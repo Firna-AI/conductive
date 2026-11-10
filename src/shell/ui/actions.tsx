@@ -21,12 +21,17 @@ function stop(event: SyntheticEvent): void {
   event.stopPropagation()
 }
 
-/** A button that opens a menu says so, and whether the menu is open. */
+/**
+ * A button that opens a menu says so, and whether the menu is open. A
+ * button that shows or hides a part of the page says whether it shows.
+ */
 type MenuTrigger = { menu?: boolean; expanded?: boolean }
 
 function triggerProps(props: MenuTrigger) {
-  if (!props.menu) return {}
-  return { expanded: props.expanded ?? false, hasPopup: 'menu' as const }
+  if (props.menu) {
+    return { expanded: props.expanded ?? false, hasPopup: 'menu' as const }
+  }
+  return props.expanded === undefined ? {} : { expanded: props.expanded }
 }
 
 /**
@@ -89,7 +94,7 @@ export function ActionButton(
   return (
     <span
       aria-disabled={held ? true : undefined}
-      className={ui.contents}
+      className={ui.keepFocus}
       onBlur={() => {
         // A window that loses the focus keeps its focused element.
         if (document.hasFocus()) setFocused(false)

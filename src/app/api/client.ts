@@ -1,19 +1,30 @@
-import { ParseError, record, text } from './parse'
+import type { ApiErrorBody } from '../../shared/api'
+import { choice, count, ParseError, record, text } from './parse'
 
 /** The fetch that the client uses: the browser's, or a fake in development. */
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 
 type WriteMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
+/** What a refusal names beside its message, such as a login that a save refused. */
+export type ApiErrorDetails = NonNullable<ApiErrorBody['error']['details']>
+
 /** A failed request, with the error code of the API when it sent one. */
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
+  readonly details: ApiErrorDetails | null
 
-  constructor(status: number, code: string, message: string) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    details: ApiErrorDetails | null = null,
+  ) {
     super(message)
     this.status = status
     this.code = code
+    this.details = details
   }
 }
 
@@ -84,10 +95,33 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
+/**
+ * The details of a refusal. A refusal without them, or with details that
+ * the app cannot read, still shows its message.
+ */
+function readDetails(value: unknown): ApiErrorDetails | null {
+  if (value === undefined || value === null) return null
+  try {
+    const details = record(value, 'details')
+    return {
+      login: text(details, 'login'),
+      triggerIndex: count(details, 'triggerIndex'),
+      list: choice(details, 'list', ['is', 'isNot']),
+    }
+  } catch {
+    return null
+  }
+}
+
 function errorFrom(status: number, body: unknown): ApiError {
   try {
     const error = record(record(body).error, 'error')
-    return new ApiError(status, text(error, 'code'), text(error, 'message'))
+    return new ApiError(
+      status,
+      text(error, 'code'),
+      text(error, 'message'),
+      readDetails(error.details),
+    )
   } catch {
     return new ApiError(status, 'http_error', 'The request failed. Try again.')
   }

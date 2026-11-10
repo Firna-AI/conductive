@@ -11,7 +11,7 @@ says.
 
 - An org owns its workspaces, its sections, its repositories, and the
   settings of its org image (decision 21).
-- An org also has members.
+- An org also has members and [routines](routines.md).
 - All orgs share the app's GitHub App. The agent logins of a user serve all
   of that user's orgs (decision 21).
 - All orgs share the app's Boat account and its plan limits, as
@@ -155,6 +155,9 @@ says.
 - Changes by every member were rejected, because a changed script reaches
   every new sandbox of the org and runs during other members' turns.
 - Every member of the org sees all of its workspaces (decision 39).
+- Every member also sees all of the routines of the org and their runs.
+  Only the owner of a routine changes it, as [Access](routines.md#access)
+  says (decision 502 B).
 - Every member can send messages in every workspace of the org. Each
   session runs on the agent login of its starter, as
   [Agents and sessions](agents-and-sessions.md#agents) says.
@@ -201,6 +204,9 @@ says.
   states the choice when no such admin exists (decision 123).
 - Reason: each workspace keeps a person in the org who is responsible for
   it.
+- Their routines in the org move to the member who gets the workspaces,
+  turned off, as [When the owner leaves](routines.md#when-the-owner-leaves)
+  says (decision 508 E).
 - The last admin can leave only after they make another member an admin,
   or by deleting the org (decision 55). This also holds when the last
   admin deletes their account. For a leave and a change of role, only
@@ -228,6 +234,10 @@ says.
 - Restore brings the org back as it was. Its workspaces start again when
   they open. A workspace whose owner is suspended does not start, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
+- The routines of a deleted org start no runs. After a Restore, each runs
+  once for the schedule times that it missed, as
+  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+  says.
 - An unfinished create continues when its workspace opens after Restore.
   It then gets a new start limit of 20 minutes, the limit of each start in
   [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts).

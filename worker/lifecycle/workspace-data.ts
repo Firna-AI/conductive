@@ -22,6 +22,7 @@ export interface WorkspaceRow {
   avatarUrl: string | null
   name: string | null
   branch: string
+  baseBranch?: string | null
   sandboxId: string | null
   providerAccount: string
   state: WorkspaceState
@@ -40,7 +41,9 @@ export interface WorkspaceRow {
 const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
   w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
   u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
-  ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId,
+  ${workspaceNameColumn('w')}, w.branch,
+  COALESCE(w.base_branch, (SELECT default_branch FROM repositories WHERE id = w.repository_id AND org_id = w.org_id)) AS baseBranch,
+  w.sandbox_id AS sandboxId,
   w.provider_account AS providerAccount, w.state,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
@@ -115,6 +118,7 @@ export async function insertWorkspace(
     city: string
     name?: string
     branch: string
+    baseBranch?: string
     sessionId: string
     turnId: string
     message: SendMessageRequest
@@ -147,8 +151,8 @@ export async function insertWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, provider_account, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
+       name, branch, base_branch, provider_account, state, created_at, updated_at, last_activity_at, position)
+       SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
          (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
           WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
        WHERE ${activeOrgIdPredicate('?')}`,
@@ -161,6 +165,7 @@ export async function insertWorkspace(
         section.id,
         input.name ?? '',
         input.branch,
+        input.baseBranch ?? null,
         input.providerAccount,
         input.now,
         input.now,

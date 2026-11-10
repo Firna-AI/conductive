@@ -14,7 +14,7 @@ import { AppLink } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
 import { Sheet } from '../ui/Sheet'
 import ui from '../ui/ui.module.css'
-import { NewWorkspaceLink, SettingsLink } from './Sidebar'
+import { NewWorkspaceLink, RoutinesLink, SettingsLink } from './Sidebar'
 import { OrgList } from './OrgList'
 
 /**
@@ -136,7 +136,7 @@ export function ListHeader(props: {
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
  * suspended org shows its notice first, and its list read-only, without
- * New workspace. Search opens the command palette. `shown` says that the
+ * New workspace. Its Routines link stays. Search opens the command palette. `shown` says that the
  * page shows the list, so that it offers New section to the palette.
  */
 export function HomeList(props: {
@@ -158,6 +158,7 @@ export function HomeList(props: {
               variant="page"
             />
           )}
+          <RoutinesLink current={false} orgId={props.org.id} variant="page" />
           <SearchRow variant="page" />
         </div>
         <OrgList

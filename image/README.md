@@ -108,7 +108,7 @@ each resume, together with the org's env vars:
 | `WORKSPACE_TOKEN` | The workspace token. |
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
-| `CONDUCTIVE_DEFAULT_BRANCH` | The default branch of the workspace's repository. |
+| `CONDUCTIVE_DEFAULT_BRANCH` | The workspace base branch, with the repository default as a fallback. |
 | `CONDUCTIVE_WORKSPACE_BRANCH` | The workspace branch that the app tracks, from the Worker's record of the workspace. |
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
@@ -131,8 +131,11 @@ get them either. So the install command of a build loads the same file,
 with automatic export, before Bash runs the org's install script. The
 install script then gets the folder variables.
 
-At a create, the Worker first fetches the default branch and creates the
-workspace branch. When the GitHub repository has no refs, the fetch step
+At a create, the Worker fetches the workspace base branch into its remote-tracking ref.
+It creates the workspace branch at the event commit of an opened or pushed pull request run.
+A missing event commit uses the fetched head.
+Other creates start at the fetched head.
+The branch's `gh-merge-base` Git setting names the workspace base. When the GitHub repository has no refs, the fetch step
 first pushes an empty first commit to the default branch. That push gets
 its token from the [git credential helper](#git-credentials), as every
 other git operation does. At each create and each resume, the Worker then

@@ -63,6 +63,20 @@ export class Git {
     })
   }
 
+  async mergeBase(branch: string): Promise<string> {
+    const remote = `refs/remotes/origin/${branch}`
+    const exists = (
+      await this.run(['for-each-ref', '--format=%(refname)', '--', remote])
+    )
+      .toString()
+      .trim()
+      .split('\n')
+      .includes(remote)
+    const base = await this.resolve(exists ? remote : branch)
+    const head = await this.resolve('HEAD')
+    return (await this.run(['merge-base', head, base])).toString().trim()
+  }
+
   async resolve(branch: string): Promise<string> {
     const sha = (
       await this.run([
