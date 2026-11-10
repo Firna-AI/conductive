@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-09, during the Milestone 8o primary merge for PR #64.
-- **Location:** `worker/lifecycle/restore-watch.test.ts:64`, `worker/lifecycle/completed-resume-test-support.ts`, and the alarm driver in `worker/lifecycle/backend-test-support.ts`.
+- **Location:** the case at `worker/lifecycle/restore-watch.test.ts:65` and its failing check at `:82`, `worker/lifecycle/completed-resume-test-support.ts`, and the alarm driver in `worker/lifecycle/backend-test-support.ts`, which runs `backendPump` from `worker/lifecycle/backend-pump.test-support.ts`.
 - **Reason:** The unchanged test passed both reruns, so a separate task must identify its nondeterminism.
 
 - **Terms:**
@@ -23,7 +23,35 @@
   No source, assertion, retry, timeout, or runner configuration changed between those runs.
   The test file matched the incoming primary version.
 
-  Reproduce the failure with the full suite and capture its exact assertion before changing code.
+  On 10 November 2026, CI run `42780530781`, attempt 1, ran the complete gate on commit `3503d628` of the branch `calummoore/workspace-open-error`.
+  Its app and Worker suite ran 704 files: 2,016 tests passed, 2 failed, and none was skipped.
+  This case failed at `worker/lifecycle/restore-watch.test.ts:82:35`:
+
+  ```text
+  AssertionError: expected [ { sandboxId: 'bx_1', …(2) }, …(1) ] to have a length of 1 but got 2
+  ```
+
+  The check expected 1 marker command and received 2.
+  It runs after the completed resume, before the test advances the clock to 5 seconds after the resume.
+  So the second marker command was already written at that point.
+  The other failure of that run was a timeout, which `plans/follow-ups/tests-time-out-under-machine-load.md` records.
+
+  On the same commit, the unchanged file then passed alone in a local run: 11 of 11 tests, with no skip, in 11.19 seconds.
+  The case then passed three more local runs alone, with no failure.
+  Each of those runs selected only this case by name, so each reported the 10 other tests of the file as skipped.
+  No skip marker, retry, assertion, or timeout changed for these runs.
+
+  The test file and each module that it imports directly equal `main` at `8567cfb6`. So does `worker/lifecycle/backend-pump.test-support.ts`.
+  Modules that those imports reach in turn changed on that branch, such as `worker/features/alarms.ts` and the shared native fixture `worker/test-support/native-workspace-entry.ts`.
+  That fixture still returns from a manual alarm only after its tracked alarm work ends.
+  No evidence ties the failure to those changes, and none rules them out.
+
+  One suspected path: `backendPump` can run the new restore watch, armed 5 seconds ahead, before the completed resume response settles.
+  That path would write the second marker command before the check at line 82.
+  No failing local trace has shown it.
+  A pass alone does not show the cause, and it does not show that load on the CI machine caused the failure.
+
+  Reproduce the failure with the full suite before changing code. Check that it gives the assertion above.
   Inspect asynchronous ordering between `resumeCompletedWorkspace`, its completed-response read, and fake-clock alarm advancement.
   This ordering is a suspected source. It has not been confirmed. Shared fixture state is another possible source.
   Make the test deterministic after the cause is known.
