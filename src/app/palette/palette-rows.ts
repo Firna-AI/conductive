@@ -135,6 +135,22 @@ export function linkRow(id: OwnActionId, href: string): CommandRow {
   }
 }
 
+/**
+ * Send feedback, which the palette offers on each page. It is not a link,
+ * because the Feedback dialog has no address: the palette opens the dialog
+ * over the current page.
+ */
+export function feedbackRow(): CommandRow {
+  const text = actionTexts['send-feedback']
+  return {
+    kind: 'command',
+    key: 'action:send-feedback',
+    lead: { kind: 'action', id: 'send-feedback' },
+    label: text.label,
+    words: text.words,
+  }
+}
+
 /** Switch to another org of the person. It opens the list of the org. */
 export function switchRow(org: OrgSummary): CommandRow {
   const text = actionTexts['switch-org']

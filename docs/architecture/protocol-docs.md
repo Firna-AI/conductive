@@ -61,6 +61,12 @@ them, and this page lists each protocol doc and what it covers.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
   what the palette shows while its workspace data loads or did not load,
   and when a tab or a search has no row.
+- [Command palette: actions and settings](../protocol/command-palette-actions.md):
+  the actions that the palette offers, their order and their groups, the
+  Help group with Send feedback, and the rows of the Settings tab.
+- [Feedback](../protocol/feedback.md): the Feedback dialog that Send
+  feedback opens, its screenshots and context, the reply address, the
+  routes, and the email to the team inbox.
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
