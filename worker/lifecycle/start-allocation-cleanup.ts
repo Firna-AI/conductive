@@ -31,9 +31,18 @@ export async function retryAllocationCleanup(
     job.providerAccount,
   )
   if (!job.allocatedSandboxId) {
-    const sandbox = await createResource(provider, {
+    const input = await readWorkspaceAllocation(env, job)
+    const sandbox = await createResource(env.DB, provider, {
       kind: 'sandbox',
-      input: await readWorkspaceAllocation(env, job),
+      mayHaveAllocated: true,
+      ownership: {
+        orgId: job.orgId,
+        providerAccount: job.providerAccount,
+        ownerUserId: job.creation?.user.id ?? input.labels?.user ?? null,
+        purpose: 'workspace',
+        purposeId: job.workspaceId,
+      },
+      input,
       persist: () =>
         storage.put(
           'job',
@@ -54,7 +63,12 @@ export async function retryAllocationCleanup(
     sandboxId: job.allocatedSandboxId,
     providerAccount: job.providerAccount,
   })
-  await deleteSandboxIfPresent(provider, job.allocatedSandboxId)
+  await deleteSandboxIfPresent(
+    env.DB,
+    provider,
+    { sandboxId: job.allocatedSandboxId, providerAccount: job.providerAccount },
+    dependencies.now(),
+  )
   await clearSandboxCleanup(
     env.DB,
     job.workspaceId,
