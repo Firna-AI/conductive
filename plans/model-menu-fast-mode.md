@@ -84,6 +84,9 @@ Contract owners:
 
 ### Decision 256: Who may turn on fast mode
 
+- **Answer:** The user chose A on 2026-11-10. Any member who may send in a
+  session may turn fast on or off, as for the model and the effort. The
+  menu says that fast can cost more.
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
@@ -159,6 +162,8 @@ Contract owners:
 
 ### Decision 257: How a member learns that a turn ran at standard speed
 
+- **Status:** Open. On 2026-11-10 the user asked to see what each option
+  looks like before the choice.
 - **Severity:** Low. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
@@ -212,8 +217,7 @@ Contract owners:
 - **Previous examples:** Decision 109: `turn.completed` carries
   `filesUnavailable`, and the end of the turn shows "Changed files
   unavailable".
-- **Related:** Decision 255. The state belongs to its switch. Option C of
-  decision 256 makes some turns standard by its rule.
+- **Related:** Decision 255. The state belongs to its switch.
 - **Recommendation:** D. It shows the cause beside the slow turn, on an end
   event that every turn already has. C needs the same report from the
   runner, and a session field too. The options check changed the
@@ -285,7 +289,8 @@ My calls, on 2026-11-10, under decision 255:
   Space changes the switch, and the menu stays open. The arrow keys reach
   the row. Reason: a switch shows its new state in place, as in Conductor.
 - A one-line note under the row says that fast output can cost more. The
-  mockup milestone sets the words. Reason: fast spends more of the login.
+  mockup milestone sets the words. Reason: fast spends more of the login,
+  and the answer A of decision 256 asks for the note.
 - The row shows only for a model that the model list marks. Reason: the
   menu already lists only the efforts of the chosen model, and
   claude.ai/code shows its switch only for a model that supports it.
@@ -366,7 +371,8 @@ the agent tools, and the model list.
 - [ ] Add a Fast mode section under Messages in
       `docs/protocol/messages-and-attachments.md`: the switch, the models
       that show it, the change rules, and the standard speed when the agent
-      cannot run fast.
+      cannot run fast. State that any member who may send in a session may
+      turn fast on or off, as for the model and the effort (decision 256).
 - [ ] Update "Names in the product" in
       `docs/protocol/agents-and-sessions.md`: the trigger names the model, the
       effort, and Fast when it is on.
@@ -463,27 +469,20 @@ The model menus show the switch, and the triggers show Fast.
       switch, a change to a model without fast, and the trigger text. See
       each new test fail first.
 
-## Milestone 6: The rule of decision 256
-
-Depends on: 3, 5, and the answer to decision 256
-
-- [ ] Apply the chosen option in the Worker and in the menus. Update the
-      protocol docs and the guides in the same milestone.
-
-## Milestone 7: The state of decision 257
+## Milestone 6: The state of decision 257
 
 Depends on: 4, 5, and the answer to decision 257
 
 - [ ] Apply the chosen option in the runner, the Worker, and the app. Update
       the protocol docs in the same milestone.
 
-## Milestone 8: The key of decision 258
+## Milestone 7: The key of decision 258
 
 Depends on: 5, and the answer to decision 258
 
 - [ ] Apply the chosen option. Option A needs no work.
 
-## Milestone 9: Verification, commit, review, and pull request
+## Milestone 8: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 

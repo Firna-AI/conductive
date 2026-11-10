@@ -28,6 +28,6 @@
 - **Left out:** A check in the model gateway. The gateway forwards each request body unchanged, and a check of the model there would need a new parse of each request body.
 - **Wider fix:** C. One rule for every field of the choice also covers a later field, such as a speed setting.
 - **Previous examples:** None found.
-- **Related:** A rule for who may turn on fast mode, if the user chooses one, lives in the same two routes. Apply the same rule to both, or record why they differ.
+- **Related:** The plan for a fast mode switch in the model menu adds fast mode to the choice. On 2026-11-10 the user chose that any member who may send in a session may turn fast mode on or off, as for the model and the effort. A rule from this item then applies to fast mode too, unless the user says otherwise.
 - **Recommendation:** B. It applies the rule that a send already follows when the share switch is off, so the starter's switch stays the one consent. C best protects the starter's account.
 - **Action:** ask the user, because B and C add a new restriction to the model route, and the user approves each new restriction.
