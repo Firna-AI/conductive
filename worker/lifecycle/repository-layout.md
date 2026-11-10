@@ -35,16 +35,16 @@ the folder map:
 | Column | Value |
 | --- | --- |
 | `image_build_jobs.repository_locations_json` | The map of the image that the job makes. |
-| `image_build_jobs.previous_repository_locations_json` | The map of the published image when the job started. |
+| `image_build_jobs.previous_repository_locations_json` | For a refresh, the map of the published image when the job started. A build stores an empty map. |
 | `workspace_creation_plans.repositories_json` | The repositories of the published image that a creation claim captures. |
 | `workspace_creation_plans.repository_locations_json` | The map of that published image. |
 | `workspace_runtime.repository_locations_json` | The map of the workspace. |
 
 ## Capture
 
-- `startImageBuild` reads the map of the published image as the previous
-  map. A build makes a new map with `repositoryLocations`. A refresh
-  copies the previous map, so it moves no folder.
+- A build makes a new map with `repositoryLocations` in `startImageBuild`,
+  and an empty previous map, because it starts on a clean machine. A
+  refresh copies the map of the published image as both maps.
 - The plan statement of `claimCreation` copies the repositories and the
   map of the published image. It runs in the same D1 batch as the claim.
   So a later build or a later change of the chosen repositories cannot
@@ -159,11 +159,11 @@ the sandbox IDs and snapshot names for Members.
 
 ## Folder moves
 
-Before it loads any repository, the source loader runs
-`sourceLayoutCommand` from
-[`image-sources/layout-command.ts`](image-sources/layout-command.ts). The
-command compares the previous map with the new map. It acts only on each
-repository whose folder changes, or that the new map does not hold:
+Before it loads any repository, the source loader runs `sourceLayoutCommand`
+from [`image-sources/layout-command.ts`](image-sources/layout-command.ts). It
+acts only on each repository whose folder differs between the previous map
+and the new map, or that the new map does not hold. So a build and a refresh
+move no folder, as [Capture](#capture) says. The command does these steps:
 
 1. It moves each old folder to a staging folder under
    `/home/user/conductive/source-relocation/<build ID>/`, and writes a
@@ -187,7 +187,7 @@ variables still get the names of the new layout, and they point to the
 older folders.
 
 - A refresh of an older image keeps the older folders.
-- The next explicit build moves the older folders to the new layout.
+- The next explicit build copies the repositories into the new layout.
 - A job that started before the migration moves no folder.
 - A workspace without a stored map keeps the older folder of its
   repository.
@@ -293,7 +293,7 @@ each token.
 - [`image-sources/data.ts`](image-sources/data.ts): `authorizeImageBuilder`
   and `readSourceRepository`, the builder and repository checks.
 - [`image-sources/layout-command.ts`](image-sources/layout-command.ts):
-  `sourceLayoutCommand`, the folder moves of a build.
+  `sourceLayoutCommand`, the folder moves of an image job.
 - [`default-branch-command.ts`](default-branch-command.ts):
   `defaultBranchCommand`, the fetch step with the empty first commit.
 - [`start-command.ts`](start-command.ts): `workspacePhaseCommand`, the

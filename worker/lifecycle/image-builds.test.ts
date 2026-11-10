@@ -168,8 +168,8 @@ it('recovers scheduling and allocation replies while streaming a successful imag
     } finally {
       await reader.cancel()
     }
+    expect(boat.starts[0].from).toBeUndefined()
     expect(boat.starts[0]).toMatchObject({
-      from: 'last-good-image',
       noEnv: true,
       env: {
         CONDUCTIVE_REPOSITORY_REPOSITORY_DIR: '/home/user/code/repository',

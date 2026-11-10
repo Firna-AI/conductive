@@ -162,6 +162,7 @@ it('keeps the captured image folder map at resume and retention after a later bu
       software: SOFTWARE,
     }),
   )
+  expect(fixture.sourceCalls.at(-1)?.previousRepositoryLocations).toEqual([])
   expect(fixture.sourceCalls.at(-1)?.repositoryLocations).toEqual([
     {
       repositoryId: 'collision-repository',

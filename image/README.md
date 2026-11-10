@@ -1,11 +1,11 @@
 # Sandbox software
 
-This folder holds the app's own sandbox software. Each image build installs
-it before it runs the org's install script. A software image build installs
-it once for each app software version. A first org build from that image
-skips the software step. Without a matching ready software image, the first
-build installs it itself. Later builds still install the software. The org
-image is the saved snapshot that every new sandbox of an org starts from.
+This folder holds the app's own sandbox software. A software image build
+installs it once for each app software version. Each org build from that
+image skips the software step. Without a matching ready software image, an
+org build installs it itself, after the repository copy and before the
+org's install script. The org image is the saved snapshot that every new
+sandbox of an org starts from.
 In a workspace sandbox, this software starts the agent runner and the
 preview relay. It also
 gives git a fresh GitHub token for each operation. The agent tools are not
@@ -90,9 +90,9 @@ paths, and its update steps.
 
 ## Install
 
-[Install in a build](install.md) describes the software step of each image
+[Install in a build](install.md) describes the software step of an image
 build: the staged scripts, the private Node, and the steps of `install.sh`.
-A refresh and a first build from a software image skip that step.
+A refresh and each build from a software image skip that step.
 The [software image backend](../worker/software-image/README.md) builds the shared image.
 A workspace gets the relay only from a new image build.
 An existing workspace keeps the software of its image, also after a resume.

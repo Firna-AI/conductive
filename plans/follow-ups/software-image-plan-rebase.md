@@ -2,23 +2,48 @@
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
-- **Added:** 2026-11-10, the post-merge tasks of the plan `plans/first-build-software-image.md`, branch `calummoore/global-snapshot-simplification`.
+- **Added:** 2026-11-10, the post-merge tasks of the plan `plans/first-build-software-image.md`, branch `calummoore/global-snapshot-simplification`. Updated on 2026-11-10 by branch `conductor/later-builds-from-software-image`.
 - **Location:** `plans/software-image.md` on branch `calummoore/build-image-install-order`.
-- **Reason:** the larger plan must start from the merged smaller change, so the update waits for that merge.
+- **Reason:** the larger plan must start from the two merged smaller changes, so the update waits for their merges.
 
 - **Terms:**
-  - **Software image:** one saved snapshot for each version of the app's own software, which holds no org data. Each deploy run asks the Worker to build it, and a first build of an org starts from it. `docs/protocol/org-image.md` gives its rules.
+  - **Software image:** one saved snapshot for each version of the app's own software, which holds no org data. Each deploy run asks the Worker to build it. Org builds use it when a matching image is ready. `docs/protocol/org-image.md` gives its rules.
   - **Larger plan:** `plans/software-image.md` on branch `calummoore/build-image-install-order`. It plans the software image together with clean later builds, a daily refresh that updates old org images, the update of old workspaces at a workspace start, the copy of a missing repository at a first workspace start, and a notice of an old org setup.
+  - **Later build:** a build of an org that already has an org image. A first build is a build of an org without one.
 - **Background:**
-  - On 10 November 2026, the user chose a smaller first step: build the software image in each deploy run, and start only first builds from it. Later builds and refreshes keep their steps.
-  - The smaller change implements these decisions of the larger plan: 2 B, a software image for each app software version; 3 C, the deploy run asks the Worker to build it and waits; 5 F, the deploy run fails unless the image is ready; and 6 D, a token for each deploy run with only its digest on the Worker.
-  - The smaller change has its own design calls, which differ from the larger plan in two places. The requests of the deploy step and the 15-minute Cron Trigger move a build on, with no coordinator object. The deploy route compares the token digest of the request, not the version tag, to tell an older Worker version apart.
-  - The larger plan still names its open decisions: 1, the label of the software step; 12, when a daily refresh runs the install script; and 13, how an added repository becomes usable.
+  - On 10 November 2026, the user chose a smaller first step: build the software image in each deploy run, and start only first builds from it. Later builds and refreshes kept their steps. PR #180, squash `4249b33d`, merged that first step.
+  - The first step implements these decisions of the larger plan:
+    - 2 B: a software image for each app software version.
+    - 3 C: the deploy run asks the Worker to build it and waits.
+    - 5 F: the deploy run fails unless the image is ready.
+    - 6 D: a token for each deploy run, with only its digest on the Worker.
+  - The first step has its own design calls, which differ from the larger plan in two places. The requests of the deploy step and the 15-minute Cron Trigger move a build on, with no coordinator object. The deploy route compares the token digest of the request, not the version tag, to tell an older Worker version apart.
+  - Later on 10 November 2026, the user asked for a second small change, on branch `conductor/later-builds-from-software-image`. It implements two decisions of the larger plan. The user chose both on 10 November 2026, in the design message "Later build = saved snapshot (global base image) -> user repos -> user scripts":
+    - 4 C: start each later build from the software image, so that no later build installs the app's own software again.
+    - 9 B: start each later build from the software image, so that the install script always runs on a clean machine. Old output does not pile up.
+  - With the second change, each build pins the ready software image of its app software version in its provider account. It starts there, copies every chosen repository into a new folder, runs the install script, and saves the org image, with no software step.
+  - Without such a software image, a build starts from the provider's base image, copies the repositories, runs the software step, then the install script. A missing software image slows a build and never fails it. A refresh still starts from the last org image, fetches commits, and runs neither the software step nor the install script.
+  - The second change does the later-build half of Milestone 7 of the larger plan, "Clean first and later builds". It also does the later-build half of design item 9, the start of first and later builds. That half is the start from the software image, the fresh copy of each repository, and the fallback. It also deletes the start from the last org image.
+  - It also does the docs of that half, and the replaced way "A later build starts from the last org image". These docs are the later-build start in `docs/protocol/org-image.md`, the clone token risk in `docs/protocol/github-tokens.md`, the term "Build" in `docs/architecture.md`, and the fresh folders in `docs/protocol/repository-folders.md`. They also include `image/install.md`, `image/README.md`, `image/runtime.md`, and the READMEs of `worker/lifecycle/` and `worker/software-image/`.
+  - This work of the larger plan stays open:
+    - The rest of Milestone 7: the skip of an empty install script, and the records of design item 10. These records are the app software version and the install script revision of each org image.
+    - Refreshes: decision 7 E, chosen on 10 November 2026, keeps a refresh after a push as today. It makes the daily refresh a clean build. Decision 12 is open.
+    - Old workspaces: decision 8 B, chosen on 10 November 2026, updates the app software at the later workspace start of an old workspace.
+    - The old setup notice: decision 11 C, chosen on 10 November 2026, gives an old workspace a notice. Its action runs the install script when the user chooses.
+    - A missing repository: the user chose decision 10 D on 10 November 2026. It copies the repository at the first workspace start, and starts a later build when an admin adds one. PR #188, squash `b25d8e0d`, already starts that build. It keeps a waiting repository off until a build holds it. The copy at the first workspace start stays open. Open decision 13 covers its conflict with that rule.
+  - The larger plan still names its open decisions:
+    - 1: the label of the software step.
+    - 12: when a daily refresh runs the install script.
+    - 13: how an added repository becomes usable. With decision 9 B, a build that an added repository starts copies every repository and runs the whole install script.
 - **Task:**
   - Merge `main` into `calummoore/build-image-install-order`.
-  - Mark Milestones 3 to 7 of the larger plan done where the smaller change covers them, and record the two design differences above.
-  - Rewrite the remaining milestones so that they build on the `worker/software-image/` area and on the `software_images` table.
+  - Mark Milestones 3 to 7 of the larger plan done where the two smaller changes cover them, and record the two design differences above.
+  - Drop the done later-build parts: their code TODOs, test TODOs, and docs TODOs, and the replaced way of the later-build start. Keep the skip of an empty install script and the records of design item 10.
+  - Mark the automatic added-repository build part of decision 10 D done by PR #188. Keep its first-start copy and decision 13 open.
+  - Rewrite the remaining milestones so that they build on the `worker/software-image/` area, on the `software_images` table, and on the clean start of each build.
   - Keep each open decision of the larger plan open, with its recorded number and letters.
-- **Impact if no action:** The larger plan describes code that already exists in another shape, so its next implementor can build a second software image path.
-- **Needs:** the merged smaller change on `main`.
+  - After this clean-build change merges, delete `plans/follow-ups/clone-token-risk-new-repository.md`. That item assumes a build copies an added repository on the last org image. Every build now uses a clean software image or base image. Refreshes copy only repositories held in the image. Its claimed extra risk no longer applies.
+  - Correct the software-step label decision's mockup background. First-build fixtures already omit that step. A future example of its label needs a fallback-build fixture. Keep the label choice open.
+- **Impact if no action:** The larger plan describes code that already exists in another shape, so its next implementor can build a second software image path. The implementor can also redo the clean later builds.
+- **Needs:** both smaller changes merged on `main`: PR #180, and the pull request of branch `conductor/later-builds-from-software-image`.
 - **Done when:** `plans/software-image.md` on its branch starts from `main`, marks the done work, and plans only the remaining work.

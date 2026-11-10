@@ -8,7 +8,7 @@
 
 - **Terms:**
   - **Software step:** the step that installs the app's own software in a cloud computer image: the private Node, the runner archive, the GitHub CLI, and the terminal packages.
-  - **Software image:** one saved image for each version of the app's own software. It holds the provider's base image and the software step. The deploy workflow asks the Worker to build it, and the first build of an org starts from it.
+  - **Software image:** one saved image for each version of the app's own software. It holds the provider's base image and the software step. The deploy workflow asks the Worker to build it. Org builds use it when a matching image is ready.
 - **Background:**
   - The software step downloads the private Node from `nodejs.org` with `curl` in `image/install-runtime.sh`.
   - It downloads the runner archive, about 320 MiB, from `https://runner.conductive.build/` with `curl` in `image/install.sh`.
@@ -16,9 +16,9 @@
   - It installs the terminal packages with `apt-get update` and `apt-get install -y ttyd tmux` in `terminalInstallCommand` of `worker/terminal/service.ts`.
   - Each command runs once, under `set -eu`, and none of them asks for a retry.
   - The provider retry policy of builds covers errors of the provider's API. It does not cover a failed command inside the sandbox.
-  - An org image build without a software image, each later build, and each software image build run the software step.
+  - Each software image build runs the software step. An org image build, first or later, runs it only when no ready software image of its app software version exists.
 - **Problem:** One short network fault in any of these downloads fails the whole build.
-- **Impact if no action:** A short network fault fails an org image build, and an admin must start the build again. It also fails a software image build, so first builds do the full install until the next deploy run builds the image.
+- **Impact if no action:** A short network fault fails an org image build, and an admin must start the build again. It also fails a software image build, so first and later builds do the full install until the next deploy run builds the image.
 - **Root question:** How does a build survive a short network fault in its downloads?
 - **Options:**
   - **A.** Retry inside each download command: `curl --retry 3 --retry-all-errors` for both archives, and `apt-get -o Acquire::Retries=3` for the packages. The digest checks stay as they are. Effort: Small.
