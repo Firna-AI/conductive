@@ -1459,7 +1459,7 @@ Depends on: 10b implementation and review
 - [x] Keep checked finding 6 option B as its independent Rare follow-up.
       Trace its check's duplicate-prompt observation and record any
       confirmed remaining work separately.
-- [ ] Commit and push the final review correction. Preserve its complete
+- [x] Commit and push the final review correction. Preserve its complete
       checked outcome and final verification in the PR record.
 
 GitHub reported the pushed `ead84a4c` as conflicting, so no full CI run
@@ -1483,7 +1483,7 @@ Depends on: 10c implementation and local verification
 - [x] Run bounded affected types, tests, builds, static checks, meaningful
       regression proofs and ten runs for materially changed async cases.
       Smoke-test the combined current Archive/Restore and Continue flows.
-- [ ] Commit and push the current combined source. Audit every resolution
+- [x] Commit and push the current combined source. Audit every resolution
       against both captured parents. Milestone 11 owns the complete final
       PR CI watch after the plan snapshot and deletion.
 
@@ -1494,9 +1494,32 @@ completed milestone text above remains dated history.
 
 Evidence: `.context/pull-request-bar-actions/archive-base-integration/`.
 
+Current source delivery: merge `3e24c158` is pushed. The current integration reports, preservation audit, restored faults, browser captures, and measured costs are saved under the evidence folder above. Final exact-head CI remains with the last task below.
+
+## Milestone 10e: Repository build and stopped-turn base integration
+
+Depends on: 10d
+
+- [ ] Integrate captured main `20083050b2f427b4ddd30df9aa6843525bb8edd0`.
+      Preserve added-repository builds and waiting states, stopped-turn
+      changed-file reports, current comparison facts, and preview Open.
+- [ ] Resolve each conflict against both captured parents. Keep all
+      branch actions, Continue, current branch input, work counts, account
+      pins, recovery, Files ownership, and current Archive/Restore behavior.
+- [ ] Align affected internal guides, mockups, public guides, and legal
+      facts. Preserve all current requirements and every active assertion.
+- [ ] Run bounded affected tests, types, and scoped checks. Prove and
+      repeat any materially changed asynchronous regression. Keep the
+      complete final gate in Milestone 11.
+- [ ] Audit the exact two-parent merge and every resolution. Commit and
+      push the result for the final source and plan record.
+
+The previous pushed source has no CI run because this newer main creates
+confirmed PR conflicts. This integration is required for final CI.
+
 ## Milestone 11: Final record and pull request completion
 
-Depends on: 10, 10a, 10b, 10c, and 10d
+Depends on: 10, 10a, 10b, 10c, 10d, and 10e
 
 - [ ] Record all checked outcomes and follow-ups. Preserve each dated
       design call and the current test-cost record in the PR description.
