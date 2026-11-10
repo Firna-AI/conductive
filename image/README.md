@@ -100,6 +100,10 @@ each resume, together with the org's env vars:
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |
 | `CONDUCTIVE_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |
+| `GIT_AUTHOR_NAME` | The workspace owner's commit author name. |
+| `GIT_AUTHOR_EMAIL` | The workspace owner's GitHub no-reply address. |
+| `GIT_COMMITTER_NAME` | The workspace owner's commit author name. |
+| `GIT_COMMITTER_EMAIL` | The workspace owner's GitHub no-reply address. |
 
 [Repository folders](../docs/protocol/repository-folders.md) gives the
 folder names and the variable names. The

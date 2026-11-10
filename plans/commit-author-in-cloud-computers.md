@@ -398,23 +398,25 @@ Each start, resume, and disk retention restart gives the cloud computer the
 workspace owner's author. Current workspaces get it at their next start or
 resume, with no image build.
 
-- [ ] Add `src/shared/commit-author.ts`. One function makes the name and
+- [x] Add `src/shared/commit-author.ts`. One function makes the name and
       the no-reply address from a `User`. One function makes the four Git
       variables from an author.
-- [ ] Make `worker/lifecycle/default-branch-command.ts` use the shared
+- [x] Make `worker/lifecycle/default-branch-command.ts` use the shared
       helper. Delete its inline author.
-- [ ] Make one builder for the sandbox variables of
+- [x] Make one builder for the sandbox variables of
       `worker/lifecycle/start-machine.ts` and
       `worker/lifecycle/disk-retention.ts`. Add the owner's author after the
       org variables, as decision 233 A says.
-- [ ] Extend `worker/lifecycle/runner-environment.test.ts`. A create and a
+- [x] Extend `worker/lifecycle/runner-environment.test.ts`. A create and a
       resume give the owner's author. An org variable `GIT_AUTHOR_NAME`
       does not replace it. An owner without a usable
       display name gets the login. See each new assertion fail first.
-- [ ] Update the variables table of `image/README.md`. Add a short commit
+- [x] Update the variables table of `image/README.md`. Add a short commit
       author section to `image/github.md`.
-- [ ] Run the targeted tests, the typecheck, the lint, the format check,
+- [x] Run the targeted tests, the typecheck, the lint, the format check,
       and the file-length check.
+
+Evidence: `.context/commit-author-in-cloud-computers/milestone-2/report.md`.
 
 ## Milestone 3: Turn commands carry the author of the turn sender
 
