@@ -173,12 +173,14 @@ Depends on: 1, 2, 3
 - [x] Run `npm run format:check`, `npm run lint`, and `npm run file-length:check`. Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the complete gate, `npm run check`.
 
 Verification evidence: `.context/ai-name-underscores/evidence/complete-gate.log`. The final pull request CI also verifies the tree with the latest `main` changes.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+
+The independent review found no findings. Evidence: `.context/reviews/calummoore/workspace-name-underscores/round-1-review.md`. The post-merge targeted checks and current documentation checks are in `.context/ai-name-underscores/evidence/merged-target-tests.log` and `.context/ai-name-underscores/docs-integration-report.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
