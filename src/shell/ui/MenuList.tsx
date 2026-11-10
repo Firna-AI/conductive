@@ -73,6 +73,7 @@ function Item(props: { entry: MenuAction; close: () => void }) {
         ui.plainButton,
         ui.menuItem,
         entry.tone === 'danger' && menu.danger,
+        entry.disabled && menu.disabled,
       )}
       disabled={entry.disabled}
       onClick={() => {

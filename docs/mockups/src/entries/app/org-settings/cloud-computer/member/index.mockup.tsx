@@ -17,4 +17,15 @@ export const computerMember = defineScreen({
   render: (props, context) => (
     <OrgSettingsScreen state={props} viewport={context.viewport} />
   ),
+  variants: [
+    {
+      slug: 'repositories-changed',
+      title: 'Repositories changed, seen by a member',
+      description:
+        'Priya opens the tab after the build of acme/admin-dashboard failed. The notice under the intro says that acme/admin-dashboard is ready after a build succeeds, and that an admin can try the build again. The notice and the card have no Try again.',
+      rationale:
+        'The user chose option C of decision 241 on 10 November 2026: the repository notice shows on the Cloud computer tab for admins and members. Only an admin builds the computer (decision 57), so a member reads who can act, as on the Repositories tab. On this tab the notice has no button for anyone, because the build card has the action, and the card of a member has none.',
+      props: { repositoryChange: 'added', build: 'failed' },
+    },
+  ],
 })
