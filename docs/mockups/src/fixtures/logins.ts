@@ -60,18 +60,6 @@ export const sharedByDefault: Readonly<
 }
 
 /**
- * The note under the share switch of a kind whose provider lets only its
- * owner use it, by agent and kind: a ChatGPT plan, under the terms of
- * OpenAI (decision 175).
- */
-export const shareNotes: Readonly<
-  Record<AgentKey, Readonly<Partial<Record<LoginKind, string>>>>
-> = {
-  claude: {},
-  codex: { token: chatGptSignInCopy.shareNote },
-}
-
-/**
  * The cause of a change of the share setting that the app did not save: the
  * message of a failed save of the server.
  */

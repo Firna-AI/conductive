@@ -128,7 +128,7 @@ the tabs of the org settings are. Its child pages:
   for the sign-in. Its `expired` variant has a code that expired, and its
   `refused` variant a sign-in that OpenAI refused, each with Get a new code.
 - `app/account/codex-token` has Codex connected by a sign-in to a ChatGPT
-  plan, whose share switch starts off, with a note on the terms of OpenAI.
+  plan, whose share switch starts off.
   Its `not-usable` variant has a sign-in that OpenAI did not renew: the row
   says Signed out, with the cause and Sign in again.
 - `app/account/share-not-saved` shows General after a login share setting

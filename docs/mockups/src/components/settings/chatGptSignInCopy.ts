@@ -31,7 +31,6 @@ export const chatGptSignInCopy = {
   expired: 'The code expired.',
   newCode: 'Get a new code',
   /** The note under the share switch of a ChatGPT plan (decision 175). */
-  shareNote: "Under OpenAI's terms, only you may use your ChatGPT plan.",
   /** The state of a login that the app can no longer use. */
   signedOut: 'Signed out',
   signInAgain: 'Sign in again',
@@ -44,5 +43,6 @@ export const chatGptSignInCopy = {
     refused:
       'ChatGPT refused the sign-in, because device code sign-in is off. Turn it on in your ChatGPT security settings, or ask your ChatGPT admin.',
     notRenewed: 'ChatGPT access expired.',
+    failed: 'ChatGPT sign-in failed.',
   },
 } as const

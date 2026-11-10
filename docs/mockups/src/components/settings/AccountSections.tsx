@@ -3,7 +3,6 @@ import { ArrowUpRight, LogOut } from 'lucide-react'
 import { agentKeys, agents, type AgentKey } from '../../fixtures/agents'
 import {
   loginLabels,
-  shareNotes,
   shareNotSavedCause,
   sharedByDefault,
   type AgentLogins,
@@ -167,7 +166,6 @@ export function AgentList(props: {
                   props.shares.notSaved === key ? shareNotSavedCause : null
                 }
                 nameId={nameId}
-                note={shareNotes[key][login]}
                 onChange={noop}
                 shared={sharedByDefault[key][login]}
               />

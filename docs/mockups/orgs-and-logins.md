@@ -143,9 +143,7 @@ plan limits.
   user run on it, from decision 116. The switch starts off for a Claude
   subscription token and on for an API key, as `app/account` shows. A
   ChatGPT plan of Codex starts off too, from decisions 171 and 175, as
-  `app/account/codex-token` shows. Under its switch, a note says that only
-  the owner may use a ChatGPT plan, under the terms of OpenAI. `shareNotes`
-  in `src/fixtures/logins.ts` holds the notes. The switch saves at once. A
+  `app/account/codex-token` shows. The switch saves at once. A
   change that the app did not save shows its cause beside the switch, as
   `app/account/share-not-saved` shows. The part lives in
   `src/components/settings/LoginShare.tsx`.
