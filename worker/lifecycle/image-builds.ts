@@ -155,6 +155,7 @@ export async function startImageBuild(
       previousRepositoryLocations: previousLocations,
       software,
       previousImageName: image?.imageName ?? null,
+      previousRunnerProtocolVersion: previous?.runnerProtocolVersion ?? null,
       now,
       nextImageRefreshAt:
         input.kind === 'refresh' && input.dailyRefresh

@@ -9,7 +9,7 @@
 - **Source:** Review. **Category:** Product bug.
 - **Terms:**
   - **First good build:** the earliest build of an org that succeeds. Until it publishes, the org has no image that a workspace can start from.
-  - **Added build:** one more build that the app starts by itself when the repositories or the install script changed during the first good build, as "The first build" in `docs/protocol/workspaces-and-sandboxes.md` requires.
+  - **Added build:** one more build that the app starts by itself when the repositories or the install script changed during the first good build, as "The first build" in `docs/protocol/org-image.md` requires.
   - **Image coordinator:** the Durable Object of an org that advances its builds and refreshes with alarms, one job at a time, in `worker/lifecycle/image-coordinator.ts`.
   - **`cleanup-build`:** the job phase that `publishBuild` saves when a first good build needs an added build. Cleanup then deletes the build sandbox and starts the added build.
 - **Background:**

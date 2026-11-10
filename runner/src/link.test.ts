@@ -2,13 +2,15 @@ import { expect, it, onTestFinished } from 'vitest'
 
 import type {
   RunnerEventEnvelope,
-  WorkspaceToRunner,
+  WorkspaceToRunnerV2 as WorkspaceToRunner,
 } from '../../src/shared/runner'
-import type { RunnerConnector } from '../../src/shared/runner-transport'
+import type { RunnerConnector as TransportRunnerConnector } from '../../src/shared/runner-transport'
 import { FakeDurableObjectEndpoint } from '../../worker/test-support/fake-durable-object'
 import { diskFixture } from '../test-support/disk'
 import { RunnerLink } from './link'
 import { EventStore } from './state'
+
+type RunnerConnector = TransportRunnerConnector<WorkspaceToRunner>
 
 it('retains numbered events across gaps, wrong confirms, reconnect, and restart', async () => {
   const { storage } = await diskFixture()
@@ -55,6 +57,10 @@ it('retains numbered events across gaps, wrong confirms, reconnect, and restart'
   const store = await EventStore.open(storage)
   const link = new RunnerLink(store, options)
   await link.connect()
+  expect(endpoint.received[0]).toMatchObject({
+    type: 'hello',
+    protocolVersion: 2,
+  })
   await link.emit({ type: 'workspace.title', name: 'First' })
   await link.emit({ type: 'workspace.title', name: 'Second' })
   await link.idle()

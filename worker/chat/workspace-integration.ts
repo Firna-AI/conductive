@@ -114,6 +114,18 @@ export function createWorkspaceIntegration(
       controller.recoverLifecycle(callbackPublisher(publish)),
     ...observeWorkspaceCallbacks(
       {
+        turnEnded: async (_id, turnId, publish) => {
+          try {
+            const fence = await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY)
+            if (fence && fence.mode !== 'active') return
+            await controller.finishLifecycleTurn(
+              turnId,
+              callbackPublisher(publish),
+            )
+          } finally {
+            context.waitUntil(reporting.background(() => devices.reconcile()))
+          }
+        },
         receiveFileResult: async (value, connectionId) => {
           files.runner.receive(connectionId, value)
         },
@@ -144,37 +156,13 @@ export function createWorkspaceIntegration(
           controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
         runnerEventStored: async (envelope, publish) => {
           const event = envelope.event
-          const lifecyclePublish = callbackPublisher(publish)
-          try {
-            if (event.type === 'runner.event-refused') {
-              if (
-                event.turnId &&
-                (event.runnerEventType === 'turn.completed' ||
-                  event.runnerEventType === 'turn.failed')
-              )
-                await controller.finishLifecycleTurn(
-                  event.turnId,
-                  lifecyclePublish,
-                )
-            } else if (
-              event.type === 'turn.started' ||
-              event.type === 'turn.completed' ||
-              event.type === 'turn.failed' ||
-              event.type === 'start.updated'
-            ) {
-              await controller.reportRunnerLifecycle(event, lifecyclePublish)
-            }
-            await projectWorkspaceTitle(env.DB, envelope, now())
-          } finally {
-            if (
-              event.type === 'turn.completed' ||
-              event.type === 'turn.failed' ||
-              (event.type === 'runner.event-refused' &&
-                (event.runnerEventType === 'turn.completed' ||
-                  event.runnerEventType === 'turn.failed'))
+          if (event.type === 'turn.started' || event.type === 'start.updated') {
+            await controller.reportRunnerLifecycle(
+              event,
+              callbackPublisher(publish),
             )
-              context.waitUntil(reporting.background(() => devices.reconcile()))
           }
+          await projectWorkspaceTitle(env.DB, envelope, now())
         },
       },
       resolvers.callbackObservers,

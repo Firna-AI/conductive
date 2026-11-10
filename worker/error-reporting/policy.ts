@@ -30,6 +30,7 @@ export function captureWorkerWarning(
     case 'lifecycle_repair_pending':
     case 'workspace_title_unconfigured':
     case 'runner_message_failed':
+    case 'runner_protocol_version_mismatch':
       return
   }
   if (userScriptFailure(warning, error)) return

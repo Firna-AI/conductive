@@ -63,6 +63,10 @@ it('reports typed safe warning values and keeps IDs, normal refusals, user scrip
       },
       error,
     )
+    captureWorkerWarning({
+      kind: 'runner_protocol_version_mismatch',
+      workspaceId: WarningId.checked(id),
+    })
   })
   await flushReporting(fixture.runtime)
   expect(fixture.envelopes).toHaveLength(1)

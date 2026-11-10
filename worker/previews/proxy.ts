@@ -1,3 +1,4 @@
+import { PREVIEW_RELAY_MARK_HEADER } from '../../src/shared/previews'
 import { linkWorkerError } from '../error-reporting/causes'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -105,29 +106,31 @@ export class PreviewProxy {
         )
       const scope = this.registry.get(row, identity)
       connection = scope.connect()
-      const destination = request.headers.get('Sec-Fetch-Dest')
-      const refresh = destination === 'document' || destination === 'iframe'
-      const port = await this.ports.get(row, refresh)
+      const port = await this.ports.get(row)
       recordActivity(this.dependencies, row.workspaceId)
       await scope.authorize()
       let upstream: Response
       try {
-        const outgoing = portRequest(request, port, undefined, {
+        const outgoing = portRequest(request, port, row.port, {
           body: connection.wrap(request.body),
           signal: connection.signal,
         })
         upstream = await this.dependencies.fetch(outgoing)
       } catch (error) {
-        this.ports.invalidate(row, row.port)
+        this.ports.invalidate(row)
         throw linkWorkerError(
           new ProviderError('unavailable', 503),
           connection.failure ?? error,
         )
       }
-      if ([401, 403].includes(upstream.status))
-        this.ports.invalidate(row, row.port)
+      if (!upstream.headers.has(PREVIEW_RELAY_MARK_HEADER)) {
+        this.ports.invalidate(row)
+        void upstream.body?.cancel().catch(() => {})
+        upstream.webSocket?.close(1008, 'Connection closed.')
+        throw new ProviderError('unavailable', 503)
+      }
       await scope.authorize()
-      const headers = portResponseHeaders(upstream, request, port)
+      const headers = portResponseHeaders(upstream, request, port, row.port)
       if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
         const protocol = upstream.headers.get('Sec-WebSocket-Protocol')
         if (

@@ -1,6 +1,7 @@
 import { Miniflare, Response as RuntimeResponse } from 'miniflare'
 
 import type { HttpFetch } from '../env'
+import type { TurnTokenEndpoint } from '../model-gateway/types'
 import { workspaceLifecycleEndpoint } from '../lifecycle/workspace-transport'
 import type { WorkspaceLifecycleEndpoint } from '../lifecycle/workspace-runtime'
 import { advanceScheduledAlarms } from '../lifecycle/scheduled-alarms.test-support'
@@ -244,7 +245,7 @@ export interface NativeActor {
   api: NativeWorkspaceApi
   rpc: DurableObjectStub<NativeWorkspace>
   fetch(request: Request): Promise<Response>
-  lifecycle: WorkspaceLifecycleEndpoint
+  lifecycle: WorkspaceLifecycleEndpoint & TurnTokenEndpoint
   configure(options: NativeWorkspaceOptions): Promise<void>
   restart(): Promise<void>
   reset(): Promise<void>

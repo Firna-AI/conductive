@@ -30,6 +30,7 @@ const SIMPLE_WARNINGS = {
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
   | { kind: keyof typeof SIMPLE_WARNINGS }
+  | { kind: 'runner_protocol_version_mismatch'; workspaceId: WarningId }
   | {
       kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'
       error: ErrorSummary
@@ -87,6 +88,8 @@ const messages = {
   image_build_failed: 'An image build failed.',
   runner_message_failed:
     'The runner of a workspace closes after a failed message.',
+  runner_protocol_version_mismatch:
+    'The runner closes because its protocol version does not meet the workspace version pin.',
   lifecycle_repair_limited: 'Lifecycle repair limited its checks.',
   lifecycle_repair_pending: 'Lifecycle repair left checks pending.',
 } as const satisfies Record<WorkerWarning['kind'], string>

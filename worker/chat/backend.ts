@@ -9,26 +9,29 @@ import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
+import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
 import {
   authorizeChatBrowser,
   type BrowserAccess,
 } from './browser-authorization'
 import { subscribeBrowser } from './browser-subscription'
-import { afterNumber, chatRoute } from './http-routes'
+import { chatRoute } from './http-routes'
 import { BrowserTabs } from './browser-tabs'
 import { authorizeChatRunner } from './runner-authorization'
 import { WorkspaceTitles } from './workspace-titles'
 import { WorkspaceOperations } from './workspace-operations'
+import { ChatWorkspaceBinding } from './workspace-binding'
 import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
+import { reportTurnEnd } from './turn-end-reports'
 import {
   runWorkspaceOperation,
   type WorkspaceOperation,
 } from './workspace-operation'
-import { browserUpgrade, runnerUpgrade } from './sockets'
+import { browserUpgrade, openBrowser, runnerUpgrade } from './sockets'
 import {
   workspaceErrorReporting,
   type WorkspaceErrorReporting,
@@ -44,13 +47,14 @@ import type {
 export class WorkspaceChat {
   readonly reporting: WorkspaceErrorReporting
   readonly store: ChatStore
+  readonly turnTokens: WorkspaceTurnTokens
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
   private readonly runner: RunnerChannel
   private readonly browsers: BrowserTabs
   private readonly operations: WorkspaceOperations
   private readonly titles: WorkspaceTitles
-  private workspaceId: string | null = null
+  private readonly binding: ChatWorkspaceBinding
 
   async workspaceSummary(workspaceId?: string): Promise<ChatWorkspaceSummary> {
     return this.operations.summary(workspaceId)
@@ -90,9 +94,14 @@ export class WorkspaceChat {
     overrides: Partial<ChatDependencies> = {},
   ) {
     this.env = env
-    this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
+    this.binding = new ChatWorkspaceBinding(
+      overrides.matchesObject ?? (() => true),
+    )
+    this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
     this.reporting = this.dependencies.reporting ?? workspaceErrorReporting(env)
-    this.store = new ChatStore(storage, this.dependencies.now)
+    this.store = new ChatStore(storage, this.dependencies.now, (report) =>
+      reportTurnEnd(this.store, this.dependencies, this.publish, report),
+    )
     this.titles = new WorkspaceTitles(
       env,
       this.store,
@@ -100,14 +109,23 @@ export class WorkspaceChat {
       (events) => this.publish(events),
     )
     this.browsers = new BrowserTabs(this.dependencies)
-    this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
-      this.publish(events),
+    this.turnTokens = new WorkspaceTurnTokens(
+      this,
+      env,
+      (id) => this.operation(id),
+      this.dependencies.randomId,
+    )
+    this.runner = new RunnerChannel(
+      this.store,
+      this.dependencies,
+      (events) => this.publish(events),
+      (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
     )
     this.operations = new WorkspaceOperations({
       env,
       store: this.store,
       dependencies: this.dependencies,
-      workspaceId: () => this.workspaceId,
+      workspaceId: () => this.binding.id,
       bind: (id) => this.bind(id),
       publish: (events) => this.publish(events),
       closeRunner: () => this.runner.close(),
@@ -154,14 +172,12 @@ export class WorkspaceChat {
     }
   }
 
-  async authorizeBrowser(request: Request): Promise<BrowserAccess> {
-    const access = await authorizeChatBrowser(
+  authorizeBrowser(request: Request): Promise<BrowserAccess> {
+    return this.binding.authorizeBrowser(
       request,
       this.env,
       this.dependencies.now(),
     )
-    this.bind(access.workspace.id)
-    return access
   }
 
   async connectRunner(request: Request, peer: RunnerPeer): Promise<void> {
@@ -241,11 +257,8 @@ export class WorkspaceChat {
     )
   }
 
-  async openBrowser(request: Request, peer: BrowserPeer): Promise<() => void> {
-    const access = await this.authorizeBrowser(request)
-    if (access.suffix !== '/events')
-      throw new HttpError(404, 'not_found', 'The page is not available.')
-    return this.subscribe(access, afterNumber(new URL(request.url)), peer)
+  openBrowser(request: Request, peer: BrowserPeer): Promise<() => void> {
+    return openBrowser(this, request, peer)
   }
 
   subscribe(
@@ -277,17 +290,7 @@ export class WorkspaceChat {
   }
 
   private bind(workspaceId: string): void {
-    if (
-      !this.dependencies.matchesObject(workspaceId) ||
-      (this.workspaceId && this.workspaceId !== workspaceId)
-    ) {
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    }
-    this.workspaceId = workspaceId
+    this.binding.bind(workspaceId)
   }
 
   private publish = (events: readonly WorkspaceEventEnvelope[]): void => {

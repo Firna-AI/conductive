@@ -12,6 +12,7 @@ import {
 } from './login-availability'
 import { readAutomaticTitleWorkspace } from './queries'
 import { titleModelBinding } from './title-model'
+import { readRunnerProtocolVersion } from './runner-version-data'
 import type { ChatDependencies } from './types'
 import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
@@ -45,6 +46,7 @@ export function chatDependencies(
     now: Date.now,
     readRunnerAccess: (id, tokenHash) =>
       runnerTokenAllowed(env.DB, id, tokenHash),
+    readRunnerProtocolVersion: (id) => readRunnerProtocolVersion(env.DB, id),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
     randomId: randomToken,
@@ -85,6 +87,7 @@ export function chatDependencies(
     runnerDisconnected: async () => undefined,
     turnDispatching: async () => true,
     turnDispatchFailed: async () => undefined,
+    turnEnded: async () => undefined,
     browserOpened: async () => undefined,
     browserClosed: async () => undefined,
     matchesObject: () => true,

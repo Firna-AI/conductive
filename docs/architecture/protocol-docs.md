@@ -28,6 +28,8 @@ them, and this page lists each protocol doc and what it covers.
 - [Error reporting](../protocol/error-reporting.md): the reports of unexpected
   failures to Better Stack, what each report holds, and what never leaves
   the app.
+- [Model gateway](../protocol/model-gateway.md): the turn token, and the
+  Worker routes that add the agent login to each model request.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar and its
   events.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a

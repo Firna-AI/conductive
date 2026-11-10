@@ -91,7 +91,7 @@ npm run typecheck
 - Native request controls hold the real JSON reader and expose `bodyUsed`.
   The queue observer signals after the production chat queue accepts its next task.
 - `workspace-callbacks.ts` preserves each real callback and its result before it awaits a native test observer.
-  Native observers record stored events, ready, disconnect, dispatch, and file-result calls at that composition point.
+  Native observers record stored events, ready, disconnect, dispatch, `turnEnded`, and file-result calls at that composition point.
   They do not infer callbacks from saved events or lifecycle-controller methods.
 - `login-queries.test-support.ts` captures login queries inside the native object.
   The metadata tests also observe actual native decrypt calls in explicit capture windows.
@@ -131,6 +131,14 @@ npm run typecheck
   `login-queries.test-support.ts` records its D1 login queries.
 - `turn-dispatch.test.ts` checks that a runner disconnect during the
   registration of a turn undoes that registration before any send.
+- [Gateway tests](../model-gateway/README.md) cover stable turn tokens, login changes, Stop, late events, and retry through chat.
+  [runtime.test.ts](../model-gateway/runtime.test.ts) evicts the production SQLite object after a saved gateway Stop.
+  It checks the retained interrupt, one failure with its cause after duplicate runner ends, late changed files, and the Retry message.
+  `integration/gateway-entry.test-support.ts` adds test-only token issuance and a fetch wrapper for the production workspace RPC.
+  The fetch wrapper releases each RPC before eviction.
+- `integration/workspace-lifecycle-recovery.test.ts` checks a gateway login change with the production lifecycle fixture.
+  The workspace stays `working` until the runner end is stored, then becomes `ready` on the same connection without an alarm repair.
+  `integration/workspace-recovery-entry.test-support.ts` adds test-only turn token issuance to that fixture.
 - `device-cleanup.test.ts` checks Mac command cleanup after a refused turn
   end. It also checks that late ends preserve the next turn and its commands.
 - `adapter.test.ts` runs `Workspace` in Miniflare, with SQLite storage,
