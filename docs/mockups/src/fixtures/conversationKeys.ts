@@ -1,7 +1,7 @@
-import { listConversationKeys } from './listConversations'
-import { tableConversationKeys } from './tableConversations'
-
-/** The key of each chat that the mockups draw. */
+/**
+ * The keys of the chat transcripts of `conversations.ts`, one for each
+ * transcript that a mockup state can show.
+ */
 export const conversationKeys = [
   'history',
   'running',
@@ -34,8 +34,13 @@ export const conversationKeys = [
   'other-org-link',
   'steered',
   'mac-in-work',
-  ...tableConversationKeys,
-  ...listConversationKeys,
+  'mention-answer',
+  'table-resources',
+  'table-header',
+  'table-rows',
+  'table-short-row',
+  'table-wide',
+  'tables-in-work',
+  'nested-lists',
+  'nested-lists-in-work',
 ] as const
-
-export type ConversationKey = (typeof conversationKeys)[number]

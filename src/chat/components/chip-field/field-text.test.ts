@@ -37,4 +37,45 @@ describe('the plain text of a field with chips', () => {
       })
     }
   })
+
+  test('keeps each mention of a file chip whole, with a space on each side where the text beside it would join it', () => {
+    const mention = (source: string): FieldPart => ({
+      kind: 'chip',
+      source,
+      mention: true,
+    })
+    const cases: [string, readonly FieldPart[], string][] = [
+      [
+        'a word typed after the chip',
+        [mention('@src/app.ts'), text('now')],
+        '@src/app.ts now',
+      ],
+      [
+        'a word right before the chip',
+        [text('See'), mention('@src/app.ts')],
+        'See @src/app.ts',
+      ],
+      [
+        'a full stop after the chip',
+        [mention('@src/app.ts'), text('.')],
+        '@src/app.ts .',
+      ],
+      [
+        'two chips side by side',
+        [mention('@a.ts'), mention('@b.ts')],
+        '@a.ts @b.ts',
+      ],
+      [
+        'spaces around the chip already',
+        [text('Read '), mention('@"My notes.md"'), text(' now')],
+        'Read @"My notes.md" now',
+      ],
+    ]
+    for (const [name, parts, expected] of cases) {
+      expect({ name, text: joinFieldParts(parts) }).toEqual({
+        name,
+        text: expected,
+      })
+    }
+  })
 })

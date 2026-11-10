@@ -5,7 +5,7 @@ import {
   type OpenWorkspace,
   type WorkspaceRow,
 } from '../components/workspaces/sections'
-import type { ConversationKey } from '../fixtures/conversationKeys'
+import type { ConversationKey } from '../fixtures/conversations'
 import { savedCarts } from '../fixtures/workspaces'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -30,7 +30,9 @@ export function createdWorkspaces(
   state: WorkspaceState,
 ): readonly OpenWorkspace[] {
   const later =
-    state.composer === 'workspace-link' || linkChats.has(state.conversation)
+    state.composer === 'workspace-link' ||
+    state.composer === 'workspace-link-pointer' ||
+    linkChats.has(state.conversation)
   return later && !isNew(state)
     ? [{ workspace: savedCarts, status: 'working' }]
     : []

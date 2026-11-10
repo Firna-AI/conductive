@@ -116,6 +116,13 @@ export const workspaceStateSchema = {
      * or a file over the size limit can stay out of the message.
      * `workspace-link` holds a message with a pasted link to another
      * workspace of the org, which shows as a chip.
+     *
+     * The `mention-` states open the list of `@`: with a query, without
+     * one, with no match, while the tree loads, and with no tree.
+     * `file-chips` holds a file chip and a folder chip. The `-pointer`
+     * states draw the pointer over the icon of the first chip or the first
+     * attached file, where a × takes the place of the icon. A phone has no
+     * pointer, so it shows the × at the end of each chip instead.
      */
     composer: {
       enum: [
@@ -130,6 +137,15 @@ export const workspaceStateSchema = {
         'no-starter-login',
         'not-shared',
         'workspace-link',
+        'mention-query',
+        'mention-start',
+        'mention-none',
+        'mention-loading',
+        'mention-unavailable',
+        'file-chips',
+        'file-chip-pointer',
+        'workspace-link-pointer',
+        'attachment-pointer',
       ],
     },
     /** The user drags the handle of the right column to widen it. */

@@ -6,7 +6,6 @@ import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
-import type { ConversationKey } from './conversationKeys'
 import { changedFiles, type ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
 import {
@@ -26,6 +25,8 @@ import {
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
+import { conversationKeys } from './conversationKeys'
+import { fileMentionConversations } from './fileMentions'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -119,6 +120,8 @@ export type ChatItem =
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
+
+export type ConversationKey = (typeof conversationKeys)[number]
 
 function tool(
   id: string,
@@ -254,6 +257,7 @@ export const conversations: Readonly<
   ...linkedConversations,
   ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
   ...workspaceLinkConversations(history),
+  ...fileMentionConversations(history),
   ...workConversations({
     start: autocompleteStart,
     tests: autocompleteTests,

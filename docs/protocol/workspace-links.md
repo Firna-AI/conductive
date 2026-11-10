@@ -121,8 +121,12 @@ number names a dated record, as
   only its text.
 - A chip in the field is one unit of the text. Backspace and Delete remove
   it whole, and the arrow keys step over it.
-- A press on a chip in the field places the caret, as in other text. It
-  opens nothing.
+- A chip in the field shows its state mark in a cell at its start. A
+  pointer over the cell turns the mark into a × that removes the chip, as
+  [Remove a chip of the composer](file-mentions.md#remove-a-chip-of-the-composer)
+  says (decision 215).
+- A press on the rest of a chip in the field places the caret, as in other
+  text. It opens nothing.
 - Typing, input methods, undo, and the touch keyboard of a phone work
   around a chip as in a plain text field.
 - [The send key](create-a-workspace.md#the-send-key) applies to the field,

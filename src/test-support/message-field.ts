@@ -1,5 +1,5 @@
 import { act } from 'react'
-import { getNearestEditorFromDOMNode } from 'lexical'
+import { $getRoot, getNearestEditorFromDOMNode } from 'lexical'
 import { $fieldText } from '../chat/components/chip-field/field-content'
 
 // Finds, types into, pastes into, and reads the message field of a composer,
@@ -43,6 +43,27 @@ export function typeMessage(field: HTMLElement, text: string): void {
   act(() => {
     field.focus()
     field.ownerDocument.getSelection()?.selectAllChildren(field)
+    field.dispatchEvent(
+      new InputEvent('input', {
+        bubbles: true,
+        data: text,
+        inputType: 'insertText',
+      }),
+    )
+    commit(field)
+  })
+}
+
+/**
+ * Types text at the end of the field, as a person does after a click at the
+ * end of a draft. The field takes the focus, and the text joins the content.
+ */
+export function typeAtEnd(field: HTMLElement, text: string): void {
+  act(() => {
+    field.focus()
+    getNearestEditorFromDOMNode(field)?.update(() => $getRoot().selectEnd(), {
+      discrete: true,
+    })
     field.dispatchEvent(
       new InputEvent('input', {
         bubbles: true,

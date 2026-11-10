@@ -62,8 +62,8 @@ describe('the attached files', () => {
         'Remove sketch.png',
         'Remove notes.txt',
         'Remove overlap.png',
-        'Upload console.log again',
         'Remove console.log',
+        'Upload console.log again',
       ],
       progress: [
         { value: '67', busy: null },

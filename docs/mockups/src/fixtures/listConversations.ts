@@ -124,17 +124,8 @@ const planInWork: readonly ChatItem[] = [
   { kind: 'turn-end', id: 'turn-end', duration: '1m 48s', files: [] },
 ]
 
-/** The keys of the chats of the list pages. */
-export const listConversationKeys = [
-  'nested-lists',
-  'nested-lists-in-work',
-] as const
-
 /** The chats of the list pages: replies with lists under their items. */
 export const listConversations = {
   'nested-lists': choicesTurn,
   'nested-lists-in-work': planInWork,
-} as const satisfies Record<
-  (typeof listConversationKeys)[number],
-  readonly ChatItem[]
->
+} as const satisfies Record<string, readonly ChatItem[]>
