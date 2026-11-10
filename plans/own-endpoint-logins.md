@@ -654,6 +654,48 @@ takes over the question of decision 6. The options check of 10 November
 - **Recommendation:** G. It was B before the options check. G uses the endpoint to learn which models work, keeps the picker as short as it is today, keeps its marks current with no Refresh, never blocks a model that a list omits, and makes a failed turn name the missing ID for every member. C or I can follow later, if users want the endpoint's other models.
 - **Action:** ask the user, because Cal asked for this choice, and G changes decision 3 A.
 
+### 11. Choose what a full phone bar keeps of the host
+
+Added on 10 November 2026 from the Milestone 1b mockups. The options check
+of 10 November 2026 added options D, E, F, and G, and it changed the
+recommendation from C to D.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** the `.endpoint` rule in `docs/mockups/src/components/chat/SessionLogin.module.css`, which the app imports, and the label rule of decision 5 C in `docs/protocol/messages-and-attachments.md`.
+- **Terms:**
+  - **Composer bar:** the row under the message box, with attach, the model picker, the login label, Stop during a turn, and Send.
+- **Background:**
+  - Decision 5 C names the starter's host in the composer bar, and the words before the host shrink first, so that the host stays visible.
+  - The label keeps the host at full width while the bar has room for it. A phone then shows "C… proxy.example.com".
+  - During a turn, the phone bar also holds Stop. The label then has no room for the host, and it shows "proxy.exam…".
+  - Main's code lets the model picker and the label give up width together. Only code comments state that rule.
+  - A long host is cut also in an idle phone bar. A full bar also removes the starter's name, which the label rule asks for.
+- **Problem:** In a full phone bar, the end of the host is lost, and the end is the part that names the server.
+- **Impact if no action:** A member who steers a turn on a phone sees only the start of the host. A host such as `api.anthropic.com.example.net` can then look like Anthropic.
+- **Root question:** When the bar cannot show the whole host, how does the sender still see which server gets the message, so that no cut host reads as another server?
+- **Options:**
+  - **A.** Keep it as built: after the words, the picker and the host give way together, and the host loses its end. Effort: Small.
+  - **B.** The host always keeps its full width. Cost: the picker then shows no model and no chevron during a turn on a phone, and it stays a tap target about 21 px wide. Effort: Small.
+  - **C.** As A, but the host loses its start, such as "…ample.com", so that its end stays. Cost: it needs right-to-left text direction around an isolated host, and Safari and Firefox need a check. A host such as `notopenai.com` can read as "…openai.com", and a port stays, such as "…le.com:8443". Effort: Small.
+  - **D.** Keep whole the part of the host that its owner registered, such as `example.com` in `proxy.example.com`. The Worker finds that part with the public suffix list, and the session record carries it with the host. Only the part before it gives way, from its start, such as "…example.com". An IP address stays whole. Cost: a new dependency, one more record field and protocol sentence, and a long registered part still squeezes the picker. Effort: Medium.
+  - **E.** As D, but with no list. The label removes whole labels from the start of the host and keeps the last two whole. Cost: a host under a shared ending, such as `name.workers.dev`, shows only "…workers.dev", and the label needs code that measures. Effort: Medium.
+  - **F.** As B, and on a phone Stop shows only its icon, with "Stop" as its spoken name. That frees about 30 px for the picker. Cost: it changes main's Stop button on a phone, and a host over about 20 characters still squeezes the picker. Effort: Small.
+  - **G.** As C, D, or E, and a press on the label opens a small panel with the whole host and one sentence about where messages go. Cost: the label becomes a control in a full bar, and the mockups need an open state. Effort: Medium.
+- **Left out:**
+  - A line under the message box, because the protocol rejects a line under the box, and decision 5 did not choose G.
+  - A minimum width for the picker alone, because it moves room from the host to the picker, so it fails the goal as A or C does.
+  - A tooltip, because a phone has no hover. A press comes back as G.
+  - A cut in the middle, such as "proxy.ex…le.com", because a host such as `api.anthropic.com.fakeanthropic.com` can still read as "api.anth…pic.com".
+  - The registered part alone, because decision 5 C names the host, and D shows that part in a full bar.
+  - A length limit for the host at the save, because a full phone bar holds only about 12 to 20 characters, which refuses common hosts that decision 9 E accepts.
+- **Wider fix:** D. It keeps the part that names the owner whole for every host shape, so a trick at either end does not work.
+- **Previous examples:** Main's `app/composer/login` page already shows "Opus …" and "Cal's…" during a turn on a phone.
+- **Related:** Decision 5 C, whose rule says that the host stays visible.
+- **Recommendation:** D. It was C before the options check. C only moves the cut, so a host can still read as another server, while D never cuts the part that names the owner. A is the smallest change.
+- **Action:** ask the user, because each option breaks a part of decision 5 C or of main's picker in a full bar, and no option is clearly best.
+
 ## Design
 
 ### Facts from the checks
@@ -790,7 +832,9 @@ The mockups show the answers to the questions that Milestone 1 raised.
       app reads the same file.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [ ] Settle how the label shows the host in a full phone bar, as
-      decision 11 says.
+      decision 11 says. Add a state with a running turn to
+      `app/composer/own-endpoint`, and correct the texts that say the host
+      always stays visible on a phone.
 
 Screenshots: `.context/own-endpoint-logins/m1b/screens/`.
 
