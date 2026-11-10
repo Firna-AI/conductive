@@ -22,9 +22,9 @@ export const accountCodexToken = defineScreen({
       slug: 'not-usable',
       title: 'ChatGPT sign-in stopped working',
       description:
-        'OpenAI did not renew the ChatGPT sign-in, so the app can no longer use it. The Codex row says Signed out in place of Connected, and keeps ChatGPT plan and Remove. Under the row comes the cause from the field unusableCause of the login status, then Sign in again, which opens the ChatGPT sign-in form of app/account/connect-codex/chatgpt. The share switch keeps its value.',
+        'OpenAI refused the ChatGPT sign-in or its renewal, so the app can no longer use it. The Codex row says Signed out in place of Connected, and keeps ChatGPT plan and Remove. Under the row comes the cause from the field unusableCause of the login status, then Sign in again, which opens the ChatGPT sign-in form of app/account/connect-codex/chatgpt. The share switch keeps its value.',
       rationale:
-        'The app renews the sign-in alone, and a refused renewal makes the login not usable, with a cause. The row says so at once, so that the user does not learn it from a failed turn. Sign in again is the way back, and Remove stays for another login. The state has an icon and a word, so it never depends on colour alone.',
+        'The app renews the sign-in alone. A refused renewal, or a refusal after a renewal, makes the login not usable, with a cause. The row says so at once, so that the user does not learn it from a failed turn. Sign in again is the way back, and Remove stays for another login. The state has an icon and a word, so it never depends on colour alone.',
       props: { codexUse: 'not-usable' },
     },
   ],

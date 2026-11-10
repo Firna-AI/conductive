@@ -200,6 +200,16 @@ with the send key that every composer shares, and the waitlist.
 - One rule, `loginUsable` in `api/read-core.ts`, says whether turns can
   run on a login. A connected login with an `unusableCause` cannot. The
   composers and Get started count such a login as missing.
+- Each open of the agent list, on the account and in Get started, reads
+  the logins again through `AccountModel.refreshLogins`. So a login that
+  the Worker stopped after the app opened shows Signed out. The Worker
+  gives the logins only in `GET /api/account`, and the read takes only
+  the logins of that answer.
+  `AgentLogins` in `agent-logins.ts` counts each local change of a login:
+  a save, a remove, a connected sign-in, and a share change, at its start
+  and when its reply shows. A read shows the login of an agent only while
+  that login had no change during the read. An open shares a read that
+  runs already, and a failed read keeps what shows.
 - Timers, the focus, the visibility, the input, and the keys of the page
   come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
   `onKey`), so that no unit test runs a real timer or needs a browser

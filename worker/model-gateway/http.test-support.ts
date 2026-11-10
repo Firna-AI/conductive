@@ -11,6 +11,8 @@ import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { requestBodyEntry } from '../http/request-body'
 import type { HttpFetch } from '../env'
 import { freshCodexLogin } from '../codex-auth/renew'
+import { failCodexAccessToken } from '../codex-auth/failure'
+import { waitForCodexRotation } from '../codex-auth/rotation'
 import { FakeAnthropic } from '../test-support/fake-anthropic'
 import { FakeOpenAI } from '../test-support/fake-openai'
 import type { TestHarness } from '../test-support/harness'
@@ -35,6 +37,10 @@ export async function gatewayHttp(
   kind: 'api-key' | 'token' = 'api-key',
   protocolVersion: RunnerProtocolVersion = 1,
   upstream?: HttpFetch,
+  recovery: {
+    wait?: (milliseconds: number) => Promise<void>
+    beforeRenew?: () => Promise<void>
+  } = {},
 ) {
   const turn = await runningGatewayTurn(harness, choice, {
     kind,
@@ -48,9 +54,9 @@ export async function gatewayHttp(
   const workspaceLookups: string[] = []
   const workspaceCalls: string[] = []
   const endpoint = {
-    checkTurnToken(token: string) {
+    checkTurnToken(token: string, claim?: true | 'complete') {
       checks.push(WORKSPACE_ID)
-      return fixture.chat.turnTokens.check(WORKSPACE_ID, token)
+      return fixture.chat.turnTokens.check(WORKSPACE_ID, token, claim)
     },
   }
   const fetch = requestBodyEntry(async (request) => {
@@ -70,12 +76,34 @@ export async function gatewayHttp(
         workspaceLookups.push(id)
         return gatewayWorkspaceAllowed(fixture.env.DB, id)
       },
-      codexLogin: (userId, failed) =>
-        freshCodexLogin(
+      codexLogin: async (userId, failed) => {
+        if (failed) await recovery.beforeRenew?.()
+        return freshCodexLogin(
           fixture.env,
           userId,
-          { now: clock.now, fetch: upstream ?? openai.fetch },
+          {
+            now: clock.now,
+            fetch: upstream ?? openai.fetch,
+            wait:
+              recovery.wait ?? ((milliseconds) => clock.advance(milliseconds)),
+          },
           failed,
+        )
+      },
+      codexLoginFailed: (userId, failed) =>
+        failCodexAccessToken(fixture.env, userId, failed),
+      codexWaitForRotation: (userId, failed, pending) =>
+        waitForCodexRotation(
+          fixture.env,
+          userId,
+          failed,
+          {
+            now: clock.now,
+            fetch: upstream ?? openai.fetch,
+            wait:
+              recovery.wait ?? ((milliseconds) => clock.advance(milliseconds)),
+          },
+          pending,
         ),
       workspace(id) {
         workspaceCalls.push(id)

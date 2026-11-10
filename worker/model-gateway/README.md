@@ -107,13 +107,34 @@ Failed or invalid account discovery sends no model request.
 The same request lease covers discovery, upload, and the streamed answer.
 The Worker reads a fresh ChatGPT login before forwarding a request.
 It renews before expiry through [Codex authentication](../codex-auth/README.md).
-An OpenAI 401 triggers one renewal and one replay of that request.
-The replay uses the stored rotated credential and the same body bytes.
-The request keeps one in-memory replay branch until that first answer.
-A failed renewal or another 401 returns `agent_login_unavailable` with HTTP 403.
+Each turn can claim one renewal after a 401, across metadata and model requests.
+Its workspace object saves the used and pending flags before renewal,
+in the same queue as token checks. Completion clears only the pending flag.
+Concurrent requests, Codex resends, and object eviction keep the same bound.
+The winning renewal finishes before it clears pending, also if its request disconnects.
+Expiry-driven renewal before a request remains unchanged.
+The three body-less metadata GET routes can replay once with the renewed login.
+`POST /backend-api/codex/responses` never clones its upload and makes only one upstream call.
+After its 401, it cancels the answer, renews the login, drains the remaining
+upload through validation, and returns `model_upstream_unavailable` with HTTP 502.
+Codex then resends the model request and reads the renewed login.
+A request that loses the turn's claim observes the stored login without
+starting another renewal. A newer login permits one metadata replay or the
+model POST's retryable 502. The observer waits up to 5 seconds with the injected
+clock while either the turn recovery or a D1 refresh claim remains pending.
+The turn flag covers the window before the winner takes its D1 claim.
+A pending recovery at the deadline returns retryable 502 and saves no cause.
+A failed renewal or a settled, unchanged login after recovery returns
+`agent_login_unavailable` with HTTP 403.
+Before the terminal reply, the Worker saves the reconnect cause only while
+the stored access token and ciphertext still match and no D1 refresh claim exists.
+A lost conditional write returns retryable 502.
+This protects both a newer sign-in and an in-flight token rotation.
 Codex then cannot start its own placeholder refresh through 401 recovery.
 Both used access tokens, and the other stored tokens, redact from allowed
 response headers and error bodies.
+The gateway's own `turn_token_invalid` also returns HTTP 403 on the four
+ChatGPT paths, including refusals before turn lookup. Other login routes keep HTTP 401.
 
 The upload reads through the entry's 100,000,000-byte budget.
 The Codex scanner retains no body, key, or value text between chunks.
@@ -148,7 +169,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [workspace-access.ts](workspace-access.ts): `gatewayWorkspaceAllowed` checks the workspace and resource predicates in D1 before object access.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
 - [codex-upstream.ts](codex-upstream.ts): ChatGPT metadata forwarding and model routing in the Worker.
-- [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, and the redaction set for the request.
+- [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, observation of concurrent rotation, and the redaction set for the request.
 - [codex-routing.ts](codex-routing.ts): account selection, backend validation, and the routing-free account reply.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
   `hasClaudeMarkers` checks the markers of the `claude` program.
@@ -173,7 +194,8 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   HMAC derives the credential with a dedicated context and the Worker encryption key.
   The signed input includes the prefix.
   Web Crypto verifies the signature in constant time.
-  The turn keeps only a random nonce and the login version for this derivation.
+  The turn keeps a random nonce and the login version for this derivation.
+  Separate booleans record whether its Codex 401 recovery was used and remains pending.
 - [login.ts](login.ts): `gatewayLogin` checks starter access and reads the login row with its `updated_at` version.
   `decryptGatewayLogin` releases the login only after the turn check accepts that version.
 - [types.ts](types.ts): `TurnTokenCheck` and `TurnTokenEndpoint` define the trusted check result and RPC method.
@@ -191,7 +213,12 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-token.test.ts](codex-token.test.ts): ChatGPT metadata, Worker routing, header filtering, route refusals, and failed discovery.
-- [codex-renew.test.ts](codex-renew.test.ts): one 401 replay, rotated-token redaction, and terminal login failure.
+- [codex-renew.test.ts](codex-renew.test.ts): body-less 401 replay, rotated-token redaction, single model forwarding with a retryable 502, and the per-turn renewal bound.
+- [codex-recovery.test.ts](codex-recovery.test.ts): one recovery claim and its pending state across concurrent calls and eviction.
+- [codex-concurrent.test.ts](codex-concurrent.test.ts): concurrent 401s before and after the D1 claim, safe failure writes during renewal, and bounded observation with an injected clock.
+- [codex-recovery-cancel.test.ts](codex-recovery-cancel.test.ts): a disconnected recovery owner keeps its pending state until rotation finishes.
+- [codex-terminal.test.ts](codex-terminal.test.ts): saved Account failure causes and protection for a newer sign-in.
+- [codex-refusal.test.ts](codex-refusal.test.ts): ChatGPT token refusals are 403 while API-key refusals stay 401.
 - [codex-stream.test.ts](codex-stream.test.ts): a 100,000,000-byte object, the shared 413, and refusal after an early answer.
 - [claude-client.test.ts](claude-client.test.ts): missing and partial Claude markers, refused before workspace access, a turn check, or an upstream call.
 - [claude-profile.test.ts](claude-profile.test.ts): bearer profile requests for both Claude login kinds, the upstream login header, the `anthropic-beta` result, unchanged body bytes, and a changed prefix.

@@ -6,6 +6,7 @@ import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { routeModelGateway } from './route'
 import { codexTokenPaths } from './paths'
 import { deriveTurnToken } from './token'
+import type { TurnTokenCheck } from './types'
 
 export const accountPath = codexTokenPaths.accounts
 export const modelPath = codexTokenPaths.responses
@@ -42,6 +43,10 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
   const bodies: string[] = []
   const clock = new ManualChatClock(0)
   let active = true
+  let workspaceAllowed = true
+  let refusal: Extract<TurnTokenCheck, { ok: false }> | null = null
+  let recoveryUsed = false
+  let recoveryPending = false
   let credentials: CodexTokens = {
     accessToken: 'real-only-in-worker',
     refreshToken: 'refresh-only-in-worker',
@@ -50,6 +55,7 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
     expiresAt: 100_000,
   }
   const renewals: string[] = []
+  const failures: string[] = []
   let reply: HttpFetch = async (request) => {
     if (new URL(request.url).pathname === accountPath)
       return Response.json(accounts())
@@ -76,7 +82,15 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
             return reply(upstream)
           },
         },
-        workspaceAllowed: async () => true,
+        workspaceAllowed: async () => workspaceAllowed,
+        codexLoginFailed: async (_userId, failed) => {
+          failures.push(failed)
+          return true
+        },
+        codexWaitForRotation: async (_userId, failed) =>
+          credentials.accessToken !== failed
+            ? { state: 'rotated', tokens: credentials }
+            : { state: recoveryPending ? 'pending' : 'unchanged' },
         codexLogin: async (_userId, failed) => {
           if (failed) {
             renewals.push(failed)
@@ -88,10 +102,22 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
           return credentials
         },
         workspace: () => ({
-          checkTurnToken: async () =>
-            active
-              ? { ok: true, login, loginOwnerId: 'owner' }
-              : { ok: false, reason: 'turn_not_active' },
+          checkTurnToken: async (_token, claim) => {
+            if (refusal) return refusal
+            const codexRecoveryClaimed = claim === true && !recoveryUsed
+            if (codexRecoveryClaimed) recoveryUsed = true
+            if (codexRecoveryClaimed) recoveryPending = true
+            if (claim === 'complete') recoveryPending = false
+            return active
+              ? {
+                  ok: true,
+                  login,
+                  loginOwnerId: 'owner',
+                  codexRecoveryClaimed,
+                  codexRecoveryPending: recoveryPending,
+                }
+              : { ok: false, reason: 'turn_not_active' }
+          },
         }),
       },
     )
@@ -101,8 +127,15 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
     requests,
     bodies,
     renewals,
+    failures,
     clock,
     request,
+    forbidWorkspace: () => {
+      workspaceAllowed = false
+    },
+    refuseToken: () => {
+      refusal = { ok: false, reason: 'turn_token_invalid' }
+    },
     stop: () => {
       active = false
     },

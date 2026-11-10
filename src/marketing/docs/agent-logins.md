@@ -133,6 +133,13 @@ Removing it from Conductive does not revoke a copy held elsewhere.
 **Connected** confirms that Conductive saved the login.
 The first agent request can still report an authentication error.
 
+Conductive shows **Signed out** in place of **Connected** when OpenAI no longer accepts your ChatGPT sign-in.
+This also applies after Conductive renewed it.
+A turn on that sign-in stops with a login error.
+The row shows the cause, such as **ChatGPT access expired.**
+Select **Sign in again**.
+Then complete the [ChatGPT sign-in steps](/docs/agent-logins#use-a-chatgpt-plan) again.
+
 Check the error from the provider.
 Make sure you connected the account you want to use.
 Note your choice for **Let other members use this login** before removing the login.

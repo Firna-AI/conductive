@@ -16,8 +16,10 @@ import {
 import type { Agent, AgentChoice } from '../shared/agents'
 import { API_PATHS } from '../shared/api'
 import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
+import { AgentLogins } from './agent-logins'
 import { ignore, nested, record } from './api/parse'
 import {
+  readAccount,
   readChoice,
   readCodexDevicePoll,
   readCodexDeviceStart,
@@ -53,12 +55,10 @@ export class AccountModel {
    * the code with its uses, and whether sign-ups are paused.
    */
   readonly waitlist = new Store<Loadable<WaitlistStateResponse>>(loading)
-  /**
-   * The number of the last change of each agent login. A share reply shows
-   * only while no later change of its login came first, so a removed login
-   * stays removed.
-   */
-  private readonly loginChanges = new Map<Agent, number>()
+  /** The logins of `account`, in the order of their changes. */
+  private readonly logins = new AgentLogins(this.account)
+  /** The read of the logins while it runs, which a new open shares. */
+  private loginRead: Promise<void> | null = null
   private readonly services: AppServices
   private readonly app: AppModel
   private readonly installationReads: Refresher<GitHubInstallationsResponse>
@@ -127,20 +127,6 @@ export class AccountModel {
     )
   }
 
-  private putLogin(login: AgentLoginStatus): void {
-    const account = this.account.get()
-    if (!account) return
-    const others = account.agentLogins.filter(
-      (item) => item.agent !== login.agent,
-    )
-    this.account.set({
-      ...account,
-      agentLogins: [...others, login].sort((a, b) =>
-        a.agent.localeCompare(b.agent),
-      ),
-    })
-  }
-
   /**
    * The API refused an operator request, so the person is no longer an
    * operator. The rail and the org switcher drop Operator, and the operator
@@ -151,19 +137,35 @@ export class AccountModel {
     if (account?.operator) this.account.set({ ...account, operator: false })
   }
 
-  private changeLogin(agent: Agent): number {
-    const change = (this.loginChanges.get(agent) ?? 0) + 1
-    this.loginChanges.set(agent, change)
-    return change
+  /**
+   * Reads the agent logins again, as each open of the agent list does, so
+   * that a login that the Worker stopped after the app opened shows Signed
+   * out. Only the read of the whole account gives the logins, and only its
+   * logins show. A read that runs already counts for this call. A failed
+   * read keeps what shows.
+   */
+  refreshLogins(): Promise<void> {
+    this.loginRead ??= this.readLogins().finally(() => {
+      this.loginRead = null
+    })
+    return this.loginRead
+  }
+
+  /**
+   * The login of an agent in the answer shows only while no change of that
+   * login came during the read, so that a read never takes back a save, a
+   * remove, a share change, or a sign-in.
+   */
+  private async readLogins(): Promise<void> {
+    const show = this.logins.mark()
+    const account = await this.services.api
+      .get(ACCOUNT_PATHS.account, readAccount)
+      .catch(() => null)
+    if (account) show(account.agentLogins)
   }
 
   login(agent: Agent): AgentLoginStatus {
-    return (
-      this.account.get()?.agentLogins.find((item) => item.agent === agent) ?? {
-        agent,
-        connected: false,
-      }
-    )
+    return this.logins.get(agent)
   }
 
   async saveLogin(request: SaveAgentLoginRequest): Promise<void> {
@@ -173,8 +175,7 @@ export class AccountModel {
       request,
       readLogin,
     )
-    this.changeLogin(request.agent)
-    this.putLogin(saved)
+    this.logins.put(saved)
   }
 
   /**
@@ -203,10 +204,7 @@ export class AccountModel {
       {},
       readCodexDevicePoll,
     )
-    if (answer.state === 'connected') {
-      this.changeLogin(answer.login.agent)
-      this.putLogin(answer.login)
-    }
+    if (answer.state === 'connected') this.logins.put(answer.login)
     return answer
   }
 
@@ -215,10 +213,11 @@ export class AccountModel {
    * run on a login of the user. The reply holds the saved status of the
    * login, which can say that the login is gone. A save, a remove, or
    * another share change that comes first makes the reply old, so it does
-   * not show.
+   * not show. A reply that shows is a change too, so that a read of the
+   * logins that ran meanwhile does not take it back.
    */
   async setNoReuse(agent: Agent, noReuse: boolean): Promise<void> {
-    const change = this.changeLogin(agent)
+    const change = this.logins.change(agent)
     const request: UpdateAgentLoginRequest = { noReuse }
     const saved: UpdateAgentLoginResponse = await this.services.api.send(
       'PATCH',
@@ -226,13 +225,12 @@ export class AccountModel {
       request,
       readLogin,
     )
-    if (this.loginChanges.get(agent) === change) this.putLogin(saved)
+    this.logins.putReply(change, saved)
   }
 
   async removeLogin(agent: Agent): Promise<void> {
     await this.services.api.send('DELETE', agentLoginPath(agent), {}, ignore)
-    this.changeLogin(agent)
-    this.putLogin({ agent, connected: false })
+    this.logins.put({ agent, connected: false })
   }
 
   async setDefaultChoice(choice: AgentChoice): Promise<void> {

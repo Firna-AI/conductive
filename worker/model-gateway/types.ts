@@ -1,7 +1,13 @@
 import type { RunnerLogin } from '../../src/shared/runner'
 
 export type TurnTokenCheck =
-  | { ok: true; login: RunnerLogin; loginOwnerId?: string }
+  | {
+      ok: true
+      login: RunnerLogin
+      loginOwnerId?: string
+      codexRecoveryClaimed?: boolean
+      codexRecoveryPending?: boolean
+    }
   | {
       ok: false
       reason:
@@ -12,5 +18,8 @@ export type TurnTokenCheck =
     }
 
 export interface TurnTokenEndpoint {
-  checkTurnToken(token: string): Promise<TurnTokenCheck>
+  checkTurnToken(
+    token: string,
+    claimCodexRecovery?: true | 'complete',
+  ): Promise<TurnTokenCheck>
 }

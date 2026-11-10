@@ -1,5 +1,4 @@
 import type { RunnerLogin } from '../../src/shared/runner'
-import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import type { HttpFetch } from '../env'
 import { codexRouting } from './codex-routing'
 import type { CodexGatewayAuth } from './codex-auth'
@@ -34,26 +33,25 @@ export async function codexTokenUpstream(
       (async () => {
         headers.set('authorization', `Bearer ${auth.current.accessToken}`)
         headers.set('chatgpt-account-id', auth.current.accountId)
-        const first = new Request(url, init)
-        const retry = first.clone()
-        let response = lifetime.received(await fetch(first))
+        let response = lifetime.received(await fetch(new Request(url, init)))
         if (response.status === 401) {
           await response.body?.cancel()
           await lifetime.wait(auth.renew(auth.current.accessToken))
-          retry.headers.set(
-            'authorization',
-            `Bearer ${auth.current.accessToken}`,
-          )
-          retry.headers.set('chatgpt-account-id', auth.current.accountId)
-          response = lifetime.received(await fetch(retry))
-          if (response.status === 401) {
-            await response.body?.cancel()
+          if (method === 'POST') {
+            await lifetime.wait(lifetime.upload.finish())
             throw new GatewayRequestError(
-              'agent_login_unavailable',
-              chatGptSignInCopy.causes.notRenewed,
+              'model_upstream_unavailable',
+              'The model request must be sent again.',
             )
           }
-        } else if (retry.body) void retry.body.cancel().catch(() => undefined)
+          headers.set('authorization', `Bearer ${auth.current.accessToken}`)
+          headers.set('chatgpt-account-id', auth.current.accountId)
+          response = lifetime.received(await fetch(new Request(url, init)))
+          if (response.status === 401) {
+            await response.body?.cancel()
+            return lifetime.wait(auth.reject())
+          }
+        }
         return response
       })(),
     )

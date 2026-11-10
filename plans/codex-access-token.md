@@ -1,6 +1,6 @@
 # Codex access tokens
 
-Status: Active. [PR #177](https://github.com/Firna-AI/remote-code/pull/177) is open, as a draft stacked on `conductor/model-gateway-worker-model-proxy-decision-120`. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #177](https://github.com/Firna-AI/remote-code/pull/177) is open, as a draft against `main`. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Members who pay for ChatGPT cannot run Codex on their plan in Conductive.
 Codex takes only an OpenAI API key today. This change adds a Codex access
@@ -396,6 +396,38 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
 - The protocol doc adds no separate line that a shared Codex access token
   stays a risk. The reason line of the share defaults and the risk of a
   personal token already say it.
+- The calls of 10 November 2026 for the fixes of review round 1. They
+  replace the retry of the call for decision 175 A, which retried every
+  request after an OpenAI 401:
+  - The three ChatGPT read requests without a body renew once and retry
+    once after a 401. `POST /backend-api/codex/responses` goes out once,
+    with no copy of its upload. After its 401, the gateway renews and
+    answers the retryable 502 `model_upstream_unavailable`, so Codex
+    sends the request again. Reason: a copy of an upload of up to
+    100,000,000 bytes can pass the 128 MB memory limit of the Worker, and
+    the pinned Codex 0.167.0 sends the request again after the 502.
+  - Each turn gets one forced renewal after a 401, across all its
+    requests. The Durable Object of the workspace saves this in the turn,
+    with a flag while the renewal runs. A request that loses the claim
+    uses the login that the winner saved. It waits up to 5 seconds for a
+    renewal that still runs, and then answers the retryable 502. Reason:
+    the resends of Codex must not renew without end, and two requests
+    that get a 401 together must not sign out a login that a renewal
+    saves.
+  - A 401 after the renewal of the turn is terminal. The gateway saves the
+    cause `ChatGPT access expired.` on the login only while the login
+    still holds the access token that failed, and only while no renewal
+    runs. Reason: the account must show Sign in again, and a newer
+    sign-in or a renewal in flight must stay usable.
+  - On the four ChatGPT routes of Codex, a turn token that is not valid
+    gets HTTP 403, not 401. Reason: Codex answers a 401 on these routes
+    with a renewal of its placeholder refresh token.
+  - Each open of the agent list reads the logins again with
+    `GET /api/account`. A login of the answer shows only when its login
+    had no local change during the read, and a share reply that shows
+    counts as a change. Reason: a login that the Worker stopped after the
+    app opened must show Signed out, and a read must not take back a
+    local change.
 
 Risks:
 

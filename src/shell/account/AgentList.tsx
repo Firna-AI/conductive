@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import styles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
@@ -107,7 +107,8 @@ function AgentRow(props: {
  * A login that the app can no longer use says Signed out in place of
  * Connected, with its cause and Sign in again under its row. Sign in again,
  * and `initial`, open the form of its agent with the kind of the login, in
- * the place of the cause.
+ * the place of the cause. Each open of the list reads the logins again, so
+ * that a login that stopped after the app opened shows Signed out.
  */
 export function AgentList(props: {
   initial: Agent | null
@@ -120,6 +121,9 @@ export function AgentList(props: {
 }) {
   const app = useApp()
   const account = useStore(app.account.account)
+  useEffect(() => {
+    void app.account.refreshLogins()
+  }, [app])
   const [open, setOpen] = useState<Agent | null>(props.initial)
   const ids = useId()
   const close = () => setOpen(null)

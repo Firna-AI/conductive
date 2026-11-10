@@ -2,11 +2,16 @@ import type { AppDependencies } from '../env'
 import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import { scheduleConnectionCheck } from '../security/connection-access'
 import type { CodexTokens } from '../codex-auth/tokens'
+import type { CodexRotation } from '../codex-auth/rotation'
 import { codexGatewayAuth } from './codex-auth'
 import { codexTokenUpstream } from './codex-upstream'
-import { gatewayError, GatewayRequestError } from './errors'
+import {
+  gatewayError,
+  GatewayRequestError,
+  type GatewayRefusal,
+} from './errors'
 import { downstreamHeaders, hasClaudeMarkers, upstreamHeaders } from './headers'
-import { allowedModelRoute, gatewayPath } from './paths'
+import { allowedModelRoute, codexTokenPaths, gatewayPath } from './paths'
 import { redactErrorBody } from './redact'
 import { GatewayRequestLifetime } from './request-lifetime'
 import { gatewayStream } from './stream'
@@ -18,6 +23,12 @@ export interface GatewayRuntime {
   workspaceAllowed(id: string): Promise<boolean>
   workspace(id: string): TurnTokenEndpoint
   codexLogin?(userId: string, failedAccessToken?: string): Promise<CodexTokens>
+  codexLoginFailed?(userId: string, failedAccessToken: string): Promise<boolean>
+  codexWaitForRotation?(
+    userId: string,
+    failedAccessToken: string,
+    recoveryPending: () => Promise<boolean>,
+  ): Promise<CodexRotation>
 }
 
 export async function routeModelGateway(
@@ -28,24 +39,29 @@ export async function routeModelGateway(
   const path = gatewayPath(url.pathname)
   if (!path) return null
   const { agent, suffix } = path
+  const chatgptRoute =
+    agent === 'codex' &&
+    Object.values(codexTokenPaths).some((path) => path === suffix)
+  const refuse = (code: GatewayRefusal, cause?: string) =>
+    gatewayError(agent, code, cause, chatgptRoute)
   if (
     !allowedModelRoute(agent, request.method, suffix) ||
     request.headers.has('Upgrade')
   )
-    return gatewayError(agent, 'model_route_not_found')
+    return refuse('model_route_not_found')
   if (agent === 'claude' && !hasClaudeMarkers(request.headers))
-    return gatewayError(agent, 'model_client_not_allowed')
+    return refuse('model_client_not_allowed')
   const bearer = request.headers
     .get('authorization')
     ?.match(/^Bearer (.+)$/i)?.[1]
   const apiKey = agent === 'claude' ? request.headers.get('x-api-key') : null
   const token = apiKey || bearer
   const route = token ? turnTokenRoute(token) : null
-  if (!route || !token) return gatewayError(agent, 'turn_token_invalid')
+  if (!route || !token) return refuse('turn_token_invalid')
 
   try {
     if (!(await runtime.workspaceAllowed(route.workspaceId)))
-      return gatewayError(agent, 'turn_token_invalid')
+      return refuse('turn_token_invalid')
     const endpoint = runtime.workspace(route.workspaceId)
     const lifetime = new GatewayRequestLifetime(request, {
       agent,
@@ -83,22 +99,82 @@ export async function routeModelGateway(
       failure = 'model_upstream_unavailable'
       const auth =
         agent === 'codex' && login.kind === 'token'
-          ? await codexGatewayAuth(async (failed) => {
-              if (!runtime.codexLogin || !loginOwnerId)
-                throw new GatewayRequestError(
-                  'agent_login_unavailable',
-                  chatGptSignInCopy.causes.notRenewed,
-                )
-              const fresh = await lifetime.wait(
-                runtime.codexLogin(loginOwnerId, failed),
-              )
-              const checked = await lifetime.wait(
-                endpoint.checkTurnToken(token),
-              )
-              if (!checked.ok)
-                throw new GatewayRequestError(checked.reason, 'The turn ended.')
-              return fresh
-            })
+          ? await lifetime.wait(
+              codexGatewayAuth(
+                async (failed) => {
+                  if (!runtime.codexLogin || !loginOwnerId)
+                    throw new GatewayRequestError(
+                      'agent_login_unavailable',
+                      chatGptSignInCopy.causes.notRenewed,
+                    )
+                  const fresh = await runtime.codexLogin(loginOwnerId, failed)
+                  const checked = await lifetime.wait(
+                    endpoint.checkTurnToken(token),
+                  )
+                  if (!checked.ok)
+                    throw new GatewayRequestError(
+                      checked.reason,
+                      'The turn ended.',
+                    )
+                  return fresh
+                },
+                async () => {
+                  const checked = await endpoint.checkTurnToken(token, true)
+                  if (!checked.ok)
+                    throw new GatewayRequestError(
+                      checked.reason,
+                      'The turn ended.',
+                    )
+                  return checked.codexRecoveryClaimed === true
+                },
+                async (failed) => {
+                  if (!runtime.codexLoginFailed || !loginOwnerId)
+                    throw new GatewayRequestError(
+                      'model_gateway_unavailable',
+                      'The login failure could not be saved.',
+                    )
+                  return lifetime.wait(
+                    runtime.codexLoginFailed(loginOwnerId, failed),
+                  )
+                },
+                async (failed) => {
+                  if (!runtime.codexWaitForRotation || !loginOwnerId)
+                    throw new GatewayRequestError(
+                      'model_gateway_unavailable',
+                      'The login renewal could not be checked.',
+                    )
+                  const rotation = await lifetime.wait(
+                    runtime.codexWaitForRotation(
+                      loginOwnerId,
+                      failed,
+                      async () => {
+                        const checked = await lifetime.wait(
+                          endpoint.checkTurnToken(token, true),
+                        )
+                        if (!checked.ok)
+                          throw new GatewayRequestError(
+                            checked.reason,
+                            'The turn ended.',
+                          )
+                        return checked.codexRecoveryPending === true
+                      },
+                    ),
+                  )
+                  const checked = await lifetime.wait(
+                    endpoint.checkTurnToken(token),
+                  )
+                  if (!checked.ok)
+                    throw new GatewayRequestError(
+                      checked.reason,
+                      'The turn ended.',
+                    )
+                  return rotation
+                },
+                async () => {
+                  await endpoint.checkTurnToken(token, 'complete')
+                },
+              ),
+            )
           : null
       const origin =
         agent === 'claude'
@@ -151,8 +227,7 @@ export async function routeModelGateway(
       })
     } catch (error) {
       lifetime.cancel(error)
-      return gatewayError(
-        agent,
+      return refuse(
         error instanceof GatewayRequestError ? error.code : failure,
         chatgpt &&
           error instanceof GatewayRequestError &&
@@ -162,6 +237,6 @@ export async function routeModelGateway(
       )
     }
   } catch {
-    return gatewayError(agent, 'model_gateway_unavailable')
+    return refuse('model_gateway_unavailable')
   }
 }

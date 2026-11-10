@@ -84,7 +84,11 @@ export class WorkspaceTurnTokens {
     )
   }
 
-  check(workspaceId: string, token: string): Promise<TurnTokenCheck> {
+  check(
+    workspaceId: string,
+    token: string,
+    claimCodexRecovery?: true | 'complete',
+  ): Promise<TurnTokenCheck> {
     return this.chat.runLifecycle(async () => {
       const route = turnTokenRoute(token)
       if (!route || route.workspaceId !== workspaceId)
@@ -125,9 +129,29 @@ export class WorkspaceTurnTokens {
       }
       if (!turnTokenMatchesKind(token, login.loginKind))
         return { ok: false, reason: 'turn_token_invalid' }
+      const codexRecoveryClaimed =
+        claimCodexRecovery === true &&
+        login.loginKind.agent === 'codex' &&
+        login.loginKind.kind === 'token' &&
+        turn.gateway.codexRecoveryUsed !== true
+      if (codexRecoveryClaimed) {
+        turn.gateway.codexRecoveryUsed = true
+        turn.gateway.codexRecoveryPending = true
+        await operation.change((transaction) => transaction.saveTurn(turn))
+      }
+      if (claimCodexRecovery === 'complete' && turn.gateway.codexRecoveryUsed) {
+        turn.gateway.codexRecoveryPending = false
+        await operation.change((transaction) => transaction.saveTurn(turn))
+      }
       return {
         ok: true,
         login: await decryptGatewayLogin(this.env, login),
+        ...(claimCodexRecovery
+          ? {
+              codexRecoveryClaimed,
+              codexRecoveryPending: turn.gateway.codexRecoveryPending === true,
+            }
+          : {}),
         ...(login.loginKind.agent === 'codex' &&
         login.loginKind.kind === 'token'
           ? { loginOwnerId: login.userId }

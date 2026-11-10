@@ -50,6 +50,8 @@ import { appFrameSources, runnerSoftware } from './configuration'
 import { appSiteResponse } from './marketing/assets'
 import { retryApprovalEmails } from './operator/approval-email'
 import { freshCodexLogin } from './codex-auth/renew'
+import { failCodexAccessToken } from './codex-auth/failure'
+import { waitForCodexRotation } from './codex-auth/rotation'
 import { cleanupCodexDevices } from './codex-auth/device-store'
 import { warnWorker } from './warnings'
 
@@ -159,6 +161,16 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
               gatewayWorkspaceAllowed(gatewayEnv.DB, id),
             codexLogin: (userId, failed) =>
               freshCodexLogin(gatewayEnv, userId, dependencies, failed),
+            codexLoginFailed: (userId, failed) =>
+              failCodexAccessToken(gatewayEnv, userId, failed),
+            codexWaitForRotation: (userId, failed, pending) =>
+              waitForCodexRotation(
+                gatewayEnv,
+                userId,
+                failed,
+                dependencies,
+                pending,
+              ),
           })
           if (gatewayResponse) return respond(gatewayResponse)
           const runnerResponse = await routeRunner(request, env)

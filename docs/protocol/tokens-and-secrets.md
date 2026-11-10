@@ -106,6 +106,10 @@ decision number names a decision of the change that adds the
   renewals for each login. It saves the rotated refresh token before
   using the new access token. A refused renewal makes the login unusable
   with a cause, until the user signs in again.
+- A second OpenAI 401 after a successful renewal does the same. A late
+  401 for a token that a newer renewal or sign-in replaced saves no cause.
+- A concurrent 401 never ends a renewal in flight. It waits for the
+  newer login as [the model gateway](model-gateway.md#how-the-agents-reach-the-gateway) says.
 - A copied login file was rejected. Its single-use refresh token would
   compete with the member's own Codex for renewal.
 - Risk: OpenAI sends hosted apps to its Sign in with ChatGPT waitlist.
@@ -123,6 +127,7 @@ decision number names a decision of the change that adds the
   no subscription login. A later release of the agent program can then
   stop the tokens.
 - Risk: a revoked sign-in or a refused renewal stops later requests.
+  A second OpenAI 401 after renewal also stops them.
   The member must sign in again. Sandbox code can still copy and spend
   the turn token while its turn runs.
 - Risk: an admin of a ChatGPT workspace can enforce Codex settings, such as

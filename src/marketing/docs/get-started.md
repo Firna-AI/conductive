@@ -154,6 +154,7 @@ You can connect the other later in **Account**.
 If your first agent request reports a login error, open **Account**.
 Remove that agent's login.
 Then connect the correct account.
+If the Codex row shows **Signed out**, select **Sign in again** instead.
 
 - [Manage logins and sharing](/docs/agent-logins)
 

@@ -225,10 +225,13 @@ export class WorkspaceLifecycle
     return credentialSender(this.chat, this.controller, turnId)
   }
 
-  async checkTurnToken(token: string): Promise<TurnTokenCheck> {
+  async checkTurnToken(
+    token: string,
+    claimCodexRecovery?: true | 'complete',
+  ): Promise<TurnTokenCheck> {
     const workspaceId = await this.chat.store.workspaceId()
     return workspaceId
-      ? this.chat.turnTokens.check(workspaceId, token)
+      ? this.chat.turnTokens.check(workspaceId, token, claimCodexRecovery)
       : { ok: false, reason: 'turn_not_active' }
   }
 

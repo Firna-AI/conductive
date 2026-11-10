@@ -119,8 +119,23 @@ while the change is open. Its pull request keeps them after the merge.
   of Codex or its helpers. The gateway address is in its settings.
 - Only the Worker renews the real sign-in. It saves each rotated refresh
   token before using the new access token. Each login has one renewal at a time.
-- On an OpenAI 401, the gateway renews once and retries the request once.
-  A failed renewal or a second 401 returns a terminal login error.
+- After an OpenAI 401, a turn can claim one renewal for all its requests.
+  The app saves the claim before renewal. Concurrent calls and resends
+  share that claim, including after a restart.
+- Concurrent 401s for one access token share the turn's claimed renewal.
+  A request can use the newer login when that renewal finishes.
+  It starts no further renewal.
+- A request waits at most 5 seconds for that renewal. If renewal still
+  runs, the request gets HTTP 502 with no saved cause.
+- A body-less metadata request can replay once after renewal.
+- Each `POST /backend-api/codex/responses` upload goes to OpenAI once.
+  After its 401, the gateway cancels the answer, renews, and returns
+  HTTP 502 with `model_upstream_unavailable`. Codex sends the upload again
+  with the renewed login.
+- A failed renewal returns a terminal login error with HTTP 403.
+- A further 401 returns that terminal error only after recovery ends
+  without a newer login. The app saves its reconnect cause only if the
+  stored access token still matches the failed token and no renewal runs.
 - Reason: a final 401 would make Codex try to renew its placeholder.
 - Codex reads the rules of the ChatGPT workspace through the gateway.
   A rule that moves Codex off the gateway fails the turn with a cause.
@@ -225,6 +240,9 @@ while the change is open. Its pull request keeps them after the merge.
   constraints. Reason: Codex must stay on the gateway while the Worker
   follows the real routing for each model request.
 - An error body also passes unchanged, unless it holds the real login.
+- For a ChatGPT sign-in, the gateway never passes on an OpenAI 401.
+  [How the agents reach the gateway](#how-the-agents-reach-the-gateway)
+  states its recovery and terminal answers.
 - On a model route of Codex, the gateway refuses a request whose body is not
   one JSON object, or is encoded. It also refuses a request whose
   top-level `background` field holds any value except `false` (gateway
@@ -253,6 +271,9 @@ while the change is open. Its pull request keeps them after the merge.
   upstream's API, with a stable error code. A body above its limit gets
   the answer that [Request bodies](access-and-security.md#request-bodies)
   gives.
+- An invalid turn token gets HTTP 403 on a ChatGPT route, with the same
+  code and cause. Claude and API-key routes keep HTTP 401.
+- Reason: a ChatGPT 401 would make Codex try to renew its placeholder.
 
 ## Streams
 
@@ -270,8 +291,8 @@ while the change is open. Its pull request keeps them after the merge.
   could then spend the login for minutes after the turn.
 - When the agent program closes its connection, the gateway cancels the
   request to the upstream.
-- The gateway retries a ChatGPT request once after renewing a refused
-  login. It adds no other retry. The agent program decides later retries.
+- The gateway can replay a body-less ChatGPT metadata request once after
+  renewal. It never copies or replays a model upload. Codex decides its resend.
 - The gateway adds no model filter, no rate limit, and no time or byte
   limit on an answer. The limits of the provider and of the agent program
   apply.
