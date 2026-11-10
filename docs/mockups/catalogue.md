@@ -10,11 +10,11 @@ how a screen is built, and links to the other pages.
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
-| `marketing/from-conductor` | The page for people who move from Conductor Cloud: one table of Conductor Cloud features, with a merged cell for each area |
+| `marketing/from-conductor` | The page for people who move from Conductor, with no scope note: one table of Conductor features, local and cloud, with a merged cell for each area |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
-| `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
+| `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |

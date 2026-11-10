@@ -41,10 +41,24 @@ export function FilePage(props: {
   navigation: FilesNavigation
   layout: FilesLayout
   targets?: FileActionTargets
+  /**
+   * Shows in place of the file, such as the state of a sandbox that does not
+   * run. The page then reads nothing and offers no Download.
+   */
+  placeholder?: ReactNode
+  /** Keeps a file that the page already shows, in place of the placeholder. */
+  keepShown?: boolean
 }) {
-  const { files, tab, navigation } = props
+  const { files, tab, navigation, placeholder } = props
   const snapshot = useFilesSnapshot(files)
-  const { state, retry } = useFollowed(files, readFile, tab.path)
+  const { state: read, retry } = useFollowed(
+    files,
+    readFile,
+    tab.path,
+    !placeholder,
+  )
+  const kept = props.keepShown === true && read?.status === 'ready'
+  const state = !placeholder || kept ? read : null
   const actions = useFileActions(files.client, tab.path, props.targets)
   const reply = state?.status === 'ready' ? state.value : null
   const label = pageLabel(snapshot, tab.path, 'file', reply)
@@ -52,9 +66,12 @@ export function FilePage(props: {
   const text = state?.status === 'ready' ? fileText(state.value) : null
   const shownAsCode =
     text?.kind === 'text' && !(markdown && tab.mode === 'preview')
-  const download = state?.status === 'ready' ? actions.download : undefined
+  const download =
+    state?.status === 'ready' && !placeholder ? actions.download : undefined
   let body: ReactNode = <LoadingFile />
-  if (state?.status === 'failed' && state.error.kind !== 'aborted') {
+  if (placeholder && !state) {
+    body = placeholder
+  } else if (state?.status === 'failed' && state.error.kind !== 'aborted') {
     body = <ReadError error={state.error} onRetry={retry} subject="file" />
   } else if (text) {
     body = (

@@ -1,0 +1,32 @@
+# The comparison page shows no progress at a glance
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, from branch `calummoore/from-conductor-timestamp-and-links`, where Cal asked "can we also add a progress bar".
+- **Location:** `src/marketing/components/ParityIntro.astro`, `docs/protocol/conductor-comparison.md`.
+- **Reason:** Cal has not chosen what the bar shows, so no option may be built.
+
+- **Terms:**
+  - **Works today:** a row with the status Available or Works differently. The claim rule of each of these statuses in `docs/protocol/conductor-comparison.md` says that the feature works in Conductive today.
+- **Background:**
+  - The public page `conductive.build/from-conductor` lists every Conductor feature, one table row each, with its status in Conductive.
+  - On 10 November 2026 the rows held 66 Available, 32 Works differently, 13 In progress, 14 Planned, 73 Under consideration, and 0 Not planned: 198 rows. So 98 of 198 work today, and 27 more are on the way. These numbers change whenever a row changes.
+  - The page runs no script, and its security policy blocks inline `style` attributes. A bar must draw its widths with SVG attributes or a native `meter` element.
+  - The rows live in `src/marketing/from-conductor/areas/`, and the site and the mockup `marketing/from-conductor/one-table` read them, so a bar can count the statuses at build time.
+- **Problem:** A visitor must read every row to judge how much of Conductor works in Conductive. Nothing on the page counts the rows.
+- **Impact if no action:** The main question of the page gets no quick answer.
+- **Root question:** Which progress should the page show a visitor at a glance?
+- **Options:**
+  - **A.** A thin bar at the top of the window that fills as the visitor scrolls down the long list, with CSS only and no script. Chrome, Edge, and Safari show it, and Firefox shows no bar. It tells how far down the visitor is, not how far Conductive is. Effort: Small.
+  - **B.** A progress bar under the lead that the rows that work today fill, with words beside it such as "98 of 198 Conductor features work in Conductive today. 27 more are on the way." It hides the split between statuses, which the legend and the table still give. Effort: Medium.
+  - **C.** A thin bar at the top of the legend, split into the six statuses in their colours, and the count of each status in the legend, such as "Available 66". It shows the whole split. It reads as a split more than as progress, and two of its parts are green. Effort: Medium.
+  - **D.** A list above the table with a bar for each area, such as "Models and providers: 8 of 16 work today". It shows where the gaps are. It adds 15 bars before the table. Effort: Medium.
+- **Left out:**
+  - Counts with no bar: the request asks for a bar, and B and C give the counts too.
+  - A bar of the Conductor Cloud shutdown days: the page gives both days in words, and a bar that moves each day needs a value at each request.
+  - A chart of progress over time: the repository keeps no record of past counts.
+  - A score weighted by importance: no data says which feature matters more.
+- **Wider fix:** None. This is a new feature, not a class of defect.
+- **Previous examples:** None found.
+- **Recommendation:** B. One line and one bar answer the main question of the page, and the legend and the table keep the detail. If B or C is chosen, the build counts the statuses from the rows, "work today" means Available and Works differently, and the page gives the numbers in words too.
+- **Action:** ask the user, because the bar adds behaviour that no requirement covers, and A answers another goal than B, C, and D.
