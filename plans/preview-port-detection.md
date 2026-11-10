@@ -685,6 +685,21 @@ Evidence: `.context/preview-port-detection/finding-2-fix-report.md`.
 Both legal pages and the Privacy uses module were read in full. Their
 public facts remain correct.
 
+## Milestone 5c: Align the newly merged public guides
+
+Depends on: 5b
+
+The public Markdown guides arrived from `main` after implementation.
+They must give the same Preview facts as the approved feature.
+
+- [x] Read all twelve public guides in full. Update each restated Preview,
+      secret-label, and new-computer rollout fact in the same change.
+- [x] Keep guide front matter and public heading links. Check their internal
+      guide URLs and anchors.
+
+Evidence: `.context/preview-port-detection/final-public-guides-report.md`.
+Only the Preview, cloud-computer, and security guides changed.
+
 ## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
@@ -742,3 +757,11 @@ Verification status: the review findings are fixed and independently checked.
 The draft pull request keeps this plan because the required signed-in
 listener inventory is still open. The complete gate and Mac checks run on
 the pull request head. The plan deletion waits for the required inventory.
+
+Final local verification: the current source passed its typecheck, 149
+runner tests, production build, and strict mockup build. The local root
+suite passed 2,013 cases and hit the existing restore-watch flake once.
+Its unchanged file rerun passed all 11 cases. The existing follow-up keeps
+the exact assertion and suspected cause. The pull request's complete gate
+and both Mac checks verify the final head. The required live inventory
+still waits for a signed-in test workspace.

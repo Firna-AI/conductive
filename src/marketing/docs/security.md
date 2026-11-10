@@ -92,8 +92,9 @@ Every workspace in the org receives every environment value at start.
 Its agents, programs, and terminal users can read those values.
 Builds and repository refreshes do not receive the org's environment values.
 
-The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
 It starts on for a new variable.
+Conductive hides these values in program names and folders before shortening them for display.
 Values and marks changed in settings apply at the computer's next start.
 Earlier chat and logs keep their text.
 

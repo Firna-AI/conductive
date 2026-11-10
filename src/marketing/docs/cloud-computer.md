@@ -107,7 +107,7 @@ Values and marks apply at the next start of each workspace's computer.
 Every workspace receives every environment value of the org.
 Agents and members with terminal access can read them.
 
-The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
 It does not hide values in file content, diffs, or Terminal.
 
 ## Apply setup changes
@@ -115,6 +115,11 @@ It does not hide values in file content, diffs, or Terminal.
 A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
+
+For the server list in **Preview**, use a new cloud computer from a new build.
+Select **Build computer**.
+After the build succeeds, create a new workspace.
+Resuming an existing computer keeps its installed software.
 
 After the first successful build, saved repository and install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build runs.
