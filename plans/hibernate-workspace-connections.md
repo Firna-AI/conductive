@@ -2,7 +2,7 @@
 
 Status: Active. [PR #148](https://github.com/Firna-AI/remote-code/pull/148) is open.
 The user approved all milestones on 9 November 2026.
-The original implementation and reviews are complete. Main integration is in progress.
+The implementation, integration, and reviews are complete. Final plan closure and CI remain.
 The pull request that completes the work deletes this plan.
 
 Conductive keeps a Durable Object for each workspace and another for each
@@ -301,8 +301,12 @@ and a shared native test harness. Preserve these changes while retaining hiberna
 - [x] Move affected test consumers to the current native harness without dropping upstream cases or hibernation proofs.
 - [x] Reconcile developer docs and live references with both implementations, and keep fixed upstream follow-ups deleted.
 - [x] Verify merge preservation, targeted native behavior, smoke checks, static checks, and the complete gate.
-- [ ] Commit and push the merge, audit its remerge diff, verify the current PR, and finish the required integration review.
+- [x] Commit and push the merge, audit its remerge diff, verify the current PR, and finish the required integration review.
 - [ ] Delete this restored plan after integration completes, retain its record in the pull request, and wait for CI on the final commit.
+
+The Low, Rare invalid-cursor error is deferred under the checked review outcome.
+Its standalone record is [events cursor upgrade error](follow-ups/events-cursor-upgrade-error.md).
+No required branch finding or user decision remains open.
 
 ## Post-merge follow-up (non-blocking)
 
