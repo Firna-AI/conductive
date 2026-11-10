@@ -425,6 +425,53 @@ added on 10 November 2026. Cal chose K on 10 November 2026.
 - **Options checks of 9 November 2026:** The first check added F and G, and it asked for a runtime proof of C. A static read of the agent's own process starts added H. The final check kept the letters, the recommendation, and the "ask the user" outcome. It corrected the reason of the Action. It found one question for Cal: the exception for children that the prefix does not wrap. Reports: `.context/model-gateway/reports/decision-11-options-check.md`, `decision-11-parent-spawn-check.md`, and `decision-11-final-check.md`.
 - **Status after the answer:** The wrapper of C is not built, so its restore defect needs no fix. Milestones 4a, 5a, 6a, 7, and 8a apply K. The answer removed the follow-up item `plans/follow-ups/claude-child-provider-settings.md`.
 
+### 12. Anthropic may refuse the profile request shape
+
+Added on 10 November 2026 from Milestone 4a. Cal chose A on 10 November
+2026.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** test.
+- **Location:** `worker/model-gateway/headers.ts` and the Claude transport of Milestone 7.
+- **Background:** In profile mode the pinned client adds a global cache scope to its cache markers and a top-level `diagnostics` field, with their `anthropic-beta` values `prompt-caching-scope-2026-01-05` and `cache-diagnosis-2026-04-07`, for both login kinds. The gateway passes the body unchanged. Fake upstreams cannot show what Anthropic accepts.
+- **Problem:** If Anthropic refuses this shape for a subscription token or an API key, each Claude turn of that login kind fails on a newer runner.
+- **Impact if no action:** The refusal shows only after the merge, on the test deployment.
+- **Root question:** When do we confirm that Anthropic accepts the profile-mode requests for both login kinds?
+- **Options:**
+  - **A.** Before the merge: a script on Cal's Mac sends small requests in the recorded shapes straight to Anthropic, with a one-token answer, once with an API key and once with a subscription token. Effort: Small.
+  - **B.** After the merge, with the real-login smoke test of the post-merge section. Effort: Small.
+  - **C.** Turn off the client's experimental betas for the agent, so it sends today's shape. Unproved, and it still needs a real check. Effort: Medium.
+- **Left out:** More fake-upstream tests, because they cannot show Anthropic's answer.
+- **Wider fix:** None. A one-time check.
+- **Previous examples:** Decision 1 confirmed the gateway with Anthropic for today's request shape.
+- **Recommendation:** A. It tests the riskiest assumption of K before the merge.
+- **Action:** ask the user, because the check needs Cal's credentials and sends requests to Anthropic.
+- **Chosen by Cal on 10 November 2026:** A. The script is `.context/model-gateway/real-check/check.sh`, saved on Cal's Mac as `~/conductive-gateway-check.sh`. Milestone 10 runs it.
+
+### 13. Subscription turns may lose the 1-hour cache
+
+Added on 10 November 2026 from Milestone 4a. Pending: no option is
+selected.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** performance.
+- **Location:** `runner/src/providers/claude.ts`.
+- **Background:** The pinned client picks its own prompt cache time. It asks for 1 hour only when it is signed in to a Claude subscription, and it has overrides: `CLAUDE_CODE_PROMPT_CACHE_TTL`, the settings key `promptCacheTtl`, and `ENABLE_PROMPT_CACHING_1H`. In profile mode it does not know that a subscription stands behind it.
+- **Problem:** Subscription turns ask for the default cache time of about 5 minutes. API-key turns already use 5 minutes.
+- **Impact if no action:** A pause of more than 5 minutes between messages can refill the cache, and use the plan's limits faster.
+- **Root question:** Do subscription turns keep the 1-hour cache under K?
+- **Options:**
+  - **A.** Accept the 5-minute cache. Effort: Small.
+  - **B.** For a subscription login, the runner gives Claude `CLAUDE_CODE_PROMPT_CACHE_TTL=1h`. Claude asks for 1 hour on its main requests, as it does today. Cost: the variable reaches the processes that Claude starts, and only Claude reads it. During paid extra usage, Claude keeps the 1-hour cache, where today it uses 5 minutes. Effort: Small.
+- **Left out:** A change of the request inside the gateway, because the gateway passes bodies unchanged.
+- **Wider fix:** None. One setting.
+- **Previous examples:** None found.
+- **Related:** Decision 12. Its check sends one subscription request with the 1-hour cache in profile mode.
+- **Recommendation:** B. It keeps today's cache for subscription turns at almost no cost.
+- **Action:** ask the user, because it changes how fast subscription limits get used.
+
 ## Design
 
 The gateway is a Worker route on the machine hostname. Each running turn
@@ -1124,8 +1171,13 @@ Evidence: `.context/model-gateway/final-m9/report.md`.
 
 Depends on: every other milestone
 
+- [ ] Run the check of decision 12 A on Cal's Mac, for an API key and for a
+      subscription token. Record the results under `.context/model-gateway/real-check/`.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
+- [ ] Copy the merge justifications of
+      `.context/model-gateway/merge-main-ab58-justification.md` into the pull
+      request description, as the `git-merge` skill says.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
