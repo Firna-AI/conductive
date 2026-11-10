@@ -58,7 +58,8 @@ function RenameRow(props: {
  * archives it at once, or Restore for an archived one, which puts it back
  * in its section. A row with `archiveTo` opens that screen in place of the
  * toast after Archive, such as the question of a workspace from Conductor
- * that was never activated. Null keeps its Archive static.
+ * that was never activated. Null keeps its Archive static. `restoreTo` does
+ * the same for Restore.
  */
 function rowAction(
   row: WorkspaceRow,
@@ -66,11 +67,16 @@ function rowAction(
   restorable: boolean,
 ): ReactNode {
   if (row.status === 'archived') {
-    return restorable ? (
-      <ScreenLink asChild to={paths.restored}>
-        <IconButton icon={ArchiveRestore} label="Restore workspace" quiet />
+    if (!restorable) return null
+    const restore = (
+      <IconButton icon={ArchiveRestore} label="Restore workspace" quiet />
+    )
+    if (row.restoreTo === null) return restore
+    return (
+      <ScreenLink asChild to={row.restoreTo ?? paths.restored}>
+        {restore}
       </ScreenLink>
-    ) : null
+    )
   }
   if (!archivable) return null
   const archive = <IconButton icon={Archive} label="Archive workspace" quiet />

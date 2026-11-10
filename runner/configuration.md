@@ -50,6 +50,9 @@ The [agent runner](README.md) reads these variables when the service starts.
   where the agents keep their sessions. Boat keeps the disk across a stop
   and a resume, so the sessions stay.
 - The state file belongs to one workspace. Keep it out of the org image.
+- A computer of an import activation keeps its state under
+  `/home/user/.conductive/imports/`, outside the checkout, as
+  [the import activation guide](import.md#the-deferred-start) says.
 - After a failed or dropped connection, the runner connects again in 1 second.
 
 When a required variable is missing or the state file cannot be read,

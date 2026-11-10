@@ -117,11 +117,18 @@ check in the Mac app.
   state and its actions, with `show` and `hide` for a kept chat.
 - `state/controller-context.ts`: the context, upload identities, devices, and event stream of one controller run.
 - `state/tab-order.ts`: the pure row order, the places of the open
-  sessions, and the move before or after a neighbour.
+  sessions, and the move before or after a neighbour. `tabKey` gives the
+  key of a tab from its kind and its session ID, path, or document ID, so
+  a file keeps its key in each mode.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
   `components/SessionTab.tsx` and the tabs of `renderTab`.
   `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
-  the row in the saved order with their titles.
+  the row in the saved order with their titles. `renderTab` draws each tab
+  that is not a session: a file, a diff, or an old session from Conductor.
+  It gives null for a tab that the host does not draw now, such as a file
+  tab of an archived workspace, and the saved view keeps that tab at its
+  place. `shownTab` gives the tab of the host that shows in place of the
+  chat. A reply that moves a draft keeps the focus on such a page.
 - `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
@@ -224,12 +231,18 @@ check in the Mac app.
   its line, and gives the line to the keeper, also at the bottom of the
   chat, so the line keeps its place.
 - `components/SessionStatus.tsx`: the empty views and the history status of
-  a session.
+  a session. The `empty` of `ChatHost` takes the place of no open session
+  and of a new session, such as the links to the old sessions of a
+  workspace from Conductor. `ChatHost.importLine` draws the first line of
+  a session that continues an old session, and `moreHistory` of the view
+  adds entries after the closed sessions of the history.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
   the reconnect, and the `hold` and `release` of the workspace stream.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
-  responses.
+  responses. `api/read-chat.ts` reads the records, such as a session with
+  its optional import fields, and `api/read-chat-events.ts` reads the chat
+  events.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer

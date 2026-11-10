@@ -2,6 +2,8 @@ import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
+import type { RunnerImportCommand } from '../../src/shared/runner-import'
+import { sendRunnerImport, sendRunnerFile } from './runner-import-controls'
 import { HttpError } from '../http'
 import { AuthenticatedRunner } from './authenticated-runner'
 import { RunnerDelivery } from './runner-delivery'
@@ -161,6 +163,11 @@ export class RunnerChannel {
         'runner_hello_required',
         'The connection is not ready.',
       )
+    if (message.type === 'import.result') {
+      if (this.connectionId && message.connectionId === this.connectionId)
+        await this.dependencies.receiveImportResult(message, this.connectionId)
+      return
+    }
     if (
       message.type === 'file.read.result' ||
       message.type === 'file.diff.result'
@@ -270,14 +277,20 @@ export class RunnerChannel {
     workspaceId: string,
     command: RunnerFileCommand,
   ): Promise<boolean> {
-    const active = this.current
-    if (!active?.ready || active.workspace.id !== workspaceId) return false
-    try {
-      await active.peer.send(command)
-      return true
-    } catch {
-      this.close()
-      return false
-    }
+    return sendRunnerFile(this.current, workspaceId, command, () =>
+      this.close(),
+    )
+  }
+
+  async sendImportCommand(
+    workspaceId: string,
+    command: Omit<RunnerImportCommand, 'connectionId'>,
+  ): Promise<string | null> {
+    return sendRunnerImport(
+      this.current,
+      this.connectionId,
+      workspaceId,
+      command,
+    )
   }
 }

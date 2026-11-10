@@ -8,7 +8,14 @@ type CommandOwner =
   | { kind: 'workspace'; id: string; attempt: string }
 
 type CommandPhase =
-  'software' | 'install' | 'fetch' | 'branch' | 'startup' | 'terminal'
+  | 'software'
+  | 'install'
+  | 'fetch'
+  | 'branch'
+  | 'startup'
+  | 'terminal'
+  | 'import-software'
+  | 'import-launch'
 
 const COMMAND_ROOT = '/tmp/conductive-lifecycle'
 

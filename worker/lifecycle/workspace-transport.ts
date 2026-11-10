@@ -3,6 +3,8 @@ import { releasedStartLog, type EncryptedStartLog } from './start-logs'
 import type { WorkspaceStartIntent, WorkspaceStartResult } from './start-types'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { TurnTokenEndpoint } from '../model-gateway/types'
+import { requireFeatureResult, type FeatureResult } from '../features/result'
+import type { ActivateWorkspaceResponse } from '../../src/shared/workspaces'
 import {
   serializeStartJob,
   type StoredWorkspaceStartJob,
@@ -20,8 +22,14 @@ export interface WorkspaceLifecycleTransport
       | 'readCreationLifecycleResult'
       | 'readLifecycleStartLog'
       | 'queueLifecycleStart'
+      | 'activateImportedWorkspace'
     >,
     TurnTokenEndpoint {
+  activateImportedWorkspace(
+    orgId: string,
+    workspaceId: string,
+    userId: string,
+  ): Promise<FeatureResult<ActivateWorkspaceResponse>>
   queueLifecycleStart(
     job: StoredWorkspaceStartJob,
     intent?: WorkspaceStartIntent,
@@ -64,6 +72,15 @@ export function workspaceLifecycleEndpoint(
   env: Pick<AppEnv, 'BOAT_KEY_ENCRYPTION_KEY'>,
 ): WorkspaceLifecycleEndpoint & TurnTokenEndpoint {
   return {
+    activateImportedWorkspace: async (orgId, id, userId) =>
+      requireFeatureResult(
+        await transport.activateImportedWorkspace(orgId, id, userId),
+      ),
+    activationCredentialSender: (id) =>
+      transport.activationCredentialSender(id),
+    sendImportCommand: (id, command) =>
+      transport.sendImportCommand(id, command),
+    seedImportSession: (id, input) => transport.seedImportSession(id, input),
     initializeLifecycle: (input) => transport.initializeLifecycle(input),
     readLifecycle: () => transport.readLifecycle(),
     beginLifecycleStart: (kind) => transport.beginLifecycleStart(kind),

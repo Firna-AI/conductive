@@ -18,6 +18,11 @@ The same module owns the old-document metadata and the paths of the import route
 The other `conductor-import-*.ts` modules own the device operations, the manifest, their parsers, and the page helpers.
 [Shared import contracts](conductor-import.md) lists them and their public and private values.
 
+`workspacePaths.activate` in `workspaces.ts` names the Activate route of an imported workspace.
+Its reply is `ActivateWorkspaceResponse`: a `WorkspaceResponse` with `sessionId`, the real early session of the activator.
+An activation shows its start with `WorkspaceStart.kind` `create`. A Resume of an activated import keeps `resume`.
+[Import activation](../../worker/lifecycle/import-activation.md) gives its steps and failures.
+
 Each area owns its paths and payloads. Import from that area directly.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
 Its `set` change carries a value and an optional mark. An omitted mark
@@ -58,6 +63,9 @@ shapes of one version. The runner imports the `V2` forms and uses
 a turn token.
 The [model gateway](../../worker/model-gateway/README.md#model-requests)
 gives the form of a turn token.
+`runner-import.ts` defines the private frames of an import activation: `import.command`, `import.result`, and the `import.preparation` event.
+Each command and result names its activation, epoch, and connection. `runnerImportWire` refuses a frame of `RUNNER_IMPORT_BYTES`, 1,048,576 bytes, or more.
+`readRunnerImportCommand` and `readRunnerImportReply` in `runner-import-read.ts` read them. No browser response type holds them.
 `RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
@@ -135,7 +143,7 @@ Its omission count measures normalized source UTF-8 bytes before JSON escaping.
 Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.
 They count omitted files. The complete Changes response has no summary cap.
 `runner.event-refused` belongs only to workspace chat events.
-It identifies the lost runner event without copying its data.
+It identifies the lost runner event without copying its data. Its `runnerEventType` never names `import.preparation`.
 Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
 Only the workspace sets that flag.
 [Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
@@ -157,6 +165,8 @@ Each other message of the session gets HTTP 409 with the code `retry_not_availab
 `Session.startedBy` names the member who started the session.
 It is null only for an older record whose starter is not known.
 `Session.sourceSessionId` names the session where a message opened this linked session, and null otherwise.
+`Session.conductorImport` marks a continuation session of an import. It holds the old-document `documentId` and `preparation`, `prepared` or `fallback`.
+`readImportSessionMetadata` in `import-session.ts` reads it. `prepared` means prepared native history, not a provider's acceptance. Native sessions omit it.
 `Session.loginAvailable` is the result of the last server check of the starter's login.
 It stays true when the starter does not share that login.
 `Session.loginShared` says whether the starter lets other members use that login, from the same check.
@@ -165,6 +175,19 @@ Each member reads the same values. None of these fields holds a login.
 `SendMessageResponse.session` in `messages.ts` is the record of the session that took the message.
 It can differ from the session of the request.
 [Agents](../../docs/protocol/agents-and-sessions.md#agents) states the starter rule.
+
+`workspace-view.ts` defines `workspaceViewPath` and `WorkspaceView`, the saved view of one member in one workspace.
+The server keeps the view. Only panel widths stay in the browser.
+A `WorkspaceTab` is a session, a file with its mode, a diff, or an old document from Conductor.
+`workspaceViewInput` of the Worker and `readView` of the chat keep only the fields of each kind.
+They remove all other fields.
+
+The tab of an old document has the kind `conductor-document` and a `documentId`.
+That ID is the `id` of a `ConductorOldDocument` from `conductor-import.ts`, as it is.
+The org and the workspace of the view give the scope of the ID.
+The tab holds no source path, native ID, storage object, upload link, or text of the document, so it gives no access.
+`conductorOldDocumentPath` reads the Markdown, with the checks that [Old documents](../../worker/conductor-import/publication.md#old-documents) gives.
+[Sessions from Conductor](../../docs/protocol/chat-and-events.md#sessions-from-conductor) states how members open the documents.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.

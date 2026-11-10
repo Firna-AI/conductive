@@ -1,5 +1,9 @@
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
-import { RESTORE_POLL_MS, type DurableLifecycleState } from './durable-types'
+import {
+  RESTORE_POLL_MS,
+  type DurableLifecycleState,
+  type LifecycleInitialization,
+} from './durable-types'
 
 export function withPreparedStart(
   state: DurableLifecycleState,
@@ -21,9 +25,7 @@ export function withPreparedStart(
 }
 
 export function initialLifecycle(
-  input: Pick<DurableLifecycleState, 'workspaceId' | 'orgId'> & {
-    firstMessage: NonNullable<DurableLifecycleState['pendingFirstMessage']>
-  },
+  input: LifecycleInitialization,
   now: number,
 ): DurableLifecycleState {
   return {
@@ -31,7 +33,8 @@ export function initialLifecycle(
     orgId: input.orgId,
     state: 'starting',
     start: null,
-    pendingFirstMessage: input.firstMessage,
+    pendingFirstMessage: 'firstMessage' in input ? input.firstMessage : null,
+    ...('imported' in input ? { startupPrepared: false } : {}),
     lastActivityAt: now,
     runningSessions: [],
     runnerConnected: false,

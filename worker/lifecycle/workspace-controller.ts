@@ -1,7 +1,7 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
-import { requireWorkspaceOrg } from './access'
+import { creationCredentialSender } from './credential-sender'
 import { runWorkspaceAlarm } from './workspace-alarm'
 import { WorkspaceEventJournal } from './durable-journal'
 import type { DurableLifecycleState } from './durable-types'
@@ -33,6 +33,7 @@ import {
   workspaceTaskAlarms,
 } from './workspace-task-alarms'
 import { ComputerStopTask } from './computer-stop-task'
+import { importActivationMethods } from './import-activation'
 
 export function createWorkspaceController(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
@@ -80,6 +81,14 @@ export function createWorkspaceController(
     alarms,
   }))
   const controller: WorkspaceController = {
+    ...importActivationMethods(
+      env,
+      dependencies,
+      platform,
+      lifecycle,
+      startJobs,
+      () => starts,
+    ),
     archiveLifecycle: (id) => archive.begin(id),
     reserveArchive: (id) => archive.reserve(id),
     restoreWorkspace: (orgId, id, userId, origin) =>
@@ -198,7 +207,10 @@ export function createWorkspaceController(
       )
       await alarms.set('lifecycle:access', null)
       if (!(await startJobs.job())) await startStorage.deleteAlarm()
-      if (!(await startJobs.publication()))
+      if (
+        !(await startJobs.publication()) &&
+        !(await startJobs.activationCleanup())
+      )
         await alarms.set('lifecycle:publication', null)
       await journal.clearFailedCreate()
     },
@@ -213,20 +225,8 @@ export function createWorkspaceController(
       const turn = await turns.remove(turnId)
       if (turn) await lifecycle.turn(turn.sessionId, false, publish)
     },
-    async credentialSender(turnId: string): Promise<string | null> {
-      const state = await lifecycle.read()
-      if (!state || state.state === 'stopped' || state.state === 'archived')
-        return null
-      await requireWorkspaceOrg(env.DB, state.orgId, state.workspaceId)
-      const job = await platform.storage.get('job', START_JOB_KEY)
-      return job?.kind === 'create' &&
-        (job.phase === 'fetch' || job.phase === 'branch') &&
-        !job.cancelled &&
-        !job.failure &&
-        job.turnId === turnId
-        ? job.admission.first.sender.id
-        : null
-    },
+    credentialSender: (turnId) =>
+      creationCredentialSender(env, lifecycle, platform, turnId),
     async reportRunnerLifecycle(event, publish): Promise<void> {
       const apply = () => applyRunnerLifecycle(lifecycle, turns, event, publish)
       if (event.type === 'runner.ready') await starts.reportRunnerReady(apply)

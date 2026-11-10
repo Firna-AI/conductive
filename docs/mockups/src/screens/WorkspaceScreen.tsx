@@ -237,7 +237,9 @@ export function WorkspaceScreen(props: {
         suspended,
         viewer: membership,
         created: createdWorkspaces(state),
-        restoreOpen: state.archive === 'kept',
+        // Only a kept cloud computer comes back. A workspace from Conductor
+        // archived before its activation never had one.
+        restoreOpen: state.sandbox === 'archived' && state.archive === 'kept',
         row: openRowLinks(state),
       })}
     >

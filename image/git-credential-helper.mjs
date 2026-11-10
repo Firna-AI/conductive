@@ -16,13 +16,17 @@ if (mode === 'get') {
   if (fields.get('protocol') !== 'https' || fields.get('host') !== 'github.com')
     process.exit(0)
 }
-const { CONDUCTIVE_MACHINE_ORIGIN, CONDUCTIVE_TURN_ID, WORKSPACE_TOKEN } =
-  process.env
+const {
+  CONDUCTIVE_MACHINE_ORIGIN,
+  CONDUCTIVE_TURN_ID,
+  CONDUCTIVE_ACTIVATION_ID,
+  WORKSPACE_TOKEN,
+} = process.env
 try {
   if (
     !CONDUCTIVE_MACHINE_ORIGIN ||
     !WORKSPACE_TOKEN ||
-    (mode === 'get' && !CONDUCTIVE_TURN_ID)
+    (mode === 'get' && !CONDUCTIVE_TURN_ID && !CONDUCTIVE_ACTIVATION_ID)
   )
     throw new Error('Missing credential context')
   const origin = new URL(CONDUCTIVE_MACHINE_ORIGIN)
@@ -43,6 +47,9 @@ try {
       Authorization: `Bearer ${WORKSPACE_TOKEN}`,
       ...(CONDUCTIVE_TURN_ID
         ? { 'X-Conductive-Turn-Id': CONDUCTIVE_TURN_ID }
+        : {}),
+      ...(CONDUCTIVE_ACTIVATION_ID
+        ? { 'X-Conductive-Activation-Id': CONDUCTIVE_ACTIVATION_ID }
         : {}),
     },
   })

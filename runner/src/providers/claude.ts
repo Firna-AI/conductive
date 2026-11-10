@@ -18,6 +18,7 @@ import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
 import { providerMessage } from './message'
 import type { ProviderFactory } from './types'
+import { claudeHistoryFailure, NativeHistoryError } from './native-history'
 
 export interface ClaudeQuery extends AsyncIterable<unknown> {
   interrupt(): Promise<unknown>
@@ -77,11 +78,18 @@ export function createClaudeFactory(
     } else env.ANTHROPIC_BASE_URL = options.endpoint
     const input = new ClaudeInputWindow()
     let resultReceived = false
+    let importDocument = options.importDocument
     const mapper = new ClaudeEvents(
       input.ids,
       (event) => {
         if (event.type === 'result') resultReceived = true
-        options.event(event)
+        options.event(
+          options.importedHistory &&
+            event.type === 'failed' &&
+            claudeHistoryFailure(event.message)
+            ? failureCause(new NativeHistoryError())
+            : event,
+        )
       },
       (uuid) => input.hasOutstanding(uuid),
     )
@@ -145,7 +153,16 @@ export function createClaudeFactory(
             message: 'The agent process ended.',
           })
       } catch (error) {
-        if (!closed) options.event(failureCause(error))
+        if (!closed)
+          options.event(
+            failureCause(
+              options.importedHistory &&
+                error instanceof Error &&
+                claudeHistoryFailure(error.message)
+                ? new NativeHistoryError()
+                : error,
+            ),
+          )
       }
     })()
     let closing: Promise<void> | null = null
@@ -184,10 +201,12 @@ export function createClaudeFactory(
           parent_tool_use_id: null,
           message: {
             role: 'user',
-            content: providerMessage(command.message) + attached,
+            content:
+              providerMessage(command.message, importDocument) + attached,
           },
           priority: 'next',
         })
+        importDocument = undefined
       },
       model: async (choice) => {
         await stream.setModel(choice.model)

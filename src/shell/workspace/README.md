@@ -21,8 +21,10 @@ until its last day. Selection and keyboard focus alone keep the time
 visible. The header has no Archive button. The shortcut and the menu of a
 row, the command palette, and the pull request bar archive in the same
 way, at once and with one request, as
-[Archive](../../../docs/protocol/workspace-life.md#archive) says. A toast
-then offers Restore. The archived bar, the row of the Archived group, and
+[Archive](../../../docs/protocol/workspace-life.md#archive) says. Before a
+successful activation, a workspace from Conductor asks its question first,
+as [Archive before the activation](../../../docs/protocol/imported-workspaces.md#archive-before-the-activation)
+says. A toast then offers Restore while the cloud computer is kept. The archived bar, the row of the Archived group, and
 the palette offer Restore to each member until the last day, as
 [Restore](../../../docs/protocol/workspace-life.md#restore) says.
 
@@ -149,11 +151,21 @@ fake API, with its address options, its controls, and the test command.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, the open file tabs, and the file page in place
   of the chat of the session, or the shell's own column for the chat slots.
+  An old session from Conductor at the address shows there too, and a
+  phone shows it in place of the whole chat.
+- `documents/`: the old sessions of a workspace from Conductor, at
+  `conductor/<document ID>`, apart from the Files screens: their page,
+  tabs, links in place of an empty chat, history entries, and the first
+  line of a continued session. They read the routes of the app in each
+  state, and start nothing. `imported/`: the flag in the header, and the
+  question of Archive before a successful activation.
 - `files/files-features.tsx`: the Files part, which connects the kept
   files, and the file or diff page of the centre.
 - `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
   sandbox at each visit that opens a file or diff tab, also a second click
-  on the tab that shows. The screen draws it in each layout.
+  on the tab that shows. The screen draws it in each layout. A workspace
+  from Conductor that waits for its activation starts nothing there, and
+  its Files part connects no files.
 - `files/chat-files.tsx`: the file tabs of the kept chat, named by the
   labels of the kept files, at their places in the tab row with the props
   that the row gives each tab, the diff links, and the way back to the chat
@@ -241,8 +253,10 @@ fake API, with its address options, its controls, and the test command.
 - `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
   states of the cloud computer, their words, and the start steps. The bar
   of an archived workspace offers Restore until its last day, then says
-  when Restore ended. `useArchiveActions.ts` runs Archive and Restore for
-  each control, with their toasts. Archive from the row of the open
+  when Restore ended. `useArchiveActions.tsx` runs Archive and Restore for
+  each control, with their toasts, and gives the question of a workspace
+  from Conductor before a successful activation, which the screen and the
+  list draw. Archive from the row of the open
   workspace, by its shortcut or its menu, acts once, also during the first
   read, as [Archive](../../../docs/protocol/workspace-menu.md#archive)
   says. An Archive and a Restore during the first read resume nothing.
@@ -253,7 +267,10 @@ fake API, with its address options, its controls, and the test command.
   for Restore by a member and for its end at the last day.
   Before the first activation of a workspace from Conductor, the bar asks
   Activate this workspace in place of the composer, and the panels show
-  Not active in place of the lists. Its Activate runs `resume`.
+  Not active in place of the lists. Its Activate runs `resume`, which
+  sends Activate. A failed or stopped activation keeps the composer under
+  its words and Try again. An Archive with no kept cloud computer says that
+  the sessions from Conductor stay readable.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
 

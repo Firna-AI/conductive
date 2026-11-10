@@ -67,6 +67,14 @@ says.
   create, as
   [Before the first good build](create-a-workspace.md#before-the-first-good-build)
   says.
+- In that cloud computer, the activation first installs the current runner
+  and the workspace tools of the app. Reason: the runner of an older org
+  image can lack the receiver and the checked delivery of the stored work,
+  and the activation has no first turn.
+- This holds only for the first activation. Ordinary starts keep the runner
+  of their org image. The org image does not change, and the workspace keeps
+  the version pin of its org image, as
+  [The agent runner](agent-runner.md#the-agent-runner) says.
 - Git fetches the branch of the workspace from GitHub. When GitHub does not
   have the branch, Git fetches the default branch instead.
 - These fetches use the GitHub user token of the member who activates.
@@ -91,8 +99,9 @@ says.
     checkout.
   - It puts the old documents in `.context/conductor/`, one file for each
     session.
-  - It adds `.context/` to the local exclude file of the clone. So Git
-    ignores the folder, and no push sends it.
+  - It adds the root rule `/.context/` to the local exclude file of the
+    clone, as [The context folder](repository-folders.md#the-context-folder)
+    says. So Git ignores the folder, and no push sends it.
   - It puts each memory file where its agent finds the sessions of the
     folder of the repository.
 - Each imported session then becomes a session of the workspace, with its
@@ -122,8 +131,8 @@ says.
 ## Archive before the activation
 
 - Before a successful activation, its Archive question asks with no check.
-- The question says that the workspace can no longer be activated, and
-  that its old documents stay readable.
+- The question says that the workspace cannot be activated while it is
+  archived, and that its old documents stay readable.
 - The question says neither that the work is pushed, nor that a cloud
   computer will be deleted.
 - After that Archive, the workspace shows the day of the archive, and that

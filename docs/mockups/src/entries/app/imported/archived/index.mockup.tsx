@@ -25,5 +25,14 @@ export const importedArchived = defineScreen({
         'The link Apply coupons before tax opened its file in the Markdown view of the archived workspace, in a tab on desktop and in the Chat tab of a phone, with a way back to the archived chat.',
       props: { tab: 'old-session' },
     },
+    {
+      slug: 'toast',
+      title: 'Just archived',
+      description:
+        'Cal pressed Archive in the question. The workspace left Import from Conductor for the open Archived group at once, and a toast names it. The toast offers no Restore, because the app keeps no cloud computer of this workspace for Restore to bring back. Its bar and its links to the old sessions stay.',
+      rationale:
+        'The toast after Archive offers Restore only while the app keeps a cloud computer, because Restore needs that computer. A workspace from Conductor that never started has none, so its toast only names it. The question before the Archive already said that it cannot be activated while it is archived.',
+      props: { toast: 'archived' },
+    },
   ],
 })

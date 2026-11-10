@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react'
+import { awaitsActivation } from '../../../app/first-start'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
@@ -25,17 +26,27 @@ function useKeptLookup(context: WorkspaceContext) {
   )
 }
 
+/** The connection of a workspace that has no project files yet: none. */
+function connectNothing(): () => void {
+  return () => {}
+}
+
 /**
  * The files of the open workspace, and their connection. The tab keeps one
  * store for each shown workspace, so a return shows the lists at once and
  * reads only the events after the last one. The hook connects the store
- * after the render and stops it at unmount. The Files part calls it.
+ * after the render and stops it at unmount. The Files part calls it. A
+ * workspace from Conductor that waits for its activation has no project
+ * files, so the store connects only when an activation succeeds.
  */
 export function useWorkspaceFiles(context: WorkspaceContext): WorkspaceFiles {
   const create = useKeptLookup(context)
+  const connect = awaitsActivation(context.workspace)
+    ? connectNothing
+    : startFiles
   const { store } = useWorkspaceStore(
     { orgId: context.org.id, workspaceId: context.workspace.id },
-    { create, connect: startFiles },
+    { create, connect },
   )
   return store
 }
@@ -73,13 +84,18 @@ export function useKeptFilesWhile(
 /**
  * The kept store while `shows` is true, connected for as long, or null. The
  * chat calls it, so the list of `@` and the file chips work also on a phone
- * before a visit to Files. It shares the connection of the Files part.
+ * before a visit to Files. It shares the connection of the Files part. A
+ * workspace from Conductor that waits for its activation gets null, because
+ * it has no project files yet.
  */
 export function useConnectedFilesWhile(
   context: WorkspaceContext,
   shows: boolean,
 ): WorkspaceFiles | null {
-  const files = useKeptFilesWhile(context, shows)
+  const files = useKeptFilesWhile(
+    context,
+    shows && !awaitsActivation(context.workspace),
+  )
   useEffect(() => (files ? startFiles(files) : undefined), [files])
   return files
 }

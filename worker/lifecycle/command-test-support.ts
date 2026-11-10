@@ -10,3 +10,19 @@ export function lifecycleCommandBody(command: string | undefined): string {
   const match = journalCommand.exec(command)
   return match?.[3]?.replaceAll(`'"'"'`, "'") ?? command
 }
+
+/** Observe the owned saved startup file, independently of its shell transport encoding. */
+export function lifecycleStartupScript(command: string): string | null {
+  const writes = new RegExp(
+    `printf %s ${quotedArgument} \\| base64 -d > ${quotedArgument}`,
+    'g',
+  )
+  for (const match of lifecycleCommandBody(command).matchAll(writes)) {
+    const path = match[2].replaceAll(`'"'"'`, "'")
+    if (path === '/run/conductive/startup.sh')
+      return Buffer.from(match[1].replaceAll(`'"'"'`, "'"), 'base64').toString(
+        'utf8',
+      )
+  }
+  return null
+}

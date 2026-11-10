@@ -1,4 +1,5 @@
 import { useEffect, useEffectEvent } from 'react'
+import { awaitsActivation } from '../../../app/first-start'
 import { routeOf, useNavigation } from '../../../app/navigation'
 import type { WorkspaceContext } from '../features'
 import { filesPlace, tabOf } from './files-address'
@@ -8,10 +9,13 @@ import { filesPlace, tabOf } from './files-address'
  * where the open of the workspace resumes it, a stopped workspace and one
  * whose later start failed. A failed first start waits for Try again. A
  * refused start, an archived workspace, and a suspended org start nothing.
+ * A workspace from Conductor that waits for its activation starts only with
+ * Activate.
  */
 function resumesAtTabOpen(context: WorkspaceContext): boolean {
   const { panel } = context
   if (context.readOnly || panel === null) return false
+  if (awaitsActivation(context.workspace)) return false
   return (
     panel.problem === 'stopped' ||
     (panel.problem === 'error' && panel.firstStart !== true)

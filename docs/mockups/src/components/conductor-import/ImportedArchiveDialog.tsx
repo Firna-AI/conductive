@@ -6,10 +6,11 @@ import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { LinkedControl } from '../common/LinkedControl'
 
 /**
- * The question of Archive for a workspace from Conductor that was never
- * activated. It has no cloud computer, so Archive checks nothing and
- * deletes none. The question says what changes: the workspace can no
- * longer be activated, and its old sessions stay readable in Archived.
+ * The question of Archive for a workspace from Conductor whose activation
+ * never succeeded: before its activation, or after a failed one. Archive
+ * checks nothing and deletes no stored work. The question says what
+ * changes: the workspace cannot be activated while archived, and its old
+ * sessions stay readable.
  * Cancel leaves the workspace as it was, and Archive leads to the archived
  * workspace.
  */
@@ -42,8 +43,7 @@ export function ImportedArchiveDialog(props: {
       viewport={props.viewport}
     >
       <DialogText>
-        After Archive, it can no longer be activated. Its sessions from
-        Conductor stay in Archived, where you can read them.
+        It cannot be activated while archived. Its old sessions stay readable.
       </DialogText>
     </ConfirmDialog>
   )

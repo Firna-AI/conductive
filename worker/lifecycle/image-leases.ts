@@ -60,6 +60,12 @@ export async function releaseImageLease(
     .prepare('DELETE FROM image_leases WHERE org_id = ? AND workspace_id = ?')
     .bind(orgId, workspaceId)
     .run()
+  await db
+    .prepare(
+      'DELETE FROM workspace_import_image_leases WHERE org_id = ? AND workspace_id = ?',
+    )
+    .bind(orgId, workspaceId)
+    .run()
 }
 
 export async function imageIsLeased(
@@ -71,9 +77,10 @@ export async function imageIsLeased(
   return Boolean(
     await db
       .prepare(
-        'SELECT workspace_id FROM image_leases WHERE org_id = ? AND snapshot_name = ? AND provider_account = ? LIMIT 1',
+        `SELECT workspace_id FROM image_leases WHERE org_id = ? AND snapshot_name = ? AND provider_account = ?
+       UNION ALL SELECT workspace_id FROM workspace_import_image_leases WHERE org_id = ? AND snapshot_name = ? AND provider_account = ? LIMIT 1`,
       )
-      .bind(orgId, snapshot, providerAccount)
+      .bind(orgId, snapshot, providerAccount, orgId, snapshot, providerAccount)
       .first(),
   )
 }

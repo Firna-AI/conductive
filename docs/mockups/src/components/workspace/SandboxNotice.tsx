@@ -149,11 +149,22 @@ function recoveryPath(state: SandboxNoticeState): string | undefined {
     : paths.retrying
 }
 
-/** The one way forward, as a link where the mockups draw its screen. */
-function RecoveryButton(props: { label: string; state: SandboxNoticeState }) {
+/**
+ * The one way forward, as a link where the mockups draw its screen.
+ * `restoreTo` is the screen of Restore, when it is not the native one.
+ */
+function RecoveryButton(props: {
+  label: string
+  state: SandboxNoticeState
+  restoreTo?: string | null
+}) {
   const button = <ActionButton tone="primary">{props.label}</ActionButton>
-  const to = recoveryPath(props.state)
-  if (to === undefined) return button
+  const restore = props.state.problem === 'archived'
+  const to =
+    restore && props.restoreTo !== undefined
+      ? props.restoreTo
+      : recoveryPath(props.state)
+  if (to === undefined || to === null) return button
   return (
     <ScreenLink asChild to={to}>
       {button}
@@ -188,15 +199,23 @@ function barBody(state: SandboxNoticeState, body: string): string {
  * that failed shows the message that the app saved for it, such as the
  * 20-minute limit of a start, before the body. An archived workspace offers
  * Restore until the app deletes its cloud computer. A workspace from
- * Conductor asks to activate it before its first activation.
+ * Conductor asks to activate it before its first activation. `restoreTo`
+ * is the screen of Restore, when it is not the native one. Null keeps
+ * Restore static.
  */
-export function SandboxBar(props: SandboxNoticeState) {
+export function SandboxBar(
+  props: SandboxNoticeState & { restoreTo?: string | null },
+) {
   const problem = problemOf(props)
   return (
     <Notice
       action={
         problem.action ? (
-          <RecoveryButton label={problem.action} state={props} />
+          <RecoveryButton
+            label={problem.action}
+            restoreTo={props.restoreTo}
+            state={props}
+          />
         ) : undefined
       }
       body={barBody(props, keptBody(props, problem.body))}

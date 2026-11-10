@@ -53,3 +53,22 @@ state the requirements.
 - A `report.refresh` command can come right after the `welcome`, before
   `runner.ready`, and during a running turn. Answer it with a full report of
   its kind.
+
+## Import controls
+
+An import activation uses its own private frames of
+[`runner-import.ts`](../../../../src/shared/runner-import.ts), as
+[Import activation](../../../lifecycle/import-activation.md#the-runner-commands)
+says.
+
+- The lifecycle sends each `import.command` through
+  `RunnerChannel.sendImportCommand`. The channel sends it only to the ready,
+  authorized connection of the same workspace, and it adds that connection ID.
+  Each frame stays below `RUNNER_IMPORT_BYTES`.
+- An `import.result` of the current connection goes to `receiveImportResult`
+  of the lifecycle. The channel drops a result of another connection. No
+  import command or result becomes a stored chat event.
+- `import.preparation` is a numbered runner event. `other-events.ts` takes it
+  only for a started turn of the same continuation session and document. It
+  then marks the session `fallback` and emits `session.updated`. The raw
+  event never reaches a browser.

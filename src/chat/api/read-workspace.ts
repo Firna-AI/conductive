@@ -9,7 +9,8 @@ import type {
   WorkspaceState,
 } from '../../shared/workspaces'
 import { count, isRecord, list, nullable, oneOf, record, text } from './json'
-import { readChatEvent, readChoice, readSender } from './read-chat'
+import { readChoice, readSender } from './read-chat'
+import { readChatEvent } from './read-chat-events'
 
 /**
  * The workspace events that the chat reads. The stream also carries file,

@@ -7,6 +7,11 @@ import type { UserMessage } from './messages'
 import type { RunnerPortsUpdated } from './ports'
 import type { RunnerFileCommand, RunnerFileResponse } from './runner-files'
 import type { WorkspaceStart } from './workspaces'
+import type {
+  RunnerImportCommand,
+  RunnerImportReply,
+  RunnerImportPreparation,
+} from './runner-import.ts'
 
 export const RUNNER_PROTOCOL_VERSION = 2 as const
 export type RunnerProtocolVersion = 1 | 2
@@ -46,6 +51,7 @@ export interface RunnerEventEnvelope {
  * A failed tree scan sends files.unavailable before runner.ready.
  */
 export type RunnerEvent =
+  | RunnerImportPreparation
   | AgentChatEvent
   | RunnerFileEvent
   | RunnerPortsUpdated
@@ -54,7 +60,7 @@ export type RunnerEvent =
   | { type: 'workspace.title'; name: string }
 
 export type RunnerToWorkspace =
-  RunnerHello | RunnerEventEnvelope | RunnerFileResponse
+  RunnerHello | RunnerEventEnvelope | RunnerFileResponse | RunnerImportReply
 
 /**
  * A confirm covers contiguous stored events or their stored refusal markers.
@@ -187,7 +193,15 @@ export type RunnerCommandV2 =
 export type RunnerCommand = RunnerCommandV1 | RunnerCommandV2
 
 export type WorkspaceToRunnerV1 =
-  RunnerWelcome<1> | RunnerConfirm | RunnerResend | RunnerCommandV1
+  | RunnerWelcome<1>
+  | RunnerConfirm
+  | RunnerResend
+  | RunnerCommandV1
+  | RunnerImportCommand
 export type WorkspaceToRunnerV2 =
-  RunnerWelcome<2> | RunnerConfirm | RunnerResend | RunnerCommandV2
+  | RunnerWelcome<2>
+  | RunnerConfirm
+  | RunnerResend
+  | RunnerCommandV2
+  | RunnerImportCommand
 export type WorkspaceToRunner = WorkspaceToRunnerV1 | WorkspaceToRunnerV2

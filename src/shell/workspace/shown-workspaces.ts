@@ -1,5 +1,6 @@
 import type { AppModel } from '../../app/app-model'
 import type { ArchiveModel } from '../../app/archive-model'
+import { ConductorDocuments } from '../../app/conductor-documents'
 import type { OrgModel } from '../../app/org-model'
 import { valueOf } from '../../app/store'
 import { WorkspaceModel } from '../../app/workspace-model'
@@ -74,6 +75,8 @@ export class ShownWorkspaces {
   private readonly kept = new Map<string, KeptWorkspace>()
   /** The kept files of each workspace, made when a Files part first shows. */
   private readonly keptFiles = new Map<string, WorkspaceFiles>()
+  /** The old documents of each workspace from Conductor that showed. */
+  private readonly keptDocuments = new Map<string, ConductorDocuments>()
 
   /**
    * `onShow` runs at the first show of each workspace, after its render. It
@@ -185,12 +188,29 @@ export class ShownWorkspaces {
     return files
   }
 
+  /**
+   * The kept old documents of a workspace from Conductor. The first call
+   * makes the model, which reads nothing until a part opens it. It reads
+   * through the client of the org, which takes each `org_suspended`
+   * refusal.
+   */
+  documents(orgId: string, workspaceId: string): ConductorDocuments {
+    const key = `${orgId}/${workspaceId}`
+    const known = this.keptDocuments.get(key)
+    if (known) return known
+    const { api } = this.app.org(orgId).services
+    const documents = new ConductorDocuments(api, orgId, workspaceId)
+    this.keptDocuments.set(key, documents)
+    return documents
+  }
+
   /** Stops every kept workspace and forgets it, as at a sign-out. */
   clear(): void {
     for (const shown of this.kept.values()) stop(shown)
     this.kept.clear()
     for (const files of this.keptFiles.values()) files.stop()
     this.keptFiles.clear()
+    this.keptDocuments.clear()
   }
 }
 

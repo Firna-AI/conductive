@@ -41,13 +41,18 @@ workspace, and the mixed mark of Select all.
   notices of `sandboxNoticeState.ts` have the state inactive, with the
   words of `ActivateBar` and `ImportedPanel`, so the app draws them too.
   The screens of an imported workspace keep these two parts, whose
-  controls link to the screens of their state. Before an activation, or
-  after a failed one, the workspace has no cloud computer to check, so
-  `ImportedArchiveDialog` asks Archive with no check. It says that the
-  workspace can no longer be activated and that its old sessions stay
-  readable. After that Archive, `ArchivedImportBar` names the day and the
-  readable old sessions, and no deleted cloud computer, because the
-  workspace never had one.
+  controls link to the screens of their state. Before a successful
+  activation, Archive checks nothing, and `ImportedArchiveDialog` asks it
+  with no check. It says that the workspace cannot be activated while it
+  is archived and that its old sessions stay readable, and the stored
+  work stays. It
+  says neither that the work is pushed nor that a cloud computer is
+  deleted, because no activation succeeded. After that Archive,
+  `ArchivedImportBar` names the day and the readable old sessions. The
+  toast after Archive offers Restore only while the app keeps a cloud
+  computer, so the toast of a workspace that never started has no Restore.
+  After a successful activation, Archive is one action, and the workspace
+  shows the toast, the bar, and the row of every archived workspace.
 - `MobileTabBar`, `ToolsPanel`, the list tabs of `FilesPanel`, and
   `WorkspaceTabs` take optional links for a workspace whose screens are not
   those of every workspace. A tab with no screen there, or with null, stays

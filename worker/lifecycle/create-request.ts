@@ -34,7 +34,7 @@ export async function prepareCreationRequest(
   input: WorkspaceCreationInput,
   reservedId?: string,
   providerAccount = DEFAULT_PROVIDER_ACCOUNT,
-): Promise<WorkspaceStartJob> {
+): Promise<Extract<WorkspaceStartJob, { kind: 'create' }>> {
   const { env, dependencies } = runtime
   await requireOrgMember(env.DB, orgId, user.id)
   const image = await readCreationImage(

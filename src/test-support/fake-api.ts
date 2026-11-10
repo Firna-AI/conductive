@@ -8,6 +8,7 @@ import type { FakeMethod, FakeRouteWriter } from './fake-api-routes'
 import { fakeCoreRoutes } from './fake-core-routes'
 import { fakeDeviceRoutes } from './fake-device-routes'
 import { FakeWorkspaceEvents } from './fake-events'
+import { fakeImportRoutes, type FakeImport } from './fake-import-routes'
 import { fakeToolRoutes } from './fake-tool-routes'
 import { fakeWorkspaceRoutes } from './fake-workspace-routes'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
@@ -34,6 +35,11 @@ export interface FakeApiOptions {
    * the labels of the mockups, to the file lists and to each finished turn.
    */
   paths?: PathState
+  /**
+   * The fake workspace came from an import of Conductor, in this state, with
+   * its old documents, as `fakeImportRoutes` says.
+   */
+  imported?: FakeImport
 }
 
 function routeKey(method: string, path: string): string {
@@ -75,6 +81,7 @@ export class FakeApiServer implements FakeRouteWriter {
       paths,
     )
     fakeToolRoutes(this, options.banner ?? 'ready-to-merge', paths)
+    if (options.imported) fakeImportRoutes(this, options.imported)
     const { workspaces, created } = workspaceFixtures(options.workspaceState)
     fakeDeviceRoutes(
       this,

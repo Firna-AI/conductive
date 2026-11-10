@@ -35,10 +35,11 @@ import {
 } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { applyStartRunnerReady } from './start-runner'
-import { prepareStartSuccess, runnerStartConnected } from './start-completion'
+import { runnerStartConnected } from './start-completion'
 import { finishArchivedStart, recoverArchivedStart } from './archive-start'
 import { publishStartCompletion } from './start-result'
 import { enqueueWorkspaceStart } from './start-admission'
+import { advanceImportActivation } from './import-activation-progress'
 
 /** The actor's alarm owns progress. Waiting HTTP requests own no phase. */
 export class WorkspaceStartCoordinator {
@@ -185,7 +186,9 @@ export class WorkspaceStartCoordinator {
         })
       const state = await this.endpoint.readLifecycle()
       if (!state?.start || state.state === 'stopped' || state.state === 'error')
-        await this.endpoint.beginLifecycleStart(job.kind)
+        await this.endpoint.beginLifecycleStart(
+          job.kind === 'activate' ? 'create' : job.kind,
+        )
       if (job.phase === 'runner') {
         return await this.finish({ ok: true })
       }
@@ -211,6 +214,17 @@ export class WorkspaceStartCoordinator {
         else await this.storage.retry(job.attempt, 'progress')
         return false
       }
+      if (
+        await advanceImportActivation(
+          this.env,
+          this.endpoint,
+          this.storage,
+          provider,
+          row,
+          job,
+        )
+      )
+        return false
       if (
         !(await advanceStartSteps(
           this.env,
@@ -270,18 +284,13 @@ export class WorkspaceStartCoordinator {
   private finish(result: WorkspaceStartResult): Promise<boolean> {
     return publishStartCompletion(
       this.env,
+      this.endpoint,
       this.storage,
+      this.dependencies.now,
       this.waiters,
       this.creationWaiters,
       this.admissionWaiters,
       result,
-      () =>
-        prepareStartSuccess(
-          this.env,
-          this.endpoint,
-          this.storage,
-          this.dependencies.now,
-        ),
     )
   }
 }

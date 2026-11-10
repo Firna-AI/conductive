@@ -181,7 +181,9 @@ history, with chat and lifecycle events.
 ## Creates and resumes
 
 The [browser routes](README.md#browser-routes) queue the start of each
-create and resume. The workspace object runs that start:
+create and resume. [Import activation](import-activation.md) gives the third start kind.
+
+The workspace object runs that start:
 
 - A create or a resume queues its start with `queueLifecycleStart`. The
   workspace object runs the start, so a closed browser does not cancel it.

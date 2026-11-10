@@ -83,8 +83,8 @@ inputs in full.
 | `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
-| `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
-| `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
+| `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds, refreshes, and new import activation attempts | The public HTTPS URL of the runner archive. |
+| `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds, refreshes, and new import activation attempts | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
 | `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](deployment/runner-archive.md#the-software-image) says. It is not a secret. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
 | `CHAT_ATTACHMENTS_S3_BUCKET_URL` | The upload links of an import from Conductor | The S3 API address of the bucket of `CHAT_ATTACHMENTS`, in path style: `https://<account ID>.r2.cloudflarestorage.com/conductive-chat-attachments`. It is not a secret. [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says more. |

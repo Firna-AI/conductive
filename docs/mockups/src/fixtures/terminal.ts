@@ -179,6 +179,7 @@ export const terminalProcesses: Readonly<
   'saved-carts': null,
   'saved-carts-branch': null,
   'coupon-totals': null,
+  'coupon-totals-activated': null,
 }
 
 /** An idle terminal: it waits at a prompt on the repository and the branch. */

@@ -677,7 +677,23 @@ They do not reopen a user decision. The earlier dated facts stay as history.
   Git disk summary to the snapshot. Reason: the content byte totals cannot
   describe the checkout and the Git expansion of an unpushed HEAD before
   the transfer.
-
+- Agent call for Archive after the main merge, 10 November 2026: keep the
+  approved Archive question, with no check, before a successful
+  activation. After a successful activation, use main's one-action
+  Archive, its toast, and its 14-day Restore. Offer Restore only while a
+  cloud computer is kept, as main's Restore rule says, so the toast after
+  the Archive of a never-started import offers no Restore. Reason: main
+  replaced the native Archive question with one action and a toast, and
+  its Restore needs a kept computer. This aligns the import with those
+  existing rules. It adds no requirement and reopens no decision.
+- Agent call for the saved tab of an old document, 10 November 2026: keep
+  the tab of an old document in the saved view of its member, as
+  `{ kind: 'conductor-document', documentId }`, as the view keeps a file
+  tab. The host renderer of the tab row takes only file and diff tabs, and
+  the row skips this tab until Milestone 8 shows it, with no loss of the
+  saved tab. Reason: an old document opens as a file opens, and the server
+  keeps the view state. This applies existing rules. It adds no store,
+  route, migration, existence check, or refusal, and no requirement.
 - Agent call for the Git LFS objects that GitHub holds, 10 November 2026:
   add the private control `repository.lfs` to the existing upload
   operation. The Mac app sends pages of `ImportLfsObject` pairs, each a
@@ -697,6 +713,37 @@ They do not reopen a user decision. The earlier dated facts stay as history.
   performance, and exact-byte rules. It changes no schema, manifest, or
   storage, and it adds no public result, receipt, limit, gate, or
   requirement.
+- Parent design call for the activation-only installer, 10 November 2026:
+  the first activation of an imported workspace installs the current runner
+  archive and the workspace tools in its own new cloud computer, before the
+  restore. The user's actual request was the attached transcript and the
+  implementation of all milestones and tasks of this plan. The user made no
+  separate choice of this installer exception. The acceptance parent
+  classifies it as a necessary implementation call inside the approved new
+  first activation. Reason: that activation has no first message and no
+  first turn, and it needs the current import receiver and its checked
+  delivery, which the runner of an older org image can lack. Developer
+  autonomy covers this bounded mechanic. Ordinary and native create, resume,
+  and retention, the build-only install of the terminal programs of decision
+  148, the minimum isolation pin from the image, and the rejected install at
+  each ordinary start stay as they are. It adds no global update, no rerun
+  of an org install, no gate for an old image, and no automatic upgrade of
+  ordinary starts. `port-previews.md`, `architecture/components.md`, and
+  `imported-workspaces.md` state this narrow exception. The earlier
+  bootstrap preparation missed their literal words. It did not prove that
+  no such rule existed.
+- Parent wording clarification for the import Archive question, 10 November
+  2026: the question says "It cannot be activated while archived. Its old
+  sessions stay readable." The approved earlier words said that the
+  workspace can no longer be activated after Archive. That wrongly implied
+  a permanent ban. An interrupted activation with a kept computer comes back
+  stopped through Restore, and an explicit Activate then continues it. The
+  acceptance parent resolved this as a routine clarification of the words,
+  not as a new decision. The question, the block of Activate while the
+  workspace is archived, and Restore with a kept computer stay as they are.
+  It adds no action and no policy. An import that never started a computer
+  still offers no Restore. The completed mockup milestones keep their words
+  as history.
 
 ### Mockup design calls, 10 November 2026
 
@@ -1151,22 +1198,27 @@ Depends on: 4
       rollout file in a cloud computer, with each login kind that
       Conductive offers: a Claude subscription token, an Anthropic API key,
       and an OpenAI API key for a Codex history from a ChatGPT login.
-- [ ] Measure the free disk of a new cloud computer, and check before
-      activation that the package fits it (decision 11).
-- [ ] Add the activation start: a first start with no first message.
-- [ ] Send the bucket data to the runner over the runner connection, in
+- [ ] Measure the free disk of a new cloud computer.
+- [x] Check before activation that the package fits the free disk of the
+      cloud computer (decision 11).
+- [x] Add the activation start: a first start with no first message.
+- [x] Send the bucket data to the runner over the runner connection, in
       checked parts below 1 MiB, before the first turn.
-- [ ] Let the runner apply the bundle, the changed files, and `.context`,
+- [x] Let the runner apply the bundle, the changed files, and `.context`,
       put the Markdown files of the old sessions in `.context/conductor/`,
-      and add `.context/` to the local exclude file.
-- [ ] Put each memory file in the agent data of the cloud computer, write
+      and add the root rule `/.context/` to the local exclude file.
+- [x] Put each memory file in the agent data of the cloud computer, write
       each pair into the runner state, and give each imported session its
       starter. Fall back to the Markdown file for a session that does not
       resume (decision 5).
-- [ ] Delete the bucket data after a successful activation, and keep it
+- [x] Delete the bucket data after a successful activation, and keep it
       after a failed one.
-- [ ] Add Worker and runner tests, as the `testing` skill says.
-- [ ] Update the READMEs of `worker/lifecycle` and `runner`.
+- [x] Add Worker and runner tests, as the `testing` skill says.
+- [x] Update the READMEs of `worker/lifecycle` and `runner`.
+
+Verification evidence: `.context/import-from-conductor/current/m5-activation-report.md` and
+`.context/import-from-conductor/current/m5-runner-corrections-report.md`. Docs evidence:
+`.context/import-from-conductor/current/m5-docs-report.md`.
 
 ## Milestone 6: The Mac app scan and upload
 
@@ -1238,6 +1290,71 @@ Agent calls, 10 November 2026:
 
 Verification evidence: `.context/import-from-conductor/milestone-7/final-report.md`.
 
+## Milestone 7a: Archive mockups after the main merge
+
+Tags: mockup
+
+Depends on: 1, 3a
+
+The main merge replaced the native Archive question with one action, a
+toast, and a 14-day Restore that needs a kept cloud computer. The approved
+import question before a successful activation stays. No mockup draws the
+toast after the Archive of a never-started import, which offers no Restore,
+or an archived import that was activated. These TODOs draw those states
+before Milestone 8 builds them. They change no requirement.
+
+- [x] Draw the toast after the Archive of a never-started import, with no
+      Restore, over the workspace and over the list, on desktop and phone.
+      Keep the approved Archive question and the old-document links.
+- [x] Draw an activated import that is then archived: one-action Archive,
+      its toast and archived bar with the last day of Restore, its row in
+      the Archived group, and Restore back to its section, stopped. Keep
+      its old-document links and its navigation in the same workspace and
+      state. Native examples keep main's toast and Restore.
+- [x] Correct `docs/mockups/design-import.md`, which says that a failed
+      activation never had a cloud computer. Keep the question with no
+      check before a successful activation, and keep the stored work.
+- [x] Run the focused mockup checks, the Markdown link check, and the
+      strict mockup build. Smoke the changed pages and the native Archive
+      pages in Chrome, on desktop and phone, in light and dark. Save the
+      evidence under `.context/import-from-conductor/`.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+Verification evidence: `.context/import-from-conductor/current/m7a-mockup-gap-report.md`.
+
+## Milestone 7b: The saved tab of an old document
+
+Depends on: 4
+
+The server keeps the view of each member, with its open tabs. An old
+document opens as a file opens, so its tab must stay in that view. The
+shared tab contract and the Worker's check of a saved view hold only
+session, file, and diff tabs today. This backend milestone adds the tab of
+an old document before Milestone 8 shows it. It adds no store, route,
+migration, existence check, or refusal, and it changes no requirement.
+
+- [x] Add `{ kind: 'conductor-document'; documentId: string }` to the
+      shared `WorkspaceTab` contract in `src/shared/workspace-view.ts`.
+      Keep the session, file, and diff tabs as they are.
+- [x] Let `worker/app-api/workspace-view.ts` read, save, and return that
+      tab in a saved view, also as the active tab, with the checks of each
+      other tab. Keep each saved native view readable and unchanged.
+- [x] Let the client callers take that tab: `readTab` in
+      `src/chat/api/read-responses.ts`, `tabKey` in
+      `src/chat/state/tab-order.ts`, and `equalTabs` in
+      `src/shell/workspace/files/view-tabs.ts`. In
+      `src/chat/components/tab-row.ts`, limit `HostTab` to file and diff
+      tabs, and let `rowOf` skip any other tab while the saved view keeps
+      it until Milestone 8 shows it.
+- [x] Add the test of a saved view with mixed tabs through the production
+      HTTP route, as the `testing` skill says.
+- [x] Update the README of each changed area, with `src/shared/README.md`
+      and `worker/app-api/README.md`.
+
+Verification evidence: `.context/import-from-conductor/current/m7b-document-tabs-report.md`.
+Docs evidence: `.context/import-from-conductor/current/m7b-docs-report.md`.
+
 ## Milestone 7c: The Git LFS objects that GitHub holds
 
 Depends on: 4
@@ -1286,25 +1403,41 @@ Verification evidence: `.context/import-from-conductor/current/m7c-lfs-facts-rep
 
 Tags: ui
 
-Depends on: 1, 4, 5, 6, 7c
+Depends on: 1, 4, 5, 6, 7a, 7b, 7c
 
-- [ ] Build the entry, the offer, the list, the progress, and the result
+Process authorization of the parent for the user, 10 November 2026: the
+disjoint UI source of this milestone can start once the public contracts that
+it uses are frozen, while the private proofs and repeats of Milestone 5
+continue. The milestones on the `Depends on:` line still govern the final
+integration and the completion checks of this milestone. This is a process
+approval. It adds no product decision and changes no required gate.
+
+- [x] Build the entry, the offer, the list, the progress, and the result
       from the mockups.
-- [ ] Show Select all with a mixed mark for a partial selection. Use the
+- [x] Show Select all with a mixed mark for a partial selection. Use the
       selected rows for the count and upload size.
-- [ ] Build the imported workspace: its flag, the links to its old
+- [x] Build the imported workspace: its flag, the links to its old
       sessions, their Markdown view, and the Activate question.
-- [ ] Show Not active with no premature file count or project file list.
+- [x] Show Not active with no premature file count or project file list.
       Use the shared notice contract from Milestone 3a.
-- [ ] Keep the old-session links in the session history after a new chat
+- [x] Keep the old-session links in the session history after a new chat
       fills the tab. Keep phone navigation in the same workspace and
       lifecycle state, including its Markdown view and archived state.
-- [ ] Use the imported Archive question and archived words before a
+- [x] Use the imported Archive question and archived words before a
       successful activation. Keep the old documents readable. Do not say
       that work is pushed or a cloud computer was deleted when neither
       fact is true.
-- [ ] Add the web app tests, as the `testing` skill says.
-- [ ] Update `src/app/README.md` and `src/shell/workspace/README.md`.
+- [x] Add the web app tests, as the `testing` skill says.
+- [x] Update `src/app/README.md` and `src/shell/workspace/README.md`.
+- [ ] After Milestone 6 pushes its production code, change the note of the
+      `local-workspaces` row in
+      `src/marketing/from-conductor/areas/workspaces-and-branches.ts`: the
+      import through the Mac app becomes in progress. Keep the row ID and
+      its status, add no due date, and keep the check time, as
+      [Conductor comparison](../docs/protocol/conductor-comparison.md#statuses)
+      says.
+
+Verification evidence: `.context/import-from-conductor/current/m8-ui-report.md`.
 
 ## Milestone 9: Verification, commit, review, and pull request
 

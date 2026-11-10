@@ -8,6 +8,7 @@
     "ready",
     "resumed",
     "archive",
-    "archived"
+    "archived",
+    "archived-activated"
   ]
 }

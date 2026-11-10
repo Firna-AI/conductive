@@ -162,8 +162,10 @@ settings file in the repository can send the requests of Claude to another
 address, as
 [How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
 says. A runner of protocol version 1 gives the agent programs the agent
-login itself. Each sandbox keeps the runner of the org image that it starts
-from.
+login itself. Each sandbox of an ordinary start keeps the runner of the org
+image that it starts from. The first activation of an imported workspace
+installs the current runner in its new sandbox first, as
+[The activation](../protocol/imported-workspaces.md#the-activation) says.
 
 The preview relay forwards each preview request to a local port of the
 sandbox. The previewed server then gets its local address as `Host`

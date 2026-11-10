@@ -35,6 +35,12 @@ export type WorkspaceRow = {
    * its row offers Restore, except in a suspended org.
    */
   restoreOpen?: boolean
+  /**
+   * The screen that Restore of the row opens, in place of the native one,
+   * such as a workspace from Conductor back in its section. Null keeps
+   * Restore static.
+   */
+  restoreTo?: string | null
 }
 
 export type SidebarSection = {

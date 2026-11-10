@@ -22,12 +22,18 @@ import type { WorkspaceState } from './workspaceState'
 
 /**
  * The links of the selected row of the open workspace: the screen of its
- * state, and for a workspace from Conductor the question of its Archive.
- * Null keeps a control static, and undefined keeps the native one.
+ * state, and for a workspace from Conductor what its Archive and its
+ * Restore open. Null keeps a control static, and undefined keeps the
+ * native one.
  */
 type OpenRowLinks = Readonly<{
   to: string | null | undefined
   archiveTo?: string | null
+  /**
+   * The screen that Restore of the archived row opens. Null keeps it
+   * static.
+   */
+  restoreTo?: string | null
 }>
 
 /**
@@ -39,7 +45,11 @@ type OpenRowLinks = Readonly<{
 export function openRowLinks(state: WorkspaceState): OpenRowLinks {
   if (isImported(state)) {
     const screens = importedScreensOf(state)
-    return { to: screens.chat, archiveTo: screens.archive }
+    return {
+      to: screens.chat,
+      archiveTo: screens.archive,
+      restoreTo: screens.restore,
+    }
   }
   if (state.workspace !== 'saved-carts-branch') return { to: undefined }
   if (state.sandbox === 'starting') return { to: paths.newWorkspaceBranchStart }
@@ -101,7 +111,10 @@ export function workspaceSidebar(props: {
   // no kept cloud computer, so its row offers no Restore.
   const list =
     workspace.from === 'conductor'
-      ? archivedWithImport(workspace, importedWorkspaces, row?.to)
+      ? archivedWithImport(workspace, importedWorkspaces, row?.to, {
+          open: props.restoreOpen,
+          to: row?.restoreTo ?? null,
+        })
       : archivedSections(workspace, suspended, props.restoreOpen)
   return (
     <Sidebar

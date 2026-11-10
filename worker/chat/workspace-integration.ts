@@ -21,6 +21,10 @@ import type { WorkspaceController } from '../lifecycle/workspace-controller-type
 import { WorkspaceChat } from './backend'
 import { firstMessageIdentity } from './first-message'
 import { projectWorkspaceTitle } from './workspace-title'
+import {
+  unfinishedImport,
+  importPreparedForDispatch,
+} from '../lifecycle/import-activation-data'
 import type { ChatCallbackPublisher, ChatDependencies } from './types'
 import {
   observeWorkspaceCallbacks,
@@ -94,6 +98,17 @@ export function createWorkspaceIntegration(
       })
     },
     runnerDetached: (connectionId) => files.runner.detach(connectionId),
+    receiveImportResult: (reply, connectionId) =>
+      controller.receiveImportResult(reply, connectionId),
+    runnerPreparationAllowed: async (id) => {
+      const state = await controller.readLifecycle()
+      return importPreparedForDispatch(
+        env.DB,
+        id,
+        state?.startupPrepared === true &&
+          ['ready', 'working', 'unread', 'input'].includes(state.state),
+      )
+    },
     runnerHello: async (_id, publish) =>
       controller.recoverLifecycle(callbackPublisher(publish)),
     ...observeWorkspaceCallbacks(
@@ -126,7 +141,9 @@ export function createWorkspaceIntegration(
           controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
         turnDispatching: async (_id, turn, publish) => {
           const state = await controller.readLifecycle()
-          if (!state) return true
+          if (!state) {
+            return !(await unfinishedImport(env.DB, _id))
+          }
           if (!['ready', 'working', 'unread', 'input'].includes(state.state))
             return false
           await controller.registerLifecycleTurn(
@@ -195,6 +212,8 @@ export function createWorkspaceIntegration(
     dependencies,
     {
       ...platform,
+      sendImportCommand: (id, command) => chat.sendImportCommand(id, command),
+      seedImportSession: (id, input) => chat.seedImportSession(id, input),
       deviceWaiting: (id) => devices.waiting(id),
       stopping: async (id) => {
         for (const hook of stoppedHooks) await hook(id)

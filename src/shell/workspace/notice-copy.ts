@@ -42,9 +42,41 @@ const history = 'Your chat history is available.'
  */
 const chatSaved = 'Your chat is saved.'
 
-/** What stays of the workspace: a failed first start keeps only its chat. */
-export function keptBody(notice: SandboxNoticeState, body: string): string {
-  return notice.problem === 'error' && notice.firstStart ? chatSaved : body
+/** What a workspace from Conductor keeps before a successful activation. */
+const importKept = 'Your work from Conductor is kept.'
+
+/**
+ * The words of a workspace from Conductor before a successful activation,
+ * where they differ from the words of every workspace: a failed activation
+ * keeps the work from Conductor, and an Archive without a kept cloud
+ * computer keeps the old sessions readable. No activation succeeded, so
+ * the words claim no deleted cloud computer. Null keeps the general words.
+ */
+function importProblem(
+  notice: SandboxNoticeState,
+  days: ArchiveDays,
+): Problem | null {
+  if (notice.problem === 'error') {
+    return {
+      icon: CircleAlert,
+      title: "The workspace couldn't be activated",
+      body: importKept,
+      panelBody: importKept,
+      action: 'Try again',
+      tone: 'danger',
+    }
+  }
+  if (notice.problem === 'archived' && notice.restore === undefined) {
+    return {
+      icon: Archive,
+      title: `Archived on ${days.archivedOn}`,
+      body: 'Its sessions from Conductor stay readable.',
+      panelTitle: 'Archived',
+      panelBody: 'It was never activated, so it has no files or tools.',
+      tone: 'neutral',
+    }
+  }
+  return null
 }
 
 /**
@@ -100,10 +132,18 @@ function archivedProblem(
   }
 }
 
+/**
+ * The words of the notice. A failed first start keeps only its chat.
+ * `awaitsActivation` marks a workspace from Conductor before a successful
+ * activation, which has its own words, as `importProblem` says.
+ */
 export function problemOf(
   notice: SandboxNoticeState,
   days: ArchiveDays,
+  awaitsActivation = false,
 ): Problem {
+  const imported = awaitsActivation ? importProblem(notice, days) : null
+  if (imported) return imported
   switch (notice.problem) {
     case 'stopped':
       return {
@@ -114,15 +154,17 @@ export function problemOf(
         action: 'Resume',
         tone: 'neutral',
       }
-    case 'error':
+    case 'error': {
+      const kept = notice.firstStart ? chatSaved : saved
       return {
         icon: CircleAlert,
         title: "The sandbox couldn't start",
-        body: saved,
-        panelBody: saved,
+        body: kept,
+        panelBody: kept,
         action: 'Try again',
         tone: 'danger',
       }
+    }
     case 'refused':
       return {
         icon: refusedIcon,

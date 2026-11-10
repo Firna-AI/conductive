@@ -153,6 +153,7 @@ export function useRowMenus(props: {
       ?.section.id ?? null
   const layer = (
     <>
+      {lifecycle.question}
       {open && openRow && openItems.length > 0 ? (
         <RowMenu
           actions={actions}

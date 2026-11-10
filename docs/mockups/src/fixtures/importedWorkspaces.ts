@@ -48,6 +48,18 @@ export const webhookSignatures: Workspace = {
   from: 'conductor',
 }
 
+/**
+ * Coupon totals at checkout after its activation succeeded. It is the same
+ * workspace, with the same key. Its own record marks the activation, so
+ * that the archived example of an activated workspace never comes from its
+ * Archive alone.
+ */
+export const activatedCouponTotals: Workspace = {
+  ...couponTotals,
+  status: 'ready',
+  activated: true,
+}
+
 /** The workspaces of the first import, in the order of the import list. */
 export const importedWorkspaces: readonly Workspace[] = [
   couponTotals,

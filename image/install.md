@@ -24,6 +24,12 @@ The [software image build](../worker/software-image/README.md) runs the same
 agent tools and image software commands as an org build. It has no
 repository or environment variable.
 
+The first activation of an imported workspace also runs the agent tools
+command and `installImageSoftware`, in its own new cloud computer, before its
+restore. It installs the runner archive that it captured at its admission.
+It changes no org image, as
+[An import activation](workspace-start.md#an-import-activation) says.
+
 The software step of a build calls `installImageSoftware`. It writes the
 scripts, both service units, and the relay socket unit to `/opt/conductive/staged/`.
 Each staged script holds the quoted full path of the private Node in place

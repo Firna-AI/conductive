@@ -3,6 +3,7 @@ import {
   workspacePath,
   workspacePaths,
   workspacesPath,
+  type ActivateWorkspaceResponse,
   type OrderedWorkspaceResponse,
   type Workspace,
   type WorkspaceResponse,
@@ -29,7 +30,12 @@ import {
   type Params,
   type Route,
 } from './router'
-import { cancelStart, resumeWorkspace, stopLater } from './start-steps'
+import {
+  activateWorkspace,
+  cancelStart,
+  resumeWorkspace,
+  stopLater,
+} from './start-steps'
 import type { OrgState } from './state'
 
 /**
@@ -127,7 +133,10 @@ function archiveWorkspace(
   const current = requireWorkspace(org, workspaceId)
   if (current.state !== 'archived') {
     const saved = org.starts.get(workspaceId)?.start ?? null
-    const first = failedFirstStart(current, saved)
+    // A failed first start, and an import before its first Activate, have
+    // no cloud computer to keep.
+    const first =
+      failedFirstStart(current, saved) || current.state === 'inactive'
     cancelStart(org, workspaceId)
     org.starts.set(workspaceId, { start: null, error: null })
     const at = backend.now()
@@ -225,6 +234,18 @@ export function workspaceRoutes(backend: DevBackend): Route[] {
         const org = orgOf(params)
         resumeWorkspace(backend, org, params.workspace)
         return orderedDetailReply(backend, org, params.workspace)
+      },
+    },
+    {
+      method: 'POST',
+      path: workspacePaths.activate(ID.org, ID.workspace),
+      answer: ({ params }) => {
+        const org = orgOf(params)
+        const sessionId = activateWorkspace(backend, org, params.workspace)
+        return json({
+          ...workspaceDetail(org, params.workspace),
+          sessionId,
+        } satisfies ActivateWorkspaceResponse)
       },
     },
     {

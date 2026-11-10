@@ -27,6 +27,15 @@ function startStep(value: unknown): StartStep {
 export function parseOtherEvent(value: unknown): RunnerEvent | null {
   const input = record(value)
   switch (input.type) {
+    case 'import.preparation':
+      if (input.preparation !== 'fallback') return invalidInput()
+      return {
+        type: input.type,
+        sessionId: identifier(input.sessionId),
+        turnId: identifier(input.turnId),
+        documentId: identifier(input.documentId),
+        preparation: 'fallback',
+      }
     case 'runner.ready':
       return { type: input.type }
     case 'workspace.title':

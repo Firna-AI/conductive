@@ -7,6 +7,10 @@ import type {
 } from '../../src/shared/runner'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
 import type {
+  RunnerImportCommand,
+  RunnerImportReply,
+} from '../../src/shared/runner-import'
+import type {
   RunnerConnection as TransportRunnerConnection,
   RunnerConnectionRequest,
   RunnerConnector as TransportRunnerConnector,
@@ -22,7 +26,7 @@ export interface LinkOptions {
   request: RunnerConnectionRequest
   connect: RunnerConnector
   now: () => number
-  command: (command: RunnerCommand) => void
+  command: (command: RunnerCommand | RunnerImportCommand) => void
   connected: () => Promise<void>
   disconnected: () => void
   warn: (message: string) => void
@@ -95,7 +99,7 @@ export class RunnerLink {
     if (envelope !== undefined) this.sendSaved(envelope)
   }
 
-  reply(response: RunnerFileResponse): void {
+  reply(response: RunnerFileResponse | RunnerImportReply): void {
     if (this.welcomed) this.send(response)
   }
 

@@ -1,6 +1,8 @@
+import { useState, type ReactNode } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { errorMessage } from '../../app/api/client'
 import type { ArchiveAction } from '../../app/archive-model'
+import { awaitsActivation } from '../../app/first-start'
 import { mayRestore } from '../../app/permissions'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
@@ -8,6 +10,7 @@ import type { User } from '../../shared/api'
 import { nameLabel } from '../../shared/name-label'
 import type { Workspace } from '../../shared/workspaces'
 import { useApp, useOrgModel } from '../context'
+import { ImportedArchiveDialog } from './imported/ImportedArchiveDialog'
 import { shownWorkspaces } from './tab-memory'
 
 /** Archive and Restore of the workspaces of one org, for its controls. */
@@ -16,14 +19,18 @@ export interface ArchiveActions {
   restore: (workspace: Workspace) => void
   /** The Archive or the Restore of a workspace that runs, if any. */
   running: (workspaceId: string) => ArchiveAction | null
+  /** The open question of Archive, which the control's screen shows. */
+  question: ReactNode
 }
 
 /**
  * Archive and Restore from each control of the app: the row and its menu,
  * the pull request bar, the palette, the archived bar, and the toast. Each
  * control uses the one flow of its workspace, so a second press while it
- * runs sends nothing. Archive asks no question. A done Archive shows a
- * toast that names the workspace. The toast offers Restore only while the
+ * runs sends nothing. Archive asks no question, except for a workspace
+ * from Conductor before a successful activation: its question says that
+ * the workspace cannot be activated while archived, and Archive of the
+ * question archives it. A done Archive shows a toast that names the workspace. The toast offers Restore only while the
  * workspace can come back: it is still archived, its cloud computer is
  * kept, its last day of Restore has not passed, and the org is not
  * suspended. A failure shows a toast that names the workspace, with the
@@ -59,7 +66,8 @@ export function useArchiveActions(orgId: string, viewer: User): ArchiveActions {
   const restore = (workspace: Workspace) => {
     flowOf(workspace).restore().catch(failed(workspace, 'restored'))
   }
-  const archive = (workspace: Workspace) => {
+  const [asking, setAsking] = useState<Workspace | null>(null)
+  const archiveNow = (workspace: Workspace) => {
     flowOf(workspace)
       .archive()
       .then(
@@ -76,9 +84,26 @@ export function useArchiveActions(orgId: string, viewer: User): ArchiveActions {
         failed(workspace, 'archived'),
       )
   }
+  const archive = (workspace: Workspace) => {
+    // The newest record decides, such as an activation that the list knows.
+    const current = org.workspace(workspace.id) ?? workspace
+    if (awaitsActivation(current)) setAsking(current)
+    else archiveNow(workspace)
+  }
+  const question = asking ? (
+    <ImportedArchiveDialog
+      archive={() => {
+        setAsking(null)
+        archiveNow(asking)
+      }}
+      close={() => setAsking(null)}
+      workspace={asking}
+    />
+  ) : null
   return {
     archive,
     restore,
     running: (workspaceId) => running.get(workspaceId) ?? null,
+    question,
   }
 }

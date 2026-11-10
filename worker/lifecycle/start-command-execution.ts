@@ -39,6 +39,8 @@ export async function advanceStartCommand(
     job.phase !== 'fetch' &&
     job.phase !== 'branch' &&
     job.phase !== 'startup' &&
+    job.phase !== 'import-software' &&
+    job.phase !== 'import-launch' &&
     job.phase !== 'terminal'
   )
     throw new WorkspaceStartError(null)
@@ -61,7 +63,10 @@ export async function advanceStartCommand(
         {
           kind: 'workspace',
           id: job.workspaceId,
-          attempt: job.commandAttempt ?? job.attempt,
+          attempt:
+            job.kind === 'activate' && job.phase === 'import-launch'
+              ? (job.activation.launchAttempt ?? job.attempt)
+              : (job.commandAttempt ?? job.attempt),
         },
         job.phase,
         job.phase === 'terminal'

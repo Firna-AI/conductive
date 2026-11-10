@@ -12,6 +12,22 @@ import {
 import { warnWorker } from '../warnings'
 import { InputActivityOwner } from './input-activity-owner'
 import { inputActivityUpdate } from './input-activity-update'
+import type { LifecycleActivityResult } from './workspace-runtime'
+
+export function recordWorkspaceActivity(
+  integration: ReturnType<typeof createWorkspaceIntegration>,
+  activity: InputActivityOwner,
+  at: number,
+): Promise<LifecycleActivityResult> {
+  return integration.chat.runLifecycle(() =>
+    integration.withGeneration(async () => {
+      const state = await integration.controller.readLifecycle()
+      const result = await integration.controller.lifecycleActivity(true)
+      if (result.ok && state) activity.record(state.workspaceId, at)
+      return result
+    }),
+  )
+}
 
 export function createWorkspaceInputActivity(
   context: DurableObjectState,

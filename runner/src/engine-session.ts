@@ -15,6 +15,8 @@ import type { TurnOutput } from './turn-output'
 import { failureCause } from './providers/failure'
 import { cancelable } from './engine-cancel'
 import { ProviderLifetime } from './providers/lifetime'
+import type { RunnerImportPreparation } from '../../src/shared/runner-import'
+import { importDocumentFile } from '../../src/shared/conductor-import-manifest'
 import type { WorkspaceToolRuntime } from './providers/workspace-tools'
 
 export interface ActiveTurn {
@@ -27,6 +29,7 @@ export interface ActiveTurn {
   waiting: ProviderInput[]
   output: TurnOutput
   stopped: boolean
+  providerOutputStarted: boolean
   provider: ProviderProcess | null
   lifetime: ProviderLifetime | null
   closing: Promise<void>
@@ -54,6 +57,7 @@ export interface EngineOptions {
   store: EventStore
   now: () => number
   emit: (event: AgentChatEvent) => Promise<void>
+  emitImport?: (event: RunnerImportPreparation) => Promise<void>
   checkpoint: (signal: AbortSignal) => Promise<Checkpoint>
   changedSince: (
     baseline: Checkpoint,
@@ -67,6 +71,7 @@ export function rememberSession(
   session: SessionRuntime,
 ): Promise<void> {
   return store.remember({
+    ...store.snapshot.sessions.find((saved) => saved.sessionId === session.id),
     sessionId: session.id,
     agent: session.agent,
     providerSessionId: session.conversationId,
@@ -117,6 +122,23 @@ export async function startProvider(
         commitAuthor: turn.first.commitAuthor,
         choice: session.choice,
         conversationId: session.conversationId,
+        ...(options.store.snapshot.sessions.find(
+          (saved) => saved.sessionId === session.id,
+        )?.conductorImport?.preparation === 'prepared'
+          ? { importedHistory: true }
+          : {}),
+        ...(session.conversationId === null &&
+        options.store.snapshot.sessions.find(
+          (saved) => saved.sessionId === session.id,
+        )?.conductorImport?.preparation === 'fallback'
+          ? {
+              importDocument: importDocumentFile(
+                options.store.snapshot.sessions.find(
+                  (saved) => saved.sessionId === session.id,
+                )?.conductorImport?.documentId ?? '',
+              ),
+            }
+          : {}),
         instructions: session.instructions,
         tools: { ...options.tools, turnId: turn.first.turnId },
         event,

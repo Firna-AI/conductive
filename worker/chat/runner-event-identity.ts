@@ -2,7 +2,7 @@ import type { RunnerEvent } from '../../src/shared/runner'
 import { isRecord } from '../http'
 
 export interface RunnerEventIdentity {
-  type: RunnerEvent['type'] | null
+  type: Exclude<RunnerEvent['type'], 'import.preparation'> | null
   sessionId: string | null
   turnId: string | null
   revision: number | null

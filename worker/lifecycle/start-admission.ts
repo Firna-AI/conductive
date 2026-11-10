@@ -61,7 +61,9 @@ export async function enqueueWorkspaceStart(
     ))
   )
     return false
-  await endpoint.beginLifecycleStart(job.kind)
+  await endpoint.beginLifecycleStart(
+    job.kind === 'activate' ? 'create' : job.kind,
+  )
   await storage.schedule()
   return true
 }
