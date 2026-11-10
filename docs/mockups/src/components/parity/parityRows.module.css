@@ -20,6 +20,11 @@
   text-transform: var(--ui-label-case);
 }
 
+/* The name of the feature column starts where the names start. */
+.head th:nth-child(2) {
+  padding-left: 10px;
+}
+
 /* Each row sits on a neutral hairline, as the rows of a table do. */
 .row > * {
   padding: 14px 20px 14px 0;
@@ -28,11 +33,16 @@
   vertical-align: top;
 }
 
+/*
+ * The name and the note keep 10px from the two ends of the fill of an
+ * opened row, so that no text touches its edge.
+ */
 .row > :last-child {
-  padding-right: 0;
+  padding-right: 10px;
 }
 
 .name {
+  padding-left: 10px;
   color: var(--ui-ink);
   font-size: 15px;
   font-weight: var(--ui-weight-heading);
@@ -58,6 +68,83 @@
   color: var(--ui-ink2);
   font-size: 14px;
   line-height: 1.55;
+}
+
+/*
+ * The row that its address opens, such as `#file-tree`: a quiet fill on the
+ * cells of the feature, never on the merged Area cell. The page stops the
+ * row 16px under its top edge.
+ */
+.row {
+  scroll-margin-top: 16px;
+}
+
+.row:target > .name,
+.row:target > .status,
+.row:target > .note {
+  background: var(--ui-selected);
+}
+
+/* The end of the name keeps the link on the line of the last word. */
+.nameEnd {
+  white-space: nowrap;
+}
+
+/*
+ * The link to the address of the row: a quiet icon in the muted colour. A
+ * device that can hover shows it while the pointer is over a cell of the
+ * feature, while the link has the keyboard focus, and on the opened row.
+ * The merged Area cell belongs to the first row of its area, so the pointer
+ * over it shows no link. The margin keeps the focus ring off the name.
+ */
+.link {
+  display: inline-flex;
+  position: relative;
+  margin-left: 3px;
+  color: var(--ui-muted);
+  vertical-align: -2px;
+  opacity: 0;
+}
+
+.row:has(> .name:hover, > .status:hover, > .note:hover) .link {
+  opacity: 1;
+}
+
+.row:target .link,
+.link:focus-visible {
+  opacity: 1;
+}
+
+.link:hover {
+  color: var(--ui-ink);
+}
+
+/* The focus ring of every link of the site. */
+.link:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+
+/* A phone extends the touch area to 44px without moving the text. */
+.link::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--ui-touch-min));
+  height: max(100%, var(--ui-touch-min));
+  transform: translate(-50%, -50%);
+  content: '';
+}
+
+/* A device without hover always shows the link, as a phone does. */
+@media (hover: none) {
+  .link {
+    opacity: 1;
+  }
+}
+
+.mobile .link {
+  opacity: 1;
 }
 
 /* A phone keeps the column names for screen readers only. */
@@ -102,4 +189,22 @@
 
 .mobile .status > * + * {
   margin-top: 0;
+}
+
+/*
+ * A phone fills the whole opened row as one rounded block. The fill reaches
+ * 10px past the text on each side and covers the hairlines above and under
+ * the row, so the text keeps its place and no line is narrower than the
+ * fill.
+ */
+.mobile .row:target {
+  margin: -1px -10px 0;
+  padding: 15px 10px 14px;
+  border-bottom-color: transparent;
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-selected);
+}
+
+.mobile .row:target > * {
+  background: none;
 }

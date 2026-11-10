@@ -117,9 +117,14 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   come from `src/marketing/from-conductor/`, the modules that the site also
   reads. `src/components/parity/` holds the parts. One table serves both
   layouts: each row also has an area cell of its own, and CSS shows the
-  merged cell on a computer and the cell of each row on a phone. The short
-  link of the hero and the Product column of the footer lead to the page,
-  with the words of the same modules.
+  merged cell on a computer and the cell of each row on a phone. The top
+  of the page ends with the date and the time in UTC of the last full
+  check of the rows, on its own line. Each row has the id of its feature
+  as its address, such as `from-conductor#file-tree`. A quiet link icon
+  after the name of the feature leads there with no script, and the row
+  that the address opens has a quiet fill. The short link of the hero and
+  the Product column of the footer lead to the page, with the words of the
+  same modules.
 - `app/sign-in/terms` draws the page that the Worker shows before GitHub
   when a sign-in starts without the agreement, such as the browser sign-in
   of the Mac app. It has the words of the sign-in page from

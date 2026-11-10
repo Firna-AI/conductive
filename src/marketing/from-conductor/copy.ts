@@ -1,7 +1,7 @@
 import { productName } from '../../../docs/mockups/src/brand'
 import { waitlistText } from '../access-copy'
 import { conductorAnnouncementHref, conductorCloudDays } from './dates'
-import { parityCheckedOn } from './features'
+import { parityCheckedAt, parityCheckedOn } from './features'
 
 /**
  * A part of a sentence of the page: plain words, a link to a page of
@@ -48,6 +48,12 @@ export const parityPageCopy = {
   },
   cloudDays,
   checked,
+  /**
+   * The line of the last full check of every row: its label, then the time
+   * in UTC as `YYYY-MM-DDTHH:MMZ`, which each host draws as a `time`
+   * element with the words of `timeWords`.
+   */
+  lastCheck: { label: 'Last checked', time: parityCheckedAt },
   legendTitle: 'How to read the list',
   columns: {
     area: 'Area',
@@ -63,6 +69,14 @@ export const parityPageCopy = {
     text: waitlistText,
   },
 } as const
+
+/**
+ * The name of the link to the row of a feature, such as "Link to File tree",
+ * so that the name says where the link leads.
+ */
+export function rowLinkLabel(featureName: string): string {
+  return `Link to ${featureName}`
+}
 
 /** The words of the links of the site that lead to the page. */
 export const parityLinkCopy = {

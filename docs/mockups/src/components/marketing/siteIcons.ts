@@ -10,6 +10,7 @@ import {
   Cloud,
   Contrast,
   Download,
+  Link,
   ListTree,
   PanelsTopLeft,
   SquarePlus,
@@ -38,4 +39,5 @@ export const siteIcons: Readonly<Record<IconName, LucideIcon>> = {
   'calendar-check': CalendarCheck,
   'arrow-right': ArrowRight,
   download: Download,
+  link: Link,
 }

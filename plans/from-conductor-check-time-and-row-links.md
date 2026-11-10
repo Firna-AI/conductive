@@ -2,7 +2,7 @@
 
 Status: Active. On branch `calummoore/from-conductor-timestamp-and-links`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
-The comparison page at `conductive.build/from-conductor` lists 164
+The comparison page at `conductive.build/from-conductor` lists about 170
 Conductor Cloud features and the status of each in Conductive. Its top
 gives the day of the last full check of the rows, as the last sentence of
 a grey paragraph, and no link can point at one row. On 9 November 2026,
@@ -106,6 +106,19 @@ These are agent calls of 10 November 2026.
 | **Tests.** One unit test for the words of a time. The built-site case of the page checks the check line, the id and the link of each row, the row headers, and unique ids. The build setup of `built-site.test.ts` moves to a test support module, so that the file stays under 300 lines and the site still builds once. A one-time check in Chrome covers hover, focus, the opened row, and the accessibility tree. | Each requirement gets one test at the lowest level. The test file has 294 lines. A second test file would build the site twice. The repository has no browser test harness for the site, and a new one is out of scope. |
 | **Delegation.** The milestones run one after the other in this workspace. Mockup and UI work runs as the `ui implementor`, docs as the `docs implementor`, and tests as the `non-ui implementor`. | The milestones depend on each other and touch few files. |
 
+These are agent calls of 10 November 2026, from the mockups of
+Milestone 1.
+
+| Call | Reason |
+| --- | --- |
+| **The fill.** The opened row uses `--ui-selected`, the colour of a selected row. On a computer, the fill is square between two hairlines. On a phone, it is one block with rounded corners that covers the whole row and its hairlines. | All text on it keeps at least 5.1 to 1, and each status icon at least 3.8 to 1, in both schemes. Against the page, the fill is only 1.23 to 1 in light and 1.17 to 1 in dark, so it stays quiet. |
+| **Space inside the fill.** On a computer, the name and the note keep 10 px from the ends of the fill. So every name, and the title of its column, sits 10 px further right than before. On a phone, the fill reaches 10 px past the text, and the text does not move. | Without that space, the fill touched the text. |
+| **The icon stays with the name.** A `nowrap` span holds a no-break space and the link. | In Chrome, a no-break space alone still let the icon wrap alone onto a new line. |
+| **Hover only over the cells of the feature.** The icon shows when the pointer is over the name, the status, or the note of its row, not over the merged Area cell. | The merged Area cell belongs to the first row of its area, so a pointer over it showed the link of that row only. |
+| **The hidden link.** At rest, the icon has no opacity and no fade. It keeps the 2 px focus ring of the other links of the site, 3 px from the name. Under the pointer, it takes the ink colour. | The keyboard and screen readers still reach a link with no opacity. The ring touched the last letter of the name without the gap. |
+| **The words of a time.** `timeWords` formats only a value of the form `YYYY-MM-DDTHH:MMZ`. Any other value shows as it is. | A time without `Z` would read as local time and show a wrong time labelled UTC. Showing the value as it is fails no build. |
+| **No area name for a lower opened row.** When the opened row is not the first of its area, the name of the area stays above the window on a computer. The page does not change for this. | The opened row names the feature, and the feature is what the link points at. A sticky area name or a second label would change the page for every visitor. |
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -116,24 +129,27 @@ The mockup `marketing/from-conductor/one-table` shows the check line on
 its own line and the link of each row, at both sizes and in both colour
 schemes.
 
-- [ ] Add the shared content that the mockup shows:
-  - [ ] `parityCheckedAt` in `features.ts`, from the design call.
-  - [ ] `timeWords` in `dates.ts`: the words of a time in UTC.
-  - [ ] `lastCheck` in `copy.ts`, with the label "Last checked" and the
+- [x] Add the shared content that the mockup shows:
+  - [x] `parityCheckedAt` in `features.ts`, from the design call.
+  - [x] `timeWords` in `dates.ts`: the words of a time in UTC.
+  - [x] `lastCheck` in `copy.ts`, with the label "Last checked" and the
         check time, and the name of a row link.
-  - [ ] The lucide `link` icon in `icon-shapes.ts` and in the mockup map
+  - [x] The lucide `link` icon in `icon-shapes.ts` and in the mockup map
         `siteIcons.ts`.
-- [ ] Show the check line on its own line in the mockup intro. The facts
+- [x] Show the check line on its own line in the mockup intro. The facts
       paragraph keeps only the days of Conductor Cloud.
-- [ ] Give each mockup row its id and its link icon, with the hover,
+- [x] Give each mockup row its id and its link icon, with the hover,
       focus, opened, and phone states of the design. The link uses
       `ScreenLink` with the row id as its fragment.
-- [ ] Update the description and the rationale of the mockup entry, the
+- [x] Update the description and the rationale of the mockup entry, the
       From Conductor `index.md`, and `docs/mockups/marketing-site.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the page at both sizes, in
+- [x] Run `npm run mockups:check`. Smoke-test the page at both sizes, in
       both schemes, and with the address of a row.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/from-conductor-check-time-and-row-links/m1/` and
+`.context/from-conductor-check-time-and-row-links/m1-verify/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -168,9 +184,14 @@ The page shows the check line and the row links of the mockup.
       facts paragraph keeps only the days of Conductor Cloud.
 - [ ] Delete `parityCheckedOn` and the shared sentence `checked`.
 - [ ] Give each row of `ParityTable.astro` its id, its link icon, the
-      name of the link, and the name of the row header.
+      name of the link, and the name of the row header. Keep the icon in
+      a `nowrap` span with a no-break space, as `FeatureCells.tsx` does.
 - [ ] Style the check line, the states of the link, and the opened row in
-      `comparison.css` and `comparison-table.css`.
+      `comparison.css` and `comparison-table.css`, as
+      `parityRows.module.css` and `ParityIntro.module.css` do. The mockup
+      sets `.mobile` for both phone rules. The site splits them: the
+      touch area and the rounded fill follow the phone width, and the
+      icon that always shows follows `(hover: none)`.
 - [ ] Move the build setup of `built-site.test.ts` to a test support
       module, with every assertion kept.
 - [ ] Add the tests of the design call. See each new assertion fail
@@ -178,7 +199,9 @@ The page shows the check line and the row links of the mockup.
 - [ ] Smoke-test in Chrome at 320, 390, 760, 1024, and 1440 px, in both
       schemes: hover, keyboard focus, a row address, an unknown id, and
       the accessibility tree. Save the evidence under
-      `.context/from-conductor-check-time-and-row-links/`.
+      `.context/from-conductor-check-time-and-row-links/`. Headless Chrome
+      reports no hover. For the hover state, start it with
+      `--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

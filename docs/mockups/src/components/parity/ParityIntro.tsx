@@ -1,6 +1,7 @@
 import type { Viewport } from '@mokly/mokly'
 import { Cloud } from 'lucide-react'
 import { parityPageCopy } from '../../../../../src/marketing/from-conductor/copy'
+import { timeWords } from '../../../../../src/marketing/from-conductor/dates'
 import { classes } from '../common/classes'
 import { ParityCopyText } from './ParityCopyText'
 import styles from './ParityIntro.module.css'
@@ -8,11 +9,12 @@ import styles from './ParityIntro.module.css'
 /**
  * The top of the page for people who move from Conductor Cloud: the title,
  * one sentence, the note that the list covers Conductor Cloud only, the
- * days of Conductor Cloud with its announcement, and the day of the last
- * check of the list.
+ * days of Conductor Cloud with its announcement, and, on its own line, the
+ * time in UTC of the last check of the list.
  */
 export function ParityIntro(props: { viewport: Viewport }) {
   const copy = parityPageCopy
+  const { lastCheck } = copy
   return (
     <header
       className={classes(
@@ -31,8 +33,11 @@ export function ParityIntro(props: { viewport: Viewport }) {
         </p>
       </div>
       <p className={styles.facts}>
-        <ParityCopyText linkClassName={styles.link} text={copy.cloudDays} />{' '}
-        <ParityCopyText linkClassName={styles.link} text={copy.checked} />
+        <ParityCopyText linkClassName={styles.link} text={copy.cloudDays} />
+      </p>
+      <p className={styles.facts}>
+        {lastCheck.label}{' '}
+        <time dateTime={lastCheck.time}>{timeWords(lastCheck.time)}</time>
       </p>
     </header>
   )
