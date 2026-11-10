@@ -22,8 +22,9 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   the buttons are gone, and the toggle takes their space.
 - `MacApp` marks the screens inside it as the Mac app, so that `AppFrame`
   draws the window controls and a banner of the Mac app. The account of
-  the Mac app keeps the sidebar of the org and adds the This Mac section,
-  and the Keyboard shortcuts tab.
+  the Mac app keeps the sidebar of the org and adds the This Mac section.
+  Its Keyboard shortcuts tab adds the commands and the menu keys that only
+  the Mac app has.
 - A person without app access sees the waitlist in the window, as
   `mac-app/waitlist` shows. The page has no top bar of its own, so in the
   Mac app the header of `SignInFrame` is the top bar of the window. It is
@@ -62,15 +63,17 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   or Mac not available. When its turn ends, the card folds with the work
   of the turn at its place, from decision 151, as
   `app/chat/work/mac-command` shows.
-- The Mac app gives the page every key, so it shows keyboard shortcuts
-  before a browser does. A browser waits for the research of its keys.
-  The account adds the Keyboard shortcuts tab, from decision 190, which
-  `mac-app/shortcuts` draws with its child pages `search`, `recording`,
-  and `changes`. A search field at the top finds a row by its words, from
-  decision 195. The line under it says that keys without ⌘ go to the
-  terminal while it has the focus. From decision 193, the Workspace group
-  ends with the fixed keys of a focused workspace row and a focused
-  divider. Reset all asks first, in a `ConfirmDialog`.
-- In the Mac app, each command row of the palette ends with its key, as
-  `mac-app/command-palette` draws. The Search row shows the person's key
-  of the palette, and it opens that page.
+- The Mac app gives the page every key, so its Keyboard shortcuts tab,
+  from decision 190, dims no key. `mac-app/shortcuts` draws the tab with
+  its child pages `search`, `recording`, and `changes`. A search field at
+  the top finds a row by its words, from decision 195. The line under it
+  says that keys without ⌘ go to the terminal while it has the focus.
+  Only the Mac app has Hide or show the sidebar, Back, Forward, Paste and
+  match style, and the Mac app group of its menu keys. From decision 193,
+  the Workspace group ends with the fixed keys of a focused workspace row
+  and a focused divider. Reset all asks first, in a `ConfirmDialog`. A
+  browser shows the same tab with the keys of its tab, as
+  `app/account/shortcuts` draws.
+- In the Mac app, each command row of the palette ends with the first key
+  of its command, as `mac-app/command-palette` draws. The Search row shows
+  the person's key of the palette, and it opens that page.

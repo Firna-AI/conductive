@@ -1,9 +1,12 @@
 /*
- * The lines above the groups: how to change a shortcut, and the keys that
- * the terminal keeps. Reset all stands beside them.
+ * The lines above the groups: how to change a shortcut, the keys that the
+ * terminal keeps, and in a browser tab, where the dimmed keys work. Reset
+ * all stands beside them. The lines keep their height in the scrolling
+ * body of a phone.
  */
 .intro {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 12px;
   min-height: var(--ui-control-height);
@@ -24,13 +27,17 @@
   margin: 0;
 }
 
-/* The rows of a group share one box, as the other lists of the account. */
+/*
+ * The rows of a group share one box, as the other lists of the account.
+ * The box is a size container, so that a narrow box can stack each row.
+ */
 .list {
   margin: 0;
   padding: 0;
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius-md);
   list-style: none;
+  container: shortcut-list / inline-size;
 }
 
 .list > li + li {
@@ -151,4 +158,41 @@
 
 .danger {
   color: var(--ui-rose);
+}
+
+/*
+ * A narrow box, on a phone or in a narrow window, puts the label of a row
+ * and its note on the first line, and the shortcuts and the control at the
+ * end on a second line, so that a long label and four shortcuts both show.
+ * The label wraps.
+ */
+@container shortcut-list (max-width: 480px) {
+  .line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 8px;
+  }
+
+  .label {
+    grid-row: 1;
+    grid-column: 1;
+    padding-top: 6px;
+    white-space: normal;
+  }
+
+  .keys {
+    flex-wrap: wrap;
+    grid-row: 2;
+    grid-column: 1;
+    margin-left: -3px;
+  }
+
+  .end {
+    grid-row: 2;
+    grid-column: 2;
+  }
+
+  .end:empty {
+    display: none;
+  }
 }

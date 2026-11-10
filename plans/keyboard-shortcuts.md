@@ -605,15 +605,18 @@ Fixed shortcuts, which show in the list with "Fixed shortcut":
 - Up, Down, Home, End, and Enter in menus and in the palette. Left and
   Right on the palette tabs.
 - Enter saves and Escape cancels a rename.
-- On a focused workspace row, Alt with Up or Down moves the row. On a
-  focused divider, the arrows, Home, and End move it. Decision 193 sets
-  their modifiers.
-- The text keys: ⌘C, ⌘V, ⌘X, ⌘A, ⌘Z, and ⇧⌘Z, and in the Mac app also
-  ⌥⇧⌘V, from its Edit menu.
+- On a focused workspace row, Alt with Up or Down and no other modifier
+  moves the row. On a focused divider, Left and Right with no modifier or
+  with Shift, Home, and End move it (decision 193 D).
+- The text keys of each system, as section 10 of
+  `.context/keyboard-shortcuts/key-table.md` lists them: the edit keys,
+  such as ⌘C, ⌘V, ⌘X, ⌘A, ⌘Z, and ⇧⌘Z, and in the Mac app also ⌥⇧⌘V,
+  from its Edit menu, and the keys that move and delete by word or line.
+  Agent call, 2026-11-10, from the user requirement of the same day.
 - In the Mac app only: the menu keys ⌘Q, ⌘H, ⌥⌘H, ⌘M, ⌘R, ⇧⌘R, ⌘0,
   ⌘+, ⌘-, ⌃⌘F, and ⌥⌘I.
-- The tab menu key ⇧F10, if the tab drag change
-  (`calummoore/tab-drag-and-drop`) merges first.
+- The tab menu keys ⇧F10 and the menu key of a keyboard, on a focused
+  tab. The tab menu change is on `main`.
 
 Decision 194 sets the Windows and Linux keys. Ctrl takes the place of ⌘
 in each case.
@@ -886,31 +889,37 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
 - [x] Draw the palette in the Mac app with the key of each row, the Search
       row with a changed palette key, and the Keyboard shortcuts row of
       the Settings tab.
-- [ ] After decisions 192 and 194: draw the tab in a browser, desktop and
+- [x] After decisions 192 and 194: draw the tab in a browser, desktop and
       phone, at `app/account/shortcuts`, with the kept keys and the second
       keys. Add the tab to the Account tabs of the browser pages. Draw the
       palette rows with their keys in a browser.
-- [ ] After decision 193: draw the keys of the row move and the divider.
-- [ ] Decision 195 E: draw the search field of the tab and a search
+- [x] After decision 193: draw the keys of the row move and the divider.
+- [x] Decision 195 E: draw the search field of the tab and a search
       without a match, in the Mac app, in a browser, and on a phone.
-- [ ] Draw the line of the tab that says which keys the terminal keeps,
+- [x] Draw the line of the tab that says which keys the terminal keeps,
       from the user requirement of 2026-11-10.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages in light
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark.
   - [x] The Mac app pages: `mac-app/shortcuts`, its child pages, and
         `mac-app/command-palette`. Evidence: `.context/keyboard-shortcuts/m1/`
         and `.context/keyboard-shortcuts/shots/`.
-  - [ ] The browser and phone pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+  - [x] The browser and phone pages. Evidence:
+        `.context/keyboard-shortcuts/shots/round2/` and
+        `.context/keyboard-shortcuts/m1/mockups-check-round2.log`.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
   - [x] The Mac app pages: decision 195, the Reset all question, the fixed
         groups, the new fixed rows, and the follow-up
         `plans/follow-ups/search-row-key-symbols.md`.
-  - [ ] The browser and phone pages.
+  - [x] The browser and phone pages: the stale list of fixed shortcuts,
+        and the Orca keys in the evidence. Reports:
+        `.context/keyboard-shortcuts/reports/`.
 
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1
+Depends on: 1. Agent call, 2026-11-10: Milestone 2 starts while the Linux
+TODO of Milestone 1 waits for decisions 196 and 197. The open decisions
+block only the Linux rules, which follow the answers.
 
 - [ ] Write `docs/protocol/keyboard-shortcuts.md`: the commands, the
       fixed keys, where a key goes, the kept keys and the second keys

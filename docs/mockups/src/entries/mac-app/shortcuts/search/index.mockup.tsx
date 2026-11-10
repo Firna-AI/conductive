@@ -4,7 +4,7 @@ import { MacAppScreen, macAppSchema } from '../../../../screens/MacAppScreen'
 export const macShortcutsSearch = defineScreen({
   title: 'Search',
   description:
-    'A search for “tab” keeps each row whose label or words hold the word, in its group: Previous tab, Next tab, Close tab, and Reopen closed session in Navigation, New session in Chat, and the fixed Switch the palette tab in Menus and palette. Reopen closed session and New session match by their words, which the rows do not show. The other groups hide. Each row keeps its shortcuts and its controls, so a press on a shortcut still records new keys.',
+    'A search for “tab” keeps each row whose label or words hold the word, in its group: Previous tab, Next tab, Close tab, Reopen closed session, and the fixed Open the menu of a focused tab in Navigation, New session in Chat, and the fixed Switch the palette tab in Menus and palette. Reopen closed session and New session match by their words, which the rows do not show. The other groups hide. Each row keeps its shortcuts and its controls, so a press on a shortcut still records new keys.',
   rationale:
     'The user chose option E of decision 195 on 10 November 2026: a search field at the top of the tab finds a row by its label and its words, with the matcher of the palette, so the two searches of the app agree. Each word of the query must be in a text of the row, in any case. The search does not take keys, because a text field cannot type ⌘ or ⌥, and the conflict line already names the command that has a recorded shortcut.',
   relatedDocs: [],
@@ -25,7 +25,7 @@ export const macShortcutsSearch = defineScreen({
       slug: 'fixed-keys',
       title: 'Fixed keys of a focused control',
       description:
-        'A search for “move” finds the fixed keys at the end of the Workspace group, and Move up or down in Menus and palette. ⌥↑ and ⌥↓ move a focused workspace in the list. ← and → move a focused divider, ⇧← and ⇧→ move it in bigger steps, and Home and End make its panel narrowest or widest. Each row shows Fixed shortcut, and its label names the control that has the focus.',
+        'A search for “move” finds the fixed keys at the end of the Workspace group, Move up or down in Menus and palette, and the rows of the Text group that move by word or by line. ⌥↑ and ⌥↓ move a focused workspace in the list. ← and → move a focused divider, ⇧← and ⇧→ move it in bigger steps, and Home and End make its panel narrowest or widest. Each row shows Fixed shortcut, and its label names the control that has the focus.',
       rationale:
         'The user chose option D of decision 193 on 10 November 2026. The row move takes ⌥ with ↑ or ↓ and no other modifier, and the divider takes ← and → alone or with ⇧. So ⌥⌘↑, ⌥⌘↓, and each recorded shortcut run their commands also from a focused row or divider. The tab lists these keys as fixed, so the recorder refuses them, as it refuses ⌘H.',
       props: { shortcutSearch: 'fixed' },

@@ -54,8 +54,8 @@ export const paletteTabPaths: Readonly<Record<PaletteTab, string>> = {
 }
 
 /**
- * The page of each tab in the Mac app, where the palette shows the keys.
- * The Mac app has no page of its own for the Workspaces tab.
+ * The page of each tab in the Mac app, where the palette shows the keys of
+ * the Mac app. The Mac app has no page of its own for the Workspaces tab.
  */
 export const macPaletteTabPaths: Readonly<Record<PaletteTab, string>> = {
   all: paths.macPalette,

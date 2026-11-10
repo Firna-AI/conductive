@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { CircleAlert, Info, TriangleAlert } from 'lucide-react'
+import type { TabBrowser } from '../../fixtures/shortcutHosts'
 import { classes } from '../common/classes'
 import { KeyChips, spokenShortcut, type Shortcut } from '../common/KeyChips'
 import { ScreenLink } from '../common/ScreenLink'
@@ -29,14 +30,24 @@ export function RowMessage(props: {
   )
 }
 
-/** A shortcut that records a new one in its place when pressed. */
+/**
+ * A shortcut that records a new one in its place when pressed. `keptBy`
+ * names the browser that keeps the shortcut in a normal tab, where it is
+ * dimmed. The person can still change it, because it works elsewhere.
+ */
 export function KeyButton(props: {
   shortcut: Shortcut
   label: string
   to?: string
+  keptBy?: TabBrowser
 }) {
-  const name = `Change ${spokenShortcut(props.shortcut)} for ${props.label}`
-  const chips = <KeyChips shortcut={props.shortcut} />
+  const kept = props.keptBy
+    ? `, a key that ${props.keptBy} keeps in this tab`
+    : ''
+  const name = `Change ${spokenShortcut(props.shortcut)} for ${props.label}${kept}`
+  const chips = (
+    <KeyChips dimmed={props.keptBy !== undefined} shortcut={props.shortcut} />
+  )
   if (props.to) {
     return (
       <ScreenLink aria-label={name} className={styles.key} to={props.to}>

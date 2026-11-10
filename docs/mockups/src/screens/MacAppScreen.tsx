@@ -13,7 +13,8 @@ import {
   type ShortcutChanges,
 } from '../fixtures/shortcutChanges'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
-import { AccountScreen, accountGeneral } from './AccountScreen'
+import { AccountScreen } from './AccountScreen'
+import { accountGeneral } from './accountState'
 import { NewWorkspaceScreen, newWorkspaceForm } from './NewWorkspaceScreen'
 import { WaitlistScreen, type WaitlistState } from './WaitlistScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
@@ -156,20 +157,19 @@ function pageFor(state: MacAppState): ReactNode {
     case 'account':
       return (
         <AccountScreen
-          shortcuts={shortcuts}
-          state={accountGeneral}
+          state={{ ...accountGeneral, shortcuts: state.shortcuts }}
           viewport="desktop"
         />
       )
     case 'shortcuts':
       return (
         <AccountScreen
-          shortcuts={shortcuts}
           state={{
             ...accountGeneral,
             tab: 'shortcuts',
             keyChange: state.keyChange,
             shortcutSearch: state.shortcutSearch,
+            shortcuts: state.shortcuts,
           }}
           viewport="desktop"
         />

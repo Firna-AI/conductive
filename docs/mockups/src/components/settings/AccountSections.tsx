@@ -8,6 +8,7 @@ import {
   type AgentLogins,
 } from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
+import type { ShortcutHost } from '../../fixtures/shortcutHosts'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
@@ -17,6 +18,7 @@ import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
 import { LoginShare } from './LoginShare'
 import { Section } from './Section'
+import { shortcutPages } from './shortcutPages'
 import styles from './AccountSections.module.css'
 
 const connected = <StatusText label="Connected" tone="success" />
@@ -185,15 +187,20 @@ export type AccountTab = 'general' | 'preferences' | 'shortcuts'
 
 /**
  * The pages of the account, as tabs that link to each one: General, with
- * the sign-in and the connections, and Preferences. The Mac app adds
- * Keyboard shortcuts, and its General tab links to its own page, which has
- * This Mac. A browser gets the third tab after decisions 192 and 194.
+ * the sign-in and the connections, Preferences, and Keyboard shortcuts.
+ * The Mac app's General tab links to its own page, which has This Mac, and
+ * Keyboard shortcuts links to the tab of the host. `flow` moves a tab that
+ * does not fit to a second line, for a phone.
  */
-export function AccountTabs(props: { tab: AccountTab; mac: boolean }) {
+export function AccountTabs(props: {
+  tab: AccountTab
+  host: ShortcutHost
+  flow?: boolean
+}) {
   const tabs: LinkTab[] = [
     {
       label: 'General',
-      to: props.mac ? paths.thisMac : paths.account,
+      to: props.host === 'mac-app' ? paths.thisMac : paths.account,
       selected: props.tab === 'general',
     },
     {
@@ -201,13 +208,11 @@ export function AccountTabs(props: { tab: AccountTab; mac: boolean }) {
       to: paths.accountPreferences,
       selected: props.tab === 'preferences',
     },
-  ]
-  if (props.mac) {
-    tabs.push({
+    {
       label: 'Keyboard shortcuts',
-      to: paths.macShortcuts,
+      to: shortcutPages[props.host].tab,
       selected: props.tab === 'shortcuts',
-    })
-  }
-  return <LinkTabs label="Account" tabs={tabs} />
+    },
+  ]
+  return <LinkTabs flow={props.flow} label="Account" tabs={tabs} />
 }

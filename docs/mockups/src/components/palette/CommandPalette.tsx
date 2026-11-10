@@ -15,7 +15,7 @@ import {
   type PaletteContext,
   type PaletteFilters,
 } from './paletteContent'
-import { PaletteResults } from './PaletteRows'
+import { PaletteResults, type PaletteKeys } from './PaletteRows'
 import {
   macPaletteTabPaths,
   paletteTabLabels,
@@ -170,16 +170,23 @@ function PalettePage(props: { content: PaletteContent }) {
 /**
  * The command palette: one search for the workspaces of the org, the
  * actions of the current page, and the settings. A desktop shows it as a
- * dialog near the top of the window, over the dimmed app. A phone shows it
- * as a page.
+ * dialog near the top of the window, over the dimmed app, and each command
+ * row ends with the first key of its command that works there. A browser
+ * page draws a normal Chrome tab on a Mac, which keeps ⌘N, so New
+ * workspace shows ⌥⌘N. A phone shows the palette as a page, without keys.
  */
 export function CommandPalette(props: {
   view: OpenPaletteView
   context: PaletteContext
   viewport: Viewport
 }) {
-  const content = paletteContent(props.view, props.context)
+  const { context } = props
+  const content = paletteContent(props.view, context)
   if (props.viewport === 'mobile') return <PalettePage content={content} />
+  const keys: PaletteKeys = {
+    changes: context.shortcuts ?? {},
+    host: context.mac ? 'mac-app' : 'chrome-mac',
+  }
   return (
     <div className={styles.layer}>
       <div aria-hidden className={styles.scrim} />
@@ -192,8 +199,8 @@ export function CommandPalette(props: {
         <div className={styles.field}>
           <SearchField content={content} mobile={false} />
         </div>
-        <TabBar content={content} mac={props.context.mac} mobile={false} />
-        <PaletteResults content={content} shortcuts={props.context.shortcuts} />
+        <TabBar content={content} mac={context.mac} mobile={false} />
+        <PaletteResults content={content} keys={keys} />
       </section>
     </div>
   )

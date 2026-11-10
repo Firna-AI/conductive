@@ -1,4 +1,4 @@
-import type { SchemaProps, Viewport } from '@mokly/mokly'
+import type { Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import type { RailState } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
@@ -10,15 +10,10 @@ import {
   SignInSection,
   type OpenAgentForm,
 } from '../components/settings/AccountSections'
-import { inviteStates } from '../components/settings/inviteCodeCopy'
 import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
 import { ResetShortcutsDialog } from '../components/settings/ResetShortcutsDialog'
-import { shortcutSearches } from '../components/settings/shortcutSearch'
-import {
-  keyChanges,
-  ShortcutsTab,
-} from '../components/settings/ShortcutsSections'
+import { ShortcutsTab } from '../components/settings/ShortcutsSections'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
@@ -29,86 +24,14 @@ import {
   type LoginKind,
 } from '../fixtures/logins'
 import { account, orgList, orgs } from '../fixtures/orgs'
-import type { ShortcutChanges } from '../fixtures/shortcutChanges'
+import {
+  editedShortcuts,
+  type ShortcutChanges,
+} from '../fixtures/shortcutChanges'
+import type { ShortcutHost } from '../fixtures/shortcutHosts'
 import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
-
-export const accountSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: [
-    'tab',
-    'connections',
-    'form',
-    'view',
-    'save',
-    'shareChange',
-    'invites',
-    'keyChange',
-    'shortcutSearch',
-  ],
-  properties: {
-    /**
-     * The tab: General, with the sign-in and the connections, Preferences,
-     * or Keyboard shortcuts, which only the Mac app shows for now. Each tab
-     * has its own address.
-     */
-    tab: { enum: ['general', 'preferences', 'shortcuts'] },
-    /** GitHub and the agents are connected, or not yet, as at the first run. */
-    connections: { enum: ['connected', 'not-connected'] },
-    /**
-     * The Connect form that is open. Its agent is not connected yet, and the
-     * other agent is.
-     */
-    form: { enum: ['none', 'claude', 'codex'] },
-    /** How New workspace opens on a computer: as the page, or as a dialog. */
-    view: { enum: ['page', 'dialog'] },
-    /**
-     * The save of the last change on Preferences: saved, or failed. A failed
-     * save shows its error, and the choice keeps its saved value.
-     */
-    save: { enum: ['saved', 'failed'] },
-    /**
-     * The invite code of the user: invites left, sign-ups paused, every
-     * invite used, or turned off by an operator.
-     */
-    invites: { enum: inviteStates },
-    /**
-     * The last change of a share setting: none, or a change of the Claude
-     * login that the app did not save.
-     */
-    shareChange: { enum: ['none', 'not-saved'] },
-    /**
-     * The change of a shortcut on Keyboard shortcuts, in progress or last:
-     * none, a row that records new keys, the same row after a fixed shortcut
-     * that it did not take, a recorded shortcut of another command, the
-     * question before Reset all, or a save that failed.
-     */
-    keyChange: { enum: keyChanges },
-    /**
-     * The search of Keyboard shortcuts: an empty field, a query that finds
-     * commands by their labels and their words, a query that finds the
-     * fixed keys of a focused workspace row and divider, or a query that
-     * matches no row.
-     */
-    shortcutSearch: { enum: shortcutSearches },
-  },
-} as const
-
-export type AccountState = SchemaProps<typeof accountSchema>
-
-/** The General tab of a connected account, with no form open. */
-export const accountGeneral: AccountState = {
-  tab: 'general',
-  connections: 'connected',
-  form: 'none',
-  view: 'page',
-  save: 'saved',
-  shareChange: 'none',
-  invites: 'left',
-  keyChange: 'none',
-  shortcutSearch: 'none',
-}
+import type { AccountState } from './accountState'
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
 
@@ -159,10 +82,11 @@ function GeneralTab(props: { state: AccountState }) {
   )
 }
 
-/** The content of the tab of a state. */
+/** The content of the tab of a state, with the keys of its host. */
 function TabContent(props: {
   state: AccountState
-  shortcuts: ShortcutChanges
+  host: ShortcutHost
+  changes: ShortcutChanges
 }) {
   const { state } = props
   switch (state.tab) {
@@ -179,7 +103,8 @@ function TabContent(props: {
       return (
         <ShortcutsTab
           change={state.keyChange}
-          changes={props.shortcuts}
+          changes={props.changes}
+          host={props.host}
           search={state.shortcutSearch}
         />
       )
@@ -189,20 +114,22 @@ function TabContent(props: {
 /**
  * The account, in tabs. General holds the GitHub sign-in, what every org
  * shares, and the invite code of the user. Preferences holds how new
- * workspaces start: their model, and how New workspace opens. The Mac app
- * adds Keyboard shortcuts. The product is free, so the page shows no plan
- * and no billing, and the sandbox provider stays out of sight.
- *
- * `shortcuts` holds the person's changes to the shortcuts. With them, the
- * Search row of the sidebar shows the person's key of the palette.
+ * workspaces start: their model, and how New workspace opens. Keyboard
+ * shortcuts holds the keys of the host: the Mac app, or the browser and the
+ * keyboard of `state.host`. The product is free, so the page shows no plan
+ * and no billing, and the sandbox provider stays out of sight. With the
+ * person's changes to the shortcuts, the Search row of the Mac app's
+ * sidebar shows the person's key of the palette.
  */
 export function AccountScreen(props: {
   state: AccountState
   viewport: Viewport
-  shortcuts?: ShortcutChanges
 }) {
   const { state } = props
   const mac = useMacApp()
+  const host: ShortcutHost = mac ? 'mac-app' : state.host
+  const changes: ShortcutChanges =
+    state.shortcuts === 'edited' ? editedShortcuts : {}
   const connected = state.connections === 'connected'
   const mobile = props.viewport === 'mobile'
   const back = connected
@@ -212,29 +139,36 @@ export function AccountScreen(props: {
     <Page
       back={mobile ? back : undefined}
       subtitle={`@${account.login}`}
-      tabs={<AccountTabs mac={mac !== undefined} tab={state.tab} />}
+      tabs={<AccountTabs flow={mobile} host={host} tab={state.tab} />}
       title="Account"
       viewport={props.viewport}
     >
-      <TabContent shortcuts={props.shortcuts ?? {}} state={state} />
+      <TabContent changes={changes} host={host} state={state} />
     </Page>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
-  // Reset all asks first, in a dialog over the account. Only the Mac app
-  // shows the Keyboard shortcuts tab, and the Mac app has no phone layout.
+  // Reset all asks first: a dialog over the account, or a sheet on a phone.
   const dialog =
     state.tab === 'shortcuts' && state.keyChange === 'reset-all' ? (
       <ResetShortcutsDialog
-        changed={Object.keys(props.shortcuts ?? {}).length}
-        viewport="desktop"
+        changed={Object.keys(changes).length}
+        host={host}
+        viewport={props.viewport}
       />
     ) : null
+  if (mobile) {
+    return (
+      <MobileFrame>
+        {page}
+        {dialog}
+      </MobileFrame>
+    )
+  }
   // The Mac app keeps the sidebar of the org beside the account.
   const sidebar = mac ? (
     <Sidebar
       org={orgs.acme}
       sections={workspaceSections(undefined, mac.needsInput)}
-      shortcuts={props.shortcuts}
+      shortcuts={changes}
       viewer={viewerMembership('admin')}
     />
   ) : undefined

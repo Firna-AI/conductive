@@ -1,9 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
-import {
-  AccountScreen,
-  accountGeneral,
-  accountSchema,
-} from '../../../../screens/AccountScreen'
+import { AccountScreen } from '../../../../screens/AccountScreen'
+import { accountGeneral, accountSchema } from '../../../../screens/accountState'
 
 export const connectClaude = defineScreen({
   title: 'Connect Claude',

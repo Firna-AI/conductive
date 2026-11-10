@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import { repositories } from '../../fixtures/repositories'
 import {
-  shortcutsOf,
+  shownShortcut,
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
+import type { ShortcutHost } from '../../fixtures/shortcutHosts'
 import { GitHubMark } from '../common/GitHubMark'
 import { KeyChips, type Shortcut } from '../common/KeyChips'
 import { ScreenLink } from '../common/ScreenLink'
@@ -46,15 +47,21 @@ function RowLink(props: {
   )
 }
 
-/** The first key of the command of a row, when the palette shows keys. */
-function shortcutOf(
-  row: PaletteRow,
-  shortcuts?: ShortcutChanges,
-): Shortcut | undefined {
-  if (row.kind !== 'command' || !shortcuts || !row.command.shortcut) {
+/**
+ * The keys that the rows show: those of the person, with their changes,
+ * on the host where the palette opens.
+ */
+export type PaletteKeys = { changes: ShortcutChanges; host: ShortcutHost }
+
+/**
+ * The key of the command of a row, when the palette shows keys: the first
+ * key of the command that works on the host.
+ */
+function shortcutOf(row: PaletteRow, keys?: PaletteKeys): Shortcut | undefined {
+  if (row.kind !== 'command' || !keys || !row.command.shortcut) {
     return undefined
   }
-  return shortcutsOf(row.command.shortcut, shortcuts)[0]
+  return shownShortcut(row.command.shortcut, keys.changes, keys.host)
 }
 
 /**
@@ -123,11 +130,11 @@ function Row(props: {
  * part of data that did not load stands first, and alone when the tab has
  * no row. A tab without rows and without a status part shows its empty
  * line while the field is empty, and "Nothing matches" for a query. With
- * the person's `shortcuts`, each command row ends with its first key.
+ * `keys`, each command row ends with its key. A phone shows no keys.
  */
 export function PaletteResults(props: {
   content: PaletteContent
-  shortcuts?: ShortcutChanges
+  keys?: PaletteKeys
 }) {
   const { groups, query, empty, status } = props.content
   if (groups.length === 0 && !status) {
@@ -163,7 +170,7 @@ export function PaletteResults(props: {
                 <Row
                   highlighted={row === first}
                   row={row}
-                  shortcut={shortcutOf(row, props.shortcuts)}
+                  shortcut={shortcutOf(row, props.keys)}
                 />
               </li>
             ))}

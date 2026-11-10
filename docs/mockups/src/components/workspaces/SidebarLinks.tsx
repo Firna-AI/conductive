@@ -60,7 +60,8 @@ export function NewWorkspaceLink(props: {
 /**
  * The row under New workspace that opens the command palette. A desktop
  * shows its key, so the row teaches it. A phone has no key to show. In the
- * Mac app the row opens the palette of the Mac app, whose rows show keys.
+ * Mac app the row opens the palette of the Mac app, whose rows show the keys
+ * of the Mac app.
  */
 export function SearchLink(props: {
   variant: 'sidebar' | 'page'

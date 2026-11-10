@@ -6,7 +6,7 @@ export const macPalette = defineScreen({
   description:
     'The command palette over a workspace in the Mac app. Each action and each setting with a shortcut ends with it, as small key chips: ⌘T for New session, ⌥⌘U for Go to Changes, and ⌘J for Go to Terminal. A command with more than one shortcut shows its first. A command without a shortcut, and a workspace, show none.',
   rationale:
-    'The palette rows show the shortcut of each command, so the palette teaches them. They show the shortcuts of the account, with the changes of the person, from option A of decision 190, where shortcut changes live. A workspace row shows no shortcut, because Open workspace 1 to 9 follow the places in the list, and the palette orders the workspaces by their latest activity. A browser tab gets the keys after decisions 192 and 194.',
+    'The palette rows show the shortcut of each command, so the palette teaches them. They show the shortcuts of the account, with the changes of the person, from option A of decision 190, where shortcut changes live. A workspace row shows no shortcut, because Open workspace 1 to 9 follow the places in the list, and the palette orders the workspaces by their latest activity. The Mac app gives the page every key, so each row shows the first shortcut of its command. A browser shows the first shortcut that works in its tab, as app/command-palette draws (decision 192 B, 10 November 2026).',
   relatedDocs: [],
   propSchema: macAppSchema,
   props: {
@@ -36,7 +36,7 @@ export const macPalette = defineScreen({
       description:
         'The Settings tab in the Mac app. The Account group adds This Mac after Sign-in, and Keyboard shortcuts at the end, with ⌥⌘/, which opens the tab. Repositories shows ⌥⌘A.',
       rationale:
-        'Only the Mac app has This Mac, as the Settings tab of the browser says. The Keyboard shortcuts row comes with the shortcuts, so a browser gets it after decisions 192 and 194.',
+        'Only the Mac app has This Mac, as the Settings tab of the browser says. A browser has the Keyboard shortcuts row too, which opens app/account/shortcuts.',
       props: { palette: 'settings' },
     },
     {

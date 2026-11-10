@@ -35,3 +35,15 @@
   white-space: nowrap;
   box-sizing: border-box;
 }
+
+/*
+ * A key that does not work where the page runs, such as a key that a
+ * browser tab keeps: an outline with dashes, no fill, and muted text. The
+ * text keeps the contrast of muted text, because the key stays a control.
+ */
+.dimmed .chip {
+  border-style: dashed;
+  background: none;
+  color: var(--ui-muted);
+  font-weight: 400;
+}

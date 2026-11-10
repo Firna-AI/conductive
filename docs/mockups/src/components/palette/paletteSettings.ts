@@ -10,7 +10,6 @@ import {
   Users,
 } from 'lucide-react'
 import { orgs } from '../../fixtures/orgs'
-import type { ShortcutChanges } from '../../fixtures/shortcutChanges'
 import { paths } from '../../paths'
 import { icon, type Command } from './paletteCommands'
 
@@ -71,26 +70,26 @@ const generalSettings: readonly Command[] = [
 ]
 
 /**
- * The Keyboard shortcuts tab. Only the Mac app has it until decisions 192
- * and 194 set the keys of a browser.
+ * The Keyboard shortcuts tab of the account, which ⌥⌘/ opens: the page of
+ * the Mac app, or of a browser.
  */
-const shortcutsSetting: Command = {
-  label: 'Keyboard shortcuts',
-  lead: icon(Keyboard),
-  words: ['keys', 'hotkeys', 'keybindings'],
-  to: paths.macShortcuts,
-  shortcut: 'keyboard-shortcuts',
+function shortcutsSetting(mac: boolean): Command {
+  return {
+    label: 'Keyboard shortcuts',
+    lead: icon(Keyboard),
+    words: ['keys', 'hotkeys', 'keybindings'],
+    to: mac ? paths.macShortcuts : paths.accountShortcuts,
+    shortcut: 'keyboard-shortcuts',
+  }
 }
 
 /**
  * The sections of the Account page, which every org shares, in the order
- * of its tabs. The Mac app adds This Mac after Sign-in, and the person's
- * shortcuts add their tab at the end.
+ * of its tabs. The Mac app adds This Mac after Sign-in, and Keyboard
+ * shortcuts comes last.
  */
-export function accountSettings(place: {
-  mac?: boolean
-  shortcuts?: ShortcutChanges
-}): Command[] {
+export function accountSettings(place: { mac?: boolean }): Command[] {
+  const mac = place.mac ?? false
   return [
     {
       label: 'Sign-in',
@@ -98,7 +97,7 @@ export function accountSettings(place: {
       words: ['sign out', 'account'],
       to: paths.account,
     },
-    ...(place.mac ? [thisMacSetting] : []),
+    ...(mac ? [thisMacSetting] : []),
     ...generalSettings,
     {
       label: 'New workspaces',
@@ -106,6 +105,6 @@ export function accountSettings(place: {
       words: ['model', 'effort', 'default'],
       to: paths.accountPreferences,
     },
-    ...(place.shortcuts ? [shortcutsSetting] : []),
+    shortcutsSetting(mac),
   ]
 }

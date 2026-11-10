@@ -74,10 +74,9 @@ export type PaletteContext = {
   rightColumn?: boolean
   mac?: boolean
   /**
-   * The person's changes to the shortcuts. With them, each row shows the
-   * key of its command, and the settings add the Keyboard shortcuts tab.
-   * Only the Mac app passes them until decisions 192 and 194 set the keys
-   * of a browser.
+   * The person's changes to the shortcuts (decision 190). On desktop, each
+   * command row ends with the first key of its command that works where
+   * the palette opens.
    */
   shortcuts?: ShortcutChanges
 }

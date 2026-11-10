@@ -106,14 +106,18 @@ sessions as tabs above the chat, and four tabs at the bottom.
   state, which also answers a search of that tab without a match. A search
   also finds a workspace by the label of its number, such as `W-395` or
   `39`. A workspace row then shows the label before the name, as a chip
-  does. In the Mac app, each command row ends with the first key of its
-  command, and the Search row shows the person's key of the palette, such
-  as ⇧⌘P. A workspace row shows no key. The browser pages show no keys
-  yet. They wait for the research of the keys of a browser.
+  does. On desktop, each command row ends with the first key of its
+  command that works where the palette opens. The Mac app gives the page
+  every key, so New workspace shows ⌘N there. A browser page draws a
+  normal Chrome tab on a Mac, which keeps ⌘N, so New workspace shows ⌥⌘N.
+  A workspace row shows no key, and a phone shows no keys. In the Mac app
+  the Search row shows the person's key of the palette, such as ⇧⌘P.
 - `KeyChips` in `src/components/common/` draws a shortcut as small key
-  chips, one for each symbol: ⌘ then K. The chips use the sans font, which
-  draws ⌘, ⌥, ⇧, ⌃, and ⌫ on every system. The Search row keeps its text
-  hint in the label font.
+  chips, one for each key: ⌘ then K on a Mac, and Ctrl then K on Windows,
+  whose modifiers show as words. The chips use the sans font, which draws
+  ⌘, ⌥, ⇧, ⌃, ⌫, and ⌦ on every system. A dimmed shortcut, which does not
+  work where the page runs, has an outline with dashes, no fill, and muted
+  text. The Search row keeps its text hint in the label font.
 - `SearchField` in `src/components/common/` draws the search field at the
   top of a list that it narrows: the repositories of an org, the tabs of
   the operator, and Keyboard shortcuts.
@@ -133,33 +137,49 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
-- The account has two tabs, General and Preferences, as links, as the org
-  settings have. Preferences holds the New workspaces section, whose rows
-  put each label beside its control in two columns. A segmented control
-  chooses how New workspace opens, with a helper line under it, and a
-  narrow section puts it under its label. A failed save shows its error
-  under the control.
-- The Mac app adds a third tab to the account, Keyboard shortcuts, from
-  `ShortcutsSections` in `src/components/settings/`. A search field at the
-  top keeps each row whose label or search words hold every word of the
-  query, by the rule of the palette, from `shortcutSearch.ts`. Fixed rows
-  match too. A group without a matching row hides, and a search without a
-  match says so, as the palette does. Two lines under the field say how to
-  change a shortcut, and that keys without ⌘ go to the terminal while it
-  has the focus. Each group of commands is a section with its rows in one
-  box. A row ends with its shortcuts. Each shortcut is a button that
-  records new keys, + adds one, and a row without a shortcut shows Add
-  shortcut. The commands that a person can change come first, and the
-  fixed shortcuts follow them with no control. A fixed row among other
-  commands shows Fixed shortcut. The Workspace group ends with the fixed
-  keys of a focused workspace row and of a focused divider, and each of
-  their labels names the control that has the focus. A group of fixed
-  shortcuts says it once, under its title. The recorder is a field with a
-  full outline in the accent colour. A line under the row
-  names a fixed shortcut that the recorder did not take, the command that
-  has the recorded shortcut, or a failed save. A changed row shows Reset.
-  Reset all asks first with `ConfirmDialog`, because nothing brings the
-  changes back.
+- The account has three tabs, General, Preferences, and Keyboard
+  shortcuts, as links, as the org settings have. On a phone, a tab that
+  does not fit moves to a second line. Preferences holds the New
+  workspaces section, whose rows put each label beside its control in two
+  columns. A segmented control chooses how New workspace opens, with a
+  helper line under it, and a narrow section puts it under its label. A
+  failed save shows its error under the control.
+- `ShortcutsSections` in `src/components/settings/` draws the Keyboard
+  shortcuts tab, in the Mac app and in each browser. It shows the keys of
+  a host: the Mac app, a normal tab of Chrome or Firefox, or the installed
+  app of Chrome, with a Mac or a Windows keyboard.
+  `src/fixtures/shortcutHosts.ts` holds the keyboard of each host and the
+  keys that a normal browser tab keeps, and
+  `src/fixtures/windowsShortcuts.ts` holds the keys of Windows. A search
+  field at the top keeps each row whose label or search words hold every
+  word of the query, by the rule of the palette, from `shortcutSearch.ts`.
+  Fixed rows match too. A group without a matching row hides, and a search
+  without a match says so, as the palette does. The lines under the field,
+  from `ShortcutIntro.tsx`, say how to change a shortcut and which keys
+  the terminal keeps on the keyboard of the page. In a normal browser tab,
+  a key that the browser keeps, or that decision 192 leaves to it, is
+  dimmed, and one more line says where the dimmed keys work. A dimmed key
+  stays a button that records new keys. A browser leaves out the commands
+  and the groups that only the Mac app has. Each group of commands is a
+  section with its rows in one box. A row ends with its shortcuts. Each
+  shortcut is a button that records new keys, + adds one, and a row
+  without a shortcut shows Add shortcut. The commands that a person can
+  change come first, and the fixed shortcuts follow them with no control.
+  A fixed row among other commands shows Fixed shortcut. The Navigation
+  group ends with the keys that open the menu of a focused tab, and the
+  Workspace group with the fixed keys of a focused workspace row and of a
+  focused divider. Each of their labels names the control that has the
+  focus. A group of fixed shortcuts says it once, under its title. The
+  Text group lists the text keys of the keyboard, with the keys that move
+  or delete by word or by line in one row each, and its line says that the
+  other text keys are fixed too. A narrow box, on a phone or in a narrow
+  window, puts the label of a row on its first line, and the shortcuts and
+  the control at the end on a second line. The recorder is a field with a
+  full outline in the accent colour. A line under the row names a fixed
+  shortcut that the recorder did not take, the command that has the
+  recorded shortcut, or a failed save. A changed row shows Reset. Reset
+  all asks first with `ConfirmDialog`, because nothing brings the changes
+  back.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
 - Each workspace has a number in its org, and `workspaceLabel` in

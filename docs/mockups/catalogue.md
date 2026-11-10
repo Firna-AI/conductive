@@ -15,9 +15,9 @@ how a screen is built, and links to the other pages.
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
-| `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
+| `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs, a search, and a search by number |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, and Keyboard shortcuts in a browser |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
@@ -40,7 +40,7 @@ A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -94,16 +94,18 @@ decision 151. The mockups draw it for Firna, the first org of the sign-up:
   script that Cal saved during the first build. One more build runs it
   when the first build succeeds, so its notice has no Build computer.
 
-`app/account` shows the General tab of the account. Its tabs are links, as
-the tabs of the org settings are. `app/account/preferences` shows the
-Preferences tab, from decision 142: the New workspaces section with Model
-and effort, and the choice of how New workspace opens on a computer, the
-page or a dialog. Its `not-saved` variant shows a save that failed, which
-keeps the saved choice. `app/account/setup`, `app/account/connect-claude`,
-and `app/account/connect-codex` show General before the first connections,
-and with the Connect form of each agent open.
-`app/account/share-not-saved` shows General after a login share setting
-failed to save, with its saved value and the cause beside the switch.
+`app/account` shows the General tab of the account. Its three tabs are
+links, as the tabs of the org settings are. `app/account/preferences`
+shows the Preferences tab, from decision 142: the New workspaces section
+with Model and effort, and the choice of how New workspace opens on a
+computer, the page or a dialog. Its `not-saved` variant shows a save that
+failed, which keeps the saved choice. `app/account/setup`,
+`app/account/connect-claude`, and `app/account/connect-codex` show General
+before the first connections, and with the Connect form of each agent
+open. `app/account/share-not-saved` shows General after a login share
+setting failed to save, with its saved value and the cause beside the
+switch. `app/account/shortcuts` shows the Keyboard shortcuts tab in a
+browser, as the keyboard shortcuts section below gives.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its variants show a
@@ -249,7 +251,8 @@ list of Acme. Its child pages:
 - `app/command-palette/actions` has the Actions tab over the list. Its
   `workspace` variant has the tab over an open workspace, whose actions
   come first.
-- `app/command-palette/settings` has the Settings tab.
+- `app/command-palette/settings` has the Settings tab. Its Account group
+  ends with Keyboard shortcuts, which opens `app/account/shortcuts`.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its `no-results` variant has a search without results.
   Its `loading`, `unavailable`, and `repositories-unavailable` variants
@@ -269,21 +272,50 @@ In `search/unavailable` and `workspaces/unavailable`, the list behind the
 palette on desktop shows the same failure, because it reads the same
 workspace list.
 
-The keyboard shortcuts plan draws the Mac app first, because the Mac app
-gives the page every key. The browser pages show no keys yet, because
-they wait for the research of the keys of a browser.
+On desktop, each command row of the palette ends with the first key of
+its command that works in a normal Chrome tab on a Mac, such as ⌥⌘N for
+New workspace, because the tab keeps ⌘N. A workspace row and a phone show
+no key.
 
+The keyboard shortcuts plan draws the Keyboard shortcuts tab in the Mac
+app and in a browser, from decisions 190 to 195. The pages of
+`app/account` and `mac-app/this-mac` show it as the third tab of the
+account.
+
+- `app/account/shortcuts` shows the tab in a normal Chrome tab on a Mac.
+  The search field of decision 195 stands at the top. The lines under it
+  say which keys the terminal keeps, and where the dimmed keys work. A
+  key that the tab keeps, or that decision 192 leaves to the browser, is
+  dimmed. Its child pages:
+  - `app/account/shortcuts/windows` has a normal Chrome tab on Windows,
+    with the keys of decision 194 and the terminal line of Windows.
+  - `app/account/shortcuts/firefox` has a normal Firefox tab on a Mac,
+    which keeps ⌥⌘↑ and ⌥⌘↓ and lets the page take ⇧⌘T.
+  - `app/account/shortcuts/installed` has the installed app of Chrome on
+    a Mac, where no key is dimmed.
+  - `app/account/shortcuts/search` has a search for "tab", with dimmed
+    keys in its rows. Its `no-match` variant has a search without a
+    match.
+  - `app/account/shortcuts/recording` has a row that records new keys.
+    Its `fixed-key` variant has ⌘Z, a text key that the recorder did not
+    take. Its `conflict` variant has a recorded shortcut of another
+    command, with Replace.
+  - `app/account/shortcuts/changes` has changed rows with Reset, and Reset
+    all. Its `reset-all` variant has the question before Reset all, a
+    sheet on a phone. Its `not-saved` variant has a save that failed.
+
+  The phone views of these pages put the shortcuts of each row on a line
+  under its label.
 - `mac-app/shortcuts` shows the Keyboard shortcuts tab of the account in
-  the Mac app, from decision 190. The search field of decision 195 stands
-  at the top, and the line under it says which keys the terminal keeps.
-  The third tab of the account shows only in the Mac app, so
-  `mac-app/this-mac` has it, and the pages of `app/account` keep two
-  tabs. Its child pages:
+  the Mac app, which gives the page every key. The search field of
+  decision 195 stands at the top, and the line under it says which keys
+  the terminal keeps. Its child pages:
   - `mac-app/shortcuts/search` has a search for "tab". It finds commands
-    by their labels and by their search words, and a fixed row. Its
+    by their labels and by their search words, and fixed rows. Its
     `fixed-keys` variant has a search for "move". It finds the fixed keys
-    of decision 193: those of a focused workspace row and of a focused
-    divider. Its `no-match` variant has a search without a match.
+    of decision 193, those of a focused workspace row and of a focused
+    divider, and the text keys that move by word or by line. Its
+    `no-match` variant has a search without a match.
   - `mac-app/shortcuts/recording` has a row that records new keys. Its
     `fixed-key` variant has a fixed shortcut that the recorder did not
     take. Its `conflict` variant has a recorded shortcut of another
@@ -294,9 +326,9 @@ they wait for the research of the keys of a browser.
 - `mac-app/command-palette` shows the All tab of the palette over a
   workspace in the Mac app, with the key of each command row. The Search
   row of each Mac app page opens it. Its `actions` and `settings` variants
-  have those tabs. The Settings tab adds This Mac and Keyboard shortcuts
-  to the Account group. Its `changed-key` variant has the Search row with
-  ⇧⌘P, the person's key of the palette.
+  have those tabs. The Settings tab adds This Mac to the Account group,
+  which ends with Keyboard shortcuts. Its `changed-key` variant has the
+  Search row with ⇧⌘P, the person's key of the palette.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the

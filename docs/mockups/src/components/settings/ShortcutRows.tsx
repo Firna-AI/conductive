@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { Plus } from 'lucide-react'
+import type { BrowserTab } from '../../fixtures/shortcutHosts'
 import { shortcutLimit } from '../../fixtures/shortcuts'
 import { ActionButton, IconButton } from '../common/actions'
 import { KeyChips, spokenShortcut, type Shortcut } from '../common/KeyChips'
@@ -12,7 +13,8 @@ import styles from './ShortcutsSections.module.css'
  * after a change, and with the shortcut that a failed save did not keep.
  * While the row records, the recorder takes the place of the pressed
  * shortcut. It names a fixed shortcut that it did not take, or the command
- * that already has the recorded shortcut.
+ * that already has the recorded shortcut. A link is missing where the
+ * catalogue draws no page for it.
  */
 export type CommandRowState =
   | {
@@ -39,7 +41,7 @@ export type CommandRowState =
       shortcut: Shortcut
       owner: string
       cancelTo: string
-      replaceTo: string
+      replaceTo?: string
     }
 
 /**
@@ -68,6 +70,11 @@ export function FixedShortcuts(props: {
   )
 }
 
+/** The browser that keeps a shortcut in a normal tab, or none. */
+function keeper(shortcut: Shortcut, tab?: BrowserTab) {
+  return tab?.kept.has(shortcut) ? tab.browser : undefined
+}
+
 /**
  * The shortcuts of a row that records: the recorder takes the place of the
  * pressed shortcut, or follows the others after a press on Add.
@@ -75,6 +82,7 @@ export function FixedShortcuts(props: {
 function recordingKeys(
   label: string,
   state: { keys: readonly Shortcut[]; replaces?: Shortcut },
+  tab?: BrowserTab,
   recorded?: Shortcut,
 ): ReactNode[] {
   const recorder = <Recorder key="recorder" shortcut={recorded} />
@@ -82,18 +90,38 @@ function recordingKeys(
     shortcut === state.replaces ? (
       recorder
     ) : (
-      <KeyButton key={shortcut} label={label} shortcut={shortcut} />
+      <KeyButton
+        key={shortcut}
+        keptBy={keeper(shortcut, tab)}
+        label={label}
+        shortcut={shortcut}
+      />
     ),
   )
   return state.replaces === undefined ? [...others, recorder] : others
 }
 
-/** The row of a command that a person can change, in its state. */
+/** A button that opens a page of the catalogue, or a button alone. */
+function Linked(props: { to?: string; children: ReactElement }) {
+  if (!props.to) return props.children
+  return (
+    <ScreenLink asChild to={props.to}>
+      {props.children}
+    </ScreenLink>
+  )
+}
+
+/**
+ * The row of a command that a person can change, in its state. In a normal
+ * browser tab, `tab` names the browser and the keys that it keeps, which
+ * the row dims.
+ */
 export function CommandShortcuts(props: {
   label: string
   state: CommandRowState
+  tab?: BrowserTab
 }) {
-  const { label, state } = props
+  const { label, state, tab } = props
   const cancel = (to: string) => (
     <ScreenLink asChild to={to}>
       <ActionButton tone="plain">Cancel</ActionButton>
@@ -104,7 +132,7 @@ export function CommandShortcuts(props: {
       return (
         <RowLayout
           end={cancel(state.cancelTo)}
-          keys={recordingKeys(label, state)}
+          keys={recordingKeys(label, state, tab)}
           label={label}
           message={
             state.refused ? (
@@ -121,17 +149,17 @@ export function CommandShortcuts(props: {
         <RowLayout
           end={
             <>
-              <ScreenLink asChild to={state.replaceTo}>
+              <Linked to={state.replaceTo}>
                 <ActionButton
                   accessibilityLabel={`Replace: move ${spokenShortcut(state.shortcut)} from ${state.owner} to ${label}`}
                 >
                   Replace
                 </ActionButton>
-              </ScreenLink>
+              </Linked>
               {cancel(state.cancelTo)}
             </>
           }
-          keys={recordingKeys(label, state, state.shortcut)}
+          keys={recordingKeys(label, state, tab, state.shortcut)}
           label={label}
           message={
             <RowMessage tone="warning">
@@ -141,7 +169,7 @@ export function CommandShortcuts(props: {
         />
       )
     case 'shortcuts':
-      return <ShortcutsLine label={label} state={state} />
+      return <ShortcutsLine label={label} state={state} tab={tab} />
   }
 }
 
@@ -149,6 +177,7 @@ export function CommandShortcuts(props: {
 function ShortcutsLine(props: {
   label: string
   state: Extract<CommandRowState, { kind: 'shortcuts' }>
+  tab?: BrowserTab
 }) {
   const { label, state } = props
   const count = state.keys.length
@@ -172,6 +201,7 @@ function ShortcutsLine(props: {
           state.keys.map((shortcut, index) => (
             <KeyButton
               key={shortcut}
+              keptBy={keeper(shortcut, props.tab)}
               label={label}
               shortcut={shortcut}
               to={index === 0 ? state.recordTo : undefined}

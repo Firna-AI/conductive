@@ -1,6 +1,7 @@
 {
   "order": [
     "preferences",
+    "shortcuts",
     "setup",
     "connect-claude",
     "connect-codex",

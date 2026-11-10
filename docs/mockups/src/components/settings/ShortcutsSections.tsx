@@ -1,4 +1,3 @@
-import { RotateCcw } from 'lucide-react'
 import {
   recordingCommand,
   refusedShortcut,
@@ -8,24 +7,29 @@ import {
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
 import {
+  browserTabOf,
+  keyboardOf,
+  type Keyboard,
+  type ShortcutHost,
+} from '../../fixtures/shortcutHosts'
+import {
   commandLabel,
   fixedLabel,
   shortcutGroups,
   type CommandRow,
   type ShortcutGroup,
 } from '../../fixtures/shortcuts'
-import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { KeyChips } from '../common/KeyChips'
-import { ScreenLink } from '../common/ScreenLink'
+import type { Shortcut } from '../common/KeyChips'
 import { SearchField } from '../common/SearchField'
 import { NoResults } from '../palette/PaletteEmpty'
+import { Section } from './Section'
+import { ShortcutIntro } from './ShortcutIntro'
+import { shortcutPages, type ShortcutPages } from './shortcutPages'
 import {
   CommandShortcuts,
   FixedShortcuts,
   type CommandRowState,
 } from './ShortcutRows'
-import { Section } from './Section'
 import {
   matchingGroups,
   shortcutQueries,
@@ -50,22 +54,28 @@ export const keyChanges = [
 
 export type KeyChange = (typeof keyChanges)[number]
 
+/** What the state of each row depends on. */
+type RowContext = {
+  changes: ShortcutChanges
+  change: KeyChange
+  keyboard: Keyboard
+  pages: ShortcutPages
+  /** The fixed shortcut that the recorder did not take, with its label. */
+  refused?: { shortcut: Shortcut; label: string }
+}
+
 /** The state of the row of a command, from the changes and the last change. */
-function rowState(
-  row: CommandRow,
-  changes: ShortcutChanges,
-  change: KeyChange,
-): CommandRowState {
-  const keys = shortcutsOf(row.id, changes)
+function rowState(row: CommandRow, context: RowContext): CommandRowState {
+  const { changes, change, pages } = context
+  const keys = shortcutsOf(row.id, changes, context.keyboard)
   const records = row.id === recordingCommand
   if (records && (change === 'recording' || change === 'refused')) {
-    const label = change === 'refused' ? fixedLabel(refusedShortcut) : undefined
     return {
       kind: 'recording',
       keys,
       replaces: keys[0],
-      refused: label ? { shortcut: refusedShortcut, label } : undefined,
-      cancelTo: paths.macShortcuts,
+      refused: change === 'refused' ? context.refused : undefined,
+      cancelTo: pages.tab,
     }
   }
   if (records && change === 'conflict') {
@@ -75,8 +85,8 @@ function rowState(
       replaces: keys[0],
       shortcut: takenShortcut.shortcut,
       owner: commandLabel(takenShortcut.owner),
-      cancelTo: paths.macShortcuts,
-      replaceTo: paths.macShortcutsChanges,
+      cancelTo: pages.tab,
+      replaceTo: pages.changes,
     }
   }
   const unsaved = change === 'not-saved' && row.id === unsavedChange.command
@@ -87,10 +97,15 @@ function rowState(
     changed: changes[row.id] !== undefined,
     unsaved: unsaved ? unsavedChange.shortcut : undefined,
     recordTo:
-      records && unchanged && change === 'none'
-        ? paths.macShortcutsRecording
-        : undefined,
+      records && unchanged && change === 'none' ? pages.recording : undefined,
   }
+}
+
+/** The fixed shortcut that the recorder of a host refuses, with its label. */
+function refusedOn(host: ShortcutHost): RowContext['refused'] {
+  const shortcut = refusedShortcut(host)
+  const label = fixedLabel(shortcut, host)
+  return label ? { shortcut, label } : undefined
 }
 
 /** The line of a group whose every row is fixed, in place of a label on each row. */
@@ -102,52 +117,36 @@ function allFixed(group: ShortcutGroup): boolean {
 }
 
 /**
- * The lines above the groups: how to change a shortcut, and the keys that
- * the terminal keeps while it has the focus. Reset all follows them after a
- * change.
- */
-function Intro(props: { changed: boolean }) {
-  return (
-    <div className={styles.intro}>
-      <div className={styles.introText}>
-        <p className={styles.introLine}>Select a shortcut to change it.</p>
-        <p className={styles.introLine}>
-          Keys without <KeyChips shortcut="⌘" /> go to the terminal while it has
-          the focus.
-        </p>
-      </div>
-      {props.changed ? (
-        <ScreenLink asChild to={paths.macShortcutsResetAll}>
-          <ActionButton
-            accessibilityLabel="Reset all shortcuts"
-            icon={RotateCcw}
-          >
-            Reset all
-          </ActionButton>
-        </ScreenLink>
-      ) : null}
-    </div>
-  )
-}
-
-/**
- * The Keyboard shortcuts tab of the account. It lists each command with
- * its shortcuts, in the groups of Conductor. The search field at the top
- * keeps the rows whose label or words hold each word of the query, as the
- * palette finds its rows, and a group without such a row hides. A press on
- * a shortcut, on +, or on Add shortcut records the next keys, and each
- * change saves at once, as Preferences does. A changed row shows Reset.
- * Reset all asks first, then returns every shortcut of this keyboard to its
- * defaults. A group of fixed shortcuts says so once, under its title.
+ * The Keyboard shortcuts tab of the account on a host. It lists each
+ * command with its shortcuts on the keyboard of the host, in the groups of
+ * Conductor. The search field at the top keeps the rows whose label or
+ * words hold each word of the query, as the palette finds its rows, and a
+ * group without such a row hides. A press on a shortcut, on +, or on Add
+ * shortcut records the next keys, and each change saves at once, as
+ * Preferences does. A changed row shows Reset. Reset all asks first, then
+ * returns every shortcut of this keyboard to its defaults. A group of fixed
+ * shortcuts says so once, under its title. In a normal browser tab, a key
+ * that the browser keeps is dimmed, and a line says where it works.
  */
 export function ShortcutsTab(props: {
+  host: ShortcutHost
   changes: ShortcutChanges
   change: KeyChange
   search: ShortcutSearch
 }) {
+  const { host } = props
   const changed = Object.keys(props.changes).length > 0
   const query = shortcutQueries[props.search]
-  const shown = matchingGroups(query, shortcutGroups)
+  const shown = matchingGroups(query, shortcutGroups(host))
+  const pages = shortcutPages[host]
+  const tab = browserTabOf(host)
+  const context: RowContext = {
+    changes: props.changes,
+    change: props.change,
+    keyboard: keyboardOf(host),
+    pages,
+    refused: refusedOn(host),
+  }
   return (
     <>
       <SearchField
@@ -155,7 +154,11 @@ export function ShortcutsTab(props: {
         placeholder="Search shortcuts"
         query={query}
       />
-      <Intro changed={changed} />
+      <ShortcutIntro
+        changed={changed}
+        host={host}
+        resetAllTo={pages.resetAll}
+      />
       {shown.length === 0 ? (
         <NoResults
           hint="Try a command name, such as Close tab."
@@ -164,7 +167,9 @@ export function ShortcutsTab(props: {
       ) : null}
       {shown.map(({ group, rows }) => (
         <Section
-          description={allFixed(group) ? fixedGroupLine : group.description}
+          description={
+            group.description ?? (allFixed(group) ? fixedGroupLine : undefined)
+          }
           key={group.label}
           title={group.label}
         >
@@ -174,7 +179,8 @@ export function ShortcutsTab(props: {
                 {row.kind === 'command' ? (
                   <CommandShortcuts
                     label={row.label}
-                    state={rowState(row, props.changes, props.change)}
+                    state={rowState(row, context)}
+                    tab={tab}
                   />
                 ) : (
                   <FixedShortcuts

@@ -13,7 +13,7 @@ import {
   SquareTerminal,
 } from 'lucide-react'
 import { orgList, type Org } from '../../fixtures/orgs'
-import { orgCommand, type CommandId } from '../../fixtures/shortcuts'
+import { orgCommand, type CommandId } from '../../fixtures/shortcutCommands'
 import { checksPaths, paths } from '../../paths'
 import { orgLinks } from '../orgs/orgLinks'
 
