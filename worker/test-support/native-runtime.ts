@@ -13,7 +13,7 @@ import type {
 import { NATIVE_TEST_TIME } from './native-workspace-api'
 import { NativeHostBridge } from './native-host-bridge'
 import { nativeWorkspaceBundle } from './native-bundle'
-import { readNativePacket } from './native-protocol'
+import { readNativeReply } from './native-protocol'
 import { forceNativeEviction } from './native-eviction'
 
 const WORKER_NAME = 'worker-core-tests'
@@ -121,7 +121,7 @@ export async function createNativeRuntime(
           body: JSON.stringify({ type: 'call', id: 'host', invocation }),
         },
       )
-      const packet = readNativePacket(await response.json())
+      const packet = await readNativeReply(response, invocation)
       if (packet.type !== 'done') throw new Error('Expected a native result.')
       return packet.result
     })

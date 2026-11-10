@@ -69,7 +69,7 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
     providerAccount: 'boat-second',
     createPayloadCiphertext: expect.any(String),
   })
-  start.restart()
+  await start.restart()
   for (let step = 0; step < 20 && (await start.job()); step++) {
     if ((await start.job())?.phase === 'runner')
       await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })

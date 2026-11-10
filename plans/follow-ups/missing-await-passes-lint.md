@@ -1,0 +1,34 @@
+# A missing await in a test passes the lint
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, from branch `calummoore/account-routing-flake-fix`, as the blocked wider fix of the account routing replay flake.
+- **Location:** `eslint.config.js`, the lint configuration of the root package. `worker/lifecycle/account-routing.test.ts:72`, the fixed call.
+- **Reason:** Each option except A adds a lint rule, and the user decides each new lint.
+
+- **Terms:**
+  - **Floating promise:** a promise that the code does not await or handle. Its work runs beside the statements that follow it.
+  - **`no-floating-promises`:** a rule of `typescript-eslint` that reports each floating promise. It needs type information from a TypeScript project.
+  - **Native fixture:** the test harness in `worker/test-support/` that runs the workspace Durable Object in a local Workers runtime, through Miniflare.
+- **Background:**
+  - The test "replays a lost allocation and resumes its disk through the stored secondary account" in `worker/lifecycle/account-routing.test.ts` called `start.restart()` without `await`. Pull request #137, commit `2f329f9d`, added the call.
+  - The restart aborts the native object. A call of the test that ran during the abort got the text reply `Error: The native test fixture requested an object reset.` The fixture read that reply as JSON. So the test failed with `SyntaxError: Unexpected token 'E', "Error: The"... is not valid JSON`.
+  - The test failed in three CI runs on 10 November 2026: 42809324418, 42815054593, and 42827704425. On a 4-core machine, 3 of 400 runs failed under load, and 1 of 60 runs failed on an idle machine. With `await`, 400 of 400 runs passed under the same load.
+  - `npm run lint` uses the `typescript-eslint` recommended rules without type information. So it does not run `no-floating-promises`.
+  - On 10 November 2026, a one-time run of the rule with type information reported the unfixed call at line 72. After the fix, it reported 14 calls, and each one is safe:
+    - 4 `context.blockConcurrencyWhile(...)` calls in Durable Object constructors of test support files under `worker/`.
+    - 10 `act(() => vi.advanceTimersByTime(...))` calls in 3 test files under `src/`.
+  - That run took about 13 seconds for `worker/`, and about 26 seconds for `worker/` and `src/`. The current lint of the same files took about 23 seconds.
+- **Problem:** No check finds a promise that a test or a fixture does not await. Such a call races the calls that follow it, and the test fails only now and then.
+- **Impact if no action:** A later missing await can add a new flaky test. Each one costs CI reruns and a search for the cause.
+- **Root question:** How does a missing await in the Worker code and the web app fail before the merge?
+- **Options:**
+  - **A.** Change nothing. A review can still find a missing await. A native call that gets a text reply now names the call, the status, and the text, so the next case is quicker to find. Effort: Small.
+  - **B.** Turn on `no-floating-promises` with type information for `worker/`, through `tsconfig.worker-tests.json`. Mark the 4 constructor calls with `void`. The lint takes about 13 seconds more. Effort: Small.
+  - **C.** B, and turn on the rule for `src/` too, through `tsconfig.app.json`. Mark the 10 `act` calls with `void`, or allow `act` in the rule options. The lint takes about 26 seconds more. Effort: Small.
+  - **D.** Make the native fixture hold each host call to an object while a restart of that object runs. Then a restart without `await` cannot race. A call during a restart then waits, but on the platform it fails. It covers restarts only, not other missing awaits. Effort: Medium.
+- **Left out:** The Mac app under `desktop/` and the agent runner under `runner/`, because each has its own lint configuration and no case came from them. A retry or a longer time limit for the test, because each hides the defect.
+- **Wider fix:** C, a detection fix for the class. D is a structural fix for restarts only.
+- **Previous examples:** None found in the history of `main` or in `plans/follow-ups/`.
+- **Recommendation:** C. It finds each missing await in the code that the root lint checks, and all 14 current reports are safe calls.
+- **Action:** ask the user, because each option except A adds a lint rule, and the user decides each new lint.
