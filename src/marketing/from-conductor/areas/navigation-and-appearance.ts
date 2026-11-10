@@ -63,7 +63,7 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Status indicators',
     status: 'available',
-    note: 'Workspace marks show activity, unread output, start progress, stopped computers, and errors. GitHub check and merge colours are planned.',
+    note: 'Workspace marks show activity, unread output, start progress, stopped computers, and errors. GitHub check and merge colours in the workspace list are in progress.',
   },
   {
     id: 'wrapped-and-passport',
