@@ -19,9 +19,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'mentions',
     area: 'agents-and-chat',
     name: 'Mentions',
-    status: 'in-progress',
-    note: 'File and folder mentions in the message box are in progress. Teammate and pull request mentions remain under consideration.',
-    due: null,
+    status: 'available',
+    note: 'Type @ in the message box to mention a file or a folder of the workspace. Teammate and pull request mentions remain under consideration.',
   },
   {
     id: 'attachments',
@@ -118,8 +117,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'copy-session-transcripts',
     area: 'agents-and-chat',
     name: 'Copy session transcripts',
-    status: 'planned',
-    note: 'Copying concise or full session transcripts as Markdown from the session menu is planned.',
+    status: 'in-progress',
+    note: 'Copying concise or full session transcripts as Markdown from the session menu is in progress.',
     due: null,
   },
   {

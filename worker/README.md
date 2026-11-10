@@ -13,6 +13,10 @@ The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the a
 The Worker reads that key from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
+The [lifecycle](lifecycle/README.md) records each image's runner version and copies it before each new computer allocation.
+The chat backend refuses a runner below that pin before the welcome or any command.
+It accepts runner protocol versions 1 and 2 at or above the pin.
+The packaged runner sends version 2, and each full image build records version 2.
 The [operator area](operator/README.md) owns the operator's app-wide numbers,
 suspensions, waitlist approvals, invite codes, and sign-up pause.
 New accounts wait for app access unless an operator identity or a valid join
@@ -78,8 +82,12 @@ The [GitHub composition](features/github.ts) stores banner updates in the common
 
 On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, workspace create/list
-tools, GitHub webhooks, and the runner socket.
+tools, GitHub webhooks, the model gateway, and the runner socket.
 These handlers use their own machine credentials and skip the browser gate.
+The [model gateway](model-gateway/README.md) accepts only a turn token.
+It adds the starter's login to allowed Anthropic and OpenAI requests.
+Its request upload and model answer both stream.
+The chat backend gives a turn token to a runner of protocol version 2, and the real login to a runner of version 1.
 The [tools composition](tools/composition.ts) reads the active stored turn.
 It keeps the inherited owner separate from the sender of the first message.
 
@@ -106,8 +114,12 @@ It also checks the runner start script.
 Run `node worker/chat/integration/run-browser-harness.mjs` to serve a production app build through the local Worker, with fake Boat and GitHub.
 [Outer Worker tests](chat/integration/outer-worker-tests.md#browser-harness) gives its settings.
 Run `npm run test -- worker/operator` to check the overview and the suspension of users and orgs.
+Run `npm run test -- worker/model-gateway worker/http/request-body.test.ts` to check version 2 token delivery, model forwarding, turn access, streamed answers, and upload limits.
 The [test support area](test-support/README.md) supplies local D1 and fake providers.
 [Deployment inputs](../docs/deployment.md) lists the bindings, variables, and secrets of a deployment.
+`wrangler.jsonc` turns on the `global_fetch_strictly_public` compatibility flag.
+So each global `fetch` takes the public Internet route, also to a hostname of this app.
+Call other parts of the app through a binding or an RPC method, not a global `fetch`.
 
 ### Key Code
 
@@ -124,6 +136,8 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
+- [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
+  The `turn` commands of a version 2 runner carry these tokens. The packaged runner uses version 2.
 - [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. It writes one structured object with fixed text and selected safe fields. It copies no extra caller field, token, error message, request body, command output, or response body. `WarningRecord` names the logged object type. `CommandFailed` carries a failed command's state, exit code, and time-out.
 - [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too.
 - [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name.

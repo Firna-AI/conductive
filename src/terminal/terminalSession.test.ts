@@ -10,6 +10,7 @@ class FakeScreen implements TerminalScreen {
   modes = { applicationCursorKeysMode: false }
   readonly output: string[] = []
   focusCount = 0
+  mouseReleased = false
   private readonly inputListeners = new Set<(data: string) => void>()
   private readonly replyListeners = new Set<(data: string) => void>()
   private readonly resizeListeners = new Set<
@@ -45,6 +46,10 @@ class FakeScreen implements TerminalScreen {
 
   focus(): void {
     this.focusCount += 1
+  }
+
+  releaseMouse(): void {
+    this.mouseReleased = true
   }
 
   type(data: string): void {

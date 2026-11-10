@@ -25,6 +25,7 @@ import {
   $selectedFieldText,
   $setFieldText,
 } from './field-content'
+import { useFieldSources } from './mention-plugins'
 
 /** Whether the field has the focus, so that a change may place its caret. */
 function focused(editor: LexicalEditor): boolean {
@@ -62,11 +63,11 @@ export function ValuePlugin(props: {
   onChangeText: (text: string) => void
 }) {
   const [editor] = useLexicalComposerContext()
-  const { links } = useChatLinks()
+  const sources = useFieldSources()
   // The owner and the text that the field shows now.
   const shown = useRef({ owner: props.owner, text: props.value })
   const onChange = useLatest(props.onChangeText)
-  const latestLinks = useLatest(links)
+  const latestSources = useLatest(sources)
   useEffect(
     () =>
       editor.registerUpdateListener((update) => {
@@ -88,24 +89,25 @@ export function ValuePlugin(props: {
     editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined)
     editor.update(
       () => {
-        $setFieldText(props.value, latestLinks.current)
+        $setFieldText(props.value, latestSources.current)
         if (caret) $getRoot().selectEnd()
         else $setSelection(null)
       },
       { discrete: true, tag: caret ? [] : [SKIP_DOM_SELECTION_TAG] },
     )
-  }, [editor, props.owner, props.value, latestLinks])
+  }, [editor, props.owner, props.value, latestSources])
   return null
 }
 
 /**
  * A paste keeps only its plain text, from the paste event, and each pasted
- * workspace link becomes a chip at once. The paste is one step of undo.
+ * workspace link becomes a chip at once, as does each pasted mention of an
+ * entry of the tree. The paste is one step of undo.
  */
 export function PastePlugin() {
   const [editor] = useLexicalComposerContext()
-  const { links } = useChatLinks()
-  const latestLinks = useLatest(links)
+  const sources = useFieldSources()
+  const latestSources = useLatest(sources)
   useEffect(
     () =>
       editor.registerCommand(
@@ -125,7 +127,7 @@ export function PastePlugin() {
               const target = $isRangeSelection(selection)
                 ? selection
                 : $getRoot().selectEnd()
-              target.insertNodes($fieldNodes(text, latestLinks.current))
+              target.insertNodes($fieldNodes(text, latestSources.current))
             },
             { tag: PASTE_TAG },
           )
@@ -133,7 +135,7 @@ export function PastePlugin() {
         },
         COMMAND_PRIORITY_HIGH,
       ),
-    [editor, latestLinks],
+    [editor, latestSources],
   )
   return null
 }

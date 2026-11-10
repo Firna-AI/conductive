@@ -136,17 +136,16 @@ it('fails only the copy turn and releases its hold before later work', async () 
     turnId: string
     state: StoredTurn['state'] | undefined
   }[] = []
-  let onStored: ChatDependencies['runnerEventStored'] = async () => {}
+  let onEnded: ChatDependencies['turnEnded'] = async () => {}
   const fixture = await attachmentFixture(harness, {
     ...copy.dependencies,
-    runnerEventStored: (...args) => onStored(...args),
+    turnEnded: (...args) => onEnded(...args),
   })
-  onStored = async ({ event }) => {
-    if (event.type !== 'turn.failed') return
+  onEnded = async (_workspaceId, turnId) => {
     const turn = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
-      view.turn(event.turnId),
+      view.turn(turnId),
     )
-    notifications.push({ turnId: event.turnId, state: turn?.state })
+    notifications.push({ turnId, state: turn?.state })
   }
   const file = await fixture.upload()
   const session = await fixture.createSession()
