@@ -126,8 +126,9 @@ export const workspaceStateSchema = {
      * attached files, with its picker open, or with a message for an agent
      * that is not connected. Or with a message in a session whose starter's
      * login is not available, or whose starter keeps that login for their
-     * own messages. With files, a file can still upload, its upload can fail,
-     * or a file over the size limit can stay out of the message.
+     * own messages, or whose starter's login is an own endpoint. With files,
+     * a file can still upload, its upload can fail, or a file over the size
+     * limit can stay out of the message.
      * `workspace-link` holds a message with a pasted link to another
      * workspace of the org, which shows as a chip.
      *
@@ -150,6 +151,7 @@ export const workspaceStateSchema = {
         'no-agent',
         'no-starter-login',
         'not-shared',
+        'own-endpoint',
         'workspace-link',
         'mention-query',
         'mention-start',

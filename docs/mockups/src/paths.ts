@@ -57,6 +57,7 @@ export const paths = {
   accountSetup: 'app/account/setup',
   connectClaude: 'app/account/connect-claude',
   connectCodex: 'app/account/connect-codex',
+  ownEndpointConnected: 'app/account/own-endpoint/connected',
   operator: 'app/operator',
   operatorMenu: 'app/operator/menu',
   operatorError: 'app/operator/error',

@@ -34,8 +34,9 @@ plan limits.
   changes no login, and the cloud computer keeps running.
 - When a message uses the login of another member, the bar of the
   composer names that login after the model picker, such as "Cal's login"
-  in `app/composer/login`. So the box keeps its place. A message on the own
-  login of the viewer shows no name. When the login of the member who
+  in `app/composer/login`. So the box keeps its place. On an own endpoint
+  the label also names the host, as [Logins](#logins) says. A message on
+  the own login of the viewer shows no name. When the login of the member who
   started a session is not available, a message of another member starts
   a new session. The notice over the composer of the first session says
   so, and its chat stays as it was, as `app/sessions/no-starter-login`
@@ -115,20 +116,60 @@ plan limits.
   key for its cloud computers, and no screen asks for one or for another
   account.
 - The account connects Claude with a subscription token from
-  `claude setup-token` or an API key, and Codex with an OpenAI API key.
-  `AgentConnectForm` opens under the row of the agent. A connected login
-  shows its kind and Remove.
+  `claude setup-token`, an API key, or an own endpoint, and Codex with an
+  OpenAI API key or an own endpoint. `AgentConnectForm` opens under the
+  row of the agent, with a choice of the kinds of that agent. On a phone
+  the three kinds of Claude wrap onto two lines. The hint of a token or an
+  API key says that the app tests it once and never shows it again. The
+  hint of an own endpoint key promises no test, because the app never
+  calls the endpoint. A connected login shows its kind and Remove.
+- An own endpoint login sends the turns of its agent to a gateway or a
+  proxy that the user chose, from decision 1 A of the own endpoint plan.
+  Its form asks for the address of the endpoint and its key, and the app
+  stores both encrypted. `EndpointFields` in `src/components/settings/`
+  draws the fields, as `app/account/own-endpoint` and its `codex` variant
+  show.
+  - The form says that the endpoint must serve the Anthropic Messages API
+    for Claude, or the OpenAI Responses API for Codex. It names the models
+    that the picker offers, which the endpoint must serve too, because the
+    app keeps its own model list and never calls the endpoint (decision
+    3 A of that plan).
+  - The address is the base address, without a query or a fragment. It has
+    no `/v1` for Claude, and it ends with `/v1` for Codex. The placeholder
+    gives an example. The hint names where the requests go, from the
+    address in the field, such as "Requests go from the cloud computer to
+    https://gateway.example.com/v1/messages". It names the cloud computer,
+    because a loopback address reaches only a proxy on the cloud computer.
+  - The save refuses an `http://` address unless its host is `localhost`,
+    `127.0.0.1`, or `[::1]` (decision 2 B of that plan). The refusal takes
+    the place of the hint under the address, and the key stays in its
+    field, as `app/account/own-endpoint/refused` shows.
+  - A connected own endpoint login shows its kind with the host of its
+    endpoint under its row, such as "Own endpoint at proxy.example.com", so
+    that a phone shows both in full. It never shows the key or the full
+    address, as `app/account/own-endpoint/connected` shows. The part lives
+    in `src/components/settings/LoginEndpoint.tsx`.
+  - The label in the bar of the composer of a session on the own endpoint
+    of another member names the host, such as "Cal's endpoint at
+    proxy.example.com" in `app/composer/own-endpoint`, so that the sender
+    sees where the message goes. A narrow bar ends the label with an
+    ellipsis, so on a phone and beside the right column of a desktop the
+    host is cut. A session on the own endpoint of the viewer gets no
+    label, as for every own login, as its `yours` variant shows.
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude
-  subscription and on for an API key, as `app/account` shows. It saves at
-  once. A change that the app did not save shows its cause beside the
-  switch, as `app/account/share-not-saved` shows. The part lives in
+  subscription, and on for an API key and an own endpoint (decision 4 B of
+  the own endpoint plan), as `app/account` and
+  `app/account/own-endpoint/connected` show. It saves at once. A change
+  that the app did not save shows its cause beside the switch, as
+  `app/account/share-not-saved` shows. The part lives in
   `src/components/settings/LoginShare.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
   It opens only after app access, so a person who waits sees the
-  waitlist instead.
+  waitlist instead. The agent step offers the kinds of the account, also
+  the own endpoint, and it shows no share switch.
 - Create org starts the first build of the cloud computer of the org, from
   decision 150. The org step shows that build under the org: preparing
   with its time, then ready, or the failure with its saved message, Try

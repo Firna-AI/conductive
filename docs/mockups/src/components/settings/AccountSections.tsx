@@ -15,6 +15,8 @@ import { LinkTabs } from '../common/LinkTabs'
 import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
+import type { EndpointEntry } from './EndpointFields'
+import { LoginEndpoint } from './LoginEndpoint'
 import { LoginShare } from './LoginShare'
 import { Section } from './Section'
 import styles from './AccountSections.module.css'
@@ -86,13 +88,19 @@ export type OpenAgentForm = {
   connectTo: string
   /** The form can close, because it did not open as the next step. */
   cancel: boolean
+  /**
+   * The form shows the own endpoint kind, and what its address field holds.
+   * Without it, the form shows the first kind of the agent.
+   */
+  endpoint?: EndpointEntry
 }
 
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
- * login. `form` opens the Connect form of an agent under its row.
- * `removable` gives each connected login its Remove, and `shares` its
- * share setting, as on the account.
+ * login. An own endpoint login shows its kind with the host of its endpoint
+ * under its row, so that a phone shows both in full. `form` opens the
+ * Connect form of an agent under its row. `removable` gives each connected
+ * login its Remove, and `shares` its share setting, as on the account.
  */
 export function AgentList(props: {
   logins: AgentLogins
@@ -128,12 +136,19 @@ export function AgentList(props: {
                 {login ? (
                   <>
                     {connected}
-                    <span className={styles.kind}>{loginLabels[login]}</span>
+                    {login.kind === 'endpoint' ? null : (
+                      <span className={styles.kind}>
+                        {loginLabels[login.kind]}
+                      </span>
+                    )}
                   </>
                 ) : null}
               </span>
               {action}
             </div>
+            {login?.kind === 'endpoint' ? (
+              <LoginEndpoint host={login.host} kind={loginLabels.endpoint} />
+            ) : null}
             {login && props.shares ? (
               <LoginShare
                 error={
@@ -141,7 +156,7 @@ export function AgentList(props: {
                 }
                 nameId={nameId}
                 onChange={noop}
-                shared={sharedByDefault[login]}
+                shared={sharedByDefault[login.kind]}
               />
             ) : null}
             {form && !login ? (
@@ -149,6 +164,7 @@ export function AgentList(props: {
                 agent={key}
                 cancel={form.cancel}
                 connectTo={form.connectTo}
+                endpoint={form.endpoint}
               />
             ) : null}
           </li>
@@ -160,8 +176,8 @@ export function AgentList(props: {
 
 /**
  * The agents that every org uses, Claude and Codex: each connected login
- * with its kind, Remove, and its share setting, or Connect, which opens the
- * form of the agent.
+ * with its kind, the host of an own endpoint, Remove, and its share setting,
+ * or Connect, which opens the form of the agent.
  */
 export function AgentsSection(props: {
   logins: AgentLogins

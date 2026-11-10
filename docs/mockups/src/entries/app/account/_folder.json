@@ -5,6 +5,7 @@
     "connect-claude",
     "connect-codex",
     "share-not-saved",
+    "own-endpoint",
     "invites"
   ]
 }

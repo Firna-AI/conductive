@@ -20,7 +20,7 @@ how a screen is built, and links to the other pages.
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, also on an own endpoint, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
@@ -31,7 +31,7 @@ how a screen is built, and links to the other pages.
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
-| `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
+| `app/composer`      | Attached files, the picker, another member's login, a missing agent, and a login on an own endpoint |
 | `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
@@ -48,7 +48,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/composer`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
 `app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
@@ -58,8 +58,9 @@ which links back to it. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
-`app/new-workspace/dialog`, `app/org-settings/cloud-computer`, and
-`app/archive` moved into their own folders and kept their paths, so that
+`app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
+`app/archive`, and `app/composer` moved into their own folders and kept
+their paths, so that
 each of those pages shows only its canonical screen. `app/sign-in/get-started` moved into its own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
@@ -153,9 +154,14 @@ with Model and effort, and the choice of how New workspace opens on a
 computer, the page or a dialog. Its `not-saved` variant shows a save that failed, which
 keeps the saved choice. `app/account/setup`, `app/account/connect-claude`,
 and `app/account/connect-codex` show General before the first connections,
-and with the Connect form of each agent open.
+and with the Connect form of each agent open, on its first kind.
 `app/account/share-not-saved` shows General after a login share setting
 failed to save, with its saved value and the cause beside the switch.
+`app/account/own-endpoint` shows the form of Claude on the own endpoint
+kind, while Codex runs on an own endpoint. Its `codex` variant has the
+form of Codex on that kind. Its `refused` variant has an `http://`
+address that the save refused. Its `connected` variant has both agents
+on an own endpoint, each with its host and its share switch on.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its states are child
@@ -200,6 +206,15 @@ chose these four actions on 9 November 2026. Its child pages:
   admin, then her own workspace, her archived row without a menu, which
   still offers Restore on hover, and a suspended org, whose rows have no
   menu.
+
+`app/composer` shows a message with two uploaded files. Its child pages:
+`app/composer/picker` has the open picker, `app/composer/no-agent` has an
+agent that is not connected, and `app/composer/login` has a session on the
+login of another member. `app/composer/not-shared` has a session whose
+starter does not share the login. `app/composer/own-endpoint` has a
+session on the own endpoint of another member, whose label in the bar
+names the host. Its `yours` variant has a session on the own endpoint of
+the viewer, whose bar names no login.
 
 `app/command-palette` shows the All tab of the command palette over the
 list of Acme. Its child pages:

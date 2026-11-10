@@ -3,6 +3,7 @@ import { SegmentedControl } from '@firna/ui/segmented'
 import { productName } from '../../brand'
 import type { AgentKey } from '../../fixtures/agents'
 import {
+  agentLoginKinds,
   claudeTokenCommand,
   loginLabels,
   openAiKeyPage,
@@ -13,27 +14,43 @@ import { ActionButton } from '../common/actions'
 import { ExternalLink } from '../common/ExternalLink'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
+import { EndpointFields, type EndpointEntry } from './EndpointFields'
 import styles from './AgentConnectForm.module.css'
 
+/** The hint of a subscription token or an API key. */
 const testHint = `${productName} tests it once, and never shows it again.`
 
-/** Claude connects with a subscription token, or with an API key. */
-const claudeKinds: readonly LoginKind[] = ['token', 'api-key']
+/**
+ * The hint of the key of an own endpoint. The app calls no endpoint at the
+ * save, so this hint promises no test.
+ */
+const keepHint = `${productName} keeps it encrypted, and never shows it again.`
 
-function ClaudeFields() {
+/**
+ * The kinds of the agent, with the kind of the form chosen. On a phone the
+ * three kinds of Claude wrap onto a second line.
+ */
+function KindChoice(props: { agent: AgentKey; kind: LoginKind }) {
+  const { field } = useControlSizes()
+  return (
+    <SegmentedControl
+      accessibilityLabel="Connect with"
+      onChange={noop}
+      options={agentLoginKinds[props.agent].map((kind) => ({
+        label: loginLabels[kind],
+        value: kind,
+      }))}
+      size={field}
+      value={props.kind}
+      wrap
+    />
+  )
+}
+
+function TokenFields() {
   const { field } = useControlSizes()
   return (
     <>
-      <SegmentedControl
-        accessibilityLabel="Connect with"
-        onChange={noop}
-        options={claudeKinds.map((kind) => ({
-          label: loginLabels[kind],
-          value: kind,
-        }))}
-        size={field}
-        value="token"
-      />
       <p className={styles.text}>
         Run <code className={styles.code}>{claudeTokenCommand}</code> on your
         computer, then paste the token that it prints.
@@ -52,7 +69,7 @@ function ClaudeFields() {
   )
 }
 
-function CodexFields() {
+function OpenAiKeyFields() {
   const { field } = useControlSizes()
   return (
     <>
@@ -75,18 +92,44 @@ function CodexFields() {
 }
 
 /**
+ * The fields of the kind of the form: the own endpoint with what its
+ * address field holds, or else the first kind of the agent.
+ */
+function KindFields(props: { agent: AgentKey; endpoint?: EndpointEntry }) {
+  if (props.endpoint) {
+    return (
+      <EndpointFields
+        agent={props.agent}
+        entry={props.endpoint}
+        keyHint={keepHint}
+      />
+    )
+  }
+  return props.agent === 'claude' ? <TokenFields /> : <OpenAiKeyFields />
+}
+
+/**
  * The form that connects an agent, open under its row: Claude with a
- * subscription token or an API key, and Codex with an OpenAI API key.
- * Connect leads to `connectTo`. Cancel shows when the form can close.
+ * subscription token, an API key, or an own endpoint, and Codex with an
+ * OpenAI API key or an own endpoint. Without `endpoint`, the form shows the
+ * first kind of the agent. With it, the form shows the own endpoint kind
+ * and what its address field holds. Connect leads to `connectTo`. Cancel
+ * shows when the form can close.
  */
 export function AgentConnectForm(props: {
   agent: AgentKey
   connectTo: string
   cancel: boolean
+  endpoint?: EndpointEntry
 }) {
+  const [firstKind] = agentLoginKinds[props.agent]
   return (
     <div className={styles.form}>
-      {props.agent === 'claude' ? <ClaudeFields /> : <CodexFields />}
+      <KindChoice
+        agent={props.agent}
+        kind={props.endpoint ? 'endpoint' : firstKind}
+      />
+      <KindFields agent={props.agent} endpoint={props.endpoint} />
       <div className={styles.actions}>
         {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
         <ScreenLink asChild to={props.connectTo}>

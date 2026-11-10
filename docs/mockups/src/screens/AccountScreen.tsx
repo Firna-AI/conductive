@@ -19,8 +19,9 @@ import { Sidebar } from '../components/workspaces/Sidebar'
 import { agentKeys, type AgentKey } from '../fixtures/agents'
 import {
   accountLogins,
+  endpointLogins,
+  type AgentLogin,
   type AgentLogins,
-  type LoginKind,
 } from '../fixtures/logins'
 import { account, orgList, orgs } from '../fixtures/orgs'
 import { viewerMembership } from '../fixtures/members'
@@ -37,6 +38,7 @@ export const accountSchema = {
     'save',
     'shareChange',
     'invites',
+    'ownEndpoint',
   ],
   properties: {
     /**
@@ -68,6 +70,13 @@ export const accountSchema = {
      * login that the app did not save.
      */
     shareChange: { enum: ['none', 'not-saved'] },
+    /**
+     * The own endpoint login: none, the open form on the own endpoint kind
+     * with an empty address or with an `http://` address that the save
+     * refused, or the logins after the connect. Except for `none`, every
+     * connected login runs on Cal's proxy.
+     */
+    ownEndpoint: { enum: ['none', 'form', 'refused', 'connected'] },
   },
 } as const
 
@@ -82,6 +91,7 @@ export const accountGeneral: AccountState = {
   save: 'saved',
   shareChange: 'none',
   invites: 'left',
+  ownEndpoint: 'none',
 }
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -91,35 +101,50 @@ const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 
 /** The logins of the agents in a state, without the agent of the form. */
 function loginsFor(state: AccountState): AgentLogins {
-  const logins: Partial<Record<AgentKey, LoginKind>> = {}
+  const logins: Partial<Record<AgentKey, AgentLogin>> = {}
   if (state.connections === 'not-connected') return logins
+  const saved = state.ownEndpoint === 'none' ? accountLogins : endpointLogins
   for (const key of agentKeys) {
-    const login = accountLogins[key]
+    const login = saved[key]
     if (login && key !== state.form) logins[key] = login
   }
   return logins
 }
 
 /**
+ * The Connect form that is open in a state. On the own endpoint kind, the
+ * form leads to the logins on the proxy.
+ */
+function formFor(state: AccountState): OpenAgentForm | undefined {
+  const { form, ownEndpoint } = state
+  if (form === 'none') return undefined
+  if (ownEndpoint === 'form' || ownEndpoint === 'refused') {
+    return {
+      agent: form,
+      connectTo: paths.ownEndpointConnected,
+      cancel: true,
+      endpoint: ownEndpoint === 'form' ? 'empty' : 'refused',
+    }
+  }
+  return { agent: form, connectTo: paths.account, cancel: true }
+}
+
+/**
  * The General tab: the GitHub sign-in, and what every org shares, the
- * GitHub App and the agents, then the invite code of the user, last, so
- * that a phone shows the form of an agent near the top. The Mac app adds
- * the This Mac section.
+ * GitHub App and the agents, with the share setting of each login and the
+ * host of an own endpoint, then the invite code of the user, last, so that
+ * a phone shows the form of an agent near the top. The Mac app adds the
+ * This Mac section.
  */
 function GeneralTab(props: { state: AccountState }) {
-  const { form } = props.state
   const mac = useMacApp()
-  const openForm: OpenAgentForm | undefined =
-    form === 'none'
-      ? undefined
-      : { agent: form, connectTo: paths.account, cancel: true }
   return (
     <>
       <SignInSection />
       {mac ? <ThisMacSection /> : null}
       <GitHubSection connected={props.state.connections === 'connected'} />
       <AgentsSection
-        form={openForm}
+        form={formFor(props.state)}
         logins={loginsFor(props.state)}
         shares={{
           notSaved: props.state.shareChange === 'not-saved' ? 'claude' : null,
