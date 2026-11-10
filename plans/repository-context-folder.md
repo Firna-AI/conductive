@@ -201,6 +201,9 @@ My calls, on 10 November 2026:
 - A repository with a `.context` file or link at its top cannot take
   attached files. The copy fails with the existing copy error. Reason: such
   a repository is rare, and a second location doubles the path rules.
+- The Sessions and chat guide gets a short paragraph about the folder.
+  Reason: the comparison row sends Conductor users to the feature, and the
+  guide is where they look for it.
 - The comparison row moves to Available in this change, because the merge
   ships the feature. The comparison mockup reads the same rows, so the plan
   has no mockup milestone.
@@ -231,6 +234,12 @@ State the requirements and the decisions in force for the work below.
 - [ ] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact, or record that no sentence does.
+- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+      sentence that restates a changed fact, or record that no sentence
+      does. Follow [Website docs](../docs/protocol/website-docs.md).
+- [ ] Add a short paragraph to the Sessions and chat guide: attached files
+      arrive in `.context/attachments/`, agents keep notes in `.context/`,
+      and Git ignores that folder, so Changes does not list its files.
 - [ ] Check each relative link of each changed Markdown file.
 
 ## Milestone 2: Attached files go into `.context/attachments/`
