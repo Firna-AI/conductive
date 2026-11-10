@@ -1,4 +1,5 @@
-import { useEffect, useEffectEvent, useRef } from 'react'
+import { useEffect, useEffectEvent } from 'react'
+import { routeOf, useNavigation } from '../../../app/navigation'
 import type { WorkspaceContext } from '../features'
 import { filesPlace, tabOf } from './files-address'
 
@@ -17,26 +18,46 @@ function resumesAtTabOpen(context: WorkspaceContext): boolean {
   )
 }
 
+/** The file or diff tab of this workspace that an address names, as a key. */
+function tabAt(href: string, orgId: string, workspaceId: string) {
+  const route = routeOf(href)
+  if (
+    route.screen !== 'workspace' ||
+    route.orgId !== orgId ||
+    route.workspaceId !== workspaceId
+  ) {
+    return null
+  }
+  const tab = tabOf(filesPlace(route.view))
+  return tab ? `${tab.kind}:${tab.path}` : null
+}
+
 /**
- * Resumes the sandbox each time the address opens a file or diff tab, so
- * that the tab can read its file. The open can be a click on a file, a tab,
- * or a link, or a move back or forward. The first address of the screen
- * starts nothing here, because the open of the workspace resumes it. A tab
- * that shows again, such as at a return to the browser tab, starts nothing,
- * and neither does a switch between the preview and the source.
+ * Resumes the sandbox at each visit that opens a file or diff tab, so that
+ * the tab can read its file. A visit opens a tab when it moves to another
+ * tab, or when it visits the address of the tab again, as a second click on
+ * the tab or on its file does. Each click, link, and move back or forward
+ * is a visit. A switch between the preview and the source of one file
+ * keeps its tab. The address of the screen at its first show starts
+ * nothing here, because the open of the workspace resumes the sandbox.
  */
 export function ResumeOnTabOpen(props: { context: WorkspaceContext }): null {
-  const tab = tabOf(filesPlace(props.context.view))
-  const opened = tab ? `${tab.kind}:${tab.path}` : null
-  const shown = useRef<string | null | undefined>(undefined)
+  const navigation = useNavigation()
+  const { org, workspace } = props.context
   const resumeIfDown = useEffectEvent(() => {
     if (resumesAtTabOpen(props.context)) props.context.resume.run()
   })
   useEffect(() => {
-    const previous = shown.current
-    shown.current = opened
-    if (previous === undefined || opened === null || opened === previous) return
-    resumeIfDown()
-  }, [opened])
+    let href = navigation.href()
+    let tab = tabAt(href, org.id, workspace.id)
+    return navigation.subscribe(() => {
+      const visited = navigation.href()
+      const opened = tabAt(visited, org.id, workspace.id)
+      const opens = opened !== null && (opened !== tab || visited === href)
+      href = visited
+      tab = opened
+      if (opens) resumeIfDown()
+    })
+  }, [navigation, org.id, workspace.id])
   return null
 }

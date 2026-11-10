@@ -88,11 +88,15 @@ Each folder of a path is a part of the address. Another address under
   takes the place of the content. The page hides the bar of the chat, so
   its panel has Resume or Try again, and the words of a refusal. The
   header keeps the name of the file, and a diff keeps its changed lines.
-- Each address that opens a file or diff tab resumes a stopped sandbox, as
+- Each visit that opens a file or diff tab resumes a stopped sandbox, as
   [Stop and resume](../../../docs/protocol/workspace-life.md#stop-and-resume)
-  says. `ResumeOnTabOpen` watches the address. The first address of the
-  screen starts nothing there, because the open of the workspace resumes
-  the sandbox. A switch between the preview and the source starts nothing.
+  says. `ResumeOnTabOpen` listens to each visit of the app navigation:
+  each click, link, and move back or forward. A visit opens a tab when it
+  moves to another tab, or when it visits the address of the tab again, as
+  a second click on the tab or on its file does.
+- A switch between the preview and the source keeps the tab, so it starts
+  nothing. The address of the screen at its first show starts nothing
+  there either, because the open of the workspace resumes the sandbox.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
 

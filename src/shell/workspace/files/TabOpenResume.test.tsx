@@ -42,7 +42,7 @@ function sent(server: FakeApiServer, method: string, path: string): number {
 const resumes = (server: FakeApiServer) =>
   sent(server, 'POST', workspacePaths.resume(org, id))
 
-test('resume a stopped sandbox when a diff opens, but not again for the address that opened the workspace', async () => {
+test('resume a stopped sandbox at each open of a diff, also of the one that shows, but not again for the address that opened the workspace', async () => {
   holdAnimationFrames()
   const server = new FakeApiServer({ workspaceState: 'stopped' })
   const { view } = await openTab(server, filesHref(org, id, formDiff))
@@ -62,13 +62,19 @@ test('resume a stopped sandbox when a diff opens, but not again for the address 
   expect(page.textContent).not.toContain("didn't open")
   expect(sent(server, 'GET', filePaths.diff(org, id, hookPath))).toBe(0)
   expect(sent(server, 'GET', filePaths.diff(org, id, FAKE_FILE_PATH))).toBe(0)
+
+  // A second click on the file that shows opens it again.
+  click(linkTo(changes, filesHref(org, id, hookDiff)))
+  await settle()
+
+  expect(resumes(server)).toBe(3)
 })
 
-test('keep the file that a tab shows when the sandbox stops, and start nothing', async () => {
+test('keep the file that a tab shows when the sandbox stops, and start nothing, also at a switch of its view', async () => {
   holdAnimationFrames()
   const server = new FakeApiServer()
   const tab: FilesTab = { kind: 'file', path: FAKE_FILE_PATH, mode: 'source' }
-  const { view } = await openTab(server, filesHref(org, id, tab))
+  const { view, navigation } = await openTab(server, filesHref(org, id, tab))
   const page = () => byRole('region', 'AddressForm.tsx', view)
   const route = filePaths.content(org, id, FAKE_FILE_PATH)
   const text = 'return <form aria-label="Address" />'
@@ -91,6 +97,12 @@ test('keep the file that a tab shows when the sandbox stops, and start nothing',
   expect(page().textContent).toContain(text)
   expect(page().textContent).not.toContain('Sandbox stopped')
   expect(sent(server, 'GET', route)).toBe(reads)
+  expect(resumes(server)).toBe(0)
+
+  // A switch between the source and the preview keeps the tab open.
+  act(() => navigation.push(filesHref(org, id, { ...tab, mode: 'preview' })))
+  await settle()
+
   expect(resumes(server)).toBe(0)
 })
 
