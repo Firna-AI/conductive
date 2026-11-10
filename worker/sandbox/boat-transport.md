@@ -70,4 +70,3 @@ An incomplete source, a byte-count mismatch, or a failed transfer gives a safe t
 The transfer uses the same 65 second request timeout as file reads.
 The adapter keeps the signed address out of its return value and errors.
 It does not copy transfer error text or codes.
-

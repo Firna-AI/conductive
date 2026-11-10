@@ -588,14 +588,14 @@ The complete change passes the gate and the review.
 - [x] Integrate main's archive restore and shared software images. Keep
       E2B archive recovery read-only and skip its vendor disk restarts.
       Verify same-account software-image selection and template fallback.
-- [ ] Resolve the PR's newer-main conflict. Preserve repository-build
+- [x] Resolve the PR's newer-main conflict. Preserve repository-build
       notices and .context attachments, and keep new repository/build
       queries on the fixed org account. Run targeted checks and final CI.
 - [x] Match main's file-write contract on E2B: create missing parents and
       replace the destination only after a complete validated upload.
       Preserve old bytes and clean the temporary file after failure.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -610,6 +610,8 @@ Evidence: `.context/e2b-backup-provider/complete-gate-1.log` and
 `combined-smoke/result.json`. Real E2B checks above remain blocked.
 Round 1 review and checks: `.context/reviews/calummoore/e2b-backup-sandbox-provider/`.
 Combined integration gate: `.context/e2b-backup-provider/complete-gate-3.log`.
+PR conflict integration: `.context/e2b-backup-provider/merge-8-backend-integration.md`
+and `merge-8-file-write-integration.md`. Final CI remains in progress.
 
 ## Post-merge follow-up (non-blocking)
 
