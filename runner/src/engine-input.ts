@@ -94,7 +94,6 @@ export async function inputCommand(
     resolvedMessageIds: new Set(),
     waiting: [],
     stopped: controller.signal.aborted,
-    shutdown: false,
     provider: null,
     lifetime: null,
     closing: Promise.resolve(),

@@ -47,6 +47,10 @@ The workspace keeps its accepted messages after a failed first start.
 Before the org's first successful build, **Send** stays off.
 You can keep a draft in **New workspace** while that build runs.
 
+A newly added repository shows as unavailable in the repository menu until its build succeeds.
+Its note says when it will be ready.
+**Send** stays off while the selected repository waits for its build.
+
 ## Choose the page or dialog
 
 1. Open **Account**.
@@ -136,7 +140,6 @@ A failed first start keeps the workspace and its accepted messages.
 If the create request itself fails, **New workspace** keeps the draft with **Try again**.
 
 If the org has no successful build, ask an admin to check **Cloud computer** in **Settings**.
-A newly added repository needs a build that includes it before a workspace can use it.
 
 For a repository with no branches or tags, Conductive creates an empty first commit at the first start.
 Your GitHub account needs permission to push that commit.

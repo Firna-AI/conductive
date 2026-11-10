@@ -17,7 +17,8 @@ These docs belong to this doc:
 - [Imported workspaces](imported-workspaces.md): a workspace from an
   import of Conductor, its activation, and Archive before its activation.
 - [Repository folders](repository-folders.md): the folder and the shell
-  variable of each repository in a sandbox.
+  variable of each repository in a sandbox, and the context folder of each
+  workspace.
 - [Life of a workspace](workspace-life.md): the start steps, the time
   limits, the states, the stop and resume, the archive, and the restore.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which

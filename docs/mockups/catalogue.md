@@ -23,9 +23,9 @@ how a screen is built, and links to the other pages.
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat with the line of its branch, the first build of a new org, its error, files on the first message, the dialog, an existing branch or pull request, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat with the line of its branch, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, an existing branch or pull request, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/imported`      | A workspace from Conductor: the list after the import, its flag and old sessions, the Markdown of an old session, its files, its activation, a failed activation, a disk that is too small, the activated workspace, and its resumed sessions |
-| `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
+| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lists in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
@@ -109,6 +109,10 @@ decision 151. The mockups draw it for Firna, the first org of the sign-up:
   shows once a build has ended. Its `script-changed` variant has an install
   script that Cal saved during the first build. One more build runs it
   when the first build succeeds, so its notice has no Build computer.
+
+[Repositories that wait for a build](catalogue-repositories.md) gives the
+pages of a chosen repository that the cloud computer of the org does not
+hold yet.
 
 `app/account` shows the General tab of the account. Its tabs are links, as
 the tabs of the org settings are. `app/account/preferences` shows the

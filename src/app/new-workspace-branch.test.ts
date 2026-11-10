@@ -77,7 +77,7 @@ describe('the branch of a new workspace', () => {
     }
     expect({
       sent,
-      next: { repositoryId: next.repositoryId, branch: next.branch },
+      next: { repositoryId: next.repository?.id ?? null, branch: next.branch },
     }).toEqual({
       sent: [
         continued,
@@ -101,7 +101,7 @@ describe('the branch of a new workspace', () => {
       const now = draft.draft.get()
       steps.push({
         step,
-        repositoryId: now.repositoryId,
+        repositoryId: now.repository?.id ?? null,
         branch: nameOf(now.branch),
         kept:
           now.text === 'Fix the flaky cart test.' &&

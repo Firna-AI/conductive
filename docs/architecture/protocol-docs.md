@@ -15,7 +15,8 @@ them, and this page lists each protocol doc and what it covers.
     from an import of Conductor, its state Not active, its activation, and
     Archive before its activation.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
-    shell variable of each repository in a sandbox.
+    shell variable of each repository in a sandbox, and the context folder
+    of each workspace.
   - [Life of a workspace](../protocol/workspace-life.md)
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.

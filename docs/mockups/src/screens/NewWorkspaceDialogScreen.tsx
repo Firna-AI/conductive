@@ -3,6 +3,7 @@ import { AppFrame } from '../components/layout/AppFrame'
 import { branchLinks } from '../components/new-workspace/branchScreens'
 import { NewWorkspaceDialog } from '../components/new-workspace/NewWorkspaceDialog'
 import { ChooseRepositoriesNotice } from '../components/new-workspace/notices'
+import { formWait } from '../components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
 import { defaultSection, sections } from '../fixtures/sections'
 import {
@@ -21,6 +22,7 @@ import {
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
+import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace } from './workspaceState'
 
@@ -32,6 +34,8 @@ export const newWorkspaceDialogSchema = {
     'files',
     'login',
     'repositories',
+    'repositoryMenu',
+    'waitingBuild',
     'branch',
     'picker',
     'result',
@@ -63,6 +67,8 @@ export const emptyDialog: NewWorkspaceDialogState = {
   files: 'none',
   login: 'connected',
   repositories: 'chosen',
+  repositoryMenu: 'closed',
+  waitingBuild: 'building',
   branch: 'new',
   picker: 'closed',
   result: 'form',
@@ -102,10 +108,11 @@ export function NewWorkspaceDialogScreen(props: {
       />
     )
   }
-  const chosen = state.repositories === 'chosen'
+  const chosen = state.repositories !== 'none'
+  const waiting = formWait(page) !== undefined
   const failed = state.result === 'error'
   const draft = newWorkspaceDraft(state)
-  const notices = formNotices(state, failed, !building)
+  const notices = formNotices(state, failed, !building && !waiting)
   if (state.org === 'new' && state.firstBuild !== 'succeeded') {
     notices.splice(
       failed ? 1 : 0,
@@ -117,6 +124,12 @@ export function NewWorkspaceDialogScreen(props: {
       />,
     )
   }
+  const repositoryWait = waitingNotice({
+    form: page,
+    wait: state.waitingBuild,
+    admin: state.viewer === 'admin',
+  })
+  if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
   if (!chosen) {
     notices.push(
       <ChooseRepositoriesNotice
@@ -134,10 +147,17 @@ export function NewWorkspaceDialogScreen(props: {
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}
       placeholder={taskPlaceholder}
-      ready={draft.text !== '' && !waits(state) && !building}
-      repository={chosen ? page.repository : undefined}
+      ready={draft.text !== '' && !waits(state) && !building && !waiting}
+      repository={chosen ? page.repository.name : undefined}
+      repositoryMenu={
+        chosen && state.repositoryMenu === 'open'
+          ? repositoryMenu(page, state.waitingBuild)
+          : undefined
+      }
       text={
-        state.org === 'new' && state.draft !== 'empty' ? page.draft : draft.text
+        (state.org === 'new' || waiting) && state.draft !== 'empty'
+          ? page.draft
+          : draft.text
       }
     />
   )

@@ -144,6 +144,7 @@ function DialogCard(props: {
               chosen={form.repository}
               repositories={form.repositories ?? []}
               tone="plain"
+              waiting={form.waiting}
             />
             <BranchControl
               model={model}

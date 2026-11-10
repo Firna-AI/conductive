@@ -65,7 +65,8 @@ function changedNotice(props: {
  * The org's cloud computer: its builds, its scripts, and its env vars.
  * `readOnly` shows them without edit fields and actions, for a member who
  * is not an admin (decision 57), and for everyone in a suspended org.
- * `envForm` opens a form of the env vars.
+ * `envForm` opens a form of the env vars. `repositoryNotice` shows the
+ * repository changes that the computer does not hold yet, under the intro.
  */
 export function ComputerTab(props: {
   org: string
@@ -75,9 +76,12 @@ export function ComputerTab(props: {
   computer: OrgComputer
   readOnly?: ReadOnlyCause
   envForm?: EnvVarForm
+  /** The repository notice, while a repository change waits for a build. */
+  repositoryNotice?: ReactNode
 }) {
   const { computer } = props
   const changed = props.script === 'changed'
+  const repositoriesChanged = Boolean(props.repositoryNotice)
   const readOnly = props.readOnly !== undefined
   return (
     <>
@@ -86,10 +90,11 @@ export function ComputerTab(props: {
         it, with every repository of the org.
         {props.readOnly === 'member' ? ' Only an admin can change it.' : null}
       </TabIntro>
+      {props.repositoryNotice}
       <BuildSection
         builds={computer}
+        changeWaits={changed || repositoriesChanged}
         readOnly={readOnly}
-        scriptChanged={changed}
         state={props.build}
       />
       <ScriptSection
