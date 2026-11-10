@@ -12,7 +12,8 @@ the person's GitHub account.
 
 The user chose this approach in a brainstorm on 10 November 2026, with
 decisions 270, 271, and 272. The user answered decisions 273 to 276 on the
-same day. The change does not cover these:
+same day. The user approved this plan on 10 November 2026, and asked to
+implement all of its milestones. The change does not cover these:
 
 - A log of the recent errors of the app. The user chose it for a follow-up
   item, in decision 271.
@@ -432,6 +433,8 @@ line that applies a decision of the user names that decision.
 - It is the one row of a new group, "Help", after "Window" on the Actions
   tab. On the All tab, it comes last among the actions. Reason: feedback
   is about the product, not about a workspace, an org, or the window.
+- Outside the Mac app, no Window group shows, so Help comes after Orgs, as
+  the mockups draw it.
 - It shows on each page where the palette opens, also with no org and in a
   suspended org. Reason: feedback changes no org.
 - The row breaks three statements of the palette doc, and the protocol doc
@@ -446,21 +449,30 @@ line that applies a decision of the user names that decision.
   menu item cannot open a dialog in the page, because the page has no
   bridge.
 - The row is not a link, and the dialog has no address. Reason: the dialog
-  sits over the current page, as the Archive question does.
+  sits over the current page, as the New workspace dialog does.
 
 ### The dialog
 
 - It uses the dialog of the app: a dialog on desktop and a sheet on a
   phone.
-- It has a message box, Add screenshots, a line that names the context, a
-  reply line, Cancel, and Send feedback.
+- Its title is "Send feedback", as the row. It has a message box, Add
+  screenshots, a line that names the context, a reply line, Cancel, and
+  Send. Reason: the title already says what Send sends.
+- It takes the wide layout of the dialog of the app, 520 px, because the
+  message box needs more room than a question.
 - The message box takes the focus. It follows
   [the send key](../docs/protocol/create-a-workspace.md#the-send-key) of
   every composer. Reason: one key rule in every composer.
 - Send waits for text in the message box.
+- On a computer, Send shows the hint of the Enter key, as Create of the
+  New workspace dialog does. A phone shows no hint, because Enter adds a
+  line there.
 - Add screenshots opens the file picker. A paste of an image into the
   message box, or a drop on the dialog, adds it too. Each screenshot shows
   as a chip with its name, its size, and Remove.
+- The chips sit above the text inside the message box, and Add screenshots
+  sits under the text. Reason: every composer puts its files there, so a
+  paste adds the chip where the person looks.
 - The dialog takes PNG, JPEG, GIF, and WebP files, as decision 274 chose.
   It runs the same check of the first bytes as the Worker, from shared
   code. So a renamed file of another type fails at once, with a message
@@ -472,19 +484,48 @@ line that applies a decision of the user names that decision.
   refuses a screenshot that passes this limit, and names the limit.
   Reason: the user chose a route limit near 10 MB, and base64 makes the
   screenshots a third larger.
+- The limit counts in units of 1000, so 7 MB is 7,000,000 bytes, as the
+  25 MB limit of a chat file is 25,000,000 bytes. Reason: one rule for the
+  limits of the app.
+- A refused file gets a notice under the message box, and the other
+  screenshots stay. The notice gives no size of the file, as the notice of
+  a chat file over 25 MB gives none, because the chips count sizes in units
+  of 1024.
 - The context line says that the message includes the org and the
   workspace that the person has open, the app version, and the browser.
+- Its words stay the same on each page. Reason: a page without an open
+  workspace sends no workspace ID, so the line stays true.
 - The reply line names the primary verified email of the person: "The
   team replies to <address>." Without one, it says how to get a reply: add
   a verified email on GitHub, then sign in again. Reason: the Worker reads
   that email at each sign-in.
 - A send shows its progress. A failed send keeps the text and the
   screenshots, and names what failed. A new press of Send tries again.
+- While the send runs, Send shows a spinner and "Sending". Cancel and Add
+  screenshots are off, and Escape and a press outside do nothing, as in
+  the New workspace dialog while it creates. Reason: a failure then shows
+  beside the kept draft.
+- A failed send shows a notice under the message box, with the message of
+  the server. Send stays on.
 - After a send, the dialog closes and a toast thanks the person.
 - A close without a send keeps the draft in the memory of the tab. The
   next open shows it. A send clears it. Reason: an Escape by mistake loses
   nothing, and the browser keeps nothing in its storage.
-- The mockups choose the final words of each text.
+- The mockups choose the final words of each text:
+  - The message box: "Report a bug, share an idea, or ask a question".
+  - The context line: "The message also includes the current org, the
+    open workspace, the app version, and your browser."
+  - The reply line: "The team replies to <address>." Without an address:
+    "To get a reply, add a verified email on GitHub, then sign in again."
+  - A refused file: "<name> wasn't added", then "Together, the screenshots
+    can be up to 7 MB." or "Add a PNG, JPEG, GIF, or WebP image." Reason:
+    the words follow "<name> wasn't attached" of the chat.
+  - A failed send: "The feedback wasn't sent", then the message of the
+    server, such as "The app can't reach the server. Check the connection,
+    then try again."
+  - The toast: "Thanks for your feedback", in the success tone.
+- These words live in `docs/mockups/src/components/feedback/feedbackCopy.ts`.
+  The app can import them, as it imports the words of the chat files.
 
 ### What a message carries
 
@@ -521,8 +562,11 @@ line that applies a decision of the user names that decision.
   JPEG, GIF, or WebP image with HTTP 400, as decision 274 chose.
   Reason: the dialog never sends them, so only a crafted request meets
   these refusals.
-- Without a team inbox, the route answers HTTP 503. A refused email gives
-  HTTP 502. The dialog shows each error.
+- Without a team inbox, the route answers HTTP 503 on every origin,
+  including a local origin. A refused email gives HTTP 502. A production
+  origin without the Resend key also gets HTTP 502, as invitations do.
+  These are my implementation calls of 10 November 2026. The dialog shows
+  each error.
 - A person without app access gets HTTP 403 with `access_required`. The
   allow list of the waitlist already refuses every new route. Reason: such
   a person sees only the waitlist, which has no palette.
@@ -554,8 +598,10 @@ line that applies a decision of the user names that decision.
   body, as the key of an invitation does. Reason: a second press of Send
   after a lost reply sends one email. A changed draft gets a new key,
   because Resend refuses a key that it saw with another body.
-- On a local app origin, the Worker writes the email to its log and sends
-  nothing, as it does for the other emails.
+- On a local app origin with a team inbox configured, the Worker writes
+  the email to its log and sends nothing, as it does for the other emails.
+  It needs no Resend key. Reason: the missing-inbox rule still applies to
+  a local send, while local logging needs no email provider.
 
 ### The legal pages and the docs
 
@@ -597,24 +643,30 @@ Draw the palette row, the Feedback dialog with its states, and the user
 flow, for desktop and for a phone. Read the `mockups` and `product-ui`
 skills first.
 
-- [ ] Add the Help group with Send feedback to the Actions tab of
+- [x] Add the Help group with Send feedback to the Actions tab of
       `app/command-palette/actions`, and a search for "feedback" to
-      `app/command-palette/search`.
-- [ ] Add the page `app/feedback`. Its canonical screen is the dialog with
+      `app/command-palette/search`. The four saved states of the search
+      page moved into child pages with the same paths, so each page keeps
+      five screens or fewer.
+- [x] Add the page `app/feedback`. Its canonical screen is the dialog with
       a message and one screenshot, over the workspace list.
-- [ ] Add the child page `app/feedback/states`: the empty dialog, the
+- [x] Add the child page `app/feedback/states`: the empty dialog, the
       dialog without a reply address, a send in progress, and a failed
-      send.
-- [ ] Add the child page `app/feedback/refusals`: a screenshot over the
+      send. Its `sent` state also draws the toast after a send, which the
+      flow needs.
+- [x] Add the child page `app/feedback/refusals`: a screenshot over the
       limit, and a file that is not a PNG, JPEG, GIF, or WebP image.
-- [ ] Add the user flow `user-flows/send-feedback`: open the palette,
+- [x] Add the user flow `user-flows/send-feedback`: open the palette,
       search "feedback", write a message, paste a screenshot, send, and
       see the toast. It reuses the screens of the pages above.
-- [ ] Choose the words of each text of the dialog and the toast, under the
+- [x] Choose the words of each text of the dialog and the toast, under the
       copy rules of the `product-ui` skill.
-- [ ] Update `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update `docs/mockups/catalogue.md`. Its palette section moved to the
+      new linked page `docs/mockups/catalogue-palette.md`, with the
+      feedback pages, so the catalogue stays under its length target.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. Evidence:
+      `.context/command-palette-feedback/reports/m1.md`.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -625,34 +677,44 @@ State the requirements and the decisions in force for the feedback row,
 the dialog, the routes, and the email. Delegate the legal pages to the
 `external docs implementor`, and the rest to the `docs implementor`.
 
-- [ ] Write `docs/protocol/feedback.md`: the row, the dialog and its
+- [x] Write `docs/protocol/feedback.md`: the row, the dialog and its
       states, what a message carries, the screenshots, the reply address,
       the email, the errors of the routes, and access. Cite each decision
       with its rejected options.
-- [ ] Move the sections Actions and Settings of
+- [x] Move the sections Actions and Settings of
       `docs/protocol/command-palette.md` to a new linked page. Add the
       Help group, the Send feedback row, and its three exceptions there.
-- [ ] Add the body limit of the feedback route to
+- [x] Add the body limit of the feedback route to
       [Request bodies](../docs/protocol/access-and-security.md#request-bodies).
-- [ ] Add `FEEDBACK_EMAIL` to the secrets of `docs/deployment.md`.
-- [ ] Add Resend to "External services" in
+- [x] Add `FEEDBACK_EMAIL` to the secrets of `docs/deployment.md`.
+- [x] Add Resend to "External services" in
       `docs/architecture/components.md`. Add the new protocol docs to the
       list in `docs/architecture.md`.
-- [ ] Read both legal pages in full. Update each sentence that the
+- [x] Read both legal pages in full. Update each sentence that the
       feedback facts change: the uses of data, the recipients, the
       keep rule and the host of decision 275, the GitHub emails, and the
       effective date.
-- [ ] Add how Resend transfers data out of the UK to "Transfers to other
+- [x] Add how Resend transfers data out of the UK to "Transfers to other
       countries", from the published terms of Resend. Name the source in
       the commit.
-- [ ] Add the feedback paragraph of decision 273 to "Your work" of the
+- [x] Add the feedback paragraph of decision 273 to "Your work" of the
       Terms page, and set a new `TERMS_VERSION`.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that the changed facts restate, such as the actions of the
       palette.
-- [ ] Update `plans/follow-ups/privacy-invitation-email-data.md`: remove
-      the parts that `origin/main` and this change complete.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Update `plans/follow-ups/privacy-invitation-email-data.md`: remove
+      the parts that `origin/main` and this change complete. All gaps are
+      complete, so this change deletes that file and its companion
+      `plans/follow-ups/privacy-invitation-item-stale.md`.
+- [x] Check each relative link of the changed Markdown files.
+
+Evidence: `.context/command-palette-feedback/reports/m2-internal.md` and
+`.context/command-palette-feedback/reports/m2-external.md`. The combined
+link and mockup type checks after merging the latest main are in
+`.context/command-palette-feedback/m2-internal/`. The deployment guide now
+links its model inputs and runner archive pages while keeping each old
+section anchor. This structural call keeps every deployment fact and
+brings the landing page below 300 lines.
 
 ## Milestone 3: The feedback routes of the Worker
 

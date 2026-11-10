@@ -179,7 +179,7 @@ says.
   with its files and its agent sessions (decision 1 of PR #138).
 - The toast after Archive, the bar of the archived workspace, and its row
   in the Archived group offer Restore. The command palette offers Restore
-  workspace, as [Actions](command-palette.md#actions) says.
+  workspace, as [Actions](command-palette-actions.md#actions) says.
 - Restore puts the workspace back in its section, at its place in the
   list.
 - The workspace comes back stopped, also when it had the error state at

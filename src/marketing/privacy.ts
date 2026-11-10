@@ -59,9 +59,15 @@ export const privacyDocument: LegalDocument = {
             that name and address. The Mac app also checks
             GitHub for updates and downloads new versions. These requests
             send your network address to GitHub.`,
-          text`Resend sends the emails of ${productName}: the invitations of
-            an org, and the email when an operator approves your account. It
-            gets the address and the text of each email.`,
+          text`Resend sends the org invitations, approval emails, and feedback
+            emails of ${productName}. An invitation gives it the invited email
+            address, org name, inviter's name, and invitation link. An approval
+            gives it your primary verified email and the email text. For
+            feedback, it gets your message, screenshots, context, and reply
+            address, and sends them to the team inbox.`,
+          text`The email provider of the operator hosts the team inbox and
+            receives your feedback message, screenshots, context, and reply
+            address. The team reads them there.`,
           text`A cloud computer provider runs the cloud computers of every org
             for ${productName}, in the account of ${productName}. Your code,
             your files, and your agent sessions are in them. ${productName}
@@ -142,6 +148,10 @@ export const privacyDocument: LegalDocument = {
             certification under the UK Extension and its use of standard
             contractual clauses. UK regulations approve transfers covered
             by the UK Extension certification.`,
+          text`Resend processes email data in the United States. Its data
+            processing terms apply the European Commission's standard
+            contractual clauses with the UK International Data Transfer
+            Addendum to restricted UK transfers.`,
           text`The cloud computer provider is based in the United States.
             It reports that its cloud computers and saved snapshots run in
             Germany, Finland, and France. UK adequacy regulations approve
@@ -183,6 +193,11 @@ export const privacyDocument: LegalDocument = {
           it. Panel widths stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
           terms and privacy notices.`,
+        paragraph`The team keeps each feedback email in its inbox while it
+          helps to improve ${productName}. It deletes the email when it no
+          longer helps, or when the sender asks. ${productName} keeps no copy
+          of feedback in its own storage. The app keeps an unsent feedback
+          draft only in the memory of its open tab.`,
         paragraph`To request deletion of your personal data, write to
           ${mailLink(legalAddress)}. Deletion rights depend on applicable
           law and can have exceptions.`,
