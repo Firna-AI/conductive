@@ -16,14 +16,14 @@ reads the path of each file at that place.
 The message text holds a mention of the copy path of each file, such as
 `@.context/attachments/<digest>/a.png`. The digest comes from the file ID
 only, so the path of a file never changes (decision 262 D). The read lines
-after the text stay as decision 244 says. Decision 265, how an image looks
-when its file tab opens, waits for the user.
+after the text stay as decision 244 says. The file tab shows each PNG,
+JPEG, GIF, and WebP file up to its read limit as a picture, also an
+attached screenshot (decision 265 B).
 
 This change does not cover a paste of a file or an image, a drop of a
-folder's files, or a drop on other parts of the app. A picture of each
-image in the sent message is option D or E of decision 265. The
-brainstorm notes and the reports of the options checks are in
-`.context/composer-file-drops/`.
+folder's files, a drop on other parts of the app, or a picture of each
+image in the sent message. The brainstorm notes and the reports of the
+options checks are in `.context/composer-file-drops/`.
 
 Contract owners:
 
@@ -336,6 +336,7 @@ recommendation.
   if "the message embed" means a picture in the message.
 - **Action:** ask the user, because the options have real trade-offs,
   and B to E add a view that the request does not name.
+- **Chosen:** B, by the user on 10 November 2026.
 
 ## Design
 
@@ -498,7 +499,7 @@ test, unless it names a decision.
 
 ### The image view
 
-These calls hold when the user chooses decision 265 B, C, D, or E.
+These calls follow decision 265 B.
 
 - The file tab shows a PNG, JPEG, GIF, or WebP file as a picture, by the
   name of the file. Reason: the runner gives `text/plain` for a GIF and a
@@ -545,13 +546,13 @@ desktop and a phone variant.
       in the text, the files at that place after the drop, and a folder
       that was not attached. Its phone variant shows a pick at the caret.
 - [ ] Add `app/attachments/open`: the file tab that a press on a sent
-      screenshot opens, with the view that decision 265 chooses.
+      screenshot opens, with its picture (decision 265 B).
 - [ ] Update `app/file-mentions/chips/attached-file`: remove a file chip
       of the text.
 - [ ] Update `app/new-workspace/files` and every New workspace state
       that shows files.
-- [ ] With decision 265 B to E, add an image to `app/files`: the file tab
-      of a picture.
+- [ ] Add an image to `app/files`: the file tab of a picture, and of an
+      image that the browser cannot draw.
 - [ ] Add the flow `user-flows/drop-a-file`: a drag of a screenshot onto
       the chat box, the drop, the upload, Send, the sent message with the
       agent's answer, and the file tab that a press on the chip opens.
@@ -583,9 +584,8 @@ the design calls above that are requirements.
       of the mentions, and the attachments line.
 - [ ] Update `docs/protocol/agents-and-sessions.md#sessions`: the names
       in a session title, and no title from a message with only files.
-- [ ] With decision 265 B to E, update
-      `docs/protocol/workspace-tools.md#files-and-changes`: the picture of
-      an image file.
+- [ ] Update `docs/protocol/workspace-tools.md#files-and-changes`: the
+      picture of an image file.
 - [ ] Read `docs/protocol/create-a-workspace.md` and
       `docs/architecture.md`, and update each sentence about the files of
       a message.
@@ -660,10 +660,8 @@ Tags: ui
 
 Depends on: 1, 2
 
-This milestone holds only with decision 265 B, C, D, or E. With C or D,
-a backend milestone for the read route from the app's storage comes
-first. With D or E, a UI milestone for the picture in the sent message
-comes after it.
+The file tab shows each image up to the read limit as a picture
+(decision 265 B). This holds for every image of the workspace.
 
 - [ ] Show a PNG, JPEG, GIF, or WebP file as a picture in
       `src/files/page/FileBody.tsx`, by the name of the file, from a
