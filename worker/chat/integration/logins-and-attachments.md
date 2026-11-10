@@ -31,4 +31,3 @@ This page belongs to the [chat backend integration](README.md) guide.
   for the connection, sandbox, and current-command checks.
 - A fixture that resolves fake paths injects its preparation seam too.
 - [Chat attachments](../attachments.md) gives the storage, copy, and cleanup boundaries.
-
