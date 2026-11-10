@@ -16,7 +16,7 @@ Today the repository holds:
   at phone and desktop sizes
 - the app package, with tests against fake GitHub and Boat servers and
   local D1 storage, and the complete gate, which GitHub Actions runs
-- the Mac app shell in `desktop/`, which is not complete yet, as
+- the Mac app in `desktop/`, with signed packages and update support, as
   [Mac app](#mac-app) says
 
 A test deployment runs at `conductive.build`. Each push to `main` deploys
@@ -26,7 +26,8 @@ deployment needs.
 
 ## Features
 
-These features are planned. The protocol docs state each one.
+Conductive has these features. The protocol docs state each one. A
+feature that is not complete yet says so.
 
 - Sign in with GitHub. The product is free.
 - A waitlist. A new account waits until an operator approves it, or an
@@ -38,6 +39,7 @@ These features are planned. The protocol docs state each one.
 - Chat with agents powered by Claude and Codex. A workspace holds several
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
+- Attach files of up to 25 MB each to a message.
 - Each user connects their own Claude subscription token or API keys.
 - Files and Changes, a terminal, and port previews. The live desktop is
   hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
@@ -57,6 +59,8 @@ These features are planned. The protocol docs state each one.
   runs the actions of the page, and opens the settings.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
+  An agent can ask to run a command on the Mac of the person who sent its
+  turn. Published packages update themselves from GitHub releases.
 
 ## What a user needs
 
@@ -82,10 +86,11 @@ how the app runs in development and in the production build.
    `{"status":"ok"}`.
 6. Run `npm run check` before you submit a change.
 
-Local development needs no Cloudflare account. Wrangler provides local D1
-and Durable Object storage under `.wrangler/`. The D1 ID in
-`wrangler.jsonc` names the production database. Local commands, such as
-`npm run db:migrate` and `npm run dev`, use only the local storage.
+Local development needs no Cloudflare account. Wrangler provides local D1,
+R2, and Durable Object storage under `.wrangler/`. The D1 ID and the R2
+bucket name in `wrangler.jsonc` name the production database and bucket.
+Local commands, such as `npm run db:migrate` and `npm run dev`, use only
+the local storage.
 
 This local setup creates no Cloudflare resources and deploys nothing. The
 `Deploy` workflow in GitHub Actions deploys each push to `main`, as
@@ -143,7 +148,7 @@ computers in local development. In a deployment, `BOAT_API_KEY` is a
 Worker secret, and `BOAT_ORG_ID` is a variable in the settings of the
 Worker, as [Deployment inputs](docs/deployment.md#how-to-set-the-inputs)
 says.
-[Access and security](docs/protocol/access-and-security.md#the-apps-boat-key)
+[Access and security](docs/protocol/isolation.md#the-apps-boat-key)
 states how the Worker keeps them away from the browser and the sandboxes.
 
 `wrangler.jsonc` also sets the production values: `MACHINE_ORIGIN` is
@@ -196,8 +201,8 @@ does not wait for CI.
 
 The Mac app is an Electron shell for macOS, on Apple silicon and Intel
 Macs. It bundles the built web app, shows it in its own window, and calls
-the same Worker. The agents still run only in the cloud. The shell is not
-complete yet:
+the same Worker. The agents still run only in the cloud. The shell has these
+features:
 
 - It shows the shared web app screens. The window has no title bar of its
   own. The native window buttons sit at the top left of the app's left
@@ -261,7 +266,8 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
 
 ## Docs
 
-- [Architecture](docs/architecture.md): the components, the hostnames, the
+- [Architecture](docs/architecture.md): the
+  [components](docs/architecture/components.md), the hostnames, the
   [flows](docs/architecture/flows.md), the
   [marketing site](docs/architecture/marketing-site.md), the
   [data and trust boundaries](docs/architecture/data-and-trust.md), and the
@@ -272,18 +278,25 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Workspace tools](docs/protocol/workspace-tools.md)
   - [Create a workspace](docs/protocol/create-a-workspace.md)
   - [Repository folders](docs/protocol/repository-folders.md)
+  - [Life of a workspace](docs/protocol/workspace-life.md)
   - [Chat and events](docs/protocol/chat-and-events.md)
+  - [Messages and attachments](docs/protocol/messages-and-attachments.md)
   - [Agents and sessions](docs/protocol/agents-and-sessions.md)
   - [Workspace links](docs/protocol/workspace-links.md)
   - [Chat Markdown](docs/protocol/chat-markdown.md)
   - [Agent runner](docs/protocol/agent-runner.md)
   - [Access and security](docs/protocol/access-and-security.md)
+  - [Isolation of orgs and sandboxes](docs/protocol/isolation.md)
+  - [Tokens and secrets](docs/protocol/tokens-and-secrets.md)
+  - [Terminal, previews, and desktop](docs/protocol/terminal-previews-and-desktop.md)
   - [GitHub banner](docs/protocol/github-banner.md)
   - [GitHub tokens](docs/protocol/github-tokens.md): git and CLI account scope.
   - [Agent tools](docs/protocol/agent-tools.md)
   - [Agent instructions](docs/protocol/agent-instructions.md)
   - [Orgs and members](docs/protocol/orgs-and-members.md)
   - [Mac app](docs/protocol/desktop-app.md)
+  - [Mac app sign-in](docs/protocol/desktop-sign-in.md)
+  - [Permissions and Mac commands](docs/protocol/desktop-commands.md)
   - [Operator actions](docs/protocol/operator-actions.md)
   - [Operator section](docs/protocol/operator-section.md)
   - [Waitlist](docs/protocol/waitlist.md)

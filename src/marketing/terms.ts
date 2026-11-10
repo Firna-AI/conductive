@@ -24,11 +24,11 @@ import {
 export const termsDocument: LegalDocument = {
   title: legalTitles.terms,
   description: `The terms of use of ${productName}.`,
-  lead: text`These terms cover your use of ${productName} at ${productDomain}
-  and ${appDomain}. You accept their current version each time that you
-  continue with GitHub to sign in. ${productName} keeps the latest version
-  that you accepted, and the time when you first accepted it. Effective
-  date: 9 November 2026.`,
+  lead: text`These terms cover your use of ${productName} at ${productDomain},
+  at ${appDomain}, and in the Mac app. You accept their current version
+  each time that you continue with GitHub to sign in. ${productName} keeps
+  the latest version that you accepted, and the time when you first
+  accepted it. Effective date: 10 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -45,10 +45,10 @@ export const termsDocument: LegalDocument = {
     {
       title: 'The service',
       blocks: [
-        paragraph`${productName} is a coding tool in the browser. Each
-          workspace has its own cloud computer, where agents powered by
-          Claude and Codex work. A workspace can hold one task after another,
-          with one branch at a time.`,
+        paragraph`${productName} is a coding tool in the browser and in the
+          Mac app. Each workspace has its own cloud computer, where agents
+          powered by Claude and Codex work. A workspace can hold one task
+          after another, with one branch at a time.`,
         paragraph`${productName} is free for now. It has no plans and no
           billing.`,
       ],
@@ -151,6 +151,24 @@ export const termsDocument: LegalDocument = {
       ],
     },
     {
+      title: 'Commands on your Mac',
+      blocks: [
+        paragraph`In the Mac app, an agent can ask to run a command on
+          your Mac. The command runs only after you allow it.`,
+        paragraph`You decide which commands run. You can allow a command
+          once. You can always allow the exact same command text on that
+          Mac. You can allow every command of one workspace on that Mac
+          for 15 minutes.`,
+        paragraph`An allowed command runs with your own permissions on the
+          Mac, in the folder that the request names. An always-allowed
+          command runs in any folder that a later request names.`,
+        paragraph`You answer for each command that you allow, and for what
+          it does on your Mac and to your data.`,
+        paragraph`You can remove an always-allowed command, or stop the
+          15 minutes, in the Mac app at any time.`,
+      ],
+    },
+    {
       title: 'Suspension',
       blocks: [
         paragraph`The operator can suspend an account or an org that breaks
@@ -194,7 +212,9 @@ export const termsDocument: LegalDocument = {
         paragraph`Your repositories, files, and agent sessions live in the
           cloud computers that ${productName} runs for your org.
           ${productName} keeps the chat history of each workspace, so that
-          you can read it while the cloud computer is stopped.`,
+          you can read it while the cloud computer is stopped. It also keeps
+          the files that you attach to messages. It copies each file to the
+          cloud computer when the agent starts work on its message.`,
         paragraph`Continue starts a new branch from the latest default branch
           of the repository. It keeps the cloud computer and its sessions.
           Changed files move to the new branch. Commits that are not pushed

@@ -3,7 +3,7 @@ import { reconciledLifecycle } from './durable-reconciliation'
 
 export async function applyLifecycleTurn(
   state: DurableLifecycleState,
-  change: { sessionId: string; running: boolean; occurredAt: number },
+  change: { sessionId: string; running: boolean },
   hooks: LifecycleHooks,
   now: () => number,
 ): Promise<DurableLifecycleState> {
@@ -13,11 +13,12 @@ export async function applyLifecycleTurn(
   const sessions = new Set(state.runningSessions)
   if (change.running) sessions.add(change.sessionId)
   else sessions.delete(change.sessionId)
+  const lastTurnEndedAt = await hooks.lastTurnEndedAt?.(state.workspaceId)
   return {
     ...state,
     runningSessions: [...sessions],
     state: sessions.size ? 'working' : 'ready',
-    lastActivityAt: Math.max(state.lastActivityAt, change.occurredAt),
+    lastActivityAt: Math.max(state.lastActivityAt, lastTurnEndedAt ?? 0),
   }
 }
 

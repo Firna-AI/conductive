@@ -1,4 +1,5 @@
 import { FakeApiServer } from '../test-support/fake-api'
+import { fetchFiles } from '../test-support/fake-files'
 import { FAKE_ORIGIN, FAKE_TIME } from '../test-support/fixtures/core'
 import { createApiClient, type FetchLike } from './api/client'
 import type {
@@ -248,7 +249,10 @@ export function testServices(
   let id = 0
   const { fetch, ...rest } = overrides
   return {
-    api: createApiClient(fetch ?? server.fetch),
+    api: createApiClient(
+      fetch ?? server.fetch,
+      fetchFiles(fetch ?? server.fetch),
+    ),
     events: new RecordingEvents(),
     now: () => FAKE_TIME,
     timeZone: 'UTC',

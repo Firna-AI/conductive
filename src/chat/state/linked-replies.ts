@@ -36,12 +36,7 @@ export function takeReply(
 
 /** Work in a draft that the user loses when another draft takes its place. */
 function holdsWork(draft: Draft): boolean {
-  return (
-    draft.text !== '' ||
-    draft.attachments.length > 0 ||
-    draft.uploads > 0 ||
-    draft.sending
-  )
+  return draft.text !== '' || draft.files.length > 0 || draft.sending
 }
 
 /**

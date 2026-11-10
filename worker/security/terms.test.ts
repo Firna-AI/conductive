@@ -55,7 +55,7 @@ async function authorize(startPath: string, callbackQuery = '') {
 it('requires consent at OAuth start before it creates a new account', async () => {
   const refused = await authorize(
     API_PATHS.githubSignIn,
-    '&terms_version=2026-11-09-legal-github-cli',
+    '&terms_version=2026-11-10-mac-app',
   )
   expect(refused.status).toBe(403)
   expect(await refused.json()).toEqual({
@@ -98,7 +98,7 @@ it('records explicit consent for an existing account and keeps its identity', as
     (
       await authorize(
         API_PATHS.githubSignIn,
-        '&terms_version=2026-11-09-legal-github-cli',
+        '&terms_version=2026-11-10-mac-app',
       )
     ).status,
   ).toBe(302)
@@ -138,7 +138,7 @@ it('replaces an old consent revision only after explicit current consent', async
     (
       await authorize(
         API_PATHS.githubSignIn,
-        '&terms_version=2026-11-09-legal-github-cli',
+        '&terms_version=2026-11-10-mac-app',
       )
     ).status,
   ).toBe(302)

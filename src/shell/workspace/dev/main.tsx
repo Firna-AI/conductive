@@ -13,6 +13,7 @@ import {
 import type { WorkspaceSocketMessage } from '../../../shared/events'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { scenarioFetch } from '../../../test-support/fake-bar-dev'
+import { fetchFiles } from '../../../test-support/fake-files'
 import {
   FAKE_IDS,
   FAKE_TIME,
@@ -81,7 +82,7 @@ function ofWorkspace(
 }
 
 const app = new AppModel({
-  api: createApiClient(fetch),
+  api: createApiClient(fetch, fetchFiles(fetch)),
   events: {
     open: (target, handlers) =>
       server.events.subscribe(

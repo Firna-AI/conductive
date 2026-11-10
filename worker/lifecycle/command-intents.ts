@@ -6,7 +6,8 @@ type CommandOwner =
   | { kind: 'build'; id: string }
   | { kind: 'workspace'; id: string; attempt: string }
 
-type CommandPhase = 'software' | 'install' | 'fetch' | 'branch' | 'startup'
+type CommandPhase =
+  'software' | 'install' | 'fetch' | 'branch' | 'startup' | 'terminal'
 
 function commandDirectory(owner: CommandOwner): string {
   const parts = [owner.kind, owner.id]

@@ -56,6 +56,13 @@ shows. It also gives the rules of the folder pages, the entries that moved,
 the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
 `app/chat`, and `app/workspace-links`, and the New workspace dialog.
 
+`app/attachments` shows uploads, failed uploads with Try again, files over
+25 MB, sent files, and the files of a queued first message. Its shared
+words live in [attachmentCopy.ts](src/components/chat/attachmentCopy.ts).
+`app/new-workspace/files` shows the same chips on the first message of a new
+workspace, before the workspace exists, and `app/new-workspace/dialog/files`
+shows them in the New workspace dialog.
+
 ## Folder layout
 
 | Folder or file            | Contents                                                            |

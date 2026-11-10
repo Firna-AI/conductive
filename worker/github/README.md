@@ -47,12 +47,17 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   The one chat publisher sends each new event after its commit, in commit order with the chat events.
   A replay goes through the same publisher.
   The caller implements only `scheduleRefresh`.
-- [installationTokenProvider](credentials.ts) signs the app JWT and gets an installation token for one repository.
+- [installationTokenProvider](credentials.ts) gets an installation token for one repository through the shared App credential flow.
   Its permissions allow repository content, pull request, check, and commit status reads only.
   The token stays on the server. A merge never uses it.
   This module has no sandbox credential endpoint.
 - [appSigningKey](private-key.ts) imports `GITHUB_APP_PRIVATE_KEY` for each GitHub App feature: these reads and the repository copies of image builds.
   It accepts each key text that the deployment guide allows.
+- [App credentials](app-credentials.ts) owns one cached PEM import, JWT signing, installation token requests, and revocation.
+  Each caller supplies its clock, repositories, permissions, and safe error.
+  Requests use the shared 30-second timeout and API version.
+  Token replies use the shared JSON body budget and accept successful 2xx responses.
+  Only a 204 or 401 revocation reply confirms that a token is inactive.
 
 ## Server integration
 
@@ -106,7 +111,7 @@ The signal keeps the delivery ID, pushed branch, retry attempt, and user ID when
 The refresh after a merge also keeps its `requireWritable` flag.
 The consumer can schedule Durable Object alarm retries for failed reads or publication.
 A retry must keep these inputs so delivery receipts and access checks still apply.
-A failed refresh must remain a failure until the current read and publication succeed.
+A failed scheduled refresh remains a failure until the current read and publication succeed.
 
 Scheduled fresh reads omit the delivery ID and pushed branch.
 They retain the user ID for access checks and advance the retry attempt.
@@ -153,8 +158,13 @@ A changed banner or check publishes one fresh event.
 A later identical read publishes none.
 Retrying an already committed delivery republishes its original event without another GitHub read.
 An unchanged delivery receipt has no envelope to publish.
-The handler marks a delivery processed only after all workspace refreshes succeed.
-A failed read or commit leaves the delivery retryable.
+For a push, each workspace refresh runs even when an earlier workspace fails.
+The image refresh runs after those workspace steps, also when a workspace fails.
+A push can complete when a `github_pending` workspace has scheduled its bounded fresh read.
+Other workspace failures and image refresh failures leave the delivery retryable.
+The handler returns the error after the independent steps run.
+For other events, the handler marks a delivery processed only after all workspace refreshes succeed.
+A failed read or commit of those events leaves the delivery retryable.
 A failure after the commit also leaves it retryable.
 The retry then replays the receipt.
 A failed send to one tab does not fail the refresh.
@@ -272,5 +282,6 @@ API references:
 - [transport.ts](transport.ts) owns each request's 30-second deadline through its complete body read, then clears the timer.
 - [Shared state comparison](../../src/shared/github-state.ts) compares the backend and browser displays without banner time.
 - [credentials.ts](credentials.ts) gets server-only installation read tokens.
+- [app-credentials.ts](app-credentials.ts) shares the signing key cache, JWT, token request, and revocation for GitHub App features.
 
 [Tests](merges.md#tests) in the merge guide gives the merge tests, their fakes, and their primary schemas.

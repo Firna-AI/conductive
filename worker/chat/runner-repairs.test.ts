@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
@@ -11,7 +10,6 @@ import {
   reportKinds,
   refusedEvents,
 } from './runner-repairs.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -22,7 +20,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('requests all four workspace reports without a login, coalesces losses, and resets only on complete reports', async () => {
   const fixture = await createChatFixture(harness)
   await harness.env.DB.prepare('DELETE FROM agent_logins').run()
@@ -58,7 +55,7 @@ it('requests all four workspace reports without a login, coalesces losses, and r
       repairFailed: true,
     })),
   )
-  fixture.restart()
+  await fixture.restart()
   await fixture.connect(runner)
   expect(refreshCommands(runner)).toEqual(initial)
   for (const kind of reportKinds) runner.emit(fullReport(kind, 3))
@@ -77,7 +74,6 @@ it('requests all four workspace reports without a login, coalesces losses, and r
     (await refusedEvents(fixture)).slice(8).map((event) => event.repairFailed),
   ).toEqual([undefined, undefined, undefined, undefined])
 })
-
 it('delivers repair commands during an active turn and ignores nonreplaceable refusals', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()

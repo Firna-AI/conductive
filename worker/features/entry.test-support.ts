@@ -1,9 +1,14 @@
-import app, { Workspace as ProductionWorkspace } from '../index'
+import { createApp } from '../application'
+import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
+import { NativeAlarmWorkspace } from '../lifecycle/native-alarm-workspace.test-support'
 import type { ReceiverOwnership } from '../members/workspace-receiver'
 import type { AppEnv } from '../env'
 import { featureResult } from './result'
+import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 
-export class Workspace extends ProductionWorkspace {
+const app = createApp({ now: () => DEVICE_TEST_NOW })
+
+export class Workspace extends NativeAlarmWorkspace {
   private suspensions = 0
   private readonly observers = new Map<number, () => void>()
 
@@ -30,9 +35,6 @@ export class Workspace extends ProductionWorkspace {
     })
   }
 
-  advanceStartAlarm(): Promise<void> {
-    return this.alarm()
-  }
   async fetch(request: Request): Promise<Response> {
     if (
       new URL(request.url).pathname === '/__test/continue-restart' &&
@@ -61,7 +63,23 @@ export class Workspace extends ProductionWorkspace {
 
   async seedFeatureState(values: Record<string, unknown>) {
     for (const [key, value] of Object.entries(values))
-      await this.ctx.storage.put(key, value)
+      await this.ctx.storage.put(
+        key,
+        key.startsWith('alarm:') && typeof value === 'number'
+          ? Math.max(this.testAlarmTime(), value)
+          : value,
+      )
+    if ('org-image:coordinator' in values) {
+      const image = await this.ctx.storage.get<ImageCoordinatorState>(
+        'org-image:coordinator',
+      )
+      if (image)
+        await this.integration.alarms.set(
+          'lifecycle:image',
+          Math.max(this.testAlarmTime(), image.nextAt),
+        )
+    }
+    await this.integration.alarms.schedule()
   }
 }
 

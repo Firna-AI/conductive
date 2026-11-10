@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { heldOperation } from '../lifecycle/platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import { FIRST_MESSAGE } from '../lifecycle/durable-test-support'
 
 import {

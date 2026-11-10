@@ -52,7 +52,7 @@ the lost lines, the turns, the work fold of each ended turn, and Try again.
   A run folds only when it holds a `tool` or an `agent` item.
 - An insert, such as a Mac command card, that follows a folded item joins that work fold at its place. An insert never starts a work fold.
 - Try again shows only on the failed item that names the retry message of the newest session record, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says. The order of the transcript items gives no permission.
+  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says. The order of the transcript items gives no permission.
   A read-only chat offers no Try again.
 - Each session log takes the `session.updated` records of its session with its other events.
   It keeps the `retryMessageId` of the record with the highest event number as `Transcript.retryMessageId`.

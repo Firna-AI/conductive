@@ -12,12 +12,14 @@ import { verify } from './crypto'
 import { DESKTOP_ORIGIN, DESKTOP_SESSION_COOKIE } from './desktop-contract'
 import { trustedOrigin } from './desktop-origin'
 import { isPreviewLaunchPath } from './preview-launch-path'
+import { rawUploadLength, rawUploadRoute } from '../http/raw-upload-routes'
 
 export interface RequestContext {
   user: User
   sessionId: string
   org: Org | null
   body: Record<string, unknown> | null
+  rawUploadBytes?: number
 }
 
 function sessionCookie(request: Request): string {
@@ -79,12 +81,12 @@ export async function sessionGate(
   return { user, sessionId }
 }
 
-export async function gate(
+export async function gateAccess(
   request: Request,
   env: AppEnv,
   now: number,
   originalRequest: Request = request,
-): Promise<RequestContext> {
+): Promise<Omit<RequestContext, 'body' | 'rawUploadBytes'>> {
   const { user, sessionId } = await sessionGate(originalRequest, env, now)
   const path = new URL(request.url).pathname
   const match = path.match(new RegExp(`^${API_PATHS.orgs}/([^/]+)(?:/|$)`))
@@ -101,8 +103,25 @@ export async function gate(
       throw new HttpError(404, 'org_not_found', 'The org is not available.')
   }
   if (org) await requireWritableOrgRequest(request, env.DB, org.id)
+  return { user, sessionId, org }
+}
+
+export async function gate(
+  request: Request,
+  env: AppEnv,
+  now: number,
+  originalRequest: Request = request,
+): Promise<RequestContext> {
+  const access = await gateAccess(request, env, now, originalRequest)
+  const raw = rawUploadRoute(originalRequest)
+  if (raw)
+    return {
+      ...access,
+      body: null,
+      rawUploadBytes: rawUploadLength(originalRequest, raw.maxBytes),
+    }
   const body = ['GET', 'HEAD', 'OPTIONS'].includes(request.method)
     ? null
     : await readJsonObject(request)
-  return { user, sessionId, org, body }
+  return { ...access, body }
 }

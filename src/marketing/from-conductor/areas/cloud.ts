@@ -127,8 +127,9 @@ export const cloudFeatures: readonly ParityFeature[] = [
     id: 'automatic-port-detection',
     area: 'cloud',
     name: 'Automatic port detection',
-    status: 'considering',
-    note: 'Automatic port suggestions are under consideration. Type a port to open its private preview today.',
+    status: 'planned',
+    note: 'Automatic port detection is planned. Select a detected server to open its private preview, or enter a port yourself.',
+    due: null,
   },
   {
     id: 'shared-preview-url',

@@ -8,6 +8,7 @@ import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
+import { AttachmentChips } from './AttachmentChips'
 import { ContinuedLine } from './ContinuedLine'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
@@ -43,6 +44,9 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
           <div className={styles.bubble}>
             <MessageText text={item.text} />
           </div>
+          {item.attachments ? (
+            <AttachmentChips attachments={item.attachments} sent />
+          ) : null}
           {item.queued ? (
             <span className={styles.queued}>
               <Clock size={12} />

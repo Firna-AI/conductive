@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { query } from '@anthropic-ai/claude-agent-sdk'
 
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
+import { attachmentDescription } from './attachment-description'
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeInputWindow } from './claude-input-window'
@@ -130,7 +131,7 @@ export function createClaudeFactory(
       send: async (command) => {
         const uuid = randomUUID()
         const attached = command.attachments
-          .map((item) => `\nAttached file: ${item.path}`)
+          .map((item) => `\n${attachmentDescription(command, item)}`)
           .join('')
         input.push(command.message.id, {
           type: 'user',

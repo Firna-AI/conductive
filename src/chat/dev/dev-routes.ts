@@ -202,11 +202,14 @@ export async function handleWrite(
     return reply(resume(backend))
   }
   if (method === 'POST' && path === filePaths.attachments(orgId, workspaceId)) {
-    const body = await bodyOf(request)
+    const query = new URL(request.url).searchParams
+    const mediaType = text(query.get('mediaType'))
     const attachment = readAttachment({
-      ...body,
       id: `dev-file-${attachments.size + 1}`,
-      sizeBytes: Math.floor((text(body.dataBase64).length * 3) / 4),
+      name: text(query.get('name')),
+      kind: mediaType.startsWith('image/') ? 'image' : 'file',
+      mediaType,
+      sizeBytes: (await request.arrayBuffer()).byteLength,
     })
     attachments.set(attachment.id, attachment)
     return reply({ attachment }, 201)

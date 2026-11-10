@@ -1,21 +1,9 @@
-import type { ApiClient } from '../../app/api/client'
 import type { AgentChoice } from '../../shared/agents'
 import type { DeviceApprovalAction } from '../../shared/device'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
-import type { StreamEnvelope } from '../api/read-workspace'
-import {
-  answerCommand,
-  DeviceReads,
-  refreshDevices,
-} from '../device/device-actions'
-import { createDeviceApi } from '../device/device-api'
-import {
-  browserTimers,
-  WorkspaceStream,
-  type StreamTimers,
-  type SubscribeToWorkspace,
-} from '../stream/workspace-stream'
+import { answerCommand, refreshDevices } from '../device/device-actions'
+import { browserTimers } from '../stream/workspace-stream'
 import {
   ChatStore,
   initialSnapshot,
@@ -23,15 +11,17 @@ import {
   type Overlay,
 } from './chat-snapshot'
 import { closeLocally, isArchived, showLocally } from './archive-view'
-import { applyEnvelopes } from './apply-events'
-import { viewWriter, type ChatContext } from './context'
+import { attachFiles, removeFile, retryFile } from './attachment-actions'
+import type { ChatContext } from './context'
+import {
+  createChatContext,
+  type ChatContextOptions,
+} from './controller-context'
 import { hydrate, watchShownSession } from './history'
 import { loadChat } from './load'
-import { followSources, withSources, type ChatSources } from './sources'
+import { followSources, withSources } from './sources'
 import {
-  attachFiles,
   interruptTurn,
-  removeAttachment,
   resumeWorkspace,
   retryTurn,
   sendDraft,
@@ -52,20 +42,7 @@ import {
   updateView,
 } from './session-actions'
 
-export interface ChatControllerOptions {
-  target: WorkspaceTarget
-  /** The JSON client of the app, over the Worker or the fake API. */
-  client: ApiClient
-  /** Opens the workspace event stream: the app's socket, or the fake's events. */
-  subscribe: SubscribeToWorkspace
-  timers?: StreamTimers
-  newId?: () => string
-  /**
-   * The inputs that app models own, as `ChatSources` says. Without them,
-   * the chat reads the account, the org, the models, the members, and the
-   * workspace list itself.
-   */
-  sources?: ChatSources
+export interface ChatControllerOptions extends ChatContextOptions {
   /**
    * Whether the host shows the workspace read-only, such as while its org
    * is suspended. The controller reads it at each action, because a
@@ -73,10 +50,6 @@ export interface ChatControllerOptions {
    */
   readOnly?: () => boolean
 }
-
-/** The Worker records a change of the workspace with each change of a Mac command. */
-const changesWorkspace = (envelopes: readonly StreamEnvelope[]) =>
-  envelopes.some(({ event }) => event?.type === 'workspace.updated')
 
 /**
  * The chat of one workspace. It loads the sessions and the history of the
@@ -140,6 +113,8 @@ export class ChatController {
 
   readonly stop = (): void => {
     this.run += 1
+    for (const upload of this.context.uploads.values()) upload.abort()
+    this.context.uploads.clear()
     this.unwatch?.()
     this.unwatch = null
     this.unfollow?.()
@@ -176,44 +151,7 @@ export class ChatController {
   }
 
   private createContext(run: number): ChatContext {
-    const { target, subscribe, timers } = this.options
-    const api = createChatApi(this.options.client, target)
-    const live = () => this.run === run
-    let drafts = 0
-    const context: ChatContext = {
-      target,
-      api,
-      store: this.store,
-      loading: new Map(),
-      edits: new Map(),
-      workspaceOrder: { through: 0 },
-      picks: new Map(),
-      moves: new Map(),
-      newId: this.options.newId ?? (() => crypto.randomUUID()),
-      prompts: new Map(),
-      newDraftId: () => {
-        drafts += 1
-        return `draft-${drafts}`
-      },
-      saveView: viewWriter((view) => api.saveView(view)),
-      live,
-      owned: this.options.sources !== undefined,
-      devices: {
-        api: createDeviceApi(this.options.client),
-        reads: new DeviceReads(),
-      },
-      stream: new WorkspaceStream({
-        target,
-        subscribe,
-        timers,
-        deliver: (envelopes) => {
-          if (!live()) return
-          applyEnvelopes(context, envelopes)
-          if (changesWorkspace(envelopes)) void refreshDevices(context)
-        },
-      }),
-    }
-    return context
+    return createChatContext(this.options, this.store, () => this.run === run)
   }
 
   private overlay(overlay: Overlay): void {
@@ -261,8 +199,11 @@ export class ChatController {
     setDraftText(this.context, sessionId, text)
   readonly attachFiles = (sessionId: string, files: readonly File[]) =>
     this.write(() => attachFiles(this.context, sessionId, files))
-  readonly removeAttachment = (sessionId: string, attachmentId: string) =>
-    removeAttachment(this.context, sessionId, attachmentId)
+  /** Try again on a file whose upload failed. */
+  readonly retryFile = (sessionId: string, fileId: string) =>
+    this.write(() => retryFile(this.context, sessionId, fileId))
+  readonly removeFile = (sessionId: string, fileId: string) =>
+    removeFile(this.context, sessionId, fileId)
   readonly send = (sessionId: string) =>
     this.write(() => sendDraft(this.context, sessionId))
   /** Sends a fixed prompt to the session of the chat, as `sendPrompt` says. */

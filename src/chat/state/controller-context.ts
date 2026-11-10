@@ -1,0 +1,85 @@
+import type { ApiClient } from '../../app/api/client'
+import { createChatApi, type WorkspaceTarget } from '../api/client'
+import type { StreamEnvelope } from '../api/read-workspace'
+import { DeviceReads, refreshDevices } from '../device/device-actions'
+import { createDeviceApi } from '../device/device-api'
+import {
+  WorkspaceStream,
+  type StreamTimers,
+  type SubscribeToWorkspace,
+} from '../stream/workspace-stream'
+import type { ChatStore } from './chat-snapshot'
+import { applyEnvelopes } from './apply-events'
+import { viewWriter, type ChatContext } from './context'
+import type { ChatSources } from './sources'
+
+export interface ChatContextOptions {
+  target: WorkspaceTarget
+  /** The JSON client of the app, over the Worker or the fake API. */
+  client: ApiClient
+  /** Opens the workspace event stream: the app's socket, or the fake's events. */
+  subscribe: SubscribeToWorkspace
+  timers?: StreamTimers
+  newId?: () => string
+  /**
+   * The inputs that app models own, as `ChatSources` says. Without them,
+   * the chat reads the account, the org, the models, the members, and the
+   * workspace list itself.
+   */
+  sources?: ChatSources
+}
+
+/** The Worker records a change of the workspace with each change of a Mac command. */
+const changesWorkspace = (envelopes: readonly StreamEnvelope[]) =>
+  envelopes.some(({ event }) => event?.type === 'workspace.updated')
+
+/** Builds the data and stream of one controller run. */
+export function createChatContext(
+  options: ChatContextOptions,
+  store: ChatStore,
+  live: () => boolean,
+): ChatContext {
+  const { target, subscribe, timers } = options
+  const api = createChatApi(options.client, target)
+  let drafts = 0
+  let files = 0
+  const context: ChatContext = {
+    target,
+    api,
+    store,
+    loading: new Map(),
+    edits: new Map(),
+    workspaceOrder: { through: 0 },
+    picks: new Map(),
+    moves: new Map(),
+    newId: options.newId ?? (() => crypto.randomUUID()),
+    prompts: new Map(),
+    newDraftId: () => {
+      drafts += 1
+      return `draft-${drafts}`
+    },
+    newFileId: () => {
+      files += 1
+      return `file-${files}`
+    },
+    uploads: new Map(),
+    saveView: viewWriter((view) => api.saveView(view)),
+    live,
+    owned: options.sources !== undefined,
+    devices: {
+      api: createDeviceApi(options.client),
+      reads: new DeviceReads(),
+    },
+    stream: new WorkspaceStream({
+      target,
+      subscribe,
+      timers,
+      deliver: (envelopes) => {
+        if (!live()) return
+        applyEnvelopes(context, envelopes)
+        if (changesWorkspace(envelopes)) void refreshDevices(context)
+      },
+    }),
+  }
+  return context
+}

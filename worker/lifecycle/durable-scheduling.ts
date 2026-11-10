@@ -25,9 +25,41 @@ export async function writeLifecycleState(
   )
     state = { ...state, restoreWatchAt: undefined }
   await storage.put(LIFECYCLE_STATE_KEY, state)
+  await scheduleLifecycleState(storage, hooks, state, now)
+  await publishLifecycleState(storage, hooks, state, now, publish)
+}
+
+export async function publishLifecycleState(
+  storage: LifecycleStorage,
+  hooks: LifecycleHooks,
+  state: DurableLifecycleState,
+  now: () => number,
+  publish?: LifecyclePublisher,
+  keepEarlier = true,
+): Promise<void> {
+  const deadlineAt = state.diskRetentionDeadlineAt
+  await storage.changedAlarm(
+    deadlineAt !== undefined && deadlineAt > now()
+      ? Math.min(now() + 30_000, deadlineAt)
+      : now() + 30_000,
+    keepEarlier,
+  )
+  if ((await hooks.changed(state, publish)) !== false)
+    await storage.changedAlarm(null)
+}
+
+export async function scheduleLifecycleState(
+  storage: LifecycleStorage,
+  hooks: LifecycleHooks,
+  state: DurableLifecycleState,
+  now: () => number,
+): Promise<void> {
+  if (await hooks.startPending?.()) {
+    await storage.deleteAlarm()
+    return
+  }
   if (state.startStop === 'pending') {
     await storage.setAlarm(now() + 30_000)
-    await hooks.changed(state, publish)
     return
   }
   const startPending = (await hooks.startPending?.()) ?? false
@@ -52,14 +84,9 @@ export async function writeLifecycleState(
       hooks.checkRestore ? (state.restoreWatchAt ?? Infinity) : Infinity,
     )
     await storage.setAlarm(
-      startPending
-        ? Math.min(next, now() + 1_000)
-        : !state.runnerConnected &&
-            !isConfirmedStopped(state) &&
-            hooks.reconcile
-          ? Math.min(next, now() + 5_000)
-          : next,
+      !state.runnerConnected && !isConfirmedStopped(state) && hooks.reconcile
+        ? Math.min(next, now() + 5_000)
+        : next,
     )
   }
-  await hooks.changed(state, publish)
 }

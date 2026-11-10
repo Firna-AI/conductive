@@ -5,13 +5,13 @@ import {
   WorkspaceEventJournal,
   type LifecyclePublication as WorkspaceResponse,
 } from './durable-journal'
-import { MemoryWorkspaceStorage } from './platform-test-storage'
+import { nativeLifecycleStorage } from './native-storage.test-support'
 import type { WorkspaceEventPublication } from './workspace-platform'
 
 it.each([{ kind: 'resume' }, { kind: 'create' }] as const)(
   'publishes only the saved $kind error and its clearing, with ordered steps and durable suppression',
   async ({ kind }) => {
-    const storage = new MemoryWorkspaceStorage()
+    const { storage } = await nativeLifecycleStorage()
     const events: WorkspaceEventPublication[] = []
     const publish = async (event: WorkspaceEventPublication) => {
       events.push(structuredClone(event))

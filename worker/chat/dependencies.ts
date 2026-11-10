@@ -1,6 +1,5 @@
 import type { AppEnv } from '../env'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
-import { HttpError } from '../http'
 import { randomToken } from '../security/crypto'
 import {
   readConnectionAccess,
@@ -14,6 +13,9 @@ import {
 import { readAutomaticTitleWorkspace } from './queries'
 import { titleModelBinding } from './title-model'
 import type { ChatDependencies } from './types'
+import { resolveMessageAttachments } from './attachment-claims'
+import { prepareMessageAttachments } from './attachment-copy'
+import { attachmentWorkspace } from './attachment-claim-data'
 import { filterRunnerOutput } from './runner-output'
 import { readRunnerBranches } from './branch-data'
 
@@ -49,15 +51,27 @@ export function chatDependencies(
         ? Promise.resolve(new Map<string, SessionLoginMetadata>())
         : readLoginMetadata(env.DB, id, targets)
     },
-    resolveAttachments: async (_userId, _workspaceId, ids) => {
-      if (ids.length)
-        throw new HttpError(
-          503,
-          'attachments_unavailable',
-          'Attachments are not available. Try again.',
-        )
-      return { attachments: [], paths: [] }
-    },
+    resolveAttachments: (userId, id, ids, messageId, usedIds) =>
+      resolveMessageAttachments(
+        env,
+        userId,
+        id,
+        ids,
+        messageId,
+        usedIds,
+        (overrides.now ?? Date.now)(),
+      ),
+    prepareAttachments: (id, userId, messageId, attachments, sandboxId) =>
+      prepareMessageAttachments(
+        env,
+        id,
+        userId,
+        messageId,
+        attachments,
+        sandboxId,
+      ),
+    attachmentSandboxId: async (id, userId) =>
+      (await attachmentWorkspace(env.DB, id, userId))?.sandboxId ?? null,
     receiveFileResult: async () => undefined,
     runnerAttached: () => undefined,
     runnerDetached: () => undefined,

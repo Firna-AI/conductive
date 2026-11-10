@@ -2,7 +2,7 @@ import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import { desktopPath } from '../shared/desktop'
 import { filePaths } from '../shared/files'
 import { githubPaths, type BannerState } from '../shared/github'
-import { DRAFT_ATTACHMENTS_PATH } from '../shared/messages'
+import { attachmentUploadPath } from '../shared/messages'
 import { previewPath, previewsPath } from '../shared/previews'
 import { terminalPaths } from '../shared/terminal'
 import type { FakeRouteWriter } from './fake-api-routes'
@@ -84,9 +84,11 @@ export function fakeToolRoutes(
   )
   routes.json('GET', filePaths.changes(org, id), data.changes)
   routes.json('GET', filePaths.diff(org, id, FAKE_FILE_PATH), data.diff)
+  // The raw file upload of the app's upload operation, at the route of each
+  // target: a workspace, and the first message of a new workspace.
   routes.json(
     'POST',
-    filePaths.attachments(org, id),
+    attachmentUploadPath(org, { type: 'workspace', workspaceId: id }),
     {
       attachment: {
         id: 'attachment-1',
@@ -100,7 +102,7 @@ export function fakeToolRoutes(
   )
   routes.json(
     'POST',
-    DRAFT_ATTACHMENTS_PATH,
+    attachmentUploadPath(org, { type: 'new-workspace', messageId: '' }),
     {
       attachment: {
         id: 'draft-attachment-1',

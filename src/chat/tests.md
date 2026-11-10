@@ -103,3 +103,8 @@ label, and a link in inline code and in a code block.
 `state/workspace-list.test.ts` checks that a chat without sources reads the
 list while it shows, and not while it is hidden. The workspace screen's
 `LinkChips.test.tsx` checks the chips of a kept chat on a phone.
+
+`components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
+It changes `readOnly` during a rename and archives a kept chat during a close question.
+Each edit hides, the old tab name stays, and no write goes out.
+The session history remains available after Archive.

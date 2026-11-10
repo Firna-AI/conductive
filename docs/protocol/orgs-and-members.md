@@ -21,12 +21,12 @@ says.
   then need the GitHub App on another GitHub account.
 - The org rail lists the orgs of the user, and the user can create orgs.
 - Create org accepts a name, custom initials, and chosen repositories.
-- Create org requires at least one repository (decision 151). The create
+- Create org requires at least one repository (decision 151 of PR #92). The create
   screen says so, and Create org stays off until the person chooses one.
   The app refuses a create of an org with no repository.
 - Reason: every new org then starts its first build at create, with the
   whole choice of repositories, as
-  [The first build](workspaces-and-sandboxes.md#the-first-build) says. A
+  [The first build](org-image.md#the-first-build) says. A
   first build at the first save on the Repositories tab was rejected,
   because that tab saves each repository on its own. That build could
   start with only part of the choice.
@@ -63,11 +63,11 @@ says.
   2. Create the first org.
   3. Connect Claude or Codex.
 - Get started asks for no Boat account and no Boat key.
-- [Chat and events](chat-and-events.md#messages) states the notice for a
+- [Chat and events](messages-and-attachments.md#messages) states the notice for a
   missing agent login.
 - The second step, the org step, shows the cloud computer of the org once
-  the org exists (decision 150). Create org starts its first build, as
-  [The first build](workspaces-and-sandboxes.md#the-first-build) says.
+  the org exists (decision 150 of PR #92). Create org starts its first build, as
+  [The first build](org-image.md#the-first-build) says.
 - While the org has no good image, the org step shows the state of the
   newest build of the org:
   - While a build runs, the step says that the cloud computer is being
@@ -85,7 +85,7 @@ says.
 - The person can connect an agent while the build runs.
 - When every step is done, Get started shows its finish: a line about the
   org, and an Open button for the org, such as "Open Acme".
-- The Open button stays on in every state of the build (decision 150).
+- The Open button stays on in every state of the build (decision 150 of PR #92).
   New workspace also shows the state of the build, as
   [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
   says.
@@ -146,7 +146,7 @@ says.
 - Every member of the org sees all of its workspaces (decision 39).
 - Every member can send messages in every workspace of the org. Each
   session runs on the agent login of its starter, as
-  [Chat and events](chat-and-events.md#agents) says.
+  [Chat and events](agents-and-sessions.md#agents) says.
 - A member who is not an admin sees the Members tab and the owner of each
   workspace, without the actions of an admin.
 - Only the workspace owner and the admins can archive a workspace
@@ -210,6 +210,6 @@ says.
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - An unfinished create continues when its workspace opens after Restore.
   It then gets a new start limit of 20 minutes, the limit of each start in
-  [Time limits of builds and starts](workspaces-and-sandboxes.md#time-limits-of-builds-and-starts).
+  [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts).
   The workspace keeps its original creation date.
 - Reason: the create makes no progress while its org is deleted.
