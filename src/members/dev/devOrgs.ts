@@ -1,4 +1,5 @@
 import { orgPath, type OrgRole, type User } from '../../shared/api'
+import { routes } from '../../app/router'
 import {
   memberPath,
   membersPath,
@@ -11,6 +12,7 @@ import type { FakeRouteWriter } from '../../test-support/fake-api-routes'
 import {
   coreFixtures,
   FAKE_TIME,
+  FAKE_ORIGIN,
   fakeUsers,
 } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -55,6 +57,8 @@ export function devWorkspace(org: DevOrgId): Workspace {
     ...checkout,
     id: 'rail-drag',
     orgId: 'futex',
+    number: 1,
+    link: new URL(routes.workspace('futex', 'rail-drag'), FAKE_ORIGIN).href,
     name: 'Rail drag and drop',
     branch: 'priyaraman/rail-drag',
     owner: priya,

@@ -1,0 +1,50 @@
+---
+import { productName } from '../../../docs/mockups/src/brand'
+import RunningText from '../components/RunningText.astro'
+import { legalLabel, type LegalDocument } from '../legal-text'
+import SiteLayout from './SiteLayout.astro'
+
+/**
+ * A legal page of the site: its title, its introduction, and its sections.
+ */
+type Props = { legalDocument: LegalDocument }
+
+const { legalDocument } = Astro.props
+---
+
+<SiteLayout
+  title={`${legalDocument.title} – ${productName}`}
+  description={legalDocument.description}
+>
+  <main class="main text-page">
+    <article class="text-article">
+      <header class="text-head">
+        <span class="intro-label">{legalLabel}</span>
+        <h1 class="text-title">{legalDocument.title}</h1>
+        <p class="text-lead">
+          <RunningText text={legalDocument.lead} />
+        </p>
+      </header>
+      {legalDocument.sections.map((section) => (
+        <section class="legal-section">
+          <h2 class="legal-heading">{section.title}</h2>
+          {section.blocks.map((block) =>
+            block.kind === 'paragraph' ? (
+              <p>
+                <RunningText text={block.text} />
+              </p>
+            ) : (
+              <ul>
+                {block.items.map((item) => (
+                  <li>
+                    <RunningText text={item} />
+                  </li>
+                ))}
+              </ul>
+            ),
+          )}
+        </section>
+      ))}
+    </article>
+  </main>
+</SiteLayout>

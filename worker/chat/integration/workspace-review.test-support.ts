@@ -7,11 +7,12 @@ import {
   DESKTOP_SESSION_COOKIE,
 } from '../../security/desktop-contract'
 import { closeSockets, SocketInbox } from '../adapter-sockets.test-support'
-import { record } from '../inputs'
+import { record, string } from '../inputs'
 import { requestRunner, OuterFakeRunner } from './runner-socket.test-support'
 import { createLifecycleChatFixture } from './workspace-lifecycle.test-support'
 import type { Workspace } from './workspace-review-entry.test-support'
 import { OUTER_ORG, OUTER_WORKSPACE } from './outer-seed.test-support'
+import { advanceNextWorkspaceAlarm } from './workspace-start.test-support'
 
 export async function reviewWorkspaceFixture(bundle: string) {
   const fixture = await createLifecycleChatFixture(bundle)
@@ -32,19 +33,24 @@ export async function reviewWorkspaceFixture(bundle: string) {
   await runner.inbox.next()
   const turn = record(await runner.inbox.next())
   await actor().readLifecycle()
-  const browser = async (after = 0) => {
+  const browser = async (after = 0, cookie = fixture.cookies.ownerCookie) => {
     const response = await fixture.request(
       workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE, after),
-      { headers: { Upgrade: 'websocket' } },
+      { headers: { Upgrade: 'websocket', Cookie: cookie } },
     )
     const socket = response.webSocket
     if (!socket) throw new Error('The workspace socket is missing.')
     sockets.push(socket)
     const inbox = new SocketInbox(socket)
+    const messages: Record<string, unknown>[] = []
+    socket.addEventListener('message', (event) => {
+      messages.push(record(JSON.parse(string(event.data))))
+    })
     socket.accept()
     return {
       socket,
       inbox,
+      messages,
       history: record(record(await inbox.next()).history),
     }
   }
@@ -93,12 +99,13 @@ export async function driveToRunningStartup(actor: {
     { phase: string; processId: number | null } | undefined
   >
   advanceStartAlarm(): Promise<void>
+  readStartAlarm(): Promise<number | null>
 }): Promise<void> {
   while (true) {
     const job = await actor.readStartCheckpoint()
     if (!job) throw new Error('The queued start is missing.')
     if (job.phase === 'startup' && job.processId !== null) return
-    await actor.advanceStartAlarm()
+    await advanceNextWorkspaceAlarm(actor)
   }
 }
 

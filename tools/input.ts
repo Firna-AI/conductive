@@ -34,12 +34,12 @@ export function text(value: unknown): string {
   return value
 }
 
-function agent(value: unknown): Agent {
+export function agent(value: unknown): Agent {
   if (value === 'claude' || value === 'codex') return value
   throw new ToolInputError('Choose Claude or Codex for the workspace.')
 }
 
-function effort(value: unknown): Effort {
+export function effort(value: unknown): Effort {
   switch (value) {
     case 'none':
     case 'low':
@@ -70,6 +70,7 @@ export function createWorkspaceInput(
   return {
     repositoryId: text(fields.repositoryId),
     firstMessage: text(fields.firstMessage),
+    ...(typeof fields.name === 'string' && { name: fields.name }),
     ...(model && {
       model: { agent: agent(model.agent), model: text(model.model) },
     }),

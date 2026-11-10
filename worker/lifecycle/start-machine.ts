@@ -14,7 +14,8 @@ import {
   repositoryLocation,
 } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
-import { workspaceEnvironment } from './settings-data'
+import { workspaceEnvironmentSettings } from './settings-data'
+import { environmentValues } from './org-environment'
 import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -43,7 +44,7 @@ export async function advanceStartMachine(
       dependencies.randomToken,
       dependencies.now(),
     )
-    const environment = await workspaceEnvironment(
+    const environment = await workspaceEnvironmentSettings(
       env,
       job.orgId,
       job.environmentCiphertext,
@@ -54,12 +55,13 @@ export async function advanceStartMachine(
       (await workspaceRepositoryLocations(env.DB, job.workspaceId))
     job.repositoryLocations = locations
     const runtimeEnv = {
-      ...environment,
+      ...environmentValues(environment),
       ...repositoryEnvironment(locations),
       WORKSPACE_TOKEN: token,
       CONDUCTIVE_WORKSPACE_ID: job.workspaceId,
       CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
       CONDUCTIVE_DEFAULT_BRANCH: job.baseBranch ?? job.defaultBranch,
+      CONDUCTIVE_WORKSPACE_BRANCH: row.branch,
       CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
         locations,
         row.repositoryId,

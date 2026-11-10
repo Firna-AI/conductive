@@ -6,7 +6,7 @@
   padding-left: 12%;
 }
 
-/* The bubble keeps the line breaks of a message, as the app does. */
+/* Keep message line breaks and wrap a long link to fit the bubble. */
 .bubble {
   padding: 9px 14px;
   border-radius: var(--ui-radius-lg);
@@ -26,6 +26,7 @@
   font-size: var(--ui-text-sm);
 }
 
+/* A long link or a long piece of code breaks to fit the line. */
 .agent {
   display: flex;
   flex-direction: column;
@@ -33,10 +34,15 @@
   color: var(--ui-ink);
   font-size: var(--ui-text-md);
   line-height: var(--ui-leading-chat);
+  overflow-wrap: anywhere;
 }
 
 .agent p {
   margin: 0;
+}
+
+.agent table {
+  overflow-wrap: normal;
 }
 
 .agent pre {

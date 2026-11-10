@@ -1,9 +1,14 @@
 import { HttpError } from '../http'
 
+const featurePath =
+  /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:files\/(?:tree|content|download)|changes(?:\/diff)?|terminal(?:\/socket)?|previews(?:\/[^/]+)?|desktop|github(?:\/checks)?)$/
+
+export function isFeatureWorkspacePath(path: string): boolean {
+  return featurePath.test(path)
+}
+
 export function featureWorkspaceId(path: string): string | null {
-  const match = path.match(
-    /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:files\/(?:tree|content|download)|changes(?:\/diff)?|terminal(?:\/socket)?|previews(?:\/[^/]+)?|desktop|github(?:\/checks)?)$/,
-  )
+  const match = path.match(featurePath)
   if (!match) return null
   try {
     return decodeURIComponent(match[1])

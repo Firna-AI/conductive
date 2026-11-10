@@ -55,11 +55,11 @@
   padding: 10px 8px 24px;
 }
 
-/* New workspace and Routines, as one group above the sections. */
+/* New workspace, Routines, and Search above the sections. */
 .links {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .choose {
@@ -115,6 +115,18 @@ a.sheetRow:hover {
   width: 24px;
   height: 24px;
   border: 1px dashed var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+}
+
+/* The mark of Operator, which only an operator sees. */
+.operatorTile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--ui-border2);
   border-radius: var(--ui-radius-md);
   color: var(--ui-muted);
 }

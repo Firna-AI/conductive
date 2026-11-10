@@ -1,7 +1,7 @@
 import {
-  changedFiles,
-  fileTree,
-} from '../../../docs/mockups/src/fixtures/files'
+  filesFor,
+  type PathState,
+} from '../../../docs/mockups/src/fixtures/maskedFiles'
 import {
   checksByState,
   pullRequest,
@@ -27,25 +27,35 @@ import {
 } from '../../shared/previews'
 import { terminalPaths, type TerminalResponse } from '../../shared/terminal'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './core'
+import { withRealPath } from './masked-paths'
 
 export const FAKE_FILE_PATH = 'src/app/checkout/AddressForm.tsx'
 export const fakeTerminalOutput =
   'storefront (calummoore/checkout-autocomplete) $ npm run dev\r\nLocal: http://localhost:3000\r\nReady\r\n'
 
-export function toolFixtures(bannerState: BannerState = 'ready-to-merge') {
+/**
+ * The replies of the tools and the file routes. With masked paths, two
+ * paths hold the fake secret value, and their records carry the labels of
+ * the mockups as display paths.
+ */
+export function toolFixtures(
+  bannerState: BannerState = 'ready-to-merge',
+  paths: PathState = 'plain',
+) {
+  const { tree, changes: changed } = filesFor(paths)
   const parents: string[] = []
   const files: FileTreeResponse = {
     revision: 1,
-    entries: fileTree.map((entry): FileEntry => {
+    entries: tree.map((entry): FileEntry => {
       parents.length = entry.depth
-      const path = [...parents, entry.name].join('/')
+      const label = [...parents, entry.name].join('/')
       if (entry.folder) parents[entry.depth] = entry.name
-      return {
-        path,
+      return withRealPath({
+        path: label,
         name: entry.name,
         kind: entry.folder ? 'directory' : 'file',
         change: entry.change ?? null,
-      }
+      })
     }),
   }
   const content: FileResponse = {
@@ -59,11 +69,14 @@ export function toolFixtures(bannerState: BannerState = 'ready-to-merge') {
   content.sizeBytes = new TextEncoder().encode(content.content).byteLength
   const changes: ChangesResponse = {
     baseBranch: 'main',
-    files: changedFiles.map((file) => ({
-      ...file,
-      uncommitted: file.path === FAKE_FILE_PATH,
-    })),
-    summary: { files: 5, added: 158, removed: 48 },
+    files: changed.map((file) =>
+      withRealPath({ ...file, uncommitted: file.path === FAKE_FILE_PATH }),
+    ),
+    summary: {
+      files: changed.length,
+      added: changed.reduce((sum, file) => sum + file.added, 0),
+      removed: changed.reduce((sum, file) => sum + file.removed, 0),
+    },
   }
   const diff: DiffResponse = {
     path: FAKE_FILE_PATH,

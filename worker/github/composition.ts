@@ -58,7 +58,7 @@ export async function productionGitHubWebhook(
           try {
             await work()
           } catch {
-            warnWorker('A pull request run could not start in the background.')
+            warnWorker({ kind: 'routine_background_start_failed' })
           }
         }),
       ),

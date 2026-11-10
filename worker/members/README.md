@@ -9,7 +9,9 @@ Its production hooks use the real workspace and image coordinator objects.
 ## Integration
 
 Run `membersGate` before feature dispatch on the app hostname.
-It calls the existing gate for sign-in, hostname, Origin, and JSON checks.
+It calls the existing gate for sign-in, app access, hostname, Origin, and JSON checks.
+It supplies the original request when it substitutes the session path.
+The waiting-session allow list therefore checks the actual method and org path.
 It then reads current membership from D1.
 It permits a deleted org only for its admins on its detail, Delete retry,
 and Restore paths.
@@ -79,7 +81,7 @@ The production receiver keeps a stopped create checkpoint after Delete, before o
 Restore starts no sandbox. The normal resume route requeues that create when the workspace opens.
 The checkpoint keeps its sender, first message, and allocation identity.
 The requeued create gets a fresh 20-minute start limit from that open. It keeps its original creation date.
-A create without a sandbox also keeps its image pin. A missing pin uses the existing failed-create draft and cleanup path.
+A create without a sandbox also keeps its image pin. A missing pin keeps the workspace, its accepted chat, and its error, with durable sandbox cleanup.
 A create with a retained sandbox resumes it and continues at its saved creation step, as the [lifecycle README](../lifecycle/README.md#browser-routes) says.
 Hidden attempts and pending lifecycle cleanup sandboxes also enter suspension and purge.
 
@@ -164,6 +166,14 @@ before any sandbox deletion. It then removes workspace state and D1 rows.
 The resource journal keeps completed steps after a failure.
 The result names purged orgs and orgs that need another attempt.
 D1 ownership records stay until every external cleanup succeeds.
+Attachment cleanup follows the same rule.
+Workspace purge removes its R2 files after the workspace receiver fence drains its work.
+Org purge also removes draft files and files of failed creation attempts.
+An R2 failure keeps the deletion record and leaves the org pending for retry.
+The scheduled handler sweeps expired unsent attachments before org work.
+Its claimed-file check runs in the workspace chat queue, beside message admission.
+An accepted file of a surviving workspace stays until purge.
+See [chat attachments](../chat/attachments.md) for the storage boundary and expiry proof.
 A cleanup lease separates Restore from cleanup calls.
 An expired lease permits a later attempt after a worker stops.
 
@@ -183,7 +193,8 @@ The capability expires when its callback ends or its lease expires.
 An invitation names an email.
 The invite route sends it through `createInvitationMailer` in `worker/invitation-mailer.ts`.
 `AppDependencies.invitationMailer` replaces that mailer when it is set.
-The mailer posts to Resend with the `RESEND_API_KEY` Worker secret, from `invites@conductive.build`.
+The mailer posts to Resend with the `RESEND_API_KEY` Worker secret, from `invites@mail.conductive.build`.
+[Secrets](../../docs/deployment.md#secrets) says which domain Resend must verify for this sender.
 With a local `APP_ORIGIN`, such as `http://127.0.0.1:5173`, the mailer always writes each invitation link to the log and sends no email.
 This is also true when the key is set.
 On every other origin, the mailer needs the key and fails each send without it.
@@ -209,6 +220,11 @@ Call `acceptOrgInvite` after an explicit acceptance by a signed-in user.
 It accepts only an invitation that names one of that user's current verified emails.
 A durable match alone does not permit acceptance.
 Sign-in alone does not accept an invitation.
+Acceptance also includes the [app access grant](../waitlist/README.md) in
+its D1 batch. The record retains the org, invitation ID, and inviting
+admin after the invitation row is deleted. Invitations use no code count.
+The batch preserves the invitation while sign-ups are paused for a user
+without app access. It still accepts for a user who already has access.
 A membership-delete trigger cancels each invitation of the membership's org that has a durable match to the departing user.
 It runs in the same statement as the membership delete, so the removal and the cancellation apply together.
 
@@ -257,6 +273,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `errors.ts` defines `lastActiveAdminError` and `suspendedOwnerRecipientError`.
 - [`active-admin.ts`](../data/active-admin.ts) defines `activeAdminMemberPredicate`, the shared SQL rule of an active admin.
 - `invites.ts` manages pending invitations and explicit acceptance.
+- `invite-data.ts` batches membership, app access, the referral code, and invitation deletion under the current pause and identity checks.
 - `ownership.ts` supplies creation ownership and workspace reassignment.
 - `deletion.ts` implements Delete, suspension, and provider stops.
 - `maintenance.ts` runs lifecycle maintenance and validates schedules.

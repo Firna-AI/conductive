@@ -55,7 +55,7 @@ says.
 - The run of a merged pull request creates its branch from the base branch
   of the pull request.
 - The name of the branch follows the rule of every workspace, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  [Create a workspace](create-a-workspace.md#the-branch-and-the-name)
   says (decision 53).
 - The run pushes to its own branch, unless its prompt says otherwise.
 - A start step names what the run fetches. For an opened or pushed pull

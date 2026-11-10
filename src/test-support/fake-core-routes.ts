@@ -1,4 +1,8 @@
-import { ACCOUNT_PATHS, agentLoginPath } from '../shared/account'
+import {
+  ACCOUNT_PATHS,
+  agentLoginPath,
+  type SessionResponse,
+} from '../shared/account'
 import { MODELS_PATH } from '../shared/agents'
 import { API_PATHS, orgPath, type OrgRole } from '../shared/api'
 import { HEALTH_PATH } from '../shared/health'
@@ -23,17 +27,23 @@ import {
   type RoutineRunResponse,
 } from '../shared/routines'
 import { sectionPath, sectionsPath } from '../shared/sections'
+import { WAITLIST_PATHS } from '../shared/waitlist'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { coreFixtures, FAKE_IDS, FAKE_TIME } from './fixtures/core'
 import { listRuns, runsPage } from './fixtures/routine-runs'
 import { routineFixtures } from './fixtures/routines'
+import { accessState } from './fixtures/waitlist'
 
 export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   const data = coreFixtures(role)
   const org = data.orgs.orgs[0]
   const id = FAKE_IDS.org
   routes.json('GET', HEALTH_PATH, { status: 'ok' })
-  routes.json('GET', API_PATHS.session, { user: data.account.user })
+  routes.json('GET', API_PATHS.session, {
+    user: data.account.user,
+    appAccess: true,
+  } satisfies SessionResponse)
+  routes.json('GET', WAITLIST_PATHS.state, accessState)
   routes.empty('POST', API_PATHS.signOut)
   routes.json('GET', ACCOUNT_PATHS.account, data.account)
   routes.json('GET', MODELS_PATH, data.models)
@@ -45,6 +55,9 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   routes.json('GET', ACCOUNT_PATHS.githubRepositories, data.githubRepositories)
   routes.json('PUT', ACCOUNT_PATHS.defaultModel, {
     choice: data.account.defaultChoice,
+  })
+  routes.json('PUT', ACCOUNT_PATHS.newWorkspaceView, {
+    view: data.account.newWorkspaceView,
   })
   routes.json('POST', ACCOUNT_PATHS.deleteAccount, { deleted: true })
   for (const login of data.account.agentLogins) {

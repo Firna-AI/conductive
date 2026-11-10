@@ -1,7 +1,8 @@
-import { productDomain, productName } from '../docs/mockups/src/brand'
+import { productName } from '../docs/mockups/src/brand'
 import type { AppEnv, HttpFetch } from './env'
 import { HttpError } from './http'
 import { hash } from './security/crypto'
+import { createMailSender } from './mail-sender'
 
 export interface InvitationEmail {
   id: string
@@ -21,53 +22,22 @@ export function invitationLink(appOrigin: string, inviteId: string): string {
   return url.href
 }
 
-/** Development deliberately writes invitation links to the local log. */
-function logInvitationMailer(
-  log: (message: string) => void = (message) => console.info(message),
-): InvitationMailer {
-  return {
-    async send(invitation) {
-      log(
-        `${invitation.invitedBy} invited ${invitation.email} to ${invitation.orgName}: ${invitation.link}`,
-      )
-    },
-  }
-}
-
 export function createInvitationMailer(
   env: Pick<AppEnv, 'APP_ORIGIN' | 'RESEND_API_KEY'>,
   fetch: HttpFetch,
 ): InvitationMailer {
-  const hostname = new URL(env.APP_ORIGIN).hostname
-  if (['localhost', '127.0.0.1', '[::1]'].includes(hostname)) {
-    return logInvitationMailer()
-  }
+  const sender = createMailSender(env, fetch)
   return {
     async send(invitation) {
       try {
-        if (!env.RESEND_API_KEY)
-          throw new Error('Invitation mailer is not configured')
-        const body = JSON.stringify({
-          from: `${productName} <invites@${productDomain}>`,
-          to: [invitation.email],
+        await sender.send({
+          recipient: invitation.email,
           subject: `Join ${invitation.orgName} on ${productName}`,
           text: `${invitation.invitedBy} invited you to join ${invitation.orgName} on ${productName}.\n\nSign in with GitHub and accept your invitation:\n${invitation.link}`,
+          deliveryKey: async (body) =>
+            `org-invite/${invitation.id}/${await hash(body)}`,
+          developmentLog: `${invitation.invitedBy} invited ${invitation.email} to ${invitation.orgName}: ${invitation.link}`,
         })
-        const response = await fetch(
-          new Request('https://api.resend.com/emails', {
-            method: 'POST',
-            redirect: 'error',
-            signal: AbortSignal.timeout(30_000),
-            headers: {
-              Authorization: `Bearer ${env.RESEND_API_KEY}`,
-              'Content-Type': 'application/json',
-              'Idempotency-Key': `org-invite/${invitation.id}/${await hash(body)}`,
-            },
-            body,
-          }),
-        )
-        if (!response.ok) throw new Error('Invitation email was refused')
-        await response.body?.cancel()
       } catch {
         throw new HttpError(
           502,

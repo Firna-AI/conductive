@@ -5,7 +5,6 @@ import type {
   PendingTurn,
   LifecycleActivityResult,
 } from './workspace-runtime'
-import type { FailedCreationDraft } from './failed-creations'
 import type { ImageCoordinatorState } from './image-timers'
 import type {
   LifecyclePublisher,
@@ -35,10 +34,6 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
     now: number,
     publish: LifecyclePublisher,
   ): Promise<boolean>
-  failedLifecycleCreation(
-    orgId: string,
-    senderUserId: string,
-  ): Promise<FailedCreationDraft | undefined>
   acknowledgeLifecycleFirstMessage(publish?: LifecyclePublisher): Promise<void>
   recoverLifecycle(publish?: LifecyclePublisher): Promise<void>
   registerLifecycleTurn(
@@ -48,12 +43,10 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
   finishLifecycleTurn(
     turnId: string,
     publish?: LifecyclePublisher,
-    occurredAt?: number,
   ): Promise<void>
   reportRunnerLifecycle(
     event: RunnerEvent,
     publish?: LifecyclePublisher,
-    occurredAt?: number,
   ): Promise<void>
   runnerLifecycleDisconnected(publish?: LifecyclePublisher): Promise<void>
   scheduleImage(state: ImageCoordinatorState): Promise<void>

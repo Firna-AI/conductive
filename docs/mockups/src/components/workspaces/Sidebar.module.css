@@ -32,7 +32,7 @@
   padding: 8px 8px 16px;
 }
 
-/* New workspace and Routines, as one group above the sections. */
+/* New workspace, Routines, and Search above the sections. */
 .links {
   display: flex;
   flex-direction: column;

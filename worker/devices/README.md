@@ -11,6 +11,8 @@ It has no imports and works in the Mac app's NodeNext build.
 [device-read.ts](../../src/shared/device-read.ts) validates unknown wire values.
 `DeviceSender` contains the stored sender's ID and display labels.
 The Worker never reads these fields from a sandbox request.
+`workspaceName` is null for a workspace with no name, in command records and
+saved permission windows. Displays use the shared `nameLabel` helper.
 
 - Machine POST `/v1/tools/mac-command` creates a command request.
 - Machine GET `/v1/tools/mac-command/:requestKey` reads that request.
@@ -22,7 +24,10 @@ The Worker never reads these fields from a sandbox request.
 - GET `/api/devices/current` identifies the paired desktop connection.
 - GET and POST `/api/devices/current/settings` relay local settings operations.
 
-App reads use the existing host, Origin, session, and membership checks.
+App reads use the existing host, Origin, session, app access, and membership checks.
+The gate refuses a waiting user's device upgrade with 403 `access_required`
+before the broker can register it. The same desktop session can connect
+after an access grant.
 New app writes run those same checks with a body-free request first.
 The application entry bounds their bodies with the [shared entry policy](../http/README.md#request-body-limit) before dispatch.
 Each request handler calls [readJsonObject](../http/README.md#json-request-objects).
@@ -36,7 +41,8 @@ Cloudflare [limits](https://developers.cloudflare.com/workers/runtime-apis/rpc/#
 
 Org suspension revokes org workspace tokens and the shared token rule checks the stored org state.
 The command checks repeat before approvals and results.
-The body-free browser gate also checks the original write method.
+The body-free browser gate supplies the original method, path, and upgrade
+to the app access check. It also checks the original write method for org suspension.
 Account-level Mac connections remain available for the member's other orgs.
 
 ## Main process and renderer
@@ -182,7 +188,8 @@ Only the fixture mounts the pre-existing chat and runner paths for setup.
 Its Vite bundle uses `write: false`.
 Sender selection comes from messages stored through that real chat path.
 `DeviceRuntime` takes one clock for lease, watchdog, and command times.
-The fixture moves that clock and invokes the real Durable Object alarm through test-only routes.
+The fixture moves that clock through a test-only route.
+Its test-only alarm route runs the real Durable Object alarm only for stored alarms that are due on that clock, through `advanceScheduledAlarms`.
 The publication recovery test interrupts real D1 with a temporary trigger and replays through a browser route.
 `worker/chat/integration/workspace-device-projection.test.ts` runs the composed workspace object with a real waiting request.
 D1, the list, and a reopen keep `input` through lifecycle activity, a start-step update, and a heartbeat.

@@ -1,12 +1,9 @@
-import type { WorkspaceEvent } from '../../src/shared/events'
+import type { WorkspaceEvent } from '../chat/workspace-events'
 import type {
   PendingTurn,
   WorkspaceLifecycleEndpoint,
 } from './workspace-runtime'
-import {
-  nativeWorkspaceStorage,
-  type WorkspaceStorage,
-} from './platform-storage'
+import type { WorkspaceStorage } from './platform-storage'
 
 export interface WorkspaceEventPublication {
   workspaceId: string
@@ -36,13 +33,23 @@ export interface WorkspacePlatform {
 }
 
 export function nativeWorkspacePlatform(
-  ctx: DurableObjectState,
+  ctx: Pick<DurableObjectState, 'blockConcurrencyWhile' | 'waitUntil'>,
   publish: WorkspacePlatform['publish'],
-  storage = nativeWorkspaceStorage(ctx.storage),
+  storage: WorkspaceStorage,
 ): WorkspacePlatform {
   return {
     storage,
-    blockConcurrencyWhile: (operation) => ctx.blockConcurrencyWhile(operation),
+    blockConcurrencyWhile: async (operation) => {
+      const result = await ctx.blockConcurrencyWhile(async () => {
+        try {
+          return { ok: true as const, value: await operation() }
+        } catch (error) {
+          return { ok: false as const, error }
+        }
+      })
+      if (!result.ok) throw result.error
+      return result.value
+    },
     waitUntil: (promise) => ctx.waitUntil(promise),
     publish,
   }

@@ -3,6 +3,7 @@
 These tools create and list Conductive workspaces from a running workspace.
 They can also ask to run a command on the active turn sender's connected Mac.
 They call the machine route `/v1/tools/workspaces` from the [shared contract](../src/shared/agent-tools.ts).
+They also list repositories, sections, and models through that contract's machine routes.
 Mac commands use `/v1/tools/mac-command` from [the device contract](../src/shared/device.ts).
 The [Worker handler](../worker/tools/README.md) verifies the workspace token and the calling turn.
 
@@ -13,9 +14,12 @@ They use its native TypeScript support and need no runtime npm packages.
 
 ```sh
 conductive workspaces list
+conductive repositories list
+conductive sections list
+conductive models list
 conductive workspaces create --repository repo-id --message 'Build this feature.'
 conductive workspaces create --repository repo-id --message 'Review the change.' \
-  --agent codex --model model-name --effort high --section section-id
+  --agent codex --model model-name --effort high --section section-id --name 'Review the change'
 conductive mcp
 conductive mac run --command 'pwd' --folder '/Users/me/project' --reason 'Check the local folder'
 ```
@@ -24,7 +28,23 @@ Create inherits the calling workspace's org and owner.
 An omitted model or effort uses the owner's default.
 An omitted section uses the org's default section.
 The first message runs as the sender of the calling turn.
-List returns every workspace in the org, including archived workspaces.
+`--name` gives an optional workspace name.
+The Worker keeps its first line with text, makes white space single, removes a final full stop, and cuts at 60 Unicode code points.
+It keeps whole words when possible and keeps an ellipsis.
+A blank result counts as no name, and the app shows "Untitled".
+The name does not change the branch.
+The create answer holds the stored name.
+`workspaces list` returns every workspace in the org, including archived workspaces.
+Each list item gives its number and canonical web link.
+Create gives both fields in the complete workspace record.
+A workspace link in a message names that workspace.
+A workspace link in an answer shows as a chip.
+The number is a display label. Links keep the workspace ID.
+`repositories list` returns the repositories that a create accepts, with IDs and the current repository mark.
+`sections list` returns the org's sections in sidebar order, with IDs and the default section mark.
+`models list` returns the app's models, their agents and efforts, and the owner's default choice.
+The default choice falls back to the app default, then to `null`.
+The [agent-tool protocol](../docs/protocol/agent-tools.md#repository-section-and-model-lists) gives the list rules and errors.
 
 The CLI writes one JSON response to stdout.
 It writes a failure message to stderr and returns exit status 1.
@@ -43,11 +63,13 @@ They send the turn ID in `X-Conductive-Turn-Id`.
 The turn ID selects context.
 It grants no access by itself.
 Create requires valid active turn context.
-List needs only the workspace token.
+All four lists need only the workspace token.
 
 ## MCP
 
-The stdio server exposes `create_workspace`, `list_workspaces`, and `run_mac_command`.
+The stdio server exposes `create_workspace`, `list_workspaces`, `list_repositories`, `list_sections`, `list_models`, and `run_mac_command`.
+The ID fields of `create_workspace` name the list tools that supply their values.
+Its optional `name` uses the same Worker rule as CLI `--name`.
 It supports the `2025-11-25` MCP revision.
 It returns this supported revision during initialization.
 It never copies an unknown offered revision into its reply.

@@ -132,16 +132,24 @@ export async function handleGitHubWebhook(
       route.repositoryId,
       route.installationId,
     )
+    let failure: { error: unknown } | undefined
     for (const workspace of workspaces) {
       const matches =
         route.push ||
         route.branch === undefined ||
         route.branch === workspace.branch
       if (!matches) continue
-      await dependencies.refresh(workspace, {
-        deliveryId,
-        ...(route.push ? { pushBranch: route.branch } : {}),
-      })
+      try {
+        await dependencies.refresh(workspace, {
+          deliveryId,
+          ...(route.push ? { pushBranch: route.branch } : {}),
+        })
+      } catch (error) {
+        if (!route.push) throw error
+        // A push refresh starts at attempt zero. Pending state has its own retry.
+        if (!(error instanceof HttpError && error.code === 'github_pending'))
+          failure ??= { error }
+      }
     }
     if (route.push && route.branch !== undefined)
       await dependencies.pushed?.(
@@ -150,6 +158,7 @@ export async function handleGitHubWebhook(
         route.branch,
       )
     if (pullRequestFailure) throw pullRequestFailure.error
+    if (failure) throw failure.error
     await completeDelivery(env.DB, deliveryId, dependencies.now())
     return new Response(null, { status: 204 })
   } catch (error) {

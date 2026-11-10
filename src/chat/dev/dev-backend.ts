@@ -10,6 +10,7 @@ import {
   type WorkspaceStart,
 } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { fetchFiles } from '../../test-support/fake-files'
 import {
   coreFixtures,
   FAKE_IDS,
@@ -22,6 +23,7 @@ import { createChatApi, type WorkspaceTarget } from '../api/client'
 import { endsTurn } from '../state/known-turns'
 import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
+import { devAnswers } from './dev-answers'
 import {
   seedLinked,
   withReaderLogin,
@@ -63,6 +65,8 @@ export class DevBackend {
   count = 0
   /** The first session of a new workspace, which follows its title. */
   titled: string | null = null
+  /** The new workspace asked for its title, which then comes on its own. */
+  titleAsked = false
 
   private constructor(parts: {
     target: WorkspaceTarget
@@ -76,6 +80,7 @@ export class DevBackend {
     open: Session[]
     closed: Session[]
     mac: DevMac
+    answer: readonly string[]
   }) {
     this.target = parts.target
     this.viewer = parts.viewer
@@ -88,7 +93,7 @@ export class DevBackend {
     this.open = parts.open
     this.closed = parts.closed
     this.mac = parts.mac
-    this.agent = new DevAgent(parts.stream, parts.clock)
+    this.agent = new DevAgent(parts.stream, parts.clock, parts.answer)
     this.agent.onTurn = (sessionId, turnId, at) =>
       setActiveTurn(this, sessionId, turnId, at)
   }
@@ -162,6 +167,7 @@ export class DevBackend {
         options.app === 'mac',
         options.change,
       ),
+      answer: devAnswers[options.answer],
     })
     backend.note(recorded.map((envelope) => envelope.event))
     writeMacReplies(backend)
@@ -189,8 +195,11 @@ export class DevBackend {
     return written ?? this.server.fetch(request)
   }
 
-  /** The JSON client of the page, over its fake API, as the app gives one. */
-  readonly client = createApiClient(this.fetch)
+  /**
+   * The JSON client of the page, over its fake API, as the app gives one.
+   * Its uploads send raw files through the same fetch.
+   */
+  readonly client = createApiClient(this.fetch, fetchFiles(this.fetch))
 
   /** Keeps the messages, the queued ones, and the running turn of the recorded chat. */
   private note(events: readonly WorkspaceEvent[]): void {

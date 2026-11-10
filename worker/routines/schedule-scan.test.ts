@@ -28,7 +28,7 @@ it('starts an exactly due routine once across overlapping scans and leaves futur
       scanRoutineSchedules(fixture.runtime),
     ]),
   )
-  fixture.setTime(SCAN_TIME + 59_000)
+  await fixture.setTime(SCAN_TIME + 59_000)
   await scanRoutineSchedules(fixture.runtime)
   const { results } = await fixture.runs()
   expect(results).toHaveLength(1)

@@ -186,14 +186,14 @@ decision number names a dated record, as
   agent can copy them, or push them to a branch.
 - The owner's GitHub token reaches each repository where the owner
   installed the GitHub App and has access, as
-  [GitHub tokens](access-and-security.md#github-tokens) says
+  [GitHub tokens](github-tokens.md) says
   (decision 121).
 - Risk: the agent of a run can create more workspaces through the agent
   tools, and their first messages also come from the owner. Those
   workspaces spend starts, and the Runs list does not show them.
 - Risk: a member with a terminal in a run workspace can read the owner's
   logins while a turn runs, as in each workspace.
-  [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   states that risk (decision 105).
 - An instruction or a classifier that makes the agent ignore commands in a
   pull request was rejected. It makes an injection less likely, but it

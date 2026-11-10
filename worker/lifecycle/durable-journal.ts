@@ -1,6 +1,14 @@
 import type { WorkspaceStorage } from './platform-storage'
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import type { WorkspacePlatform } from './workspace-platform'
+import type { WorkspaceSnapshot } from '../data/workspace-link'
+
+export interface LifecyclePublication extends Omit<
+  WorkspaceResponse,
+  'workspace'
+> {
+  workspace: WorkspaceSnapshot
+}
 
 const LAST_PUBLISHED = 'lifecycle:last-published'
 
@@ -19,7 +27,7 @@ export class WorkspaceEventJournal {
   }
 
   publishLifecycle(
-    response: WorkspaceResponse,
+    response: LifecyclePublication,
     now: number,
     publish = this.publish,
   ): Promise<void> {
@@ -30,6 +38,20 @@ export class WorkspaceEventJournal {
         error: response.error,
       })
       if ((await this.storage.get('text', LAST_PUBLISHED)) === signature) return
+      const start = response.start
+      const failedCreate =
+        response.workspace.state === 'error' &&
+        start?.kind === 'create' &&
+        start.steps.some((step) => step.state === 'failed')
+      const publishStart = async () => {
+        if (start)
+          await publish({
+            workspaceId: response.workspace.id,
+            event: { type: 'start.updated', start },
+            occurredAt: now,
+          })
+      }
+      if (failedCreate) await publishStart()
       await publish({
         workspaceId: response.workspace.id,
         event: {
@@ -41,12 +63,7 @@ export class WorkspaceEventJournal {
         },
         occurredAt: now,
       })
-      if (response.start)
-        await publish({
-          workspaceId: response.workspace.id,
-          event: { type: 'start.updated', start: response.start },
-          occurredAt: now,
-        })
+      if (!failedCreate) await publishStart()
       await this.storage.put('text', LAST_PUBLISHED, signature)
     })
   }

@@ -82,16 +82,23 @@ export class GitHubClient {
         displayName: typeof profile.name === 'string' ? profile.name : null,
         avatarUrl:
           typeof profile.avatar_url === 'string' ? profile.avatar_url : null,
-        verifiedEmails: await this.verifiedEmails(tokens.accessToken),
+        githubCreatedAt:
+          typeof profile.created_at === 'string' &&
+          Number.isFinite(Date.parse(profile.created_at))
+            ? Date.parse(profile.created_at)
+            : null,
+        ...(await this.verifiedEmails(tokens.accessToken)),
       },
       tokens,
     }
   }
 
-  private async verifiedEmails(
-    accessToken: string,
-  ): Promise<readonly string[]> {
+  private async verifiedEmails(accessToken: string): Promise<{
+    verifiedEmails: readonly string[]
+    primaryVerifiedEmail: string | null
+  }> {
     const emails = new Set<string>()
+    let primaryVerifiedEmail: string | null = null
     let next = true
     for (let page = 1; next; page++) {
       const response = await this.response(
@@ -119,11 +126,15 @@ export class GitHubClient {
           typeof value.verified !== 'boolean'
         )
           throw signInFailed()
-        if (value.verified) emails.add(value.email.toLowerCase())
+        if (value.verified) {
+          const email = value.email.toLowerCase()
+          emails.add(email)
+          if (value.primary === true) primaryVerifiedEmail = email
+        }
       }
       next = /\brel="next"/.test(response.headers.get('Link') ?? '')
     }
-    return [...emails]
+    return { verifiedEmails: [...emails], primaryVerifiedEmail }
   }
 
   private async request(request: Request): Promise<unknown> {

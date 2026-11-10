@@ -1,7 +1,7 @@
 import type { AgentLoginStatus } from '../../shared/account'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import type { Org, User } from '../../shared/api'
-import type { Attachment, SendMessageResponse } from '../../shared/messages'
+import type { SendMessageResponse } from '../../shared/messages'
 import type {
   ChangeModelResponse,
   InterruptResponse,
@@ -25,7 +25,6 @@ import {
 } from './json'
 import {
   readAgent,
-  readAttachment,
   readChoice,
   readDraft,
   readEffort,
@@ -196,8 +195,4 @@ export function readViewReply(value: unknown): ViewReply {
     view: readView(value),
     routine: optional(nullable(readRunRoutine))(routine) ?? null,
   }
-}
-
-export function readAttachmentResponse(value: unknown): Attachment {
-  return readAttachment(record(value, 'attachment response').attachment)
 }

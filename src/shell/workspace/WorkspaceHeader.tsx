@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
-import { Archive, ChevronLeft, FolderGit2, GitBranch } from 'lucide-react'
+import { ChevronLeft, FolderGit2 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
@@ -8,6 +8,7 @@ import styles from '../../../docs/mockups/src/components/workspace/WorkspaceHead
 import { personName } from '../../app/people'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
+import { nameLabel } from '../../shared/name-label'
 import type { Workspace } from '../../shared/workspaces'
 import { useOrgModel } from '../context'
 import { useMacBar } from '../mac/mac-app'
@@ -15,7 +16,9 @@ import { IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
+import { CopyLink } from './CopyLink'
 import type { WorkspaceContext } from './features'
+import { RightColumnToggle } from './WorkspaceColumns'
 import { RunLine } from './RunLine'
 import { useRunRoutine } from './saved-view'
 
@@ -43,18 +46,21 @@ function State(props: { workspace: Workspace }) {
 }
 
 /**
- * The name, repository, branch, owner, and state of the open workspace,
- * and Archive for its owner and the org's admins (decision 42). The list
- * groups workspaces by section, so the header names the repository. The
- * workspace of a routine run has a line under the header that links to
- * its routine.
+ * The name, number, repository, owner, and state of the open
+ * workspace. A workspace
+ * with no name yet shows Untitled. The label of the number copies the link
+ * of the workspace. On desktop it follows the name, and the repository
+ * takes the room that the other parts leave. On a phone it leads
+ * the line under the name. The list groups workspaces by section, so the
+ * header names the repository. On desktop the header ends with the toggle
+ * of the right column. A run workspace links to its routine below it.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
   /** The owner picker of Milestone 15c. Without it the owner shows read-only. */
   ownerControl?: ReactNode
 }) {
-  const { workspace, org, archive } = props.context
+  const { workspace, org } = props.context
   const model = useOrgModel(org.id)
   const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
@@ -64,13 +70,14 @@ export function WorkspaceHeader(props: {
   const repository =
     repositories?.find((item) => item.id === workspace.repositoryId)
       ?.fullName ?? workspace.repositoryId
+  const name = nameLabel(workspace.name)
   const phone = props.context.viewport === 'phone'
   const ownerView = props.ownerControl ?? (
     <Owner compact={phone} workspace={workspace} />
   )
-  const archiveButton = archive ? (
-    <IconButton icon={Archive} label="Archive workspace" onPress={archive} />
-  ) : null
+  const copyLink = (
+    <CopyLink inline={phone} key={workspace.link} workspace={workspace} />
+  )
   const header = phone ? (
     <header className={styles.mobile}>
       <IconButton
@@ -79,30 +86,28 @@ export function WorkspaceHeader(props: {
         onPress={() => go(routes.org(org.id))}
       />
       <div className={styles.titles}>
-        <h1 className={styles.title}>{workspace.name}</h1>
-        <span className={styles.branch}>
-          {repository} · {workspace.branch}
+        <h1 className={styles.title}>{name}</h1>
+        <span className={styles.line}>
+          {copyLink}
+          <span className={styles.branch}>{repository}</span>
         </span>
       </div>
       {ownerView}
       <State workspace={workspace} />
-      {archiveButton}
     </header>
   ) : (
     <header className={classes(styles.bar, bar)}>
-      <h1 className={styles.title}>{workspace.name}</h1>
-      <span className={styles.meta}>
-        <FolderGit2 aria-hidden className={styles.icon} size={13} />
-        <span className={styles.branch}>{repository}</span>
+      <h1 className={styles.title}>{name}</h1>
+      {copyLink}
+      <span className={styles.metas}>
+        <span className={styles.meta}>
+          <FolderGit2 aria-hidden className={styles.icon} size={13} />
+          <span className={styles.branch}>{repository}</span>
+        </span>
       </span>
-      <span className={styles.meta}>
-        <GitBranch aria-hidden className={styles.icon} size={13} />
-        <span className={styles.branch}>{workspace.branch}</span>
-      </span>
-      <span className={styles.spacer} />
       {ownerView}
       <State workspace={workspace} />
-      {archiveButton}
+      <RightColumnToggle />
     </header>
   )
   if (!routine) return header

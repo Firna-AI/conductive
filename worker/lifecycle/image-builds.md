@@ -18,6 +18,23 @@ Software and install commands run detached and stream their output.
 D1 stores the step, output offsets, and log. Each row holds at most
 256 KiB of UTF-8 text, split between complete characters.
 
+`createShellOrg` in [`feature-org.ts`](../app-api/feature-org.ts) starts the
+first build after it saves the org and its repositories. A new build whose
+first alarm cannot schedule fails at once with a saved message. A build
+that has not allocated a sandbox ends without cleanup. An allocation
+already in progress keeps its cleanup ownership. A failed reschedule of
+an existing running build keeps that build running.
+
+`publishBuild` in [`build-admission-data.ts`](build-admission-data.ts)
+records whether the first good build needs an added build for changed
+settings. Its `cleanup-build` phase keeps that work through coordinator
+reconstruction. `cleanupBuild` in [`build-execution.ts`](build-execution.ts)
+finishes resource cleanup before `startAddedImageBuild` in
+[`first-image-build.ts`](first-image-build.ts) starts the added build.
+The added build uses the first admin who is not suspended. A failed start
+keeps the first good image and writes one fixed warning. A failed first
+build starts no added build.
+
 D1 keeps at most 4 MiB of each build log: the first and the last output.
 A write that passes that budget removes whole rows from the middle.
 The line `[N output bytes omitted]` takes their place in the event order.
@@ -60,7 +77,7 @@ transient. Other errors keep their existing handling.
   step still uses the first window.
 - The window does not limit a whole job or a healthy command.
 - The whole-job deadline takes precedence over a retry wait. The limits
-  are in [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md).
+  are in [Workspaces and sandboxes](../../docs/protocol/workspace-life.md).
 - Cancellation and terminal cleanup do not wait for a pending retry.
 - A source command start never retries. It fails closed, as the source
   loader says.

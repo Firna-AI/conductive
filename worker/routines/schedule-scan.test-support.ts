@@ -7,7 +7,7 @@ export const SCAN_TIME = Date.parse('2026-11-09T09:00:00Z')
 
 export async function scanFixture(harness: TestHarness) {
   const fixture = await runFixture(harness)
-  fixture.setTime(SCAN_TIME)
+  await fixture.setTime(SCAN_TIME)
   const db = fixture.runtime.env.DB
   const schedule = async (
     id = 'routine-one',

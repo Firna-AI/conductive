@@ -14,6 +14,11 @@ say. A host can give its own parts instead, as
 states of the cloud computer are in `app/shell`, and the notices are in
 `app/chat/lost-updates`.
 
+The workspace list offers Archive over the time of each permitted row on
+hover only. Selection and keyboard focus alone keep the time visible.
+The header has no Archive button. The list uses the same Archive question
+as the command palette and the pull request bar.
+
 ## The kept workspace
 
 [The kept workspace](kept-workspace.md) gives the parts that the tab keeps
@@ -23,7 +28,7 @@ for each workspace that it showed, and what a return reads again.
 
 [The chat of the workspace](screen-parts.md#the-chat-of-the-workspace)
 gives how `ChatArea` draws the kept chat in the centre, with its file
-tabs.
+tabs at their places in the tab row.
 
 ## The Files part
 
@@ -32,8 +37,8 @@ of the shell, their addresses, and the saved view.
 
 ## The tools part
 
-[The tools part](screen-parts.md#the-tools-part) gives the Terminal,
-Preview, and Desktop tools of the shell, and their addresses.
+[The tools part](screen-parts.md#the-tools-part) gives the Terminal and
+Preview tools of the shell, the hidden Desktop tool, and their addresses.
 
 ## The GitHub part
 
@@ -85,10 +90,8 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
 - The snapshot is the `detail` of the model, or `loading` while a kept
   failure waits for the open of this view.
 - The hook connects the view after the render. The first connect of a
-  workspace reads the members when they are not ready. It also starts the
-  subscriptions between the kept parts and the creates of the org. They
-  stay until the tab forgets the workspace. The first connect in the tab
-  makes the memory follow the sign-in.
+  workspace reads the members when they are not ready. The first connect
+  in the tab makes the memory follow the sign-in.
 - Each connect calls `notices.newView()`, makes the notices and the tool
   events follow the stream of the model, and calls `model.open()` and
   `chat.show()`, in this order. The follows come before the open. So at a
@@ -125,12 +128,12 @@ fake API, with its address options, its controls, and the test command.
 - `WorkspaceScreen.tsx`: the screen of one open workspace. It takes a view
   of the kept workspace through `useWorkspaceStore`, and places the header,
   the notices, the columns, and the features. Its `Unavailable` view shows
-  a 404 and a failed create.
+  a 404. A failed first start keeps the screen, and `failedFirstStart`
+  marks its sandbox view.
 - `shown-workspaces.ts`: `ShownWorkspaces`, the kept workspaces of one tab
-  and one user. It gives the events and a 404 of each kept
-  workspace to the creates of its org, and forgets a failed create.
-  `ShownWorkspaces.view` gives a view of a workspace, and makes its parts
-  at the first view.
+  and one user. It keeps a workspace whose first start failed, as it keeps
+  any other. `ShownWorkspaces.view` gives a view of a workspace, and makes
+  its parts at the first view.
 - `tab-memory.ts`: `shownWorkspaces`, which clears them at a sign-out or a
   sign-in of another user.
 - `workspace-view.ts`: `WorkspaceView`, the store of one mounted view over
@@ -141,8 +144,10 @@ fake API, with its address options, its controls, and the test command.
   of the chat of the session, or the shell's own column for the chat slots.
 - `files/files-features.tsx`: the Files part, which connects the kept
   files, and the file or diff page of the centre.
-- `files/chat-files.tsx`: the file tabs and the diff links of the kept
-  chat, and the way back to the chat when a session becomes active.
+- `files/chat-files.tsx`: the file tabs of the kept chat, named by the
+  labels of the kept files, at their places in the tab row with the props
+  that the row gives each tab, the diff links, and the way back to the chat
+  when a session becomes active.
 - `files/files-navigation.ts`: the navigation of the Files screens, and
   the changes of the saved view that the address and the pages make.
 - `files/files-address.ts` and `files/view-tabs.ts`: the addresses of the
@@ -166,7 +171,12 @@ fake API, with its address options, its controls, and the test command.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
   takes the place of the tools inside the tabs, the tool and preview of the
-  address or the saved view, and their addresses.
+  address or the saved view, and their addresses. `useToolSelect` is the
+  select of a tool tab, which the Go to rows of the command palette share.
+- `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
+  command palette, as `workspaceActionIds` chooses them. Each one runs the
+  control of the screen: +, the clock of the history, a tab of the right
+  column, or Archive.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream, with the kept revokes of previews.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
@@ -194,10 +204,20 @@ fake API, with its address options, its controls, and the test command.
   `WorkspaceContext`, what each part gets, and `useFeatures`, the parts of
   the host over the app's own parts.
 - `WorkspaceHeader.tsx` and `WorkspaceColumns.tsx`: the header, the
-  columns, and the tab bar of a phone. `RunLine.tsx`: the line under the
-  header of a run workspace, which links to its routine, and to the pull
-  request of a pull request run. `RunLine.test.tsx` checks the line and
-  its links.
+  columns, the toggle of the right column, and the tab bar of a phone.
+  `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
+  hides the right column, opens the workspace again, and shows the column.
+- `CopyLink.tsx`: the label of the number, such as `W-395`, as the Copy
+  link button of the header, as
+  [Copy link](../../../docs/protocol/workspace-links.md#copy-link) says.
+  It copies `workspace.link` through `AppServices.copy`, so the copy holds
+  no tab path. "Link copied" shows for 2 seconds through
+  `AppServices.delay`. A failed copy asks to try again until the next
+  press, as the file page does. On desktop the button follows the name,
+  and the repository fills the `.metas` group. On a phone
+  it leads the line under the name. `CopyLink.test.tsx` mounts the whole
+  app and presses the button for a copy and for a failed copy.
+- `RunLine.tsx`: the line under the header of a run workspace, which links to its routine and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
@@ -208,13 +228,16 @@ fake API, with its address options, its controls, and the test command.
 
 ## Related docs
 
-- [Lost workspace updates](../../../docs/protocol/chat-and-events.md#lost-workspace-updates):
+- [Lost workspace updates](../../../docs/protocol/agent-runner.md#lost-workspace-updates):
   the repair, and the notice of a failed repair.
-- [Start steps](../../../docs/protocol/workspaces-and-sandboxes.md#start-steps)
-  and [Workspace states](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-states).
+- [Start steps](../../../docs/protocol/workspace-life.md#start-steps)
+  and [Workspace states](../../../docs/protocol/workspace-life.md#workspace-states).
+- [Workspace numbers and links](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-numbers-and-links)
+  and [Workspace links](../../../docs/protocol/workspace-links.md): the
+  number, the link, and Copy link.
 - [Web app: data and composition](../../app/README.md): the models, the
   event stream, and the features.
 - [The chat](../../chat/README.md): the chat that fills the centre.
 - [The Files screens](../../files/README.md) and
   [the browser fakes](../../test-support/README.md).
-- [The web app in the architecture](../../../docs/architecture.md#web-app).
+- [The web app in the architecture](../../../docs/architecture/components.md#web-app).

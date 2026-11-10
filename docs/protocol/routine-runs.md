@@ -42,7 +42,7 @@ number names a dated record, as
 - The first session runs on the owner's own login, so the share setting of
   that login does not block it.
 - A later message of another member follows the share setting, as
-  [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says (decision 116).
 
 ## When a run starts
@@ -97,7 +97,7 @@ number names a dated record, as
 - A run shows one of these states:
   - queued, while it waits for its workspace
   - the state of its workspace, once it has one, as
-    [Workspace states](workspaces-and-sandboxes.md#workspace-states) says,
+    [Workspace states](workspace-life.md#workspace-states) says,
     or archived
   - failed, with its cause
   - skipped, with its reason
@@ -123,26 +123,26 @@ number names a dated record, as
 
 ## Failed runs
 
-- A run that fails a check or its first start keeps no workspace
-  (decision 512 B). Its row shows its cause, with the action that fixes it
-  when one exists.
-- A failed first start removes the new workspace, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
-  says. The run keeps the cause of the failure.
-- A run whose first turn fails keeps its workspace, as each run workspace
-  does. Try again there retries the turn, as
-  [Messages](chat-and-events.md#messages) says.
-- The follow-up of decision 130 D will keep each workspace whose first
-  start fails, in its error state with Try again. A run whose start fails
-  then keeps its workspace too (decision 509 F).
-- A run that fails a check stays a failed row, also after that follow-up.
+- A run that fails a check before the create has no workspace (decision
+  512 B). Its row shows its cause, with the action that fixes it when one
+  exists.
+- A run whose first start fails keeps its workspace in the error state,
+  with its accepted messages and Try again, as
+  [A failed first start](create-a-workspace.md#a-failed-first-start) says
+  (decisions 130 D and 512 B).
+- The run shows as failed with its cause and a link to that workspace.
+  Try again there starts a new sandbox for the same workspace.
+- A run whose first turn fails keeps its workspace too. Try again there
+  retries the turn, as [Messages](messages-and-attachments.md#messages) says.
+- A failed run keeps its failed outcome after an in-workspace retry.
+- Every failed check, start, and first turn counts toward the turn-off
+  after three failed runs (decision 513 B).
 - Decision 509 F puts the retry of a failed run in its workspace. Run again
   in the Runs list was rejected. An automatic retry, and an automatic start
   after a reconnect, were rejected, because they spend starts that nobody
   asked for.
-- Decision 512 B: routines do not wait for that follow-up. A kept workspace
-  for the failed starts of runs alone was rejected, because the app would
-  then have two rules for a failed first start.
+- A kept workspace for the failed starts of runs alone was rejected,
+  because the app would then have two rules for a failed first start.
 
 ## Turn off after failed runs
 

@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'vitest'
 import { HeldRequests } from '../../app/test-kit'
 import type { OrgRole } from '../../shared/api'
-import { DRAFT_ATTACHMENTS_PATH } from '../../shared/messages'
+import { attachmentUploadPath } from '../../shared/messages'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import { workspacesPath } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { repositoryFixtures } from '../../test-support/fixtures/repositories'
 import { renderScreen, startedApp, textOf } from '../test-render'
 import { NewWorkspaceScreen } from './NewWorkspaceScreen'
 
@@ -78,7 +79,7 @@ describe('NewWorkspaceScreen', () => {
         "The sandbox can't start This org is suspended. For questions, write to abuse@conductive.build.",
       ),
       start: textOf(html).includes('Start a workspace'),
-      composer: html.includes('<textarea'),
+      composer: html.includes('aria-label="Message"'),
     }).toEqual({ refused: true, start: false, composer: false })
   })
 
@@ -92,6 +93,59 @@ describe('NewWorkspaceScreen', () => {
         `Starts from the cloud computer of Acme, ${expected}`,
       )
     }
+  })
+
+  test('in an org without chosen repositories, an admin gets Choose repositories, and a member reads that an admin chooses them', async () => {
+    const seen: Record<string, unknown> = {}
+    for (const role of ['admin', 'member'] as const) {
+      const server = new FakeApiServer({ role })
+      const { repositories } = repositoryFixtures(FAKE_IDS.org).repositories
+      server.json('GET', orgSettingsPaths.repositories(FAKE_IDS.org), {
+        repositories: repositories.map((item) => ({
+          ...item,
+          selected: false,
+        })),
+      })
+      const app = await startedApp(server)
+      await app.org(FAKE_IDS.org).reload('repositories')
+      const html = renderScreen(
+        app,
+        <NewWorkspaceScreen
+          org={{ id: FAKE_IDS.org, name: 'Acme', role }}
+          sectionId={null}
+        />,
+      )
+      seen[role] = {
+        words: /Start a workspace (.*?\.)/.exec(textOf(html))?.[1],
+        buttons: pressable(html, 'Choose repositories'),
+      }
+    }
+    expect(seen).toEqual({
+      admin: {
+        words: 'Choose the repositories of Acme first.',
+        buttons: { 'Choose repositories': true },
+      },
+      member: {
+        words: 'An admin of Acme chooses its repositories first.',
+        buttons: {},
+      },
+    })
+  })
+
+  test('while the repositories of the org load, the empty chat asks for none', async () => {
+    // The screen renders before any read of the repositories.
+    const app = await startedApp(new FakeApiServer())
+    const html = renderScreen(
+      app,
+      <NewWorkspaceScreen
+        org={{ id: FAKE_IDS.org, name: 'Acme', role: 'admin' }}
+        sectionId={null}
+      />,
+    )
+    expect({
+      asks: textOf(html).includes('Choose the repositories of Acme first'),
+      buttons: pressable(html, 'Choose repositories'),
+    }).toEqual({ asks: false, buttons: {} })
   })
 
   test('the paperclip waits for the create, and Try again waits for the files and the agent login, as Send does', async () => {
@@ -128,12 +182,16 @@ describe('NewWorkspaceScreen', () => {
     const whileSending = buttons('Attach files')
     held.release('POST', createPath)
     await sending
-    held.hold('POST', DRAFT_ATTACHMENTS_PATH)
+    const uploadPath = attachmentUploadPath(FAKE_IDS.org, {
+      type: 'new-workspace',
+      messageId: draft.draft.get().messageId,
+    })
+    held.hold('POST', uploadPath)
     const uploading = draft.attach([
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
     const whileUploading = buttons('Send', 'Try again')
-    held.release('POST', DRAFT_ATTACHMENTS_PATH)
+    held.release('POST', uploadPath)
     await uploading
     const uploaded = buttons('Send', 'Try again')
     await app.account.removeLogin('claude')
@@ -150,7 +208,7 @@ describe('NewWorkspaceScreen', () => {
     })
   })
 
-  test('a create whose first start failed shows the message that the Worker saved for it, and other server errors keep the fixed text', async () => {
+  test('a create request that fails before the server takes the message shows the message that the Worker saved for its start, and other server errors keep the fixed text', async () => {
     const cases = [
       {
         name: 'a start that passed its limit',

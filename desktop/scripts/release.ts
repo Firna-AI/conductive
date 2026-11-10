@@ -1,7 +1,7 @@
 import { mkdir, readdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { productName } from '../../docs/mockups/src/brand.ts'
+import { macDmgNames, productName } from '../../docs/mockups/src/brand.ts'
 import { runReleaseCommand } from './release-command.ts'
 import { withReleaseKeychain } from './release-keychain.ts'
 import { verifyReleaseApp } from './release-signature.ts'
@@ -11,6 +11,10 @@ if (process.platform !== 'darwin')
 const desktop = resolve(import.meta.dirname, '..')
 const evidence = resolve(desktop, '../.context/boat-native-remote-workspaces')
 const release = resolve(desktop, 'dist/release')
+const dmgArtifactName = macDmgNames.arm64.replace(
+  /arm64\.dmg$/,
+  '${arch}.${ext}',
+)
 
 await withReleaseKeychain(async (environment, teamId, signal) => {
   await runReleaseCommand(
@@ -35,6 +39,7 @@ await withReleaseKeychain(async (environment, teamId, signal) => {
       '-c.mac.notarize=true',
       '-c.mac.entitlements=entitlements.mac.plist',
       '-c.mac.entitlementsInherit=entitlements.mac.plist',
+      `-c.dmg.artifactName=${dmgArtifactName}`,
       '-c.dmg.sign=true',
     ],
     environment,

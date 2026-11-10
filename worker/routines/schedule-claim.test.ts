@@ -139,9 +139,11 @@ it('rolls back a claim if the batch fails and continues other due routines and q
       ['routine-two', 'failed', 'agent_login_required'],
       ['routine-one', 'failed', 'agent_login_required'],
     ])
-    expect(warning).toHaveBeenCalledWith(
-      'A routine schedule could not run. The next scan will try again.',
-    )
+    expect(warning).toHaveBeenCalledWith({
+      kind: 'routine_schedule_failed',
+      message:
+        'A routine schedule could not run. The next scan will try again.',
+    })
   } finally {
     warning.mockRestore()
     await db.prepare('DROP TRIGGER refuse_schedule_claim').run()

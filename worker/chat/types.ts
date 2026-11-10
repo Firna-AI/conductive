@@ -8,11 +8,9 @@ import type {
   RunnerInterrupt,
   RunnerLogin,
   WorkspaceToRunner,
+  RunnerEventEnvelope,
 } from '../../src/shared/runner'
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
   ConnectionGrant,
   ConnectionIdentity,
@@ -23,6 +21,9 @@ import type {
   SessionLoginMetadata,
   SessionLoginTarget,
 } from './login-availability'
+import type { FilteredRunnerOutput } from './runner-output'
+import type { ChatTransaction } from './store'
+import type { TitleModelCall } from './title-model'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -117,6 +118,15 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  readAutomaticTitleWorkspace: (
+    workspaceId: string,
+  ) => Promise<{ name: string | null } | null>
+  runTitleModel?: TitleModelCall
+  filterRunnerOutput(
+    transaction: ChatTransaction,
+    workspace: RunnerWorkspaceRecord,
+    input: RunnerEventEnvelope,
+  ): Promise<FilteredRunnerOutput>
   runnerAttached(
     workspaceId: string,
     connectionId: string,
@@ -150,7 +160,6 @@ export interface ChatDependencies {
     identities: readonly ConnectionIdentity[],
     now: number,
   ) => Promise<readonly ConnectionGrant[]>
-  firstStartIncomplete: (workspaceId: string) => Promise<boolean>
   randomId: () => string
   randomConnectionId: () => string
   readLoginMetadata: (
@@ -166,7 +175,20 @@ export interface ChatDependencies {
     userId: string,
     workspaceId: string,
     ids: readonly string[],
+    messageId: string,
+    usedIds: readonly string[],
   ) => Promise<ResolvedAttachments>
+  prepareAttachments: (
+    workspaceId: string,
+    userId: string,
+    messageId: string,
+    attachments: readonly RunnerAttachment[],
+    sandboxId: string | null,
+  ) => Promise<string | null>
+  attachmentSandboxId: (
+    workspaceId: string,
+    userId: string,
+  ) => Promise<string | null>
   /** File owners validate results here. Results never enter history. */
   receiveFileResult: (value: unknown, connectionId: string) => Promise<void>
   /** The supplied publisher preserves the callback's place in the serial task. */

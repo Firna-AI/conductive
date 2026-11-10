@@ -186,6 +186,7 @@ describe('ChatController actions', () => {
     answer(fable, after + 1)
     chat.held.splice(1, 1)[0]()
     await second
+    expect(chat.controller.getSnapshot().sessions[0].choice).toEqual(fable)
     answer(sonnet, after)
     chat.held.splice(0, 1)[0]()
     await first
@@ -196,7 +197,8 @@ describe('ChatController actions', () => {
     const chat = chatFor({
       conversation: 'history',
       hold: (request) =>
-        request.method === 'POST' && request.url.endsWith('/attachments'),
+        request.method === 'POST' &&
+        new URL(request.url).pathname === filePaths.attachments(org, ws),
     })
     await chat.controller.start()
     chat.controller.setDraft(id, 'The suggestions cover the postcode.')

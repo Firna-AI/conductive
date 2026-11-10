@@ -10,7 +10,7 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
@@ -51,6 +51,13 @@ View writes cannot change this branch.
   last secret-save time. It returns the current metadata, including a
   disconnected status when the login was removed.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
+- Create org requires at least one repository. `createShellOrg` starts its
+  first image build after it saves the org, its admin, and its repositories.
+  A failed build start writes one fixed warning through `warnWorker`.
+  The org stays, and the request still answers 201.
+- The settings reply compares its revision with the published image's
+  build. Before the first image, it uses the newest build. With no build,
+  `needsBuild` is false.
 - `getStartedGitHubComplete` owns the `github-app` step in every org state.
   The step is complete when an org of the user that is not deleted has a
   repository through an installation that is not suspended.
@@ -79,6 +86,11 @@ View writes cannot change this branch.
 Org suspension keeps shell reads available.
 The common browser gate refuses every org write except Leave.
 The view, read-mark, shared-shell, settings, repository, and archive SQL writes also check stored org state, so an earlier permission read cannot admit a later write.
+
+The workspace responses give an org-local number and a canonical web link.
+The request's effective app origin reaches each response constructor explicitly.
+Durable Object reads and Archive receive that origin through their RPC arguments.
+The machine tools use the configured app origin instead.
 
 ### List order
 
@@ -116,8 +128,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 
 - `boot.test.ts` checks the boot routes, the saved preferences, the
   encrypted logins, and a missing model list. Two users save different
-  defaults and logins, both with a Claude login. After each save and a
-  delete, each reads only their own account and Get started step.
+  defaults, New workspace views, and logins, both with a Claude login.
+  After each save and a delete, each reads only their own account and
+  Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
@@ -132,7 +145,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   delivers the first message through a Stop and a resume.
 - `machine-credentials.test.ts` checks the two machine credential routes.
 - `feature-shell-settings.test.ts` checks shared scripts, encrypted env
-  values, member reads, and refused member writes through the Worker.
+  values, secret marks, mark changes without replacement values, member
+  reads, and refused member writes through the Worker.
 - `feature-shell-sections.test.ts` checks section order, private collapse,
   workspace moves, section deletion, and workspace event publication.
 - `feature-workspaces-data.test.ts` and `feature-sections-data.test.ts`
@@ -149,6 +163,10 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   tests.
 - `feature-shell-github.test.ts` checks the user's GitHub access, paginated
   repository reads, saved org initials, and admin repository selection.
+- `feature-org.test.ts` checks the repository requirement, the first build,
+  and a failed build start that keeps the org.
+- `feature-settings-builds.test.ts` checks the build revision used by the
+  settings reply before and after the first image.
 
 ### Key code
 
@@ -167,7 +185,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
-  values and returns their names. [`feature-sections.ts`](feature-sections.ts)
+  values and their secret marks. Replies return names and marks only.
+  [`feature-sections.ts`](feature-sections.ts)
   and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
   publish workspace metadata through the workspace object.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
@@ -178,7 +197,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`feature-github.ts`](feature-github.ts): account installations and
   repositories read with the fresh GitHub user token.
   [`feature-org.ts`](feature-org.ts) creates an org with its chosen
-  repositories. [`feature-repositories.ts`](feature-repositories.ts) merges
+  repositories and starts its first build with `startImageBuild` of the
+  [image lifecycle](../lifecycle/image-builds.md).
+  [`feature-repositories.ts`](feature-repositories.ts) merges
   the org's saved choices with repositories that its reader can access.
   Their `*-data.ts` files keep queries and guarded writes.
 

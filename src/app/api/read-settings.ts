@@ -49,6 +49,19 @@ function readBaseImage(value: unknown): BaseImage {
   }
 }
 
+/**
+ * An env var by its name and its Secret mark. The reader keeps no other
+ * field, so a value never reaches a screen. A reply without a mark counts
+ * as secret, the safe side, as the Worker reads an old variable.
+ */
+function readEnvVar(value: unknown): OrgSettings['envVars'][number] {
+  const envVar = record(value, 'env var')
+  return {
+    name: text(envVar, 'name'),
+    secret: envVar.secret === undefined ? true : flag(envVar, 'secret'),
+  }
+}
+
 /** The settings of the cloud computer. An older reply has no base image. */
 export function readSettings(value: unknown): OrgSettings {
   const settings = record(record(value, 'settings').settings, 'settings')
@@ -57,9 +70,7 @@ export function readSettings(value: unknown): OrgSettings {
     ...(baseImage ? { baseImage } : {}),
     installScript: text(settings, 'installScript'),
     startupScript: text(settings, 'startupScript'),
-    envVars: items(settings, 'envVars', (item) => ({
-      name: text(record(item, 'env var'), 'name'),
-    })),
+    envVars: items(settings, 'envVars', readEnvVar),
     updatedAt: count(settings, 'updatedAt'),
     needsBuild: flag(settings, 'needsBuild'),
   }

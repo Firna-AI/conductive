@@ -24,7 +24,7 @@ it('recovers a stored pull request through the minute scan when its background t
   expect((await h.request(h.payload())).status).toBe(204)
   expect((await h.rows()).results.map((row) => row.state)).toEqual(['queued'])
   expect(h.boat.starts).toEqual([])
-  h.setTime(TEST_TIME + 60_001)
+  await h.setTime(TEST_TIME + 60_001)
   await h.run(() => scanRoutineSchedules(h.runtime))
   expect((await h.rows()).results.map((row) => row.state)).toEqual(['started'])
   expect(

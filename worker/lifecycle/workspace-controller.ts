@@ -10,18 +10,13 @@ import type { ImageCoordinatorState } from './image-timers'
 import { TurnScopes } from './turns'
 import { applyRunnerLifecycle, registerTrustedTurn } from './runner-lifecycle'
 import { WorkspaceStartCoordinator } from './start-coordinator'
-import type { WorkspaceStartJob } from './start-types'
+import type { WorkspaceStartIntent, WorkspaceStartJob } from './start-types'
 import {
   durableStartStorage,
   readStartLog,
   START_JOB_KEY,
 } from './start-storage'
-import {
-  retainFailedCreation,
-  failedCreationForSender,
-  type FailedCreationDraft,
-  type FailedCreationStorage,
-} from './failed-creations'
+import { FIRST_MESSAGE_ADMISSION_KEY } from './workspace-runtime'
 import { workspaceActionContext } from './workspace-actions'
 import { initializeWorkspaceLifecycle } from './lifecycle-admission'
 import { createWorkspaceLifecycle } from './create-workspace-lifecycle'
@@ -31,6 +26,10 @@ import { WorkspaceAccessStop } from './workspace-suspension'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { WorkspacePlatform } from './workspace-platform'
 import type { WorkspaceController } from './workspace-controller-types'
+import {
+  taskWorkspaceStorage,
+  workspaceTaskAlarms,
+} from './workspace-task-alarms'
 
 export function createWorkspaceController(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
@@ -44,7 +43,18 @@ export function createWorkspaceController(
       platform.storage.put('turns', 'lifecycle:turn-scopes', values),
   })
   const journal = new WorkspaceEventJournal(platform.storage, platform.publish)
-  const images = new ImageCoordinator(platform.storage, env, dependencies)
+  const alarms = workspaceTaskAlarms(platform.storage)
+  const startStorage = taskWorkspaceStorage(platform.storage, 'lifecycle:start')
+  const startJobs = durableStartStorage(platform.storage, dependencies.now, env)
+  const cleanupStorage = taskWorkspaceStorage(
+    platform.storage,
+    'lifecycle:cleanup',
+  )
+  const images = new ImageCoordinator(
+    taskWorkspaceStorage(platform.storage, 'lifecycle:image'),
+    env,
+    dependencies,
+  )
   const { lifecycle, projection } = createWorkspaceLifecycle(
     platform,
     env,
@@ -55,15 +65,12 @@ export function createWorkspaceController(
   const accessStop = new WorkspaceAccessStop(() => ({
     env,
     dependencies,
-    storage: platform.storage,
+    storage: taskWorkspaceStorage(platform.storage, 'lifecycle:access'),
     lifecycle,
     starts,
     turns,
+    alarms,
   }))
-  const drafts: FailedCreationStorage = {
-    get: (key) => platform.storage.get('draft', key),
-    put: (key, value) => platform.storage.put('draft', key, value),
-  }
   const controller: WorkspaceController = {
     extendLifecycleInput: (operation) => lifecycle.input.extend(operation),
     recordLifecycleInput: (at) => lifecycle.input.record(at),
@@ -76,8 +83,11 @@ export function createWorkspaceController(
       accessStop.cancelPending(id, ownerId),
     projectDeviceState: (id, choice, now, publish) =>
       projection.deviceChanged(id, choice, now, publish),
-    async queueLifecycleStart(job: WorkspaceStartJob): Promise<boolean> {
-      const enqueued = starts.enqueue(job)
+    async queueLifecycleStart(
+      job: WorkspaceStartJob,
+      intent?: WorkspaceStartIntent,
+    ): Promise<boolean> {
+      const enqueued = starts.enqueue(job, intent)
       platform.waitUntil(enqueued)
       return enqueued
     },
@@ -95,24 +105,6 @@ export function createWorkspaceController(
     },
     readLifecycleStartLog() {
       return readStartLog(platform.storage, env)
-    },
-    async retainLifecycleFailedCreation(
-      error: FailedCreationDraft['error'],
-      fallback?: Omit<FailedCreationDraft, 'error'>,
-    ): Promise<void> {
-      await retainFailedCreation(
-        env,
-        drafts,
-        await lifecycle.read(),
-        error,
-        fallback,
-      )
-    },
-    async failedLifecycleCreation(
-      orgId: string,
-      senderUserId: string,
-    ): Promise<FailedCreationDraft | undefined> {
-      return failedCreationForSender(env, drafts, orgId, senderUserId)
     },
     async initializeLifecycle(
       input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
@@ -137,8 +129,20 @@ export function createWorkspaceController(
         await lifecycle.step('runner', 'Starting the agent', 'completed')
       await lifecycle.prepared()
     },
-    lifecycleFailed(error: NonNullable<DurableLifecycleState['error']>) {
-      return lifecycle.fail(error)
+    async lifecycleFailed(error: NonNullable<DurableLifecycleState['error']>) {
+      const job = await platform.storage.get('job', START_JOB_KEY)
+      const first = await platform.storage.get(
+        'first',
+        FIRST_MESSAGE_ADMISSION_KEY,
+      )
+      if (!(await lifecycle.read()) && first && job) {
+        await lifecycle.initialize({
+          workspaceId: first.workspaceId,
+          orgId: job.orgId,
+          firstMessage: first.request,
+        })
+      }
+      await lifecycle.fail(error, job?.kind === 'create')
     },
     async lifecycleActivity(checkOnly) {
       try {
@@ -173,8 +177,15 @@ export function createWorkspaceController(
       if (state) await platform.stopped?.(state.workspaceId)
       await turns.clear()
       await lifecycle.clear(
-        Boolean(await platform.storage.get('job', 'lifecycle:start-job')),
+        Boolean(
+          (await platform.storage.get('job', 'lifecycle:start-job')) ||
+          (await platform.storage.get('text', 'lifecycle:cleanup')),
+        ),
       )
+      await alarms.set('lifecycle:access', null)
+      if (!(await startJobs.job())) await startStorage.deleteAlarm()
+      if (!(await startJobs.publication()))
+        await alarms.set('lifecycle:publication', null)
       await journal.clearFailedCreate()
     },
     async acknowledgeLifecycleFirstMessage(publish): Promise<void> {
@@ -184,9 +195,9 @@ export function createWorkspaceController(
     async registerLifecycleTurn(turn, publish): Promise<void> {
       await registerTrustedTurn(env, lifecycle, turns, turn, publish)
     },
-    async finishLifecycleTurn(turnId, publish, occurredAt): Promise<void> {
+    async finishLifecycleTurn(turnId, publish): Promise<void> {
       const turn = await turns.remove(turnId)
-      if (turn) await lifecycle.turn(turn.sessionId, false, publish, occurredAt)
+      if (turn) await lifecycle.turn(turn.sessionId, false, publish)
     },
     async credentialSender(turnId: string): Promise<string | null> {
       const state = await lifecycle.read()
@@ -202,9 +213,8 @@ export function createWorkspaceController(
         ? job.admission.first.sender.id
         : null
     },
-    async reportRunnerLifecycle(event, publish, occurredAt): Promise<void> {
-      const apply = () =>
-        applyRunnerLifecycle(lifecycle, turns, event, publish, occurredAt)
+    async reportRunnerLifecycle(event, publish): Promise<void> {
+      const apply = () => applyRunnerLifecycle(lifecycle, turns, event, publish)
       if (event.type === 'runner.ready') await starts.reportRunnerReady(apply)
       else await apply()
     },
@@ -215,8 +225,10 @@ export function createWorkspaceController(
       await images.schedule(state)
     },
     async retryFailedCreateCleanup(workspaceId: string): Promise<void> {
-      await platform.storage.put('text', 'lifecycle:cleanup', workspaceId)
-      await platform.storage.setAlarm(dependencies.now() + 5_000)
+      await cleanupStorage.transaction(async (storage) => {
+        await storage.put('text', 'lifecycle:cleanup', workspaceId)
+        await storage.setAlarm(dependencies.now() + 5_000)
+      })
     },
     async finishDiskMaintenance(): Promise<void> {
       await finishDiskMaintenance(
@@ -232,8 +244,11 @@ export function createWorkspaceController(
         images: images,
         starts: starts,
         lifecycle: lifecycle,
-        turns,
         accessStop,
+        alarms,
+        startStorage,
+        startJobs,
+        cleanupStorage,
       })
     },
   }
@@ -241,7 +256,7 @@ export function createWorkspaceController(
     env,
     dependencies,
     controller,
-    durableStartStorage(platform.storage, dependencies.now, env),
+    startJobs,
     async (error, cancelled) => {
       await turns.clear()
       await lifecycle.stopFailedStart(error, cancelled)

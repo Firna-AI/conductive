@@ -1,12 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { sessionPaths } from '../../src/shared/sessions'
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { liveSessions, sessionRecord } from './retry.test-support'
 import { messageCommands, startTurn } from './turn-lifecycle.test-support'
-
 describe('empty linked sessions', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -18,7 +16,6 @@ describe('empty linked sessions', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('opens an empty linked session and preserves the source running turn and real senders in two peers', async () => {
     const fixture = await createChatFixture(harness)
     const source = await fixture.createSession()
@@ -39,9 +36,15 @@ describe('empty linked sessions', () => {
     await harness.env.DB.prepare('DELETE FROM agent_logins WHERE user_id = ?')
       .bind(fixture.owner.id)
       .run()
-    const reply = await fixture.send(source.id, 'linked', fixture.memberCookie)
+    const reply = await fixture.send(
+      source.id,
+      'linked',
+      fixture.memberCookie,
+      CLAUDE,
+      'Name this linked session.\nKeep the source conversation separate',
+    )
     expect(reply.session).toMatchObject({
-      title: 'New session',
+      title: 'Name this linked session',
       startedBy: { id: fixture.member.id },
       sourceSessionId: source.id,
       loginAvailable: true,
@@ -94,10 +97,9 @@ describe('empty linked sessions', () => {
         .filter((session) => session.id === source.id)
         .at(-1)?.loginAvailable,
     ).toBe(false)
-    ownerTab.close()
-    memberTab.close()
+    await ownerTab.close()
+    await memberTab.close()
   })
-
   it('replays a redirected message after a committed reply loss and restart even when the starter login returns', async () => {
     const fixture = await createChatFixture(harness)
     const source = await fixture.createSession()
@@ -105,7 +107,10 @@ describe('empty linked sessions', () => {
       'SELECT kind, ciphertext FROM agent_logins WHERE user_id = ? AND agent = ?',
     )
       .bind(fixture.owner.id, 'claude')
-      .first<{ kind: string; ciphertext: string }>()
+      .first<{
+        kind: string
+        ciphertext: string
+      }>()
     if (!storedLogin) throw new Error('The fixture login is missing.')
     await harness.env.DB.prepare('DELETE FROM agent_logins WHERE user_id = ?')
       .bind(fixture.owner.id)
@@ -119,8 +124,8 @@ describe('empty linked sessions', () => {
     }
     const observation = await fixture.tab(0, undefined, fixture.memberCookie)
     expect((await sessionRecord(fixture, source.id)).loginAvailable).toBe(false)
-    observation.close()
-    fixture.storage.crashAfterCommit = true
+    await observation.close()
+    await fixture.failNextCommit('after', 'Injected post-commit crash')
     const lost = await fixture.fetch(path, input, fixture.memberCookie)
     expect(lost.status).toBe(500)
     const committed = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
@@ -132,7 +137,7 @@ describe('empty linked sessions', () => {
       state: 'queued',
     })
     expect(committed?.sessionId).not.toBe(source.id)
-    fixture.restart()
+    await fixture.restart()
     const replay = await fixture.fetch(path, input, fixture.memberCookie)
     expect(replay.status).toBe(202)
     const accepted: SendMessageResponse = await replay.json()
@@ -194,7 +199,6 @@ describe('empty linked sessions', () => {
       ).status,
     ).toBe(409)
   })
-
   it('keeps missing-logins responses atomic without creating an orphan linked session', async () => {
     const fixture = await createChatFixture(harness)
     const source = await fixture.createSession()

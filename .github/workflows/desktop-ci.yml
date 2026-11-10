@@ -1,124 +1,28 @@
 name: Desktop
 
-# Pull requests run Apple silicon only. Pushes to main and
-# the primary branch, and release tags, also run Intel.
+# Pull requests and pushes run Apple silicon and Intel checks.
+# release.yml handles signing and releases.
 on:
   workflow_dispatch:
   push:
     branches: [main, calummoore/conductor-alternative-architecture]
-    tags: ['v*']
     paths:
       - 'desktop/**'
       - 'worker/security/desktop-*'
       - 'src/**'
       - '.github/workflows/desktop-ci.yml'
+      - '.github/workflows/desktop-mac-checks.yml'
   pull_request:
     paths:
       - 'desktop/**'
       - 'worker/security/desktop-*'
       - 'src/**'
       - '.github/workflows/desktop-ci.yml'
+      - '.github/workflows/desktop-mac-checks.yml'
 
 permissions:
   contents: read
 
 jobs:
   mac:
-    name: Mac app ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: ${{ github.event_name == 'pull_request' && fromJSON('["macos-15"]') || fromJSON('["macos-15", "macos-15-intel"]') }}
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            desktop/package-lock.json
-      - run: npm ci
-      - run: npm --prefix desktop ci
-      - run: npm --prefix desktop run typecheck
-      - run: npm --prefix desktop run lint
-      - run: npm --prefix desktop run format:check
-      - run: npm --prefix desktop run test:logic
-      - run: npm --prefix desktop run build
-      - run: npm --prefix desktop run test:electron
-      - run: npm --prefix desktop run package
-      - run: npm --prefix desktop run test:packaged
-      - uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: desktop-evidence-${{ matrix.runner }}
-          path: |
-            .context/boat-native-remote-workspaces/desktop-*.json
-            .context/boat-native-remote-workspaces/desktop-*.png
-            desktop/dist/test-results/
-          retention-days: 14
-      - uses: actions/upload-artifact@v6
-        with:
-          name: desktop-packages-${{ matrix.runner }}
-          path: |
-            desktop/dist/release/*.dmg
-            desktop/dist/release/*.zip
-          retention-days: 14
-  release:
-    name: Signed and notarized Mac packages
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    needs: mac
-    runs-on: macos-15
-    timeout-minutes: 90
-    environment: desktop-release
-    concurrency:
-      group: desktop-release-${{ github.ref }}
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            desktop/package-lock.json
-      - run: npm ci
-      - run: npm --prefix desktop ci
-      - run: npm --prefix desktop run build
-      - name: Sign and notarize both Mac architectures
-        run: npm --prefix desktop run package:release
-        env:
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          CONDUCTIVE_APPLE_TEAM_ID: ${{ vars.CONDUCTIVE_APPLE_TEAM_ID }}
-      - run: npm --prefix desktop run test:packaged
-      - name: Remove temporary signing credentials
-        if: always()
-        shell: bash
-        run: |
-          for folder in "$RUNNER_TEMP"/conductive-release-*; do
-            [ -d "$folder" ] || continue
-            security delete-keychain "$folder/signing.keychain-db" 2>/dev/null || true
-            rm -rf "$folder"
-          done
-      - uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: desktop-release-evidence
-          path: |
-            .context/boat-native-remote-workspaces/desktop-*.json
-            desktop/dist/test-results/
-          retention-days: 14
-      - uses: actions/upload-artifact@v6
-        with:
-          name: desktop-signed-packages
-          if-no-files-found: error
-          path: |
-            desktop/dist/release/*.dmg
-            desktop/dist/release/*.zip
-          retention-days: 14
+    uses: ./.github/workflows/desktop-mac-checks.yml

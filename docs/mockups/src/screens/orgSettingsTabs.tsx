@@ -12,16 +12,13 @@ import {
 } from '../components/settings/RepositoryList'
 import { Section } from '../components/settings/Section'
 import {
-  acmeMembers,
   memberViewer,
   you,
+  type Membership,
   type PersonKey,
 } from '../fixtures/members'
-import { orgs } from '../fixtures/orgs'
-import { acmeRepositories } from '../fixtures/repositories'
 import type { OrgSettingsState } from './OrgSettingsScreen'
-
-const org = orgs.acme
+import { settingsOrg } from './settingsOrgs'
 
 /** The person signed in: Cal, an admin, or Priya, a member who is not. */
 export function settingsViewer(state: OrgSettingsState): PersonKey {
@@ -33,12 +30,10 @@ export function settingsViewer(state: OrgSettingsState): PersonKey {
  * not an admin always can, and an admin only while another active admin
  * remains. Cal is the only admin of Acme, so only its other members can.
  */
-function mayLeave(person: PersonKey): boolean {
-  const role = acmeMembers.find((item) => item.person === person)?.role
+function mayLeave(person: PersonKey, members: readonly Membership[]): boolean {
+  const role = members.find((item) => item.person === person)?.role
   if (role !== 'admin') return true
-  return acmeMembers.some(
-    (item) => item.role === 'admin' && item.person !== person,
-  )
+  return members.some((item) => item.role === 'admin' && item.person !== person)
 }
 
 /** Why the person signed in cannot change the settings, when they cannot. */
@@ -62,6 +57,8 @@ export function TabBody(props: { state: OrgSettingsState }) {
   const { state } = props
   const viewer = settingsViewer(state)
   const readOnly = readOnlyCause(state)
+  const settings = settingsOrg(state)
+  const { org } = settings
   switch (state.tab) {
     case 'general':
       return (
@@ -72,7 +69,7 @@ export function TabBody(props: { state: OrgSettingsState }) {
             readOnly={readOnly}
           />
           {readOnly ? null : <DeleteOrgSection name={org.name} />}
-          {readOnly === 'suspended' && mayLeave(viewer) ? (
+          {readOnly === 'suspended' && mayLeave(viewer, settings.members) ? (
             <LeaveOrgSection name={org.name} />
           ) : null}
         </>
@@ -85,18 +82,33 @@ export function TabBody(props: { state: OrgSettingsState }) {
           title="Repositories"
         >
           {readOnly ? (
-            <OrgRepositoryList repositories={acmeRepositories} />
+            <OrgRepositoryList repositories={settings.repositories} />
           ) : (
-            <RepositoryList repositories={acmeRepositories} search="" />
+            <RepositoryList repositories={settings.repositories} search="" />
           )}
         </Section>
       )
     }
     case 'computer':
       return (
-        <ComputerTab build={state.build} org={org.name} readOnly={readOnly} />
+        <ComputerTab
+          build={state.build}
+          computer={settings.computer}
+          envForm={state.envForm}
+          org={org.name}
+          readOnly={readOnly}
+          script={state.script}
+        />
       )
     case 'members':
-      return <MembersTab canManage={readOnly === undefined} viewer={viewer} />
+      return (
+        <MembersTab
+          canManage={readOnly === undefined}
+          invites={settings.invites}
+          members={settings.members}
+          viewer={viewer}
+          workspaces={settings.workspaces}
+        />
+      )
   }
 }

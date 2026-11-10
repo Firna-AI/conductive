@@ -6,22 +6,28 @@ import { browserDelay, type WorkspaceEventSource } from '../events'
 import {
   windowFocus,
   windowInput,
+  windowKeys,
+  windowPlatform,
   windowStorage,
   windowVisibility,
   type AppServices,
 } from '../services'
 import { accountRoutes } from './account-routes'
+import { attachmentRoutes } from './attachment-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
+import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
 import { routineRoutes } from './routine-routes'
+import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
 import { runRoutes } from './run-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
+import { waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
 /**
@@ -52,15 +58,18 @@ export function createFakeServices(search: string): AppServices {
     : []
   const routes = [
     ...signedOut,
+    ...waitlistRoutes(backend),
     ...accountRoutes(backend),
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),
     ...createRoutes(backend),
+    ...attachmentRoutes(backend, options.upload),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
     ...routineRoutes(backend),
     ...runRoutes(backend),
+    ...operatorRoutes(backend),
   ]
   const fetch = routeFetch(
     routes,
@@ -72,16 +81,19 @@ export function createFakeServices(search: string): AppServices {
       server.events.subscribe(target.afterEventNumber, handlers.message),
   }
   return {
-    api: createApiClient(fetch),
+    api: createApiClient(fetch, devFileTransport(fetch, search)),
     events,
     now,
     delay: browserDelay,
     onFocus: windowFocus(window),
     onInput: windowInput(window),
+    onKey: windowKeys(window),
+    platform: windowPlatform(window),
     visible: windowVisibility(window),
     storage: windowStorage(window),
     newId,
     leave: (url) => window.location.assign(url),
+    appOrigin: window.location.origin,
     copy: (text) => navigator.clipboard.writeText(text),
   }
 }

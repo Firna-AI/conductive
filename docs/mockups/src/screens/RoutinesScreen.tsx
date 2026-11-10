@@ -114,6 +114,7 @@ export function RoutinesScreen(props: {
           org={org}
           sections={suspended ? suspendedSections() : workspaceSections()}
           suspended={suspended}
+          viewer={{ person: 'cal', role: 'admin' }}
         />
       }
     >

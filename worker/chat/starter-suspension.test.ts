@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { sessionsPath } from '../../src/shared/sessions'
 import { recordUserSuspension } from '../operator/data'
 import {
@@ -9,7 +8,6 @@ import {
 } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { captureLoginQueries } from './login-queries.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -20,7 +18,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('keeps suspended starter metadata and history readable and sends an active member through a linked session', async () => {
   const fixture = await createChatFixture(harness)
   const suspendedSession = await fixture.createSession(
@@ -29,7 +26,7 @@ it('keeps suspended starter metadata and history readable and sends an active me
   )
   const activeSession = await fixture.createSession()
   await recordUserSuspension(harness.env.DB, 8, fixture.owner.id, TEST_TIME)
-  const queries = captureLoginQueries(fixture.env)
+  const queries = await captureLoginQueries(fixture)
   const tab = await fixture.tab()
   expect(queries).toHaveLength(1)
   expect(queries[0]?.query).not.toMatch(/ciphertext|SELECT\s+\*/i)
@@ -75,10 +72,9 @@ it('keeps suspended starter metadata and history readable and sends an active me
     login: { secret: `secret-${fixture.owner.id}-claude` },
   })
   expect(JSON.stringify(tab.messages)).not.toContain('secret-')
-  tab.close()
+  await tab.close()
   runner.disconnect()
 })
-
 it('refuses a queued suspended sender while the active starter and owner retain their login and runner', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()

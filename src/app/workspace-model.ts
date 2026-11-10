@@ -11,6 +11,7 @@ import type { ShellEvent } from './api/read-events'
 import { readOrderedWorkspaceResponse } from './api/read-workspaces'
 import { ArchiveModel } from './archive-model'
 import { WorkspaceStream, type Delay } from './events'
+import { resumesAtOpen } from './first-start'
 import type { OrgModel } from './org-model'
 import type { Change } from './resource'
 import {
@@ -22,6 +23,7 @@ import {
   type Loadable,
 } from './store'
 import { WorkspaceReadMarks } from './workspace-read-marks'
+import { archivedDetail, workspaceAfterEvent } from './workspace-detail'
 
 const activityInterval = 60_000
 
@@ -39,6 +41,7 @@ export class WorkspaceModel {
   private generation = 0
   private readonly readMarks: WorkspaceReadMarks
   private refusedOwnerId: string | null = null
+  private stopArchiveFollow: (() => void) | null = null
   /**
    * The workspace event number whose state the detail shows, from its read,
    * a Resume reply, or an event of the stream. A reply or an event that is
@@ -79,7 +82,9 @@ export class WorkspaceModel {
   }
 
   /**
-   * Opens the workspace. A stopped sandbox resumes, and the steps stream in.
+   * Opens the workspace. A stopped sandbox, or one whose later start failed,
+   * resumes, and the steps stream in. A failed first start waits for Try
+   * again.
    * The input of the user on the page counts as activity until `close`. A
    * call to `close` while the request runs makes its answer obsolete, so an
    * old open never starts the stream again. A suspended org refuses each
@@ -87,6 +92,10 @@ export class WorkspaceModel {
    */
   async open(): Promise<void> {
     const run = ++this.generation
+    this.stopArchiveFollow ??= this.org.workspaces.subscribe(() =>
+      this.syncArchive(),
+    )
+    this.syncArchive()
     const path = workspacePath(this.org.orgId, this.workspaceId)
     let detail: OrderedWorkspaceResponse
     try {
@@ -109,8 +118,8 @@ export class WorkspaceModel {
     this.readMarks.open()
     this.stream.start()
     if (run !== this.generation || this.suspended) return
-    const state = valueOf(this.detail.get())?.workspace.state
-    if (state === 'stopped' || state === 'error')
+    const shown = valueOf(this.detail.get())
+    if (shown && resumesAtOpen(shown))
       await this.resume().catch(() => undefined)
   }
 
@@ -121,6 +130,8 @@ export class WorkspaceModel {
   /** Stops the stream. An open that still runs can no longer start it. */
   close(): void {
     this.generation += 1
+    this.stopArchiveFollow?.()
+    this.stopArchiveFollow = null
     this.resuming.clear()
     this.archive.cancel()
     this.readMarks.close()
@@ -133,7 +144,7 @@ export class WorkspaceModel {
     const detail = valueOf(this.detail.get())
     if (!detail || eventNumber <= this.through) return
     this.through = eventNumber
-    this.setDetail(changed(detail, event))
+    this.setDetail(workspaceAfterEvent(detail, event))
   }
 
   /**
@@ -167,15 +178,36 @@ export class WorkspaceModel {
   }
 
   private setDetail(detail: WorkspaceResponse): void {
+    const archived = this.archivedFromList()
+    const next =
+      archived && detail.workspace.state !== 'archived'
+        ? archivedDetail(archived)
+        : detail
     if (
       this.refusedOwnerId !== null &&
-      this.refusedOwnerId !== detail.workspace.owner.id
+      this.refusedOwnerId !== next.workspace.owner.id
     ) {
       this.refusedOwnerId = null
       this.startError.set(null)
     }
-    this.detail.set(ready(detail))
-    this.org.putWorkspace(detail.workspace)
+    this.detail.set(ready(next))
+    this.org.putWorkspace(next.workspace)
+  }
+
+  private archivedFromList(): Workspace | undefined {
+    return valueOf(this.org.workspaces.get())?.find(
+      (workspace) =>
+        workspace.id === this.workspaceId && workspace.state === 'archived',
+    )
+  }
+
+  private syncArchive(): void {
+    const archived = this.archivedFromList()
+    const current = valueOf(this.detail.get())
+    if (!archived || current?.workspace.state === 'archived') return
+    const detail = archivedDetail(archived)
+    if (current) this.local(() => detail)
+    else this.setDetail(detail)
   }
 
   reassigned(workspace: Workspace): void {
@@ -258,34 +290,5 @@ export class WorkspaceModel {
         ? { ...current, workspace: { ...current.workspace, state: 'ready' } }
         : current,
     )
-  }
-}
-
-/**
- * The detail after an event of the stream. A workspace record applies its
- * saved public error with its state: a record without the error keeps the
- * current error, and null clears it. An event error carries no log, so the
- * detail keeps a null log for it.
- */
-function changed(
-  detail: WorkspaceResponse,
-  event: ShellEvent,
-): WorkspaceResponse {
-  switch (event.type) {
-    case 'workspace.updated':
-      return {
-        ...detail,
-        workspace: event.workspace,
-        ...(event.error === undefined
-          ? {}
-          : {
-              error:
-                event.error === null ? null : { ...event.error, log: null },
-            }),
-      }
-    case 'start.updated':
-      return { ...detail, start: event.start }
-    case 'workspace.title':
-      return { ...detail, workspace: { ...detail.workspace, name: event.name } }
   }
 }

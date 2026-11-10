@@ -56,9 +56,7 @@ export async function scanRoutineSchedules(
         )
         if (runId) await startRoutineRun(runtime, routine.orgId, runId)
       } catch {
-        warnWorker(
-          'A routine schedule could not run. The next scan will try again.',
-        )
+        warnWorker({ kind: 'routine_schedule_failed' })
       }
     }),
   )
@@ -66,9 +64,7 @@ export async function scanRoutineSchedules(
     try {
       await startRoutineRun(runtime, run.orgId, run.id)
     } catch {
-      warnWorker(
-        'A queued routine run could not start. The next scan will try again.',
-      )
+      warnWorker({ kind: 'routine_queued_start_failed' })
     }
   }
 }

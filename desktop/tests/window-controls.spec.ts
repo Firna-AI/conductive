@@ -11,6 +11,7 @@ import {
   expectCornerLayout,
   expectDraggableHeader,
   expectWindowLayout,
+  rightColumnLayout,
 } from './window-layout.js'
 import {
   evidence,
@@ -20,7 +21,7 @@ import {
   workspaceTitle,
 } from './window-shell.js'
 
-test('the bundled workspace aligns its draggable bars and keeps sidebar, resize, and history controls working', async () => {
+test('the bundled workspace aligns its draggable bars and keeps sidebar, right column, resize, and history controls working', async () => {
   await mkdir(evidence, { recursive: true })
   const profile = await mkdtemp(resolve(evidence, 'window-controls-profile-'))
   let electron: ElectronApplication | undefined
@@ -48,6 +49,27 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, resize,
     await controls.getByRole('button', { name: 'Show the sidebar' }).click()
     await expect(sidebar).toBeVisible()
     await expectWindowLayout(page)
+
+    // The toggle at the end of the header gives the width of the right
+    // column to the centre column, and takes it back.
+    const hideColumn = page.getByRole('button', {
+      name: 'Hide the right column',
+      exact: true,
+    })
+    await expect(hideColumn).toHaveCSS('-webkit-app-region', 'no-drag')
+    await expect
+      .poll(() => rightColumnLayout(page, workspaceHeading))
+      .toEqual({ shown: true, gap: 0 })
+    await hideColumn.click()
+    await expect
+      .poll(() => rightColumnLayout(page, workspaceHeading))
+      .toEqual({ shown: false, gap: 0 })
+    await page
+      .getByRole('button', { name: 'Show the right column', exact: true })
+      .click()
+    await expect
+      .poll(() => rightColumnLayout(page, workspaceHeading))
+      .toEqual({ shown: true, gap: 0 })
 
     await sidebar.getByRole('link', { name: 'Settings', exact: true }).click()
     await expect(page).toHaveURL(DESKTOP_ORIGIN + routes.settings(FAKE_IDS.org))

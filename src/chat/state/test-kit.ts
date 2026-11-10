@@ -1,9 +1,14 @@
-import { createApiClient, type FetchLike } from '../../app/api/client'
+import {
+  createApiClient,
+  type FetchLike,
+  type FileTransport,
+} from '../../app/api/client'
 import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import type { ChangeModelResponse, Session } from '../../shared/sessions'
 import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'
 import type { FakeWorkspaceEvents } from '../../test-support/fake-events'
+import { fetchFiles } from '../../test-support/fake-files'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { record, text } from '../api/json'
@@ -12,9 +17,9 @@ import type { StreamTimers } from '../stream/workspace-stream'
 import { ChatController } from './controller'
 
 /**
- * The record of a new session of the workspace, as the backend writes it.
- * The admin of the fake, who reads the chat by default, started it, unless
- * `more` says otherwise.
+ * The record of a new session of the workspace, as the backend writes it,
+ * with no title yet. The admin of the fake, who reads the chat by default,
+ * started it, unless `more` says otherwise.
  */
 export function newSessionRecord(
   sessionId: string,
@@ -25,7 +30,7 @@ export function newSessionRecord(
   return {
     id: sessionId,
     workspaceId: FAKE_IDS.workspace,
-    title: 'New session',
+    title: null,
     choice,
     createdAt: FAKE_TIME,
     closedAt,
@@ -103,6 +108,12 @@ export function chatFor(
      * own readers, such as two tabs, get the same events.
      */
     stream?: FakeWorkspaceEvents
+    /**
+     * Sends the raw files of uploads. By default they go through the fetch
+     * of the chat, with no progress, as `fetchFiles` says.
+     */
+    files?: FileTransport
+    readOnly?: () => boolean
   } = {},
 ) {
   const server = new FakeApiServer(options)
@@ -126,7 +137,7 @@ export function chatFor(
       orgId: FAKE_IDS.org,
       workspaceId: options.workspaceId ?? FAKE_IDS.workspace,
     },
-    client: createApiClient(fetch),
+    client: createApiClient(fetch, options.files ?? fetchFiles(fetch)),
     subscribe: (_target, from, listener) => {
       after.push(from)
       return (options.stream ?? server.events).subscribe(from, (message) =>
@@ -134,6 +145,7 @@ export function chatFor(
       )
     },
     timers,
+    readOnly: options.readOnly,
     newId: () => {
       ids += 1
       return `client-${ids}`

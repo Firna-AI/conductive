@@ -1,14 +1,15 @@
 import { expect, it } from 'vitest'
 
-import { MemoryWorkspaceStorage } from './platform-test-storage'
+import { nativeLifecycleStorage } from './native-storage.test-support'
+import { TEST_TIME } from '../test-support/harness'
 import { durableStartStorage, readStartLog } from './start-storage'
 import type { WorkspaceStartJob } from './start-types'
 import { readSavedScript } from './saved-script'
 
-it('masks a secret split between stdout and stderr in the released start log', async () => {
+it('masks split and short secrets without changing an inserted start-log marker', async () => {
   const env = { BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)) }
-  const storage = new MemoryWorkspaceStorage()
-  const starts = durableStartStorage(storage, () => 0, env)
+  const { storage } = await nativeLifecycleStorage()
+  const starts = durableStartStorage(storage, () => TEST_TIME, env)
   const job: WorkspaceStartJob = {
     workspaceId: 'log-workspace',
     orgId: 'log-org',
@@ -25,7 +26,7 @@ it('masks a secret split between stdout and stderr in the released start log', a
     stderrOffset: 0,
   }
   await starts.begin(job, 0)
-  await starts.secrets(['stored-env-secret'])
+  await starts.secrets(['stored-env-secret', 'h'])
   await starts.capture(job, {
     stdout: 'failed stored-',
     stderr: 'secret',
@@ -34,11 +35,11 @@ it('masks a secret split between stdout and stderr in the released start log', a
   })
   await starts.capture(job, {
     stdout: 'env-',
-    stderr: '\n',
+    stderr: '\nh',
     stdoutNextOffset: 18,
-    stderrNextOffset: 7,
+    stderrNextOffset: 8,
   })
   expect(JSON.stringify({ log: await readStartLog(storage, env) })).toBe(
-    '{"log":"failed [hidden]\\n"}',
+    '{"log":"failed [hidden]\\n[hidden]"}',
   )
 })

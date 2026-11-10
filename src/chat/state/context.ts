@@ -5,7 +5,6 @@ import type { DeviceChannel } from '../device/device-actions'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
 import type { PendingMove } from './model-moves'
-import { SessionLog } from './session-log'
 import type { PendingEdit } from './session-records'
 import type { Transcript } from './transcript'
 
@@ -15,14 +14,13 @@ export interface ChatContext {
   readonly api: ChatApi
   readonly store: ChatStore
   readonly stream: WorkspaceStream
-  readonly logs: Map<string, SessionLog>
   /** The running history load of each session, so that loads are shared. */
   readonly loading: Map<string, Promise<number | null>>
   /** The rename and model edits that wait for their replies, by session. */
   readonly edits: Map<string, readonly PendingEdit[]>
   /**
    * The event number of the workspace record that shows, so an older reply
-   * or event no longer replaces it, as `session-records.ts` says.
+   * or event no longer replaces it, as `workspace-records.ts` says.
    */
   readonly workspaceOrder: { through: number }
   /** The number of the latest model pick of each session. */
@@ -32,6 +30,13 @@ export interface ChatContext {
   readonly newId: () => string
   /** A new identity for a draft that a session starts after its draft moved. */
   readonly newDraftId: () => string
+  /** A new local identity for a file of a draft, in this tab. */
+  readonly newFileId: () => string
+  /**
+   * The uploads that run, by file ID. Remove aborts the upload of its file,
+   * and a stop of the chat aborts each one.
+   */
+  readonly uploads: Map<string, AbortController>
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
@@ -42,14 +47,6 @@ export interface ChatContext {
   readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
-}
-
-export function logOf(context: ChatContext, sessionId: string): SessionLog {
-  const known = context.logs.get(sessionId)
-  if (known) return known
-  const log = new SessionLog()
-  context.logs.set(sessionId, log)
-  return log
 }
 
 const RETRY_MESSAGE = 'The request failed. Try again.'

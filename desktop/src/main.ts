@@ -3,6 +3,7 @@ import { readFile, realpath, stat } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import {
   app,
+  autoUpdater,
   BrowserWindow,
   dialog,
   protocol,
@@ -65,7 +66,7 @@ const createAppWindow = () => {
   installNavigation(window.webContents, configuration.appOrigin, {
     load: (url) => window.loadURL(url),
     external: (url) => shell.openExternal(url),
-    signIn: () => signIn.start(),
+    signIn: (code) => signIn.start(code),
     preview: (url) =>
       openPreviewInBrowser(url, {
         appOrigin: configuration.appOrigin,
@@ -113,12 +114,12 @@ startDesktop({
       exchange: (request) => fetch(request),
       saveCookie: (cookie) => rendererSession.cookies.set(cookie),
       flushCookies: () => rendererSession.cookies.flushStore(),
-      signedIn: async () => {
+      signedIn: async (path) => {
         if (active && !active.isDestroyed()) {
           if (active.isMinimized()) active.restore()
           active.show()
           active.focus()
-          await active.loadURL(`${DESKTOP_ORIGIN}/`)
+          await active.loadURL(`${DESKTOP_ORIGIN}${path}`)
         }
       },
     })
@@ -149,6 +150,7 @@ startDesktop({
       app.setAsDefaultProtocolClient('conductive')
     const updates = startUpdates({
       updater: electronUpdater.autoUpdater,
+      nativeUpdater: autoUpdater,
       packaged: app.isPackaged,
       enabled: configuration.updates === 'enabled',
       choose: async (message, action) =>
@@ -161,6 +163,14 @@ startDesktop({
             cancelId: 1,
           })
         ).response === 0,
+      inform: async (message) => {
+        await dialog.showMessageBox({
+          type: 'info',
+          title: productName,
+          message,
+          buttons: ['OK'],
+        })
+      },
       every: (callback, milliseconds) => {
         const timer = setInterval(callback, milliseconds)
         return () => clearInterval(timer)

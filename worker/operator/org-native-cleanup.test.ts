@@ -6,7 +6,7 @@ import { boatRoute } from '../sandbox/routes'
 import { SESSION_COOKIE } from '../security/cookies'
 import { sign } from '../security/crypto'
 import { refreshSignal } from '../security/github-test-support'
-import { heldOperation } from '../lifecycle/platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import {
   realRuntimeFixture,
   runtimeBundle,
@@ -18,7 +18,7 @@ beforeAll(async () => {
   bundle = await runtimeBundle()
 })
 
-it('keeps a deleted workspace pending in repeated org suspension until native Delete cleanup succeeds', async () => {
+it('keeps a failed workspace pending in repeated org suspension until native Delete cleanup succeeds', async () => {
   const fixture = await realRuntimeFixture(bundle)
   const allocation = heldOperation()
   const deletion = refreshSignal()
@@ -80,16 +80,20 @@ it('keeps a deleted workspace pending in repeated org suspension until native De
     })
     allocation.release()
     await deletion.promise
-    expect(await failed).toBe(
-      'Runtime create failed: workspace_cleanup_pending',
-    )
+    expect(await failed).toBe('Runtime create failed: org_suspended')
     const counts = await fixture.env.DB.prepare(
       `SELECT
         (SELECT COUNT(*) FROM workspaces) AS workspaces,
         (SELECT COUNT(*) FROM workspace_tokens) AS tokens,
+        (SELECT COUNT(*) FROM workspace_tokens WHERE revoked_at IS NULL) AS activeTokens,
         (SELECT COUNT(*) FROM lifecycle_sandbox_cleanup) AS cleanup`,
     ).first()
-    expect(counts).toEqual({ workspaces: 0, tokens: 0, cleanup: 1 })
+    expect(counts).toEqual({
+      workspaces: 1,
+      tokens: 1,
+      activeTokens: 0,
+      cleanup: 1,
+    })
     expect(fixture.boat.states.get('bx_1')).toBe('ready')
     expect(
       await fixture.actor('runtime-state-workspace').alarmAt(),
@@ -101,6 +105,9 @@ it('keeps a deleted workspace pending in repeated org suspension until native De
       pendingWorkspaceIds: ['runtime-state-workspace'],
       pendingBuildIds: [],
     })
+    expect(
+      await fixture.actor('runtime-state-workspace').alarmAt(),
+    ).not.toBeNull()
     expect(fixture.boat.stopIds).toEqual([])
     refuseDelete = false
     await fixture.restart()

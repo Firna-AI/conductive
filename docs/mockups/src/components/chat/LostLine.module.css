@@ -15,3 +15,23 @@
   margin-right: 6px;
   vertical-align: -2px;
 }
+
+/*
+ * A lost line among the steps of an open fold: the icon in the column of
+ * the icons of the other steps, and the text beside it.
+ */
+.start {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  min-height: 24px;
+  padding: 3px 0;
+  box-sizing: border-box;
+  text-align: start;
+  text-wrap: wrap;
+}
+
+.start .icon {
+  flex-shrink: 0;
+  margin: 2px 0 0;
+}

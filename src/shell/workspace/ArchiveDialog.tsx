@@ -13,6 +13,7 @@ import { StatusText } from '../../../docs/mockups/src/components/common/StatusTe
 import styles from '../../../docs/mockups/src/components/workspace/ArchiveDialog.module.css'
 import { hasUnpushedWork, type ArchiveModel } from '../../app/archive-model'
 import { useStore } from '../../app/store'
+import { nameLabel } from '../../shared/name-label'
 import type { ArchiveCheckResponse, Workspace } from '../../shared/workspaces'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
@@ -57,6 +58,7 @@ export function ArchiveDialog(props: {
   const theme = useSharedUiTheme()
   const flow = useStore(props.archive.flow)
   const { workspace } = props
+  const name = nameLabel(workspace.name)
   // While the archive runs, Cancel cannot undo it, so the dialog stays.
   const archiving = flow.step === 'confirm' && flow.archiving
   const cancel = () => {
@@ -86,7 +88,7 @@ export function ArchiveDialog(props: {
           </>
         }
         close={cancel}
-        title={`Archive ${workspace.name}?`}
+        title={`Archive ${name}?`}
       >
         {flow.step === 'checking' ? (
           <div className={ui.center}>
@@ -133,7 +135,7 @@ export function ArchiveDialog(props: {
           </>
         }
         close={cancel}
-        title={`Archive ${workspace.name}?`}
+        title={`Archive ${name}?`}
       >
         <StatusText
           icon={CircleCheck}
@@ -157,7 +159,7 @@ export function ArchiveDialog(props: {
       title="Archive with work that is not pushed?"
     >
       <DialogText>
-        Archive deletes the cloud computer of {workspace.name}, with this work:
+        Archive deletes the cloud computer of {name}, with this work:
       </DialogText>
       <UnpushedList branch={workspace.branch} check={flow.check} />
       <DialogText>{kept}</DialogText>

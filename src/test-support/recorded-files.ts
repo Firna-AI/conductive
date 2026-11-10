@@ -1,3 +1,4 @@
+import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import type { WorkspaceEventEnvelope } from '../shared/events'
 import type {
   ChangesResponse,
@@ -149,11 +150,46 @@ export const recordedMultipartRunnerFileEvents: readonly RunnerFileEvent[] =
     }))
   })
 
+/**
+ * The browser events with the two masked files of the mockups: the masked
+ * tree in the full report, and the masked files in each changes report.
+ */
+function maskedBrowserFileEvents(): readonly FileEvent[] {
+  const masked = toolFixtures('ready-to-merge', 'masked')
+  const extra = masked.changes.files.filter(
+    (file) => file.displayPath !== undefined,
+  )
+  const sum = (key: 'added' | 'removed') =>
+    extra.reduce((total, file) => total + file[key], 0)
+  return browserFileEvents.map((event): FileEvent => {
+    if (event.type === 'files.snapshot') {
+      return { ...event, tree: masked.files }
+    }
+    if (event.type !== 'changes.updated') return event
+    const { summary } = event.changes
+    return {
+      ...event,
+      changes: {
+        ...event.changes,
+        files: [...event.changes.files, ...extra],
+        summary: {
+          files: summary.files + extra.length,
+          added: summary.added + sum('added'),
+          removed: summary.removed + sum('removed'),
+        },
+      },
+    }
+  })
+}
+
 export function recordedFileEvents(
   workspaceId: string = FAKE_IDS.workspace,
   firstEventNumber = 1,
+  paths: PathState = 'plain',
 ): readonly WorkspaceEventEnvelope[] {
-  return browserFileEvents.map((event, index) => ({
+  const events =
+    paths === 'masked' ? maskedBrowserFileEvents() : browserFileEvents
+  return events.map((event, index) => ({
     workspaceId,
     eventNumber: firstEventNumber + index,
     occurredAt: FAKE_TIME + index * 1_000,

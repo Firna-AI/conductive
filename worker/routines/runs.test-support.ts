@@ -36,7 +36,10 @@ export async function runFixture(harness: TestHarness) {
     db
       .prepare(
         `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, no_reuse, created_at, updated_at)
-      VALUES (?, 'codex', 'api-key', ?, 1, ?, ?)`,
+      VALUES (?, 'codex', 'api-key', ?, 1, ?, ?)
+      ON CONFLICT(user_id, agent) DO UPDATE SET
+        kind = excluded.kind, ciphertext = excluded.ciphertext,
+        no_reuse = excluded.no_reuse, updated_at = excluded.updated_at`,
       )
       .bind(
         user.id,

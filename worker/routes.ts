@@ -1,4 +1,5 @@
 import { API_PATHS } from '../src/shared/api'
+import type { SessionResponse } from '../src/shared/account'
 import { bootRoute } from './app-api/boot'
 import { chatLifecycleRoute } from './app-api/lifecycle'
 import { shellRoute } from './app-api/shell'
@@ -14,6 +15,8 @@ import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
 import { routinesRoute } from './routines/route'
 import { routineRunsRoute } from './routines/run-route'
+import { hasAppAccess } from './waitlist/data'
+import { waitlistRoute } from './waitlist/route'
 
 export { routeDevice } from './devices/router'
 
@@ -24,6 +27,8 @@ export async function route(
   dependencies: AppDependencies,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const waitlist = await waitlistRoute(request, env, context, dependencies)
+  if (waitlist) return waitlist
   const operator = await handleOperatorRequest(
     request,
     env,
@@ -73,7 +78,10 @@ export async function route(
   if (lifecycle) return lifecycle
   const path = new URL(request.url).pathname
   if (path === API_PATHS.session && request.method === 'GET') {
-    return Response.json({ user: context.user })
+    return Response.json({
+      user: context.user,
+      appAccess: await hasAppAccess(env.DB, context.user.id),
+    } satisfies SessionResponse)
   }
   if (path === API_PATHS.signOut && request.method === 'POST') {
     return signOut(env, context.sessionId)

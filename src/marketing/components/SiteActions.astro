@@ -1,0 +1,21 @@
+---
+import { siteActionCopy } from '../access-copy'
+import { macAppHref } from '../request-values'
+import Icon from './Icon.astro'
+import StartButton from './StartButton.astro'
+
+/*
+ * The two actions of the hero and of the last call to action: Sign up, which
+ * goes to the GitHub sign-in of the app, and Download for Mac, which leads to
+ * the Mac app section of the home page with the download of each chip. A
+ * phone puts them under each other at full width.
+ */
+---
+
+<div class="actions">
+  <StartButton size="lg" />
+  <a class="button" href={macAppHref}>
+    <Icon name="download" size={16} class="download-icon" />
+    <span>{siteActionCopy.download}</span>
+  </a>
+</div>

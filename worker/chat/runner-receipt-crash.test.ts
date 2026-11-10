@@ -1,14 +1,9 @@
 import { expect, it } from 'vitest'
-
 import { loadReportState, storedParts } from '../files/report-storage'
 import { FilesState } from '../files/state'
 import { chatFilesStorage } from './files-storage'
-import {
-  context,
-  createRunnerLimitsFixture,
-  snapshot,
-} from './runner-limits.test-support'
-
+import { createRunnerLimitsFixture } from './runner-limits.test-support'
+import { context, snapshot } from './runner-fixtures.test-support'
 it.each(['turn.completed', 'turn.failed'])(
   'keeps the refusal and terminal cleanup after a post-commit crash for %s',
   async (type) => {
@@ -21,7 +16,7 @@ it.each(['turn.completed', 'turn.failed'])(
         ...context,
       }),
     )
-    fixture.storage.crashAfterCommit = true
+    await fixture.failNextCommit('after', 'Injected post-commit crash')
     await expect(fixture.receive(1, terminal)).rejects.toThrow(
       'Injected post-commit crash',
     )
@@ -72,13 +67,12 @@ it.each(['turn.completed', 'turn.failed'])(
     })
   },
 )
-
 it('keeps pending file assembly after a post-commit crash and resumes the join after restart', async () => {
   const fixture = await createRunnerLimitsFixture()
   const storage = chatFilesStorage(fixture.storage)
   const files = new FilesState(storage)
   await fixture.receive(1, snapshot(1, 1, 1, ['old']))
-  fixture.storage.crashAfterCommit = true
+  await fixture.failNextCommit('after', 'Injected post-commit crash')
   await expect(
     fixture.receive(2, snapshot(2, 1, 2, ['first'])),
   ).rejects.toThrow('Injected post-commit crash')

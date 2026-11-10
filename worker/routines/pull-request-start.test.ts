@@ -46,7 +46,7 @@ it.each(['pushed', 'merged'] as const)(
     ).toEqual({
       baseBranch: event === 'merged' ? 'release/next' : 'feature/review',
     })
-    start.restart()
+    await start.restart()
     for (let phase = 0; phase < 20; phase++) {
       const job = await start.job()
       if (!job || job.phase === 'runner') break

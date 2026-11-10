@@ -31,7 +31,7 @@ it('restarts only queued runs older than one minute with their stored message id
     ),
   )
   await fixture.run(() => scanRoutineSchedules(fixture.runtime))
-  fixture.setTime(SCAN_TIME)
+  await fixture.setTime(SCAN_TIME)
   await scanRoutineSchedules(fixture.runtime)
   expect(
     (await fixture.runs()).results.map((row) => [
@@ -169,7 +169,7 @@ it('limits each scan to its due and queued batch sizes and leaves the rest for t
     { state: 'skipped', count: 2 },
   ])
   expect(await fixture.nextTime('due-03')).toBe(SCAN_TIME)
-  fixture.setTime(SCAN_TIME + 60_000)
+  await fixture.setTime(SCAN_TIME + 60_000)
   await scanRoutineSchedules(fixture.runtime, limits)
   expect((await counts()).results).toEqual([
     { state: 'failed', count: 3 },

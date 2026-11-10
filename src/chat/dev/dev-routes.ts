@@ -8,11 +8,13 @@ import { readAttachment, readChoice } from '../api/read-chat'
 import type { DevBackend } from './dev-backend'
 import { requestStop, resume } from './dev-sandbox'
 import {
+  askTitle,
   clearRetry,
   newSession,
   place,
   recordOf,
   targetOf,
+  titleFromMessage,
 } from './dev-sessions'
 
 const reply = (body: unknown, status = 200) => Response.json(body, { status })
@@ -55,7 +57,9 @@ async function send(backend: DevBackend, session: Session, request: Request) {
 /**
  * Accepts a message of the reader, as the Worker does: it steers the running
  * turn, waits for the sandbox, or starts a turn. The session then names no
- * retry. The reply names the session that took the message, with its record.
+ * retry, and a later session can take its title from the message. A new
+ * workspace with no title yet asks for it. The reply names the session that
+ * took the message, with its record.
  */
 function accept(backend: DevBackend, session: Session, outgoing: Outgoing) {
   const ready = ['ready', 'working', 'input', 'unread'].includes(
@@ -72,6 +76,8 @@ function accept(backend: DevBackend, session: Session, outgoing: Outgoing) {
   const steered = backend.agent.steer(message)
   if (!steered) backend.stream.emit({ type: 'message.accepted', message })
   clearRetry(backend, session.id)
+  titleFromMessage(backend, session.id, message.text)
+  askTitle(backend, message.text)
   const answer = (turnId: string | null) =>
     recordReply(
       backend,
@@ -196,11 +202,14 @@ export async function handleWrite(
     return reply(resume(backend))
   }
   if (method === 'POST' && path === filePaths.attachments(orgId, workspaceId)) {
-    const body = await bodyOf(request)
+    const query = new URL(request.url).searchParams
+    const mediaType = text(query.get('mediaType'))
     const attachment = readAttachment({
-      ...body,
       id: `dev-file-${attachments.size + 1}`,
-      sizeBytes: Math.floor((text(body.dataBase64).length * 3) / 4),
+      name: text(query.get('name')),
+      kind: mediaType.startsWith('image/') ? 'image' : 'file',
+      mediaType,
+      sizeBytes: (await request.arrayBuffer()).byteLength,
     })
     attachments.set(attachment.id, attachment)
     return reply({ attachment }, 201)

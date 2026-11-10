@@ -1,6 +1,7 @@
 import { shellArgument } from './privileged'
 
 export const TERMINAL_RUNTIME = '/run/conductive-terminal'
+export const TERMINAL_RESTORE_MARKER = `${TERMINAL_RUNTIME}/restore-ended`
 /**
  * The provider's file API reads only under /home/user or /tmp. The start hook
  * binds the memory folder here, so the password stays out of the disk.
@@ -9,6 +10,7 @@ export const TERMINAL_RUNTIME_VIEW = '/home/user/.conductive-terminal'
 
 export interface TerminalScriptOptions {
   runtimeDirectory: string
+  restoreMarker: string
   environmentFile: string
   owner: string
   group: string
@@ -17,8 +19,22 @@ export interface TerminalScriptOptions {
   multiplexerCommand: readonly string[]
 }
 
+/**
+ * Bash shows only the current folder name in the prompt.
+ * Bash checks once, at the first prompt after the restore marker exists.
+ * If the real folder differs from `$PWD`, it moves there and keeps `OLDPWD`.
+ * The check flag stays local to this shell, so new shells check for themselves.
+ */
+export function terminalPromptCommand(
+  restoreMarker = TERMINAL_RESTORE_MARKER,
+): string {
+  return `PS1=\${PS1//\\\\w/\\\\W}
+builtin test -n "\${__conductive_restore_checked-}" || ! builtin test -f ${shellArgument(restoreMarker)} || { __conductive_restore_checked=1; [ -z "\${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=\${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }; }`
+}
+
 const terminalScriptDefaults: TerminalScriptOptions = {
   runtimeDirectory: TERMINAL_RUNTIME,
+  restoreMarker: TERMINAL_RESTORE_MARKER,
   environmentFile: '/run/ascii-secrets/env.sh',
   owner: 'user',
   group: 'user',
@@ -63,6 +79,12 @@ chmod 600 "$password_file"
 `
 }
 
+/**
+ * tmux gets the repository path, not the launcher's current folder. After a
+ * start from a saved snapshot, the provider restores the disk in the
+ * background. When the restore ends, the launcher's current folder can be an
+ * old view of the disk at another path.
+ */
 export function launcherScript(
   options: TerminalScriptOptions = terminalScriptDefaults,
 ): string {
@@ -77,7 +99,7 @@ ${validation}
 valid_password || exit 1
 password=$(cat -- "$password_file")
 [ -n "$password" ] || exit 1
-exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port 7681 --writable --credential "conductive:$password" ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} new-session -A -s workspace /bin/bash -l
+exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port 7681 --writable --credential "conductive:$password" ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} new-session -A -s workspace -c "$CONDUCTIVE_REPOSITORY_DIR" /bin/bash -l
 `
 }
 
@@ -90,6 +112,6 @@ set -a
 . ${shellArgument(options.environmentFile)}
 set +a
 cd "$CONDUCTIVE_REPOSITORY_DIR"
-exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-option -g mouse on ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
 `
 }

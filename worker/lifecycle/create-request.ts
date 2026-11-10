@@ -11,6 +11,10 @@ export interface WorkspaceCreationBase {
   startSha?: string
 }
 
+export interface WorkspaceCreationInput extends CreateWorkspaceRequest {
+  name?: string
+}
+
 const CITIES = [
   'lisbon',
   'oslo',
@@ -31,7 +35,7 @@ export async function prepareCreationRequest(
   orgId: string,
   user: User,
   sender: User,
-  input: CreateWorkspaceRequest,
+  input: WorkspaceCreationInput,
   reservedId?: string,
   base?: WorkspaceCreationBase,
 ): Promise<WorkspaceStartJob> {
@@ -71,6 +75,7 @@ export async function prepareCreationRequest(
       repositoryId: repository.id,
       sectionId: input.sectionId,
       city,
+      ...(input.name !== undefined && { name: input.name }),
       branch,
       sessionId,
       request: input.firstMessage,

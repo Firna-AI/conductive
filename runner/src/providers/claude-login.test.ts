@@ -50,6 +50,7 @@ function fixture(kind: RunnerLogin['kind'] = 'token') {
     login: { agent: 'claude' as const, kind, secret: 'private-test-login' },
     choice: turn().message.choice,
     conversationId: null,
+    instructions: '',
     tools: fakeToolContext,
     event: () => {},
     warn: () => {},

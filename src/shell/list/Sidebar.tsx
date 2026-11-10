@@ -8,6 +8,9 @@ import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
+import { useSidebarShown } from '../mac/mac-app'
+import { useNewWorkspace } from '../new-workspace/NewWorkspaceHost'
+import { SearchRow } from '../palette/SearchRow'
 import { AppLink } from '../ui/AppLink'
 import ui from '../ui/ui.module.css'
 import { OrgList } from './OrgList'
@@ -68,20 +71,34 @@ function OrgPageLink(props: {
   )
 }
 
-/** The row at the top of the list that starts a new workspace in General. */
+/**
+ * The row at the top of the list that starts a new workspace in General. It
+ * links to the page. A plain click opens the dialog in its place when the
+ * user chose the dialog, and a click with a modifier key opens the page in
+ * a new tab.
+ */
 export function NewWorkspaceLink(props: {
   orgId: string
   current: boolean
   variant: RowVariant
 }) {
+  const newWorkspace = useNewWorkspace()
   return (
-    <OrgPageLink
-      current={props.current}
-      icon={Plus}
-      label="New workspace"
+    <AppLink
+      aria-current={props.current ? 'page' : undefined}
+      className={classes(
+        links.row,
+        props.variant === 'page' && links.page,
+        props.current && links.selected,
+      )}
+      onClick={(event) =>
+        newWorkspace.click(event, { orgId: props.orgId, sectionId: null })
+      }
       to={routes.newWorkspace(props.orgId)}
-      variant={props.variant}
-    />
+    >
+      <Plus aria-hidden className={links.icon} size={14} />
+      New workspace
+    </AppLink>
   )
 }
 
@@ -107,12 +124,14 @@ export function RoutinesLink(props: {
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
- * link, New workspace, Routines, and the sections of the org. A suspended
- * org shows its sections read-only, without New workspace.
+ * link, New workspace, Routines, Search, and the sections of the org. A suspended
+ * org shows its sections read-only, without New workspace. While the
+ * sidebar shows, its list offers New section to the command palette.
  */
 export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
   const { org, current } = props
   const { suspended } = useOrgAccess(org)
+  const shown = useSidebarShown()
   return (
     <>
       <div className={styles.top}>
@@ -133,8 +152,10 @@ export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
             orgId={org.id}
             variant="sidebar"
           />
+          <SearchRow variant="sidebar" />
         </div>
         <OrgList
+          offerActions={shown}
           orgId={org.id}
           readOnly={suspended}
           selectedId={

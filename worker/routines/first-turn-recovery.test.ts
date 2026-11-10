@@ -24,7 +24,7 @@ it('reports the first turn after a crash between its chat commit and its run upd
   await seedChatRun(fixture, accepted.session.activeTurnId!, session.id)
   const turn = runner.commands.find((command) => command.type === 'turn')
   if (turn?.type !== 'turn') throw new Error('Missing dispatched turn')
-  fixture.storage.crashAfterCommit = true
+  await fixture.failNextCommit('after', 'Injected post-commit crash')
   runner.emit(terminalEvent(turn, 'failed'))
   await expect(fixture.drain()).rejects.toThrow('Injected post-commit crash')
   expect(
@@ -32,7 +32,7 @@ it('reports the first turn after a crash between its chat commit and its run upd
       "SELECT state FROM routine_runs WHERE id = 'first-run'",
     ).first('state'),
   ).toBe('started')
-  fixture.restart()
+  await fixture.restart()
   await fixture.connect(runner)
   await fixture.drain()
   expect(
@@ -47,5 +47,5 @@ it('reports the first turn after a crash between its chat commit and its run upd
     (await readRoutine(fixture.env.DB, fixture.org.id, 'chat-routine'))
       .failedRunsInARow,
   ).toBe(1)
-  fixture.chat.closeConnections()
+  await fixture.chat.closeConnections()
 })

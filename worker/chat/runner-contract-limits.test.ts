@@ -15,7 +15,7 @@ import {
   file,
   numberedRunnerInput,
   snapshot,
-} from './runner-limits.test-support'
+} from './runner-fixtures.test-support'
 
 const envelope = (event: unknown) => ({
   type: 'event',

@@ -24,6 +24,7 @@ export class LifecycleBoat {
   commandRunning = false
   commandExitCode = 0
   commandOutput = 'installing...\n'
+  commandStderr = ''
   statusChunkSize = Infinity
   beforeStatus?: () => Promise<void>
   synchronousExitCode = 0
@@ -32,6 +33,7 @@ export class LifecycleBoat {
   failStop = false
   stopReplyState: SandboxState = 'archived'
   failDeadline = false
+  hydrated: boolean | undefined
   lostCreateReplies = 0
   afterLostCreate?: () => Promise<void>
   beforeSandboxRead?: (sandboxId: string) => Promise<void>
@@ -193,14 +195,20 @@ export class LifecycleBoat {
         await this.beforeStatus?.()
         const processId = Number(operation.slice('commands/'.length))
         const offset = Number(url.searchParams.get('stdoutOffset') ?? '0')
+        const stderrOffset = Number(url.searchParams.get('stderrOffset') ?? '0')
         this.statusRequests.push({
           processId,
           stdoutOffset: offset,
-          stderrOffset: Number(url.searchParams.get('stderrOffset') ?? '0'),
+          stderrOffset,
         })
         const text = this.commandOutput
         const stdout = text.slice(offset, offset + this.statusChunkSize)
         const nextOffset = offset + stdout.length
+        const stderr = this.commandStderr.slice(
+          stderrOffset,
+          stderrOffset + this.statusChunkSize,
+        )
+        const stderrNextOffset = stderrOffset + stderr.length
         response = Response.json({
           ok: true,
           success: true,
@@ -211,12 +219,14 @@ export class LifecycleBoat {
           exitCode: this.commandRunning ? null : this.commandExitCode,
           timedOut: false,
           stdout,
-          stderr: '',
+          stderr,
           stdoutOffset: offset,
-          stderrOffset: 0,
+          stderrOffset,
           stdoutNextOffset: nextOffset,
-          stderrNextOffset: 0,
-          more: nextOffset < text.length,
+          stderrNextOffset,
+          more:
+            nextOffset < text.length ||
+            stderrNextOffset < this.commandStderr.length,
         })
       } else {
         if (request.method === 'GET') {
@@ -243,7 +253,11 @@ export class LifecycleBoat {
     return Response.json({
       ok: true,
       type: 'sandbox.info',
-      sandbox: { id, state: this.states.get(id) ?? 'ready' },
+      sandbox: {
+        id,
+        state: this.states.get(id) ?? 'ready',
+        hydrated: this.hydrated,
+      },
     })
   }
 }

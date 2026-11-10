@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Plus, Repeat } from 'lucide-react'
+import { Plus, Repeat, Search } from 'lucide-react'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
@@ -63,13 +63,14 @@ function OrgPageLink(props: {
 export function NewWorkspaceLink(props: {
   current?: boolean
   variant: LinkVariant
+  to?: string
 }) {
   return (
     <OrgPageLink
       current={props.current}
       icon={Plus}
       label="New workspace"
-      to={paths.newWorkspace}
+      to={props.to ?? paths.newWorkspace}
       variant={props.variant}
     />
   )
@@ -92,5 +93,26 @@ export function RoutinesLink(props: {
       to={props.to ?? paths.routines}
       variant={props.variant}
     />
+  )
+}
+
+/**
+ * The row under New workspace that opens the command palette. A desktop
+ * shows its key, so the row teaches it. A phone has no key to show.
+ */
+export function SearchLink(props: {
+  variant: 'sidebar' | 'page'
+  /** Show ⌘K, the key that opens the palette. */
+  keys: boolean
+}) {
+  return (
+    <ScreenLink
+      className={classes(styles.row, props.variant === 'page' && styles.page)}
+      to={paths.palette}
+    >
+      <Search aria-hidden className={styles.icon} size={14} />
+      Search
+      {props.keys ? <kbd className={styles.keys}>⌘K</kbd> : null}
+    </ScreenLink>
   )
 }

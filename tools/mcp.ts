@@ -105,17 +105,28 @@ export function createWorkspaceMcp(client: WorkspaceToolClient) {
       const args =
         params.arguments === undefined ? {} : record(params.arguments)
       try {
-        const result =
-          params.name === 'run_mac_command'
-            ? await client.runMacCommand(
+        const run = () => {
+          switch (params.name) {
+            case 'run_mac_command':
+              return client.runMacCommand(
                 readDeviceCommandInput({
                   ...args,
                   requestId: args.requestId ?? crypto.randomUUID(),
                 }),
               )
-            : params.name === 'create_workspace'
-              ? await client.create(createWorkspaceInput(args))
-              : await client.list()
+            case 'create_workspace':
+              return client.create(createWorkspaceInput(args))
+            case 'list_repositories':
+              return client.listRepositories()
+            case 'list_sections':
+              return client.listSections()
+            case 'list_models':
+              return client.listModels()
+            default:
+              return client.list()
+          }
+        }
+        const result = await run()
         return success({
           content: [{ type: 'text', text: JSON.stringify(result) }],
           structuredContent: result,

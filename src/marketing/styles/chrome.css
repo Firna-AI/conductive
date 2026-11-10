@@ -21,9 +21,14 @@
   margin-left: auto;
 }
 
+/*
+ * A label never wraps, so each link keeps one line when a narrow desktop
+ * window leaves the header little room.
+ */
 .header-link {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   min-height: var(--ui-touch-min);
   padding: 6px 10px;
   border-radius: var(--ui-radius-lg);
@@ -31,6 +36,7 @@
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .header-link:hover {
@@ -175,7 +181,7 @@
   color: var(--ui-ink);
 }
 
-/* A phone keeps the wordmark and Sign in: the main action follows at once. */
+/* A phone keeps the wordmark, GitHub, and Sign in. */
 @media (max-width: 759.98px) {
   .header-inner {
     height: 56px;

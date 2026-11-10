@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { ApiError } from '../../app/api/client'
+import { uploadingFile, type DraftFile } from '../../app/draft-files'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { sessionPaths } from '../../shared/sessions'
 import {
@@ -77,6 +79,9 @@ describe('SessionChat', () => {
     expect(text()).toContain('Thinking 2m 41s')
     expect(text()).toContain('Stop')
     expect(markup()).toContain('placeholder="Steer the agent while it works"')
+    chat.controller.setDraft(FAKE_IDS.session, 'Use the saved address.')
+    expect(markup()).toContain('placeholder="Steer the agent while it works"')
+    expect(text()).not.toContain('The agent reads this at its next step.')
   })
 
   it('names a missing login, also when the account lists no entry for the agent, and keeps Send off', async () => {
@@ -153,6 +158,7 @@ describe('session parts', () => {
         mobile={false}
         onCancelRename={() => {}}
         onClose={() => {}}
+        onMove={() => {}}
         onNew={() => {}}
         onRename={() => {}}
         onSelect={() => {}}
@@ -160,7 +166,15 @@ describe('session parts', () => {
         onStartRename={() => {}}
         readOnly={false}
         renaming={null}
-        tabs={[{ id: 'a', title: 'Address autocomplete', selected: true }]}
+        tabs={[
+          {
+            kind: 'session',
+            id: 'a',
+            title: 'Address autocomplete',
+            name: 'Address autocomplete',
+            selected: true,
+          },
+        ]}
       />,
     )
     expect(textOf(html)).toContain(
@@ -168,30 +182,37 @@ describe('session parts', () => {
     )
   })
 
-  it('keeps Send off while a file uploads', () => {
-    const composer = (attaching: boolean) =>
+  it('keeps Send off while a file uploads or failed', () => {
+    const composer = (files: readonly DraftFile[]) =>
       renderToStaticMarkup(
         <Composer
-          attaching={attaching}
           blocked={false}
           choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
-          draft={{ ...blankDraft('draft'), text: 'See the screenshot.' }}
+          draft={{
+            ...blankDraft('draft'),
+            text: 'See the screenshot.',
+            files,
+          }}
           models={[]}
           onAttach={() => {}}
           onChangeText={() => {}}
           onChooseModel={() => {}}
-          onRemoveAttachment={() => {}}
+          onRemoveFile={() => {}}
+          onRetryFile={() => {}}
           onSend={() => {}}
           onStop={() => {}}
           running={false}
           sending={false}
           stopping={false}
-          waits={false}
         />,
       )
-    expect(composer(true)).toMatch(/aria-label="Send" aria-disabled="true"/)
-    expect(composer(false)).not.toMatch(
-      /aria-label="Send" aria-disabled="true"/,
+    const file = new File(['png'], 'overlap.png', { type: 'image/png' })
+    const off = /aria-label="Send" aria-disabled="true"/
+    const error = new ApiError(502, 'upload_failed', 'The upload failed.')
+    expect(composer([uploadingFile('file-1', file)])).toMatch(off)
+    expect(composer([{ state: 'failed', id: 'file-1', file, error }])).toMatch(
+      off,
     )
+    expect(composer([])).not.toMatch(off)
   })
 })

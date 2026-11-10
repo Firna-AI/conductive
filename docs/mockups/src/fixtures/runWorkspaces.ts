@@ -16,7 +16,11 @@ import { pullRequest } from './pullRequests'
 import { repositories } from './repositories'
 import { routines, type Routine } from './routines'
 import type { StartingLog } from './starting'
-import { checkoutAutocomplete, type Workspace } from './workspaces'
+import {
+  checkoutAutocomplete,
+  workspaceLink,
+  type Workspace,
+} from './workspaces'
 
 /** The routine of a run, and the pull request of a pull request run. */
 type RunOrigin = {
@@ -92,7 +96,8 @@ function cloudStart(fetch: string, branch: string): StartingLog {
 const reviewRun: Workspace = {
   key: 'review-482',
   name: 'Review address autocomplete',
-  generatedName: 'Porto',
+  number: 403,
+  link: workspaceLink('cm0YjhrB-DTIEJp6mtDjfkR-lAm76zVuKQRMXFPtTzg'),
   branch: `${people.cal.login}/porto-3f8m`,
   repository: 'storefront',
   section: review.section,
@@ -106,7 +111,8 @@ const reviewRun: Workspace = {
 const summaryRun: Workspace = {
   key: 'morning-summary-run',
   name: 'Merged pull requests',
-  generatedName: 'Braga',
+  number: 404,
+  link: workspaceLink('yJkjoAhmqwUVB6vlWGqk-enPknXxeegP22XbMDhe6vc'),
   branch: `${people.cal.login}/braga-9d2k`,
   repository: 'storefront',
   section: summary.section,
@@ -129,7 +135,7 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
       {
         kind: 'agent',
         id: 'plan',
-        paragraphs: [
+        blocks: [
           `I'll read the changes of pull request #${pullRequest.number} first.`,
         ],
       },
@@ -164,9 +170,7 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
       {
         kind: 'agent',
         id: 'plan',
-        paragraphs: [
-          "I'll list the pull requests merged into main since Friday.",
-        ],
+        blocks: ["I'll list the pull requests merged into main since Friday."],
       },
       {
         kind: 'tool',

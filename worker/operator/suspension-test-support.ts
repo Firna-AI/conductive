@@ -3,6 +3,7 @@ import type { backendFixture } from '../lifecycle/backend-test-support'
 import { createWorkspace } from '../lifecycle/workspaces'
 import { API_PATHS, type User } from '../../src/shared/api'
 import { seedWorkspace } from '../members/members-test-support'
+import { seedBackendLogin } from '../lifecycle/backend-seed.test-support'
 import { orgSandboxProvider } from '../sandbox/client'
 import {
   assignSandbox,
@@ -22,6 +23,7 @@ export async function joinedMember(fixture: SuspensionFixture): Promise<User> {
   )
     .bind(fixture.org.id, user.id)
     .run()
+  await seedBackendLogin(fixture.harness, user.id)
   return user
 }
 
@@ -77,7 +79,10 @@ export async function existingWorkspace(
     },
   })
   await fixture.runtime.workspace(id).lifecyclePrepared()
-  return workspaceView(await readWorkspace(env.DB, fixture.org.id, id))
+  return workspaceView(
+    await readWorkspace(env.DB, fixture.org.id, id),
+    env.APP_ORIGIN,
+  )
 }
 
 export function completedWorkspace(

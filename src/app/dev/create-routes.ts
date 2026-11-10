@@ -1,34 +1,24 @@
-import {
-  DRAFT_ATTACHMENTS_PATH,
-  type Attachment,
-  type MessageSender,
-  type SendMessageRequest,
-  type UploadAttachmentResponse,
-} from '../../shared/messages'
+import type { MessageSender, SendMessageRequest } from '../../shared/messages'
 import {
   workspacesPath,
   type CreateWorkspaceResponse,
   type Workspace,
 } from '../../shared/workspaces'
-import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { choice, maybeText, nested, record, text, texts } from '../api/parse'
+import { maybeText, nested, record, text, texts } from '../api/parse'
 import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
 import { requireOrg, type DevBackend } from './backend'
 import { ID, json, requiredText, RouteError, type Route } from './router'
+import { routes } from '../router'
+import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { createPlan, runStart } from './start-steps'
 import { slugify, type OrgState } from './state'
 
-/** The cities that name new workspaces: the recorded one, Lisbon, first. */
-const CITIES = [
-  workspaceFixtures().created.workspace.name,
-  'Porto',
-  'Kyoto',
-  'Oslo',
-  'Lima',
-  'Hobart',
-  'Tallinn',
-]
+/**
+ * The cities that name the branches of new workspaces: Lisbon first, as the
+ * branch of the recorded create has it.
+ */
+const CITIES = ['Lisbon', 'Porto', 'Kyoto', 'Oslo', 'Lima', 'Hobart', 'Tallinn']
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
 
 /** Four random characters, as a branch has after its city. */
@@ -37,7 +27,7 @@ function randomSuffix(): string {
   return Array.from(bytes, (byte) => ALPHABET[byte % ALPHABET.length]).join('')
 }
 
-/** The city that names the next new workspace of the org. */
+/** The city that names the branch of the next new workspace of the org. */
 function cityFor(org: OrgState): string {
   return CITIES[org.created.size % CITIES.length]
 }
@@ -49,26 +39,6 @@ function newWorkspaceId(org: OrgState, city: string): string {
   let id = `${base}-${randomSuffix()}`
   while (taken.has(id)) id = `${base}-${randomSuffix()}`
   return id
-}
-
-/** The number of bytes that a base64 text holds. */
-function decodedSize(base64: string): number {
-  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0
-  return Math.max(0, Math.floor((base64.length * 3) / 4) - padding)
-}
-
-/** An upload before the workspace exists, with its own ID and its own name. */
-function uploadAttachment(backend: DevBackend, body: unknown): Response {
-  const fields = record(body)
-  const attachment: Attachment = {
-    id: backend.newId(),
-    name: requiredText(fields, 'name'),
-    kind: choice(fields, 'kind', ['image', 'file']),
-    mediaType: requiredText(fields, 'mediaType'),
-    sizeBytes: decodedSize(text(fields, 'dataBase64')),
-  }
-  backend.state.attachments.set(attachment.id, attachment)
-  return json({ attachment } satisfies UploadAttachmentResponse, 201)
 }
 
 function readFirstMessage(value: unknown): SendMessageRequest {
@@ -91,11 +61,12 @@ export interface WorkspaceRequest {
 }
 
 /**
- * Makes a workspace from its first message, in the section of the request
- * or else in General, and starts its cloud computer. Its name is a city,
- * and its branch is the login of the user, the city, and four random
- * characters. A first message that contains `fail` stands for a cloud
- * computer that did not start: the fake makes nothing and throws.
+ * Create workspace. The first message makes it, in the section of the
+ * request or else in General. It has no name, as in the Worker, and the fake
+ * writes no title, as local development has no title model. Its branch is
+ * the login of the user, a city, and four random characters. A first message
+ * that contains `fail` stands for a cloud computer that did not start: the
+ * fake makes nothing, and the app keeps the draft.
  */
 export function startWorkspace(
   backend: DevBackend,
@@ -103,6 +74,14 @@ export function startWorkspace(
   request: WorkspaceRequest,
 ): CreateWorkspaceResponse {
   const { first, repositoryId } = request
+  if (org.currentImageBuildId === null)
+    throw new RouteError(
+      409,
+      'image_required',
+      org.builds.some((item) => item.build.state === 'running')
+        ? 'The cloud computer is still being prepared.'
+        : 'The cloud computer needs a build. Ask an org admin to build it.',
+    )
   const repository = org.repositories.find((item) => item.id === repositoryId)
   if (!repository) {
     throw new RouteError(
@@ -136,11 +115,13 @@ export function startWorkspace(
   const at = backend.now()
   const workspace: Workspace = {
     id,
+    number: ++org.workspaceNumberCount,
+    link: new URL(routes.workspace(org.org.id, id), FAKE_ORIGIN).href,
     orgId: org.org.id,
     repositoryId,
     sectionId: section?.id ?? '',
     owner,
-    name: city,
+    name: null,
     branch,
     choice: first.choice,
     state: 'starting',
@@ -196,11 +177,6 @@ export function createRoutes(backend: DevBackend): Route[] {
       path: workspacesPath(ID.org),
       answer: ({ params, body }) =>
         createWorkspace(backend, requireOrg(backend.state, params.org), body),
-    },
-    {
-      method: 'POST',
-      path: DRAFT_ATTACHMENTS_PATH,
-      answer: ({ body }) => uploadAttachment(backend, body),
     },
   ]
 }

@@ -6,16 +6,12 @@ import { chatEventsOf, SessionLog } from '../../src/chat/state/session-log'
 import type {
   ChatHistoryResponse,
   WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+} from './workspace-events'
 import type { RunnerEvent } from '../../src/shared/runner'
-import {
-  choice,
-  context,
-  createRunnerLimitsFixture,
-} from './runner-limits.test-support'
-import type { MemoryChatStorage } from './memory-storage.test-support'
+import { createRunnerLimitsFixture } from './runner-limits.test-support'
+import { choice, context } from './runner-fixtures.test-support'
+import type { ChatData } from './types'
 import { chatKey } from './storage-keys'
-
 export const tool = {
   id: 'first-tool',
   kind: 'run' as const,
@@ -23,7 +19,6 @@ export const tool = {
   detail: null,
   omittedDetailBytes: 0,
 }
-
 export async function orderedHistoryFixture() {
   const fixture = await createRunnerLimitsFixture()
   let eventNumber = 0
@@ -71,7 +66,13 @@ export async function orderedHistoryFixture() {
     13,
   )
   for (let part = 0; part < 30; part++)
-    await receive({ type: 'workspace.title', name: `Metadata ${part}` }, 13)
+    await receive(
+      {
+        type: 'start.updated',
+        start: { kind: 'create', startedAt: part, steps: [] },
+      },
+      13,
+    )
   await receive(
     {
       ...context,
@@ -134,7 +135,6 @@ export async function orderedHistoryFixture() {
   )
   return fixture
 }
-
 export async function historyPages(
   fixture: Awaited<ReturnType<typeof createRunnerLimitsFixture>>,
 ) {
@@ -149,18 +149,15 @@ export async function historyPages(
     after = page.nextAfterEventNumber
   }
 }
-
 export function mergeLive(
   log: SessionLog,
   events: readonly WorkspaceEventEnvelope[],
 ) {
   log.merge(chatEventsOf('session', events.map(readEnvelope)))
 }
-
 export function mergeHistory(log: SessionLog, page: ChatHistoryResponse) {
   log.merge(chatEventsOf('session', readStoredEvents(page).envelopes))
 }
-
 export function itemRows(log: SessionLog) {
   const times = log.times
   return log.transcript.items.map((item) => {
@@ -177,12 +174,9 @@ export function itemRows(log: SessionLog) {
     return { kind: item.kind, at }
   })
 }
-
-export async function forgetPositionIndex(
-  storage: MemoryChatStorage,
-): Promise<void> {
+export async function forgetPositionIndex(storage: ChatData): Promise<void> {
   await storage.delete(chatKey('history-index', 'positions-through'))
-  for (const key of storage.records.keys())
+  for (const key of (await storage.list({ prefix: '' })).keys())
     if (
       (key.startsWith(chatKey('history-answer', '')) ||
         key.startsWith(chatKey('history-tool', ''))) &&

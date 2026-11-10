@@ -58,6 +58,7 @@ function rowFor(
   workspace: Workspace,
   open?: OpenWorkspace,
   needsInput?: string,
+  created: readonly OpenWorkspace[] = [],
 ): WorkspaceRow {
   const isOpen = open !== undefined && workspace.key === open.workspace.key
   if (!isOpen && workspace.key === needsInput) {
@@ -69,10 +70,11 @@ function rowFor(
       to: paths.macPrompt,
     }
   }
+  const made = created.find((item) => item.workspace.key === workspace.key)
   const busy = isOpen && liveStatuses.has(open.status)
   return {
     workspace: busy ? { ...workspace, updated: 'now' } : workspace,
-    status: isOpen ? open.status : workspace.status,
+    status: isOpen ? open.status : (made?.status ?? workspace.status),
     selected: isOpen,
     to: linkFor(workspace.key, isOpen),
   }
@@ -82,21 +84,28 @@ function rowFor(
  * The sections of the org, each with its workspaces. The open workspace
  * shows its current status, and a new one joins the top of its section.
  * `needsInput` marks a workspace whose agent waits for the user while the
- * main area shows another page.
+ * main area shows another page. `created` adds the workspaces that the
+ * create flow made by the time of the screen, with their states, at the
+ * top of their sections.
  */
 export function workspaceSections(
   open?: OpenWorkspace,
   needsInput?: string,
+  created: readonly OpenWorkspace[] = [],
 ): SidebarSection[] {
   const isNew =
     open !== undefined &&
     !workspaceList.some((item) => item.key === open.workspace.key)
-  const all = isNew ? [open.workspace, ...workspaceList] : workspaceList
+  const all = [
+    ...created.map((item) => item.workspace),
+    ...(isNew ? [open.workspace] : []),
+    ...workspaceList,
+  ]
   return sectionKeys.map((key) => ({
     section: sections[key],
     rows: all
       .filter((workspace) => workspace.section === key)
-      .map((workspace) => rowFor(workspace, open, needsInput)),
+      .map((workspace) => rowFor(workspace, open, needsInput, created)),
   }))
 }
 

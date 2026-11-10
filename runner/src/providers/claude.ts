@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { query } from '@anthropic-ai/claude-agent-sdk'
 
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
+import { attachmentDescription } from './attachment-description'
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeInputWindow } from './claude-input-window'
@@ -11,6 +12,7 @@ import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
+import { providerMessage } from './message'
 import type { ProviderFactory } from './types'
 
 export interface ClaudeQuery extends AsyncIterable<unknown> {
@@ -40,10 +42,14 @@ export function createClaudeFactory(
     options.signal?.throwIfAborted()
     const input = new ClaudeInputWindow()
     let resultReceived = false
-    const mapper = new ClaudeEvents(input.ids, (event) => {
-      if (event.type === 'result') resultReceived = true
-      options.event(event)
-    })
+    const mapper = new ClaudeEvents(
+      input.ids,
+      (event) => {
+        if (event.type === 'result') resultReceived = true
+        options.event(event)
+      },
+      (uuid) => input.hasOutstanding(uuid),
+    )
     let closed = false
     let stream: ClaudeQuery
     try {
@@ -51,6 +57,7 @@ export function createClaudeFactory(
         prompt: input,
         options: {
           cwd: options.cwd,
+          systemPrompt: options.instructions,
           env: providerEnvironment(options.home, options.tools),
           pathToClaudeCodeExecutable: binary(),
           model: options.choice.model,
@@ -124,14 +131,17 @@ export function createClaudeFactory(
       send: async (command) => {
         const uuid = randomUUID()
         const attached = command.attachments
-          .map((item) => `\nAttached file: ${item.path}`)
+          .map((item) => `\n${attachmentDescription(command, item)}`)
           .join('')
         input.push(command.message.id, {
           type: 'user',
           uuid,
           session_id: options.conversationId ?? '',
           parent_tool_use_id: null,
-          message: { role: 'user', content: command.message.text + attached },
+          message: {
+            role: 'user',
+            content: providerMessage(command.message) + attached,
+          },
           priority: 'next',
         })
       },

@@ -1,7 +1,7 @@
 import type { AccountResponse } from '../../shared/account'
 import type { User } from '../../shared/api'
 import { BASE_IMAGE } from '../../shared/base-image'
-import type { MembersResponse } from '../../shared/members'
+import type { MembersResponse, PendingOrgInvite } from '../../shared/members'
 import type { Attachment } from '../../shared/messages'
 import type {
   GetStartedResponse,
@@ -17,6 +17,7 @@ import type { Routine, RoutineRun } from '../../shared/routines'
 import type { Section } from '../../shared/sections'
 import type { Workspace, WorkspaceResponse } from '../../shared/workspaces'
 import { coreFixtures } from '../../test-support/fixtures/core'
+import type { OperatorRecords } from '../../test-support/fixtures/operator'
 
 /** The start steps and the start error of one workspace. */
 export type StartRecord = Pick<WorkspaceResponse, 'start' | 'error'>
@@ -28,6 +29,7 @@ export interface OrgState {
   sections: readonly Section[]
   /** In the order of the workspace list. */
   workspaces: readonly Workspace[]
+  workspaceNumberCount: number
   starts: Map<string, StartRecord>
   /** The workspaces that the fake made. The recorded server has no replies for them. */
   created: Set<string>
@@ -35,6 +37,8 @@ export interface OrgState {
   running: Map<string, () => void>
   repositories: readonly Repository[]
   settings: OrgSettings
+  settingsRevision: number
+  buildRevisions: Map<string, number>
   /** Each build with its log, the newest first. */
   builds: readonly BuildResponse[]
   currentImageBuildId: string | null
@@ -45,6 +49,20 @@ export interface OrgState {
   runs: readonly RoutineRun[]
 }
 
+/**
+ * The waitlist of the person signed in: their app access, the address of
+ * their approval email, and the org invitations that wait for them. The
+ * pause and the codes, with the referral code of the person, are those of
+ * the operator section, in `DevState.operator`.
+ */
+export interface DevWaitlist {
+  appAccess: boolean
+  /** The primary verified email of the user, or `null`. */
+  approvalEmail: string | null
+  /** Each invitation, with the state of the org that an Accept joins. */
+  invitations: { invite: PendingOrgInvite; org: OrgState }[]
+}
+
 /** Everything that the writes of the dev fake change. */
 export interface DevState {
   account: AccountResponse
@@ -53,12 +71,21 @@ export interface DevState {
   orgs: readonly OrgState[]
   /** `false` until the user installs the GitHub App. */
   githubAppInstalled: boolean
-  /** The uploads of New workspace, by ID. */
+  /** The file uploads of the fake, by ID, which a create or a send names. */
   attachments: Map<string, Attachment>
   /** The wait before an open workspace stops, from `stop=<seconds>`. */
   stopAfterMs: number | null
+  /**
+   * The suspensions and deletions of the sample orgs and users of the
+   * operator section, which Suspend and Lift change, and the records of
+   * the waitlist: the approvals, the codes, and the pause. The operator
+   * section and the waitlist of the person signed in share them, as they
+   * share the database of the Worker.
+   */
+  operator: OperatorRecords
   /** Each change of a share setting fails, from `shareSave=fail`. */
   shareSaveFails: boolean
+  waitlist: DevWaitlist
 }
 
 /**
@@ -102,6 +129,7 @@ export function freshOrg(
     org,
     sections: [{ ...general, orgId: org.id, position: 0, collapsed: false }],
     workspaces: [],
+    workspaceNumberCount: 0,
     starts: new Map(),
     created: new Set(),
     running: new Map(),
@@ -115,6 +143,8 @@ export function freshOrg(
       needsBuild: false,
     },
     builds: [],
+    settingsRevision: 1,
+    buildRevisions: new Map(),
     currentImageBuildId: null,
     members: {
       members: [{ user, role: org.role, joinedAt: now }],
@@ -122,6 +152,18 @@ export function freshOrg(
     },
     routines: [],
     runs: [],
+  }
+}
+
+export function updateNeedsBuild(org: OrgState): void {
+  const baseline =
+    org.currentImageBuildId ??
+    org.builds.find((item) => item.build.kind === 'build')?.build.id
+  const revision =
+    baseline === undefined ? undefined : org.buildRevisions.get(baseline)
+  org.settings = {
+    ...org.settings,
+    needsBuild: revision !== undefined && revision !== org.settingsRevision,
   }
 }
 

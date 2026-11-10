@@ -2,7 +2,7 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 stream cursor, the session logs, the transcript items and their counts,
-the lost lines, the turns, and Try again.
+the lost lines, the turns, the work fold of each ended turn, and Try again.
 
 - The stream cursor spans the whole workspace: every session, file, and
   workspace event. It drops a resent event, holds an event after a gap until
@@ -15,7 +15,7 @@ the lost lines, the turns, and Try again.
 - Tool transcript items keep `tool.omittedDetailBytes`.
   `Transcript.turnCompletions` keeps each completion event by turn ID, including stopped completions and `omittedFileCount`.
 - A tool call shows the size of output that the runner left out, such as "1.2 MB left out".
-  A folded run of calls shows the total of its calls' current counts, so a finished run still names it.
+  A folded run of calls shows the total of its calls' current counts, so a finished run still names it. The work fold of an ended turn shows the total of its calls too.
 - A finished turn ends its file list with the files that the runner left out, such as "47 more files".
   A stopped line adds the count of its stopped completion: "You stopped the agent · 5 changed files not listed".
   The counts come from `turnCompletions`. A zero count shows nothing.
@@ -40,13 +40,24 @@ the lost lines, the turns, and Try again.
 - A refusal marker starts no turn. A refused `turn.completed` or `turn.failed` ends its turn only while that turn runs.
   Its running calls show as stopped, its Stop request clears, and no time, files, or Try again appear.
   A marker of an ended turn, of a turn that never started, or without a turn ends nothing.
+- The work of a turn folds when `Transcript.turns` shows that the turn ended, as `hasEnded` says: its end arrived, or a newer turn started.
+  Then the work before the answer of each part becomes one work fold, as
+  [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn) says. A running turn folds nothing.
+- The items of an ended turn, as `turnOf` gives them, split into parts at each of its user items.
+  The answer of a part is its last `agent` item, with the `agent` items directly before it. An insert between two of them ends the answer.
+  The answer and each later item of the part stay in view, such as the calls that a stop cut off. The row where the turn ended stays in view too.
+- A part without an `agent` item has no work fold. Its runs of tool calls group as while the turn runs.
+- Before the answer, the work of a part is its `agent` and `tool` items and each `lost` item whose marker names the turn.
+  A `lost` item of another turn, or of no turn, stays in view and ends a run of work.
+  A run folds only when it holds a `tool` or an `agent` item.
+- An insert, such as a Mac command card, that follows a folded item joins that work fold at its place. An insert never starts a work fold.
 - Try again shows only on the failed item that names the retry message of the newest session record, as
-  [Messages](../../docs/protocol/chat-and-events.md#messages) says. The order of the transcript items gives no permission.
+  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says. The order of the transcript items gives no permission.
   A read-only chat offers no Try again.
 - Each session log takes the `session.updated` records of its session with its other events.
   It keeps the `retryMessageId` of the record with the highest event number as `Transcript.retryMessageId`.
   So a record that arrives late, such as in a history load, never brings back an older Try again or hides a newer one.
-- A record from a read or a reply counts at the event number of its state, as the [record order rule](README.md#rules-for-this-code) says.
+- A record from a read or a reply counts at the event number of its state, as the [record order rule](loads-and-sends.md#record-order) says.
   `SessionLog.offer` in [`state/session-log.ts`](state/session-log.ts) folds it at its place in the event order.
 - `retryItemId` picks one failed item. A turn that continues the unanswered messages of a finished turn takes their IDs.
   So a late failure of the older turn can name the same message. Then only the item of the newer known turn offers Try again.

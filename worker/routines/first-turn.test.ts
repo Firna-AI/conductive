@@ -72,7 +72,7 @@ it('reports a failed first turn once, turns off after three failures, and preser
       "SELECT state FROM routine_runs WHERE id = 'first-run'",
     ).first('state'),
   ).toBe('failed')
-  fixture.chat.closeConnections()
+  await fixture.chat.closeConnections()
 })
 
 it('resets the failure count when the first turn finishes and ignores a later failed turn', async () => {
@@ -103,7 +103,7 @@ it('resets the failure count when the first turn finishes and ignores a later fa
     (await readRoutine(fixture.env.DB, fixture.org.id, 'chat-routine'))
       .failedRunsInARow,
   ).toBe(0)
-  fixture.chat.closeConnections()
+  await fixture.chat.closeConnections()
 })
 
 it('reports a queued first turn failure when its login disappears before dispatch', async () => {
@@ -130,5 +130,5 @@ it('reports a queued first turn failure when its login disappears before dispatc
       .failedRunsInARow,
   ).toBe(1)
   expect(runner.commands).toEqual([])
-  fixture.chat.closeConnections()
+  await fixture.chat.closeConnections()
 })

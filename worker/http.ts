@@ -55,7 +55,8 @@ export function requiredString(value: unknown): string {
 
 export function privateResponse(response: Response): Response {
   response.headers.set('Cache-Control', 'no-store')
-  response.headers.set('Referrer-Policy', 'no-referrer')
+  if (!response.headers.has('Referrer-Policy'))
+    response.headers.set('Referrer-Policy', 'no-referrer')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   return response
 }

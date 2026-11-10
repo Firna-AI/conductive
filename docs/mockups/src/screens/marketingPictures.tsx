@@ -11,6 +11,7 @@ import {
   type PictureLayout,
   type ScreenViewport,
 } from './marketingPictureList'
+import { MacAppScreen, type MacAppState } from './MacAppScreen'
 import { acmeSettings, OrgSettingsScreen } from './OrgSettingsScreen'
 import { WorkspaceListScreen } from './WorkspaceListScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
@@ -27,6 +28,14 @@ const creating: WorkspaceState = {
 
 /** The open picker of the model and the effort, over two attached files. */
 const picker: WorkspaceState = { ...readyWorkspace, composer: 'picker' }
+
+/** A command that waits for Allow in the window of the Mac app. */
+const waitingCommand: MacAppState = {
+  window: 'window',
+  page: 'workspace',
+  command: 'prompt',
+  change: 'none',
+}
 
 function workspace(state: WorkspaceState, viewport: ScreenViewport) {
   return <WorkspaceScreen state={state} viewport={viewport} />
@@ -79,10 +88,16 @@ const screens: Readonly<
   /** The workspace list of a phone, with the state of each workspace. */
   phone: (viewport) => (
     <WorkspaceListScreen
-      state={{ list: 'workspaces', menu: 'none' }}
+      state={{ list: 'workspaces', menu: 'none', palette: 'closed' }}
       viewport={viewport}
     />
   ),
+  /**
+   * The window of the Mac app with its buttons and the sidebar, where an
+   * agent asks to run a command on this Mac. The Mac app has no phone
+   * layout, so each layout shows the screen of a Mac.
+   */
+  mac: () => <MacAppScreen state={waitingCommand} />,
 }
 
 /** A picture of the home page in one layout, and how the page frames it. */

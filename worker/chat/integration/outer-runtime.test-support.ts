@@ -56,6 +56,7 @@ export async function createOuterRuntime(
   bundle: string,
   options: {
     appOrigin?: string
+    appOriginBinding?: string | null
     port?: number
     assetsDirectory?: string
     https?: boolean
@@ -97,12 +98,15 @@ export async function createOuterRuntime(
             },
             env: {
               DB: { type: 'd1', id: 'outer-chat-db' },
+              CHAT_ATTACHMENTS: { type: 'r2', name: 'outer-chat-attachments' },
               WORKSPACES: {
                 type: 'durable-object',
                 worker: 'outer-chat-tests',
                 exportName: 'Workspace',
               },
-              APP_ORIGIN: text(appOrigin),
+              ...(options.appOriginBinding === null
+                ? {}
+                : { APP_ORIGIN: text(options.appOriginBinding ?? appOrigin) }),
               MACHINE_ORIGIN: text(OUTER_MACHINE_ORIGIN),
               GITHUB_CLIENT_ID: text('outer-client'),
               GITHUB_CLIENT_SECRET: text('outer-client-secret'),
@@ -172,6 +176,9 @@ export async function createOuterRuntime(
     await applyMigrations(db)
     const env: AppEnv = {
       DB: db,
+      CHAT_ATTACHMENTS: (
+        await runtime.getBindings<{ CHAT_ATTACHMENTS: R2Bucket }>()
+      ).CHAT_ATTACHMENTS,
       APP_ORIGIN: appOrigin,
       MACHINE_ORIGIN: OUTER_MACHINE_ORIGIN,
       GITHUB_CLIENT_ID: 'outer-client',
@@ -218,6 +225,9 @@ export async function createOuterRuntime(
         await runtime.dispose()
         runtime = createRuntime()
         env.DB = await runtime.getD1Database('DB')
+        env.CHAT_ATTACHMENTS = (
+          await runtime.getBindings<{ CHAT_ATTACHMENTS: R2Bucket }>()
+        ).CHAT_ATTACHMENTS
       },
       dispose: () => runtime.dispose(),
     }

@@ -1,5 +1,6 @@
-import { errorSummary, warnWorker } from '../warnings'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import { warnWorker } from '../warnings'
+import { errorSummary, WarningId } from '../warning-values'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import { HttpError } from '../http'
@@ -35,7 +36,9 @@ export class RunnerChannel {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
-    this.delivery = new RunnerDelivery(store, dependencies, publish)
+    this.delivery = new RunnerDelivery(store, dependencies, publish, () =>
+      this.flush(),
+    )
     this.repairs = new RepairDelivery(store, publish)
   }
 
@@ -96,9 +99,11 @@ export class RunnerChannel {
       try {
         await this.handle(active, value)
       } catch (error) {
-        warnWorker(
-          `The runner of workspace ${active.workspace.id} closes after a failed message: ${errorSummary(error)}`,
-        )
+        warnWorker({
+          kind: 'runner_message_failed',
+          workspaceId: WarningId.checked(active.workspace.id),
+          error: errorSummary(error),
+        })
         active.peer.close()
         throw error
       }
@@ -181,19 +186,20 @@ export class RunnerChannel {
         'runner_stream_mismatch',
         'The connection is not available.',
       )
-    let stored: WorkspaceEventEnvelope | undefined
+    let stored: WorkspaceEventEnvelope[] = []
     let becameReady = false
     const cursor = await this.store.change(
       active.workspace.id,
       async (transaction) => {
-        stored = undefined
+        stored = []
         becameReady = false
         const through = await transaction.cursor(message.streamId)
         if (message.eventNumber !== through + 1) return through
         const receipt = await storeRunnerReceipt(
           transaction,
+          active.workspace,
           message,
-          this.dependencies.randomId,
+          this.dependencies,
         )
         becameReady = receipt.ready
         stored = receipt.stored
@@ -222,7 +228,8 @@ export class RunnerChannel {
       this.attachFiles(active)
       await this.dependencies.runnerReady(active.workspace.id, publish)
     }
-    if (stored) await this.dependencies.runnerEventStored(stored, publish)
+    for (const envelope of stored)
+      await this.dependencies.runnerEventStored(envelope, publish)
     await this.flush()
   }
 

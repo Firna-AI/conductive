@@ -57,14 +57,16 @@ of the data that the screens read and write.
   Archive, or a cleared unread state carries no number. Each shows at once
   and stays over the reply of a pending Resume. A reply after close
   changes no workspace state.
+- An open workspace follows confirmed archived records in the org list,
+  so Archive does not wait for the event stream. It also checks the list
+  when it opens. A known archive stays over an older open or Resume reply.
 - A workspace event applies its saved public error with the workspace
   state. An older event without the error keeps the current error. An
   explicit null clears it. Event errors carry no log, so the model keeps
   a null log for them.
-- An admitted create stays in `OrgModel.creations` until its start ends.
-  A failed start takes the workspace out of the list, and gives the first
-  message back in a form of its own. A sign-out, or a sign-in of another
-  person, forgets every create.
+- A create request lives in `OrgModel.creations` until it answers. A
+  sign-out, or a sign-in of another person, ends every request that still
+  runs. A failed first start keeps its workspace in the list.
   [Creation recovery](creation-recovery.md) gives the rules.
 - The invitations of the user read at the first show of `/` for that user,
   through `AppModel.invitations`. The first load and the other addresses
@@ -74,6 +76,23 @@ of the data that the screens read and write.
   opens, and Get started reads again. A sign-out, or a sign-in of another
   person, forgets the invitations, and an answer for the person before
   changes nothing.
+- The reply of the session says whether the person has app access.
+  Without it, the first load reads only the waitlist state, and the boot
+  is `waiting`. The waitlist reads the invitations of the person at its
+  first show.
+- The waitlist reads the app access again each time that the person comes
+  back to the page, with the invitations. The reply of Use code holds the
+  app access, and an Accept reads the waitlist state again. No timer reads
+  it. A read at a return waits for no running use of a code or Accept, and
+  a failed read there changes nothing.
+- When app access arrives, the address changes first, while the waitlist
+  still shows: `/` after a code or an approval, and the org after an
+  Accept. Then `AppModel.admit` reads what every screen shares, and the
+  app opens. A failed read shows that the app did not load, with Try
+  again. A new start, a sign-out, or the open of the app makes an older
+  answer of the waitlist change nothing.
+- The invite code of the account reads each time that the Account page
+  opens, because its uses change while the page is closed.
 - The tab keeps the `WorkspaceModel` of each workspace that it showed, for
   the signed-in user, as
   [The kept workspace](../shell/workspace/README.md#the-kept-workspace)
@@ -81,10 +100,11 @@ of the data that the screens read and write.
   event number that it reached. A sign-out, or a sign-in of another user,
   closes and forgets every kept model.
 - An open reads the workspace detail, shows it, and starts the read marks
-  and the event stream. Only then does a stopped or failed workspace get
-  its Resume. So a refused or failed start keeps the detail and the
-  stream, and `startError` of `WorkspaceModel` holds the error. A manual
-  Resume still rejects for its caller.
+  and the event stream. Only then does a stopped workspace, or one whose
+  later start failed, get its Resume. A failed first start waits for Try
+  again. So a refused or failed start keeps the detail and the stream, and
+  `startError` of `WorkspaceModel` holds the error. A manual Resume still
+  rejects for its caller.
 - A `user_suspended` refusal holds only while the owner stays the same. A
   new owner in the detail, or from `reassigned(workspace)`, clears it. A
   late refusal for a former owner sets nothing.

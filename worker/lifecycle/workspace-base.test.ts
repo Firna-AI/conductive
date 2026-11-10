@@ -47,8 +47,8 @@ it('keeps the pull request base on resume and on the disk retention restart', as
   await actor.lifecycleStopped()
   h.boat.states.set('bx_1', 'archived')
   const maintenanceAt = (await actor.readLifecycle())!.nextDiskKeepaliveAt!
-  h.setTime(maintenanceAt)
-  await actor.alarm()
+  await h.setTime(maintenanceAt)
+  await actor.advance()
   const retained = h.boat.server.requests.filter((request) =>
     new URL(request.url).pathname.endsWith('/resume'),
   )

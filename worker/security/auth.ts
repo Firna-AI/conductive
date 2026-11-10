@@ -1,6 +1,7 @@
 import { API_PATHS } from '../../src/shared/api'
+import { INVITE_CODE_PARAMETER } from '../../src/shared/waitlist'
 import { productDomain } from '../../docs/mockups/src/brand'
-import { termsConsentPage } from '../../src/marketing/sign-in-consent'
+import { termsConsentResponse } from '../marketing/consent'
 import {
   TERMS_VERSION,
   TERMS_VERSION_PARAMETER,
@@ -23,6 +24,7 @@ import { GitHubClient } from './github'
 import { saveGitHubTokens } from './github-tokens'
 import { createDesktopHandoff, desktopChallenge } from './desktop-auth'
 import { desktopSessionCookie } from './desktop-contract'
+import { signInAppAccess } from './sign-in-access'
 
 const OAUTH_SECONDS = 600
 const SESSION_SECONDS = 7 * 24 * 60 * 60
@@ -33,14 +35,20 @@ export async function startSignIn(
   request?: Request,
 ): Promise<Response> {
   const challenge = desktopChallenge(request)
+  const inviteCode =
+    request && new URL(request.url).searchParams.get(INVITE_CODE_PARAMETER)
   const termsVersion =
     request && new URL(request.url).searchParams.get(TERMS_VERSION_PARAMETER)
   if (termsVersion !== TERMS_VERSION) {
-    const continuation = new URL(acceptedTermsSignInPath(), env.APP_ORIGIN)
+    const continuation = new URL(
+      acceptedTermsSignInPath(inviteCode ?? undefined),
+      env.APP_ORIGIN,
+    )
     if (challenge) continuation.searchParams.set('desktop_challenge', challenge)
-    return await termsConsentPage(
+    return await termsConsentResponse(
       continuation.pathname + continuation.search,
       env.MARKETING_ORIGIN ?? `https://${productDomain}`,
+      env.ASSETS,
     )
   }
   const state = dependencies.randomToken()
@@ -54,6 +62,7 @@ export async function startSignIn(
       expiresAt,
       desktopChallenge: challenge,
       termsVersion,
+      inviteCode,
     },
     'github-state',
     env.SESSION_SIGNING_KEY,
@@ -130,6 +139,7 @@ export async function finishSignIn(
   )
   await saveGitHubTokens(env, user.id, tokens, now)
   await saveVerifiedEmails(env.DB, user.id, profile.verifiedEmails)
+  const location = await signInAppAccess(env, user, stored.inviteCode, now)
   if (typeof stored.desktopChallenge === 'string') {
     return new Response(null, {
       status: 302,
@@ -152,7 +162,7 @@ export async function finishSignIn(
     'session',
     env.SESSION_SIGNING_KEY,
   )
-  const headers = new Headers({ Location: env.APP_ORIGIN })
+  const headers = new Headers({ Location: location })
   headers.append('Set-Cookie', cookie(SESSION_COOKIE, session, SESSION_SECONDS))
   headers.append('Set-Cookie', cookie(OAUTH_COOKIE, '', 0))
   return new Response(null, { status: 302, headers })

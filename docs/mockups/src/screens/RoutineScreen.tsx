@@ -156,6 +156,10 @@ export function RoutineScreen(props: {
           org={orgs.acme}
           sections={suspended ? suspendedSections() : workspaceSections()}
           suspended={suspended}
+          viewer={{
+            person: state.viewer === 'member' ? memberViewer : 'cal',
+            role: state.viewer,
+          }}
         />
       }
     >

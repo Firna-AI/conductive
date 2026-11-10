@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
+import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import { nameLabel } from '../../shared/name-label'
 import { createApiClient } from '../../app/api/client'
 import { ServicesContext } from '../../app/services'
 import { testServices } from '../../app/test-kit'
@@ -8,21 +10,26 @@ import type { Action } from '../../shell/ui/useAction'
 import {
   byRole,
   queryAllByRole,
+  queryByLabel,
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import {
   holdAnimationFrames,
   mount,
   MOUNTED_TEST_TIMEOUT,
   press,
+  typeText,
   waitFor,
 } from '../../test-support/mount'
+import { ChatController } from '../state/controller'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
-import { WorkspaceChat } from '../WorkspaceChat'
+import { WorkspaceChat, WorkspaceChatView } from '../WorkspaceChat'
+import { pointer, rowStatus } from './tab-drag-test-kit'
+import { pressOn, rightClick } from './tab-row-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -31,6 +38,11 @@ const isShownTab = (title: string) =>
   queryAllByRole('button', title).some(
     (tab) => tab.getAttribute('aria-current') === 'page',
   )
+
+const writes = (server: FakeApiServer) =>
+  server.requests
+    .filter((request) => request.method !== 'GET')
+    .map((request) => `${request.method} ${new URL(request.url).pathname}`)
 
 /** An action that the refused bar never runs, because it offers none. */
 const noResume: Action<[]> = {
@@ -41,14 +53,16 @@ const noResume: Action<[]> = {
 }
 
 describe('a read-only chat', () => {
-  it('shows the refused bar of the host for a suspended org, switches its sessions with no write, and shows no control that writes', async () => {
+  it('shows the refused bar of the host for a suspended org, switches its sessions with no write, shows no control that writes, and opens no tab menu', async () => {
     holdAnimationFrames()
     // The cloud computer still runs while its stop waits, so the chat would
     // show its composer without the read-only input.
     const server = new FakeApiServer({ workspaceState: 'ready' })
     const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
       server.events.subscribe(after, (message) => listener.message(message))
-    const { workspace } = workspaceFixtures('ready').detail
+    const fixtures = workspaceFixtures('ready')
+    const { workspace } = fixtures.detail
+    const second = nameLabel(fixtures.sessions.sessions[1].title)
     await mount(
       <ServicesContext.Provider value={testServices(server)}>
         <WorkspaceChat
@@ -62,6 +76,7 @@ describe('a read-only chat', () => {
                 workspace={workspace}
               />
             ),
+            keepsComposer: false,
           }}
           orgId={FAKE_IDS.org}
           readOnly
@@ -75,27 +90,168 @@ describe('a read-only chat', () => {
       () => queryByText(orgRefusal.reason),
       'the refused bar of the host',
     )
-    await press(byRole('button', 'Debounce lookups'))
+    await press(byRole('button', second))
     await waitFor(
-      () => isShownTab('Debounce lookups'),
+      () => isShownTab(second),
       'the second session as the shown tab',
     )
+    const mouse = { pointerType: 'mouse' }
+    pointer(byRole('button', second), 'pointerdown', {
+      ...mouse,
+      clientX: 50,
+    })
+    pointer(window, 'pointermove', { ...mouse, clientX: 90 })
+    const drag = rowStatus()
+    pointer(window, 'pointerup', { ...mouse, clientX: 90, buttons: 0 })
+    const tab = byRole('button', second)
+    const tabMenu = {
+      browserMenu: rightClick(tab, { clientX: 50, clientY: 15 }),
+      keyReachesBrowser: pressOn(tab, 'F10', { shiftKey: true }),
+      menus: queryAllByRole('menu', second).length,
+    }
     expect({
       refused: queryByText("The sandbox can't start") !== null,
-      composer: document.querySelector('textarea') !== null,
+      composer: queryByLabel('Message') !== null,
       newSession: queryByRole('button', 'New session') !== null,
-      rename: queryByRole('button', 'Rename Debounce lookups') !== null,
+      rename: queryByRole('button', `Rename ${second}`) !== null,
+      tabMenu,
       resume: queryByRole('button', 'Resume') !== null,
-      writes: server.requests
-        .filter((request) => request.method !== 'GET')
-        .map((request) => `${request.method} ${new URL(request.url).pathname}`),
+      drag,
+      writes: writes(server),
     }).toEqual({
       refused: true,
       composer: false,
       newSession: false,
       rename: false,
+      tabMenu: { browserMenu: true, keyReachesBrowser: true, menus: 0 },
       resume: false,
+      drag: '',
       writes: [],
     })
+  })
+
+  it('keeps the old tab name when host access becomes read-only during a rename', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ workspaceState: 'ready' })
+    const client = createApiClient(server.fetch)
+    const services = testServices(server)
+    const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
+      server.events.subscribe(after, (message) => listener.message(message))
+    const { workspace } = workspaceFixtures('ready').detail
+    const render = (readOnly: boolean) => (
+      <ServicesContext.Provider value={services}>
+        <WorkspaceChat
+          client={client}
+          clock={{ now: () => FAKE_TIME }}
+          host={
+            readOnly
+              ? {
+                  starting: null,
+                  sandboxBar: (
+                    <SandboxBar
+                      notice={orgRefusal}
+                      resume={noResume}
+                      workspace={workspace}
+                    />
+                  ),
+                  keepsComposer: false,
+                }
+              : undefined
+          }
+          orgId={FAKE_IDS.org}
+          readOnly={readOnly}
+          subscribe={subscribe}
+          viewport="desktop"
+          workspaceId={FAKE_IDS.workspace}
+        />
+      </ServicesContext.Provider>
+    )
+    const view = await mount(render(false))
+    rightClick(
+      await waitFor(
+        () => queryByRole('button', 'Address autocomplete'),
+        'the session tab before access changes',
+      ),
+    )
+    await press(byRole('menuitem', 'Rename session'))
+    await typeText(byRole('textbox', 'Session name'), 'Unsaved session name')
+
+    await view.rerender(render(true))
+
+    expect({
+      rename: queryByRole('textbox', 'Session name') !== null,
+      oldName: isShownTab('Address autocomplete'),
+      composer: queryByRole('textbox', 'Message') !== null,
+      refused: queryByText(orgRefusal.reason) !== null,
+      writes: writes(server),
+    }).toEqual({
+      rename: false,
+      oldName: true,
+      composer: false,
+      refused: true,
+      writes: [],
+    })
+  })
+
+  it('hides an open close question after an archive and keeps session history available without writes', async ({
+    onTestFinished,
+  }) => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({
+      workspaceState: 'working',
+      conversation: 'running',
+    })
+    const controller = new ChatController({
+      target: { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace },
+      client: createApiClient(server.fetch),
+      subscribe: (_target, after, listener) =>
+        server.events.subscribe(after, (message) => listener.message(message)),
+    })
+    onTestFinished(controller.stop)
+    await controller.start()
+    await mount(
+      <WorkspaceChatView
+        clock={{ now: () => FAKE_TIME }}
+        controller={controller}
+        viewport="desktop"
+      />,
+    )
+    await press(byRole('button', 'Close Address autocomplete'))
+    expect(
+      queryByRole('dialog', 'Stop the turn and close the tab?'),
+    ).not.toBeNull()
+    const { workspace } = workspaceFixtures('archived').detail
+
+    await act(async () =>
+      server.events.emit({
+        workspaceId: FAKE_IDS.workspace,
+        eventNumber: server.events.history().throughEventNumber + 1,
+        occurredAt: FAKE_TIME,
+        event: { type: 'workspace.updated', workspace },
+      }),
+    )
+
+    expect({
+      close: queryByRole('dialog', 'Stop the turn and close the tab?') !== null,
+      tab: isShownTab('Address autocomplete'),
+      composer: queryByRole('textbox', 'Message') !== null,
+      overlay: controller.getSnapshot().overlay,
+      notice: controller.getSnapshot().notice,
+    }).toEqual({
+      close: false,
+      tab: true,
+      composer: false,
+      overlay: { kind: 'close', sessionId: FAKE_IDS.session },
+      notice: null,
+    })
+    await press(byRole('button', 'Session history'))
+    const history = byRole('menu', 'Session history')
+    expect(
+      queryByText(
+        'Why does the places proxy time out on slow networks?',
+        history,
+      ),
+    ).not.toBeNull()
+    expect(writes(server)).toEqual([])
   })
 })

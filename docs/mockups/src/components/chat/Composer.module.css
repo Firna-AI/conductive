@@ -26,9 +26,3 @@
   flex: 1;
   min-width: 4px;
 }
-
-.hint {
-  padding-left: 14px;
-  color: var(--ui-muted);
-  font-size: var(--ui-text-sm);
-}

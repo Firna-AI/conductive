@@ -1,7 +1,10 @@
 import { API_PATHS } from '../src/shared/api'
 import { MACHINE_PATHS } from '../src/shared/agent-tools'
+import { GITHUB_SETUP_PATH } from '../src/shared/github-setup'
 import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
+import { SITE_FOLDER } from '../src/shared/site-build'
 import type { AppDependencies, AppEnv } from './env'
+import { githubSetupResponse } from './github-setup'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
 import { requestBodyEntry } from './http/request-body'
@@ -16,7 +19,8 @@ import {
   handleImageSourceCredential,
   IMAGE_SOURCE_CREDENTIAL_PATH,
 } from './lifecycle/image-sources/credential'
-import { workspaceRuntime } from './lifecycle/runtime'
+import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
+import { repairLifecycleAlarms } from './lifecycle/repair'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -24,14 +28,18 @@ import { randomToken } from './security/crypto'
 import { finishDesktopSignIn } from './security/desktop-auth'
 import { DESKTOP_EXCHANGE_PATH } from './security/desktop-contract'
 import { desktopCors, desktopPreflight } from './security/desktop-origin'
-import { checkOrigin } from './security/gate'
+import { checkOrigin, sessionGate } from './security/gate'
 import { membersGate } from './members/gate'
 import { productionMembersHooks } from './members/composition'
 import { cleanupDeletedOrgs } from './members/cleanup'
 import { routePreview, routeWorkspaceFeatures } from './features/router'
 import { productionAgentTools } from './tools/composition'
+import { isAgentToolPath } from './tools/lists'
 import { productionGitHubWebhook } from './github/composition'
-import { appFrameSources } from './configuration'
+import { appFrameSources, runnerSoftware } from './configuration'
+import { appSiteResponse } from './marketing/assets'
+import { retryApprovalEmails } from './operator/approval-email'
+import { warnWorker } from './warnings'
 import { routineRunRuntime } from './routines/run-runtime'
 import { scanRoutineSchedules } from './routines/schedule-scan'
 
@@ -81,8 +89,19 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             const preflight = desktopPreflight(request)
             if (preflight) return privateResponse(preflight)
           }
+          if (upgrade && !appApi)
+            await sessionGate(request, env, dependencies.now())
+          if (
+            path === GITHUB_SETUP_PATH &&
+            (request.method === 'GET' || request.method === 'HEAD') &&
+            !upgrade
+          ) {
+            return respond(await githubSetupResponse(request, env))
+          }
           if (!path.startsWith('/api/') && env.ASSETS) {
-            const asset = await env.ASSETS.fetch(request)
+            const asset = path.startsWith(`/${SITE_FOLDER}/`)
+              ? await appSiteResponse(request, env.ASSETS)
+              : await env.ASSETS.fetch(request)
             const response = new Response(asset.body, asset)
             response.headers.set(
               'Content-Security-Policy',
@@ -95,7 +114,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await routeMacCommand(request, env))
         }
         if (surface === 'machine') {
-          if (path === MACHINE_PATHS.workspaces)
+          if (isAgentToolPath(path))
             return respond(
               await productionAgentTools(request, env, dependencies),
             )
@@ -150,9 +169,18 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         }
         if (isDeviceAppPath(path))
           return respond(await routeDevice(request, env))
-        const chatResponse = await routeChat(request, env)
+        const chatResponse = await routeChat(
+          request,
+          env,
+          dependencies.now,
+          dependencies.randomToken,
+        )
         if (chatResponse) return respond(chatResponse)
-        const featureResponse = await routeWorkspaceFeatures(request, env)
+        const featureResponse = await routeWorkspaceFeatures(
+          request,
+          env,
+          dependencies.now(),
+        )
         if (featureResponse) return respond(featureResponse)
         const context = await membersGate(request, env, dependencies.now())
         return respond(
@@ -172,12 +200,24 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     async scheduled(event: ScheduledController, env: AppEnv): Promise<void> {
       if (event.cron === '* * * * *') {
         await scanRoutineSchedules(routineRunRuntime(env, dependencies))
-      } else if (event.cron === '*/15 * * * *') {
-        await cleanupDeletedOrgs(
-          env,
-          dependencies,
-          productionMembersHooks(env, dependencies),
-        )
+        return
+      }
+      if (event.cron !== '*/15 * * * *') return
+      await cleanupDeletedOrgs(
+        env,
+        dependencies,
+        productionMembersHooks(env, dependencies),
+      )
+      await repairLifecycleAlarms(
+        workspaceRuntime(env, dependencies),
+        imageRuntime(env, dependencies),
+        () => runnerSoftware(env),
+      )
+      // Last, so that a slow or failed email never holds back the repairs.
+      try {
+        await retryApprovalEmails(env, dependencies)
+      } catch {
+        warnWorker({ kind: 'approval_email_retry_failed' })
       }
     },
   }

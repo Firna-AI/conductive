@@ -29,7 +29,10 @@ Pass that ID as `before` to read the next page.
 The cursor belongs to the same org and routine.
 Equal creation times sort by ID descending.
 The run state comes from its stored outcome, its workspace, and its creation attempt.
-A removed failed-start workspace has no public workspace link.
+An accepted failed first start keeps its workspace link and its failure cause.
+Try again in that workspace replaces its failed sandbox.
+Attempt failures retain their cause for recovery if the run outcome write stops.
+A failure before workspace admission has no public workspace link.
 A failed first turn keeps its workspace link and its failure cause.
 For an author or sender skip, the pull request trigger includes `skipLogin`.
 It is the account login from the event that caused the skip.

@@ -2,6 +2,7 @@ import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
 import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
 import { EFFORTS } from '../../app/api/read-core'
 import type {
@@ -134,7 +135,7 @@ export function ModelPicker(props: {
           hasPopup="menu"
           onPress={toggle}
           size="sm"
-          style={{ height: control.height, paddingHorizontal: 8 }}
+          style={pickerButtonStyle(control.height)}
           tone="plain"
         />
       )}

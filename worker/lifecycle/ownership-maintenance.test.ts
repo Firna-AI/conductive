@@ -9,7 +9,7 @@ import { runningRuntimeWorkspace } from './runtime-lifecycle-test-support'
 import { workspaceRuntime } from './runtime'
 import { readWorkspace, workspaceView } from './workspace-data'
 import { authenticateWorkspaceToken, readWorkspaceToken } from './tokens'
-import { heldOperation } from './platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import {
   activeRuntimeOwner,
   finishRuntimeStart,
@@ -45,7 +45,10 @@ it.each(['reassign', 'remove'] as const)(
     const hooks = {
       workspaceOwnerChanged: workspaceOwnerChangedHook(runtime),
       readWorkspace: async (orgId: string, id: string) =>
-        workspaceView(await readWorkspace(fixture.env.DB, orgId, id)),
+        workspaceView(
+          await readWorkspace(fixture.env.DB, orgId, id),
+          fixture.env.APP_ORIGIN,
+        ),
     }
     const requests = fixture.requests.length
     if (change === 'reassign') {

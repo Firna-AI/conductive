@@ -981,9 +981,9 @@ number names the user's choice. The user can override any part of it.
   `error_code`, `error_message`, `created_at`, and `updated_at`.
   - A skipped run has the state `skipped`, and its reason in
     `error_code` and `error_message`.
-  - `workspace_id` has no foreign key. Reason: a failed start removes its
-    workspace row, and the run keeps the ID to read the failure. A key
-    with `ON DELETE SET NULL` would lose it.
+  - `workspace_id` has no foreign key. A create refused before admission
+    can remove its provisional workspace. The run keeps the attempt ID
+    for recovery. An accepted failed first start keeps its workspace.
   - `run_key` makes each run start once. A schedule uses
     `schedule:<routine>:<time>`, a pull request event uses
     `github:<routine>:<delivery>`, and Run now uses
@@ -998,8 +998,9 @@ number names the user's choice. The user can override any part of it.
   member who left for the routine page.
 - `workspace_creation_attempts` gets nullable `error_code` and
   `error_message` columns. The start failure writes them when it marks the
-  attempt failed. Reason: the workspace object clears its result after a
-  failed start, so D1 keeps no cause today.
+  attempt failed. The queued-run recovery reads that cause if the Worker
+  stops before it writes the failed run outcome. This also covers a
+  refused admission whose provisional workspace was removed.
 - `workspace_creation_plans` gets a nullable `base_branch` and
   `start_sha`. Reason: `joinCreation` rebuilds each job from the plan row,
   so a base only in memory gets lost.
@@ -1036,9 +1037,10 @@ number names the user's choice. The user can override any part of it.
      its own start.
   4. It stores the workspace ID. When `createWorkspace` throws, it stores
      the failure code and message.
-- A failed run keeps no workspace at launch (decision 512 B). When the
-  follow-up of decision 130 D lands, a run whose start fails keeps its
-  workspace in its error state with Try again (decision 509 F).
+- A run whose accepted first start fails keeps its workspace in its error
+  state with Try again (decisions 130 D, 509 F, and 512 B). The run links
+  to that workspace and keeps its failed outcome after the retry. A run
+  refused by the create checks keeps no workspace.
 - A routine turns off after three runs in a row fail (decision 513 B).
   - A run counts as failed when the run row failed, when its start
     failed, or when its first turn failed. A run whose first turn
@@ -1052,13 +1054,14 @@ number names the user's choice. The user can override any part of it.
   address, its head branch with the head commit, the branch that it
   merges into, and the branch that the run's own work goes to. The text
   copies no title or body of a pull request.
-- The state of a run comes from three places, in this order:
+- The state of a run comes from these records:
   - The run row: `queued` before a workspace exists, `failed` with its
     cause, or `skipped` with its reason.
   - The workspace row: its state, such as starting, working, input,
     unread, ready, stopped, error, or archived.
-  - The creation attempt: a failed start that removed its workspace gives
-    `failed` with the stored code and message.
+  - The creation attempt: a failed admission without a workspace gives
+    `failed` with the stored code and message. The queued-run recovery
+    also uses that cause after an interrupted run outcome write.
   - The first turn: the workspace tells the run how its first turn ended.
     A failed first turn shows the run as `failed` with its cause, not as
     unread or ready. Reason: a failed turn counts as output for the
@@ -1475,7 +1478,7 @@ Store routines and serve their routes with the access rules. Nothing runs
 yet.
 
 - [x] Add the migration with `routines` and `routine_runs`, in the range
-      `202611090000`–`202611090059`. Add
+      `202611100000`–`202611100059`. Add
       the row to the range table of `migrations/README.md`. Add the new
       tables to the reset list of `worker/test-support/harness.ts`.
 - [x] Add `src/shared/routines.ts` with the paths and the routine,
@@ -1522,7 +1525,7 @@ Start a run as a new workspace, and let the owner start one by hand.
 
 - [x] Add the migration with the error columns of
       `workspace_creation_attempts`, in the range
-      `202611090100`–`202611090159`. Write them in the start failure.
+      `202611100100`–`202611100159`. Write them in the start failure.
 - [x] Add the run starter: the checks, the create with the stable message
       ID, the run text, and the stored workspace or failure.
   - [x] Test that a run creates its workspace with the owner, the
@@ -1590,7 +1593,7 @@ Start runs from pull request events, on a branch from the pull request.
 
 - [x] Add the migration with `base_branch` and `start_sha` on
       `workspace_creation_plans`, and `base_branch` on `workspaces`, in
-      the range `202611090200`–`202611090259`.
+      the range `202611100200`–`202611100259`.
 - [x] Let a create start its branch from a base that only the Worker
       passes: the plan columns, the fetch of the base branch, the branch
       at the head commit, the `gh-merge-base` setting, and the step
@@ -1805,6 +1808,8 @@ re-ran the 596 tests of `src` and the static checks. The handoff is in
 Depends on: every other milestone
 
 Prove the whole change, review it, and open the pull request.
+
+Merge resolutions and verification: `.context/routines/reports/m10-merge.md`.
 
 - [ ] Smoke-test with the browser harness of
       `worker/chat/integration/run-browser-harness.mjs`: create a routine,

@@ -6,6 +6,8 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { readRoutine } from './routine-data'
+import { readRoutineRun } from './run-list-data'
+import { resumeCompletedWorkspace } from '../lifecycle/completed-resume-test-support'
 import { startRoutineRun } from './run-starter'
 import { recordRoutineRun } from './run-record-data'
 import { finishRoutineRun } from './run-outcome-data'
@@ -22,7 +24,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('keeps the failed start cause on its creation attempt and run after workspace removal', async () => {
+it('keeps a failed start workspace and cause, counts the failure, and retries in the same workspace', async () => {
   const fixture = await runFixture(harness)
   const { runtime, org, seedRun, boat } = fixture
   await seedRun()
@@ -43,7 +45,17 @@ it('keeps the failed start cause on its creation attempt and run after workspace
     await runtime.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspaces',
     ).first('count'),
-  ).toBe(0)
+  ).toBe(1)
+  expect(
+    await runtime.env.DB.prepare(
+      'SELECT id, state, sandbox_id AS sandboxId, last_error_code AS code FROM workspaces',
+    ).first(),
+  ).toEqual({
+    id,
+    state: 'error',
+    sandboxId: null,
+    code: 'workspace_start_failed',
+  })
   expect(
     await runtime.env.DB.prepare(
       'SELECT state, error_code AS code, error_message AS message FROM workspace_creation_attempts',
@@ -62,6 +74,27 @@ it('keeps the failed start cause on its creation attempt and run after workspace
     code: 'workspace_start_failed',
     message: 'The cloud computer could not start. Try again.',
   })
+  expect(
+    (await readRoutine(runtime.env.DB, org.id, 'routine-one')).failedRunsInARow,
+  ).toBe(1)
+  const failedRun = await readRoutineRun(runtime.env.DB, org.id, 'run-one')
+  expect(failedRun).toMatchObject({
+    state: 'failed',
+    workspaceId: id,
+    error: {
+      code: 'workspace_start_failed',
+      message: 'The cloud computer could not start. Try again.',
+    },
+  })
+  boat.commandExitCode = 0
+  const retried = await fixture.run(() =>
+    resumeCompletedWorkspace(runtime, org.id, id!, fixture.user.id),
+  )
+  expect(retried.workspace).toMatchObject({ id, state: 'ready' })
+  expect(boat.starts).toHaveLength(2)
+  expect(await readRoutineRun(runtime.env.DB, org.id, 'run-one')).toEqual(
+    failedRun,
+  )
   expect(
     (await readRoutine(runtime.env.DB, org.id, 'routine-one')).failedRunsInARow,
   ).toBe(1)

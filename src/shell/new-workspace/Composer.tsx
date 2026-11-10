@@ -1,51 +1,31 @@
 import { useRef } from 'react'
 import { Button } from '@firna/ui/button'
-import { InputFrame } from '@firna/ui/input'
-import { ArrowUp, FileText, ImageIcon, Paperclip, X } from 'lucide-react'
-import chips from '../../../docs/mockups/src/components/chat/AttachmentChips.module.css'
+import { ArrowUp, Paperclip } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
-import { formatSize } from '../../../docs/mockups/src/components/chat/sizes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { useStore } from '../../app/store'
+import {
+  DraftFiles,
+  OversizeNotice,
+} from '../../chat/components/AttachmentChips'
+import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
+import { useSendKey } from '../../chat/components/send-key'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
-import type { Attachment } from '../../shared/messages'
 import { IconButton } from '../ui/actions'
 import { ModelPicker } from '../ui/ModelPicker'
 import ui from '../ui/ui.module.css'
 
-/** The files attached to the first message, each with a way to remove it. */
-function AttachmentList(props: {
-  attachments: readonly Attachment[]
-  remove: (id: string) => void
-}) {
-  return (
-    <ul aria-label="Attached files" className={chips.chips}>
-      {props.attachments.map((file) => {
-        const Icon = file.kind === 'image' ? ImageIcon : FileText
-        return (
-          <li className={chips.chip} key={file.id}>
-            <Icon aria-hidden className={chips.icon} size={13} />
-            <span className={chips.name}>{file.name}</span>
-            <span className={chips.size}>{formatSize(file.sizeBytes)}</span>
-            <IconButton
-              icon={X}
-              label={`Remove ${file.name}`}
-              onPress={() => props.remove(file.id)}
-              quiet
-            />
-          </li>
-        )
-      })}
-    </ul>
-  )
-}
-
 /**
  * The composer of a new workspace: attached files above the text, then the
- * attach button, the model and effort picker, and Send. Send is off until
- * the message can go, as the screen decides for Send and Try again. While
- * the create runs, the text and the attach button are off.
+ * attach button, the model and effort picker, and Send. The files upload
+ * before the workspace exists, with the chips and the notice of the
+ * workspace chat. Send is off until the message can go, as the screen
+ * decides for Send and Try again. Enter sends as in every composer: on a
+ * computer, Enter sends and Shift+Enter adds a line. While the create runs,
+ * the text and the attach button are off. A kept message shows with the
+ * cursor at its end. A pasted workspace link shows as a chip, which
+ * `OrgLinks` finds.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
@@ -60,73 +40,75 @@ export function Composer(props: {
   const create = useStore(props.model.create)
   const files = useRef<HTMLInputElement>(null)
   const sending = create.state === 'sending'
+  const sendKey = useSendKey(props.ready, props.send)
   return (
-    <div className={styles.wrap}>
-      <div className={styles.composer}>
-        {draft.attachments.length > 0 ? (
-          <AttachmentList
-            attachments={draft.attachments}
-            remove={(id) => props.model.detach(id)}
-          />
-        ) : null}
-        <InputFrame
-          accessibilityLabel="Message"
-          editable={!sending}
-          focusIndicator="none"
-          maxLines={8}
-          multiline
-          numberOfLines={2}
-          onChangeText={(text) => props.model.setText(text)}
-          placeholder="Describe the task"
-          size={control.field}
-          value={draft.text}
-          variant="seamless"
-        />
-        <div className={styles.bar}>
-          <IconButton
-            disabled={sending}
-            icon={Paperclip}
-            label="Attach files"
-            onPress={() => files.current?.click()}
-          />
-          <input
-            className={ui.hidden}
-            multiple
-            onChange={(event) => {
-              const chosen = Array.from(event.currentTarget.files ?? [])
-              event.currentTarget.value = ''
-              if (chosen.length > 0) void props.model.attach(chosen)
-            }}
-            ref={files}
-            tabIndex={-1}
-            type="file"
-          />
-          {props.choice ? (
-            <ModelPicker
-              change={(choice) => props.model.setChoice(choice)}
-              choice={props.choice}
-              models={props.models}
+    <>
+      <OversizeNotice
+        onAttach={() => files.current?.click()}
+        refused={draft.refused}
+      />
+      <div className={styles.wrap}>
+        <div className={styles.composer}>
+          {draft.files.length > 0 ? (
+            <DraftFiles
+              files={draft.files}
+              onRemove={(id) => props.model.removeFile(id)}
+              onRetry={(id) => void props.model.retryFile(id)}
             />
           ) : null}
-          <span className={styles.spacer} />
-          <Button
-            accessibilityLabel="Send"
-            boxSize={control.height}
-            busy={sending}
-            disabled={!props.ready}
-            icon={ArrowUp}
-            onPress={props.send}
-            shape="square"
-            size="sm"
-            tone={props.ready ? 'primary' : 'secondary'}
+          <ChipTextField
+            caretAtEnd
+            editable={!sending}
+            label="Message"
+            lines={2}
+            maxLines={8}
+            onChangeText={(text) => props.model.setText(text)}
+            onEnter={sendKey}
+            owner={props.model}
+            placeholder="Describe the task"
+            value={draft.text}
           />
+          <div className={styles.bar}>
+            <IconButton
+              disabled={sending}
+              icon={Paperclip}
+              label="Attach files"
+              onPress={() => files.current?.click()}
+            />
+            <input
+              className={ui.hidden}
+              multiple
+              onChange={(event) => {
+                const chosen = Array.from(event.currentTarget.files ?? [])
+                event.currentTarget.value = ''
+                if (chosen.length > 0) void props.model.attach(chosen)
+              }}
+              ref={files}
+              tabIndex={-1}
+              type="file"
+            />
+            {props.choice ? (
+              <ModelPicker
+                change={(choice) => props.model.setChoice(choice)}
+                choice={props.choice}
+                models={props.models}
+              />
+            ) : null}
+            <span className={styles.spacer} />
+            <Button
+              accessibilityLabel="Send"
+              boxSize={control.height}
+              busy={sending}
+              disabled={!props.ready}
+              icon={ArrowUp}
+              onPress={props.send}
+              shape="square"
+              size="sm"
+              tone={props.ready ? 'primary' : 'secondary'}
+            />
+          </div>
         </div>
       </div>
-      {draft.upload.error ? (
-        <p className={ui.error} role="alert">
-          {`The file wasn't attached. ${draft.upload.error.message}`}
-        </p>
-      ) : null}
-    </div>
+    </>
   )
 }

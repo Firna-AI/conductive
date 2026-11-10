@@ -1,0 +1,9 @@
+/*
+ * The page scrolls when its content is taller than the window, as the
+ * waitlist with its invitations and notices can be. The element in the
+ * selector puts it above the page rule of the sign-in, in any order of the
+ * stylesheets.
+ */
+div.scroll {
+  overflow-y: auto;
+}
