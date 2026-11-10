@@ -45,7 +45,11 @@
       "includeEntryExports": true,
     },
     "runner": {
-      "entry": ["src/{main,measure,compare}.ts", "scripts/*.mjs"],
+      "entry": [
+        "src/{main,measure,compare}.ts",
+        "src/relay/main.ts",
+        "scripts/*.mjs",
+      ],
       "project": [
         "src/**/*.ts",
         "test-support/**/*.ts",
