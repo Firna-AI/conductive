@@ -63,13 +63,15 @@
   margin: 0;
 }
 
-/* A block after the text of a list item, such as a second paragraph. */
-.messageBody li > * + * {
+/*
+ * A block after the text of a list item, such as a second paragraph. The
+ * rules name the blocks of an item, so a chip in its text keeps its place.
+ */
+.messageBody li > :is(p, pre, div, ol, ul) + :is(p, pre, div) {
   margin-top: 6px;
 }
 
 /* A list under the text of its item, as close as the next item. */
-.messageBody li > * + ol,
-.messageBody li > * + ul {
+.messageBody li > :is(p, pre, div, ol, ul) + :is(ol, ul) {
   margin-top: 2px;
 }
