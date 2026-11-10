@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath, URL as NodeURL } from 'node:url'
 import { promisify } from 'node:util'
@@ -9,9 +9,9 @@ import { onTestFinished } from 'vitest'
 export const execute = promisify(execFile)
 
 export async function runtimeDirectory(): Promise<string> {
-  const directory = await mkdtemp(
-    join(process.cwd(), '.context/e2b-backup-provider/runtime-'),
-  )
+  const parent = join(process.cwd(), '.context/e2b-backup-provider')
+  await mkdir(parent, { recursive: true })
+  const directory = await mkdtemp(join(parent, 'runtime-'))
   onTestFinished(() => rm(directory, { recursive: true, force: true }))
   return directory
 }
