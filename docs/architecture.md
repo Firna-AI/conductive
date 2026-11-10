@@ -5,8 +5,9 @@ own cloud computer, a Boat sandbox, and one branch at a time. It can hold
 one task after another. Agents powered by Claude and Codex work only in
 the sandbox. The user follows them in the browser or in the Mac app, which
 shows the web app. This doc describes the components, their
-responsibilities, and the boundaries between them. The [protocol docs](#protocol-docs) hold the
-requirements of each feature.
+responsibilities, and the boundaries between them. The
+[protocol docs](architecture/protocol-docs.md) hold the requirements of
+each feature.
 
 ## Terms
 
@@ -78,12 +79,12 @@ its storage, Boat, the sandbox software, and the external services.
 
 ## Hostnames
 
-| Hostname                | What it serves                                                              |
-| ----------------------- | --------------------------------------------------------------------------- |
-| `conductive.build`      | The marketing site, with the Terms, Privacy, and comparison pages                        |
-| `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                    |
-| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper |
-| `*.conductive.page`     | One random hostname for each open port preview, one level deep              |
+| Hostname                | What it serves                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| `conductive.build`      | The marketing site, with the public docs and the Terms, Privacy, and comparison pages |
+| `app.conductive.build`  | The web app, the API, the chat sockets, and the terminal                              |
+| `api.conductive.build`  | The GitHub webhooks, the agent tools, the runner, and the credential helper           |
+| `*.conductive.page`     | One random hostname for each open port preview, one level deep                        |
 
 `api.conductive.build` is the hostname for machines. Each of its routes has
 a path under `/v1/` (decision 102). The preview domain, `conductive.page`,
@@ -115,5 +116,5 @@ the merge.
 
 ## Protocol docs
 
-The [protocol docs](protocol/README.md) hold the requirements of each
-feature. Their index lists each doc and what it covers.
+[Protocol docs](architecture/protocol-docs.md) lists each protocol doc
+and what it covers.

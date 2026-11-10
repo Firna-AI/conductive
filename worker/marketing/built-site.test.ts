@@ -1,7 +1,6 @@
 import { beforeAll, expect, it } from 'vitest'
 
-import { macDmgNames, productName } from '../../docs/mockups/src/brand'
-import { macAppSection } from '../../src/marketing/features'
+import { productName } from '../../docs/mockups/src/brand'
 import { parityAreas } from '../../src/marketing/from-conductor/areas'
 import {
   parityLinkCopy,
@@ -9,15 +8,13 @@ import {
 } from '../../src/marketing/from-conductor/copy'
 import { parityFeatures } from '../../src/marketing/from-conductor/features'
 import { parityStatuses } from '../../src/marketing/from-conductor/statuses'
-import {
-  pageHrefs,
-  sitePaths,
-  sourceRepositoryHref,
-} from '../../src/marketing/links'
+import { docsPath, pageHrefs, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
 import type { SiteBinding } from '../test-support/site-binding'
+import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
+import { checkMacDownloads } from './built-site-downloads.test-support'
 import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
 import { termsConsentResponse } from './consent'
 import {
@@ -79,58 +76,17 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
   }
 })
 
-/** The address that always gives the file `name` of the latest release. */
-const latestRelease = (name: string) =>
-  `${sourceRepositoryHref}/releases/latest/download/${name}`
-
 it('leads the header, action, and footer links of the Mac app to both chip downloads', async () => {
-  const home = await (await get('/')).text()
-  const comparison = await (await get(sitePaths.fromConductor)).text()
-  /** The last call to action of a page: from its title to the footer. */
-  const closing = (page: string, title: string) =>
-    page.slice(page.indexOf(title), page.indexOf('<footer'))
-  const hero = home.slice(home.indexOf('<h1'), home.indexOf(' id="features"'))
-  const cases = [
-    ['header', home.slice(0, home.indexOf('</header>')), 'Download'],
-    ['hero', hero, 'Download for Mac'],
-    [
-      'home closing',
-      closing(home, 'Give your next task its own cloud computer.'),
-      'Download for Mac',
-    ],
-    [
-      'comparison closing',
-      closing(comparison, parityPageCopy.closing.title),
-      'Download for Mac',
-    ],
-    ['footer', home.slice(home.indexOf('<footer')), 'Mac app'],
-  ] as const
-  for (const [part, html, text] of cases) {
-    const href = links(html).find((link) => link.text === text)?.href
-    const address = new URL(href ?? '/missing', SITE)
-    expect(address.pathname, part).toBe(sitePaths.home)
-    const start = home.indexOf(` id="${address.hash.slice(1)}"`)
-    expect(start, part).toBeGreaterThan(-1)
-    const section = home.slice(start, home.indexOf('</section>', start))
-    expect(links(section), part).toEqual([
-      {
-        href: latestRelease(macDmgNames.arm64),
-        text: 'Download for Mac (Apple silicon)',
-      },
-      {
-        href: latestRelease(macDmgNames.x64),
-        text: 'Download for Mac (Intel)',
-      },
-    ])
-    expect(section, part).toContain(macAppSection.requirement)
-  }
+  await checkMacDownloads(get, SITE)
 })
 
-it('names no sandbox provider on the home, legal, and comparison pages', async () => {
+it('names no sandbox provider on home, legal, docs, and comparison pages', async () => {
   for (const path of [
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
+    docsPath,
+    `${docsPath}/get-started`,
     sitePaths.fromConductor,
   ]) {
     const response = await get(path)
@@ -146,6 +102,8 @@ it('allows exactly each page inline style hash and serves every file it names', 
     sitePaths.home,
     sitePaths.terms,
     sitePaths.privacy,
+    docsPath,
+    `${docsPath}/get-started`,
     sitePaths.fromConductor,
     '/missing',
   ]) {
@@ -171,6 +129,14 @@ it('allows exactly each page inline style hash and serves every file it names', 
   expect(new Uint8Array(await icon.arrayBuffer())).toEqual(
     new Uint8Array(await expected.arrayBuffer()),
   )
+})
+
+it('serves guide bodies with matching contents and collection navigation', async () => {
+  await checkGuideRoutes(get)
+})
+
+it('renders class-coloured code and named keyboard scroll regions', async () => {
+  await checkScrollRegions(get)
 })
 
 it('serves the complete Cloud comparison with its public entry links', async () => {

@@ -1004,6 +1004,10 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: the shared local-work check counts
   HEAD together with every local branch. Reason: the all-branch extension
   must retain the old check's protection for detached-HEAD commits.
+- Design call on 10 November 2026: use main's protocol index at
+  `docs/architecture/protocol-docs.md` as the one list. Keep the earlier
+  protocol README and architecture heading as pointers. Reason: one index
+  keeps all entries together while existing links continue to work.
 
 ## Milestone 1: Mockups
 
@@ -1261,6 +1265,8 @@ Depends on: every other milestone
 - [x] Retain HEAD coverage in the shared all-branch local-work check.
       Prove that a clean detached checkout with an unpushed commit is
       reported as local work without changing earlier count assertions.
+- [x] Preserve main's public product guides and protocol index during
+      integration. Read every guide and align each changed feature fact.
 - [ ] Run the affected tests and the complete gate on the combined review
       fixes. Re-review the fix once under the same review workflow.
 

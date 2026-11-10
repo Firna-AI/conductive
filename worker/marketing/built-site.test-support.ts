@@ -32,7 +32,7 @@ export async function buildSiteAssets(): Promise<SiteBinding> {
   try {
     await promisify(execFile)(
       'node_modules/.bin/astro',
-      ['build', '--outDir', folder],
+      ['build', '--force', '--outDir', folder],
       {
         env: isolatedProcessEnvironment({
           PATH: process.env.PATH,
