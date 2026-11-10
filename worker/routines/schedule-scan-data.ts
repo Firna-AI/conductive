@@ -19,15 +19,16 @@ const eligible = `r.active = 1 AND EXISTS (
 export async function dueRoutineSchedules(
   db: D1Database,
   now: number,
+  limit: number,
 ): Promise<DueRoutine[]> {
   const { results } = await db
     .prepare(
       `SELECT r.id, r.org_id AS orgId, r.owner_user_id AS ownerId,
     r.time_zone AS timeZone, r.triggers_json AS triggersJson, r.next_run_at AS nextRunAt
     FROM routines r WHERE r.next_run_at <= ? AND ${eligible}
-    ORDER BY r.next_run_at, r.id LIMIT 50`,
+    ORDER BY r.next_run_at, r.id LIMIT ?`,
     )
-    .bind(now)
+    .bind(now, limit)
     .all<DueRoutine>()
   return results
 }
@@ -80,13 +81,14 @@ export async function claimRoutineSchedule(
 export async function oldQueuedRoutineRuns(
   db: D1Database,
   now: number,
+  limit: number,
 ): Promise<{ id: string; orgId: string }[]> {
   const { results } = await db
     .prepare(
       `SELECT id, org_id AS orgId FROM routine_runs
-    WHERE state = 'queued' AND created_at < ? ORDER BY created_at, id LIMIT 50`,
+    WHERE state = 'queued' AND created_at < ? ORDER BY created_at, id LIMIT ?`,
     )
-    .bind(now - 60_000)
+    .bind(now - 60_000, limit)
     .all<{ id: string; orgId: string }>()
   return results
 }

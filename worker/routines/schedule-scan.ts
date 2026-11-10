@@ -10,12 +10,16 @@ import { readRoutineTriggers, routineTriggerInputs } from './stored-triggers'
 
 export async function scanRoutineSchedules(
   runtime: RoutineRunRuntime,
+  limits: { dueRoutines: number; queuedRuns: number } = {
+    dueRoutines: 50,
+    queuedRuns: 50,
+  },
 ): Promise<void> {
   const { env, dependencies } = runtime
   const now = dependencies.now()
   const [due, queued] = await Promise.all([
-    dueRoutineSchedules(env.DB, now),
-    oldQueuedRoutineRuns(env.DB, now),
+    dueRoutineSchedules(env.DB, now, limits.dueRoutines),
+    oldQueuedRoutineRuns(env.DB, now, limits.queuedRuns),
   ])
   await Promise.all(
     due.map(async (routine) => {

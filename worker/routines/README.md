@@ -105,6 +105,8 @@ The saved trigger facts supply the first message and remain available in run his
 Run `npm run test -- worker/routines` from the repository root with Node 24.
 The route tests use the production Worker handler with local D1 and fake GitHub.
 The schedule tests use fixed dates around changes of summer time.
+`scanRoutineSchedules` accepts `dueRoutines` and `queuedRuns` limits, both 50 by default.
+The batch-limit test passes 2 for each limit and checks the stored operation counts across two scans.
 
 ### Key code
 

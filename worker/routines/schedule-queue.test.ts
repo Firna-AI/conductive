@@ -123,14 +123,13 @@ it('skips blocked queued runs with their reason and stops retrying them after ac
   ).toBe(0)
 })
 
-it('limits each scan to 50 due routines and 50 old queued runs and leaves the rest for the next minute', async () => {
+it('limits each scan to its due and queued batch sizes and leaves the rest for the next minute', async () => {
   const fixture = await scanFixture(harness)
   const { db } = fixture
+  const limits = { dueRoutines: 2, queuedRuns: 2 }
   await fixture.schedule()
   const ids = JSON.stringify(
-    Array.from({ length: 51 }, (_, index) =>
-      String(index + 1).padStart(2, '0'),
-    ),
+    Array.from({ length: 3 }, (_, index) => String(index + 1).padStart(2, '0')),
   )
   await db.batch([
     db
@@ -157,7 +156,7 @@ it('limits each scan to 50 due routines and 50 old queued runs and leaves the re
     ),
     db.prepare('DELETE FROM agent_logins'),
   ])
-  await scanRoutineSchedules(fixture.runtime)
+  await scanRoutineSchedules(fixture.runtime, limits)
   const counts = () =>
     db
       .prepare(
@@ -165,18 +164,18 @@ it('limits each scan to 50 due routines and 50 old queued runs and leaves the re
       )
       .all<{ state: string; count: number }>()
   expect((await counts()).results).toEqual([
-    { state: 'failed', count: 50 },
+    { state: 'failed', count: 2 },
     { state: 'queued', count: 1 },
-    { state: 'skipped', count: 50 },
+    { state: 'skipped', count: 2 },
   ])
-  expect(await fixture.nextTime('due-51')).toBe(SCAN_TIME)
+  expect(await fixture.nextTime('due-03')).toBe(SCAN_TIME)
   fixture.setTime(SCAN_TIME + 60_000)
-  await scanRoutineSchedules(fixture.runtime)
+  await scanRoutineSchedules(fixture.runtime, limits)
   expect((await counts()).results).toEqual([
-    { state: 'failed', count: 51 },
-    { state: 'skipped', count: 51 },
+    { state: 'failed', count: 3 },
+    { state: 'skipped', count: 3 },
   ])
-  expect(await fixture.nextTime('due-51')).toBe(
+  expect(await fixture.nextTime('due-03')).toBe(
     Date.parse('2026-11-09T10:00:00Z'),
   )
   expect(
