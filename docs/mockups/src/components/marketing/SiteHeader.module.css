@@ -20,6 +20,10 @@
   margin-left: auto;
 }
 
+/*
+ * A label never wraps. In the narrowest desktop window, the links reach a
+ * little into the padding of the header.
+ */
 .link {
   display: inline-flex;
   align-items: center;

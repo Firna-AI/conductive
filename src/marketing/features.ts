@@ -1,3 +1,4 @@
+import type { MacChip } from '../../docs/mockups/src/brand'
 import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList'
 import type { FeatureIconName } from './icon-shapes'
 
@@ -61,6 +62,40 @@ export const features: readonly Feature[] = [
     bleed: true,
   },
 ]
+
+/** A download of the Mac app: the chip of its DMG, and its button. */
+type MacDownload = {
+  readonly chip: MacChip
+  readonly label: string
+}
+
+/**
+ * A feature with the downloads of the Mac app, and the oldest macOS version
+ * that the app runs on.
+ */
+export type MacAppSection = Feature & {
+  /** The downloads in their order. The first one is the main action. */
+  readonly downloads: readonly MacDownload[]
+  /** The oldest macOS version that the app runs on, as one sentence. */
+  readonly requirement: string
+}
+
+/**
+ * The section of the Mac app, after the features. It is not an entry of
+ * `features`, because the site draws each entry of `features` as a feature
+ * without downloads. Each claim is one that the plan decides.
+ */
+export const macAppSection: MacAppSection = {
+  label: 'Mac app',
+  title: 'Work from the Mac app.',
+  text: 'The app opens in its own window, and agents keep working in the cloud. An agent can ask to run a command on your Mac, and the command runs only after you allow it.',
+  picture: 'mac',
+  downloads: [
+    { chip: 'arm64', label: 'Download for Mac (Apple silicon)' },
+    { chip: 'x64', label: 'Download for Mac (Intel)' },
+  ],
+  requirement: 'Runs on macOS 13 or later.',
+}
 
 /**
  * A smaller feature: an icon, a short title, and one sentence. The icon is

@@ -5,7 +5,7 @@ how a screen is built, and links to the other pages.
 
 | Path                | What it shows                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |
-| `marketing`         | The home page of the site: the app, its features, and Join the waitlist                 |
+| `marketing`         | The home page of the site: the app, its features, the Mac app downloads, and Join the waitlist |
 | `marketing/docs`    | The overview of the public docs, then a guide, with its Docs menu or its contents open on a phone |
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |

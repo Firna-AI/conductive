@@ -89,6 +89,10 @@ hold the requirements of each feature.
 ### Mac app
 
 - An Electron shell for macOS, as [Mac app](protocol/desktop-app.md) says.
+- Its packages and its updates come from the GitHub releases of the
+  public source repository, as
+  [Packages and updates](protocol/desktop-app.md#packages-and-updates)
+  says.
 
 ### Worker
 

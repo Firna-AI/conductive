@@ -15,15 +15,19 @@ it. For each picture, it gives:
 - the key, such as `hero`, in the order of the home page
 - the label in each layout, which is the alt text on the site and the
   label in the mockups
-- the screen of each layout: 1440 × 900 on desktop, or 390 × 800 on a
-  phone
+- the screen of each layout: a desktop screen of 1440 × 900, or a phone
+  screen of 390 × 800
 - the crop of each layout: the part of the screen that the picture shows,
   in CSS px of the screen
 - the scale at which the page shows the crop in each layout
 - the frame: a window that becomes a phone in the phone layout, a quiet
   excerpt, or a phone
 - the files: one file for each layout, or one file that both layouts share
-- the capture page and the file name of each capture
+
+[`marketingPictureCaptures.ts`](../../docs/mockups/src/screens/marketingPictureCaptures.ts)
+beside the list gives the capture page of each picture, its captures, and
+the file name of each capture. It imports only the list, so Node can
+import it too.
 
 `components/PictureFrame.astro` reads each picture from the list by its
 key and layout. `picture-urls.ts` reads the files with one glob keyed by
@@ -32,10 +36,11 @@ the list. So the site keeps no label, size, or scale of its own.
 chooses the screen and the state that each picture shows.
 
 Each picture has a file for each layout and each colour scheme, in
-`pictures/`, as `<picture>-<layout>-<scheme>.webp`. The phone picture
-shows the same phone screen in both layouts. So it has one file for each
-scheme, `phone-<scheme>.webp`, which both layouts share. That gives 13
-captures and 26 files, and each file keeps its name on each run.
+`pictures/`, as `<picture>-<layout>-<scheme>.webp`. The phone picture and
+the Mac picture each show the same screen in both layouts. So each has one
+file for each scheme, such as `phone-<scheme>.webp`, which both layouts
+share. That gives 14 captures and 28 files, and each file keeps its name
+on each run.
 
 When a screen of the app or a picture of the list changes, capture the
 pictures again with `npm run marketing:pictures` from the repository root.
@@ -57,8 +62,9 @@ of the pictures on the page.
 
 The command captures at two device pixels for each CSS pixel of the
 screen. The site then shows each file at the scale of the list. The
-command freezes animations at the same phase on each run. It uses the
-direct development dependency `sharp` to write lossless WebP files in
-`pictures/`, so each pixel stays as the mockup draws it. The command stops
-its server and browser and removes its temporary files on success,
-failure, or interruption.
+command freezes each animation of the clock at the same phase on each run.
+An animation that scrolling drives keeps the state of its scroll position.
+The command uses the direct development dependency `sharp` to write
+lossless WebP files in `pictures/`, so each pixel stays as the mockup draws
+it. The command stops its server and browser and removes its temporary
+files on success, failure, or interruption.

@@ -158,7 +158,7 @@ before the Worker serves them.
 - Run the site tests with `npm run test -- worker/marketing src/marketing`.
   The built-site test clears Astro's content cache and builds once in a
   temporary folder, so Markdown hooks always use current source. The
-  capture test uses fake pages and needs no browser.
+  capture tests use fake pages and a fake browser, so they need no Chrome.
 - Work on the pages with `npm run site:dev`. It serves them at
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.
@@ -244,7 +244,9 @@ before the Worker serves them.
 - `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
   queries, frame classes, and picture-size CSS.
 - [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
-  the shared picture list, capture pages, bounds, and file names.
+  the shared picture list.
+- [`marketingPictureCaptures.ts`](../../docs/mockups/src/screens/marketingPictureCaptures.ts):
+  capture pages, bounds, and file names.
 - [`tools/marketing-pictures/run.ts`](../../tools/marketing-pictures/run.ts):
   the capture command, build, and cleanup.
 - [`capture-pictures.ts`](../../tools/marketing-pictures/capture-pictures.ts),
@@ -253,6 +255,7 @@ before the Worker serves them.
   [`encode-pictures.ts`](../../tools/marketing-pictures/encode-pictures.ts):
   capture pages, browser control, Chrome connection, and lossless encoding.
 - `picture-capture.test.ts`: capture pages, bounds, and file names.
+- `picture-page.test.ts`: the animation reset before each capture.
 - [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
   real builds served through the Worker, including their policy, their
   files, the public guides, and the comparison page with its two entry

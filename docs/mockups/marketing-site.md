@@ -5,8 +5,8 @@ how a screen is built, and links to the other pages.
 
 The home page follows the calm structure of a Conductor-style home page: a
 header, a hero with a short link, a short headline, one sentence, and a
-large picture of the app, then one section for each feature, the smaller
-features, a last call to action, and a footer. The short link above the
+large picture of the app, then one section for each feature, the Mac app
+with its downloads, the smaller features, a last call to action, and a footer. The short link above the
 headline, "From Conductor Cloud? Compare the features", leads to the page
 for people who move from Conductor Cloud. Both actions, "Join the waitlist"
 and "Sign in", lead to `app/sign-in`. A new person waits for app access,
@@ -17,31 +17,36 @@ computer.", promises no use at once either.
 for the header, the hero, the last call to action, and the footer. The
 parts live in `src/components/marketing/`.
 
-The header of a desktop has Features, Docs, GitHub, Sign in, and Join the
-waitlist. A phone keeps the wordmark, Docs, GitHub, and Sign in.
-Each link of the phone header is a 44 px target. There GitHub shows only
-its mark, in a square named "GitHub", so that the links fit on a 360 px
-phone. GitHub leads to the public source repository in both layouts.
+The header of a desktop has Features, Download, Docs, GitHub, Sign in, and
+Join the waitlist. Features and Download lead to the features and to the
+Mac app section of the home page. A phone keeps the wordmark, Docs,
+GitHub, and Sign in. Each link of the phone header is a 44 px target.
+There GitHub shows only its mark, in a square named "GitHub", so that the
+links fit on a 360 px phone. The header links to the public source
+repository on GitHub in both layouts.
 The wordmark is the lockup of the brand, 30 px high. It keeps the clear
 space of the [brand rules](../brand/README.md#rules): 15 px, half its
 tile. So the phone header is 60 px high, with a gap of 15 px after the
-wordmark, and the footer keeps 15 px under it. The
-Product column of the footer lists Docs after Features. The Docs links of
-the header and the footer lead to the docs overview, `marketing/docs`.
+wordmark, and the footer keeps 15 px under it. The Product column of the
+footer lists Docs after Features, and it has Mac app. Features and Mac app
+lead to the same sections as in the header. The Docs links of the header
+and the footer lead to the docs overview, `marketing/docs`.
 [The docs](#the-docs) gives its layout.
 
-The site keeps still captures of the workspace screen, the org settings cloud computer tab, and the phone workspace list.
+The site keeps still captures of the workspace screen, the org settings cloud computer tab, the phone workspace list, and the Mac app.
 Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).
 
 - Every picture is a real screen of the catalogue, not a drawing of one.
-  `ScreenFrame` lays the screen out at its own size, 1440 × 900 on desktop
-  and 390 × 800 on a phone, then scales it and crops it to one part.
-  `src/screens/marketingPictureList.ts` is the one list of the pictures. It
-  gives the frame of each picture. For each layout, it gives the label, the
-  screen, the part in px of the screen, and the scale. The site and the
-  capture command read the same list, and the list imports nothing.
-  `src/screens/marketingPictures.tsx` chooses the screen and its state.
-  When a layout of the app changes, look at the pictures again.
+  `ScreenFrame` lays the screen out at its own size, 1440 × 900 for a
+  desktop screen and 390 × 800 for a phone screen, then scales it and
+  crops it to one part. `src/screens/marketingPictureList.ts` is the one
+  list of the pictures. It gives the frame of each picture. For each
+  layout, it gives the label, the screen, the part in px of the screen, and
+  the scale. The site and the capture command read the same list, and the
+  list imports nothing. `src/screens/marketingPictureCaptures.ts` gives the
+  capture page and the files of each picture, and it imports only the
+  list. `src/screens/marketingPictures.tsx` chooses the screen and its
+  state. When a layout of the app changes, look at the pictures again.
 - Each picture has a capture page at `marketing/pictures/<picture>`.
   `PictureCapture` in `src/screens/marketingPictures.tsx` draws the part of
   the screen of one layout at its own size, at scale 1 and without a frame,
@@ -56,8 +61,25 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   `--frame-scale`, because a view runs no script. The other pictures keep
   one scale.
 - Each claim on the page is one that the plan decides. The page shows no
-  customer logos, testimonials, user counts, certifications, desktop or
-  native mobile app, API, other agents, or changelog.
+  customer logos, testimonials, user counts, certifications, native mobile
+  app, API, other agents, or changelog.
+- The Mac app section shows [the Mac app](mac-app.md) of decision 62: a
+  real screen of `mac-app/commands`, with the window buttons, the sidebar,
+  and a command that waits for Allow. The Mac app has no phone layout, so
+  the phone layout shows the same picture, smaller. Under the words,
+  "Download for Mac" links the DMG for Apple silicon first, then the DMG
+  for Intel. A line under them names the oldest macOS version that the app
+  runs on, macOS 13. The section has no label for an early version, such
+  as Beta.
+- Each download is the file with a fixed name in the latest release of the
+  public repository on GitHub, so its address always gives the newest DMG.
+  `src/brand.ts` derives the names from the product name, and
+  [`links.ts`](../../src/marketing/links.ts) of the site builds the
+  addresses. The words of the section come from `macAppSection` in
+  [`features.ts`](../../src/marketing/features.ts).
+- The hero sentence and the footer tagline name the Mac app beside the
+  browser. The description of the home page, which a search result can
+  show, is the hero sentence.
 - The page shows no plans, because the product is free for now. It asks
   for no other account, because the app runs every cloud computer in its
   own account.

@@ -44,7 +44,7 @@ export function SitePage(props: {
       {bare ? null : (
         <SiteFooter
           links={links}
-          tagline="Coding agents on cloud computers, in your browser."
+          tagline="Coding agents on cloud computers, in your browser or the Mac app."
           viewport={viewport}
           year={year}
         />

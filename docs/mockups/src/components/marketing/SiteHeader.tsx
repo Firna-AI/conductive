@@ -22,10 +22,11 @@ export type SiteLinks = {
 export type SiteSection = 'docs'
 
 /**
- * The top of the site: the wordmark, Features, Docs, GitHub, Sign in, and
- * the main action. A phone keeps the wordmark, Docs, GitHub as its mark,
- * and Sign in. A bare header has only the wordmark, for a page that leads
- * on to sign-in itself.
+ * The top of the site: the wordmark, Features, Download, Docs, GitHub, Sign
+ * in, and the main action. Features and Download lead to their sections of
+ * the home page. A phone keeps the wordmark, Docs, GitHub as its mark, and
+ * Sign in. A bare header has only the wordmark, for a page that leads on to
+ * sign-in itself.
  */
 export function SiteHeader(props: {
   links: SiteLinks
@@ -51,9 +52,10 @@ export function SiteHeader(props: {
 }
 
 /**
- * The links of the header: Features, Docs, GitHub, Sign in, and the main
- * action. On a phone GitHub shows only its mark, in a square touch target,
- * so that every link fits beside the wordmark.
+ * The links of the header: Features, Download, Docs, GitHub, Sign in, and
+ * the main action. A phone leaves out Features, Download, and the main
+ * action. There GitHub shows only its mark, in a square touch target, so
+ * that every link fits beside the wordmark.
  */
 function SiteNav(props: {
   links: SiteLinks
@@ -66,13 +68,22 @@ function SiteNav(props: {
   return (
     <nav aria-label="Site" className={styles.nav}>
       {mobile ? null : (
-        <ScreenLink
-          className={styles.link}
-          fragment="features"
-          to={props.links.home}
-        >
-          Features
-        </ScreenLink>
+        <>
+          <ScreenLink
+            className={styles.link}
+            fragment="features"
+            to={props.links.home}
+          >
+            Features
+          </ScreenLink>
+          <ScreenLink
+            className={styles.link}
+            fragment="mac-app"
+            to={props.links.home}
+          >
+            Download
+          </ScreenLink>
+        </>
       )}
       <ScreenLink
         aria-current={inDocs ? 'true' : undefined}

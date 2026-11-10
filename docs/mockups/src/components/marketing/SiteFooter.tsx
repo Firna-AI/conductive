@@ -56,6 +56,15 @@ export function SiteFooter(props: {
             </ScreenLink>
           </li>
           <li>
+            <ScreenLink
+              className={styles.link}
+              fragment="mac-app"
+              to={props.links.home}
+            >
+              Mac app
+            </ScreenLink>
+          </li>
+          <li>
             <ScreenLink className={styles.link} to={props.links.fromConductor}>
               {parityLinkCopy.footer}
             </ScreenLink>
