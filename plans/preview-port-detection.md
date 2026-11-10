@@ -12,8 +12,9 @@ The runner in each cloud computer watches the listening TCP ports. It
 reports the full list when the list changes (decision 213). The workspace
 stores each report as a workspace event and sends it to the open tabs. The
 port form of the Preview tool lists each detected server as a button with
-its port and a short program name (decision 214). A click opens its
-preview with the same request and checks as a typed port.
+its port, a short program name, and its folder when that folder tells it
+apart (decision 214). A click opens its preview with the same request and
+checks as a typed port.
 
 This change does not cover a ports control in the workspace header,
 forwarding to localhost, stable preview links, a notice when a server
@@ -206,8 +207,9 @@ Brainstorm".
 - **Action:** ask the user, because B, C, and D send process data to the
   browser, and no requirement covers that data.
 - **Chosen:** B, by the user on 10 November 2026. The options check then
-  added D and recommends it. The user's answer on D is open, and the
-  mockups wait for it.
+  added D and recommended it. The user chose D on the same day. The user
+  also asked that the tab of an open preview keeps a short label, cut with
+  "…", so the folder shows in the list and not in the tab.
 
 ## Design
 
@@ -233,9 +235,9 @@ decision. The user can override any of them.
   port of the app's own services that a new cloud computer shows. The
   terminal port constant moves to the shared contracts, so that the
   runner and the Worker use one value.
-- Each port has a name or none (decision 214 B). The runner finds the
-  process of a new socket through `/proc/<pid>/fd`. It keeps the name for
-  the life of that socket.
+- Each port has a name or none, and a folder or none (decision 214 D).
+  The runner finds the process of a new socket through `/proc/<pid>/fd`.
+  It keeps the name and the folder for the life of that socket.
 - The name is the file name of the program. For a known interpreter, such
   as `node`, `python3`, `bun`, or `deno`, it is the file name of the
   script, or the module after `-m`.
@@ -246,6 +248,16 @@ decision. The user can override any of them.
   pass, and the output filter masks it only when it is a marked env value.
 - A name has at most 40 characters. A port whose process the runner
   cannot read has no name.
+- The folder comes from the working folder of the process. A server in
+  the root of the workspace's own repository, `CONDUCTIVE_REPOSITORY_DIR`,
+  has no folder. A server below that root shows its path from the root,
+  such as `apps/web`.
+- A server in another repository folder under `~/code` shows the name of
+  that folder and the path below it, such as `api` or `api/server`. A
+  server outside `~/code` has no folder. Reason: no path outside the
+  repositories reaches the browser.
+- A folder has at most 120 characters. A longer folder keeps its end,
+  after "…", because the end tells servers apart.
 - The list holds at most 64 ports, in the order of their numbers. Reason:
   the event stays far below the event limit, and rows do not move under
   the pointer.
@@ -265,8 +277,8 @@ decision. The user can override any of them.
 - When the sandbox stops, the workspace commits `ports.updated` with
   `ports: null`. A null list means that the app has no report. Reason: an
   old list would offer servers that the stop ended.
-- The output filter covers each name, as it covers other runner text.
-  Reason: a stored secret never goes back to the browser.
+- The output filter covers each name and each folder, as it covers other
+  runner text. Reason: a stored secret never goes back to the browser.
 - A port report is not activity. Reason: decision 29 counts the use of a
   workspace, and a report is not use.
 
@@ -274,12 +286,19 @@ decision. The user can override any of them.
 
 - The list shows in the port form, where the port field is today: when no
   preview is open, and after "+".
-- Each detected server is a button with its port and its name. A click
-  opens its preview with the same request and checks as a typed port.
+- Each detected server is a button with its port, its name, and its
+  folder. The row cuts a folder that does not fit with "…" at its start,
+  so the end stays. A click opens its preview with the same request and
+  checks as a typed port.
 - A port that has an open preview leaves the list, because its tab shows
-  it. The tab then shows the name of its port after the port number, when
-  the list has one. Reason: the options check found that the tab row
-  otherwise loses the name of decision 214.
+  it.
+- The tab of an open preview shows the port and at most 10 characters of
+  its name. A longer name shows 9 characters and "…". The tab shows no
+  folder. Reason: the user asked on 10 November 2026 for a short tab
+  label, strictly limited, maybe with "…".
+- The tooltip and the accessible name of the tab give the port, the full
+  name, and the folder. Reason: the cut label must not hide which server
+  the tab shows.
 - The port field stays below the list, as a smaller "Other port" row.
 - When the runner reports no server, the form asks the user to start one
   in the terminal, or to ask the agent. The text keeps a positive frame,
@@ -300,14 +319,16 @@ Depends on: none
 
 The Preview tool gets the new states of its port form. The Tools page
 would then pass five screens, so the Preview states move to a child page.
-The rows wait for the user's answer on option D of decision 214.
 
-- [ ] Add detected servers to `docs/mockups/src/fixtures/previews.ts`, for
-      example port 3000 with `next dev` and port 6006 with `storybook`.
+- [ ] Add detected servers to `docs/mockups/src/fixtures/previews.ts`. Give
+      two of them one program in two folders, such as `next dev` in
+      `apps/web` and in `apps/docs`. Add one with a long folder and one with
+      a name over 10 characters.
 - [ ] Draw the port form with the list of detected servers and the smaller
       "Other port" row, in `docs/mockups/src/components/tools/PortPreview.tsx`.
-- [ ] Show the name of a port after its number in the tab of an open
-      preview.
+      Each row shows the port, the name, and the folder.
+- [ ] Draw the tab of an open preview with the port and the name cut to 10
+      characters, with no folder.
 - [ ] Move the Preview states from
       `docs/mockups/src/entries/app/tools/index.mockup.tsx` to a child page,
       `app/tools/preview`. Its canonical screen is the open port preview.
@@ -328,9 +349,9 @@ and 214 before the code changes.
 
 - [ ] Update "Port previews" in `docs/protocol/workspace-tools.md`.
       Replace the rule that the app does not discover ports. State the
-      list, its names, its update time, its empty and unknown states, its
-      clear at a stop, and the field. Add decisions 213 and 214 with their
-      rejected alternatives.
+      list, its names and folders, its update time, its empty and unknown
+      states, its clear at a stop, the field, and the short tab label. Add
+      decisions 213 and 214 with their rejected alternatives.
 - [ ] Update `docs/protocol/agent-runner.md`. State that the runner
       reports the listening ports, add `ports.updated` to the kinds of
       "Lost workspace updates", and give the limits of the list.
@@ -350,12 +371,12 @@ Depends on: 2
 The runner watches the socket tables and reports the list.
 
 - [ ] Add the shared contract in `src/shared/`: a listening port type with
-      `port` and `name`, `ports.updated` in `RunnerEvent` and
+      `port`, `name`, and `folder`, `ports.updated` in `RunnerEvent` and
       `WorkspaceEvent`, the kind in `RunnerReportKind`, the limits, and the
       terminal port constant.
 - [ ] Add the port watcher to the runner: the parser of the socket tables,
-      the filter, the names, the rule of two scans, and the reports after a
-      change, a connect, and a refresh.
+      the filter, the names, the folders, the rule of two scans, and the
+      reports after a change, a connect, and a refresh.
 - [ ] Test the parser and the filter with socket table fixtures: a
       wildcard, a loopback, and a specific address, another owner, another
       state, the terminal port, IPv6, and one port in both tables.
@@ -363,6 +384,10 @@ The runner watches the socket tables and reports the list.
       interpreter, `-m`, a flag, a path, a next word with digits or
       capitals, the length limit, and a process that the runner cannot
       read.
+- [ ] Add a table test of the folder rule with literal folders: the root
+      of the workspace's repository, a folder below it, another repository
+      under `~/code`, a folder outside `~/code`, and a folder over 120
+      characters.
 - [ ] Test the rule of two scans for a new and for a closed port, a report
       only on a change, the report after a connect, and the refresh answer.
       Use a fake scan driver and no sleep.
@@ -381,12 +406,13 @@ The workspace accepts, stores, filters, sends, and clears the list.
       with its limits. Refuse an invalid report with the refusal marker and
       the repair of decision 96.
 - [ ] Store and send each report as a workspace event.
-- [ ] Add each name to the output filter in `src/shared/output-fields.ts`.
+- [ ] Add each name and each folder to the output filter in
+      `src/shared/output-fields.ts`.
 - [ ] Commit `ports.updated` with `ports: null` in the stop hook of the
       workspace, beside the preview revocation.
 - [ ] Add Worker tests: a stored and sent report, an invalid report with
-      its marker and its refresh, a masked marked env value in a name, and
-      the clear at a stop.
+      its marker and its refresh, a masked marked env value in a name and
+      in a folder, and the clear at a stop.
 
 ## Milestone 5: Detected servers in the Preview tool
 
@@ -399,11 +425,16 @@ The port form lists the detected servers, as the mockups show.
 - [ ] Read `ports.updated` in `src/app/api/read-events.ts`. Keep the latest
       list in the preview reducer.
 - [ ] Show the list in `PreviewOpenForm`, with the states and the words of
-      the mockups, on the desktop and the phone sizes.
-- [ ] Show the name of a port in its tab, in `PreviewToolbar`.
+      the mockups, on the desktop and the phone sizes. Each row shows the
+      port, the name, and the folder.
+- [ ] Show the port and the cut name in the tab, in `PreviewToolbar`. Give
+      the tab a tooltip and an accessible name with the port, the full name,
+      and the folder.
 - [ ] Add tests: the reducer keeps the latest list and the null list, the
       form lists the servers without an open preview, a click opens the
-      port, the empty and unknown states show, and a tab shows its name.
+      port, and the empty and unknown states show. Test that a tab cuts a
+      name over 10 characters to 9 and "…", and that its accessible name
+      holds the full name and the folder.
 - [ ] Add a fake `ports.updated` to the tools dev page in
       `src/terminal/dev/`. Smoke-test the port form there.
 - [ ] Set the "Automatic port detection" row in
@@ -438,6 +469,7 @@ The complete gate proves the work, and the review checks it.
 
 - [ ] After the deploy, build the cloud computer of a test org and create
       a workspace. Start a dev server. Check that the Preview tool lists it
-      with its name within 5 seconds, and that a click opens its preview.
+      with its name and folder within 5 seconds, and that a click opens its
+      preview.
 - [ ] Check that a workspace created before that build shows the port
       field as today.
