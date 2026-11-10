@@ -48,6 +48,12 @@ export const metrics = {
   /** The least height of a local control; a phone screen raises it to 44px. */
   touchMin: '0px',
   /**
+   * The height of the lockup of the brand on the marketing site and the
+   * sign-in page. Its tile fills that height, so the clear space that the
+   * brand asks for is half of it.
+   */
+  lockupHeight: '25px',
+  /**
    * The height of a screen: the window. A picture of a screen on the
    * marketing site sets it to the height of its frame.
    */

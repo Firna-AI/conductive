@@ -155,7 +155,13 @@ export function OrgRoutes(props: { route: OrgRoute; user: User }) {
   return (
     <RailFrame
       current={current}
-      sidebar={<Sidebar current={listCurrent(props.route)} org={org} />}
+      sidebar={
+        <Sidebar
+          current={listCurrent(props.route)}
+          org={org}
+          user={props.user}
+        />
+      }
       user={props.user}
     >
       {screen ?? <OrgHome org={org} user={props.user} />}

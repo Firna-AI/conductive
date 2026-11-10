@@ -89,6 +89,7 @@ it.each([
       )
       expect(await cleanupResources(runtime.env.DB, org.id)).toContainEqual({
         kind: 'snapshot',
+        providerAccount: 'boat',
         id: savedImageName(buildId),
         stoppedAt: null,
         removedAt: null,

@@ -143,6 +143,15 @@ A failed run does not roll back.
   restores the version before the newest one.
 - A rollback does not undo a D1 migration. It cannot go back across a
   Durable Object migration.
+- `migrations/202611092305_org_images.sql` is for the time before the
+  launch only, while no real user depends on the app. It copies the six org
+  image fields of `settings` to `org_images`, then drops them, with no
+  bridge for an older Worker. A Worker version from before it reads those
+  fields, so that version cannot use the new schema, after a failed upload
+  or after a rollback to it. To recover, deploy a fix forward. Or restore
+  D1 with Time Travel to a minute before the migration, together with a
+  Worker rollback to a version from before it. That restore loses each D1
+  write after that minute.
 - [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
   restores the database to an earlier minute. Run
   `npx wrangler d1 time-travel restore DB --timestamp=<time>`, with a Unix

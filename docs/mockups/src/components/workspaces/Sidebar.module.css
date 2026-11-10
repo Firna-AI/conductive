@@ -32,6 +32,15 @@
   padding: 8px 8px 16px;
 }
 
+/*
+ * A view runs no script, so it draws an open menu of a row in place, and
+ * the list lets that menu pass its edge. The app draws the menu above the
+ * page.
+ */
+.unclipped {
+  overflow: visible;
+}
+
 /* New workspace and Search, one under the other. */
 .links {
   display: flex;

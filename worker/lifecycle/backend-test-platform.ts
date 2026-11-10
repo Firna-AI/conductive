@@ -24,7 +24,7 @@ function readyEndpoint<T extends object>(endpoint: T, ready: Promise<void>): T {
 export function backendActor(
   harness: TestHarness,
   id: string,
-  environment: Record<string, string | undefined>,
+  environment: NativeWorkspaceOptions['environment'],
   changed: () => void,
   accepted: (job: StoredWorkspaceStartJob) => void,
   now: () => number,

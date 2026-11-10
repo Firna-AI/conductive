@@ -12,6 +12,7 @@ import {
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { cacheTerminalPassword } from '../terminal/credentials'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
 import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
 
@@ -69,6 +70,7 @@ it('serves terminal and fresh desktop URLs and launches a preview through its se
       orgId: OUTER_ORG,
       workspaceId: OUTER_WORKSPACE,
       sandboxId: 'bx_tools',
+      providerAccount: DEFAULT_PROVIDER_ACCOUNT,
       state: 'ready',
     },
     'a'.repeat(64),

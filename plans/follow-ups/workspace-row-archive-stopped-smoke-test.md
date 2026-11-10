@@ -1,0 +1,38 @@
+# Archive a stopped workspace from its row
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Post-merge task.
+- **Added:** 2026-11-09, from branch `calummoore/workspace-context-menu`, the menu of a workspace row.
+- **Location:** `readArchiveCheck` in `worker/app-api/archive.ts`, `checkWorkspaceArchive` in `worker/workspace.ts`, `ArchiveModel` in `src/app/archive-model.ts`, `ArchiveDialog` in `src/shell/workspace/ArchiveDialog.tsx`, and the Archive question of a row in `src/shell/list/useRowMenus.tsx`.
+- **Reason:** only a real stopped cloud computer on the test deployment, after the merge, gives the provider's reply to the saved-work check.
+
+- **Terms:**
+  - **Saved-work check:** the read that Archive sends before it deletes a cloud computer, `GET /api/orgs/<org ID>/workspaces/<workspace ID>/archive-check`. It lists the files that are not committed and counts the commits that are not pushed.
+  - **Workspace row menu:** the menu of a row of the workspace list, with Move to section, Reassign to, Rename, and Archive. `docs/protocol/workspace-menu.md` states its requirements.
+- **Background:**
+  - Archive deletes the cloud computer of a workspace and keeps its chat read-only in the Archived group. The section "Archive" of `docs/protocol/workspace-life.md` states the rules.
+  - Before it archives, the app runs the saved-work check, and the person confirms in the Archive question. When the check does not finish, the question says so and names the failure, with Try again and Cancel. The app archives nothing without a finished check.
+  - The workspace row menu offers Archive also for a workspace that is not open. The section "Archive" of `docs/protocol/workspace-menu.md` says that the check does not start a stopped cloud computer.
+  - A cloud computer stops after 30 minutes without activity on its workspace, as "Stop and resume" in `docs/protocol/workspace-life.md` says. So Archive from a row often meets a stopped cloud computer.
+  - `readArchiveCheck` runs the check as one command in the cloud computer. When the command runs and fails or times out, the Worker answers HTTP 409 with the code `sandbox_unavailable`. Its message is "Open the workspace to check its saved work. Then try again."
+  - The provider can also refuse the command itself, for example for a stopped cloud computer. No code maps that refusal to `sandbox_unavailable`. `checkWorkspaceArchive` passes on only `HttpError` failures, and the Worker answers any other error with HTTP 500, the code `internal_error`, and "The request failed. Try again."
+  - Nobody has seen the provider's real reply for a stopped cloud computer. So the message that the question shows in that case is unknown.
+  - In the browser, `ArchiveModel` turns a failed check into its `check-failed` step. `ArchiveDialog` then shows "The check didn't finish", the message of the reply, Cancel, and Try again. The list draws that question over the current page for a row that is not open.
+  - Tests cover this path with fake replies only. `src/shell/list/RowActions.test.tsx` gives the check of another row a 409 with the instruction, then checks Cancel, Try again, and the archive after the confirmation. `src/app/workspace-model.test.ts` covers the check, the confirmation, and Cancel of `ArchiveModel`.
+  - These rules stay during the task and in any fix. The menu starts no stopped cloud computer. No failed check skips the finished check or the explicit confirmation. An automatic Resume for the check needs a user decision.
+- **Task:**
+  - On the test deployment, choose a workspace that nobody needs, and that the tester may archive as its owner or as an admin. Close each tab of that workspace, and wait until the list shows it as stopped.
+  - Open another page, such as the list or another workspace. Open the menu of the stopped row with a right click, and choose Archive. The Archive shortcut of the row on hover asks the same question.
+  - In the network panel of the browser, record the reply of the saved-work check: its HTTP status, its error code, and its message. Record what the question shows.
+  - Check that the question shows "The check didn't finish" with that message, Cancel, and Try again, and no button that archives.
+  - Choose Try again, and check that the check fails again in the same way. Then choose Cancel.
+  - Check that the workspace is still in its section, is not archived, and is still stopped. Check that the current page did not change.
+  - Open the workspace, and wait until its cloud computer is ready. Archive it from its row, and check that the check finishes and that the question asks for the confirmation. Cancel there, unless the workspace can go.
+  - When the reply has no useful instruction, or another check fails, propose a separate fix in a new follow-up item. One example is to map the provider's refusal of the command to `sandbox_unavailable` in `readArchiveCheck`. Do not propose an automatic Resume or an archive without the check as a fix that needs no user decision.
+- **Impact if no action:** the real reply stays unknown. A person who archives a stopped workspace from its row could see only "The request failed. Try again.", with no word that opening the workspace lets the check finish.
+- **Needs:**
+  - the merged and deployed change on the test deployment
+  - an account that may archive a test workspace
+  - a test workspace whose cloud computer has stopped
+  - a browser with a network panel
+- **Done when:** the change that deletes this item records the status, the code, and the message of the real reply. It also records that Cancel and Try again work as the task says. It records that the workspace stays as it was, and that no cloud computer started. Each needed fix has its own new follow-up item.

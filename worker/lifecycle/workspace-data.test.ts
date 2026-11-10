@@ -54,6 +54,7 @@ it.each([
     await insertWorkspace(db, {
       id: 'n',
       orgId,
+      providerAccount: 'boat',
       repositoryId,
       sectionId: reordered ? generalId : undefined,
       user,
@@ -64,7 +65,7 @@ it.each([
       message: FIRST_MESSAGE,
       now: TEST_TIME + 100,
     }),
-  ).toBe('test-image')
+  ).toEqual({ imageName: 'test-image', providerAccount: 'boat' })
   expect(
     (await shellWorkspaces(db, orgId, user.id)).map(({ id }) => id),
   ).toEqual(expected)
@@ -96,6 +97,7 @@ it('allocates distinct numbers during overlapping creates and never reuses a rem
     await insertWorkspace(db, {
       id,
       orgId,
+      providerAccount: 'boat',
       repositoryId,
       sectionId: generalId,
       user,

@@ -69,6 +69,7 @@ with the message of the API.
 | ----------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `MembersTab`            | The Members tab, in the page column of the org settings    | `api`, `org` (with the viewer's `role`), `viewerId`, `viewport`, `now`, optional `onMemberRemoved(member)` and `suspended` |
 | `OwnerPicker`           | The workspace header, beside the state                     | `api`, `workspace`, `canReassign` (the viewer is an admin of an org that is not suspended), `viewport`, `onReassigned(workspace)` |
+| `OwnerChoices`          | Reassign to in the menu of a workspace row, beside the menu or in its sheet | `choices` from `useOwnerChoices({ api, workspace, onReassigned, close })`, `layout: 'menu' \| 'sheet'`. The menu moves the focus. |
 | `DeleteOrgSection`      | The General tab of an admin, under the org name            | `api`, `org`, `viewport`, `now`, optional `timeZone`, `onDeleted(org)`. It renders nothing for a member.               |
 | `DeletedOrgPage`        | The main area of a deleted org, which it fills             | `api`, `org` (with `deletion`), `viewport`, optional `timeZone` and `suspended`, `onRestored(org)`. Only an admin gets Restore. |
 | `MemberRepositoriesTab` | The Repositories tab of a member who is not an admin       | `api`, `org`, `viewport`, optional `suspended`                                                                         |
@@ -98,6 +99,8 @@ with the message of the API.
   with more room, and it gets shorter to fit. It follows its button when the
   page scrolls or the window changes size. In a long menu, only the choices
   scroll. The heading, an error, and the note stay in view.
+- A desktop menu closes when the window loses focus, including a press
+  inside a preview frame. The menu stays open while its change runs.
 - The menus and the questions note themselves in the open layers of the
   app shell, from `../shell/ui/layers.ts`. So the key of the command
   palette asks an open desktop menu to close, as Escape does. While its
@@ -215,6 +218,9 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - Check a busy desktop menu in a real browser, because happy-dom cannot open
   it. On the dev page, `delay` holds each reply and `fail` with `once=1`
   makes the first change fail.
+- `desktop/tests/owner-menu.spec.ts` checks that a press inside a preview
+  frame closes the desktop menu and keeps focus in the preview. Run it with
+  `npm --prefix desktop run test:electron -- tests/owner-menu.spec.ts`.
 
 ## Limits
 
@@ -231,6 +237,10 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - `actionOwners.ts`: the owner of each action, and `keepExistingOwners`,
   the owner rule that the store applies after each state change.
 - `MemberComputerView.tsx`: the controlled read-only Cloud computer tab.
+- `OwnerChoices.tsx`: `useOwnerChoices`, the members as choices of a new
+  owner with their load, change, and refusal states. `OwnerPicker` and the
+  menu of a workspace row in the shell share it, so both show the same
+  states.
 - `software.ts`: `softwareSentence`, the base image as one sentence, which
   the admin tab of the shell also uses.
 - `useMounted.ts`: the ref that drops the answers of an old scope.

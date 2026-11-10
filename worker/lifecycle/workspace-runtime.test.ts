@@ -54,6 +54,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     avatarUrl: null,
   }
   const job: WorkspaceStartJob = {
+    providerAccount: 'boat',
     workspaceId: id,
     orgId: 'runtime-org',
     kind: 'create',
