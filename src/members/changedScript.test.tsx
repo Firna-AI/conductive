@@ -54,13 +54,29 @@ describe('the notice of a changed install script for a member', () => {
     const cases = [
       {
         name: 'first build runs',
-        builds: { builds: [build('b1', 'running')], currentImageBuildId: null },
+        builds: {
+          builds: [build('b1', 'running')],
+          currentImageBuildId: null,
+          changes: {
+            installScript: true,
+            addedRepositories: [],
+            removedRepositories: [],
+          },
+        },
         present: [`The install script changed ${oneMoreBuild}`],
         absent: [keepsBuild, 'Build computer'],
       },
       {
         name: 'no good build, and none runs',
-        builds: { builds: [build('b1', 'failed')], currentImageBuildId: null },
+        builds: {
+          builds: [build('b1', 'failed')],
+          currentImageBuildId: null,
+          changes: {
+            installScript: true,
+            addedRepositories: [],
+            removedRepositories: [],
+          },
+        },
         present: ['The install script changed It runs at the next build.'],
         absent: [keepsBuild, oneMoreBuild, 'Build computer'],
       },
@@ -69,6 +85,11 @@ describe('the notice of a changed install script for a member', () => {
         builds: {
           builds: [build('b1', 'succeeded')],
           currentImageBuildId: 'b1',
+          changes: {
+            installScript: true,
+            addedRepositories: [],
+            removedRepositories: [],
+          },
         },
         present: [`It runs at the next build. ${keepsBuild}`],
         absent: [oneMoreBuild, 'Build computer'],

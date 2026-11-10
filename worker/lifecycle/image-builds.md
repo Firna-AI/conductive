@@ -25,15 +25,32 @@ that has not allocated a sandbox ends without cleanup. An allocation
 already in progress keeps its cleanup ownership. A failed reschedule of
 an existing running build keeps that build running.
 
+`changeShellRepository` in
+[`feature-repositories.ts`](../app-api/feature-repositories.ts) starts a
+build after a save adds a repository. It uses the admin who added it,
+also after a failed build. A repeated save and a removal start no build.
+A failed start keeps the saved choice and writes one fixed warning.
+
 `publishBuild` in [`build-admission-data.ts`](build-admission-data.ts)
 records whether the first good build needs an added build for changed
-settings. Its `cleanup-build` phase keeps that work through coordinator
+settings. A successful build or refresh also gets an added build when its
+repositories lack a chosen repository and the newest build succeeded.
+Its `cleanup-build` phase keeps that work through coordinator
 reconstruction. `cleanupBuild` in [`build-execution.ts`](build-execution.ts)
 finishes resource cleanup before `startAddedImageBuild` in
 [`first-image-build.ts`](first-image-build.ts) starts the added build.
 The added build uses the first admin who is not suspended. A failed start
-keeps the first good image and writes one fixed warning. A failed first
-build starts no added build.
+keeps the published image and writes one fixed warning. A failed build
+starts no added build. A refresh after a failed build gets none either.
+
+`readBuildHistory` in [`build-data.ts`](build-data.ts) returns
+`BuildsResponse.changes` with the build history. `readBuildChanges` in
+[`build-changes-data.ts`](build-changes-data.ts) compares the raw saved
+install script with the newest successful build's script. Before the first
+image, it uses the newest build instead. A refresh never becomes this
+script reference. The added and removed repository lists compare the
+chosen repositories with the published image's repositories. Both lists
+stay empty before the first image.
 
 D1 keeps at most 4 MiB of each build log: the first and the last output.
 A write that passes that budget removes whole rows from the middle.

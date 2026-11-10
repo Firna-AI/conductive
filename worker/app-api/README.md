@@ -46,9 +46,18 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   first image build after it saves the org, its admin, and its repositories.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
+- A save that adds a repository starts an image build for the admin who
+  added it, also after a failed build. A repeated save and a removal start
+  no build. A running job takes the request without starting another job.
+  A failed start writes one fixed warning through `warnWorker`. The saved
+  choice stays, and the reply keeps the repository list and HTTP 200.
 - The settings reply compares its revision with the published image's
   build. Before the first image, it uses the newest build. With no build,
   `needsBuild` is false.
+- The build history reply also gives `BuildsResponse.changes`: the saved
+  install script change and the added and removed repositories. The
+  [image build reader](../lifecycle/image-builds.md#build-jobs) owns the
+  comparison. The settings reply still keeps `needsBuild`.
 - `getStartedGitHubComplete` owns the `github-app` step in every org state.
   The step is complete when an org of the user that is not deleted has a
   repository through an installation that is not suspended.
@@ -158,6 +167,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   and a failed build start that keeps the org.
 - `feature-settings-builds.test.ts` checks the build revision used by the
   settings reply before and after the first image.
+- `feature-repository-builds.test.ts` checks the admin's repository build,
+  repeated saves, removals, adds after a failed build, and a failed start
+  that keeps the choice.
 
 ### Key code
 
@@ -191,7 +203,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   repositories and starts its first build with `startImageBuild` of the
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
-  the org's saved choices with repositories that its reader can access.
+  the org's saved choices with repositories that its reader can access,
+  and starts a build after an add.
   Their `*-data.ts` files keep queries and guarded writes.
 
 ### Related docs

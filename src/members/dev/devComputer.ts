@@ -116,6 +116,11 @@ export function computerReplies(
   const builds: BuildsResponse = {
     builds: newest ? [newest.build, ...history] : history,
     currentImageBuildId: 'build-5',
+    changes: {
+      installScript: scene === 'changed',
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   }
   const replies: { path: string; body: unknown }[] = [
     { path: orgSettingsPaths.builds(org), body: builds },
@@ -147,6 +152,11 @@ export function liveComputer(): LiveComputer {
     builds: {
       builds: [runningBuild, ...history],
       currentImageBuildId: 'build-5',
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     },
     log: withLog(runningBuild, runningLog.slice(0, 3)).log,
   }
@@ -168,6 +178,14 @@ export function withFinishedBuild(live: LiveComputer): LiveComputer {
   }
   return {
     ...live,
-    builds: { builds: [done, ...history], currentImageBuildId: done.id },
+    builds: {
+      builds: [done, ...history],
+      currentImageBuildId: done.id,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
+    },
   }
 }

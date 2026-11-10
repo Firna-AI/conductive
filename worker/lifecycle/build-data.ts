@@ -13,6 +13,7 @@ import { buildLogStatements } from './build-log-statements'
 import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
+import { readBuildChanges } from './build-changes-data'
 
 export type BuildPhase =
   | 'create'
@@ -194,7 +195,11 @@ export async function readBuildHistory(
     .bind(orgId)
     .all<ImageBuild>()
   const image = await readOrgImage(db, orgId, providerAccount)
-  return { builds: results, currentImageBuildId: image?.imageBuildId ?? null }
+  return {
+    builds: results,
+    currentImageBuildId: image?.imageBuildId ?? null,
+    changes: await readBuildChanges(db, orgId, providerAccount),
+  }
 }
 
 export async function readBuild(

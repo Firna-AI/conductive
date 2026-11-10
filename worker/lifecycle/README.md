@@ -118,6 +118,8 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+  Its `imageAdmissionError` gives a waiting repository the next-build message.
+  The browser create and the agent tools share that message.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
   `workspaceView` adds the canonical web link for an explicit app origin.
@@ -263,10 +265,16 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
   [Workspace Durable Object](workspace-object.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
+- [`build-changes-data.ts`](build-changes-data.ts): `readBuildChanges`, the
+  saved install script change and the added and removed repositories in
+  `BuildsResponse.changes`. It reads the published image's repositories
+  from the same source as creation admission.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
   which starts changed settings after the first good build finishes cleanup.
+  It also builds waiting repositories after a successful build or refresh,
+  when the newest build succeeded.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
 - [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
   replays a saved allocation request and saves the recovered sandbox ID.

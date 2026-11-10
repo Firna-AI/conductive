@@ -13,6 +13,8 @@ export const SIMPLE_WARNINGS = {
     'Could not start the first cloud computer build.',
   added_image_build_start_failed:
     'Could not start the added cloud computer build.',
+  repository_image_build_start_failed:
+    'Could not start the cloud computer build for the added repository.',
   approval_email_delivery_failed:
     'Approval email delivery failed. The email remains pending.',
   approval_email_retry_failed:

@@ -74,6 +74,11 @@ export interface BuildLogEvent {
 export interface BuildsResponse {
   builds: readonly ImageBuild[]
   currentImageBuildId: string | null
+  changes: {
+    installScript: boolean
+    addedRepositories: readonly { id: string; fullName: string }[]
+    removedRepositories: readonly { id: string; fullName: string }[]
+  }
 }
 export interface BuildResponse {
   build: ImageBuild

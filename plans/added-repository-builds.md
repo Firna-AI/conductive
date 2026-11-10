@@ -445,43 +445,43 @@ Depends on: 2
 Build each added repository, and give the app the data of the new
 notices. The app keeps its current screens.
 
-- [ ] Start a build in `changeShellRepository` in
+- [x] Start a build in `changeShellRepository` in
       `worker/app-api/feature-repositories.ts` after a save that changed
       a repository from removed to added. Catch a failed start and warn,
       as `createShellOrg` does.
-- [ ] In `publishBuild` of `worker/lifecycle/build-admission-data.ts`,
+- [x] In `publishBuild` of `worker/lifecycle/build-admission-data.ts`,
       also give a job that succeeded the phase `cleanup-build` when it
       lacks a chosen repository and the newest build succeeded. Keep the
       rule of decision 151.
-- [ ] Add `changes` to `BuildsResponse` and to `readBuildHistory` in
+- [x] Add `changes` to `BuildsResponse` and to `readBuildHistory` in
       `worker/lifecycle/build-data.ts`. Read the repositories of the org
       image as `publishedImageSource` does.
-- [ ] Keep `needsBuild` in the settings reply for Milestones 3 and 4.
-- [ ] Give the refusal of a create in a waiting repository its new words.
-- [ ] Read `changes` in the parsers of `src/app/api/` and
+- [x] Keep `needsBuild` in the settings reply for Milestones 3 and 4.
+- [x] Give the refusal of a create in a waiting repository its new words.
+- [x] Read `changes` in the parsers of `src/app/api/` and
       `src/members/api/`.
-- [ ] Return `changes` from the dev fakes in `src/app/dev/` and
+- [x] Return `changes` from the dev fakes in `src/app/dev/` and
       `src/members/dev/`. The fake add of a repository starts a fake
       build, as the Worker does.
-- [ ] Add Worker tests:
-  - [ ] An add starts a build for the admin. A second save of the same
+- [x] Add Worker tests:
+  - [x] An add starts a build for the admin. A second save of the same
         repository starts none. A removal starts none.
-  - [ ] An add after a failed build starts a build.
-  - [ ] An add during a build gets one added build after that build
+  - [x] An add after a failed build starts a build.
+  - [x] An add during a build gets one added build after that build
         succeeds, and none after it fails.
-  - [ ] An add during a refresh gets one added build after the refresh
+  - [x] An add during a refresh gets one added build after the refresh
         succeeds, and none when the newest build failed.
-  - [ ] `changes` lists the added and the removed repositories.
-  - [ ] `changes.installScript` turns on for an install script change,
+  - [x] `changes` lists the added and the removed repositories.
+  - [x] `changes.installScript` turns on for an install script change,
         stays off for a repository change, and stays on after a refresh.
-  - [ ] The refusal words of a waiting repository and of a repository
+  - [x] The refusal words of a waiting repository and of a repository
         that the org did not choose.
-- [ ] Update `plans/follow-ups/added-build-can-be-lost.md`: the added
+- [x] Update `plans/follow-ups/added-build-can-be-lost.md`: the added
       build now follows each job that succeeds, and option D of decision
       240, the start in the image coordinator, is a new option there.
-- [ ] Update the lifecycle README, `image-builds.md`, and the app-api
+- [x] Update the lifecycle README, `image-builds.md`, and the app-api
       README.
-- [ ] Run the targeted tests, `npm run typecheck`, and `npm run lint`.
+- [x] Run the targeted tests, `npm run typecheck`, and `npm run lint`.
 
 ## Milestone 4: Screens
 

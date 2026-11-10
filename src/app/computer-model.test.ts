@@ -70,6 +70,11 @@ describe('ComputerModel', () => {
     server.json('GET', buildsPath, {
       builds: [running.build],
       currentImageBuildId: null,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     server.json('GET', buildPath(org, FAKE_IDS.build), running)
     const held = new HeldRequests(server)

@@ -75,14 +75,29 @@ describe('the notice of a changed install script', () => {
       firstBuild: await changedScript({
         builds: [buildOf('first', 'running', 134_000)],
         currentImageBuildId: null,
+        changes: {
+          installScript: true,
+          addedRepositories: [],
+          removedRepositories: [],
+        },
       }),
       noGoodBuild: await changedScript({
         builds: [buildOf('first', 'failed', 720_000)],
         currentImageBuildId: null,
+        changes: {
+          installScript: true,
+          addedRepositories: [],
+          removedRepositories: [],
+        },
       }),
       goodBuild: await changedScript({
         builds: [buildOf('first', 'succeeded', 3_600_000)],
         currentImageBuildId: 'first',
+        changes: {
+          installScript: true,
+          addedRepositories: [],
+          removedRepositories: [],
+        },
       }),
     }
     expect(shown).toEqual({

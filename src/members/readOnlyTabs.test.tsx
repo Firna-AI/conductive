@@ -79,7 +79,15 @@ describe('the read-only settings of a member', () => {
     ]
     const card = (builds: ImageBuild[], currentImageBuildId = 'b4') => (
       <BuildCard
-        builds={{ builds, currentImageBuildId }}
+        builds={{
+          builds,
+          currentImageBuildId,
+          changes: {
+            installScript: false,
+            addedRepositories: [],
+            removedRepositories: [],
+          },
+        }}
         log={[]}
         now={now}
         timeZone="UTC"
@@ -150,7 +158,15 @@ describe('the read-only settings of a member', () => {
       shown: OrgSettings = settings,
     ) => (
       <MemberComputerView
-        builds={{ builds, currentImageBuildId: 'b1' }}
+        builds={{
+          builds,
+          currentImageBuildId: 'b1',
+          changes: {
+            installScript: false,
+            addedRepositories: [],
+            removedRepositories: [],
+          },
+        }}
         log={log}
         now={now}
         org={{ id: 'acme', name: 'Acme', role: 'member' }}

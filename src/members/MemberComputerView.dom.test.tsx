@@ -55,7 +55,15 @@ function event(eventNumber: number, text: string): BuildLogEvent {
 function view(builds: ImageBuild[], log: BuildLogEvent[]) {
   return (
     <MemberComputerView
-      builds={{ builds, currentImageBuildId: 'b1' }}
+      builds={{
+        builds,
+        currentImageBuildId: 'b1',
+        changes: {
+          installScript: false,
+          addedRepositories: [],
+          removedRepositories: [],
+        },
+      }}
       log={log}
       now={now}
       org={{ id: 'acme', name: 'Acme', role: 'member' }}

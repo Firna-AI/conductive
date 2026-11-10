@@ -134,8 +134,14 @@ export async function publishBuild(
       .bind(now, job.buildId),
     db
       .prepare(
-        `UPDATE image_build_jobs SET phase = CASE WHEN ? IS NULL AND ? = 'build'
-          AND EXISTS (SELECT 1 FROM settings WHERE org_id = ? AND revision > ?)
+        `UPDATE image_build_jobs SET phase = CASE WHEN
+          (? IS NULL AND ? = 'build'
+            AND EXISTS (SELECT 1 FROM settings WHERE org_id = ? AND revision > ?))
+          OR (EXISTS (SELECT 1 FROM repositories r WHERE r.org_id = ? AND r.selected = 1
+            AND NOT EXISTS (SELECT 1 FROM json_each(image_build_jobs.repositories_json) repository
+              WHERE json_extract(repository.value, '$.id') = r.id))
+            AND (SELECT state FROM image_builds WHERE org_id = ? AND kind = 'build'
+              ORDER BY started_at DESC, id DESC LIMIT 1) = 'succeeded')
           THEN 'cleanup-build' ELSE 'cleanup' END,
           process_id = NULL WHERE build_id = ? AND EXISTS
           (SELECT 1 FROM image_builds WHERE id = image_build_jobs.build_id AND state = 'succeeded')`,
@@ -145,6 +151,8 @@ export async function publishBuild(
         job.kind,
         job.orgId,
         job.settingsRevision,
+        job.orgId,
+        job.orgId,
         job.buildId,
       ),
   ])
