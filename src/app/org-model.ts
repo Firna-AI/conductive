@@ -29,6 +29,7 @@ import { Refresher, type RefreshWait, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
 import { ready, Store, valueOf, type Loadable, type Readable } from './store'
+import { WorkspaceActions } from './workspace-actions'
 import {
   neverSuspended,
   noteOrgRefusals,
@@ -122,6 +123,7 @@ export class OrgModel {
   readonly members: Readable<Loadable<MembersResponse>>
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
+  readonly workspaceActions: WorkspaceActions
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
 
@@ -158,6 +160,7 @@ export class OrgModel {
       ),
     }
     const { list, repositories, builds, members } = this.resources
+    this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
     this.workspaces = partOf(list.store, (value) => value.workspaces)
     this.repositories = repositories.store

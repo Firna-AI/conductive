@@ -1,0 +1,37 @@
+---
+import type { MenuGroup } from '../docs-guides'
+
+/*
+ * The guides of the docs in their groups, with the current guide marked
+ * for sight and for screen readers. The sidebar of a desktop and the docs
+ * menu of a phone both show it, so each list takes its name from its group
+ * through `aria-label`, and the two copies on a page need no IDs.
+ */
+type Props = { groups: readonly MenuGroup[]; current: string }
+
+const { groups, current } = Astro.props
+---
+
+<nav aria-label="Docs" class="docs-nav">
+  {groups.map((group) => (
+    <div class="docs-nav-group">
+      <span class="docs-nav-heading">{group.name}</span>
+      <ul aria-label={group.name} class="docs-nav-list">
+        {group.guides.map((guide) => (
+          <li>
+            <a
+              aria-current={guide.id === current ? 'page' : undefined}
+              class:list={[
+                'docs-nav-item',
+                { 'docs-nav-current': guide.id === current },
+              ]}
+              href={guide.href}
+            >
+              {guide.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</nav>

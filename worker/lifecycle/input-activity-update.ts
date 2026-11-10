@@ -1,7 +1,7 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { assertReceiverActive } from '../members/receiver-fence'
 import type { ReceiverStorage } from '../members/receiver-storage'
-import { sandboxProvider } from '../sandbox/client'
+import { providerForAccount } from '../sandbox/client'
 import type { LifecycleReconciliation } from './durable-types'
 import {
   readInputActivityTarget,
@@ -42,23 +42,32 @@ export function inputActivityUpdate(options: {
         at,
         target.sandboxId,
         captured.generation,
+        target.providerAccount,
       ))
     )
       return
     await assertReceiverActive(options.storage, captured.generation)
     if (!captured.lifecycle) return
-    const provider = sandboxProvider(options.env, async (request) => {
-      await assertReceiverActive(options.storage, captured.generation)
-      const current = await readInputActivityTarget(options.env.DB, workspaceId)
-      if (
-        current?.sandboxId !== target.sandboxId ||
-        current.generation !== captured.generation
-      )
-        return new Response(null, { status: 404 })
-      const response = await options.dependencies.fetch(request)
-      await assertReceiverActive(options.storage, captured.generation)
-      return response
-    })
+    const provider = providerForAccount(
+      options.env,
+      async (request) => {
+        await assertReceiverActive(options.storage, captured.generation)
+        const current = await readInputActivityTarget(
+          options.env.DB,
+          workspaceId,
+        )
+        if (
+          current?.sandboxId !== target.sandboxId ||
+          current.providerAccount !== target.providerAccount ||
+          current.generation !== captured.generation
+        )
+          return new Response(null, { status: 404 })
+        const response = await options.dependencies.fetch(request)
+        await assertReceiverActive(options.storage, captured.generation)
+        return response
+      },
+      target.providerAccount,
+    )
     const remote = await options.extendDeadline(async () => {
       const sandbox = await replyOrCurrentState(
         provider,
@@ -72,6 +81,7 @@ export function inputActivityUpdate(options: {
       const current = await readInputActivityTarget(options.env.DB, workspaceId)
       if (
         current?.sandboxId === target.sandboxId &&
+        current.providerAccount === target.providerAccount &&
         current.generation === captured.generation
       )
         await options.reconcile(captured, target.sandboxId, remote)

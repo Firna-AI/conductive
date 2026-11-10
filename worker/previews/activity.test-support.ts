@@ -22,6 +22,7 @@ export function toolsActivity(db: D1Database, now: () => number) {
           at,
           target.sandboxId,
           target.generation,
+          target.providerAccount,
         )
     },
     warn: warnWorker,

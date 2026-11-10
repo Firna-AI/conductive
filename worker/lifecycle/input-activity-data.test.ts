@@ -19,6 +19,7 @@ it('writes monotonically only for the current sandbox, org generation, and runni
       at,
       'bx_one',
       generation,
+      'boat',
     )
   expect(await write(TEST_TIME + 20_000, 0)).toBe(true)
   expect(await write(TEST_TIME + 10_000, 0)).toBe(true)

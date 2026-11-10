@@ -9,7 +9,7 @@
 - **Source:** Review. **Category:** Product bug.
 - **Terms:**
   - **Push refresh:** an update of the org image after a push to the default branch of a chosen repository. It fetches the new commits and runs no install script. The protocol allows at most one in 30 minutes for each org.
-  - **Push refresh mark:** the columns `last_push_refresh_at` and `pending_push_refresh_at` of the settings of the org. They hold the 30-minute limit and a refresh that waits for a running build.
+  - **Push refresh mark:** the columns `last_push_refresh_at` and `pending_push_refresh_at` of the `org_images` record of the org and its provider account. They hold the 30-minute limit and a refresh that waits for a running build.
 - **Background:**
   - `refreshImagesForPush` first writes `last_push_refresh_at` and clears `pending_push_refresh_at`. It then calls `startImageBuild` to record the refresh.
   - `runImageAlarm` also clears `pending_push_refresh_at` and writes `last_push_refresh_at` before it calls `startImageBuild`.

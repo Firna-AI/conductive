@@ -1,5 +1,6 @@
 import { CommandFailed } from '../warnings'
 import type { SandboxProvider } from '../sandbox/provider'
+import { providerForAccount } from '../sandbox/client'
 import {
   jobSoftware,
   saveBuildOutput,
@@ -22,6 +23,7 @@ import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { privilegedCommand } from '../terminal/privileged'
 import { recoverImageBuildAllocation } from './image-allocation'
 import { startAddedImageBuild } from './first-image-build'
+import { imageIsPublished } from './org-image-data'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -102,30 +104,58 @@ export async function cleanupBuild(
   if (job.sandboxId) {
     await deleteSandboxIfPresent(provider, job.sandboxId)
     await runtime.env.DB.prepare(
-      'UPDATE image_builds SET sandbox_id = NULL WHERE id = ?',
+      'UPDATE image_builds SET sandbox_id = NULL WHERE id = ? AND sandbox_id = ? AND provider_account = ?',
     )
-      .bind(job.buildId)
+      .bind(job.buildId, job.sandboxId, job.providerAccount)
       .run()
   }
   if (
     job.state === 'failed' &&
     job.snapshotName &&
-    job.snapshotName !== job.previousImageName
+    (job.snapshotName !== job.previousImageName ||
+      job.providerAccount !== job.previousProviderAccount)
   )
     await deleteSnapshotIfPresent(provider, job.snapshotName)
   // Keep build metadata and logs. Only the current image needs a snapshot.
   if (
     job.state === 'succeeded' &&
     job.previousImageName &&
-    job.previousImageName !== job.snapshotName
+    (job.previousImageName !== job.snapshotName ||
+      job.previousProviderAccount !== job.providerAccount)
   ) {
-    if (await imageIsLeased(runtime.env.DB, job.orgId, job.previousImageName))
-      return false
-    await deleteSnapshotIfPresent(provider, job.previousImageName)
+    const published = await imageIsPublished(
+      runtime.env.DB,
+      job.previousImageName,
+      job.previousProviderAccount,
+    )
+    if (!published) {
+      if (
+        await imageIsLeased(
+          runtime.env.DB,
+          job.orgId,
+          job.previousImageName,
+          job.previousProviderAccount,
+        )
+      )
+        return false
+      await deleteSnapshotIfPresent(
+        providerForAccount(
+          runtime.env,
+          runtime.dependencies.fetch,
+          job.previousProviderAccount,
+        ),
+        job.previousImageName,
+      )
+    }
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
   await startAddedImageBuild(runtime, job)
-  await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
+  await scheduleIdleImage(
+    runtime,
+    job.orgId,
+    jobSoftware(job),
+    job.providerAccount,
+  )
   return true
 }
 

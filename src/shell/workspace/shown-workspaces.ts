@@ -1,4 +1,5 @@
 import type { AppModel } from '../../app/app-model'
+import type { ArchiveModel } from '../../app/archive-model'
 import type { OrgModel } from '../../app/org-model'
 import { valueOf } from '../../app/store'
 import { WorkspaceModel } from '../../app/workspace-model'
@@ -7,6 +8,7 @@ import { ChatController } from '../../chat/state/controller'
 import type { ChatSources } from '../../chat/state/sources'
 import type { SubscribeToWorkspace } from '../../chat/stream/workspace-stream'
 import type { WorkspaceFiles } from '../../files/model/files-store'
+import type { Workspace } from '../../shared/workspaces'
 import { createWorkspaceFiles } from './files/files-store'
 import { HeaderNotices } from './header-notices'
 import { ToolEvents } from './tools/tool-events'
@@ -96,6 +98,31 @@ export class ShownWorkspaces {
     const key = `${workspace.orgId}/${workspace.workspaceId}`
     const shown = this.kept.get(key) ?? this.keep(key, workspace)
     return new WorkspaceView(shown, () => this.start(key, shown))
+  }
+
+  /** Saves a row's name and updates a model that the tab already keeps. */
+  async rename(workspace: WorkspaceIdentity, name: string): Promise<void> {
+    const { orgId, workspaceId } = workspace
+    const updated = await this.app
+      .org(orgId)
+      .workspaceActions.rename(workspaceId, name)
+    this.kept.get(`${orgId}/${workspaceId}`)?.model.renamed(updated)
+  }
+
+  /** Takes the owner reply without opening the workspace. */
+  reassigned(workspace: Workspace): void {
+    const kept = this.kept.get(`${workspace.orgId}/${workspace.id}`)
+    if (kept) kept.model.reassigned(workspace)
+    else this.app.org(workspace.orgId).workspaceActions.reassigned(workspace)
+  }
+
+  /** Reuses a kept Archive flow, or the flow of an unopened list row. */
+  archive(workspace: WorkspaceIdentity): ArchiveModel {
+    const { orgId, workspaceId } = workspace
+    return (
+      this.kept.get(`${orgId}/${workspaceId}`)?.model.archive ??
+      this.app.org(orgId).workspaceActions.archive(workspaceId)
+    )
   }
 
   private keep(key: string, workspace: WorkspaceIdentity): KeptWorkspace {

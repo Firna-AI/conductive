@@ -49,9 +49,22 @@ approval retries without real waits. Captured provider requests show
 delivery keys and message content.
 Each test creates its own members client and lifecycle hooks.
 The harness gives the Worker a test `BOAT_API_KEY` and `BOAT_ORG_ID`.
-`FakeBoat` serves only requests for its `orgId`. A request without
-`X-Boat-Org` goes to `activeOrgId`, another organization, and gets 404.
-`FakeBoat` also refuses each request without its `apiKey`.
+`FakeBoat` serves requests for its `orgId`, and for each organization that
+`addAccount({ orgId, apiKey })` adds with its own key. A request for any
+other organization gets 404. A request without `X-Boat-Org` goes to
+`activeOrgId`, another organization, and gets 404.
+`FakeBoat` also refuses each request without the `apiKey` of its
+organization. `reset` keeps the added organizations.
+To test a second provider account, add its organization to the fake. Then
+configure the matching account in the trusted `SANDBOX_PROVIDER_ACCOUNTS`
+map of the Worker environment, as the
+[sandbox area](../sandbox/README.md#provider-accounts) says.
+Native actor options accept that map in `environment`.
+The lifecycle fixture passes its configured accounts to each native actor.
+The Boat driver of the
+[provider contract suite](../sandbox/README.md#provider-contract-suite)
+makes a new `FakeBoat` for each case, and sets its replies from each
+normalized scenario.
 
 `memberFixture` prepares three users, signed sessions, an org, memberships, and settings in one D1 batch.
 It then grants each user app access. The waitlist fixture omits those
@@ -129,7 +142,7 @@ So a plain object does not type-check as the environment of a child process.
 - `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
 - `native-attachment-controls.ts` runs streaming attachment storage and reads real R2 byte samples inside the runtime.
 - `migrations.ts` applies migrations for every test harness.
-- `fake-boat.ts` supplies provider replies and fresh streaming response factories.
+- `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
 - `fake-site.ts` supplies built site files, the sign-in agreement, and the GitHub install return pages.
 - `fake-runner.ts` supplies the runner without an agent SDK.

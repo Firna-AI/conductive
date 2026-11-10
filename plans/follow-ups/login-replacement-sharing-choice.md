@@ -1,0 +1,89 @@
+# Replacing a login loses its sharing choice
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-09, from the branch `calummoore/docs-section-brainstorm`, which adds the public website docs. The check of finding 4 in review round 4 found these two problems outside the scope of that branch.
+- **Location:** `src/marketing/terms.ts:94-95`, `src/shell/account/AgentList.tsx:43-64` and `:109`, `worker/app-api/account-data.ts:110-116` and `:145-148`, `docs/protocol/access-and-security.md:221-231`, and `docs/mockups/src/components/settings/AccountSections.tsx:97-119`.
+- **Reason:** The website docs branch fixed only its new guide, but the cause is in the Account page, the Worker, the access protocol, and the Terms.
+
+- **Terms:**
+  - **Agent login:** a Claude subscription token or an Anthropic or OpenAI API key that a member saves in Account for the sessions that the member starts.
+  - **Share setting:** the switch **Let other members use this login** under a connected login in Account, stored as `no_reuse` in `agent_logins`, where 1 means off.
+  - **Same-kind replacement:** a new secret saved over a saved login of the same agent and kind, such as a new API key over an old one.
+  - **Terms revision:** the version of the Terms that each sign-in accepts, named by `TERMS_VERSION` in `src/shared/terms.ts:4`.
+- **Background:**
+  - Each session runs on the agent login of the member who started it (`docs/protocol/access-and-security.md:205-207`). Model use bills to that member's account (`src/marketing/terms.ts:65-67`).
+  - While the starter shares the login, the messages of other members in that session run on it (`docs/protocol/access-and-security.md:219-220`).
+  - When the starter does not share it, a message of another member starts a new session on that member's own login. The new session has none of the earlier conversation (`docs/protocol/access-and-security.md:232-235` and `docs/protocol/chat-and-events.md:52-62`).
+  - The kind of a new login sets the default of its share setting: off for a Claude subscription token, on for an API key (`docs/protocol/access-and-security.md:221-226`). Reason: Anthropic's consumer terms forbid making a Claude account available to anyone else. The owner of an API key may let a team use it.
+  - The rotation rule at `docs/protocol/access-and-security.md:227-229` says: "A replaced login keeps its share setting while its kind stays the same. A login whose kind changes gets the default of its new kind. Reason: a key rotation keeps the choice of its owner."
+  - The Terms at `src/marketing/terms.ts:91-96` say: "For a Claude subscription, the setting starts off. For an API key, it starts on. When you replace a login with one of the same kind, the setting stays. You can change it on your account page."
+  - The Worker serves `/api/account/agent-logins/claude` and `/api/account/agent-logins/codex` in `worker/app-api/boot.ts:71-117`:
+    - `PUT` saves a login through `saveAccountLogin` in `worker/app-api/account-data.ts:99-119`. A new row gets the default: `no_reuse` 1 for a token and 0 for an API key (line 116).
+    - Over a saved row of the same agent, the `PUT` keeps `no_reuse` when the kind stays the same. It takes the default of the new kind when the kind changes (lines 110-113).
+    - `PATCH` changes only the share setting (lines 121-138).
+    - `DELETE` deletes the row, with its secret and its share setting (lines 140-149).
+  - The Account page never sends a `PUT` over a saved login. In `src/shell/account/AgentList.tsx`, a connected login has only **Remove** (lines 43-53). **Connect** shows only when no login is saved (lines 54-64), and the Connect form opens only then (line 109).
+  - So the only replacement in the app is **Remove**, then **Connect**. **Remove** sends the `DELETE` (`src/app/account-model.ts:193-197`). **Connect** sends a `PUT` that makes a new row with the default (`src/app/account-model.ts:163-172`).
+  - No other screen saves over a login:
+    - Get started shows the same list without **Remove** (`src/shell/onboarding/AgentStep.tsx:32-39`).
+    - The chat notice of a missing login opens **Connect** only when no login is saved (`src/chat/components/ChatNotices.tsx:14-37`).
+    - The Mac app shows the same Account page, with an extra This Mac section (`src/shell/account/AccountScreen.tsx:42-59` and `docs/protocol/desktop-app.md:275`).
+  - The mockup draws the same rows: **Remove** for a connected login, and **Connect** otherwise (`docs/mockups/src/components/settings/AccountSections.tsx:97-119`).
+  - The development fake follows the Worker rule in `noReuseOf` (`src/app/dev/account-routes.ts:44-57`) and in its `DELETE` route (lines 117-124).
+  - The Worker test `worker/app-api/agent-login-reuse.test.ts` checks the defaults (lines 45-67). It checks same-kind saves that keep the setting (lines 111-119 and 123-128). It also checks kind changes that take the new default (lines 120-122 and 129-134).
+  - The same test deletes a subscription token and then saves an API key, which gets the API key default (lines 135-149). No test deletes a login and then saves one of the same kind.
+  - `src/shell/account/AccountScreen.test.tsx:107-142` expects only a **Remove** button on a connected login.
+  - The public guide `src/marketing/docs/agent-logins.md` gives **Remove**, then **Connect**, in its sections "Replace or remove a login" and "Recover from a login error". It tells the owner to note the switch before **Remove**, check it after **Connect**, and set it again if needed. It makes no claim that a replacement keeps the setting.
+  - Each public guide must agree with the Terms and Privacy pages (`docs/protocol/website-docs.md:172`). So the guide does not say in words that a replacement resets the setting while the Terms say that it stays.
+  - A rotation in the app today has these effects:
+    - A private API key comes back shared. A shared subscription token comes back private, so the messages of other members then start new sessions.
+    - Between **Remove** and **Connect**, the sessions of the owner have no usable login. A message of another member in that time starts a new session on that member's own login, also when the removed login was shared (`docs/protocol/chat-and-events.md:52-56`).
+    - Recovery: right after **Connect**, the switch and its hint show under the login. The owner can set the switch back at once.
+  - Each sign-in accepts the current Terms revision. A changed revision applies at the next sign-in, within 7 days for a user who keeps using the app (`docs/protocol/access-and-security.md:28-42`).
+  - Earlier changes to the Terms text also changed `TERMS_VERSION`, for example in commits `7e23773f` and `dbb3d26d`. The Terms are the contract of the operator, Firna Ltd (`src/marketing/legal-pages.md:8`).
+  - The Privacy page says: "A connected agent login stays until you remove or replace it" (`src/marketing/privacy.ts:203-204`). This sentence covers the secret. No requirement says how long a share setting stays.
+- **Problem:** The Terms and the rotation rule of the access protocol promise that a same-kind replacement keeps the share setting. The only replacement in the app, **Remove** then **Connect**, deletes the setting, and the new login gets the default of its kind. Only a direct `PUT` over a saved login keeps the setting, and no screen sends one.
+- **Impact if no action:** After a rotation, an API key that its owner kept private is shared again, so other members can bill model use to it. The Terms, which each user accepts at sign-in, keep a promise that the app does not deliver.
+- **Root question:** How does an owner who replaces a login keep the sharing choice they want, and how do the Terms and the access protocol describe it?
+- **Options:**
+  - **A.** Describe the current rule. Change the Terms sentence at `src/marketing/terms.ts:94-95`, or drop it. A new sentence says that a login connected after **Remove** starts with the default of its kind. In `docs/protocol/access-and-security.md`, state that the Account page replaces a login only by **Remove**, then **Connect**. Narrow or drop the rotation reason at lines 227-229. The guide can then state the reset in words.
+    - Cost: a new Terms revision, with a new `TERMS_VERSION` and a new effective date at `src/marketing/terms.ts:30-31`. Each user accepts it at the next sign-in. Cal approves the Terms wording and the changed requirement.
+    - Risk: words alone keep nothing. Each rotation still resets the setting, and the owner must set it again by hand.
+    - Effort: Small.
+  - **B.** Warn at the share switch, together with A. Add one line to the share setting in Account: "Remove clears this choice. A new login starts with the default of its kind." The text lives in the shared part `docs/mockups/src/components/settings/LoginShare.tsx`, which the app and the mockups both render.
+    - Cost: the work of A, because the Terms sentence stays false. Also the copy change, a protocol line for the new text, and a check of the copy and the mockup by hand. Cal approves the new product text and A.
+    - Tests: keep the existing tests of the sharing behaviour, such as `src/shell/account/LoginShareSetting.test.tsx`. Update the row text that `src/shell/account/AccountScreen.test.tsx:129-131` expects. Add no test of the new sentence. Only a new copy decision could make such a test fail, so under the `testing` skill it protects nothing.
+    - Risk: one more line under each connected login. A warning keeps nothing.
+    - Effort: Small.
+  - **C.** Add an in-place **Replace** action to Account. It sits beside **Remove** on a connected login and opens the Connect form of that agent. Its save sends the existing `PUT` over the saved login. So the Worker keeps the setting for the same kind, and it gives the default of the new kind on a kind change.
+    - Changes: `AgentList` in `src/shell/account/AgentList.tsx`, where the form opens today only without a saved login (line 109). The mockup `AgentList` in `docs/mockups/src/components/settings/AccountSections.tsx`, and a catalogue entry under `docs/mockups/src/entries/app/account/` for the open Replace form.
+    - More changes: the test at `src/shell/account/AccountScreen.test.tsx:107-142`, and a new test that a replacement shows the kept setting. A protocol line for the action near `docs/protocol/access-and-security.md:227-231`. The guide, which then uses **Replace** for a rotation.
+    - No change: the Worker, the save route, `saveLogin` in `src/app/account-model.ts:163-172`, and the development fake already keep the setting. Get started gets no **Replace**, because it passes `removable={false}`.
+    - Benefit: the Terms sentence becomes true without a new Terms revision. **Remove** stays a full removal, as the Privacy page describes.
+    - Benefit: an in-place rotation avoids the extra time without a usable login between **Remove** and **Connect**. The share setting still controls the messages of other members. While the owner shares the login, they run on it. While the owner does not, they start new sessions, as today.
+    - Cost: Cal approves the new Account action and its mockup, because no requirement or mockup covers it. Risk: one more button on each connected login.
+    - Effort: Medium.
+  - **D.** Choose the share setting in the Connect form, together with A. Add the switch to the form, preset to the default of the kind. The save then stores the choice of the owner, in one of two ways:
+    - A `noReuse` field in the save request stores the login and its setting in one save. It changes `SaveAgentLoginRequest` in `src/shared/account.ts:27-29`, the Worker save route, and the development fake.
+    - A `PATCH` after the `PUT` keeps the save request as it is. But between the two requests, the new login has the default of its kind. For an API key, that default is shared. For a token, it is private. When the `PATCH` fails, the default stays. The single save avoids that gap.
+    - Cost: the work of A, because after **Remove** the form starts at the default and the Terms sentence stays false. Also the form in `src/shell/account/AgentConnectForm.tsx` and its mockup part, tests, and a protocol line.
+    - More cost: Get started uses the same form, so the switch shows there too unless the form hides it. Cal approves the new control and A.
+    - Risk: one more step at each connect, also the first one. It asks the owner again and does not keep the earlier choice.
+    - Effort: Medium.
+  - **E.** Keep a same-kind setting after **Remove**, and delete only the secret. The next **Connect** of the same agent and kind gets the kept setting. A login of another kind still gets its default.
+    - Cost: `agent_logins.ciphertext` is `NOT NULL` (`migrations/202611060100_contracts.sql:128-137`). So the kept setting needs a new table and a migration, or a nullable secret that each reader of `agent_logins` must skip. The readers are `worker/app-api/account-data.ts:15`, `worker/app-api/get-started-data.ts:20`, and `worker/chat/queries.ts:94` and `:129`.
+    - More cost: `removeAccountLogin` and `saveAccountLogin`, the development fake, the Worker tests, and the default rule at `docs/protocol/access-and-security.md:221-229`. The Privacy retention text may need a sentence, because a setting then outlives its login. Cal approves the changed requirement and any Privacy text.
+    - Benefit: the guide steps and the Terms sentence become true for **Remove**, then **Connect**, with no new control.
+    - Risk: a removed shared subscription comes back shared without a new choice, which the private default for subscriptions exists to prevent. A setting from long ago applies without notice. The time without a usable login between **Remove** and **Connect** stays.
+    - Effort: Medium.
+- **Left out:**
+  - Change nothing: it fails the goal. The Terms keep a promise that the app does not deliver, and each rotation resets the setting.
+  - Make every new login private by default: it fails the goal. A shared key then turns private at each rotation, which is the same reset in the other direction. Every first API key changes too.
+  - A rotation route outside the app: it fails the goal, because users have no API access to Conductive. The comparison page lists personal API keys as under consideration (`src/marketing/from-conductor/areas/automation-and-api.ts:12-16`).
+- **Wider fix:** None. The `documentation` skill already says that a protocol doc must let a reader tell whether the code meets each behaviour at the boundary. It also says that a missing requirement found in a review becomes a decision. Each option adds that requirement for the Account page.
+- **Previous examples:**
+  - Commit `3f3d7b9c`, on 7 November 2026, corrected claims about agent logins in the Terms and Privacy pages. They now name the member who started the session.
+  - The public guide `src/marketing/docs/agent-logins.md` copied the same promise before its release. The branch that added the guide removed the promise and added the check of the switch.
+- **Recommendation:** C. It gives owners the rotation that the access protocol and the Terms promise, with the existing, tested save route and Worker rule. It needs no Terms revision, no schema change, and no change to the defaults. A costs the least, but each rotation still resets the setting.
+- **Action:** ask the user, because no requirement or mockup covers the recommended **Replace** action, and each other option changes a requirement or the Terms.
