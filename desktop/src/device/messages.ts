@@ -10,6 +10,7 @@ import type {
   DeviceSettingsAction,
   WorkerToDevice,
 } from '../../../src/shared/device.ts'
+import { readImportWorkerFrame } from '../../../src/shared/conductor-import-control-read.ts'
 
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -86,6 +87,14 @@ export function workerMessage(frame: string): WorkerToDevice | undefined {
     return
   }
   if (!record(value)) return
+  if (typeof value.type === 'string' && value.type.startsWith('import.')) {
+    if (Buffer.byteLength(frame) >= DEVICE_FRAME_LIMIT_BYTES) return
+    try {
+      return readImportWorkerFrame(value)
+    } catch {
+      return
+    }
+  }
   switch (value.type) {
     case 'device.connected':
       if (

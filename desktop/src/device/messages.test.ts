@@ -55,3 +55,38 @@ it('accepts a command request whose workspace name is null', () => {
     request: { workspaceName: null },
   })
 })
+
+it('parses import controls with the shared private frame reader', () => {
+  const operation = {
+    type: 'import.operation',
+    operationId: 'scan-one',
+    orgId: 'org-one',
+    operation: { action: 'scan' },
+  }
+  expect(workerMessage(JSON.stringify(operation))).toEqual(operation)
+  expect(
+    workerMessage(
+      JSON.stringify({
+        type: 'import.ack',
+        operationId: 'scan-one',
+        sequence: 0,
+        result: { kind: 'accepted' },
+      }),
+    ),
+  ).toEqual({
+    type: 'import.ack',
+    operationId: 'scan-one',
+    sequence: 0,
+    result: { kind: 'accepted' },
+  })
+  expect(
+    workerMessage(
+      JSON.stringify({
+        type: 'import.operation',
+        operationId: 'bad',
+        orgId: 'org-one',
+        operation: { action: 'upload', localWorkspaceId: 4 },
+      }),
+    ),
+  ).toBeUndefined()
+})

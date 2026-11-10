@@ -131,6 +131,14 @@ Native notification display and click behavior also need a Mac smoke check.
 The main-process socket uses `ws` because the native WebSocket API cannot set authenticated upgrade headers.
 `@types/ws` supplies its TypeScript types.
 
+## Import from Conductor
+
+The main process lists the Conductor workspaces of this Mac that are not archived.
+It uploads the workspaces that the person selects.
+No page of the app starts an import operation yet.
+The [import README](src/import/README.md) gives the consent, the operations, the scan, the upload, the old documents, the focused checks, and the key code.
+[Import on the Mac](../docs/protocol/desktop-import.md) states the requirements.
+
 ## Window integration
 
 The window has no title bar of its own.
@@ -255,6 +263,7 @@ Web assets, configuration, and brand assets live in `dist/bundle/`.
 Packages live in `dist/release/`.
 Playwright output lives in `dist/test-results/`.
 The package includes only `dist/app/` and `dist/bundle/`.
+The import worker thread loads its compiled code from `app.asar.unpacked`, so the package unpacks the import code and the shared modules.
 
 ### Releases and updates
 
@@ -276,6 +285,7 @@ The package includes only `dist/app/` and `dist/bundle/`.
 - [Command runner](src/device/runner.ts) owns time and output limits through injected process and clock boundaries.
 - [Device contract](../src/shared/device.ts) supplies shared message types, routes, and wire limits.
 - [Desktop contract](../worker/security/desktop-contract.ts) shares the desktop origin and session cookie format without Worker dependencies.
+- [Import from Conductor](src/import/README.md) lists the import entry points and their hooks in the main process and the device session.
 - [Navigation](src/navigation.ts) keeps remote pages outside the main frame.
 - [Downloads](src/downloads.ts) allows file response blobs from the bundled main frame only.
 - [Preview launch](src/preview.ts) exchanges an authenticated launcher for a short browser handoff.
