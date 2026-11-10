@@ -19,7 +19,7 @@ import { plansAndPricingFeatures } from './areas/plans-and-pricing'
 export const parityCheckedOn = '2026-11-10'
 
 /** The time in UTC of the last full check of every row, as `YYYY-MM-DDTHH:MMZ`. */
-export const parityCheckedAt = '2026-11-09T19:17Z'
+export const parityCheckedAt = '2026-11-10T02:07Z'
 
 export const parityFeatures: readonly ParityFeature[] = [
   ...workspacesAndBranchesFeatures,

@@ -17,12 +17,12 @@ type CopyPart =
 export type CopyText = readonly CopyPart[]
 
 /**
- * The days of Conductor Cloud, in words that stay true after each day,
- * with the announcement of Conductor beside them.
+ * The days of the cloud workspaces of Conductor, in words that stay true
+ * after each day, with the announcement of Conductor beside them.
  */
 const cloudDays: CopyText = [
   { text: "Conductor's announcement", href: conductorAnnouncementHref },
-  ' gives the days of Conductor Cloud: read-only from ',
+  ' gives the days of its cloud workspaces: read-only from ',
   { day: conductorCloudDays.readOnly },
   ', and shut down from ',
   { day: conductorCloudDays.shutDown },
@@ -33,15 +33,15 @@ const cloudDays: CopyText = [
 const checked: CopyText = ['List checked on ', { day: parityCheckedOn }, '.']
 
 /**
- * The words of the page for people who move from Conductor Cloud. The site
- * and the mockup draw the same words, each in its own markup.
+ * The words of the page for people who move from Conductor. The site and the
+ * mockup draw the same words, each in its own markup.
  */
 export const parityPageCopy = {
-  documentTitle: `From Conductor Cloud – ${productName}`,
-  description: `Which Conductor Cloud features work in ${productName} today, which are on the way, and which work differently.`,
-  label: 'From Conductor Cloud',
-  title: 'Coming from Conductor Cloud?',
-  lead: `See which Conductor Cloud features work in ${productName} today, which are on the way, and which work differently.`,
+  documentTitle: `From Conductor – ${productName}`,
+  description: `Which Conductor features work in ${productName} today, which are on the way, and which work differently.`,
+  label: 'From Conductor',
+  title: 'Coming from Conductor?',
+  lead: `See which Conductor features work in ${productName} today, which are on the way, and which work differently.`,
   scope: {
     title: 'Conductor Cloud features only.',
     text: 'The list leaves out the features of local Conductor workspaces on a Mac.',
@@ -57,7 +57,7 @@ export const parityPageCopy = {
   legendTitle: 'How to read the list',
   columns: {
     area: 'Area',
-    feature: 'Conductor Cloud feature',
+    feature: 'Conductor feature',
     status: `In ${productName}`,
     note: 'Notes',
   },
@@ -65,7 +65,7 @@ export const parityPageCopy = {
   noDate: 'No date yet',
   affiliation: `${productName} is not affiliated with Conductor.`,
   closing: {
-    title: 'Plan your move from Conductor Cloud.',
+    title: 'Plan your move from Conductor.',
     text: waitlistText,
   },
 } as const
@@ -80,6 +80,6 @@ export function rowLinkLabel(featureName: string): string {
 
 /** The words of the links of the site that lead to the page. */
 export const parityLinkCopy = {
-  home: 'From Conductor Cloud? Compare the features',
-  footer: 'From Conductor Cloud',
+  home: 'From Conductor? Compare the features',
+  footer: 'From Conductor',
 } as const

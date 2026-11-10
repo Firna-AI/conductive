@@ -1,13 +1,14 @@
 ---
 title: From Conductor
-description: The page for people who move from Conductor Cloud, at conductive.build/from-conductor, with the rows that the site shows.
+description: The page for people who move from Conductor, at conductive.build/from-conductor, with the rows that the site shows.
 ---
 
 # From Conductor
 
 The page at `conductive.build/from-conductor` shows people who move from
-Conductor Cloud which of its features work in Conductive today, which are
-on the way, and which work differently.
+Conductor which of its features work in Conductive today, which are on the
+way, and which work differently. It lists the features of Conductor, local
+and cloud.
 [The comparison page](mock:marketing/from-conductor/one-table) draws it at
 phone and desktop sizes, in light and dark.
 
@@ -23,16 +24,15 @@ phone and desktop sizes, in light and dark.
 
 ## The page
 
-- The top says that the list covers Conductor Cloud features only, and
-  leaves out the features of local Conductor workspaces. It gives the days
-  of Conductor Cloud beside the announcement of Conductor, in words that
-  stay true after each day.
+- The top has no scope note, because the list covers every Conductor
+  feature. It gives the days of the cloud workspaces of Conductor beside
+  the announcement of Conductor, in words that stay true after each day.
 - The last line of the top gives the date and the time of the last full
   check of the rows, in UTC on the 24-hour clock, after "Last checked". It
   has the quiet type of the line above it.
 - The legend comes next. Then one table with one header lists the features
-  in the order of their areas, with the columns Area, Conductor Cloud
-  feature, In Conductive, and Notes.
+  in the order of their areas, with the columns Area, Conductor feature,
+  In Conductive, and Notes.
 - On a computer, each area is one merged cell, with its name at the top.
   Only the darker hairline at the end of the area crosses that cell. The
   other columns keep a hairline under each feature.

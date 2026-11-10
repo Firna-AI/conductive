@@ -57,8 +57,8 @@ function AreaRows(props: { area: ParityArea }) {
 /**
  * The list as one table: the legend, then one header and a group of rows
  * for each area, in the order of the areas, with a row for each Conductor
- * Cloud feature. The first column names the area of each group, and the
- * cells of each feature keep their hairlines.
+ * feature. The first column names the area of each group, and the cells of
+ * each feature keep their hairlines.
  */
 export function ParityOneTable(props: { viewport: Viewport }) {
   const mobile = props.viewport === 'mobile'

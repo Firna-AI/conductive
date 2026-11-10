@@ -1,6 +1,6 @@
 /*
- * The table of Conductor Cloud features: the header, the rows, and their
- * cells. The table sets `.mobile` on an ancestor for a phone.
+ * The table of Conductor features: the header, the rows, and their cells.
+ * The table sets `.mobile` on an ancestor for a phone.
  */
 .table {
   width: 100%;

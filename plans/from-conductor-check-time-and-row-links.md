@@ -237,14 +237,14 @@ The mockup lists the features of local Conductor workspaces too, says
       `.context/conductor-local-features/proposal.md`.
 - [ ] Add the new rows to the area files, and a new area to `areas.ts`
       and `features.ts` only when the design call "Areas" allows it.
-- [ ] Set `parityCheckedAt` from the design call "The check time moves".
-- [ ] Say "Conductor" instead of "Conductor Cloud" in the shared copy:
+- [x] Set `parityCheckedAt` from the design call "The check time moves".
+- [x] Say "Conductor" instead of "Conductor Cloud" in the shared copy:
       the document title, the description, the label, the title, the
       lead, the feature column, the last call to action, and the two
       entry links. Change the sentence of the shutdown days as the design
       call says. Keep `scope` until Milestone 3.
-- [ ] Remove the scope note from the mockup intro.
-- [ ] Update the description and the rationale of the mockup entry, the
+- [x] Remove the scope note from the mockup intro.
+- [x] Update the description and the rationale of the mockup entry, the
       From Conductor `index.md`, `docs/mockups/marketing-site.md`, and
       `docs/mockups/catalogue.md`.
 - [ ] Run `npm run mockups:check`. Smoke-test the page at both sizes, in
