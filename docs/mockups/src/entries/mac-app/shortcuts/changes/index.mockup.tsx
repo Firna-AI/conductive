@@ -16,6 +16,7 @@ export const macShortcutsChanges = defineScreen({
     change: 'none',
     palette: 'closed',
     keyChange: 'none',
+    shortcutSearch: 'none',
     shortcuts: 'edited',
   },
   render: (props) => <MacAppScreen state={props} />,

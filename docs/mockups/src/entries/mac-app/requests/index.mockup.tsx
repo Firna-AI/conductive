@@ -16,6 +16,7 @@ export const macRequests = defineScreen({
     change: 'none',
     palette: 'closed',
     keyChange: 'none',
+    shortcutSearch: 'none',
     shortcuts: 'default',
   },
   render: (props) => <MacAppScreen state={props} />,

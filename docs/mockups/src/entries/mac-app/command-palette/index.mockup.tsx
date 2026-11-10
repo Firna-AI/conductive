@@ -16,6 +16,7 @@ export const macPalette = defineScreen({
     change: 'none',
     palette: 'all',
     keyChange: 'none',
+    shortcutSearch: 'none',
     shortcuts: 'default',
   },
   render: (props) => <MacAppScreen state={props} />,

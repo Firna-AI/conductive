@@ -1,9 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
+import { SearchField } from '../components/common/SearchField'
 import { ApproveDialog } from '../components/operator/ApproveDialog'
-import {
-  DirectorySearch,
-  DirectoryTable,
-} from '../components/operator/directory'
+import { DirectoryTable } from '../components/operator/directory'
 import { OperatorPage } from '../components/operator/OperatorPage'
 import {
   EmptyWaitlist,
@@ -74,7 +72,7 @@ function WaitlistBody(props: {
   const found = results(props.list)
   return (
     <>
-      <DirectorySearch
+      <SearchField
         label="Search the waitlist"
         placeholder="GitHub login, name, or GitHub ID"
         query={found.query}

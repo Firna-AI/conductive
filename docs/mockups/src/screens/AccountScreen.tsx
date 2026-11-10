@@ -14,6 +14,7 @@ import { inviteStates } from '../components/settings/inviteCodeCopy'
 import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
 import { ResetShortcutsDialog } from '../components/settings/ResetShortcutsDialog'
+import { shortcutSearches } from '../components/settings/shortcutSearch'
 import {
   keyChanges,
   ShortcutsTab,
@@ -44,6 +45,7 @@ export const accountSchema = {
     'shareChange',
     'invites',
     'keyChange',
+    'shortcutSearch',
   ],
   properties: {
     /**
@@ -83,6 +85,13 @@ export const accountSchema = {
      * question before Reset all, or a save that failed.
      */
     keyChange: { enum: keyChanges },
+    /**
+     * The search of Keyboard shortcuts: an empty field, a query that finds
+     * commands by their labels and their words, a query that finds the
+     * fixed keys of a focused workspace row and divider, or a query that
+     * matches no row.
+     */
+    shortcutSearch: { enum: shortcutSearches },
   },
 } as const
 
@@ -98,6 +107,7 @@ export const accountGeneral: AccountState = {
   shareChange: 'none',
   invites: 'left',
   keyChange: 'none',
+  shortcutSearch: 'none',
 }
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -166,7 +176,13 @@ function TabContent(props: {
         />
       )
     case 'shortcuts':
-      return <ShortcutsTab change={state.keyChange} changes={props.shortcuts} />
+      return (
+        <ShortcutsTab
+          change={state.keyChange}
+          changes={props.shortcuts}
+          search={state.shortcutSearch}
+        />
+      )
   }
 }
 
@@ -204,8 +220,8 @@ export function AccountScreen(props: {
     </Page>
   )
   if (mobile) return <MobileFrame>{page}</MobileFrame>
-  // Reset all asks first, in a dialog over the account. A phone has no
-  // Keyboard shortcuts tab until decisions 192 and 194 are answered.
+  // Reset all asks first, in a dialog over the account. Only the Mac app
+  // shows the Keyboard shortcuts tab, and the Mac app has no phone layout.
   const dialog =
     state.tab === 'shortcuts' && state.keyChange === 'reset-all' ? (
       <ResetShortcutsDialog

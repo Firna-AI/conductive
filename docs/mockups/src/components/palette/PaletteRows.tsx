@@ -14,6 +14,7 @@ import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import type { CommandLead } from './paletteCommands'
 import type { PaletteContent, PaletteRow } from './paletteContent'
+import { EmptyTab, NoResults } from './PaletteEmpty'
 import { PaletteStatusPart } from './PaletteStatus'
 import styles from './CommandPalette.module.css'
 
@@ -116,27 +117,6 @@ function Row(props: {
   )
 }
 
-/** The answer to a query that matches nothing. */
-function NoResults(props: { query: string }) {
-  return (
-    <div className={styles.empty} role="status">
-      <p className={styles.emptyTitle}>Nothing matches “{props.query}”</p>
-      <p className={styles.emptyBody}>
-        Try a workspace name, a branch, or a repository.
-      </p>
-    </div>
-  )
-}
-
-/** The line of a tab that has no row to show while the field is empty. */
-function EmptyTab(props: { line: string }) {
-  return (
-    <div className={styles.empty} role="status">
-      <p className={styles.emptyBody}>{props.line}</p>
-    </div>
-  )
-}
-
 /**
  * The results in their groups. The first row is highlighted, so Enter runs
  * it. The list scrolls under the search field and the tabs. The status
@@ -151,7 +131,14 @@ export function PaletteResults(props: {
 }) {
   const { groups, query, empty, status } = props.content
   if (groups.length === 0 && !status) {
-    return empty ? <EmptyTab line={empty} /> : <NoResults query={query} />
+    return empty ? (
+      <EmptyTab line={empty} />
+    ) : (
+      <NoResults
+        hint="Try a workspace name, a branch, or a repository."
+        query={query}
+      />
+    )
   }
   const first = groups[0]?.rows[0]
   return (

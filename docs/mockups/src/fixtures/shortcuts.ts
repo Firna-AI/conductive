@@ -1,5 +1,10 @@
-import { productName } from '../brand'
 import type { Shortcut } from '../components/common/KeyChips'
+import {
+  fixed,
+  fixedGroups,
+  focusedKeys,
+  type FixedRow,
+} from './fixedShortcuts'
 
 const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const
 
@@ -42,20 +47,23 @@ export type CommandId =
   | 'next-effort'
   | 'stop-agent'
 
-/** A command and its default shortcuts on a Mac. */
+/**
+ * A command and its default shortcuts on a Mac. `words` are more words
+ * that a search of the tab finds it by, which the row does not show.
+ */
 export type CommandRow = {
   kind: 'command'
   id: CommandId
   label: string
   keys: readonly Shortcut[]
+  words?: readonly string[]
 }
 
 /**
  * A row of the Keyboard shortcuts tab: a command that a person can change,
- * or a fixed shortcut, which the app or the menus of the Mac app own.
+ * or a fixed shortcut.
  */
-type ShortcutRow =
-  CommandRow | { kind: 'fixed'; label: string; keys: readonly Shortcut[] }
+export type ShortcutRow = CommandRow | FixedRow
 
 export type ShortcutGroup = {
   label: string
@@ -66,16 +74,36 @@ export type ShortcutGroup = {
 /** A command holds at most four shortcuts. */
 export const shortcutLimit = 4
 
+/**
+ * The words that a person may search for and that the label of a command
+ * lacks. A command that the palette also lists has the palette's words.
+ */
+const commandWords: Partial<Record<CommandId, readonly string[]>> = {
+  'command-palette': ['search'],
+  'keyboard-shortcuts': ['keys', 'hotkeys', 'keybindings'],
+  'account-page': ['settings', 'preferences'],
+  'create-org': ['new', 'team'],
+  'previous-tab': ['session'],
+  'next-tab': ['session'],
+  'close-tab': ['session'],
+  'reopen-session': ['tab'],
+  'repositories-settings': ['github'],
+  'new-workspace': ['create', 'task'],
+  'new-section': ['group'],
+  'go-to-checks': ['ci'],
+  'go-to-preview': ['port'],
+  'new-session': ['tab', 'agent', 'chat'],
+  'session-history': ['closed', 'reopen'],
+  'attach-files': ['upload'],
+  'stop-agent': ['cancel'],
+}
+
 function command(
   id: CommandId,
   label: string,
   ...keys: Shortcut[]
 ): CommandRow {
-  return { kind: 'command', id, label, keys }
-}
-
-function fixed(label: string, ...keys: Shortcut[]): ShortcutRow {
-  return { kind: 'fixed', label, keys }
+  return { kind: 'command', id, label, keys, words: commandWords[id] }
 }
 
 /** The nine commands that open the org or the workspace at a place. */
@@ -91,10 +119,10 @@ function numbered(
 
 /**
  * The groups of the tab in the Mac app, with Conductor's keys as the
- * defaults, and the second keys of decision 191 where a browser tab keeps
- * Conductor's key. The commands that a person can change come first. The
- * fixed shortcuts of a group follow them, and the groups of fixed
- * shortcuts close the list.
+ * defaults, and a second key where a browser tab keeps Conductor's key.
+ * The commands that a person can change come first. The fixed shortcuts
+ * of a group follow them, and the groups of fixed shortcuts close the
+ * list.
  */
 export const shortcutGroups: readonly ShortcutGroup[] = [
   {
@@ -145,6 +173,7 @@ export const shortcutGroups: readonly ShortcutGroup[] = [
       command('go-to-checks', 'Go to Checks'),
       command('go-to-terminal', 'Go to Terminal', '⌘J'),
       command('go-to-preview', 'Go to Preview'),
+      ...focusedKeys,
     ],
   },
   {
@@ -161,45 +190,7 @@ export const shortcutGroups: readonly ShortcutGroup[] = [
       fixed('New line', '⇧Enter'),
     ],
   },
-  {
-    label: 'Menus and palette',
-    rows: [
-      fixed('Move up or down', '↑', '↓'),
-      fixed('First or last item', 'Home', 'End'),
-      fixed('Run the item', 'Enter'),
-      fixed('Switch the palette tab', '←', '→'),
-    ],
-  },
-  {
-    label: 'Text',
-    rows: [
-      fixed('Undo', '⌘Z'),
-      fixed('Redo', '⇧⌘Z'),
-      fixed('Cut', '⌘X'),
-      fixed('Copy', '⌘C'),
-      fixed('Paste', '⌘V'),
-      fixed('Paste and match style', '⌥⇧⌘V'),
-      fixed('Select all', '⌘A'),
-      fixed('Save a rename', 'Enter'),
-      fixed('Cancel a rename', 'Esc'),
-    ],
-  },
-  {
-    label: 'Mac app',
-    rows: [
-      fixed(`Hide ${productName}`, '⌘H'),
-      fixed('Hide others', '⌥⌘H'),
-      fixed(`Quit ${productName}`, '⌘Q'),
-      fixed('Reload', '⌘R'),
-      fixed('Force reload', '⇧⌘R'),
-      fixed('Developer tools', '⌥⌘I'),
-      fixed('Actual size', '⌘0'),
-      fixed('Zoom in', '⌘+'),
-      fixed('Zoom out', '⌘-'),
-      fixed('Full screen', '⌃⌘F'),
-      fixed('Minimize', '⌘M'),
-    ],
-  },
+  ...fixedGroups,
 ]
 
 const rows = shortcutGroups.flatMap((group) => group.rows)

@@ -270,13 +270,20 @@ palette on desktop shows the same failure, because it reads the same
 workspace list.
 
 The keyboard shortcuts plan draws the Mac app first, because the Mac app
-gives the page every key. Its decisions 192 and 194, on the keys of a
-browser, are open, so the browser pages show no keys yet.
+gives the page every key. The browser pages show no keys yet, because
+they wait for the research of the keys of a browser.
 
 - `mac-app/shortcuts` shows the Keyboard shortcuts tab of the account in
-  the Mac app, from decision 190. The third tab of the account shows only
-  in the Mac app, so `mac-app/this-mac` has it, and the pages of
-  `app/account` keep two tabs. Its child pages:
+  the Mac app, from decision 190. The search field of decision 195 stands
+  at the top, and the line under it says which keys the terminal keeps.
+  The third tab of the account shows only in the Mac app, so
+  `mac-app/this-mac` has it, and the pages of `app/account` keep two
+  tabs. Its child pages:
+  - `mac-app/shortcuts/search` has a search for "tab". It finds commands
+    by their labels and by their search words, and a fixed row. Its
+    `fixed-keys` variant has a search for "move". It finds the fixed keys
+    of decision 193: those of a focused workspace row and of a focused
+    divider. Its `no-match` variant has a search without a match.
   - `mac-app/shortcuts/recording` has a row that records new keys. Its
     `fixed-key` variant has a fixed shortcut that the recorder did not
     take. Its `conflict` variant has a recorded shortcut of another

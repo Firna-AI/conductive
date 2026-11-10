@@ -18,6 +18,7 @@ export const macCommands = defineScreen({
     change: 'none',
     palette: 'closed',
     keyChange: 'none',
+    shortcutSearch: 'none',
     shortcuts: 'default',
   },
   useCasePaths: flow,

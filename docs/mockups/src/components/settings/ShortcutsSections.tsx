@@ -16,13 +16,21 @@ import {
 } from '../../fixtures/shortcuts'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
+import { KeyChips } from '../common/KeyChips'
 import { ScreenLink } from '../common/ScreenLink'
+import { SearchField } from '../common/SearchField'
+import { NoResults } from '../palette/PaletteEmpty'
 import {
   CommandShortcuts,
   FixedShortcuts,
   type CommandRowState,
 } from './ShortcutRows'
 import { Section } from './Section'
+import {
+  matchingGroups,
+  shortcutQueries,
+  type ShortcutSearch,
+} from './shortcutSearch'
 import styles from './ShortcutsSections.module.css'
 
 /**
@@ -94,42 +102,74 @@ function allFixed(group: ShortcutGroup): boolean {
 }
 
 /**
- * The Keyboard shortcuts tab of the account (decision 190). It lists each
- * command with its shortcuts, in the groups of Conductor. A press on a
- * shortcut, on +, or on Add shortcut records the next keys, and each change
- * saves at once, as Preferences does. A changed row shows Reset. Reset all
- * asks first, then returns every shortcut of this keyboard to its defaults.
- * A group of fixed shortcuts says so once, under its title. Only the Mac
- * app shows the tab until decisions 192 and 194 set the keys of a browser.
+ * The lines above the groups: how to change a shortcut, and the keys that
+ * the terminal keeps while it has the focus. Reset all follows them after a
+ * change.
+ */
+function Intro(props: { changed: boolean }) {
+  return (
+    <div className={styles.intro}>
+      <div className={styles.introText}>
+        <p className={styles.introLine}>Select a shortcut to change it.</p>
+        <p className={styles.introLine}>
+          Keys without <KeyChips shortcut="⌘" /> go to the terminal while it has
+          the focus.
+        </p>
+      </div>
+      {props.changed ? (
+        <ScreenLink asChild to={paths.macShortcutsResetAll}>
+          <ActionButton
+            accessibilityLabel="Reset all shortcuts"
+            icon={RotateCcw}
+          >
+            Reset all
+          </ActionButton>
+        </ScreenLink>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * The Keyboard shortcuts tab of the account. It lists each command with
+ * its shortcuts, in the groups of Conductor. The search field at the top
+ * keeps the rows whose label or words hold each word of the query, as the
+ * palette finds its rows, and a group without such a row hides. A press on
+ * a shortcut, on +, or on Add shortcut records the next keys, and each
+ * change saves at once, as Preferences does. A changed row shows Reset.
+ * Reset all asks first, then returns every shortcut of this keyboard to its
+ * defaults. A group of fixed shortcuts says so once, under its title.
  */
 export function ShortcutsTab(props: {
   changes: ShortcutChanges
   change: KeyChange
+  search: ShortcutSearch
 }) {
   const changed = Object.keys(props.changes).length > 0
+  const query = shortcutQueries[props.search]
+  const shown = matchingGroups(query, shortcutGroups)
   return (
     <>
-      <div className={styles.intro}>
-        <p className={styles.introText}>Select a shortcut to change it.</p>
-        {changed ? (
-          <ScreenLink asChild to={paths.macShortcutsResetAll}>
-            <ActionButton
-              accessibilityLabel="Reset all shortcuts"
-              icon={RotateCcw}
-            >
-              Reset all
-            </ActionButton>
-          </ScreenLink>
-        ) : null}
-      </div>
-      {shortcutGroups.map((group) => (
+      <SearchField
+        label="Search shortcuts"
+        placeholder="Search shortcuts"
+        query={query}
+      />
+      <Intro changed={changed} />
+      {shown.length === 0 ? (
+        <NoResults
+          hint="Try a command name, such as Close tab."
+          query={query}
+        />
+      ) : null}
+      {shown.map(({ group, rows }) => (
         <Section
           description={allFixed(group) ? fixedGroupLine : group.description}
           key={group.label}
           title={group.label}
         >
           <ul aria-label={group.label} className={styles.list}>
-            {group.rows.map((row) => (
+            {rows.map((row) => (
               <li className={styles.row} key={row.label}>
                 {row.kind === 'command' ? (
                   <CommandShortcuts

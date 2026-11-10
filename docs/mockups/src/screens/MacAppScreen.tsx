@@ -4,6 +4,7 @@ import { isPendingCommand } from '../components/chat/PendingCommand'
 import { AllowAllBar } from '../components/mac/AllowAllBar'
 import { MacNotification } from '../components/mac/MacNotification'
 import { MacScreen } from '../components/mac/MacScreen'
+import { shortcutSearches } from '../components/settings/shortcutSearch'
 import { keyChanges } from '../components/settings/ShortcutsSections'
 import { conversations as chats } from '../fixtures/conversations'
 import { safariTest } from '../fixtures/mac'
@@ -28,6 +29,7 @@ export const macAppSchema = {
     'change',
     'palette',
     'keyChange',
+    'shortcutSearch',
     'shortcuts',
   ],
   properties: {
@@ -88,6 +90,13 @@ export const macAppSchema = {
      * question before Reset all, or a save that failed.
      */
     keyChange: { enum: keyChanges },
+    /**
+     * The search of Keyboard shortcuts: an empty field, a query that finds
+     * commands by their labels and their words, a query that finds the
+     * fixed keys of a focused workspace row and divider, or a query that
+     * matches no row.
+     */
+    shortcutSearch: { enum: shortcutSearches },
     /**
      * The person's shortcuts: the defaults, or after a few changes, such as
      * ⇧⌘P for the palette.
@@ -160,6 +169,7 @@ function pageFor(state: MacAppState): ReactNode {
             ...accountGeneral,
             tab: 'shortcuts',
             keyChange: state.keyChange,
+            shortcutSearch: state.shortcutSearch,
           }}
           viewport="desktop"
         />

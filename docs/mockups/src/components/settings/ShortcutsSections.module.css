@@ -1,4 +1,7 @@
-/* The line above the groups: how to change a shortcut, and Reset all. */
+/*
+ * The lines above the groups: how to change a shortcut, and the keys that
+ * the terminal keeps. Reset all stands beside them.
+ */
 .intro {
   display: flex;
   align-items: center;
@@ -8,11 +11,17 @@
 }
 
 .introText {
+  display: flex;
   flex: 1;
-  margin: 0;
+  flex-direction: column;
+  min-width: 0;
   color: var(--ui-muted);
   font-size: var(--ui-text-md);
   line-height: 1.5;
+}
+
+.introLine {
+  margin: 0;
 }
 
 /* The rows of a group share one box, as the other lists of the account. */

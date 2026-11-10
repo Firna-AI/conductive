@@ -101,17 +101,22 @@ sessions as tabs above the chat, and four tabs at the bottom.
   place of the workspace groups: a spinner, or `LoadFailure`. The list and
   the workspace screens own it as their `palette` state. The Search row
   under New workspace opens it, and on desktop that row shows ⌘K.
-  `paletteSearch.ts` beside it holds the rule of a search. A search also
-  finds a workspace by the label of its number, such as `W-395` or `39`.
-  A workspace row then shows the label before the name, as a chip does.
-  In the Mac app, each command row ends with the first key of its command,
-  and the Search row shows the person's key of the palette, such as ⇧⌘P.
-  A workspace row shows no key. The browser pages show no keys while
-  decisions 192 and 194, on the keys of a browser, are open.
+  `paletteSearch.ts` beside it holds the rule of a search, which the
+  Keyboard shortcuts tab also uses. `PaletteEmpty.tsx` holds the empty
+  state, which also answers a search of that tab without a match. A search
+  also finds a workspace by the label of its number, such as `W-395` or
+  `39`. A workspace row then shows the label before the name, as a chip
+  does. In the Mac app, each command row ends with the first key of its
+  command, and the Search row shows the person's key of the palette, such
+  as ⇧⌘P. A workspace row shows no key. The browser pages show no keys
+  yet. They wait for the research of the keys of a browser.
 - `KeyChips` in `src/components/common/` draws a shortcut as small key
   chips, one for each symbol: ⌘ then K. The chips use the sans font, which
   draws ⌘, ⌥, ⇧, ⌃, and ⌫ on every system. The Search row keeps its text
   hint in the label font.
+- `SearchField` in `src/components/common/` draws the search field at the
+  top of a list that it narrows: the repositories of an org, the tabs of
+  the operator, and Keyboard shortcuts.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
   and Try again.
@@ -135,14 +140,22 @@ sessions as tabs above the chat, and four tabs at the bottom.
   narrow section puts it under its label. A failed save shows its error
   under the control.
 - The Mac app adds a third tab to the account, Keyboard shortcuts, from
-  `ShortcutsSections` in `src/components/settings/`. Each group of
-  commands is a section with its rows in one box. A row ends with its
-  shortcuts. Each shortcut is a button that records new keys, + adds one,
-  and a row without a shortcut shows Add shortcut. The commands that a
-  person can change come first, and the fixed shortcuts follow them with
-  no control. A fixed row among other commands shows Fixed shortcut. A
-  group of fixed shortcuts says it once, under its title. The recorder is
-  a field with a full outline in the accent colour. A line under the row
+  `ShortcutsSections` in `src/components/settings/`. A search field at the
+  top keeps each row whose label or search words hold every word of the
+  query, by the rule of the palette, from `shortcutSearch.ts`. Fixed rows
+  match too. A group without a matching row hides, and a search without a
+  match says so, as the palette does. Two lines under the field say how to
+  change a shortcut, and that keys without ⌘ go to the terminal while it
+  has the focus. Each group of commands is a section with its rows in one
+  box. A row ends with its shortcuts. Each shortcut is a button that
+  records new keys, + adds one, and a row without a shortcut shows Add
+  shortcut. The commands that a person can change come first, and the
+  fixed shortcuts follow them with no control. A fixed row among other
+  commands shows Fixed shortcut. The Workspace group ends with the fixed
+  keys of a focused workspace row and of a focused divider, and each of
+  their labels names the control that has the focus. A group of fixed
+  shortcuts says it once, under its title. The recorder is a field with a
+  full outline in the accent colour. A line under the row
   names a fixed shortcut that the recorder did not take, the command that
   has the recorded shortcut, or a failed save. A changed row shows Reset.
   Reset all asks first with `ConfirmDialog`, because nothing brings the

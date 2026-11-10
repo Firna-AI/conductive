@@ -63,10 +63,14 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   of the turn at its place, from decision 151, as
   `app/chat/work/mac-command` shows.
 - The Mac app gives the page every key, so it shows keyboard shortcuts
-  before a browser does. A browser waits for decisions 192 and 194. The
-  account adds the Keyboard shortcuts tab, from decision 190, which
-  `mac-app/shortcuts` draws with its child pages `recording` and
-  `changes`. Reset all asks first, in a `ConfirmDialog`.
+  before a browser does. A browser waits for the research of its keys.
+  The account adds the Keyboard shortcuts tab, from decision 190, which
+  `mac-app/shortcuts` draws with its child pages `search`, `recording`,
+  and `changes`. A search field at the top finds a row by its words, from
+  decision 195. The line under it says that keys without ⌘ go to the
+  terminal while it has the focus. From decision 193, the Workspace group
+  ends with the fixed keys of a focused workspace row and a focused
+  divider. Reset all asks first, in a `ConfirmDialog`.
 - In the Mac app, each command row of the palette ends with its key, as
   `mac-app/command-palette` draws. The Search row shows the person's key
   of the palette, and it opens that page.

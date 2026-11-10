@@ -37,6 +37,7 @@ const waitingCommand: MacAppState = {
   change: 'none',
   palette: 'closed',
   keyChange: 'none',
+  shortcutSearch: 'none',
   shortcuts: 'default',
 }
 
