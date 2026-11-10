@@ -63,6 +63,8 @@ turn repair from the committed chat and the one writer of the shown state.
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
+The [software image area](../software-image/README.md) builds the shared
+image that a build of an org without an org image starts from.
 
 ## Settings
 
@@ -122,7 +124,7 @@ A confirmed missing archived disk uses that batch too.
 - [`archive-state.ts`](archive-state.ts): `WorkspaceArchive`, the durable owner of interrupted starts, stop confirmation, retention, deletion, and publication.
   Its allocation recovery calls `createResource` with the saved account and request, the workspace purpose, and the creator or labelled user as owner.
   While the recovery fails, it keeps the saved request and its retry alarm, also after the Restore window.
-  It writes a recovered ID to D1 before it clears the request and releases the image lease.
+  It writes a recovered ID to the workspace row before it clears the request and releases the image lease.
   [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with no env values or startup command.
   [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
   [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
@@ -265,6 +267,7 @@ A confirmed missing archived disk uses that batch too.
 - [Image builds](image-builds.md#key-code): the entries of the image
   builds, the refreshes, the build logs, the image coordinator, and the
   image software and runtime.
+- [Software images](../software-image/README.md): the shared software builds and their cleanup.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
   into a Bash command. [`lifecycleCommand`](command-intents.ts) runs each step once.

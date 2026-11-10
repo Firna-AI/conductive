@@ -32,7 +32,7 @@ Contract owners:
   merge.
 - [Command palette](../docs/protocol/command-palette.md), the actions of a
   workspace.
-- [Conductor Cloud comparison](../docs/protocol/conductor-cloud-comparison.md),
+- [Conductor comparison](../docs/protocol/conductor-comparison.md),
   the statuses of the rows `archive` and `workspaces-page-and-restore`.
 - The [app API README](../worker/app-api/README.md), the
   [lifecycle README](../worker/lifecycle/README.md), and the
@@ -489,7 +489,7 @@ requirements, before the code changes.
 - [x] Update the rows `archive` and `workspaces-page-and-restore` in
       `src/marketing/from-conductor/areas/workspaces-and-branches.ts`,
       under the claim rules of
-      [Statuses](../docs/protocol/conductor-cloud-comparison.md#statuses).
+      [Statuses](https://github.com/Firna-AI/remote-code/blob/df93a19147b1b63b877575ef9e344201c5856a4a/docs/protocol/conductor-cloud-comparison.md#statuses).
       Main already shows `workspaces-page-and-restore` as Planned, with
       Restore within 14 days. Give it the status that holds when this
       pull request merges, and drop the check from the note of `archive`.
@@ -719,6 +719,15 @@ Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 4a, 5
 - [x] Fix confirmed review finding 1 with option C. Prove lost-reply expiry
       and recovered-ID persistence through interruption. Keep Restore ended
       after 14 days while cleanup retries.
+- [ ] Integrate main 08cbe3cd and preserve shared software image, commit
+      author environment, Issues tracking, comparison rows and docs. Audit
+      the merge, install current dependencies, and verify the combined tree.
+- [x] Fix confirmed finding 3 with option B. Keep expired-archive deletion,
+      disk retention, later deletes and pending Org Restore progressing
+      independently under the existing lease. Prove the failure first and
+      repeat each new asynchronous regression ten times.
+- [x] Record checked follow-ups for the broader cleanup ownership, the
+      rare uncertain-computer notice, and independent pre-purge steps.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

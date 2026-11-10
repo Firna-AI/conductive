@@ -159,6 +159,9 @@ Schedule `cleanupDeletedOrgs` with all hooks except `readWorkspace`.
 It retries stops and controlled retention during the restore window.
 [`archive-cleanup.ts`](archive-cleanup.ts) deletes expired archived disks under the same cleanup lease.
 Its detach marks the exact ledger entry deleted in the same D1 batch.
+Each delete, with its provider lookup, fails alone: it writes the existing Archive warning and keeps its records for the next run.
+The run still tries the later deletes, retention, and the pending Org Restore handoff under their guards, then rethrows the first failure, so the org stays pending.
+A successful handoff rearms the native Archive alarm of each retained expired computer.
 Retention continues before each pending Restore handoff attempt.
 Choose a cleanup interval plus retry budget smaller than the lifecycle's
 margin between its keepalive date and the disk's 14-day expiry.

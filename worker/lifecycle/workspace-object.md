@@ -56,7 +56,7 @@ command start. For a workspace object, it:
 
 - runs the queued start of a create or a resume, one phase at a time
 - finishes Archive initialization and uncertain allocation recovery before normal start work,
-  also after the Restore window, until D1 holds the recovered ID
+  also after the Restore window, until the workspace row holds the recovered ID
 - stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline
 - clears Restore when the provider confirms that a retained computer is missing
 - repairs the running turns from the committed chat before its deadline

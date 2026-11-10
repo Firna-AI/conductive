@@ -70,3 +70,7 @@
   - Delete org now lists the live ledger rows that hold a computer ID, at `worker/members/deletion-data.ts:130-131`. The other line anchors above also predate the ledger. Recheck each claim and anchor against the current hooks before the work starts.
   - This note changes no option and no recommendation. It does not claim that the gap still reproduces.
   - `plans/follow-ups/unresolved-computer-request-ownership.md` holds the wider question: one owner for unresolved create requests across every owner. Its option D would also close this gap.
+- **Evidence update, 2026-11-10, build jobs:** `stopOrgLifecycleRecords` in `worker/members/composition-data.ts:17-37` sets each running build job of the deleted org to the phase `done`, at lines 33-37.
+  - Then `cleanupBuild` in `worker/lifecycle/build-execution.ts` does not replay the saved build request. So Delete org ends the build replay before the purge, in addition to the gaps above.
+  - Recheck this against the current hooks before the work starts. This note changes no option and no recommendation. It does not claim that the gap still reproduces.
+  - `plans/follow-ups/pre-purge-step-failure-blocks-others.md` puts the stop step of Delete org into a default step runner. It touches the same code, and neither item waits for the other.

@@ -62,9 +62,29 @@ export async function cleanupDeletedOrgs(
             hooks,
           )
           if (dependencies.now() < org.deletesAt) {
-            await cleanupOrgArchives(env, org.id, token, dependencies)
-            await maintainDeletedOrg(env, org.id, token, dependencies, hooks)
-            await finishPendingRestore(env, org.id, token, dependencies, hooks)
+            const failures: unknown[] = []
+            try {
+              await cleanupOrgArchives(env, org.id, token, dependencies)
+            } catch (error) {
+              failures.push(error)
+            }
+            try {
+              await maintainDeletedOrg(env, org.id, token, dependencies, hooks)
+            } catch (error) {
+              failures.push(error)
+            }
+            try {
+              await finishPendingRestore(
+                env,
+                org.id,
+                token,
+                dependencies,
+                hooks,
+              )
+            } catch (error) {
+              failures.push(error)
+            }
+            if (failures.length > 0) throw failures[0]
             return
           }
           if (

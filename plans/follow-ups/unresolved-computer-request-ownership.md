@@ -1,90 +1,123 @@
 # No shared owner for unresolved create requests
 
 - **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
-- **Kind:** Needs decision.
-- **Added:** 2026-11-10, from branch `calummoore/workspace-archive-error`, pull request #138. It is review item 2, the blocked wider fix of review item 1, which an independent check confirmed the same day.
-- **Location:** `worker/lifecycle/archive-state.ts:151-225` (the Archive owner), `worker/lifecycle/start-allocation-cleanup.ts` (`retryAllocationCleanup`, the failed-start owner), `worker/lifecycle/build-execution.ts` (`cleanupBuild`) and `worker/lifecycle/image-allocation.ts` (`recoverImageBuildAllocation`, the image build owner), `worker/members/deletion-data.ts:130-131` (the computers that Delete org lists), `worker/lifecycle/resource-intents.ts` (`createResource`), `worker/lifecycle/computer-ledger.ts`, `migrations/202611100900_computer_ledger.sql`, `worker/operator/stop-computers.ts:52-53`, `worker/lifecycle/repair-data.ts:11`, and `worker/sandbox/routes.ts`.
-- **Reason:** This branch fixed the concrete Archive case, and the remaining choice is a storage and ownership design that only the user can approve.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-10, from branch `calummoore/workspace-archive-error`, pull request #138. It is review item 2, the wider fix of review item 1. An independent check and an options check of the same day confirmed it.
+- **Location:** `worker/lifecycle/resource-intents.ts:74`, `:94-99`, and `:132-171` (the one create call, the ledger write of the returned ID, and the build request), `worker/lifecycle/start-allocation.ts:65-84` and `worker/lifecycle/start-machine.ts:57-102` (the encrypted workspace create body, the computer name, and its labels), `worker/lifecycle/archive-state.ts:150-225` (the Archive owner), `worker/lifecycle/start-allocation-cleanup.ts:16-25` (`retryAllocationCleanup`), `worker/lifecycle/build-execution.ts` (`cleanupBuild`), `worker/lifecycle/image-allocation.ts` (`recoverImageBuildAllocation`), `worker/lifecycle/cleanup.ts:37-73`, `worker/lifecycle/computer-ledger.ts`, `migrations/202611100900_computer_ledger.sql:6`, `worker/members/composition-data.ts:17-37` (`stopOrgLifecycleRecords`), `worker/members/workspace-receiver.ts:52-117`, `worker/members/receiver-fence.ts:48-67`, `worker/members/purge-data.ts:20`, `worker/members/cleanup.ts:70-139`, `worker/members/deletion-data.ts:130-131`, `worker/operator/computer-data.ts:15-36`, `worker/operator/stop-computers.ts:52-53`, and `worker/sandbox/routes.ts`.
+- **Reason:** This branch fixed the concrete Archive case, and the wider fix I is Large, reaches cleanup owners outside this branch, and waits for three provider checks.
 
 - **Source:** Review. **Category:** Code structure.
 - **Terms:**
-  - **Create request:** the saved request for a new cloud computer. The app encrypts it and keeps it before it calls the provider. It can hold the env values of the org.
-  - **Unresolved create request:** a create request whose reply never reached the Worker. No record of the app then holds the ID of the computer, which the provider can already have.
-  - **Replay:** a second create call with the same saved request and its idempotency key. While the provider keeps the key, it answers with the original computer.
-  - **Owner:** the record that keeps an unresolved create request, and retries its recovery and its delete until it confirms the delete.
-  - **Computer ledger:** the D1 table `computer_ledger`. It has one row for each create request and each computer, with its allocation key, computer ID, provider account, org, owner, purpose, and flags. It holds no request body.
+  - **Create request:** the request for a new cloud computer. A workspace create saves its request body, encrypted, in its start job. An image build saves no body, and rebuilds its request from D1 columns.
+  - **Owner:** a record that keeps what a delete needs, and retries the recovery and the delete until it confirms the delete. Three owners exist: the Archive state, the failed-start cleanup job, and the image build rows.
+  - **Exit:** an event that ends an owner, such as the end of Restore, a failed start, a failed build, or Delete org.
+  - **Replay:** a second create call with the same idempotency key. While the provider keeps the key, it answers with the original computer. A computer whose create reply was lost needs a replay or a lookup to learn its ID.
+  - **Computer ledger:** the D1 table `computer_ledger`. It has one row for each create request and each org computer: its allocation key, computer ID once known, provider account, org, owner user, purpose, and flags. It holds no request body. Its rows cascade from `orgs`.
 - **Background:**
-  - `createResource` in `worker/lifecycle/resource-intents.ts` is the only path to a provider call that creates a computer. It records a ledger row with the allocation key first. Then it calls the provider. A lost reply leaves an unresolved create request.
-  - Four owners deal with unresolved create requests today. Each owner that keeps a request keeps the only copy of it:
-    - The Archive owner in `worker/lifecycle/archive-state.ts` keeps the request of a create that Archive interrupted, in the storage of its workspace object.
-    - The failed-start cleanup job, `retryAllocationCleanup` in `worker/lifecycle/start-allocation-cleanup.ts`, keeps the request of a start that reached its time limit. It is a separate durable job of the workspace object.
-    - An image build keeps its request in its `image_build_jobs` row, in the phase `allocating`. After a failed build, `cleanupBuild` in `worker/lifecycle/build-execution.ts` replays it through `recoverImageBuildAllocation` in `worker/lifecycle/image-allocation.ts`.
-    - Delete org lists only ledger rows that hold a computer ID, at `worker/members/deletion-data.ts:130-131`. So it cannot see an unresolved create request.
-  - The ledger row of an unresolved create request has an allocation key and no computer ID. Without the request body, no other owner can replay it.
-  - Only a replay can find such a computer. The fixed provider routes in `worker/sandbox/routes.ts` have no route that lists or finds computers. `docs/protocol/isolation.md` says that the Worker calls only a fixed list of the provider's routes.
+  - At commit `88651783`, the only product call of `provider.create` is in `createResource`, at `worker/lifecycle/resource-intents.ts:74`. No product code calls `fork`. `createResource` records the ledger row first.
+  - `attachComputer` writes the returned computer ID to the ledger before `createResource` returns, at lines 94-99.
+  - Main at commit `08cbe3cd` adds a global software image build. It calls `createResource` with `ownership: null`, so the ledger holds no row for that computer. Its own D1 record in `software_images` keeps the attempt and the request, and the Cron Trigger retries its cleanup in the default provider account.
+  - What keeps a request:
+    - A workspace create: the start job keeps the body as `createPayloadCiphertext`, encrypted with `BOAT_KEY_ENCRYPTION_KEY`, at `worker/lifecycle/start-allocation.ts:65-84`. The body holds the org env values and the workspace token `WORKSPACE_TOKEN`, at `worker/lifecycle/start-machine.ts:57-70`.
+    - Copies of that body live in the same workspace object: the running start job, the create checkpoint `members:create-checkpoint`, the Archive state, and the failed-start cleanup job.
+    - An image build: no saved body. `buildSandboxIntent` rebuilds its request from plain columns of `image_builds` and `image_build_jobs`, at `worker/lifecycle/resource-intents.ts:132-171`. Its env holds only repository folder variables, from `repositoryEnvironment` in `worker/lifecycle/repository-locations.ts:129`, and no org env value.
+  - Three owners keep a request after the start ends: the Archive state in `worker/lifecycle/archive-state.ts`, the failed-start cleanup job `retryAllocationCleanup`, and the build rows, which `cleanupBuild` replays through `recoverImageBuildAllocation`.
+  - Delete org owns no request. It is an exit that ends each of the three owners:
+    - Its suspend step deletes every alarm of each workspace object, at `worker/members/workspace-receiver.ts:52-117`. The Archive state and the cleanup job stay in storage, with no alarm.
+    - `stopOrgLifecycleRecords` sets each running build job to the phase `done`, at `worker/members/composition-data.ts:33-37`. Then `cleanupBuild` does not replay.
+    - The Archive owner returns at once in a deleted org, at `worker/lifecycle/archive-state.ts:150`. `retryAllocationCleanup` makes no progress without an admin, at `worker/lifecycle/start-allocation-cleanup.ts:24-25`.
+    - Delete org lists only ledger rows that hold a computer ID, at `worker/members/deletion-data.ts:130-131`.
+    - The purge deletes the storage of each listed object, at `worker/members/receiver-fence.ts:48-67`. Then it deletes the `orgs` row, at `worker/members/purge-data.ts:20`. The cascade removes each `image_build_jobs` and `computer_ledger` row of the org.
+    - The purge already waits for each listed provider delete before `purgeOrgRecords`, at `worker/members/cleanup.ts:70-139`.
+  - Known IDs: in a live org, no code deletes a live ledger row with an ID that no cleanup record names, at `worker/lifecycle/cleanup.ts:37-73`.
+  - Finding a computer: the fixed provider routes in `worker/sandbox/routes.ts` have no route that lists or finds computers. A workspace computer has its workspace ID as its name for each attempt, at `worker/lifecycle/start-machine.ts:93`. Its labels hold no allocation key, at lines 97-102.
+  - D1 already holds the same secret values, encrypted with the same key: `settings.env_vars_ciphertext`, `workspace_creation_plans.environment_ciphertext`, `workspace_runtime.environment_ciphertext`, and the workspace token in `workspace_tokens.ciphertext`. `docs/architecture/data-and-trust.md:16` puts env values in "The Worker's storage, encrypted", which covers D1 and Durable Object storage.
   - The requirements:
-    - The Archive section of `docs/protocol/workspace-life.md` says that Restore ends 14 days after the Archive, and that the app then deletes the sandbox. The delete can retry after Restore ends.
+    - The Archive section of `docs/protocol/workspace-life.md` says that the app deletes the sandbox when Restore ends 14 days after the Archive, and that the delete can still retry after that.
     - The Privacy page in `src/marketing/privacy.ts` says that the app keeps an archived cloud computer for 14 days, and then deletes it.
-    - The "Delete org" section of `docs/protocol/orgs-and-members.md` says that the app deletes everything of the org after 7 days.
-  - Every option except E assumes that a replay still finds the original computer after a long outage. The repository does not establish how long the provider keeps the idempotency key.
-  - E could drop that assumption, but nobody has checked that the provider has such a route. Both are open questions for a future investigation. This item claims nothing about the behaviour of the provider.
+    - The "Delete org" section of `docs/protocol/orgs-and-members.md` says that Delete org stops every sandbox and hides the org at once, and that the app deletes everything of the org after 7 days.
+  - Three provider facts are open. They decide what a shared record must keep, and an agent can check them. They are not user choices:
+    - how long the provider keeps an idempotency key, and returns the original computer for it
+    - whether a replay with a known key and a different body, such as one with no env values, returns the original computer
+    - whether a route can find a computer by name or label, and whether a label with the allocation key makes the match exact
 - **Problem:**
-  - Each owner must keep its saved request through every exit, until a confirmed delete or a definite refusal. One exit that drops the request leaves a computer that no record leads to.
-  - Each fix so far applies this rule to one owner. A new owner, or a new exit of an existing owner, can repeat the defect.
+  - Each owner must keep what a delete needs through every exit, until a confirmed delete or a definite refusal. One exit that drops it leaves a computer that no record leads to.
+  - The class covers computers with no known ID, and computers with a known ID that no owner names. Each fix so far covers one owner, so a new owner or exit can repeat the defect.
   - The class has three cases:
     1. **Archive, in this branch.** At the end of the 14 days, a workspace without a computer ID dropped its saved request, set its purge phase, and removed its alarm.
        - A probe on the native runtime with local D1 lost every create reply after an Archive. One hour after the end of the 14 days, computer `bx_1` still existed, with no delete request and no retry alarm.
-       - The live ledger row with no ID also kept an operator suspension of that org or owner pending without end, at `worker/operator/stop-computers.ts:52-53`.
-       - A second path could drop a recovered ID that the owner saved before its D1 write.
+       - The live ledger row with no ID kept an operator suspension of that org or owner pending without end, at `worker/operator/stop-computers.ts:52-53`.
+       - A second path left a live ledger row with a known ID and no owner. `attachComputer` had already written the ID, and the workspace row write came later.
     2. **Image builds.** Commit `43320068960532267364bc96f989b68028d08c4d`, "fix(lifecycle): finish readiness and retain timeout cleanup", of 2026-11-08, keeps unresolved image allocation intents until cleanup recovers and deletes the sandbox.
     3. **Failed starts.** The test "ends endless allocation retries and preserves encrypted cleanup ownership across reconstruction", at `worker/lifecycle/start-allocation-time-limit.test.ts:17`, covers the separate cleanup job that keeps the request after a start fails.
-  - On 10 November 2026, this branch fixed the Archive case with a direct fix, option C of the review:
+  - On 10 November 2026, commit `88651783` fixed the Archive case with a direct fix, option C of the review:
     - The end of the 14 days drops nothing while a saved request remains, at `worker/lifecycle/archive-state.ts:151-161`. The Archive owner keeps the request and its 30-second retry alarm while the recovery fails.
-    - After a recovery, the owner writes the ID to D1, at line 219. Only then does it clear the request and release the image lease, at lines 220-225.
+    - After a recovery, the owner writes the ID to the workspace row at line 219. Only then does it clear the request and release the image lease, at lines 220-225.
     - Restore still ends at the original deadline, 14 days after the Archive.
-    - Two tests in `worker/lifecycle/archive-expiry-recovery.test.ts` cover the expiry with a failed recovery, and an interruption before the D1 write.
+    - Two tests in `worker/lifecycle/archive-expiry-recovery.test.ts` cover the expiry with a failed recovery, and an interruption before the workspace row write.
 - **Impact if no action:**
-  - Each new owner or exit must follow the rule by hand. A missed exit leaves a computer with the code, files, agent sessions, and secret values of an org in the app's provider account after the promised delete.
-  - No record then leads to its delete. Each new owner also adds code that D or F must move later.
-- **Root question:** How should an unresolved create request stay owned until a confirmed cleanup, across every owner?
+  - Each new owner or exit must follow the rule by hand. A missed exit can repeat the High defect of the Archive case.
+  - It leaves a computer with the code, files, agent sessions, and secret values of an org in the app's provider account after the promised delete, with no record that leads to it.
+  - Each new create path also adds code that a later shared owner must cover.
+- **Root question:** How does every cloud computer that the app created, or may have created, get deleted after its owner ends, whatever owner or exit ends first?
 - **Options:**
-  - **A.** Keep a journal in the native storage of each owner, as today.
-    - Apply the discipline of option C to each owner and each exit: keep the request, write a recovered ID to D1 before the request goes, and end only at a confirmed delete or a definite refusal.
-    - Add a regression test for each exit.
-    - It adds no migration and no new storage. Each owner still repeats the rule, so a future exit can repeat the defect. Delete org still cannot replay an unresolved request.
+  - **A.** Keep each owner as today, and apply the discipline of option C at each exit. Keep what a delete needs until a confirmed delete or a definite refusal, and add a regression test for each exit.
+    - It adds no storage. A future exit can still repeat the defect.
+    - Each owner also needs its own Delete org handling, because Delete org ends all three owners. `plans/follow-ups/org-deletion-lost-build-allocation.md` holds that work.
     - Effort: Medium.
-  - **D.** Store the encrypted request body of each unresolved create request in its existing ledger row in D1, until a confirmed delete or a definite refusal.
-    - One shared recovery driver replays and deletes each live ledger row whose owner has ended. It covers Archive, failed starts, image builds, and Delete org.
-    - It needs a migration, encrypted env values in a shared D1 table, a recovery driver, and tests for each owner.
-    - It can replace the failed-start cleanup job and the image build cleanup, which are functionality on `origin/main`.
+  - **H.** Detect the class from the ledger. The 15-minute Cron Trigger warns about each live ledger row with no ID after the 60-minute build time limit and a grace period.
+    - It also warns about each live row with an ID that no workspace or build record names. `suspensionComputers` in `worker/operator/computer-data.ts:15-36` already computes that check.
+    - It skips the rows that a pending Delete org already lists. It deletes nothing, so a person acts on each warning.
+    - It is a detection fix. It catches every owner and every exit, also a new one, and it works with each other option.
+    - Effort: Medium.
+  - **D.** Make the ledger row the one owner of each request, until a confirmed delete or a definite refusal. One recovery driver replays and deletes each live row whose owner has ended.
+    - Only workspace creates need a stored body, encrypted as today. Builds already keep their inputs in D1, so they need only a lifetime change: the phase `done` at Delete org and the cascade at the purge.
+    - It needs a purge step that resolves each live row of the org before `purgeOrgRecords`.
+    - Its driver must know when it may act, as F must. A live start uses its computer, and Archive keeps a recovered computer for Restore.
+    - As one owner, it replaces `retryAllocationCleanup`, the replay of the Archive owner, and the replay in `cleanupBuild`, with their tests. These are functionality on `origin/main`.
     - Effort: Large.
-  - **E.** Find the computer without a replay.
-    - Add a provider route that finds a computer by the labels or the name of its create request. Delete the computer that it finds.
+  - **E.** Find the computer without a replay, through a provider route that finds a computer by name or label. Delete the computer that it finds.
     - It does not depend on how long the provider keeps the key.
-    - It needs a new route in the fixed provider route list, contract tests, and the fake server. The repository does not show that the provider has such a route.
+    - A workspace computer's name repeats for each attempt, and its labels hold no allocation key. So a lookup can match several attempts, until a label with the allocation key makes it exact.
+    - It finds computers but owns none, so it still needs a driver and the purge step of D. The repository does not show that the provider has such a route.
     - Effort: Large.
-  - **F.** Give each allocation its own Durable Object owner, independent of the lifetime of its workspace or build.
-    - The ledger row leads to the object. The object keeps the encrypted request in its native storage, not in D1. It runs the recovery and the delete until it confirms the delete.
-    - It keeps env values out of D1.
-    - It adds another object role and driver. The ledger row and the object must stay in step through each interruption, so it needs cross-object lifetime and atomicity work.
-    - Delete org and the purge must also reach each object.
+  - **F.** Give each allocation its own Durable Object owner, found through the ledger, with the request in its native storage.
+    - It avoids one more D1 copy of the body only. D1 already holds the same values, encrypted with the same key.
+    - It adds an object role, a driver, and a call between objects before each create. The ledger row and the object must stay in step through each interruption.
+    - The purge must list each such object and resolve its computer before it deletes the object's storage.
+    - Effort: Large.
+  - **G.** Keep no secret in the shared record. The ledger row keeps the allocation key and the request fields that hold no secret: the name, the image, the labels, and the time to live.
+    - One driver replays with that key and no env values, then deletes the computer. No body is stored.
+    - It works only if the provider returns the original computer for a known key whatever the body. Otherwise D is necessary.
+    - If the provider no longer has the key, the replay makes an empty computer with no org data. The driver deletes it, but the original stays, as with D.
+    - It needs the driver, the owner rule, and the purge step of D.
+    - Effort: Large.
+  - **I.** Use the shared record as a backup of the current owners. Keep the Archive owner, the failed-start cleanup job, and the build cleanup unchanged.
+    - The ledger row also keeps what a recovery needs, as in D or G, until a confirmed delete or a definite refusal.
+    - The driver acts only on a row whose original owner has ended. It never acts on a computer that a live start uses, or that Archive keeps for Restore.
+    - The driver decides from facts in D1, such as the owner record and the age of the row. A release mark that each owner must write at each exit would make it a direct fix again.
+    - It needs the purge step of D, and it covers the global software image path, or states why that path's own owner suffices.
+    - It removes no functionality on `origin/main`. Each row has two recovery paths while its owner lives.
     - Effort: Large.
 - **Left out:**
-  - A hand-off from each owner to the failed-start cleanup job at each exit, option B of the review. It must know each exit, so a later exit repeats the defect. It also adds a second owner and a hand-off between two alarms.
-  - The direct Archive fix, option C of the review. This branch applied it. It is the discipline of A for one owner.
-  - The removal of the disk by the provider. It fails the goal, because the protocol and the Privacy page say that the app deletes the computer.
-  - An exit that waits until the replay succeeds. For Archive, it breaks the requirement that Archive acts at once in each state of the workspace.
-  - A longer retention for a computer that the app cannot find. It breaks the 14-day choice of the user and the Privacy page.
-  - A new "computer pending" column on the workspace row. The live ledger row with no ID already marks the pending computer.
-  - A repair by the Cron Trigger alone. It repairs only a lost alarm, and it needs a computer ID, at `worker/lifecycle/repair-data.ts:11`.
-- **Wider fix:** D. It gives every unresolved create request one owner that outlives each workspace, build, and org exit, on the existing ledger row. F is the other structural placement, with the request in native storage.
-- **Previous examples:** commit `43320068960532267364bc96f989b68028d08c4d` for image builds, the test at `worker/lifecycle/start-allocation-time-limit.test.ts:17` for failed starts, and the Archive case of this branch, which option C fixed.
-- **Related:** `plans/follow-ups/org-deletion-lost-build-allocation.md` is a narrower task of the same class.
-  - It asks how Delete org stops and deletes every computer that only a saved request or a pending cleanup tracks.
-  - Its option C, one shared recovery queue, is the Delete org form of D here. A choice of D or F here would make that work smaller.
-  - That item does not wait for this answer.
-- **Recommendation:** D, provisional until a fresh options check. It reuses the existing ledger row of each request, so one owner covers every owner and every exit, also Delete org. F is the choice when env values must stay out of D1. A is the choice when no new storage is wanted.
-- **Action:** ask the user, because the recommended option D can replace cleanup functionality on `origin/main`, and the options have real storage and ownership trade-offs.
-  - This choice blocks only future wider cleanup work.
-  - It does not block the option C fix or pull request #138.
-  - No architecture change happens now.
+  - A hand-off to the failed-start cleanup job at each exit, option B of the review. A is better on every point: the same rule at each exit, with no second owner and no hand-off.
+  - The direct Archive fix, option C of the review. Commit `88651783` applied it. It is the discipline of A for one owner.
+  - The removal of the disk by the provider, an exit that waits for the replay, a longer retention, a "computer pending" column, and a repair by the Cron Trigger alone. Each fails the goal or breaks the 14-day choice, as earlier checks found.
+  - A time limit that ends the retries. It breaks the rule that the delete retries until it succeeds.
+  - A refusal of Delete org while a live row has no confirmed delete. It breaks the rule that Delete org stops every sandbox and hides the org at once.
+  - A per-org native owner, such as the org Stop task object. It is F with fewer objects: the same storage and the same purge step.
+  - A create request with no secret values, with the env values sent after the create. It finds and deletes no computer.
+- **Wider fix:** I. It is the best structural option that is not blocked. D is the same structure as one owner, and it is blocked because it replaces live cleanup code. H is the detection fix, and it works with I.
+- **Previous examples:** commit `43320068960532267364bc96f989b68028d08c4d` for image builds, the test at `worker/lifecycle/start-allocation-time-limit.test.ts:17` for failed starts, and the Archive case, which commit `88651783` fixed with option C.
+- **Related:** `plans/follow-ups/org-deletion-lost-build-allocation.md` is the same class at the Delete org exit.
+  - Its option C, one shared recovery queue, is the Delete org form of D. The purge step that I needs is the same work as its option B.
+  - That item does not wait for this one.
+  - `plans/follow-ups/archived-computer-certainty.md` reads the live ledger row of an unresolved request to decide whether a computer may still exist. A fix here must keep that meaning of a live row. Neither item waits for the other.
+  - `plans/follow-ups/pre-purge-step-failure-blocks-others.md`: its option E keeps the Archive owner running in the Delete org window, which overlaps the ownership design here. E should follow that design.
+- **Recommendation:** I. On 10 November 2026 the root changed the provisional D to I, the best structural option that is not blocked.
+  - The options check showed that I keeps every current owner, adds the shared backup, and removes no functionality, so it needs no user decision.
+  - D as one owner replaces live cleanup code on `origin/main`. The earlier provisional D was never put to the user as a question, and D stays blocked unless the user later chooses a replacement explicitly.
+  - The provider checks decide what the row keeps: the fields of G, a lookup as in E, or else the encrypted body of D. H can land first, because it waits for no provider check.
+- **Action:** fix after merge, apply I, after the three provider checks, because it is Large and reaches cleanup owners outside this branch. No replacement or override of existing functionality on `origin/main` is authorized.
+  - Required first tasks, done by an agent: check key retention, a replay with the same key and a different body, and a lookup by name or label with an exact match.
+  - Then apply I with the record form that the checks allow. Keep each current owner, and add the purge step.

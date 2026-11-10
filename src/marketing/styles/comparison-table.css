@@ -1,8 +1,9 @@
 /*
- * The table of the comparison page. One table serves both layouts. A
- * computer shows the merged Area cell of each row group, and a phone shows
- * the Area cell of each row, so the page needs no script. The values follow
- * the mockup marketing/from-conductor/one-table.
+ * The table of the comparison page, with the link of each row and the row
+ * that its address opens. One table serves both layouts. A computer shows
+ * the merged Area cell of each row group, and a phone shows the Area cell of
+ * each row, so the page needs no script. The values follow the mockup
+ * marketing/from-conductor/one-table.
  */
 .parity-table {
   width: 100%;
@@ -20,6 +21,11 @@
   letter-spacing: 0.08em;
   text-align: left;
   text-transform: var(--ui-label-case);
+}
+
+/* The name of the feature column starts where the names start. */
+.parity-head th:nth-child(2) {
+  padding-left: 10px;
 }
 
 /* The widths of the area, feature, and status columns. Notes take the rest. */
@@ -43,8 +49,12 @@
   vertical-align: top;
 }
 
+/*
+ * The name and the note keep 10px from the two ends of the fill of an
+ * opened row, so that no text touches its edge.
+ */
 .parity-row > :last-child {
-  padding-right: 0;
+  padding-right: 10px;
 }
 
 /*
@@ -62,6 +72,7 @@
 }
 
 .parity-name {
+  padding-left: 10px;
   color: var(--ui-ink);
   font-size: 15px;
   font-weight: var(--ui-weight-heading);
@@ -112,6 +123,82 @@ th.parity-group-area {
 
 .parity-row-area {
   display: none;
+}
+
+/*
+ * The row that its address opens, such as `#file-tree`: a quiet fill on the
+ * cells of the feature, never on the merged Area cell. The page stops the
+ * row 16px under its top edge.
+ */
+.parity-row {
+  scroll-margin-top: 16px;
+}
+
+.parity-row:target > .parity-name,
+.parity-row:target > .parity-status,
+.parity-row:target > .parity-note {
+  background: var(--ui-selected);
+}
+
+/* The end of the name keeps the link on the line of the last word. */
+.parity-name-end {
+  white-space: nowrap;
+}
+
+/*
+ * The link to the address of the row: a quiet icon in the muted colour. A
+ * device that can hover shows it while the pointer is over a cell of the
+ * feature, while the link has the keyboard focus, and on the opened row.
+ * The merged Area cell belongs to the first row of its area, so the pointer
+ * over it shows no link. The link keeps the focus ring of every link of the
+ * site, from base.css, and its margin keeps that ring off the name.
+ */
+.parity-row-link {
+  display: inline-flex;
+  position: relative;
+  margin-left: 3px;
+  color: var(--ui-muted);
+  vertical-align: -2px;
+  opacity: 0;
+}
+
+.parity-row:has(
+    > .parity-name:hover,
+    > .parity-status:hover,
+    > .parity-note:hover
+  )
+  .parity-row-link {
+  opacity: 1;
+}
+
+.parity-row:target .parity-row-link,
+.parity-row-link:focus-visible {
+  opacity: 1;
+}
+
+.parity-row-link:hover {
+  color: var(--ui-ink);
+}
+
+/*
+ * The touch area covers the icon. In the phone layout, base.css raises
+ * --ui-touch-min, so the area grows to 44px without moving the text.
+ */
+.parity-row-link::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--ui-touch-min));
+  height: max(100%, var(--ui-touch-min));
+  transform: translate(-50%, -50%);
+  content: '';
+}
+
+/* A device without hover, such as a phone, always shows the link. */
+@media (hover: none) {
+  .parity-row-link {
+    opacity: 1;
+  }
 }
 
 @media (max-width: 759.98px) {
@@ -170,5 +257,23 @@ th.parity-group-area {
 
   .parity-table .parity-status > * + * {
     margin-top: 0;
+  }
+
+  /*
+   * A phone fills the whole opened row as one rounded block. The fill
+   * reaches 10px past the text on each side and covers the hairlines above
+   * and under the row, so the text keeps its place and no line is narrower
+   * than the fill.
+   */
+  .parity-table .parity-row:target {
+    margin: -1px -10px 0;
+    padding: 15px 10px 14px;
+    border-bottom-color: transparent;
+    border-radius: var(--ui-radius-xl);
+    background: var(--ui-selected);
+  }
+
+  .parity-table .parity-row:target > * {
+    background: none;
   }
 }
