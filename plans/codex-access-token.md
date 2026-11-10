@@ -322,7 +322,9 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
   item 2 of the mockup report.
 - The Codex form lists "API key" first and selects it. "Access token" comes
   second. Reason: most members have an API key, and a token needs a
-  Business or Enterprise workspace.
+  Business or Enterprise workspace. Since decision 175, the second option
+  is "ChatGPT plan", and the reason is that an API key needs no step
+  before it, while the sign-in needs a ChatGPT setting first.
 - The calls of 10 November 2026 for decision 175 A:
   - The ChatGPT sign-in keeps the stored kind `token` of Codex, so the
     contracts, the migration, and the share default of decision 171 C
@@ -479,6 +481,15 @@ change.
       the section "Logins" of `docs/mockups/orgs-and-logins.md`.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages at phone and
       desktop sizes.
+- [ ] Draw a ChatGPT sign-in that stopped working: the Codex row shows its
+      cause and "Sign in again", which opens the sign-in.
+- [ ] Apply the user's answers of 10 November 2026 to the mockup report:
+      the share switch of a ChatGPT plan stays, off at the start, with a
+      hint that only its owner may use it (item 1 B). The start text names
+      device code sign-in in the ChatGPT security settings with no quoted
+      label (item 3 C). The code step says "Never share this code, and
+      enter only a code that this page shows. It expires in 15 minutes."
+      (item 5 B).
 - [ ] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
@@ -661,7 +672,10 @@ The account page connects Codex with a device code sign-in, as Milestone
 
 - [ ] Replace the access token field of the Codex form with the sign-in
       button, the code, the link, and the states of Milestone 1b.
-- [ ] Use the start and poll calls of Milestone 4.
+- [ ] Use the start and poll calls of Milestone 4. The mockup step
+      `refused` draws the poll state `failed`, with its cause.
+- [ ] Take the words from the shared copy module of the mockups,
+      `docs/mockups/src/components/settings/chatGptSignInCopy.ts`.
 - [ ] Change the Codex kind name from "Access token" to the name of
       Milestone 1b.
 - [ ] Add tests for each state of the sign-in.
@@ -675,6 +689,8 @@ Depends on: 4, 5c
 The public guides and the comparison page say that Codex connects with a
 device code sign-in to the member's ChatGPT plan.
 
+- [ ] Add the ChatGPT plan to the example guide of the mockups,
+      `docs/mockups/src/screens/docsGetStarted.tsx`.
 - [ ] Update `src/marketing/docs/agent-logins.md` and
       `src/marketing/docs/get-started.md` for the ChatGPT sign-in, as
       [Website docs](../docs/protocol/website-docs.md) says.
