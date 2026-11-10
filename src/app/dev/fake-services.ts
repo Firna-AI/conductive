@@ -16,6 +16,7 @@ import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
+import { routineRoutes } from './routine-routes'
 import { routeFetch, RouteError, type Route } from './router'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
@@ -57,6 +58,7 @@ export function createFakeServices(search: string): AppServices {
     ...createRoutes(backend),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
+    ...routineRoutes(backend),
   ]
   const fetch = routeFetch(
     routes,

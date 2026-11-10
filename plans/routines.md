@@ -1644,16 +1644,25 @@ Depends on: 3
 
 Let members find the routines of their org.
 
-- [ ] Add the three routes to the router and to `OrgRoutes`.
-- [ ] Add the Routines link to the desktop sidebar and to the phone list.
-- [ ] Add the routines resource and its reader to the org model, and the
+- [x] Add the three routes to the router and to `OrgRoutes`.
+- [x] Add the Routines link to the desktop sidebar and to the phone list.
+- [x] Add the routines resource and its reader to the org model, and the
       routes to the dev fake and the test fake.
-- [ ] Build the Routines page and its empty state from the mockup.
-  - [ ] Test that the link opens the page, and that the page lists the
+- [x] Build the Routines page and its empty state from the mockup.
+  - [x] Test that the link opens the page, and that the page lists the
         routines of the API.
-- [ ] Capture again the marketing pictures that show the sidebar, as
+- [x] Capture again the marketing pictures that show the sidebar, as
       `src/marketing/README.md` says, so that they show the Routines link.
-- [ ] Update the web app README.
+- [x] Update the web app README.
+
+Milestone completed on 10 November 2026. A UI implementor subagent built
+it. It also fixed the New workspace row, which lost its styles when
+Milestone 1 renamed two classes of the shared mockup CSS, and the link
+role of the shared test helper, so that link queries can fail. The
+orchestrator re-ran the 562 tests of `src` and the typecheck, lint,
+format, file-length, and export checks. The handoff is in
+`.context/routines/reports/m7-ui.md`. The follow-up item
+`age-format-weeks.md` holds its open question about "14d" and "2w".
 
 ## Milestone 8: Routine page
 

@@ -14,6 +14,7 @@ import { HomeList, ListHeader } from './list/HomeList'
 import { Sidebar, type ListCurrent } from './list/Sidebar'
 import { useMacApp } from './mac/mac-app'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
+import { RoutinesScreen } from './routines/RoutinesScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
 import { ActionButton } from './ui/actions'
 import { useGo } from './ui/AppLink'
@@ -122,6 +123,13 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
       )
     case 'settings':
       return <OrgSettingsScreen org={org} tab={route.tab} user={user} />
+    case 'routines':
+      return <RoutinesScreen org={org} />
+    // The addresses of a routine and of a new routine have no page of
+    // their own, so they say that the page is not available.
+    case 'new-routine':
+    case 'routine':
+      return <NotAvailable title="This page is not available" />
   }
 }
 
@@ -135,6 +143,10 @@ function listCurrent(route: OrgRoute): ListCurrent {
       return { screen: 'workspace', workspaceId: route.workspaceId }
     case 'settings':
       return { screen: 'settings' }
+    case 'routines':
+    case 'new-routine':
+    case 'routine':
+      return { screen: 'routines' }
   }
 }
 

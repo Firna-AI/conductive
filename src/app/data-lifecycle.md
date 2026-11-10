@@ -8,7 +8,8 @@ of the data that the screens read and write.
   reads when its first screen mounts, each time that the user comes back
   to the page, and on a timer while a screen shows it. The last screen
   that leaves stops the timer. Screens that show a part share its reads.
-- The timer is short while a row works, needs input, or starts, or while a
+- The timer is short while a row works, needs input, or starts, while the
+  last run of a routine waits, starts, works, or needs input, or while a
   build runs. Otherwise it is slow, so that changes from other tabs and
   other people show. Repositories and the members read at entry and at
   focus only. The waits are choices of the app, not product

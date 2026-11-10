@@ -21,7 +21,9 @@ pull request bar, and the owner picker. A host can give its own parts, as
   `?login=none`, `?deleted=1`, or `?suspended=1`. `dev/options.ts` lists
   them. A new org
   of the dev fake gets every repository of the account's list, and keeps
-  its custom initials through rename, delete, and restore.
+  its custom initials through rename, delete, and restore. Acme has the
+  routines of the mockups, each with its last run. The other orgs have no
+  routines, so their Routines page shows its empty state.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -168,7 +170,9 @@ clicks, types, and lets the answers of the fake API settle.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  and computer settings of one org, with `watch` and the wait of each part.
+  routines, and computer settings of one org, with `watch` and the wait of
+  each part. `api/read-routines.ts`: the reader of the routines, each with
+  its newest run.
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the GitHub App installations, and the repositories that
   Create org offers.
@@ -204,6 +208,11 @@ clicks, types, and lets the answers of the fake API settle.
   a store, connects it again, or makes a new one.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
+- `../shell/routines/RoutinesScreen.tsx`: the Routines page, which the
+  Routines link of the sidebar and of the phone list opens.
+  [Routines](../../docs/protocol/routines.md#the-routine-pages) states what
+  it shows. The addresses of a routine and of a new routine have no page of
+  their own, so they show that the page is not available.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.

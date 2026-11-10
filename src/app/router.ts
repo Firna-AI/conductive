@@ -25,6 +25,9 @@ export type Route =
       view: readonly string[]
     }
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
+  | { screen: 'routines'; orgId: string }
+  | { screen: 'new-routine'; orgId: string }
+  | { screen: 'routine'; orgId: string; routineId: string }
   | { screen: 'not-found' }
 
 const encode = encodeURIComponent
@@ -49,6 +52,10 @@ export const routes = {
     tab === 'general'
       ? `/orgs/${encode(orgId)}/settings`
       : `/orgs/${encode(orgId)}/settings/${tab}`,
+  routines: (orgId: string) => `/orgs/${encode(orgId)}/routines`,
+  newRoutine: (orgId: string) => `/orgs/${encode(orgId)}/routines/new`,
+  routine: (orgId: string, routineId: string) =>
+    `/orgs/${encode(orgId)}/routines/${encode(routineId)}`,
 } as const
 
 function settingsTab(value: string | undefined): SettingsTab | null {
@@ -100,6 +107,11 @@ export function parseRoute(pathname: string, search: string): Route {
   if (area === 'settings' && rest.length === 0) {
     const tab = settingsTab(id)
     if (tab) return { screen: 'settings', orgId, tab }
+  }
+  if (area === 'routines' && rest.length === 0) {
+    if (id === undefined) return { screen: 'routines', orgId }
+    if (id === 'new') return { screen: 'new-routine', orgId }
+    return { screen: 'routine', orgId, routineId: id }
   }
   return { screen: 'not-found' }
 }

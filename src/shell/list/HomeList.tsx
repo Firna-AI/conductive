@@ -13,7 +13,7 @@ import { AppLink } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
 import { Sheet } from '../ui/Sheet'
 import ui from '../ui/ui.module.css'
-import { NewWorkspaceLink, SettingsLink } from './Sidebar'
+import { NewWorkspaceLink, RoutinesLink, SettingsLink } from './Sidebar'
 import { OrgList } from './OrgList'
 
 /** The org switcher of a phone, which has no rail. */
@@ -117,8 +117,9 @@ export function ListHeader(props: {
 
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
- * suspended org shows its notice in place of New workspace, and its list
- * read-only.
+ * suspended org shows its notice first, no New workspace, and its list
+ * read-only. Its Routines link stays, because a suspension keeps every
+ * read.
  */
 export function HomeList(props: { org: OrgSummary; user: User }) {
   const { suspended } = useOrgAccess(props.org)
@@ -126,15 +127,17 @@ export function HomeList(props: { org: OrgSummary; user: User }) {
     <>
       <ListHeader org={props.org} settings user={props.user} />
       <div className={styles.scroll}>
-        {suspended ? (
-          <SuspendedOrgNotice org={props.org} />
-        ) : (
-          <NewWorkspaceLink
-            current={false}
-            orgId={props.org.id}
-            variant="page"
-          />
-        )}
+        {suspended ? <SuspendedOrgNotice org={props.org} /> : null}
+        <div className={styles.links}>
+          {suspended ? null : (
+            <NewWorkspaceLink
+              current={false}
+              orgId={props.org.id}
+              variant="page"
+            />
+          )}
+          <RoutinesLink current={false} orgId={props.org.id} variant="page" />
+        </div>
         <OrgList
           orgId={props.org.id}
           readOnly={suspended}

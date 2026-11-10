@@ -13,6 +13,7 @@ import type {
   Repository,
 } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
+import type { Routine, RoutineRun } from '../../shared/routines'
 import type { Section } from '../../shared/sections'
 import type { Workspace, WorkspaceResponse } from '../../shared/workspaces'
 import { coreFixtures } from '../../test-support/fixtures/core'
@@ -38,6 +39,10 @@ export interface OrgState {
   builds: readonly BuildResponse[]
   currentImageBuildId: string | null
   members: MembersResponse
+  /** Newest first, as the Worker lists them. */
+  routines: readonly Routine[]
+  /** The runs of every routine of the org. */
+  runs: readonly RoutineRun[]
 }
 
 /** Everything that the writes of the dev fake change. */
@@ -81,7 +86,7 @@ function catalogueOf(
 /**
  * A new org: the default section, no workspaces, the repositories of the
  * catalogue with the chosen ones added, empty scripts with the base image,
- * no builds, and the user as its only member.
+ * no builds, the user as its only member, and no routines.
  */
 export function freshOrg(
   org: OrgSummary,
@@ -115,6 +120,8 @@ export function freshOrg(
       members: [{ user, role: org.role, joinedAt: now }],
       invites: [],
     },
+    routines: [],
+    runs: [],
   }
 }
 

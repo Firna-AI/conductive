@@ -6,6 +6,7 @@ import {
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
+import { routineFixtures } from '../../test-support/fixtures/routines'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
@@ -23,9 +24,10 @@ type CoreFixtures = ReturnType<typeof coreFixtures>
 const DELETE_AFTER = 604_800_000
 
 /**
- * Acme with the recorded sections, workspaces, settings, build, and
- * members. A starting workspace has the recorded resume step, and a
- * workspace in the error state has the recorded start error.
+ * Acme with the recorded sections, workspaces, settings, build, members,
+ * and routines with their last runs. A starting workspace has the recorded
+ * resume step, and a workspace in the error state has the recorded start
+ * error.
  */
 function acme(
   summary: OrgSummary,
@@ -33,6 +35,7 @@ function acme(
   options: DevOptions,
 ): OrgState {
   const { workspaces } = workspaceFixtures(options.server.workspaceState)
+  const { routines, runs } = routineFixtures(summary.id)
   const starting = workspaceFixtures('starting').detail.start
   const failed = workspaceFixtures('error').detail.error
   const startOf = (workspace: Workspace): [string, StartRecord] => [
@@ -62,6 +65,8 @@ function acme(
     builds: [core.build],
     currentImageBuildId: core.builds.currentImageBuildId,
     members: core.members,
+    routines,
+    runs,
   }
 }
 
