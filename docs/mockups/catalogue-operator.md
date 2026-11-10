@@ -1,11 +1,57 @@
-# The operator section
+# The catalogue: the waitlist, suspensions, and the operator
 
-The [mockups README](README.md) gives the commands, the folder layout,
-how a screen is built, and links to the other pages.
-[The catalogue](catalogue.md) lists each path of the catalogue and what it
-shows. This page gives the pages of the operator section, at
-`app/operator`. [Operator section](../protocol/operator-section.md) states
-their requirements.
+This page belongs to [the catalogue](catalogue.md), which lists each path
+of the catalogue, the rules of its folder pages, and the entries that
+moved. This page gives what the operator controls: the pages of the
+waitlist, a suspended org, and the operator section with its child pages.
+
+The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
+an account without app access, and the person waits until an operator
+approves them, or a code or an org invitation lets them in. Its pages:
+
+- `app/sign-in/waitlist` has the only screen of a person who waits, Sam
+  Okafor, with the address that gets the approval email. Its child pages
+  were its variants and kept their paths. `code-failed` has a typed code
+  that was not found, and `paused` has a code that the pause of sign-ups
+  stopped. `invited` has an org invitation that lets Sam in, and its
+  `paused` variant has the same invitation after the pause stopped Accept:
+  the invitation stays, and a notice asks Sam to accept it again when
+  sign-ups resume. `no-email` has an account with no verified email. The
+  code control of `mockups:serve` shows each reason that a code does not
+  work: unknown, disabled, used up, and the pause.
+- `mac-app/waitlist` has the same waitlist in a window of the Mac app, and
+  its `full-screen` variant has it without the window buttons.
+- `app/sign-in/join` has the sign-in page that an invite link opens, with
+  its code. Its child page `app/sign-in/join/failed` has the waitlist after
+  the code of the link did not work, here a used-up code, and its `paused`
+  variant has the pause.
+- `app/account` shows the invite code of the user at the end of the
+  General tab, with 3 of 5 invites left. Its child page `app/account/invites` has the
+  pause, and its variants have every invite used and a code that an
+  operator turned off.
+- The Sign up flow ends on the waitlist. The Join with an invite link flow
+  goes from the link through Get started, so the people of each flow stay
+  the same.
+
+`app/orgs/suspended` shows Acme after the operator suspended it, from
+decision 129. Its notice is at the top of the list, and every workspace
+shows stopped. Its child pages:
+
+- `app/orgs/suspended/workspace` has a workspace with the refused bar of the
+  org. Its `archived` variant has an archived workspace, with the notice of
+  the org above the archived bar. Its `files` variant has the Files tab of a
+  phone, whose panel shows the words of the org.
+- `app/orgs/suspended/new-workspace` has the New workspace page, which an
+  old tab can still open. The refused bar takes the place of the composer.
+- `app/orgs/suspended/settings` has the four tabs, read-only also for an
+  admin.
+- `app/orgs/suspended/leave` has Leave org for a member who is not an
+  admin, and its `confirm` variant has the question before the leave. Acme
+  is the only org of that member, so Leave org opens
+  `app/sign-in/get-started/no-org`: no org, and the agent still connected.
+- `app/orgs/suspended/deleted` has a deleted org that is also suspended:
+  the notice of the org above the page of the deleted org, with its date,
+  and no Restore.
 
 `app/operator` shows the Overview tab of the operator, the person who runs
 the app for everyone, from decision 142. It holds live counts across every

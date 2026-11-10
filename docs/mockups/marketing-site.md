@@ -32,15 +32,17 @@ GitHub, and Sign in. Each link of the phone header is a 44 px target.
 There GitHub shows only its mark, in a square named "GitHub", so that the
 links fit on a 360 px phone. The header links to the public source
 repository on GitHub in both layouts.
-The wordmark is the lockup of the brand, 30 px high. It keeps the clear
-space of the [brand rules](../brand/README.md#rules): 15 px, half its
-tile. So the phone header is 60 px high, with a gap of 15 px after the
-wordmark, and the footer keeps 15 px under it. The Product column of the
-footer lists Docs after Features, and it has Mac app. Features and Mac app
-lead to the same sections as in the header. The Account column of the
-footer has Sign up and Sign in. The Docs links of the header and the
-footer lead to the docs overview, `marketing/docs`.
-[The docs](#the-docs) gives its layout.
+The wordmark is the lockup of the brand, 25 px high, from the
+`lockupHeight` token. Its tile fills that height. It keeps the clear
+space of the [brand rules](../brand/README.md#rules): at least 12.5 px,
+half its tile. So each header is at least twice as high as the lockup.
+The phone header is 56 px high, and the desktop header 64 px. The gap
+after the wordmark is 16 px, and the footer keeps half the lockup height,
+12.5 px, under it. The Product column of the footer lists Docs after
+Features, and it has Mac app. Features and Mac app lead to the same
+sections as in the header. The Account column of the footer has Sign up
+and Sign in. The Docs links of the header and the footer lead to the docs
+overview, `marketing/docs`. [The docs](#the-docs) gives its layout.
 
 The site keeps still captures of the workspace screen, the org settings cloud computer tab, the phone workspace list, and the Mac app.
 Changes to those screens require recapture with the [capture steps](../../src/marketing/README.md#pictures).

@@ -2,12 +2,17 @@
   border-bottom: 1px solid var(--ui-border);
 }
 
+/*
+ * The header is at least twice as high as the lockup. So the lockup keeps
+ * the clear space of half a tile above it and below it.
+ */
 .inner {
   display: flex;
   align-items: center;
   gap: 16px;
   max-width: 1184px;
   height: 64px;
+  min-height: calc(var(--ui-lockup-height) * 2);
   margin: 0 auto;
   padding: 0 32px;
   box-sizing: border-box;
@@ -58,13 +63,8 @@
   margin-left: 8px;
 }
 
-/*
- * The lockup keeps 15px of clear space above, below, and beside it, half
- * of its 30px tile, as the brand asks.
- */
 .mobile .inner {
-  gap: 15px;
-  height: 60px;
+  height: 56px;
   padding: 0 8px 0 20px;
 }
 

@@ -40,7 +40,7 @@ export const plansAndPricingFeatures: readonly ParityFeature[] = [
     id: 'plan-and-billing-pages',
     area: 'plans-and-pricing',
     name: 'Plan and billing pages',
-    status: 'different',
-    note: 'Conductive has no paid plans or billing pages. New users need approval or an invite for app access.',
+    status: 'considering',
+    note: 'Paid plans and billing pages are under consideration. Conductive is free today.',
   },
 ]

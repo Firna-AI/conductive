@@ -46,7 +46,10 @@ and the parts in
 [`components/parity/`](../../docs/mockups/src/components/parity/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
 site uses the lockups and favicons from that folder unchanged. The header
-and the footer show the lockup 30 px high, as the mockups do.
+and the footer show the lockup 25 px high, from the `lockupHeight` token
+of the mockups, with its clear space of half that height. On a narrow
+phone, the lockup of the site shrinks to the space beside the links, so
+the page never scrolls sideways.
 
 ## How the Worker serves it
 

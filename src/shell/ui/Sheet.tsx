@@ -34,15 +34,18 @@ export function trapTab(event: KeyboardEvent<HTMLElement>): void {
 /**
  * A sheet that rises from the bottom of a phone screen over the dimmed
  * app. A press on the dim area or Escape closes it, and the focus goes back
- * to its trigger.
+ * to its trigger. `returnFocus` names that trigger when a render can
+ * replace it while the sheet shows, such as the row of a menu that moves
+ * the row.
  */
 export function Sheet(props: {
   title: string
   close: () => void
+  returnFocus?: () => void
   children: ReactNode
 }) {
   const sheet = useRef<HTMLElement>(null)
-  useModalLayer(sheet, props.close)
+  useModalLayer(sheet, props.close, { returnFocus: props.returnFocus })
   return (
     <Overlay>
       <div className={styles.layer}>
