@@ -19,6 +19,10 @@ const SIMPLE_WARNINGS = {
     'Approval email delivery failed. The email remains pending.',
   approval_email_retry_failed:
     'The retry of approval emails failed. It runs again at the next timer.',
+  software_image_repair_failed:
+    'Software image repair failed. It runs again at the next timer.',
+  software_image_cleanup_failed:
+    'Software image cleanup failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',
   attachment_upload_cleanup_retry: 'An attachment upload cleanup will retry.',
   activity_timestamp_failed: 'Workspace activity timestamp could not be saved.',

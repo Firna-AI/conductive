@@ -24,6 +24,10 @@ import {
   IMAGE_SOURCE_CREDENTIAL_PATH,
 } from './lifecycle/image-sources/credential'
 import { workspaceRuntime } from './lifecycle/runtime'
+import {
+  handleSoftwareImage,
+  SOFTWARE_IMAGE_PATH,
+} from './software-image/route'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -115,6 +119,10 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await routeMacCommand(request, env))
         }
         if (surface === 'machine') {
+          if (path === SOFTWARE_IMAGE_PATH)
+            return respond(
+              await handleSoftwareImage(request, env, dependencies),
+            )
           if (isAgentToolPath(path))
             return respond(
               await productionAgentTools(request, env, dependencies),

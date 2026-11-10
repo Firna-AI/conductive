@@ -8,6 +8,13 @@ export type GitHubIdentity = Omit<User, 'id'> & {
 const columns = `id, github_id AS githubId, github_login AS githubLogin,
   display_name AS displayName, avatar_url AS avatarUrl`
 
+export function readUser(db: D1Database, id: string): Promise<User | null> {
+  return db
+    .prepare(`SELECT ${columns} FROM users WHERE id = ?`)
+    .bind(id)
+    .first<User>()
+}
+
 export async function saveUser(
   db: D1Database,
   id: string,

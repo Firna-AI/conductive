@@ -251,6 +251,7 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
       type: 'gateway',
       ...turn('close', 'bob', 'codex').credential,
     },
+    commitAuthor: null,
     choice: { agent: 'codex', model: 'test-model', effort: 'high' },
     conversationId: null,
     instructions: '',

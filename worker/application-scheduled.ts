@@ -5,6 +5,7 @@ import { captureWorkerWarning } from './error-reporting/policy'
 import { cleanupDeletedOrgs } from './members/cleanup'
 import { productionMembersHooks } from './members/composition'
 import { repairLifecycleAlarms } from './lifecycle/repair'
+import { repairSoftwareImages } from './software-image/repair'
 import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
 import { runnerSoftware } from './configuration'
 import { retryApprovalEmails } from './operator/approval-email'
@@ -28,6 +29,13 @@ export function scheduledWorker(
         imageRuntime(env, dependencies),
         () => runnerSoftware(env),
       )
+      try {
+        await repairSoftwareImages({ env, dependencies })
+      } catch (error) {
+        const warning = { kind: 'software_image_repair_failed' } as const
+        warnWorker(warning)
+        captureWorkerWarning(warning, error)
+      }
       // Last, so that a slow or failed email never holds back the repairs.
       try {
         await retryApprovalEmails(env, dependencies)

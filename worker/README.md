@@ -81,7 +81,8 @@ previews, and desktop inside the real workspace object.
 The [GitHub composition](features/github.ts) stores banner updates in the common chat stream.
 
 On the machine hostname, the Worker serves the Mac command routes, the git
-credential route, the image source credential route, workspace create/list
+credential route, the image source credential route, the
+[software image deploy route](software-image/README.md#deploy-route), workspace create/list
 tools, GitHub webhooks, the model gateway, and the runner socket.
 These handlers use their own machine credentials and skip the browser gate.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
@@ -99,6 +100,8 @@ It also retries pending approval emails until delivery or 24 hours from
 approval. [Approval delivery](operator/README.md#approval-email-delivery)
 describes the saved messages and delivery keys.
 It also repairs overdue workspace disk alarms and org image refreshes after a 15-minute grace period.
+It then advances unfinished software image builds and retries their cleanup
+in the default provider account.
 The repair checks at most 50 workspaces and 50 orgs per run.
 It defers failed calls and logs counts when either limit leaves work pending.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
@@ -177,6 +180,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
 - [application-scheduled.ts](application-scheduled.ts): `scheduledWorker` runs the work of the Cron Trigger: the cleanup, the lifecycle repair, and the approval email retries.
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
+- [software-image/README.md](software-image/README.md) owns software image builds, the deploy token gate, and Cron cleanup.
 - [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk and image alarms from the Cron Trigger.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.

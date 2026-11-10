@@ -34,6 +34,20 @@ examples.
   Worker and of its Durable Objects. It removes the query string of each
   request URL from the logs, because a query string can hold a sign-in
   code, a preview credential, or the name of an attached file.
+- `wrangler.jsonc` also turns on Issues, the error tracking of Workers,
+  which is in open beta. Issues groups each uncaught exception, each
+  `5xx` reply, and each error log line of the Worker into issues. The
+  Worker page of the Cloudflare dashboard lists them under Issues.
+  - Each deploy sets Issues from `wrangler.jsonc`. A switch in the
+    dashboard alone ends at the next deploy.
+  - Cloudflare keeps the details of each occurrence for 7 days.
+  - The preview proxy passes each `5xx` reply of a preview through, so
+    the failures of the programs in the sandboxes become issues too.
+  - Issues sends no alert by itself. An automation in the dashboard sends
+    an issue to a chat, an incident tool, a webhook, or a coding agent.
+  - Issues shows no cause for an unexpected error that the Worker
+    catches. The reply is then `500 internal_error`, and the Worker logs
+    no error line.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
@@ -51,6 +65,7 @@ examples.
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
 | `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion | The bucket `conductive-chat-attachments`, as [The attachment bucket](#the-attachment-bucket) says. |
 | `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](#the-title-model) says. |
+| `CF_VERSION_METADATA` | Version metadata | The software image route of the deploy run | The ID, the tag, and the creation time of the running Worker version. `wrangler.jsonc` sets it. Without it, the route answers 404, as [The software image](#the-software-image) says. |
 
 ## Public variables
 
@@ -68,6 +83,7 @@ examples.
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
+| `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](#the-software-image) says. It is not a secret. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
 | `OPERATOR_GITHUB_IDS` | The operator section and the suspension of users and orgs | Optional. The numeric GitHub user IDs of the operators, separated by commas. It is not a secret. Without it, each operator request gets `403 operator_required`, as the [operator area](../worker/operator/README.md#overview) says. |
 
@@ -213,6 +229,34 @@ two runner archive variables.
 
 [The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
 says how each deploy from `main` publishes the archive.
+
+### The software image
+
+Each deploy from `main` asks the Worker for the
+[software image](protocol/org-image.md#the-software-image) of its new
+version. The software image holds the base image, the runner archive, and
+the rest of the app's own sandbox software.
+
+1. Before the Worker upload, the deploy makes 32 random bytes as its
+   deploy token. It keeps the token in a file of the deploy job only, and
+   masks it in the log.
+2. It sets `CONDUCTIVE_DEPLOY_TOKEN_SHA256` to the SHA-256 digest of the
+   token, with `--var`.
+3. After the health check, it calls `POST /v1/deploy/software-image` on
+   the machine hostname every 10 seconds, for up to 15 minutes. Each call
+   sends the token and its digest. Each call moves the build on, and
+   answers with its state and its new output.
+4. A later job fails the run unless the last answer says that the image
+   is ready.
+
+- The Worker accepts the token only for 30 minutes after the creation time
+  of its version, which `CF_VERSION_METADATA` gives.
+- An older Worker version answers 409 to the digest of a newer deploy. The
+  deploy then asks again.
+- A deploy by hand sets no new token, so it builds no software image. Builds
+  of an org without an org image then install the app's own software.
+- After the wait ends, the 15-minute Cron Trigger moves an unfinished
+  build on, until it ends or reaches its time limit of 60 minutes.
 
 ## Frame sources
 

@@ -52,7 +52,11 @@ export const privacyDocument: LegalDocument = {
             in the repository can send these requests to another address
             instead.`,
           text`GitHub signs you in, and gives ${productName} access to your
-            repositories through its GitHub App. The Mac app also checks
+            repositories through its GitHub App. Each commit made in a cloud
+            computer carries its author's GitHub display name or login and
+            GitHub no-reply address. That address contains the author's GitHub
+            user ID and login. GitHub and each reader of the repository see
+            that name and address. The Mac app also checks
             GitHub for updates and downloads new versions. These requests
             send your network address to GitHub.`,
           text`Resend sends the emails of ${productName}: the invitations of

@@ -149,7 +149,7 @@ pictures, the header and the footer, and [the docs pages](marketing-site.md#the-
 It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
-[Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)
+[Conductor comparison](../protocol/conductor-comparison.md)
 states its requirements. It draws the real rows: its rows, statuses, dates,
 and words come from `src/marketing/from-conductor/`, the modules that the
 site also reads, as

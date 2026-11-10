@@ -62,7 +62,8 @@ them, and this page lists each protocol doc and what it covers.
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
   messages in the chat, with their tables.
-- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope.
+- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope,
+  and the author of each commit in a sandbox.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, the sender line of each message, and the base
   prompt of Claude agents.
@@ -73,6 +74,6 @@ them, and this page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md): the
-  public page for people who move from Conductor Cloud, with the status of
-  each Conductor Cloud feature.
+- [Conductor comparison](../protocol/conductor-comparison.md): the public
+  page for people who move from Conductor, with the status of each
+  Conductor feature.
