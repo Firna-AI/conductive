@@ -39,7 +39,7 @@ Use **Terminal** to find the ignored files.
 **All files** and **Changes** do not list them.
 
 You can send a message while the workspace's computer starts.
-The chat shows that the message waits.
+The chat shows the steps of that start.
 The workspace keeps accepted messages for the agent.
 
 The org must have a successful build before you create a new workspace.
