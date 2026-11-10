@@ -22,6 +22,15 @@ export const macShortcutsChanges = defineScreen({
   render: (props) => <MacAppScreen state={props} />,
   variants: [
     {
+      slug: 'reset-conflict',
+      title: 'Default shortcut in use',
+      description:
+        'A search for “model” finds Model picker, which has no shortcut, because Replace gave ⌘/ to Keyboard shortcuts. The person pressed Reset on Model picker. Its default ⌘/ belongs to Keyboard shortcuts now, so the row shows ⌘/ in the field of the recorder, and the line under it says that Keyboard shortcuts uses ⌘/. Replace gives Model picker its default shortcut and takes ⌘/ from Keyboard shortcuts, which then has no shortcut. Cancel keeps both commands as they were.',
+      rationale:
+        'The agent call of 10 November 2026 makes Reset follow the conflict rule of a recorded shortcut: two commands that can run in the same place never share a shortcut, so Reset asks before it takes a shortcut from another command. Replace saves both rows in one change. The field shows the shortcut that waits for the answer, as it does for a recorded shortcut. The search brings the row of Model picker, at the end of the list, to the top of the screen. Reset asks in the same way without a search.',
+      props: { keyChange: 'reset-conflict', shortcutSearch: 'one-command' },
+    },
+    {
       slug: 'reset-all',
       title: 'Reset all',
       description:
@@ -29,6 +38,15 @@ export const macShortcutsChanges = defineScreen({
       rationale:
         'Nothing brings the changes back after Reset all, so the tab asks first, as ConfirmDialog does before each action that a person cannot simply undo. Reset all covers the changes of a Mac keyboard, which follow the account to every Mac (decision 190).',
       props: { keyChange: 'reset-all' },
+    },
+    {
+      slug: 'reset-all-failed',
+      title: 'Reset all failed',
+      description:
+        'The person confirmed Reset all, and the save failed. Each changed row keeps its change and its Reset. A line under the lines and Reset all says that the shortcuts were not reset, and asks the person to try again.',
+      rationale:
+        'Reset all saves every command in one change, so it fails as a whole, and its error stands under Reset all, not on a row. The agent call of 10 November 2026 asks each error to name what failed. A failed save keeps the saved shortcuts, so the tab never shows a shortcut that the account does not hold.',
+      props: { keyChange: 'reset-all-failed' },
     },
     {
       slug: 'not-saved',

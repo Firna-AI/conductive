@@ -86,16 +86,18 @@ export const macAppSchema = {
     palette: { enum: ['closed', 'all', 'actions', 'settings'] },
     /**
      * The change of a shortcut on Keyboard shortcuts, in progress or last:
-     * none, a row that records new keys, the same row after a fixed shortcut
-     * that it did not take, a recorded shortcut of another command, the
-     * question before Reset all, or a save that failed.
+     * none, a row that records new keys in place of a shortcut, the same
+     * row after a fixed shortcut that it did not take, a row that records
+     * one more shortcut, a recorded shortcut of another command, a Reset
+     * whose default shortcut another command holds, the question before
+     * Reset all, a Reset all that failed, or a save that failed.
      */
     keyChange: { enum: keyChanges },
     /**
      * The search of Keyboard shortcuts: an empty field, a query that finds
      * commands by their labels and their words, a query that finds the
-     * fixed keys of a focused workspace row and divider, or a query that
-     * matches no row.
+     * fixed keys of a focused workspace row and divider, a query that finds
+     * only Model picker, or a query that matches no row.
      */
     shortcutSearch: { enum: shortcutSearches },
     /**

@@ -1,6 +1,8 @@
 import {
+  heldDefault,
   recordingCommand,
   refusedShortcut,
+  resetCommand,
   shortcutsOf,
   takenShortcut,
   unsavedChange,
@@ -14,6 +16,7 @@ import {
 } from '../../fixtures/shortcutHosts'
 import {
   commandLabel,
+  defaultShortcuts,
   fixedLabel,
   shortcutGroups,
   type CommandRow,
@@ -39,16 +42,21 @@ import styles from './ShortcutsSections.module.css'
 
 /**
  * The change of a shortcut on the tab, in progress or last: none, a row
- * that records new keys, the same row after a fixed shortcut that it did
- * not take, a recorded shortcut of another command, the question before
- * Reset all, or a save that failed.
+ * that records new keys in place of a shortcut, the same row after a fixed
+ * shortcut that it did not take, a row that records one more shortcut, a
+ * recorded shortcut of another command, a Reset whose default shortcut
+ * another command holds, the question before Reset all, a Reset all that
+ * failed, or a save that failed.
  */
 export const keyChanges = [
   'none',
   'recording',
   'refused',
+  'adding',
   'conflict',
+  'reset-conflict',
   'reset-all',
+  'reset-all-failed',
   'not-saved',
 ] as const
 
@@ -78,6 +86,9 @@ function rowState(row: CommandRow, context: RowContext): CommandRowState {
       cancelTo: pages.tab,
     }
   }
+  if (records && change === 'adding') {
+    return { kind: 'recording', keys, cancelTo: pages.tab }
+  }
   if (records && change === 'conflict') {
     return {
       kind: 'conflict',
@@ -89,15 +100,29 @@ function rowState(row: CommandRow, context: RowContext): CommandRowState {
       replaceTo: pages.changes,
     }
   }
+  const held =
+    change === 'reset-conflict' && row.id === resetCommand
+      ? heldDefault(row.id, changes, context.keyboard)
+      : undefined
+  if (held) {
+    return {
+      kind: 'reset-conflict',
+      keys: defaultShortcuts(row.id, context.keyboard),
+      shortcut: held.shortcut,
+      owner: commandLabel(held.owner),
+      cancelTo: pages.changes ?? pages.tab,
+    }
+  }
   const unsaved = change === 'not-saved' && row.id === unsavedChange.command
   const unchanged = Object.keys(changes).length === 0
+  const linked = records && unchanged && change === 'none'
   return {
     kind: 'shortcuts',
     keys,
     changed: changes[row.id] !== undefined,
     unsaved: unsaved ? unsavedChange.shortcut : undefined,
-    recordTo:
-      records && unchanged && change === 'none' ? pages.recording : undefined,
+    recordTo: linked ? pages.recording : undefined,
+    addTo: linked ? pages.adding : undefined,
   }
 }
 
@@ -123,10 +148,12 @@ function allFixed(group: ShortcutGroup): boolean {
  * words hold each word of the query, as the palette finds its rows, and a
  * group without such a row hides. A press on a shortcut, on +, or on Add
  * shortcut records the next keys, and each change saves at once, as
- * Preferences does. A changed row shows Reset. Reset all asks first, then
- * returns every shortcut of this keyboard to its defaults. A group of fixed
- * shortcuts says so once, under its title. In a normal browser tab, a key
- * that the browser keeps is dimmed, and a line says where it works.
+ * Preferences does. A changed row shows Reset, which asks first when
+ * another command holds a default shortcut of the row. Reset all asks
+ * first, then returns every shortcut of this keyboard to its defaults. A
+ * group of fixed shortcuts says so once, under its title. In a normal
+ * browser tab, a key that the browser keeps is dimmed, and a line says
+ * where it works.
  */
 export function ShortcutsTab(props: {
   host: ShortcutHost
@@ -157,6 +184,7 @@ export function ShortcutsTab(props: {
       <ShortcutIntro
         changed={changed}
         host={host}
+        resetAllFailed={props.change === 'reset-all-failed'}
         resetAllTo={pages.resetAll}
       />
       {shown.length === 0 ? (

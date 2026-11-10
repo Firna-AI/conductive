@@ -1,20 +1,31 @@
-import type { ReactElement, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Plus } from 'lucide-react'
 import type { BrowserTab } from '../../fixtures/shortcutHosts'
 import { shortcutLimit } from '../../fixtures/shortcuts'
 import { ActionButton, IconButton } from '../common/actions'
-import { KeyChips, spokenShortcut, type Shortcut } from '../common/KeyChips'
-import { ScreenLink } from '../common/ScreenLink'
-import { KeyButton, Recorder, RowLayout, RowMessage } from './ShortcutParts'
+import { KeyChips, type Shortcut } from '../common/KeyChips'
+import {
+  CancelButton,
+  ConflictActions,
+  ConflictLine,
+  KeyButton,
+  Linked,
+  Recorder,
+  RemoveButton,
+  RowLayout,
+  RowMessage,
+} from './ShortcutParts'
 import styles from './ShortcutsSections.module.css'
 
 /**
  * The state of the row of a command. A row shows its shortcuts, with Reset
  * after a change, and with the shortcut that a failed save did not keep.
  * While the row records, the recorder takes the place of the pressed
- * shortcut. It names a fixed shortcut that it did not take, or the command
- * that already has the recorded shortcut. A link is missing where the
- * catalogue draws no page for it.
+ * shortcut, and Remove can take that shortcut off. The recorder names a
+ * fixed shortcut that it did not take, or the command that already has the
+ * recorded shortcut. After Reset, the row names the command that holds a
+ * default shortcut of the row. A link is missing where the catalogue draws
+ * no page for it.
  */
 export type CommandRowState =
   | {
@@ -25,10 +36,13 @@ export type CommandRowState =
       unsaved?: Shortcut
       /** The page that a press on the first shortcut opens. */
       recordTo?: string
+      /** The page that a press on + opens. */
+      addTo?: string
     }
   | {
       kind: 'recording'
       keys: readonly Shortcut[]
+      /** The pressed shortcut, which Remove takes off. None after Add. */
       replaces?: Shortcut
       /** The last fixed shortcut that the recorder did not take. */
       refused?: { shortcut: Shortcut; label: string }
@@ -38,6 +52,16 @@ export type CommandRowState =
       kind: 'conflict'
       keys: readonly Shortcut[]
       replaces?: Shortcut
+      shortcut: Shortcut
+      owner: string
+      cancelTo: string
+      replaceTo?: string
+    }
+  | {
+      kind: 'reset-conflict'
+      /** The default shortcuts that Reset gives the command. */
+      keys: readonly Shortcut[]
+      /** The default shortcut that another command holds now. */
       shortcut: Shortcut
       owner: string
       cancelTo: string
@@ -101,13 +125,26 @@ function recordingKeys(
   return state.replaces === undefined ? [...others, recorder] : others
 }
 
-/** A button that opens a page of the catalogue, or a button alone. */
-function Linked(props: { to?: string; children: ReactElement }) {
-  if (!props.to) return props.children
-  return (
-    <ScreenLink asChild to={props.to}>
-      {props.children}
-    </ScreenLink>
+/**
+ * The default shortcuts that Reset would give a row. The shortcut that
+ * another command holds waits in the field of the recorder, as a recorded
+ * shortcut does. The others show without a control until the answer.
+ */
+function resetKeys(
+  state: { keys: readonly Shortcut[]; shortcut: Shortcut },
+  tab?: BrowserTab,
+): ReactNode[] {
+  return state.keys.map((shortcut) =>
+    shortcut === state.shortcut ? (
+      <Recorder key={shortcut} shortcut={shortcut} />
+    ) : (
+      <span className={styles.still} key={shortcut}>
+        <KeyChips
+          dimmed={keeper(shortcut, tab) !== undefined}
+          shortcut={shortcut}
+        />
+      </span>
+    ),
   )
 }
 
@@ -122,16 +159,18 @@ export function CommandShortcuts(props: {
   tab?: BrowserTab
 }) {
   const { label, state, tab } = props
-  const cancel = (to: string) => (
-    <ScreenLink asChild to={to}>
-      <ActionButton tone="plain">Cancel</ActionButton>
-    </ScreenLink>
-  )
   switch (state.kind) {
     case 'recording':
       return (
         <RowLayout
-          end={cancel(state.cancelTo)}
+          end={
+            <>
+              {state.replaces ? (
+                <RemoveButton label={label} shortcut={state.replaces} />
+              ) : null}
+              <CancelButton to={state.cancelTo} />
+            </>
+          }
           keys={recordingKeys(label, state, tab)}
           label={label}
           message={
@@ -147,25 +186,19 @@ export function CommandShortcuts(props: {
     case 'conflict':
       return (
         <RowLayout
-          end={
-            <>
-              <Linked to={state.replaceTo}>
-                <ActionButton
-                  accessibilityLabel={`Replace: move ${spokenShortcut(state.shortcut)} from ${state.owner} to ${label}`}
-                >
-                  Replace
-                </ActionButton>
-              </Linked>
-              {cancel(state.cancelTo)}
-            </>
-          }
+          end={<ConflictActions held={state} label={label} />}
           keys={recordingKeys(label, state, tab, state.shortcut)}
           label={label}
-          message={
-            <RowMessage tone="warning">
-              {state.owner} uses <KeyChips shortcut={state.shortcut} />.
-            </RowMessage>
-          }
+          message={<ConflictLine held={state} />}
+        />
+      )
+    case 'reset-conflict':
+      return (
+        <RowLayout
+          end={<ConflictActions held={state} label={label} />}
+          keys={resetKeys(state, tab)}
+          label={label}
+          message={<ConflictLine held={state} />}
         />
       )
     case 'shortcuts':
@@ -185,7 +218,9 @@ function ShortcutsLine(props: {
     <RowLayout
       end={
         count > 0 && count < shortcutLimit ? (
-          <IconButton icon={Plus} label={`Add shortcut for ${label}`} quiet />
+          <Linked to={state.addTo}>
+            <IconButton icon={Plus} label={`Add shortcut for ${label}`} quiet />
+          </Linked>
         ) : undefined
       }
       keys={

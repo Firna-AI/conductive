@@ -111,7 +111,7 @@ app.
 
 - When a recorded key belongs to another command that can run in the same
   place, the row names that command, as in "Model picker uses ⌘/.". The row
-  then offers Replace and Cancel.
+  then offers only Replace and Cancel.
 - Replace moves the key to this command, and takes it from the other
   command, in one save.
 - Cancel keeps the keys of both commands.

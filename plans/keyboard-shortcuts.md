@@ -846,6 +846,10 @@ Agent calls, 2026-11-08 and 2026-11-09:
   - When another command holds a default key, Reset shows the conflict
     line of that key with Replace and Cancel. Reason: Reset then follows
     the conflict rule of a recorded key.
+  - While a row names the command that holds a key, it offers only
+    Replace and Cancel, and no Remove. Reason: the conflict then asks one
+    question, and Remove beside the conflict line could read as taking the
+    key from the other command.
   - Each save error names what failed: "Model picker wasn't reset. Try
     again.", "⌘/ wasn't removed. Try again.", and "The shortcuts weren't
     reset. Try again." under Reset all. Reason: the copy rules ask an
@@ -929,8 +933,9 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
       without a match, in the Mac app, in a browser, and on a phone.
 - [x] Draw the line of the tab that says which keys the terminal keeps,
       from the user requirement of 2026-11-10.
-- [ ] Draw Remove in the recorder and the conflict line of a Reset, from
+- [x] Draw Remove in the recorder and the conflict line of a Reset, from
       the agent calls of Milestone 2, in the Mac app and in a browser.
+      Evidence: `.context/keyboard-shortcuts/shots/round3/`.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark.
   - [x] The Mac app pages: `mac-app/shortcuts`, its child pages, and

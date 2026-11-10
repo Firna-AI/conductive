@@ -79,6 +79,11 @@ const commandSpecs = shortcutSpecs
   .flatMap((group) => group.rows)
   .filter((spec): spec is CommandSpec => spec.kind === 'command')
 
+/** Each command that a person can change, in the order of the tab. */
+export const commandIds: readonly CommandId[] = commandSpecs.map(
+  (spec) => spec.id,
+)
+
 /** The default shortcuts of a command on a keyboard. */
 export function defaultShortcuts(
   id: CommandId,

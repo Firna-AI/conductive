@@ -296,13 +296,19 @@ account.
   - `app/account/shortcuts/search` has a search for "tab", with dimmed
     keys in its rows. Its `no-match` variant has a search without a
     match.
-  - `app/account/shortcuts/recording` has a row that records new keys.
-    Its `fixed-key` variant has ⌘Z, a text key that the recorder did not
-    take. Its `conflict` variant has a recorded shortcut of another
-    command, with Replace.
+  - `app/account/shortcuts/recording` has a row that records new keys,
+    with Remove beside Cancel. Its `adding` variant has the recorder of +,
+    which adds a shortcut and shows only Cancel. Its `fixed-key` variant
+    has ⌘Z, a text key that the recorder did not take. Its `conflict`
+    variant has a recorded shortcut of another command, with Replace and
+    Cancel.
   - `app/account/shortcuts/changes` has changed rows with Reset, and Reset
-    all. Its `reset-all` variant has the question before Reset all, a
-    sheet on a phone. Its `not-saved` variant has a save that failed.
+    all. Its `reset-conflict` variant has a search for "model" and the
+    Reset of Model picker, whose default shortcut Keyboard shortcuts now
+    holds, with Replace and Cancel. Its `reset-all` variant has the
+    question before Reset all, a sheet on a phone. Its `reset-all-failed`
+    variant has a Reset all that failed. Its `not-saved` variant has a
+    save that failed.
 
   The phone views of these pages put the shortcuts of each row on a line
   under its label.
@@ -316,13 +322,17 @@ account.
     of decision 193, those of a focused workspace row and of a focused
     divider, and the text keys that move by word or by line. Its
     `no-match` variant has a search without a match.
-  - `mac-app/shortcuts/recording` has a row that records new keys. Its
-    `fixed-key` variant has a fixed shortcut that the recorder did not
-    take. Its `conflict` variant has a recorded shortcut of another
-    command, with Replace.
+  - `mac-app/shortcuts/recording` has a row that records new keys, with
+    Remove beside Cancel. Its `adding` variant has the recorder of +, which
+    adds a shortcut and shows only Cancel. Its `fixed-key` variant has a
+    fixed shortcut that the recorder did not take. Its `conflict` variant
+    has a recorded shortcut of another command, with Replace and Cancel.
   - `mac-app/shortcuts/changes` has changed rows with Reset, and Reset
-    all. Its `reset-all` variant has the question before Reset all. Its
-    `not-saved` variant has a save that failed.
+    all. Its `reset-conflict` variant has a search for "model" and the
+    Reset of Model picker, whose default shortcut Keyboard shortcuts now
+    holds, with Replace and Cancel. Its `reset-all` variant has the
+    question before Reset all. Its `reset-all-failed` variant has a Reset
+    all that failed. Its `not-saved` variant has a save that failed.
 - `mac-app/command-palette` shows the All tab of the palette over a
   workspace in the Mac app, with the key of each command row. The Search
   row of each Mac app page opens it. Its `actions` and `settings` variants

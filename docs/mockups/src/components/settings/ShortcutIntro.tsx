@@ -10,6 +10,7 @@ import {
 import { ActionButton } from '../common/actions'
 import { KeyChips } from '../common/KeyChips'
 import { ScreenLink } from '../common/ScreenLink'
+import { RowMessage } from './ShortcutParts'
 import styles from './ShortcutsSections.module.css'
 
 /**
@@ -54,11 +55,14 @@ function keptKeysLine(keyboard: Keyboard, tab: BrowserTab): string {
 /**
  * The lines above the groups: how to change a shortcut, the keys that the
  * terminal keeps, and in a normal browser tab, where the dimmed keys work.
- * Reset all follows them after a change.
+ * Reset all follows them after a change. The error of a failed Reset all
+ * stands under them, across the width of the tab.
  */
 export function ShortcutIntro(props: {
   host: ShortcutHost
   changed: boolean
+  /** The save of Reset all failed, so the changes stay. */
+  resetAllFailed?: boolean
   /** The question before Reset all, when the catalogue draws it. */
   resetAllTo?: string
 }) {
@@ -84,6 +88,13 @@ export function ShortcutIntro(props: {
         </ScreenLink>
       ) : null}
       {props.changed && !props.resetAllTo ? resetAll : null}
+      {props.resetAllFailed ? (
+        <div className={styles.introError}>
+          <RowMessage tone="danger">
+            The shortcuts weren't reset. Try again.
+          </RowMessage>
+        </div>
+      ) : null}
     </div>
   )
 }

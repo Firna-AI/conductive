@@ -6,7 +6,7 @@ import {
   type Keyboard,
   type ShortcutHost,
 } from './shortcutHosts'
-import { defaultShortcuts } from './shortcuts'
+import { commandIds, defaultShortcuts } from './shortcuts'
 
 /**
  * The person's changes on one keyboard, which the account holds (decision
@@ -80,6 +80,33 @@ export const takenShortcut = {
   shortcut: '⌘/',
   owner: 'model-picker',
 } as const satisfies { shortcut: Shortcut; owner: CommandId }
+
+/**
+ * The command whose Reset the states of the tab draw: Model picker, whose
+ * default ⌘/ Replace gave to Keyboard shortcuts in the changes.
+ */
+export const resetCommand: CommandId = 'model-picker'
+
+/**
+ * The first default shortcut of a command that another command holds after
+ * the changes, with that command. Reset then names that command, and asks
+ * before it takes the shortcut.
+ */
+export function heldDefault(
+  id: CommandId,
+  changes: ShortcutChanges,
+  keyboard: Keyboard,
+): { shortcut: Shortcut; owner: CommandId } | undefined {
+  for (const shortcut of defaultShortcuts(id, keyboard)) {
+    const owner = commandIds.find(
+      (other) =>
+        other !== id &&
+        shortcutsOf(other, changes, keyboard).includes(shortcut),
+    )
+    if (owner) return { shortcut, owner }
+  }
+  return undefined
+}
 
 /** A change of the palette shortcut to ⇧⌘P that the app did not save. */
 export const unsavedChange = {

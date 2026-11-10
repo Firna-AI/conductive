@@ -175,11 +175,17 @@ sessions as tabs above the chat, and four tabs at the bottom.
   other text keys are fixed too. A narrow box, on a phone or in a narrow
   window, puts the label of a row on its first line, and the shortcuts and
   the control at the end on a second line. The recorder is a field with a
-  full outline in the accent colour. A line under the row names a fixed
-  shortcut that the recorder did not take, the command that has the
-  recorded shortcut, or a failed save. A changed row shows Reset. Reset
-  all asks first with `ConfirmDialog`, because nothing brings the changes
-  back.
+  full outline in the accent colour. While it replaces a shortcut, Remove
+  stands beside Cancel. A recorder that adds a shortcut shows only
+  Cancel. A line under the row names a fixed shortcut that the recorder
+  did not take, the command that has the recorded shortcut, or a failed
+  save. A row that names the command of a recorded shortcut shows only
+  Replace and Cancel. A changed row shows Reset. When another command
+  holds a default shortcut of the row, Reset shows that shortcut in the
+  field of the recorder, the line that names the command, and Replace and
+  Cancel. Reset all asks first with `ConfirmDialog`, because nothing
+  brings the changes back. The error of a failed Reset all stands under
+  the lines and Reset all, across the width of the tab.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
 - Each workspace has a number in its org, and `workspaceLabel` in

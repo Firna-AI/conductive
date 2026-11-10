@@ -1,16 +1,22 @@
 /*
  * The lines above the groups: how to change a shortcut, the keys that the
  * terminal keeps, and in a browser tab, where the dimmed keys work. Reset
- * all stands beside them. The lines keep their height in the scrolling
- * body of a phone.
+ * all stands beside them, and the error of a failed Reset all wraps under
+ * them. The lines keep their height in the scrolling body of a phone.
  */
 .intro {
   display: flex;
+  flex-wrap: wrap;
   flex-shrink: 0;
   align-items: center;
-  gap: 12px;
+  gap: 4px 12px;
   min-height: var(--ui-control-height);
   padding: 0 2px;
+}
+
+/* The error of a failed Reset all takes a line of its own. */
+.introError {
+  flex-basis: 100%;
 }
 
 .introText {
