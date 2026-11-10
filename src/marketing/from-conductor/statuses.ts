@@ -48,7 +48,8 @@ export const parityStatuses = {
   },
   'not-planned': {
     label: 'Not planned',
-    meaning: 'Left out by design. The note says what to do instead.',
+    meaning:
+      'Left out by an explicit product decision. The note says what to do instead.',
     icon: 'circle-minus',
     tone: 'danger',
   },
