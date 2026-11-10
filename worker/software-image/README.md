@@ -5,6 +5,8 @@ version. The image holds the provider's base image and the app software.
 It holds no repository, org data, or credential.
 Its build receives no app environment variable.
 The [org lifecycle](../lifecycle/README.md) owns org builds and their pins.
+Each org build starts from the ready image of its version, or from the
+provider's base image without one.
 
 ## Responsibilities
 
@@ -57,7 +59,7 @@ The tests use local D1 and the lifecycle fake provider.
 
 ### Related Docs
 
-- [Org image](../../docs/protocol/org-image.md): requirements for first builds and shared software.
+- [Org image](../../docs/protocol/org-image.md): requirements for org builds and shared software.
 - [Automatic deploys](../../docs/automatic-deploys.md): the deploy run and its result.
 - [Sandbox software](../../image/README.md): the installed software.
 - [Migrations](../../migrations/README.md): the records and org-job pin.

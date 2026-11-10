@@ -3,7 +3,7 @@
 This doc holds the requirements and the decisions in force for the org
 image that every sandbox of an org starts from. It covers the builds and
 the refreshes of the org image, the first build of a new org, the
-software image that a first build starts from, and the builds and the
+software image that each build starts from, and the builds and the
 notices of a change of the repositories. It
 belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md). The
 terms are those of the [architecture doc](../architecture.md#terms). A
@@ -26,8 +26,9 @@ decision number names a dated record, as
 - Bash runs the install script.
 - The Cloud computer tab lists the operating system and software that the
   base image includes before the install script runs.
-- "Build computer" starts a build. A build runs the install script on a
-  copy of the image, with every chosen repository cloned (decision 12).
+- "Build computer" starts a build. A build runs the install script with
+  every chosen repository cloned (decision 12). Each build starts on a
+  clean computer, as [The software image](#the-software-image) says.
 - An add of a repository also starts a build, as
   [Added repositories](#added-repositories) says (decision 240).
 - The app also starts some builds by itself, as
@@ -84,10 +85,9 @@ decision number names a dated record, as
 - The first build is a normal build. The person who creates the org, its
   first admin, is the starter of that build. Its log and its result show
   on the Cloud computer tab, as for every build.
-- A build of an org without an org image starts from the software image.
-  It copies the repositories and runs the install script, with no install
-  of the app's own software, as [The software image](#the-software-image)
-  says.
+- Like each build, a build of an org without an org image starts on a clean
+  computer. It copies the repositories and runs the install script, as
+  [The software image](#the-software-image) says.
 - When the first build cannot start, Create org still creates the org. An
   admin can then start a build on the Cloud computer tab, with Build
   computer or Try again. Reason: the org is valid without a build.
@@ -131,17 +131,24 @@ decision number names a dated record, as
 - It holds no org data and no secret, because every org uses it.
 - One software image belongs to each version of the app's own software. A
   change of any install step of that software makes a new version.
-- A build of an org without an org image starts from the ready software
-  image of the current version. It copies the repositories, then runs the
-  install script. A later build and a refresh start from the last org
-  image.
-- Reason: the first build of a new org then waits for no install of the
-  app's own software. A skip of the parts that each org image already
-  holds was rejected, because it does not make a first build faster.
-- Without a ready software image of the current version, such a build
-  starts from the base image. It copies the repositories, installs the
-  app's own software, then runs the install script. A missing software
-  image slows a build and never fails it.
+- Each build starts from the ready software image of the current version.
+  It copies every chosen repository fresh, then runs the install script.
+  It does not install the app's own software. A refresh starts from
+  the last org image.
+- Reason: a build from the software image waits for no app software install.
+  The install script always runs on a clean machine. No output of an
+  earlier org install script stays.
+- A skip of the parts that each org image already holds was rejected,
+  because it does not make a first build faster.
+- Later builds on the last org image were rejected, also in these forms:
+  - with a check that skips the software step when the image holds the
+    current software
+  - with an install script that must be safe to run more than once
+  - with a variable for the kind of build, or with a "Clean build" choice
+- Without a ready software image of the current version, a build starts
+  from the base image. It copies the repositories, installs the app's own
+  software, then runs the install script. A missing software image slows a
+  build and never fails it.
 - Each deploy run asks the Worker to build the software image of the
   deployed version, and waits for the result. A deploy run whose version
   has a ready software image waits for nothing.

@@ -144,7 +144,8 @@ export function buildSandboxIntent(
     },
     input: {
       snapshotName:
-        (job.previousProviderAccount === job.providerAccount
+        (job.kind === 'refresh' &&
+        job.previousProviderAccount === job.providerAccount
           ? job.previousImageName
           : null) ??
         job.softwareImageName ??

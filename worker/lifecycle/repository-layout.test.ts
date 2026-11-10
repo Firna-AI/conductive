@@ -137,10 +137,11 @@ it('runs the sample install script in named image repositories and keeps install
       software: SOFTWARE,
     })
     await finishImageBuild(fixture, refresh)
-    expect(
-      (await readBuildJob(runtime.env.DB, org.id, refresh))
-        .repositoryLocationsJson,
-    ).toBe(job.repositoryLocationsJson)
+    const refreshed = await readBuildJob(runtime.env.DB, org.id, refresh)
+    expect(refreshed.repositoryLocationsJson).toBe(job.repositoryLocationsJson)
+    expect(refreshed.previousRepositoryLocationsJson).toBe(
+      job.repositoryLocationsJson,
+    )
     expect(prepared).toEqual([
       [
         '/home/user/code/billing-service',

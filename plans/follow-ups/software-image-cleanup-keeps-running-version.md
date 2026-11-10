@@ -4,19 +4,19 @@
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-10, from branch `calummoore/global-snapshot-simplification`, review finding 14 of round 1 and its check.
 - **Location:** `worker/software-image/cleanup.ts:84`, `worker/software-image/build.ts:47`.
-- **Reason:** the case needs a deploy that goes back to an older software version while a first build still pins its image, and first builds keep the full-install fallback.
+- **Reason:** the case needs a deploy back to an older software version while a build still pins its image, and builds keep the full-install fallback.
 
 - **Terms:**
   - **Software image:** one saved snapshot for each version of the app's own software: the base image with the agent runner, its private Node, the terminal service, the agent tools, the git credential helper, and the GitHub CLI. Each deploy run asks the Worker to build the image of the deployed version through `POST /v1/deploy/software-image`.
   - **App software version:** the SHA-256 digest of the exact commands that install that software. The Worker computes it with `softwareVersion` in `worker/software-image/version.ts`.
-  - **Pin:** the column `image_build_jobs.software_image_name`. A build of an org without an org image records the ready software image that it starts from. The image cannot be deleted while a build job that pins it is not `done`.
+  - **Pin:** the column `image_build_jobs.software_image_name`. Each build records its matching ready software image when one exists. The image cannot be deleted while a build job that pins it is not `done`.
 - **Background:**
   - `cleanupOldSoftwareImages` in `worker/software-image/cleanup.ts` keeps the ready image with the latest build start, and deletes each other ready image that no unfinished build pins. The deploy route runs it after each ready answer, and the 15-minute Cron Trigger runs it again.
   - `advanceSoftwareImage` in `worker/software-image/build.ts` answers with the row that it read before the cleanup when D1 no longer holds that row.
   - `docs/protocol/org-image.md`, section "The software image", requires that the deploy run fails unless the software image of its version is ready (decision 5 F of 10 November 2026).
-- **Problem:** Version A has a ready image that a running first build pins. A deploy of version B builds image B. Cleanup keeps A while the pin holds. A later deploy goes back to version A, and its request finds the ready row A. The cleanup in the same request, or a later Cron run, deletes A once the pin ends, because B started later. The route can then answer `ready` from the deleted row, and a later first build finds no image of the running version.
-- **Impact if no action:** A deploy can pass without a software image of its version. First builds then do the full install of the app's own software until the next deploy run that changes the version.
-- **Root question:** How does a successful deploy keep its software image available for first builds?
+- **Problem:** Version A has a ready image that a running build pins. A deploy of version B builds image B. Cleanup keeps A while the pin holds. A later deploy goes back to version A, and its request finds the ready row A. The cleanup in the same request, or a later Cron run, deletes A once the pin ends, because B started later. The route can then answer `ready` from the deleted row, and a later build finds no image of the running version.
+- **Impact if no action:** A deploy can pass without a software image of its version. Each build, first or later, then does the full install of the app's own software until the next deploy run that changes the version.
+- **Root question:** How does a successful deploy keep its software image available for builds?
 - **Options:**
   - **A.** If cleanup removes the requested image, create a fresh attempt and wait for it. Make the route answer from the row that D1 holds, and add the regression test. This repeats an avoidable install. Effort: Small.
   - **B.** Make both cleanup paths keep the image of the running Worker's software version before they look at image age. The Worker computes that version from `runnerSoftware(env)`. When the Worker has no runner software, keep the current rule. Add the regression test. Effort: Small.
