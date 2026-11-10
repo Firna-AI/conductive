@@ -1,0 +1,37 @@
+# Keyboard users cannot leave the terminal
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, from the options check of the plan `plans/terminal-tabs.md`, branch `calummoore/multiple-terminal-windows`.
+- **Location:** `src/app/palette/palette-keys.ts:49`, `src/terminal/TerminalScreen.tsx`, `docs/protocol/command-palette.md:47`.
+- **Reason:** The problem is older than the terminal tabs change, and each option that removes it changes a decision that the user made.
+
+- **Source:** Design.
+- **Category:** Product bug.
+- **Terms:**
+  - **Terminal:** the Terminal tool of a workspace, which shows a shell of the cloud computer. It draws the shell with xterm.js.
+  - **xterm.js:** the library that draws the terminal in the page. The app uses `@xterm/xterm` version 6.
+  - **Palette key:** ⌘K on a Mac, and Ctrl+K on Windows and Linux. It opens the command palette, as `docs/protocol/command-palette.md` says.
+- **Background:**
+  - xterm.js turns Tab into a tab character for the shell, and it stops the browser's own action for the key. So Tab never moves the focus out of the terminal. Its source shows this in `src/common/input/Keyboard.ts`, in the case for key code 9.
+  - The app gives xterm.js no key handler of its own. A search of `src/` for `attachCustomKeyEventHandler` finds nothing.
+  - On Windows and Linux, the palette key in the terminal goes to the shell, as `src/app/palette/palette-keys.ts:49` does. The palette protocol requires this, because shells use Ctrl+K to delete to the end of the line.
+  - On a Mac, ⌘K opens the palette also from the terminal, so a Mac user can leave through the palette. The Mac app runs only on macOS.
+  - Only the palette has a key. The user chose this for the first version on 8 November 2026, and plans more keys in another workspace.
+  - Success criterion 2.1.2 of WCAG 2.1, No Keyboard Trap, asks that keyboard users can move the focus away from each part of a page.
+- **Problem:** In a browser on Windows or Linux, a keyboard user whose focus is in the terminal cannot reach any other control of the page. The browser's own keys, such as F6, move the focus to the browser's toolbar. Tab then enters the page again from its start.
+- **Impact if no action:** Keyboard users on Windows and Linux leave the page to reach the controls beside the terminal. The terminal tabs change adds a + button beside each terminal, which these users cannot reach from the terminal either.
+- **Root question:** How does a keyboard user move the focus from the terminal to the rest of the page?
+- **Options:**
+  - **A.** Tell users the browser's way out in the guide `src/marketing/docs/terminal-and-previews.md`. The way out leaves the page, and Tab then starts again at the top of the page. Effort: Small.
+  - **B.** Let Ctrl+K open the palette from the terminal also on Windows and Linux. It changes the requirement in force, and shells lose Ctrl+K, which deletes to the end of the line. Effort: Small.
+  - **C.** Add one key, on every platform, that moves the focus from the terminal to the controls beside it, such as its tab row. The key must not clash with shells, tmux, or browsers. It changes the user's choice that only the palette has a key. Effort: Medium.
+  - **D.** Add a mode in which Tab moves the focus and does not reach the shell, as Ctrl+M does in VS Code. A key turns the mode on and off. It changes the user's choice that only the palette has a key, and the user must know the mode. Effort: Medium.
+- **Left out:**
+  - Escape as the way out, because shells and programs such as Vim need Escape.
+  - Shift+Tab as the way out, because shells and programs read it as a key of their own.
+  - A button on the page that moves the focus, because a user in the terminal cannot reach it.
+- **Wider fix:** C. One key that leaves every terminal covers each control beside it, also controls that later changes add.
+- **Previous examples:** None found.
+- **Recommendation:** C. It keeps Ctrl+K for the shell and needs no mode, and it reaches every control beside the terminal.
+- **Action:** ask the user, because the recommended option changes the user's choice of 8 November 2026 that only the palette has a key, and no user decision covers that change.
