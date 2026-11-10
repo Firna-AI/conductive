@@ -32,6 +32,10 @@ says.
   - with the first message of a new workspace
   - with a message that starts a new session, as
     [Messages](messages-and-attachments.md#messages) says
+  - with an import from Conductor: the importer starts each imported
+    session, and the member who activates starts the new session of the
+    activation, as [The activation](imported-workspaces.md#the-activation)
+    says
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
 - While the starter shares the login, the messages of the other members

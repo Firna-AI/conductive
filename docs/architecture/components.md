@@ -30,6 +30,11 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 ## Mac app
 
 - An Electron shell for macOS, as [Mac app](../protocol/desktop-app.md) says.
+- It is the one client that imports from Conductor. After the person
+  allows it, it reads the local data of Conductor and runs Git on the Mac.
+  It sends the list to the Worker over its device connection, and it
+  uploads the work of each import straight to the attachment storage, as
+  [Import on the Mac](../protocol/desktop-import.md) says.
 - Its packages and updates come from the GitHub releases of the public source repository, as
   [Packages and updates](../protocol/desktop-packages-and-updates.md) says.
 
@@ -54,7 +59,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - D1 holds the records of the app: users, orgs, members, sections,
   repositories, workspaces, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
-  the sign-up pause, and the state of approval emails.
+  the sign-up pause, the state of approval emails, and the reservations of
+  imports.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -78,14 +84,23 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   files of every org, so the Worker's own records keep the orgs apart, as
   [Access and security](../protocol/isolation.md#orgs-and-workspaces)
   says.
-- Only the Worker reads and writes the bucket. The browser sends each file
-  as raw bytes in one request, and the Worker streams it into the bucket
-  (decision 144).
+- Only the Worker reads the bucket, and only the Worker writes attached
+  files. The browser sends each file as raw bytes in one request, and the
+  Worker streams it into the bucket (decision 144).
 - Before the agent runner gets a message, the Worker copies the files of
   the message into the sandbox, through an upload address that Boat gives
   for each file.
 - [Chat and events](../protocol/messages-and-attachments.md#attachments) states how
   long a file stays.
+- The same bucket holds the stored work and the old documents of each
+  import from Conductor, under a prefix for each reservation and each
+  workspace.
+- The Mac app writes the parts of an import with short-lived upload links
+  from the Worker, and the Worker checks each part.
+  [Import uploads](../protocol/access-and-security.md#import-uploads)
+  states these rules and how long the data stays.
+- At an activation, the Worker copies the stored work into the sandbox.
+  The sandbox gets no credential for the bucket.
 
 ## Boat
 

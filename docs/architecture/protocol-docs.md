@@ -8,6 +8,12 @@ them, and this page lists each protocol doc and what it covers.
   image and the life of a workspace.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
+  - [Continue a branch](../protocol/continue-a-branch.md): a new workspace on
+    a branch or an open pull request from GitHub, the pull requests from
+    forks, and two workspaces on one branch.
+  - [Imported workspaces](../protocol/imported-workspaces.md): a workspace
+    from an import of Conductor, its state Not active, its activation, and
+    Archive before its activation.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
     shell variable of each repository in a sandbox.
   - [Life of a workspace](../protocol/workspace-life.md)
@@ -15,13 +21,14 @@ them, and this page lists each protocol doc and what it covers.
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
-  the chat shows, and the events.
+  the chat shows, the sessions from Conductor, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, and the repair of lost workspace
-    updates.
+    its events and their limits, its turns, the work of an imported
+    workspace, and the repair of lost workspace updates.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
-  gates, the secrets, and the isolation of sandboxes and previews.
+  gates, the secrets, the isolation of sandboxes and previews, and the
+  uploads and the storage of an import.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
@@ -36,6 +43,12 @@ them, and this page lists each protocol doc and what it covers.
   - [Mac packages and updates](../protocol/desktop-packages-and-updates.md)
   - [Mac app sign-in](../protocol/desktop-sign-in.md)
   - [Permissions and Mac commands](../protocol/desktop-commands.md)
+  - [Import on the Mac](../protocol/desktop-import.md): the entry points, the
+    consent, the scan, the device operations, and the uploads of the import
+    from Conductor.
+- [Import from Conductor](../protocol/conductor-import.md): what the Mac app
+  imports from local Conductor workspaces, the list, the stored work, the
+  reservations, and the stopped uploads.
 - [Operator actions](../protocol/operator-actions.md): the operator, the
   suspension of a user or an org, the lift of a suspension, and abuse
   reports.
@@ -43,6 +56,9 @@ them, and this page lists each protocol doc and what it covers.
   operator in the web app, their counts, and their searches.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
+- [Command palette: actions and settings](../protocol/command-palette-actions.md):
+  the actions of the palette, their order and their groups, and its
+  settings rows.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
   what the palette shows while its workspace data loads or did not load,
   and when a tab or a search has no row.

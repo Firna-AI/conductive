@@ -78,8 +78,8 @@ decision number names a dated record, as
   guesses. A mask of every value was rejected, because it also hides
   short, common values, such as `1`, in ordinary text.
 - Risk: the app hides only exact copies of a value. A changed or encoded
-  value still shows. File content, diff content, and the terminal hide no
-  value.
+  value still shows. File content, diff content, the old documents of an
+  import from Conductor, and the terminal hide no value.
   The mark does not keep a value from the agent or from a member with a
   terminal, because each sandbox gets every env var.
 - Risk: the runner does not hide secret values. So its saved events on the

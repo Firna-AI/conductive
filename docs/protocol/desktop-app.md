@@ -19,6 +19,8 @@ These docs belong to this doc:
   and the desktop origin at the Worker.
 - [Permissions and Mac commands](desktop-commands.md): the permissions of
   the page, and the side of the Mac app in Mac commands.
+- [Import on the Mac](desktop-import.md): the side of the Mac app in the
+  import from Conductor.
 
 ## Scope
 
@@ -31,6 +33,10 @@ These docs belong to this doc:
 - The Mac app has no product screens of its own. It shows the screens of
   the web app, and adds the controls of [The window](#the-window) and of
   [Mac commands](desktop-commands.md#mac-commands).
+- Only the Mac app imports local Conductor workspaces (import decision 9).
+  It adds the offer bar and the consent alert of
+  [Import on the Mac](desktop-import.md). The import screens of the web app
+  show only in the Mac app.
 - Agents never run on the Mac. Each agent runs in the sandbox of its
   workspace, as it does for the web app in a browser.
 - An agent can ask to run a command on the Mac. The command runs only with
@@ -146,6 +152,11 @@ These docs belong to this doc:
 ## Mac commands
 
 [Mac commands](desktop-commands.md#mac-commands) holds these requirements.
+
+## Import from Conductor
+
+[Import on the Mac](desktop-import.md) holds the entry points, the
+consent, the scan, the device operations, and the uploads.
 
 ## Packages and updates
 

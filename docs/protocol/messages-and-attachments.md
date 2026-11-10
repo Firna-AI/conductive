@@ -69,8 +69,11 @@ says.
   says. The app accepts that message before the sandbox is ready
   (decision 14).
 - The app also accepts a later message while the sandbox is not ready
-  (decisions 14 and 130). Examples are the first start, a resume, and the
-  error state of a failed first start.
+  (decisions 14 and 130). Examples are the first start, an activation, a
+  resume, and the error state of a failed first start.
+- An imported workspace accepts no message before its activation starts,
+  as [Before the activation](imported-workspaces.md#before-the-activation)
+  says.
 - The workspace keeps such a message, and gives it to the agent when the
   sandbox is ready. The agent of each session gets these messages in the
   order that the workspace accepted them (decision 130).

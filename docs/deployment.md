@@ -12,6 +12,9 @@ Each input names the routes that read it. A route that does not read an
 input works without it. Keep secrets out of the repository and out of
 examples.
 
+[The attachment bucket](deployment/attachment-bucket.md) and
+[Models](deployment/models.md) give two groups of these inputs in full.
+
 ## How to set the inputs
 
 - Declare the bindings in `wrangler.jsonc`. It already holds `DB`,
@@ -46,8 +49,8 @@ examples.
 | `DB` | D1 database | Every route that reads users, orgs, or workspaces | The production database. Apply the migrations with `npx wrangler d1 migrations apply DB --remote`. |
 | `ASSETS` | Static assets | The pages of the web app | The client build of `npm run build`. |
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
-| `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion | The bucket `conductive-chat-attachments`, as [The attachment bucket](#the-attachment-bucket) says. |
-| `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](#the-title-model) says. |
+| `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion. The import from Conductor uses it too, as [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says. | The bucket `conductive-chat-attachments`, as [The attachment bucket](deployment/attachment-bucket.md#the-attachment-bucket) says. |
+| `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](deployment/models.md#the-title-model) says. |
 
 ## Public variables
 
@@ -60,12 +63,13 @@ examples.
 | `GITHUB_CLIENT_ID` | GitHub sign-in, each refresh of a stored GitHub user token, the GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds that copy a repository | The client ID of the GitHub App. |
 | `GITHUB_APP_SLUG` | The links to the GitHub App: Install in Get started, Manage on GitHub in the account, and Manage access of the repository lists | Optional. The slug of the GitHub App, as in `https://github.com/apps/<slug>`. Without it, or with a value that is not a slug, the links use `conductive`, and the Worker logs a warning for a wrong value. It is not a secret. |
 | `BOAT_ORG_ID` | Each call to Boat | The ID of the app's Boat organization, as [The app's Boat account](#the-apps-boat-account) says. It is not a secret. |
-| `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](#models) says. |
-| `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](#models) says. |
-| `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
+| `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](deployment/models.md#models) says. |
+| `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](deployment/models.md#models) says. |
+| `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
+| `CHAT_ATTACHMENTS_S3_BUCKET_URL` | The upload links of an import from Conductor | The S3 API address of the bucket of `CHAT_ATTACHMENTS`, in path style: `https://<account ID>.r2.cloudflarestorage.com/conductive-chat-attachments`. It is not a secret. [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says more. |
 | `OPERATOR_GITHUB_IDS` | The operator section and the suspension of users and orgs | Optional. The numeric GitHub user IDs of the operators, separated by commas. It is not a secret. Without it, each operator request gets `403 operator_required`, as the [operator area](../worker/operator/README.md#overview) says. |
 
 - Without `MACHINE_ORIGIN`, the Worker refuses each request on the machine
@@ -86,6 +90,8 @@ examples.
 | `BOAT_KEY_ENCRYPTION_KEY` | Every route that stores or reads a stored secret | A separate 32 random bytes, encoded as Base64. |
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. A PKCS#8 PEM works too. |
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhooks on the machine hostname | The webhook secret of the GitHub App. The Worker checks each delivery with it. Without it, each delivery gets `503 github_unavailable`. |
+| `CHAT_ATTACHMENTS_ACCESS_KEY_ID` | The upload links of an import from Conductor | The Access Key ID of an R2 API token for the bucket of `CHAT_ATTACHMENTS` only, as [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says. |
+| `CHAT_ATTACHMENTS_SECRET_ACCESS_KEY` | The upload links of an import from Conductor | The Secret Access Key of the same token. |
 | `RESEND_API_KEY` | The invitation emails of the member routes, and the approval emails of the operator section | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. The approval emails come from the same sender. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. An approval still gives app access, and the app tries its email again for 24 hours, as [The approval email](protocol/waitlist.md#the-approval-email) says. |
 
 - `BOAT_KEY_ENCRYPTION_KEY` encrypts the agent logins, the GitHub user
@@ -96,31 +102,10 @@ examples.
 
 ## The attachment bucket
 
-`CHAT_ATTACHMENTS` holds the files that users attach to chat messages, as
-[Attachments](protocol/messages-and-attachments.md#attachments) says. One bucket
-serves every org.
-
-- Create the private bucket once, before the first deploy that declares
-  the binding:
-  `npx wrangler r2 bucket create conductive-chat-attachments --location weur`.
-  The primary orchestrator does this at the next deployment.
-- The location hint puts the bucket in Western Europe, near the production
-  database and the workspace objects. A bucket keeps the location of its
-  first creation.
-- Without the bucket, `wrangler deploy` creates it with no location hint.
-  So create it first.
-- Keep public access off. Add no custom domain, no `r2.dev` address, and
-  no CORS rule. Only the Worker reads and writes the bucket, as
-  [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
-  says.
-- Add no lifecycle rule that deletes files by age. Such a rule would also
-  delete the files of sent messages, which stay until the app deletes their
-  workspace.
-- The copy of each file into a sandbox also needs the `file.write` action
-  on the Boat key, as [The app's Boat account](#the-apps-boat-account)
-  says.
-- Local development and the Worker tests use local R2 storage. They need no
-  Cloudflare account and no bucket.
+[The attachment bucket](deployment/attachment-bucket.md#the-attachment-bucket)
+gives the setup of `CHAT_ATTACHMENTS`.
+[Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import)
+gives the inputs of the upload links of an import from Conductor.
 
 ## The GitHub App
 
@@ -145,76 +130,13 @@ above.
 
 ## Models
 
-`CONDUCTIVE_MODELS` holds the models that the app offers.
-The `vars` of [`wrangler.jsonc`](../wrangler.jsonc) hold this list and
-`CONDUCTIVE_DEFAULT_CHOICE`, the app default. Edit them in the repository.
-Each deploy publishes these values through the existing deploy workflow.
-The Worker has no built-in list and no fallback model.
-
-Keep both settings as JSON encoded in strings, because the model readers
-expect text bindings. A `.dev.vars` value replaces its repository value
-for local development.
-
-- The value is a non-empty JSON array. Each entry is an object with these
-  fields:
-  - `agent`: `claude` or `codex`.
-  - `model`: the model ID that the agent gets, as a non-empty string.
-  - `label`: the name that the app shows, as a non-empty string.
-  - `efforts`: a non-empty array. Each effort is `none`, `low`, `medium`,
-    `high`, `xhigh`, or `max`.
-- `CONDUCTIVE_DEFAULT_CHOICE` is one JSON object with `agent`, `model`, and
-  `effort`. The saved default of a user comes before it.
-- These routes read the two variables:
-  - `GET /api/models` of the app reads `CONDUCTIVE_MODELS`. A missing or
-    invalid value gives `503 models_unavailable`.
-  - `GET /api/account` of the app reads `CONDUCTIVE_DEFAULT_CHOICE` for a
-    user with no saved default. A missing or invalid value then gives
-    `503 default_model_unavailable`.
-  - The tool create route `POST /v1/tools/workspaces` reads
-    `CONDUCTIVE_DEFAULT_CHOICE` when the call names no model or no effort
-    and the owner of the calling workspace has no saved default. A missing
-    or invalid value then gives `503 default_model_unavailable`.
-  - The tool model list `GET /v1/tools/models` reads both variables. A
-    missing or invalid `CONDUCTIVE_MODELS` gives `503 models_unavailable`.
-    When the owner of the calling workspace has no saved default, a
-    missing or invalid `CONDUCTIVE_DEFAULT_CHOICE` gives an empty default
-    choice, not an error.
-    [Agent tools](protocol/agent-tools.md#models) states the list.
-- No other route reads these two variables.
-- The web app reads `GET /api/models` and `GET /api/account` when it
-  starts. So it does not start without a valid model list. A user with no
-  saved default also needs a valid default choice.
-
-The shape of the two values, with placeholders in place of real values:
-
-```json
-[{ "agent": "claude", "model": "<model ID>", "label": "<label>", "efforts": ["low", "medium", "high"] }]
-```
-
-```json
-{ "agent": "claude", "model": "<model ID>", "effort": "medium" }
-```
+[Models](deployment/models.md#models) gives `CONDUCTIVE_MODELS` and
+`CONDUCTIVE_DEFAULT_CHOICE`, and the routes that read them.
 
 ## The title model
 
-`CONDUCTIVE_TITLE_MODEL` names the model that writes a title for a workspace
-that has no name, as [Messages](protocol/messages-and-attachments.md#messages)
-says. It is operator data. The Worker has no built-in title model.
-
-- The value is the model ID of a text generation model of Workers AI, the
-  model service of Cloudflare. The
-  [Workers AI models](https://developers.cloudflare.com/workers-ai/models/)
-  catalogue lists them. Choose a small, fast model.
-- The Worker calls the model through the `AI` binding, on the Cloudflare
-  account of the Worker. Each request counts toward the Workers AI use of
-  that account.
-- Without the binding or the variable, no automatic title is written.
-  The Worker logs a warning when it would request a title.
-  The Worker also logs a warning for a failed request.
-  No route fails for a missing title.
-- Workers AI runs only on the network of Cloudflare. `npm run dev` and
-  `npm run preview` do not reach it. So they need no Cloudflare login, and
-  no automatic title is written locally.
+[The title model](deployment/models.md#the-title-model) gives
+`CONDUCTIVE_TITLE_MODEL` and the `AI` binding.
 
 ## The runner archive
 

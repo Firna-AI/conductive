@@ -67,8 +67,8 @@ The header shows the repository, owner, and state.
 The workspace can show **Untitled** before it receives an automatic name.
 The name comes from the first message.
 
-The branch name uses a GitHub login, a city, and a short suffix.
-It stays the same when the workspace receives a name.
+A new branch's name uses a GitHub login, a city, and a short suffix.
+The branch name stays the same when the workspace receives a name.
 To see the checked-out branch, run this command in **Terminal**:
 
 ```bash
@@ -146,12 +146,12 @@ Only the workspace owner and org admins can archive it.
 On a computer, point to the workspace's row in the org's workspace list.
 Select **Archive workspace** when its icon appears over the time.
 
-Conductive checks for uncommitted files and unpushed commits.
+When the workspace has a cloud computer, Conductive first checks it for uncommitted files and unpushed commits.
 If it finds work, the question lists it.
 Cancel the archive to keep that work.
 Choose **Archive anyway** only when you want to discard it.
 
-Archive deletes the cloud computer and its files.
+Archive deletes the workspace's cloud computer and its files, when it has one.
 Its chat stays read-only in **Archived**.
 Push important work to GitHub before you archive.
 

@@ -18,6 +18,9 @@ decision number names a dated record, as
 | Chat history and banner state                                                | The workspace Durable Object             |
 | Files attached to chat messages | The attachment storage, an R2 bucket |
 | The records of attached files | D1 |
+| The stored work and the old documents of imports | The attachment storage, an R2 bucket |
+| The reservations of imports, and the local Conductor ID of each imported workspace | D1 |
+| The data of Conductor, and the consent of the import | The Mac of the person |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
 | Panel widths                                                                 | The browser, or the Mac app              |
@@ -36,6 +39,12 @@ decision number names a dated record, as
   into a saved snapshot.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
+- The Mac app reads the data of Conductor only after the person allows
+  it, and it changes nothing there. It gets upload links only for the parts
+  of the reservations of its own user, as
+  [Import uploads](../protocol/access-and-security.md#import-uploads) says.
+- Neither the browser nor a sandbox gets a credential for the attachment
+  storage.
 - A sandbox gets none of the secrets of the app's Boat account. At a
   start, it gets only the secrets of its workspace and its org.
 - During a turn, the sandbox also holds the agent login of the starter of

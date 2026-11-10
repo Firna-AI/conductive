@@ -3,11 +3,12 @@
 This doc holds the requirements and the decisions in force for the create
 of a workspace. It covers New workspace, as a page or as a dialog, the
 preference that chooses between them, the create, the branch, and a failed
-first start. It belongs to
+first start. This doc belongs to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
 provider, the org image, and the startup script.
-[Life of a workspace](workspace-life.md) covers the start steps and the
-rest of the life of a workspace. The terms are those of the
+[Continue a branch](continue-a-branch.md) covers a new workspace on an
+existing branch. [Life of a workspace](workspace-life.md) covers the start
+steps and the rest of the life of a workspace. The terms are those of the
 [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
@@ -173,6 +174,10 @@ decision number names a dated record, as
 
 - A new workspace starts from the newest good org image. It then creates
   its branch in the folder of its repository.
+- New branch is the default. The person can choose an existing branch or
+  an open pull request instead, as [Continue a branch](continue-a-branch.md)
+  says (import decision 1). The workspace then continues that branch,
+  with the name that the branch has on GitHub.
 - When the GitHub repository has no refs, such as branches or tags, the
   start first pushes an empty first commit to the default branch of the
   repository (decision 89). It then fetches that branch and creates the
@@ -189,8 +194,8 @@ decision number names a dated record, as
   Changes list compares with it, so that branch must exist on GitHub. A
   branch or a first commit only in the sandbox was rejected for that
   reason, and a refused start because it blocks work in a new repository.
-- The branch name starts with the GitHub login that the workspace owner has
-  at the create (decision 53).
+- The name of a new branch starts with the GitHub login that the workspace
+  owner has at the create (decision 53).
 - A city name and four random characters follow, such as
   `calummoore/lisbon-7k2q`. The branch keeps the city name when the
   workspace gets a name.
@@ -221,3 +226,9 @@ decision number names a dated record, as
   good org image, with the current startup script and env vars.
 - When that sandbox is ready, the agent gets the queued messages, as
   [Messages](messages-and-attachments.md#messages) says.
+
+## Imported workspaces
+
+- An import from Conductor creates a workspace with no first message and
+  no cloud computer. Its first start is its activation, as
+  [Imported workspaces](imported-workspaces.md) says.

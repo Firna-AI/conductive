@@ -153,3 +153,6 @@ number names a dated record, as
 - The check does not start a stopped cloud computer. When the check does
   not finish, the question says so, as
   [Archive](workspace-life.md#archive) says.
+- An imported workspace with no successful activation gets the question of
+  [Archive before the activation](imported-workspaces.md#archive-before-the-activation),
+  with no check.

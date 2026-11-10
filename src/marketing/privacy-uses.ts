@@ -73,9 +73,25 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         The result says how the command ended. They let you and the
         agent follow the command. Always-allowed commands and 15-minute
         permissions stay only on your Mac.`,
+      text`An import from Conductor: in the Mac app, after you allow it,
+        ${productName} reads the list of your local Conductor workspaces:
+        their names, repositories, branches, numbers of sessions, and upload
+        sizes. The Mac app sends this list to ${productName}, which shows it
+        to you in the app and keeps no copy. For each workspace that you
+        import, the Mac app uploads the work that GitHub does not hold, the
+        agent session files of its sessions, and a document of each session
+        to the storage of ${productName} at Cloudflare. ${productName} keeps
+        the Conductor ID, the name, the repository, and the branch of each
+        imported workspace. It keeps the title, the agent, the number of
+        messages, and the day of each imported session. The result of an
+        import names the files that stayed on your Mac and the sessions that
+        did not import, and ${productName} keeps no copy of it.`,
       text`Your code: it stays in the cloud computers that ${productName}
-        runs for your org. ${productName} reads a file or a diff when you
-        open it, to show it to you.`,
+        runs for your org. The work of an import from Conductor stays in the
+        storage of ${productName} until a member activates its workspace.
+        ${productName} then copies it to the cloud computer of that
+        workspace. ${productName} reads a file or a diff when you open it,
+        to show it to you.`,
       text`GitHub events: the state of the pull requests and the checks
         of your branches, which GitHub sends to ${productName}.`,
       text`Panel widths: your browser keeps the widths of the panels of

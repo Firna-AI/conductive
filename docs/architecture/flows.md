@@ -43,6 +43,38 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 - A push to the default branch of a chosen repository can also start a
   refresh of the org image.
 
+## Import from Conductor
+
+[Import from Conductor](../protocol/conductor-import.md) states the rules
+of this flow.
+
+1. The page in the Mac app asks the Worker for a scan. The Worker sends
+   the scan to the Mac app of the same sign-in session, over its device
+   connection.
+2. After the person allows it, the Mac app reads the local data of
+   Conductor in read-only mode. It sends the list of workspaces to the
+   Worker, which adds the state of each row and relays it to the page.
+3. The person selects rows and imports them. The Worker records a
+   reservation for each row and asks the Mac app to upload.
+4. The Mac app builds the stored work with Git and the old documents from
+   the memory files. It gets short-lived upload links from the Worker and
+   sends each part straight to the attachment storage.
+5. When each part of a reservation is stored and checked, the Worker
+   creates its workspace in the section Import from Conductor, with no
+   sandbox.
+
+## Activation
+
+1. A member activates an imported workspace. The Worker asks Boat for a
+   sandbox from the newest good org image, as for each first start.
+2. The sandbox fetches the branch from GitHub. The agent runner connects
+   to the Durable Object of the workspace.
+3. The Worker copies the stored work from the attachment storage into the
+   sandbox. The runner checks the disk, puts the work in place, and
+   restores the sessions from their memory files.
+4. The Worker deletes the stored work and keeps the old documents. The
+   agent can then take messages.
+
 ## Stops
 
 - The Durable Object stops a sandbox when the stop rule of

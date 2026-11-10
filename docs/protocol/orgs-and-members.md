@@ -105,6 +105,9 @@ says.
 - New workspace at the top of the list puts the workspace in General, the
   default section. New workspace in the menu of a section puts it in that
   section.
+- An import from Conductor puts its workspaces in the section Import from
+  Conductor, as
+  [Where an import goes](conductor-import.md#where-an-import-goes) says.
 - A workspace moves to another section by drag and drop. On a phone, a
   long press lifts the row.
 - Move to section in the

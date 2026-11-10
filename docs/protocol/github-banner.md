@@ -31,7 +31,10 @@ says.
 
 ## State of a branch
 
-- The Worker routes each event to the workspace of its branch.
+- The Worker routes each event to each workspace of its branch. Two
+  workspaces can share one branch, as
+  [Two workspaces on one branch](continue-a-branch.md#two-workspaces-on-one-branch)
+  says.
 - The Worker pushes the new state to every open tab of that workspace.
 - When a tab opens, the Worker reads the current pull request and the
   current checks of the branch from the GitHub API.

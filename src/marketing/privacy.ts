@@ -66,10 +66,14 @@ export const privacyDocument: LegalDocument = {
             login of the member who started it. Your messages in another
             member's session use that member's login only when that member
             lets other members use it. When that member does not share the
-            login, your message starts a new session on your own login. The
-            terms of that provider apply.`,
+            login, your message starts a new session on your own login. When
+            an agent continues a session that a member imported from
+            Conductor, the provider also gets the earlier history of that
+            session. The terms of that provider apply.`,
           text`The members of your orgs see the workspaces of the org,
-            their chats, and each Mac command request and result.
+            their chats, and each Mac command request and result. They also
+            see the documents of the sessions that a member imports from
+            Conductor.
             A member with a terminal in a cloud computer can read
             the agent login and the GitHub token of a turn that runs there. A
             program that a tool of the agent starts, such as a dev server, can
@@ -128,6 +132,13 @@ export const privacyDocument: LegalDocument = {
         paragraph`${productName} keeps each file that you send with a message
           until it deletes the workspace of the message. It deletes an unsent
           file 7 days after you upload it.`,
+        paragraph`For an import from Conductor, ${productName} deletes the
+          uploaded parts of a workspace whose upload did not finish 7 days
+          after the import started it. It keeps the uploaded work of an
+          imported workspace until a member activates the workspace, and then
+          deletes it. Work of a workspace that nobody activates stays until
+          ${productName} deletes the workspace. The documents of the imported
+          sessions stay until ${productName} deletes their workspace.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and

@@ -12,6 +12,10 @@ These docs belong to this doc:
 - [Org image](org-image.md): its builds, refreshes, and first build.
 - [Create a workspace](create-a-workspace.md): New workspace as a page or
   as a dialog, the create, the branch, and a failed first start.
+  - [Continue a branch](continue-a-branch.md): a new workspace on a branch
+    or a pull request that exists on GitHub.
+- [Imported workspaces](imported-workspaces.md): a workspace from an
+  import of Conductor, its activation, and Archive before its activation.
 - [Repository folders](repository-folders.md): the folder and the shell
   variable of each repository in a sandbox.
 - [Life of a workspace](workspace-life.md): the start steps, the time
@@ -82,6 +86,14 @@ These docs belong to this doc:
 
 - [Create a workspace](create-a-workspace.md) holds the requirements of the
   page, the dialog, the create, the branch, and a failed first start.
+- [Continue a branch](continue-a-branch.md) holds the choice of an
+  existing branch.
+
+## Imported workspaces
+
+- [Imported workspaces](imported-workspaces.md) holds the requirements of
+  a workspace from an import of Conductor: its state Not active, its
+  activation, and Archive before its activation.
 
 ## Workspace numbers and links
 

@@ -36,6 +36,13 @@ feature that is not complete yet says so.
   Boat account.
 - A new workspace starts as an empty chat. The first message creates it,
   with its own cloud computer and branch.
+- A new workspace can also continue a branch or an open pull request that
+  exists on GitHub. This is not complete yet.
+  [Continue a branch](docs/protocol/continue-a-branch.md) states it.
+- The Mac app imports local Conductor workspaces with their work, branch,
+  name, and sessions. An imported workspace starts its cloud computer when
+  a member activates it. This is not complete yet.
+  [Import from Conductor](docs/protocol/conductor-import.md) states it.
 - Chat with agents powered by Claude and Codex. A workspace holds several
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
@@ -153,10 +160,10 @@ states how the Worker keeps them away from the browser and the sandboxes.
 `wrangler.jsonc` also sets the production values: `MACHINE_ORIGIN` is
 `https://api.conductive.build`, and `PREVIEW_DOMAIN` is `conductive.page`.
 It sets `CONDUCTIVE_TITLE_MODEL` for automatic workspace names, as
-[The title model](docs/deployment.md#the-title-model) says.
+[The title model](docs/deployment/models.md#the-title-model) says.
 It also holds the model list and the app default in `CONDUCTIVE_MODELS`
 and `CONDUCTIVE_DEFAULT_CHOICE`. Edit these values in the repository.
-The next deploy publishes them, as [Models](docs/deployment.md#models) says.
+The next deploy publishes them, as [Models](docs/deployment/models.md#models) says.
 A value in `.dev.vars` replaces the corresponding production value locally.
 When `.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
 requests to that address keep that role. The

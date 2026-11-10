@@ -206,6 +206,12 @@ export const termsDocument: LegalDocument = {
           you can read it while the cloud computer is stopped. It also keeps
           the files that you attach to messages. It copies each file to the
           cloud computer when the agent starts work on its message.`,
+        paragraph`In the Mac app, you can import your local Conductor
+          workspaces. ${productName} then keeps the work that GitHub does not
+          hold, the agent session files, and a document of each session. It
+          copies the work and the session files to the cloud computer when a
+          member activates the workspace. The members of the org can read the
+          documents of the imported sessions.`,
         paragraph`You keep any rights that you have in your repositories,
           files, messages, and other content. You give the operator
           permission to store, copy, process, and transmit that content as

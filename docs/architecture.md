@@ -32,7 +32,8 @@ hold the requirements of each feature.
   gives app access to up to 5 people who wait. The screens of users call
   it an invite code.
 - **Workspace:** one task in an org. It has one repository, one branch,
-  one sandbox, and one or more sessions.
+  one sandbox, and one or more sessions. An imported workspace has no
+  sandbox and no session until its activation.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
 - **Sender:** the person who sent the message of a turn. The GitHub token
@@ -62,6 +63,16 @@ hold the requirements of each feature.
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
   build or a refresh. The app's Boat account limits the starts of all orgs.
+- **Imported workspace:** a workspace that the Mac app imported from a
+  local workspace of Conductor. It has no sandbox until its activation.
+- **Activation:** the first start of an imported workspace. It starts the
+  sandbox and copies the stored work into it.
+- **Stored work:** the work of an imported workspace that GitHub does not
+  hold. The attachment storage keeps it until a successful activation.
+- **Old document:** the Markdown file of one session from Conductor. The
+  members of the org read it in the app for the life of the workspace.
+- **Reservation:** the record of one workspace of an import while its
+  upload runs. No member sees it as a workspace.
 
 ## Components
 
@@ -87,7 +98,7 @@ the app (decision 6).
 
 The [flows page](architecture/flows.md) describes how the components work
 together for a new workspace, chat, the terminal, previews, the desktop,
-GitHub events, and stops.
+GitHub events, stops, and an import from Conductor with its activation.
 
 ## Where data lives
 
@@ -105,6 +116,10 @@ A decision number, such as decision 36, names the dated record of one
 decision. The plan of the change that wrote these docs keeps the records
 while the change is open. The pull request of that change keeps them after
 the merge.
+
+An import decision, such as import decision 5, names a dated record of the
+import from Conductor. The plan of that change keeps its records while the
+change is open, and its pull request keeps them after the merge.
 
 ## Protocol docs
 

@@ -586,6 +586,54 @@ decision or the user.
   own bucket prefix, so imports run side by side.
 - No cloud computer starts until the user activates a workspace.
 
+### Integration facts and design calls, 10 November 2026
+
+These calls apply the approved import design to the current implementation.
+They do not reopen a user decision. The earlier dated facts stay as history.
+
+- Main now has attachments, the provider file write, agent instructions,
+  provider accounts, and the computer ledger. The import reuses its bucket.
+- Keep the approved runner connection for activation delivery. Reason: it
+  gives the import bounded, checked delivery with no bucket credential in
+  the cloud computer. Attachments keep their separate path.
+- Cite this change as import decision N in the protocol docs. Reason: its
+  decision numbers must be distinct from the main plan's decision numbers.
+- Relay only local ID, name, repository, branch, session count, and upload
+  size for a scan. Keep no server copy of its list or result. Scan again
+  when the import opens, so the list stays current.
+- Bind each import operation and reply to the asking page's paired device
+  connection. Do not move it to a new connection. Reason: one user's
+  current connection can belong to another Mac.
+- Split lists and results across bounded device messages. Reason: a large
+  list must not fail only because it passes one frame's byte limit.
+- Keep consent and offer dismissal on the Mac. Reason: they describe that
+  Mac's access and discovery.
+- Apply the approved 100 MiB file rule inside .context too. Its exemptions
+  remain the bundle, memory files, and old documents.
+- A changed source after a stopped upload gets a new whole package.
+  Reason: restored work must come from one consistent source state.
+- Reservation expiry counts seven days from creation. Find the ordinary
+  import section by name and create it at the top only when absent.
+- Match a local source to a chosen repository by its GitHub remote.
+- Activation uses the activating member's GitHub token. The importer starts
+  imported continuation sessions. The activating member starts the new
+  Untitled session. Reason: each credential keeps its existing owner.
+- Activation requires the latest good image and uses the existing create
+  refusal when none exists. A failed activation shows error. Not active
+  applies before the first activation starts.
+- Prepare native memory during activation. A session that cannot continue
+  uses its old document. Keep stored user messages as the member wrote
+  them. The implementation must verify the exact fallback point.
+- Old documents omit thinking, provider metadata, and full tool output.
+  They use the existing unmasked file-content policy. Reason: they are
+  documents, while raw native memory stays private.
+- Use CHAT_ATTACHMENTS_S3_BUCKET_URL, CHAT_ATTACHMENTS_ACCESS_KEY_ID, and
+  CHAT_ATTACHMENTS_SECRET_ACCESS_KEY for the server's upload adapter.
+  The key pair covers only the shared private bucket.
+- Advance the Terms revision to 2026-11-10-conductor-import. Reason: each
+  later sign-in must record the updated Terms, under the existing consent
+  rule. Existing sessions get no new gate.
+
 ### Mockup design calls, 10 November 2026
 
 These are agent calls from Milestone 1, within the decisions in force.
@@ -919,31 +967,33 @@ Verification evidence: `.context/import-from-conductor/checks/milestone-1-report
 
 Depends on: 1
 
-- [ ] Create `docs/protocol/conductor-import.md` with the requirements of
+- [x] Create `docs/protocol/conductor-import.md` with the requirements of
       the scan, the consent, the list, the import, the bucket data, and
       activation.
-- [ ] State incomplete-upload availability and recovery after decisions
+- [x] State incomplete-upload availability and recovery after decisions
       13 and 14. If unfinished reservations are chosen, settle their
       retention before implementation.
-- [ ] State the new device operations in the Mac app protocol doc.
-- [ ] State which scan metadata the Worker relays to the page. Read both
+- [x] State the new device operations in the Mac app protocol doc.
+- [x] State which scan metadata the Worker relays to the page. Read both
       legal pages in full and update each sentence that restates the
       changed facts. Consent must not promise a local-only list.
-- [ ] State imported workspaces, activation, and the branch choice of a
+- [x] State imported workspaces, activation, and the branch choice of a
       new workspace in the protocol doc that holds Create a workspace.
-- [ ] State the fork pull request rule after decision 15. If C or E is
+- [x] State the fork pull request rule after decision 15. If C or E is
       chosen, update the repository model and banner routing requirements.
-- [ ] State Not active, the current org as the import destination, and
+- [x] State Not active, the current org as the import destination, and
       the place of the import section. State Archive before activation
       under the existing Archive and retention rules.
-- [ ] State the old sessions in Chat and events.
-- [ ] State the retention of the bucket data in Access and security.
-- [ ] Add the import flow to the architecture doc.
-- [ ] Split each touched doc that passes the length target into linked
+- [x] State the old sessions in Chat and events.
+- [x] State the retention of the bucket data in Access and security.
+- [x] Add the import flow to the architecture doc.
+- [x] Split each touched doc that passes the length target into linked
       pages, as the `documentation` skill says. Remove each split doc from
       `plans/follow-ups/protocol-docs-split.md`.
-- [ ] Update the feature list of `README.md`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Update the feature list of `README.md`.
+- [x] Check each relative link of each changed Markdown file.
+
+Verification evidence: `.context/import-from-conductor/current/docs-report.md`.
 
 ## Milestone 3: Continue an existing branch
 

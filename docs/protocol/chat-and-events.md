@@ -1,8 +1,8 @@
 # Chat and events
 
 This doc holds the requirements and the decisions in force for the chat of
-a workspace. It covers the messages, what the chat shows, and the events
-that reach the browser. Linked pages cover
+a workspace. It covers the messages, what the chat shows, the sessions
+from Conductor, and the events that reach the browser. Linked pages cover
 [the agents and the sessions](agents-and-sessions.md),
 [the workspace links in chat](workspace-links.md), and
 [the agent runner](agent-runner.md) in the sandbox. The terms are those of
@@ -107,6 +107,53 @@ says.
   and each message. A click opens a message line to its full text.
 - When the user opens or closes a fold or a run of tool calls, its line
   stays in place. Its list opens or closes below the line.
+
+## Sessions from Conductor
+
+An [imported workspace](imported-workspaces.md) keeps each session from
+Conductor as an old document, as
+[Old documents](conductor-import.md#old-documents) says.
+
+- The chat of an imported workspace lists its old documents in place of an
+  empty chat (import decision 7). The session history lists them too,
+  under the label From Conductor.
+- Reason: the old documents stay one click away after new sessions fill
+  the tabs.
+- Each entry shows the agent, the title, the number of messages, and the
+  day of its session.
+- An entry opens its document in the Markdown view of the app, as a file
+  opens. On a phone, it opens in the Chat tab, with a way back to the same
+  workspace.
+- Every member of the org can read the old documents of the workspace.
+  They stay readable before and after the activation, while the cloud
+  computer is stopped, after a failed activation, and after Archive.
+- A document comes from the storage of the app, never from the cloud
+  computer. Reason: a link must work while no cloud computer runs.
+- An old document is no chat event. It never enters the stored history of
+  the workspace, and a tab reads it only when the tab opens it.
+- Reason: a tab that opens gets the whole stored history first. A document
+  needs no mapping of old events, and it adds nothing to that history.
+- These ways were rejected:
+  - Old sessions as read-only sessions in the stored history. Each first
+    show then replays every old event.
+  - Old sessions as chat events in a store of their own. Each old event
+    then needs a mapping into the event type of the app.
+  - Readers that read only their own part of the stored history. The slow
+    replay of a long workspace is a separate problem, for a change of its
+    own.
+- After the activation, each imported session is an ordinary session tab,
+  oldest first, before the tab of the new session of the activation.
+- A session that its agent resumes continues with the memory of the agent
+  (import decision 5). Its chat shows only its new turns, under a first
+  line that names its old session and links to its document.
+- A session that its agent cannot resume starts fresh, with no memory. Its
+  first line says that it could not resume, and links to its document.
+- The composer of such a session starts with a draft that names the path
+  of its document in `.context/conductor/`. So its first message names
+  that file, and the agent can read it.
+- Reason: the agent keeps its working memory where it can, and the old
+  document is the fallback. A start from the document alone was rejected,
+  because the agent then loses its working memory.
 
 ## Events
 
