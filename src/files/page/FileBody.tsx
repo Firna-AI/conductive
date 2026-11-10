@@ -4,7 +4,7 @@ import type { MarkdownParser } from '../markdown/markdown-document'
 import { MarkdownView } from '../markdown/MarkdownView'
 import type { FileText } from '../model/file-text'
 import { splitPath, type FileMode } from '../navigation'
-import { isMarkdown } from '../panel/file-icons'
+import { isMarkdown } from '../code/file-kind'
 import { ActionButton } from '../ui/actions'
 import { EmptyState } from '../ui/EmptyState'
 
