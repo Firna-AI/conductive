@@ -102,11 +102,11 @@ decision number names a dated record, as
 - An answer that does not come from the preview relay never reaches the browser.
 - The Worker refuses previews with 409 `preview_relay_unavailable` without
   a running relay, because the app is not live and the Worker keeps one route.
-  Decision 214 rejects a direct fallback, installation at preview open,
+  Decision 219 rejects a direct fallback, installation at preview open,
   startup by the Worker, and software updates at each workspace start.
 - Through the relay, each request reaches the previewed server with
   `Host: localhost:<port>`, as a browser in the sandbox would send it
-  (decision 213).
+  (decision 218).
 - Reason: by default, dev servers such as Vite, webpack, and `mokly serve`
   refuse a `Host` that is not local. The relay makes each such server work
   with no change to its repository, as a forwarded local port does.
@@ -117,7 +117,7 @@ decision number names a dated record, as
     projects still need their own setting
   - a relay option at Boat, because the wait for Boat is unknown
 - Through the relay, a request from the preview's own origin reaches the
-  previewed server with `Origin: http://localhost:<port>` (decision 213).
+  previewed server with `Origin: http://localhost:<port>` (decision 218).
   A request from another origin keeps its `Origin`. A request without an
   `Origin` gets none.
 - Reason: some servers, such as `mokly serve`, refuse a request whose

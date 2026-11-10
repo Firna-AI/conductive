@@ -144,7 +144,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   frame.
 - Some servers accept only requests to their local address, such as a dev
   server that checks `Host`. Such a server works in a preview with no change
-  to its repository (decision 213).
+  to its repository (decision 218).
   [Port previews](terminal-previews-and-desktop.md#port-previews)
   states the `Host` and the `Origin` that the server gets.
 - A workspace whose cloud computer has no running relay refuses previews.

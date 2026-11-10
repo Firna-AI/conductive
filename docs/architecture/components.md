@@ -123,7 +123,7 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
 
 The preview relay forwards each preview request to a local port of the
 sandbox. The previewed server then gets its local address as `Host`
-(decision 213).
+(decision 218).
 [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
 states the rules of the relay.
 
