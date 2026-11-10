@@ -125,7 +125,7 @@ export async function cleanupDraftAttachments(
             )
         } else await deleteAttachment(env, record)
       } catch {
-        warnWorker('An attachment cleanup will retry.')
+        warnWorker({ kind: 'attachment_cleanup_retry' })
       }
       after = record.id
     }

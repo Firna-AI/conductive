@@ -1,7 +1,8 @@
 import type { WorkspacePlatform } from './workspace-platform'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
-import { errorSummary, warnWorker } from '../warnings'
+import { warnWorker } from '../warnings'
+import { errorSummary, WarningId } from '../warning-values'
 import { requireOrgMember, requireWorkspaceOrg } from './access'
 import type { DurableLifecycle } from './durable'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -29,9 +30,11 @@ export async function initializeWorkspaceLifecycle(
       await lifecycle.initialize(input)
     })
   } catch (error) {
-    warnWorker(
-      `Workspace ${input.workspaceId} could not admit its first message: ${errorSummary(error)}`,
-    )
+    warnWorker({
+      kind: 'workspace_first_message_failed',
+      workspaceId: WarningId.checked(input.workspaceId),
+      error: errorSummary(error),
+    })
     throw error
   }
 }

@@ -5,6 +5,7 @@ import {
   terminalStartCommand,
 } from '../terminal/service'
 import { warnWorker } from '../warnings'
+import { WarningId } from '../warning-values'
 import { lifecycleCommand } from './command-intents'
 import { workspacePhaseCommand } from './start-command'
 import { workspaceEnvironmentSettings } from './settings-data'
@@ -79,9 +80,12 @@ export async function advanceStartCommand(
   if (status.more || status.running) return false
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
     if (job.phase === 'terminal')
-      warnWorker(
-        `The terminal of workspace ${job.workspaceId} did not start: exit code ${status.exitCode}, timed out ${status.timedOut}`,
-      )
+      warnWorker({
+        kind: 'terminal_start_failed',
+        workspaceId: WarningId.checked(job.workspaceId),
+        exitCode: status.exitCode,
+        timedOut: status.timedOut,
+      })
     throw new WorkspaceStartError(null)
   }
   return true

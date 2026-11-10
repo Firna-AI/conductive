@@ -9,7 +9,7 @@ import { suspendOrg } from '../operator/suspend-org'
 import { expiringGitHubReply } from '../security/github-test-support'
 import { saveGitHubTokens } from '../security/github-tokens'
 import { machineCredentialFixture } from './machine-test-support'
-import { heldOperation } from './platform-test-storage'
+import { heldOperation } from '../test-support/held-operation'
 import { workspaceRuntime } from './runtime'
 import { readWorkspaceToken } from './tokens'
 

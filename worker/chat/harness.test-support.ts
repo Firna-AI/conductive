@@ -1,9 +1,9 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AgentChoice } from '../../src/shared/agents'
 import type {
-  WorkspaceSocketMessage,
   ChatHistoryResponse,
   WorkspaceEventEnvelope,
+  WorkspaceSocketMessage,
 } from '../../src/shared/events'
 import { chatHistoryPath, workspaceEventsPath } from '../../src/shared/events'
 import type { SendMessageResponse } from '../../src/shared/messages'
@@ -13,22 +13,22 @@ import {
   type SessionResponse,
 } from '../../src/shared/sessions'
 import type { RunnerConnectionRequest } from '../../src/shared/runner-transport'
-import type {
-  RunnerToWorkspace,
-  WorkspaceToRunner,
-} from '../../src/shared/runner'
 import {
   TEST_ORIGIN,
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
 import { FakeRunner } from '../test-support/fake-runner'
-import { FakeRunnerConnection } from '../test-support/runner-connection'
-import { WorkspaceChat } from './backend'
-import { MemoryChatStorage } from './memory-storage.test-support'
+import type { NativeStorageHooks } from '../test-support/native-storage'
+import type { NativeWorkspaceOptions } from '../test-support/native-workspace-api'
 import { seedChatFixture } from './fixture-seed.test-support'
-import { ManualChatClock } from './chat-clock.test-support'
-import type { BrowserPeer, ChatDependencies, RunnerPeer } from './types'
+import { nativeChatTransport } from './native-transport.test-support'
+import type { NativeChatCallbacks } from '../test-support/native-chat-resolvers'
+import type { NativeChatObservers } from '../test-support/native-chat-observers'
+import type { WorkspaceChat } from './backend'
+import type { ChatTransaction } from './store'
+import type { BrowserPeer } from './types'
+import { nativeRequestControls } from './native-request-controls.test-support'
 
 export const CLAUDE: AgentChoice = {
   agent: 'claude',
@@ -44,36 +44,28 @@ export const MACHINE_ORIGIN = 'https://machines.conductive.test'
 export const WORKSPACE_ID = 'workspace-chat'
 export const WORKSPACE_TOKEN = 'workspace-token'
 
+export type ChatFixtureOptions = NativeChatCallbacks &
+  NativeChatObservers & {
+    ids?: readonly string[]
+    idFallback?: string
+  }
+
 export async function createChatFixture(
   harness: TestHarness,
-  overrides: Partial<ChatDependencies> = {},
+  overrides: ChatFixtureOptions = {},
 ) {
-  const { org, owner, member, ownerCookie, memberCookie } =
-    await seedChatFixture(harness, WORKSPACE_ID, WORKSPACE_TOKEN)
-  const storage = new MemoryChatStorage()
-  const env = { ...harness.env, MACHINE_ORIGIN }
-  let sequence = 0
-  let connectionSequence = 0
-  const clock = new ManualChatClock(TEST_TIME)
-  const dependencies = {
-    now: clock.now,
-    scheduleBrowserCheck: clock.schedule,
-    scheduleRunnerCheck: clock.schedule,
-    randomId: () => `chat-${String(++sequence).padStart(4, '0')}`,
-    randomConnectionId: () => `connection-${++connectionSequence}`,
-    ...overrides,
+  const seeded = await seedChatFixture(harness, WORKSPACE_ID, WORKSPACE_TOKEN)
+  const { org, ownerCookie } = seeded
+  const options: NativeWorkspaceOptions = {
+    callbacks: overrides,
+    observers: overrides,
+    idFallback: overrides.idFallback,
   }
-  let chat = new WorkspaceChat(storage, env, dependencies)
-  const errors: unknown[] = []
-  const transport: {
-    dropIncoming: (message: RunnerToWorkspace) => boolean
-    dropOutgoing: (message: WorkspaceToRunner) => boolean
-    closedConnections: number
-  } = {
-    dropIncoming: () => false,
-    dropOutgoing: () => false,
-    closedConnections: 0,
-  }
+  const actor = harness.native.actor(WORKSPACE_ID, options)
+  await actor.configure(options)
+  if (overrides.ids) await actor.api.controls.nextIds([...overrides.ids])
+  const transport = nativeChatTransport(actor)
+  let now = TEST_TIME
   const request = (
     path: string,
     body?: unknown,
@@ -89,61 +81,18 @@ export async function createChatFixture(
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     })
+  const fetchRequest = async (input: Request) => {
+    await transport.flushInput()
+    const response = await actor.fetch(input)
+    await transport.drain()
+    return response
+  }
   const fetch = (
     path: string,
     body?: unknown,
     cookie = ownerCookie,
     method?: string,
-  ) => chat.fetch(request(path, body, cookie, method))
-  const drain = async () => {
-    let current: Promise<unknown>
-    do {
-      current = chat.store.settled()
-      await current
-    } while (current !== chat.store.settled())
-    if (errors.length) throw errors.shift()
-  }
-  const connect = async (
-    runner = new FakeRunner({ workspaceId: WORKSPACE_ID }),
-    parameters: Partial<RunnerConnectionRequest> = {},
-  ) => {
-    await runner.connect(
-      async (connectionRequest) => {
-        const connection = new FakeRunnerConnection((value) => {
-          if (transport.dropIncoming(value)) return
-          void chat
-            .receiveRunner(peer, value)
-            .catch((error: unknown) => errors.push(error))
-        })
-        const peer: RunnerPeer = {
-          send: (message) => {
-            if (!transport.dropOutgoing(message)) connection.reply(message)
-          },
-          close: () => connection.close(),
-        }
-        connection.onClose(() => {
-          transport.closedConnections++
-          chat.disconnectRunner(peer)
-        })
-        await chat.connectRunner(
-          new Request(connectionRequest.url, {
-            headers: {
-              Authorization: `Bearer ${connectionRequest.workspaceToken}`,
-            },
-          }),
-          peer,
-        )
-        return connection
-      },
-      {
-        url: `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
-        workspaceToken: WORKSPACE_TOKEN,
-        ...parameters,
-      },
-    )
-    await drain()
-    return runner
-  }
+  ) => fetchRequest(request(path, body, cookie, method))
   const createSession = async (choice = CLAUDE, cookie = ownerCookie) => {
     const response = await fetch(
       sessionsPath(org.id, WORKSPACE_ID),
@@ -195,60 +144,118 @@ export async function createChatFixture(
       after = page.nextAfterEventNumber
     }
   }
-  const tab = async (
-    after = 0,
-    onSend?: (message: WorkspaceSocketMessage) => void,
-    cookie = ownerCookie,
-  ) => {
-    const messages: WorkspaceSocketMessage[] = []
-    let closed = 0
-    const peer: BrowserPeer = {
-      send: (message) => {
-        messages.push(structuredClone(message))
-        onSend?.(message)
-      },
-      close: () => {
-        closed++
-      },
-    }
-    const socketRequest = request(
-      workspaceEventsPath(org.id, WORKSPACE_ID, after),
-      undefined,
-      cookie,
-    )
-    socketRequest.headers.set('Upgrade', 'websocket')
-    const close = await chat.openBrowser(socketRequest, peer)
-    return {
-      messages,
-      close,
-      get closed() {
-        return closed
-      },
-    }
+  const setStorageHooks = async (hooks: NativeStorageHooks) => {
+    options.hooks = hooks
+    await actor.configure(options)
   }
   return {
-    org,
-    owner,
-    member,
-    ownerCookie,
-    memberCookie,
-    storage,
-    clock,
-    env,
-    fetch,
+    ...seeded,
+    actor,
+    env: { ...harness.env, MACHINE_ORIGIN },
+    storage: actor.api.storage,
+    chat: actor.api.chat,
+    sendFileCommand: async (
+      ...args: Parameters<WorkspaceChat['sendFileCommand']>
+    ) => {
+      await transport.flushInput()
+      const result = await actor.api.chat.sendFileCommand(...args)
+      await transport.drain()
+      return result
+    },
+    appendWorkspaceEvent: async (
+      ...args: Parameters<WorkspaceChat['appendWorkspaceEvent']>
+    ) => {
+      await transport.flushInput()
+      await actor.api.chat.appendWorkspaceEvent(...args)
+      await transport.drain()
+    },
+    changeWorkspace: async <T>(
+      workspaceId: string,
+      work: (view: ChatTransaction) => Promise<T>,
+    ) => {
+      const result = await actor.api.chat.changeWorkspace(workspaceId, work)
+      await transport.drain()
+      return result
+    },
+    snapshot: actor.api.controls.snapshot,
+    setStorageHooks,
+    clearFaults: () => setStorageHooks({}),
+    setEnvironment: async (values: Record<string, string | undefined>) => {
+      options.environment = { ...options.environment, ...values }
+      await actor.configure(options)
+    },
+    observeQueries: async (onQuery: NativeWorkspaceOptions['onQuery']) => {
+      options.onQuery = onQuery
+      await actor.configure(options)
+    },
+    failNextCommit: (boundary: 'before' | 'after', message: string) => {
+      let failed = false
+      return setStorageHooks({
+        [boundary === 'before' ? 'beforeCommit' : 'afterCommit']: async () => {
+          if (!failed) {
+            failed = true
+            throw new Error(message)
+          }
+        },
+      })
+    },
     request,
+    fetch,
+    fetchRequest,
     createSession,
     send,
     history,
-    tab,
-    connect,
-    drain,
-    transport,
-    get chat() {
-      return chat
+    drain: transport.drain,
+    disconnect: transport.disconnect,
+    drainAttachments: async () => {
+      try {
+        await actor.api.controls.drainBackground()
+      } finally {
+        await transport.drain()
+      }
     },
-    restart: () => {
-      chat = new WorkspaceChat(storage, env, dependencies)
+    transport: transport.transport,
+    setSendRule: transport.setSendRule,
+    observeOutgoing: transport.observeOutgoing,
+    tab: (
+      after = 0,
+      onSend?: (message: WorkspaceSocketMessage) => void,
+      cookie = ownerCookie,
+    ) =>
+      transport.tab(
+        request(
+          workspaceEventsPath(org.id, WORKSPACE_ID, after),
+          undefined,
+          cookie,
+        ),
+        onSend,
+      ),
+    openBrowser: (request: Request, peer: BrowserPeer) =>
+      transport.tab(request, peer.send, peer.close),
+    connect: (
+      runner = new FakeRunner({ workspaceId: WORKSPACE_ID }),
+      parameters: Partial<RunnerConnectionRequest> = {},
+    ) =>
+      transport.connect(runner, {
+        url: `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
+        workspaceToken: WORKSPACE_TOKEN,
+        ...parameters,
+      }),
+    clock: {
+      now: () => now,
+      advance: async (milliseconds: number) => {
+        now += milliseconds
+        await actor.api.controls.setTime(now)
+        await transport.pump()
+      },
+      scheduledCount: async () =>
+        (await actor.api.controls.snapshot()).scheduledCount,
+    },
+    ...nativeRequestControls(actor, options, transport.drain),
+    restart: async () => {
+      await transport.drain()
+      transport.reset()
+      await actor.restart()
     },
   }
 }

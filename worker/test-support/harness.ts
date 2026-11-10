@@ -1,5 +1,3 @@
-import { Miniflare } from 'miniflare'
-
 import { API_PATHS, type Org } from '../../src/shared/api'
 import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
@@ -9,47 +7,22 @@ import { FakeBoat } from './fake-boat'
 import { FakeGitHub } from './fake-github'
 import { createTestOrg } from './org-test-support'
 import { applyMigrations } from './migrations'
+import { createNativeRuntime } from './native-runtime'
+import { NATIVE_TEST_TIME } from './native-workspace-api'
 
 export const TEST_ORIGIN = 'https://app.conductive.test'
-export const TEST_TIME = 1_800_000_000_000
+export const TEST_TIME = NATIVE_TEST_TIME
 
 export async function createHarness() {
-  const runtime = new Miniflare({
-    enableDevRegistry: false,
-    telemetry: { enabled: false },
-    cf: false,
-    workers: [
-      {
-        config: {
-          name: 'worker-core-tests',
-          compatibilityDate: '2026-11-06',
-          env: {
-            DB: { type: 'd1', id: 'test-db' },
-            CHAT_ATTACHMENTS: { type: 'r2', name: 'test-chat-attachments' },
-          },
-          manifest: {
-            mainModule: 'index.js',
-            modules: {
-              'index.js': {
-                type: 'esm',
-                contents:
-                  'export default { fetch() { return new Response("test") } }',
-              },
-            },
-          },
-        },
-      },
-    ],
-  })
-  const db = await runtime.getD1Database('DB')
-  const { CHAT_ATTACHMENTS: attachments } = await runtime.getBindings<{
-    CHAT_ATTACHMENTS: R2Bucket
-  }>()
-  await applyMigrations(db)
-  const env: AppEnv = {
-    DB: db,
-    CHAT_ATTACHMENTS: attachments,
+  const github = new FakeGitHub()
+  const boat = new FakeBoat()
+  let send = (request: Request) =>
+    new URL(request.url).hostname === 'boat.dev'
+      ? boat.fetch(request)
+      : github.fetch(request)
+  const variables = {
     APP_ORIGIN: TEST_ORIGIN,
+    MACHINE_ORIGIN: 'https://machines.conductive.test',
     GITHUB_CLIENT_ID: 'github-client-id',
     GITHUB_CLIENT_SECRET: 'github-client-secret',
     SESSION_SIGNING_KEY: btoa('s'.repeat(32)),
@@ -57,13 +30,23 @@ export async function createHarness() {
     BOAT_ORG_ID: 'app-org',
     BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)),
   }
-  const github = new FakeGitHub()
-  const boat = new FakeBoat()
+  const native = await createNativeRuntime(variables, (request) =>
+    send(request),
+  )
+  const db = native.bindings.DB
+  const attachments = native.bindings.CHAT_ATTACHMENTS
+  await applyMigrations(db)
+  const env: AppEnv = {
+    DB: db,
+    CHAT_ATTACHMENTS: attachments,
+    ...variables,
+  }
   let now = TEST_TIME
   let sequence = 0
+  const randomToken = () => `test-${++sequence}`.padEnd(43, 'x')
   const app = createApp({
     now: () => now,
-    randomToken: () => `test-${++sequence}`.padEnd(43, 'x'),
+    randomToken,
     fetch: (request) =>
       new URL(request.url).hostname === 'boat.dev'
         ? boat.fetch(request)
@@ -108,12 +91,19 @@ export async function createHarness() {
     env,
     github,
     boat,
+    native,
+    reserveTokens: (count: number) =>
+      Array.from({ length: count }, randomToken),
+    setNativeFetch: (fetch: typeof send) => {
+      send = fetch
+    },
     fetch,
     request,
     beginSignIn,
     login,
     createOrg,
     reset: async () => {
+      await native.reset()
       await db.batch(
         [
           'chat_attachments',
@@ -154,13 +144,17 @@ export async function createHarness() {
       } while (cursor)
       github.reset()
       boat.reset()
+      send = (request) =>
+        new URL(request.url).hostname === 'boat.dev'
+          ? boat.fetch(request)
+          : github.fetch(request)
       now = TEST_TIME
       sequence = 0
     },
     setTime: (value: number) => {
       now = value
     },
-    dispose: () => runtime.dispose(),
+    dispose: () => native.dispose(),
   }
 }
 

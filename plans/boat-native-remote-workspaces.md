@@ -5627,7 +5627,7 @@ Fix round 2, 9 November 2026. Agent call:
 
 Fix-round evidence: `.context/boat-native-remote-workspaces/5e/fix-round-2/summary.md`.
 
-## Milestone 5f: Tests on the real workspace object
+## Milestone 5f: Tests on the real workspace object (completed)
 
 Depends on: 5e, 8m. Both change the lifecycle and chat tests that this
 milestone moves.
@@ -5636,14 +5636,30 @@ Apply the `fix after merge` items of the Worker tests. Added on 8 November
 2026. One native harness serves the chat tests and the lifecycle tests, as
 both items recommend.
 
-- [ ] Apply option D of `plans/follow-ups/chat-tests-on-real-object.md` and
+- [x] Apply option D of `plans/follow-ups/chat-tests-on-real-object.md` and
       option E of `plans/follow-ups/lifecycle-tests-on-real-object.md`, with
       one native harness. Delete both items.
-- [ ] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5f`.
+- [x] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
       113), and delete that item.
-- [ ] Apply option A of `plans/follow-ups/start-time-limit-test-under-load.md`
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5f`.
+- [x] Apply option A of `plans/follow-ups/start-time-limit-test-under-load.md`
       after the move to the real object, and delete that item. Added on 8
       November 2026.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5f`.
+
+9 November 2026. Agent calls:
+
+- Share one native runtime, D1, and R2 per test file. Keep each test's data isolated.
+- Run ordinary lifecycle calls through the production RPC and log codecs.
+- Keep transaction faults on live native transactions. Keep synchronous peer faults inside the native runtime.
+- Reset the real object context before eviction. This releases native request timers without changing production deadlines.
+- Keep the cancellation epoch proof on a focused native controller path. Ordinary RPC calls share the production chat queue.
+- Observe queries, decryption, warnings, and request bodies inside the native runtime. Host spies cannot observe those calls.
+- Batch prerequisite records and split independent long cases. Keep every product assertion, table row, and tested transition.
+- Include the new primary-branch naming tests. Keep their current expected values and native restart checks.
+
+Verification evidence: `.context/boat-native-remote-workspaces/5f/`.
 
 ## Milestone 6: App shell and workspaces
 
@@ -8015,10 +8031,51 @@ Depends on: 5e. Its one alarm scheduler changes the GitHub alarms.
 Apply the `fix after merge` items of the GitHub code. Added on 8 November
 2026.
 
-- [ ] Apply option B of `plans/follow-ups/github-push-refresh-isolation.md`,
+- [x] Apply option B of `plans/follow-ups/github-push-refresh-isolation.md`,
       and delete that item.
-- [ ] Apply option E of `plans/follow-ups/shared-github-app-credentials.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13c`.
+- [x] Apply option E of `plans/follow-ups/shared-github-app-credentials.md`,
       and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13c`.
+
+Design calls by the implementor, checked by the orchestrator on 9 November
+2026:
+
+- Limit refresh isolation to push deliveries. Other events keep their
+  existing failure responses and delivery retries.
+- Accept `github_pending` for a push after its workspace stores a fresh
+  read. Push refreshes start at attempt zero, so the retry bound permits
+  that read.
+- Keep one current PEM key in the shared credential module. Both callers
+  reuse its import, and a failed token request clears that cache entry.
+- Accept PEM text or an imported `CryptoKey` in the shared flow. Production
+  image copies pass PEM text and their injected clock. The existing native
+  test caller keeps its imported key, without a change to shared fixtures.
+
+Evidence: `.context/boat-native-remote-workspaces/13c/orchestrator-checks.md`.
+
+Fix round 1, 9 November 2026. The user selected:
+
+- Finding 1, option D: keep the push-decision tests and add one native
+  push case. Prove retry storage, its due alarm, real eviction, and the
+  alarm's committed result before a browser read.
+- Finding 2, option C: use PEM text and a required clock in every image
+  credential caller and test. This replaces the earlier imported-key
+  compatibility call.
+- Finding 1, option E after the merge: move the GitHub tests to the one
+  native workspace harness. The
+  [follow-up item](follow-ups/github-tests-on-real-object.md) records that
+  wider move.
+
+Continuation on 9 November 2026. The user approved one bounded native
+case diagnostic round. That round did not produce a concrete fix. Under
+the user's fallback, keep the unfinished native case and its helper
+additions out of this branch. Record the wait markers and remaining
+uncertainty in the native-harness follow-up. Option E uses the one native
+harness from Milestone 5f, pull request #102. Finding 2 option C proceeds
+through the gate and CI. No further answer is needed for this case.
+
+Fix-round evidence: `.context/boat-native-remote-workspaces/13c/fix-round-1/summary.md`.
 
 ## Milestone 15t: Typed Worker warnings
 
@@ -8028,8 +8085,35 @@ most warnings live.
 Apply the wider fix of findings 1 and 6 of the review of the deploy fixes.
 Added on 8 November 2026.
 
-- [ ] Apply option D of `plans/follow-ups/typed-worker-warnings.md`, and
+- [x] Apply option D of `plans/follow-ups/typed-worker-warnings.md`, and
       delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15t`.
+
+Design calls by the implementor, checked by the orchestrator on 9 November
+2026:
+
+- Use a structured warning union. Each kind selects fixed text and typed
+  metadata. Select every logged field explicitly, including nested error
+  fields, because structural assignment can retain extra caller fields.
+- Check IDs against the canonical base64url format of `randomToken`.
+  Other values become `unknown` in logs only. Do not widen the check for
+  short fixture IDs or UUIDs that production does not use.
+- Use allowlists for HTTP codes, provider codes, and command states.
+  Unknown HTTP codes and command states become `unknown`. Unknown provider
+  codes become `null`. Keep numeric status and outcome fields.
+- Use the fixed kind `error` for generic errors. A custom constructor name
+  can hold private text, as an error message can.
+- Keep warning kinds and checked values in separate modules. This keeps
+  the logger short and gives callers the types and checks that they need.
+  Keep `CommandFailed` in its existing module, so its other caller needs
+  no import change.
+- Keep the current detached terminal path. Its warning and integration
+  regression moved to the lifecycle code. The named terminal service test
+  now checks the current command path directly, with markers in both
+  stdout and stderr. Keep the existing lifecycle failure and password-read
+  assertions.
+
+Evidence: `.context/boat-native-remote-workspaces/15t/orchestrator-checks.md`.
 
 ## Milestone 15u: One record of every cloud computer
 

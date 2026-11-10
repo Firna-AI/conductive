@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import type { WorkspaceValues } from './platform-storage'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 
@@ -17,20 +18,22 @@ it('advances a restored image coordinator from its shared lifecycle alarm', asyn
   )
     .bind(now + 60_000, fixture.org.id)
     .run()
-  await actor.storage.put('image', 'org-image:coordinator', {
+  await actor.storage.put<WorkspaceValues['image']>('org-image:coordinator', {
     orgId: fixture.org.id,
     software: SOFTWARE,
     nextAt: now,
     buildId: null,
   })
-  await actor.storage.put('number', 'alarm:lifecycle', now)
+  await actor.storage.put<WorkspaceValues['number']>('alarm:lifecycle', now)
   await actor.storage.setAlarm(now)
   await fixture.advanceTo(now, id)
   expect(
-    await actor.storage.get('image', 'org-image:coordinator'),
+    await actor.storage.get<WorkspaceValues['image']>('org-image:coordinator'),
   ).toMatchObject({
     nextAt: now + 60_000,
   })
-  expect(actor.storage.alarmAt).toBe(now + 60_000)
-  expect(await actor.storage.get('number', 'alarm:lifecycle')).toBeUndefined()
+  expect(await actor.storage.getAlarm()).toBe(now + 60_000)
+  expect(
+    await actor.storage.get<WorkspaceValues['number']>('alarm:lifecycle'),
+  ).toBeUndefined()
 })

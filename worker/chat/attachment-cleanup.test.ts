@@ -7,7 +7,6 @@ import {
   it,
   vi,
 } from 'vitest'
-
 import {
   createHarness,
   TEST_TIME,
@@ -24,7 +23,6 @@ import {
 } from './attachment-cleanup'
 import { WORKSPACE_ID } from './harness.test-support'
 import { failedAttachmentDeletes } from '../test-support/attachment-r2'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -38,28 +36,28 @@ afterEach(() => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('expires unclaimed drafts at seven days', async () => {
   const fixture = await attachmentFixture(harness)
   const draft = await fixture.upload()
-  await cleanupDraftAttachments(harness.env, TEST_TIME + 604_799_999)
+  await cleanupDraftAttachments(harness.env, TEST_TIME + 604799999)
   expect(await readAttachment(harness.env.DB, draft.id)).toMatchObject({
     state: 'ready',
   })
-  await cleanupDraftAttachments(harness.env, TEST_TIME + 604_800_000)
+  await cleanupDraftAttachments(harness.env, TEST_TIME + 604800000)
   expect(await readAttachment(harness.env.DB, draft.id)).toBeNull()
 })
-
 it('queues expiry behind message acceptance and removes a claim after a rolled back acceptance', async () => {
   const fixture = await attachmentFixture(harness)
   const first = await fixture.upload()
   const session = await fixture.createSession()
   const entered = held<void>()
   const release = held<void>()
-  fixture.storage.beforeCommit = async () => {
-    entered.resolve()
-    await release.promise
-  }
+  await fixture.setStorageHooks({
+    beforeCommit: async () => {
+      entered.resolve()
+      await release.promise
+    },
+  })
   const sending = fixture.sendAttachment(session.id, 'winning-message', [
     first.id,
   ])
@@ -74,10 +72,10 @@ it('queues expiry behind message acceptance and removes a claim after a rolled b
       firstClaim.orgId,
       firstClaim.id,
       firstClaim.revision,
-      TEST_TIME + 604_800_000,
+      TEST_TIME + 604800000,
     ),
   )
-  fixture.storage.beforeCommit = null
+  await fixture.clearFaults()
   release.resolve()
   expect((await sending).status).toBe(202)
   await expiry
@@ -85,14 +83,16 @@ it('queues expiry behind message acceptance and removes a claim after a rolled b
     state: 'claimed',
   })
   const abandoned = await fixture.upload()
-  fixture.storage.beforeCommit = async () => {
-    throw new Error('Injected acceptance rollback')
-  }
+  await fixture.setStorageHooks({
+    beforeCommit: async () => {
+      throw new Error('Injected acceptance rollback')
+    },
+  })
   expect(
     (await fixture.sendAttachment(session.id, 'rolled-back', [abandoned.id]))
       .status,
   ).toBe(500)
-  fixture.storage.beforeCommit = null
+  await fixture.clearFaults()
   expect(
     await fixture.chat.store.read(WORKSPACE_ID, (view) =>
       view.attachmentUse(abandoned.id),
@@ -108,7 +108,7 @@ it('queues expiry behind message acceptance and removes a claim after a rolled b
       abandonedClaim.orgId,
       abandonedClaim.id,
       abandonedClaim.revision,
-      TEST_TIME + 604_800_000,
+      TEST_TIME + 604800000,
     ),
   )
   expect(await readAttachment(harness.env.DB, abandoned.id)).toBeNull()
@@ -116,7 +116,6 @@ it('queues expiry behind message acceptance and removes a claim after a rolled b
     state: 'claimed',
   })
 })
-
 it('keeps a deletion tombstone after an external failure and retries workspace and zero-workspace org purge', async () => {
   const fixture = await attachmentFixture(harness)
   const workspaceFile = await fixture.upload()
@@ -144,7 +143,6 @@ it('keeps a deletion tombstone after an external failure and retries workspace a
   expect(await readAttachment(harness.env.DB, draftFile.id)).toBeNull()
   expect((await bucket.list()).objects).toEqual([])
 })
-
 it('removes a late orphan object when its retained file record is already gone', async () => {
   const fixture = await attachmentFixture(harness)
   const file = await fixture.upload()

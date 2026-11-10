@@ -87,8 +87,9 @@ The phases are `layout`, `ready`, `fetch`, `revoke`, `finalize`, and
 encrypted token stays owned until its revocation.
 
 1. The first command makes the folder moves below.
-2. For each repository, the Worker signs a GitHub App JWT with
-   `GITHUB_APP_PRIVATE_KEY` and `GITHUB_CLIENT_ID`. It gets an installation
+2. For each repository, the [shared App credential flow](../github/README.md#public-boundaries)
+   signs a JWT with `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CLIENT_ID`, and the injected clock.
+   It gets an installation
    token that can only read the contents of that repository. It stores the
    token encrypted, bound to the org, the build, the sandbox, the
    repository, and the source index, with the hash of a new one-use build
@@ -104,9 +105,8 @@ encrypted token stays owned until its revocation.
    helper gives Git the token from the process environment only. Git makes
    a bare clone in a staging folder, with no checkout, hook, filter, or
    submodule. No helper or token stays in a Git config.
-4. When the command ends, the Worker revokes the token with
-   `revokeInstallationToken` from
-   [`image-sources/github-app.ts`](image-sources/github-app.ts). A 204 or a
+4. When the command ends, the Worker uses the shared revocation through
+   [`revokeInstallationToken`](image-sources/github-app.ts). A 204 or a
    401 reply from GitHub confirms that the token is inactive. Any other
    reply keeps the encrypted token, and a later alarm tries again. No local
    clock releases the token. The loader goes on only after that proof.
@@ -284,8 +284,8 @@ each token.
   isolated bare clone and the finalization commands.
 - [`image-sources/credential.ts`](image-sources/credential.ts):
   `handleImageSourceCredential` and `IMAGE_SOURCE_CREDENTIAL_PATH`.
-- [`image-sources/github-app.ts`](image-sources/github-app.ts): the scoped
-  `installationToken` and `revokeInstallationToken`.
+- [Image App adapter](image-sources/github-app.ts): `installationToken` and
+  `revokeInstallationToken`, through [shared credentials](../github/app-credentials.ts).
 - [`image-sources/cleanup.ts`](image-sources/cleanup.ts):
   `cleanupBuildImageSources` and `cleanupOrgImageSources`.
 - [`image-sources/members.ts`](image-sources/members.ts):

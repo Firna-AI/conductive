@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import type { User } from '../../src/shared/api'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import { deleteProvisionalWorkspace } from '../lifecycle/workspace-data'
@@ -12,10 +11,7 @@ import {
 import { attachmentFixture, FILE_BYTES } from './attachment.test-support'
 import { readAttachment } from './attachment-data'
 import { expireClaimedAttachment } from './attachment-cleanup'
-import { WorkspaceChat } from './backend'
 import { CLAUDE, WORKSPACE_ID } from './harness.test-support'
-import { MemoryChatStorage } from './memory-storage.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -26,7 +22,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 async function firstMessage(
   orgId: string,
   userId: string,
@@ -76,7 +71,6 @@ async function firstMessage(
     },
   }
 }
-
 it('admits a first-message file before a computer exists and replays acceptance before another claim', async () => {
   const fixture = await attachmentFixture(harness)
   const file = await fixture.upload(FILE_BYTES, {
@@ -101,10 +95,7 @@ it('admits a first-message file before a computer exists and replays acceptance 
     state: 'claimed',
     claimedWorkspaceId: WORKSPACE_ID,
   })
-  const before = await fixture.chat.store.read(
-    WORKSPACE_ID,
-    async (view) => view.eventNumber,
-  )
+  const before = await fixture.actor.api.controls.eventNumber(WORKSPACE_ID)
   await harness.env.DB.prepare(
     "UPDATE chat_attachments SET state = 'deleting' WHERE id = ?",
   )
@@ -115,14 +106,10 @@ it('admits a first-message file before a computer exists and replays acceptance 
       fixture.chat.acceptFirstMessage(first),
     ),
   ).toEqual(accepted)
-  expect(
-    await fixture.chat.store.read(
-      WORKSPACE_ID,
-      async (view) => view.eventNumber,
-    ),
-  ).toBe(before)
+  expect(await fixture.actor.api.controls.eventNumber(WORKSPACE_ID)).toBe(
+    before,
+  )
 })
-
 it('retains a removed workspace file for a new attempt and fences cleanup of the old claim', async () => {
   const fixture = await attachmentFixture(harness)
   const file = await fixture.upload(FILE_BYTES, {
@@ -151,10 +138,12 @@ it('retains a removed workspace file for a new attempt and fences cleanup of the
     'new-attempt',
     file.id,
   )
-  const chat = new WorkspaceChat(new MemoryChatStorage(), harness.env, {
-    now: () => TEST_TIME + 1,
-    prepareAttachments: async () => null,
+  const retryActor = harness.native.actor('new-attempt')
+  await retryActor.configure({
+    callbacks: { prepareAttachments: async () => null },
   })
+  await retryActor.api.controls.setTime(TEST_TIME + 1)
+  const chat = retryActor.api.chat
   expect(
     await chat.runLifecycle(() => chat.acceptFirstMessage(retry)),
   ).toMatchObject({ attachments: [file] })
@@ -166,7 +155,7 @@ it('retains a removed workspace file for a new attempt and fences cleanup of the
       fixture.org.id,
       file.id,
       old.revision,
-      TEST_TIME + 604_800_000,
+      TEST_TIME + 604800000,
     ),
   )
   expect(await readAttachment(harness.env.DB, file.id)).toMatchObject({
@@ -182,12 +171,11 @@ it('retains a removed workspace file for a new attempt and fences cleanup of the
       fixture.org.id,
       file.id,
       current.revision,
-      TEST_TIME + 604_800_000,
+      TEST_TIME + 604800000,
     ),
   )
   expect(await fixture.bytes(file.id)).toEqual(FILE_BYTES)
 })
-
 it('expires a removed workspace draft at its original upload deadline', async () => {
   const fixture = await attachmentFixture(harness)
   const file = await fixture.upload(FILE_BYTES, {
@@ -217,7 +205,7 @@ it('expires a removed workspace draft at its original upload deadline', async ()
       fixture.org.id,
       file.id,
       record.revision,
-      TEST_TIME + 604_799_999,
+      TEST_TIME + 604799999,
     ),
   )
   expect(await fixture.bytes(file.id)).toEqual(FILE_BYTES)
@@ -229,7 +217,7 @@ it('expires a removed workspace draft at its original upload deadline', async ()
       fixture.org.id,
       file.id,
       record.revision,
-      TEST_TIME + 604_800_000,
+      TEST_TIME + 604800000,
     ),
   )
   expect(await readAttachment(harness.env.DB, file.id)).toBeNull()

@@ -1,4 +1,5 @@
 import type { ConnectionScheduler } from '../security/connection-access'
+import type { WorkerWarning } from '../warning-types'
 
 export interface InputActivityOptions {
   now(): number
@@ -6,7 +7,7 @@ export interface InputActivityOptions {
   waitUntil(pending: Promise<void>): void
   recordLocal(workspaceId: string, at: number): Promise<void>
   update(workspaceId: string, at: number): Promise<void>
-  warn(message: string): void
+  warn(warning: WorkerWarning): void
 }
 
 export class InputActivityOwner {
@@ -54,9 +55,7 @@ export class InputActivityOwner {
           try {
             await this.options.recordLocal(input.workspaceId, input.at)
           } catch {
-            this.options.warn(
-              'Workspace activity timestamp could not be saved.',
-            )
+            this.options.warn({ kind: 'activity_timestamp_failed' })
           }
         }
       })
@@ -89,7 +88,7 @@ export class InputActivityOwner {
       .then(() => this.options.update(input.workspaceId, input.at))
       .catch(() => {
         this.attempted = input.revision - 1
-        this.options.warn('Workspace activity update failed.')
+        this.options.warn({ kind: 'activity_update_failed' })
       })
       .finally(() => {
         this.running = undefined

@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
@@ -15,7 +14,6 @@ import {
   startTurn,
   terminalEvent,
 } from './turn-lifecycle.test-support'
-
 describe('newest failed turn retries', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -27,7 +25,6 @@ describe('newest failed turn retries', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('rejects a stale second tab after newer queued, running, finished, and failed work', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -41,7 +38,7 @@ describe('newest failed turn retries', () => {
     runner.emit(terminalEvent(old, 'failed'))
     await fixture.drain()
     const staleFailure = liveSessions(staleTab.messages).at(-1)
-    staleTab.close()
+    await staleTab.close()
     runner.disconnect()
     await fixture.send(session.id, 'new-request')
     for (const phase of ['queued', 'running', 'finished', 'failed'] as const) {
@@ -98,9 +95,8 @@ describe('newest failed turn retries', () => {
     expect(await refused.json()).toEqual(retryUnavailable)
     expect((await sessionRecord(fixture, session.id)).retryMessageId).toBeNull()
     expect((await sessionRecord(fixture, session.id)).activeTurnId).toBeNull()
-    currentTab.close()
+    await currentTab.close()
   })
-
   it('makes a failed retry eligible by its new message ID', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()

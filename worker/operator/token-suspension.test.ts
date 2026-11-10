@@ -56,11 +56,13 @@ it.each(['resume', 'maintenance'] as const)(
         ),
       )
     } else {
-      fixture.setTime(dependencies.now() + DISK_KEEPALIVE_MS)
-      await fixture.runtime.workspace(owned.id).lifecycleActivity()
+      await fixture.runtime
+        .workspace(owned.id)
+        .reconcileLifecycleAccess(owned.id)
+      await fixture.setTime(dependencies.now() + DISK_KEEPALIVE_MS)
       const actor = fixture.actors.get(owned.id)
       if (!actor) throw new Error('Missing maintenance actor')
-      await actor.endpoint().alarm()
+      await actor.endpoint().advance()
     }
     const token = readWorkspaceToken(env, owned.id)
     await expect(token).resolves.not.toBe('owned-secret')

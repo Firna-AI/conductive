@@ -11,7 +11,7 @@ it('bounds lasting start status faults across alarm restarts and retains existin
   statusFault(fixture)
   const now = fixture.runtime.dependencies.now() + 1_000
   await start.tick(now)
-  start.restart()
+  await start.restart()
   await start.tick(now + 1_000)
   const calls = fixture.boat.statusRequests.length
   await start.tick(now + 2_000)
@@ -48,14 +48,14 @@ it('preserves captured start output and lets cancellation bypass a pending retry
   await start.tick(now + 2_000)
   fault.fail('60')
   await start.tick(now + 3_000)
-  expect(start.storage.alarmAt).toBe(now + 63_000)
+  expect(await start.storage.getAlarm()).toBe(now + 63_000)
   expect(await start.job()).toMatchObject({
     phase: 'terminal',
     stdoutOffset: 0,
     stderrOffset: 0,
   })
   await start.endpoint.lifecycleStopped()
-  expect(start.storage.alarmAt).toBe(now + 4_000)
+  expect(await start.storage.getAlarm()).toBe(now + 4_000)
   await start.tick(now + 4_000)
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toMatchObject({

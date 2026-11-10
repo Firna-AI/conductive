@@ -4,22 +4,15 @@ import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import { readAttachment } from './attachment-data'
 import { storeAttachment } from './attachment-storage'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-import type { ChatDependencies } from './types'
-
+import type { ChatFixtureOptions } from './harness.test-support'
 export const FILE_BYTES = new Uint8Array([0, 255, 128, 13, 10, 65])
-
 export async function attachmentFixture(
   harness: TestHarness,
-  overrides: Partial<ChatDependencies> = {},
+  overrides: ChatFixtureOptions = {},
 ) {
-  const background: Promise<unknown>[] = []
   const chat = await createChatFixture(harness, {
     prepareAttachments: async () => null,
     ...overrides,
-    waitUntil: (work) => {
-      background.push(work)
-      overrides.waitUntil?.(work)
-    },
   })
   const target: AttachmentUploadTarget = {
     type: 'workspace',
@@ -66,21 +59,14 @@ export async function attachmentFixture(
       },
       cookie,
     )
-  let index = 0
-  const drainAttachments = async () => {
-    while (index < background.length) await background[index++]
-    await chat.drain()
-  }
   return {
     ...chat,
     target,
     upload,
     bytes,
     sendAttachment: send,
-    drainAttachments,
   }
 }
-
 export function held<T>() {
   let resolve: (value: T) => void = () => {
     throw new Error('The promise is not initialized.')

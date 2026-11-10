@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { retryMessagePath } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
@@ -12,7 +11,6 @@ import {
   startTurn,
   terminalEvent,
 } from './turn-lifecycle.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -23,7 +21,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('cancels a running copy failure before the real engine starts Try again without a Worker wait', async () => {
   let fail = true
   const fixture = await attachmentFixture(harness, {
@@ -104,7 +101,6 @@ it('cancels a running copy failure before the real engine starts Try again witho
     runner.disconnect()
   }
 })
-
 it('replays stored copy-failure interrupts after restart and clears only the matching late end', async () => {
   const fixture = await attachmentFixture(harness, {
     prepareAttachments: async () => {
@@ -125,7 +121,7 @@ it('replays stored copy-failure interrupts after restart and clears only the mat
       second.id,
       'second-start',
     )
-    fixture.transport.dropOutgoing = (command) => command.type === 'interrupt'
+    await fixture.setSendRule({ type: 'interrupt', drop: true })
     for (const [sessionId, messageId] of [
       [first.id, 'first-failed-file'],
       [second.id, 'second-failed-file'],
@@ -149,8 +145,8 @@ it('replays stored copy-failure interrupts after restart and clears only the mat
     const secondInterrupt = interrupts[1]
     if (!secondInterrupt) throw new Error('The second cancellation is missing.')
     runner.disconnect()
-    fixture.restart()
-    fixture.transport.dropOutgoing = () => false
+    await fixture.restart()
+    await fixture.setSendRule(null)
     await fixture.connect(runner)
     await fixture.drainAttachments()
     expect(
