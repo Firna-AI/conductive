@@ -1,0 +1,63 @@
+# Archived bar claims an unconfirmed computer delete
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-10, from branch `calummoore/workspace-archive-error`, pull request #138. It is review item 4, which an independent check confirmed the same day.
+- **Location:** `src/shared/workspaces.ts:7-14` (`workspaceRestoreUntil`), `worker/lifecycle/workspace-data.ts:101` and `worker/devices/state.ts:107` (the replies and events that carry `restoreUntil`), `src/shell/workspace/sandbox-view.ts:40-42` (`archivedRestore`), `src/shell/workspace/notice-copy.ts:80-87` (the deletion text), `docs/mockups/src/components/workspace/sandboxNoticeState.ts` (the shared notice type), and `src/chat/components/SandboxState.tsx:95-104` (the chat's own bar, outside the product path).
+- **Reason:** The defect is rare and visible only, Restore stays correctly unavailable, and the fix needs a new reply field, mockups, a protocol line, and new notice states.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Archive:** the action that stops a workspace's computer and keeps it for 14 days.
+  - **Restore:** the action that puts an archived workspace back, stopped, during those 14 days.
+  - **`restoreUntil`:** the field of each workspace reply that gives the last time of Restore, or null.
+  - **Unresolved computer:** a computer that the provider can hold while the workspace row has no computer ID, because a create reply was lost or its ID was not yet written to the row.
+  - **Computer ledger:** the D1 table `computer_ledger`. It has one row for each create request and each org computer, with its computer ID once known, a deleted date after a confirmed delete, and a flag for a refused create.
+- **Background:**
+  - Archive acts at once in each state of a workspace, also during a create. It then keeps an unresolved create request, and retries its recovery every 30 seconds, also after the 14 days, in `worker/lifecycle/archive-state.ts`.
+  - While a replay of a lost create reply fails, the Archive owner writes no computer ID to the workspace row. The Archive reply reads the row after that first pass, at `worker/lifecycle/archive-workspace.ts:35-37`.
+  - `workspaceRestoreUntil` in `src/shared/workspaces.ts:7-14` returns null when the row has no computer ID. Each Worker reply and event takes `restoreUntil` from it.
+  - `archivedRestore` in `src/shell/workspace/sandbox-view.ts:40-42` gives no Restore state for a null `restoreUntil`. That case shows the bar "Its cloud computer is deleted, and the chat is read-only." and the panel text "The files and the tools went with the cloud computer.", at `src/shell/workspace/notice-copy.ts:80-87`.
+  - The requirement, at the Restore section of `docs/protocol/workspace-life.md`: "The bar says that the cloud computer is deleted only after the delete. Before that, it gives the day when Restore ended." So a deletion claim needs a confirmed delete.
+  - The same section says that an archived workspace without a kept sandbox offers no Restore, and that the app refuses such a Restore with HTTP 409.
+  - The ledger already records the pending request, the recovered ID, and the confirmed delete of each org computer.
+  - The Worker sends facts, and the browser chooses the words, through the notice type in `docs/mockups/src/components/workspace/sandboxNoticeState.ts`, which the app imports.
+- **Problem:**
+  - A null computer ID makes `restoreUntil` null, and the notice maps that null to the deletion text. So the bar and the panels claim a delete that did not happen.
+  - Proof in the native tests: `worker/lifecycle/archive-expiry-recovery.test.ts:58-82` reaches the end of the 14 days in the phase `resolve`, with computer `bx_1` at the provider and no delete. Lines 114-141 hold `bx_1` in the Archive state while the row has no ID.
+  - Proof of the text: an in-memory render with the production `workspaceRestoreUntil`, `archivedRestore`, and `SandboxBar` gave a null `restoreUntil`, and printed "Its cloud computer is deleted, and the chat is read-only."
+  - A separate, related place outside the product path: the chat's own bar in `src/chat/components/SandboxState.tsx:95-104` says "Its cloud computer is deleted" for each archived workspace, also while Restore is available. Only the chat dev harness and test kits render it, because the product always passes the shell's bar.
+- **Impact if no action:** The app tells members that a computer and its files are gone while the computer can still exist, through the recovery and after the end of Restore. No data is lost, and Restore stays unavailable.
+- **Root question:** How can an archived workspace report computer loss without claiming an unconfirmed deletion?
+- **Options:**
+  - **A.** Use the chat-only words for every archived record with a null `restoreUntil`. Effort: Small. Blocked: after the last day of Restore it drops the day when Restore ended, which `docs/protocol/workspace-life.md` requires. It also removes the drawn state `app/archive/deleted` of the mockup catalogue.
+  - **B.** Project the certainty of the computer apart from Restore availability, from the existing ledger.
+    - The reply carries the computer state as its own typed field, read from the row and the ledger. The notice maps that field to its states exhaustively.
+    - A computer may exist while the row has an ID, or while a ledger row of the workspace has no deleted date and no refused create. This covers a lost reply, a recovered ID before its row write, and a failed-start delete that still retries.
+    - The reply carries the original last day of Restore, also while Restore is unavailable.
+    - Before that day, an unresolved computer shows the chat-history words. After it, the bar gives the day when Restore ended. Only a confirmed delete shows the deletion words.
+    - Restore stays unavailable without an identified computer.
+    - It adds no stored state. It is structural only with the typed field and the exhaustive mapping. A browser rule that infers the state from `restoreUntil` would make it a direct fix again.
+    - Effort: Medium.
+  - **C.** Store an explicit Archive computer outcome, and update it through the recovery, the missing-computer path, the delete, and the Delete org cleanup. Publish it to the list and the detail. It adds stored state and coordination, and a write next to the Delete org cleanup. Effort: Large.
+  - **D.** Count an unresolved computer as kept. `restoreUntil` stays set while the row has an ID or a live ledger row names the workspace, and Restore first replays the saved request.
+    - The bar can then offer a Restore that fails during the same outage. A late replay can make a new computer without the old files, because nobody has checked how long the provider keeps a key.
+    - Blocked: it changes the protocol rule that a workspace without a kept sandbox offers no Restore, with the mockup and the public guide, without a user decision.
+    - Effort: Large.
+- **Left out:**
+  - The current Restore offered for an unresolved computer. It returns HTTP 409, and the protocol offers no Restore without a kept sandbox. D brings back a Restore that replays first.
+  - An Archive that waits for the replay. It breaks the rule that Archive acts at once in each state.
+  - A read of the Archive phase from each workspace object. The list reads each row from D1, and the ledger already holds the same fact there. B is better on every point.
+  - A test for the class. It needs user approval, and the typed field of B removes the wrong case, so a guard catches nothing more.
+- **Wider fix:** B. It separates the certainty of the computer from Restore availability, so an unavailable Restore cannot imply a delete.
+- **Previous examples:** commit `d78a9f26995df063dd4439f5eba27674906851f3` changed refused-start notices to promise only the chat history, because the disk might not survive. The comment at `src/shell/workspace/notice-copy.ts:31-35` keeps that rule. It supports the chat-history words of B before the last day.
+- **Related:**
+  - `plans/follow-ups/unresolved-computer-request-ownership.md`: every option there keeps the ledger row of an unresolved request live until a confirmed delete or a refusal. B reads that row. B does not wait for it, but a later fix there must keep that meaning of a live row.
+  - Review item 1 of this branch, fixed in the same pull request: its fix keeps the unresolved request through and after the 14 days. B covers both states that it leaves.
+- **Recommendation:** B. It is the only unblocked option that keeps each drawn state true, and the ledger already holds the facts that it needs.
+  - The future work: a pending state under `app/archive/` in the mockups, the change of the shared notice type, one protocol line for an unresolved computer, the new field in each Worker reply and each reader of the app, and the notice states. Read the public guides and the legal pages, as `AGENTS.md` says.
+  - Assess later, and record a design call for each: a workspace with no live ledger row and no ID without a confirmed delete. This happens after an Archive just before the ledger write, after a refused create, and for an Archive of a workspace whose create came before the ledger existed. B needs deletion words or neutral words for that case.
+  - The chat-history words before the last day follow the two precedents above, so they need no new user decision.
+  - Fix the chat's own bar in `src/chat/components/SandboxState.tsx:95-104` with the same rule, so the dev harness shows what the product shows.
+- **Action:** fix after merge, apply B, because this rare visible defect needs a new reply field and new notice states, and does not block the purpose of Archive. A and D stay unapplied, because they are blocked.
+  - Checks for that work: regression cases for an unresolved computer before and after the last day, for a confirmed delete, and for an unavailable Restore. Then the mockup and app checks of that change.

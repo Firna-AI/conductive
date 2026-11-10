@@ -14,4 +14,7 @@ Each provider start captures the encrypted org env values and their secret
 marks. The start-log masker and the workspace object output filter use
 that capture. No private org-value list goes into the runner environment.
 A running sandbox keeps its capture after later org setting changes.
-Disk retention resumes also replace the saved capture.
+The ordinary disk retention resume of a workspace that is not archived
+also replaces the saved capture.
+The maintenance resume of a retained archived disk gets no env values, so
+it keeps the saved capture.

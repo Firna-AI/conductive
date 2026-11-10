@@ -123,6 +123,7 @@ function createWorkspace(
     createdAt: at,
     updatedAt: at,
     archivedAt: null,
+    restoreUntil: null,
   }
   org.workspaces = [workspace, ...org.workspaces]
   org.created.add(id)

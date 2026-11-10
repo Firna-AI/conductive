@@ -125,7 +125,7 @@ export async function deleteShellSection(
          ) UPDATE workspaces SET
          section_id = (SELECT id FROM sections WHERE org_id = ? AND is_default = 1),
          position = (SELECT next FROM target) + (SELECT offset FROM moved WHERE moved.id = workspaces.id),
-         updated_at = ?
+         updated_at = MAX(updated_at, ?)
        WHERE org_id = ? AND section_id = ? AND ${activeShellMemberPredicate}
          AND ${sectionExists} RETURNING id`,
       )

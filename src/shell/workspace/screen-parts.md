@@ -104,6 +104,9 @@ Each folder of a path is a part of the address. Another address under
 - A switch between the preview and the source keeps the tab, so it starts
   nothing. The address of the screen at its first show starts nothing
   there either, because the open of the workspace resumes the sandbox.
+- A Restore moves no address, so it starts nothing, also while the address
+  names a file or diff tab. The next visit that opens a tab resumes the
+  sandbox.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
 
@@ -165,8 +168,9 @@ the org, waits with the timer of the app, and takes the GitHub events of
 the ordered stream of the workspace.
 
 - On desktop, the bar tops the right column. After a merge, its Archive
-  opens the Archive question of the screen. It shows only when
-  `WorkspaceContext.archive` offers Archive, so a suspended org shows none.
+  archives the workspace at once, with one request, and stays busy while
+  that request runs. It shows only when `WorkspaceContext.archive` offers
+  Archive, so a suspended org shows none.
 - On a phone, the row sits under the header on every tab. A pull request
   opens the Checks tab at its address.
 - An archived workspace keeps the bar on desktop. On a phone it shows only

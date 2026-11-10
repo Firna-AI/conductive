@@ -162,6 +162,12 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         paragraph`When an admin deletes an org, ${productName} deletes the data
           of the org after 7 days, unless an admin restores it.`,
+        paragraph`When the owner or an admin archives a workspace,
+          ${productName} stops its cloud computer and keeps it for 14 days.
+          Its disk keeps your code, your files, your agent sessions, and each
+          secret value that a script or an agent wrote there. ${productName}
+          then deletes the cloud computer, unless a member restores the
+          workspace before then.`,
         paragraph`${productName} keeps each file that you send with a message
           until it deletes the workspace of the message. It deletes an unsent
           file 7 days after you upload it.`,
@@ -220,11 +226,16 @@ export const privacyDocument: LegalDocument = {
         paragraph`This site sets no cookies. The web app and the Mac app each
           set their own cookie that keeps you signed in. Only the Mac app's
           cookie store holds its session cookie. Another cookie protects the
-          GitHub sign-in while it runs.`,
+          GitHub sign-in while it runs. When the web app sends you to GitHub
+          to install the GitHub App or change its access, a third cookie
+          keeps the screen that you left, so that the app can return you
+          there.`,
         paragraph`Each sign-in cookie lasts for up to 7 days. The GitHub
-          sign-in protection cookie lasts for up to 10 minutes. These
-          cookies support sign-in and security. They use secure connections
-          and cannot be read by page scripts.`,
+          sign-in protection cookie lasts for up to 10 minutes. The GitHub
+          return cookie lasts for up to 1 hour, and the app deletes it when
+          you come back. These cookies support sign-in, security, and the
+          return from GitHub. They use secure connections and cannot be read
+          by page scripts.`,
       ],
     },
     {

@@ -1,7 +1,7 @@
 import { act } from 'react'
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
-import { workspacePath } from '../../shared/workspaces'
+import { workspacePath, type Workspace } from '../../shared/workspaces'
 import {
   accessibleName,
   byRole,
@@ -10,6 +10,7 @@ import {
 } from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { press } from '../test-mount'
 
 // The helpers of the tests of the menu of a workspace row in the whole app.
@@ -139,4 +140,12 @@ export function requestsFor(
   return requestLines(server)
     .slice(from)
     .filter((line) => line.includes(`${path}/`) || line.endsWith(path))
+}
+
+/** The reply of a write of Apple Pay button, with `change` applied. */
+export function applePayReply(change: Partial<Workspace>) {
+  const { workspaces, detail } = workspaceFixtures()
+  const applePay = workspaces.workspaces.find((item) => item.id === 'apple-pay')
+  if (!applePay) throw new Error('The fixture has no Apple Pay button.')
+  return { ...detail, workspace: { ...applePay, ...change } }
 }

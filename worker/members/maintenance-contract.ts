@@ -6,6 +6,7 @@ export interface WorkspaceDisk {
   providerAccount: string
   stoppedAt: number
   nextKeepaliveAt: number | null
+  archivedAt?: number
 }
 
 export interface DeletedOrgRetention {
