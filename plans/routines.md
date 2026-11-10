@@ -1814,7 +1814,7 @@ Merge resolutions and verification: `.context/routines/reports/m10-merge.md`.
 - [ ] Smoke-test with the browser harness of
       `worker/chat/integration/run-browser-harness.mjs`: create a routine,
       use Run now, and open the run workspace.
-- [ ] Change `TERMS_VERSION` in `src/shared/terms.ts`, because Milestone 2
+- [x] Change `TERMS_VERSION` in `src/shared/terms.ts`, because Milestone 2
       changed the Terms for routines, so that each user accepts them again.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
