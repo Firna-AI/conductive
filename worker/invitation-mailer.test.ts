@@ -38,7 +38,8 @@ it('sends a plain text invitation through Resend with the secret and a stable de
   const request = requests[0]
   expect(request.url).toBe('https://api.resend.com/emails')
   expect(request.method).toBe('POST')
-  expect(request.redirect).toBe('error')
+  expect(request.redirect).toBe('manual')
+  expect(request.headers.get('User-Agent')).toBe('Conductive')
   expect(request.headers.get('Authorization')).toBe('Bearer test-resend-secret')
   expect(request.headers.get('Idempotency-Key')).toBe(
     requests[1].headers.get('Idempotency-Key'),
