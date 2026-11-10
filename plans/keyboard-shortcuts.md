@@ -568,18 +568,44 @@ Replaced ways:
   that Keyboard shortcuts ends the group.
 - **Impact if no action:** The mockup and the product disagree on one
   row.
-- **Root question:** Where does This Mac stand in the Account group of the
-  palette in the Mac app?
+- **Root question:** Which rule orders the rows of the palette's Account
+  group, in a browser and in the Mac app, so that the app, the mockup, and
+  the protocol agree, also for a row that only one host shows? The options
+  check wrote this question, because no rule sets the order today.
 - **Options:**
   - **A.** After Sign-in, as the General tab orders its sections. This
     changes one list and one test of the app. Effort: Small.
   - **B.** After New workspaces, as `main` has it. This changes the
     mockup. Effort: Small.
-- **Left out:** Other places, because no source draws or asks for them.
-- **Wider fix:** None. One list holds the order.
+  - **C.** Added by the options check. A, and the rule in the Settings
+    section of `docs/protocol/command-palette.md`: the Account group lists
+    its rows in the order of the Account page, tab by tab, and in each tab
+    in the order of its sections. A row of one host at the end of the group
+    was rejected, because the group then leaves the order of the page.
+    Cost: the list, its test, and two protocol sentences. Effort: Small.
+  - **D.** Added by the options check. This Mac after Agents, under the
+    rule that the sections of every host come first in each tab. Both the
+    app and the mockup change. Effort: Small.
+  - **E.** Added by the options check. C, and one list of the Account rows
+    in the mockups that both palettes read, with their labels, search
+    words, and order, so that the search words agree too. Effort: Medium.
+  - **F.** Added by the options check. C, and each package builds its
+    Account group from the list that draws its Account page, so the group
+    cannot drift from the page. Effort: Medium.
+- **Left out:** Change nothing, because the mockup and the product keep
+  disagreeing. This Mac first, after GitHub, or after Keyboard shortcuts,
+  because no rule gives these places, and Keyboard shortcuts ends the
+  group. A group of its own, because each group holds the rows of one
+  page.
+- **Wider fix:** F. The group then follows the page also for a later
+  section.
+- **Related:** The mockup gives This Mac the search word "always allow",
+  and the app does not. The same answer settles which list wins.
 - **Previous examples:** None found.
-- **Recommendation:** A. The palette then follows the order of the
-  General tab, which the person already knows.
+- **Recommendation:** C, changed from A by the options check. The palette
+  then follows the order of the Account page, which the person already
+  knows, and the protocol states the rule, so a later row gets one place.
+  F best protects the codebase.
 - **Action:** ask the user, because the choice decides which side of a
   mismatch between the mockup and the product is right.
 
