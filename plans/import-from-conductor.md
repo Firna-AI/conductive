@@ -485,6 +485,12 @@ decision or the user.
 - The Mac app builds the bucket data of decision 8 with Git, and uploads
   it straight to the bucket with short-lived upload links. No Worker
   request carries the bytes.
+- Agent call, 10 November 2026: the Mac app uploads each part as its own
+  file, with a plain upload to the address that the server gives it, and
+  uses no storage-specific multipart feature. The server keeps all access
+  to the bucket behind one small storage adapter, as it does for the
+  cloud computer provider. Reason: another storage then needs only a new
+  adapter on the server, and an old Mac app keeps working.
 - Decision 11 says which files are too large to import.
 - Each part, each session page, and each request stays small, as the
   performance rules below say.
