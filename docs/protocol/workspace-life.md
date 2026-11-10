@@ -89,6 +89,14 @@ says.
   stopped state with Resume (decision 11).
 - A resume at once when the tab shows again was rejected. Resume avoids a
   start that the user did not ask for.
+- Opening a file tab or a diff tab also resumes the sandbox, in the same
+  cases as opening the workspace (decision 247). A click on a file, on its
+  tab, or on a link to it opens the tab. A move back or forward to its
+  address opens it too.
+- Reason: the tab can show its file only from a running sandbox, so the
+  open asks for the start. A tab that showed the stopped state, or an error
+  with Try again, until a member pressed Resume was rejected, because the
+  open of the tab already asks for the file.
 - While the sandbox is stopped, the chat history shows, and the stopped
   state takes the place of the composer.
 - A start that fails shows the error state with Try again. The chat history

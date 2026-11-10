@@ -705,9 +705,28 @@ Depends on: 4a
 
 Evidence: `.context/archive-with-restore/m5-evidence.md`.
 
+## Milestone 5a: Preserve Restore through file-tab integration (completed)
+
+Tags: ui
+
+Depends on: 4, 5
+
+Main added deliberate file-tab Resume during final verification. Preserve
+that action and the approved stopped return from Restore.
+
+- [x] Resolve the workspace screen integration with the palette actions and
+      the incoming file-tab Resume hook on desktop and phone.
+- [x] Verify that automatic restored-view recovery starts nothing and that
+      a later deliberate file or diff visit still resumes. Add a meaningful
+      regression only if a real interaction needs it.
+- [x] Run the focused Archive/file-tab checks and UI type and early checks.
+      Record the source trace, results, and any regression proof.
+
+Evidence: .context/archive-with-restore/file-tab-integration-read.md.
+
 ## Milestone 6: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 4a, 5
+Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 4a, 5, 5a
 
 - [x] Integrate the latest main preview relay and audit preservation before
       the final gate. Keep Archive preview revocation and unavailable tools.
@@ -719,7 +738,7 @@ Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 4a, 5
 - [x] Fix confirmed review finding 1 with option C. Prove lost-reply expiry
       and recovered-ID persistence through interruption. Keep Restore ended
       after 14 days while cleanup retries.
-- [ ] Integrate main 08cbe3cd and preserve shared software image, commit
+- [x] Integrate main 08cbe3cd and preserve shared software image, commit
       author environment, Issues tracking, comparison rows and docs. Audit
       the merge, install current dependencies, and verify the combined tree.
 - [x] Fix confirmed finding 3 with option B. Keep expired-archive deletion,

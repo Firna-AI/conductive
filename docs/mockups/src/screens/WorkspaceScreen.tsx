@@ -33,6 +33,7 @@ import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import {
   FilesContent,
+  filesPlaceholder,
   openFile,
   startingLogFor,
   ToolContent,
@@ -256,7 +257,13 @@ export function WorkspaceScreen(props: {
       })}
     >
       <WorkspaceBody
-        center={file ? <FilePage view={file} /> : chat}
+        center={
+          file ? (
+            <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
+          ) : (
+            chat
+          )
+        }
         files={files}
         header={header}
         pullRequest={

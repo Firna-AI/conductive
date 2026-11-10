@@ -119,8 +119,9 @@ An open tab alone does not keep it running.
 A normal stop keeps its files, sessions, and chat history.
 
 Open a stopped workspace to start its computer again.
-If it stops while the workspace is open, select **Resume**.
+If it stops while the workspace is open, select **Resume**, or open a file or a change.
 The history remains readable while the computer starts.
+An open file or change waits for the computer, then opens.
 
 **Stop** in chat interrupts an agent turn.
 It is separate from the computer's automatic stop.

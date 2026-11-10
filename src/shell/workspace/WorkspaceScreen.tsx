@@ -24,6 +24,7 @@ import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
 import { ChatArea } from './ChatArea'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
+import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { archivedRestore, sandboxView } from './sandbox-view'
@@ -225,6 +226,7 @@ export function WorkspaceScreen(props: {
   )
   // The actions of the screen for the palette.
   const paletteOffer = <WorkspacePaletteActions chat={chat} context={context} />
+  const tabOpen = <ResumeOnTabOpen context={context} />
   if (phone) {
     const view = phoneView(props.view)
     const archived = sandbox === 'archived'
@@ -247,6 +249,7 @@ export function WorkspaceScreen(props: {
         </div>
         {archived ? null : <PhoneTabBar context={context} />}
         {paletteOffer}
+        {tabOpen}
       </div>
     )
     // An archived workspace on a phone shows only its chat: no pull request
@@ -270,6 +273,7 @@ export function WorkspaceScreen(props: {
           tools={sandbox === 'archived' ? undefined : tools}
         />
         {paletteOffer}
+        {tabOpen}
       </div>
     </WorkspaceGitHub>
   )

@@ -33,8 +33,8 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'start-from-a-branch-pr-or-issue',
     area: 'workspaces-and-branches',
     name: 'Start from a branch, PR, or issue',
-    status: 'planned',
-    note: 'Starting from an existing GitHub branch, pull request, or issue is planned.',
+    status: 'in-progress',
+    note: 'Starting from a GitHub branch or pull request is in progress. Starting from an issue is planned.',
     due: null,
   },
   {
