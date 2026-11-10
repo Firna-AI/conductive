@@ -24,6 +24,10 @@
     - The symptom matches the `runner-repairs.test.ts` case above: no command after the drain. So the suspected source is the same.
   - `worker/lifecycle/provisioning.test.ts`: "recovers an accepted create after its caller closes and the actor restarts".
   - `worker/lifecycle/disk-retention.test.ts`: "keeps a stopped disk through startup and stop failures without a stale stop after user open".
+    - On 10 November 2026, the CI of pull request #164 failed this case at head `929f442e`. The checkout merged that head with main `a1bbd7f8`. The run had 2,048 passes, one failure, and no skips.
+    - The assertion at line 86 expected two stop calls for `bx_1`. It received three: `AssertionError: expected [ 'bx_1', 'bx_1', 'bx_1' ] to have a length of 2 but got 3`.
+    - After merging main through `ae736ab5`, an unchanged isolated run of `npm run test -- worker/lifecycle/disk-retention.test.ts` passed both tests, with no skips. The lifecycle sources and native harness matched `a1bbd7f8`; only the harness README differed in the transcript branch.
+    - No source, assertion, timeout, or retry setting changed for this result. The cause remains unproved. The symptom suggests retention alarm, stop-task handoff, or drain-observation ordering under full-suite load.
 
   Another full-gate failure came from `worker/operator/suspension-race.test.ts` during the primary integration of PR #106.
   Its case was "cancels an in-flight allocation and cleans its delayed computer after actor recovery".
