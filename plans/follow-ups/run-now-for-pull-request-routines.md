@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-09, from branch `calummoore/routines-feature-brainstorm`, decision 510 of `plans/routines.md`. The user chose C now and B as a later follow-up.
-- **Location:** None until the routines code exists. The routine page and the Run now route of the routines feature, and `docs/protocol/routines.md`.
+- **Location:** `src/shell/routines/RunNow.tsx`, the routine page that shows it (`src/shell/routines/RoutineEditor.tsx`), the rule `offersRunNow` in `docs/mockups/src/components/routines/triggerCopy.ts`, the Run now route in `worker/routines/run-route.ts`, the run record in `worker/routines/run-record-data.ts`, and `docs/protocol/routines.md`.
 - **Reason:** The user chose to hide Run now on pull request routines first, and to add this test later.
 
 - **Terms:**
