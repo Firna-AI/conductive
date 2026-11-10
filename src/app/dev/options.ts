@@ -20,6 +20,7 @@ const CONVERSATIONS = [
 ] as const satisfies readonly RecordedChatScenario[]
 
 const UPLOADS = ['wait', 'fail'] as const satisfies readonly DevUploadMode[]
+const FEEDBACK = ['ready', 'fail', 'no-email'] as const
 
 const BANNERS = [
   'none',
@@ -100,6 +101,7 @@ export interface DevOptions {
   /** What each file upload does. */
   upload: DevUploadMode
   shareSaveFails: boolean
+  feedback: (typeof FEEDBACK)[number]
   /** The user waits for app access, with a verified email or none. */
   waiting: 'verified' | 'none' | null
   invited: boolean
@@ -146,6 +148,7 @@ export function readDevOptions(search: string): DevOptions {
     stopAfterMs: stopAfter(params.get('stop')),
     upload: pick(params, 'upload', UPLOADS) ?? 'ready',
     shareSaveFails: params.get('shareSave') === 'fail',
+    feedback: pick(params, 'feedback', FEEDBACK) ?? 'ready',
     waiting,
     invited: params.get('invited') === '1',
     paused: params.get('paused') === '1',

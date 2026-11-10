@@ -3,6 +3,7 @@ import { appDomain } from '../../docs/mockups/src/brand'
 import { createApiClient } from './api/client'
 import { xhrFileTransport } from './api/xhr-files'
 import { browserDelay, socketEventSource } from './events'
+import { APP_VERSION } from './version'
 import {
   windowFocus,
   windowInput,
@@ -49,6 +50,7 @@ export function createLiveServices(target: Window): AppServices {
     newId: () => target.crypto.randomUUID(),
     leave: (url) => target.location.assign(url),
     appOrigin: appHostOrigin(target.location),
+    appVersion: APP_VERSION,
     copy: (text) => copyText(target, text),
   }
 }

@@ -36,6 +36,7 @@ npm --prefix desktop start
 
 `CONDUCTIVE_APP_ORIGIN` selects the API origin at build time.
 It defaults to `https://app.conductive.build`.
+Each build also stamps the renderer with the app version, from the shared [build-version.ts](../build-version.ts), as the web build does.
 Local development can use an HTTP localhost origin.
 `CONDUCTIVE_FRAME_SOURCES` lists space-separated HTTPS frame origins.
 Set the same frame sources in the web policy.

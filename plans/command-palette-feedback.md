@@ -499,6 +499,12 @@ line that applies a decision of the user names that decision.
   team replies to <address>." Without one, it says how to get a reply: add
   a verified email on GitHub, then sign in again. Reason: the Worker reads
   that email at each sign-in.
+- The reply read has loading, ready, and failed states. Send waits until
+  the read is ready, so the reply information is visible before the send,
+  as decision 272 requires. A ready result without an email still permits
+  sending. A failed read keeps the draft and offers Try again. This is my
+  implementation call of 10 November 2026. Milestone 4a draws these states
+  before the dialog implementation.
 - A send shows its progress. A failed send keeps the text and the
   screenshots, and names what failed. A new press of Send tries again.
 - While the send runs, Send shows a spinner and "Sending". Cancel and Add
@@ -644,6 +650,22 @@ line that applies a decision of the user names that decision.
   gets a short section on how to send feedback. Reason: the palette is the
   only entry point, so a guide helps people find it.
 
+### The client model
+
+- The first send snapshots the text, images, app version, and current
+  context. A retry keeps that snapshot until the text or images change.
+  This is my implementation call of 10 November 2026. Reason: a close or
+  navigation after a failed send must not change a retry's payload.
+- The model creates IDs only when the person edits feedback. This is my
+  implementation call of 10 November 2026. Reason: an unused feature must
+  not consume the ID sequence of existing features.
+- Both renderer builds use one helper for the root package version and
+  short Git commit. A source archive keeps the package version with a
+  development commit marker. Non-Vite hosts can supply the version through
+  services. This is my implementation call of 10 November 2026. Reason:
+  both builds need one stamp, while tests and source archives need no
+  bundler global or Git checkout.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -767,22 +789,46 @@ Depends on: 3
 Add the build version, the model of the dialog, and the dev fake, with no
 screen.
 
-- [ ] Stamp the app version in the builds of `vite.config.ts` and
+- [x] Stamp the app version in the builds of `vite.config.ts` and
       `desktop/vite.config.ts`, and give it to the app.
-- [ ] Add the feedback model in `src/app/`: the read of the reply
+- [x] Add the feedback model in `src/app/`: the read of the reply
       address, the draft in memory, and the send with its draft ID.
-- [ ] Add the readers of the replies in `src/app/api/`.
-- [ ] Add the two routes to the dev fake, so that the dialog works with
+- [x] Add the readers of the replies in `src/app/api/`.
+- [x] Add the two routes to the dev fake, so that the dialog works with
       `npm run dev`.
-- [ ] Test the model: a send, a failed send that keeps the draft, a
+- [x] Test the model: a send, a failed send that keeps the draft, a
       second send with the same draft ID, and the clear after a send.
-- [ ] Update the [web app README](../src/app/README.md).
+- [x] Update the [web app README](../src/app/README.md).
+
+Evidence and README handoff:
+`.context/command-palette-feedback/reports/m4.md`. The docs implementor
+owns the remaining README task.
+
+## Milestone 4a: Reply address mockup states
+
+Tags: mockup
+
+Depends on: 4
+
+Draw the two reply-read states that the client lifecycle requires. The
+reply information must appear before Send, as decision 272 chose. This
+adds no API route, rejection, email requirement, or stored data.
+
+- [ ] Add `app/feedback/reply`: the reply address loading, then a failed
+      read with Try again. Reuse the Feedback dialog on desktop and phone.
+- [ ] Keep text entry, screenshots, and Cancel available while the reply
+      read loads or fails. Show Send as unavailable until the reply read
+      is ready. A ready result without an email keeps the existing state.
+- [ ] Choose the short loading and error words with the product copy
+      rules. Update the catalogue and the design of this plan.
+- [ ] Run `npm run mockups:check` and visually check the two states.
+- [ ] Record any problem that the mockups show in this plan.
 
 ## Milestone 5: The palette row and the dialog
 
 Tags: ui
 
-Depends on: 1, 4
+Depends on: 1, 4, 4a
 
 Build the row, the dialog, and the toast as the mockups draw them.
 

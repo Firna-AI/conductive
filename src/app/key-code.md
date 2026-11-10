@@ -42,6 +42,22 @@ Each path is relative to `src/app/`, the folder of this page.
 - `invitations-model.ts`: `InvitationsModel`, the pending invitations,
   Continue to workspaces, and Accept invitation.
   `api/read-invitations.ts`: their readers.
+- `feedback-model.ts`: `FeedbackModel`, which `AppModel.feedback` holds.
+  `open` takes the org, the workspace, and the `desktop` flag of the page,
+  and reads the reply address. `readReply` reads it again, for Try again.
+  `canSend` is the readiness of Send. `addScreenshot` takes a screenshot
+  that the dialog has already checked. `send` gives true only for an
+  accepted send. `feedback-state.ts`: `FeedbackState`, what the dialog
+  shows, and `FeedbackScreenshotInput`. `api/read-feedback.ts`:
+  `readFeedback`, the strict reader of the reply address. The send uses
+  the `ignore` reader for its 204. [Data lifecycle](data-lifecycle.md)
+  gives the rules of the draft.
+- `version.ts`: `APP_VERSION`, the stamp of `../../build-version.ts`, which
+  both Vite configs define.
+- `dev/feedback-routes.ts`: the feedback routes of the dev fake, with the
+  `feedback` option of `dev/options.ts`. `feedback-model.test.ts`,
+  `feedback-lifetime.test.ts`, and `dev/feedback-routes.test.ts` check
+  them, with `feedback.test-support.ts`.
 - `get-started.ts`: the order and the states of the steps of Get started.
   `setup-steps.ts`: `setupSteps`, the steps that the screens show, and
   `setupOrg`, the org of Get started and of the address `/`.
