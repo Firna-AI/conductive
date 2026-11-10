@@ -10,6 +10,8 @@ export function createDesktopServices(
 ): AppServices {
   return {
     ...createLiveServices(target),
+    platform: 'mac',
+    host: { kind: 'mac-app', system: 'mac' },
     api: createApiClient((path, init) =>
       target.fetch(new URL(path, appOrigin).href, {
         ...init,

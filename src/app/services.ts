@@ -1,6 +1,8 @@
 import { createContext, useContext } from 'react'
+import type { ShortcutKeyboard } from '../shared/shortcut-key'
 import type { ApiClient } from './api/client'
 import type { Delay, WorkspaceEventSource } from './events'
+import { detectShortcutHost, type ShortcutHost } from './shortcuts/host'
 import type { Readable } from './store'
 
 /** The storage of the panel widths, such as `localStorage`. */
@@ -11,13 +13,14 @@ export interface KeyValueStorage {
 
 /**
  * The keyboard of the person: a Mac, with ⌘, or Windows and Linux, with
- * Ctrl. It chooses the key of the command palette and the hint of that key.
+ * Ctrl. It chooses the defaults and the text of the shortcut hints.
  */
-export type Platform = 'mac' | 'other'
+export type Platform = ShortcutKeyboard
 
 /** A press of a key on the page. A browser gives its `KeyboardEvent`. */
 export interface KeyPress {
   readonly key: string
+  readonly code: string
   readonly metaKey: boolean
   readonly ctrlKey: boolean
   readonly altKey: boolean
@@ -30,6 +33,8 @@ export interface KeyPress {
   readonly target: EventTarget | null
   /** Stops the own action of the browser for the key. */
   preventDefault(): void
+  /** Stops the press before an element of the page hears it. */
+  stopPropagation(): void
 }
 
 /**
@@ -55,11 +60,14 @@ export interface AppServices {
   onInput: (listener: () => void) => () => void
   /**
    * Calls `listener` at each key press on the page, before an element of
-   * the page hears it. The listener can stop the browser's own action.
+   * the page hears it. The listener can stop the browser's own action
+   * and delivery to an element.
    */
   onKey: (listener: (press: KeyPress) => void) => () => void
   /** The keyboard of the person, as `Platform` says. */
   platform: Platform
+  /** The host and system that choose the kept keys and text keys. */
+  host: ShortcutHost
   /**
    * Whether the page shows, so that the user can see its output. A page
    * without the focus can still show, so this is not the focus.
@@ -168,4 +176,15 @@ const appleAgents = /Mac|iPhone|iPad|iPod/
 /** The keyboard of a browser window, from the name of its system. */
 export function windowPlatform(target: Window): Platform {
   return appleAgents.test(target.navigator.userAgent) ? 'mac' : 'other'
+}
+
+/** Only Chrome and Edge in an app display mode count as installed apps. */
+export function windowHost(target: Window): ShortcutHost {
+  const mode = target.matchMedia?.('(display-mode: window-controls-overlay)')
+    .matches
+    ? 'window-controls-overlay'
+    : target.matchMedia?.('(display-mode: standalone)').matches
+      ? 'standalone'
+      : 'browser'
+  return detectShortcutHost(target.navigator.userAgent, mode)
 }

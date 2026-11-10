@@ -178,8 +178,11 @@ with the send key that every composer shares, and the waitlist.
   before a field can stop them. An open workspace counts the input
   anywhere on the page as activity, at most once a minute. `onKey` is not
   passive, so the palette key stops the browser's own action.
-  `AppServices.platform` says whether the keyboard is a Mac, which
-  chooses the palette key and its hint.
+  `AppServices.platform` chooses the shortcut defaults and their key text.
+  `AppServices.host` identifies the Mac app, an installed Chromium app,
+  or a browser tab with its browser and system. `KeyPress.code` identifies
+  the physical key. `KeyPress.stopPropagation` can stop delivery to a
+  field or terminal after a shortcut consumes the press.
 - An address that people share, such as the invite link, starts with
   `AppServices.appOrigin`: the origin of the page in a browser. The Mac
   app loads the page from its own origin, so it names the app host of the
@@ -205,7 +208,13 @@ clicks, types, and lets the answers of the fake API settle.
 `../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
 for the tests of New workspace as a page or a dialog, and of its send key.
 
-## Key code
+### Key Code
+
+- [Shortcuts](shortcuts/README.md): the pure command registry, keyboard
+  defaults, browser keys, account keymap, conflicts, and press decision.
+  The page shortcut listener does not call this model yet.
+- `services.ts`: `windowHost` detects the web host. `live-services.ts`
+  and `dev/fake-services.ts` supply it with the keyboard and key events.
 
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.

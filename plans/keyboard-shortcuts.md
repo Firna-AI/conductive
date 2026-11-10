@@ -988,19 +988,22 @@ Depends on: 2. Agent call, 2026-11-10: Milestone 3 starts while the Linux
 TODOs wait for decisions 196 and 197. It leaves out the Linux tab keys and
 the layout switch rule until the answers.
 
-- [ ] Add the shared command ids, the key text, and the request and reply
+- [x] Add the shared command ids, the key text, and the request and reply
       types under `src/shared/`.
-- [ ] Add the model under `src/app/shortcuts/`: the commands, the
+- [x] Add the model under `src/app/shortcuts/`: the commands, the
       defaults for each keyboard, the kept keys of each browser, the
       keymap of a person, the conflicts, and the decision for one key
       press.
-- [ ] Add the host to `AppServices`: the Mac app, an installed app, or a
+- [x] Add the host to `AppServices`: the Mac app, an installed app, or a
       browser tab with its browser. Add the physical key to `KeyPress`,
       and a way to stop the press before an element of the page hears it.
-- [ ] Node tests: the decision for a key press, the keymap with changes,
+- [x] Node tests: the decision for a key press, the keymap with changes,
       the conflicts, and the kept keys. Name the break that each test
       catches. Cover the keys that the terminal keeps on each keyboard,
-      and the text keys in a text field.
+      and the text keys in a text field. Evidence:
+      `.context/keyboard-shortcuts/reports/m3-non-ui.md`.
+- [ ] Add the Linux tab keys and the layout switch rule after decisions 196
+      and 197.
 
 ## Milestone 4: Storage on the Worker
 

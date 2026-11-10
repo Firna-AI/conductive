@@ -5,6 +5,7 @@ import { AppModel } from '../../../app/app-model'
 import { browserDelay } from '../../../app/events'
 import {
   windowFocus,
+  windowHost,
   windowInput,
   windowKeys,
   windowPlatform,
@@ -72,6 +73,7 @@ const app = new AppModel({
   onInput: windowInput(window),
   onKey: windowKeys(window),
   platform: windowPlatform(window),
+  host: windowHost(window),
   visible: windowVisibility(window),
   storage: null,
   newId: () => crypto.randomUUID(),

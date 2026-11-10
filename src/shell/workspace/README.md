@@ -123,7 +123,7 @@ refusal of a suspended org, and the context that each part gets.
 [Development page](development-page.md) says how to run the page over the
 fake API, with its address options, its controls, and the test command.
 
-## Key code
+### Key Code
 
 - `WorkspaceScreen.tsx`: the screen of one open workspace. It takes a view
   of the kept workspace through `useWorkspaceStore`, and places the header,
@@ -223,6 +223,8 @@ fake API, with its address options, its controls, and the test command.
   also for a suspended org and for the saved message of a failed start.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
+  `dev/main.tsx` supplies the real window host, keyboard, and key events
+  through `AppServices`.
 
 ## Related docs
 

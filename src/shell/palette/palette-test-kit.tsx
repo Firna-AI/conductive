@@ -49,6 +49,13 @@ export async function openPaletteTab(
   const app = await startedApp(server, {
     onKey: windowKeys(window),
     platform: options.platform ?? 'other',
+    host: options.mac
+      ? { kind: 'mac-app', system: 'mac' }
+      : {
+          kind: 'browser-tab',
+          browser: 'chrome',
+          system: options.platform === 'mac' ? 'mac' : 'windows',
+        },
     events: options.events ?? recordingSocket(server).source,
   })
   const navigation = memoryNavigation(href)

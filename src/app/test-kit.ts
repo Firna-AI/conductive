@@ -252,6 +252,11 @@ export function testServices(
     onInput: new ManualInput().onInput,
     onKey: new ManualKeys().onKey,
     platform: 'other',
+    host: {
+      kind: 'browser-tab',
+      browser: 'chrome',
+      system: overrides.platform === 'mac' ? 'mac' : 'windows',
+    },
     visible: new ManualVisibility(),
     ...rest,
   }
