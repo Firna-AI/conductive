@@ -18,13 +18,19 @@
 - **Problem:** Two plans that run at the same time take the same numbers, because no rule reserves them.
 - **Evidence:**
   - Decision 142 names three records:
-    - the operator section, in `docs/protocol/operator-section.md` and `docs/protocol/access-and-security.md`
+    - the operator section, in `docs/protocol/operator-section.md` and `docs/protocol/isolation.md`
     - the rule that the last edit that the server commits to a session field wins, in `docs/protocol/agents-and-sessions.md`
     - the Preferences tab, in `docs/protocol/create-a-workspace.md`
   - Decision 145 names three records:
     - the palette key, in `docs/protocol/command-palette.md`
-    - the masked file paths, in `docs/protocol/access-and-security.md` and `src/marketing/privacy.ts`
+    - the masked file paths, in `docs/protocol/tokens-and-secrets.md` and `src/marketing/privacy.ts`
     - the lift of a suspension, in `docs/protocol/operator-actions.md` and `docs/protocol/operator-section.md`
+  - The preview relay change of `calummoore/port-preview-error-v2` took 213 and 214 on 10 November 2026. Main used 213 to 217 for the provider groundwork within hours, so before its merge the branch renumbered them:
+    - 213 became 218, the local `Host` and `Origin` that a previewed server gets.
+    - 214 became 219, the refusal of previews in a sandbox without the relay.
+  - Decision 148 names two records:
+    - the rule that only an image build installs the terminal files, in `plans/boat-native-remote-workspaces.md`
+    - the Overview that lists no suspensions, in `docs/protocol/operator-section.md` and the operator mockup
   - Decisions 150 and 151 each name two records:
     - the fold of the work of an ended turn, in `docs/protocol/chat-and-events.md` and `docs/protocol/agent-tools.md`
     - the first build of a new org, in `docs/protocol/org-image.md`, `docs/protocol/orgs-and-members.md`, and `docs/protocol/create-a-workspace.md`

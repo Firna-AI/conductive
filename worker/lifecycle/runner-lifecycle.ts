@@ -7,11 +7,16 @@ import { requireOrgMember } from './access'
 import type { PendingTurn } from './workspace-runtime'
 import type { LifecyclePublisher } from './durable-types'
 
+export type RunnerLifecycleEvent = Extract<
+  RunnerEvent,
+  { type: 'runner.ready' | 'turn.started' | 'start.updated' }
+>
+
 /** Call only after Milestone 7 accepts an ordered runner event. */
 export async function applyRunnerLifecycle(
   lifecycle: DurableLifecycle,
   turns: TurnScopes,
-  event: RunnerEvent,
+  event: RunnerLifecycleEvent,
   publish?: LifecyclePublisher,
 ): Promise<void> {
   const state = await lifecycle.read()
@@ -29,9 +34,6 @@ export async function applyRunnerLifecycle(
   } else if (event.type === 'turn.started') {
     const turn = await turns.find(event.turnId)
     if (turn) await lifecycle.turn(turn.sessionId, true, publish)
-  } else if (event.type === 'turn.completed' || event.type === 'turn.failed') {
-    const turn = await turns.remove(event.turnId)
-    if (turn) await lifecycle.turn(turn.sessionId, false, publish)
   } else if (event.type === 'start.updated') {
     await lifecycle.reportStart(event.start, publish)
   }

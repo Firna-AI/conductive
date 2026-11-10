@@ -62,6 +62,7 @@ export async function realRuntimeFixture(bundle: string) {
           config: {
             name: 'workspace-runtime-test',
             compatibilityDate: '2026-11-06',
+            compatibilityFlags: ['global_fetch_strictly_public'],
             exports: {
               WorkspaceRuntimeFixture: {
                 type: 'durable-object',
@@ -175,6 +176,7 @@ export async function realRuntimeFixture(bundle: string) {
     orgId: 'runtime-org',
     buildId: 'base-runtime-build',
     imageName: 'base-runtime-image',
+    runnerProtocolVersion: 1,
     repositories: [
       {
         id: 'runtime-repo',

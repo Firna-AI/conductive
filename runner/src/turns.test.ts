@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { runnerHarness, turn } from '../test-support/harness'
+import { duringTurn, runnerHarness, turn } from '../test-support/harness'
 
 it('combines partial text, steers a turn, and reports actual touched files', async () => {
   const h = await runnerHarness()
@@ -13,7 +13,7 @@ it('combines partial text, steers a turn, and reports actual touched files', asy
   provider.emit({ type: 'delta', messageId: 'answer', text: 'Hello ' })
   provider.emit({ type: 'delta', messageId: 'answer', text: 'secret-alice' })
   const message = turn('2')
-  h.endpoint.send({ ...message, type: 'message', turnId: 'turn-1' })
+  h.endpoint.send({ ...duringTurn(message), type: 'message', turnId: 'turn-1' })
   h.endpoint.send({
     type: 'model',
     commandId: 'model-1',
@@ -117,7 +117,11 @@ it('stops a turn without an error and keeps the session on its original agent', 
   h.endpoint.send(turn())
   await h.runner.idle()
   const provider = h.providers.latest
-  h.endpoint.send({ ...turn('queued'), type: 'message', turnId: 'turn-1' })
+  h.endpoint.send({
+    ...duringTurn(turn('queued')),
+    type: 'message',
+    turnId: 'turn-1',
+  })
   provider.emit({ type: 'delta', messageId: 'stop-tail', text: 'tail sec' })
   await h.runner.idle()
   provider.emit({
