@@ -66,6 +66,7 @@ Each path is relative to `src/app/`, the folder of this page.
 - `workspace-actions.ts`: `OrgModel.workspaceActions`, the Rename write,
   owner-only confirmation, and list-owned Archive flows for unopened rows.
   `list-changes.ts` confirms only the fields of each action.
+  Archive also advances `updatedAt` when the acknowledged time is newer.
 - `../shell/workspace/shown-workspaces.ts`: `ShownWorkspaces.rename`,
   `reassigned`, and `archive` use a kept model when one exists. They open
   no workspace and create no model for an unopened row.
@@ -93,6 +94,7 @@ Each path is relative to `src/app/`, the folder of this page.
   `WorkspaceModel.renamed` takes the confirmed name into the kept detail.
   Local action fields stay over pending open and Resume replies.
   `workspace-detail.ts` maps its stream and Archive records to detail.
+  `workspace-activity.ts` counts input reports through `WorkspaceActivity`.
 - `suspension.ts` and `permissions.ts`: the suspension of an org, the
   client that reports its refusals, also the replies of its fetch, and the
   rules of what a person may change.
@@ -186,7 +188,9 @@ Each path is relative to `src/app/`, the folder of this page.
   workspace dialog, and the command palette.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
-  every sheet and dialog uses. Escape closes only the newest layer.
+  every sheet and dialog uses. Escape closes only the newest layer. Its
+  optional `returnFocus` names a trigger that a render can replace, such as
+  the row of a phone menu sheet.
   `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
   screen after a layer closes with a move, which the main area of a
   desktop frame takes through `useScreenFocus`.
@@ -206,5 +210,7 @@ Each path is relative to `src/app/`, the folder of this page.
   composer.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.
   `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
+  A closing row menu gives the focus to the current link of its row through
+  it, also after a render replaced the row.
 - `../shell/orgs/`: Create org and the name and initials fields.
   `../shell/settings/RepositorySearch.tsx`: the searchable repository list.

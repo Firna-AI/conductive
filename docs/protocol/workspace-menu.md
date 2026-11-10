@@ -27,6 +27,7 @@ number names a dated record, as
   workspace is open.
 - Each action changes only its own part of the workspace: the section,
   the owner, the name, or the archive state.
+- Archive can also advance the activity time, as [Archive](#archive) says.
 - The reply to an action does not bring back an older value of another
   part, such as an older state of the workspace.
 - When the workspace of the row is open, its page shows the new name or
@@ -139,6 +140,8 @@ number names a dated record, as
 
 ## Archive
 
+- A confirmed Archive advances the row's activity time to its acknowledged
+  time. If the row already has a newer activity time, that newer time stays.
 - Archive asks the Archive question over the current page, with its check
   for work that is not pushed, as
   [Archive](workspaces-and-sandboxes.md#archive) says.

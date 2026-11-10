@@ -351,6 +351,75 @@ These are agent calls from Milestone 4c.
   does not name the hook that draws the question. Reason: Milestone 4d
   joins main's row Archive and the menu in one flow and chooses that hook.
 
+### Model integration design calls, 9 November 2026
+
+These are agent calls from the model part of Milestone 4d.
+
+- `ShownWorkspaces.archive` stays the entry point for the row shortcut
+  and the menu. Reason: it reuses the kept workspace's flow and gives an
+  unopened row a list-owned flow without opening that workspace.
+- The kept Archive callback projects the detail before it confirms the
+  list. Reason: the list's immediate Archive follow must not replace the
+  detail's newer name or owner with a different list snapshot.
+- A confirmed Archive keeps its detail over older open and Resume
+  replies and over replayed start, title, and non-archived state events.
+  An actual archived detail read still applies. Reason: replayed records
+  cannot undo Archive or replace newer metadata.
+- Activity reporting moves to `WorkspaceActivity`. The detail helper
+  owns archive protection and local metadata projections. Reason: each
+  responsibility stays separate and the combined model stays below the
+  file-length limit.
+- Archive also advances `updatedAt` when its reply is newer than the
+  current activity time. It keeps a newer current time in the list and
+  detail. This replaces M3's state-only projection detail. Reason: main
+  records the Archive time as activity, and the user chose to keep Archive.
+
+### Workspace menu UI integration design calls, 9 November 2026
+
+These are agent calls from the UI part of Milestone 4d.
+
+- `useRowMenus` gives each row its menu and its Archive shortcut. Both
+  start the flow of `ShownWorkspaces.archive`, so main's `useListArchive`
+  is gone. The shortcut keeps main's `mayArchive` check. Reason: one
+  action shows one question, with main's permissions.
+- The open menu, the Rename field, and the list's own question belong to
+  the org of the list. A change of the org closes them and cancels the
+  list's own check, as main did. Reason: the sidebar keeps one list while
+  the org changes.
+- The list owns the flow of its question only while its row is not the
+  current page. Reason: the page draws its own question, and closes its
+  flow when it closes.
+- A closing menu gives the focus to the current link of its row through
+  the link refs of `useRowFocus`. An archived row falls back to its own
+  link. Reason: a move can replace the row in the render that closes the
+  menu.
+- The row of an open menu keeps the fill of a hover, without the Archive
+  shortcut. Reason: the person sees which row the menu changes, and only a
+  real hover shows the shortcut.
+- The Rename field takes the focus in an effect after the cleanups of the
+  closed menu. Reason: a phone sheet keeps the page inert until its own
+  cleanup, so an earlier focus would not take.
+- Rename leaves Enter and Escape to an input method that composes a word,
+  as the command palette does. Reason: the input method owns those keys.
+- The menu keys also work from the Archive shortcut, and give the focus
+  back to the link of the row. Reason: the shortcut hides when the pointer
+  leaves the row.
+- Each section choice uses the ID of its section as its key. Reason: two
+  sections can have the same name.
+
+### Phone sheet focus design call, 9 November 2026
+
+This is an agent call from Milestone 4e.
+
+- A sheet can take an optional `returnFocus` callback, which
+  `useModalLayer` passes to `useLayerFocus`. The row menu sheet passes the
+  same row callback as the menu at a point. The callback runs after the
+  sheet releases inert, and only when the focus is lost or stayed in the
+  sheet. An address change still sends the focus to the new screen. When
+  the callback places no focus, the element that had the focus before the
+  sheet takes it back. Reason: a move from the sheet replaces the row that
+  opened it, and every other sheet and dialog keeps its behavior.
+
 ## Milestone 1: Workspace menu mockups
 
 Tags: mockup
@@ -561,29 +630,54 @@ Depends on: 4c
 Actions: `non-ui implementor` for model state, then `ui implementor` for
 the components and interactions. This milestone changes no backend route.
 
-- [ ] Merge main's confirmed Archive state and older-read protections
+- [x] Merge main's confirmed Archive state and older-read protections
       with the field-specific name, owner, and archive updates.
-- [ ] Use one Archive flow for the shortcut and the menu. Preserve the
+- [x] Keep Archive's immediate activity time as on main. A later reply
+      must not roll back a newer activity time.
+- [x] Use one Archive flow for the shortcut and the menu. Preserve the
       currently open workspace and the single question during its load.
-- [ ] Remove the workspace More control on every screen and its dead
+- [x] Remove the workspace More control on every screen and its dead
       helpers. Keep the hover-only Archive, its permissions, and its layout.
-- [ ] Keep main's focus and keyboard moves from every row control. Keep
+- [x] Keep main's focus and keyboard moves from every row control. Keep
       right-click, local menu keys, drag, and modified-click navigation.
-- [ ] Preserve all main tests. Update tests of the explicitly removed
+- [x] Preserve all main tests. Update tests of the explicitly removed
       More behavior. Verify new or changed asynchronous tests ten times.
-- [ ] Run the targeted checks and browser smoke test on the combined UI.
+- [x] Run the targeted checks and browser smoke test on the combined UI.
+
+Model evidence: `.context/workspace-context-menu/resume-f/model/report.md`.
+UI evidence: `.context/workspace-context-menu/resume-f/ui/report.md`.
+
+## Milestone 4e: Keep focus after a sheet moves a row
+
+Tags: ui
+
+Depends on: 4d
+
+Action: `ui implementor`.
+
+- [x] Return focus to the current workspace link after a section choice
+      in the phone sheet replaces the row. Keep other sheet behavior.
+- [x] Extend the existing phone menu test, prove its failure, repeat it
+      ten times, and check the real browser and affected layers.
+
+Evidence: `.context/workspace-context-menu/resume-f/phone-focus/report.md`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3, 4, 4a, 4b, 4c, 4d
+Depends on: 1, 2, 3, 4, 4a, 4b, 4c, 4d, 4e
 
 Action: `default orchestrator`.
 
 - [x] Resolve Decision 2 before integrating main's Archive row control.
       Then add the required integration milestones for its chosen approach.
-- [ ] Run the early checks and `npm run check` on the complete implementation.
+- [x] Integrate the latest main changes before the complete check. Keep
+      the comparison page's Rename row aligned with the finished feature.
+- [x] Run the early checks and `npm run check` on the complete implementation.
       Install root, desktop, and runner dependencies as `AGENTS.md` requires.
-- [ ] Review the final diff for scope, preserved functionality, protocol
+- [x] Integrate main's later Mac download and comparison updates. Keep
+      the finished Rename row and every unrelated main feature.
+- [x] Run `npm run check` again on that combined tree before the review.
+- [x] Review the final diff for scope, preserved functionality, protocol
       alignment, legal text, file length, and real data in product screens.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
@@ -594,6 +688,8 @@ Action: `default orchestrator`.
       decisions and design calls in the pull request description.
 - [ ] Open the pull request into `main`. Include the plan permalink and each
       follow-up item that this change adds. Wait for CI before the final report.
+
+Evidence: `.context/workspace-context-menu/final-integration/`.
 
 ## Post-merge follow-up (non-blocking)
 

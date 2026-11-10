@@ -46,6 +46,15 @@
   outline-offset: -2px;
 }
 
+/*
+ * A menu at a point of the window, or its choices, above the page. Its
+ * owner sets its place, so no box that scrolls cuts it off.
+ */
+.pointLayer {
+  position: fixed;
+  z-index: 20;
+}
+
 /* The anchor of a menu that opens beside its trigger. */
 .anchor {
   display: flex;

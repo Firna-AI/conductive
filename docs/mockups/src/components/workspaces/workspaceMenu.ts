@@ -20,7 +20,7 @@ export type RowAccess = {
 }
 
 /** One row of the workspace menu: an action, or the line before Archive. */
-type WorkspaceMenuItem =
+export type WorkspaceMenuItem =
   | {
       kind: 'action'
       action: WorkspaceAction
@@ -46,10 +46,10 @@ function action(
  * admins reassign, and only the owner and the admins archive. The archived
  * row of an admin offers only Reassign to. An org with one section offers
  * no Move to section. An empty menu means no menu, so a right click keeps
- * the browser's own menu. The mockups read this one list. It holds no data
- * of a screen, so the app can import it too.
+ * the browser's own menu. The mockups and the app read this one list. It
+ * holds no data of a screen, so the app can import it.
  */
-function workspaceMenuItems(access: RowAccess): WorkspaceMenuItem[] {
+export function workspaceMenuItems(access: RowAccess): WorkspaceMenuItem[] {
   const reassign = action('reassign', 'Reassign to', UserRoundPen)
   if (access.archived) return access.admin ? [reassign] : []
   const items: WorkspaceMenuItem[] = []
