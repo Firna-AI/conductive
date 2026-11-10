@@ -49,7 +49,7 @@
   - The three logins in a secret store, and a model of each agent that the test account can use.
   - The terminal of a test workspace on that repository, in the test org of the version 1 image.
 - **Done when:** every step below gives its expected result for all three login kinds, and the evidence holds only the values that the evidence rules allow. Then delete this item. When a step fails, keep this item, record the failure as the evidence rules say, and report it to the user.
-- **Related:** `plans/follow-ups/runner-update-at-start.md` records how version 1 runners could end: an update of the runner at each start. When no sandbox can run a version 1 runner any more, drop this item.
+- **Related:** `plans/follow-ups/runner-update-at-start.md` records how version 1 runners could end, for example an update of the runner at each start with a version pin that the Worker raises. When no sandbox can run a version 1 runner any more, drop this item.
 
 ## Live check
 

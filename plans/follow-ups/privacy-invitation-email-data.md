@@ -36,6 +36,7 @@
   - No third naming approach exists. The page names either the service or its kind.
 - **Wider fix:** None. The legal-pages rule now covers this class. It came two days after the email invitations, which explains this gap.
 - **Previous examples:** Commit `3f3d7b9`, on 7 November 2026, corrected the legal drafts after the login-sharing feature changed whose login a session uses.
+- **Related:** `plans/follow-ups/privacy-invitation-item-stale.md` corrects this item. The Privacy page already names Resend and the verified emails, so two of its gaps are stale.
 - **Recommendation:** A. The page names every other outside party, except the cloud computer provider that a repository rule keeps unnamed. B protects the page better if the email provider changes. Both forms identify the recipient of the invitation data.
 - **Action:** ask the user, because both texts are correct, and no copy rule picks one.
 

@@ -91,7 +91,7 @@ npm run typecheck
 - Native request controls hold the real JSON reader and expose `bodyUsed`.
   The queue observer signals after the production chat queue accepts its next task.
 - `workspace-callbacks.ts` preserves each real callback and its result before it awaits a native test observer.
-  Native observers record stored events, ready, disconnect, dispatch, and file-result calls at that composition point.
+  Native observers record stored events, ready, disconnect, dispatch, `turnEnded`, and file-result calls at that composition point.
   They do not infer callbacks from saved events or lifecycle-controller methods.
 - `login-queries.test-support.ts` captures login queries inside the native object.
   The metadata tests also observe actual native decrypt calls in explicit capture windows.

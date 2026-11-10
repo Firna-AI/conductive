@@ -102,7 +102,6 @@ Each new runner connection gets it again until the late end of that turn from th
 The interrupt changes no public turn or session state.
 So Try again needs no Worker wait, and the runner starts the retry after the old agent process exits.
 After that commit, the common turn-end report gives the end to the lifecycle and to device cleanup, as for every other turn end.
-The failure also calls `runnerEventStored` with the stored event.
 A failure fails no turn when the newest connection of its owner has closed, or when the workspace names another sandbox.
 The current connection and computer then get their own owner.
 

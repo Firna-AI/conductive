@@ -67,10 +67,40 @@ Replaced ways:
 - The Codex model provider address `https://api.openai.com/v1` in
   `runner/src/providers/codex.ts` → the gateway address of Codex. Moved in
   Milestone 7.
+- The report of each turn end to the workspace lifecycle through
+  `runnerEventStored`, which matched the stored end events by type → the
+  common turn-end report of D36. `TurnCompletion.finish` records each
+  ended turn in the chat transaction, and the `turnEnded` hook reports it
+  to the lifecycle after the commit. Consumers:
+  - The type match of turn ends and the device cleanup in
+    `runnerEventStored` of `worker/chat/workspace-integration.ts`. Moved
+    in Milestone 6.
+  - The attachment copy failure in `worker/chat/attachment-delivery.ts`,
+    which still called `runnerEventStored` with its stored `turn.failed`
+    event. Moved by the fix of review finding 41 of 10 November 2026,
+    under the open review TODO of Milestone 10.
+  - The notification checks of `worker/chat/delivery-order.test.ts`, which
+    observed that call. The same fix moves them to `turnEnded`, and adds
+    `turnEnded` to the observed callbacks of
+    `worker/chat/workspace-callbacks.ts`.
+  - `worker/chat/attachments.md`, `worker/lifecycle/workspace-object.md`,
+    and `worker/chat/tests.md`. Moved by the same fix.
+  - `plans/follow-ups/runner-turn-failed-lifecycle-test.md`, which named
+    the removed `turn.failed` match of the lifecycle. The same fix deletes
+    it, because the lifecycle no longer matches turn ends by type. The
+    chat still sends a runner's stored end to `TurnLifecycle.runnerEnded`
+    by its type, in `worker/chat/turn-events.ts`. The `failed` case of
+    `worker/chat/integration/workspace-lifecycle-recovery.test.ts` covers
+    that match through the production workspace object.
+  - The old way itself: the turn-end branch of `applyRunnerLifecycle` in
+    `worker/lifecycle/runner-lifecycle.ts`, which no caller reached after
+    Milestone 6, and the turn ends in the event type of
+    `reportRunnerLifecycle`. The same fix deletes the branch, and narrows
+    the type to `runner.ready`, `turn.started`, and `start.updated`.
 
 No own-endpoint route exists on `origin/main`. Decision 10 B moves that
-feature's integration to the follow-up above. This branch does not build
-a direct own-endpoint route in the runner.
+feature's integration to the own-endpoint follow-up of the summary above.
+This branch does not build a direct own-endpoint route in the runner.
 
 ## Decisions
 
@@ -414,7 +444,7 @@ added on 10 November 2026. Cal chose K on 10 November 2026.
   - **J.** Give Claude the gateway address and the turn token in a profile pair, with no address, token, or certificate setting in its environment or flag settings. Pin `ANTHROPIC_BASE_URL` to an empty value in the flag settings, so that repository settings cannot redirect the agent. Cost: the turn token moves from the private descriptor into a file that each process can read during the turn. A project SDK without its own key finds the profile pair and spends the starter's login, unless the gateway refuses requests without the agent's markers. The empty value reaches children: Python SDK 0.125.0 then fails, and a project address in an env file loses to it. The client sends the token of an API-key login as a bearer token. Effort: Medium.
   - **K.** Use J without the empty pin. Cost: a repository setting can send the agent's requests and its turn token to another address, and the agent then fails there. A repository hook could already read the token file. Python SDKs and env-file addresses keep working. The other costs of J stay. Effort: Medium.
 - **Shared assumptions:** The saved login stays outside a newer-image computer. It comes from the approved gateway requirement. Options A to I also keep the turn token on its private descriptor and the native Claude subscription and API-key modes. J and K drop both: the turn token sits in a file, and Claude uses its profile mode. The current client version is an implementation pin, which A can replace. No option authorizes a new trust change or an unlisted child regression without Cal's answer.
-- **Left out:** An environment-only endpoint lets repository settings redirect the agent, and children inherit it. Tested host-managed mode, built-in scrubbing, and a plain Unix socket failed the goal. Vendor cloud-provider modes change the required native authentication. A profile pair whose credentials path is the private descriptor failed, because the pinned client creates a lock folder beside the credentials file. Real-login fallback breaks the approved protection. A contains the vendor client-change route.
+- **Left out:** An environment-only endpoint lets repository settings redirect the agent, and children inherit it. Tested host-managed mode, built-in scrubbing, and a plain Unix socket failed the goal. Vendor cloud-provider modes change the required native authentication. A profile pair whose credentials path is the private descriptor failed. The pinned client locks the folder that holds the credentials file, and it could not make that lock beside `/proc/<pid>/fd`. Real-login fallback breaks the approved protection. A contains the vendor client-change route.
 - **Wider fix:** A's client separation. None of the runner mechanisms removes the entire class.
 - **Previous examples:** The existing custom-endpoint plan has the same child-environment problem. The pinned-client proofs showed the gateway address in commands, background commands, both hook forms, and MCP servers. The restoring-prefix proof passed its common-case matrix but failed the explicit equal-value override case.
 - **Related:** Gateway-first remains approved. This question affects Claude's transport and blocks the shared version 2 runner cutover. It does not reopen custom endpoints or provider approval.
@@ -740,9 +770,11 @@ more approaches of each call.
   client uses `ANTHROPIC_BASE_URL` before the profile's `base_url`, and
   it uses profile auth only when no other credential is set. It refuses
   a credentials file that other users can read. Rejected: `/dev/fd/3` as
-  the credentials path, because the client creates a lock folder beside
-  the file. Rejected: the user's default profile folder and name,
-  because they would replace a project's own Anthropic profile.
+  the credentials path, because the client locks the folder that holds
+  the file. It makes a lock folder beside that folder, and it could not
+  make one beside `/proc/<pid>/fd`. Rejected: the user's default profile
+  folder and name, because they would replace a project's own Anthropic
+  profile.
 - **D39. Agent markers, 10 November 2026.** Agent call for decision 11 K.
   The Claude route refuses a request that lacks the markers that only
   the `claude` program sends, before the turn check and before any

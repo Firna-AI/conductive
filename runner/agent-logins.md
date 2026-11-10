@@ -110,9 +110,16 @@ says.
 - Stop also removes the file when it comes while the adapter still writes
   the profile pair. The config file stays, and it holds no secret.
 - Before its first connection, the runner removes each entry of the
-  `credentials` folder. So no token stays after a crash. The pinned
-  program makes a lock folder beside a credentials file, and this step
-  removes such folders too. A reconnect removes nothing.
+  `credentials` folder. So no token stays after a crash. A reconnect
+  removes nothing.
+- While the pinned program reads a credentials file, it locks the folder
+  that holds the file. Its lock is the folder `credentials.lock`, beside
+  the `credentials` folder. The program removes the lock at a normal exit
+  and at each signal that it can catch.
+- The removal before the first connection keeps that lock, because the
+  lock is outside the `credentials` folder. A hard kill of the program
+  during a read can leave the lock. Then no later program can read its
+  token until the lock is 60 seconds old.
 - The runner uses its own folder, not the default Anthropic folder
   `~/.anthropic`. So the Anthropic profiles of a project stay as they are.
 - A tool process inherits `ANTHROPIC_CONFIG_DIR` and `ANTHROPIC_PROFILE`.
