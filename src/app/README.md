@@ -183,7 +183,8 @@ with the send key that every composer shares, and the waitlist.
   page. The browser hears the input and the keys in the capture phase,
   before a field can stop them. An open workspace counts the input
   anywhere on the page as activity, at most once a minute. `onKey` is not
-  passive, so the palette key stops the browser's own action.
+  passive, so the shortcut listener stops the browser's own action of a
+  key that runs a command.
   `AppServices.platform` chooses the shortcut defaults and their key text.
   `AppServices.host` identifies the Mac app, an installed Chromium app,
   or a browser tab with its browser and system. `KeyPress.code` identifies
@@ -218,7 +219,8 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 
 - [Shortcuts](shortcuts/README.md): the pure command registry, keyboard
   defaults, browser keys, account keymap, conflicts, and press decision.
-  The page shortcut listener does not call this model yet.
+  The [shortcut layer](../shell/shortcuts/README.md) calls it for each key
+  of the page.
 - `services.ts`: `windowHost` detects the web host. `live-services.ts`
   and `dev/fake-services.ts` supply it with the keyboard and key events.
 
@@ -361,18 +363,23 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   before the name. `commands.ts` holds the labels and the search words.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
-  `palette-keys.ts` the palette key and what it does, and `controller.ts`
-  the open state and the offers of one tab, with `show`, the one way to
-  open the palette.
+  and `controller.ts` the open state and the offers of one tab, with
+  `show`, the one way to open the palette.
 - `../shell/palette/`: the layer of the palette. `PaletteProvider.tsx`
-  hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
-  frame, `palette-context.ts` gives `usePaletteOffer` and
-  `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
+  offers the palette key to the shortcut layer and closes the palette,
+  `PaletteLayer.tsx` draws it in a frame, `palette-context.ts` gives
+  `usePaletteOffer`, and `SearchRow.tsx` is the Search row of the list,
+  with the palette key of the keymap.
   `use-palette-source.ts` gives the list and the repositories of the org
   with their load states, and `PaletteStatus.tsx` draws the status part.
+- `../shell/shortcuts/`: the shortcut layer: the one key listener on
+  `AppServices.onKey`, the commands that the parts of the page offer, the
+  terminals that keep their keys, and the open layers. Its
+  [README](../shell/shortcuts/README.md) says how a key goes.
 - `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
   which say whether they closed, and the modal layers with their owners.
-  The palette reads them before it opens.
+  The shortcut listener reads them before a key runs a command, and the
+  palette reads them before it opens.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
 - `../shell/layout/frames.tsx`: the frames: the desktop frame with the
   rail, a desktop page alone, such as Create org, and the phone frame.

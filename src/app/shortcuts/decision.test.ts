@@ -55,6 +55,47 @@ test('runs an offered default through each host on the matching keyboard', () =>
   }
 })
 
+test('the palette key is ⌘K on a Mac and Ctrl+K on Windows and Linux, without another modifier', () => {
+  const offered = new Set(['command-palette'] as const)
+  const windows = tab('chrome', 'windows')
+  const outcome = (
+    event: ReturnType<typeof press>,
+    keyboard: 'mac' | 'other' = 'mac',
+  ) => {
+    const decision = decideShortcut(
+      context({
+        press: event,
+        keyboard,
+        host: keyboard === 'mac' ? macApp : windows,
+        offered,
+      }),
+    )
+    return decision.kind === 'command' ? decision.command : 'pass'
+  }
+  const control = { metaKey: false, ctrlKey: true }
+  expect({
+    macCommand: outcome(press()),
+    macCapsLock: outcome(press({ key: 'K' })),
+    macControl: outcome(press(control)),
+    macBoth: outcome(press({ ctrlKey: true })),
+    macShift: outcome(press({ key: 'K', shiftKey: true })),
+    macOtherKey: outcome(press({ key: 'j', code: 'KeyJ' })),
+    otherControl: outcome(press(control), 'other'),
+    otherMeta: outcome(press(), 'other'),
+    otherAlt: outcome(press({ ...control, altKey: true }), 'other'),
+  }).toEqual({
+    macCommand: 'command-palette',
+    macCapsLock: 'command-palette',
+    macControl: 'pass',
+    macBoth: 'pass',
+    macShift: 'pass',
+    macOtherKey: 'pass',
+    otherControl: 'command-palette',
+    otherMeta: 'pass',
+    otherAlt: 'pass',
+  })
+})
+
 test('runs only offered commands and keeps Mac window commands in the Mac app', () => {
   expect(decideShortcut(context({ offered: new Set() }))).toEqual({
     kind: 'pass',

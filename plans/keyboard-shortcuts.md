@@ -1034,13 +1034,21 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Add the shortcut listener on `AppServices.onKey`, with the rules of
+- [x] Add the shortcut listener on `AppServices.onKey`, with the rules of
       "Where a key goes". Move the palette key into it, and move each
-      consumer of "Replaced ways". Delete `palette-keys.ts`.
+      consumer of "Replaced ways". Delete `palette-keys.ts`. Evidence:
+      `.context/keyboard-shortcuts/reports/m5a-ui.md`.
 - [ ] Offer each command from the part of the page that owns its control.
       Add the key-only commands as offers that the palette does not list.
 - [ ] Apply decision 193 to the row move, the divider, and the keys of
       the workspaces and the tabs.
+  - [x] The row move and the divider match their keys exactly.
+  - [ ] The keys of the workspaces and the tabs run their commands.
+- [ ] Fix the two findings of part A: a repeat of a command key reaches
+      the browser (Medium, fix now: the model gives a repeat its own
+      decision, and the listener stops it without running the command
+      again), and the terminal mark covers the buttons of the Terminal
+      tool (Low, fix now: mark only the screen of the terminal).
 - [ ] If PR #79 merged, offer its right column toggle with ⌘⌥B.
 - [ ] Show the keys in the palette rows, the Search row, the tooltips, and
       `aria-keyshortcuts`. Hide the hints in the phone layout.

@@ -10,7 +10,7 @@ import {
 import { FakeApiServer } from '../../test-support/fake-api'
 import { MacApp, type MacWindowState } from '../mac/mac-app'
 import { Shell } from '../Shell'
-import { mountScreen, press, settle } from '../test-mount'
+import { mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import type { Viewport } from '../ui/viewport'
 import { recordingSocket } from '../workspace/kept-test-kit'
@@ -93,18 +93,6 @@ export function searchField(): HTMLInputElement {
     throw new Error('The search field is not a text field.')
   }
   return field
-}
-
-/** Presses the palette key of the platform, by default on the focused element. */
-export function pressPaletteKey(
-  platform: Platform,
-  target: EventTarget = document.activeElement ?? document.body,
-): KeyboardEvent {
-  return press(
-    target,
-    'k',
-    platform === 'mac' ? { meta: true } : { ctrl: true },
-  )
 }
 
 /** The options of the results, in their order. */

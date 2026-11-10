@@ -14,8 +14,9 @@ If the menu stays open, the caller leaves the key alone.
 Otherwise, it calls `preventDefault` and `stopPropagation` before running
 the command. A pass decision leaves the press alone.
 
-The page shortcut listener does not use this model yet.
-The existing palette listener still owns its key.
+The [shortcut layer](../../shell/shortcuts/README.md) of the shell calls
+`decideShortcut` for each key of the page. The palette key is one of its
+commands.
 
 The account stores canonical modifier names, such as `Alt+Meta+N`.
 The key formatter gives Mac symbols or Windows and Linux key names.

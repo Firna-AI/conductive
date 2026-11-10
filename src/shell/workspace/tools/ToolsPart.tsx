@@ -11,7 +11,7 @@ import type { ConnectTerminal } from '../../../terminal/TerminalScreen'
 import { TerminalTool } from '../../../terminal/TerminalTool'
 import type { ToolWorkspace } from '../../../terminal/tool-parts/workspace'
 import { useOrgServices } from '../../context'
-import { usePaletteTerminal } from '../../palette/palette-context'
+import { useShortcutTerminal } from '../../shortcuts/shortcut-context'
 import type { WorkspaceContext } from '../features'
 import { offeredToolTabs } from './tool-address'
 import { useToolNavigation, type ToolNavigation } from './tool-navigation'
@@ -104,8 +104,8 @@ export function ToolsPart(props: {
     [org.id, workspace.id, services, toolEvents],
   )
   const touch = context.viewport === 'phone'
-  // Ctrl+K in the terminal goes to its shell, not to the command palette.
-  const terminal = usePaletteTerminal()
+  // The terminal keeps the keys that a program in it can read.
+  const terminal = useShortcutTerminal()
   const { tool } = navigation
   const [terminalShown, setTerminalShown] = useState(tool === 'terminal')
   if (tool === 'terminal' && !terminalShown) setTerminalShown(true)

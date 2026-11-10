@@ -15,9 +15,9 @@ const closed: Readable<boolean> = {
  * and makes it inert. A page that is not signed in shows no palette.
  */
 export function PaletteLayer() {
-  const palette = useContext(PaletteContext)
-  const open = useStore(palette?.controller.open ?? closed)
+  const controller = useContext(PaletteContext)
+  const open = useStore(controller?.open ?? closed)
   const boot = useStore(useApp().boot)
-  if (!palette || !open || boot.state !== 'ready') return null
-  return <PalettePanel controller={palette.controller} />
+  if (!controller || !open || boot.state !== 'ready') return null
+  return <PalettePanel controller={controller} />
 }

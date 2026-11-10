@@ -2,6 +2,7 @@ import { Fragment, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import { stepTarget, type SectionGroup } from '../../app/sections'
+import { workspaceRowMove } from '../../app/shortcuts/navigation'
 import type { Workspace } from '../../shared/workspaces'
 import { nameLabel } from '../../shared/name-label'
 import ui from '../ui/ui.module.css'
@@ -58,9 +59,10 @@ function LiftedRow(props: {
 /**
  * The sections of the org, each a group of workspaces that the people of
  * the org made, then the Archived group. A workspace moves to another
- * section by drag and drop, by a long press on a phone, or by Alt and an
- * arrow key. A read-only list, as in a suspended org, moves nothing and
- * shows no section menu.
+ * section by drag and drop, by a long press on a phone, or by Alt with Up
+ * or Down and no other modifier. A key with more modifiers, such as ⌥⌘↑,
+ * stays free for its shortcut. A read-only list, as in a suspended org,
+ * moves nothing and shows no section menu.
  */
 export function SectionList(props: {
   groups: readonly SectionGroup[]
@@ -82,12 +84,14 @@ export function SectionList(props: {
     workspace: Workspace,
     event: KeyboardEvent<HTMLElement>,
   ) => {
-    if (!event.altKey) return
-    const step =
-      event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0
-    if (step === 0) return
+    const move = workspaceRowMove(event.nativeEvent)
+    if (move === null) return
     event.preventDefault()
-    const target = stepTarget(props.groups, workspace.id, step)
+    const target = stepTarget(
+      props.groups,
+      workspace.id,
+      move === 'up' ? -1 : 1,
+    )
     if (!target) return
     const section = props.groups.find(
       (group) => group.section.id === target.sectionId,

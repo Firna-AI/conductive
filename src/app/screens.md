@@ -80,6 +80,10 @@ what the palette does.
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
   step that ends at its start width stores nothing.
+- A focused divider takes only its own keys, through `dividerKey` of the
+  shortcut model: Left and Right, alone or with Shift for a larger step,
+  and Home and End alone. A key with other modifiers, such as ⌥⌘←, goes to
+  its shortcut.
 - On desktop, the toggle at the end of the workspace header hides the
   right column and shows it again. The choice holds for every workspace
   of the tab until the page closes. A hidden column stays mounted, so its
@@ -106,15 +110,18 @@ what the palette does.
   and stops it, so Escape closes only that menu. A press outside closes
   the desktop dialog, and Cancel closes the phone page. A change of the
   address and a sign-out close the palette too.
-- The palette key comes from `AppServices.onKey`, which hears each key in
-  the capture phase and not as a passive listener, so the palette can
-  stop the browser's own action. Every UI kit of the app notes its open
-  menus and modal layers through `useMenuLayer` and `useModalLayer` of
-  `../shell/ui/layers.ts`: the shell, the chat, and the members UI. A
-  menu says whether it closed, and a menu whose change runs refuses. A
-  modal layer has an owner: the dialog of the palette has the palette.
-  The owner of the terminal marks its element with `usePaletteTerminal`,
-  where Ctrl+K stays with the terminal.
+- The palette key is a shortcut. The
+  [shortcut layer](../shell/shortcuts/README.md) hears each key through
+  `AppServices.onKey`, in the capture phase and not as a passive listener,
+  so a key that runs a command stops the browser's own action and reaches
+  no element of the page. Every UI kit of the app notes its open menus and
+  modal layers through `useMenuLayer` and `useModalLayer` of
+  `../shell/ui/layers.ts`: the shell, the chat, and the members UI. A menu
+  says whether it closed, and a menu whose change runs refuses. A modal
+  layer has an owner: the dialog of the palette has the palette, which
+  offers the palette key with that owner. The owner of the terminal marks
+  its element with `useShortcutTerminal`, so the terminal keeps the keys
+  that its shell reads.
 - `PaletteController.show` is the one way to open the palette, for the
   key and for the Search row. It opens only when no dialog or sheet of
   another owner holds the input, and when every open menu closed. The
@@ -135,6 +142,9 @@ what the palette does.
 - `AppModel.lastOrg` keeps the org that the tab opened last, in memory
   only. The Account sidebar of the Mac app and the palette on a page
   without an org read it through `keptOrg`.
+- A workspace row moves on Alt with Up or Down and no other modifier,
+  through `workspaceRowMove` of the shortcut model. A key with more
+  modifiers, such as ⌥⌘↑, goes to its shortcut.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the
