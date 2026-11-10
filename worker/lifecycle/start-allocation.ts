@@ -6,6 +6,10 @@ import { encrypt, decrypt } from '../security/crypto'
 import { createResource } from './resource-intents'
 import { assignSandbox } from './workspace-data'
 import type { StartJobStorage, WorkspaceStartJob } from './start-types'
+import {
+  activationResourceFence,
+  activationResourceBindings,
+} from './import-activation-fence'
 
 function strings(value: unknown): Record<string, string> {
   if (!isRecord(value)) throw new Error('Invalid stored create values')
@@ -82,14 +86,22 @@ export async function allocateWorkspace(
       env.BOAT_KEY_ENCRYPTION_KEY,
     )
   }
-  await env.DB.prepare(
+  const pinned = await env.DB.prepare(
     `UPDATE workspaces SET runner_protocol_version = COALESCE(
       (SELECT runner_protocol_version FROM image_builds
        WHERE org_id = ? AND snapshot_name = ? AND state = 'succeeded' LIMIT 1), 1)
-     WHERE org_id = ? AND id = ?`,
+     WHERE org_id = ? AND id = ? ${job.kind === 'activate' ? `AND ${activationResourceFence}` : ''}`,
   )
-    .bind(job.orgId, payload.snapshotName ?? null, job.orgId, job.workspaceId)
+    .bind(
+      job.orgId,
+      payload.snapshotName ?? null,
+      job.orgId,
+      job.workspaceId,
+      ...(job.kind === 'activate' ? activationResourceBindings(job) : []),
+    )
     .run()
+  if (job.kind === 'activate' && !pinned.meta.changes)
+    throw new Error('The activation allocation is no longer current.')
   try {
     if (!job.allocatedSandboxId) {
       const sandbox = await createResource(env.DB, provider, {
@@ -106,19 +118,12 @@ export async function allocateWorkspace(
         persist: () => storage.update(job),
       })
       job.allocatedSandboxId = sandbox.id
-      await assignSandbox(
-        env.DB,
-        job.orgId,
-        job.workspaceId,
-        sandbox.id,
-        job.providerAccount,
-      )
+      await assignStartSandbox(env.DB, job, sandbox.id, job.providerAccount)
       await storage.update(job)
     }
-    await assignSandbox(
+    await assignStartSandbox(
       env.DB,
-      job.orgId,
-      job.workspaceId,
+      job,
       job.allocatedSandboxId,
       job.providerAccount,
     )
@@ -133,4 +138,35 @@ export async function allocateWorkspace(
       throw error
     return null
   }
+}
+
+async function assignStartSandbox(
+  db: D1Database,
+  job: WorkspaceStartJob,
+  sandboxId: string,
+  providerAccount: string,
+) {
+  if (job.kind !== 'activate')
+    return assignSandbox(
+      db,
+      job.orgId,
+      job.workspaceId,
+      sandboxId,
+      providerAccount,
+    )
+  const assigned = await db
+    .prepare(
+      `UPDATE workspaces SET sandbox_id = ?,provider_account = ?
+    WHERE id = ? AND org_id = ? AND ${activationResourceFence}`,
+    )
+    .bind(
+      sandboxId,
+      providerAccount,
+      job.workspaceId,
+      job.orgId,
+      ...activationResourceBindings(job),
+    )
+    .run()
+  if (!assigned.meta.changes)
+    throw new Error('The activation allocation is no longer current.')
 }

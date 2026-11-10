@@ -66,6 +66,12 @@ export type Workspace = {
   owner: PersonKey
   /** The workspace came from an import of Conductor, which it shows. */
   from?: 'conductor'
+  /**
+   * The activation of the workspace from Conductor succeeded. An Archive
+   * alone never marks it, because a workspace can be archived before its
+   * activation, or while it runs.
+   */
+  activated?: true
 }
 
 /** A workspace of the list when the app opens. None of them is inactive. */

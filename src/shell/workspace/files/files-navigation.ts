@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
-import {
-  isFilesTab,
-  type FileListKind,
-  type FilesNavigation,
-  type FilesTab,
-  type FilesTarget,
+import type {
+  FileListKind,
+  FilesNavigation,
+  FilesTab,
+  FilesTarget,
 } from '../../../files/navigation'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
 import type { SavedView, WorkspaceContext } from '../features'
@@ -71,9 +70,10 @@ export function useOpenTab(saved: SavedView, tab: FilesTab): void {
 }
 
 /**
- * While a file or diff shows in the centre, the chat can make a session the
- * active tab: a click on its tab, a new session, or a reopened one. The
- * address then goes back to the chat, which shows that session.
+ * While a file, a diff, or an old session from Conductor shows in the
+ * centre, the chat can make a session the active tab: a click on its tab,
+ * a new session, or a reopened one. The address then goes back to the
+ * chat, which shows that session.
  */
 export function useLeaveForSession(
   context: WorkspaceContext,
@@ -86,7 +86,8 @@ export function useLeaveForSession(
   useEffect(() => {
     const previous = before.current
     before.current = active
-    if (showsTab && active?.kind === 'session' && isFilesTab(previous)) {
+    const leftPage = previous !== null && previous.kind !== 'session'
+    if (showsTab && active?.kind === 'session' && leftPage) {
       navigation.push(routes.workspace(org.id, workspace.id))
     }
   }, [navigation, org.id, workspace.id, showsTab, active])

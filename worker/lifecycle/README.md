@@ -11,14 +11,18 @@ with the client of the provider account that each record stores.
 
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
-`handleLifecycleRequest`. The root Worker also serves the
-[machine route](#machine-route), image builds, refreshes, and build log streams.
+`handleLifecycleRequest`. It serves the Activate route of an imported
+workspace itself, as [Import activation](#import-activation) says. The root
+Worker also serves the [machine route](#machine-route), image builds,
+refreshes, and build log streams.
 
 ## Responsibilities
 
 - Build and refresh the org image in a separate build sandbox, with a build
   history and a live build log.
 - Create a workspace from the newest good org image.
+- Activate an imported workspace: restore its stored work from the import
+  area in a new cloud computer, with no first message.
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
   starts a stopped sandbox briefly, so that Boat keeps its disk.
@@ -27,7 +31,8 @@ gives the create, read, resume, and activity routes of a workspace to
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
-  the current turn.
+  the current turn. During the restore of an activation, give it the token
+  of the activator.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
@@ -58,6 +63,13 @@ names, the lifecycle steps, the alarm, the start logs, the event socket,
 and the publication of the events. It also gives the creates and resumes.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
+
+### Import activation
+
+[Import activation](import-activation.md) gives the Activate route, the
+separate image lease, the attempt fence, the phases and their runner
+commands, the held messages, the work cleanup after success, and the
+interrupted attempts.
 
 ### Builds and refreshes
 
@@ -104,7 +116,8 @@ The [lifecycle code map](code-map.md) lists the lifecycle entry points.
 
 The trusted [import record writer](../conductor-import/workspace-data.ts)
 publishes a verified imported workspace without a cloud computer or first chat identity.
-Its runtime session, turn, and message IDs stay null.
+It writes the runtime session, turn, and message IDs as null.
+The activation later saves the early session as the runtime session. The first turn and message IDs can stay null, and an activated import still resumes.
 The list and read projections preserve `inactive` and its import origin.
 Normal create admission still requires every first-message ID.
 
@@ -125,6 +138,8 @@ including its empty-repository initialization.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):
   the org image. [Life of a workspace](../../docs/protocol/workspace-life.md)
   gives the start steps, stop and resume, Archive, and Restore.
+- [Imported workspaces](../../docs/protocol/imported-workspaces.md): the
+  activation of a workspace from Conductor.
 - [Access and security](../../docs/protocol/access-and-security.md): what a
   sandbox holds, the workspace token, and GitHub tokens.
 - [Architecture](../../docs/architecture/components.md): the Worker, the workspace

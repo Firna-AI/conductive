@@ -18,6 +18,7 @@ import { createBackend, guardScope } from './backend'
 import { branchRoutes } from './branch-routes'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
+import { importRoutes } from './import-routes'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
@@ -68,6 +69,7 @@ export function createFakeServices(search: string): AppServices {
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
     ...operatorRoutes(backend),
+    ...importRoutes(options.importScan, options.importUpload),
   ]
   const fetch = routeFetch(
     routes,

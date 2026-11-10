@@ -28,7 +28,8 @@ export async function retryFailedCreation(
     '',
   )
   const admission = await endpoint.waitCreationAdmission()
-  if (!original?.creation || !admission.ok) return false
+  if (!original?.creation || original.kind !== 'create' || !admission.ok)
+    return false
   await endpoint.queueLifecycleStart(
     {
       ...original,

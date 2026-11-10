@@ -127,6 +127,8 @@ function readTab(value: unknown): WorkspaceTab {
   switch (source.kind) {
     case 'session':
       return { kind: 'session', sessionId: text(source.sessionId) }
+    case 'conductor-document':
+      return { kind: 'conductor-document', documentId: text(source.documentId) }
     case 'diff':
       return { kind: 'diff', path: text(source.path) }
     default:

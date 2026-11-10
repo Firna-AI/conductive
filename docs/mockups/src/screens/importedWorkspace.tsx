@@ -21,8 +21,8 @@ export function isImported(state: WorkspaceState): boolean {
 }
 
 /**
- * The workspace came from Conductor and was never activated: before its
- * activation, or after a failed one. It has no cloud computer.
+ * The workspace came from Conductor, and no activation of it succeeded:
+ * before its activation, or after a failed one.
  */
 export function neverActivated(state: WorkspaceState): boolean {
   return (
@@ -97,8 +97,8 @@ export function importedChat(state: WorkspaceState): ImportedChat {
 }
 
 /**
- * What the files and tools panels of an imported workspace show while it
- * has no cloud computer: before the activation, after a failed one, and
+ * What the files and tools panels of an imported workspace show before a
+ * successful activation: before the activation, after a failed one, and
  * after an archive before the activation. Otherwise the panels show what
  * they show in any workspace. Their action opens the activation of the
  * state, as the chat does.

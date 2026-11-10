@@ -24,6 +24,8 @@ import { WorkspaceStartError } from './workspace-start'
 import { revokeWorkspaceToken } from './tokens'
 import { creationAdmissionResponse } from './creation-admission-response'
 import { detachFailedSandbox } from './failed-workspace-data'
+import { releaseImageLease } from './image-leases'
+import { closeActivationFence } from './import-activation-fence'
 
 export type ResumeStartFailure = (
   error: { code: string; message: string; log: null },
@@ -99,7 +101,13 @@ export async function finishFailedStart(
     }
   }
   const first = await storage.firstMessage()
+  if (job.kind === 'activate') {
+    await closeActivationFence(env.DB, job, 'failed')
+    job.activation.cleanupPending = false
+    await storage.update(job)
+  }
   const accepted =
+    job.kind === 'activate' ||
     job.phase !== 'records' ||
     Boolean(first || (await endpoint.readLifecycle()))
   if (accepted && job.phase === 'records')
@@ -121,7 +129,9 @@ export async function finishFailedStart(
   let cleanupPending = false
   if (!sandboxId && job.createPayloadCiphertext) {
     const canDefer = () =>
-      job.failure?.timeLimit || startTimeLimitReached(job, dependencies.now())
+      job.kind === 'activate' ||
+      job.failure?.timeLimit ||
+      startTimeLimitReached(job, dependencies.now())
     if (!canDefer()) {
       if (!provider) return null
       sandboxId = await allocateWorkspace(
@@ -156,6 +166,8 @@ export async function finishFailedStart(
     providerAccount,
   )
   await markCreationFailed(env.DB, job.workspaceId)
+  if (job.kind === 'activate')
+    await releaseImageLease(env.DB, job.orgId, job.workspaceId)
   if (accepted)
     await endpoint.lifecycleFailed({
       code: failure.code,

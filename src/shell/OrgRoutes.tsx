@@ -12,6 +12,8 @@ import { OrgRail, type RailCurrent } from './layout/OrgRail'
 import { DeletedOrg, OrgHome } from './list/OrgHome'
 import { HomeList, ListHeader } from './list/HomeList'
 import { Sidebar, type ListCurrent } from './list/Sidebar'
+import { ConductorImportScreen } from './import/ConductorImportScreen'
+import { ImportOfferBar } from './import/ImportOfferBar'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
 import { ActionButton } from './ui/actions'
@@ -94,6 +96,8 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
       )
     case 'settings':
       return <OrgSettingsScreen org={org} tab={route.tab} user={user} />
+    case 'conductor-import':
+      return <ConductorImportScreen key={org.id} org={org} />
   }
 }
 
@@ -107,6 +111,8 @@ function listCurrent(route: OrgRoute): ListCurrent {
       return { screen: 'workspace', workspaceId: route.workspaceId }
     case 'settings':
       return { screen: 'settings' }
+    case 'conductor-import':
+      return null
   }
 }
 
@@ -164,6 +170,9 @@ export function OrgRoutes(props: { route: OrgRoute; user: User }) {
       }
       user={props.user}
     >
+      {props.route.screen === 'conductor-import' ? null : (
+        <ImportOfferBar org={org} />
+      )}
       {screen ?? <OrgHome org={org} user={props.user} />}
     </RailFrame>
   )

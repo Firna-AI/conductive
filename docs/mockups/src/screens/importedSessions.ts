@@ -7,6 +7,7 @@ import {
   type OldSession,
 } from '../fixtures/conductorImport'
 import type { ChatItem } from '../fixtures/conversations'
+import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
 import {
   resumedChoice,
   resumedConversations,
@@ -20,10 +21,15 @@ import type { WorkspaceState } from './workspaceState'
 
 /**
  * Whether the activation of the workspace succeeded, so its sessions from
- * Conductor continue as session tabs: while it is ready, and after it
- * stopped.
+ * Conductor continue as session tabs: while it is ready, after it stopped,
+ * and after an Archive of the activated workspace. An Archive alone does
+ * not show a successful activation, so only a record that marks the
+ * activation keeps those tabs after an Archive.
  */
 function activated(state: WorkspaceState): boolean {
+  if (state.sandbox === 'archived') {
+    return openableWorkspaceRecords[state.workspace].activated === true
+  }
   return state.sandbox === 'ready' || state.sandbox === 'stopped'
 }
 

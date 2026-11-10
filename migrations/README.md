@@ -166,6 +166,16 @@ A reservation goes with its org, and each child table goes with its reservation.
 The cleanup table has no foreign key. So a cleanup record and its unresolved write stay after the org and reservation rows.
 The [import area](../worker/conductor-import/reservations.md) owns these records, and its publication writes the workspace record in the same batch that ends the reservation.
 
+`202611101900_import_image_leases.sql` adds `workspace_import_image_leases`.
+Each row leases one org image snapshot and its provider account for the activation of one imported workspace.
+It goes with its workspace and its org. An index on the org, the account, and the snapshot serves the lease check of image cleanup.
+Native creation keeps `image_leases`, because its claim needs a first message. The migration changes no earlier table.
+
+`202611102030_import_activation_fences.sql` adds `workspace_import_activation_attempts`.
+Each row keeps the current activation attempt of one imported workspace: its attempt ID, epoch, state, and completion time.
+It goes with its workspace and its org. The migration changes no earlier table.
+The [import activation](../worker/lifecycle/import-activation.md) owns both tables.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

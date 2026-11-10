@@ -36,6 +36,7 @@ export async function handleGitCredential(
     runtime,
     authorization.slice(7),
     request.headers.get(TOOL_TURN_HEADER),
+    request.headers.get('X-Conductive-Activation-Id'),
   )
 }
 
@@ -43,9 +44,16 @@ async function authenticatedCredentialResponse(
   runtime: WorkspaceRuntime,
   bearer: string,
   turnId: string | null,
+  activationId: string | null,
 ): Promise<Response> {
   const tokenHash = await hash(bearer)
-  const senderId = await authorizeCredential(runtime, bearer, tokenHash, turnId)
+  const senderId = await authorizeCredential(
+    runtime,
+    bearer,
+    tokenHash,
+    turnId,
+    activationId,
+  )
   const token = await freshGitHubUserToken(
     runtime.env,
     senderId,
@@ -56,6 +64,7 @@ async function authenticatedCredentialResponse(
     bearer,
     tokenHash,
     turnId,
+    activationId,
   )
   if (currentSenderId !== senderId) throw workspaceTokenRefusedError()
   return privateResponse(Response.json({ token }))
@@ -66,13 +75,20 @@ async function authorizeCredential(
   bearer: string,
   tokenHash: string,
   turnId: string | null,
+  activationId: string | null,
 ): Promise<string> {
   const identity = await authenticateWorkspaceToken(runtime.env, bearer)
+  if (turnId !== null && activationId !== null) throw currentTurnRequired()
   const senderId =
-    turnId === null
-      ? null
-      : await runtime.workspace(identity.workspaceId).credentialSender(turnId)
-  if (turnId !== null && !senderId) throw currentTurnRequired()
+    activationId !== null
+      ? await runtime
+          .workspace(identity.workspaceId)
+          .activationCredentialSender(activationId)
+      : turnId === null
+        ? null
+        : await runtime.workspace(identity.workspaceId).credentialSender(turnId)
+  if ((turnId !== null || activationId !== null) && !senderId)
+    throw currentTurnRequired()
   const access = await readMachineCredentialAccess(runtime.env.DB, {
     ...identity,
     tokenHash,

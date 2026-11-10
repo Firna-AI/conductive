@@ -19,6 +19,11 @@ function viewTab(value: unknown): WorkspaceTab {
   const tab = record(value)
   if (tab.kind === 'session')
     return { kind: 'session', sessionId: identifier(tab.sessionId) }
+  if (tab.kind === 'conductor-document')
+    return {
+      kind: 'conductor-document',
+      documentId: identifier(tab.documentId),
+    }
   if (tab.kind === 'diff') return { kind: 'diff', path: identifier(tab.path) }
   if (tab.kind === 'file' && (tab.mode === 'preview' || tab.mode === 'source'))
     return { kind: 'file', path: identifier(tab.path), mode: tab.mode }

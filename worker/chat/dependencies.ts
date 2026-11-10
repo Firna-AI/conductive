@@ -82,6 +82,8 @@ export function chatDependencies(
     resolveAttachmentPaths: (id, userId, attachments) =>
       resolveAttachmentPaths(env, id, userId, attachments),
     receiveFileResult: async () => undefined,
+    receiveImportResult: async () => undefined,
+    runnerPreparationAllowed: async () => true,
     runnerAttached: () => undefined,
     runnerDetached: () => undefined,
     runnerEventStored: async () => undefined,

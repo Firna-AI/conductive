@@ -18,6 +18,7 @@ import {
   type SessionRuntime,
 } from './engine-session'
 import { failureCause } from './providers/failure'
+import { fallbackImportedHistory } from './engine-import'
 
 type Command = ProviderInput | RunnerChangeModel | RunnerInterrupt
 
@@ -181,33 +182,61 @@ export class SessionEngine {
     const session = this.session
     if (!session) return
     const generation = ++session.generation
-    await startProvider(this.options, session, command, (event) => {
-      const turn = session.active
-      if (this.closed || generation !== session.generation) return
-      void this.enqueue(async () => {
-        if (this.closed || turn !== session.active) return
-        if (generation !== session.generation && !turn?.stopped) return
+    try {
+      await startProvider(this.options, session, command, (event) => {
+        const turn = session.active
+        if (this.closed || generation !== session.generation) return
         if (
-          turn?.stopped &&
-          (event.type === 'result' ||
-            event.type === 'failed' ||
-            event.type === 'conversation')
+          turn &&
+          ['thinking', 'delta', 'answer', 'tool'].includes(event.type)
         )
-          return
-        try {
-          await this.event(event, true)
-        } catch (error) {
-          if (session.active && !this.closed)
-            await this.finish(failureCause(error))
-        }
+          turn.providerOutputStarted = true
+        void this.enqueue(async () => {
+          if (this.closed || turn !== session.active) return
+          if (generation !== session.generation && !turn?.stopped) return
+          if (
+            turn?.stopped &&
+            (event.type === 'result' ||
+              event.type === 'failed' ||
+              event.type === 'conversation')
+          )
+            return
+          try {
+            await this.event(event, true)
+          } catch (error) {
+            if (session.active && !this.closed)
+              await this.finish(failureCause(error))
+          }
+        })
       })
-    })
+    } catch (error) {
+      if (
+        await fallbackImportedHistory(
+          this.options,
+          session,
+          failureCause(error),
+          () => this.start(command),
+        )
+      )
+        return
+      throw error
+    }
   }
 
   private async event(
     event: ProviderEvent,
     acceptedBeforeStop = false,
   ): Promise<void> {
+    const session = this.session
+    const first = session?.active?.first
+    if (
+      session &&
+      first &&
+      (await fallbackImportedHistory(this.options, session, event, () =>
+        this.start(first),
+      ))
+    )
+      return
     if (this.session)
       await providerEvent(
         this.options,

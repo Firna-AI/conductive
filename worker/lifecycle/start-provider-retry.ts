@@ -4,7 +4,7 @@ import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { WORKSPACE_START_TIME_LIMIT_MS } from './job-time-limit'
 
 export function startDeadlineAt(job: WorkspaceStartJob, now: number): number {
-  if (job.kind === 'create' && job.deadlineAt !== undefined)
+  if (job.kind !== 'resume' && job.deadlineAt !== undefined)
     return job.deadlineAt
   return (
     (job.kind === 'create' ? (job.creation?.createdAt ?? now) : now) +

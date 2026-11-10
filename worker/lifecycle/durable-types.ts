@@ -90,3 +90,9 @@ export interface LifecycleTurnRecovery {
 export type LifecycleReconciliation = 'stopped' | 'error' | undefined
 export type LifecycleRestoreResult = 'pending' | 'done' | 'stopped' | 'error'
 export type LifecycleStopResult = 'stopped' | 'error' | 'pending'
+
+export type LifecycleInitialization = Pick<
+  DurableLifecycleState,
+  'workspaceId' | 'orgId'
+> &
+  ({ firstMessage: SendMessageRequest } | { imported: true })

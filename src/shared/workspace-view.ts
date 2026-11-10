@@ -8,6 +8,7 @@ export type WorkspaceTab =
   | { kind: 'session'; sessionId: string }
   | { kind: 'file'; path: string; mode: 'preview' | 'source' }
   | { kind: 'diff'; path: string }
+  | { kind: 'conductor-document'; documentId: string }
 
 /** The server keeps view state. Only panel widths stay in the browser. */
 export interface WorkspaceView {

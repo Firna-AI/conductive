@@ -11,8 +11,9 @@ import { recordingSocket } from './kept-test-kit'
 // The helpers of the tests that mount the parts of the workspace screen.
 
 /**
- * The whole app in a tab at `href`, over the fake API and its stream. The
- * services can replace the event source, such as with a terminal socket.
+ * The whole app in a tab at `href`, over the fake API and its stream, and
+ * the app, for a test that reads its kept stores. The services can replace
+ * the event source, such as with a terminal socket.
  */
 export async function openTab(
   server: FakeApiServer,
@@ -31,7 +32,7 @@ export async function openTab(
     { viewport: options.viewport ?? 'desktop' },
   )
   await settle()
-  return { view, navigation }
+  return { view, navigation, app }
 }
 
 /** The links to `href` inside `root`. */

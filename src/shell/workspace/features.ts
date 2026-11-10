@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import type { SandboxPanelState } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ArchiveAction } from '../../app/archive-model'
 import type { WorkspaceStream } from '../../app/events'
+import { awaitsActivation } from '../../app/first-start'
 import type { ChatController } from '../../chat/state/controller'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
@@ -129,12 +130,19 @@ export function useFeatures(): WorkspaceFeatures {
   return useMemo(() => ({ ...appFeatures, ...host }), [host])
 }
 
-/** The sandbox state that a workspace state shows in the panels. */
+/**
+ * The sandbox state that a workspace state shows in the panels. A workspace
+ * from Conductor that stopped before an activation succeeded, such as after
+ * the Restore of an Archive during its activation, shows its activation as
+ * failed, with Try again. Once an activation started, it never shows Not
+ * active again.
+ */
 export function sandboxState(workspace: Workspace): SandboxState {
   switch (workspace.state) {
+    case 'stopped':
+      return awaitsActivation(workspace) ? 'error' : 'stopped'
     case 'inactive':
     case 'starting':
-    case 'stopped':
     case 'error':
     case 'archived':
       return workspace.state

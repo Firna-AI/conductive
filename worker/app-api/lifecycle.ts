@@ -42,6 +42,7 @@ export async function chatLifecycleRoute(
     workspaceId &&
     request.method === 'POST' &&
     [
+      workspacePaths.activate(orgId, workspaceId),
       workspacePaths.resume(orgId, workspaceId),
       workspacePaths.activity(orgId, workspaceId),
     ].includes(path)
@@ -50,6 +51,23 @@ export async function chatLifecycleRoute(
     requireWritableWorkspace(await readWorkspace(env.DB, orgId, workspaceId))
   const binding = workspaceBinding(env)
   const lifecycleEnv = { ...env, WORKSPACES: binding }
+  if (
+    workspaceId &&
+    path === workspacePaths.activate(orgId, workspaceId) &&
+    request.method === 'POST'
+  ) {
+    const result = await workspaceRuntime(lifecycleEnv, dependencies)
+      .workspace(workspaceId)
+      .activateImportedWorkspace(orgId, workspaceId, context.user.id)
+    return Response.json({
+      ...result,
+      workspace: await workspaceForViewer(
+        env,
+        context.user.id,
+        result.workspace,
+      ),
+    })
+  }
   if (
     workspaceId &&
     path === workspacePaths.resume(orgId, workspaceId) &&

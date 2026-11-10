@@ -13,7 +13,7 @@ It then publishes the workspace with no cloud computer, and members read the old
 - Read the current GitHub facts of the chosen repository for the Mac, with the token of the importer on the Worker. They are its heads, its commit prerequisites, and the current availability of its Git LFS objects, as [Reservations](reservations.md#current-github-facts) says.
 - Publish the workspace only after each part is stored and checked, as [Publication and old documents](publication.md) says.
 - Serve the old documents to the members of the org, in every state of the workspace.
-- Give a later activation its trusted reads and its work-only cleanup.
+- Give the activation its trusted reads and its work-only cleanup.
 - Delete the stored data of each reservation, also after a late upload and after the org is gone, as [Import cleanup](cleanup.md) says.
 - Keep each byte of the bucket behind one storage port, as [Import storage](storage.md) says.
 
@@ -23,7 +23,7 @@ It then publishes the workspace with no cloud computer, and members read the old
 - **Old-document routes:** `GET` of `conductorOldDocumentsPath` and of `conductorOldDocumentPath`. `route` in [`worker/routes.ts`](../routes.ts) tries `conductorDocumentRoute` first, after the app request gate.
 - **Reservation owner:** each reservation has its own Durable Object of the `Workspace` class, named `importServiceName(reservationId)`, through the existing `WORKSPACES` binding. `ImportWorkspace` in [`workspace.ts`](workspace.ts) adds its RPC methods and its alarm to that class. `Workspace.alarm` runs the import alarm first.
 - **Record writer:** [`workspace-data.ts`](workspace-data.ts) gives the statements of the inactive workspace record. Publication runs them in its own guarded batch.
-- **Activation:** a later activation reads the published import through [`activation-data.ts`](activation-data.ts). After a successful activation, it calls `cleanupImportWork` of [`cleanup.ts`](cleanup.ts). [Trusted activation reads](publication.md#trusted-activation-reads) gives the duties of that caller.
+- **Activation:** the [lifecycle activation](../lifecycle/import-activation.md) reads the published import through [`activation-data.ts`](activation-data.ts). After a successful activation, its publication calls `cleanupImportWork` of [`cleanup.ts`](cleanup.ts). [Trusted activation reads](publication.md#trusted-activation-reads) gives the duties of that caller.
 - **Members cleanup:** `cleanupDeletedOrgs` of the [members backend](../members/README.md) calls `cleanupExpiredImports` at the start of each Cron run. It calls `purgeOrgImports` before it purges the records of a deleted org.
 - **Contracts:** the [shared import contracts](../../src/shared/conductor-import.md) define each request, frame, event, manifest record, and page helper.
 

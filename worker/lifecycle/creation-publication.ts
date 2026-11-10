@@ -4,12 +4,23 @@ import {
   completeCreationAttempt,
   markCreationFailed,
 } from './creation-attempt-data'
+import { cleanupImportWork } from '../conductor-import/cleanup'
 
 /** The native outcome commits first. D1 publication can then retry without changing it. */
 export async function publishCreationResult(
   env: AppEnv,
   storage: StartJobStorage,
 ): Promise<boolean> {
+  const cleanup = await storage.activationCleanup()
+  if (cleanup) {
+    try {
+      await cleanupImportWork(env, cleanup.orgId, cleanup.workspaceId)
+      await storage.clearActivationCleanup()
+    } catch {
+      await storage.schedulePublication()
+      return false
+    }
+  }
   const record = await storage.publication()
   if (!record) {
     await storage.clearPublication()

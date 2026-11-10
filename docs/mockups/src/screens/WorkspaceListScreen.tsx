@@ -3,7 +3,6 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { paletteViews } from '../components/palette/paletteViews'
 import type { RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
-import { sectionsWithImport } from '../components/workspaces/importSections'
 import {
   archivedGroup,
   newOrgSections,
@@ -12,11 +11,11 @@ import {
   type SidebarSection,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { importedWorkspaces } from '../fixtures/importedWorkspaces'
 import { viewerMembership } from '../fixtures/members'
 import { deletedOrg, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { importLists, importListView, isImportList } from './importedListViews'
 import {
   ChooseWorkspace,
   DeletedOrg,
@@ -55,7 +54,9 @@ export const workspaceListSchema = {
      * a deleted org, Acme after the operator suspended it, a deleted org
      * that the operator suspended, Acme after its list did not load, Acme
      * with its Archived group open, or Acme after an import from Conductor,
-     * which adds the section Import from Conductor.
+     * which adds the section Import from Conductor. After the import, the
+     * list can also show the question of Archive over it, the list just
+     * after that Archive, or the activated workspace in the Archived group.
      */
     list: {
       enum: [
@@ -68,7 +69,7 @@ export const workspaceListSchema = {
         'deleted-suspended',
         'failed',
         'archived',
-        'imported',
+        ...importLists,
       ],
     },
     /**
@@ -97,14 +98,13 @@ export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
 const viewer = viewerMembership('admin')
 
 /**
- * The sections of a list before any state changes them. Acme after an
- * import has the section Import from Conductor.
+ * The sections of a list before any state changes them. The lists after
+ * an import have their own view, with the section Import from Conductor.
  */
 function sectionsOf(list: WorkspaceListState['list']): SidebarSection[] {
   if (list === 'general-only') return generalOnlySections()
   if (list === 'suspended') return suspendedSections()
   if (list === 'archived') return archivedGroup().sections
-  if (list === 'imported') return sectionsWithImport(importedWorkspaces)
   return newOrgs[list] ? newOrgSections() : workspaceSections()
 }
 
@@ -120,12 +120,16 @@ function archivedGroupView(): Pick<MenuListView, 'archived' | 'focus'> {
   }
 }
 
-/** The list and what lies over it, in a state of the menu of a row. */
+/**
+ * The list and what lies over it, in a state of the menu of a row, or in a
+ * list after an import.
+ */
 function rowMenuView(
   state: WorkspaceListState,
   viewport: Viewport,
 ): MenuListView | undefined {
   const { list, menu } = state
+  if (isImportList(list)) return importListView(list, viewport)
   if (!isWorkspaceMenuState(menu)) return undefined
   if (list !== 'workspaces' && list !== 'general-only' && list !== 'suspended')
     return undefined
@@ -180,7 +184,7 @@ function MobileList(props: { state: WorkspaceListState }) {
         newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
         sections={sections}
-        switcherTo={list === 'imported' ? null : undefined}
+        switcherTo={isImportList(list) ? null : undefined}
         viewer={view?.viewer ?? viewer}
       />
       {view ? view.over : listSheet(menu)}
@@ -256,7 +260,7 @@ export function WorkspaceListScreen(props: {
   const rail = view?.rail ?? listRail(menu)
   // After an import, the tile of Acme keeps the list with the import. No
   // entry draws the org switcher of a narrow window over that list.
-  const imported = list === 'imported'
+  const imported = isImportList(list)
   return (
     <AppFrame
       overlay={listPalette(palette, props.viewport) ?? view?.over}

@@ -46,7 +46,7 @@ On the app hostname, the Worker serves these API routes:
 - The account, its default model, its agent logins, the model list, and Get started.
 - The sections, the repositories, the members, and the workspace list of an org.
 - Leave org, under the existing last-active-admin rule.
-- The create, read, resume, and activity routes of a workspace.
+- The create, read, resume, and activity routes of a workspace, and the Activate route of an imported workspace, through the [import activation](lifecycle/import-activation.md).
 - The view and the read mark of a workspace.
 - The Mac device routes.
 - The import operations of the Mac app and the old documents of an imported workspace, through the [import area](conductor-import/README.md).
@@ -141,7 +141,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
-- [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
+- [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds, refreshes, and new import activation attempts.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [conductor-import/README.md](conductor-import/README.md): the import from Conductor, with its Mac operations, reservations, verified publication, old documents, and cleanup.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).

@@ -2,16 +2,14 @@ import { configuration } from './config'
 import { createClaudeFactory } from './providers/claude'
 import { createCodexFactory } from './providers/codex'
 import { warmClaude } from './providers/binaries'
-import { Runner } from './runner'
+import { initializeRunner } from './initialize'
 import { connectWebSocket } from './socket'
-import { DiskStorage, EventStore } from './state'
 import { ProcPortScanner } from './proc-ports'
 
 const warn = (message: string) => process.stderr.write(`${message}\n`)
 
 async function main(): Promise<void> {
   const config = configuration(process.env)
-  const store = await EventStore.open(new DiskStorage(config.statePath))
   const ports = new ProcPortScanner({
     ...config,
     uid: process.getuid?.() ?? -1,
@@ -28,9 +26,7 @@ async function main(): Promise<void> {
       })
     }, 1000)
   }
-  const runner = new Runner({
-    ...config,
-    store,
+  const runner = await initializeRunner(config, {
     connect: (request) => connectWebSocket(request, warn),
     providers: { claude: createClaudeFactory(), codex: createCodexFactory() },
     warm: warmClaude,

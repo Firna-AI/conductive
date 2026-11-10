@@ -7,6 +7,7 @@ import type {
 } from '../../src/shared/runner'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { array, integer, nullable, object, oneOf, string } from './parse'
+import { readRunnerImportCommand } from '../../src/shared/runner-import-read'
 
 export function parseChoice(value: unknown): AgentChoice {
   const input = object(value)
@@ -91,6 +92,7 @@ export function parseWorkspaceMessage(
 ): WorkspaceToRunner {
   const input = object(value)
   const type = string(input.type)
+  if (type === 'import.command') return readRunnerImportCommand(value)
   if (type === 'welcome') {
     if (input.protocolVersion !== RUNNER_PROTOCOL_VERSION) {
       throw new Error('The runner protocol version is not supported.')

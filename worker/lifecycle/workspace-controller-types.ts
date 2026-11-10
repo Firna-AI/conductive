@@ -13,8 +13,13 @@ import type {
 import type { LifecycleActivitySnapshot } from './input-activity-state'
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import type { ComputerIdentity } from './computer-ledger'
+import type { RunnerImportReply } from '../../src/shared/runner-import'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  receiveImportResult(
+    reply: RunnerImportReply,
+    connectionId: string,
+  ): Promise<void>
   archiveLifecycle(workspaceId: string): Promise<void>
   reserveArchive(workspaceId: string): Promise<void>
   restoreWorkspace(

@@ -28,8 +28,12 @@ export async function advanceStartSteps(
   if (job.phase === 'terminal-password') {
     await prepareStartTerminal(env, dependencies, job)
     await endpoint.lifecycleStep('startup', stepLabel('startup'), 'completed')
-    await nextStartCommand(storage, job, 'runner')
-    return true
+    await nextStartCommand(
+      storage,
+      job,
+      job.kind === 'activate' ? 'import-finish' : 'runner',
+    )
+    return job.kind !== 'activate'
   }
   if (
     !(await advanceStartCommand(

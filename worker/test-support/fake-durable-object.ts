@@ -14,6 +14,10 @@ import {
 } from '../../src/shared/runner'
 import type { RunnerConnector } from '../../src/shared/runner-transport'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
+import type {
+  RunnerImportCommand,
+  RunnerImportReply,
+} from '../../src/shared/runner-import'
 import { FakeRunnerFileReports } from './fake-runner-files'
 import { FakeRunnerConnection } from './runner-connection'
 
@@ -37,6 +41,7 @@ export class FakeDurableObjectEndpoint {
   readonly runnerEvents: RunnerEventEnvelope[] = []
   readonly events: WorkspaceEventEnvelope[] = []
   readonly fileResponses: RunnerFileResponse[] = []
+  readonly importReplies: RunnerImportReply[] = []
   confirmEvents = true
   private readonly cursors = new Map<string, number>()
   private readonly options: FakeDurableObjectOptions
@@ -85,6 +90,10 @@ export class FakeDurableObjectEndpoint {
           throw new Error('Send the runner hello before events.')
         }
         if (message.type !== 'event') {
+          if (message.type === 'import.result') {
+            this.importReplies.push(structuredClone(message))
+            return
+          }
           this.fileResponses.push(structuredClone(message))
           return
         }
@@ -101,7 +110,7 @@ export class FakeDurableObjectEndpoint {
     return connection
   }
 
-  send(command: RunnerCommand): void {
+  send(command: RunnerCommand | RunnerImportCommand): void {
     if (!this.connection) throw new Error('Connect the runner before commands.')
     this.connection.reply(command)
   }
@@ -139,7 +148,10 @@ export class FakeDurableObjectEndpoint {
             type: 'runner.event-refused',
             streamId: message.streamId,
             runnerEventNumber: message.eventNumber,
-            runnerEventType: message.event.type,
+            runnerEventType:
+              message.event.type === 'import.preparation'
+                ? 'unknown'
+                : message.event.type,
             reason,
             sessionId:
               'sessionId' in message.event ? message.event.sessionId : null,
@@ -166,7 +178,8 @@ export class FakeDurableObjectEndpoint {
 
   private browserEvent(message: RunnerEventEnvelope): WorkspaceEvent | null {
     const event = message.event
-    if (event.type === 'runner.ready') return null
+    if (event.type === 'runner.ready' || event.type === 'import.preparation')
+      return null
     if (
       event.type === 'files.snapshot' ||
       event.type === 'files.unavailable' ||

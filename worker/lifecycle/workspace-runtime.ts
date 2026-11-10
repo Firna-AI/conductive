@@ -5,6 +5,9 @@ import type { AppDependencies, AppEnv } from '../env'
 import type { DurableLifecycleState } from './durable-types'
 import type { MaskedStartLog } from './masked-start-log'
 import type { TurnTokenEndpoint } from '../model-gateway/types'
+import type { ActivateWorkspaceResponse } from '../../src/shared/workspaces'
+import type { RunnerImportCommand } from '../../src/shared/runner-import'
+import type { SeedImportSession } from '../chat/import-sessions'
 import type {
   WorkspaceStartJob,
   WorkspaceStartIntent,
@@ -26,6 +29,20 @@ export type LifecycleActivityResult =
 
 /** Internal RPC only. Machine requests cannot register sender identities. */
 export interface WorkspaceLifecycleEndpoint {
+  activateImportedWorkspace(
+    orgId: string,
+    workspaceId: string,
+    userId: string,
+  ): Promise<ActivateWorkspaceResponse>
+  activationCredentialSender(activationId: string): Promise<string | null>
+  sendImportCommand(
+    workspaceId: string,
+    command: Omit<RunnerImportCommand, 'connectionId'>,
+  ): Promise<string | null>
+  seedImportSession(
+    workspaceId: string,
+    input: SeedImportSession,
+  ): Promise<void>
   initializeLifecycle(input: {
     workspaceId: string
     orgId: string

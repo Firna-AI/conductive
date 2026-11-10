@@ -9,12 +9,13 @@ import type {
   SandboxPanelState,
 } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
+import { awaitsActivation } from '../../app/first-start'
 import { useServices } from '../../app/services'
 import { formatDay } from '../../app/time'
 import type { Workspace } from '../../shared/workspaces'
 import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
-import { barBody, keptBody, problemOf } from './notice-copy'
+import { barBody, problemOf } from './notice-copy'
 
 /**
  * The notice of a start in a suspended org. The org's metadata and the
@@ -53,11 +54,15 @@ function useProblem(notice: SandboxNoticeState, workspace: Workspace) {
   const { timeZone } = useServices()
   const archivedAt = workspace.archivedAt ?? workspace.updatedAt
   const { restoreUntil } = workspace
-  return problemOf(notice, {
-    archivedOn: formatDay(archivedAt, timeZone),
-    restoreUntil:
-      restoreUntil === null ? '' : formatDay(restoreUntil, timeZone),
-  })
+  return problemOf(
+    notice,
+    {
+      archivedOn: formatDay(archivedAt, timeZone),
+      restoreUntil:
+        restoreUntil === null ? '' : formatDay(restoreUntil, timeZone),
+    },
+    awaitsActivation(workspace),
+  )
 }
 
 /**
@@ -121,7 +126,7 @@ export function SandboxBar(props: {
           </ActionButton>
         ) : undefined
       }
-      body={barBody(notice, keptBody(notice, problem.body))}
+      body={barBody(notice, problem.body)}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}
@@ -172,9 +177,7 @@ export function SandboxPanel(props: {
         ) : undefined
       }
       body={
-        phone && state.problem === 'refused'
-          ? state.reason
-          : keptBody(state, problem.panelBody)
+        phone && state.problem === 'refused' ? state.reason : problem.panelBody
       }
       icon={problem.icon}
       title={problem.panelTitle ?? problem.title}

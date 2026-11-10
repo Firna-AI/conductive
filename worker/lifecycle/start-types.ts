@@ -6,6 +6,10 @@ import type { RepositoryLocation } from './repository-locations'
 import type { SavedScript } from './saved-script'
 import type { ProviderRetryState } from './provider-retry'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
+import type {
+  ImportActivationProgress,
+  ImportStartPhase,
+} from './import-activation-types'
 
 interface WorkspaceStartData {
   workspaceId: string
@@ -16,12 +20,12 @@ interface WorkspaceStartData {
   environmentCiphertext: string | null
   defaultBranch: string
   repositoryLocations?: readonly RepositoryLocation[]
-  turnId: string
+  turnId: string | null
   attempt: string
   /** Restore changes only the command journal identity, not allocation. */
   commandAttempt?: string
   /** A retained create rebuilds runtime files from this phase after readiness. */
-  afterReadyPhase?: 'fetch' | 'branch' | 'startup'
+  afterReadyPhase?: WorkspaceMachinePhase
   creation?: WorkspaceCreation
   processId: number | null
   stdoutOffset: number
@@ -47,6 +51,7 @@ export type WorkspaceStartIntent =
   | { kind: 'resume-retained-create' }
 
 export type WorkspaceMachinePhase =
+  | ImportStartPhase
   | 'machine'
   | 'ready'
   | 'fetch'
@@ -60,9 +65,18 @@ export type WorkspaceRunningStartJob = WorkspaceStartData &
   (
     | { kind: 'resume'; phase: WorkspaceMachinePhase; admission?: never }
     | {
+        kind: 'activate'
+        phase: WorkspaceMachinePhase
+        admission?: never
+        activation: ImportActivationProgress
+        creation?: never
+        turnId: null
+      }
+    | {
         kind: 'create'
         phase: WorkspaceMachinePhase
         admission: SavedProvisionedWorkspace
+        turnId: string
       }
   )
 
@@ -72,6 +86,7 @@ export type WorkspaceStartJob =
       kind: 'create'
       phase: 'records'
       admission?: never
+      turnId: string
     })
 
 interface WorkspaceCreation {
@@ -128,6 +143,10 @@ export interface StartJobStorage {
   firstMessage(): Promise<FirstWorkspaceMessage | undefined>
   publication(): Promise<CreationPublication | undefined>
   clearPublication(): Promise<void>
+  activationCleanup(): Promise<
+    { orgId: string; workspaceId: string } | undefined
+  >
+  clearActivationCleanup(): Promise<void>
   complete(result: WorkspaceStartResult): Promise<void>
   secrets(values: readonly string[]): Promise<void>
   capture(

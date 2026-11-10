@@ -1,7 +1,7 @@
 /** The workspaces that the workspace screen can show open. */
 
 import { savedCartsOnBranch } from './branches'
-import { couponTotals } from './importedWorkspaces'
+import { activatedCouponTotals, couponTotals } from './importedWorkspaces'
 import { checkoutAutocomplete, savedCarts, type Workspace } from './workspaces'
 
 export const openableWorkspaces = [
@@ -9,6 +9,7 @@ export const openableWorkspaces = [
   'saved-carts',
   'saved-carts-branch',
   'coupon-totals',
+  'coupon-totals-activated',
 ] as const
 
 export type OpenableWorkspace = (typeof openableWorkspaces)[number]
@@ -20,4 +21,5 @@ export const openableWorkspaceRecords: Readonly<
   'saved-carts': savedCarts,
   'saved-carts-branch': savedCartsOnBranch,
   'coupon-totals': couponTotals,
+  'coupon-totals-activated': activatedCouponTotals,
 }

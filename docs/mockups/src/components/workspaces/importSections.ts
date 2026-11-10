@@ -45,8 +45,9 @@ type ImportRowLinks = Readonly<{
    */
   live?: boolean
   /**
-   * The question of Archive of the open row, from the state of its screen.
-   * Without it, the question follows the status of the row.
+   * What Archive of the open row opens, from the state of its screen, or of
+   * the drawn row in a list without an open workspace, such as the question
+   * over the list. Without it, the question follows the status of the row.
    */
   archiveTo?: string | null
 }>
@@ -71,8 +72,9 @@ export function sectionsWithImport(
     const drawn = workspace.key === 'coupon-totals' && (links.live ?? true)
     const to = drawn ? paths.imported : undefined
     const status = isOpen ? open.status : workspace.status
+    const own = isOpen || open === undefined
     const archiveTo =
-      isOpen && links.archiveTo !== undefined
+      own && links.archiveTo !== undefined
         ? links.archiveTo
         : (importedArchive(status) ?? null)
     return {
@@ -87,15 +89,25 @@ export function sectionsWithImport(
 }
 
 /**
- * The sections after an imported workspace was archived before its
- * activation. It leaves Import from Conductor for the open Archived group,
- * where its row keeps `openTo`, and the other workspaces of the import
- * stay in their section. Null keeps that row static.
+ * The Restore of the row of an archived workspace from Conductor: whether
+ * the app still keeps its cloud computer, so the row offers Restore, and
+ * the screen of the workspace back in its section. A workspace archived
+ * before its activation has no kept cloud computer.
+ */
+type ImportRestore = Readonly<{ open: boolean; to: string | null }>
+
+/**
+ * The sections after an imported workspace was archived. It leaves Import
+ * from Conductor for the open Archived group, where its row keeps
+ * `openTo`, and the other workspaces of the import stay in their section.
+ * Null keeps that row static. `restore` says whether the row offers
+ * Restore, and where Restore leads.
  */
 export function archivedWithImport(
   open: Workspace,
   imported: readonly Workspace[],
   openTo?: string | null,
+  restore: ImportRestore = { open: false, to: null },
 ): ArchivedList {
   const others = imported.filter((item) => item.key !== open.key)
   const archived: WorkspaceRow = {
@@ -103,6 +115,8 @@ export function archivedWithImport(
     status: 'archived',
     selected: true,
     to: openTo ?? undefined,
+    restoreOpen: restore.open,
+    restoreTo: restore.to,
   }
   return { sections: sectionsWithImport(others), archived: [archived] }
 }

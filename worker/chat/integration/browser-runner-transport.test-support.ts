@@ -9,10 +9,12 @@ import {
   type RunnerToWorkspace,
 } from '../../../src/shared/runner'
 import type { OuterRuntime } from './outer-runtime.test-support'
+import type { RunnerImportCommand } from '../../../src/shared/runner-import'
 import { requestRunner } from './runner-socket.test-support'
 
 export class BrowserRunnerTransport {
   readonly warnings: string[] = []
+  readonly importCommands: RunnerImportCommand[] = []
   private socket: WebSocket | undefined
   private connecting: Promise<void> | undefined
   private stopped = true
@@ -118,7 +120,12 @@ export class BrowserRunnerTransport {
         } else if (message.type === 'confirm')
           this.confirm(message.throughEventNumber)
         else if (message.type === 'resend') this.replay(message.fromEventNumber)
-        else this.command(message)
+        else if (message.type === 'import.command') {
+          this.importCommands.push(message)
+          this.warnings.push(
+            'The browser runner fixture does not restore imports.',
+          )
+        } else this.command(message)
       } catch (error) {
         this.failed(error)
         socket.close(1011, 'The fake runner failed.')

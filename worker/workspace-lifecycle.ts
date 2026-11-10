@@ -11,7 +11,10 @@ import {
   type WorkspaceChatResolvers,
 } from './chat/workspace-integration'
 import { DeviceRuntime } from './devices/runtime'
-import { credentialSender } from './lifecycle/credential-sender'
+import {
+  checkWorkspaceTurnToken,
+  credentialSender,
+} from './lifecycle/credential-sender'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type {
@@ -31,11 +34,15 @@ import {
 } from './lifecycle/workspace-transport'
 import type { WorkspaceController } from './lifecycle/workspace-controller-types'
 import type { WorkspaceStartIntent } from './lifecycle/start-types'
-import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
+import {
+  createWorkspaceInputActivity,
+  recordWorkspaceActivity,
+} from './lifecycle/create-input-activity'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { ComputerIdentity } from './lifecycle/computer-ledger'
-import type { TurnTokenCheck } from './model-gateway/types'
+import { featureResult } from './features/result'
+import { acceptLifecycleMessage } from './lifecycle/workspace-first-message'
 
 export class WorkspaceLifecycle
   extends DurableObject<WorkspaceCompositionEnv>
@@ -86,6 +93,34 @@ export class WorkspaceLifecycle
     )
   }
 
+  activateImportedWorkspace(orgId: string, id: string, userId: string) {
+    return featureResult(() =>
+      this.run(() =>
+        this.controller.activateImportedWorkspace(orgId, id, userId),
+      ),
+    )
+  }
+
+  activationCredentialSender(id: string) {
+    return this.chat.runLifecycle(() =>
+      this.controller.activationCredentialSender(id),
+    )
+  }
+
+  sendImportCommand(
+    id: string,
+    command: Parameters<WorkspaceLifecycleEndpoint['sendImportCommand']>[1],
+  ) {
+    return this.run(() => this.controller.sendImportCommand(id, command))
+  }
+
+  seedImportSession(
+    id: string,
+    input: Parameters<WorkspaceLifecycleEndpoint['seedImportSession']>[1],
+  ) {
+    return this.run(() => this.controller.seedImportSession(id, input))
+  }
+
   queueComputerStops(
     orgId: string,
     computers: readonly ComputerIdentity[],
@@ -104,11 +139,9 @@ export class WorkspaceLifecycle
   async acceptLifecycleFirstMessage(
     first: FirstWorkspaceMessage,
   ): Promise<UserMessage> {
-    return this.run(async () => {
-      const message = await this.chat.acceptFirstMessage(first)
-      await this.controller.acknowledgeLifecycleFirstMessage()
-      return message
-    })
+    return this.run(() =>
+      acceptLifecycleMessage(this.chat, this.controller, first),
+    )
   }
 
   async readChatWorkspaceSummary(): Promise<ChatWorkspaceSummary> {
@@ -170,14 +203,10 @@ export class WorkspaceLifecycle
   }
 
   async lifecycleActivity() {
-    const at = this.activityNow()
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const state = await this.controller.readLifecycle()
-        const result = await this.controller.lifecycleActivity(true)
-        if (result.ok && state) this.activity.record(state.workspaceId, at)
-        return result
-      }),
+    return recordWorkspaceActivity(
+      this.integration,
+      this.activity,
+      this.activityNow(),
     )
   }
 
@@ -225,11 +254,8 @@ export class WorkspaceLifecycle
     return credentialSender(this.chat, this.controller, turnId)
   }
 
-  async checkTurnToken(token: string): Promise<TurnTokenCheck> {
-    const workspaceId = await this.chat.store.workspaceId()
-    return workspaceId
-      ? this.chat.turnTokens.check(workspaceId, token)
-      : { ok: false, reason: 'turn_not_active' }
+  checkTurnToken(token: string) {
+    return checkWorkspaceTurnToken(this.chat, token)
   }
 
   async reportRunnerLifecycle(event: RunnerLifecycleEvent): Promise<void> {

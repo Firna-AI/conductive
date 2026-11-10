@@ -14,6 +14,9 @@ These entry points belong to the [workspace lifecycle](README.md).
   Its `imageAdmissionError` gives a waiting repository the next-build message.
   The browser create and the agent tools share that message.
 - [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
+  `releaseImageLease` deletes the native lease and the import lease, and `imageIsLeased` counts both.
+- [Import activation](import-activation.md#key-code): the entries of the activation of an imported workspace,
+  its image lease, and its attempt fence.
 - [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
@@ -67,6 +70,9 @@ These entry points belong to the [workspace lifecycle](README.md).
 - [`creation-publication.ts`](creation-publication.ts): `publishCreationResult`
   writes the stored result of a create to D1, with its own due time, as
   [Creates and resumes](workspace-object.md#creates-and-resumes) says.
+  After a successful activation, it calls `cleanupImportWork` of the import area.
+  [`start-storage-completion.ts`](start-storage-completion.ts): `completeStoredStart`
+  saves the result of a start, and the checkpoint of an activation.
 - [`start-runner.ts`](start-runner.ts): readiness admission, the original
   deadline, and the active owner and requester checks for runner reports.
 - [`job-time-limit.ts`](job-time-limit.ts): the build and start time limits

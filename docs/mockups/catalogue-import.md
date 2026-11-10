@@ -54,7 +54,11 @@ child pages:
 - `app/imported/list` has the workspace list after the import, with the
   section Import from Conductor at the top. The tile of Acme in its rail
   opens the same list. No entry draws the org switcher over this list, so
-  its org switcher on a phone and in a narrow window stays static.
+  its org switcher on a phone and in a narrow window stays static. Its
+  `archive` variant has the question of Archive over the list, which the
+  Archive button of the row opens there. Its `archived` variant has the
+  list just after that Archive: the workspace in the open Archived group,
+  and a toast that names it with no Restore.
 - `app/imported/old-session` has the Markdown file of an old session in the
   Markdown view of the app, before the activation. Its `active`, `failed`,
   and `stopped` variants have the same file after the activation, after a
@@ -92,7 +96,7 @@ child pages:
   `.context/conductor/`. A session whose memory file was gone on the Mac
   never imported, so no tab shows it.
 - `app/imported/archive` has the question of Archive before the
-  activation: the workspace can no longer be activated after Archive, and
+  activation: the workspace cannot be activated while it is archived, and
   its old sessions stay readable. Its `failed` variant has the same
   question after a failed activation. The Archive button of the row of a
   workspace that was never activated opens it, and its Archive leads to
@@ -100,7 +104,19 @@ child pages:
 - `app/imported/archived` has the workspace after that Archive. Its bar
   names the day of the archive and says that the old sessions stay
   readable, and it names no deleted cloud computer. Its `old-session`
-  variant has the file of an old session in that state.
+  variant has the file of an old session in that state. Its `toast`
+  variant has the workspace just after the Archive of its question, with a
+  toast that names it and offers no Restore, because the app keeps no
+  cloud computer of a workspace that never started.
+- `app/imported/archived-activated` has the workspace after its
+  activation and its Archive. Archive is one action, with no question, and
+  the bar gives the last day of Restore, because the app keeps its cloud
+  computer. Its `just-archived` variant has the toast with Restore, its
+  `group` variant has its row in the Archived group with Restore under the
+  pointer, and its `document` variant has its old document. Restore leads
+  to `app/imported/ready/stopped`. Only the record of the activated
+  workspace, `coupon-totals-activated`, draws these screens, because an
+  Archive alone does not show a successful activation.
 
 The controls of an imported workspace open only screens of the same
 workspace in the same state, for the same viewer and org: the tabs of a
@@ -114,8 +130,10 @@ workspace by the session that its chat shows or that opened its document,
 the `resume` state, and a failed activation by its saved message. So a
 document opened from a session from Conductor returns to that session, and
 no control of that session opens the new session in its place. Only the state before
-the activation matches a drawn list, `app/imported/list`, so the way back
-and the tile of Acme open it there and stay static in the other states. No
+the activation and the archived activated workspace match a drawn list:
+`app/imported/list`, and the `group` variant of
+`app/imported/archived-activated`. So the way back and the tile of Acme
+open them there and stay static in the other states. No
 entry draws the menu of the owner for an imported workspace, so the owner
 stays static. Every imported entry shows an admin of Acme while Acme is
 active. Another viewer or org in the serve controls, such as a member,

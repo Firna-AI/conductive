@@ -27,6 +27,11 @@ function equalTabs(left: WorkspaceTab | null, right: WorkspaceTab): boolean {
       )
     case 'diff':
       return left.kind === 'diff' && left.path === right.path
+    case 'conductor-document':
+      return (
+        left.kind === 'conductor-document' &&
+        left.documentId === right.documentId
+      )
   }
 }
 

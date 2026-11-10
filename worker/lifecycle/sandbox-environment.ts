@@ -41,6 +41,7 @@ export async function sandboxEnvironment(
       workspace.repositoryId,
     ),
     CONDUCTIVE_TURN_ID: '',
+    CONDUCTIVE_ACTIVATION_ID: '',
     CONDUCTIVE_DISK_KEEPALIVE: input.diskKeepalive ? '1' : '0',
   }
 }

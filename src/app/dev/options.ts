@@ -2,11 +2,13 @@ import type { OrgRole } from '../../shared/api'
 import type { BannerState } from '../../shared/github'
 import type { GetStartedStep } from '../../shared/onboarding'
 import type { FakeApiOptions } from '../../test-support/fake-api'
+import { FAKE_IMPORTS } from '../../test-support/fake-import-routes'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
 import type { DevBranchMode } from './branch-routes'
+import type { DevImportScan, DevImportUpload } from './import-routes'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -40,6 +42,17 @@ const BANNERS = [
 
 const PATHS = ['plain', 'masked'] as const
 
+const IMPORT_SCANS = [
+  'rows',
+  'empty',
+  'consent',
+] as const satisfies readonly DevImportScan[]
+
+const IMPORT_UPLOADS = [
+  'ok',
+  'fail',
+] as const satisfies readonly DevImportUpload[]
+
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
 
@@ -56,6 +69,14 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `banner=<state>`: its GitHub banner, such as `merged`.
  * - `paths=masked`: two files whose real paths hold a fake secret value,
  *   with their labels, in the file lists and at the end of each turn.
+ * - `imported=inactive|starting|failed|stopped|ready|archived`:
+ *   `checkout-autocomplete` came from an import of Conductor, in that
+ *   state, with its old sessions. Activate runs the steps of an
+ *   activation.
+ * - `mac=1`: the page is the Mac app on the Mac of the user, with its
+ *   pairing, so it shows This Mac and the import from Conductor.
+ *   `importScan=rows|empty|consent` picks what a scan finds, and
+ *   `importUpload=fail` stops the first upload of each row before Try again.
  * - `firstRun=github-app|org|agent-login`: Get started is not done from
  *   that step on. With `github-app` or `org`, the user has no org until
  *   Create org runs. In each first run, no agent login is connected.
@@ -112,6 +133,9 @@ export interface DevOptions {
   invited: boolean
   paused: boolean
   inviteCode: DevInviteCode
+  /** What a scan of the Mac finds, and what its uploads do. */
+  importScan: DevImportScan
+  importUpload: DevImportUpload
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -142,6 +166,8 @@ export function readDevOptions(search: string): DevOptions {
       conversation: pick(params, 'conversation', CONVERSATIONS),
       banner: pick(params, 'banner', BANNERS),
       paths: pick(params, 'paths', PATHS),
+      imported: pick(params, 'imported', FAKE_IMPORTS),
+      onMac: params.get('mac') === '1',
     },
     // A person who waits has a new account, unless the options say otherwise.
     firstRun: firstRun ?? (waiting === null ? null : 'github-app'),
@@ -158,6 +184,8 @@ export function readDevOptions(search: string): DevOptions {
     invited: params.get('invited') === '1',
     paused: params.get('paused') === '1',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
+    importScan: pick(params, 'importScan', IMPORT_SCANS) ?? 'rows',
+    importUpload: pick(params, 'importUpload', IMPORT_UPLOADS) ?? 'ok',
   }
 }
 

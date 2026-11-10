@@ -11,6 +11,10 @@ import type {
   RunnerConnector,
 } from '../../src/shared/runner-transport'
 import type { RunnerFileResponse } from '../../src/shared/runner-files'
+import type {
+  RunnerImportCommand,
+  RunnerImportReply,
+} from '../../src/shared/runner-import'
 
 export interface FakeRunnerOptions {
   workspaceId: string
@@ -27,6 +31,7 @@ export interface FakeRunnerOptions {
 export class FakeRunner {
   readonly commands: RunnerCommand[] = []
   readonly received: WorkspaceToRunner[] = []
+  readonly importCommands: RunnerImportCommand[] = []
   private readonly outbox = new Map<number, RunnerEventEnvelope>()
   private connection: RunnerConnection | null = null
   private sequence = 0
@@ -81,7 +86,7 @@ export class FakeRunner {
     return structuredClone([...this.outbox.values()])
   }
 
-  reply(response: RunnerFileResponse): void {
+  reply(response: RunnerFileResponse | RunnerImportReply): void {
     if (!this.connection)
       throw new Error('Connect the fake runner before replying.')
     this.connection.send(response)
@@ -107,6 +112,8 @@ export class FakeRunner {
       if (message.type === 'welcome') this.resend(through + 1)
     } else if (message.type === 'resend') {
       this.resend(message.fromEventNumber)
+    } else if (message.type === 'import.command') {
+      this.importCommands.push(message)
     } else {
       this.commands.push(message)
     }

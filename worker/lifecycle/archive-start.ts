@@ -10,6 +10,7 @@ import type { WorkspaceArchiveState } from './archive-types'
 import { CREATE_CHECKPOINT_KEY } from '../members/creation-checkpoint'
 import { clearRetention } from './retention-data'
 import { readArchiveResource } from './archive-data'
+import { closeActivationFence } from './import-activation-fence'
 
 interface Waiter<T> {
   publish(value: T): void
@@ -57,6 +58,9 @@ export async function prepareArchivedLifecycle(
   },
   state: WorkspaceArchiveState,
 ): Promise<WorkspaceArchiveState> {
+  const active = await input.startJobs.job()
+  if (active?.kind === 'activate')
+    await closeActivationFence(input.db, active, 'interrupted')
   await input.starts.archive()
   await input.startJobs.clearPublication()
   await input.stopped?.(state.workspaceId)

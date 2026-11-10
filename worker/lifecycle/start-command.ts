@@ -5,7 +5,15 @@ import {
   existingBranchFetch,
 } from './existing-branch-command'
 import { repositoryLocation } from './repository-locations'
-import { workspaceStartupCommand } from './image-software'
+import {
+  workspaceStartupCommand,
+  workspaceStartupBody,
+  workspaceRunnerLaunch,
+  installImageSoftware,
+} from './image-software'
+import { privilegedCommand } from '../terminal/privileged'
+import { workspaceToolsCommand } from '../tools/image'
+import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import type { WorkspaceRow } from './workspace-data'
 import type { WorkspaceStartJob } from './start-types'
 
@@ -14,7 +22,15 @@ export function workspacePhaseCommand(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
 ): string {
+  if (job.kind === 'activate') {
+    if (job.phase === 'import-software')
+      return `${privilegedCommand(workspaceToolsCommand(WORKSPACE_TOOL_SOURCES))}\n${installImageSoftware(job.activation.software)}`
+    if (job.phase === 'import-launch') return workspaceRunnerLaunch(job.attempt)
+    if (job.phase === 'startup') return workspaceStartupBody(job.startupScript)
+    throw new Error('Invalid import shell phase.')
+  }
   if (job.phase === 'startup') return workspaceStartupCommand(job.startupScript)
+  if (job.turnId === null) throw new Error('Missing native creation turn.')
   const directory = repositoryLocation(
     job.repositoryLocations,
     row.repositoryId,

@@ -13,7 +13,8 @@ export async function creationAdmissionResponse(
   job: WorkspaceStartJob,
   acceptedFirst?: FirstWorkspaceMessage,
 ): Promise<SavedProvisionedWorkspace> {
-  if (!job.creation) throw new Error('Missing admitted first message')
+  if (!job.creation || job.kind !== 'create')
+    throw new Error('Missing admitted first message')
   const row = await readWorkspace(env.DB, job.orgId, job.workspaceId)
   const state = await endpoint.readLifecycle()
   const first = state?.pendingFirstMessage ?? acceptedFirst?.request

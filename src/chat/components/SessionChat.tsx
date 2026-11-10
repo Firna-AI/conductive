@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Agent } from '../../shared/agents'
+import type { ImportSessionMetadata } from '../../shared/import-session'
 import type { WorkspaceState } from '../../shared/workspaces'
 import { PendingCommands } from '../device/PendingCommands'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
@@ -44,6 +45,16 @@ export interface ChatHost {
    * members can still queue messages. Otherwise the bar takes its place.
    */
   keepsComposer: boolean
+  /**
+   * What takes the place of an empty chat, such as the links to the old
+   * sessions of a workspace from Conductor, or null for the chat's own.
+   */
+  empty?: ReactNode
+  /**
+   * The first line of a session that continues an old session from
+   * Conductor, which links to its document.
+   */
+  importLine?: (metadata: ImportSessionMetadata) => ReactNode
 }
 
 export interface SessionChatProps {
@@ -138,6 +149,12 @@ export function SessionChat(props: SessionChatProps) {
     void (open ? controller.select(sessionId) : controller.reopen(sessionId))
   }
   const source = sourceInsert(snapshot, session, openSession)
+  const imported = session?.conductorImport
+  const importLine =
+    imported && props.host?.importLine
+      ? { key: 'conductor', after: null, node: props.host.importLine(imported) }
+      : null
+  const firsts = [source, importLine].filter((insert) => insert !== null)
   const footer = (
     <>
       {id && content && status === 'failed' ? (
@@ -211,13 +228,14 @@ export function SessionChat(props: SessionChatProps) {
         controller,
         starting: starting !== null,
         readOnly,
+        empty: props.host?.empty,
       })}
       footer={footer}
       mobile={props.mobile}
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
-        inserts={source ? [source, ...commands.inserts] : commands.inserts}
+        inserts={[...firsts, ...commands.inserts]}
         now={now}
         onOpenDiff={props.onOpenDiff}
         onRetry={(messageId) => id && void controller.retry(id, messageId)}

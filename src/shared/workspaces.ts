@@ -22,6 +22,8 @@ export function workspacePath(orgId: string, workspaceId: string): string {
   return `${workspacesPath(orgId)}/${encodeURIComponent(workspaceId)}`
 }
 export const workspacePaths = {
+  activate: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/activate`,
   resume: (orgId: string, id: string) => `${workspacePath(orgId, id)}/resume`,
   activity: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/activity`,
@@ -96,4 +98,8 @@ export interface CreateWorkspaceRequest {
 export interface CreateWorkspaceResponse extends WorkspaceResponse {
   sessionId: string
   firstMessage: UserMessage
+}
+
+export interface ActivateWorkspaceResponse extends WorkspaceResponse {
+  sessionId: string
 }

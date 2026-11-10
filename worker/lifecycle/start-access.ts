@@ -9,6 +9,7 @@ import { firstOrgAdmin } from './settings-data'
 import { orgProviderForAccount } from '../sandbox/client'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
+import { requireOrgMember } from './access'
 
 export async function startProvider(
   env: AppEnv,
@@ -32,6 +33,16 @@ export async function requireActiveStartUsers(
   job: WorkspaceStartJob,
 ): Promise<void> {
   await requireActiveOrg(db, job.orgId)
+  if (job.kind === 'activate') {
+    await requireOrgMember(db, job.orgId, job.activation.activatorUserId)
+    const row = await readWorkspace(db, job.orgId, job.workspaceId)
+    if (row.archivedAt !== null)
+      throw new HttpError(
+        409,
+        'workspace_archived',
+        'The archived workspace cannot start.',
+      )
+  }
   if (job.requestedByUserId) await requireActiveUser(db, job.requestedByUserId)
   if (job.creation && job.kind === 'create') {
     await requireActiveUser(db, job.creation.sender.id)

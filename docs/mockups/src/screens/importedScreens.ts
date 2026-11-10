@@ -1,3 +1,4 @@
+import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
 import type { StartError } from '../fixtures/starting'
 import { paths } from '../paths'
 import { importedWorkspace, type WorkspaceState } from './workspaceState'
@@ -23,8 +24,14 @@ type ImportedScreens = Readonly<
     activation: string | null
     /** The archived workspace, which Archive of its question opens. */
     afterArchive: string | null
-    /** The question of Archive, which Archive of the selected row opens. */
+    /**
+     * What Archive of the selected row opens: the question of Archive before
+     * a successful activation, or the archived workspace with its toast
+     * after it, because Archive is then one action.
+     */
     archive: string | null
+    /** The workspace back in its section, which Restore opens. */
+    restore: string | null
   } & (
     { chat: string; document: string } | { chat: string | null; document: null }
   )
@@ -43,6 +50,7 @@ const noScreens: ImportedScreens = {
   activation: null,
   afterArchive: null,
   archive: null,
+  restore: null,
 }
 
 /** The session from Conductor that a chat shows, or that opened a document. */
@@ -64,6 +72,7 @@ const readyScreens: Readonly<Record<Origin, ImportedScreens>> = {
     terminal: paths.importedReadyTerminal,
     preview: paths.importedReadyPreview,
     history: paths.importedHistory,
+    archive: paths.importedActivatedArchivedToast,
   },
   memory: {
     ...noScreens,
@@ -71,6 +80,23 @@ const readyScreens: Readonly<Record<Origin, ImportedScreens>> = {
     document: paths.importedResumedDocument,
   },
   fallback: { ...noScreens, chat: paths.importedFallback },
+}
+
+/**
+ * The screens of the activated workspace after its Archive, while the app
+ * keeps its cloud computer. Its chat shows the session that resumed, and
+ * Restore puts it back in its section, stopped.
+ */
+const archivedScreens: Readonly<Record<Origin, ImportedScreens>> = {
+  none: noScreens,
+  memory: {
+    ...noScreens,
+    chat: paths.importedActivatedArchived,
+    document: paths.importedActivatedArchivedDocument,
+    list: paths.importedActivatedArchivedGroup,
+    restore: paths.importedStopped,
+  },
+  fallback: noScreens,
 }
 
 /**
@@ -85,7 +111,7 @@ const errorScreens: Readonly<Record<StartError, ImportedScreens>> = {
     document: paths.importedOldSessionFailed,
     files: paths.importedFailedFiles,
     activation: paths.importedActivating,
-    afterArchive: paths.importedArchived,
+    afterArchive: paths.importedArchivedToast,
     archive: paths.importedArchiveFailed,
   },
   'disk-space': {
@@ -99,12 +125,15 @@ const errorScreens: Readonly<Record<StartError, ImportedScreens>> = {
 
 /**
  * Every other state of the cloud computer, with its screens. No imported
- * entry draws a refused start, an archive after the activation, or the
- * menu of the owner. Only the list after the import, with both workspaces
- * Not active, matches a state: the state before the activation.
+ * entry draws a refused start or the menu of the owner. Only the list
+ * after the import, with both workspaces Not active, matches a state: the
+ * state before the activation.
  */
 const sandboxScreens: Readonly<
-  Record<Exclude<WorkspaceState['sandbox'], 'ready' | 'error'>, ImportedScreens>
+  Record<
+    Exclude<WorkspaceState['sandbox'], 'ready' | 'error' | 'archived'>,
+    ImportedScreens
+  >
 > = {
   inactive: {
     chat: paths.imported,
@@ -116,8 +145,9 @@ const sandboxScreens: Readonly<
     list: paths.importedList,
     owner: null,
     activation: paths.importedActivating,
-    afterArchive: paths.importedArchived,
+    afterArchive: paths.importedArchivedToast,
     archive: paths.importedArchive,
+    restore: null,
   },
   starting: { ...noScreens, chat: paths.importedActivating },
   stopped: {
@@ -126,9 +156,9 @@ const sandboxScreens: Readonly<
     document: paths.importedOldSessionStopped,
     files: paths.importedStoppedFiles,
     terminal: paths.importedStoppedTerminal,
+    archive: paths.importedActivatedArchivedToast,
   },
   refused: noScreens,
-  archived: noScreens,
   'archived-inactive': {
     ...noScreens,
     chat: paths.importedArchived,
@@ -149,13 +179,19 @@ function originOf(state: WorkspaceState): Origin {
  * The screens of a state. The records name each state, with no fallback,
  * so a new state or a new saved message fails the typecheck until it
  * names its screens. A session from Conductor continues only in the
- * activated workspace, so another state with one has no drawn screen.
+ * activated workspace, so another state with one has no drawn screen. An
+ * archived workspace has the screens of an activated one only when its
+ * record marks the activation, because an Archive alone does not.
  */
 function screensOf(state: WorkspaceState): ImportedScreens {
   const origin = originOf(state)
   switch (state.sandbox) {
     case 'ready':
       return readyScreens[origin]
+    case 'archived':
+      return openableWorkspaceRecords[state.workspace].activated
+        ? archivedScreens[origin]
+        : noScreens
     case 'error':
       return origin === 'none' ? errorScreens[state.startError] : noScreens
     default:

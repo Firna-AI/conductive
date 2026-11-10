@@ -4,9 +4,10 @@ import { EmptyState } from '../common/EmptyState'
 import { Notice } from '../common/Notice'
 
 /**
- * The bar of a workspace from Conductor that was archived before its
- * activation, in place of the composer. It never had a cloud computer, so
- * the bar names no deleted one. Its old sessions stay readable.
+ * The bar of a workspace from Conductor that was archived before a
+ * successful activation, in place of the composer. No activation
+ * succeeded, so the bar names no deleted cloud computer. Its old sessions
+ * stay readable.
  */
 export function ArchivedImportBar() {
   return (
@@ -19,8 +20,8 @@ export function ArchivedImportBar() {
 }
 
 /**
- * What the files panel of that workspace shows. It never had a cloud
- * computer, so it has no files and no tools.
+ * What the files panel of that workspace shows. No activation brought its
+ * files in, so it has no files and no tools.
  */
 export function ArchivedImportPanel() {
   return (

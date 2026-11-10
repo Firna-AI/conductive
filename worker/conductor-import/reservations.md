@@ -70,7 +70,7 @@ It describes the reservation of one imported workspace, from the first control o
 - A candidate is verified only when one of the captured heads contains it. A moved head, another repository, or a GitHub failure establishes nothing.
 - Each comparison that GitHub returns must have the captured head as its base and the requested candidate as its head. Otherwise the request fails, and it stores no receipt.
 - [`repository-data.ts`](repository-data.ts) keeps the facts, the receipt, and each verified pair with the reservation. The manifest names each prerequisite with its receipt ID, and `closeManifest` checks the receipt against the source and its HEAD.
-- The Mac needs no Conductor login and no Git credential of its own for this check. A later activation must still check each prerequisite against GitHub at that time.
+- The Mac needs no Conductor login and no Git credential of its own for this check. The activation must still check each prerequisite against GitHub at that time.
 
 ### Git LFS availability
 

@@ -11,6 +11,7 @@ import { orgs, suspendedOrg } from '../fixtures/orgs'
 import type { Workspace } from '../fixtures/workspaces'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
+import { importedScreensOf } from './importedScreens'
 import { importedItems } from './importedSessions'
 import { importedChat, isImported } from './importedWorkspace'
 import { viewerOf } from './sessionStarter'
@@ -22,8 +23,8 @@ import type { WorkspaceState } from './workspaceState'
  * The chat of the open workspace, with its composer and the notices around
  * it. A new session starts empty. A workspace from Conductor lists its old
  * sessions in place of an empty chat, and its own bars can take the place
- * of the composer. The chips find their workspaces in `rows`, the list of
- * the screen.
+ * of the composer. Restore on its archived bar leads to its own screen.
+ * The chips find their workspaces in `rows`, the list of the screen.
  */
 export function WorkspaceChat(props: {
   state: WorkspaceState
@@ -34,6 +35,9 @@ export function WorkspaceChat(props: {
   const { state, workspace } = props
   const fresh = state.tab === 'new-session'
   const imported = isImported(state) ? importedChat(state) : undefined
+  const restoreTo = isImported(state)
+    ? importedScreensOf(state).restore
+    : undefined
   return (
     <ChatWorkspaces rows={props.rows}>
       <ChatPane
@@ -67,6 +71,7 @@ export function WorkspaceChat(props: {
         }
         problem={sandboxNotice(state)}
         replaceComposer={imported?.replaceComposer}
+        restoreTo={restoreTo}
         starting={startingLogFor(state)}
         viewer={viewerOf(state)}
         viewport={props.viewport}

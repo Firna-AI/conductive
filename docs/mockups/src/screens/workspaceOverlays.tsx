@@ -18,6 +18,7 @@ import { paths } from '../paths'
 import { importedScreensOf } from './importedScreens'
 import { neverActivated } from './importedWorkspace'
 import type { WorkspaceState } from './workspaceState'
+import { archiveRestore } from './workspaceSandbox'
 import { historyFor } from './workspaceTabs'
 
 /**
@@ -111,8 +112,8 @@ export function workspaceOverlay(
 
 /**
  * The toast of the state, over the whole screen. Just after Archive, the
- * toast names the workspace and offers Restore, which does what Restore on
- * the archived bar does.
+ * toast names the workspace. It offers Restore, which does what Restore on
+ * the archived bar does, while the app keeps the cloud computer.
  */
 export function workspaceToast(
   state: WorkspaceState,
@@ -124,7 +125,11 @@ export function workspaceToast(
       return null
     case 'archived':
       return (
-        <ArchivedToast name={workspace.name} phone={viewport === 'mobile'} />
+        <ArchivedToast
+          name={workspace.name}
+          phone={viewport === 'mobile'}
+          restorable={archiveRestore(state) === 'available'}
+        />
       )
   }
 }

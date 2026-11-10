@@ -1,7 +1,7 @@
 # Publication and old documents
 
 This page belongs to the [import area](README.md).
-It describes how a complete reservation becomes a workspace, how members read its old documents, and what a later activation can read.
+It describes how a complete reservation becomes a workspace, how members read its old documents, and what the activation reads.
 [Imported workspaces](../../docs/protocol/imported-workspaces.md) and [Sessions from Conductor](../../docs/protocol/chat-and-events.md#sessions-from-conductor) state the requirements.
 
 ## Publication
@@ -39,7 +39,7 @@ It describes how a complete reservation becomes a workspace, how members read it
 
 They mint no bucket credential, and they check no access.
 No call returns a result of `repository.lfs`, because the Worker stores none, as [Git LFS availability](reservations.md#git-lfs-availability) says.
-Their caller owns these duties:
+Their caller is the [lifecycle activation](../lifecycle/import-activation.md), with its runner restore. It owns these duties:
 
 - Authorize the activation, the member, the owner, the image, and the current start before each read.
 - Check the disk before the transfer. Combine the Git disk facts of the snapshot and its content byte totals with the actual free disk. Count each file reference, the filesystem allocation, the Git indexes, the LFS copies, and the room to stage the work. After the delivery, check the actual tree, pack, and LFS facts before any change to the checkout.

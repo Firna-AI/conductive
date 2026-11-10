@@ -40,6 +40,11 @@ export function ChatPane(props: {
    */
   problem?: SandboxNoticeState
   /**
+   * The screen that Restore on the bar of an archived workspace opens, when
+   * it is not the native one. Null keeps Restore static.
+   */
+  restoreTo?: string | null
+  /**
    * A bar in place of the composer, such as the question that activates a
    * workspace from Conductor, which has no cloud computer yet.
    */
@@ -124,7 +129,9 @@ export function ChatPane(props: {
         ) : null}
         {mac?.choicesOpen && pending.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
-        {props.problem ? <SandboxBar {...props.problem} /> : null}
+        {props.problem ? (
+          <SandboxBar {...props.problem} restoreTo={props.restoreTo} />
+        ) : null}
         {props.replaceComposer}
         {composer ? <Composer {...props.composer} /> : null}
       </div>

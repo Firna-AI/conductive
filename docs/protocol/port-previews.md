@@ -18,8 +18,10 @@
 - Both a check and a report were rejected, because two paths must stay in
   step. An install of the newest runner at each start was rejected,
   because a start then takes longer and can fail in a new way. It also
-  breaks the rule that only a build installs the software of a sandbox,
-  which decision 148 kept for the terminal programs.
+  breaks the rule that only a build installs the software of a sandbox for
+  an ordinary start, which decision 148 kept for the terminal programs. The
+  first activation of an imported workspace is the one other install, as
+  [The activation](imported-workspaces.md#the-activation) says.
 - Each server is a button with its port, its program name, and its folder,
   when the report gives them (decision 221). A folder that does not fit
   keeps its end, after "…".
@@ -40,7 +42,9 @@
   in the terminal, or to ask the agent. The field stays.
 - When the app has no report, the form shows only the field. This holds
   for a sandbox whose runner does not report ports, such as one from an
-  older org image, because only a build installs a new runner.
+  older org image, because an ordinary start installs no new runner. Only a
+  build, or the first activation of an imported workspace, installs one, as
+  [The activation](imported-workspaces.md#the-activation) says.
 - When the sandbox stops, the workspace sends `ports.updated` with
   `ports: null` to the open tabs. A null list means that the app has no
   report. Reason: an old list would offer servers that the stop ended.

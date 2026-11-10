@@ -14,7 +14,7 @@ Each handler returns `null` for a path that it does not own. The
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
-| `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
+| `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume`, `activity`, and `activate`, and image build, refresh, and log routes |
 
 `featureShellRoute` in [feature-shell.ts](feature-shell.ts) serves account GitHub
 access, org creation with initials and repository choices, shared settings,
@@ -35,6 +35,10 @@ Two browser routes of an import from Conductor live in the [import area](../cond
 These replies hold only public values: scan rows and their states, progress, results, and old-document metadata and Markdown.
 No reply gives the page an upload link, a manifest, a native session recipe, a repository proof, a source path, or a byte of an upload.
 [Import operations](../conductor-import/operations.md) and [Old documents](../conductor-import/publication.md#old-documents) give their rules.
+
+A saved view names an old document only by the `id` of its metadata.
+The view routes read no document, and they do not look up that ID.
+The document routes keep their own checks, so a saved tab gives no access.
 
 ## Rules
 
@@ -78,6 +82,11 @@ No reply gives the page an upload link, a manifest, a native session recipe, a r
 - A repository without a GitHub installation is not in the list.
 - Each member has a view of their own. A read mark only moves forward, and
   it stops at the last event number of the workspace.
+- `workspaceViewInput` checks each view write and each saved row. A tab is
+  a session, a file with its mode, a diff, or an old document, also as the
+  active tab. The check keeps only the fields of each kind. A write with
+  an unknown kind or mode, or an empty or missing ID or path, gets
+  `400 invalid_input`.
 - The list and the lifecycle replies give each reader one state.
   Archived, starting, stopped, error, and input come from the workspace
   record. Otherwise, the chat summary of the workspace object and the
@@ -89,8 +98,12 @@ No reply gives the page an upload link, a manifest, a native session recipe, a r
 - An archived workspace keeps its view readable. A view write, a read mark,
   and a lifecycle action other than Restore get `409 workspace_archived`.
 - `chatLifecycleRoute` gives the lifecycle handler the runner archive as a
-  getter, so only a build or a refresh reads it. It gives the first message
+  getter, so the handler reads it only for a build or a refresh. It gives the first message
   of a create to `acceptLifecycleFirstMessage` of the workspace object.
+- `chatLifecycleRoute` serves `activate` itself, through
+  `activateImportedWorkspace` of the workspace object. A new activation
+  attempt reads the runner archive there, as
+  [Import activation](../lifecycle/import-activation.md) says.
 
 Org suspension keeps shell reads available.
 The common browser gate refuses every org write except Leave.
@@ -140,6 +153,7 @@ The list and workspace read return `inactive` before activation.
 Their optional `conductorImport` field keeps source identity, importer, and activation completion time.
 It remains present after Archive. Native responses omit the field.
 The writer creates no first message, session, turn, token, or cloud computer.
+`POST` of `workspacePaths.activate` later makes the early session and starts the cloud computer, as [Import activation](../lifecycle/import-activation.md) says.
 
 Run `npm run test -- worker/app-api worker/chat/integration` from the
 repository root. The integration tests use the production Worker entry,
@@ -160,6 +174,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - `shell-resources.test.ts` and `chat-read-state.test.ts` check the lists,
   the private views, the encoded workspace IDs, the archived writes, and
   the read marks.
+- [`workspace-view.test.ts`](../conductor-import/workspace-view.test.ts)
+  in the import folder saves a view with native tabs and the tab of an old
+  document through the production route. It checks the read back, the
+  removed fields, the view of another member, an empty ID, and an
+  archived workspace. It runs with the import tests.
 - `chat-create-journey.test.ts` boots the shell, creates a workspace, and
   delivers the first message through a Stop and a resume.
 - `machine-credentials.test.ts` checks the two machine credential routes.
@@ -200,7 +219,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   `getStartedGitHubComplete`, the one owner of the `github-app` step.
 - [`shell.ts`](shell.ts) and [`shell-data.ts`](shell-data.ts): the lists of
   an org and the read marks.
-- [`workspace-view.ts`](workspace-view.ts): the saved view of each member.
+- [`workspace-view.ts`](workspace-view.ts): the saved view of each member,
+  and `workspaceViewInput`, the check of each tab.
 - [`workspace-state.ts`](workspace-state.ts): the state of a workspace for
   its reader, and the refusal of archived writes.
 - [`workspace-path.ts`](workspace-path.ts): the workspace ID of a path.
