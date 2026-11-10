@@ -39,7 +39,7 @@ export async function advanceStartSteps(
       provider,
       row,
       job,
-      stepLabel(job.phase),
+      stepLabel(job.phase, job.creation?.branchMode),
     ))
   )
     return false
@@ -51,7 +51,11 @@ export async function advanceStartSteps(
     )
     return false
   }
-  await endpoint.lifecycleStep(job.phase, stepLabel(job.phase), 'completed')
+  await endpoint.lifecycleStep(
+    job.phase,
+    stepLabel(job.phase, job.creation?.branchMode),
+    'completed',
+  )
   if (job.phase === 'fetch' || job.phase === 'branch') {
     await nextStartCommand(
       storage,

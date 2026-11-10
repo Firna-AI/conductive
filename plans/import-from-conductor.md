@@ -654,6 +654,29 @@ They do not reopen a user decision. The earlier dated facts stay as history.
   provider identity to conductive. Offline probes preserved the original
   source bytes and all response items. Actual provider acceptance still
   needs a real continuation turn, so preparation must not certify it.
+- Agent calls for the import service, 10 November 2026: keep one portable
+  contract family under `src/shared/` for the Worker, the Mac app, the
+  runner, and the browser. Reason: no side needs a copy or a converter of
+  the manifest and operation types. Give each reservation its own Durable
+  Object through the existing workspace binding, with one serial queue for
+  its controls, seals, and deletions. Reason: the writes and the cleanup of
+  one prefix must not race, and no new binding is needed. Keep the
+  reservation ledger and a normalized manifest inventory in D1, read and
+  written in bounded pages. Reason: no request rebuilds a whole package, and
+  no total size cap applies. Prove prerequisites with source-bound receipts
+  of the current GitHub heads, read with the importer's token on the
+  Worker. Reason: a stale remote-tracking ref cannot prove that GitHub holds
+  a commit, and the Mac needs no Git credential. Acknowledge each Mac frame,
+  send large private replies in acknowledged fragments, and run import
+  waits outside the device broker's serial queue. Reason: frames stay
+  bounded with no total list cap, and an import never delays commands,
+  settings, or heartbeats. Keep durable cleanup ownership with no org
+  foreign key, a write marker for each admitted seal, and a second deletion
+  after the latest link expiry. Reason: a late upload or a lost seal reply
+  must not leave or recreate data after cleanup. Add a fixed-size private
+  Git disk summary to the snapshot. Reason: the content byte totals cannot
+  describe the checkout and the Git expansion of an unpushed HEAD before
+  the transfer.
 
 ### Mockup design calls, 10 November 2026
 
@@ -1078,22 +1101,27 @@ Depends on: 2
       computer, with the "from Conductor" flag and the local Conductor ID,
       with its migration. Record Not active and whether activation
       completed, so Archive can choose the correct words.
-- [ ] Add the reservation of each selected workspace, with short-lived
+- [x] Add the reservation of each selected workspace, with short-lived
       upload links under its own bucket prefix.
-- [ ] Create the workspace in the section "Import from Conductor" only when
+- [x] Create the workspace in the section "Import from Conductor" only when
       its last part is stored and checked, and record each old session with
       its title and its Markdown file (decision 13).
-- [ ] Keep an unfinished reservation for Try again, and expire it with its
+- [x] Keep an unfinished reservation for Try again, and expire it with its
       parts after 7 days (decision 14).
-- [ ] Add the route that reads the Markdown file of an old session for a
+- [x] Add the route that reads the Markdown file of an old session for a
       member of the org.
-- [ ] Add the R2 bucket of decision 132 when Milestone 8p of the main plan
+- [x] Add the R2 bucket of decision 132 when Milestone 8p of the main plan
       has not merged it yet, and keep each workspace's data under its own
       prefix.
-- [ ] Add Worker tests, as the `testing` skill says.
-- [ ] Update `worker/app-api/README.md` and `worker/chat/README.md`.
+- [x] Add Worker tests, as the `testing` skill says.
+- [x] Update `worker/app-api/README.md` and `worker/chat/README.md`.
+- [ ] Prove with the live bucket and its key pair that a signed PUT link
+      stores the exact bytes, and that live R2 refuses an expired link, a
+      wrong size, a wrong SHA-256, and a second PUT to the same temporary
+      key. Local R2 cannot run this proof, and no live key pair exists yet.
 
 Records checkpoint evidence: `.context/import-from-conductor/current/milestone-4-records-report.md`.
+Service checkpoint evidence: `.context/import-from-conductor/current/m4-service-report.md`. Docs evidence: `.context/import-from-conductor/current/m4-docs-report.md`.
 
 ## Milestone 5: Activation
 

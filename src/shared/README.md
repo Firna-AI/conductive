@@ -14,6 +14,9 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 It keeps the local Conductor ID, importer user ID, and nullable activation completion time.
 Native workspaces omit it. `readWorkspaceImport` validates that field for each workspace reader.
 An imported workspace starts in `inactive`, with no first message or session.
+The same module owns the old-document metadata and the paths of the import routes.
+The other `conductor-import-*.ts` modules own the device operations, the manifest, their parsers, and the page helpers.
+[Shared import contracts](conductor-import.md) lists them and their public and private values.
 
 Each area owns its paths and payloads. Import from that area directly.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
@@ -178,7 +181,8 @@ with their GitHub names, or null.
 [Operator actions](../../worker/operator/README.md) gives the access and the reply codes.
 
 `device.ts` defines Mac command paths, socket messages, pairing, and local settings relays.
-It has no imports and also serves the Mac app's NodeNext build.
+Its socket messages also include the import frames.
+Its only import is a type import of those frames, with a `.ts` path, so it also serves the Mac app's NodeNext build.
 `device-read.ts` validates its wire values and preserves command text, timeouts, and truncation.
 Command records return `requestKey` for URLs and retain `requestId` for retries and device frames.
 Settings results distinguish applied and saved changes, applied but unsaved changes, and failed changes.

@@ -157,6 +157,15 @@ one building attempt per account. `image_build_jobs.software_image_name`
 pins the ready software image that a first build uses.
 The [software image backend](../worker/software-image/README.md) owns these records.
 
+`202611101830_conductor_import_reservations.sql` adds the nine `conductor_import_*` tables of the import service.
+It changes no earlier table, index, or trigger. `workspaces`, `workspace_runtime`, the org numbering, and the computer ledger stay as they were.
+A reservation keeps its org, importer, chosen repository, local Conductor ID, name, branch, state, creation and expiry times, and snapshot.
+A partial unique index keeps one open or complete reservation for each org and local Conductor ID. That index is the source slot.
+Child tables keep the ordered manifest records, the content objects, the parts, each issued upload identity, the old documents, the GitHub proofs, and the verified prerequisites.
+A reservation goes with its org, and each child table goes with its reservation.
+The cleanup table has no foreign key. So a cleanup record and its unresolved write stay after the org and reservation rows.
+The [import area](../worker/conductor-import/reservations.md) owns these records, and its publication writes the workspace record in the same batch that ends the reservation.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

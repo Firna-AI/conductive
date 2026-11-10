@@ -113,7 +113,7 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
  * where the page hides the bar of the chat. A workspace from Conductor
  * shows its own panel while it has no cloud computer.
  */
-export function filesPlaceholder(
+function filesPlaceholder(
   state: WorkspaceState,
   withAction: boolean,
 ): ReactNode {

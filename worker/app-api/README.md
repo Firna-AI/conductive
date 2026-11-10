@@ -25,6 +25,17 @@ The [archive route](archive.ts) archives and restores a workspace through its wo
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
 
+### Import routes
+
+Two browser routes of an import from Conductor live in the [import area](../conductor-import/README.md).
+
+- `conductorDocumentRoute` in [`conductor-import/routes.ts`](../conductor-import/routes.ts) serves `GET` of `conductorOldDocumentsPath` and `conductorOldDocumentPath`. `route` tries it before the other handlers. It gives a member the pages of old-document metadata and the Markdown of one old document, in every workspace state.
+- The device broker serves `POST` of `conductorImportOperationsPath`, because it needs the paired Mac connection. Its reply is a stream of public import events.
+
+These replies hold only public values: scan rows and their states, progress, results, and old-document metadata and Markdown.
+No reply gives the page an upload link, a manifest, a native session recipe, a repository proof, a source path, or a byte of an upload.
+[Import operations](../conductor-import/operations.md) and [Old documents](../conductor-import/publication.md#old-documents) give their rules.
+
 ## Rules
 
 - The model list and the default choice come from `CONDUCTIVE_MODELS` and
@@ -118,6 +129,7 @@ The machine tools use the configured app origin instead.
 
 Imported workspace records use the trusted
 [record writer](../conductor-import/workspace-data.ts).
+[Publication](../conductor-import/publication.md#publication) runs its statements in one guarded batch, after each part is checked.
 The list and workspace read return `inactive` before activation.
 Their optional `conductorImport` field keeps source identity, importer, and activation completion time.
 It remains present after Archive. Native responses omit the field.
@@ -207,6 +219,7 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 ### Related docs
 
 - [Worker backend](../README.md)
+- [Import from Conductor backend](../conductor-import/README.md)
 - [Workspace lifecycle](../lifecycle/README.md#browser-routes)
 - [Deployment inputs](../../docs/deployment.md)
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md)

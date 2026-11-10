@@ -29,15 +29,15 @@ const section = `(SELECT id FROM sections WHERE org_id = ?
   AND name = 'Import from Conductor' ORDER BY position, id LIMIT 1)`
 
 /** Trusted publication boundary. Its caller must verify every stored import part first. */
-export async function insertVerifiedImportedWorkspace(
+export function importedWorkspaceStatements(
   db: D1Database,
   input: VerifiedImportedWorkspace,
-): Promise<WorkspaceRow> {
+  guard = '1',
+  guardBindings: unknown[] = [],
+): D1PreparedStatement[] {
   const { orgId, importer, repositoryId, id } = input
-  await requireActiveOrg(db, orgId)
-  await requireOrgMember(db, orgId, importer.id)
   const access = [orgId, importer.id, repositoryId]
-  await db.batch([
+  return [
     db
       .prepare(
         `INSERT INTO sections (id, org_id, name, position, is_default, created_at)
@@ -45,7 +45,7 @@ export async function insertVerifiedImportedWorkspace(
         (SELECT COALESCE(MIN(position) - 1, 0) FROM sections WHERE org_id = ?), 0, ?
       WHERE ${permitted} AND NOT EXISTS (SELECT 1 FROM sections
         WHERE org_id = ? AND name = 'Import from Conductor')
-      AND NOT EXISTS (SELECT 1 FROM workspaces WHERE org_id = ? AND conductor_local_id = ?)`,
+      AND NOT EXISTS (SELECT 1 FROM workspaces WHERE org_id = ? AND conductor_local_id = ?) AND ${guard}`,
       )
       .bind(
         `conductor-import-${id}`,
@@ -56,6 +56,7 @@ export async function insertVerifiedImportedWorkspace(
         orgId,
         orgId,
         input.localWorkspaceId,
+        ...guardBindings,
       ),
     db
       .prepare(
@@ -68,7 +69,7 @@ export async function insertVerifiedImportedWorkspace(
          WHERE org_id = ? AND section_id = ${section}
            AND archived_at IS NULL AND state != 'archived'), ?, ?
       WHERE ${permitted} AND NOT EXISTS (SELECT 1 FROM workspaces
-        WHERE org_id = ? AND conductor_local_id = ?)`,
+        WHERE org_id = ? AND conductor_local_id = ?) AND ${guard}`,
       )
       .bind(
         id,
@@ -89,6 +90,7 @@ export async function insertVerifiedImportedWorkspace(
         ...access,
         orgId,
         input.localWorkspaceId,
+        ...guardBindings,
       ),
     db
       .prepare(
@@ -96,7 +98,7 @@ export async function insertVerifiedImportedWorkspace(
       (workspace_id, org_id, created_by_user_id, agent, model, effort)
       SELECT id, org_id, imported_by_user_id, ?, ?, ? FROM workspaces
       WHERE id = ? AND org_id = ? AND conductor_local_id = ?
-        AND imported_by_user_id = ? AND NOT EXISTS (SELECT 1 FROM workspace_runtime WHERE workspace_id = ?)`,
+        AND imported_by_user_id = ? AND NOT EXISTS (SELECT 1 FROM workspace_runtime WHERE workspace_id = ?) AND ${guard}`,
       )
       .bind(
         input.choice.agent,
@@ -107,8 +109,19 @@ export async function insertVerifiedImportedWorkspace(
         input.localWorkspaceId,
         importer.id,
         id,
+        ...guardBindings,
       ),
-  ])
+  ]
+}
+
+export async function insertVerifiedImportedWorkspace(
+  db: D1Database,
+  input: VerifiedImportedWorkspace,
+): Promise<WorkspaceRow> {
+  const { orgId, importer } = input
+  await requireActiveOrg(db, orgId)
+  await requireOrgMember(db, orgId, importer.id)
+  await db.batch(importedWorkspaceStatements(db, input))
   await requireActiveOrg(db, orgId)
   await requireOrgMember(db, orgId, importer.id)
   const saved = await db

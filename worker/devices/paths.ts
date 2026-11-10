@@ -14,6 +14,7 @@ export function isDeviceAppPath(path: string): boolean {
     path === '/api/devices/connect' ||
     path === DEVICE_CURRENT_PATH ||
     path === DEVICE_SETTINGS_PATH ||
+    /^\/api\/orgs\/[^/]+\/conductor-import\/operations$/.test(path) ||
     /^\/api\/orgs\/[^/]+\/workspaces\/[^/]+\/device-commands(?:\/[^/]+(?:\/approval)?)?$/.test(
       path,
     )

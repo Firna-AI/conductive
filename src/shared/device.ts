@@ -1,3 +1,9 @@
+import type {
+  ImportDeviceFrame,
+  ImportPrivateAck,
+  ImportWorkerFrame,
+} from './conductor-import-operation.ts'
+
 export const DEVICE_FRAME_LIMIT_BYTES = 1_000_000
 /** Combined UTF-8 bytes of stdout and stderr. */
 export const DEVICE_OUTPUT_LIMIT_BYTES = 65_536
@@ -156,6 +162,7 @@ export interface DeviceSettingsResponse extends DevicePairing {
 
 /** The main process authenticates with HTTP headers, never with a JSON frame. */
 export type WorkerToDevice =
+  | ImportWorkerFrame
   | {
       type: 'device.connected'
       device: DevicePairing
@@ -180,6 +187,8 @@ export type WorkerToDevice =
     }
 
 export type DeviceToWorker =
+  | ImportDeviceFrame
+  | ImportPrivateAck
   | { type: 'device.ping' }
   | { type: 'device.sleep' }
   | ({ type: 'command.approved' } & DeviceCommandRef)

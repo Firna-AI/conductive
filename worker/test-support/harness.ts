@@ -116,6 +116,8 @@ export async function createHarness() {
       await native.reset()
       await db.batch(
         [
+          'conductor_import_reservations',
+          'conductor_import_cleanup',
           'chat_attachments',
           'github_webhook_deliveries',
           'github_connections',

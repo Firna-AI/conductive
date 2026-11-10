@@ -23,6 +23,7 @@ export const SIMPLE_WARNINGS = {
   software_image_cleanup_failed:
     'Software image cleanup failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',
+  import_cleanup_retry: 'An import cleanup will retry.',
   attachment_upload_cleanup_retry: 'An attachment upload cleanup will retry.',
   activity_timestamp_failed: 'Workspace activity timestamp could not be saved.',
   activity_update_failed: 'Workspace activity update failed.',

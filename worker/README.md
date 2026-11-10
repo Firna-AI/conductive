@@ -49,6 +49,7 @@ On the app hostname, the Worker serves these API routes:
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
 - The Mac device routes.
+- The import operations of the Mac app and the old documents of an imported workspace, through the [import area](conductor-import/README.md).
 - `GET /api/operator/overview`, the app-wide numbers for operators.
 - `GET /api/operator/orgs`, the org search and cursor pages for operators.
 - `GET /api/operator/users`, the user search and cursor pages for operators.
@@ -142,6 +143,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
+- [conductor-import/README.md](conductor-import/README.md): the import from Conductor, with its Mac operations, reservations, verified publication, old documents, and cleanup.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
 - [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
   The `turn` commands of a version 2 runner carry these tokens. The packaged runner uses version 2.

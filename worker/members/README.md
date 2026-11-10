@@ -186,6 +186,11 @@ The scheduled handler sweeps expired unsent attachments before org work.
 Its claimed-file check runs in the workspace chat queue, beside message admission.
 An accepted file of a surviving workspace stays until purge.
 See [chat attachments](../chat/attachments.md) for the storage boundary and expiry proof.
+Import cleanup follows the same rule.
+`cleanupDeletedOrgs` first sends each due import cleanup to its reservation owner, with `cleanupExpiredImports`.
+The org purge calls `purgeOrgImports` after the attachment purge and before `purgeOrgRecords`.
+A pending import cleanup leaves the org pending for retry.
+The import cleanup records have no org foreign key, so they outlive the purge, as [Import cleanup](../conductor-import/cleanup.md) says.
 A cleanup lease separates Restore from cleanup calls.
 An expired lease permits a later attempt after a worker stops.
 

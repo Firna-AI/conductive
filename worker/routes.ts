@@ -15,6 +15,7 @@ import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
+import { conductorDocumentRoute } from './conductor-import/routes'
 
 export { routeDevice } from './devices/router'
 
@@ -25,6 +26,13 @@ export async function route(
   dependencies: AppDependencies,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const document = await conductorDocumentRoute(
+    request,
+    env,
+    context,
+    dependencies.now,
+  )
+  if (document) return document
   const waitlist = await waitlistRoute(request, env, context, dependencies)
   if (waitlist) return waitlist
   const operator = await handleOperatorRequest(

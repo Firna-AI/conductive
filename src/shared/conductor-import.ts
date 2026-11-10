@@ -4,6 +4,30 @@ export interface ConductorImportOrigin {
   activatedAt: number | null
 }
 
+export interface ConductorOldDocument {
+  id: string
+  title: string | null
+  agent: 'claude' | 'codex'
+  messageCount: number
+  occurredAt: number | null
+}
+
+export interface ConductorOldDocuments {
+  documents: ConductorOldDocument[]
+  nextCursor: number | null
+}
+
+export const conductorImportOperationsPath = (orgId: string) =>
+  `/api/orgs/${encodeURIComponent(orgId)}/conductor-import/operations`
+export const conductorOldDocumentsPath = (orgId: string, workspaceId: string) =>
+  `/api/orgs/${encodeURIComponent(orgId)}/workspaces/${encodeURIComponent(workspaceId)}/conductor-documents`
+export const conductorOldDocumentPath = (
+  orgId: string,
+  workspaceId: string,
+  documentId: string,
+) =>
+  `${conductorOldDocumentsPath(orgId, workspaceId)}/i${encodeURIComponent(documentId)}`
+
 /** A native workspace has no import fields. */
 export function readWorkspaceImport(value: unknown): {
   conductorImport?: ConductorImportOrigin

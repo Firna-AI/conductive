@@ -69,6 +69,19 @@ export async function deviceFixture() {
           exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
           env: {
             DB: { type: 'd1', id: 'device-db' },
+            CHAT_ATTACHMENTS: { type: 'r2', name: 'device-imports' },
+            CHAT_ATTACHMENTS_S3_BUCKET_URL: {
+              type: 'text',
+              value: 'https://example.r2.cloudflarestorage.com/private-bucket',
+            },
+            CHAT_ATTACHMENTS_ACCESS_KEY_ID: {
+              type: 'text',
+              value: 'test-access',
+            },
+            CHAT_ATTACHMENTS_SECRET_ACCESS_KEY: {
+              type: 'text',
+              value: 'test-secret',
+            },
             WORKSPACES: {
               type: 'durable-object',
               worker: 'device-tests',
