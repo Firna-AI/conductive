@@ -303,16 +303,16 @@ Depends on: 2
 
 The page shows the check line and the row links of the mockup.
 
-- [ ] Show the check line on its own line in `ParityIntro.astro`. The
+- [x] Show the check line on its own line in `ParityIntro.astro`. The
       facts paragraph keeps only the days of the shutdown. Remove the
       scope note.
-- [ ] Delete `parityCheckedOn`, the shared sentence `checked`, and the
+- [x] Delete `parityCheckedOn`, the shared sentence `checked`, and the
       shared copy `scope`.
-- [ ] Say "Conductor" in the comments of the site files of the page.
-- [ ] Give each row of `ParityTable.astro` its id, its link icon, the
+- [x] Say "Conductor" in the comments of the site files of the page.
+- [x] Give each row of `ParityTable.astro` its id, its link icon, the
       name of the link, and the name of the row header. Keep the icon in
       a `nowrap` span with a no-break space, as `FeatureCells.tsx` does.
-- [ ] Style the check line, the states of the link, and the opened row in
+- [x] Style the check line, the states of the link, and the opened row in
       `comparison.css` and `comparison-table.css`, as
       `parityRows.module.css` and `ParityIntro.module.css` do. The mockup
       sets `.mobile` for both phone rules. The site splits them: the
@@ -325,7 +325,7 @@ The page shows the check line and the row links of the mockup.
 - [ ] Add the tests of the design call. Move the scope check of the
       built-site test to the new words. See each new assertion fail
       first. Run each new test 10 times.
-- [ ] Smoke-test in Chrome at 320, 390, 760, 1024, and 1440 px, in both
+- [x] Smoke-test in Chrome at 320, 390, 760, 1024, and 1440 px, in both
       schemes: hover, keyboard focus, a row address, an unknown id, and
       the accessibility tree. Save the evidence under
       `.context/from-conductor-check-time-and-row-links/`. Headless Chrome

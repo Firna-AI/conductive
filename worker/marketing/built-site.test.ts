@@ -144,10 +144,7 @@ it('serves the complete Cloud comparison with its public entry links', async () 
   expect(response.status).toBe(200)
   expect(response.headers.get('Set-Cookie')).toBeNull()
   const page = await response.text()
-  for (const text of [
-    parityPageCopy.title,
-    ...Object.values(parityPageCopy.scope),
-  ]) {
+  for (const text of [parityPageCopy.title]) {
     expect(words(page)).toContain(text)
   }
   const tables = [...page.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/g)]

@@ -1,7 +1,7 @@
 import { productName } from '../../../docs/mockups/src/brand'
 import { waitlistText } from '../access-copy'
 import { conductorAnnouncementHref, conductorCloudDays } from './dates'
-import { parityCheckedAt, parityCheckedOn } from './features'
+import { parityCheckedAt } from './features'
 
 /**
  * A part of a sentence of the page: plain words, a link to a page of
@@ -29,9 +29,6 @@ const cloudDays: CopyText = [
   '.',
 ]
 
-/** The day of the last full check of the rows against the product. */
-const checked: CopyText = ['List checked on ', { day: parityCheckedOn }, '.']
-
 /**
  * The words of the page for people who move from Conductor. The site and the
  * mockup draw the same words, each in its own markup.
@@ -42,12 +39,7 @@ export const parityPageCopy = {
   label: 'From Conductor',
   title: 'Coming from Conductor?',
   lead: `See which Conductor features work in ${productName} today, which are on the way, and which work differently.`,
-  scope: {
-    title: 'Conductor Cloud features only.',
-    text: 'The list leaves out the features of local Conductor workspaces on a Mac.',
-  },
   cloudDays,
-  checked,
   /**
    * The line of the last full check of every row: its label, then the time
    * in UTC as `YYYY-MM-DDTHH:MMZ`, which each host draws as a `time`

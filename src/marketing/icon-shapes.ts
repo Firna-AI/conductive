@@ -68,8 +68,8 @@ const featureIcons = {
 } as const satisfies IconShapes
 
 /**
- * The icons of the Conductor Cloud comparison page, and of its link from
- * the home page.
+ * The icons of the Conductor comparison page, and of its link from the home
+ * page.
  */
 const comparisonIcons = {
   'circle-check': [circle(12, 12, 10), path('m9 12 2 2 4-4')],
