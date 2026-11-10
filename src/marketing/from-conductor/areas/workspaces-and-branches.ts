@@ -64,14 +64,14 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Archive',
     status: 'different',
-    note: 'Archive checks for unpushed work, deletes the cloud computer, and keeps the chat for reading.',
+    note: 'Archive checks for unpushed work and deletes the cloud computer. Immediate archive with file and session restore is in progress.',
   },
   {
     id: 'workspaces-page-and-restore',
     area: 'workspaces-and-branches',
     name: 'Workspaces page and restore',
-    status: 'planned',
-    note: 'Restore within 14 days of archive is planned, including workspace files and sessions. Archived chats already stay readable.',
+    status: 'in-progress',
+    note: 'Restoring workspace files and sessions within 14 days of archive is in progress. Archived chats already stay readable.',
     due: null,
   },
   {

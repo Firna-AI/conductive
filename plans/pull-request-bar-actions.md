@@ -1279,6 +1279,9 @@ and 4 are independent follow-ups. The two review rounds and each fresh
 finding check are complete. Finding 4 uses the checked Worker-only option
 B, which also covers older runners. Its Rare outcome is fix after merge.
 
+- [ ] Preserve main's start-card note removal and complete-work fixture
+      waits. Verify the final combined tree and keep the refreshed pictures.
+
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
