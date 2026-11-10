@@ -1070,6 +1070,17 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: Keep server-list storage and action history as separate Privacy facts. Reason: They describe different retained records.
 - Design call on 10 November 2026: Keep the Terms revision during the preview base update. Reason: The Terms are unchanged and new processing text belongs in Privacy.
 
+### Final review calls
+
+- Design call on 10 November 2026: share the existing started-turn reader
+  between the record fold and Continue eligibility. Reason: the two paths
+  must agree while retaining transcript fallback and the current Worker
+  refusal during a short dispatch/report gap.
+- Design call on 10 November 2026: accept the one-owner proof with its
+  recorded chip failure point. Reason: the exact KeptFiles assertion and
+  missing mention behavior prove the connection dependency, and the report
+  truthfully states that the later list assertion did not run.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1412,12 +1423,29 @@ Depends on: 10a implementation and local verification
       combined tree. Preserve existing assertions and exact source.
 - [ ] Commit and push. Complete a fresh fixed-source review and watch CI.
 
+## Milestone 10c: Final review correction
+
+Depends on: 10b implementation and review
+
+- [x] Apply checked finding 5 option B. Share the existing started-turn
+      rule between the record fold and the Continue running-state reader.
+      Keep transcript fallback and Worker admission unchanged.
+- [x] Extend the existing Continue regression with queued messages.
+      Prove its failure before the fix and pass the changed async case
+      ten times. Preserve running and stopping exclusions and all earlier
+      assertions. Run affected types, statics, and tests.
+- [x] Keep checked finding 6 option B as its independent Rare follow-up.
+      Trace its check's duplicate-prompt observation and record any
+      confirmed remaining work separately.
+- [ ] Commit and push the final review correction. Preserve its complete
+      checked outcome and final verification in the PR record.
+
 GitHub reported the pushed `ead84a4c` as conflicting, so no full CI run
 started on that head. Its bounded backend and UI verification passed.
 
 ## Milestone 11: Final record and pull request completion
 
-Depends on: 10, 10a, and 10b
+Depends on: 10, 10a, 10b, and 10c
 
 - [ ] Record all checked outcomes and follow-ups. Preserve each dated
       design call and the current test-cost record in the PR description.

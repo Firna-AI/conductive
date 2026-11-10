@@ -20,7 +20,11 @@ import {
   serveContinue,
   serveWork,
 } from '../../../test-support/fake-bar'
-import { FAKE_IDS, fakeUsers } from '../../../test-support/fixtures/core'
+import {
+  FAKE_IDS,
+  FAKE_TIME,
+  fakeUsers,
+} from '../../../test-support/fixtures/core'
 import {
   senderSnapshot,
   workspaceFixtures,
@@ -62,6 +66,16 @@ async function mergedTab(server: FakeApiServer, delay = new ManualDelay()) {
     await settle()
   }
   return { ...tab, column, press, runTimers }
+}
+
+/** Whether the bar says that Continue waits, and whether Continue is off. */
+function continueWaits(column: HTMLElement) {
+  return {
+    line: (column.textContent ?? '').includes(
+      'Continue waits for the agent to finish.',
+    ),
+    off: isOff(byRole('button', 'Continue', column)),
+  }
 }
 
 describe('Continue in the pull request bar', () => {
@@ -181,7 +195,7 @@ describe('Continue in the pull request bar', () => {
     })
   })
 
-  test('Continue waits while a turn runs, and a stop names its cause and keeps Continue', async () => {
+  test('Continue waits while a turn runs, not while a sent message waits for its agent, and a stop names its cause and keeps Continue', async () => {
     holdAnimationFrames()
     const running = await mergedTab(
       new FakeApiServer({ banner: 'merged', conversation: 'running' }),
@@ -190,6 +204,32 @@ describe('Continue in the pull request bar', () => {
       line: running.column.querySelector('[role="status"]')?.textContent,
       off: isOff(byRole('button', 'Continue', running.column)),
     }
+    const queuedServer = new FakeApiServer({
+      banner: 'merged',
+      conversation: 'queued',
+    })
+    const queued = await mergedTab(queuedServer)
+    const { message, sessions } = workspaceFixtures()
+    const session = { ...sessions.sessions[0], activeTurnId: 'turn-1' }
+    // The record of the accepted message names its turn before dispatch.
+    emit(queuedServer, {
+      type: 'session.updated',
+      session: { ...session, activeTurnStartedAt: null },
+    })
+    await settle()
+    const beforeStart = continueWaits(queued.column)
+    // The agent starts before a record names the start time.
+    emit(queuedServer, {
+      type: 'turn.started',
+      sessionId: session.id,
+      turnId: 'turn-1',
+      senderId: message.sender.id,
+      choice: message.choice,
+      startedAt: FAKE_TIME,
+      messageIds: [message.id],
+    })
+    await settle()
+    const afterStart = continueWaits(queued.column)
     const server = new FakeApiServer({ banner: 'merged' })
     serveContinue(server, 'clash')
     const stopped = await mergedTab(server)
@@ -198,10 +238,15 @@ describe('Continue in the pull request bar', () => {
 
     expect({
       waits,
+      queued: { beforeStart, afterStart },
       stop: stopped.column.querySelector('[role="alert"]')?.textContent,
       again: isOff(byRole('button', 'Continue', stopped.column)),
     }).toEqual({
       waits: { line: 'Continue waits for the agent to finish.', off: true },
+      queued: {
+        beforeStart: { line: false, off: false },
+        afterStart: { line: true, off: true },
+      },
       stop: `Continue stopped: the changed files clash with the latest main. The workspace stays on ${branch}.`,
       again: false,
     })

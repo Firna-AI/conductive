@@ -11,6 +11,7 @@ import type {
 } from '../api/read-responses'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
 import { emptyTranscript, type Transcript } from './transcript'
+import { startedTurn } from './turn-records'
 
 /**
  * The message that a user writes in a session. Its identity stays when the
@@ -181,12 +182,14 @@ export function isRunning(snapshot: ChatSnapshot, sessionId: string): boolean {
 
 /**
  * A turn runs or stops in a session of the workspace, open or closed, as
- * its record or its transcript says.
+ * its record or its transcript says. A record names a started turn as
+ * `startedTurn` says, so a message that waits for dispatch runs no turn.
+ * The transcript also shows a turn that started before a record names it.
  */
 export function anyTurnRuns(snapshot: ChatSnapshot): boolean {
   const records = [...snapshot.sessions, ...snapshot.history]
   return (
-    records.some((session) => session.activeTurnId !== null) ||
+    records.some((session) => startedTurn(session) !== null) ||
     snapshot.sessions.some((session) => isRunning(snapshot, session.id))
   )
 }

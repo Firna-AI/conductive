@@ -36,6 +36,19 @@ export function foldMarkedLate(
 }
 
 /**
+ * The turn that a session record names as started, with its stored start
+ * time. The active turn of an accepted message has no start time until
+ * dispatch, so the record names no started turn while the message waits.
+ */
+export function startedTurn(
+  session: Pick<Session, 'activeTurnId' | 'activeTurnStartedAt'>,
+): { turnId: string; startedAt: number } | null {
+  const { activeTurnId, activeTurnStartedAt } = session
+  if (activeTurnId === null || activeTurnStartedAt === null) return null
+  return { turnId: activeTurnId, startedAt: activeTurnStartedAt }
+}
+
+/**
  * Applies a session record at its place in the event order. The record
  * names the active turn of the session at that place:
  *
@@ -54,15 +67,16 @@ export function foldRecord(
     'activeTurnId' | 'activeTurnStartedAt' | 'retryMessageId'
   >,
 ): Transcript {
-  const { activeTurnId, activeTurnStartedAt, retryMessageId } = session
+  const { activeTurnId, retryMessageId } = session
   let next = transcript
   for (const known of transcript.turns) {
     if (!known.ended && known.id !== activeTurnId) {
       next = endShownTurn(next, known.id)
     }
   }
-  if (activeTurnId !== null && activeTurnStartedAt !== null) {
-    next = startFromRecord(next, activeTurnId, activeTurnStartedAt)
+  const started = startedTurn(session)
+  if (started !== null) {
+    next = startFromRecord(next, started.turnId, started.startedAt)
   }
   return next.retryMessageId === retryMessageId
     ? next
