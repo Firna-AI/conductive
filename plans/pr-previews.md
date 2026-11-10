@@ -10,13 +10,14 @@ each pull request from a branch of this repository its own copy of the
 app, in a separate Cloudflare account. The copy is a Worker
 `conductive-pr-<number>` with its own D1 database, its own Durable Objects,
 and its own marketing, app, and machine hostnames. A bot comment on the
-pull request links the copy. A close or a merge deletes it.
+pull request links the copy. A close or a merge deletes it. One relay
+Worker gives GitHub events and install returns to every preview.
 
 The user chose the approach in a brainstorm on 9 and 10 November 2026:
 decision 1 B and decision 2 D below. The notes, the checked facts, and the
 earlier transcripts are in `.context/pr-previews/`. The change does not
-cover port previews in a preview, live GitHub webhooks in a preview, the
-Mac app, or seed data for a new preview. The design gives the reason for
+cover port previews in a preview, the Mac app, or seed data for a new
+preview. The design gives the reason for
 each.
 
 Contract owners:
@@ -130,6 +131,7 @@ Contract owners:
   - The token can write every preview Worker, every preview database, and the runner bucket. A replaced archive breaks the image builds of the other previews, because `image/install.sh` checks its SHA-256.
   - Each running preview Worker runs the code of its own pull request with the shared Boat key, GitHub App key, session key, and encryption key, and with the shared attachment bucket. No CI setting changes that.
   - The shared Boat key can run commands in every preview sandbox. So the code of any open pull request can read the agent login of a running turn in another preview, as `plans/follow-ups/agent-logins-readable-in-sandbox.md` explains.
+  - One shared relay Worker, deployed only from `main`, gives GitHub events and install returns to every preview, as the design says. The token of a branch run under A can also deploy over that relay.
   - Shared assumption: previews use the real GitHub App and Boat keys. Source: decision 2 D. D drops it.
   - Shared assumption of A to D: all previews share one Boat key and one attachment bucket. Source: the design. It holds only for honest code. E drops it, and F drops it for the Boat key.
   - Shared assumption: each push deploys with no manual step. Source: decision 2. Kept.
@@ -140,7 +142,7 @@ Contract owners:
   - **A.** Each pull request run deploys its own preview, with hardening. The build job has no secrets. The deploy job installs Wrangler from the lockfile of `main`, with no install scripts, and unpacks the build in the temporary folder of the runner. The docs say that any open pull request can reach the data and the logins of every preview. Effort: Small.
   - **B.** Deploy from a trusted workflow. The pull request run builds with no secrets. A `workflow_run` workflow on `main` deploys that build as data, with the preview tool and Wrangler of `main`. The environment `preview` allows only `main`. The workflow must skip runs of forks and of Dependabot from the event data. It must check that the commit is the head of an open pull request. Its concurrency group names the pull request. A change to the preview tool reaches previews only after it merges, and the first real run comes after this change merges. The running Workers still share the keys. Effort: Medium.
   - **C.** As B, and give each preview its own session key and encryption key at its first deploy. Each signed token and each encrypted value also needs rows in the database of its own preview, so C adds little. Effort: Medium.
-  - **D.** Keep every real key out of previews with option E of decision 2. Effort: Large.
+  - **D.** Keep every real key out of previews with option E of decision 2. Effort: Large. Ruled out by the answer of the user on 10 November 2026, which asks for a real preview GitHub App and the real Boat service.
   - **E.** As C, and give each preview its own attachment bucket, Boat environment, and Boat key, made by the trusted workflow at the first deploy. The delete then removes all sandboxes and snapshots of that environment, and the environment, the key, and the bucket. A running preview then shares only the GitHub App key. Only a Boat account key with `account.admin` can make keys, so E needs a Boat user who belongs only to the preview organization, and decision 4 B. Effort: Large. Added by the second options check.
   - **F.** As E, but one trusted proxy Worker, deployed only from `main`, holds the one preview Boat key. Each preview gets its own proxy token, and the proxy refuses each sandbox and snapshot that the preview did not make. It needs product code, because `worker/sandbox/transport.ts` fixes the Boat address. Effort: Large. Added by the second options check.
 - **Left out:**
@@ -154,6 +156,7 @@ Contract owners:
 - **Related:** Decision 1: its option C uses the same trusted workflow in the live account. Decision 2: its option E removes the real keys. Decision 4: E needs its option B.
 - **Recommendation:** A. B protects only against branch authors who already hold the admin GitHub token, and it adds a workflow that forks can start. The first recommendation and both options checks chose B. E best protects the previews.
 - **Action:** ask the user, because the options trade the reach of a bad branch against a privileged workflow, a slower path for changes to the preview tool, and new Boat setup.
+- **Answer so far:** On 10 November 2026 the user asked for a preview GitHub App to test with, which sends GitHub events to every preview and redirects correctly, with the real Boat service. That rules out D and adds the relay of the design. It chooses none of A, B, C, E, and F, so the decision stays open.
 
 ### 4. Choose the Boat account for preview sandboxes
 
@@ -189,6 +192,7 @@ Contract owners:
 - **Related:** Decision 3: its option E needs B.
 - **Recommendation:** B. With A, any branch can use up the starts of the live app for up to a day, spend its wallet, and fill its saved snapshots. C is the better choice if the live app moves before launch anyway, and the other Firna work can share its limits with previews.
 - **Action:** ask the user, because B adds a monthly cost, A needs a protocol change, and C moves the live app. Only the user can make an organization or a key.
+- **Chosen:** the user provides the preview Boat key and its organization, on 10 November 2026. The docs ask for a key limited to one environment, in an organization that holds no live work. A key in the live organization would share its starts, wallet, and saved snapshots, and would break the rule of `docs/protocol/isolation.md`.
 
 ## Design
 
@@ -210,8 +214,8 @@ otherwise. The user can override any of them.
   which runs can read it: each pull request run with no branch rule, or a
   trusted workflow on `main` with a `main`-only branch rule.
   - Secrets: `CLOUDFLARE_API_TOKEN`, `GITHUB_CLIENT_SECRET`,
-    `GITHUB_APP_PRIVATE_KEY`, `SESSION_SIGNING_KEY`,
-    `BOAT_KEY_ENCRYPTION_KEY`, and `BOAT_API_KEY`.
+    `GITHUB_APP_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`,
+    `SESSION_SIGNING_KEY`, `BOAT_KEY_ENCRYPTION_KEY`, and `BOAT_API_KEY`.
   - Variables: `CLOUDFLARE_ACCOUNT_ID`, `PREVIEW_ZONE`, `GITHUB_CLIENT_ID`,
     `GITHUB_APP_SLUG`, `BOAT_ORG_ID`, `OPERATOR_GITHUB_IDS`, and the
     optional `CONDUCTIVE_FRAME_SOURCES`.
@@ -226,21 +230,26 @@ otherwise. The user can override any of them.
   succeeds. With only some of them, the run fails and names the missing
   ones. Reason: the always-on rules ask to warn and continue for
   recoverable input. The deploy workflow uses the same rule.
-- The preview GitHub App is its own app, with the permissions of the live
-  app. Its one callback URL is `https://<preview zone>/api/auth/github/callback`,
-  with wildcard matching on. Its webhook is inactive. Reason: one app
-  then signs users in on every preview hostname.
-- The preview GitHub App has no Setup URL, and its user authorization
-  during an install stays off, as for the live app. After an install,
-  GitHub shows its own page, and the user goes back to the preview tab.
-  Reason: a GitHub App has one Setup URL, and that route only sends the
-  user back. The app reads each install with the user's own GitHub token,
-  as `worker/github-setup.ts` says. Changed on 10 November 2026 by the
-  options check, which found that GitHub returns an install to the Setup
-  URL, not to the callback URL.
-- The zone holds only hostnames that the preview Workers and the runner
-  bucket serve. Reason: with wildcard matching, a sign-in code can go to
-  any subdomain of the zone.
+- The preview GitHub App is its own app, with the permissions and the
+  webhook events of the live app. Its one callback URL is
+  `https://<preview zone>/api/auth/github/callback`, with wildcard matching
+  on. Reason: one app then signs users in on every preview hostname, with
+  no relay for sign-in.
+- Its Setup URL is `https://<preview zone>/github/setup`, and its webhook
+  URL is `https://<preview zone>/v1/github/webhooks`, with the secret
+  `GITHUB_WEBHOOK_SECRET`. The relay below serves both. Its user
+  authorization during an install stays off, as for the live app. Changed
+  on 10 November 2026 by the answer of the user, who asked for events in
+  every preview and correct redirects. The first design had no webhook and
+  no Setup URL.
+- The tool prints a GitHub App manifest for the zone, so the user makes
+  the app in one step on GitHub. The user then turns on wildcard matching
+  for the callback URL, because a manifest cannot set it. The docs list
+  the permissions and the events, which the user confirms against the live
+  app. Reason: the user asked to make a preview app in GitHub.
+- The zone holds only hostnames that the preview Workers, the relay, and
+  the runner bucket serve. Reason: with wildcard matching, a sign-in code
+  can go to any subdomain of the zone.
 - Previews use a Boat key of their own, with the actions of
   `worker/sandbox/README.md`, limited to one environment. Decision 4
   chooses its Boat organization. `SANDBOX_PROVIDER_ACCOUNTS` stays unset,
@@ -273,7 +282,8 @@ otherwise. The user can override any of them.
   but 1,000 routes. Three custom domains for each preview would allow only
   33 previews, and each new custom domain waits for its own certificate.
 - The variables set `APP_ORIGIN`, `MARKETING_ORIGIN`, and `MACHINE_ORIGIN`
-  to those origins. `PREVIEW_DOMAIN` stays unset. Reason: the Worker reads
+  to those origins, and `GITHUB_INSTALL_STATE_PREFIX` to `pr-<n>`.
+  `PREVIEW_DOMAIN` stays unset. The bare zone belongs to the relay. Reason: the Worker reads
   each hostname from its variables, so previews need no product code
   change. Without `PREVIEW_DOMAIN`, a port preview answers
   `503 preview_unavailable`.
@@ -293,8 +303,9 @@ otherwise. The user can override any of them.
   check: the brainstorm call gave previews an email key.
 - Previews keep the waitlist of the live app. Other people who sign in
   wait, and an operator can approve them.
-- No protocol doc, architecture doc, or legal page changes. Reason:
-  previews change no product requirement and no Worker code.
+- No protocol doc, architecture doc, legal page, or public guide changes.
+  Reason: previews change no product requirement. The one product code
+  change below keeps the behaviour of the live app.
 
 **Build and deploy.**
 
@@ -372,6 +383,7 @@ otherwise. The user can override any of them.
   6. It checks that `/api/health` on the app hostname answers
      `{"status":"ok"}` within 2 minutes. Reason: a new route can need
      some seconds to reach every Cloudflare location.
+  7. It adds `pr-<n>` to the registry of the relay.
 - A dry run of steps 2 and 5 on `main` at `fe295f38` passed on
   10 November 2026, with the routes, the attachment bucket, and all 32
   migrations. Evidence: `.context/pr-previews/proof/dry-run.log` and
@@ -383,11 +395,49 @@ otherwise. The user can override any of them.
   its image in each preview. Reason: previews that share a seed image can
   break when one preview rebuilds it. A seed can come later.
 
+**GitHub events and install returns.**
+
+Added on 10 November 2026 from the answer of the user to decision 3.
+
+- One relay Worker, `conductive-preview-relay`, serves the bare preview
+  zone. It deploys only from `main`, on each push that changes it and on a
+  manual run. Reason: a GitHub App has one webhook URL and one Setup URL,
+  so one trusted Worker must hand each event and each install return to
+  the right preview.
+- On `POST /v1/github/webhooks`, the relay checks the GitHub signature
+  with `GITHUB_WEBHOOK_SECRET`. It answers GitHub at once, then sends the
+  raw body and the GitHub headers to `/v1/github/webhooks` on the machine
+  hostname of every live preview. Each preview checks the signature
+  again, keeps the events of its own repositories, and answers a repeated
+  delivery from its stored receipt, as `worker/github/README.md` says. Reason: GitHub waits at most
+  10 seconds for an answer. A preview that misses an event still reads the
+  state of its pull request bar when a tab opens.
+- The relay finds the live previews in a KV namespace, which the relay
+  deploy creates when it is missing. The deploy adds `pr-<n>`, and the
+  delete removes it. The sweep removes each entry with no Worker. Reason:
+  the relay then needs no Cloudflare token.
+- The relay sets the compatibility flag `global_fetch_strictly_public`.
+  Reason: a Worker cannot call a Worker on a route of the same zone
+  without it, as the Cloudflare docs on custom domains say.
+- On `GET /github/setup`, the relay reads `state` as `pr-<n>.<source>`.
+  It sends the user to `/github/setup` on the app hostname of `pr-<n>`,
+  with `state` set to `<source>` and the other GitHub values unchanged.
+  It refuses any other `state` with a short page. Reason: only a known
+  preview hostname can be the target, so the relay is no open redirect.
+- `GET /` on the relay lists the live previews with their links.
+- Product code change: a new optional Worker variable,
+  `GITHUB_INSTALL_STATE_PREFIX`, puts `state=<prefix>` on the install URL
+  of the API. `githubInstallLink` in `src/shared/github-setup.ts` then
+  keeps that value as a prefix: `<prefix>.<source>`. Without the variable,
+  the link stays as today. Each preview sets it to `pr-<n>`. Reason: the
+  `state` of an install is the only value that GitHub gives back to the
+  Setup URL.
+
 **Delete and sweep.**
 
 - A close or a merge runs the delete, in this order:
-  1. It reads the org IDs and the image build IDs from the preview
-     database.
+  1. It removes `pr-<n>` from the registry of the relay, and it reads the
+     org IDs and the image build IDs from the preview database.
   2. It deletes each Boat sandbox whose `org` label names one of those
      orgs, and each saved snapshot of one of those builds. It names a
      snapshot with the helper in `worker/lifecycle/image-names.ts`.
@@ -408,9 +458,6 @@ otherwise. The user can override any of them.
 - Port previews stay out. Reason: a preview needs a preview domain of two
   levels, which needs a second domain and a certificate add-on. The
   post-merge section holds the task.
-- Previews get no live GitHub webhooks. Reason: a GitHub App has one
-  webhook address. The pull request bar still reads its state when a tab
-  opens, as `docs/protocol/github-banner.md` says.
 - The Mac app stays out. Reason: a preview build would share the
   `conductive://` sign-in address with the installed Mac app. Mac CI
   already tests each change to it.
@@ -418,11 +465,13 @@ otherwise. The user can override any of them.
 **Code and tests.**
 
 - The preview tool is TypeScript for Node 24, in `tools/pr-previews/`. It
-  has the commands `deploy`, `delete`, and `sweep`. Reason: the workflow
-  stays short, and the logic gets unit tests.
+  has the commands `deploy`, `delete`, `sweep`, `relay`, and `manifest`.
+  The relay Worker lives in `tools/pr-previews/relay/`. Reason: the
+  workflow stays short, and the logic gets unit tests.
 - Unit tests cover the logic with fake command and HTTP replies: the
   config, the hostnames, the settings check, the comment, the choice of
-  resources to delete, and the sweep. No test reads the workflow YAML, as
+  resources to delete, the sweep, the relay fan-out, and the relay
+  redirect. No test reads the workflow YAML, as
   the `testing` skill says. The workflow is checked once with actionlint,
   and by its runs.
 - The deploy workflow merged on 9 November 2026 in pull request #82. This
@@ -438,39 +487,60 @@ gives each step.
 
 - [ ] Make a Cloudflare account for previews, on the Workers Paid plan.
 - [ ] Add a domain for previews as a zone of that account.
-- [ ] Add a proxied wildcard DNS record to the zone.
+- [ ] Add a proxied DNS record for the bare zone, and a proxied wildcard
+      DNS record.
 - [ ] Add the response header rule `X-Robots-Tag: noindex` to the zone.
 - [ ] Make the R2 bucket `conductive-preview-runner`, with the public
       custom domain `runner.<preview zone>`.
 - [ ] Make the private R2 bucket `conductive-preview-attachments`, with
       the location hint for Western Europe.
 - [ ] Make a Cloudflare API token for that account, as the docs say.
-- [ ] Make the preview GitHub App, and install it on test repositories.
-- [ ] Make the Boat key of previews, in the organization that decision 4
-      chooses.
+- [ ] Make the preview GitHub App from the manifest that the tool prints.
+      Turn on wildcard matching for its callback URL. Install it on test
+      repositories.
+- [ ] Give the preview Boat key and its organization ID, as decision 4
+      says.
 - [ ] Make the GitHub environment `preview` with its secrets, its
       variables, and the branch rule that decision 3 chooses. With
       decision 3 B or C, also set the repository variable `PREVIEW_ZONE`.
-- [ ] For the smoke test of Milestone 5, put a token of the preview
+- [ ] For the smoke test of Milestone 7, put a token of the preview
       account in this workspace.
 
 ## Milestone 1: Documentation
 
 Depends on: none
 
-The docs state what a preview is, its setup, and its life.
+The docs state what a preview is, its setup, its relay, and its life.
 
 - [ ] Add `docs/pr-previews.md`. Give what a preview is and when it runs,
-      the hostnames, what works and what does not, the setup by the user
-      with each setting and each token permission, the life of a preview,
-      the sweep, a recovery by hand, and the costs.
-- [ ] `docs/deployment.md`: link the new page, and say that a preview sets
-      the same inputs with its own values.
+      the hostnames, and what works and what does not.
+- [ ] In the same page, give the setup by the user with each setting, each
+      token permission, and the permissions and events of the preview
+      GitHub App.
+- [ ] In the same page, give the relay, the life of a preview, the sweep,
+      a recovery by hand, and the costs.
+- [ ] `docs/deployment.md`: add the optional variable
+      `GITHUB_INSTALL_STATE_PREFIX`. Link the new page, and say that a
+      preview sets the same inputs with its own values.
 - [ ] `README.md`: name previews in the status and in the CI paragraph.
 - [ ] `AGENTS.md`, "CI": add the preview workflow and its link.
 - [ ] Check each relative link of the changed Markdown files.
 
-## Milestone 2: Preview configuration
+## Milestone 2: Install state prefix
+
+Depends on: 1
+
+An install from a preview returns to that preview through the relay. The
+live app keeps its behaviour.
+
+- [ ] Add `GITHUB_INSTALL_STATE_PREFIX` to `worker/env.ts`. Put
+      `state=<prefix>` on the install URL of the API when it is set.
+- [ ] Make `githubInstallLink` keep a `state` of the install URL as the
+      prefix `<prefix>.<source>`.
+- [ ] Add tests for the link with and without a prefix, and for the
+      install URL of the API, and see each fail once.
+
+## Milestone 3: Preview configuration
 
 Depends on: 1
 
@@ -488,32 +558,48 @@ Wrangler config of a preview.
 - [ ] Run a dry run of a generated config. Save the output under
       `.context/pr-previews/`.
 
-## Milestone 3: Deploy, delete, and sweep commands
+## Milestone 4: Deploy, delete, and sweep commands
 
-Depends on: 2
+Depends on: 3
 
 The tool deploys, deletes, and sweeps previews.
 
 - [ ] Add `deploy`: the D1 database with its reset after a changed
-      migration, the migrations, the runner archive, the deploy, and the
-      health check.
-- [ ] Add `delete`: the Boat sandboxes and snapshots, the attachments,
-      the Worker and its routes, then the database. A failed step stops
-      it.
-- [ ] Add `sweep`: the list of preview Workers and databases, and the
-      delete of each closed pull request.
+      migration, the migrations, the runner archive, the deploy, the
+      health check, and the registry entry.
+- [ ] Add `delete`: the registry entry, the Boat sandboxes and snapshots,
+      the attachments, the Worker and its routes, then the database. A
+      failed step stops it.
+- [ ] Add `sweep`: the list of preview Workers, databases, and registry
+      entries, and the delete of each closed pull request.
 - [ ] Add unit tests with fake command, Boat, Cloudflare, and GitHub
       replies, and see each fail once.
 
-## Milestone 4: Preview workflow
+## Milestone 5: Relay and GitHub App manifest
 
-Depends on: 3, and the answer to decision 3
+Depends on: 4
 
-`.github/workflows/preview.yml` runs the tool for each pull request.
+The relay gives GitHub events and install returns to every preview. The
+tool prints the manifest of the preview GitHub App.
+
+- [ ] Add the relay Worker: the signature check and the fan-out of
+      webhooks, the redirect of install returns, and the list of previews.
+- [ ] Add the `relay` command, which creates the KV namespace when it is
+      missing and deploys the relay.
+- [ ] Add the `manifest` command, which prints the manifest for a zone.
+- [ ] Add unit tests with fake GitHub deliveries, KV entries, and preview
+      replies, and see each fail once.
+
+## Milestone 6: Preview workflow
+
+Depends on: 2, 5, and the answer to decision 3
+
+`.github/workflows/preview.yml` runs the tool for each pull request, and
+deploys the relay from `main`.
 
 - [ ] Add the workflow with its triggers, permissions, concurrency, and
-      jobs: build, runner, deploy, delete, sweep, and comment. Put the
-      deploy, delete, and comment jobs where decision 3 says.
+      jobs: build, runner, deploy, delete, sweep, comment, and relay. Put
+      the deploy, delete, and comment jobs where decision 3 says.
 - [ ] Skip forks and Dependabot with a notice. Warn and skip without the
       settings.
 - [ ] Install the packages of `main` for the deploy job in a temporary
@@ -521,24 +607,29 @@ Depends on: 3, and the answer to decision 3
 - [ ] Check the workflow once with actionlint. Save the output under
       `.context/pr-previews/`.
 
-## Milestone 5: Smoke test
+## Milestone 7: Smoke test
 
-Depends on: 4, and the setup by the user
+Depends on: 6, and the setup by the user
 
-A real preview works and leaves nothing behind.
+A real preview works, its relay works, and the delete leaves nothing
+behind.
 
-- [ ] Deploy a preview for the test number 0 with the tool from this
-      workspace.
+- [ ] Deploy the relay and a preview for the test number 0 with the tool
+      from this workspace.
 - [ ] Check the health route, the marketing page, the app page, and the
       machine hostname.
 - [ ] Check that GitHub accepts the sign-in redirect of the app hostname.
+- [ ] Send a signed test delivery to the relay, and check that the
+      preview records it.
+- [ ] Check that the relay sends `state=pr-0.get-started` to
+      `/github/setup` of the preview, and refuses another `state`.
 - [ ] Delete the preview. Prove that no Worker, route, D1 database,
-      Durable Object storage, attachment, Boat sandbox, or saved snapshot
-      remains. If a route or Durable Object storage remains, add its
-      delete to the tool first.
+      Durable Object storage, attachment, Boat sandbox, saved snapshot, or
+      registry entry remains. If a route or Durable Object storage
+      remains, add its delete to the tool first.
 - [ ] Save the evidence under `.context/pr-previews/`.
 
-## Milestone 6: Verification, commit, review, and pull request
+## Milestone 8: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
@@ -558,8 +649,9 @@ Depends on: every other milestone
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Check the first real preview of the next pull request: the links,
-      the comment, sign-in, an org, an image build, a workspace, chat, and
-      the terminal. With decision 3 B or C, the trusted workflow runs only
+      the comment, sign-in, an install, an org, an image build, a
+      workspace, chat, the terminal, and a live update of the pull request
+      bar. With decision 3 B or C, the trusted workflow runs only
       after this change merges.
 - [ ] Check that the preview of this pull request was deleted when it
       merged, and that the first daily sweep passed.
