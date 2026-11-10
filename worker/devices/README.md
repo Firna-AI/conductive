@@ -217,6 +217,13 @@ Its readiness route reports the instance marker, the native sockets with their a
 `sendFrame` reads that route after each frame, because an automatic pong does not show that the broker queue is empty.
 `deviceClock(fixture).hibernate()` in `alarm.test-support.ts` keeps the Mac socket through a wake, as [Wake tests](../README.md#wake-tests) says.
 Its restart route aborts the object, so the platform closes the Mac socket.
+`native-close.test.ts` makes a Mac close the first event after a broker wake, with no restored peer.
+The `closed` route of the device test worker uses `NativeCloseProbe`, as [Native close probe](../test-support/README.md#native-close-probe) says.
+A POST of that route prepares the probe before the eviction. A GET waits for the close callback, then reports the result.
+The case checks the new instance, a close as the first event, the omitted connection ID, and one completed callback with no error.
+It reads the settled state right after that callback, before any broker read could reconcile it.
+The case then checks that the pending request is `unavailable`, and that the workspace moves from `input` to `working`.
+It also checks that the saved connection, the pending records, and the alarm are gone, and that the Mac got no second `device.connected`.
 The publication recovery test interrupts real D1 with a temporary trigger and replays through a browser route.
 `worker/chat/integration/workspace-device-projection.test.ts` runs the composed workspace object with a real waiting request.
 D1, the list, and a reopen keep `input` through lifecycle activity, a start-step update, and a heartbeat.

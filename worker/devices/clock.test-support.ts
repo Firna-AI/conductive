@@ -9,9 +9,10 @@ const CLOCK_PATH = '/__test/device-clock'
 const ALARM_PATH = '/__test/device-alarm'
 const RESTART_PATH = '/__test/device-restart'
 const READY_PATH = '/__test/device-ready'
+const CLOSED_PATH = '/__test/device-closed'
 
 export function deviceTestPath(
-  action: 'clock' | 'alarm' | 'restart' | 'ready',
+  action: 'clock' | 'alarm' | 'restart' | 'ready' | 'closed',
   object: string,
 ) {
   const path =
@@ -21,13 +22,19 @@ export function deviceTestPath(
         ? ALARM_PATH
         : action === 'restart'
           ? RESTART_PATH
-          : READY_PATH
+          : action === 'ready'
+            ? READY_PATH
+            : CLOSED_PATH
   return `${path}?object=${encodeURIComponent(object)}`
 }
 export function deviceTestTarget(url: URL): string | null {
-  return [CLOCK_PATH, ALARM_PATH, RESTART_PATH, READY_PATH].includes(
-    url.pathname,
-  )
+  return [
+    CLOCK_PATH,
+    ALARM_PATH,
+    RESTART_PATH,
+    READY_PATH,
+    CLOSED_PATH,
+  ].includes(url.pathname)
     ? url.searchParams.get('object')
     : null
 }

@@ -4,6 +4,8 @@ import { Workspace as ProductionWorkspace } from '../workspace'
 import type { WorkspaceCompositionEnv } from './workspace-integration'
 import { record, string, number } from './inputs'
 import { BROWSER_TEST_NOW } from './browser-clock.test-support'
+import { NativeCloseProbe } from '../test-support/native-close.test-support'
+import { RunnerConnectionStore } from './runner-connection-store'
 
 const CLOCK = '__test:runner-clock'
 
@@ -27,8 +29,13 @@ export class Workspace extends ProductionWorkspace {
   private failure = ''
   private alarmsCompleted = 0
   private alarmObserved = signal()
+  private readonly closeProbe: NativeCloseProbe
+  private fileBinding: string | null = null
+  private readonly fileAttached: string[] = []
+  private readonly fileDetached: string[] = []
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
+    const closeProbe = new NativeCloseProbe(context)
     const clock = {
       now: context.storage.kv.get<number>(CLOCK) ?? BROWSER_TEST_NOW,
     }
@@ -58,6 +65,23 @@ export class Workspace extends ProductionWorkspace {
     })
     this.clock = clock
     this.access = access
+    this.closeProbe = closeProbe
+    const attach = this.integration.files.runner.attach.bind(
+      this.integration.files.runner,
+    )
+    this.integration.files.runner.attach = (id, send) => {
+      this.fileBinding = id
+      this.fileAttached.push(id)
+      attach(id, send)
+    }
+    const detach = this.integration.files.runner.detach.bind(
+      this.integration.files.runner,
+    )
+    this.integration.files.runner.detach = (id) => {
+      if (this.fileBinding === id) this.fileBinding = null
+      this.fileDetached.push(id)
+      detach(id)
+    }
     const hello = this.controller.recoverLifecycle.bind(this.controller)
     this.controller.recoverLifecycle = async (...args) => {
       await count('__test:runner-hello')
@@ -101,14 +125,23 @@ export class Workspace extends ProductionWorkspace {
     this.alarmObserved = signal()
   }
 
+  override webSocketClose(socket: WebSocket): Promise<void> {
+    return this.closeProbe.close(() => super.webSocketClose(socket))
+  }
+
   override async fetch(request: Request): Promise<Response> {
+    this.closeProbe.fetch()
     const path = new URL(request.url).pathname
     if (path === '/inspect')
       return Response.json([...(await this.ctx.storage.list())])
     if (path !== '/__test/runner') return super.fetch(request)
     const input = record(await readJsonObject(request))
     const action = string(input.action)
-    if (action === 'clock') {
+    if (action === 'prepare-close') {
+      await this.closeProbe.prepare()
+    } else if (action === 'close-handled') {
+      await this.closeProbe.wait()
+    } else if (action === 'clock') {
       this.clock.now = number(input.now)
       await this.ctx.storage.put(CLOCK, this.clock.now)
     } else if (action === 'settled') {
@@ -145,6 +178,11 @@ export class Workspace extends ProductionWorkspace {
     }
     return Response.json({
       instance: this.instance,
+      closeEvent: this.closeProbe.snapshot(),
+      runner: await new RunnerConnectionStore(this.ctx.storage).current(),
+      fileBinding: this.fileBinding,
+      fileAttached: this.fileAttached,
+      fileDetached: this.fileDetached,
       now: this.clock.now,
       alarm: await this.ctx.storage.getAlarm(),
       alarmsCompleted: this.alarmsCompleted,

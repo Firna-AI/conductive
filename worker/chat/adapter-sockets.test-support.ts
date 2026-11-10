@@ -29,9 +29,25 @@ export async function closeSockets(...sockets: WebSocket[]): Promise<void> {
     sockets.map((socket) => {
       if (socket.readyState === WebSocket.READY_STATE_CLOSED)
         return Promise.resolve()
-      return new Promise<void>((resolve) => {
-        socket.addEventListener('close', () => resolve(), { once: true })
-        socket.close(1000, 'The test has finished using this connection.')
+      return new Promise<void>((resolve, reject) => {
+        const finish = () => {
+          socket.removeEventListener('close', finish)
+          resolve()
+        }
+        socket.addEventListener('close', finish, { once: true })
+        try {
+          socket.close(1000, 'The test has finished using this connection.')
+        } catch (error) {
+          if (
+            !(error instanceof TypeError) ||
+            error.message !== 'WebSocket already closed'
+          ) {
+            socket.removeEventListener('close', finish)
+            reject(error)
+            return
+          }
+        }
+        if (socket.readyState === WebSocket.READY_STATE_CLOSED) finish()
       })
     }),
   )

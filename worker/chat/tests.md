@@ -106,8 +106,9 @@ npm run typecheck
 - `browser-entry.test-support.ts` and `runner-entry.test-support.ts` extend
   the production `Workspace`. Each adds a stored fixture clock, controls
   that fail an access read or a lifecycle read or write, a random instance
-  marker, and a test-only control route. `browserControls` in `browser-native.test-support.ts` and
-  `runnerControls` in `runner-native.test-support.ts` drive them. Their
+  marker, and a test-only control route. `browserControls` in
+  `browser-native.test-support.ts` and `runnerControls` in
+  `runner-native.test-support.ts` drive them. Their
   `hibernate` helpers evict with `webSockets: 'hibernate'`, and they check
   the instance marker, as [Wake tests](../README.md#wake-tests) says.
 - `browser-native-access.test.ts` checks the tab access clocks through
@@ -119,6 +120,22 @@ npm run typecheck
   returns while a token read waits. `runner-native-delivery.test.ts` checks
   that a wake resends no command or repair, keeps file ownership, and
   revives no replaced runner.
+- `browser-native-close.test.ts` and `runner-native-close.test.ts` make a
+  close the first event after a wake, with no restored peer. Their entries
+  give the `prepare-close` and `close-handled` controls of
+  `NativeCloseProbe`, as
+  [Native close probe](../test-support/README.md#native-close-probe) says.
+  Each case checks the new instance, a close as the first event, the
+  omitted socket ID, and one completed close callback with no error.
+- The tab case then checks that the saved registration is gone and that no
+  alarm stays set. It also checks one close count, no access read, the
+  server close reply, and no frame after the history.
+- The runner case checks that the saved current runner is gone and that no
+  alarm stays set. It also checks one disconnect hook, the file detach of
+  the same connection ID, and no second `welcome`, hello hook, or ready
+  hook.
+- In both cases, a later settle or close changes nothing. So the cleanup
+  runs once.
 - `tab-access.test.ts`, `tab-deadlines.test.ts`, and `security.test.ts`
   check the tab grants on memory peers with a fake clock.
   `runner-access.test.ts` and `runner-current-access.test.ts` check the

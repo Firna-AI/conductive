@@ -3,6 +3,7 @@ import { Workspace as ProductionWorkspace } from '../workspace'
 import { readConnectionAccess } from '../security/connection-access'
 import { record, string, number } from './inputs'
 import { readJsonObject } from '../http/json-body'
+import { NativeCloseProbe } from '../test-support/native-close.test-support'
 
 import { BROWSER_TEST_NOW } from './browser-clock.test-support'
 
@@ -35,8 +36,10 @@ export class Workspace extends ProductionWorkspace {
   private readonly instance = crypto.randomUUID()
   private alarmsCompleted = 0
   private alarmObserved = signal()
+  private readonly closeProbe: NativeCloseProbe
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
+    const closeProbe = new NativeCloseProbe(context)
     const clock = {
       now: context.storage.kv.get<number>(CLOCK) ?? BROWSER_TEST_NOW,
     }
@@ -81,6 +84,7 @@ export class Workspace extends ProductionWorkspace {
     })
     this.clock = clock
     this.controls = controls
+    this.closeProbe = closeProbe
     const deviceAlarm = this.devices.alarm.bind(this.devices)
     this.devices.alarm = async () => {
       if (controls.deviceHeld) {
@@ -125,12 +129,21 @@ export class Workspace extends ProductionWorkspace {
     this.alarmObserved = signal()
   }
 
+  override webSocketClose(socket: WebSocket): Promise<void> {
+    return this.closeProbe.close(() => super.webSocketClose(socket))
+  }
+
   override async fetch(request: Request): Promise<Response> {
+    this.closeProbe.fetch()
     const url = new URL(request.url)
     if (url.pathname !== '/__test/browser') return super.fetch(request)
     const input = record(await readJsonObject(request))
     const action = string(input.action)
-    if (action === 'clock') {
+    if (action === 'prepare-close') {
+      await this.closeProbe.prepare()
+    } else if (action === 'close-handled') {
+      await this.closeProbe.wait()
+    } else if (action === 'clock') {
       this.clock.now = number(input.now)
       await this.ctx.storage.put(CLOCK, this.clock.now)
     } else if (action === 'publish') {
@@ -184,6 +197,7 @@ export class Workspace extends ProductionWorkspace {
     }
     return Response.json({
       instance: this.instance,
+      closeEvent: this.closeProbe.snapshot(),
       lifecycleHeld: this.controls.lifecycleHeld,
       deviceHeld: this.controls.deviceHeld,
 
