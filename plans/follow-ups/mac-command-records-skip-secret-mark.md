@@ -1,0 +1,33 @@
+# Mac command records skip the Secret mark
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, from the options check of the plan `plans/mac-command-secret-advice.md`, branch `calummoore/mac-command-output-privacy`.
+- **Location:** `worker/devices/records.ts` and `worker/devices/workspace-browser.ts:39`, which store and serve the records, `src/chat/device/CommandCard.tsx:44`, `src/shared/transcript/markdown-items.ts:109`, and "Secrets that users enter" in `docs/protocol/tokens-and-secrets.md`.
+- **Reason:** The change that found it adds only advice to the Mac command tool, and it does not change the records or the Secret mark.
+
+- **Source:** Review.
+- **Category:** Security.
+- **Terms:**
+  - **Secret mark:** an admin's mark on an org env var that makes its value a secret value, by decision 133.
+  - **Mac command record:** the record that the server stores for each agent request to run a command on a member's Mac, with its result.
+- **Background:**
+  - "Secrets that users enter" in `docs/protocol/tokens-and-secrets.md` says that the workspace Durable Object hides each exact copy of a secret value in the text that screens show from each runner event. It does this before it checks, stores, or sends the event.
+  - Mac command records are not runner events. `worker/devices/` stores and serves them with no Secret mark step.
+  - The Mac command card and the session copy show the command, the folder, and the output from the record. Details shows the reason.
+  - The agent writes the command, the folder, and the reason. With the CLI, the shell of the cloud computer expands a variable before the request leaves. So `conductive mac run --command "echo $NPM_TOKEN" ...` stores the value of `NPM_TOKEN`.
+  - The output of a command on the Mac can also hold a copy of an org secret value.
+  - The settings never return a stored env var value to the browser.
+- **Problem:** The card and the copy can show an org secret value that the Secret mark hides everywhere else in the chat.
+- **Impact if no action:** Each member of the org can read an org secret value on screen or in a session copy, although the settings never show it.
+- **Root question:** How do the screens and copies of a Mac command hide the org's secret values, as the rest of the chat does?
+- **Options:**
+  - **A.** Record the gap as a risk in `docs/protocol/tokens-and-secrets.md`, and change nothing else. Effort: Small.
+  - **B.** The server applies the Secret mark to the command, the folder, the reason, and the output when it serves a record to a browser or builds a session copy. The stored record keeps the exact text, so the Mac and the agent get it unchanged. Effort: Medium.
+  - **C.** The server refuses a request whose command, folder, or reason holds an org secret value. It adds a new rejection, and the output can still hold a copy. Effort: Medium.
+- **Left out:** A filter in the Mac app, because the Mac does not know the org's secret values, and a copy of them on each Mac spreads them further.
+- **Wider fix:** B. Each read of a record for a screen or a copy then goes through the Secret mark, also the read of a later screen.
+- **Previous examples:** `plans/follow-ups/tool-detail-cut-before-env-filter.md`, another path where the shown text can skip the env filter. The Secret mark of runner events lives in `worker/chat/runner-output.ts`.
+- **Related:** On 10 November 2026 an open decision asked for a guard behind the advice of the Mac command tool. One of its options is the same fix as B. When the user chooses that option, this item closes.
+- **Recommendation:** B. It meets the rule of the Secret mark for screens and copies, and the Mac still gets the exact command.
+- **Action:** ask the user, because B adds behaviour at a boundary that no requirement covers: the rule of the Secret mark names only runner events.
