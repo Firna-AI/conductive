@@ -3932,6 +3932,9 @@ Added on 8 November 2026 from the check of finding 2 of PR #47
 - **Recommendation:** C.
 - **Chosen:** C, by the user on 8 November 2026, who also asked that the
   app tell the user of the limit. Milestone 5d applies it.
+- **Changed on 10 November 2026:** the user asked to remove the note of the
+  start limit from the chat. The start steps no longer name the limit. A
+  start that passes it still names it in its error.
 - **Design call of the orchestrator, 8 November 2026:** the start limit
   also covers the disk restart near day 14 (decision 43 D), because the
   protocol counts that restart as a start, and an unfinished restart
@@ -8126,8 +8129,88 @@ member actions that read the computers.
 
 Apply option F of finding 10 of PR #52. Added on 8 November 2026.
 
-- [ ] Apply option F of `plans/follow-ups/computer-ledger.md`, and delete
-      that item.
+- [x] Apply option F of `plans/follow-ups/computer-ledger.md`, and delete
+      that item. Branch: `conductor/boat-native-remote-workspaces-milestone-15u`.
+
+Scope approved by the user on 9 November 2026:
+
+- Include the operator org search and its tests.
+- Include the Archive Delete call and its tests. Include each other Delete
+  helper caller that needs the same database access.
+
+Design calls by the implementor, checked by the orchestrator on 9 November
+2026:
+
+- Record each allocation key before create. Attach the provider ID after
+  the reply, because the provider chooses that ID.
+- Keep owner and parent IDs without foreign keys. Computer history must
+  survive account, workspace, and build removal until the org purge.
+- Keep unknown legacy owners and purposes explicit. Backfill every stored
+  computer ID, including image source jobs and deletion journals.
+- Retain assigned identities through guarded SQL triggers. Imports and
+  repairs then keep their earlier computer IDs too.
+- Use guarded inserts in those triggers. An outer upsert or replacement
+  can override an inner `INSERT OR IGNORE` policy.
+- Keep live workspace ownership current in the same owner write. During
+  recovery, prefer the current or retained owner before the saved request
+  owner, so an old request cannot undo a reassignment.
+- Merge an imported computer with its allocation intent before removing
+  the duplicate intent. Keep one record of that physical computer.
+- Give each computer its own cleanup flag. Keep the workspace cleanup
+  pointer for native scheduling, and read every flagged live computer.
+- Keep cleanup pending after Stop until Delete succeeds or returns not
+  found. Keep the deleted computer record until the org purge.
+- Keep current workspace and unfinished build work with their lifecycle
+  handlers. Stop detached and retained computers through the ledger.
+- Keep existing pending-list order and remove duplicate IDs. Use the
+  computer ID when no parent ID survives, because the browser only counts
+  these entries.
+- Mark a definite first create refusal separately. A refused replay keeps
+  an earlier uncertain allocation live, also when its job predates the
+  ledger.
+- Start the operator test fixture without a placeholder computer. Its
+  later provider allocation then creates its first computer identity.
+- Supply the fake provider to native operator calls from Node. The native
+  object's outbound fake does not cover those direct calls.
+- Move the two native image-build suspension tests to their own file.
+  Keep every assertion and the 300-line limit.
+- Keep unresolved allocation recovery in the existing follow-up
+  `plans/follow-ups/org-deletion-lost-build-allocation.md`. It already
+  selects option B and is outside this milestone.
+
+Evidence: `.context/boat-native-remote-workspaces/15u/`.
+
+Fix round 1, 9 November 2026. The user chose option B for review finding 1
+and option C of the check for finding 2. Both findings are High with Rare
+likelihood. The primary orchestrator supplied the review and checks.
+
+Design calls for the fixes:
+
+- Give each org one `org-computer-stops:<orgId>` task. Save the concrete
+  computer IDs and the retry alarm before dispatch, so restart keeps each
+  failed Stop.
+- Keep queued Stop work after a lift or owner change. Clear an ID only
+  after confirmation, not found, or removal from that org's live ledger.
+- Serialize task admission and alarm work through the native lifecycle
+  queue. Reject failed admission with the existing unavailable error,
+  because a pending reply needs a saved retry owner.
+- Keep unresolved allocations with their existing lifecycle owners. The
+  task handles only assigned computer IDs.
+- Make build cleanup read every live ledger computer for the exact org
+  and build. Keep cleanup scheduled until all Deletes are confirmed.
+- Attempt each build computer even when an earlier Delete fails. Keep
+  that failure pending after the other attempts, so one computer cannot
+  block cleanup of the rest.
+- Keep the no-provider failure exit pending while a live build computer
+  remains. Clear only the matching current assignment after deletion.
+- Adapt the ledger tests to the native fixture API from the primary
+  branch. Await its restart and clock writes, and use its storage adapter.
+- Keep the long README detail in local linked guides. Preserve the
+  Settings and Development anchors.
+
+Fix-round evidence: `.context/boat-native-remote-workspaces/15u/fix-round-1/`.
+
+Justifications and evidence for the merge of main `2f329f9d`: `.context/boat-native-remote-workspaces/merge-main/code-merge-report.md` and `.context/boat-native-remote-workspaces/merge-main/docs-merge-report.md`.
 
 ## Milestone 2c: Doc follow-ups
 
@@ -8163,6 +8246,16 @@ Design calls by the agents on 9 November 2026:
       delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-2c`.
 
 Evidence: `.context/milestone-2c/reports/` and `.context/milestone-2c/checks/`.
+
+## Milestone 5g: Tests that fail under load
+
+Depends on: 15u. It changes lifecycle tests on the native harness.
+
+Make the tests that fail now and then under the load of the full gate
+reliable. Added on 10 November 2026.
+
+- [ ] Apply option B of `plans/follow-ups/tests-fail-under-load.md`, and
+      delete that item.
 
 ## Milestone 15d: Marketing site
 

@@ -2,11 +2,14 @@ import { createHash } from 'node:crypto'
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { satteri } from '@astrojs/markdown-satteri'
 import type { AstroIntegration } from 'astro'
 import { defineConfig } from 'astro/config'
 import type { Plugin } from 'vite'
 import { productDomain } from './docs/mockups/src/brand'
+import { guideActions } from './src/marketing/guide-actions'
 import { picturesCss } from './src/marketing/picture-styles'
+import { scrollRegions } from './src/marketing/scroll-regions'
 import { tokensCss } from './src/marketing/tokens'
 import {
   SITE_FILE_LIST,
@@ -132,6 +135,12 @@ function siteFileList(): AstroIntegration {
  * `public/_site/`, which the Worker's static assets hold. Every other file
  * loads from `/_site/`. The public folder is the brand folder, so the
  * favicons keep fixed addresses.
+ *
+ * The guides of the docs are Markdown. Prism gives each token of their
+ * code a class, and the stylesheet of the docs colours the classes, so the
+ * policy of the pages needs no other style. One plugin lets a keyboard
+ * scroll each code block and table. The other marks each guide action, a
+ * link that is the only content of its list item.
  */
 export default defineConfig({
   site: `https://${productDomain}`,
@@ -153,6 +162,10 @@ export default defineConfig({
       target: 'baseline-widely-available',
     },
     plugins: [generatedStylesPlugin(), siteFolderInDevelopmentPlugin()],
+  },
+  markdown: {
+    syntaxHighlight: 'prism',
+    processor: satteri({ hastPlugins: [scrollRegions, guideActions] }),
   },
   integrations: [siteFileList()],
 })

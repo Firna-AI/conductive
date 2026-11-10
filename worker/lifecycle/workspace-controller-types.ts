@@ -11,8 +11,13 @@ import type {
   LifecycleReconciliation,
 } from './durable-types'
 import type { LifecycleActivitySnapshot } from './input-activity-state'
+import type { ComputerIdentity } from './computer-ledger'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  queueComputerStops(
+    orgId: string,
+    computers: readonly ComputerIdentity[],
+  ): Promise<ComputerIdentity[]>
   lifecycleActivity(checkOnly?: true): Promise<LifecycleActivityResult>
   extendLifecycleInput(
     operation: () => Promise<LifecycleReconciliation>,
