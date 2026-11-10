@@ -1,9 +1,9 @@
 /*
- * The pricing page: its column, its top with the note that the product
- * stays free, the plans, and how cloud hours count. The values follow the
- * mockup marketing/pricing in docs/mockups/src/components/pricing/. The
- * page imports this stylesheet, and the build puts it before the shared
- * styles of `Document`, so each rule relies on its own classes.
+ * The pricing page: its column, its top, the plans, and how cloud hours
+ * count. The values follow the mockup marketing/pricing in
+ * docs/mockups/src/components/pricing/. The page imports this stylesheet,
+ * and the build puts it before the shared styles of `Document`, so each
+ * rule relies on its own classes.
  */
 
 /*

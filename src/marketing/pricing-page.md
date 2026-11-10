@@ -58,9 +58,8 @@ Keep each price true:
 - `pages/pricing.astro`: the page, in the site layout. The header marks
   Pricing as the current page.
 - `components/PricingIntro.astro`, `PlanCards.astro`, and
-  `HoursRules.astro`: the top of the page with the note that Conductive
-  stays free, the plans with the currency and tax line, and how cloud
-  hours count.
+  `HoursRules.astro`: the top of the page, the plans with the currency and
+  tax line, and how cloud hours count.
 - `styles/pricing.css`: the styles of the page, with the 1000 px
   breakpoint of the mockup and the 760 px phone breakpoint of the site.
   The page imports it, so other pages do not carry it.

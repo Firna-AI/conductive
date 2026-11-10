@@ -54,4 +54,4 @@
 - **Done when:** Each page, the comparison page with both entry links, and the agreement page show on the deployed site with today's headers, and the logs show no site warning.
   The public guides show there with the same headers.
   The docs navigation and keyboard controls work with page scripts off.
-  The pricing page shows the plans of `src/marketing/pricing.ts` and the free-until-billing note on a phone and a desktop, with the same headers, and its header and footer links open it.
+  The pricing page shows the plans of `src/marketing/pricing.ts` on a phone and a desktop, with the same headers, and its header and footer links open it.
