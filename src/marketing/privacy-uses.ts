@@ -57,7 +57,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         team make. They run the service.`,
       text`Routines: the prompt, the triggers, and the author filters of
         each routine, with the GitHub accounts that a filter names. Each
-        run keeps its trigger, its state, and its pull request. A skipped
+        run keeps its owner, its agent, its trigger, its state, and its pull
+        request. A skipped
         run keeps the GitHub login of the account outside the org whose
         event it skipped. They run the routines and show their runs.`,
       text`Keys and logins: the env var values of each org, and your

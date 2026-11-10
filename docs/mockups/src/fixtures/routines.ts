@@ -75,7 +75,7 @@ export type Routine = {
    */
   movedFrom?: string
   /**
-   * The runs that failed in a row. A failed run, a failed start, and a
+   * The runs that failed in a row. A failed check, a failed start, and a
    * failed first turn count. A finished first turn resets the count.
    */
   failedRunsInARow?: number
@@ -104,6 +104,12 @@ export const routineKeys = [
 export type RoutineKey = (typeof routineKeys)[number]
 
 const london = 'Europe/London'
+
+/**
+ * Lena Park, who created the routine that checks the site copy and then
+ * left Acme. Its past runs still name her.
+ */
+export const lena = { name: 'Lena Park' }
 
 const opened: Trigger = { kind: 'pull-request', event: 'opened' }
 const pushed: Trigger = { kind: 'pull-request', event: 'pushed' }
@@ -179,7 +185,7 @@ export const routines: Readonly<Record<RoutineKey, Routine>> = {
     repository: 'marketing-site',
     section: 'general',
     owner: people.cal,
-    movedFrom: 'Lena Park',
+    movedFrom: lena.name,
     active: false,
     timeZone: london,
     triggers: [

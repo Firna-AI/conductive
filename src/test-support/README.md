@@ -172,6 +172,8 @@ Replies, timers, and `waitFor` go on.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
 - `fixtures/routines.ts` maps the routines of the mockups, newest first, with the last run of each, to the shared contracts. Its `runs` are the runs that the page of each routine lists in the mockups, or else its last run. Its `created` is the reply of a create: the routine that the flow "Create a routine" saves.
 - `fixtures/routine-runs.ts` maps the run lists of the mockups to the runs of the API: each cause of a failed run and each reason of a skipped run as the Worker stores them, with the login of an account outside the org. `runsPage` gives one page of runs as the Worker pages them.
+  Each run includes its agent and owner for the shared run contract. A member who left the org stays the owner of their runs, as the Worker keeps their user record.
+  A run whose first start or first turn failed keeps its workspace, and a run that a check failed has none.
 - `fixtures/routine-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.

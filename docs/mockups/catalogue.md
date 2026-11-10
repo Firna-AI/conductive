@@ -333,6 +333,11 @@ New workspace opens. Its child pages:
   Delete asks first, because a deleted routine cannot come back. The first
   four were saved states of the page. They moved into their own folders
   and kept their paths, so the page shows only its canonical screen.
+  `unavailable` has the page of a routine that the org no longer has,
+  because it was deleted or the address is wrong, with Open Routines.
+  `not-loaded` has the page after the read of the routine failed, with
+  the load failure of the other lists of the app and Try again. The
+  `read` state of the routine screen draws both.
 - `app/routines/triggers` has the open Add trigger menu. Its child page
   `app/routines/triggers/schedules` has the Hourly, Daily, and Weekly
   editors with the time zone, and a custom cron that the form refuses.
@@ -343,15 +348,21 @@ New workspace opens. Its child pages:
 - `app/routines/runs` has the newest 50 runs, in each state of their
   workspaces, with Show older runs at the end. Its variants have a failed
   run for each cause, skipped runs, and, as `saved` and `run-now`, the
-  routine of the flow before and after Run now. A phone shows a saved
-  routine in two tabs, Routine and Runs. These pages open on the Runs tab,
-  except `saved`.
+  routine of the flow before and after Run now. In `failed`, a run that a
+  check failed has no workspace, and a run whose first start or first
+  turn failed opens its workspace. A phone shows a saved routine in two
+  tabs, Routine and Runs. These pages open on the Runs tab, except
+  `saved`.
 - `app/routines/run-workspace` has the workspace of a pull request run,
-  its start, and the workspace of a run of Run now. It draws the workspace
-  screen with its `run` state, which no other workspace page sets. The
-  base branch of a pull request run is the head branch of its pull
-  request, so its bar names that branch, and Changes lists only the work
-  of the run. The run of Run now keeps `main`.
+  its start, and the workspace of a run of Run now. Its `start-failed`
+  and `turn-failed` variants have the workspaces of the two failed runs
+  of `app/routines/runs/failed` that kept their workspaces: a first start
+  that failed, with Try again in the bar, and a first turn that failed,
+  with Try again in the chat. It draws the workspace screen with its `run`
+  state, which no other workspace page sets. The base branch of a pull
+  request run is the head branch of its pull request, so its bar names
+  that branch, and Changes lists only the work of the run. The run of Run
+  now keeps `main`.
 `app/workspace-links` draws the workspace numbers and the chips of
 decisions 211 and 212. Its canonical screen has a message and an answer
 with chips in Checkout address autocomplete, `W-395`. Its child pages:

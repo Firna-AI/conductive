@@ -176,9 +176,15 @@ sessions as tabs above the chat, and four tabs at the bottom.
   square, and ready is one bright cell on a faint green grid. A workspace
   whose agent waits for the user, such as for the approval of a command,
   shows Needs input: a middle column in the accent colour that pulses.
-  A routine run takes the mark of its workspace, and has three marks of its
-  own: an hourglass while it waits for its workspace, a slash in rose when
-  it failed before it had one, and a chevron when a rule skipped it.
+  A routine run takes the mark of its workspace. A run without a
+  workspace shows an hourglass while it waits for one, and a chevron when
+  a rule skipped it. A failed run shows the mark of its failure. It keeps
+  that mark after Try again, because the run keeps its failed outcome.
+  - A run whose first start failed shows the cross, as its workspace in
+    the error state does.
+  - A run that a check failed before it had a workspace, and a run whose
+    first turn failed, show a slash in rose. After a failed turn, the mark
+    of the workspace shows a finished turn, which would hide the failure.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
@@ -210,6 +216,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   branch ends in an ellipsis at half of the line. The
   bubble of a message keeps its line breaks, as in the app, so the first
   message of a run shows the facts of its trigger on their own lines.
+  - `runCopy.ts` gives the words of a failed run from its stored cause, and
+    from the agent and the owner of the run itself, not of its routine. So
+    a later change of the agent, or a move of the routine to another owner,
+    changes no past row. A failed start and a failed first turn keep their
+    workspace, and their rows open it, as `app/routines/runs/failed` shows.
+  - When the routine page cannot show its routine, the page keeps Routine
+    as its name and shows no tabs, no Runs list, and no actions. A routine
+    that the org no longer has shows the empty state "This routine is not
+    available" with Open Routines. A read that failed shows `LoadFailure`.
+    `app/routines/routine/unavailable` and `not-loaded` show them.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of

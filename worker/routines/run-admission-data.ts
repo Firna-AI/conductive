@@ -51,7 +51,7 @@ export async function runAdmission(
   }
 }
 
-export function runCreationAttempt(
+export async function runCreationAttempt(
   db: D1Database,
   run: StoredRoutineRun,
 ): Promise<{
@@ -59,13 +59,40 @@ export function runCreationAttempt(
   state: string
   errorCode: string | null
   errorMessage: string | null
+  owner: User
 } | null> {
-  return db
+  const row = await db
     .prepare(
-      `SELECT workspace_id AS id, state, error_code AS errorCode, error_message AS errorMessage
-    FROM workspace_creation_attempts WHERE org_id = ? AND first_message_id = ?
-      AND (? IS NULL OR sender_user_id = ?) ORDER BY created_at DESC, workspace_id DESC LIMIT 1`,
+      `SELECT a.workspace_id AS id, a.state, a.error_code AS errorCode, a.error_message AS errorMessage,
+    u.id AS ownerId, u.github_id AS githubId, u.github_login AS githubLogin,
+    u.display_name AS displayName, u.avatar_url AS avatarUrl
+    FROM workspace_creation_attempts a JOIN users u ON u.id = a.sender_user_id
+    WHERE a.org_id = ? AND a.first_message_id = ?
+      AND (? IS NULL OR a.sender_user_id = ?) ORDER BY a.created_at DESC, a.workspace_id DESC LIMIT 1`,
     )
     .bind(run.orgId, run.messageId, run.ownerUserId, run.ownerUserId)
-    .first()
+    .first<
+      Omit<User, 'id'> & {
+        id: string
+        ownerId: string
+        state: string
+        errorCode: string | null
+        errorMessage: string | null
+      }
+    >()
+  return row
+    ? {
+        id: row.id,
+        state: row.state,
+        errorCode: row.errorCode,
+        errorMessage: row.errorMessage,
+        owner: {
+          id: row.ownerId,
+          githubId: row.githubId,
+          githubLogin: row.githubLogin,
+          displayName: row.displayName,
+          avatarUrl: row.avatarUrl,
+        },
+      }
+    : null
 }

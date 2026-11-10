@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react'
 import { offersRunNow } from '../../../docs/mockups/src/components/routines/triggerCopy'
 import styles from '../../../docs/mockups/src/screens/RoutineScreen.module.css'
 import {
+  draftFields,
   draftOf,
   draftReady,
   sameDraft,
@@ -17,7 +18,7 @@ import type { Routine } from '../../shared/routines'
 import type { Section } from '../../shared/sections'
 import { useApp, useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
-import { useSavedDraft } from '../ui/useSavedDraft'
+import { eachField, useSavedDraft } from '../ui/useSavedDraft'
 import { useViewport } from '../ui/viewport'
 import { useDeleteRoutine } from './DeleteRoutine'
 import { PromptEditor } from './PromptBox'
@@ -28,6 +29,13 @@ import { RunNowButton } from './RunNow'
 import { RunsPanel, type RunsSource } from './RunsPanel'
 import { TriggerEditor } from './TriggerList'
 import { useRoutineSave } from './useRoutineSave'
+
+/**
+ * The form follows a newer saved routine field by field, so an edit stays,
+ * and a field that changed elsewhere, such as Active after a turn-off,
+ * shows its new value.
+ */
+const followEachField = eachField(draftFields)
 
 /** A saved routine with its runs, or the draft of a new one, which the first save creates. */
 type Source =
@@ -59,7 +67,7 @@ export function RoutineEditor(
     () => (routine ? draftOf(routine) : props.initial),
     [routine, props.initial],
   )
-  const form = useSavedDraft(saved, sameDraft)
+  const form = useSavedDraft(saved, followEachField)
   const { draft } = form
   const { save, refused, refusal } = useRoutineSave({
     org,
@@ -117,7 +125,13 @@ export function RoutineEditor(
     <RoutineFrame
       actions={actions}
       org={org}
-      runs={<RunsPanel orgName={org.name} ownerViews source={props.runs} />}
+      runs={
+        <RunsPanel
+          orgName={org.name}
+          source={props.runs}
+          viewer={props.user.id}
+        />
+      }
       tabs={routine ? { routineId: routine.id, current: props.tab } : undefined}
       title={routine ? routine.name : 'New routine'}
     >

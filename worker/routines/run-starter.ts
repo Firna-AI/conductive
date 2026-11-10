@@ -6,8 +6,10 @@ import { readAgentLogin } from '../chat/queries'
 import { HttpError } from '../http'
 import { createWorkspace } from '../lifecycle/workspaces'
 import { freshGitHubUserToken } from '../security/github-tokens'
+import { warnWorker } from '../warnings'
 import { readRoutine } from './routine-data'
 import { runAdmission, runCreationAttempt } from './run-admission-data'
+import { recordRunChoice } from './run-choice-data'
 import { finishRoutineRun } from './run-outcome-data'
 import {
   attachRunWorkspace,
@@ -28,12 +30,6 @@ export async function startRoutineRun(
   const { env, dependencies } = runtime
   const run = await storedRoutineRun(env.DB, orgId, runId)
   if (!run || run.state !== 'queued') return
-  let routine = await readRoutine(env.DB, orgId, run.routineId)
-  let admission = await runAdmission(env.DB, routine, run)
-  if ('code' in admission) {
-    await skipRoutineRun(env.DB, orgId, runId, admission, dependencies.now())
-    return
-  }
   try {
     const attempt = await runCreationAttempt(env.DB, run)
     if (attempt?.state === 'failed') {
@@ -55,22 +51,37 @@ export async function startRoutineRun(
       )
       return
     }
-    if (!attempt) {
-      if (
-        !(await readAgentLogin(env, admission.owner.id, routine.choice.agent))
-      )
-        throw new HttpError(
-          409,
-          'agent_login_required',
-          `Connect ${routine.choice.agent === 'claude' ? 'Claude' : 'Codex'} to run this routine.`,
-        )
-      await freshGitHubUserToken(env, admission.owner.id, dependencies)
-    }
-    routine = await readRoutine(env.DB, orgId, run.routineId)
-    admission = await runAdmission(env.DB, routine, run)
+    let routine = await readRoutine(env.DB, orgId, run.routineId)
+    const choice =
+      run.choice ??
+      (await recordRunChoice(env.DB, orgId, runId, routine.choice))
+    let admission = attempt
+      ? { owner: attempt.owner }
+      : await runAdmission(env.DB, routine, run)
     if ('code' in admission) {
       await skipRoutineRun(env.DB, orgId, runId, admission, dependencies.now())
       return
+    }
+    if (!attempt) {
+      if (!(await readAgentLogin(env, admission.owner.id, choice.agent)))
+        throw new HttpError(
+          409,
+          'agent_login_required',
+          `Connect ${choice.agent === 'claude' ? 'Claude' : 'Codex'} to run this routine.`,
+        )
+      await freshGitHubUserToken(env, admission.owner.id, dependencies)
+      routine = await readRoutine(env.DB, orgId, run.routineId)
+      admission = await runAdmission(env.DB, routine, run)
+      if ('code' in admission) {
+        await skipRoutineRun(
+          env.DB,
+          orgId,
+          runId,
+          admission,
+          dependencies.now(),
+        )
+        return
+      }
     }
     const created = await createWorkspace(
       runtime,
@@ -83,7 +94,7 @@ export async function startRoutineRun(
           id: run.messageId,
           text: routineRunText(routine, run.trigger),
           attachmentIds: [],
-          choice: routine.choice,
+          choice,
         },
       },
       admission.owner,
@@ -107,14 +118,25 @@ export async function startRoutineRun(
       dependencies.now(),
     )
   } catch (error) {
+    const attempt = await runCreationAttempt(env.DB, run)
+    if (attempt && attempt.state !== 'failed') {
+      warnWorker({ kind: 'routine_queued_start_failed' })
+      return
+    }
     await finishRoutineRun(
       env.DB,
       orgId,
       runId,
       {
         state: 'failed',
-        error:
-          error instanceof HttpError
+        error: attempt
+          ? {
+              code: attempt.errorCode ?? 'workspace_start_failed',
+              message:
+                attempt.errorMessage ??
+                'The cloud computer could not start. Try again.',
+            }
+          : error instanceof HttpError
             ? { code: error.code, message: error.message }
             : {
                 code: 'workspace_start_failed',
@@ -122,6 +144,7 @@ export async function startRoutineRun(
               },
       },
       dependencies.now(),
+      attempt?.id,
     )
   }
 }

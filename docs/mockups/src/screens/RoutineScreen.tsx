@@ -1,24 +1,22 @@
 import type { Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { acmeRail } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
 import { DeleteRoutineDialog } from '../components/routines/DeleteRoutineDialog'
 import { RunsPanel } from '../components/routines/RunsPanel'
 import { offersRunNow } from '../components/routines/triggerCopy'
-import {
-  suspendedSections,
-  workspaceSections,
-} from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
-import { memberViewer, people } from '../fixtures/members'
-import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { editsOf } from '../fixtures/routineTriggers'
 import { routines, type Routine } from '../fixtures/routines'
 import { hasOlderRuns, runLists } from '../fixtures/runLists'
 import { paths } from '../paths'
 import { PhoneDelete, routineActions } from './routineActions'
+import { RoutineFrame } from './routineFrame'
+import { RoutineNotShown } from './routineNotShown'
 import { PhoneSheet, RoutineForm, runLinks, titleOf } from './routineParts'
-import { accessOf, saveStateOf, type RoutineState } from './routineState'
+import {
+  accessOf,
+  saveStateOf,
+  viewerOf,
+  type RoutineState,
+} from './routineState'
 import { RoutineTabs } from './routineTabs'
 import styles from './RoutineScreen.module.css'
 
@@ -45,7 +43,8 @@ function flowLinks(state: RoutineState, routine: Routine) {
  * model, beside the Runs list. Desktop shows the runs in a column at the
  * right. A phone shows a saved routine in two tabs, Routine and Runs.
  * Every member sees the routine and its runs, and only its owner changes
- * it (decision 502). A suspended org shows them read-only to everyone.
+ * it (decision 502). A suspended org shows them read-only to everyone. A
+ * routine that the page cannot read shows why in place of the routine.
  */
 export function RoutineScreen(props: {
   state: RoutineState
@@ -54,6 +53,17 @@ export function RoutineScreen(props: {
   const { state, viewport } = props
   const mobile = viewport === 'mobile'
   const suspended = state.org === 'suspended'
+  if (state.read !== 'ready') {
+    return (
+      <RoutineFrame state={state} viewport={viewport}>
+        <RoutineNotShown
+          read={state.read}
+          routines={suspended ? paths.suspendedRoutines : paths.routines}
+          viewport={viewport}
+        />
+      </RoutineFrame>
+    )
+  }
   const routine = routines[state.routine]
   const access = accessOf(state, routine)
   const edits = editsOf(state.triggers, routine.triggers)
@@ -79,91 +89,74 @@ export function RoutineScreen(props: {
     <RunsPanel
       links={suspended ? {} : runLinks}
       older={hasOlderRuns(state.runs)}
-      ownerViews={access === 'owner'}
       routine={routine}
       runs={runLists[state.runs]}
+      // A suspended org takes every action away, so no failed run offers one.
+      viewer={suspended ? undefined : viewerOf(state)}
       viewport={viewport}
     />
   )
-  const page = (
-    <Page
-      actions={routineActions({
-        routine,
-        access,
-        save: saveStateOf(state, routine),
-        viewport,
-        withForm: !runsTab,
-        runNow: offersRunNow(edits.map((edit) => edit.trigger)),
-        ...links,
-      })}
-      back={{
-        label: 'Routines',
-        to: suspended ? paths.suspendedRoutines : paths.routines,
-      }}
-      fill
-      subtitle="Routine"
-      tabs={
-        mobile && routine.saved ? (
-          <RoutineTabs
-            routine={routine}
-            suspended={suspended}
-            tab={state.tab}
-          />
-        ) : undefined
+  return (
+    <RoutineFrame
+      overlay={
+        mobile ? (
+          <>
+            <PhoneSheet edits={edits} menu={menu} />
+            {dialog}
+          </>
+        ) : (
+          dialog
+        )
       }
-      title={titleOf(routine)}
+      state={state}
       viewport={viewport}
     >
-      {mobile ? (
-        <div className={styles.phoneScroll}>
-          <div className={styles.phoneContent}>
-            {runsTab ? runs : form}
-            {!runsTab && access === 'owner' && routine.saved ? (
-              <PhoneDelete to={links.deleteTo} />
-            ) : null}
+      <Page
+        actions={routineActions({
+          routine,
+          access,
+          save: saveStateOf(state, routine),
+          viewport,
+          withForm: !runsTab,
+          runNow: offersRunNow(edits.map((edit) => edit.trigger)),
+          ...links,
+        })}
+        back={{
+          label: 'Routines',
+          to: suspended ? paths.suspendedRoutines : paths.routines,
+        }}
+        fill
+        subtitle="Routine"
+        tabs={
+          mobile && routine.saved ? (
+            <RoutineTabs
+              routine={routine}
+              suspended={suspended}
+              tab={state.tab}
+            />
+          ) : undefined
+        }
+        title={titleOf(routine)}
+        viewport={viewport}
+      >
+        {mobile ? (
+          <div className={styles.phoneScroll}>
+            <div className={styles.phoneContent}>
+              {runsTab ? runs : form}
+              {!runsTab && access === 'owner' && routine.saved ? (
+                <PhoneDelete to={links.deleteTo} />
+              ) : null}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className={styles.body}>
-          <div className={styles.formScroll}>
-            <div className={styles.form}>{form}</div>
+        ) : (
+          <div className={styles.body}>
+            <div className={styles.formScroll}>
+              <div className={styles.form}>{form}</div>
+            </div>
+            {runs}
           </div>
-          {runs}
-        </div>
-      )}
-    </Page>
-  )
-  if (mobile) {
-    return (
-      <MobileFrame>
-        {page}
-        <PhoneSheet edits={edits} menu={menu} />
-        {dialog}
-      </MobileFrame>
-    )
-  }
-  return (
-    <AppFrame
-      overlay={dialog}
-      rail={{
-        ...acmeRail,
-        suspended: suspended ? suspendedOrg : undefined,
-        person: state.viewer === 'member' ? people[memberViewer] : undefined,
-      }}
-      sidebar={
-        <Sidebar
-          current="routines"
-          org={orgs.acme}
-          sections={suspended ? suspendedSections() : workspaceSections()}
-          suspended={suspended}
-          viewer={{
-            person: state.viewer === 'member' ? memberViewer : 'cal',
-            role: state.viewer,
-          }}
-        />
-      }
-    >
-      {page}
-    </AppFrame>
+        )}
+      </Page>
+    </RoutineFrame>
   )
 }

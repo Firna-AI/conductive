@@ -20,7 +20,8 @@ import { RoutineEditor } from './RoutineEditor'
 import { RoutineFrame } from './RoutineFrame'
 import { RoutineReader } from './RoutineReader'
 
-function Waiting(props: { org: OrgSummary; title: string }) {
+/** The wait of the first read, with the title of a new routine, or Routine alone. */
+function Waiting(props: { org: OrgSummary; title?: string }) {
   const theme = useSharedUiTheme()
   return (
     <RoutineFrame org={props.org} title={props.title}>
@@ -39,7 +40,7 @@ function Waiting(props: { org: OrgSummary; title: string }) {
 function Missing(props: { org: OrgSummary }) {
   const go = useGo()
   return (
-    <RoutineFrame org={props.org} title="Routine">
+    <RoutineFrame org={props.org}>
       <EmptyState
         action={
           <ActionButton
@@ -78,7 +79,7 @@ function SavedRoutine(props: {
   if (routine.state === 'failed') {
     if (routine.error.code === 'routine_not_found') return <Missing org={org} />
     return (
-      <RoutineFrame org={org} title="Routine">
+      <RoutineFrame org={org}>
         <LoadFailure
           error={routine.error}
           retry={() => model.reload()}
@@ -92,14 +93,13 @@ function SavedRoutine(props: {
     repositories.state === 'loading' ||
     sections.state === 'loading'
   ) {
-    return <Waiting org={org} title="Routine" />
+    return <Waiting org={org} />
   }
   const shared = {
     repositories: repositories.state === 'ready' ? repositories.value : [],
     sections: sections.state === 'ready' ? sections.value : [],
     tab: props.tab,
     runs: {
-      routine: routine.value,
       runs,
       loadOlder: () => model.runs.loadOlder(),
       retry: () => model.runs.reload(),
@@ -122,6 +122,7 @@ function SavedRoutine(props: {
       }
       org={org}
       routine={routine.value}
+      user={props.user}
       {...shared}
     />
   )

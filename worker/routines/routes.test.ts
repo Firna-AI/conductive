@@ -59,6 +59,8 @@ it('lets every org member read routine data and lets a member create with defaul
     id: 'last-run',
     routineId: 'routine-one',
     orgId: org.id,
+    agent: null,
+    owner: null,
     trigger: { kind: 'run-now' },
     state: 'failed',
     error: { code: 'agent_login_required', message: 'Connect Codex.' },

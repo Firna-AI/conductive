@@ -15,9 +15,9 @@ This change does not cover a webhook trigger, filters for labels or base
 branches, notifications, or routines across several repositories. The
 design calls below give the reasons.
 
-The user answered every decision of this plan. On 9 November 2026, the
-user kept 503 B and 504 A after the options check changed their
-recommendations, and chose 506 C.
+The user answered decisions 501 to 513. Decision 514 waits for the user.
+On 9 November 2026, the user kept 503 B and 504 A after the options check
+changed their recommendations, and chose 506 C.
 
 The decisions of this plan take the numbers from 501. They first took
 201 to 214, but other plans on `main` used numbers up to 212 by
@@ -1305,9 +1305,10 @@ These calls of 9 November 2026 come from the code searches of this plan:
   keeps one bar layout for every workspace.
 
 - Changes compares from the merge base of a branch and its base branch,
-  for every workspace. Reason: the base branch of a run can move while the
-  run works. The follow-up item `changes-base-stale-default-branch.md`
-  keeps the separate problem of an old local default branch.
+  for every workspace. It reads the base branch from its remote-tracking
+  ref, which each fetch updates, and not from an old local copy. Reason:
+  the base branch of a run can move while the run works, and the local
+  copy of a branch in the org image can be older than GitHub.
 - An author filter matches GitHub account IDs, which the Worker resolves
   from the logins at each save. Reason: a login can change owner.
 - The Runs list shows a skipped run for an author or a sender outside the

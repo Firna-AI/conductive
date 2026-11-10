@@ -1,6 +1,7 @@
+import type { AgentChoice } from '../../src/shared/agents'
 import type { RoutineRunTrigger } from '../../src/shared/routines'
 import type { AppDependencies } from '../env'
-import { readRunTrigger } from './stored-run'
+import { readRunChoice, readRunTrigger } from './stored-run'
 import { pullRequestLoopGuard } from './pull-request-data'
 
 export interface StoredRoutineRun {
@@ -8,6 +9,7 @@ export interface StoredRoutineRun {
   routineId: string
   orgId: string
   ownerUserId: string | null
+  choice: AgentChoice | null
   messageId: string
   trigger: RoutineRunTrigger
   state: 'queued' | 'started' | 'finished' | 'failed' | 'skipped'
@@ -23,11 +25,23 @@ export async function storedRoutineRun(
     .prepare(
       `SELECT id, routine_id AS routineId, org_id AS orgId,
     owner_user_id AS ownerUserId, message_id AS messageId, trigger_json AS triggerJson,
-    state, workspace_id AS workspaceId FROM routine_runs WHERE org_id = ? AND id = ?`,
+    state, workspace_id AS workspaceId, choice_json AS choiceJson
+    FROM routine_runs WHERE org_id = ? AND id = ?`,
     )
     .bind(orgId, id)
-    .first<Omit<StoredRoutineRun, 'trigger'> & { triggerJson: string }>()
-  return row ? { ...row, trigger: readRunTrigger(row.triggerJson) } : null
+    .first<
+      Omit<StoredRoutineRun, 'trigger' | 'choice'> & {
+        triggerJson: string
+        choiceJson: string | null
+      }
+    >()
+  return row
+    ? {
+        ...row,
+        trigger: readRunTrigger(row.triggerJson),
+        choice: readRunChoice(row.choiceJson),
+      }
+    : null
 }
 
 export async function recordRoutineRun(

@@ -1,12 +1,16 @@
-import type {
-  FailureCause,
-  Run,
-  SkipReason,
+import {
+  runsOf,
+  type FailedRun,
+  type ListedRun,
+  type Run,
+  type SkipReason,
 } from '../../../docs/mockups/src/fixtures/routineRuns'
+import { routines as mockupRoutines } from '../../../docs/mockups/src/fixtures/routines'
 import {
   runLists,
   type RunListKey,
 } from '../../../docs/mockups/src/fixtures/runLists'
+import type { MessageSender } from '../../shared/messages'
 import type {
   Routine,
   RoutinePullRequestEvent,
@@ -59,7 +63,7 @@ export function pullRequestTrigger(
 
 /** Each cause of a failed run, as the Worker stores it. */
 const failures: Readonly<
-  Record<FailureCause, { code: string; message: string }>
+  Record<Exclude<FailedRun['cause'], 'turn'>, { code: string; message: string }>
 > = {
   'agent-login': {
     code: 'agent_login_required',
@@ -101,11 +105,53 @@ function skipLogin(run: Run): string | undefined {
 }
 
 /**
- * A run of a mockup list, as the Worker gives it. A run in the state of a
- * workspace has one. A queued, failed, or skipped run has none. A skip of
- * an author or a sender keeps the login of that account. Each run is a
- * little older than the run before it, so the order of the list holds when
- * two runs have the same age.
+ * Whether a run has a workspace: a run in the state of a workspace, and a
+ * run whose first start or first turn failed, which keeps its workspace. A
+ * queued or skipped run has none, and neither has a run that a check failed
+ * before the create.
+ */
+function hasWorkspace(run: Run): boolean {
+  switch (run.state) {
+    case 'queued':
+    case 'skipped':
+      return false
+    case 'failed':
+      return run.cause === 'start' || run.cause === 'turn'
+    default:
+      return true
+  }
+}
+
+/**
+ * The owner of a run, as the Worker names them. A member who left the org
+ * keeps their user record, so a run still names them, with a login from
+ * their name.
+ */
+function ownerOf(run: Run): MessageSender {
+  const { owner } = run
+  if ('key' in owner) {
+    return {
+      id: owner.key,
+      githubLogin: owner.login,
+      displayName: owner.name,
+      avatarUrl: null,
+    }
+  }
+  const login = owner.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return {
+    id: login,
+    githubLogin: login,
+    displayName: owner.name,
+    avatarUrl: null,
+  }
+}
+
+/**
+ * A run of a mockup list, as the Worker gives it, with its own agent and
+ * owner. A run that has a workspace keeps its ID. A skip of an author or a
+ * sender keeps the login of that account. Each run is a little older than
+ * the run before it, so the order of the list holds when two runs have the
+ * same age.
  */
 function apiRun(routine: Routine, run: Run, index: number): RoutineRun {
   const at = timeOf(run.when) - index
@@ -120,17 +166,20 @@ function apiRun(routine: Routine, run: Run, index: number): RoutineRun {
             run.trigger.number,
             skipLogin(run),
           )
-  const workspace = !['queued', 'failed', 'skipped'].includes(run.state)
   return {
     id: `run-${routine.id}-${run.key}`,
     routineId: routine.id,
     orgId: routine.orgId,
+    agent: run.agent,
+    owner: ownerOf(run),
     trigger,
     state: run.state,
-    workspaceId: workspace ? `${routine.id}-${run.key}` : null,
+    workspaceId: hasWorkspace(run) ? `${routine.id}-${run.key}` : null,
     error:
       run.state === 'failed'
-        ? failures[run.cause]
+        ? run.cause === 'turn'
+          ? { code: 'agent_unavailable', message: run.message }
+          : failures[run.cause]
         : run.state === 'skipped'
           ? skipOf(run.skip)
           : null,
@@ -143,9 +192,9 @@ function apiRun(routine: Routine, run: Run, index: number): RoutineRun {
  * The runs of the review routine after its newest 50, which Show older
  * runs adds: an open and a push of each pull request below #453.
  */
-const olderReviewRuns: readonly Run[] = Array.from(
+const olderReviewRuns: readonly ListedRun[] = Array.from(
   { length: 6 },
-  (_, index): Run => {
+  (_, index): ListedRun => {
     const number = 452 - Math.floor(index / 2)
     const event = index % 2 === 0 ? 'pushed' : 'opened'
     return {
@@ -159,8 +208,8 @@ const olderReviewRuns: readonly Run[] = Array.from(
 
 /** The run lists that hold older runs than the newest 50. */
 const olderRuns: Partial<Record<RunListKey, readonly Run[]>> = {
-  review: olderReviewRuns,
-  suspended: olderReviewRuns,
+  review: runsOf(mockupRoutines['review-prs'], olderReviewRuns),
+  suspended: runsOf(mockupRoutines['review-prs'], olderReviewRuns),
 }
 
 /** The run list of each routine of the mockups that draws one. */

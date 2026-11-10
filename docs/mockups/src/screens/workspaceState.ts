@@ -189,11 +189,13 @@ export const workspaceStateSchema = {
     org: { enum: ['active', 'suspended'] },
     /**
      * The run of a routine that made the workspace (decision 501): a run of
-     * a pull request, or a run that Run now started. A run workspace is a
-     * normal workspace, whose header links to its routine, and for a pull
-     * request run to the pull request. It shows the chat of its run at the
-     * stage of `conversation`: `queued` while the sandbox starts, or else
-     * its first turn. A workspace that a person created has none.
+     * a pull request, a run that Run now started, or a failed run that kept
+     * its workspace, whose first start or first turn failed. A run
+     * workspace is a normal workspace, whose header links to its routine,
+     * and for a pull request run to the pull request. It shows the chat of
+     * its run at the stage of `conversation`: `queued` while the sandbox
+     * starts or after a failed first start, or else its first turn. A
+     * workspace that a person created has none.
      */
     run: { enum: runWorkspaceKeys },
     /**

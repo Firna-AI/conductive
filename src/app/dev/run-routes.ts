@@ -9,6 +9,7 @@ import {
   workspaceViewPath,
   type WorkspaceViewResponse,
 } from '../../shared/workspace-view'
+import type { CreateWorkspaceResponse } from '../../shared/workspaces'
 import { runsPage } from '../../test-support/fixtures/routine-runs'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { record } from '../api/parse'
@@ -52,8 +53,11 @@ function runText(routine: Routine): string {
 /**
  * Starts the workspace of a run in the section of its routine, or fails
  * the run with its cause, as the Worker does. Without the agent login of
- * the routine's model, the run fails with no workspace. A prompt that
- * contains `fail` stands for a cloud computer that did not start.
+ * the routine's model, the run fails with no workspace, and so does a
+ * create that the fake refuses, such as without an image, with the code
+ * and the words of the refusal. A prompt that contains `fail` stands for a
+ * cloud computer that did not start: the run fails and keeps its
+ * workspace, in the error state with Try again.
  */
 function startRun(
   backend: DevBackend,
@@ -70,8 +74,9 @@ function startRun(
     const error = { code: 'agent_login_required', message }
     return { ...run, state: 'failed', error }
   }
+  let created: CreateWorkspaceResponse
   try {
-    const created = startWorkspace(backend, org, {
+    created = startWorkspace(backend, org, {
       repositoryId: routine.repositoryId,
       sectionId: routine.sectionId,
       first: {
@@ -80,14 +85,17 @@ function startRun(
         attachmentIds: [],
         choice: routine.choice,
       },
+      keepFailedStart: true,
     })
-    return { ...run, workspaceId: created.workspace.id }
   } catch (error) {
     if (!(error instanceof RouteError)) throw error
-    const message = 'The cloud computer could not start. Try again.'
-    const failure = { code: 'workspace_start_failed', message }
-    return { ...run, state: 'failed', error: failure }
+    const refusal = { code: error.code, message: error.message }
+    return { ...run, state: 'failed', error: refusal }
   }
+  const workspaceId = created.workspace.id
+  if (!created.error) return { ...run, workspaceId }
+  const { code, message } = created.error
+  return { ...run, state: 'failed', workspaceId, error: { code, message } }
 }
 
 /**
@@ -124,6 +132,8 @@ function runNow(
       id,
       routineId,
       orgId: org.org.id,
+      agent: routine.choice.agent,
+      owner: { ...routine.owner },
       trigger: { kind: 'run-now' },
       state: 'queued',
       workspaceId: null,

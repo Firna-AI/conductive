@@ -11,10 +11,26 @@ import { routineKeys, type Routine } from '../fixtures/routines'
 export const routineStateSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['routine', 'viewer', 'triggers', 'runs', 'tab', 'org', 'dialog'],
+  required: [
+    'routine',
+    'read',
+    'viewer',
+    'triggers',
+    'runs',
+    'tab',
+    'org',
+    'dialog',
+  ],
   properties: {
     /** A new routine, a draft of one, or a saved routine of Acme. */
     routine: { enum: routineKeys },
+    /**
+     * The read of a saved routine: it shows, the org no longer has it,
+     * because it was deleted or the address is wrong, or the read failed,
+     * such as when the app cannot reach the server. The last two show in
+     * place of the routine, without the Runs list and without actions.
+     */
+    read: { enum: ['ready', 'unavailable', 'failed'] },
     /**
      * The person signed in: Cal, an admin of Acme, or Priya, a member who
      * is not an admin. The person who created the routine changes it.
@@ -53,6 +69,7 @@ export type RoutineState = SchemaProps<typeof routineStateSchema>
 /** Cal's routine that reviews pull requests, as Cal sees it. */
 export const ownerRoutine: RoutineState = {
   routine: 'review-prs',
+  read: 'ready',
   viewer: 'admin',
   triggers: 'saved',
   runs: 'review',
@@ -69,7 +86,7 @@ export const ownerRoutine: RoutineState = {
 export type RoutineAccess = 'owner' | 'admin' | 'member'
 
 /** The person signed in. */
-function viewerOf(state: RoutineState): PersonKey {
+export function viewerOf(state: RoutineState): PersonKey {
   return state.viewer === 'admin' ? you : memberViewer
 }
 

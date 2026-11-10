@@ -92,6 +92,10 @@ It also records the owner when a run enters the queue.
 The saved owner prevents an old queued request from using a replacement owner's logins.
 Message indexes support first-turn reports and creation recovery.
 
+`202611100101_routine_run_choice.sql` adds the nullable agent choice of a run.
+The starter records the agent, model, and effort together before it checks the login.
+Existing runs keep null because their original choice is not known.
+
 `202611100200_workspace_base_branches.sql` adds the nullable workspace base branch and the creation plan base branch and start commit.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.

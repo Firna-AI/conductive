@@ -67,8 +67,12 @@ number names a dated record, as
 - Before each create, the app checks that the owner is still a member of
   the org. It also checks that neither the owner nor the org is suspended
   or deleted.
-- It then checks the owner's agent login for the agent of the routine, and
-  the owner's GitHub access.
+- It then checks the owner's agent login for the agent of the run, and the
+  owner's GitHub access.
+- A run takes the agent, the model, and the effort of its routine at its
+  first start, and keeps them for its check and its create.
+- Reason: a change of the routine during the start cannot give the check
+  and the create two different agents.
 - A missing agent login fails the run with the code `agent_login_required`.
   Expired GitHub access fails it with the code `github_reconnect_required`.
 - Reason: the run fails before it spends a start, and the Runs list names
@@ -106,12 +110,14 @@ number names a dated record, as
 - Reason: a failed turn counts as output for the state of a workspace. So
   the state of the workspace would hide the failure.
 - A run fails for one of these causes:
-  - The owner has no agent login for the agent of the routine.
+  - The owner has no agent login for the agent of the run.
   - The owner's GitHub access expired.
   - The cloud computer did not start.
   - The first turn failed.
 - The owner sees the one action that fixes the cause, when one exists, such
   as Connect Claude. Another member reads whose login or access it is.
+- The cause names the agent and the owner of the run, also after the
+  routine changes its agent or its owner.
 - A run is skipped when the author or the sender of its pull request event
   is outside the org.
   [Who may start a run](pull-request-runs.md#who-may-start-a-run) states

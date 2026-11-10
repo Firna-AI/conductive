@@ -1,5 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { History } from 'lucide-react'
+import type { PersonKey } from '../../fixtures/members'
 import type { Run } from '../../fixtures/routineRuns'
 import type { Routine } from '../../fixtures/routines'
 import { ActionButton } from '../common/actions'
@@ -13,8 +14,11 @@ export type RunsPanelProps = {
   /** Runs older than the newest 50 exist, so the end of the list offers them. */
   older: boolean
   routine: Routine
-  /** The person signed in created the routine. */
-  ownerViews: boolean
+  /**
+   * The person signed in, who reads the causes of their own failed runs as
+   * their owner. None where nobody can act, as in a suspended org.
+   */
+  viewer?: PersonKey
   /** The screens of the run workspaces that the mockups draw, by run. */
   links: Readonly<Record<string, string>>
   viewport: Viewport
@@ -39,9 +43,9 @@ function Runs(props: RunsPanelProps) {
       <RunList
         boxed={mobile}
         links={props.links}
-        ownerViews={props.ownerViews}
         routine={props.routine}
         runs={props.runs}
+        viewer={props.viewer}
       />
       {props.older ? (
         <div className={mobile ? styles.olderPhone : styles.older}>

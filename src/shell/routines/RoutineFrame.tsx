@@ -21,7 +21,12 @@ export interface RoutineTabs {
  */
 export function RoutineFrame(props: {
   org: OrgSummary
-  title: string
+  /**
+   * The name of the routine, or New routine, over the subtitle Routine. A
+   * page that shows no routine, such as while it loads or when the org no
+   * longer has it, has none, and its title is Routine alone.
+   */
+  title?: string
   actions?: ReactNode
   /** The Runs list: a column on desktop, and the Runs tab on a phone. */
   runs?: ReactNode
@@ -38,7 +43,7 @@ export function RoutineFrame(props: {
       back={{ label: 'Routines', to: routes.routines(org.id) }}
       backOnDesktop
       fill
-      subtitle="Routine"
+      subtitle={props.title === undefined ? undefined : 'Routine'}
       tabs={
         phone && tabs ? (
           <LinkTabs
@@ -58,7 +63,7 @@ export function RoutineFrame(props: {
           />
         ) : undefined
       }
-      title={props.title}
+      title={props.title ?? 'Routine'}
     >
       {phone ? (
         <div className={styles.phoneScroll}>

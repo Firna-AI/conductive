@@ -38,5 +38,23 @@ export const runWorkspace = defineScreen({
       props: { run: 'run-now', banner: 'no-commits' },
       useCasePaths: ['user-flows/create-routine'],
     },
+    {
+      slug: 'start-failed',
+      title: 'First start failed',
+      description:
+        'The workspace of the run of PR opened #486, whose first start failed. The line under the header still links to the routine and to #486. The bar shows the message that the app saved for the start, and Try again starts a new sandbox in the same workspace. The first message of the run waits in the queue, and the composer under the bar takes more messages. The files and the tools show the error. The row of the run in the Runs list opens this workspace.',
+      rationale:
+        'The user chose option D of decision 130 and option B of decision 512: a run whose first start fails keeps its workspace in the error state, as app/new-workspace/error shows for a workspace that a person created. The run stays failed after Try again, and its failed start counts toward the turn-off after three failed runs in a row, from decision 513 B.',
+      props: { run: 'start-failed', sandbox: 'error', conversation: 'queued' },
+    },
+    {
+      slug: 'turn-failed',
+      title: 'First turn failed',
+      description:
+        'The workspace of the run of PR pushed #486, whose first turn stopped with an error of the model provider. The error names the cause, and Try again retries the turn. The Runs list shows the run as failed with the same words, and its row opens this workspace.',
+      rationale:
+        'A failed first turn keeps its workspace, so Try again is in the chat, as for any turn. A failed turn counts as output for the state of a workspace, so the workspace shows Ready. The Runs list shows the run as failed, because the state of its workspace would hide the failure.',
+      props: { run: 'turn-failed', conversation: 'failed' },
+    },
   ],
 })

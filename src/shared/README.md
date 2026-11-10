@@ -170,6 +170,8 @@ The git credential payload is not defined yet.
   Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
   Run now takes a page request ID and returns its run after workspace admission.
   Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
+  Each run carries its own `agent` and `owner`, independent of later routine edits or owner moves.
+  An unknown historical agent or owner is null.
   Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
   A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
   Older runs and skips without an account omit it.

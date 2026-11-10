@@ -1,25 +1,30 @@
 /**
  * The run lists that the Runs list of a routine can show, newest first.
  * A list holds at most the newest 50 runs, and offers older runs at its
- * end when they exist.
+ * end when they exist. Each run has the agent and the owner of its
+ * routine, unless it names its own.
  */
 
-import type { PullRequestEvent } from './routines'
+import { failedRuns, turnedOffRuns } from './failedRunLists'
+import { lena, routines, type PullRequestEvent } from './routines'
 import {
   pr,
+  runsOf,
   workspaceAfterSuspension,
+  type ListedRun,
   type Run,
   type RunTrigger,
 } from './routineRuns'
 
 const weekly: RunTrigger = { kind: 'schedule', schedule: 'weekly' }
-const hourly: RunTrigger = { kind: 'schedule', schedule: 'hourly' }
+
+const review = routines['review-prs']
 
 /**
  * The newest runs of the routine that reviews pull requests, in each state
  * of a workspace.
  */
-const newestReviewRuns: readonly Run[] = [
+const newestReviewRuns: readonly ListedRun[] = [
   {
     key: 'pushed-485',
     trigger: pr('pushed', 485),
@@ -79,9 +84,9 @@ function daysAgo(days: number): string {
  * The older runs of the same routine: a push and an open for each pull
  * request, from #473 down, so that the list holds the newest 50 runs.
  */
-const olderReviewRuns: readonly Run[] = Array.from(
+const olderReviewRuns: readonly ListedRun[] = Array.from(
   { length: 42 },
-  (_, index): Run => {
+  (_, index): ListedRun => {
     const number = 473 - Math.floor(index / 2)
     const event: PullRequestEvent = index % 2 === 0 ? 'pushed' : 'opened'
     return {
@@ -93,7 +98,10 @@ const olderReviewRuns: readonly Run[] = Array.from(
   },
 )
 
-const reviewRuns: readonly Run[] = [...newestReviewRuns, ...olderReviewRuns]
+const reviewRuns: readonly Run[] = runsOf(review, [
+  ...newestReviewRuns,
+  ...olderReviewRuns,
+])
 
 /** A run of an org that the operator suspended a minute ago. */
 function afterSuspension(run: Run): Run {
@@ -138,44 +146,13 @@ export type RunListKey = (typeof runListKeys)[number]
 export const runLists: Readonly<Record<RunListKey, readonly Run[]>> = {
   /** The newest 50 runs of a pull request routine, which has older ones. */
   review: reviewRuns,
-  /** A failed run for each cause, and a run whose cloud computer failed. */
-  failed: [
-    {
-      key: 'opened-488',
-      trigger: pr('opened', 488),
-      state: 'failed',
-      cause: 'agent-login',
-      when: '2m',
-    },
-    {
-      key: 'pushed-487',
-      trigger: pr('pushed', 487),
-      state: 'failed',
-      cause: 'github-access',
-      when: '1h',
-    },
-    {
-      key: 'opened-487',
-      trigger: pr('opened', 487),
-      state: 'failed',
-      cause: 'start',
-      when: '3h',
-    },
-    {
-      key: 'pushed-486',
-      trigger: pr('pushed', 486),
-      state: 'error',
-      when: '5h',
-    },
-    {
-      key: 'opened-486',
-      trigger: pr('opened', 486),
-      state: 'ready',
-      when: '6h',
-    },
-  ],
+  /**
+   * A failed run for each cause. A failed start and a failed first turn
+   * keep their workspace, and a run that a check failed has none.
+   */
+  failed: failedRuns,
   /** Events of accounts outside Acme, which start no run. */
-  skipped: [
+  skipped: runsOf(review, [
     {
       key: 'opened-490',
       trigger: pr('opened', 490),
@@ -202,55 +179,43 @@ export const runLists: Readonly<Record<RunListKey, readonly Run[]>> = {
       state: 'ready',
       when: '2h',
     },
-  ],
-  weekly: [
+  ]),
+  weekly: runsOf(routines['dependency-updates'], [
     { key: 'weekly-3', trigger: weekly, state: 'ready', when: '3d' },
     { key: 'weekly-2', trigger: weekly, state: 'archived', when: '10d' },
     { key: 'weekly-1', trigger: weekly, state: 'archived', when: '17d' },
-  ],
-  'owner-left': [
-    { key: 'weekly-copy-2', trigger: weekly, state: 'stopped', when: '2w' },
-    { key: 'weekly-copy-1', trigger: weekly, state: 'archived', when: '3w' },
-  ],
+  ]),
+  /**
+   * The runs of the routine that moved to Cal when Lena left Acme. They ran
+   * as Lena, so they keep her as their owner.
+   */
+  'owner-left': runsOf(routines['copy-review'], [
+    {
+      key: 'weekly-copy-2',
+      trigger: weekly,
+      state: 'stopped',
+      owner: lena,
+      when: '2w',
+    },
+    {
+      key: 'weekly-copy-1',
+      trigger: weekly,
+      state: 'archived',
+      owner: lena,
+      when: '3w',
+    },
+  ]),
   none: [],
-  'run-now': [
+  'run-now': runsOf(routines['morning-summary'], [
     {
       key: 'run-now',
       trigger: { kind: 'run-now' },
       state: 'starting',
       when: 'now',
     },
-  ],
+  ]),
   /** The runs of the review routine after the suspension of Acme. */
   suspended: reviewRuns.map(afterSuspension),
-  /**
-   * An hourly routine whose last three runs failed, because the Claude
-   * login of its owner is not connected, so it turned off.
-   */
-  'turned-off': [
-    {
-      key: 'hourly-6',
-      trigger: hourly,
-      state: 'failed',
-      cause: 'agent-login',
-      when: '5m',
-    },
-    {
-      key: 'hourly-5',
-      trigger: hourly,
-      state: 'failed',
-      cause: 'agent-login',
-      when: '1h',
-    },
-    {
-      key: 'hourly-4',
-      trigger: hourly,
-      state: 'failed',
-      cause: 'agent-login',
-      when: '2h',
-    },
-    { key: 'hourly-3', trigger: hourly, state: 'ready', when: '3h' },
-    { key: 'hourly-2', trigger: hourly, state: 'archived', when: '4h' },
-    { key: 'hourly-1', trigger: hourly, state: 'archived', when: '5h' },
-  ],
+  /** The failed runs that turned an hourly routine off. */
+  'turned-off': turnedOffRuns,
 }

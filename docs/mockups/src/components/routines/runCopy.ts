@@ -1,11 +1,11 @@
 import { agents, type AgentKey } from '../../fixtures/agents'
+import type { PersonKey } from '../../fixtures/members'
 import type {
-  FailureCause,
+  FailedRun,
   RunState,
   RunTrigger,
   SkipReason,
 } from '../../fixtures/routineRuns'
-import type { Routine } from '../../fixtures/routines'
 import { paths } from '../../paths'
 import { activityPresentation } from '../workspaces/status'
 import { eventLabels, scheduleLabels } from './triggerCopy'
@@ -50,36 +50,38 @@ export type FailureCopy = {
 }
 
 /**
- * The cause of a failed run in words. The owner reads what to fix. Another
- * member reads whose login it is, because only the owner can fix it.
+ * The cause of a failed run in words, from the agent and the owner of the
+ * run itself. So a later change of the agent of its routine, or a move of
+ * the routine to another owner, changes no past row. The owner of the run
+ * reads what to fix, with the one action that fixes it. Another member
+ * reads whose login or access it is, because only that owner can fix it.
+ * A failed start and a failed first turn kept their workspace, which has
+ * Try again, so their rows offer no action. `viewer` is the person signed
+ * in, or none where nobody can act, as in a suspended org.
  */
-export function failureCopy(
-  cause: FailureCause,
-  routine: Routine,
-  ownerViews: boolean,
-): FailureCopy {
-  const agent = agents[routine.choice.agent].name
-  const whose = ownerViews ? 'Your' : `${routine.owner.name}'s`
-  switch (cause) {
+export function failureCopy(run: FailedRun, viewer?: PersonKey): FailureCopy {
+  const agent = agents[run.agent].name
+  const own = 'key' in run.owner && run.owner.key === viewer
+  const whose = own ? 'Your' : `${run.owner.name}'s`
+  switch (run.cause) {
     case 'agent-login':
       return {
         text: `${whose} ${agent} login isn't connected.`,
-        action: ownerViews
-          ? {
-              label: `Connect ${agent}`,
-              to: connectPaths[routine.choice.agent],
-            }
+        action: own
+          ? { label: `Connect ${agent}`, to: connectPaths[run.agent] }
           : undefined,
       }
     case 'github-access':
       return {
         text: `${whose} GitHub access expired.`,
-        action: ownerViews
+        action: own
           ? { label: 'Sign in with GitHub', to: paths.signIn }
           : undefined,
       }
     case 'start':
       return { text: "The cloud computer didn't start." }
+    case 'turn':
+      return { text: run.message }
   }
 }
 

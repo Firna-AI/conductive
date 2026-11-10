@@ -153,6 +153,37 @@ function sameChoice(a: AgentChoice, b: AgentChoice): boolean {
   return a.agent === b.agent && a.model === b.model && a.effort === b.effort
 }
 
+/** The equality of each field of a record. */
+type FieldEqualities<T> = {
+  readonly [K in keyof T]-?: (a: T[K], b: T[K]) => boolean
+}
+
+/** Whether the field `key` of two records differs. */
+function differs<T, K extends keyof T>(
+  fields: FieldEqualities<T>,
+  key: K,
+  a: T,
+  b: T,
+): boolean {
+  return !fields[key](a[key], b[key])
+}
+
+/**
+ * The equality of each field of a draft. A save sends the fields that
+ * differ from the saved routine, and the form follows a newer routine field
+ * by field with the same equality.
+ */
+export const draftFields: FieldEqualities<RoutineDraft> = {
+  name: Object.is,
+  active: Object.is,
+  repositoryId: Object.is,
+  sectionId: Object.is,
+  prompt: Object.is,
+  choice: sameChoice,
+  timeZone: Object.is,
+  triggers: sameTriggers,
+}
+
 export function sameDraft(a: RoutineDraft, b: RoutineDraft): boolean {
   return Object.keys(updateRequest(a, b)).length === 0
 }
@@ -171,19 +202,17 @@ export function updateRequest(
   saved: RoutineDraft,
   draft: RoutineDraft,
 ): UpdateRoutineRequest {
+  const changed = (key: keyof RoutineDraft) =>
+    differs(draftFields, key, draft, saved)
   const request: UpdateRoutineRequest = {}
-  if (draft.name !== saved.name) request.name = draft.name
-  if (draft.active !== saved.active) request.active = draft.active
-  if (draft.repositoryId !== saved.repositoryId) {
-    request.repositoryId = draft.repositoryId
-  }
-  if (draft.sectionId !== saved.sectionId) request.sectionId = draft.sectionId
-  if (draft.prompt !== saved.prompt) request.prompt = draft.prompt
-  if (!sameChoice(draft.choice, saved.choice)) request.choice = draft.choice
-  if (draft.timeZone !== saved.timeZone) request.timeZone = draft.timeZone
-  if (!sameTriggers(draft.triggers, saved.triggers)) {
-    request.triggers = [...draft.triggers]
-  }
+  if (changed('name')) request.name = draft.name
+  if (changed('active')) request.active = draft.active
+  if (changed('repositoryId')) request.repositoryId = draft.repositoryId
+  if (changed('sectionId')) request.sectionId = draft.sectionId
+  if (changed('prompt')) request.prompt = draft.prompt
+  if (changed('choice')) request.choice = draft.choice
+  if (changed('timeZone')) request.timeZone = draft.timeZone
+  if (changed('triggers')) request.triggers = [...draft.triggers]
   return request
 }
 

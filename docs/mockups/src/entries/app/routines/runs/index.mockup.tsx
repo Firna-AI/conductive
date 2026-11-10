@@ -24,9 +24,9 @@ export const runs = defineScreen({
       slug: 'failed',
       title: 'Failed runs',
       description:
-        "A failed run for each cause: the Claude login of the owner is not connected, the GitHub access of the owner expired, and the cloud computer did not start. Each says what failed, and the owner gets the one action that fixes it. A run whose cloud computer could not start a second time keeps its workspace, which shows Couldn't start.",
+        "A failed run for each cause, among runs that did not fail. A check before the create failed two runs, so they have no workspace: the Claude login of the owner is not connected, and the GitHub access of the owner expired. Each says what failed, and the owner gets the one action that fixes it. The run of PR opened #486 failed its first start, and the run of PR pushed #486 failed its first turn. Each kept its workspace, and its row opens it, with Try again. The failed start shows the cross of its workspace. The oldest failed run used Codex, before Cal moved the routine to Claude, so its row still names Codex and offers Connect Codex. The run of PR opened #485 finished its first turn, and later its workspace could not resume, so it shows Couldn't start.",
       rationale:
-        'The app checks the logins of the owner before each create, so a run fails before it spends a start, and the Runs list names the real cause. A failed first start removes its workspace, so the run keeps the saved cause. The routine stays on after a failure.',
+        'The app checks the logins of the owner before each create, so a run fails before it spends a start, and the Runs list names the real cause. A failed first start and a failed first turn keep their workspace, from option D of decision 130 and option B of decision 512, and the run stays failed after Try again. The words come from the cause that the app stored, and from the agent and the owner of the run itself, so a later change of the routine changes no past row. A failed first turn shows as failed, because the state of its workspace would hide the failure. A routine turns off only after three runs in a row fail, from decision 513 B. The run of PR opened #487 did not fail, so this routine stays on.',
       props: { runs: 'failed' },
     },
     {

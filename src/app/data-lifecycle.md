@@ -18,21 +18,36 @@ of the data that the screens read and write.
   then the changes that the server confirmed after that read started, such
   as events, then the waiting writes in the order that they went out. A
   read that started before a change keeps the change. A failed read keeps
-  the value that shows.
+  the value that shows. A part can name the errors that prove that its
+  value no longer exists, as the routine page does for `routine_not_found`.
+  Such a read shows its error also over the value.
 - The routine page reads its routine when it mounts and at each return to
-  the page. A save sends only the fields that the owner changed, so it
-  keeps a turn-off that the app made after the read. Its answer is the
-  whole routine, and the Routines list takes it at once, with the last run
-  that the list has. A delete takes the routine out of the list, and a
-  later visit of its address reads it again.
-- The Runs list of the routine page reads the newest 50 runs when it
-  shows, every 10 seconds while it shows, and at each return to the page.
-  Show older runs reads the page after the oldest run that the list shows.
-  From then on, the list keeps each run that it showed, and each read of
-  the newest runs updates them, so a new run that pushes runs out of the
-  newest page leaves no gap. Run now shows its run first at once, and the
-  Routines list takes it as the last run. A later read of the runs brings
-  its next state.
+  the page. Each field that the owner did not change takes the field of the
+  newer routine, and an edited field keeps its edit. A save sends only the
+  fields that the owner changed, so it keeps a turn-off that the app made
+  during the edit. Its answer is the whole routine, and the Routines list
+  takes it at once, with the last run that the list has. A delete takes
+  the routine out of the list, and a later visit of its address reads it
+  again.
+- A read of the routine that gets `routine_not_found` shows that the
+  routine is not available, also in place of a routine that shows. Any
+  other failed read keeps the routine. The other requests of the page go
+  through one client of the routine: the reads of the runs, Show older
+  runs, Save, Turn off, Run now, and Delete. When one of them gets
+  `routine_not_found`, the routine reads again, after the read that runs,
+  if any, and that read decides. A write can get that refusal also while
+  the routine exists, so the refusal alone decides nothing.
+- The Runs list of the routine page shows a number of pages of 50 runs:
+  one at first, and one more after each Show older runs. It reads them
+  when it shows, every 10 seconds while it shows, and at each return to
+  the page. Each read gets that many pages from the newest run, one after
+  the other, and replaces the whole list. So the list has no gap, and each
+  row shows the state of the last read. When new runs arrive, the oldest
+  rows move behind Show older runs. Show older runs reads the page after
+  the oldest run that the list shows, and adds it at once. A read that
+  started before keeps that page only while its own pages end at the same
+  run. Run now shows its run first at once, and the Routines list takes it
+  as the last run. A later read of the runs brings its next state.
 - The chat reads the routine of a run workspace, with the pull request of
   its run, with the saved view, at each load of the chat. The header shows
   them until the next load.

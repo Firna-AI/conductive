@@ -29,6 +29,12 @@ Pass that ID as `before` to read the next page.
 The cursor belongs to the same org and routine.
 Equal creation times sort by ID descending.
 The run state comes from its stored outcome, its workspace, and its creation attempt.
+Each run returns its recorded agent and its recorded owner as a person.
+The starter saves the complete agent choice once, before the login check.
+The check and workspace create use that same choice, including its model and effort.
+Runs without a saved choice return null for the agent.
+Runs without a saved owner return null for the owner.
+Neither value falls back to the routine's current settings.
 An accepted failed first start keeps its workspace link and its failure cause.
 Try again in that workspace replaces its failed sandbox.
 Attempt failures retain their cause for recovery if the run outcome write stops.
@@ -45,11 +51,16 @@ View writes cannot change these saved run facts.
 `recordRoutineRun` stores a unique run key and a stable first-message ID.
 It checks the current owner membership, the owner and org suspension, and org deletion inside SQL.
 Scheduled and pull request runs also need an active routine.
-`startRoutineRun` checks access again and skips a queued run that cannot start.
+`startRoutineRun` checks access again before a new create and skips a queued run that cannot start.
 It checks the owner's agent login and fresh GitHub access before the create.
 The first session uses the owner's own login, independent of its share setting.
 It calls the existing workspace create and first-message admission paths.
 It does not wait for cloud computer startup.
+A repeat with a creation attempt uses its original sender and bypasses the routine access and login checks.
+The create joins the existing workspace through the stored first-message ID.
+A failed accept or workspace-link write leaves the run queued and logs only a fixed warning.
+Only an error without a creation attempt, or a failed creation attempt, records a start failure.
+The workspace's start and first-turn hooks record the actual outcome after admission.
 The minute schedule scan calls this starter.
 Signed pull request webhooks call the same starter in the request background.
 The dispatch stores a queued run before the webhook reply.
@@ -79,7 +90,7 @@ The scan selects the oldest due times first, with the routine ID as a tie-breake
 It processes independent due routines in parallel.
 The scan also retries at most 50 queued runs older than one minute, oldest first.
 It reuses their stored run and first-message IDs.
-The starter skips a queued run whose current owner, org, or routine cannot start it.
+The starter skips a queued run without a creation attempt whose current owner, org, or routine cannot start it.
 One failed claim or retry logs a safe warning and leaves the other scan items available.
 
 Author-filter requests hold logins.
@@ -101,6 +112,7 @@ A matching event shares one delivery key across duplicate triggers.
 Own run branches and owner events during a queued, starting, working, or input run do not create another run.
 The insert checks both loop guards atomically, also across overlapping deliveries.
 The guard finds an admitted workspace through its stable first-message ID before the run stores its workspace link.
+The workspace's routine line uses the same identity while the link is pending.
 The saved trigger facts supply the first message and remain available in run history.
 
 ## Development
@@ -131,6 +143,7 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 - [run-starter.ts](run-starter.ts) starts or skips a stored queued run.
 - [run-record-data.ts](run-record-data.ts) stores run keys, message IDs, owner snapshots, and workspace links.
 - [run-admission-data.ts](run-admission-data.ts) checks current access and finds existing creation attempts.
+- [run-choice-data.ts](run-choice-data.ts) saves the first agent choice atomically for concurrent starters.
 - [run-text.ts](run-text.ts) formats the prompt and trigger facts without pull request titles or bodies.
 - [run-outcome-data.ts](run-outcome-data.ts) records terminal outcomes and updates the failure count once.
 - [run-list-data.ts](run-list-data.ts) reads the latest 50 runs and older pages.

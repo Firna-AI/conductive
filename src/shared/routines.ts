@@ -1,4 +1,4 @@
-import type { AgentChoice } from './agents'
+import type { Agent, AgentChoice } from './agents'
 import { orgPath, type Timestamp } from './api'
 import type { MessageSender } from './messages'
 import type { WorkspaceState } from './workspaces'
@@ -115,6 +115,8 @@ export interface RoutineRun {
   id: string
   routineId: string
   orgId: string
+  agent: Agent | null
+  owner: MessageSender | null
   trigger: RoutineRunTrigger
   state: WorkspaceState | 'queued' | 'failed' | 'skipped'
   workspaceId: string | null

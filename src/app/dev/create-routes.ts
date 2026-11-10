@@ -7,11 +7,11 @@ import {
 import { maybeText, nested, record, text, texts } from '../api/parse'
 import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
-import { requireOrg, type DevBackend } from './backend'
+import { requireOrg, requireWorkspace, type DevBackend } from './backend'
 import { ID, json, requiredText, RouteError, type Route } from './router'
 import { routes } from '../router'
 import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
-import { createPlan, runStart } from './start-steps'
+import { createPlan, failFirstStart, runStart } from './start-steps'
 import { slugify, type OrgState } from './state'
 
 /**
@@ -58,6 +58,11 @@ export interface WorkspaceRequest {
   /** The section, or null for General. */
   sectionId: string | null
   first: SendMessageRequest
+  /**
+   * A first start that fails keeps its workspace in the error state, as
+   * the Worker keeps the workspace of a routine run.
+   */
+  keepFailedStart?: boolean
 }
 
 /**
@@ -66,7 +71,8 @@ export interface WorkspaceRequest {
  * writes no title, as local development has no title model. Its branch is
  * the login of the user, a city, and four random characters. A first message
  * that contains `fail` stands for a cloud computer that did not start: the
- * fake makes nothing, and the app keeps the draft.
+ * fake makes nothing, and the app keeps the draft. With `keepFailedStart`,
+ * the workspace stays in the error state instead.
  */
 export function startWorkspace(
   backend: DevBackend,
@@ -95,7 +101,8 @@ export function startWorkspace(
   const section =
     org.sections.find((item) => item.id === request.sectionId) ??
     defaultSection(org.sections)
-  if (first.text.includes('fail')) {
+  const fails = first.text.includes('fail')
+  if (fails && !request.keepFailedStart) {
     throw new RouteError(
       502,
       'start_failed',
@@ -132,13 +139,15 @@ export function startWorkspace(
   org.workspaces = [workspace, ...org.workspaces]
   org.created.add(id)
   const plan = createPlan(org.org.name, repository, branch)
-  const start = runStart(backend, org, id, 'create', plan)
+  const begun = fails
+    ? failFirstStart(backend, org, id, plan)
+    : { start: runStart(backend, org, id, 'create', plan), error: null }
   const sessionId = backend.newId()
   const attachments = first.attachmentIds.flatMap(
     (attachmentId) => backend.state.attachments.get(attachmentId) ?? [],
   )
   return {
-    workspace,
+    workspace: requireWorkspace(org, id),
     sessionId,
     firstMessage: {
       id: first.id,
@@ -150,8 +159,7 @@ export function startWorkspace(
       createdAt: at,
       state: 'queued',
     },
-    start,
-    error: null,
+    ...begun,
   }
 }
 

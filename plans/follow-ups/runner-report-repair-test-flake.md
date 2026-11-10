@@ -5,7 +5,7 @@
 - **Added:** 2026-11-10, during final merge verification on branch `conductor/boat-native-remote-workspaces-merge-main-73`.
 - **Source:** Implementation.
 - **Category:** Test.
-- **Location:** `worker/chat/runner-repairs.test.ts:23`, `worker/chat/native-transport.test-support.ts`, `worker/test-support/native-peers.ts`, and `worker/chat/runner-channel.ts`.
+- **Location:** `worker/chat/runner-repairs.test.ts:23` and `:108`, `worker/chat/native-transport.test-support.ts`, `worker/test-support/native-peers.ts`, and `worker/chat/runner-channel.ts`.
 - **Reason:** The test and report-repair behavior are unchanged from primary, and no assertion detail identifies a correction for this merge.
 
 - **Terms:**
@@ -20,6 +20,15 @@
    × requests all four workspace reports without a login, coalesces losses, and resets only on complete reports 621ms
 ```
 
+- **Second known failed case:** On 2026-11-10, the complete gate of branch `calummoore/routines-feature-brainstorm` failed in the companion case of the same file, with 1 failed and 2068 passed tests in 1204 seconds of tests. The branch does not change this test file. Its changes to `worker/chat/runner-refusal.ts` and `worker/chat/runner-delivery.ts` run only when a refusal or a delivery failure finishes a turn, and this case keeps its turn active.
+
+```text
+ FAIL  worker/chat/runner-repairs.test.ts > delivers repair commands during an active turn and ignores nonreplaceable refusals
+AssertionError: expected [] to deeply equal [ 'files.snapshot' ]
+ ❯ worker/chat/runner-repairs.test.ts:108:66
+```
+
+  Three isolated reruns of the file passed both cases each time (6/6). So both cases of the file fail only under full-suite load, and no repair command shows by the time `fixture.drain()` returns.
 - **Incomplete gate:** The gate was stopped with SIGINT and exited 130 after the failure marker. It printed no assertion body. This run is incomplete and is not a pass.
 - **Isolated result:** One reproduction and ten fresh repetitions each ran both tests unchanged. All eleven commands exited 0. The result was 22/22 passing cases, zero failures, and zero skips. The marked case passed 11 times. Its companion passed 11 times. No source, assertion, timeout, retry, or runner setting changed between these runs.
 - **Source comparison:** The failing test is byte-identical to primary `27cebd4c58f30241f7682eec1d95bb022b824c23`. Its report helper changes only an event type import. Report-repair production behavior is unchanged. Relevant event-envelope import changes are type-only.

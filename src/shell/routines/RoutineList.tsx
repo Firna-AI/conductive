@@ -15,6 +15,7 @@ import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import { useViewport } from '../ui/viewport'
 import { runStateLabel, triggersText } from './routine-copy'
+import { runMark } from './run-copy'
 
 /** The state of the last run and its time, or no run yet. */
 function LastRun(props: { routine: ListedRoutine; now: number }) {
@@ -24,7 +25,7 @@ function LastRun(props: { routine: ListedRoutine; now: number }) {
   const when = formatAgo(props.now, run.createdAt)
   return (
     <span className={styles.lastRun} title={`Last run: ${label}, ${when}`}>
-      <StatusGlyph status={run.state} />
+      <StatusGlyph status={runMark(run)} />
       <span className={ui.hidden}>{`Last run: ${label}, `}</span>
       <span className={styles.when}>{when}</span>
     </span>

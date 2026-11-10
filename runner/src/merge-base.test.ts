@@ -54,3 +54,42 @@ it('keeps newer base commits out of Changes, file marks, and diffs', async () =>
   await h.git('branch', '-D', 'review-source')
   expect(await repository.changes('review-source')).toEqual(expected)
 })
+
+it('compares from the fetched remote base when the local base branch is behind', async () => {
+  const h = await repositoryFixture()
+  const repository = new Repository(h.root)
+  await h.git('branch', 'review-source')
+  await h.write('README.md', 'first\nremote base work\n')
+  await h.write('base-only.txt', 'remote base file\n')
+  await h.git('add', '.')
+  await h.git('commit', '-m', 'remote base work')
+  await h.git('update-ref', 'refs/remotes/origin/review-source', 'HEAD')
+  await h.write('README.md', 'first\nremote base work\nrun work\n')
+  await h.git('add', 'README.md')
+  await h.git('commit', '-m', 'run work')
+  const expected = {
+    baseBranch: 'review-source',
+    files: [
+      {
+        path: 'README.md',
+        change: 'modified',
+        added: 1,
+        removed: 0,
+        uncommitted: false,
+      },
+    ],
+    summary: { files: 1, added: 1, removed: 0 },
+  }
+  expect(await repository.changes('review-source')).toEqual(expected)
+  const snapshot = await repository.snapshot('review-source')
+  expect(snapshot.changes).toEqual(expected)
+  expect(
+    snapshot.entries.find((entry) => entry.path === 'base-only.txt')?.change,
+  ).toBeNull()
+  expect(await repository.diff('README.md', 'review-source')).toMatchObject({
+    baseBranch: 'review-source',
+    oldContent: 'first\nremote base work\n',
+    newContent: 'first\nremote base work\nrun work\n',
+    patch: expect.stringContaining('+run work\n'),
+  })
+})

@@ -8,14 +8,19 @@ import { mountScreen } from '../test-mount'
 import { startedApp } from '../test-render'
 import type { Viewport } from '../ui/viewport'
 
-/** The app at an address of an org, with the address bar that a test reads. */
+/**
+ * The app at an address of an org, with the address bar that a test reads.
+ * `services` replaces services of the app, such as the timer or the focus
+ * of the page.
+ */
 export async function openApp(
   server: FakeApiServer,
   address: string,
   viewport: Viewport = 'desktop',
+  services: Parameters<typeof startedApp>[1] = {},
 ) {
   holdAnimationFrames()
-  const app = await startedApp(server)
+  const app = await startedApp(server, services)
   const navigation = memoryNavigation(address)
   const view = mountScreen(
     app,

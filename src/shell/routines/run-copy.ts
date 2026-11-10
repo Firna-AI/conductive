@@ -4,12 +4,9 @@ import {
 } from '../../../docs/mockups/src/components/routines/triggerCopy'
 import { personName } from '../../app/people'
 import { routes } from '../../app/router'
-import type {
-  Routine,
-  RoutineRun,
-  RoutineRunTrigger,
-} from '../../shared/routines'
-import { acceptedTermsSignInPath } from '../../shared/terms'
+import { API_PATHS } from '../../shared/api'
+import type { MessageSender } from '../../shared/messages'
+import type { RoutineRun, RoutineRunTrigger } from '../../shared/routines'
 import { agentNames } from '../account/labels'
 
 /** What started a run, such as "PR opened", "Daily", or "Run now". */
@@ -22,6 +19,23 @@ export function runTriggerLabel(trigger: RoutineRunTrigger): string {
     case 'pull-request':
       return eventLabels[trigger.event]
   }
+}
+
+/** The code that a run stores when the cloud computer of its workspace did not start. */
+const startFailed = 'workspace_start_failed'
+
+/**
+ * The state whose mark a run shows. A failed run keeps the mark of its
+ * failure, also after Try again in its workspace, because the run keeps its
+ * failed outcome. A run whose first start failed shows the cross of its
+ * workspace in the error state. A failed check and a failed first turn show
+ * the slash of a failed run: after a failed turn, the mark of the workspace
+ * would show a finished turn.
+ */
+export function runMark(run: RoutineRun): RoutineRun['state'] {
+  return run.state === 'failed' && run.error?.code === startFailed
+    ? 'error'
+    : run.state
 }
 
 /**
@@ -40,47 +54,75 @@ export interface FailureCopy {
 }
 
 /**
- * The cause of a failed run in words. The owner reads what to fix, with
- * the action that fixes it. Another member reads whose login or access it
- * is, because only the owner can fix it. A start that failed removed its
- * workspace. A first turn that failed keeps its workspace, so its cause is
- * the error of the turn.
+ * The words that the Worker stored with the failure of a run, with no
+ * action. A run without them failed in its first turn.
+ */
+function storedCopy(run: RoutineRun): FailureCopy {
+  return { text: run.error?.message || 'The first turn failed.', action: null }
+}
+
+/** "Your" for the owner of the run, and the name of the owner for anyone else. */
+function whose(owner: MessageSender, own: boolean): string {
+  return own ? 'Your' : `${personName(owner)}'s`
+}
+
+/**
+ * The cause of a failed run in words, from the run alone: its stored error,
+ * its agent, and its owner. So a later change of the agent of its routine,
+ * or a move of the routine to another owner, changes no past row. The
+ * owner of the run reads what to fix, with the one action that fixes it.
+ * Another member reads whose login or access it is, because only that
+ * owner can fix it. `viewer` is the ID of the person signed in, or null
+ * where nobody can act, as in a suspended org.
+ *
+ * - A check of the agent login or of the GitHub access failed the run
+ *   before it had a workspace.
+ * - A first start that failed kept its workspace, whose Try again starts
+ *   it again. Its words come from its stored code.
+ * - A first turn that failed kept its workspace too, so its cause is the
+ *   stored error of the turn. A first turn whose sender lost access, such
+ *   as after the owner left the org, stores the code of a missing login
+ *   with its own words.
+ * - A run from before runs kept their agent and owner shows the stored
+ *   words of a failed check, with no action.
  */
 export function failureCopy(
   run: RoutineRun,
-  routine: Routine,
-  ownerViews: boolean,
+  viewer: string | null,
 ): FailureCopy {
-  const agent = agentNames[routine.choice.agent]
-  const whose = ownerViews ? 'Your' : `${personName(routine.owner)}'s`
-  switch (run.error?.code) {
-    case 'agent_login_required':
-      return {
-        text: `${whose} ${agent} login isn't connected.`,
-        action: ownerViews
-          ? {
-              label: `Connect ${agent}`,
-              to: routes.account(routine.choice.agent),
-              leavesApp: false,
-            }
-          : null,
-      }
-    case 'github_reconnect_required':
-      return {
-        text: `${whose} GitHub access expired.`,
-        action: ownerViews
-          ? {
-              label: 'Sign in with GitHub',
-              to: acceptedTermsSignInPath(),
-              leavesApp: true,
-            }
-          : null,
-      }
-  }
-  if (run.workspaceId === null) {
+  const code = run.error?.code
+  if (code === startFailed) {
     return { text: "The cloud computer didn't start.", action: null }
   }
-  return { text: run.error?.message || 'The first turn failed.', action: null }
+  const { agent, owner } = run
+  if (agent === null || owner === null) return storedCopy(run)
+  const own = owner.id === viewer
+  if (code === 'agent_login_required' && run.workspaceId === null) {
+    const name = agentNames[agent]
+    return {
+      text: `${whose(owner, own)} ${name} login isn't connected.`,
+      action: own
+        ? {
+            label: `Connect ${name}`,
+            to: routes.account(agent),
+            leavesApp: false,
+          }
+        : null,
+    }
+  }
+  if (code === 'github_reconnect_required') {
+    return {
+      text: `${whose(owner, own)} GitHub access expired.`,
+      action: own
+        ? {
+            label: 'Sign in with GitHub',
+            to: API_PATHS.githubSignIn,
+            leavesApp: true,
+          }
+        : null,
+    }
+  }
+  return storedCopy(run)
 }
 
 /** The verb of the account that caused each pull request event. */

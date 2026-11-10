@@ -147,6 +147,12 @@ what the palette does.
   changes, a draft that the user did not change takes the new value, and
   an edited draft stays. A draft that equals the one that went out for a
   save takes the value of the answer. A failed save keeps the draft.
+- A form with several fields, such as the routine page, applies these
+  rules to each field on its own (`eachField`). A field that the user did
+  not change takes the field of the newer saved value, and an edited field
+  keeps its edit. So a save sends only the fields that the user changed,
+  and a field that changed elsewhere, such as Active after a turn-off,
+  shows its new value.
 - Save keeps the focus when a save leaves nothing to save
   (`ActionButton` with `keepFocus`). A browser takes the focus from a
   natively disabled button, so Save stays a native button while it has

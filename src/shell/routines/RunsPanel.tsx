@@ -7,7 +7,6 @@ import styles from '../../../docs/mockups/src/components/routines/RunsPanel.modu
 import type { ShownRuns } from '../../app/routine-runs'
 import type { Loadable } from '../../app/store'
 import { useNow } from '../../app/time'
-import type { Routine } from '../../shared/routines'
 import { ActionButton } from '../ui/actions'
 import { LoadFailure } from '../ui/LoadFailure'
 import ui from '../ui/ui.module.css'
@@ -26,9 +25,8 @@ function NoRuns() {
   )
 }
 
-/** The saved routine of the runs, and what the list needs to draw them. */
+/** The runs of a saved routine, and what the list needs to draw them. */
 export interface RunsSource {
-  routine: Routine
   runs: Loadable<ShownRuns>
   loadOlder: () => Promise<void>
   retry: () => Promise<void>
@@ -36,7 +34,7 @@ export interface RunsSource {
 
 function Content(props: {
   source: RunsSource | null
-  ownerViews: boolean
+  viewer: string | null
   orgName: string
   phone: boolean
 }) {
@@ -87,9 +85,8 @@ function Content(props: {
         boxed={phone}
         now={now}
         orgName={props.orgName}
-        ownerViews={props.ownerViews}
-        routine={source.routine}
         runs={runs.value.runs}
+        viewer={props.viewer}
       />
       {runs.value.more ? (
         <div className={phone ? styles.olderPhone : styles.older}>
@@ -110,7 +107,12 @@ function Content(props: {
 export function RunsPanel(props: {
   /** The runs of a saved routine, or null for a new routine. */
   source: RunsSource | null
-  ownerViews: boolean
+  /**
+   * The ID of the person signed in, who reads the causes of their own
+   * failed runs as their owner. Null where nobody can act, as in a
+   * suspended org.
+   */
+  viewer: string | null
   orgName: string
 }): ReactNode {
   const heading = useId()
@@ -118,9 +120,9 @@ export function RunsPanel(props: {
   const content = (
     <Content
       orgName={props.orgName}
-      ownerViews={props.ownerViews}
       phone={phone}
       source={props.source}
+      viewer={props.viewer}
     />
   )
   if (phone) {

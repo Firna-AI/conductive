@@ -1,7 +1,15 @@
+import type { AgentChoice } from '../../src/shared/agents'
 import type { RoutineRunTrigger } from '../../src/shared/routines'
+import { choice } from '../chat/inputs'
 import { isRecord } from '../http'
 import { invalidRoutineInput } from './errors'
 import { parseRoutineTriggers } from './triggers'
+
+export function readRunChoice(json: string | null): AgentChoice | null {
+  if (json === null) return null
+  const value: unknown = JSON.parse(json)
+  return choice(value)
+}
 
 export function readRunTrigger(json: string): RoutineRunTrigger {
   const value: unknown = JSON.parse(json)

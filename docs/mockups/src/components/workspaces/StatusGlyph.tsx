@@ -26,13 +26,20 @@ const shapes: Readonly<Record<RunState, readonly number[]>> = {
   starting: [3, 4, 5],
   /** Two columns, like a pause sign. */
   stopped: [0, 3, 6, 2, 5, 8],
-  /** A cross. */
+  /**
+   * A cross: the sandbox could not start. A routine run whose first start
+   * failed keeps its workspace, so it shows this mark too.
+   */
   error: [0, 2, 4, 6, 8],
   /** No cell lit: nothing runs, and nothing can start. */
   archived: [],
   /** An hourglass: a routine run waits for its workspace. */
   queued: [0, 1, 2, 4, 6, 7, 8],
-  /** A slash: a routine run failed before it had a workspace. */
+  /**
+   * A slash: a check failed a routine run before it had a workspace, or the
+   * first turn of the run failed. The mark of that workspace would show the
+   * turn as finished.
+   */
   failed: [2, 4, 6],
   /** A chevron that points on: a rule skipped a routine run. */
   skipped: [0, 4, 6],

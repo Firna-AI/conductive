@@ -1,5 +1,9 @@
 import type { Repository } from '../../shared/org-settings'
-import type { StartStep, WorkspaceStart } from '../../shared/workspaces'
+import type {
+  StartStep,
+  WorkspaceResponse,
+  WorkspaceStart,
+} from '../../shared/workspaces'
 import { changeWorkspace, requireWorkspace, type DevBackend } from './backend'
 import type { OrgState } from './state'
 
@@ -103,6 +107,42 @@ export function runStart(
   }
   later(org, workspaceId, () => complete(0))
   return start
+}
+
+/** The error of a first start that failed, as the Worker saves it. */
+const startFailure = {
+  code: 'workspace_start_failed',
+  message: 'The cloud computer could not start. Try again.',
+  log: null,
+}
+
+/**
+ * The first start of a new workspace fails at its first step, as a cloud
+ * computer that did not start: the workspace shows the error state with
+ * the saved error, and Try again starts it again.
+ */
+export function failFirstStart(
+  backend: DevBackend,
+  org: OrgState,
+  workspaceId: string,
+  plan: readonly PlannedStep[],
+): Pick<WorkspaceResponse, 'start' | 'error'> {
+  cancelStart(org, workspaceId)
+  const at = backend.now()
+  const failed: StartStep = {
+    ...plan[0],
+    state: 'failed',
+    startedAt: at,
+    completedAt: at,
+  }
+  const record = {
+    start: { kind: 'create', startedAt: at, steps: [failed] },
+    error: startFailure,
+  } satisfies Pick<WorkspaceResponse, 'start' | 'error'>
+  org.starts.set(workspaceId, record)
+  const current = requireWorkspace(org, workspaceId)
+  changeWorkspace(backend, org, { ...current, state: 'error', updatedAt: at })
+  return record
 }
 
 /**

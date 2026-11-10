@@ -10,10 +10,15 @@ import {
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 
-/** The routine page that the header of each run workspace links to. */
+/**
+ * The routine page that the header of each run workspace links to. The
+ * failed runs link to the page whose Runs list shows them.
+ */
 const routinePaths: Readonly<Record<RunWorkspaceKey, string>> = {
   'pull-request': paths.routine,
   'run-now': paths.routineRunNow,
+  'start-failed': paths.routineFailedRuns,
+  'turn-failed': paths.routineFailedRuns,
 }
 
 /** The open workspace, its chat, and the routine of its run, if any. */

@@ -4,29 +4,31 @@ import styles from '../../../docs/mockups/src/components/routines/RunList.module
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import { routes } from '../../app/router'
 import { formatAgo } from '../../app/time'
-import type { Routine, RoutineRun } from '../../shared/routines'
+import type { RoutineRun } from '../../shared/routines'
 import { AppLink } from '../ui/AppLink'
 import { ExternalLink } from '../ui/links'
 import { runStateLabel } from './routine-copy'
-import { failureCopy, runTriggerLabel, skipCopy } from './run-copy'
+import { failureCopy, runMark, runTriggerLabel, skipCopy } from './run-copy'
 
 interface RowProps {
   run: RoutineRun
-  routine: Routine
-  /** The person signed in owns the routine, so a failure says what to fix. */
-  ownerViews: boolean
+  /**
+   * The ID of the person signed in. The owner of a failed run reads what to
+   * fix. Null where nobody can act, as in a suspended org.
+   */
+  viewer: string | null
   orgName: string
   now: number
 }
 
-/** Why a run has no workspace or failed: its cause, or its skip reason. */
+/** Why a run failed or was skipped: its cause, or its skip reason. */
 function Reason(props: RowProps) {
   const { run } = props
   if (run.state === 'skipped') {
     return <span className={styles.reason}>{skipCopy(run, props.orgName)}</span>
   }
   if (run.state !== 'failed') return null
-  const copy = failureCopy(run, props.routine, props.ownerViews)
+  const copy = failureCopy(run, props.viewer)
   const { action } = copy
   return (
     <span className={styles.reason}>
@@ -50,9 +52,10 @@ function Reason(props: RowProps) {
 }
 
 /**
- * One run: its state, its trigger, its time, and, for a pull request, a
- * link to the pull request on GitHub. A run with a workspace opens it from
- * the whole row.
+ * One run: its mark and state, its trigger, its time, and, for a pull
+ * request, a link to the pull request on GitHub. A run with a workspace
+ * opens it from the whole row, also a run whose first start or first turn
+ * failed.
  */
 function RunRow(props: RowProps) {
   const { run } = props
@@ -61,12 +64,12 @@ function RunRow(props: RowProps) {
   const title = pullRequest ? `${trigger} #${pullRequest.number}` : trigger
   const failed = run.state === 'failed' || run.state === 'error'
   const to = run.workspaceId
-    ? routes.workspace(props.routine.orgId, run.workspaceId)
+    ? routes.workspace(run.orgId, run.workspaceId)
     : undefined
   return (
     <li className={classes(styles.row, to !== undefined && styles.linked)}>
       <span className={styles.glyph}>
-        <StatusGlyph status={run.state} />
+        <StatusGlyph status={runMark(run)} />
       </span>
       <span className={styles.text}>
         <span className={styles.top}>
@@ -110,8 +113,7 @@ function RunRow(props: RowProps) {
  */
 export function RunList(props: {
   runs: readonly RoutineRun[]
-  routine: Routine
-  ownerViews: boolean
+  viewer: string | null
   orgName: string
   now: number
   boxed: boolean
@@ -126,9 +128,8 @@ export function RunList(props: {
           key={run.id}
           now={props.now}
           orgName={props.orgName}
-          ownerViews={props.ownerViews}
-          routine={props.routine}
           run={run}
+          viewer={props.viewer}
         />
       ))}
     </ul>

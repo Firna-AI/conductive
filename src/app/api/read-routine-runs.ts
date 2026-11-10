@@ -1,3 +1,4 @@
+import type { Agent } from '../../shared/agents'
 import type {
   RoutinePullRequestEvent,
   RoutineRun,
@@ -15,6 +16,7 @@ import {
   record,
   text,
 } from './parse'
+import { AGENTS, readSender } from './read-core'
 import { WORKSPACE_STATES } from './read-workspaces'
 
 export const SCHEDULES = [
@@ -65,12 +67,22 @@ function readRunTrigger(value: unknown): RoutineRunTrigger {
   }
 }
 
+function readAgent(value: unknown): Agent {
+  return choice({ agent: value }, 'agent', AGENTS)
+}
+
+/**
+ * A run with the agent and the owner that it ran with. A run from before
+ * the Worker kept them has null in their place.
+ */
 export function readRun(value: unknown): RoutineRun {
   const run = record(value, 'run')
   return {
     id: text(run, 'id'),
     routineId: text(run, 'routineId'),
     orgId: text(run, 'orgId'),
+    agent: maybeNested(run, 'agent', readAgent),
+    owner: maybeNested(run, 'owner', readSender),
     trigger: nested(run, 'trigger', readRunTrigger),
     state: choice(run, 'state', RUN_STATES),
     workspaceId: maybeText(run, 'workspaceId'),

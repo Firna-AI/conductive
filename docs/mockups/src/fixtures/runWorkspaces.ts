@@ -1,61 +1,41 @@
 /**
- * The workspaces of routine runs. A run workspace is a normal workspace in
- * the section of its routine (decision 504), on a new branch of the owner.
- * The base branch of a pull request run is the head branch of its pull
+ * The workspaces of routine runs that the workspace screen can show. The
+ * base branch of a pull request run is the head branch of its pull
  * request, so its Changes list and its pull request bar show only its own
- * work (decision 507 G). Its first message is the prompt, a separator
- * line, and the facts of the trigger. The message copies no title or body
- * of a pull request.
+ * work (decision 507 G).
  */
 
 import { defaultChoice } from './agents'
-import type { ChatItem } from './conversations'
+import { startFailedRun, turnFailedRun } from './failedRunWorkspaces'
 import { changedFiles } from './files'
 import { people } from './members'
 import { pullRequest } from './pullRequests'
 import { repositories } from './repositories'
-import { routines, type Routine } from './routines'
-import type { StartingLog } from './starting'
+import { routines } from './routines'
+import {
+  cloudStart,
+  pullRequestFacts,
+  runMessage,
+  type RunWorkspace,
+} from './runWorkspaceParts'
 import {
   checkoutAutocomplete,
   workspaceLink,
   type Workspace,
 } from './workspaces'
 
-/** The routine of a run, and the pull request of a pull request run. */
-type RunOrigin = {
-  routine: string
-  pullRequest?: { number: number; url: string }
-}
-
-export type RunWorkspace = {
-  workspace: Workspace
-  origin: RunOrigin
-  /** The first message, which waits while the sandbox starts. */
-  queued: readonly ChatItem[]
-  /** The first message and the first turn of the agent. */
-  firstTurn: readonly ChatItem[]
-  starting: StartingLog
-}
-
-/** The run workspaces that the workspace screen can show. */
-export const runWorkspaceKeys = ['pull-request', 'run-now'] as const
+/**
+ * The run workspaces that the workspace screen can show: a pull request
+ * run, the run of Run now, and two failed runs that kept their workspaces.
+ */
+export const runWorkspaceKeys = [
+  'pull-request',
+  'run-now',
+  'start-failed',
+  'turn-failed',
+] as const
 
 export type RunWorkspaceKey = (typeof runWorkspaceKeys)[number]
-
-/** The line between the prompt and the facts of the trigger. */
-const separator = '---'
-
-/** The first message of a run: the prompt, a separator, and the facts. */
-function runMessage(routine: Routine, facts: readonly string[]): string {
-  return [
-    routine.prompt,
-    '',
-    separator,
-    `Routine: ${routine.name}`,
-    ...facts,
-  ].join('\n')
-}
 
 /** The lines that the changes of the pull request add, or remove. */
 function changedLines(kind: 'added' | 'removed'): number {
@@ -71,27 +51,18 @@ const review = routines['review-prs']
 const summary = routines['morning-summary']
 const storefront = repositories.storefront
 
-const reviewMessage = runMessage(review, [
-  'Trigger: PR opened',
-  `Pull request: #${pullRequest.number}, ${pullRequest.url}`,
-  `Head: ${checkoutAutocomplete.branch} at ${headCommit}`,
-  `Merges into: ${storefront.defaultBranch}`,
-  `Your work goes to: ${checkoutAutocomplete.branch}`,
-])
+const reviewMessage = runMessage(
+  review,
+  pullRequestFacts({
+    trigger: 'PR opened',
+    pullRequest,
+    head: checkoutAutocomplete.branch,
+    headCommit,
+    mergesInto: storefront.defaultBranch,
+  }),
+)
 
 const summaryMessage = runMessage(summary, ['Trigger: Run now'])
-
-function cloudStart(fetch: string, branch: string): StartingLog {
-  return {
-    title: 'Starting the sandbox',
-    steps: [
-      'Starting from the cloud computer of Acme',
-      fetch,
-      `Creating branch ${branch}`,
-    ],
-    elapsed: '7s',
-  }
-}
 
 const reviewRun: Workspace = {
   key: 'review-482',
@@ -186,4 +157,6 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
       summaryRun.branch,
     ),
   },
+  'start-failed': startFailedRun,
+  'turn-failed': turnFailedRun,
 }

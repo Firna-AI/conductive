@@ -25,10 +25,16 @@ import { paths } from '../paths'
 import type { RoutineAccess } from './routineState'
 import styles from './RoutineScreen.module.css'
 
-/** The screens of the run workspaces that the mockups draw, by run. */
+/**
+ * The screens of the run workspaces that the mockups draw, by run: a run
+ * that works, the run of Run now, and the two failed runs whose first
+ * start or first turn failed, which kept their workspaces.
+ */
 export const runLinks: Readonly<Record<string, string>> = {
   'opened-482': paths.runWorkspace,
   'run-now': paths.runNowWorkspace,
+  'opened-486': paths.runStartFailed,
+  'pushed-486': paths.runTurnFailed,
 }
 
 /** The name in the header: "New routine" until the routine is saved. */

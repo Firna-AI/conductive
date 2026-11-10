@@ -88,9 +88,12 @@ pull request bar, and the owner picker. A host can give its own parts, as
   section of the routine, and the run takes the state of that workspace.
   Without the agent login of the routine's model, as with `?login=none`,
   the run fails with no workspace. A prompt that contains `fail` stands for
-  a cloud computer that did not start. The recorded server has no chat for
+  a cloud computer that did not start: the run fails and keeps its
+  workspace, in the error state with Try again, as the Worker does. The
+  recorded server has no chat for
   a workspace that the fake made, so its chat does not load, and the line
   of its routine does not show.
+  The dev backend records each run's agent and owner when Run now starts it.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -291,12 +294,17 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `api/read-routines.ts`: the readers of the routines, each with its newest run, and of one routine. `api/read-routine-runs.ts`: the readers of the runs.
 - `routine-model.ts`: `RoutineModel`, one routine with its reads, its
   saves, and its runs, and `routineModel`, the model that the org keeps for
-  each routine. `routine-actions.ts`: create, update, Turn off, Delete, and
-  Run now, which also update the Routines list.
-- `routine-runs.ts`: `RoutineRuns`, the Runs list of one routine: its
-  reads while the page shows it, Show older runs, and Run now.
-- `routine-draft.ts`: the draft of the routine page, its create and update
-  requests, and whether Save can send it. `routine-triggers.ts`: the
+  each routine. Its `client` sends the other requests of the routine page,
+  and a `routine_not_found` from any of them reads the routine again.
+  `routine-actions.ts`: create, update, Turn off, Delete, and Run now,
+  which also update the Routines list.
+- `routine-runs.ts`: `RoutineRuns`, the Runs list of one routine: the
+  pages that it shows, which each read gets again from the newest run
+  while the page shows them, Show older runs, which adds a page, and Run
+  now.
+- `routine-draft.ts`: the draft of the routine page, the equality of each
+  of its fields, its create and update requests, and whether Save can send
+  it. `routine-triggers.ts`: the
   defaults of a new trigger and the edits of an author filter.
   `routine-cron.ts`: the rule of a custom cron, which the Worker applies
   too.
@@ -310,8 +318,9 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
-  its waiting writes. `refresh.ts`: `Refresher`, the shared reads of a part
-  while screens show it.
+  its waiting writes, and the errors that prove that the value no longer
+  exists. `refresh.ts`: `Refresher`, the shared reads of a part while
+  screens show it, and `reread`, a read that starts after a refusal.
 - `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
   writes, their changes, moves, and the Archived group.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace, its
@@ -415,9 +424,10 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   that a save refused. `RoutineFrame.tsx` puts the Runs list beside the
   form on desktop, and on the Runs tab of a phone.
 - `../shell/routines/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
-  the state, the trigger, the pull request, and the time of each run, and
-  the link to its workspace. `run-copy.ts`: the cause of a failed run and
-  the reason of a skipped run in words, with the login of an account
+  the mark, the state, the trigger, the pull request, and the time of each
+  run, and the link to its workspace. `run-copy.ts`: the mark of a run, the
+  cause of a failed run in words, from the agent and the owner of the run
+  itself, and the reason of a skipped run, with the login of an account
   outside the org. `RunNow.tsx`: Run now of the owner.
 - `../shell/workspace/RunLine.tsx`: the line under the header of a run
   workspace, which links to its routine, and to the pull request of a pull
@@ -447,7 +457,8 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   `../chat/components/chip-field/focus-plugins.tsx`.
 - `../chat/components/send-key.ts`: `useSendKey`, the send key of every
   composer.
-- `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.
+- `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value,
+  as one value or field by field (`eachField`).
   `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
 - `../shell/orgs/`: Create org and the name and initials fields.
   `../shell/settings/RepositorySearch.tsx`: the searchable repository list.

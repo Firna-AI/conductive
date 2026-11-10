@@ -15,7 +15,9 @@ import { forgetRoutine, routineModel } from './routine-model'
 /*
  * The writes of a routine. Each answer of a create or an update is the
  * whole routine: the routine page shows it, and the Routines list takes it
- * at once, with the last run that the list already has.
+ * at once, with the last run that the list already has. The writes of a
+ * saved routine go through the client of its model, so a refusal with
+ * `routine_not_found` reads the routine again.
  */
 
 /** A newer record of a routine. A routine that the list lacks goes first. */
@@ -56,8 +58,9 @@ export async function updateRoutine(
   routineId: string,
   request: UpdateRoutineRequest,
 ): Promise<Routine> {
-  const routine = await routineModel(org, routineId).resource.save(() =>
-    org.services.api.send(
+  const model = routineModel(org, routineId)
+  const routine = await model.resource.save(() =>
+    model.client.send(
       'PATCH',
       routinePath(org.orgId, routineId),
       request,
@@ -84,7 +87,7 @@ export async function deleteRoutine(
   org: OrgModel,
   routineId: string,
 ): Promise<void> {
-  await org.services.api.send(
+  await routineModel(org, routineId).client.send(
     'DELETE',
     routinePath(org.orgId, routineId),
     {},

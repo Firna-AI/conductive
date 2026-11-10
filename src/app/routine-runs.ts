@@ -4,6 +4,7 @@ import {
   type RoutineRunsResponse,
   type RunRoutineRequest,
 } from '../shared/routines'
+import type { ApiClient } from './api/client'
 import {
   readRoutineRunResponse,
   readRoutineRunsResponse,
@@ -14,8 +15,8 @@ import { Resource } from './resource'
 import { ready, Store, type Loadable, type Readable } from './store'
 
 /**
- * How often a shown Runs list reads its newest runs. The app has no event
- * stream for the runs of a routine, so the page reads them again.
+ * How often a shown Runs list reads its runs. The app has no event stream
+ * for the runs of a routine, so the page reads them again.
  */
 const runsWait = 10_000
 
@@ -25,58 +26,36 @@ export interface ShownRuns {
   more: boolean
 }
 
-/** The older runs that the person read with Show older runs. */
-interface Older {
-  /** Every run that the list showed since the first older page, by ID. */
-  known: ReadonlyMap<string, RoutineRun>
-  /** The cursor of the next older page, or null when no older run exists. */
-  cursor: string | null
-}
-
-/** Newest first, as the Worker sorts them: equal times by ID, descending. */
-function newestFirst(a: RoutineRun, b: RoutineRun): number {
-  if (a.createdAt !== b.createdAt) return b.createdAt - a.createdAt
-  if (a.id === b.id) return 0
-  return a.id < b.id ? 1 : -1
-}
-
-function withRuns(
-  known: ReadonlyMap<string, RoutineRun>,
-  runs: readonly RoutineRun[],
-): Map<string, RoutineRun> {
-  const next = new Map(known)
-  for (const run of runs) next.set(run.id, run)
-  return next
-}
-
 /**
- * The runs of one routine. While its page shows them, the newest runs read
- * every 10 seconds and at each return to the page. Show older runs adds
- * the next older page. From then on, the list keeps each run that it
- * showed, and each read of the newest runs updates them, so a new run that
- * pushes runs out of the newest page leaves no gap.
+ * The runs of one routine, newest first. The list shows a number of pages
+ * of 50 runs: one at first, and one more after each Show older runs. While
+ * its page shows it, the list reads every 10 seconds and at each return to
+ * the page. Each read gets that many pages from the newest run, one after
+ * the other, and replaces the whole list. So the list has no gap, and each
+ * row shows the state of the last read. When new runs arrive, the oldest
+ * rows move behind Show older runs. Each request goes through `client`,
+ * the client of the routine page.
  */
 export class RoutineRuns {
   readonly shown: Readable<Loadable<ShownRuns>>
   private readonly view = new Store<Loadable<ShownRuns>>({ state: 'loading' })
-  private readonly newest: Resource<RoutineRunsResponse>
+  /** The runs of the pages that the list shows, and the cursor after them. */
+  private readonly window: Resource<RoutineRunsResponse>
   private readonly reads: Refresher<RoutineRunsResponse>
-  private older: Older | null = null
+  /** The number of pages that the list shows. */
+  private pages = 1
   private readonly org: OrgModel
   private readonly routineId: string
+  private readonly client: ApiClient
 
-  constructor(org: OrgModel, routineId: string) {
+  constructor(org: OrgModel, routineId: string, client: ApiClient) {
     this.org = org
     this.routineId = routineId
-    this.newest = new Resource(() =>
-      org.services.api.get(
-        routinePaths.runs(org.orgId, routineId),
-        readRoutineRunsResponse,
-      ),
-    )
-    this.reads = new Refresher(this.newest, () => runsWait, org.services)
+    this.client = client
+    this.window = new Resource(() => this.readPages(this.pages))
+    this.reads = new Refresher(this.window, () => runsWait, org.services)
     this.shown = this.view
-    this.newest.store.subscribe(() => this.show())
+    this.window.store.subscribe(() => this.show())
   }
 
   /** The page shows the runs. The result says that it no longer does. */
@@ -84,66 +63,86 @@ export class RoutineRuns {
     return this.reads.watch()
   }
 
-  /** Reads the newest runs now, such as for Try again. */
+  /** Reads the runs now, such as for Try again. */
   reload(): Promise<void> {
     return this.reads.refresh()
   }
 
-  /** Reads the next older page, after the oldest run that the list shows. */
+  /**
+   * Show older runs: reads the page after the oldest run that the list
+   * shows, and adds it at once. From then on, each read gets one page more.
+   * A read that started before keeps the page only while it ends at the
+   * same run, so the list never has a gap.
+   */
   async loadOlder(): Promise<void> {
-    const newest = this.newest.store.get()
-    if (newest.state !== 'ready') return
-    const cursor = this.older ? this.older.cursor : newest.value.nextCursor
+    const shown = this.window.store.get()
+    if (shown.state !== 'ready') return
+    const cursor = shown.value.nextCursor
     if (cursor === null) return
-    const page = await this.org.services.api.get(
-      routinePaths.runs(this.org.orgId, this.routineId, cursor),
-      readRoutineRunsResponse,
+    const older = await this.readPage(cursor)
+    this.pages += 1
+    this.window.confirm((window) =>
+      window.nextCursor === cursor
+        ? {
+            runs: [...window.runs, ...older.runs],
+            nextCursor: older.nextCursor,
+          }
+        : window,
     )
-    const known = this.older?.known ?? withRuns(new Map(), newest.value.runs)
-    this.older = { known: withRuns(known, page.runs), cursor: page.nextCursor }
-    this.show()
   }
 
   /**
    * Run now of the owner, with a new request ID. The run shows first at
-   * once, and the next read of the newest runs brings its later state.
+   * once, and the next read of the runs brings its later state.
    */
   async runNow(): Promise<RoutineRun> {
     const request: RunRoutineRequest = { requestId: this.org.services.newId() }
-    const run = await this.org.services.api.send(
+    const run = await this.client.send(
       'POST',
       routinePaths.runNow(this.org.orgId, this.routineId),
       request,
       readRoutineRunResponse,
     )
-    this.newest.confirm(
-      (page) => ({
-        ...page,
-        runs: [run, ...page.runs.filter((item) => item.id !== run.id)],
+    this.window.confirm(
+      (window) => ({
+        ...window,
+        runs: [run, ...window.runs.filter((item) => item.id !== run.id)],
       }),
       `run ${run.id}`,
     )
     return run
   }
 
+  /** The newest `pages` pages, one after the other, as one list. */
+  private async readPages(pages: number): Promise<RoutineRunsResponse> {
+    let window = await this.readPage(null)
+    for (let page = 1; page < pages && window.nextCursor !== null; page += 1) {
+      const older = await this.readPage(window.nextCursor)
+      window = {
+        runs: [...window.runs, ...older.runs],
+        nextCursor: older.nextCursor,
+      }
+    }
+    return window
+  }
+
+  /** The 50 runs after the run of `before`, or the newest 50. */
+  private readPage(before: string | null): Promise<RoutineRunsResponse> {
+    return this.client.get(
+      routinePaths.runs(this.org.orgId, this.routineId, before ?? undefined),
+      readRoutineRunsResponse,
+    )
+  }
+
   private show(): void {
-    const newest = this.newest.store.get()
-    if (newest.state !== 'ready') {
-      this.view.set(newest)
-      return
-    }
-    if (!this.older) {
-      const { runs, nextCursor } = newest.value
-      this.view.set(ready({ runs, more: nextCursor !== null }))
-      return
-    }
-    const known = withRuns(this.older.known, newest.value.runs)
-    this.older = { ...this.older, known }
+    const window = this.window.store.get()
     this.view.set(
-      ready({
-        runs: [...known.values()].sort(newestFirst),
-        more: this.older.cursor !== null,
-      }),
+      window.state === 'ready'
+        ? ready({
+            runs: window.value.runs,
+            more: window.value.nextCursor !== null,
+          })
+        : window,
     )
   }
 }

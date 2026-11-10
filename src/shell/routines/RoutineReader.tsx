@@ -5,6 +5,7 @@ import { turnOffRoutine } from '../../app/routine-actions'
 import { draftOf } from '../../app/routine-draft'
 import type { RoutineTab } from '../../app/router'
 import { useStore } from '../../app/store'
+import type { User } from '../../shared/api'
 import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Routine } from '../../shared/routines'
@@ -25,10 +26,13 @@ import { TriggerFacts } from './TriggerList'
  * triggers, and its prompt with the model, beside its runs. An admin can
  * turn it off while it is on, and delete it. In a suspended org nobody
  * acts, and no line names the logins of runs, because no run starts.
+ * `user` is the person signed in, who reads the causes of their own failed
+ * runs as their owner.
  */
 export function RoutineReader(props: {
   access: Exclude<RoutineAccess, 'owner'>
   org: OrgSummary
+  user: User
   routine: Routine
   repositories: readonly Repository[]
   sections: readonly Section[]
@@ -72,7 +76,11 @@ export function RoutineReader(props: {
       actions={actions}
       org={org}
       runs={
-        <RunsPanel orgName={org.name} ownerViews={false} source={props.runs} />
+        <RunsPanel
+          orgName={org.name}
+          source={props.runs}
+          viewer={access === 'suspended' ? null : props.user.id}
+        />
       }
       tabs={{ routineId: routine.id, current: props.tab }}
       title={routine.name}

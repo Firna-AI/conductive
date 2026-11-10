@@ -63,6 +63,8 @@ function lastRun(
     id: `${routine.key}-last`,
     routineId: routine.key,
     orgId,
+    agent: routine.choice.agent,
+    owner: sender(routine),
     trigger: runTrigger(routine, at),
     state: run.state,
     workspaceId: workspace ? `${routine.key}-run` : null,

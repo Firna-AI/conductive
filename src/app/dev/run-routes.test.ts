@@ -130,7 +130,7 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('Run now refuses another owner and a routine of pull requests, and fails without an agent login', async () => {
+  test('Run now refuses another owner and a routine of pull requests, fails without an agent login, and keeps the workspace of a start that failed', async () => {
     const { api } = setup()
     await expect(
       runNow(api, 'dependency-updates', 'request-1'),
@@ -140,6 +140,17 @@ describe('the runs of the dev fake', () => {
       code: 'routine_pull_request_required',
     })
     const run = await runNow(setup('?login=none').api, 'error-triage', 'r')
+    // A prompt that contains `fail` stands for a cloud computer that did
+    // not start, and its run keeps the workspace, as the Worker does.
+    const start = setup()
+    const { acme } = start
+    acme.routines = acme.routines.map((item) =>
+      item.id === 'error-triage'
+        ? { ...item, prompt: `${item.prompt} Then fail.` }
+        : item,
+    )
+    const failed = await runNow(start.api, 'error-triage', 'request-2')
+    const kept = acme.workspaces.find((item) => item.id === failed.workspaceId)
     expect(run).toMatchObject({
       state: 'failed',
       workspaceId: null,
@@ -147,6 +158,28 @@ describe('the runs of the dev fake', () => {
         code: 'agent_login_required',
         message: 'Connect Claude to run this routine.',
       },
+    })
+    expect({
+      state: failed.state,
+      error: failed.error,
+      workspace: kept && {
+        state: kept.state,
+        start: acme.starts.get(kept.id)?.start?.steps.map((step) => step.state),
+        error: acme.starts.get(kept.id)?.error?.code,
+      },
+      listed: (await runs(start.api, 'error-triage')).runs[0]?.workspaceId,
+    }).toEqual({
+      state: 'failed',
+      error: {
+        code: 'workspace_start_failed',
+        message: 'The cloud computer could not start. Try again.',
+      },
+      workspace: {
+        state: 'error',
+        start: ['failed'],
+        error: 'workspace_start_failed',
+      },
+      listed: kept?.id,
     })
   })
 
