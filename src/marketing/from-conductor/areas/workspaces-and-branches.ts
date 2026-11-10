@@ -20,7 +20,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Start from a branch, PR, or issue',
     status: 'planned',
-    note: 'Starting from an existing branch or pull request is planned. Starting from an issue has no delivery plan.',
+    note: 'Starting from an existing branch or pull request is planned. GitHub issue starts are under consideration.',
     due: null,
   },
   {
@@ -48,8 +48,9 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'rename-a-workspace',
     area: 'workspaces-and-branches',
     name: 'Rename a workspace',
-    status: 'considering',
-    note: 'Workspace rename controls are under consideration. You can rename chat sessions today.',
+    status: 'planned',
+    note: 'Workspace rename from the row’s context menu is planned. Chat sessions can already be renamed.',
+    due: null,
   },
   {
     id: 'city-names',
@@ -83,8 +84,9 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'continue-after-merge',
     area: 'workspaces-and-branches',
     name: 'Continue after merge',
-    status: 'considering',
-    note: 'Continuing after a merge on a new branch in the same workspace is under consideration.',
+    status: 'planned',
+    note: 'Continue on a new branch in the same workspace is planned, with the existing files and chat sessions.',
+    due: null,
   },
   {
     id: 'pinned-workspaces-and-manual-order',
