@@ -468,29 +468,29 @@ Decision 175 A replaces the access token with a device code sign-in to
 the member's ChatGPT plan. The Codex form and the connected Codex row
 change.
 
-- [ ] Replace the access token state of `app/account/connect-codex` with
+- [x] Replace the access token state of `app/account/connect-codex` with
       the ChatGPT sign-in: the switch names it, a button starts the sign-in,
       and the form then shows the code, the link to
       `https://auth.openai.com/codex/device`, and a waiting state.
-- [ ] Draw the states of the sign-in: the code shown, the code expired, the
+- [x] Draw the states of the sign-in: the code shown, the code expired, the
       sign-in refused, and the turn on of device code sign-in in the
       security settings of ChatGPT as the help text.
-- [ ] Change `app/account/codex-token` to a Codex login connected by a
+- [x] Change `app/account/codex-token` to a Codex login connected by a
       ChatGPT sign-in, with its share switch off.
-- [ ] Update the kind names in `docs/mockups/src/fixtures/logins.ts` and
+- [x] Update the kind names in `docs/mockups/src/fixtures/logins.ts` and
       the section "Logins" of `docs/mockups/orgs-and-logins.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at phone and
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at phone and
       desktop sizes.
-- [ ] Draw a ChatGPT sign-in that stopped working: the Codex row shows its
+- [x] Draw a ChatGPT sign-in that stopped working: the Codex row shows its
       cause and "Sign in again", which opens the sign-in.
-- [ ] Apply the user's answers of 10 November 2026 to the mockup report:
+- [x] Apply the user's answers of 10 November 2026 to the mockup report:
       the share switch of a ChatGPT plan stays, off at the start, with a
       hint that only its owner may use it (item 1 B). The start text names
       device code sign-in in the ChatGPT security settings with no quoted
       label (item 3 C). The code step says "Never share this code, and
       enter only a code that this page shows. It expires in 15 minutes."
       (item 5 B).
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -584,26 +584,26 @@ that route, and the typed rule of decision 174 D.
 - [x] Try the route of `experimental_bearer_token` in the `config` of
       `thread/start` and `thread/resume`. Use it when Codex accepts the
       token on it. Codex skips the requests of the token mode on it.
-- [ ] Worker: add the device code flow for the account page. A start call
+- [x] Worker: add the device code flow for the account page. A start call
       asks OpenAI for a code, as the pinned Codex 0.167.0 does, and returns
       the code and the link. A poll call reports the state, and on success
       exchanges the authorization for the sign-in and stores it encrypted
       as the Codex `token` secret.
-- [ ] Worker: renew the access token alone, one renewal at a time for each
+- [x] Worker: renew the access token alone, one renewal at a time for each
       login. Store the new refresh token before the new access token is
       used. A refused renewal marks the login as not usable, with a cause.
-- [ ] Gateway: add the routes of the ChatGPT sign-in mode on a fixed list:
+- [x] Gateway: add the routes of the ChatGPT sign-in mode on a fixed list:
       the rule bundle, the account check, the model list, and the Codex
       model route. Put in the real access token and its
       `chatgpt-account-id`. Follow the routing in the Worker. Refuse a
       WebSocket upgrade. Handle the zstd bodies, or turn compression off.
       On a 401 from OpenAI, renew once and retry.
-- [ ] Runner: accept a Codex credential of the kind `token`. Write a login
+- [x] Runner: accept a Codex credential of the kind `token`. Write a login
       file for the session in its own Codex home, with the turn token in
       place of the access token and a placeholder refresh token. Point the
       ChatGPT base address of Codex at the gateway. Remove the file at the
       end of the turn. Keep the API key route as it is.
-- [ ] Decision 174 D: add one typed rule of the login kinds that each
+- [x] Decision 174 D: add one typed rule of the login kinds that each
       runner can run. The Worker checks it before each command that carries
       a login, the `turn` and the `message`, sends no command that the
       runner cannot run, and ends that turn with a cause that names the way
@@ -611,25 +611,29 @@ that route, and the typed rule of decision 174 D.
       A runner without the change of this milestone, also a version 2
       runner in an older image, counts as unable. A new login kind fails
       the typecheck until the rule states it.
-- [ ] Change the Milestone 3 test that expects the real Codex login in a
+- [x] Change the Milestone 3 test that expects the real Codex login in a
       version 1 `turn` command, and state the rule of decision 174 D in
       `docs/protocol/isolation.md` and in the protocol doc that says what a
       member sees when a turn cannot run.
-- [ ] Remove the parts that serve only an access token: the `whoami`
+- [x] Remove the parts that serve only an access token: the `whoami`
       route, the `at-` turn token, and the `CODEX_ACCESS_TOKEN` start.
-- [ ] Tests: the device code flow and its failures, the renewal and its
+- [x] Tests: the device code flow and its failures, the renewal and its
       race, the gateway routes and their refusals, the retry after a 401,
       and the runner's login file and its removal.
-- [ ] Protocol: state the ChatGPT sign-in in
+- [x] Protocol: state the ChatGPT sign-in in
       `docs/protocol/tokens-and-secrets.md`, with the risk that OpenAI sends
       hosted apps to its waitlist and can block this use (decision 175
       changes decision 37). State its routes and the login file of a turn
       in `docs/protocol/model-gateway.md`, and its share default reason in
       `docs/protocol/isolation.md`.
-- [ ] Read both legal pages in full, and update each sentence that restates
+- [x] Read both legal pages in full, and update each sentence that restates
       a changed fact. List the public guide sentences for Milestone 5b.
-- [ ] Update `runner/agent-logins.md`, `runner/README.md`, and
+- [x] Update `runner/agent-logins.md`, `runner/README.md`, and
       `worker/model-gateway/README.md`.
+
+The evidence of Milestone 4 is in
+`.context/codex-access-token/m4c/implementation.md`, and its complete gate
+log is `.context/codex-access-token/m4c/check-stable.log`.
 
 ## Milestone 5: Connect form
 
@@ -670,16 +674,16 @@ Depends on: 1b, 4
 The account page connects Codex with a device code sign-in, as Milestone
 1b draws it.
 
-- [ ] Replace the access token field of the Codex form with the sign-in
+- [x] Replace the access token field of the Codex form with the sign-in
       button, the code, the link, and the states of Milestone 1b.
-- [ ] Use the start and poll calls of Milestone 4. The mockup step
+- [x] Use the start and poll calls of Milestone 4. The mockup step
       `refused` draws the poll state `failed`, with its cause.
-- [ ] Take the words from the shared copy module of the mockups,
+- [x] Take the words from the shared copy module of the mockups,
       `docs/mockups/src/components/settings/chatGptSignInCopy.ts`.
-- [ ] Change the Codex kind name from "Access token" to the name of
+- [x] Change the Codex kind name from "Access token" to the name of
       Milestone 1b.
-- [ ] Add tests for each state of the sign-in.
-- [ ] Smoke-test the account page in `npm run dev` at phone and desktop
+- [x] Add tests for each state of the sign-in.
+- [x] Smoke-test the account page in `npm run dev` at phone and desktop
       sizes.
 
 ## Milestone 5b: Public guides and comparison
@@ -689,16 +693,16 @@ Depends on: 4, 5c
 The public guides and the comparison page say that Codex connects with a
 device code sign-in to the member's ChatGPT plan.
 
-- [ ] Add the ChatGPT plan to the example guide of the mockups,
+- [x] Add the ChatGPT plan to the example guide of the mockups,
       `docs/mockups/src/screens/docsGetStarted.tsx`.
-- [ ] Update `src/marketing/docs/agent-logins.md` and
+- [x] Update `src/marketing/docs/agent-logins.md` and
       `src/marketing/docs/get-started.md` for the ChatGPT sign-in, as
       [Website docs](../docs/protocol/website-docs.md) says.
-- [ ] Update the Codex row in `src/marketing/from-conductor/` from "in
+- [x] Update the Codex row in `src/marketing/from-conductor/` from "in
       progress" to its shipped status, as
       [Conductor Cloud comparison](../docs/protocol/conductor-cloud-comparison.md#statuses)
       says.
-- [ ] Read every other public guide in full, and update each sentence that
+- [x] Read every other public guide in full, and update each sentence that
       restates a changed fact.
 
 ## Milestone 6: Verification, commit, review, and pull request
