@@ -435,8 +435,9 @@ Depends on: 9, 10
 - [x] Change `StartButton.astro`, `SiteActions.astro`, the footer, and
       `access-copy.ts`, as Milestone 9 draws them.
 - [x] Update the tests and `src/marketing/README.md`.
-- [ ] Run the targeted tests and the complete gate, commit, push, and
-      review the change.
+- [x] Run the targeted tests and the complete gate, commit, push, and
+      review the change. The review found one Low finding, which commit
+      `109b3778` fixed. The re-review found none.
 
 Evidence: `.context/mac-app-downloads/actions/`, with the comparison of the
 site and the mockups in `m11-compare.log`.
