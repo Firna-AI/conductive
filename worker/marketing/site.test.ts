@@ -145,9 +145,7 @@ it('returns 503 and a safe warning for failed files instead of forwarding app HT
     }
   }
   expect(warn.mock.calls).toEqual(
-    Array.from({ length: 8 }, () => [
-      'The built marketing site is not available.',
-    ]),
+    Array.from({ length: 8 }, () => [{ kind: 'marketing_site_unavailable' }]),
   )
 })
 

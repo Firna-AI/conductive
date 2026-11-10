@@ -1,5 +1,4 @@
 import { expect } from 'vitest'
-
 import type { TestHarness } from '../test-support/harness'
 import { checkCommitBoundaries } from './commit-boundary.test-support'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
@@ -10,7 +9,6 @@ import {
   sessionRecord,
 } from './retry.test-support'
 import { startTurn, terminalEvent } from './turn-lifecycle.test-support'
-
 const initialTypes = [
   'session.updated',
   'message.accepted',
@@ -18,7 +16,6 @@ const initialTypes = [
   'message.sent',
   'turn.started',
 ]
-
 export async function checkRetryBoundaries(
   harness: TestHarness,
   phase: 'failure' | 'retry',
@@ -37,11 +34,7 @@ export async function checkRetryBoundaries(
       'confirmed-retry-command',
     ]
     const fixture = await createChatFixture(harness, {
-      randomId: () => {
-        const id = ids.shift()
-        if (!id) throw new Error('The test ID sequence is empty.')
-        return id
-      },
+      ids,
     })
     const session = await fixture.createSession()
     const runner = await fixture.connect()
@@ -140,7 +133,7 @@ export async function checkRetryBoundaries(
         liveSessions(resumed.messages).map((record) => record.retryMessageId),
       ).toEqual(after)
       await acceptedCount()
-      resumed.close()
+      await resumed.close()
     }
     const committedRetry = async () => {
       const resumed = await fixture.tab()
@@ -151,7 +144,7 @@ export async function checkRetryBoundaries(
       expect(await response.json()).toEqual(retryUnavailable)
       expect(liveSessions(resumed.messages)).toEqual([])
       await acceptedCount()
-      resumed.close()
+      await resumed.close()
     }
     const actions = {
       failure: async (error: string) => {
@@ -170,19 +163,20 @@ export async function checkRetryBoundaries(
       },
     }
     return {
-      storage: fixture.storage,
+      failNextCommit: fixture.failNextCommit,
+      clearFaults: fixture.clearFaults,
       before: phase === 'failure' ? running : failed,
       after: phase === 'failure' ? failed : accepted,
       read,
       action: actions[phase],
-      unpublished: () => {
+      unpublished: async () => {
         expect(liveSessions(tab.messages)).toEqual([])
         expect(runner.commands).toEqual([active])
-        tab.close()
+        await tab.close()
       },
-      restart: () => {
+      restart: async () => {
         runner.disconnect()
-        fixture.restart()
+        await fixture.restart()
       },
       verify:
         phase === 'failure'

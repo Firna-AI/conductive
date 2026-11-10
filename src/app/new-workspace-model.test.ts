@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest'
-import { DRAFT_ATTACHMENTS_PATH } from '../shared/messages'
+import { attachmentUploadPath } from '../shared/messages'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
+import { sentFiles } from '../test-support/fake-files'
 import { FAKE_IDS } from '../test-support/fixtures/core'
 import { OrgModel } from './org-model'
 import { valueOf } from './store'
@@ -9,6 +10,10 @@ import { HeldRequests, testServices } from './test-kit'
 
 const org = FAKE_IDS.org
 const createPath = workspacesPath(org)
+const uploadPath = attachmentUploadPath(org, {
+  type: 'new-workspace',
+  messageId: '',
+})
 const choice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
@@ -48,20 +53,33 @@ describe('NewWorkspaceModel', () => {
     await draft.attach([
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
-    expect(await server.requests.at(-1)?.json()).toEqual({
-      name: 'notes.txt',
-      kind: 'file',
-      mediaType: 'text/plain',
-      dataBase64: 'Q2FydCBub3Rlcw==',
-    })
+    // The raw file goes before the workspace exists, and names the message.
+    expect(await sentFiles(server.requests)).toEqual([
+      {
+        path: uploadPath,
+        query: {
+          name: 'notes.txt',
+          mediaType: 'text/plain',
+          messageId: 'client-1',
+        },
+        text: 'Cart notes',
+      },
+    ])
     server.json(
       'POST',
-      DRAFT_ATTACHMENTS_PATH,
+      uploadPath,
       { error: { code: 'too_large', message: 'The file is too large.' } },
       413,
     )
     await draft.attach([new File(['Big'], 'big.bin')])
-    expect(draft.draft.get().upload.error?.code).toBe('too_large')
+    const failed = draft.draft.get().files.at(-1)
+    expect(failed).toMatchObject({
+      state: 'failed',
+      error: { code: 'too_large' },
+    })
+    // Send waits for the failed file until the user takes it off.
+    expect(await draft.send(defaults)).toBeNull()
+    draft.removeFile(failed?.id ?? '')
     const created = await draft.send(defaults)
     expect(await server.requests.at(-1)?.json()).toEqual({
       repositoryId: 'billing-service',
@@ -76,7 +94,19 @@ describe('NewWorkspaceModel', () => {
     expect(created?.workspace.id).toBe('saved-carts')
     expect(valueOf(model.workspaces.get())?.[0]?.id).toBe('saved-carts')
     expect(draft.draft.get().text).toBe('')
-    expect(draft.draft.get().upload).toEqual({ pending: 0, error: null })
+    expect(draft.draft.get().files).toEqual([])
+    draft.setText('A newer draft')
+    if (!created) throw new Error('The create did not return its workspace.')
+    model.putWorkspace({ ...created.workspace, state: 'error' })
+    expect(valueOf(model.workspaces.get())?.[0]).toMatchObject({
+      id: 'saved-carts',
+      state: 'error',
+    })
+    expect(draft.draft.get()).toMatchObject({
+      text: 'A newer draft',
+      files: [],
+    })
+    expect(draft.draft.get().messageId).not.toBe('client-1')
   })
 
   test('a failed create keeps the draft, and Try again sends the same message', async () => {
@@ -94,19 +124,36 @@ describe('NewWorkspaceModel', () => {
     )
     const draft = (await loaded(server)).newWorkspace(null)
     draft.setText('Fix the flaky cart test.')
+    await draft.attach([notes()])
     expect(await draft.send(defaults)).toBeNull()
     expect(draft.create.get()).toMatchObject({
       state: 'failed',
       error: { code: 'start_failed' },
     })
     expect(draft.draft.get().text).toBe('Fix the flaky cart test.')
+    expect(draft.draft.get()).toMatchObject({
+      files: [{ state: 'ready', attachment: { id: 'draft-attachment-1' } }],
+      messageId: 'client-1',
+    })
+    draft.setText('Fix the flaky cart test first.')
     await draft.send(defaults)
     const [first, second] = server.requests.slice(-2)
     const firstBody = await first.json()
+    const secondBody = await second.json()
     expect(firstBody).not.toHaveProperty('sectionId')
-    expect((await second.json()).firstMessage.id).toBe(
-      firstBody.firstMessage.id,
-    )
+    expect(secondBody.firstMessage.id).toBe(firstBody.firstMessage.id)
+    expect(draft.draft.get()).toMatchObject({
+      text: 'Fix the flaky cart test first.',
+      files: [{ state: 'ready', attachment: { id: 'draft-attachment-1' } }],
+      messageId: 'client-1',
+    })
+    expect(firstBody.firstMessage.attachmentIds).toEqual(['draft-attachment-1'])
+    expect(secondBody.firstMessage).toEqual({
+      id: 'client-1',
+      text: 'Fix the flaky cart test first.',
+      attachmentIds: ['draft-attachment-1'],
+      choice: defaults.choice,
+    })
   })
 
   test('Try again sends nothing while a file uploads, then sends the same message with the file', async () => {
@@ -121,11 +168,11 @@ describe('NewWorkspaceModel', () => {
     const draft = (await loaded(server, held)).newWorkspace(null)
     draft.setText('Fix the flaky cart test.')
     await draft.send(defaults)
-    held.hold('POST', DRAFT_ATTACHMENTS_PATH)
+    held.hold('POST', uploadPath)
     const uploading = draft.attach([notes()])
     await draft.send(defaults)
     const whileUploading = received(server, 'POST', createPath).length
-    held.release('POST', DRAFT_ATTACHMENTS_PATH)
+    held.release('POST', uploadPath)
     await uploading
     await draft.send(defaults)
     const creates = await Promise.all(
@@ -159,9 +206,9 @@ describe('NewWorkspaceModel', () => {
     held.release('POST', createPath)
     const created = await creating
     expect({
-      uploads: received(server, 'POST', DRAFT_ATTACHMENTS_PATH).length,
+      uploads: received(server, 'POST', uploadPath).length,
       created: created?.workspace.id,
-      attachments: draft.draft.get().attachments,
-    }).toEqual({ uploads: 0, created: 'saved-carts', attachments: [] })
+      files: draft.draft.get().files,
+    }).toEqual({ uploads: 0, created: 'saved-carts', files: [] })
   })
 })

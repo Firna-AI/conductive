@@ -4,9 +4,9 @@ This guide belongs to [Chat backend integration](README.md). It gives the
 starter of each session, the two login paths of `SessionLogins`, and the
 linked sessions.
 
-[Agents](../../../docs/protocol/chat-and-events.md#agents),
-[Messages](../../../docs/protocol/chat-and-events.md#messages), and
-[Agent logins in a sandbox](../../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
+[Agents](../../../docs/protocol/agents-and-sessions.md#agents),
+[Messages](../../../docs/protocol/messages-and-attachments.md#messages), and
+[Agent logins in a sandbox](../../../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
 state the rules.
 
 - Each creation path stores its authenticated user as `Session.startedBy`:

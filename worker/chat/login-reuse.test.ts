@@ -1,12 +1,10 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { agentLoginPath } from '../../src/shared/account'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CODEX, createChatFixture } from './harness.test-support'
 import { readAgentLogin } from './queries'
 import { retryRequest, sessionRecord } from './retry.test-support'
 import { messageCommands, startTurn } from './turn-lifecycle.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -15,7 +13,6 @@ beforeEach(async () => {
   await harness.reset()
 })
 afterAll(async () => harness.dispose())
-
 it('keeps the starter login available and sends another member to an empty linked session when reuse is disabled', async () => {
   let refuseDuringRead = false
   const fixture = await createChatFixture(harness, {
@@ -83,7 +80,7 @@ it('keeps the starter login available and sends another member to an empty linke
     .bind(fixture.owner.id)
     .run()
   const refreshed = await fixture.tab(0, undefined, fixture.memberCookie)
-  refreshed.close()
+  await refreshed.close()
   expect(await sessionRecord(fixture, source.id)).toMatchObject({
     loginShared: true,
   })
@@ -110,7 +107,6 @@ it('keeps the starter login available and sends another member to an empty linke
     { login: { secret: `secret-${fixture.owner.id}-codex` } },
   ])
 })
-
 it('checks a changed reuse preference before queued dispatch and permits a linked retry on the sender login', async () => {
   const fixture = await createChatFixture(harness)
   const source = await fixture.createSession()

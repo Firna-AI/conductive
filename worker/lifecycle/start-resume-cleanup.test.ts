@@ -33,7 +33,7 @@ it('ends a timed-out resume and blocks later startup until durable stop cleanup 
   expect(await start.retry()).toBe(false)
   expect(fixture.boat.commands).toHaveLength(commands)
   expect(fixture.boat.resumeIds).toEqual(['bx_1'])
-  start.restart()
+  await start.restart()
   await start.tick(deadlineAt + 30_000)
   expect(fixture.boat.stopIds).toEqual(['bx_1', 'bx_1'])
   expect(await start.retry()).toBe(false)
@@ -92,7 +92,7 @@ it('keeps a failed resume after late runner readiness and permits a safe new rea
     error: null,
   })
   const stops = fixture.boat.stopIds.length
-  await start.advance()
+  await start.tick(fixture.runtime.dependencies.now() + 1_000)
   expect(fixture.boat.stopIds).toHaveLength(stops)
 })
 
@@ -114,7 +114,7 @@ it('completes cancellation while failed stops retry beyond the original resume d
   }
   expect(await start.wait()).toEqual(cancelled)
   expect((await start.actor.readLifecycle())?.state).toBe('stopped')
-  start.restart()
+  await start.restart()
   await start.tick(deadlineAt + 300_000)
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toEqual(cancelled)

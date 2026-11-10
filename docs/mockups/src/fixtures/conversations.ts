@@ -4,6 +4,8 @@
 
 import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
+import { attachmentConversations } from './attachmentConversations'
+import type { Attachment } from './attachments'
 import { changedFiles, type ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
 import { lostConversations } from './lostConversations'
@@ -11,7 +13,10 @@ import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
-import { newWorkspaceConversations } from './newWorkspaceConversations'
+import {
+  newWorkspaceConversations,
+  savedCartsMessage,
+} from './newWorkspaceConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
@@ -32,6 +37,8 @@ export type ChatItem =
       kind: 'user'
       id: string
       text: string
+      /** The files of the message, which show under it. */
+      attachments?: readonly Attachment[]
       queued?: boolean
       /** Sent while a turn runs: it joins that turn as a new part. */
       during?: true
@@ -134,6 +141,8 @@ export const conversationKeys = [
   'files-unavailable',
   'stopped-files-unavailable',
   'linked',
+  'sent-files',
+  'queued-files',
   'link-sent',
   'link-answer',
   'other-org-link',
@@ -279,6 +288,7 @@ export const conversations: Readonly<
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations,
+  ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
   ...workspaceLinkConversations(history),
   ...workConversations({
     start: autocompleteStart,

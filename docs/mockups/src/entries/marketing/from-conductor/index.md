@@ -38,7 +38,9 @@ phone and desktop sizes, in light and dark.
   own. CSS shows the merged cell on a computer and the cell of each row on
   a phone, so the page needs no script.
 - A line under the table says that Conductive is not affiliated with
-  Conductor. The last call to action is Join the waitlist.
+  Conductor. The last call to action has the actions of the home page:
+  Sign up, and Download for Mac, which leads to the Mac app section of the
+  home page.
 - The home page links to the page from a short link above its headline.
   The footer of the site links to it from its Product column.
 
