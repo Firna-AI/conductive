@@ -133,6 +133,11 @@ describe('the org settings of a member who is not an admin', () => {
     const history = (newest: ImageBuild) => ({
       builds: [newest, done],
       currentImageBuildId: done.id,
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
     const first = [line(1, 'Cloning 3 repositories')]
     const more = [...first, line(2, 'added 1184 packages')]

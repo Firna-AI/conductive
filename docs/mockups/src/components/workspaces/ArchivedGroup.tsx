@@ -5,16 +5,19 @@ import { WorkspaceRowView } from './WorkspaceRow'
 import styles from './SectionList.module.css'
 
 /**
- * The archived workspaces at the end of the list, from decision 16. The
- * group is the app's own, not a section of the user, so it has no menu,
- * and it is collapsed until the user opens it. An archived workspace opens
- * with its chat read-only. `controlsOf` draws the menu that a right click
- * opened on a row, which only an admin has on an archived row.
+ * The archived workspaces at the end of the list. The group is the app's
+ * own, not a section of the user, so it has no menu, and it is collapsed
+ * until the user opens it. An archived workspace opens with its chat
+ * read-only. While the app keeps its cloud computer, its row offers Restore
+ * on hover to every member, except in a suspended org (`readOnly`).
+ * `controlsOf` draws the menu that a right click opened on a row, which
+ * only an admin has on an archived row.
  */
 export function ArchivedGroup(props: {
   rows: readonly WorkspaceRow[]
   open: boolean
   variant: 'sidebar' | 'page'
+  readOnly: boolean
   controlsOf?: (row: WorkspaceRow) => RowControls | undefined
 }) {
   const Chevron = props.open ? ChevronDown : ChevronRight
@@ -41,6 +44,7 @@ export function ArchivedGroup(props: {
             <li key={row.workspace.key}>
               <WorkspaceRowView
                 controls={props.controlsOf?.(row)}
+                restorable={!props.readOnly && row.restoreOpen === true}
                 row={row}
                 variant={props.variant}
               />

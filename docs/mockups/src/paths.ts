@@ -40,7 +40,6 @@ export const paths = {
   sections: 'app/sections',
   workspaceMenu: 'app/workspace-menu',
   workspaceMenuArchive: 'app/workspace-menu/archive',
-  workspaceMenuArchived: 'app/workspace-menu/archive/archived',
   palette: 'app/command-palette',
   paletteWorkspaces: 'app/command-palette/workspaces',
   paletteRepository: 'app/command-palette/workspaces/repository',
@@ -114,6 +113,10 @@ export const paths = {
     'app/org-settings/cloud-computer/first-build/failed',
   firstBuildComputerNoBuild:
     'app/org-settings/cloud-computer/first-build/no-build',
+  repositoriesChangedFailed:
+    'app/org-settings/cloud-computer/repositories-changed/build-failed',
+  repositoriesChangedNoBuild:
+    'app/org-settings/cloud-computer/repositories-changed/no-build',
   members: 'app/org-settings/members',
   removeMember: 'app/org-settings/members/remove',
   deleteOrg: 'app/org-settings/delete',
@@ -125,8 +128,8 @@ export const paths = {
   loginNotShared: 'app/composer/not-shared',
   reassign: 'app/reassign',
   archive: 'app/archive',
-  archivePushed: 'app/archive/pushed',
-  archived: 'app/archive/archived',
+  justArchived: 'app/archive/just-archived',
+  restored: 'app/archive/restored',
   attachments: 'app/attachments',
   attachmentsSent: 'app/attachments/sent',
   attachmentsQueued: 'app/attachments/queued',

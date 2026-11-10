@@ -17,8 +17,14 @@ Use a separate workspace when a task needs a separate copy of the files.
 You need a connected login for the agent you choose.
 Other members can also send messages under the session's login-sharing rules.
 
+An archived workspace offers read-only chat instead of a message box.
+Restore the workspace before starting a session or sending another message.
+Restore is available for 14 days after Archive while its computer is kept.
+Select **Resume** if the restored workspace is already open.
+
 - [Create a workspace](/docs/workspaces#create-a-workspace-from-a-message)
 - [Connect an agent login](/docs/agent-logins)
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 ## Send a message
 
@@ -31,6 +37,12 @@ Other members can also send messages under the session's login-sharing rules.
 On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
+
+Attached files arrive in `.context/attachments/` in the workspace's repository folder.
+New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
+Git ignores the folder's files unless your repository already tracks them.
+Use **Terminal** to find the ignored files.
+**All files** and **Changes** do not list them.
 
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.

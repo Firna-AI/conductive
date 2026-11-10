@@ -11,13 +11,23 @@ import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { type Org, orgList } from '../fixtures/orgs'
+import { repositoryChanges } from '../fixtures/repositories'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
 import { settingsOrg } from './settingsOrgs'
 
 export const orgSettingsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['tab', 'build', 'script', 'envForm', 'dialog', 'viewer', 'org'],
+  required: [
+    'tab',
+    'build',
+    'script',
+    'repositoryChange',
+    'envForm',
+    'dialog',
+    'viewer',
+    'org',
+  ],
   properties: {
     tab: { enum: ['general', 'repositories', 'computer', 'members'] },
     /**
@@ -32,6 +42,15 @@ export const orgSettingsSchema = {
      * build runs.
      */
     script: { enum: ['built', 'changed'] },
+    /**
+     * The saved repository changes of Acme that its cloud computer does not
+     * hold yet: none, acme/admin-dashboard added, acme/marketing-site
+     * removed, or both. The repository notice then shows on the
+     * Repositories and Cloud computer tabs, in the state that `build`
+     * gives. Firna draws no change, because the notices of its first build
+     * cover the time before its first good build.
+     */
+    repositoryChange: { enum: repositoryChanges },
     /**
      * The open form of the environment variables, which the cloud computer
      * tab of an admin shows: none, Add variable, or the new value of
@@ -68,6 +87,7 @@ export const acmeSettings: OrgSettingsState = {
   tab: 'general',
   build: 'ready',
   script: 'built',
+  repositoryChange: 'none',
   envForm: 'none',
   dialog: 'none',
   viewer: 'admin',

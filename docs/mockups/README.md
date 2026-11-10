@@ -55,7 +55,8 @@ of [the operator section](design-operator.md).
 shows. It also gives the rules of the folder pages and the entries that
 moved. It gives the child pages of `marketing/docs`, `app/account`,
 `app/banner`, `app/chat`, `app/workspace-menu`, `app/workspace-links`, and `app/tools`,
-and the New workspace dialog. Its linked page,
+the New workspace dialog, and the repositories that wait for a build. Its
+linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section.
@@ -109,8 +110,8 @@ shows them in the New workspace dialog.
 
 [Orgs and members](orgs-and-logins.md#orgs-and-members) gives what the
 screens show of orgs and members: the roles, the logins of the sessions,
-the owners of the workspaces, the menu of a workspace row, Archive, and
-Delete org.
+the owners of the workspaces, the menu of a workspace row, Archive and
+Restore, and Delete org.
 
 No screen shows the value of an env var. Each env var of an org has a
 Secret mark: an admin switches it in the row, and a new variable starts

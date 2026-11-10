@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { Archive, CircleAlert, CirclePause } from 'lucide-react'
-import { archivedOn } from '../../fixtures/archive'
+import { archivedOn, restoreUntil } from '../../fixtures/archive'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
@@ -11,6 +11,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import { refusedIcon } from '../orgs/suspension'
 import styles from './SandboxNotice.module.css'
 import type {
+  ArchiveRestore,
   SandboxNoticeState,
   SandboxPanelState,
   SandboxProblem,
@@ -42,49 +43,99 @@ const history = 'Your chat history is available.'
  */
 const chatSaved = 'Your chat is saved.'
 
-const problems: Readonly<Record<SandboxProblem, Problem>> = {
-  stopped: {
-    icon: CirclePause,
-    title: 'Sandbox stopped',
-    body: saved,
-    panelBody: saved,
-    action: 'Resume',
+const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
+  {
+    stopped: {
+      icon: CirclePause,
+      title: 'Sandbox stopped',
+      body: saved,
+      panelBody: saved,
+      action: 'Resume',
+      tone: 'neutral',
+    },
+    error: {
+      icon: CircleAlert,
+      title: "The sandbox couldn't start",
+      body: saved,
+      panelBody: saved,
+      action: 'Try again',
+      tone: 'danger',
+    },
+    refused: {
+      icon: refusedIcon,
+      title: "The sandbox can't start",
+      body: history,
+      panelBody: history,
+      tone: 'neutral',
+    },
+  }
+
+const archivedTitle = `Archived on ${archivedOn}`
+
+/**
+ * An archived workspace: Restore until its last day, no Restore in a
+ * suspended org, which promises no files, the day when Restore ended,
+ * while a failed delete of the cloud computer can still try again, or the
+ * words of a cloud computer that the app deleted.
+ */
+const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
+  available: {
+    icon: Archive,
+    title: archivedTitle,
+    body: `Restore it until ${restoreUntil} to bring back its files and sessions.`,
+    panelBody: 'The files and the tools come back with Restore.',
+    action: 'Restore',
     tone: 'neutral',
   },
-  error: {
-    icon: CircleAlert,
-    title: "The sandbox couldn't start",
-    body: saved,
-    panelBody: saved,
-    action: 'Try again',
-    tone: 'danger',
-  },
   refused: {
-    icon: refusedIcon,
-    title: "The sandbox can't start",
+    icon: Archive,
+    title: archivedTitle,
     body: history,
     panelBody: history,
     tone: 'neutral',
   },
-  archived: {
+  ended: {
     icon: Archive,
-    title: `Archived on ${archivedOn}`,
+    title: archivedTitle,
+    body: `Restore ended on ${restoreUntil}, and the chat is read-only.`,
+    panelBody: history,
+    tone: 'neutral',
+  },
+  deleted: {
+    icon: Archive,
+    title: archivedTitle,
     body: 'Its cloud computer is deleted, and the chat is read-only.',
     panelBody: 'The files and the tools went with the cloud computer.',
     tone: 'neutral',
   },
 }
 
+/** The words and the action of a sandbox that is not running. */
+function problemOf(state: SandboxNoticeState): Problem {
+  if (state.problem !== 'archived') return problems[state.problem]
+  return archived[state.restore ?? 'deleted']
+}
+
 /**
- * The one way forward. The mockups draw one failed first start, so its Try
- * again leads to the start of a new cloud computer in that workspace.
+ * The screen that the one way forward leads to, when the mockups draw it:
+ * the start of a new cloud computer after the one failed first start that
+ * they draw, and the workspace back in its section after a Restore.
  */
+function recoveryPath(state: SandboxNoticeState): string | undefined {
+  if (state.problem === 'archived') return paths.restored
+  if (state.problem === 'error' && state.firstStart === true) {
+    return paths.retrying
+  }
+  return undefined
+}
+
+/** The one way forward, as a link where the mockups draw its screen. */
 function RecoveryButton(props: { label: string; state: SandboxNoticeState }) {
-  const { state } = props
   const button = <ActionButton tone="primary">{props.label}</ActionButton>
-  if (state.problem !== 'error' || state.firstStart !== true) return button
+  const to = recoveryPath(props.state)
+  if (to === undefined) return button
   return (
-    <ScreenLink asChild to={paths.retrying}>
+    <ScreenLink asChild to={to}>
       {button}
     </ScreenLink>
   )
@@ -114,10 +165,11 @@ function barBody(state: SandboxNoticeState, body: string): string {
  * stays under it. A refused start shows the words of the refusal, and no
  * action, because the start stays refused until its cause changes. A start
  * that failed shows the message that the app saved for it, such as the
- * 20-minute limit of a start, before the body.
+ * 20-minute limit of a start, before the body. An archived workspace offers
+ * Restore until the app deletes its cloud computer.
  */
 export function SandboxBar(props: SandboxNoticeState) {
-  const problem = problems[props.problem]
+  const problem = problemOf(props)
   return (
     <Notice
       action={
@@ -152,8 +204,7 @@ export function SandboxPanel(props: {
       </div>
     )
   }
-  const problem = problems[state.problem]
-  const archived = state.problem === 'archived'
+  const problem = problemOf(state)
   return (
     <EmptyState
       action={
@@ -167,7 +218,7 @@ export function SandboxPanel(props: {
           : keptBody(state, problem.panelBody)
       }
       icon={problem.icon}
-      title={archived ? 'Archived' : problem.title}
+      title={state.problem === 'archived' ? 'Archived' : problem.title}
     />
   )
 }

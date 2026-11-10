@@ -8,7 +8,7 @@ order: 40
 ## Choose people you trust
 
 Every member of an org can see its workspaces and chats.
-Members can use the files and tools of those workspaces.
+Members can use the files and tools of workspaces that are not archived.
 Their terminal access can reach credentials available on a workspace's cloud computer.
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
@@ -67,8 +67,8 @@ They do not offer a call to read or message another workspace's chat.
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
 
-A cloud computer from a new **Build computer** keeps the stored agent login outside that computer.
-Each turn gets a temporary credential called a turn token.
+A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
+Each turn there gets a temporary credential called a turn token.
 A program or member with terminal access can read or copy it.
 That token can use the session starter's login through Conductive while the turn runs.
 It also works from outside the cloud computer during that turn.
@@ -78,23 +78,29 @@ Any request that still runs ends within 30 seconds after the turn ends.
 A program that keeps running can read the tokens of later turns, including turns in other members' sessions.
 Agent settings in the repository can send model requests and their turn token to another address.
 
-An older cloud computer can still receive the agent login itself.
+An older cloud computer starts from an earlier setup that still permits software to receive the agent login itself.
+A program or member with terminal access can read or copy that login during a turn.
 A copied login can remain usable after the turn ends.
 Removing a login from Account does not revoke a copy held elsewhere.
-Installing newer software in an older computer does not remove this risk.
+
+Installing newer software on that computer does not remove this risk.
+A new build gives the protection to new cloud computers created from its setup.
 Use **Build computer** and a new workspace to get the newer protection.
+
+Agent settings in the repository can send model requests and their credentials to another address.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-A copied credential from another member's workspace can still expose credentials of later turns.
+A copied credential for a workspace connection can still expose credentials of later turns.
 
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
-Save the work you need before archiving an affected workspace.
-Archive deletes its cloud computer and ends that workspace's connection access.
+Archive stops its cloud computer and ends that workspace's connection access.
+Conductive keeps its files for 14 days.
+Those files can still hold copied credentials during that window.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
@@ -149,11 +155,19 @@ Keep the app open and retry if a permission change takes effect but cannot save.
 
 A normal computer stop keeps its files and sessions.
 The chat stays readable while the computer is stopped.
-Archive deletes the computer and keeps its chat read-only.
+
+Archive stops the computer and keeps it and its files for 14 days.
+Its chat stays read-only, with no file lists or tools.
+Every member of an active org can restore it during that window while its computer is kept.
+Restore returns the workspace stopped.
+
+Restore ends after 14 days.
+Conductive then deletes the computer and its files.
+Its chat remains read-only after deletion.
 
 Deleting an org stops its computers and starts a seven-day restore window.
 After that window, deletion removes its data and computers.
-Keep important work in GitHub before you archive or delete it.
+Keep important work in GitHub if you need it after a Restore window ends.
 
 The Terms and Privacy notice give the service's data and retention information.
 

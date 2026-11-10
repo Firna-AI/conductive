@@ -11,6 +11,10 @@ Open a workspace in an org you belong to.
 Its cloud computer must start before the tools can connect.
 Select **Resume** if the computer is stopped.
 
+For an archived workspace, use **Restore** first if it is available.
+Restore leaves the computer stopped.
+Resume it before opening **Terminal** or **Preview**.
+
 Commands in **Terminal** run on that cloud computer.
 A preview shows a web server that runs there too.
 
@@ -131,6 +135,7 @@ Members with terminal access can also obtain GitHub credentials available to the
 Conductive offers **Terminal** and **Preview** as workspace tools.
 The Mac app provides a window for Conductive and optional Mac command requests.
 
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 - [Change startup commands](/docs/cloud-computer#run-commands-at-startup)
 - [Read the security guide](/docs/security)
 - [Use the Mac app](/docs/mac-app)
