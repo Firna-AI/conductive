@@ -82,9 +82,11 @@ it('replays every history page of a kept failed create to another member and kee
   expect(histories.map((history) => history.throughEventNumber)).toEqual(
     histories.map(() => through),
   )
-  expect(envelopes.at(-2)).toMatchObject({
-    event: { type: 'workspace.updated', workspace: { state: 'error' } },
-  })
+  expect(envelopes.slice(-3)).toMatchObject([
+    { event: { type: 'workspace.updated', workspace: { state: 'error' } } },
+    { event: { type: 'start.updated' } },
+    { event: { type: 'ports.updated', ports: null } },
+  ])
   expect(envelopes).toEqual(
     expect.arrayContaining([
       expect.objectContaining({

@@ -187,7 +187,7 @@ async function applyRunnerEvent(
         parsed.occurredAt,
       )
     else await transaction.emit(event, parsed.occurredAt)
-    if (event.type === 'start.updated')
+    if (event.type === 'start.updated' || event.type === 'ports.updated')
       await transaction.repairs.remove(event.type)
   }
   return { ready: false, accepted: true }

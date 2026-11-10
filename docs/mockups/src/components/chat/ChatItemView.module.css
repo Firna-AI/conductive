@@ -17,14 +17,6 @@
   overflow-wrap: anywhere;
 }
 
-.queued {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--ui-muted);
-  font-size: var(--ui-text-sm);
-}
-
 /* A long link or a long piece of code breaks to fit the line. */
 .agent {
   display: flex;

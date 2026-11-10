@@ -54,11 +54,13 @@ of [the operator section](design-operator.md).
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
 moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/banner`, `app/chat`, `app/workspace-menu`, and `app/workspace-links`,
+`app/banner`, `app/chat`, `app/workspace-menu`, `app/workspace-links`, and `app/tools`,
 and the New workspace dialog. Its linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section.
+The [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+page gives their child pages and flows.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared
@@ -145,7 +147,8 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
+pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs),
+and [the pricing page](marketing-site.md#the-pricing-page).
 It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
@@ -154,7 +157,9 @@ states its requirements. It draws the real rows: its rows, statuses, dates,
 and words come from `src/marketing/from-conductor/`, the modules that the
 site also reads, as
 [the marketing site README](../../src/marketing/README.md#the-comparison-page)
-says. The pictures are captures of real screens, such as the workspace
+says. The pricing page reads its plans, its prices, and its words from
+`src/marketing/pricing.ts` in the same way. The pictures are captures of
+real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the
 [capture steps](../../src/marketing/README.md#pictures).

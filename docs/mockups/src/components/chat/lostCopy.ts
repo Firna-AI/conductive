@@ -1,8 +1,9 @@
 /**
- * The words of the chat and the file lists for data that they do not have: a
- * runner event that the workspace refused, the part of a tool's output or of
- * a turn's file list that the runner left out, and files that the cloud
- * computer could not read. The words name the lost data in product terms,
+ * The words of the chat, the file lists, and the list of servers of the
+ * Preview tool for data that they do not have: a runner event that the
+ * workspace refused, the part of a tool's output or of a turn's file list
+ * that the runner left out, and files that the cloud computer could not
+ * read. The words name the lost data in product terms,
  * and never show the refused data itself. A line can follow a newer turn, so
  * no words point at "this turn".
  */
@@ -22,6 +23,7 @@ export type LostWhat =
   | 'changes'
   | 'start-steps'
   | 'title'
+  | 'servers'
   | 'agent-update'
   | 'update'
 
@@ -40,6 +42,7 @@ const subjects: Readonly<Record<LostWhat, string>> = {
   changes: 'An update to Changes',
   'start-steps': 'An update to the start steps',
   title: 'The new workspace name',
+  servers: 'An update to the list of servers',
   'agent-update': 'An update from an agent',
   update: 'An update from the cloud computer',
 }
@@ -88,7 +91,7 @@ export function unlistedFiles(count: number): string {
  */
 export type UnavailableData = Extract<
   LostWhat,
-  'all-files' | 'changes' | 'start-steps' | 'title'
+  'all-files' | 'changes' | 'start-steps' | 'title' | 'servers'
 >
 
 const unavailable: Readonly<Record<UnavailableData, string>> = {
@@ -96,6 +99,7 @@ const unavailable: Readonly<Record<UnavailableData, string>> = {
   changes: 'The latest list of changes is unavailable',
   'start-steps': 'The latest start steps are unavailable',
   title: 'The new workspace name is unavailable',
+  servers: 'The latest list of servers is unavailable',
 }
 
 /** The words of a failed-repair notice, which name the unavailable data. */
