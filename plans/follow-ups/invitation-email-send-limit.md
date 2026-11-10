@@ -1,0 +1,32 @@
+# Org invitations have no send limit
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, from the second options check of the plan `plans/command-palette-feedback.md`, branch `calummoore/command-palette-feedback-option`.
+- **Location:** `worker/members/route.ts:121` (the invite route), `worker/mail-sender.ts` (the shared mail sender), and the section on invitations of `docs/protocol/orgs-and-members.md`.
+- **Reason:** The problem is in code on `origin/main` that the feedback plan does not change, and a limit adds a new refusal, which the user decides.
+
+- **Source:** Review. **Category:** Security.
+- **Terms:**
+  - **Resend:** the email service that sends the emails of the app, through `worker/mail-sender.ts`, from `mail.conductive.build`.
+  - **Send quota:** the number of emails that the Resend plan of the deployment allows in a day or a month. The Free plan allows 100 emails a day.
+- **Background:**
+  - An admin of an org invites a person by email. The route `POST` of the invites of an org stores the invitation, then sends one email through Resend.
+  - The route has no limit on the number of invitations.
+  - Each person with app access can create an org, and so becomes its admin.
+  - The invitation emails and the approval emails of the waitlist share one Resend account, with one send quota and one rate limit.
+  - Without pay-as-you-go, Resend refuses each send after the quota runs out. With it, each extra email costs money.
+  - An approval email tries again for up to 24 hours, then stops.
+- **Problem:** One person can send invitation emails with no limit, to any address, from the product's own sender.
+- **Impact if no action:** One person can use up the send quota, so other invitations and approval emails fail. The same person can also send many unwanted emails to strangers from the product's address, which can harm the reputation of the sending domain.
+- **Root question:** How do the emails of the app keep working, and the sending domain keep its reputation, while one person sends invitations in a loop?
+- **Options:**
+  - **A.** Change nothing. An operator suspends a person who misuses invitations. Effort: Small.
+  - **B.** A limit of invitations for each person, such as 20 in a day. The route answers a send above it with HTTP 429, and the Members tab says when to try again. It needs a table of send times, a screen state, and its mockup. Effort: Medium.
+  - **C.** The shared mail sender applies limits to each email that a person's request starts: a limit for each person, and a daily limit for the whole app below the send quota. The approval email stays outside the limits, because an operator starts it. Each later kind of email gets the limits by default. Effort: Medium.
+- **Left out:** A limit in the Members tab alone, because a crafted request skips it.
+- **Wider fix:** C. Each kind of email that a person starts then has a limit by default.
+- **Previous examples:** The plan `plans/command-palette-feedback.md` asks the same question for feedback emails, as its decision 224. The follow-up item `plans/follow-ups/draft-attachment-quota.md` asks it for the draft files of the chat.
+- **Related:** Decision 224 of `plans/command-palette-feedback.md` offers option G, which is option C here. When the user chooses that option there, that plan covers this item, and its pull request deletes this file.
+- **Recommendation:** C. One rule in the sender protects every email that a person starts, and it keeps room in the quota for the approval emails.
+- **Action:** ask the user, because each option except A adds a new refusal.
