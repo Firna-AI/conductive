@@ -27,6 +27,6 @@
 - **Left out:** No change. It keeps the wrong words.
 - **Wider fix:** None. The class is one mismatch between a protocol doc and the code, and the `documentation` skill already says to change the wrong side.
 - **Previous examples:** None found.
-- **Related:** `plans/copy-session-transcripts.md`: a copied transcript repeats the words of the chat, so its full copy also says "of output left out" when it repeats this line.
+- **Related:** `docs/protocol/session-transcripts.md`: a copied transcript repeats the words of the chat, so its full copy also says "of output left out" when it repeats this line.
 - **Recommendation:** A. The chat was built around the description, and tool output needs its own design of size, masking, and display.
 - **Action:** ask the user, because the user decides which side of a mismatch between a protocol doc and the code is right.
