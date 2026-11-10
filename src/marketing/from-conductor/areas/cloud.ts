@@ -34,7 +34,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Computer builds and rollback',
     status: 'available',
-    note: 'Builds show live logs and history. A failed build keeps the last good image. Selecting an older image is under consideration.',
+    note: 'Builds show live logs and history, and failures keep the last good image. More detailed progress and selecting older images are under consideration.',
   },
   {
     id: 'configure-with-an-agent',
@@ -83,7 +83,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Cloud agent credentials',
     status: 'available',
-    note: 'Each member connects Claude or Codex and can share a login with teammates. Shared admin keys have no delivery plan.',
+    note: 'Members connect and share agent logins. Using keys from cloud computer environment variables is under consideration.',
   },
   {
     id: 'workspace-details',

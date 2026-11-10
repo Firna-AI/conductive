@@ -30,6 +30,20 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     note: 'Attach files of up to 25 MB each for the agent to read. If a file is too large, attach a smaller file.',
   },
   {
+    id: 'drag-and-drop-attachments',
+    area: 'agents-and-chat',
+    name: 'Drag and drop attachments',
+    status: 'considering',
+    note: 'Dropping files into the message box as inline attachments is under consideration. Use the attachment button today.',
+  },
+  {
+    id: 'large-text-pastes',
+    area: 'agents-and-chat',
+    name: 'Large text pastes',
+    status: 'considering',
+    note: 'Turning large text pastes into attached files is under consideration. Save the text as a file and attach it today.',
+  },
+  {
     id: 'terminal-context',
     area: 'agents-and-chat',
     name: 'Terminal context',
@@ -160,8 +174,9 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'agent-to-agent-messages',
     area: 'agents-and-chat',
     name: 'Agent-to-agent messages',
-    status: 'considering',
-    note: 'Agents can create another workspace with a first message. Messages to existing sessions are under consideration.',
+    status: 'planned',
+    note: 'Agents can create another workspace with a first message. Sending messages to existing sessions is planned.',
+    due: null,
   },
   {
     id: 'codex-personalities',
