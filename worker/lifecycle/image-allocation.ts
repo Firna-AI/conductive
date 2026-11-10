@@ -24,6 +24,6 @@ export async function recoverImageBuildAllocation(
     provider,
     buildSandboxIntent(db, job, mayHaveAllocated),
   )
-  await assignBuildSandbox(db, job.buildId, sandbox.id)
+  await assignBuildSandbox(db, job.buildId, sandbox.id, job.providerAccount)
   return sandbox.id
 }

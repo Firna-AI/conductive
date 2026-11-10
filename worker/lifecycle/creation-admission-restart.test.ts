@@ -23,6 +23,7 @@ it('keeps admission when the actual runtime stops immediately after the machine 
       avatarUrl: null,
     }
     const job: WorkspaceStartJob = {
+      providerAccount: 'boat',
       workspaceId: 'runtime-admission-workspace',
       orgId: 'runtime-org',
       kind: 'create',

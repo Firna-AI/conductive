@@ -20,4 +20,4 @@
 - **Impact if no action:** A broken step can stop every deploy, and the live app stays on old code.
 - **Needs:** A later deploy run, and a person who can sign in to the deployed app.
 - **Done when:** a later run reuses the archive, and an agent answers a message in the deployed app. Then delete this item.
-- **Related:** `plans/follow-ups/runner-archive-from-deploy-check.md` checks the archive in an image build.
+- **Related:** `plans/follow-ups/runner-archive-from-deploy-check.md` checks the archive in an image build. `plans/follow-ups/provider-groundwork-deployed-smoke.md` also checks a deploy run and a message in the deployed app, so one session can run both items.

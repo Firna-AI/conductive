@@ -13,6 +13,7 @@ import {
 } from '../test-support/harness'
 import { membersGate } from './gate'
 import { seedAppAccess } from '../test-support/app-access'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { membersSeed } from './fixture-data.test-support'
 import { maintainDisksForTests } from './maintenance-test-support'
 import { workspaceCreator } from './ownership'
@@ -168,8 +169,8 @@ export async function seedWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, sandbox_id, state, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'Lisbon', 'member/lisbon-ab12', ?, 'working', ?, ?)`,
+       name, branch, sandbox_id, provider_account, state, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'Lisbon', 'member/lisbon-ab12', ?, ?, 'working', ?, ?)`,
       )
       .bind(
         id,
@@ -178,6 +179,7 @@ export async function seedWorkspace(
         creator.id,
         `general-${org.id}`,
         sandboxId,
+        DEFAULT_PROVIDER_ACCOUNT,
         TEST_TIME,
         TEST_TIME,
       ),

@@ -1,6 +1,7 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { randomToken } from '../security/crypto'
 import { HttpError } from '../http'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import type { Workspace } from '../workspace'
 import type { ImageRuntime } from './image-builds'
 import { createGitHubImageSourceMaterializer } from './image-sources/materialize'
@@ -40,12 +41,20 @@ export function imageRuntime(
     dependencies,
     prepareSources: createGitHubImageSourceMaterializer(env, dependencies),
     scheduler: {
-      schedule: async (orgId, software, at, buildId) => {
+      schedule: async (orgId, software, at, buildId, providerAccount) => {
         await workspaceNamespace(env)
           .getByName(`org-image:${orgId}`, {
             locationHint: 'weur',
           })
-          .scheduleImage({ orgId, software, nextAt: at, buildId })
+          .scheduleImage({
+            orgId,
+            software,
+            nextAt: at,
+            buildId,
+            ...(providerAccount && providerAccount !== DEFAULT_PROVIDER_ACCOUNT
+              ? { providerAccount }
+              : {}),
+          })
       },
     },
   }

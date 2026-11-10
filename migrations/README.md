@@ -90,6 +90,42 @@ and body for stable delivery retries. A missing verified email saves the
 disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
 owns email delivery and code management.
 
+`202611092100_provider_accounts.sql` adds `provider_account` to each table
+that holds a sandbox ID or a saved snapshot name: `workspaces`,
+`image_builds`, `image_build_jobs`, `lifecycle_sandbox_cleanup`,
+`image_leases`, `workspace_creation_plans`, `image_source_jobs`,
+`org_deletion_resources`, `terminal_credentials`, and `preview_hostnames`.
+The column defaults to `boat`, the one production account. The default
+fills the existing rows and the rows that the previous Worker writes during
+a deploy. Name the account in each new write, and do not rely on the default.
+In `image_build_jobs`, the column holds the account of `previous_image_name`.
+In `preview_hostnames`, it holds the account of `listener_sandbox_id`.
+`settings` gets no column. The next migration moves the org image out of
+`settings`.
+The migration rebuilds `workspaces`, so that a unique index on
+`(provider_account, sandbox_id)` replaces the unique `sandbox_id`.
+D1 keeps cascading deletes active while it defers foreign keys. So the
+migration copies each child table of `workspaces` aside and back. It keeps
+each workspace number and the org counters, and it recreates both triggers.
+It also rebuilds `org_deletion_resources` with the account in its primary
+key, and it adds the account to the `image_leases_snapshot` index.
+
+`202611092305_org_images.sql` adds `org_images`, one org image for each org
+and provider account, with the primary key `(org_id, provider_account)`.
+Each row holds `image_name`, `image_build_id`, `last_refresh_at`,
+`last_push_refresh_at`, `pending_push_refresh_at`, and
+`next_image_refresh_at`. `provider_account` has no default, so each writer
+names it. The non-unique index `org_images_account_name`, on
+`(provider_account, image_name)`, serves the check of whether a record still
+names an image. The migration copies these six fields of each `settings` row. The
+copy takes the account of the build that `image_build_id` names, or `boat`
+without such a build. Then the migration drops the six fields from
+`settings`. The scripts, the env vars, and the revision stay in `settings`.
+A Worker version from before this migration cannot run on the new schema, as
+[When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails) says.
+The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#org-images)
+page gives the readers and the rules of these records.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

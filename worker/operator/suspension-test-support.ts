@@ -4,7 +4,8 @@ import { createWorkspace } from '../lifecycle/workspaces'
 import { API_PATHS, type User } from '../../src/shared/api'
 import { seedWorkspace } from '../members/members-test-support'
 import { seedBackendLogin } from '../lifecycle/backend-seed.test-support'
-import { orgSandboxProvider } from '../sandbox/client'
+import { orgProviderForAccount } from '../sandbox/client'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import {
   assignSandbox,
   readWorkspace,
@@ -55,11 +56,12 @@ export async function existingWorkspace(
       `${id}-message`,
     )
     .run()
-  const provider = await orgSandboxProvider(
+  const provider = await orgProviderForAccount(
     env,
     user.id,
     fixture.org.id,
     dependencies.fetch,
+    DEFAULT_PROVIDER_ACCOUNT,
   )
   const sandbox = await provider.create({
     name: id,
@@ -68,7 +70,13 @@ export async function existingWorkspace(
     idempotencyKey: id,
     labels: { org: fixture.org.id, workspace: id },
   })
-  await assignSandbox(env.DB, fixture.org.id, id, sandbox.id)
+  await assignSandbox(
+    env.DB,
+    fixture.org.id,
+    id,
+    sandbox.id,
+    DEFAULT_PROVIDER_ACCOUNT,
+  )
   await fixture.runtime.workspace(id).initializeLifecycle({
     workspaceId: id,
     orgId: fixture.org.id,

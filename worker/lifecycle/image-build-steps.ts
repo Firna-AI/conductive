@@ -60,7 +60,12 @@ export async function advanceBuildStep(
       provider,
       buildSnapshotIntent(env.DB, job),
     )
-    await assignBuildSnapshot(env.DB, buildId, snapshot.name)
+    await assignBuildSnapshot(
+      env.DB,
+      buildId,
+      snapshot.name,
+      job.providerAccount,
+    )
     if (snapshot.status === 'failed') throw new Error('Image save failed')
     if (snapshot.status === 'ready')
       await completeBuildPhase(env.DB, buildId, 'publish')
@@ -78,6 +83,7 @@ export async function advanceBuildStep(
       orgId,
       buildId,
       sandboxId: job.sandboxId,
+      providerAccount: job.providerAccount,
       repositories: readRepositories(JSON.parse(job.repositoriesJson)),
       repositoryLocations: capturedRepositoryLocations(
         job.repositoryLocationsJson,

@@ -5,8 +5,9 @@ life of each workspace. The org image is the saved snapshot that every new
 sandbox of an org starts from. A workspace is one task with its own branch
 and its own Boat sandbox. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
-with the app's one Boat key, as the [sandbox area](../sandbox/README.md)
-says.
+with the client of the provider account that each record stores.
+[Provider accounts](provider-accounts.md) and the
+[sandbox area](../sandbox/README.md) say how.
 
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
@@ -66,6 +67,12 @@ logs, snapshot leases, and refresh timers.
 ## Settings
 
 [Lifecycle settings](settings.md) gives the environment inputs and captured secret values.
+
+## Provider accounts
+
+[Provider accounts](provider-accounts.md) gives the provider account that
+each record and start job stores, the client that each call uses, and the
+[org image of each account](provider-accounts.md#org-images).
 
 ## Development
 

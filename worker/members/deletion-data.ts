@@ -1,6 +1,7 @@
 import { activeAdminPredicate } from './org-data'
 import { CLEANUP_LEASE_MS, lifecycleWritePredicate } from './lifecycle-data'
 import { computerDeletedStatement } from '../lifecycle/computer-ledger'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 const RESTORE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -125,16 +126,40 @@ export async function recordSuspendedResources(
       .bind(orgId, ...ownership),
     db
       .prepare(
-        `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, sort_order)
-       SELECT org_id, 'sandbox', sandbox_id, CASE WHEN purpose = 'build' THEN 1 ELSE 0 END
-       FROM computer_ledger WHERE org_id = ? AND deleted_at IS NULL AND create_rejected = 0 AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}`,
+        `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, provider_account, sort_order)
+       SELECT org_id, 'sandbox', sandbox_id, provider_account, 0 FROM workspaces
+         WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}
+       UNION ALL SELECT org_id, 'sandbox', sandbox_id, provider_account, 1 FROM image_builds
+         WHERE org_id = ? AND sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}
+       UNION ALL SELECT org_id, 'sandbox', sandbox_id, provider_account, 0 FROM lifecycle_sandbox_cleanup
+         WHERE org_id = ? AND ${lifecycleWritePredicate}
+       UNION ALL SELECT l.org_id, 'sandbox', l.sandbox_id, COALESCE(
+         (SELECT provider_account FROM lifecycle_sandbox_cleanup WHERE org_id = l.org_id AND sandbox_id = l.sandbox_id),
+         (SELECT provider_account FROM workspaces WHERE org_id = l.org_id AND sandbox_id = l.sandbox_id),
+         (SELECT provider_account FROM image_builds WHERE org_id = l.org_id AND sandbox_id = l.sandbox_id), ?),
+         CASE WHEN l.purpose = 'build' THEN 1 ELSE 0 END
+       FROM computer_ledger l WHERE l.org_id = ? AND l.deleted_at IS NULL
+         AND l.create_rejected = 0 AND l.sandbox_id IS NOT NULL AND ${lifecycleWritePredicate}`,
       )
-      .bind(orgId, ...ownership),
+      .bind(
+        orgId,
+        ...ownership,
+        orgId,
+        ...ownership,
+        orgId,
+        ...ownership,
+        DEFAULT_PROVIDER_ACCOUNT,
+        orgId,
+        ...ownership,
+      ),
     db
       .prepare(
-        `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id)
-       SELECT org_id, 'snapshot', org_image_name FROM settings WHERE org_id = ? AND org_image_name IS NOT NULL AND ${lifecycleWritePredicate}
-       UNION ALL SELECT org_id, 'snapshot', snapshot_name FROM image_builds WHERE org_id = ? AND snapshot_name IS NOT NULL AND ${lifecycleWritePredicate}`,
+        `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, provider_account)
+       SELECT i.org_id, 'snapshot', i.image_name, i.provider_account
+         FROM org_images i
+         WHERE i.org_id = ? AND i.image_name IS NOT NULL AND ${lifecycleWritePredicate}
+       UNION ALL SELECT org_id, 'snapshot', snapshot_name, provider_account FROM image_builds
+         WHERE org_id = ? AND snapshot_name IS NOT NULL AND ${lifecycleWritePredicate}`,
       )
       .bind(orgId, ...ownership, orgId, ...ownership),
     db
@@ -149,6 +174,7 @@ export async function recordSuspendedResources(
 export interface CleanupResource {
   kind: 'sandbox' | 'snapshot'
   id: string
+  providerAccount: string
   stoppedAt: number | null
   removedAt: number | null
 }
@@ -157,8 +183,9 @@ export async function cleanupResources(db: D1Database, orgId: string) {
   return (
     await db
       .prepare(
-        `SELECT kind, resource_id AS id, stopped_at AS stoppedAt, removed_at AS removedAt
-     FROM org_deletion_resources WHERE org_id = ? ORDER BY kind DESC, sort_order, resource_id`,
+        `SELECT kind, resource_id AS id, provider_account AS providerAccount,
+       stopped_at AS stoppedAt, removed_at AS removedAt
+     FROM org_deletion_resources WHERE org_id = ? ORDER BY kind DESC, sort_order, provider_account, resource_id`,
       )
       .bind(orgId)
       .all<CleanupResource>()
@@ -169,6 +196,7 @@ export async function markResourceStopped(
   db: D1Database,
   orgId: string,
   id: string,
+  providerAccount: string,
   now: number,
   ownership?: { token: string; generation: number },
 ) {
@@ -179,23 +207,24 @@ export async function markResourceStopped(
   const result = await db.batch([
     db
       .prepare(
-        `UPDATE org_deletion_resources SET stopped_at = ? WHERE org_id = ? AND kind = 'sandbox' AND resource_id = ?${guard}`,
+        `UPDATE org_deletion_resources SET stopped_at = ? WHERE org_id = ?
+         AND kind = 'sandbox' AND resource_id = ? AND provider_account = ?${guard}`,
       )
-      .bind(now, orgId, id, ...bindings),
+      .bind(now, orgId, id, providerAccount, ...bindings),
     db
       .prepare(
         `UPDATE workspaces SET state = CASE WHEN archived_at IS NULL THEN 'stopped' ELSE state END,
        stopped_at = CASE WHEN state = 'stopped' AND stopped_at IS NOT NULL THEN stopped_at ELSE ? END,
        next_disk_keepalive_at = CASE WHEN state = 'stopped' THEN next_disk_keepalive_at ELSE NULL END,
-       updated_at = ? WHERE org_id = ? AND sandbox_id = ?${guard}`,
+       updated_at = ? WHERE org_id = ? AND sandbox_id = ? AND provider_account = ?${guard}`,
       )
-      .bind(now, now, orgId, id, ...bindings),
+      .bind(now, now, orgId, id, providerAccount, ...bindings),
     db
       .prepare(
         `UPDATE image_builds SET state = 'failed', completed_at = ?, error = 'The org was deleted.'
-       WHERE org_id = ? AND sandbox_id = ? AND state = 'running'${guard}`,
+       WHERE org_id = ? AND sandbox_id = ? AND provider_account = ? AND state = 'running'${guard}`,
       )
-      .bind(now, orgId, id, ...bindings),
+      .bind(now, orgId, id, providerAccount, ...bindings),
   ])
   return result[0].meta.changes > 0
 }
@@ -209,9 +238,10 @@ export async function markResourceRemoved(
   await db.batch([
     db
       .prepare(
-        'UPDATE org_deletion_resources SET removed_at = ? WHERE org_id = ? AND kind = ? AND resource_id = ?',
+        `UPDATE org_deletion_resources SET removed_at = ?
+         WHERE org_id = ? AND kind = ? AND resource_id = ? AND provider_account = ?`,
       )
-      .bind(now, orgId, resource.kind, resource.id),
+      .bind(now, orgId, resource.kind, resource.id, resource.providerAccount),
     ...(resource.kind === 'sandbox'
       ? [computerDeletedStatement(db, resource.id, now)]
       : []),

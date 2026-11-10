@@ -13,8 +13,8 @@ export function portUrl(
   const url = new URL(privateOrigin(port))
   url.pathname = terminal ? '/ws' : source.pathname
   url.search = terminal ? '' : source.search
-  url.searchParams.delete('_token')
-  url.searchParams.delete('_port_auth')
+  for (const name of port.credential.stripQueryParameters)
+    url.searchParams.delete(name)
   return url
 }
 
@@ -39,8 +39,8 @@ export function previewLocation(
   port: PrivatePort,
 ): string | null {
   const url = new URL(location, portUrl(request, port, false))
-  url.searchParams.delete('_token')
-  url.searchParams.delete('_port_auth')
+  for (const name of port.credential.stripQueryParameters)
+    url.searchParams.delete(name)
   if (
     ['http:', 'https:'].includes(url.protocol) &&
     url.host === new URL(privateOrigin(port)).host
