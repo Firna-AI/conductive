@@ -13,14 +13,16 @@ type Read<T> = (
 
 /**
  * Reads one file or one diff, and reads it again when an event may change
- * it. A reply for a path that the page no longer shows never shows. A null
- * `path` reads nothing and gives no state, such as while the sandbox
- * starts. A later path reads at once.
+ * it. A reply for a path that the page no longer shows never shows. With
+ * `follow` off, such as while the sandbox does not run, it reads nothing,
+ * and the state stays as the last read left it. When `follow` turns on, it
+ * reads at once.
  */
 export function useFollowed<T>(
   files: WorkspaceFiles,
   read: Read<T>,
-  path: string | null,
+  path: string,
+  follow = true,
 ): { state: Loaded<T> | null; retry: () => void } {
   const loader = useMemo(
     () =>
@@ -28,8 +30,8 @@ export function useFollowed<T>(
     [files, read],
   )
   useEffect(
-    () => (path === null ? undefined : followPath(files, loader, path)),
-    [files, loader, path],
+    () => (follow ? followPath(files, loader, path) : undefined),
+    [files, loader, path, follow],
   )
   const state = useSyncExternalStore(
     loader.subscribe,

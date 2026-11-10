@@ -238,10 +238,7 @@ export function WorkspaceScreen(props: {
       <WorkspaceBody
         center={
           file ? (
-            <FilePage
-              placeholder={filesPlaceholder(state, false)}
-              view={file}
-            />
+            <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
           ) : (
             chat
           )

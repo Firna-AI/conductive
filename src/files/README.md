@@ -83,9 +83,10 @@ The screens:
 - `DiffPage` shows the diff of one changed file.
 - The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
   of the page, for example with a sandbox state. The page then reads
-  nothing, and its header offers no Copy and no Download. A diff keeps its
-  changed lines from Changes. When the placeholder goes, the page reads at
-  once.
+  nothing, and its header offers no Download. A diff keeps its changed
+  lines from Changes. With `keepShown`, a page that already shows its file
+  keeps it, with Copy, and the placeholder shows only in place of a page
+  with nothing to show. When the placeholder goes, the page reads at once.
 - `FileTabItem` is the closable tab of a file or a diff, as a list item
   for the tab row of the centre column on desktop. `onClose` asks the shell
   to close the tab. It takes the tab styles of the mockups' `WorkspaceTabs`,

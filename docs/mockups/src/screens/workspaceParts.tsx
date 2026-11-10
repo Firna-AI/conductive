@@ -79,15 +79,17 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
  * The sandbox state in place of All files, Changes, and the content of an
  * open file: while the sandbox starts, while its start is refused, and
  * after a failed first start. A stopped sandbox, and one whose later start
- * failed, keep them.
+ * failed, keep them. `withAction` adds the action and the words of a
+ * refusal, as a phone shows them, and as a file page shows them on desktop,
+ * where the page hides the bar of the chat.
  */
 export function filesPlaceholder(
   state: WorkspaceState,
-  phone: boolean,
+  withAction: boolean,
 ): ReactNode {
   const panel = panelState(state)
   return panel && replacesLists(panel) ? (
-    <SandboxPanel phone={phone} state={panel} />
+    <SandboxPanel phone={withAction} state={panel} />
   ) : undefined
 }
 

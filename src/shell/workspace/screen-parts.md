@@ -79,12 +79,20 @@ Each folder of a path is a part of the address. Another address under
   Changes, and Checks stays. A refused panel has the words of its cause,
   as [A refused start](refused-start.md) says. An archived workspace has no
   file lists, and its right column shows the archived panel.
-- A file or diff page shows the same sandbox panel in place of its
-  content, on desktop and on a phone, and reads nothing. So an open tab
-  waits until the sandbox is ready, as
-  [Start steps](../../../docs/protocol/workspace-life.md#start-steps) says.
-  Its header keeps the name of the file, and a diff keeps its changed
-  lines. The page reads when the panel goes.
+- While the sandbox does not run, a file or diff page reads nothing, on
+  desktop and on a phone. So an open tab waits until the sandbox is ready,
+  as [Start steps](../../../docs/protocol/workspace-life.md#start-steps)
+  says. The page reads when the sandbox runs again.
+- A stopped sandbox, and one whose later start failed, keep the file that
+  a page already shows, as they keep the lists. Otherwise the sandbox panel
+  takes the place of the content. The page hides the bar of the chat, so
+  its panel has Resume or Try again, and the words of a refusal. The
+  header keeps the name of the file, and a diff keeps its changed lines.
+- Each address that opens a file or diff tab resumes a stopped sandbox, as
+  [Stop and resume](../../../docs/protocol/workspace-life.md#stop-and-resume)
+  says. `ResumeOnTabOpen` watches the address. The first address of the
+  screen starts nothing there, because the open of the workspace resumes
+  the sandbox. A switch between the preview and the source starts nothing.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
 

@@ -39,19 +39,24 @@ export function DiffPage(props: {
   layout: FilesLayout
   targets?: FileActionTargets
   /**
-   * Shows in place of the diff, such as the state of a sandbox that starts.
-   * The page then reads nothing and offers no Download.
+   * Shows in place of the diff, such as the state of a sandbox that does not
+   * run. The page then reads nothing and offers no Download.
    */
   placeholder?: ReactNode
+  /** Keeps a diff that the page already shows, in place of the placeholder. */
+  keepShown?: boolean
 }) {
   const { files, tab, placeholder } = props
   const snapshot = useFilesSnapshot(files)
   const changed = snapshot.changes?.files.find((file) => file.path === tab.path)
-  const { state, retry } = useFollowed(
+  const { state: read, retry } = useFollowed(
     files,
     readDiff,
-    placeholder ? null : tab.path,
+    tab.path,
+    !placeholder,
   )
+  const kept = props.keepShown === true && read?.status === 'ready'
+  const state = !placeholder || kept ? read : null
   const actions = useFileActions(files.client, tab.path, props.targets)
   const diff = state?.status === 'ready' ? state.value : null
   const label = pageLabel(snapshot, tab.path, 'diff', diff)
@@ -70,7 +75,7 @@ export function DiffPage(props: {
       : actions.download
   const newText = diff && !diff.binary ? diff.newContent : null
   let body: ReactNode = <Loading label="Opening the diff" />
-  if (placeholder) {
+  if (placeholder && !state) {
     body = placeholder
   } else if (state?.status === 'failed' && state.error.kind !== 'aborted') {
     body = <ReadError error={state.error} onRetry={retry} subject="diff" />

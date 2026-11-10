@@ -144,6 +144,9 @@ fake API, with its address options, its controls, and the test command.
   of the chat of the session, or the shell's own column for the chat slots.
 - `files/files-features.tsx`: the Files part, which connects the kept
   files, and the file or diff page of the centre.
+- `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
+  sandbox when the address opens a file or diff tab. The screen draws it in
+  each layout.
 - `files/chat-files.tsx`: the file tabs of the kept chat, named by the
   labels of the kept files, at their places in the tab row with the props
   that the row gives each tab, the diff links, and the way back to the chat
@@ -164,6 +167,10 @@ fake API, with its address options, its controls, and the test command.
   a file address and at a diff address while the sandbox starts. It checks
   the sandbox panel in place of the page, with no read, and the read once
   the workspace is ready.
+- `files/TabOpenResume.test.tsx`: mounts the whole app over the fake API. It
+  checks the resume when a diff of a stopped workspace opens, no second
+  resume at the first address, the file that a tab keeps when the sandbox
+  stops, and no start in a ready or a refused workspace.
 - `app-features.tsx`: the shell's own files, pull request, and owner
   parts, which `useFeatures` puts under the parts of the host. The screen
   draws its own tools panel when the host gives no `tools` part.
