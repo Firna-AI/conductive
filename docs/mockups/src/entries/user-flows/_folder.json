@@ -12,6 +12,7 @@
     "create-org",
     "mac-command",
     "link-a-workspace",
+    "mention-a-file",
     "import-from-conductor"
   ]
 }

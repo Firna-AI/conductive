@@ -42,7 +42,7 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
       return (
         <div className={styles.user}>
           <div className={styles.bubble}>
-            <MessageText text={item.text} />
+            <MessageText mentions text={item.text} />
           </div>
           {item.attachments ? (
             <AttachmentChips attachments={item.attachments} sent />

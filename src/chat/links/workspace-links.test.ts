@@ -17,11 +17,14 @@ const address = (path: string) => `${FAKE_ORIGIN}${path}`
 
 /** The parts in a short form: text, code, or the ID and page of a chip. */
 function shapes(parts: readonly ChatPart[]) {
-  return parts.map((part) =>
-    part.kind === 'chip'
-      ? { chip: part.target.workspace.id, to: part.target.to }
-      : { [part.kind]: part.text },
-  )
+  return parts.map((part) => {
+    if (part.kind === 'chip') {
+      return { chip: part.target.workspace.id, to: part.target.to }
+    }
+    return part.kind === 'file'
+      ? { file: part.entry.path }
+      : { [part.kind]: part.text }
+  })
 }
 
 /** The parts of a sent message, as the chat reads it. */
