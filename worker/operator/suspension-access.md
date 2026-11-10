@@ -40,7 +40,7 @@ The suspension stays on the user record. Each of these entries reads it:
 
 A stopped workspace of the user gets no disk retention restart. So Boat
 can delete its disk after 14 days, as
-[Stop and resume](../../docs/protocol/workspaces-and-sandboxes.md#stop-and-resume)
+[Stop and resume](../../docs/protocol/workspace-life.md#stop-and-resume)
 says.
 
 ## Sandbox access

@@ -118,6 +118,8 @@ export async function admitFirstMessage(
     sender.id,
     first.workspaceId,
     first.request.attachmentIds,
+    first.request.id,
+    await transaction.usedAttachments(first.request.attachmentIds, sender.id),
   )
   await transaction.saveFirstSession({
     id: first.sessionId,

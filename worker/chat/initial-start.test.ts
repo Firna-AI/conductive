@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionPaths } from '../../src/shared/sessions'
 import {
@@ -12,7 +11,6 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -23,7 +21,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('stores later messages in every session during a first start and its failure and keeps accepted repeats', async () => {
   const fixture = await createChatFixture(harness)
   const first = await fixture.createSession()
@@ -36,7 +33,7 @@ it('stores later messages in every session during a first start and its failure 
     messageId: 'first-message',
     now: TEST_TIME,
   })
-  fixture.restart()
+  await fixture.restart()
   expect(await fixture.send(first.id, 'first-message')).toEqual({
     ...accepted,
     eventNumber: 4,
@@ -69,7 +66,7 @@ it('stores later messages in every session during a first start and its failure 
     state: 'queued',
   })
   const history = await fixture.history(first.id)
-  fixture.restart()
+  await fixture.restart()
   expect(await fixture.send(first.id, 'first-message')).toEqual({
     ...accepted,
     eventNumber: failed.eventNumber,

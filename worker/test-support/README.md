@@ -1,6 +1,28 @@
 # Backend and runner fakes
 
-`createHarness` creates a local D1 database.
+`createHarness` creates one Miniflare runtime with local D1 and R2.
+The runtime also constructs the production workspace object with native SQLite.
+`harness.native.actor(name)` supplies HTTP, lifecycle RPC, storage controls, and real eviction.
+`native-runtime.ts` owns these objects and their fake outbound fetch path.
+`native-workspace-entry.ts` adds test controls around the production constructor.
+Initial actor options reach that constructor before it captures optional dependencies.
+The registered object still extends the production `Workspace`.
+`native-warnings.ts` observes native warnings without replacing product warning rules.
+The reverse callback bridge keeps transaction reads on native storage.
+Native peers keep synchronous send faults inside the runtime.
+The shared scheduled-alarm helper runs only stored due alarms.
+Reset removes the native records, aborts the real object context, and evicts its fresh idle instance.
+Restart saves clock metadata and keeps committed native SQLite records through the same context reset.
+Instance identity checks prove that reconstruction creates a fresh object.
+Production request timeouts stay unchanged.
+
+The root Vitest setup builds one current Worker bundle for each run and watch rerun.
+Native fixtures read that bundle from the provided test context.
+Standalone callers build on demand and reuse that bundle only within their process.
+
+`createHarness` also supplies the private local R2 attachment bucket.
+Reset removes its file records and objects between tests.
+`attachment-r2.ts` wraps local R2 deletion for controlled cleanup failures.
 It supplies fake GitHub and Boat servers, a fixed clock, sign-in, org creation, and cleanup.
 `login()` runs GitHub sign-in and then grants fixture app access through
 the real shared grant step. `login({ appAccess: false })` runs sign-in
@@ -103,6 +125,9 @@ So a plain object does not type-check as the environment of a child process.
 
 - `harness.ts` owns D1 setup and the HTTP test app.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
+- `native-global-setup.ts` builds and provides the current native bundle before tests and watch reruns.
+- `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
+- `native-attachment-controls.ts` runs streaming attachment storage and reads real R2 byte samples inside the runtime.
 - `migrations.ts` applies migrations for every test harness.
 - `fake-boat.ts` supplies provider replies and fresh streaming response factories.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.

@@ -39,7 +39,12 @@ it('retains a failed email and retries from the scheduled entry with the same ke
       source: 'approval',
     })
     expect(warning.mock.calls).toEqual([
-      ['Approval email delivery failed. The email remains pending.'],
+      [
+        {
+          kind: 'approval_email_delivery_failed',
+          message: 'Approval email delivery failed. The email remains pending.',
+        },
+      ],
     ])
     const repeat = await client.request(
       operatorApprovalPath(11),

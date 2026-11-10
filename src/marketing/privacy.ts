@@ -9,6 +9,7 @@ import {
   text,
   type LegalDocument,
 } from './legal-text'
+import { privacyUsesSection } from './privacy-uses'
 
 /**
  * The privacy notice follows the list of privacy information in the ICO
@@ -36,93 +37,14 @@ export const privacyDocument: LegalDocument = {
         paragraph`For privacy questions, contact ${mailLink(legalAddress)}.`,
       ],
     },
-    {
-      title: `What ${productName} uses, and why`,
-      blocks: [
-        list(
-          text`Your GitHub account: your GitHub user ID, login, display name,
-            avatar, and the date when you created the account. They sign you
-            in, and they show who owns and who sends each piece of work. The
-            operator sees the age of the account when you wait for app
-            access. Your login and display name also tell the agents who sent
-            each message.`,
-          text`Your GitHub emails: at each sign-in, ${productName} keeps the
-            verified email addresses of your GitHub account, and which one is
-            primary. An org invitation reaches you through one of them. The
-            approval email goes to the primary one.`,
-          text`Your GitHub token: the sign-in gives ${productName} a GitHub
-            token for your account. ${productName} stores it encrypted, for
-            every account, also while you wait for app access. It uses the
-            token to read GitHub for you, and for the git calls of your
-            turns.`,
-          text`The waitlist: a new account waits for app access, and sees only
-            the waitlist until then. ${productName} records when and how you
-            got app access. The record names the operator who approved you,
-            the invite code that you used, or the org invitation that you
-            accepted, with its org and the admin who sent it. It lets the
-            operator trace misuse back to a code or a person.`,
-          text`Invite codes: each account with app access has an invite code
-            with 5 invites. ${productName} keeps who used each code, and when.
-            You see how many of your invites are left, but not who used them.
-            The operator sees both.`,
-          text`The approval email: when an operator approves your account,
-            ${productName} sends one email to the primary verified email of
-            your GitHub account, and keeps whether it went. A failed send
-            goes again for up to 24 hours. An account without a verified
-            email gets no email.`,
-          text`Your agreement: you accept the current version of the terms at
-            each sign-in. ${productName} keeps the latest version that you
-            accepted, and the time when you first accepted it. They show that
-            you accepted the terms.`,
-          text`A suspension: if the operator suspends your account,
-            ${productName} records the time and the operator who suspended
-            it. An operator can lift the suspension, and ${productName}
-            records each lift in the same way. It keeps every record. A
-            suspension keeps your cloud computers stopped until an operator
-            lifts it.`,
-          text`Your session: a cookie of the app keeps you signed in. A
-            second cookie protects the GitHub sign-in while it runs.`,
-          text`Your orgs: the orgs, members, roles, invites, sections,
-            repositories, workspaces, scripts, and settings that you and your
-            team make. They run the service.`,
-          text`Keys and logins: the env var values of each org, and your
-            Claude or OpenAI logins. ${productName} stores them encrypted. It
-            uses your login only for the turns of the sessions that you start.
-            The messages of other members in those sessions use it only when
-            you let other members use that login.`,
-          text`Your work: ${productName} keeps your messages and the answers
-            of the agents as the chat history of each workspace. It also
-            keeps the last file list and the last summary of changes of each
-            workspace. The files that you attach go to the cloud computer of
-            the workspace.`,
-          text`Mac commands: ${productName} keeps each request and its result.
-            They record the command, its folder, its reason, its time limit,
-            and the output. A request also names the Mac that gets it.
-            The result says how the command ended. They let you and the
-            agent follow the command. Always-allowed commands and 15-minute
-            permissions stay only on your Mac.`,
-          text`Your code: it stays in the cloud computers that ${productName}
-            runs for your org. ${productName} reads a file or a diff when you
-            open it, to show it to you.`,
-          text`GitHub events: the state of the pull requests and the checks
-            of your branches, which GitHub sends to ${productName}.`,
-          text`Panel widths: your browser keeps the widths of the panels of
-            the app. They stay in your browser.`,
-        ),
-        paragraph`Where data protection law requires a lawful basis, the
-          operator relies on performance of a contract to provide the
-          service to you. It relies on legitimate interests to operate and
-          secure the service and prevent abuse. It also uses personal data
-          when necessary to comply with a legal obligation.`,
-      ],
-    },
+    privacyUsesSection,
     {
       title: 'Who gets your data',
       blocks: [
         list(
           text`Cloudflare runs ${productName} and stores its data.
-            Cloudflare's AI model service also writes a short name for each
-            new workspace from the text of its first message.`,
+            If a workspace has no name, Cloudflare's AI model service can
+            write a short name from the text of its first message.`,
           text`GitHub signs you in, and gives ${productName} access to your
             repositories through its GitHub App. The Mac app also checks
             GitHub for updates and downloads new versions. These requests
@@ -203,6 +125,9 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         paragraph`When an admin deletes an org, ${productName} deletes the data
           of the org after 7 days, unless an admin restores it.`,
+        paragraph`${productName} keeps each file that you send with a message
+          until it deletes the workspace of the message. It deletes an unsent
+          file 7 days after you upload it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and

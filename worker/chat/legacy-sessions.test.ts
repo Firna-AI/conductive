@@ -1,12 +1,10 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import type { Session } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { isRecord } from '../http'
 import { createChatFixture, type ChatFixture } from './harness.test-support'
 import { retryRequest, sessionRecord } from './retry.test-support'
 import { startTurn, terminalEvent } from './turn-lifecycle.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -17,7 +15,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('preserves legacy history with an unknown starter and sends retries and new messages into fresh linked sessions', async () => {
   const fixture = await createChatFixture(harness)
   const source = await fixture.createSession()
@@ -29,7 +26,7 @@ it('preserves legacy history with an unknown starter and sends retries and new m
   await fixture.drain()
   const before = await fixture.history(source.id)
   await removeMetadata(fixture, source.id)
-  fixture.restart()
+  await fixture.restart()
   expect(await sessionRecord(fixture, source.id)).toMatchObject({
     startedBy: null,
     sourceSessionId: null,
@@ -93,7 +90,9 @@ it('preserves legacy history with an unknown starter and sends retries and new m
     fixture.memberCookie,
   )
   expect(response.status).toBe(202)
-  const linked: { session: Session } = await response.json()
+  const linked: {
+    session: Session
+  } = await response.json()
   expect(linked.session).toMatchObject({
     startedBy: { id: fixture.member.id },
     sourceSessionId: source.id,
@@ -107,9 +106,8 @@ it('preserves legacy history with an unknown starter and sends retries and new m
     sourceSessionId: source.id,
   })
   expect((await sessionRecord(fixture, source.id)).startedBy).toBeNull()
-  ownerTab.close()
-  memberTab.close()
-
+  await ownerTab.close()
+  await memberTab.close()
   const empty = await fixture.createSession()
   const emptyBefore = await fixture.history(empty.id)
   await removeMetadata(fixture, empty.id, true)
@@ -131,7 +129,6 @@ it('preserves legacy history with an unknown starter and sends retries and new m
     ),
   ).toEqual([null])
 })
-
 async function removeMetadata(
   fixture: ChatFixture,
   sessionId: string,
@@ -146,7 +143,7 @@ async function removeMetadata(
     if (omitRetry) delete result.retryMessageId
     return result
   }
-  for (const [key, value] of fixture.storage.records) {
+  for (const [key, value] of (await fixture.snapshot()).records) {
     if (!isRecord(value)) continue
     if (value.id === sessionId && 'choice' in value)
       await fixture.storage.put(key, without(value))

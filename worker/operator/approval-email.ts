@@ -37,7 +37,7 @@ export async function sendApprovalEmail(
       developmentLog: `Approval email to ${email.recipient}: ${email.subject}\n${email.body}`,
     })
   } catch {
-    warnWorker('Approval email delivery failed. The email remains pending.')
+    warnWorker({ kind: 'approval_email_delivery_failed' })
     return true
   }
   await finishApprovalEmail(env.DB, userId, 'sent', dependencies.now())
