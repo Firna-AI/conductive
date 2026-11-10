@@ -22,6 +22,7 @@
 - **Left out:** A coverage limit, because a line that a test runs can still have no assertion that fails when it breaks.
 - **Wider fix:** B, a detection fix for the class.
 - **Previous examples:** `plans/follow-ups/list-failure-test.md`, and both scroll behaviours in `src/chat/components/row-scroll.ts`. `src/chat/components/TabRow.dom.test.tsx` now tests both behaviours directly.
+- **Related:** `plans/follow-ups/raised-constant-weakens-tests.md` has a shared wider fix. Its option C, a mutation run over the code that reads each changed constant, is a form of option B here. A run over the changed lines alone misses that class.
 - **Recommendation:** C. It shows the unprotected lines to the review at a medium cost, without a gate that fails on mutants that change nothing. B best protects the codebase.
 - **Action:** ask the user, because B adds a gate, and C adds a CI step that the user should weigh.
 - **Answer:** On 9 November 2026, the user chose to keep this work as a follow-up item for a later change, and to merge the change that found it without it. No option is chosen yet, so the item still needs a decision.

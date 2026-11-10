@@ -1,6 +1,8 @@
+import { PREVIEW_RELAY_MARK_HEADER } from '../../src/shared/previews'
 import { createHarness, TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import type { ProxySocket, SocketRuntime } from './types'
 import { toolsActivity } from './activity.test-support'
+import { relayResponse } from './relay.test-support'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 class TestSocket implements ProxySocket {
@@ -95,6 +97,7 @@ export async function createToolsHarness() {
   let activity = toolsActivity(core.env.DB, () => now)
   let desktopSequence = 0
   let terminalSequence = 0
+  let relaySocketActive = true
   const passwords = new Map<string, string>()
   const requests: Request[] = []
   const serverSockets: TestSocket[] = []
@@ -158,12 +161,15 @@ export async function createToolsHarness() {
         }
         if (url.pathname.endsWith('/commands')) {
           const body: { command: string } = await request.clone().json()
-          if (body.command.includes('ss -H -ltn')) {
+          if (
+            body.command ===
+            'systemctl is-active --quiet conductive-preview-relay.socket'
+          ) {
             return Response.json({
               ok: true,
               type: 'command.finished',
-              exitCode: 0,
-              stdout: 'LISTEN 0 128 0.0.0.0:3000 0.0.0.0:*\n',
+              exitCode: relaySocketActive ? 0 : 3,
+              stdout: '',
               stderr: '',
               timedOut: false,
             })
@@ -191,12 +197,14 @@ export async function createToolsHarness() {
       if (request.headers.get('Upgrade') === 'websocket') {
         const upstream = new TestSocket()
         upstreamSockets.push(upstream)
-        return socketResponse(
+        const response = socketResponse(
           upstream,
           request.headers.get('Sec-WebSocket-Protocol') ?? '',
         )
+        response.headers.set(PREVIEW_RELAY_MARK_HEADER, '1')
+        return response
       }
-      return new Response('preview content', {
+      return relayResponse('preview content', {
         headers: {
           'Content-Type': 'text/plain',
           'Set-Cookie':
@@ -214,6 +222,9 @@ export async function createToolsHarness() {
     requests,
     serverSockets,
     upstreamSockets,
+    setRelaySocketActive: (value: boolean) => {
+      relaySocketActive = value
+    },
     setNow: (value: number) => {
       now = value
       core.setTime(value)
@@ -233,6 +244,7 @@ export async function createToolsHarness() {
       dependencies.fetch = fetch
       desktopSequence = 0
       terminalSequence = 0
+      relaySocketActive = true
       passwords.clear()
     },
     seed: async () => {

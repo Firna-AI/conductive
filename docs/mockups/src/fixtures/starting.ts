@@ -43,12 +43,6 @@ export const resumingLog: StartingLog = {
   elapsed: '3s',
 }
 
-/**
- * Each create and resume runs for at most 20 minutes from its start, with
- * the startup script and every retry.
- */
-export const startLimit = 'Each start has a 20-minute limit.'
-
 /** Why a start failed: a failure, or the 20-minute limit. */
 export const startErrorKeys = ['failed', 'time-limit'] as const
 

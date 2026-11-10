@@ -22,13 +22,20 @@ The wildcard also covers `authorize`. A preview label is 32 hex characters,
 so it never matches `authorize`.
 
 Each hostname holds 128 random bits. D1 stores its workspace, port, and expiry.
-The server keeps private port descriptors in memory for each workspace,
-provider account, sandbox, and port. Each descriptor holds the private origin
+The server keeps one private relay descriptor in memory for each workspace,
+provider account, and sandbox. Each descriptor holds the private origin
 and the [port credential](../sandbox/README.md#port-credentials) that the
 client built. The proxy sends the credential headers only upstream.
-D1 stores the listener mode, the listener sandbox ID, and
-the provider account of that sandbox. A saved mode applies only while the
-workspace has that sandbox in that account. D1 stores no port credential.
+D1 stores no port credential.
+
+D1 keeps each preview's sandbox in `listener_sandbox_id`, with the provider
+account of that sandbox, for
+[operator searches](../../docs/protocol/operator-section.md#orgs-and-users).
+The insert records the current sandbox.
+Each relay resolution updates every active preview of the workspace.
+The update requires the workspace to still have that sandbox in that
+account. Closed previews keep their last sandbox record.
+The Worker does not read or write `listener_mode`.
 
 `Preview.url` is the absolute app address from `previewPath`. It holds no secret.
 Each frame load, reload, and new tab starts there, because a frame under the
@@ -132,25 +139,44 @@ So a preview of a workspace whose owner is suspended gets the same 404.
 So does each request of a viewer who is suspended, leaves or is removed from
 the org, or signs out.
 
-Preview open, document loads, iframe loads, and cache misses resolve the listener.
-The resolver checks `ss` output for loopback and wildcard addresses.
-It does not treat a specific sandbox address as a wildcard server.
-This avoids treating Boat's existing relay as the app's network listener.
-Concurrent loads share an in-flight resolution. Module requests reuse its result.
-Workspace changes and provider authentication failures invalidate the descriptor.
-A failed request is never replayed automatically. A later request can refresh it.
+Each preview open checks the relay socket unit with one command call:
+`systemctl is-active --quiet conductive-preview-relay.socket`.
+A proxy cache miss runs the same check. Concurrent requests share its pending result.
+Document loads, iframe loads, and module requests reuse the cached descriptor.
+A sandbox change, a failed upstream request, or an unmarked response clears the descriptor.
+A failed request is never replayed automatically. The next request checks again.
 
-A server must accept its private `.on.boat.dev` hostname.
-For Vite, configure `server.allowedHosts: ['.on.boat.dev']` in its repository.
-The proxy preserves the upstream Host behavior. It does not change user repositories.
+The relay marks every HTTP response and WebSocket handshake with `X-Conductive-Relay: 1`.
+The Worker replaces an unmarked answer with the provider-unavailable error.
+No provider page reaches the browser.
+The next request checks the relay socket unit again.
+Marked errors keep the descriptor, including 401, 403, and the relay's 502 for a stopped dev server.
+The response header allowlist removes the mark before the browser gets the answer.
 
-For an Origin header with `Sec-Fetch-Site:same-origin`, the proxy sends the
-private port origin. This includes a form's literal `Origin:null`.
+When the relay socket unit is missing or inactive, the open and the proxy refuse with
+409 `preview_relay_unavailable`. The message says:
+"Previews need newer cloud computer software. Start a new workspace after an admin runs Build computer."
+The image build installs the relay. An existing workspace keeps its image's software.
+systemd holds the relay port in the socket unit while the service restarts.
+The Worker checks the socket state, so a service restart does not trigger the software refusal.
+
+Boat hosts only the relay port for previews, in localhost mode.
+Each HTTP request and WebSocket upgrade goes to that port's Boat address.
+The path and query stay, except for reserved port credentials.
+The Worker sets `X-Conductive-Preview-Port` to the previewed port.
+The header allowlist drops any value that the browser sends for this header.
+The relay sends the previewed server `Host: localhost:<port>`.
+A server with a local Host check needs no change to its repository.
+
+For an Origin header with `Sec-Fetch-Site:same-origin`, the proxy sends
+`http://localhost:<port>`. This includes a form's literal `Origin:null`.
 When fetch metadata is absent, only the preview's own Origin is mapped.
 Foreign Origins and a missing Origin keep their meaning. The shared origin
-helper also maps `http` and `https` private redirects to the preview origin.
-It also owns the terminal's private port Origin. The application owns the
-CORS policy of requests that carry a valid preview cookie.
+helper also maps local `http` and `https` redirects to the preview origin.
+The local hostname is `localhost`, `127.0.0.1`, or `[::1]`, with the previewed port.
+Relative redirects stay on the preview hostname. Redirects to Boat addresses keep their destination.
+The origin helper also owns the terminal's private port Origin.
+The application owns the CORS policy of requests that carry a valid preview cookie.
 
 Browser preflights carry no cookie, so the proxy rejects them before any sandbox
 call. A default cross-origin fetch also carries no cookie and gets the same 404.
@@ -211,15 +237,16 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [viewer-access.ts](viewer-access.ts) exports `readPreviewAccess`, the one D1 read of a preview and its viewer.
 - [connection.ts](connection.ts) wraps both HTTP directions with authorization and backpressure.
 - [authorization.ts](authorization.ts) shares fresh reads across queued data.
-- [ports.ts](ports.ts) caches private port descriptors and refreshes their listener modes.
-- [listeners.ts](listeners.ts) resolves explicit localhost or network exposure.
+- [ports.ts](ports.ts) caches relay descriptors and clears them after an upstream failure or a sandbox change.
+- [relay.ts](relay.ts) checks the relay socket unit and refuses previews when it is missing or inactive.
 - [store.ts](store.ts) and [workspace-store.ts](workspace-store.ts) hold the D1 queries.
   `publicPreview` in `store.ts` builds `Preview.url`.
+  `savePreviewSandbox` records the sandbox for active previews after a relay resolution.
   `readWorkspaceTarget` returns a `WorkspaceAccessTarget` with the `ownerActive` and `sandboxAllowed` flags. It keeps the row of a suspended owner's workspace, so the metadata reads still work.
 - [sandbox-access.ts](../data/sandbox-access.ts) exports `sandboxAccessPredicate`, the shared rule of the preview, terminal, and desktop access.
 - [provider.ts](provider.ts) exports the typed `WorkspaceTools` adapter.
-- [headers.ts](headers.ts) builds private upstream requests and safe responses with the port credential. The terminal uses its `portRequest` too.
-- [origins.ts](origins.ts) maps request Origins and private redirects, and drops the credential's query names.
+- [headers.ts](headers.ts) builds relay requests, terminal requests, and safe preview responses with the port credential.
+- [origins.ts](origins.ts) maps preview Origins and local redirects, keeps the terminal's private port Origin, and drops the credential's query names.
 - [port-credentials.test.ts](port-credentials.test.ts) checks that the proxy follows the credential for request headers, cookies, query names, and reply fields.
 - [socket.ts](socket.ts) selects binary frames and drains queued data before forwarding a normal close with its code and reason.
 - [types.ts](types.ts) defines the fetch, activity, and socket boundaries. Its `WorkspaceTarget` holds the sandbox ID with its provider account.
