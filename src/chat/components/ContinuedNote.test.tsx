@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
+import { emptyTranscript } from '../../shared/transcript/transcript'
 import {
   FAKE_IDS,
   FAKE_TIME,
@@ -11,7 +12,6 @@ import {
   workspaceFixtures,
 } from '../../test-support/fixtures/workspaces'
 import { chatFor, shown } from '../state/test-kit'
-import { emptyTranscript } from '../state/transcript'
 import { textOf } from './render-kit'
 import { ItemView } from './TranscriptItem'
 

@@ -1,8 +1,9 @@
 /*
- * A tab that a drag can move. A long press must not open the menu of a link
- * or select text, and a finger still scrolls the row sideways.
+ * A tab that a finger can hold: for a drag, or, in a read-only row, for its
+ * menu. A long press must not open the menu of a link or select text, and a
+ * finger still scrolls the row sideways.
  */
-.dragSurface {
+.holdSurface {
   touch-action: pan-x;
   -webkit-touch-callout: none;
   user-select: none;

@@ -1,4 +1,4 @@
-import type { AgentChatEvent } from '../../shared/chat-events'
+import type { AgentChatEvent } from '../chat-events'
 import {
   agentKey,
   endKey,
@@ -7,7 +7,7 @@ import {
   toolKey,
   userKey,
 } from './item-keys'
-import { placeInTurn } from './placement'
+import { placeInTurn } from './item-placement'
 import type { RunningTurn, Transcript, TranscriptItem } from './transcript'
 
 type AgentText = Extract<

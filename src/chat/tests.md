@@ -64,6 +64,16 @@ showed. A second drag scrolls by the same step, so the first drag left no
 frame loop running. `components/TabMenu.dom.test.tsx` opens the tab menu
 with Shift and F10 and with a right click, moves a file tab with Move
 left, and opens the rename field in a tab that does not show.
+`components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
+that never showed, through the real controller, client, and menu, with
+the copy of the app's test services. Copy full transcript asks for the
+full text, copies the reply, says "Transcript copied", and keeps the shown
+tab, the view, and the loaded history. A failed request says "The
+transcript didn't copy. Try again." and copies nothing. In an archived
+workspace on a phone, a finger that moves first opens nothing, and a long
+press lifts no tab, keeps the menu of the browser shut, and opens a sheet
+with only the copy items. The late click of the finger selects nothing,
+and Copy concise transcript copies the concise text.
 `components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
 its fades. It also scrolls a full row over the browser layout of
 `components/row-layout-test-kit.ts`, which gives the row and its tabs
@@ -127,6 +137,7 @@ Files, and opens a file and a folder from their chips, also into a hidden
 right column.
 
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
+A right click and Shift and F10 open a tab menu with only the copy items, with no line.
 It changes `readOnly` during a rename and archives a kept chat during a close question.
 Each edit hides, the old tab name stays, and no write goes out.
 The session history remains available after Archive.

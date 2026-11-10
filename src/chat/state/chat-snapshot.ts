@@ -10,8 +10,11 @@ import type {
   OrgSummary,
 } from '../api/read-responses'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
-import { emptyTranscript, type Transcript } from './transcript'
-import { startedTurn } from './turn-records'
+import {
+  emptyTranscript,
+  type Transcript,
+} from '../../shared/transcript/transcript'
+import { startedTurn } from '../../shared/transcript/turn-records'
 
 /**
  * The message that a user writes in a session. Its identity stays when the

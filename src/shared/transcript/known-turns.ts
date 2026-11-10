@@ -1,7 +1,4 @@
-import type {
-  AgentChatEvent,
-  RunnerEventRefused,
-} from '../../shared/chat-events'
+import type { AgentChatEvent, RunnerEventRefused } from '../chat-events'
 import type { Transcript, TranscriptItem } from './transcript'
 
 /** A turn of the session that an accepted event named. */

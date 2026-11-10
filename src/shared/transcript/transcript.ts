@@ -1,12 +1,12 @@
-import type { AgentChoice } from '../../shared/agents'
+import type { AgentChoice } from '../agents'
 import type {
   AgentChatEvent,
   ChatEvent,
   RunnerEventRefused,
   ToolCall,
-} from '../../shared/chat-events'
-import type { ChangedFile } from '../../shared/files'
-import type { MessageSender, UserMessage } from '../../shared/messages'
+} from '../chat-events'
+import type { ChangedFile } from '../files'
+import type { MessageSender, UserMessage } from '../messages'
 import { continuedKey, userKey } from './item-keys'
 import { hasEnded, noteTurn, takeMessage, type KnownTurn } from './known-turns'
 import { foldLate } from './late-events'

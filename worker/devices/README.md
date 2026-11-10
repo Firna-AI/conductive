@@ -202,6 +202,7 @@ When the turn ends, the request fails with `turn_ended`, and D1 shows `ready`.
 - `workspace-commands.ts`, `workspace-browser.ts`: machine commands and scoped app records/approvals.
 - `broker.ts`, `broker-routes.ts`, `broker-messages.ts`: the authenticated device socket and relays.
 - `records.ts`, `storage.ts`: durable requests and chunked values.
+  `record-read.ts` lists their records for device reads and the transcript snapshot.
 - `state.ts`: `publishDeviceState`, the queue-owned call of the shared state writer, and the device-only fallback.
 - `body.ts`: browser gates that preserve the unread request body.
 - `internal.ts`, `socket.ts`: the RPC client with its plain reply types, and wire bounds.

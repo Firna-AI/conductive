@@ -1,5 +1,5 @@
-import type { DeviceCommandRecord } from '../../shared/device'
-import type { TranscriptItem } from '../state/transcript'
+import type { DeviceCommandRecord } from '../device'
+import type { TranscriptItem } from './transcript'
 
 /** A command and the item that it follows, or null when it comes first. */
 export interface PlacedCommand {

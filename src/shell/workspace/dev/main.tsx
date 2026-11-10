@@ -1,3 +1,4 @@
+import { copyText } from '../../../app/clipboard'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createApiClient } from '../../../app/api/client'
@@ -101,7 +102,7 @@ const app = new AppModel({
   newId: () => crypto.randomUUID(),
   leave: () => undefined,
   appOrigin: window.location.origin,
-  copy: (text) => navigator.clipboard.writeText(text),
+  copy: (text) => copyText(window, text),
 })
 
 const root = document.getElementById('root')

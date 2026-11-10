@@ -125,6 +125,27 @@ With current agent software, later messages tell the agent the current branch na
 
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
 
+## Copy a transcript
+
+Copy a session's whole conversation as Markdown for another agent or a document.
+
+1. Open the session tab's menu with a right click.
+   On a phone, use a long press.
+2. Select **Copy concise transcript** or **Copy full transcript**.
+3. Paste the text where you need it.
+
+**Copy concise transcript** keeps the default folds closed.
+A run of tool calls stays open if any call is not done.
+**Copy full transcript** includes the messages and work inside every fold.
+
+You can copy another tab's conversation without changing the selected tab.
+Both options work in archived and other read-only workspaces.
+
+For a closed session, reopen it from **Session history** before copying.
+
+If the copy fails, open the menu again.
+Select the same copy option within one minute to retry.
+
 ## Know whose account a session uses
 
 The member who starts a session supplies its agent login.

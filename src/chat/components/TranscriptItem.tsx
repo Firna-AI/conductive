@@ -1,16 +1,22 @@
 import { CircleAlert, CircleStop } from 'lucide-react'
-import type { MessageSender, UserMessage } from '../../shared/messages'
+import type { UserMessage } from '../../shared/messages'
 import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import {
-  turnFilesUnavailable,
-  unlistedFiles,
-} from '../../../docs/mockups/src/components/chat/lostCopy'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
-import type { MemberSummary } from '../api/read-responses'
 import { LinkedText } from '../links/LinkedText'
-import type { Transcript, TranscriptItem } from '../state/transcript'
+import type {
+  Transcript,
+  TranscriptItem,
+} from '../../shared/transcript/transcript'
+import {
+  continuedBy,
+  filesUnread,
+  omittedFiles,
+  stoppedSummary,
+  turnCopy,
+  type ChatReaders,
+} from '../../shared/transcript/turn-words'
 import { ActionButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
 import { AgentText } from './AgentText'
@@ -35,66 +41,6 @@ export function UserBubble(props: { message: UserMessage }) {
       ) : null}
     </div>
   )
-}
-
-/** The person who reads the chat, and the members whom it can name. */
-export interface ChatReaders {
-  viewerId: string | null
-  members: readonly MemberSummary[]
-}
-
-/**
- * The line of a stopped turn: "You" to the member who pressed
- * Stop, and that member's name to the others. A stop without a request, or
- * by a member whom the chat cannot name, names nobody.
- */
-function stoppedLine(by: string | null, readers: ChatReaders): string {
-  if (by !== null && by === readers.viewerId) return 'You stopped the agent'
-  const member = readers.members.find((item) => item.id === by)
-  if (!member) return 'The agent stopped'
-  return `${member.displayName ?? member.githubLogin} stopped the agent`
-}
-
-/**
- * Who pressed Continue: "You" to that member, and the name that the note
- * keeps of the member to the others, also after the member left the org.
- */
-function continuedBy(member: MessageSender, readers: ChatReaders): string {
-  if (member.id === readers.viewerId) return 'You'
-  return member.displayName ?? member.githubLogin
-}
-
-/** The newest end of a turn, with the data that its rows do not keep. */
-function completionOf(transcript: Transcript, turnId: string) {
-  const { turnCompletions } = transcript
-  return Object.hasOwn(turnCompletions, turnId)
-    ? turnCompletions[turnId]
-    : undefined
-}
-
-/** The files of an ended turn past the ones that the runner listed. */
-function omittedFiles(transcript: Transcript, turnId: string): number {
-  return completionOf(transcript, turnId)?.omittedFileCount ?? 0
-}
-
-/** Whether the cloud computer could not read the changed files of a turn. */
-function filesUnread(transcript: Transcript, turnId: string): boolean {
-  return completionOf(transcript, turnId)?.filesUnavailable === true
-}
-
-/** Whether a turn has a file row, such as one from a late end. */
-function hasFileRow(transcript: Transcript, turnId: string): boolean {
-  return transcript.items.some(
-    (item) => item.kind === 'turn-end' && item.turnId === turnId,
-  )
-}
-
-/**
- * The files that a stopped line names. A turn with a file row, such as one
- * from a late end, counts the rest after its files instead.
- */
-function unlistedOf(transcript: Transcript, turnId: string): number {
-  return hasFileRow(transcript, turnId) ? 0 : omittedFiles(transcript, turnId)
 }
 
 export interface ItemActions {
@@ -134,20 +80,18 @@ export function ItemView(props: {
           onOpenDiff={actions.onOpenDiff}
         />
       )
-    case 'stopped': {
-      const files = unlistedOf(props.transcript, item.turnId)
-      const unread =
-        !hasFileRow(props.transcript, item.turnId) &&
-        filesUnread(props.transcript, item.turnId)
+    case 'stopped':
       return (
         <div className={styles.event}>
           <CircleStop size={13} />
-          {stoppedLine(item.by, props.readers)}
-          {files > 0 ? ` · ${unlistedFiles(files)}` : null}
-          {unread ? ` · ${turnFilesUnavailable}` : null}
+          {stoppedSummary(
+            props.transcript,
+            item.turnId,
+            item.by,
+            props.readers,
+          )}
         </div>
       )
-    }
     case 'failed':
       return (
         <Notice
@@ -157,13 +101,13 @@ export function ItemView(props: {
                 busy={actions.retrying}
                 onPress={() => actions.onRetry(item.retryMessageId)}
               >
-                Try again
+                {turnCopy.retry}
               </ActionButton>
             ) : undefined
           }
           body={item.error.message}
           icon={CircleAlert}
-          title="This turn stopped"
+          title={turnCopy.failed}
           tone="danger"
         />
       )

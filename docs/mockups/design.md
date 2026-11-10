@@ -73,6 +73,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   keeps its place, greyed, and its detail keeps the muted colour, so that
   the reason stays readable. An item with choices ends with an arrow, and
   its submenu opens beside the menu, level with the item.
+  A move that the place of a tab rules out keeps its place, greyed.
+  A read-only workspace leaves out each item that it does not allow,
+  from decision 214.
 - The menu of a workspace row has Move to section, Reassign to, Rename, a
   line, then Archive, as `app/workspace-menu` shows. It lists only the
   actions that the person can use, from `workspaceMenu.ts` in
@@ -92,6 +95,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
+  Transcript copy uses the same layer. A copy that worked shows the
+  success mark. A copy that failed shows the error mark with the words
+  "Try again", as `app/transcripts` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -101,15 +107,20 @@ sessions as tabs above the chat, and four tabs at the bottom.
   stands between two tabs and takes no space. When the tabs do not fit at
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, then Move left
-  and Move right. A file or diff tab has only the moves. The menu is the one
-  way to rename a session, so no tab shows a rename button. Rename session
-  opens a field in place of the title of that tab, also when the tab does
-  not show. The field marks that tab, which takes no fill, so only the shown
-  tab is filled. On a phone, a long press that ends without a move opens the
-  menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
-  `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
-  `TabRename.module.css` the rename field. The app shares these modules.
+  tab opens its menu at the pointer: Rename session, a line, Copy concise
+  transcript and Copy full transcript, a line, then Move left and Move
+  right, from decisions 188 and 215. A file or diff tab has only the moves.
+  In a read-only workspace, the menu of a session tab holds only the two
+  copy items, and a file or diff tab opens no menu. A copy keeps the shown
+  tab, and a toast gives its result, as `app/transcripts` shows. The menu
+  is the one way to rename a session, so no tab shows a rename button.
+  Rename session opens a field in place of the title of that tab, also when
+  the tab does not show. The field marks that tab, which takes no fill, so
+  only the shown tab is filled. On a phone, a long press that ends without a
+  move opens the menu as a sheet. `WorkspaceTabs.module.css` styles the row
+  and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
+  a drag, and `TabRename.module.css` the rename field. The app shares these
+  modules.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without
@@ -181,6 +192,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
     repository, so the name keeps its room. The button
     keeps the height of that line, and its touch area of 44 px reaches up
     over the name and down to the bottom edge of the header.
+- [Workspace and file chips](design-chat.md#workspace-and-file-chips) gives
+  the workspace links, file mentions, the list of `@`, and chip removal.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
@@ -254,9 +267,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The mockups, chat, and composer of a new workspace share it.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
-- [The chat](design-chat.md) gives the chips of attached files, of
-  workspaces, and of files, the list of `@`, the Markdown tables of a reply
-  and of a file preview, and the fold of the work of a turn. It also gives the data that the chat does not have, and the
+- [The chat](design-chat.md) gives the chips of attached files, the
+  Markdown tables of a reply and of a file preview, and the fold of the work
+  of a turn. It also gives the data that the chat does not have, and the
   files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A

@@ -3,12 +3,19 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { UserMessage } from '../../shared/messages'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
-import { formatDuration } from '../state/format'
-import { retryItemId } from '../state/known-turns'
-import type { RunningTurn, Transcript } from '../state/transcript'
+import { formatDuration } from '../../shared/transcript/duration'
+import { retryItemId } from '../../shared/transcript/known-turns'
+import type {
+  RunningTurn,
+  Transcript,
+} from '../../shared/transcript/transcript'
 import { ToolGroup } from './ToolGroup'
-import { ItemView, UserBubble, type ChatReaders } from './TranscriptItem'
-import { groupEntries, type TranscriptInsert } from './transcript-entries'
+import { ItemView, UserBubble } from './TranscriptItem'
+import { turnCopy, type ChatReaders } from '../../shared/transcript/turn-words'
+import {
+  groupEntries,
+  type TranscriptInsert,
+} from '../../shared/transcript/transcript-entries'
 import { WorkFold } from './WorkFold'
 
 /** The running turn: thinking until the agent writes, and the time since it started. */
@@ -17,7 +24,7 @@ function WorkingRow(props: { turn: RunningTurn; now: number }) {
   return (
     <div className={styles.working}>
       <Spinner color={theme.colors.primary} size={12} />
-      {props.turn.thinking ? 'Thinking' : 'Working'}
+      {props.turn.thinking ? turnCopy.thinking : turnCopy.working}
       <span className={styles.elapsed}>
         {formatDuration(props.now - props.turn.startedAt)}
       </span>
@@ -34,7 +41,7 @@ function WorkingRow(props: { turn: RunningTurn; now: number }) {
  */
 export function TranscriptView(props: {
   transcript: Transcript
-  inserts?: readonly TranscriptInsert[]
+  inserts?: readonly TranscriptInsert<ReactNode>[]
   readers: ChatReaders
   pending: readonly UserMessage[]
   now: number
@@ -54,7 +61,7 @@ export function TranscriptView(props: {
         switch (entry.kind) {
           case 'insert':
             return (
-              <Fragment key={entry.insert.key}>{entry.insert.node}</Fragment>
+              <Fragment key={entry.insert.key}>{entry.insert.content}</Fragment>
             )
           case 'tools':
             return <ToolGroup calls={entry.calls} key={entry.id} />

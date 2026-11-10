@@ -10,7 +10,7 @@ import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/mac/AllowAllBar.module.css'
 import { ActionButton } from '../ui/actions'
 import { systemClock, useNow, type Clock } from '../ui/clock'
-import { timeLeft } from './command-text'
+import { timeLeft } from '../../shared/transcript/command-words'
 import type { MacSettingsController, MacSettingsState } from './mac-settings'
 import {
   controlOf,

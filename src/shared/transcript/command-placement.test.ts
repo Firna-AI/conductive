@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { fakeMacRequest } from '../../test-support/fixtures/devices'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import type { TranscriptItem } from '../state/transcript'
-import { placeCommands } from './placement'
+import type { TranscriptItem } from './transcript'
+import { placeCommands } from './command-placement'
 
 const { message } = workspaceFixtures()
 const turn = 'turn-1'

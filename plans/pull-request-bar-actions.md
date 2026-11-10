@@ -1113,6 +1113,20 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: Put main's two new creation-claims key-code lines in the existing lifecycle key-code.md guide. Reason: The lifecycle README is a pointer and the entry list must have one full home.
 - Design call on 10 November 2026: Keep main's waiting-repository section in the main mockup catalogue beside the branch's bar row. Reason: The combined catalogue remains 294 lines and needs no additional split.
 
+### Session transcript integration calls
+
+- Design call on 10 November 2026: Move the existing started-turn reader with main's shared transcript helpers. Reason: The record fold and Continue eligibility must still share the same start-time rule and transcript fallback.
+- Design call on 10 November 2026: Keep Continue as an ordered transcript item through main's shared model and session-event reader. Reason: Both transcript copies must retain every chat item that the stored session history contains.
+- Design call on 10 November 2026: Render the copied Continue note as standalone italic metadata with the stored member name and code-formatted branches. Reason: The existing note words and shared Markdown escaping preserve its meaning without an agent heading.
+- Design call on 10 November 2026: Extend the existing closed, archived, and suspended transcript-route case for both copy modes. Reason: One real route test can assert exact note count and order while retaining access and privacy coverage.
+- Design call on 10 November 2026: Use one shared event-omission fault through the real transcript route and ten selected passes. Reason: This proves the full Continue export path without duplicate formatter-only cases or old fault replays.
+- Design call on 10 November 2026: Keep the transcript-copy public instructions beside the existing Continue notes. Reason: Both features apply to the same retained sessions.
+- Design call on 10 November 2026: Keep the current consent revision during transcript integration. Reason: Copy uses existing stored history and a temporary memory-only retry cache, so no legal fact changes.
+- Design call on 10 November 2026: Use one continuedBy rule for the live note and Markdown copies. Reason: The browser may say You to its reader, while a copied transcript always names the stored member.
+- Design call on 10 November 2026: Keep main's Workspace and file chips section and remove the identical earlier branch copy. Reason: The content has one complete home with the anchor that current links use.
+- Design call on 10 November 2026: Keep main's Worker chat key-code page and add the branch-data entry fact there. Reason: The README retains its old heading as a pointer and the entry list stays complete.
+- Design call on 10 November 2026: Correct the existing Continue-note test import to the moved shared transcript module. Reason: The typecheck exposed a stale branch-only path; no converter or assertion change is needed.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1531,13 +1545,13 @@ confirmed PR conflicts. This integration is required for final CI.
 
 Depends on: 10e
 
-- [ ] Integrate captured main `5d56546ceba68d6e19c3a673df1e18460f0164dc`.
+- [x] Integrate captured main `5d56546ceba68d6e19c3a673df1e18460f0164dc`.
       Preserve transcript copy, shared transcript formatting, clipboard
       behavior, and the current app and mockup session menu.
-- [ ] Keep Continue notes and branch context through the moved transcript
+- [x] Keep Continue notes and branch context through the moved transcript
       code. Preserve the shared started-turn rule, queued messages, Files
       ownership, all actions, and current Archive/Restore behavior.
-- [ ] Resolve and audit all current source and document combinations.
+- [x] Resolve and audit all current source and document combinations.
       Keep current public, legal, protocol, and mockup facts aligned.
 - [ ] Run bounded affected checks and any necessary regression proof and
       ten runs. Audit the two-parent merge, commit, and push the final

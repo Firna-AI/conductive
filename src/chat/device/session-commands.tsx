@@ -1,12 +1,13 @@
+import type { ReactNode } from 'react'
 import { CircleAlert } from 'lucide-react'
 import type { DeviceCommandRecord } from '../../shared/device'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import type { TranscriptInsert } from '../components/transcript-entries'
+import type { TranscriptInsert } from '../../shared/transcript/transcript-entries'
 import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
 import { ActionButton } from '../ui/actions'
 import { CommandCard } from './CommandCard'
 import { requestsOf } from './device-snapshot'
-import { placeCommands } from './placement'
+import { placeCommands } from '../../shared/transcript/command-placement'
 
 /**
  * The Mac commands of the shown session. The requests that wait go just
@@ -18,7 +19,7 @@ export function sessionCommands(
   snapshot: ChatSnapshot,
   sessionId: string | null,
   state: SessionState,
-): { waiting: DeviceCommandRecord[]; inserts: TranscriptInsert[] } {
+): { waiting: DeviceCommandRecord[]; inserts: TranscriptInsert<ReactNode>[] } {
   const viewerId = snapshot.account?.user.id ?? null
   const requests = requestsOf(snapshot.devices, sessionId)
   const answered = requests.filter((request) => request.state !== 'waiting')
@@ -28,7 +29,7 @@ export function sessionCommands(
     inserts: placed.map(({ request, after }) => ({
       key: `command:${request.requestId}`,
       after,
-      node: <CommandCard request={request} viewerId={viewerId} />,
+      content: <CommandCard request={request} viewerId={viewerId} />,
     })),
   }
 }

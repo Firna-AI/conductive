@@ -8,7 +8,10 @@ import { publishDeviceState, type DeviceStateProjection } from './state'
 import { readDeviceRecord } from '../../src/shared/device-read'
 import { readDeviceValue, writeDeviceValue } from './storage'
 
-const RECORDS = 'devices:v1:request:'
+import {
+  DEVICE_RECORDS_PREFIX as RECORDS,
+  readDeviceCommands,
+} from './record-read'
 const OUTBOX = 'devices:v1:publish:'
 const AUTH = 'devices:v1:token:'
 export const commandPending = (record: DeviceCommandRecord) =>
@@ -53,17 +56,8 @@ export class DeviceRecords {
   async tokenHash(id: string): Promise<string> {
     return (await this.storage.get<string>(AUTH + (await hash(id)))) ?? ''
   }
-  async list(): Promise<DeviceCommandRecord[]> {
-    const records = await Promise.all(
-      [...(await this.storage.list({ prefix: RECORDS })).keys()].map(
-        async (key) =>
-          readDeviceRecord(await readDeviceValue(this.storage, key)),
-      ),
-    )
-    return records.sort(
-      (a, b) =>
-        a.createdAt - b.createdAt || a.requestId.localeCompare(b.requestId),
-    )
+  list(): Promise<DeviceCommandRecord[]> {
+    return readDeviceCommands(this.storage)
   }
   async desktopSession(id: string): Promise<string> {
     return (
