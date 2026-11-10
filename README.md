@@ -51,6 +51,8 @@ feature that is not complete yet says so.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
 - Agents can create and list workspaces.
+- Routines run a saved prompt on a schedule or on a pull request event,
+  each time in a new workspace.
 - Each workspace has a number, such as `W-395`. A press on the number in
   the header copies the link of the workspace. A workspace link in chat
   shows as a chip with the number and the name.

@@ -31,6 +31,9 @@ whoever owns or started it (decision 129).
   previews, the terminals, and the desktops of the org end.
 - Nobody can create, resume, or start a workspace of the org. No build and
   no image refresh of the org runs, by hand or automatically.
+- No routine of the org starts a run, as
+  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+  says.
 - A start of a workspace of the org that waits or runs stops before its
   next step.
 - Each unfinished build of the org stops and fails. The app removes its
@@ -54,6 +57,8 @@ whoever owns or started it (decision 129).
 - The org suspension takes away no access to read. Members can still open
   the org and its workspaces, also archived ones, and read the chat
   history of each workspace.
+- Members can also read the routines of the org and their runs. The
+  routine pages show no actions.
 - The org and each of its workspaces show a notice. It says that the org
   is suspended, and it gives the address for abuse reports.
 - While the org is suspended, no member can change anything in it, and

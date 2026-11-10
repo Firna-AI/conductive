@@ -23,6 +23,8 @@
     `docs/protocol/file-mentions.md:24` links to `access-and-security.md#secrets-that-users-enter`.
     The heading lives in `tokens-and-secrets.md`.
     The baseline repair must change the target to `tokens-and-secrets.md#secrets-that-users-enter`.
+    The routines change at `d39e64eb` later corrected that target.
+    This remains an example of a reference error that the proposed check would find.
 - **Problem:** No command finds a relative link to a missing page or heading, or a doc path in code that names a missing page. Agents check links by hand, and a merge can miss a citation on a line that it does not change.
 - **Impact if no action:** A reader follows a link or a citation to a page or a heading that does not exist, and cannot find the requirement.
 - **Root question:** How does the repository find each reference to a doc page or a heading that no longer exists?

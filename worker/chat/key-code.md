@@ -55,6 +55,8 @@ first.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
   chunks of large file reports and tree deltas.
+- `routine-run.ts`: reports a routine's stored first-turn result after a chat transaction commits.
+- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and routine outcome recovery after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event. A connection keeps the protocol

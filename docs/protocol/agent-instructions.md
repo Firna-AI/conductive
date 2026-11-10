@@ -21,8 +21,10 @@ says.
   names the member who sent that message.
 - **Workspace branch:** the branch that the Worker's record of the
   workspace names. The app tracks this branch.
-- **Target branch:** the default branch of the workspace's repository. The
-  workspace branch starts from it, and the Changes list compares with it.
+- **Target branch:** the base branch of the workspace, as
+  [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
+  says. For a workspace that a member creates, it is the default branch of
+  the repository.
 - **Base prompt:** the general rules for work that a Claude agent gets
   before the agent instructions.
 

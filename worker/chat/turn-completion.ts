@@ -5,7 +5,11 @@ import type { StoredTurn } from './types'
 
 export type TurnEnd =
   | { state: 'stopped' }
-  | { state: 'failed'; retryMessageId?: string }
+  | {
+      state: 'failed'
+      retryMessageId?: string
+      error?: { code: string; message: string }
+    }
   | { state: 'finished'; randomId: () => string }
 
 /** Commit an end and advance the session and its waiting turns together. */
@@ -26,18 +30,19 @@ export class TurnCompletion {
     turn.started ??= turn.state === 'running' || turn.state === 'stopping'
     if (turn.loginFailure) {
       const retryMessageId = turn.messageIds[0]
+      const error = { code: 'agent_login_required', message: turn.loginFailure }
       await this.transaction.emit({
         type: 'turn.failed',
         sessionId: this.session.id,
         turnId: turn.id,
-        error: { code: 'agent_login_required', message: turn.loginFailure },
+        error,
         retryMessageId,
         durationMs: Math.max(
           0,
           this.transaction.now - (turn.startedAt ?? this.transaction.now),
         ),
       })
-      end = { state: 'failed', retryMessageId }
+      end = { state: 'failed', retryMessageId, error }
       delete turn.loginFailure
     }
     let following = turn.nextTurnId ?? null
@@ -59,6 +64,7 @@ export class TurnCompletion {
       }
     }
     turn.state = end.state
+    if (end.state === 'failed') turn.error = end.error
     turn.nextTurnId = null
     await this.removeCommands(turn.id)
     await this.transaction.saveTurn(turn)

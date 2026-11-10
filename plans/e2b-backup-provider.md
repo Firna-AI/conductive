@@ -594,6 +594,9 @@ The complete change passes the gate and the review.
 - [x] Match main's file-write contract on E2B: create missing parents and
       replace the destination only after a complete validated upload.
       Preserve old bytes and clean the temporary file after failure.
+- [x] Preserve the new routines and workspace base-branch inputs through
+      the fixed org-account create path. Verify routine allocation and
+      persisted provider identity. Push the conflict resolution for CI.
 - [x] Commit with Conventional Commits and push the branch.
 - [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

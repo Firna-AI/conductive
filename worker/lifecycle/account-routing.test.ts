@@ -62,6 +62,7 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
       user,
       { repositoryId, firstMessage: FIRST_MESSAGE },
       user,
+      { branch: 'feature/review', startSha: 'a'.repeat(40) },
     ),
   )
   const id = created.workspace.id
@@ -71,9 +72,11 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
   await start.advance()
   expect(await start.job()).toMatchObject({
     providerAccount: 'boat-second',
+    baseBranch: 'feature/review',
+    startSha: 'a'.repeat(40),
     createPayloadCiphertext: expect.any(String),
   })
-  start.restart()
+  await start.restart()
   for (let step = 0; step < 20 && (await start.job()); step++) {
     if ((await start.job())?.phase === 'runner')
       await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
@@ -83,7 +86,11 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
   expect(await start.wait()).toEqual({ ok: true })
   expect(await readWorkspace(runtime.env.DB, org.id, id)).toMatchObject({
     providerAccount: 'boat-second',
+    baseBranch: 'feature/review',
     sandboxId: 'bx_1',
+  })
+  expect(boat.starts[0]).toMatchObject({
+    env: { CONDUCTIVE_DEFAULT_BRANCH: 'feature/review' },
   })
   const create = boatRoute({ operation: 'create' })
   expect(

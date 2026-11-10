@@ -24,6 +24,10 @@ says.
 - The steps are product steps, not the raw output of the provider.
 - A new workspace shows steps such as the start from the org image, the
   fetch of the default branch, and the creation of the branch.
+- The run of a pull request fetches that pull request, or its base branch
+  after a merge.
+  [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
+  gives its steps.
 - A resume shows that the files come back as the user left them.
 - The chat history shows at once while a sandbox starts. The files and the
   tools wait until the sandbox is ready.

@@ -93,6 +93,20 @@ At the end of Restore, the delete goes through the ledger-aware cleanup of [`cle
 `detachArchiveDisk` then marks the exact account and ID deleted in the same D1 batch that detaches the disk.
 A confirmed missing archived disk uses that batch too.
 
+## Resource entry points
+
+- [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
+  path to a provider call that creates a sandbox or a snapshot. It stores the
+  request first, so the lifecycle finds the resource after a lost reply.
+  It records a computer allocation before create and attaches the returned ID.
+- [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
+  confirmed deletions, and the live computers that still need cleanup.
+- [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.
+  The task saves the account and ID of each computer, and its alarm, before the first provider request.
+  Its native RPC and alarm share the lifecycle queue.
+- [`cleanup.ts`](cleanup.ts): retries every failed computer of a workspace.
+  `deleteSandboxIfPresent` marks the ledger after Delete succeeds or returns not found.
+
 ## Org images
 
 `org_images` holds one org image for each org and provider account: the

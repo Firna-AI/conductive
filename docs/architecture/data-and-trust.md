@@ -17,6 +17,7 @@ and the separate preview domain.
 | ---------------------------------------------------------------------------- | ---------------------------------------- |
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
 | App access, the codes and their uses, the pause, and approval email states   | D1                                       |
+| Routines and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
 | The provider account of each org, and the weights of new orgs with each change | D1 |
 | Env var values, agent logins, and the traffic token of each E2B sandbox | The Worker's storage, encrypted |
@@ -64,3 +65,8 @@ and the separate preview domain.
   sandbox, as
   [Access and security](../protocol/isolation.md#agent-logins-in-a-sandbox)
   says.
+- A routine run acts as its owner while no person watches. It uses the
+  owner's agent login and GitHub token, and the org's env vars. Its
+  sandbox follows the same version pin boundary above. Other GitHub accounts
+  can write text that its agent reads, as
+  [Risks that stay open](../protocol/routines.md#risks-that-stay-open) says.

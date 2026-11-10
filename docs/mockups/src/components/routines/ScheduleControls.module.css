@@ -1,0 +1,23 @@
+/* The parts of a schedule, which wrap below the name on a phone. */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+/* A word and its selects, such as "at 09 : 00", which stay on one line. */
+.group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A phone gives each select the room of its larger text. */
+.number {
+  width: max(64px, calc(var(--ui-touch-min) * 2 + 8px));
+}
+
+.day {
+  width: max(124px, calc(var(--ui-touch-min) * 3 + 12px));
+}

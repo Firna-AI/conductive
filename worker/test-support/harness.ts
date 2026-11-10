@@ -136,6 +136,8 @@ export async function createHarness() {
           'terminal_credentials',
           'workspace_tokens',
           'section_preferences',
+          'routine_runs',
+          'routines',
           'workspaces',
           'sections',
           'repositories',

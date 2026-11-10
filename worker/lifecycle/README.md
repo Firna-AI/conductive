@@ -39,6 +39,15 @@ gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest` serves, the options of its caller, and the rules
 of a create.
 
+The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
+The create reads the fixed org account, and that account selects the published org image independently of those branch fields.
+The creation claim keeps them in its saved plan.
+The fetch updates `refs/remotes/origin/<base branch>`.
+The branch phase uses the event commit when it exists, or the fetched head otherwise.
+It sets the branch's `gh-merge-base` Git setting to the workspace base.
+Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
+A null stored base uses the repository default branch.
+
 ### Input activity
 
 [Input activity](routes.md#input-activity) gives how one
@@ -92,6 +101,10 @@ the persisted resource records and the retained computer ledger.
   route.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
   workspace on its fixed org account and queues its start.
+- [`creation-attempt-data.ts`](creation-attempt-data.ts) keeps the public failure code and message after a failed create.
+  [`start-failure.ts`](start-failure.ts) writes that cause and reports a run failure.
+  Accepted first starts keep the workspace in its error state for Try again.
+  The saved attempt cause repairs a run outcome after an interrupted report.
 - [`creation-claims.ts`](creation-claims.ts): `claimCreation`, which records
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
@@ -142,6 +155,7 @@ the persisted resource records and the retained computer ledger.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.
+- [`creation-fetch-label.ts`](creation-fetch-label.ts) names the pull request or base branch in the fetch step from saved run facts.
 - [`start-progress.ts`](start-progress.ts): the command steps, the
   terminal setup and its password read, and the move into the saved runner
   readiness phase.
@@ -213,17 +227,7 @@ the persisted resource records and the retained computer ledger.
   marker of the [terminal backend](../terminal/README.md) when the restore
   ends, as the [restore watch](workspace-object.md#creates-and-resumes)
   says.
-- [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
-  path to a provider call that creates a sandbox or a snapshot. It stores the
-  request first, so the lifecycle finds the resource after a lost reply.
-  It records a computer allocation before create and attaches the returned ID.
-- [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
-  confirmed deletions, and the live computers that still need cleanup.
-- [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.
-  The task saves the account and ID of each computer, and its alarm, before the first provider request.
-  Its native RPC and alarm share the lifecycle queue.
-- [`cleanup.ts`](cleanup.ts): retries every failed computer of a workspace.
-  `deleteSandboxIfPresent` marks the ledger after Delete succeeds or returns not found.
+- [Provider resource entries](provider-accounts.md#resource-entry-points): allocation, ledger, persistent Stop tasks, and cleanup.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`, the
   maintenance resume, startup, and stop phases. Its D1 progress retains a
   failure while stop cleanup retries.

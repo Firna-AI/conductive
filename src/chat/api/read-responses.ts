@@ -9,8 +9,21 @@ import type {
   SessionsResponse,
   SessionTranscriptResponse,
 } from '../../shared/sessions'
-import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
-import { count, flag, list, nullable, oneOf, record, text } from './json'
+import type {
+  WorkspaceTab,
+  WorkspaceView,
+  WorkspaceViewResponse,
+} from '../../shared/workspace-view'
+import {
+  count,
+  flag,
+  list,
+  nullable,
+  oneOf,
+  optional,
+  record,
+  text,
+} from './json'
 import {
   readAgent,
   readChoice,
@@ -146,6 +159,42 @@ export function readView(value: unknown): WorkspaceView {
     activeTab: nullable(readTab)(view.activeTab),
     fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
     tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
+  }
+}
+
+/**
+ * The routine whose run made the workspace, with the pull request of a
+ * pull request run, or null for a run of a schedule or of Run now.
+ */
+export type RunRoutine = Required<NonNullable<WorkspaceViewResponse['routine']>>
+
+/** The saved view, and the routine of a run workspace. */
+export interface ViewReply {
+  view: WorkspaceView
+  /** Null for a workspace that a person created. */
+  routine: RunRoutine | null
+}
+
+function readPullRequest(value: unknown): RunRoutine['pullRequest'] {
+  const pullRequest = record(value, 'pull request')
+  return { number: count(pullRequest.number), url: text(pullRequest.url) }
+}
+
+function readRunRoutine(value: unknown): RunRoutine {
+  const routine = record(value, 'routine')
+  const pullRequest = optional(nullable(readPullRequest))(routine.pullRequest)
+  return {
+    id: text(routine.id),
+    name: text(routine.name),
+    pullRequest: pullRequest ?? null,
+  }
+}
+
+export function readViewReply(value: unknown): ViewReply {
+  const routine = record(value, 'view response').routine
+  return {
+    view: readView(value),
+    routine: optional(nullable(readRunRoutine))(routine) ?? null,
   }
 }
 

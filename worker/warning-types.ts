@@ -11,6 +11,12 @@ export const SIMPLE_WARNINGS = {
     'Sandbox provider assignment uses the configured account weights.',
   provider_assignment_choice_ignored:
     'The selected sandbox provider account is unavailable. Assignment uses the account weights.',
+  routine_schedule_failed:
+    'A routine schedule could not run. The next scan will try again.',
+  routine_queued_start_failed:
+    'A queued routine run could not start. The next scan will try again.',
+  routine_background_start_failed:
+    'A pull request run could not start in the background.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   github_app_slug_invalid:
     'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',

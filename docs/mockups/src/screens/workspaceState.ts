@@ -7,6 +7,7 @@ import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
+import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
 
@@ -219,6 +220,17 @@ export const workspaceStateSchema = {
      * refusal, and nothing in the workspace can change.
      */
     org: { enum: ['active', 'suspended'] },
+    /**
+     * The run of a routine that made the workspace (decision 501): a run of
+     * a pull request, a run that Run now started, or a failed run that kept
+     * its workspace, whose first start or first turn failed. A run
+     * workspace is a normal workspace, whose header links to its routine,
+     * and for a pull request run to the pull request. It shows the chat of
+     * its run at the stage of `conversation`: `queued` while the sandbox
+     * starts or after a failed first start, or else its first turn. A
+     * workspace that a person created has none.
+     */
+    run: { enum: runWorkspaceKeys },
     /**
      * The command palette, closed or open on one of its views. Over an
      * open workspace it offers the actions of the workspace first. A phone
