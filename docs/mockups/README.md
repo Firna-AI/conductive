@@ -53,7 +53,8 @@ share.
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages, the entries that moved,
 the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
-`app/chat`, and `app/workspace-links`, and the New workspace dialog.
+`app/chat`, `app/workspace-links`, `app/new-workspace/branch`, and
+`app/imported`, and the New workspace dialog.
 
 ## Folder layout
 
@@ -127,7 +128,8 @@ invite code on the Account page.
 ## The Mac app
 
 [The Mac app](mac-app.md) gives the screens of the Mac app: its window, the
-waitlist, the commands that an agent runs on the Mac, and This Mac.
+waitlist, the commands that an agent runs on the Mac, This Mac, and the
+import from Conductor.
 
 ## The marketing site
 

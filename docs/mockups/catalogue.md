@@ -20,7 +20,8 @@ how a screen is built, and links to the other pages.
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat with the line of its branch, the first build of a new org, its error, the dialog, an existing branch or pull request, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/imported`      | A workspace from Conductor: the list after the import, its flag and old sessions, the Markdown of an old session, its files, its activation, a failed activation, and the activated workspace |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -33,14 +34,14 @@ how a screen is built, and links to the other pages.
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
-| `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace |
+| `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, and the import from Conductor |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace, import from Conductor |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/command-palette`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/workspace-links`, `app/new-workspace/branch`, `app/imported`, and `mac-app/import` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -328,3 +329,83 @@ and in the `workspace-link` variant of `app/new-workspace/dialog`.
 The flow `user-flows/link-a-workspace` goes from the copy to the answer,
 and ends with a press on the chip, which opens
 `app/new-workspace/first-turn`.
+
+`app/new-workspace/branch` draws the branch of a new workspace. New branch
+stays the default, so the line under the repository picker of the page says
+that the workspace starts on a new branch from main, with the quiet link
+Use an existing branch. The canonical screen has the branch picker open: a
+search field, New branch, the open pull requests, and the branches without
+a pull request. The picker leaves out the default branch, and it shows the
+pull request of a workspace that is still open with no warning. A phone
+opens it in a sheet. In each picker, New branch leads back to the default
+form, and the sample branch and pull request lead to their chosen states,
+in the dialog when the picker is in the dialog. Its child pages:
+
+- `app/new-workspace/branch/chosen` has a chosen branch, whose line says
+  that the workspace continues it, with Change. Its `pull-request` variant
+  has a chosen open pull request. Its `change` and `pull-request-change`
+  variants have the picker open again from Change, with the choice still
+  checked.
+- `app/new-workspace/branch/dialog` has the picker open in the New
+  workspace dialog, where a quiet picker beside the repository says New
+  branch. Its `chosen` and `pull-request` variants have a chosen branch and
+  a chosen pull request, and its `change` and `pull-request-change`
+  variants have the picker open again with that choice checked.
+- `app/new-workspace/branch/search` has a search that finds a pull
+  request. Its variants have a search with no match, the list while it
+  loads, and the list that did not load.
+- `app/new-workspace/branch/start` has the first start of the workspace
+  that Send makes on the chosen branch: it fetches that branch and checks
+  it out with tracking. Send of `app/new-workspace/branch/chosen` opens it.
+- `app/new-workspace/branch/gone` has the failed first start of a
+  workspace whose chosen branch was gone from GitHub before its start. The
+  bar names the branch and says to restore it on GitHub, with Try again,
+  and the composer stays.
+
+`app/imported` shows Coupon totals at checkout, a workspace that the Mac
+app imported from Conductor, before its activation. The header shows the
+flag From Conductor and the state Not active, whose mark is the four
+corners. The old sessions are links in place of the empty chat, and the
+question Activate this workspace takes the place of the composer. Its
+child pages:
+
+- `app/imported/list` has the workspace list after the import, with the
+  section Import from Conductor at the top.
+- `app/imported/old-session` has the Markdown file of an old session in the
+  Markdown view of the app, before the activation. Its `active` and
+  `stopped` variants have the same file after the activation and while the
+  activated workspace is stopped, and its `history` variant has the old
+  sessions in the session history. Each link to the file, its tab, and
+  the way back of a phone keep the state of the workspace.
+- `app/imported/files` has the Files tab of a phone before the activation.
+  Its `terminal` and `preview` variants have the other tabs before the
+  activation, and its `stopped` and `stopped-terminal` variants have the
+  Files and Terminal tabs while the activated workspace is stopped.
+- `app/imported/activating` has the activation: the first start of the
+  workspace, which copies in the work from Conductor.
+- `app/imported/failed` has a failed activation with Try again. Its `files`
+  variant has the Files tab of a phone.
+- `app/imported/ready` has the activated workspace, with no tab of a
+  resumed old session. Its `files`, `terminal`, and `preview` variants have
+  the tabs of a phone after the activation, and its `stopped` variant has
+  the same workspace after its cloud computer stopped.
+- `app/imported/archive` has the question of Archive before the
+  activation: the workspace can no longer be activated after Archive, and
+  its old sessions stay readable. Its `failed` variant has the same
+  question after a failed activation. The Archive button of the row of a
+  workspace that was never activated opens it, and its Archive leads to
+  `app/imported/archived`.
+- `app/imported/archived` has the workspace after that Archive. Its bar
+  names the day of the archive and says that the old sessions stay
+  readable, and it names no deleted cloud computer. Its `old-session`
+  variant has the file of an old session in that state.
+
+The controls of an imported workspace open only screens of the same
+workspace in the same state: the tabs of a phone, the list tabs of its
+Files panel, its tool tabs, and its session history. A control with no such
+screen stays static.
+
+[The Mac app](mac-app.md#the-import-from-conductor) gives the pages of the
+import itself, under `mac-app/import`. The flow
+`user-flows/import-from-conductor` goes from the offer of the Mac app to the
+activated workspace.

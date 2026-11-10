@@ -1,0 +1,61 @@
+/*
+ * One muted line under the repository picker. A narrow screen wraps the
+ * link onto its own line, still centred.
+ */
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 6px;
+  max-width: 100%;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+.chosen {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--ui-ink2);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.branch {
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dot {
+  color: var(--ui-faint);
+}
+
+/* The open picker hangs from the link. */
+.anchor {
+  display: inline-flex;
+  position: relative;
+}
+
+/* The quiet link: the link colour, and a line under it only on hover. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-touch-min);
+  color: var(--ui-link);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+a.link:hover {
+  text-decoration: underline;
+}

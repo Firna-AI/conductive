@@ -546,6 +546,226 @@ decision or the user.
   own bucket prefix, so imports run side by side.
 - No cloud computer starts until the user activates a workspace.
 
+### Mockup design calls, 10 November 2026
+
+These are agent calls from Milestone 1, within the decisions in force.
+
+- The settings entry is an "Import from Conductor" section below This Mac
+  in the Mac app account. The offer is a dismissible bar of the Mac app.
+  Both name the current org. The offer gives no count before consent.
+  Reason: the account is available to every member, and detection reads
+  only the presence of the database file.
+- Consent uses the Mac app's own alert. Don't Allow leads to Ask again.
+  The text does not promise that the list stays on the Mac. The Worker
+  relays the list to the page, because the page has no bridge to the Mac.
+  Milestone 2 must cover this data flow and the legal pages.
+- The list keeps unavailable rows, with the reason and the admin's Add
+  repository link. Imported rows link to their workspace. Select all
+  shows a mixed mark for a partial selection. Counts and upload sizes
+  come from the selected rows. Reason: the user must see what can import.
+- The section "Import from Conductor" stands at the top of the list.
+  An imported workspace shows "Not active" with its own mark until its
+  first start. The header keeps "From Conductor" after activation.
+  Reason: Stopped would imply that a cloud computer had already existed.
+- Old sessions appear as document links in the empty chat and in the
+  session history. A phone opens their Markdown in Chat, with a way back.
+  Each link keeps the inactive, active, or stopped state of the workspace.
+  Reason: old documents must stay reachable after a new chat fills the tab.
+- Before activation, files and tools show Not active, with no Changes
+  count. The activation question takes the place of the composer.
+  Activation uses the existing start card, queued composer, general
+  failure, and Try again. The existing whole-start limit stays in force.
+  The mockups show only a fresh session after activation. They do not
+  choose the resumed-session tab of decision 5.
+- New workspace has the quiet branch line on the page and a quiet picker
+  beside the repository in the desktop dialog. The picker has search,
+  loading, failure, and no-match states. A phone uses a sheet. Opening
+  Change keeps the current choice and draft. Reason: the dialog preference
+  must give the same branch choice as the page.
+- A failed first start on a branch that is gone keeps the workspace and
+  its messages. It names the branch and offers Try again after the user
+  restores the branch on GitHub. The existing failed-first-start rule
+  settles this case. Changing to a new branch is a separate feature.
+- Archive of a never-activated import says that the old sessions stay
+  readable and that activation becomes impossible. It says neither that
+  everything is pushed nor that it deletes a cloud computer. The existing
+  Archive and retention rules settle this case. The approved retention
+  rule stays in force. This milestone adds no storage cleanup policy.
+- The scan must obtain each row's upload size without building every
+  bundle before the user chooses. Milestone 6 must check that cost.
+  The shared notice contract and its app switch must change together in
+  Milestone 8. Reason: the mockups exposed both consumers of the new state.
+- Native fixture collections keep their original entries. Import examples
+  add their fixtures explicitly. Reason: the app's tests and development
+  data also read the native collections. An import-only section must not
+  appear there before an import.
+
+### Open decisions from the mockups
+
+These continue the decision numbers above. They are open, from
+10 November 2026. No option has been applied. The normal progress example
+keeps the current design: the first workspace is fully uploaded before its
+link opens. The incomplete workspace and interrupted upload stay undrawn.
+
+#### 13. A workspace whose upload is not complete
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** Design, "The import, at once" and "Activation".
+- **Terms:**
+  - **Bucket:** The cloud storage that holds the uploaded work and old
+    session documents before a cloud computer exists.
+- **Background:** The current design creates each workspace before its
+  upload ends. Every org member can open it. Decision 8 requires the
+  complete work at activation. Only the importing Mac can finish the upload.
+- **Problem:** No requirement says what members can open or activate
+  while the upload is incomplete. Old session files can also be absent.
+- **Impact if no action:** An early activation can restore incomplete
+  work. An old-session link can name a file that is not stored yet.
+- **Root question:** What can members see and do before an imported
+  workspace's work is complete in storage?
+- **Options:**
+  - **A.** Show an upload state. Keep Activate and old-session links off
+    until that workspace's upload ends. Check the same state at the
+    server for an old tab. Effort: Medium.
+  - **B.** Keep Activate on. Wait for that workspace's upload, then start
+    activation. This adds a persistent wait to the start path. Effort: Large.
+  - **C.** Create each workspace when its own upload ends. It then appears
+    with its complete work and documents. This changes when it appears
+    during the import. Effort: Medium.
+  - **D.** A, but upload the old-session documents first. Each link works
+    when its own file is stored. Activate waits for the rest. This needs
+    a stored mark for each document. Effort: Medium.
+  - **E.** Keep Activate on. If the work is incomplete, fail activation
+    before a cloud computer starts. Name the upload as the cause. An
+    unavailable document says that its upload is incomplete. Effort: Small.
+- **Left out:** Copying only the uploaded part loses work. Reading missing
+  work from the Mac fails when the Mac is off. Hiding a workspace from
+  other members breaks the org visibility rule. Waiting for every selected
+  workspace before creating any is worse than C for each workspace.
+- **Wider fix:** C. A workspace with incomplete work never reaches an org
+  member, screen, or activation route.
+- **Previous examples:** The first-build rule keeps Send and Create off
+  and refuses a create from an old tab. The follow-up
+  `plans/follow-ups/workspace-waits-for-first-build.md` records the wider
+  change needed for a persistent wait.
+- **Related:** Decision 14 has the same cause. Its D needs C here.
+- **Recommendation:** C. It removes incomplete workspaces from every
+  consumer. The UI proposal recommended A. The options check changed it
+  to C. Choose D if appearance before the upload remains required.
+- **Action:** ask the user, because C changes the current appearance
+  timing, and the other options add incomplete-upload behaviour that no
+  requirement covers.
+
+#### 14. An upload that stops before completion
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** Design, "The import, at once", and Milestone 6.
+- **Terms:**
+  - **Reservation:** An unfinished import record that holds uploaded parts
+    before a workspace exists.
+- **Background:** The importing Mac can sleep, quit, or lose its network.
+  The current design creates workspaces before their uploads end. The list
+  then marks their local IDs as already imported.
+- **Problem:** No requirement says how an interrupted upload finishes or
+  is undone. The already-imported row also prevents another normal import.
+- **Impact if no action:** Members can have a workspace with no complete
+  work and no way to finish the import.
+- **Root question:** How does a stopped upload finish or get undone
+  without lost work or an unusable workspace?
+- **Options:**
+  - **A.** Keep the workspace. Mark its upload as incomplete. The Mac
+    import list offers Try again for that row. Effort: Medium.
+  - **B.** Delete the unfinished workspace and make its row importable
+    again. This must not delete an accepted message. Effort: Medium.
+  - **C.** The Mac app tries again by itself when it opens again.
+    This can resume an action that the user stopped. Effort: Medium.
+  - **D.** With 13 C, keep an unfinished reservation instead of a
+    workspace. The Mac list offers Try again from the stored parts.
+    A separate retention rule must define when unused parts expire.
+    Effort: Medium.
+- **Left out:** Preventing sleep or asking before quit does not handle
+  network failure. Hiding an unfinished workspace from other org members
+  breaks the org visibility rule.
+- **Wider fix:** D with 13 C. An interrupted upload cannot leave an
+  unusable workspace in the org.
+- **Previous examples:** A failed first start keeps its workspace and
+  accepted messages. Mac settings changes offer Try again after a lost
+  connection instead of moving the action to a new connection themselves.
+- **Related:** Decision 13 sets whether the workspace already exists.
+  B must preserve any messages accepted under 13 B or E. D needs 13 C.
+- **Recommendation:** D if 13 C is chosen. It keeps recovery on the Mac
+  that holds the work. The UI proposal recommended A. The options check
+  changed it to D with C of decision 13. If creation stays before upload,
+  A remains the recommendation.
+- **Action:** ask the user, because upload recovery has no requirement,
+  and the best option depends on decision 13.
+
+#### 15. Continue a pull request from a fork
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** Design, "Continue a branch in New workspace";
+  `worker/github/client.ts`, `worker/github/banner.ts`, and
+  `worker/github/webhook-routing.ts`.
+- **Terms:**
+  - **Fork:** A copy of a GitHub repository whose branches belong to the
+    copy.
+  - **Head repository:** The repository that holds a pull request's
+    branch. The base repository receives the pull request.
+- **Background:** The picker offers the chosen repository's open pull
+  requests. One can have its branch in a fork. The current workspace,
+  banner, and webhook model follows one repository and one branch.
+  Git uses the sender's user token, whose access can cover several installs.
+- **Problem:** The plan names no fork rule. Fetching a branch by name in
+  the chosen repository can find no branch, or the wrong branch.
+  The current banner does not follow a pull request from another repository.
+- **Impact if no action:** A fork choice can fail, continue different
+  work, or promise to update a pull request that the workspace cannot track.
+- **Root question:** Which open pull requests can the user continue from
+  the chosen repository, and where does the continued work go?
+- **Options:**
+  - **A.** Continue only pull requests whose head repository matches the
+    chosen repository. Show other rows as unavailable, with a reason and
+    Open on GitHub. This also handles a deleted fork. Effort: Medium.
+  - **B.** Copy a fork pull request onto a new branch of the chosen
+    repository. Name that copy before create. Fetch the pull request ref
+    from the base repository, and use the normal new-branch name rule.
+    It does not update the original pull request. Effort: Medium.
+  - **C.** Continue the original fork branch and pull request when the
+    sender can push there. Track both repositories through start, pushes,
+    the banner, checks, and webhooks. Other fork rows use A. This changes
+    the repository model and needs proof of the user token's push access.
+    Effort: Large.
+  - **D.** Hide fork pull requests without a note. Search shows the usual
+    no-match state. This is smaller, but gives no reason for a missing
+    pull request that the user can see on GitHub. Effort: Small.
+  - **E.** Use C when the sender can push to the fork, and B otherwise.
+    A row can change kind when access changes. Effort: Large.
+- **Left out:** Removing every pull request breaks decision 1. A fetch
+  alone does not settle the push target. A branch name alone can select
+  different work, including the chosen repository's default branch.
+  Refusing only at start tells the user too late. Adding the fork as a
+  chosen repository still does not make the banner follow the original
+  pull request in its other repository.
+- **Wider fix:** A. Compare repository IDs, not branch names, before
+  offering continuation. B and D use the same identity rule. C still
+  needs a fallback for a fork that the sender cannot change.
+- **Previous examples:** The banner reader and webhook router already
+  compare the head repository with the workspace repository. Their tests
+  reject another repository's pull request as a match.
+- **Related:** Decision 1 includes open pull requests. Decision 2 permits
+  shared branches, which does not settle fork repository identity.
+- **Recommendation:** A. It gives the reason while keeping the existing
+  repository model for an uncommon action. The options check kept A and
+  added D and E. B lets a maintainer take over work without fork access.
+- **Action:** ask the user, because the new picker has no fork rule,
+  and filtering, copying, and continuing the original have real trade-offs.
+
 ## Checks before Milestone 1
 
 These checks settle facts that decisions 5 and 7 need. They need no
@@ -568,24 +788,45 @@ Depends on: none
 
 Draw every screen and flow of the change, at the Mac app's desktop size,
 and at phone size where a screen shows on a phone. The tab of a resumed
-session waits for decision 5.
+session waits for decision 5. The list below separates each blocked part
+from the normal path. The progress example follows the current appearance
+timing. It opens only a workspace whose own upload is complete.
 
-- [ ] Add the quiet branch link to the New workspace screen, and the
+- [x] Add the quiet branch link to the New workspace screen, and the
       branch picker with branches and open pull requests.
-- [ ] Add the import entry in the settings and in the command palette, and
-      the one-time offer when the Mac app finds Conductor data.
-- [ ] Add the consent dialog, the list with Select all, the rows that
+- [x] Add the settings entry and the one-time offer when the Mac app finds
+      Conductor data.
+- [ ] Add the palette entry. Blocked by the unmerged branch
+      `calummoore/command-palette-mockups`.
+- [x] Add the consent dialog, the list with Select all, the rows that
       cannot import, and the already imported rows.
-- [ ] Add the import progress and the result, with the files that
-      decision 11 leaves out.
-- [ ] Add an imported workspace: its flag, the links to its old sessions,
+- [x] Add the normal import progress and result.
+- [ ] Add the omitted-file result. Blocked by decision 11.
+- [x] Add an imported workspace: its flag, the links to its old sessions,
       the Markdown view of one old session, the Activate
       question, activation progress, and a failed activation.
-- [ ] Add the user flow `import-from-conductor`, from the offer to an
+- [x] Add the first start on an existing branch and the failed start when
+      that branch is gone. Keep the accepted messages and Try again.
+- [x] Add Archive of a never-activated import and its archived workspace.
+      Keep the old session documents readable. Show no false statement
+      about pushed work or a deleted cloud computer.
+- [ ] Add the resumed-session tab. Blocked by decision 5.
+- [ ] Add the full-disk activation stop. Blocked by decision 11.
+- [ ] Finish incomplete-upload workspace availability, and revise the
+      progress and flow if needed. Blocked by decision 13.
+- [ ] Add interrupted-upload recovery and the unfinished row. Blocked by
+      decision 14, which also depends on decision 13.
+- [ ] Add the fork pull request case to the page, dialog, and phone
+      picker if needed. Blocked by decision 15.
+- [x] Add the user flow `import-from-conductor`, from the offer to an
       activated workspace.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Keep import fixtures separate from the native section collection
+      that the app's tests and development data read.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Verification evidence: `.context/import-from-conductor/checks/milestone-1-report.md`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -594,9 +835,20 @@ Depends on: 1
 - [ ] Create `docs/protocol/conductor-import.md` with the requirements of
       the scan, the consent, the list, the import, the bucket data, and
       activation.
+- [ ] State incomplete-upload availability and recovery after decisions
+      13 and 14. If unfinished reservations are chosen, settle their
+      retention before implementation.
 - [ ] State the new device operations in the Mac app protocol doc.
+- [ ] State which scan metadata the Worker relays to the page. Read both
+      legal pages in full and update each sentence that restates the
+      changed facts. Consent must not promise a local-only list.
 - [ ] State imported workspaces, activation, and the branch choice of a
       new workspace in the protocol doc that holds Create a workspace.
+- [ ] State the fork pull request rule after decision 15. If C or E is
+      chosen, update the repository model and banner routing requirements.
+- [ ] State Not active, the current org as the import destination, and
+      the place of the import section. State Archive before activation
+      under the existing Archive and retention rules.
 - [ ] State the old sessions in Chat and events.
 - [ ] State the retention of the bucket data in Access and security.
 - [ ] Add the import flow to the architecture doc.
@@ -611,7 +863,11 @@ Depends on: 1
 Depends on: 2
 
 - [ ] Add a Worker route that lists the branches and the open pull
-      requests of a chosen repository, without the default branch.
+      requests of a chosen repository, without the default branch. Page
+      the list and support the search shown in the picker.
+- [ ] Apply decision 15 to fork pull requests. Use repository IDs for
+      identity. B needs a copy from the pull request ref. C or E also
+      needs the head repository, push access, banner, and webhook changes.
 - [ ] Accept an existing branch in the create request. Keep New branch as
       the default.
 - [ ] Fetch and check out the existing branch at the first start, with
@@ -626,11 +882,15 @@ Depends on: 2
 
 - [ ] Let a workspace record exist with no first message and no cloud
       computer, with the "from Conductor" flag and the local Conductor ID,
-      with its migration.
+      with its migration. Record Not active and whether activation
+      completed, so Archive can choose the correct words.
 - [ ] Add the import routes: create the imported workspaces in the section
       "Import from Conductor", record each old session with its title and
       its Markdown file, and give short-lived upload links for the bucket
       data.
+- [ ] Add the upload completion and recovery state chosen in decisions
+      13 and 14. Keep a partial import from claiming that all its work is
+      ready. Keep accepted messages under the failed-first-start rule.
 - [ ] Add the route that reads the Markdown file of an old session for a
       member of the org.
 - [ ] Add the R2 bucket of decision 132 when Milestone 8p of the main plan
@@ -664,10 +924,13 @@ Depends on: 4
 - [ ] Detect `conductor.db`, and offer the import once.
 - [ ] Ask the user before the first read of Conductor data.
 - [ ] Read `conductor.db` in read-only mode, and tolerate a missing column.
+- [ ] Obtain row sizes without building a bundle for every unselected
+      workspace. Measure the scan cost with the user's 36-workspace case.
 - [ ] Find each session file, also a compressed one, and turn each session
       into one Markdown file, as decision 7 says.
 - [ ] Build the bucket data of decision 8 with Git, and upload it with the
       short-lived links.
+- [ ] Handle an upload that stops, and retry it only as decision 14 says.
 - [ ] Add the device operations of the scan and the upload.
 - [ ] Add the tests of the Mac app, as the `testing` skill says.
 - [ ] Update `desktop/README.md`.
@@ -678,7 +941,12 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Build the quiet branch link and the picker from the mockups.
+- [ ] Build the quiet branch control on the page and in the desktop
+      dialog. Keep the current choice and draft when the picker opens.
+- [ ] Build the search, loading, failure, and no-match states. Keep New
+      branch available. Change the first-message helper so it does not
+      promise a new branch after an existing branch was chosen.
+- [ ] Build the fork row and chosen state that decision 15 requires.
 - [ ] Add the web app tests, as the `testing` skill says.
 - [ ] Update `src/app/README.md`.
 
@@ -690,8 +958,19 @@ Depends on: 1, 4, 5, 6
 
 - [ ] Build the entry, the offer, the list, the progress, and the result
       from the mockups.
+- [ ] Show Select all with a mixed mark for a partial selection. Use the
+      selected rows for the count and upload size.
 - [ ] Build the imported workspace: its flag, the links to its old
       sessions, their Markdown view, and the Activate question.
+- [ ] Show Not active with no premature file count or project file list.
+      Keep the shared notice contract and its app switch aligned.
+- [ ] Keep the old-session links in the session history after a new chat
+      fills the tab. Keep phone navigation in the same workspace and
+      lifecycle state, including its Markdown view and archived state.
+- [ ] Use the imported Archive question and archived words before a
+      successful activation. Keep the old documents readable. Do not say
+      that work is pushed or a cloud computer was deleted when neither
+      fact is true.
 - [ ] Add the web app tests, as the `testing` skill says.
 - [ ] Update `src/app/README.md` and `src/shell/workspace/README.md`.
 

@@ -3,6 +3,7 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { Archive, CircleAlert, CirclePause } from 'lucide-react'
 import { archivedOn } from '../../fixtures/archive'
+import { startErrors } from '../../fixtures/starting'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
@@ -76,13 +77,16 @@ const problems: Readonly<Record<SandboxProblem, Problem>> = {
 }
 
 /**
- * The one way forward. The mockups draw one failed first start, so its Try
- * again leads to the start of a new cloud computer in that workspace.
+ * The one way forward. The Try again of a failed first start leads to the
+ * start of a new cloud computer in that workspace, which the mockups draw
+ * for Saved carts. A branch that is gone stays gone until someone restores
+ * it on GitHub, so its Try again leads to no drawn screen.
  */
 function RecoveryButton(props: { label: string; state: SandboxNoticeState }) {
   const { state } = props
   const button = <ActionButton tone="primary">{props.label}</ActionButton>
   if (state.problem !== 'error' || state.firstStart !== true) return button
+  if (state.message === startErrors['branch-gone']) return button
   return (
     <ScreenLink asChild to={paths.retrying}>
       {button}

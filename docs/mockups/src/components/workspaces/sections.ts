@@ -1,4 +1,5 @@
 import {
+  conductorSection,
   defaultSection,
   sectionKeys,
   sections,
@@ -7,17 +8,22 @@ import {
 } from '../../fixtures/sections'
 import {
   workspaceList,
-  type ActivityStatus,
   type Workspace,
+  type WorkspaceStatus,
 } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
 
 export type WorkspaceRow = {
   workspace: Workspace
-  status: ActivityStatus
+  status: WorkspaceStatus
   selected: boolean
   /** The screen that opening this workspace shows, when the mockups draw it. */
   to?: string
+  /**
+   * The question that Archive opens for this workspace, when it is not the
+   * question that the mockups draw for every row. Null keeps it static.
+   */
+  archiveTo?: string | null
 }
 
 export type SidebarSection = {
@@ -26,7 +32,7 @@ export type SidebarSection = {
 }
 
 /** The workspace that the main area shows, with its current status. */
-export type OpenWorkspace = { workspace: Workspace; status: ActivityStatus }
+export type OpenWorkspace = { workspace: Workspace; status: WorkspaceStatus }
 
 /** The section whose menu the list shows open. */
 export type ListMenu = { section: SectionKey }
@@ -48,7 +54,7 @@ function linkFor(key: string, open: boolean): string | undefined {
 }
 
 /** The open workspace has activity now, so its row shows no age. */
-const liveStatuses: ReadonlySet<ActivityStatus> = new Set([
+const liveStatuses: ReadonlySet<WorkspaceStatus> = new Set([
   'working',
   'input',
   'starting',
@@ -59,6 +65,7 @@ function rowFor(
   open?: OpenWorkspace,
   needsInput?: string,
   created: readonly OpenWorkspace[] = [],
+  openTo?: string,
 ): WorkspaceRow {
   const isOpen = open !== undefined && workspace.key === open.workspace.key
   if (!isOpen && workspace.key === needsInput) {
@@ -76,7 +83,7 @@ function rowFor(
     workspace: busy ? { ...workspace, updated: 'now' } : workspace,
     status: isOpen ? open.status : (made?.status ?? workspace.status),
     selected: isOpen,
-    to: linkFor(workspace.key, isOpen),
+    to: (isOpen ? openTo : undefined) ?? linkFor(workspace.key, isOpen),
   }
 }
 
@@ -86,12 +93,14 @@ function rowFor(
  * `needsInput` marks a workspace whose agent waits for the user while the
  * main area shows another page. `created` adds the workspaces that the
  * create flow made by the time of the screen, with their states, at the
- * top of their sections.
+ * top of their sections. `openTo` is the screen of the open workspace in
+ * its state, which its selected row keeps, where the mockups draw one.
  */
 export function workspaceSections(
   open?: OpenWorkspace,
   needsInput?: string,
   created: readonly OpenWorkspace[] = [],
+  openTo?: string,
 ): SidebarSection[] {
   const isNew =
     open !== undefined &&
@@ -105,8 +114,71 @@ export function workspaceSections(
     section: sections[key],
     rows: all
       .filter((workspace) => workspace.section === key)
-      .map((workspace) => rowFor(workspace, open, needsInput, created)),
+      .map((workspace) => rowFor(workspace, open, needsInput, created, openTo)),
   }))
+}
+
+/**
+ * The question of Archive for an imported workspace that was never
+ * activated, before its activation or after a failed one. It has no cloud
+ * computer to check. An activated workspace gets the question of every
+ * workspace.
+ */
+function importedArchive(status: WorkspaceStatus): string | undefined {
+  if (status === 'inactive') return paths.importedArchive
+  if (status === 'error') return paths.importedArchiveFailed
+  return undefined
+}
+
+/**
+ * The sections after an import from Conductor: Import from Conductor at
+ * the top, with the workspaces of the import and their states, then the
+ * other sections. A row opens its workspace, when the mockups draw it.
+ * `open` is the workspace that the main area shows, and `openTo` the
+ * screen of its current state, which its selected row keeps.
+ */
+export function sectionsWithImport(
+  imported: readonly Workspace[],
+  open?: OpenWorkspace,
+  openTo?: string,
+): SidebarSection[] {
+  const rows = imported.map((workspace): WorkspaceRow => {
+    const isOpen = workspace.key === open?.workspace.key
+    const to = workspace.key === 'coupon-totals' ? paths.imported : undefined
+    const status = isOpen ? open.status : workspace.status
+    return {
+      workspace,
+      status,
+      selected: isOpen,
+      to: isOpen ? (openTo ?? to) : to,
+      archiveTo:
+        workspace.key === 'coupon-totals'
+          ? (importedArchive(status) ?? null)
+          : null,
+    }
+  })
+  return [{ section: conductorSection, rows }, ...workspaceSections(open)]
+}
+
+/**
+ * The sections after an imported workspace was archived before its
+ * activation. It leaves Import from Conductor for the open Archived group,
+ * where its row keeps `openTo`, and the other workspaces of the import
+ * stay in their section.
+ */
+export function archivedWithImport(
+  open: Workspace,
+  imported: readonly Workspace[],
+  openTo?: string,
+): { sections: SidebarSection[]; archived: WorkspaceRow[] } {
+  const others = imported.filter((item) => item.key !== open.key)
+  const archived: WorkspaceRow = {
+    workspace: open,
+    status: 'archived',
+    selected: true,
+    to: openTo,
+  }
+  return { sections: sectionsWithImport(others), archived: [archived] }
 }
 
 /** A new org: its default section, with no workspaces yet. */

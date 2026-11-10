@@ -29,6 +29,8 @@ export const newWorkspaceDialogSchema = {
     'draft',
     'login',
     'repositories',
+    'branch',
+    'picker',
     'result',
     'org',
     'firstBuild',
@@ -57,6 +59,8 @@ export const emptyDialog: NewWorkspaceDialogState = {
   draft: 'empty',
   login: 'connected',
   repositories: 'chosen',
+  branch: 'new',
+  picker: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -108,6 +112,7 @@ export function NewWorkspaceDialogScreen(props: {
   const dialog = (
     <NewWorkspaceDialog
       attachments={draft.attachments}
+      branch={{ choice: state.branch, picker: state.picker }}
       choice={page.choice}
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}

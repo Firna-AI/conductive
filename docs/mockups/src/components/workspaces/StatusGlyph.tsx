@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { ActivityStatus } from '../../fixtures/workspaces'
+import type { WorkspaceStatus } from '../../fixtures/workspaces'
 import { classes } from '../common/classes'
 import styles from './StatusGlyph.module.css'
 
@@ -13,7 +13,7 @@ const ring = [0, 1, 2, 5, 8, 7, 6, 3]
  * The cells that each state lights. Each state has its own shape, so the
  * state never depends on colour alone.
  */
-const shapes: Readonly<Record<ActivityStatus, readonly number[]>> = {
+const shapes: Readonly<Record<WorkspaceStatus, readonly number[]>> = {
   /** A light runs around the ring. */
   working: ring,
   /** The middle column pulses, like a text cursor: the agent asks. */
@@ -30,6 +30,8 @@ const shapes: Readonly<Record<ActivityStatus, readonly number[]>> = {
   error: [0, 2, 4, 6, 8],
   /** No cell lit: nothing runs, and nothing can start. */
   archived: [],
+  /** The four corners, like an empty frame: no cloud computer yet. */
+  inactive: [0, 2, 6, 8],
 }
 
 /** One turn of the working ring, and one wave of the starting row, in ms. */
@@ -40,7 +42,7 @@ const wave = 1200
  * The delay of a lit cell, so the cells move in order. Each delay is
  * negative, so every view shows the motion already under way.
  */
-function delay(status: ActivityStatus, cell: number): CSSProperties {
+function delay(status: WorkspaceStatus, cell: number): CSSProperties {
   if (status === 'working') {
     return { animationDelay: `${(ring.indexOf(cell) * turn) / 8 - turn}ms` }
   }
@@ -55,7 +57,7 @@ function delay(status: ActivityStatus, cell: number): CSSProperties {
  * lit cells draw the state. Working moves around the ring, starting fills
  * the middle row, and a workspace that needs input pulses.
  */
-export function StatusGlyph(props: { status: ActivityStatus }) {
+export function StatusGlyph(props: { status: WorkspaceStatus }) {
   const lit = new Set(shapes[props.status])
   return (
     <span aria-hidden className={classes(styles.glyph, styles[props.status])}>

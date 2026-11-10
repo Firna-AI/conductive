@@ -1,0 +1,95 @@
+/* The flag keeps its width beside a name or a repository that shortens. */
+.flag {
+  display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/*
+ * The old sessions in place of an empty chat: a quiet heading, then one
+ * list with a full outline, as the repository list has.
+ */
+.links {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.icon {
+  margin-bottom: 6px;
+  color: var(--ui-faint);
+}
+
+.heading {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+  line-height: 1.4;
+}
+
+.body {
+  margin: 0 0 10px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+.list {
+  width: 100%;
+  max-width: 460px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+  text-align: left;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--ui-border);
+}
+
+/* One session on one line: the agent, the title, the size, and an arrow. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: max(40px, var(--ui-touch-min));
+  padding: 4px 10px 4px 12px;
+  color: var(--ui-ink);
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+a.row:hover {
+  background: var(--ui-soft);
+}
+
+.title {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  font-size: var(--ui-text-md);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+}

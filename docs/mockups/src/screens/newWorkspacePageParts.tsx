@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
+import { BranchLine } from '../components/new-workspace/BranchLine'
 import {
   ChooseRepositoriesButton,
   chooseRepositoriesFirst,
@@ -73,14 +74,17 @@ export function pageOrg(state: NewWorkspaceState): PageOrg {
 
 /**
  * The start of an empty chat, with the repository of the new workspace.
- * The note names the build that the workspace starts from. Before the
- * first good build there is none, and the notice over the composer says
- * why.
+ * The line under the repository names the branch, a new one by default,
+ * with a quiet link that changes it. The note names the build that the
+ * workspace starts from. Before the first good build there is none, and
+ * the notice over the composer says why.
  */
 export function Start(props: {
   page: PageOrg
   chosen: boolean
   admin: boolean
+  state: NewWorkspaceState
+  phone: boolean
 }) {
   return (
     <div className={styles.start}>
@@ -88,7 +92,7 @@ export function Start(props: {
       <h2 className={styles.title}>Start a workspace</h2>
       <p className={styles.body}>
         {props.chosen
-          ? 'Your first message creates it, on a new branch of the repository.'
+          ? 'Your first message creates it.'
           : props.admin
             ? `${chooseRepositoriesFirst(props.page.org.name)}.`
             : `An admin of ${props.page.org.name} chooses its repositories first.`}
@@ -106,6 +110,13 @@ export function Start(props: {
         </ActionButton>
       ) : props.admin ? (
         <ChooseRepositoriesButton />
+      ) : null}
+      {props.chosen ? (
+        <BranchLine
+          choice={props.state.branch}
+          phone={props.phone}
+          picker={props.state.picker}
+        />
       ) : null}
       {props.chosen && props.page.built ? (
         <p className={styles.note}>

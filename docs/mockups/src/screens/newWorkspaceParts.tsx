@@ -29,6 +29,19 @@ export const newWorkspaceFormProperties = {
    * admin to choose them first, and the message waits.
    */
   repositories: { enum: ['chosen', 'none'] },
+  /**
+   * The branch of the new workspace: a new branch, as by default, an
+   * existing branch, or the branch of an open pull request.
+   */
+  branch: { enum: ['new', 'existing', 'pull-request'] },
+  /**
+   * The branch picker: closed, open, open with a search that finds a pull
+   * request or finds nothing, or open while its list loads or after the
+   * list did not load. A phone opens it in a sheet.
+   */
+  picker: {
+    enum: ['closed', 'open', 'search', 'no-match', 'loading', 'failed'],
+  },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties

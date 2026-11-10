@@ -87,6 +87,12 @@
   background: var(--ui-soft);
 }
 
+/* A row that leads to the screen of its choice keeps the look of a row. */
+.link {
+  cursor: pointer;
+  text-decoration: none;
+}
+
 .icon {
   flex-shrink: 0;
   color: var(--ui-muted);
@@ -172,4 +178,31 @@
   margin: 3px 0;
   border: 0;
   background: var(--ui-border);
+}
+
+/* The search field of a picker, above its rows. */
+.search {
+  padding: 2px 2px 6px;
+}
+
+.sheet .search {
+  padding: 0 12px 8px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* A list that loads or did not load, under the rows of a picker. */
+.status {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 4px 4px;
+  white-space: normal;
+}
+
+.sheet .status {
+  padding: 8px 12px;
 }

@@ -36,6 +36,13 @@
   color: var(--ui-muted);
 }
 
+/* The open branch picker hangs from its control. */
+.anchor {
+  display: inline-flex;
+  position: relative;
+  min-width: 0;
+}
+
 /* The org and the section that the new workspace joins, as plain text. */
 .place {
   overflow: hidden;

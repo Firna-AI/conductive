@@ -1,4 +1,12 @@
 {
   "title": "Mac app",
-  "order": ["window", "waitlist", "commands", "requests", "stop", "this-mac"]
+  "order": [
+    "window",
+    "waitlist",
+    "commands",
+    "requests",
+    "stop",
+    "this-mac",
+    "import"
+  ]
 }

@@ -1,8 +1,10 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { ChatPane } from '../components/chat/ChatPane'
+import { Sheet } from '../components/common/Sheet'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
+import { BranchPicker } from '../components/new-workspace/BranchPicker'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { firstBuildStates } from '../fixtures/computer'
 import { memberViewer, you } from '../fixtures/members'
@@ -24,6 +26,8 @@ export const newWorkspaceSchema = {
     'draft',
     'login',
     'repositories',
+    'branch',
+    'picker',
     'result',
     'org',
     'firstBuild',
@@ -49,10 +53,21 @@ export const newWorkspaceForm: NewWorkspaceState = {
   draft: 'message',
   login: 'connected',
   repositories: 'chosen',
+  branch: 'new',
+  picker: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
   viewer: 'admin',
+}
+
+/** The screen that Send opens for each branch choice, where one is drawn. */
+const createFlows: Readonly<
+  Record<NewWorkspaceState['branch'], string | undefined>
+> = {
+  new: paths.creating,
+  existing: paths.newWorkspaceBranchStart,
+  'pull-request': undefined,
 }
 
 /**
@@ -67,8 +82,12 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const building = state.org === 'new' && state.firstBuild !== 'succeeded'
   const failed = !suspended && state.result === 'error'
   const draft = newWorkspaceDrafts[state.draft]
-  // Send leads to the create flow, which draws the task of Saved carts.
-  const linked = state.draft === 'workspace-link'
+  // Send leads to the create flow, which draws the task of Saved carts on
+  // a new branch, or to its start on the chosen branch. The mockups draw no
+  // create flow for another draft, or for a chosen pull request, whose
+  // branch starts in the same way.
+  const flow = createFlows[state.branch]
+  const otherFlow = state.draft === 'workspace-link' || flow === undefined
   const text =
     state.org === 'new' && state.draft !== 'empty' ? page.draft : draft.text
   const notices = formNotices(state, failed, !building)
@@ -93,16 +112,18 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
-          failed || linked || state.org === 'new' || text === ''
+          failed || otherFlow || state.org === 'new' || text === ''
             ? undefined
-            : paths.creating,
+            : flow,
       }}
       empty={
         suspended ? undefined : (
           <Start
-            page={page}
-            chosen={state.repositories === 'chosen'}
             admin={state.viewer === 'admin'}
+            chosen={state.repositories === 'chosen'}
+            page={page}
+            phone={props.viewport === 'mobile'}
+            state={state}
           />
         )
       }
@@ -139,7 +160,22 @@ export function NewWorkspaceScreen(props: {
       <NewChat state={state} viewport={props.viewport} />
     </Page>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (mobile) {
+    return (
+      <MobileFrame>
+        {page}
+        {state.picker !== 'closed' && state.repositories === 'chosen' ? (
+          <Sheet title="Branch">
+            <BranchPicker
+              choice={state.branch}
+              placement="sheet"
+              state={state.picker}
+            />
+          </Sheet>
+        ) : null}
+      </MobileFrame>
+    )
+  }
   return (
     <AppFrame rail={railOf(state)} sidebar={sidebarOf(state, mac?.needsInput)}>
       {page}

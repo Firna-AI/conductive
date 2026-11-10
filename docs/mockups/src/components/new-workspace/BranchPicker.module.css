@@ -1,0 +1,10 @@
+/* The list of the picker while it loads: a spinner and a quiet line. */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 32px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}

@@ -7,7 +7,7 @@ import { conversationKeys } from '../fixtures/conversations'
 import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { startErrorKeys } from '../fixtures/starting'
-import { openableWorkspaces } from '../fixtures/workspaces'
+import { openableWorkspaces } from '../fixtures/openableWorkspaces'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -54,14 +54,28 @@ export const workspaceStateSchema = {
     /**
      * The cloud computer. An archived workspace has none. `refused` is a
      * stopped cloud computer whose start the app refuses, such as while the
-     * owner of the workspace is suspended.
+     * owner of the workspace is suspended. `inactive` is a workspace from
+     * Conductor before its activation, which has none yet. Its activation
+     * is its first start, and a failed one is its `error`. Such a workspace
+     * archived before its activation is `archived-inactive`: it never had
+     * a cloud computer, so its archive deleted none.
      */
     sandbox: {
-      enum: ['ready', 'starting', 'stopped', 'error', 'refused', 'archived'],
+      enum: [
+        'ready',
+        'starting',
+        'stopped',
+        'error',
+        'refused',
+        'archived',
+        'inactive',
+        'archived-inactive',
+      ],
     },
     /**
      * The message that the app saved for a start that failed, which the
-     * error state shows: a failure, or the 20-minute limit of a start.
+     * error state shows: a failure, the 20-minute limit of a start, or a
+     * chosen branch that is gone from GitHub.
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
@@ -84,7 +98,8 @@ export const workspaceStateSchema = {
      * linked session that a member's message opened from the first session,
      * or a file, a Markdown preview, a diff, or a file whose name the app
      * does not know, such as a file that moved. A phone shows a file in
-     * Files.
+     * Files. `old-session` is the Markdown file of a session from
+     * Conductor, which a phone shows in Chat.
      */
     tab: {
       enum: [
@@ -95,6 +110,7 @@ export const workspaceStateSchema = {
         'markdown',
         'diff',
         'unnamed-file',
+        'old-session',
       ],
     },
     /**
@@ -235,4 +251,17 @@ export const checksWorkspace: WorkspaceState = {
   files: 'checks',
   tool: 'preview',
   focus: 'files',
+}
+
+/**
+ * The workspace from Conductor as it opens after the import: no cloud
+ * computer yet, and its branch on GitHub without a pull request. Its
+ * entries change from here.
+ */
+export const importedWorkspace: WorkspaceState = {
+  ...readyWorkspace,
+  workspace: 'coupon-totals',
+  sandbox: 'inactive',
+  banner: 'none',
+  files: 'all',
 }

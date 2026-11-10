@@ -61,3 +61,36 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   or Mac not available. When its turn ends, the card folds with the work
   of the turn at its place, from decision 151, as
   `app/chat/work/mac-command` shows.
+
+## The import from Conductor
+
+Only the Mac app imports the local workspaces of Conductor, also the ones
+that a person moved there from Conductor Cloud. Its pages live under
+`mac-app/import`, and their parts in `src/components/conductor-import/`.
+`ConductorImportScreen` in `src/screens/` draws them in the window of
+`MacScreen`. A phone view shows the same screen, smaller, and it does not
+mean that the web app imports.
+
+- When the Mac app finds the data of Conductor, `ImportOffer` offers the
+  import once, as a bar of the Mac app at the top of the main area, as
+  `mac-app/import/offer` shows. The close button dismisses it.
+- The account of the Mac app has the section Import from Conductor under
+  This Mac, from `ImportSection`, as `mac-app/import/settings` shows.
+- Before its first read of the data of Conductor, the Mac app asks in an
+  alert of macOS of its own, from `ConsentAlert`, as
+  `mac-app/import/consent` shows. The page cannot answer it, because the
+  page has no bridge to the Mac app. Its `reading` and `denied` variants
+  have the read and the answer Don't Allow.
+- `ImportList` draws the list on the page of the import: Select all with
+  the size of the selection, which shows the mixed mark while only some
+  rows are selected, and a row for each workspace with its name,
+  repository, branch, sessions, and the size of its upload. A row whose
+  repository the org did not choose has its box off and says why. A row
+  that an earlier import brought in links to its workspace with a chip.
+  `mac-app/import` and `mac-app/import/list` draw them.
+- `ImportProgress` draws the upload and its end, as
+  `mac-app/import/progress` shows. The import makes each workspace at once,
+  so the sidebar shows them from the start of the upload.
+
+The imported workspace itself shows in the web app and in the Mac app, as
+`app/imported` shows in [the catalogue](catalogue.md).

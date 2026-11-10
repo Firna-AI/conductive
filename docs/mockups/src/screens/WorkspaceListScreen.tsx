@@ -10,6 +10,7 @@ import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
 import {
   newOrgSections,
+  sectionsWithImport,
   suspendedSections,
   workspaceSections,
   type ListDrag,
@@ -24,6 +25,7 @@ import {
   suspendedOrg,
   type Org,
 } from '../fixtures/orgs'
+import { importedWorkspaces } from '../fixtures/importedWorkspaces'
 import { anotherOrg, newOrg } from '../fixtures/repositories'
 import { menuSection } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
@@ -49,8 +51,9 @@ export const workspaceListSchema = {
     /**
      * The workspaces of Acme, the first org of a new user or another new
      * org, both without workspaces, a deleted org, Acme after the operator
-     * suspended it, a deleted org that the operator suspended, or Acme
-     * after its list did not load.
+     * suspended it, a deleted org that the operator suspended, Acme after
+     * its list did not load, or Acme after an import from Conductor, which
+     * adds the section Import from Conductor.
      */
     list: {
       enum: [
@@ -61,6 +64,7 @@ export const workspaceListSchema = {
         'suspended',
         'deleted-suspended',
         'failed',
+        'imported',
       ],
     },
     /**
@@ -76,6 +80,13 @@ export const workspaceListSchema = {
 export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
 
 const viewer = viewerMembership('admin')
+
+/** The sections of Acme, with Import from Conductor after an import. */
+function acmeSections(list: WorkspaceListState['list']) {
+  return list === 'imported'
+    ? sectionsWithImport(importedWorkspaces)
+    : workspaceSections()
+}
 
 function listMenu(menu: WorkspaceListState['menu']): ListMenu | undefined {
   return menu === 'section' ? { section: menuSection } : undefined
@@ -189,7 +200,7 @@ function MobileList(props: { state: WorkspaceListState }) {
         menuStyle="sheet"
         newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
-        sections={fresh ? newOrgSections() : workspaceSections()}
+        sections={fresh ? newOrgSections() : acmeSections(list)}
         viewer={viewer}
       />
       {sheets[menu]}
@@ -240,7 +251,7 @@ export function WorkspaceListScreen(props: {
       </AppFrame>
     )
   }
-  const sections = workspaceSections()
+  const sections = acmeSections(list)
   const open = listMenu(menu)
   const drag = listDrag(menu)
   const rail = rails[menu] ?? acmeRail

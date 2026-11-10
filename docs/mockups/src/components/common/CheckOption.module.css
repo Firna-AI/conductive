@@ -17,6 +17,19 @@
   cursor: pointer;
 }
 
+/*
+ * Only some of the options are checked: a box in the accent colour with a
+ * short line in place of the check mark.
+ */
+.mixed {
+  appearance: none;
+  border-radius: 3px;
+  background:
+    linear-gradient(var(--ui-on-solid), var(--ui-on-solid)) center / 8px 2px
+      no-repeat,
+    var(--ui-primary);
+}
+
 .text {
   display: flex;
   flex-direction: column;

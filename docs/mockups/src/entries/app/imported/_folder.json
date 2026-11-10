@@ -1,0 +1,12 @@
+{
+  "order": [
+    "list",
+    "old-session",
+    "files",
+    "activating",
+    "failed",
+    "ready",
+    "archive",
+    "archived"
+  ]
+}

@@ -7,6 +7,7 @@ import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
+import { ImportedArchiveDialog } from '../components/conductor-import/ImportedArchiveDialog'
 import { ArchiveDialog } from '../components/workspace/ArchiveDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
@@ -14,6 +15,7 @@ import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { importedChatPath, neverActivated } from './importedWorkspace'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
 
@@ -66,6 +68,18 @@ export function workspaceOverlay(
       return <CloseSessionDialog viewport={viewport} />
     case 'archive-unpushed':
     case 'archive-pushed':
+      // A workspace from Conductor that was never activated has no cloud
+      // computer, so its check finds no work and its question is its own.
+      if (neverActivated(state)) {
+        return (
+          <ImportedArchiveDialog
+            archiveTo={paths.importedArchived}
+            cancelTo={importedChatPath(state)}
+            viewport={viewport}
+            workspace={workspace}
+          />
+        )
+      }
       return (
         <ArchiveDialog
           pushed={state.overlay === 'archive-pushed'}

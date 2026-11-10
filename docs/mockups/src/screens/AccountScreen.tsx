@@ -1,6 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import type { RailState } from '../components/layout/OrgRail'
+import { ImportSection } from '../components/conductor-import/ImportSection'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
 import {
@@ -104,7 +105,8 @@ function loginsFor(state: AccountState): AgentLogins {
  * The General tab: the GitHub sign-in, and what every org shares, the
  * GitHub App and the agents, then the invite code of the user, last, so
  * that a phone shows the form of an agent near the top. The Mac app adds
- * the This Mac section.
+ * the This Mac section, and the import from Conductor, which reads the
+ * data of this Mac.
  */
 function GeneralTab(props: { state: AccountState }) {
   const { form } = props.state
@@ -117,6 +119,7 @@ function GeneralTab(props: { state: AccountState }) {
     <>
       <SignInSection />
       {mac ? <ThisMacSection /> : null}
+      {mac ? <ImportSection /> : null}
       <GitHubSection connected={props.state.connections === 'connected'} />
       <AgentsSection
         form={openForm}

@@ -26,6 +26,10 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
     case 'diff':
     case 'unnamed-file':
       return isNew(state) ? workspace.owner : workspaceSessions[0].starter
+    case 'old-session':
+      // The old sessions are documents. The composer, if any, starts a
+      // new session of the viewer.
+      return viewerOf(state)
   }
 }
 

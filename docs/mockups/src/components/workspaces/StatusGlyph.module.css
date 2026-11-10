@@ -48,7 +48,8 @@
 
 .starting,
 .stopped,
-.archived {
+.archived,
+.inactive {
   color: var(--ui-muted);
 }
 

@@ -66,7 +66,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `src/components/common/` beside its button or its tab, or in a `Sheet` on
   a phone. Firna's own menu rows are taller than the dense design. A row can
   lead with a mark, such as an avatar, and end with a muted detail and an
-  icon. An item that is off keeps its place, greyed.
+  icon. An item that is off keeps its place, greyed. A picker can add a
+  search field above its rows and a status part under them, such as a
+  spinner or `LoadFailure`, as the branch picker of New workspace does. A
+  row can lead to the screen that its choice shows. It is then a link with
+  the look of a row, and hidden words name the checked choice, because a
+  link of the catalogue takes no menu role.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -120,6 +125,35 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
+- `BranchLine` in `src/components/new-workspace/` draws the line under the
+  repository picker of the New workspace page: New branch from the default
+  branch, and the quiet link Use an existing branch, in the link colour.
+  A chosen branch or pull request shows on the line, with Change.
+  `BranchPicker` beside it is the picker, with a search field, New branch,
+  the open pull requests, and the branches without one. It leaves out the
+  default branch. The New workspace dialog shows the same choice as a
+  quiet picker beside its repository picker.
+- A workspace from Conductor shows the flag From Conductor, a Firna badge,
+  after its label in the header. `src/components/conductor-import/` holds
+  its parts: the links to its old sessions in place of an empty chat, the
+  question Activate this workspace in place of the composer, the notice of
+  a failed activation above the composer, and the text of its panels. Its
+  activation is its first start, so the chat shows the steps of a start,
+  and a failed activation keeps the composer, as a failed first start does.
+  The Markdown of an old session opens in `FilePage`, the Markdown view of
+  every file, and a phone opens it in the Chat tab. The shared sandbox
+  notices of `sandboxNoticeState.ts` stay as they are, because the app
+  draws them too. Before an activation, or after a failed one, the
+  workspace has no cloud computer to check, so `ImportedArchiveDialog`
+  asks Archive with no check. It says that the workspace can no longer be
+  activated and that its old sessions stay readable. After that Archive,
+  `ArchivedImportBar` names the day and the readable old sessions, and no
+  deleted cloud computer, because the workspace never had one.
+- `MobileTabBar`, `ToolsPanel`, the list tabs of `FilesPanel`, and
+  `WorkspaceTabs` take optional links for a workspace whose screens are not
+  those of every workspace. A tab with no screen there stays static. An
+  imported workspace passes the screens of its state, so its tabs never
+  open another workspace or another state.
 - The account has two tabs, General and Preferences, as links, as the org
   settings have. Preferences holds the New workspaces section, whose rows
   put each label beside its control in two columns. A segmented control
@@ -174,7 +208,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   working and starting move with CSS. A finished turn is a full bright green
   square, and ready is one bright cell on a faint green grid. A workspace
   whose agent waits for the user, such as for the approval of a command,
-  shows Needs input: a middle column in the accent colour that pulses.
+  shows Needs input: a middle column in the accent colour that pulses. A
+  workspace from Conductor that has no cloud computer yet shows Not active:
+  the four corners, in the muted colour. `WorkspaceStatus` in
+  `src/fixtures/workspaces.ts` adds that state to the activity of a
+  workspace. `workspaceList` keeps only the states of the app, because the
+  tests of the app read it.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
@@ -208,7 +247,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   build or start shows the message that the app saved for it, so a job that
   passed its limit names that limit, as
   `app/org-settings/cloud-computer/build-failed/time-limit`,
-  `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show.
+  `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show. A
+  first start on a chosen branch that is gone from GitHub names that branch
+  and says to restore it before Try again, as
+  `app/new-workspace/branch/gone` shows. A first start on a chosen branch
+  that is there fetches it and checks it out with tracking, as
+  `app/new-workspace/branch/start` shows.
 - A new org has no image until its first build succeeds. Until then New
   workspace keeps Send off under a notice with the state of that build, as
   `app/new-workspace/first-build` shows. A notice of work that runs, such
@@ -344,7 +388,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   lift does not give back. The Suspend question of a user offers to
   disable their referral code with `CheckOption` from
   `src/components/common/`, the checkbox of the browser in the accent
-  colour, because `@firna/ui` has no checkbox.
+  colour, because `@firna/ui` has no checkbox. A box that stands for
+  several options shows a mixed mark while only some are checked, as
+  Select all of the import from Conductor does. CSS draws the mark, with
+  `aria-checked` set to mixed, because a view runs no script.
 - `DailyChart` names each point and each label of its axis with the UTC
   day, such as "10 Oct", in British English, so that no time zone and no
   locale of a browser or of the build machine changes a date. Its axis has

@@ -7,19 +7,22 @@ import { orgSuspendedReason } from '../components/orgs/suspension'
 import { conversations } from '../fixtures/conversations'
 import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
-import type { ActivityStatus } from '../fixtures/workspaces'
+import type { WorkspaceStatus } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { isImported } from './importedWorkspace'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
 /**
  * The state of the open workspace, for its header and its row: the state
  * of its sandbox, or, on a ready sandbox, whether its agent waits for the
- * user or works.
+ * user or works. A workspace from Conductor is inactive until its
+ * activation.
  */
-export function activityOf(state: WorkspaceState): ActivityStatus {
+export function activityOf(state: WorkspaceState): WorkspaceStatus {
   // A refused start leaves the sandbox stopped.
   if (state.sandbox === 'refused') return 'stopped'
+  if (state.sandbox === 'archived-inactive') return 'archived'
   if (state.sandbox !== 'ready') return state.sandbox
   if (conversations[state.conversation].some(isPendingCommand)) return 'input'
   return isRunning(state) ? 'working' : 'ready'
@@ -30,8 +33,16 @@ export function activityOf(state: WorkspaceState): ActivityStatus {
  * refused, so a sandbox that is not archived draws as refused.
  */
 export function drawnState(state: WorkspaceState): WorkspaceState {
-  const refused = state.org === 'suspended' && state.sandbox !== 'archived'
+  const refused = state.org === 'suspended' && !isArchived(state)
   return refused ? { ...state, sandbox: 'refused' } : state
+}
+
+/**
+ * The workspace is archived: its cloud computer is deleted, or, for a
+ * workspace from Conductor that was never activated, it never had one.
+ */
+export function isArchived(state: WorkspaceState): boolean {
+  return state.sandbox === 'archived' || state.sandbox === 'archived-inactive'
 }
 
 /**
@@ -52,7 +63,8 @@ function beforeFirstStart(state: WorkspaceState): boolean {
  * The bar under the chat while the sandbox is not running. A refused start
  * shows the words of its cause: the org or the owner. A failed start
  * carries the message that the app saved for it. A failed first start
- * keeps the composer under its bar.
+ * keeps the composer under its bar. A workspace from Conductor draws its
+ * own question before its activation, and its own failed activation.
  */
 export function sandboxNotice(
   state: WorkspaceState,
@@ -67,6 +79,7 @@ export function sandboxNotice(
             : ownerSuspendedRefusal,
       }
     case 'error':
+      if (isImported(state)) return undefined
       return {
         problem: 'error',
         message: startErrors[state.startError],
@@ -77,6 +90,8 @@ export function sandboxNotice(
       return { problem: state.sandbox }
     case 'ready':
     case 'starting':
+    case 'inactive':
+    case 'archived-inactive':
       return undefined
   }
 }

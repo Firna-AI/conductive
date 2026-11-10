@@ -1,4 +1,4 @@
-import type { ActivityStatus } from '../../fixtures/workspaces'
+import type { WorkspaceStatus } from '../../fixtures/workspaces'
 
 /**
  * How a row title shows its state: strong for output that the user has not
@@ -13,7 +13,7 @@ export type StatusPresentation = {
 }
 
 export const activityPresentation: Readonly<
-  Record<ActivityStatus, StatusPresentation>
+  Record<WorkspaceStatus, StatusPresentation>
 > = {
   working: { label: 'Working', emphasis: 'active' },
   input: { label: 'Needs input', emphasis: 'active' },
@@ -23,4 +23,5 @@ export const activityPresentation: Readonly<
   stopped: { label: 'Stopped', emphasis: 'dim' },
   error: { label: "Couldn't start", emphasis: 'normal' },
   archived: { label: 'Archived', emphasis: 'dim' },
+  inactive: { label: 'Not active', emphasis: 'dim' },
 }

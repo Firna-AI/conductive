@@ -42,6 +42,7 @@ export function WorkspaceRowView(props: {
   )
   if (props.drag) return <div className={className}>{content}</div>
   const archivable = props.archivable === true && row.status !== 'archived'
+  const archive = <IconButton icon={Archive} label="Archive workspace" quiet />
   return (
     <span
       className={classes(styles.container, archivable && styles.archivable)}
@@ -59,9 +60,13 @@ export function WorkspaceRowView(props: {
       )}
       {archivable ? (
         <span className={styles.archive}>
-          <ScreenLink asChild to={paths.archive}>
-            <IconButton icon={Archive} label="Archive workspace" quiet />
-          </ScreenLink>
+          {row.archiveTo === null ? (
+            archive
+          ) : (
+            <ScreenLink asChild to={row.archiveTo ?? paths.archive}>
+              {archive}
+            </ScreenLink>
+          )}
         </span>
       ) : null}
     </span>
