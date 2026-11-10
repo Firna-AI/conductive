@@ -169,6 +169,19 @@ The app milestone added these calls on 10 November 2026:
     real records must follow the same rule. The existing `banner` URL
     option covers the smoke states, so no new URL option is needed.
 
+The first review added these calls on 10 November 2026:
+
+36. An existing list row takes its GitHub summary from list reads only.
+    Other workspace records keep the list's value. A new row takes its
+    supplied initial value. Reason: summaries have no independent order,
+    so an old full or partial record must not replace a newer list value.
+37. An unread workspace chip name uses the existing strong weight of 600.
+    Its other name states and file chips keep their current look. Reason:
+    the approved bold rule carries the unread signal after the shape goes.
+38. One native SQLite retry case proves the failed-copy recovery after an
+    eviction. The queue unit test stays. Reason: only recovery depends on
+    the store, and the real chat queue can block a nested store read.
+
 ## Contracts
 
 - `GitHubSummary` in `src/shared/github.ts`: `'checks-running'`,
@@ -353,27 +366,94 @@ The app draws the new mark from the GitHub summary of each record.
   `.context/workspace-marks-show-github-state/m4-docs/`, and
   `.context/workspace-marks-show-github-state/m4-external/`.
 
-## Milestone 5: Verification, commit, review, and pull request
+## Milestone 5: Initial verification and review
 
 Depends on: 1, 2, 3, 4
 
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - Evidence: `.context/workspace-marks-show-github-state/m5/gate.log` and
   `.context/workspace-marks-show-github-state/m5/new-test-costs.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
-      `implementation-review` skill after the push. Report the findings,
-      then apply the fix rule: fix the `fix now` findings, record
-      follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` after the push.
+      Run the independent finding checks before any fix.
+- Review summary: three Medium findings are confirmed. Apply 1 D, 2 A,
+  and 3 D now. Record wider fixes 2 B and 3 F for after the merge. Keep
+  the existing owner-update problem on a separate branch.
+- Review records: `.context/reviews/calummoore/workspace-status-icons/`.
+
+## Milestone 6: Review mockups — unread chip names
+
+Tags: mockup
+
+Depends on: 5
+
+The shared chip restores the approved visible unread signal.
+
+- [ ] Apply finding 2 A in the shared workspace chip. Use strong weight
+      on its unread name only. Preserve the shared file-chip styles.
+- [ ] Show an unread workspace in an existing chip mockup page.
+- [ ] Cover unread emphasis in the chip, row, and palette render tests.
+      Keep the existing state words and archive checks.
+- [ ] Check the real app and the mockups at both sizes and in both
+      schemes. Record computed weights and screenshots.
+- [ ] Capture marketing pictures again. Keep intentional changes and
+      remove only proven capture noise.
+- [ ] Run the targeted checks and ten runs of changed async regressions.
+- [ ] Update the design text and any tasks that the visual check changes.
+
+## Milestone 7: Keep the latest list summary
+
+Depends on: 6
+
+Other records update their owned fields without replacing the list's
+GitHub summary.
+
+- [ ] Apply finding 1 D in `workspaceUpdated`. Preserve `github` for an
+      existing row and keep the initial summary for a new row.
+- [ ] Add a regression through the app models. A title event after a
+      newer list summary keeps its colour. An older full record also
+      keeps it. Titles and read marks still update at once.
+- [ ] See the regression fail first. Run its targets and ten async runs.
+- [ ] Update the app data lifecycle doc for the field owner.
+
+## Milestone 8: Prove native retry recovery
+
+Depends on: 6
+
+The failed-copy retry uses real chat storage, D1, and eviction.
+
+- [ ] Apply finding 3 D through the existing native SQLite fixture.
+      Pass the real copy callback and use a non-null pull request summary.
+- [ ] Inject a failed D1 copy. Evict the object and retry the delivery
+      with reads forbidden. Keep one stored event and repair the summary.
+- [ ] Keep the valid queue unit test and the D1 logic tests.
+- [ ] See the native regression fail first. Run its targets and ten runs.
+- [ ] Update the GitHub backend README for the native proof.
+
+## Milestone 9: Verify the fixes and deliver
+
+Depends on: 6, 7, 8
+
+- [ ] Record the two deferred wider fixes and the outside-scope owner
+      problem as self-contained follow-up items.
+- [ ] Run the combined targeted checks and complete gate on the fixed tree.
+- [ ] Commit and push the fixes. Re-review once with fresh context. Run
+      finding checks for any new item, then apply the fix rule and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
-      design calls of this plan with their dates, a permalink to this plan,
-      and the follow-up items that the change adds.
+- [ ] Open the pull request. Its description gives each dated decision
+      and design call, a permalink to this plan, the fixed findings, and
+      each follow-up item that this change adds.
 
 ## Post-merge follow-up (non-blocking)
 
 - [ ] On the deployment, push a failing check to a pull request of a
       workspace. Its row turns red, then green after a passing run, and
-      purple after the merge.
+      purple after the merge. Recorded in
+      `follow-ups/workspace-github-marks-deployed-check.md`.
+- [ ] Use a shared state-aware name component after the direct chip fix,
+      as wider option 2 B says.
+- [ ] Give future GitHub integration tests a native default backend,
+      as wider option 3 F says.
+- [ ] Fix the old owner restored by partial workspace changes on a
+      separate branch. It already occurs on `origin/main`.
