@@ -3931,6 +3931,9 @@ Added on 8 November 2026 from the check of finding 2 of PR #47
 - **Recommendation:** C.
 - **Chosen:** C, by the user on 8 November 2026, who also asked that the
   app tell the user of the limit. Milestone 5d applies it.
+- **Changed on 10 November 2026:** the user asked to remove the note of the
+  start limit from the chat. The start steps no longer name the limit. A
+  start that passes it still names it in its error.
 - **Design call of the orchestrator, 8 November 2026:** the start limit
   also covers the disk restart near day 14 (decision 43 D), because the
   protocol counts that restart as a start, and an unfinished restart
@@ -8250,8 +8253,26 @@ Depends on: 15u. It changes lifecycle tests on the native harness.
 Make the tests that fail now and then under the load of the full gate
 reliable. Added on 10 November 2026.
 
-- [ ] Apply option B of `plans/follow-ups/tests-fail-under-load.md`, and
-      delete that item.
+Design calls by the implementor on 10 November 2026:
+
+- Flush batched input and track transport work across each outbox read.
+  A completed receive can leave output after an empty read.
+- Advance automatic start work only while a start job exists.
+  A response in transit must not advance a later maintenance alarm.
+- Wait for the admission queue before choosing a manual alarm target.
+  Share that advance path and keep background error observation unchanged.
+- Use the existing queue completion signal for the provisioning item's readiness wait.
+  It gives the required signal without adding a fixture API.
+- Check the original org test path and its moved build case.
+  The current case lives in `worker/operator/org-native-build-suspension.test.ts`.
+  Also check the later suspension case that the follow-up item records.
+
+- [x] Apply option B of `plans/follow-ups/tests-fail-under-load.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5g`.
+- [x] Apply option B of `plans/follow-ups/provisioning-alarm-admission-order.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5g`.
+
+Evidence: `.context/milestone-5g/`.
 
 ## Milestone 15d: Marketing site
 
