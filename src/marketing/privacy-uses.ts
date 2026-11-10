@@ -16,6 +16,15 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         operator sees the age of the account when you wait for app
         access. Your login and display name also tell the agents who sent
         each message.`,
+      text`Commit authors: each commit in a cloud computer names the person
+        whose GitHub token Git uses as author and committer. In a workspace
+        with older cloud computer software, agent commits name the workspace
+        owner. The name is
+        their GitHub display name, or their login when the display name is
+        missing or unusable. ${productName} uses their GitHub user ID and
+        login to make their GitHub no-reply address,
+        <id>+<login>@users.noreply.github.com. The address lets GitHub link
+        the commit to their account without showing their private email.`,
       text`Your GitHub emails: at each sign-in, ${productName} keeps the
         verified email addresses of your GitHub account, and which one is
         primary. An org invitation reaches you through one of them. The
@@ -59,11 +68,23 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         Claude or OpenAI logins. ${productName} stores them encrypted. It
         uses your login only for the turns of the sessions that you start.
         The messages of other members in those sessions use it only when
-        you let other members use that login.`,
+        you let other members use that login. A newer cloud computer starts
+        from an org image that requires ${productName} to keep agent logins
+        outside the cloud computer. ${productName} enforces this requirement
+        for computers that start from that image. Each turn of your sessions
+        there gets only a credential that works through ${productName}
+        while that turn runs. An older cloud computer starts from an earlier
+        org image. ${productName} still permits older software there that
+        receives your login itself. Installing newer software in that cloud
+        computer does not remove this risk. A new image build gives the
+        protection to each cloud computer that starts from it.`,
       text`Your work: ${productName} keeps your messages and the answers
         of the agents as the chat history of each workspace. It also
         keeps the last file list and the last summary of changes of each
-        workspace. The files that you attach to a message stay in the
+        workspace. With the chat history, it keeps each list of the
+        servers that run in the cloud computer of a workspace: the port,
+        a short program name, and the folder of each server. The files
+        that you attach to a message stay in the
         storage of ${productName} at Cloudflare. When the agent starts
         work on the message, ${productName} copies them to the cloud
         computer of the workspace.`,
@@ -73,9 +94,18 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         The result says how the command ended. They let you and the
         agent follow the command. Always-allowed commands and 15-minute
         permissions stay only on your Mac.`,
-      text`Your code: it stays in the cloud computers that ${productName}
-        runs for your org. ${productName} reads a file or a diff when you
-        open it, to show it to you.`,
+      text`Your code: your repositories and files live in the cloud
+        computers that ${productName} runs for your org. ${productName}
+        reads a file or a diff when you open it, to show it to you. In a
+        newer cloud computer, the agents send their requests to the models
+        of Anthropic or OpenAI through ${productName}. Agent settings in the
+        repository can send them to another address instead. These model
+        requests can hold your messages, your files, and your code.
+        ${productName} adds the login that the session uses, and passes
+        each request on. When it passes on these model requests and their
+        answers, it keeps no copy of them. It writes no body or header value
+        of them to its logs. ${productName} still keeps the chat history and
+        the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
         of your branches, which GitHub sends to ${productName}.`,
       text`Panel widths: your browser keeps the widths of the panels of

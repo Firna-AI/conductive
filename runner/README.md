@@ -3,17 +3,18 @@
 The agent runner is the program of Conductive in each cloud computer, a
 Boat sandbox. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
-repository.
+repository and the listening ports.
 
 The runner opens one outbound WebSocket to the workspace Durable Object.
-It sends numbered events. It gets turns, messages, interrupts, model
-changes, file requests, and report requests.
-[Agent runner](../docs/protocol/agent-runner.md)
-states its requirements, and the
-[shared contracts](../src/shared/README.md) define its messages.
+It speaks runner protocol version 2. It sends numbered events. It gets
+turns, messages, interrupts, model changes, file requests, and report
+requests. [Agent runner](../docs/protocol/agent-runner.md) and
+[Model gateway](../docs/protocol/model-gateway.md) state its requirements,
+and the [shared contracts](../src/shared/README.md) define its messages.
 
 This folder is a separate Node 24 package with its own lockfile. The root
 `npm install` does not install it. Tests inject the fake workspace endpoint.
+The package also holds the sandbox's preview relay.
 
 ## What it does
 
@@ -32,8 +33,16 @@ These facts belong to this implementation, not to the protocol docs.
 - Both agents get the sandbox's `computer` MCP server and the `conductive`
   workspace MCP server. The [agent tools guide](agent-tools.md) gives
   their settings, runtime context, and process lifetime.
-- Each agent program gets the login of its turn through a route that its
-  tool processes do not inherit, as [Agent logins](agent-logins.md) says.
+- No command carries an agent login or a GitHub token. Each `turn` command
+  carries a turn token for the model gateway, as [Agent logins](agent-logins.md)
+  says. [GitHub tokens](../docs/protocol/github-tokens.md)
+  states how a sandbox gets GitHub access.
+- Each agent process gets the commit author of its turn as `GIT_AUTHOR_NAME`,
+  `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL`.
+  A message during the turn keeps that author, also when a new agent process
+  takes deferred input. Without an author, the process keeps the sandbox values.
+  A malformed author gives a local warning and keeps those values. The turn continues.
+  A workspace gets this behaviour only from an org image built with this runner.
 - `agentInstructions` builds the agent instructions of each agent from the
   configuration. Claude gets its seven base rules and that text as
   `systemPrompt`. Codex keeps its default base instructions and gets the
@@ -47,9 +56,9 @@ These facts belong to this implementation, not to the protocol docs.
   never shows the sender line.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
-  process then takes the waiting input on the same conversation and login.
-  If that process fails, the turn fails. Its retry names the first message
-  of that process, and the input that still waits does not run.
+  process then takes the waiting input on the same conversation and turn
+  token. If that process fails, the turn fails. Its retry names the first
+  message of that process, and the input that still waits does not run.
 - To close an agent process, the runner sends `SIGTERM` and waits until the
   process exits. A process that still runs 5 seconds after `SIGTERM` gets
   `SIGKILL`. The end of a turn goes out only after its agent process exits,
@@ -66,11 +75,11 @@ These facts belong to this implementation, not to the protocol docs.
   input. Only a `turn` command starts a turn. A `message` command reaches
   only the running turn that it names. Others get only a local warning. An
   idle `model` command only saves the choice, and the next turn applies it.
-- The shared output filter replaces the workspace token and known logins
-  in displayed text with `[redacted]`. It holds possible secret prefixes
-  across answer events. After a completion or a turn end, it keeps the
-  shown end of each answer that can still start a secret. Later text of
-  that answer then masks the part that completes a secret.
+- The shared output filter replaces the workspace token and the turn
+  tokens in displayed text with `[redacted]`. It holds possible secret
+  prefixes across answer events. After a completion or a turn end, it
+  keeps the shown end of each answer that can still start a secret. Later
+  text of that answer then masks the part that completes a secret.
 - The filter keeps real file paths and base branches for operations, and
   masks their separate display labels. The workspace object filters marked
   org env values before it stores or sends events. The runner receives no
@@ -78,7 +87,7 @@ These facts belong to this implementation, not to the protocol docs.
   values, as agent sessions can.
 - Claude text joins across SDK frames and text blocks until `message_stop`,
   or else the next `message_start`, a tool result, or the result. So a split
-  login stays in one filtered message, and partial text still streams live.
+  token stays in one filtered message, and partial text still streams live.
 - The Claude adapter holds new input while 64 sent messages wait for a
   result that lists them. Each result frees only the messages that it
   lists. Closing discards held input. The engine matches result lists exactly.
@@ -94,10 +103,10 @@ These facts belong to this implementation, not to the protocol docs.
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, and
   `turns` records of accepted turns. It holds the conversation reference and
-  the agent instructions of each session. It also
-  holds the last `start.updated` and `workspace.title` events, and the ID of
-  each answered [report request](#report-requests). It holds no other
-  command data and no login. The runner saves a turn record before the
+  the agent instructions of each session. It also holds the last
+  `start.updated` and `workspace.title` events, and the ID of each answered
+  [report request](reports.md). It holds no other command data, no
+  login, and no turn token. The runner saves a turn record before the
   session save. The saves of `turn.started` and its end update that record.
   A turn stopped before its start also has a saved end record.
   The confirm of the end removes the record.
@@ -136,10 +145,7 @@ These facts belong to this implementation, not to the protocol docs.
   Git stops patch output at the cap. An oversized result returns
   `file_too_large`. Patch size reports the first byte over the limit.
 - Before it connects, the runner reads the `claude` program file once, so
-  that the disk loads it early. It uses no login and starts no agent.
-- The runner protocol carries no GitHub token.
-  [GitHub tokens](../docs/protocol/github-tokens.md)
-  states how a sandbox gets GitHub access.
+  that the disk loads it early. It uses no credential and starts no agent.
 
 ## Event limits
 
@@ -149,56 +155,32 @@ the outbox size check.
 
 ## Report requests
 
-The workspace sends a `report.refresh` command when it needs a fresh full
-report of one kind.
-[Lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
-states the requirements.
+The [report guide](reports.md) gives full report requests, their saved
+receipts, and the listening-port scan and scheduling boundaries.
 
-- The runner takes a request without a session or a login. The agents never
-  get it. So a running turn keeps its agent process and its input.
-- After the `welcome`, the runner takes commands while the refresh after the
-  connect still runs. So a request does not wait for `runner.ready`.
-- A `files.snapshot` or `changes.updated` request scans the repository again.
-  It sends a full report of that kind only, in numbered parts.
-- The repository watcher, the refresh after each connect, and these two
-  report requests share one scan queue. So such a report request waits for
-  each earlier scan. The events of two scans never interleave. File reads
-  and diffs do not use this queue.
-- A watcher scan compares each kind with the last scan of that kind. So a
-  request for one kind hides no later update of the other kind.
-- The runner keeps the latest `start.updated` and `workspace.title`
-  reports in memory. Each saved state includes them. A confirm does not
-  remove them. They stay after a restart.
-- A `start.updated` or `workspace.title` request selects the current
-  report and appends its filtered copy in one store operation. It saves
-  the copy before it sends it, with a new event number.
-- Until the runner accepts an event of that kind, such a request sends
-  nothing. The runner has no source of new start steps or new workspace
-  names yet.
-- The runner skips a command ID that it has seen. When the runner answers
-  with a report, the save of the last report event also saves the ID. So a
-  repeat of that ID after a reconnect or a restart sends nothing. If the
-  runner process ends before that save, a repeat after the restart gets a
-  new answer. The outbox still resends an unconfirmed answer.
-- A state file from an older runner has no saved events of these two kinds
-  and no saved IDs. The runner still reads it.
+## Preview relay
+
+The [preview relay guide](preview-relay.md) gives its entry points, build,
+service, and socket activation.
 
 ## Commands
 
 Run these commands from the repository root, with Node 24 from `.nvmrc`.
 
-| Command                             | What it does                                                  |
-| ----------------------------------- | ------------------------------------------------------------- |
-| `npm ci --prefix runner`            | Install the runner packages into `runner/node_modules`        |
-| `npm --prefix runner run build`     | Bundle the runner and its two measurement tools               |
-| `npm --prefix runner run typecheck` | Check the runner, its fakes, and the shared contracts it uses |
-| `npm --prefix runner test`          | Run the runner tests with Vitest                              |
-| `npm --prefix runner start`         | Run the runner bundle with the variables of the current shell |
+| Command                                  | What it does                                                 |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `npm ci --prefix runner`                  | Install the runner packages into `runner/node_modules`        |
+| `npm --prefix runner run build`           | Bundle the runner, relay, and two measurement tools           |
+| `npm --prefix runner run typecheck`       | Check the runner, its fakes, and the shared contracts it uses  |
+| `npm --prefix runner test`                | Run the runner tests with Vitest                             |
+| `npm --prefix runner test -- src/relay`    | Run the relay tests against local servers                     |
+| `npm --prefix runner start`               | Run the runner bundle with the variables of the current shell |
+| `node dist/runner/relay.mjs`               | Run the relay bundle                                         |
 
-The build writes `runner.mjs`, `measure.mjs`, and `compare.mjs` into
-`dist/runner/`. The bundles do not include the npm packages. The build
-links `dist/runner/node_modules` to `runner/node_modules`, so that the
-bundles find them.
+The build writes `runner.mjs`, `relay.mjs`, `measure.mjs`, and `compare.mjs`
+into `dist/runner/`. The runner and measurement bundles load npm packages
+at run time. The build links `dist/runner/node_modules` to
+`runner/node_modules`, so that the bundles find them.
 
 The complete gate, the root `npm run check`, runs the runner typecheck and
 the runner tests. Run `npm ci --prefix runner` once before the gate, as CI
@@ -230,10 +212,14 @@ their defaults, and the startup failure message.
   disk fixture for the recovery tests, and it can hold one chosen write.
   `mockComputerServer` in `computer-mcp.ts` makes `readComputerServer` give
   the fixed test entry `fakeComputerServer`.
-- The tests need Git. They need no network, no agent login, no cloud
+- The relay tests use real local HTTP and WebSocket servers on free ports.
+  They check IPv4, IPv6, streams, headers, and disconnects.
+  The inherited-descriptor test uses `systemd-socket-activate` with a temporary Unix socket.
+  It needs that command, but no running systemd manager.
+- The tests need Git. They need no external network, no agent login, no cloud
   account, and no cloud computer. No test starts a real agent program, a
-  real Worker, or a real sandbox. So a passing run does not show that a
-  real login works, or that the `computer` MCP server answers.
+  real Worker, or a real sandbox. So a passing run does not show that the
+  gateway path, a real login, or the `computer` MCP server works.
 - `scripts/codex-capabilities.mjs` checks what the Codex SDK streams and
   whether an abort stops it. Each model request goes to a local fake server.
 
@@ -246,14 +232,21 @@ tools that time the first agent start after a resume.
 
 - `src/main.ts` and `src/config.ts`: the service entry point, the variables
   and their defaults, the state file, and the reconnect after each drop.
-- `src/runner.ts`: `Runner` joins the connection, agents, file reports,
-  and report requests.
+- [`src/relay/server.ts`](src/relay/server.ts): starts the preview relay.
+  The HTTP and upgrade handlers share the header rules and target connection code.
+- `src/runner.ts`: `Runner` joins the connection, agents, file and port
+  reports, and report requests.
 - `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
 - [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
   [output field policy](../src/shared/output-fields.ts): the one filter
-  shared with the Worker. The runner supplies tokens and logins.
+  shared with the Worker. The runner supplies the workspace and turn tokens.
 - [`event-limits.ts`](../src/shared/event-limits.ts): portable UTF-8 byte
   accounting and the shared tool and turn-summary caps.
+- `src/proc-ports.ts`, `src/socket-table.ts`, and `src/port-metadata.ts`:
+  socket-table reads, listener filters, and safe process names and folders.
+- `src/ports.ts`: `PortReporter`, its stable list, scan queue, and timer lifetime.
+- `src/port-report-budget.ts`: complete private port labels or whole-label
+  omission within the report budget, after runner credential filtering.
 - `src/file-parts.ts`: full report parts and bounded tree deltas.
 - `src/file-updates.ts`: the full tree or the tree delta of each scan, and
   the check for a new changes report.
@@ -274,7 +267,8 @@ tools that time the first agent start after a resume.
   `message.ts` puts the sender line before the text of each message.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
   `attachment-description.ts` describes each attached file to both agents.
-  The [tool entry points](agent-tools.md#key-code) cover both MCP servers.
+  The [tool entry points](agent-tools.md#key-code) cover both MCP servers,
+  and the [login entry points](agent-logins.md#key-code) cover the credentials.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of
   one turn.
@@ -290,7 +284,8 @@ tools that time the first agent start after a resume.
 - [Architecture: sandbox software](../docs/architecture/components.md#sandbox-software)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
-- [Chat and events: agents](../docs/protocol/agents-and-sessions.md#agents)
+- [Agent runner: listening ports](../docs/protocol/agent-runner.md#listening-ports)
+- [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)
 - [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
 - [Workspaces and sandboxes: files and changes](../docs/protocol/workspace-tools.md#files-and-changes)

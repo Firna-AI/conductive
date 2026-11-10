@@ -61,8 +61,10 @@ turn repair from the committed chat and the one writer of the shown state.
 
 ### Builds and refreshes
 
-[Image builds](image-builds.md) describes build sandboxes, suspension, provider retries,
-logs, snapshot leases, and refresh timers.
+[Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
+provider retries, logs, snapshot leases, and refresh timers.
+The [software image area](../software-image/README.md) builds the shared
+image that a build of an org without an org image starts from.
 
 ## Settings
 
@@ -105,6 +107,8 @@ The native cleanup pointer can therefore change without losing an older failed c
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
   Its `imageAdmissionError` gives a waiting repository the next-build message.
   The browser create and the agent tools share that message.
+- [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
+- [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
   `workspaceView` adds the canonical web link for an explicit app origin.
@@ -168,6 +172,8 @@ The native cleanup pointer can therefore change without losing an older failed c
   for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
+  It also exposes the trusted `checkTurnToken` RPC through `workspaceRuntime`.
+- [`credential-sender.ts`](credential-sender.ts): the git credential sender lookup, including creation-time access and active stored turns.
 - [`retry-creation.ts`](retry-creation.ts): `retryFailedCreation` reuses the
   first-message admission and workspace identity after a failed first start.
   [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.
@@ -258,7 +264,7 @@ The native cleanup pointer can therefore change without losing an older failed c
   `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as the
   [Workspace Durable Object](workspace-object.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
-- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
+- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
 - [`build-changes-data.ts`](build-changes-data.ts): `readBuildChanges`, the
   saved install script change and the added and removed repositories in
   `BuildsResponse.changes`. It reads the script reference and the published
@@ -283,6 +289,7 @@ The native cleanup pointer can therefore change without losing an older failed c
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
+- [Software images](../software-image/README.md): the shared software builds and their cleanup.
 - [`image-software.ts`](image-software.ts): the runner archive check and
   install/start commands.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text

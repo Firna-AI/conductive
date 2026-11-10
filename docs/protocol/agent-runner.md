@@ -2,13 +2,14 @@
 
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
-runner, its events and their limits, its turns, and the repair of lost
-workspace updates. It belongs to
+runner, its events and their limits, its turns, its report of the
+listening ports, and the repair of lost workspace updates. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A gateway decision number names a decision of the change that adds
+the [model gateway](model-gateway.md), as that doc says.
 
 ## The agent runner
 
@@ -17,11 +18,29 @@ says.
   workspace, at `/v1/runner` on `api.conductive.build`, the hostname for
   machines. It proves itself with the workspace token.
 - The runner connection carries a protocol version. The Durable Object
-  serves each version that a live org image or sandbox can hold.
+  serves each version that a live org image or sandbox can hold, within
+  the version pin of its workspace.
 - Each build of the org image installs the newest runner. Reason: a stopped
   sandbox can resume weeks later with an old runner.
 - A connection to the runner through a Boat port address was rejected,
   because it ties the runner to Boat.
+- Each build of the org image records the runner protocol version that it
+  installs. A refresh keeps the version of the image that it refreshes,
+  because a refresh keeps the installed runner.
+- Each cloud computer of a workspace takes the runner version of the org
+  image that it starts from as the version pin of the workspace, before it
+  can connect. So a Try again that starts a new cloud computer from a newer
+  image takes the version of that image. A stop and a resume keep the pin.
+  A workspace or an org image without a recorded version counts as version
+  1 (gateway decisions 2 and 5).
+- The workspace refuses a runner connection whose protocol version is below
+  its pin. It closes that connection before the `welcome` and before any
+  command.
+- Reason: a runner of version 1 gets the agent login itself with each turn.
+  Any process with the workspace token can open a runner connection and
+  claim version 1.
+- A pin by the first connection was rejected, because a program that the
+  org image or the startup script starts can connect first.
 - The runner numbers each event, and keeps it until the Durable Object
   confirms it.
 - A dropped connection loses no event. A resent event shows once.
@@ -78,9 +97,11 @@ says.
   It remains retryable. It never becomes a permanent refusal.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model or the effort to the runner.
-- Each turn also brings the agent login of the starter of its session, as
+- Each turn also brings a credential of the starter of its session. A
+  runner of protocol version 1 gets the agent login itself, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
-  says.
+  says. A runner of version 2 or later gets a turn token in its place, as
+  [The turn token](model-gateway.md#the-turn-token) says.
 - Each turn that the runner accepts gets exactly one end: `turn.completed`
   or `turn.failed`. This holds also when Stop, a shutdown, or a crash of
   the runner comes before the agent starts.
@@ -120,11 +141,16 @@ says.
   [Files and changes](workspace-tools.md#files-and-changes) says.
   File results are not part of the chat history.
 
+## Listening ports
+
+The [listening-port requirements](listening-ports.md) give the scanner,
+its labels, its limits, and its full reports.
+
 ## Lost workspace updates
 
-- The file tree, the changes list, the start steps, and the workspace name
-  belong to no session. A later full report of the same kind replaces each
-  of them. But a report of the workspace name sets that name only while
+- The file tree, the changes list, the start steps, the workspace name,
+  and the list of listening ports belong to no session. A later full
+  report of the same kind replaces each of them. But a report of the workspace name sets that name only while
   the workspace has no name, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
 - When the workspace refuses an update of one of these kinds, the update is
@@ -136,8 +162,8 @@ says.
 - Reason: only the latest full report matters. A notice for each lost update
   was rejected.
 - The request is a `report.refresh` command with a `commandId` and a `kind`.
-  The kind is `files.snapshot`, `changes.updated`, `start.updated`, or
-  `workspace.title`.
+  The kind is `files.snapshot`, `changes.updated`, `start.updated`,
+  `workspace.title`, or `ports.updated`.
 - The workspace asks for a full file tree after a refused tree delta. It asks
   for no report after a refused event of any other type.
 - Each kind has at most one open request. After a further refusal of that

@@ -69,7 +69,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Managed Git identity',
     status: 'available',
-    note: 'Git and the GitHub CLI use the message sender’s GitHub account. The terminal uses the workspace owner’s account.',
+    note: 'Git and the GitHub CLI use the message sender’s GitHub account, and commits name that person. The terminal uses the workspace owner’s account. Workspaces with older cloud computer software name the owner in commits.',
   },
   {
     id: 'organization-environment-and-secrets',
@@ -127,9 +127,8 @@ export const cloudFeatures: readonly ParityFeature[] = [
     id: 'automatic-port-detection',
     area: 'cloud',
     name: 'Automatic port detection',
-    status: 'in-progress',
-    note: 'Automatic port detection is in progress. The Preview tool will list running servers so you can open their private previews.',
-    due: null,
+    status: 'available',
+    note: 'The Preview tool lists the servers that run in the cloud computer. Click a server to open its private preview.',
   },
   {
     id: 'shared-preview-url',

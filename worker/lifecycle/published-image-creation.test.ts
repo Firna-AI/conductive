@@ -129,6 +129,7 @@ it('leases the image and captured branch from the same publication at claim admi
               repositories,
               software: SOFTWARE,
               now: TEST_TIME + 1,
+              runnerProtocolVersion: 2,
             })
           }
           return target.batch(queries)
@@ -168,6 +169,7 @@ it('leases the image and captured branch from the same publication at claim admi
     repositories: [{ ...repositories[0], defaultBranch: 'published-later' }],
     software: SOFTWARE,
     now: TEST_TIME + 2,
+    runnerProtocolVersion: 3,
   })
   await db
     .prepare(
@@ -193,6 +195,12 @@ it('leases the image and captured branch from the same publication at claim admi
   expect(duplicate.workspace.id).toBe(id)
   expect(boat.starts).toHaveLength(1)
   expect(boat.starts[0]).toMatchObject({ from: 'next-image' })
+  expect(
+    await db
+      .prepare('SELECT runner_protocol_version FROM workspaces WHERE id = ?')
+      .bind(id)
+      .first('runner_protocol_version'),
+  ).toBe(2)
   expect(lifecycleCommandBody(boat.commands[0])).toContain(
     "git fetch origin 'published-next'",
   )

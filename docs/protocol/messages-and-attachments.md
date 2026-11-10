@@ -74,8 +74,11 @@ says.
 - The workspace keeps such a message, and gives it to the agent when the
   sandbox is ready. The agent of each session gets these messages in the
   order that the workspace accepted them (decision 130).
-- A message that waits for the sandbox shows that it waits. A queue in the
-  browser was rejected, because a closed tab would lose the message.
+- A message that waits for the sandbox shows no label of its own. A label
+  under each such message was rejected, because the start steps, or the
+  bar of a failed first start, already show that the sandbox is not ready.
+- A queue in the browser was rejected, because a closed tab would lose the
+  message.
 - Reason: a failed first start keeps its workspace and its queued messages,
   as [Create a workspace](create-a-workspace.md#a-failed-first-start)
   says. So members can add work at once, and an accepted message survives
@@ -162,6 +165,9 @@ says.
 - The composer shows each upload while it runs. A failed upload offers Try
   again and Remove. Send waits while a file uploads, and while a failed
   upload waits for Try again or Remove.
+- Each attached file has a × that removes it, as
+  [Remove a chip of the composer](file-mentions.md#remove-a-chip-of-the-composer)
+  says. This × is the Remove of a failed upload.
 - An upload works also before the cloud computer of its workspace exists,
   and while that cloud computer starts or is stopped (decision 132).
 - The Worker stores each uploaded file in one R2 bucket of the app, outside

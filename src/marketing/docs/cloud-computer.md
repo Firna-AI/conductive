@@ -110,10 +110,16 @@ Use a row's change action to replace its value.
 Saved values stay hidden in settings, including values without the **Secret** mark.
 
 Values and marks apply at the next start of each workspace's computer.
-Every workspace receives every environment value of the org.
-Agents and members with terminal access can read them.
+Every workspace receives the org's environment values, except values with a name that Conductive sets itself.
+Agents and members with terminal access can read the values that the computer receives.
 
-The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for commit authors and committers.
+An org variable with one of these names has no effect.
+These values also take priority over an author that a script or an agent writes into Git settings.
+A Git command can still set its own author, for example with `--author`.
+The author of a commit does not prove who made it.
+
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
 It does not hide values in file content, diffs, or Terminal.
 
 ## Apply setup changes
@@ -123,6 +129,11 @@ A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
 Adding a repository starts a build automatically.
+A build also installs the newest Conductive cloud computer software.
+An existing workspace keeps the software of the setup that it started from, also after a resume.
+To get newer software, start a new workspace after an admin runs **Build computer**.
+This also gives the new workspace the server list in **Preview**.
+
 After the first successful build, removed repositories and saved install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build runs.
 

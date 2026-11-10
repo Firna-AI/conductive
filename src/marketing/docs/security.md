@@ -13,7 +13,7 @@ Their terminal access can reach credentials available on a workspace's cloud com
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 The agent login's share setting controls whose messages spend that login.
-It does not hide the credential from code or terminal users on the same computer.
+It does not hide credentials available to code or terminal users on the same computer.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -33,12 +33,17 @@ Its sender is the person whose message started that turn.
 | Agent model use | The session starter's connected agent account |
 | Git and GitHub CLI in a turn | The turn sender's GitHub account |
 | GitHub commands in the shared Terminal | The workspace owner's GitHub account |
+| Commit in an agent turn | The turn sender, as author and committer |
+| Commit outside a turn, including Terminal and scripts | The workspace owner, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
+
+In a workspace with older cloud computer software, agent commits name the workspace owner.
+[Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
 
 Other members' messages can spend a session starter's account while that person shares the login.
 Without sharing, another member's message starts a new session on their own login.
 The agent can identify the member who sent each message.
-Another member's message during a turn does not switch its GitHub account or receiving Mac.
+Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
 Every member using a workspace's Terminal uses the same owner identity for GitHub commands.
 GitHub access can include repositories outside the Conductive org.
@@ -61,11 +66,23 @@ They do not offer a call to read or message another workspace's chat.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
-The cloud computer receives the session's login when a turn needs it.
 
-A program or member with terminal access there can read or copy that login.
+A cloud computer from a new **Build computer** keeps the stored agent login outside that computer.
+Each turn gets a temporary credential called a turn token.
+A program or member with terminal access can read or copy it.
+That token can use the session starter's login through Conductive while the turn runs.
+It also works from outside the cloud computer during that turn.
+
+After **Stop**, the token can start no new request.
+Any request that still runs ends within 30 seconds after the turn ends.
+A program that keeps running can read the tokens of later turns, including turns in other members' sessions.
+Agent settings in the repository can send model requests and their turn token to another address.
+
+An older cloud computer can still receive the agent login itself.
 A copied login can remain usable after the turn ends.
 Removing a login from Account does not revoke a copy held elsewhere.
+Installing newer software in an older computer does not remove this risk.
+Use **Build computer** and a new workspace to get the newer protection.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
@@ -88,12 +105,19 @@ Only an org admin can change environment variables.
 Conductive stores their values encrypted.
 Settings show their names and **Secret** marks without returning stored values.
 
-Every workspace in the org receives every environment value at start.
-Its agents, programs, and terminal users can read those values.
+Every workspace receives the org's environment values at start, except values with a name that Conductive sets itself.
+Its agents, programs, and terminal users can read the values that the computer receives.
 Builds and repository refreshes do not receive the org's environment values.
 
-The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for commit authors and committers.
+An org variable with one of these names has no effect.
+These values also take priority over an author that a script or an agent writes into Git settings.
+A Git command can still set its own author, for example with `--author`.
+The author of a commit does not prove who made it.
+
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
 It starts on for a new variable.
+Conductive hides these values in program names and folders before shortening them for display.
 Values and marks changed in settings apply at the computer's next start.
 Earlier chat and logs keep their text.
 

@@ -18,6 +18,7 @@ import styles from './ParityOneTable.module.css'
  * the merged cell, so no line crosses it until the darker hairline at the
  * end of the area. A phone stacks each row and shows its own area cell.
  * CSS alone chooses, so one table serves both layouts without a script.
+ * Each row has the id of its feature as its address, such as `#file-tree`.
  */
 function AreaRows(props: { area: ParityArea }) {
   const { area } = props
@@ -31,6 +32,7 @@ function AreaRows(props: { area: ParityArea }) {
             index === 0 && styles.groupStart,
             index === features.length - 1 && styles.groupEnd,
           )}
+          id={feature.id}
           key={feature.id}
         >
           {index === 0 ? (
@@ -55,8 +57,8 @@ function AreaRows(props: { area: ParityArea }) {
 /**
  * The list as one table: the legend, then one header and a group of rows
  * for each area, in the order of the areas, with a row for each Conductor
- * Cloud feature. The first column names the area of each group, and the
- * cells of each feature keep their hairlines.
+ * feature. The first column names the area of each group, and the cells of
+ * each feature keep their hairlines.
  */
 export function ParityOneTable(props: { viewport: Viewport }) {
   const mobile = props.viewport === 'mobile'

@@ -2,7 +2,7 @@ import { beforeEach, expect, it, onTestFinished } from 'vitest'
 
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../test-support/harness'
+import { duringTurn, runnerHarness, turn } from '../../test-support/harness'
 import { fakeToolContext } from '../../test-support/providers'
 import { string } from '../parse'
 import { Runner } from '../runner'
@@ -28,7 +28,7 @@ async function queuedClaudeTurn() {
   h.endpoint.send(first)
   for (let id = 2; id <= 65; id++)
     h.endpoint.send({
-      ...turn(String(id)),
+      ...duringTurn(turn(String(id))),
       type: 'message',
       turnId: 'turn-1',
       message: { ...turn(String(id)).message, text: `Message ${id}.` },
@@ -135,7 +135,11 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
   )({
     cwd: h.root,
     home: h.home,
-    login: first.login,
+    sessionId: first.sessionId,
+    endpoint:
+      fakeToolContext.machineOrigin + '/v1/model/' + first.message.choice.agent,
+    credential: { type: 'gateway', ...first.credential },
+    commitAuthor: null,
     choice: first.message.choice,
     conversationId: null,
     instructions: '',

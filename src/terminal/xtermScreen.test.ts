@@ -1,5 +1,7 @@
 import { Terminal } from '@xterm/xterm'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { FakeTerminal } from '../test-support/fake-terminal'
+import { TerminalSession } from './terminalSession'
 import { XtermScreen } from './xtermScreen'
 
 /** Resolves when xterm.js has parsed each chunk that was written before. */
@@ -32,6 +34,31 @@ describe('XtermScreen', () => {
       'reply "\\u001bP1$r0m\\u001b\\\\"',
       'user "c"',
     ])
+    screen.dispose()
+    xterm.dispose()
+  })
+
+  it('turns off the mouse reports of a program when the session transport closes, and sends nothing', async () => {
+    const xterm = new Terminal()
+    const screen = new XtermScreen(xterm)
+    const transport = new FakeTerminal()
+    const session = new TerminalSession(screen, transport, {
+      onClosed: vi.fn(),
+      onControlChange: vi.fn(),
+    })
+    session.start()
+
+    // tmux turns on mouse reports with drags, in the SGR encoding.
+    transport.emit('\x1b[?1000h\x1b[?1002h\x1b[?1006h')
+    await parsed(xterm)
+    const whileConnected = xterm.modes.mouseTrackingMode
+    transport.close()
+    await parsed(xterm)
+
+    expect(whileConnected).toBe('drag')
+    expect(xterm.modes.mouseTrackingMode).toBe('none')
+    expect(transport.inputs).toEqual([])
+    session.dispose()
     screen.dispose()
     xterm.dispose()
   })

@@ -2,7 +2,7 @@
  * Terminal sessions. Each line is a list of coloured segments.
  */
 
-import { timedOutBuild } from './computer'
+import { failedBuild, timedOutBuild } from './computer'
 import { checkoutAutocomplete, savedCarts } from './workspaces'
 
 export type TerminalTone =
@@ -126,34 +126,38 @@ export const timedOutBuildLog: readonly TerminalLine[] = [
 ]
 
 /**
- * The start of the first build of Firna, the new org of the sign-up: it
- * loads the two repositories, then installs the software of the cloud
- * computer. The install script of a new org is empty.
+ * The start of the first build of Firna, the new org of the sign-up. The
+ * build starts from the software image, which already holds the software
+ * of the cloud computer. So it loads the two repositories, then runs the
+ * install script, which is empty in a new org.
  */
 const firstBuildStart: readonly TerminalLine[] = [
   muted('Cloning 2 repositories into ~/code'),
   success(' ✓ firna/components at 3e9d2b7'),
-  success(' ✓ firna/docs at c41a8f0'),
-  muted('Installing the cloud computer software'),
 ]
 
 /** The first build of Firna while it runs. */
 export const firstBuildLog: readonly TerminalLine[] = [
   ...firstBuildStart,
-  plain('Setting up nodejs (24.11.0-1nodesource1) ...'),
+  success(' ✓ firna/docs at c41a8f0'),
+  muted('Running the install script'),
 ]
 
-/** The first build of Firna, which failed at a short network fault. */
+/**
+ * The first build of Firna, which failed when the app saved its image. The
+ * app adds the saved message of the build as the last line.
+ */
 export const failedFirstBuildLog: readonly TerminalLine[] = [
-  ...firstBuildStart,
-  error('E: Temporary failure resolving archive.ubuntu.com'),
-  muted('The software install stopped with exit code 100.'),
+  ...firstBuildLog,
+  muted(failedBuild.error),
 ]
 
-/** The first build of Firna, which the app stopped at its 60-minute limit. */
+/**
+ * The first build of Firna, which the app stopped at its 60-minute limit
+ * while it still loaded a large repository.
+ */
 export const timedOutFirstBuildLog: readonly TerminalLine[] = [
   ...firstBuildStart,
-  plain('Setting up nodejs (24.11.0-1nodesource1) ...'),
   muted(timedOutBuild.error),
 ]
 

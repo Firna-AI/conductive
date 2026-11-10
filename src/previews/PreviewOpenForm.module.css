@@ -22,3 +22,19 @@
   font-size: var(--ui-text-sm);
   line-height: 1.5;
 }
+
+/* A detected server waits while a preview opens, as Open preview does. */
+.row:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.row:disabled:hover {
+  background: none;
+}
+
+/* The message of a failed open, under the list of servers. */
+.listError {
+  max-width: none;
+  padding: 6px 8px 0;
+}

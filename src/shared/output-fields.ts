@@ -146,6 +146,15 @@ export function filterOutput(
     return filterFileReport(event, text)
   if (event.type === 'workspace.title' || event.type === 'start.updated')
     return filterRetainedReport(event, text)
+  if (event.type === 'ports.updated')
+    return {
+      ...event,
+      ports: event.ports.map((port) => ({
+        ...port,
+        name: port.name === null ? null : text(port.name),
+        folder: port.folder === null ? null : text(port.folder),
+      })),
+    }
   if (event.type === 'assistant.delta' || event.type === 'assistant.completed')
     return { ...event, text: text(event.text) }
   if (event.type === 'tool.updated')

@@ -8,6 +8,7 @@ import { ThisMacSection } from '../device/ThisMacSection'
 import type { Clock } from '../ui/clock'
 import { WorkspaceChat } from '../WorkspaceChat'
 import type { DevBackend } from './dev-backend'
+import { devMentions } from './dev-mentions'
 import type { DevOptions } from './dev-options'
 import { DevControls } from './DevControls'
 import { DevMacBanner } from './DevMacBanner'
@@ -87,11 +88,13 @@ export function DevPage(props: {
     (line: string) => setLog((lines) => [line, ...lines].slice(0, 6)),
     [],
   )
+  const [mentions] = useState(() => devMentions(note))
   const mobile = options.viewport === 'mobile'
   const chat = (
     <WorkspaceChat
       client={backend.client}
       clock={props.clock}
+      mentions={mentions}
       onConnectAgent={(agent) =>
         note(`The app opens the Connect form of ${agent}.`)
       }

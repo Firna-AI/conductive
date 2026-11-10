@@ -49,7 +49,13 @@ class ChildLifetime {
 
 export class ProviderLifetime {
   private readonly children = new Set<ChildLifetime>()
+  private readonly cleanups = new Set<() => Promise<void>>()
   private closing = false
+
+  registerCleanup(cleanup: () => Promise<void>): void {
+    let closing: Promise<void> | undefined
+    this.cleanups.add(() => (closing ??= cleanup()))
+  }
 
   register(child: Child): Promise<void> {
     const lifetime = new ChildLifetime(child)
@@ -61,6 +67,10 @@ export class ProviderLifetime {
 
   async close(): Promise<void> {
     this.closing = true
-    await Promise.all([...this.children].map((child) => child.close()))
+    try {
+      await Promise.all([...this.children].map((child) => child.close()))
+    } finally {
+      await Promise.all([...this.cleanups].map((cleanup) => cleanup()))
+    }
   }
 }

@@ -2,8 +2,9 @@ import type { SchemaProps } from '@mokly/mokly'
 import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
+import { previewStates } from '../components/tools/PortPreview'
 import { toolKeys } from '../components/workspace/tools'
-import { conversationKeys } from '../fixtures/conversations'
+import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { startErrorKeys } from '../fixtures/starting'
@@ -76,7 +77,15 @@ export const workspaceStateSchema = {
     files: { enum: fileLists },
     /** The tool of the tools panel. */
     tool: { enum: toolKeys },
-    ports: { enum: ['open', 'none'] },
+    /**
+     * The Preview tool: a preview in its frame, or "+" beside the tabs of
+     * the open previews. With no preview open, the port form lists the
+     * detected servers, says that the runner reports none, or reads as
+     * before when the app has no report, as for an older image. After a
+     * failed repair of the list (decision 96), it keeps its last list under
+     * a notice.
+     */
+    ports: { enum: previewStates },
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
     /**
@@ -116,6 +125,13 @@ export const workspaceStateSchema = {
      * or a file over the size limit can stay out of the message.
      * `workspace-link` holds a message with a pasted link to another
      * workspace of the org, which shows as a chip.
+     *
+     * The `mention-` states open the list of `@`: with a query, without
+     * one, with no match, while the tree loads, and with no tree.
+     * `file-chips` holds a file chip and a folder chip. The `-pointer`
+     * states draw the pointer over the icon of the first chip or the first
+     * attached file, where a × takes the place of the icon. A phone has no
+     * pointer, so it shows the × at the end of each chip instead.
      */
     composer: {
       enum: [
@@ -130,6 +146,15 @@ export const workspaceStateSchema = {
         'no-starter-login',
         'not-shared',
         'workspace-link',
+        'mention-query',
+        'mention-start',
+        'mention-none',
+        'mention-loading',
+        'mention-unavailable',
+        'file-chips',
+        'file-chip-pointer',
+        'workspace-link-pointer',
+        'attachment-pointer',
       ],
     },
     /** The user drags the handle of the right column to widen it. */

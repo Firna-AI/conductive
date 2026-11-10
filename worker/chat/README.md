@@ -81,97 +81,8 @@ Try again replaces the failed first computer without accepting the stored messag
 
 ## Access
 
-The Durable Object runs the gates itself.
-
-- A forwarded browser chat request keeps the body limit of the Worker
-  entry and the host and `Origin` checks. The outer Worker skips its
-  request gate, so only the gate of the Durable Object parses the JSON body.
-- `authorizeBrowser` runs `gate` from `worker/security/gate.ts`, the gate
-  of the other app routes. It checks the app hostname, the `Origin`
-  header, the session cookie, the org membership, and the body of writes.
-- `findChatWorkspace` then reads the workspace from D1. The workspace must
-  belong to that org, and the org must not be deleted.
-- Each browser write then enters the serial queue of the object. In the
-  queue, `authorizeChatBrowser` checks the access again, with the body that
-  the gate already read and the time of the queued check. It runs
-  `gateAccess`, the [access checks](../security/README.md#access-checks) of
-  the gate, and reads the workspace and its archive state again. This
-  repeats the D1 reads of the first check. So a write that waited for its
-  body or for the queue gets the refusal that a new request would get. An
-  example is `401 sign_in_required` after a sign-out. The write saves
-  nothing. Reads and the events socket take no second check.
-- Each open tab holds a `workspace` identity. The
-  [shared connection reader](../security/README.md#open-connections) of
-  the security area gives it a grant with a deadline. The `workspace` kind
-  needs no running sandbox. So the tabs of a stopped or archived workspace
-  stay open.
-- The Durable Object reads the first grant of a new tab before the
-  history read. It checks the grant again before it sends the history. A
-  tab without a valid grant gets no history and `404 workspace_not_found`.
-- Each event send checks the grant first, without a D1 read. A tab with
-  an expired grant closes and gets no event.
-- Every 15 seconds, one D1 query refreshes the grants of all open tabs.
-  The refresh closes each tab without a new grant. Sign-out, membership
-  removal, a suspension of the user, session expiry, and org deletion end
-  access. A failed read closes each tab of its batch.
-- A separate expiry timer closes each tab at its grant deadline, also
-  while a refresh read waits. A late read result cannot reopen a closed
-  tab.
-- Both timers stop when the last tab closes.
-- An archived workspace still serves its history and its events socket.
-  Each write gets `409 workspace_archived`.
-- `connectRunner` accepts only `/v1/runner` on `MACHINE_ORIGIN`, with
-  `Authorization: Bearer <workspace token>`.
-- `tokenWorkspace` hashes the token. It accepts a token that is not
-  revoked, of a workspace that is not archived, in an org that is not
-  deleted, with an owner who is not suspended.
-  `workspaceTokenAccessPredicate` in
-  [`workspace-token-access.ts`](../data/workspace-token-access.ts) holds
-  that rule. The agent tools, the git credential route, and the Mac
-  commands use it too.
-- The runner sends `hello` first, with `RUNNER_PROTOCOL_VERSION` and its
-  workspace ID. A new runner connection closes the previous one.
-- `AuthenticatedRunner` keeps the token hash of its connection. It checks
-  the token rule again before each message that it sends or receives, and
-  every 15 seconds while the connection is idle, with no cached result. A
-  failed rule or a failed read closes the connection.
-- The first workspace that passes a gate binds the Durable Object. Each
-  other workspace gets `404 workspace_not_found`. So does a workspace that
-  `matchesObject` refuses, because `WORKSPACES.idFromName` names another
-  object.
-- Every login lookup goes through `SessionLogins`. Its credential path uses
-  `readLogin` in `login-access.ts`, the only caller of `resolveLogin`. It
-  reads the agent login of a starter or of a linked-session member, for one
-  agent. `resolveLogin` first checks the workspace, that user, the sender,
-  and the runner token in one D1 read. The workspace must pass the token
-  rule above, without the token. That user and the sender must be members
-  who are not suspended. The same read checks the share setting of the
-  login, `agent_logins.no_reuse`, before it reads a secret. An override
-  replaces only the login read. A refusal to share keeps the starter's own
-  login available, so `SessionLogins.observe` stores
-  `loginAvailable: true` and `loginShared: false`. Send uses the existing
-  empty linked session, and queued member commands cannot receive the
-  starter's login while the starter does not share it.
-- Its metadata path, `readLoginMetadata`, reads only the membership, the
-  suspension, the stored login kind, and the share setting of each starter,
-  in one D1 query. It returns a map of `SessionLoginMetadata` by session
-  ID. A valid login gives `loginAvailable: true`, and `loginShared` is true
-  when `no_reuse` is 0. A missing or invalid login gives false for both.
-  The workspace must also pass the token rule above. So a suspended starter
-  or a refused workspace shows an unavailable login. The result sets only
-  `loginAvailable` and `loginShared`, so the session list, the history, and
-  the event subscription stay readable. It reads no ciphertext.
-- A revoked or replaced runner token closes that connection without a
-  login, and the command stays queued. A sender who left the org gets no
-  login either. [Session logins](integration/README.md#session-logins) says
-  when the workspace checks the starter's login. The storage never holds a
-  login.
-
-An org suspension keeps chat history and event subscriptions readable.
-The common browser write gate refuses session and message changes with `org_suspended`.
-The second access check of each browser write refuses such a change again in the queue.
-This also holds when the suspension starts while the change waits.
-The shared token rule refuses runners and agent logins for the org.
+[Chat access](access.md) gives the browser gates, the runner token checks,
+the workspace version pin, and the login checks.
 
 ## History and event order
 
@@ -225,13 +136,21 @@ features. It covers the hooks, the trusted workspace calls, the workspace
 events, the outer Worker, and the lifecycle. It also covers the files, the
 GitHub state, the agent runner, the logins and attachments, the session
 logins, and the test fixtures. Its
-[Outer Worker tests](integration/outer-worker-tests.md) guide gives the
+[Agent runner integration](integration/runner/README.md) page gives the
+runner events and the runner commands. Its
+[Agent logins and attachments](integration/logins-and-attachments.md) page
+gives the agent logins and the attachments.
+Its [Outer Worker tests](integration/outer-worker-tests.md) guide gives the
 tests through the production Worker entry.
 
 ## Key code
 
 - `backend.ts`: `WorkspaceChat`, its gates, its trusted methods, the open
   tabs, and the one publisher of committed events.
+- `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
+- [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
+  It derives a running turn's token and checks the starter's current login in the chat queue.
+  Runner delivery gets the token of each version 2 `turn` command from `forRunningTurn`.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
 - `operation.ts`: `ChatOperation`, the reads and changes of one route, tab
@@ -241,7 +160,8 @@ tests through the production Worker entry.
   sets the hooks, and gives the Mac devices the shared state writer.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
-  lifecycle events.
+  lifecycle events. Its stop transaction clears the port report with
+  `ports: null`, including when the workspace has no previews.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
 - `session-titles.ts`: the empty-name rule for the first session's workspace
@@ -272,14 +192,16 @@ tests through the production Worker entry.
   chunks of large file reports and tree deltas.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
-  or refusal marker of each runner event.
+  or refusal marker of each runner event. A connection keeps the protocol
+  version of its `hello`, 1 or 2, and its `welcome` repeats that version.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. One workspace record keeps each shown answer end
   that can still start a secret, so a new stream cannot complete such a
   secret. That state, the filtered events, and the raw cursor of the
   stream commit in one transaction. The shared field policy keeps
-  operational paths and masks display labels.
+  operational paths and masks display labels. It masks each complete port
+  name and folder before the workspace display excerpt and the second parse.
 - `runner-output.ts` also moves the answer ends of older stream records
   into the workspace record, at the first accepted receipt without that
   record. Held text stays with its own stream, because the held text of
@@ -288,16 +210,29 @@ tests through the production Worker entry.
   records again.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
   runner connection before each message and while it is idle.
+- [`runner-version-data.ts`](runner-version-data.ts): `readRunnerProtocolVersion`, the workspace pin read before a runner's welcome or commands.
+  [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes a runner below that pin, and starts the stream before the `welcome`.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
-  check.
+  check. Each command takes the shape of the connection's protocol
+  version. Version 1 gets the real login in each `turn` and `message`
+  command. Version 2 gets a turn token in each `turn` command, after the
+  running state commits, and no credential in a `message` command.
+  `gatewayRunnerCommand` in `runner-gateway-command.ts` builds that
+  version 2 command.
+  [The agent runner](integration/runner/README.md#the-agent-runner) gives
+  the rules of both versions.
 - `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
   send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.
 - `delivery-state.ts`: dispatch state before sending and queued-state restoration.
+- `port-reports.ts`: the listener-list parser, final port-label excerpts, and
+  displayed-label checks. Private labels stay complete for the output filter.
+  Runner reports require a sorted unique array. Only a workspace stop
+  publishes a null list.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
   `parseRunnerEnvelope` applies the byte limits to the raw message.
@@ -308,6 +243,17 @@ tests through the production Worker entry.
   `continuation.ts`: active and waiting turns, the dispatch rule of each
   command, the retry message of a turn end, safe turn context, late data,
   terminal events, and unanswered messages.
+  `TurnLifecycle.runnerEnded`, `workspaceStopped`, and `fail` handle each source of a turn end.
+  `fail` ends a queued turn at once. The login check of runner delivery calls it only for a queued turn.
+  A failed token or gateway check calls it for a running turn.
+  Then `fail` keeps its Stop and cause until a runner end or workspace stop.
+  `TurnCompletion.finish` in `turn-completion.ts` commits each end, updates the session, and advances waiting work.
+  It also records the turn ID of the end in `ChatTransaction.endedTurns`.
+- `turn-end-reports.ts`: `TurnEndReports` keeps the recorded ends of each
+  committed transaction. `ChatStore.reportTurnEnds` gives each end to the
+  `turnEnded` hook. It runs after the runner confirm, before each dispatch,
+  and at the end of each queued task. So the workspace lifecycle gets each
+  end by its turn ID, from one path, whatever ended the turn.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-tabs.ts`: open tabs, their grants, the refresh and expiry
   timers, and the grant check before each send. By default,

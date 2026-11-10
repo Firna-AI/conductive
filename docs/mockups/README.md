@@ -54,12 +54,14 @@ of [the operator section](design-operator.md).
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
 moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/banner`, `app/chat`, `app/workspace-menu`, and `app/workspace-links`,
+`app/banner`, `app/chat`, `app/workspace-menu`, `app/workspace-links`, and `app/tools`,
 the New workspace dialog, and the repositories that wait for a build. Its
 linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section.
+The [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+page gives their child pages and flows.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared
@@ -150,7 +152,7 @@ pictures, the header and the footer, and [the docs pages](marketing-site.md#the-
 It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
-[Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)
+[Conductor comparison](../protocol/conductor-comparison.md)
 states its requirements. It draws the real rows: its rows, statuses, dates,
 and words come from `src/marketing/from-conductor/`, the modules that the
 site also reads, as

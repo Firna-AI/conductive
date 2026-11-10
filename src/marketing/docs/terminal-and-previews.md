@@ -48,6 +48,15 @@ The CLI is ready to use without a separate login step.
 | In an agent turn | The person whose message started the turn |
 | In the shared Terminal | The workspace owner |
 
+Commits name the person in the table as both author and committer.
+Commits that a script makes outside an agent turn name the workspace owner.
+In a workspace with older cloud computer software, agent commits name the workspace owner.
+[Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
+Conductive uses their GitHub display name, or their login when the display name is missing or unusable.
+Each commit uses their private GitHub no-reply address, `<id>+<login>@users.noreply.github.com`.
+Here, `<id>` is their GitHub user ID and `<login>` is their GitHub login.
+GitHub links the commit to their account without showing their private email.
+
 Every member connected to that Terminal uses the same owner identity.
 An explicit `GH_TOKEN` or `GITHUB_TOKEN` value can replace the supplied CLI login.
 
@@ -57,14 +66,30 @@ This can include repositories outside the Conductive org.
 ## Preview a running app
 
 1. Start your web server with the agent or **Terminal**.
-2. Note the port that the server reports.
-3. Open **Preview**.
-4. Enter that number in **Port**.
-5. Select **Open preview**.
+2. Open **Preview**.
+3. Select your server in the list.
+
+Each row shows a port and can also show a short program name and repository folder.
+The list updates as servers start and stop.
+Servers that already have an open preview appear in their tabs.
+When the list is empty, the form asks you to start a server in **Terminal** or ask the agent.
+
+To open a server by its port:
+
+1. Note the port that the server reports.
+2. Enter it in **Other port** below the list, or **Port** when only the field appears.
+3. Select **Open preview**.
 
 For example, enter `3000` if your server reports port 3000.
 Use the port of your server when it reports a different one.
-Conductive asks for the port instead of finding it automatically.
+
+An older cloud computer can show only the **Port** field.
+Use the manual steps there.
+If Preview says it needs newer cloud computer software, ask an admin to run **Build computer**.
+After that build succeeds, create a new workspace.
+An existing workspace keeps its installed software after a resume.
+
+- [Prepare a new cloud computer for the server list](/docs/cloud-computer#apply-setup-changes)
 
 The preview opens inside the workspace.
 Use **Open in new tab** if the app works better in a browser tab.
@@ -72,8 +97,10 @@ This can help when its cookies or sign-in do not work inside the frame.
 
 ## Manage previews
 
-Each preview has a tab named for its port.
-Use **Preview another port** to open another server.
+Each preview tab shows its port and a program name when available.
+The program name uses at most 10 characters, including **…** when shortened.
+Its tooltip and screen reader label give the full name and folder.
+Use **+**, named **Preview another port**, to choose another server or enter its port.
 Use **Reload** to load the selected preview again.
 Use **Close preview** to close it.
 

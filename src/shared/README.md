@@ -23,15 +23,47 @@ removes it. Each request sends `EmptyRequest` and returns the current list.
 
 `runner.ts` defines the versioned handshake, commands, numbered events,
 confirmations, and resend rules. Its comments state the delivery contract.
+`RunnerProtocolVersion` is 1 or 2. The Worker accepts both versions.
+The `welcome` repeats the version of the runner's `hello`.
+`RUNNER_PROTOCOL_VERSION` is 2. The packaged runner sends it, and
+each full image build records it.
+The credential of a turn belongs to the session starter, whoever sent the
+message:
+
+- `RunnerTurnV1` and `RunnerMessageDuringTurnV1` carry the real agent
+  login in `login`, with its agent, kind, and secret.
+- `RunnerTurnV2` carries a turn token in `credential`, with the agent and
+  the login kind. It has no `login`.
+- `RunnerMessageDuringTurnV2` carries no credential and no login.
+
+`RunnerTurn`, `RunnerMessageDuringTurn`, `RunnerCommand`, and
+`WorkspaceToRunner` cover both versions. Their `V1` and `V2` forms give the
+shapes of one version. The runner imports the `V2` forms and uses
+a turn token.
+The [model gateway](../../worker/model-gateway/README.md#model-requests)
+gives the form of a turn token.
 `RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
 Storage and network failures remain unconfirmed.
-After a refused file tree, changes list, start steps, or workspace name,
+After a refused file tree, changes list, start steps, workspace name, or port list,
 `RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
-It carries no login. A redelivery keeps its command ID.
+It carries no login and no turn token. A redelivery keeps its command ID.
+`ports.ts` defines the common listening-port fields and both report phases.
+`RunnerPortsUpdated` carries complete selected private labels.
+`PortsUpdated` carries final filtered display labels, with a null list when
+there is no current report. The display limits apply only after the workspace
+filter. The module owns those limits and the shared count limit.
+`terminal.ts` owns `TERMINAL_PORT`, shared by the runner exclusion
+and the terminal backend.
+[Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
+that report, its limits, and its refresh kind.
 `runner-transport.ts` defines the injectable socket boundary.
-Runner commands carry the agent login of the session starter, whoever sent the message. Browser response types do not.
+`RunnerConnection` and `RunnerConnector` take the type of the Worker's
+messages.
+Browser response types carry no login and no turn token.
+Turn commands also carry the commit author of the member whose message started the turn.
+Message commands carry no commit author.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
 
 `messages.ts` owns the attachment metadata and target identity.
@@ -77,8 +109,10 @@ The Worker keeps the held text in the encrypted state of its runner stream.
 It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
 It saves both before it confirms the corresponding raw event.
 
-`event-limits.ts` applies the same excerpt caps after either filter.
+`event-limits.ts` applies the same chat excerpt caps after either filter.
 Its UTF-8 byte count works in the Worker and Node.
+The workspace's [port report owner](../../worker/chat/port-reports.ts)
+shortens port labels only after its final filter.
 
 `chat-events.ts` caps serialized tool detail at 64 KiB.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.
@@ -153,6 +187,9 @@ The git credential payload is not defined yet.
 
 ## Key code
 
+- [Port reports](ports.ts) carry sorted listening ports and their safe labels.
+- [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
+- [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.

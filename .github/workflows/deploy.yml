@@ -99,6 +99,9 @@ jobs:
       RUNNER_BASE_URL: https://runner.conductive.build/
       RUNNER_BUCKET: conductive-runner
       HEALTH_URL: https://app.conductive.build/api/health
+      SOFTWARE_IMAGE_URL: https://api.conductive.build/v1/deploy/software-image
+    outputs:
+      software_image: ${{ steps.software_image.outputs.result }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -218,7 +221,14 @@ jobs:
           ARCHIVE_SHA256: ${{ steps.runner.outputs.sha256 }}
         run: |
           set -euo pipefail
+          umask 077
+          deploy_token=$(openssl rand -hex 32)
+          echo "::add-mask::$deploy_token"
+          printf '%s' "$deploy_token" > "$RUNNER_TEMP/conductive-deploy-token"
+          deploy_digest=$(sha256sum "$RUNNER_TEMP/conductive-deploy-token")
+          deploy_digest=${deploy_digest%% *}
           npx wrangler deploy \
+            --var "CONDUCTIVE_DEPLOY_TOKEN_SHA256:$deploy_digest" \
             --var "CONDUCTIVE_RUNNER_ARCHIVE_URL:$ARCHIVE_URL" \
             --var "CONDUCTIVE_RUNNER_ARCHIVE_SHA256:$ARCHIVE_SHA256" \
             --tag "${GITHUB_SHA:0:7}" --message "main at $GITHUB_SHA"
@@ -238,6 +248,85 @@ jobs:
           echo "::error::Health check failed for $HEALTH_URL."
           exit 1
 
+      - name: Build software image
+        id: software_image
+        run: |
+          set -euo pipefail
+          deploy_token=$(cat "$RUNNER_TEMP/conductive-deploy-token")
+          deploy_digest=$(printf '%s' "$deploy_token" | sha256sum)
+          deploy_digest=${deploy_digest%% *}
+          body=$(jq -nc --arg digest "$deploy_digest" '{tokenDigest: $digest}')
+          response_file="$RUNNER_TEMP/conductive-software-image-response"
+          deadline=$((SECONDS + 900))
+          result=timeout
+          last_phase=''
+          version=''
+          while (( SECONDS < deadline )); do
+            remaining=$((deadline - SECONDS))
+            if (( remaining <= 0 )); then break; fi
+            request_time=$((remaining < 30 ? remaining : 30))
+            if code=$(curl -sS --max-time "$request_time" \
+              --output "$response_file" --write-out '%{http_code}' \
+              --request POST --header 'Content-Type: application/json' \
+              --header "Authorization: Bearer $deploy_token" \
+              --data "$body" "$SOFTWARE_IMAGE_URL"); then
+              case "$code" in
+                200)
+                  if ! jq -e 'type == "object" and
+                    (.state == "building" or .state == "ready" or .state == "failed") and
+                    (.phase | type == "string") and (.version | type == "string") and
+                    (.output | type == "string")' "$response_file" > /dev/null; then
+                    echo 'Software image response is not valid.'
+                    result=refused
+                    break
+                  fi
+                  phase=$(jq -r '.phase' "$response_file")
+                  version=$(jq -r '.version' "$response_file")
+                  if [[ "$phase" != "$last_phase" ]]; then
+                    printf 'Software image phase: %s\n' "$phase"
+                    last_phase=$phase
+                  fi
+                  jq -rj '.output' "$response_file"
+                  state=$(jq -r '.state' "$response_file")
+                  if [[ "$state" == ready ]]; then
+                    result=ready
+                    break
+                  fi
+                  if [[ "$state" == failed ]]; then
+                    jq -r '.error // "The software image build failed."' "$response_file"
+                    jq -rj '.keptOutput // ""' "$response_file"
+                    result=failed
+                    break
+                  fi
+                  ;;
+                400|401|403|404)
+                  printf 'Software image request refused: HTTP %s.\n' "$code"
+                  result=refused
+                  break
+                  ;;
+                409|429|5??)
+                  printf 'Software image request will retry: HTTP %s.\n' "$code"
+                  ;;
+                *)
+                  printf 'Software image request returned unexpected HTTP %s.\n' "$code"
+                  result=refused
+                  break
+                  ;;
+              esac
+            else
+              echo 'Software image request will retry after a network error.'
+            fi
+            remaining=$((deadline - SECONDS))
+            if (( remaining <= 0 )); then break; fi
+            delay=$((remaining < 10 ? remaining : 10))
+            sleep "$delay"
+          done
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          {
+            printf '### Software image\n\nResult: %s\n\n' "$result"
+            printf 'Version: %s\n\nPhase: %s\n' "${version:-unknown}" "${last_phase:-unknown}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Write deploy summary
         env:
           ARCHIVE_URL: ${{ steps.runner.outputs.url }}
@@ -250,11 +339,30 @@ jobs:
             printf 'Archive publish result: %s\n' "$PUBLISH_RESULT"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  software-image:
+    name: Check the software image result
+    needs: [check, deploy]
+    if: >-
+      ${{ !cancelled() && needs.deploy.result == 'success' &&
+      needs.check.outputs.attempt == github.run_attempt }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require a ready software image
+        env:
+          SOFTWARE_IMAGE_RESULT: ${{ needs.deploy.outputs.software_image }}
+        run: |
+          set -euo pipefail
+          if [[ "$SOFTWARE_IMAGE_RESULT" != ready ]]; then
+            echo "::error::The software image step ended with ${SOFTWARE_IMAGE_RESULT:-no result}. A ready software image is required. The Worker is already live. Re-run all jobs to retry."
+            exit 1
+          fi
+
   # Older commits and partial re-runs start a new run on main.
   # A re-run keeps the outputs of jobs that passed.
   redeploy:
     name: Start a deploy of the head
-    needs: [check, deploy]
+    needs: [check, deploy, software-image]
     if: >-
       ${{ !cancelled() && needs.check.result == 'success' &&
       (needs.check.outputs.stale == 'true' || needs.check.outputs.attempt != github.run_attempt) }}
