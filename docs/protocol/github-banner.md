@@ -46,7 +46,7 @@ The bar shows one state of the branch of the workspace (decision 18):
 Rules for the bar:
 
 - The bar names the branch of the workspace and its base branch, as
-  [Base branches](base-branches.md) says (decision 207 G). A narrow column
+  [Base branches](base-branches.md) says (decision 507 G). A narrow column
   cuts each name with an ellipsis, and the full name shows as a tooltip.
 - Reason: one layout of the bar serves every workspace, also a pull request
   run whose base branch is not the default branch.
@@ -54,7 +54,7 @@ Rules for the bar:
   that its base branch does not have. It opens a pull request into the base
   branch.
 - The bar of a pull request run shows the state of its own branch, not the
-  pull request that started it (decision 205 A).
+  pull request that started it (decision 505 A).
 - A bar that shows that pull request was rejected. The run's own work would
   then get no "Create pull request", and the header of the run already
   links to that pull request.

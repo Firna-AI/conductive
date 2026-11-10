@@ -5,7 +5,7 @@ import { membersEntry } from './triggerCopy'
 import styles from './AuthorFilter.module.css'
 
 /**
- * The author filter of a pull request trigger (decision 206 C): an "is"
+ * The author filter of a pull request trigger (decision 506 C): an "is"
  * list and an "is not" list of GitHub logins. An empty "is" means every
  * member of the org. "is" can hold the entry "Members of <org>", so a bot
  * joins the members and does not replace them. Another account starts

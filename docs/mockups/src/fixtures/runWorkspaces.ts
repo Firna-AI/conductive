@@ -1,9 +1,9 @@
 /**
  * The workspaces of routine runs. A run workspace is a normal workspace in
- * the section of its routine (decision 204), on a new branch of the owner.
+ * the section of its routine (decision 504), on a new branch of the owner.
  * The base branch of a pull request run is the head branch of its pull
  * request, so its Changes list and its pull request bar show only its own
- * work (decision 207 G). Its first message is the prompt, a separator
+ * work (decision 507 G). Its first message is the prompt, a separator
  * line, and the facts of the trigger. The message copies no title or body
  * of a pull request.
  */

@@ -109,7 +109,7 @@ says.
   its branch in the folder of its repository.
 - The run of a pull request creates its branch from that pull request, as
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
-  says (decision 205 A).
+  says (decision 505 A).
 - When the GitHub repository has no refs, such as branches or tags, the
   start first pushes an empty first commit to the default branch of the
   repository (decision 89). It then fetches that branch and creates the
@@ -156,7 +156,7 @@ says.
 ## Base branch
 
 - Each workspace has a base branch, the branch that its work targets
-  (decision 207 G). It is the default branch, except for the run of a pull
+  (decision 507 G). It is the default branch, except for the run of a pull
   request.
 - Changes, each diff, the pull request bar, and "Create pull request" use
   the base branch. [Base branches](base-branches.md) states the rules.

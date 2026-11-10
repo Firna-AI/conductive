@@ -10,7 +10,7 @@ export const memberRoutine = defineScreen({
   description:
     "Priya, a member who is not an admin, reads Cal's routine: its facts, its triggers, its prompt with the model, and its runs, without fields and without actions. One line says that only Cal can change it.",
   rationale:
-    'Every member sees each routine, its prompt, and its runs, as the user chose in decision 202 B. A run acts as its owner, so only the owner decides what runs on those logins.',
+    'Every member sees each routine, its prompt, and its runs, as the user chose in decision 502 B. A run acts as its owner, so only the owner decides what runs on those logins.',
   relatedDocs: [],
   propSchema: routineStateSchema,
   props: { ...ownerRoutine, viewer: 'member' },

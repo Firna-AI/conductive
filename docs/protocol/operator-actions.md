@@ -158,7 +158,7 @@ of a deleted org takes effect.
   remaining member who is not suspended. Only when no such member remains
   do they move to the earliest admin.
 - The routines of the member who leaves move to the same member as the
-  workspaces (decision 208 E).
+  workspaces (decision 508 E).
 - For a leave and a change of role, the last-admin rule counts only
   active admins. An admin can leave the org, or lose the admin role, only
   while another active admin remains.

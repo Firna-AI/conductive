@@ -32,7 +32,7 @@ says.
 ## Who may start a run
 
 - The author of the pull request must be a member of the org, or an
-  account that "Author is" names (decision 206 C).
+  account that "Author is" names (decision 506 C).
 - The sender of the event must pass the same rule. The sender is the
   account that caused the event, such as the account that pushed the new
   commits or merged the pull request.
@@ -94,8 +94,8 @@ says.
 ## The workspace of a pull request run
 
 - The run creates its own branch from the pull request, and it gets a base
-  branch, as [Base branches](base-branches.md) says (decisions 205 A and
-  207 G).
+  branch, as [Base branches](base-branches.md) says (decisions 505 A and
+  507 G).
 - The pull request bar of the run shows the run's own branch, not the pull
   request of the event, as
   [Banner states](github-banner.md#banner-states) says.

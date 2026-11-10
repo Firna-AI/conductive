@@ -21,7 +21,7 @@ decision number names a dated record, as
   the org, and a section. It also has a model with its effort, an Active
   switch, one time zone, and its triggers.
 - Each trigger starts a run. Each run creates a new workspace, with its own
-  cloud computer and branch (decision 201 A).
+  cloud computer and branch (decision 501 A).
 - One workspace for each routine, with a new session for each run, was
   rejected. Its runs would share one branch and one set of files. A pull
   request run would then switch branches under the earlier work.
@@ -30,7 +30,7 @@ decision number names a dated record, as
 - The cloud computer of a run still holds the other chosen repositories of
   the org, as [Repository folders](repository-folders.md) says.
 - An empty name saves as "Untitled routine".
-- The prompt must have text (decision 211 B). Save stays off until the
+- The prompt must have text (decision 511 B). Save stays off until the
   prompt has text. The Worker refuses a routine whose prompt is empty or
   holds only spaces.
 - Reason: a run without a prompt has no task, but it still spends a start.
@@ -44,7 +44,7 @@ decision number names a dated record, as
   org, the routine turns off, and its page says why. Reason: no run of it
   can succeed, and a turn-off names the cause before any run fails.
 - A deleted routine keeps its run workspaces, because they are normal
-  workspaces (decision 204 A).
+  workspaces (decision 504 A).
 
 ## The routine pages
 
@@ -73,7 +73,7 @@ decision number names a dated record, as
 ## Access
 
 - Every member of the org sees every routine, with its prompt, its
-  triggers, and its runs (decision 202 B).
+  triggers, and its runs (decision 502 B).
 - Every member who can create a workspace can create a routine. The member
   who creates it is its owner.
 - Only the owner changes a routine, turns it on, and uses Run now.
@@ -93,10 +93,10 @@ decision number names a dated record, as
   rejected. Org routines on an agent login of the org were rejected too.
   Each breaks the rule that pushes show as their sender (decision 50).
 - Run now does not show on a routine whose triggers are all pull request
-  triggers (decision 210 C). Reason: such a run needs a pull request.
+  triggers (decision 510 C). Reason: such a run needs a pull request.
 - A routine with a schedule, or with no trigger, keeps Run now. A Run now
   that asks for a pull request and an event is a later change
-  (decision 210 B).
+  (decision 510 B).
 - Run now works while the routine is off. Reason: the owner can test a
   routine before its triggers start runs.
 
@@ -110,7 +110,7 @@ decision number names a dated record, as
   for a day and a time. Times use the 24-hour clock.
 - Custom asks for a cron expression with five fields. They are the minute,
   the hour, the day of the month, the month, and the day of the week.
-- A schedule runs at most once an hour (decision 203 B). So the minute
+- A schedule runs at most once an hour (decision 503 B). So the minute
   field of a custom cron must name one minute. Each preset meets this rule.
 - The form refuses a cron that breaks the rule, and says why. The Worker
   refuses it too. It also refuses a cron without five fields and an unknown
@@ -134,7 +134,7 @@ decision number names a dated record, as
 ## When the owner leaves
 
 - When the owner leaves the org, or an admin removes them, their routines
-  in that org move to a new owner (decision 208 E).
+  in that org move to a new owner (decision 508 E).
 - The new owner is the member who gets their workspaces, as
   [When a member leaves](orgs-and-members.md#when-a-member-leaves) says.
   That member is usually an admin.
@@ -169,7 +169,7 @@ decision number names a dated record, as
 ## Limits
 
 - Routines add no limit beyond the hourly rule of schedules
-  (decision 203 B). The plan limits of the app's Boat account still apply,
+  (decision 503 B). The plan limits of the app's Boat account still apply,
   as [The provider](workspaces-and-sandboxes.md#the-provider) says.
 - Risk: routines can still use up the daily starts that all orgs share. A
   few hourly routines can do it. The restarts near day 14 of kept run
@@ -202,6 +202,6 @@ decision number names a dated record, as
   controlled run can still push a secret to a branch.
 - A first agent without logins that summarizes the pull request was
   rejected, because the agent that pushes a fix must read the code itself.
-- Decision 206 C chose the author rule. A token of the GitHub App that
+- Decision 506 C chose the author rule. A token of the GitHub App that
   reaches only the routine's repository was rejected for pull request runs.
   It breaks the rule that pushes show as their sender (decision 50).

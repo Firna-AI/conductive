@@ -38,7 +38,7 @@ function Owner(props: { row: RoutineRow }) {
 
 /**
  * Whether the routine is on. A routine that turned off after failed runs
- * says so in short, under Off (decision 213 B).
+ * says so in short, under Off (decision 513 B).
  */
 function State(props: { row: RoutineRow }) {
   const { routine } = props.row
@@ -91,7 +91,7 @@ function Row(props: { row: RoutineRow; to?: string; viewport: Viewport }) {
 }
 
 /**
- * The routines of the org. Every member sees each routine (decision 202).
+ * The routines of the org. Every member sees each routine (decision 502).
  * Each row shows the name, the repository, the triggers, the state of the
  * last run, the person whose logins the runs use, and whether it is on.
  */

@@ -12,7 +12,7 @@ export type RunSource = {
 
 /**
  * The line under the header of a run workspace, which links to its routine
- * and to the pull request that started the run (decision 205 A, with the
+ * and to the pull request that started the run (decision 505 A, with the
  * links of D). The header bar has no room left for them, also on desktop.
  * A long routine name gives up its room first, and the number of the pull
  * request always shows.

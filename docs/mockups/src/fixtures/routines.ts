@@ -1,8 +1,8 @@
 /**
  * The routines of Acme: saved prompts that run an agent without a person,
  * on a schedule or on a pull request event. Each run opens a new workspace
- * (decision 201). A run acts as the person who created the routine, with
- * the agent login and the GitHub access of that person (decision 202).
+ * (decision 501). A run acts as the person who created the routine, with
+ * the agent login and the GitHub access of that person (decision 502).
  */
 
 import { defaultChoice, type AgentChoice } from './agents'
@@ -24,7 +24,7 @@ export type ClockTime = { hour: number; minute: number }
 
 /**
  * A schedule: a preset, or a custom cron. Each runs at most once an hour,
- * so the minute field of a custom cron names one minute (decision 203).
+ * so the minute field of a custom cron names one minute (decision 503).
  */
 export type ScheduleTrigger =
   | { kind: 'hourly'; minute: number }
@@ -36,7 +36,7 @@ export type ScheduleTrigger =
 export type PullRequestEvent = 'opened' | 'pushed' | 'merged'
 
 /**
- * The author filter of a pull request trigger (decision 206 C). An author
+ * The author filter of a pull request trigger (decision 506 C). An author
  * passes "is" when the list names the author, and "is not" when it does
  * not. An empty "is" means every member. `members` is the entry "Members
  * of <org>" in "is", which stands for every member. A first account added
@@ -62,16 +62,16 @@ export type Routine = {
   /** The name. A new routine has none, and saves as "Untitled routine". */
   name: string
   repository: RepositoryKey
-  /** The section that the run workspaces join (decision 204). */
+  /** The section that the run workspaces join (decision 504). */
   section: SectionKey
   /**
    * The member whose logins the runs use: the creator, or the admin who
-   * got the routine when its creator left the org (decision 208 E).
+   * got the routine when its creator left the org (decision 508 E).
    */
   owner: Person
   /**
    * The name of the member who left the org, from whom the routine moved,
-   * turned off, to its owner (decision 208 E).
+   * turned off, to its owner (decision 508 E).
    */
   movedFrom?: string
   /**
@@ -207,7 +207,7 @@ export const routines: Readonly<Record<RoutineKey, Routine>> = {
   },
 }
 
-/** The failed runs in a row that turn a routine off (decision 213 B). */
+/** The failed runs in a row that turn a routine off (decision 513 B). */
 const failedRunsToTurnOff = 3
 
 /** The routine turned off because its last runs failed in a row. */

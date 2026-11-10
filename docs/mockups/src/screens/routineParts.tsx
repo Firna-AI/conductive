@@ -55,7 +55,7 @@ function ReadOnlyNote(props: { routine: Routine; access: RoutineAccess }) {
 
 /**
  * Why a routine turned off after three failed runs in a row (decision
- * 213 B). The owner fixes the cause and turns it on. Another person reads
+ * 513 B). The owner fixes the cause and turns it on. Another person reads
  * who can.
  */
 function FailedRunsNotice(props: { routine: Routine; ownerViews: boolean }) {
@@ -77,7 +77,7 @@ function FailedRunsNotice(props: { routine: Routine; ownerViews: boolean }) {
  * The note above the routine: the notice of a suspended org, the reason
  * why it turned off after failed runs, the reason why the person signed in
  * reads it without fields, or, for its owner, the notice of a routine that
- * moved from a member who left (decision 208 E).
+ * moved from a member who left (decision 508 E).
  */
 function Note(props: {
   routine: Routine

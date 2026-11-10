@@ -12,7 +12,7 @@ export const runs = defineScreen({
   description:
     'The newest 50 runs of the routine that reviews pull requests: queued, starting, working, needs input, done and unread, ready, stopped, and archived, then older runs. Each run shows its trigger, its pull request, its time, and its state. A run with a workspace opens it from its row. Older runs exist, so Show older runs ends the list. A phone shows the runs on the Runs tab.',
   rationale:
-    'Each run opens a new workspace, from decision 201 A, so a run takes the state of its workspace and the same mark as the workspace list. A queued run has no workspace yet. The pull request of a run opens on GitHub, from option D of decision 205, which the design adds to the chosen A. The run of PR opened #482 opens its workspace. The list holds the newest 50 runs, so that each read every 10 seconds stays small, and Show older runs reaches the rest.',
+    'Each run opens a new workspace, from decision 501 A, so a run takes the state of its workspace and the same mark as the workspace list. A queued run has no workspace yet. The pull request of a run opens on GitHub, from option D of decision 505, which the design adds to the chosen A. The run of PR opened #482 opens its workspace. The list holds the newest 50 runs, so that each read every 10 seconds stays small, and Show older runs reaches the rest.',
   relatedDocs: [],
   propSchema: routineStateSchema,
   props: { ...ownerRoutine, tab: 'runs' },
@@ -35,7 +35,7 @@ export const runs = defineScreen({
       description:
         'Two events that started no run: a pull request that an account outside Acme opened, and a push of github-actions[bot] to the pull request of a member. Each shows its reason. An author whom the filter leaves out shows no row.',
       rationale:
-        'The user chose option C of decision 206. The Runs list shows a skipped run for an author or a sender outside the org, and nothing for an author whom the owner left out, because the owner chose that.',
+        'The user chose option C of decision 506. The Runs list shows a skipped run for an author or a sender outside the org, and nothing for an author whom the owner left out, because the owner chose that.',
       props: { runs: 'skipped' },
     },
     {

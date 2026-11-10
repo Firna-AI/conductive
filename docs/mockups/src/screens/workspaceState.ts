@@ -133,7 +133,7 @@ export const workspaceStateSchema = {
      */
     org: { enum: ['active', 'suspended'] },
     /**
-     * The run of a routine that made the workspace (decision 201): a run of
+     * The run of a routine that made the workspace (decision 501): a run of
      * a pull request, or a run that Run now started. A run workspace is a
      * normal workspace, whose header links to its routine, and for a pull
      * request run to the pull request. It shows the chat of its run at the

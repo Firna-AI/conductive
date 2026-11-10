@@ -45,7 +45,7 @@ function flowLinks(state: RoutineState, routine: Routine) {
  * model, beside the Runs list. Desktop shows the runs in a column at the
  * right. A phone shows a saved routine in two tabs, Routine and Runs.
  * Every member sees the routine and its runs, and only its owner changes
- * it (decision 202). A suspended org shows them read-only to everyone.
+ * it (decision 502). A suspended org shows them read-only to everyone.
  */
 export function RoutineScreen(props: {
   state: RoutineState

@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-09, from branch `calummoore/routines-feature-brainstorm`, a new problem of the options check of decision 214 of `plans/routines.md`.
+- **Added:** 2026-11-09, from branch `calummoore/routines-feature-brainstorm`, a new problem of the options check of decision 514 of `plans/routines.md`.
 - **Location:** `docs/protocol/agent-tools.md`, "Create and list calls", and `worker/tools/create.ts:34`.
 - **Reason:** The routines plan does not change the agent tools, and the doc gap changes no behaviour.
 

@@ -110,7 +110,7 @@ function RunRow(props: RowProps) {
 
 /**
  * The runs of a routine, newest first. Each run opens its own workspace
- * (decision 201). `links` gives the screens of the workspaces that the
+ * (decision 501). `links` gives the screens of the workspaces that the
  * mockups draw. A boxed list has a full outline, for the page of a phone.
  */
 export function RunList(props: {

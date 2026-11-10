@@ -278,7 +278,7 @@ A decision number, such as decision 36, names the dated record of one
 decision. The plan of the change that made the decision keeps the record
 while that change is open. The pull request of that change keeps the
 record after the merge. The decisions of routines use the numbers from
-201, so that each number names one record.
+501, so that each number names one record.
 
 ## Protocol docs
 

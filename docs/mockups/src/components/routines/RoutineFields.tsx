@@ -115,7 +115,7 @@ export function RoutineFields(props: { routine: Routine; viewport: Viewport }) {
 
 /**
  * The same facts as another member reads them. Only the owner changes a
- * routine (decision 202).
+ * routine (decision 502).
  */
 export function RoutineFacts(props: { routine: Routine; schedules: boolean }) {
   const { routine } = props

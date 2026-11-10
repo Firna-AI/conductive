@@ -105,7 +105,7 @@ export function ScheduleControls(props: { trigger: ScheduleTrigger }) {
 /**
  * The field of a custom cron, in the time zone of the routine. A cron that
  * runs more than once an hour is refused, so its minute names one minute
- * (decision 203).
+ * (decision 503).
  */
 export function CronField(props: { cron: string; refused?: boolean }) {
   const { field } = useControlSizes()

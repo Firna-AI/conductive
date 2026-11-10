@@ -11,7 +11,7 @@ import styles from './PromptBox.module.css'
  * The prompt of a routine, with the model and the effort of its runs at
  * the bottom of the box, as in a composer. The owner edits both. Another
  * member reads them. The line under the box names whose logins the runs
- * use (decision 202).
+ * use (decision 502).
  */
 export function PromptBox(props: {
   prompt: string

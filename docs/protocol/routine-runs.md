@@ -10,9 +10,9 @@ number names a dated record, as
 
 ## A run is a workspace
 
-- Each run creates a new workspace (decision 201 A). The workspace gets the
+- Each run creates a new workspace (decision 501 A). The workspace gets the
   repository, the section, the model, and the effort of the routine.
-- A run workspace is a normal workspace (decision 204 A). It shows in the
+- A run workspace is a normal workspace (decision 504 A). It shows in the
   workspace list of its section, and it stays until someone archives it.
 - Every member can open a run workspace and send messages there, as in
   each workspace.
@@ -124,7 +124,7 @@ number names a dated record, as
 ## Failed runs
 
 - A run that fails a check or its first start keeps no workspace
-  (decision 212 B). Its row shows its cause, with the action that fixes it
+  (decision 512 B). Its row shows its cause, with the action that fixes it
   when one exists.
 - A failed first start removes the new workspace, as
   [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
@@ -134,19 +134,19 @@ number names a dated record, as
   [Messages](chat-and-events.md#messages) says.
 - The follow-up of decision 130 D will keep each workspace whose first
   start fails, in its error state with Try again. A run whose start fails
-  then keeps its workspace too (decision 209 F).
+  then keeps its workspace too (decision 509 F).
 - A run that fails a check stays a failed row, also after that follow-up.
-- Decision 209 F puts the retry of a failed run in its workspace. Run again
+- Decision 509 F puts the retry of a failed run in its workspace. Run again
   in the Runs list was rejected. An automatic retry, and an automatic start
   after a reconnect, were rejected, because they spend starts that nobody
   asked for.
-- Decision 212 B: routines do not wait for that follow-up. A kept workspace
+- Decision 512 B: routines do not wait for that follow-up. A kept workspace
   for the failed starts of runs alone was rejected, because the app would
   then have two rules for a failed first start.
 
 ## Turn off after failed runs
 
-- A routine turns off after three runs in a row fail (decision 213 B).
+- A routine turns off after three runs in a row fail (decision 513 B).
 - Each failed run counts: a failed check, a failed start, and a failed
   first turn. A failure that clears by itself counts too.
 - A run whose first turn finishes resets the count. A skipped run and a

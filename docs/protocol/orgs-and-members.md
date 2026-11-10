@@ -92,7 +92,7 @@ says.
 - Every member of the org sees all of its workspaces (decision 39).
 - Every member also sees all of the routines of the org and their runs.
   Only the owner of a routine changes it, as [Access](routines.md#access)
-  says (decision 202 B).
+  says (decision 502 B).
 - Every member can send messages in every workspace of the org. Each
   session runs on the agent login of its starter, as
   [Chat and events](chat-and-events.md#agents) says.
@@ -126,7 +126,7 @@ says.
   it.
 - Their routines in the org move to the member who gets the workspaces,
   turned off, as [When the owner leaves](routines.md#when-the-owner-leaves)
-  says (decision 208 E).
+  says (decision 508 E).
 - The last admin can leave only after they make another member an admin,
   or by deleting the org (decision 55). This also holds when the last
   admin deletes their account. For a leave and a change of role, only

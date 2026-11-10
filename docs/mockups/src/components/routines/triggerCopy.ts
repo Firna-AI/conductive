@@ -100,7 +100,7 @@ export function hasSchedule(triggers: readonly Trigger[]): boolean {
 /**
  * Run now shows on a routine with a schedule or with no trigger. A routine
  * whose triggers are all pull request triggers has none, because its runs
- * need a pull request (decision 210 C).
+ * need a pull request (decision 510 C).
  */
 export function offersRunNow(triggers: readonly Trigger[]): boolean {
   return triggers.length === 0 || hasSchedule(triggers)

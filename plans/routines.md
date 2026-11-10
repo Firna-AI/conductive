@@ -16,13 +16,13 @@ branches, notifications, or routines across several repositories. The
 design calls below give the reasons.
 
 The user answered every decision of this plan. On 9 November 2026, the
-user kept 203 B and 204 A after the options check changed their
-recommendations, and chose 206 C.
+user kept 503 B and 504 A after the options check changed their
+recommendations, and chose 506 C.
 
-The decisions of this plan take the numbers from 201. The decisions of
-`plans/boat-native-remote-workspaces.md` reached 146 on 9 November 2026,
-and that plan still adds decisions. A separate block keeps each number in
-the protocol docs the name of one record.
+The decisions of this plan take the numbers from 501. They first took
+201 to 214, but other plans on `main` used numbers up to 212 by
+10 November 2026, so the orchestrator moved them by 300 on that day. Each
+number in the protocol docs then names one record.
 
 Contract owners:
 
@@ -41,7 +41,7 @@ Contract owners:
 
 ## Decisions
 
-### 201. Choose what one routine run works in
+### 501. Choose what one routine run works in
 
 Added on 8 November 2026 from the routines brainstorm.
 
@@ -54,7 +54,7 @@ Added on 8 November 2026 from the routines brainstorm.
   agent starts on a first message. Both options share three assumptions:
   - A run works in a cloud computer. Decision 36 requires this.
   - A run acts as the routine's owner, as in Conductor and Claude.
-    Decision 202 decides who may change a routine.
+    Decision 502 decides who may change a routine.
   - A routine has one repository, as a workspace does. Its cloud computer
     still holds the org's other chosen repositories (decision 94).
 - **Problem:** No requirement says what a run works in, what starts it, or
@@ -99,7 +99,7 @@ Added on 8 November 2026 from the routines brainstorm.
   isolation, and no requirement covered routines.
 - **Chosen:** A, by the user on 8 November 2026.
 
-### 202. Choose who sees and edits a routine
+### 502. Choose who sees and edits a routine
 
 Added on 8 November 2026 from the routines brainstorm.
 
@@ -156,7 +156,7 @@ Added on 8 November 2026 from the routines brainstorm.
 - **Chosen:** B, by the user on 8 November 2026. The options check came
   after the choice and kept the same recommendation.
 
-### 203. Choose how often routines may start cloud computers
+### 503. Choose how often routines may start cloud computers
 
 Added on 8 November 2026 from the routines brainstorm.
 
@@ -221,7 +221,7 @@ Added on 8 November 2026 from the routines brainstorm.
 - **Chosen:** B, by the user on 8 November 2026. The user kept B on
   9 November 2026, after the options check recommended E.
 
-### 204. Choose where run workspaces show and how long they stay
+### 504. Choose where run workspaces show and how long they stay
 
 Added on 8 November 2026 from the routines brainstorm.
 
@@ -229,7 +229,7 @@ Added on 8 November 2026 from the routines brainstorm.
 - **Source:** Design.
 - **Category:** Docs or spec.
 - **Location:** None.
-- **Background:** Under decision 201 A, each run adds a workspace. A
+- **Background:** Under decision 501 A, each run adds a workspace. A
   stopped workspace keeps its disk, and the app restarts it near day 14 of
   each stop (decision 43). Archive deletes the cloud computer and keeps
   the chat read-only (decision 16). Conductor hides run workspaces from
@@ -278,8 +278,8 @@ Added on 8 November 2026 from the routines brainstorm.
 - **Previous examples:** Decision 43 rejected an archive near day 14,
   because it loses unpushed work. C, D, E, and F archive only when the
   check finds no such work.
-- **Related:** Decision 201. This decision applies only to decision
-  201 A. Decision 203 E would also count the restarts of kept run
+- **Related:** Decision 501. This decision applies only to decision
+  501 A. Decision 503 E would also count the restarts of kept run
   workspaces.
 - **Recommendation:** E, from the options check of 9 November 2026. The
   first recommendation was C. E keeps the normal list that the user
@@ -295,7 +295,7 @@ Added on 8 November 2026 from the routines brainstorm.
   options check recommended E. The restarts of kept run workspaces stay a
   known cost.
 
-### 205. Choose the branch of a pull request run
+### 505. Choose the branch of a pull request run
 
 Added on 8 November 2026 from the routines brainstorm.
 
@@ -343,8 +343,8 @@ Added on 8 November 2026 from the routines brainstorm.
 - **Wider fix:** None, because this decision sets one rule.
 - **Previous examples:** Claude's routines start a pull request run from
   its head commit, and they push to a new `claude/` branch.
-- **Related:** Decision 201. This decision applies only to decision
-  201 A. Decision 206 decides whose pull requests start a run.
+- **Related:** Decision 501. This decision applies only to decision
+  501 A. Decision 506 decides whose pull requests start a run.
 - **Recommendation:** D, from the options check of 9 November 2026. The
   first recommendation was A. D keeps A's rule of one workspace for each
   branch, and it tells the agent and the members which pull request
@@ -355,7 +355,7 @@ Added on 8 November 2026 from the routines brainstorm.
   two links to A, so the design takes them as an agent call of
   9 November 2026. E stays out.
 
-### 206. Choose whose pull requests may start a run
+### 506. Choose whose pull requests may start a run
 
 Added on 9 November 2026 from a new problem of the options check.
 
@@ -416,7 +416,7 @@ Added on 9 November 2026 from a new problem of the options check.
     only, in place of the owner's user token. A run that foreign text
     controls then reaches only that repository on GitHub. The run's pushes
     show as the app, so they start no new run. The agent login and the env
-    vars stay in reach. It applies decision 202 D to pull request runs,
+    vars stay in reach. It applies decision 502 D to pull request runs,
     and it is an exception to decision 50. Effort: Medium.
 - **Left out:**
   - Only pull requests of the routine's owner. B is better on every
@@ -441,8 +441,8 @@ Added on 9 November 2026 from a new problem of the options check.
   a terminal can read the logins of a running turn, so the members of one
   org trust each other. The webhook route already drops pull requests from
   forks.
-- **Related:** Decision 202 D and E would narrow what a run holds, and G
-  applies 202 D to pull request runs. Decision 205 starts the run on the
+- **Related:** Decision 502 D and E would narrow what a run holds, and G
+  applies 502 D to pull request runs. Decision 505 starts the run on the
   code of the pull request.
 - **Recommendation:** B. It keeps the trust line that decisions 105 and
   121 already draw around the members of one org, at a small cost. C, E, or
@@ -454,7 +454,7 @@ Added on 9 November 2026 from a new problem of the options check.
 - **Chosen:** C, by the user on 9 November 2026. The design section "Pull
   request runs" gives the rule and the filter.
 
-### 207. Choose how a pull request run shows and sends its own work
+### 507. Choose how a pull request run shows and sends its own work
 
 Added on 9 November 2026 from the mockups of Milestone 1.
 
@@ -463,9 +463,9 @@ Added on 9 November 2026 from the mockups of Milestone 1.
 - **Category:** Docs or spec.
 - **Location:** The mockup `app/routines/run-workspace`.
 - **Background:** A pull request run starts its own branch at the head
-  commit of the pull request (decision 205 A). Changes and the pull
+  commit of the pull request (decision 505 A). Changes and the pull
   request bar compare each branch with the default branch. Option E of
-  decision 205, which compares with the head commit, stayed out.
+  decision 505, which compares with the head commit, stayed out.
 - **Problem:** The run of #482 shows the commits of #482 in Changes, as if
   the run made them. The bar also offers "Create pull request" for a
   branch that holds only those commits.
@@ -512,7 +512,7 @@ Added on 9 November 2026 from the mockups of Milestone 1.
     pull request bar, and "Create pull request" use the base branch. It is
     D without the stored start commit. Effort: Medium.
 - **Left out:**
-  - Work on the pull request's own branch, option B of decision 205. The
+  - Work on the pull request's own branch, option B of decision 505. The
     user chose A, so that no two workspaces share a branch.
   - A bar that shows the pull request of the event itself. The run's own
     work then gets no "Create pull request", and the header already links
@@ -521,7 +521,7 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   workspace, so each later kind of workspace that starts from another
   branch shows and sends only its own work.
 - **Previous examples:** None found.
-- **Related:** Decision 205 E holds the comparison part of C. Changes uses
+- **Related:** Decision 505 E holds the comparison part of C. Changes uses
   no merge base today (`runner/src/git-index.ts:161`), so a run of a pull
   request behind the default branch shows newer default-branch work as
   reverted. D's start commit removes that case too.
@@ -536,7 +536,7 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   and the starts that keep the base branch.
 
 
-### 208. Choose how the org keeps a routine whose owner left
+### 508. Choose how the org keeps a routine whose owner left
 
 Added on 9 November 2026 from the mockups of Milestone 1.
 
@@ -571,8 +571,8 @@ Added on 9 November 2026 from the mockups of Milestone 1.
 - **Left out:**
   - Runs that go on with the logins of the member who left. They break
     the rule that the owner must be a member of the org.
-  - An org routine on an org login, decision 202 E. It breaks the user's
-    choice of decision 202 B.
+  - An org routine on an org login, decision 502 E. It breaks the user's
+    choice of decision 502 B.
 - **Wider fix:** None, because this decision adds one rule or action.
 - **Previous examples:** Decision 39 moves the workspaces of a member who
   leaves to an admin.
@@ -584,7 +584,7 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   requirement covered.
 - **Chosen:** E, by the user on 9 November 2026.
 
-### 209. Choose how the owner runs a failed event again
+### 509. Choose how the owner runs a failed event again
 
 Added on 9 November 2026 from the mockups of Milestone 1.
 
@@ -611,9 +611,9 @@ Added on 9 November 2026 from the mockups of Milestone 1.
     start of the shared daily starts. Effort: Medium.
   - **D.** Added by the options check: Run again, for the owner, on a
     failed run. A pull request run starts again for the same pull request
-    at its current head, through the start path of decision 210 B, with
-    the fork rule and the author rule of decision 206 C. A schedule run
-    works as Run now. Effort: Small with decision 210 B, Medium alone.
+    at its current head, through the start path of decision 510 B, with
+    the fork rule and the author rule of decision 506 C. A schedule run
+    works as Run now. Effort: Small with decision 510 B, Medium alone.
   - **E.** Added by the options check: after the owner connects the agent
     login or GitHub again, the app starts the newest failed run of each
     pull request and each schedule of the last 24 hours. It spends starts
@@ -626,7 +626,7 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   as a workspace with Try again.
 - **Recommendation:** D, from the options check of 9 November 2026. The
   first recommendation was B. A review needs the pull request as it is
-  now, and D shares one start path with decision 210 B.
+  now, and D shares one start path with decision 510 B.
 - **Action:** asked the user, because B, C, D, and E add behaviour that
   no requirement covered.
 - **Chosen:** F, an option of the user on 9 November 2026: "can we create
@@ -636,10 +636,10 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   decision 130 says for every workspace. A run whose owner has no agent
   login keeps its workspace with its first message, its cause, and Try
   again. The create refuses such a first message before any cloud
-  computer starts, so that run spends no start. Decisions 212 and 213 ask
+  computer starts, so that run spends no start. Decisions 512 and 513 ask
   when this comes and how repeated failures stop.
 
-### 210. Choose how the owner tests a pull request routine
+### 510. Choose how the owner tests a pull request routine
 
 Added on 9 November 2026 from the mockups of Milestone 1.
 
@@ -663,20 +663,20 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   - **B.** Run now offers a pull request number and an event when the
     routine has a pull request trigger. The run then starts from that pull
     request, as a pull request run of that event does. It applies the fork
-    rule and the author rule of decision 206 C. Effort: Medium.
+    rule and the author rule of decision 506 C. Effort: Medium.
   - **C.** Hide Run now on a routine that has only pull request triggers.
     The owner then cannot test it. The options check found that it fails
     the goal. Effort: Small.
   - **D.** Added by the options check: Run again, for the owner, on any
     pull request run of the Runs list. It starts a run for that pull
     request at its current head. A first test then needs one real event,
-    such as a draft pull request. Effort: Small with decision 209 D,
+    such as a draft pull request. Effort: Small with decision 509 D,
     Medium alone.
 - **Left out:** A preview of the first message for a chosen pull request.
   It shows the text, not the work of the agent.
 - **Wider fix:** None, because this decision changes one action.
 - **Previous examples:** None found.
-- **Related:** Decision 209 D would reuse the start of B.
+- **Related:** Decision 509 D would reuse the start of B.
 - **Recommendation:** B. The owner tests the real case before the first
   event. The options check kept B.
 - **Action:** asked the user, because B and D add behaviour that no
@@ -686,7 +686,7 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   triggers. The follow-up item `run-now-for-pull-request-routines.md`
   holds B.
 
-### 211. Choose whether a routine may save without a prompt
+### 511. Choose whether a routine may save without a prompt
 
 Added on 9 November 2026 from the mockups of Milestone 1.
 
@@ -716,15 +716,15 @@ Added on 9 November 2026 from the mockups of Milestone 1.
   user's rules keep each new refusal for the user.
 - **Chosen:** B, by the user on 9 November 2026.
 
-### 212. Choose when a failed run keeps its workspace
+### 512. Choose when a failed run keeps its workspace
 
-Added on 9 November 2026 from the user's choice of decision 209 F.
+Added on 9 November 2026 from the user's choice of decision 509 F.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Process.
 - **Location:** None.
-- **Background:** Decision 209 F keeps the workspace of a failed run, with
+- **Background:** Decision 509 F keeps the workspace of a failed run, with
   Try again inside it. A failed first start removes its workspace today.
   Option D of decision 130, which the user chose on 8 November 2026 as a
   later follow-up, keeps that workspace in its error state for every
@@ -738,7 +738,7 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
 - **Root question:** When, compared with the launch of routines, does
   every failed run keep its workspace with a retry in it, whatever made it
   fail? The options check of 9 November 2026 wrote this question. Decision
-  209 F also covers a run whose first message the create refuses, which
+  509 F also covers a run whose first message the create refuses, which
   option D of decision 130 does not change.
 - **Options:**
   - **A.** In this plan. A new milestone builds option D of decision 130
@@ -768,7 +768,7 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
     no delay of the launch.
 - **Left out:**
   - Failed rows forever, with no workspace. It breaks the user's choice of
-    decision 209 F.
+    decision 509 F.
   - Archive the workspace of a failed run, and retry in a new one. The
     archived chat is read-only, so the retry is not in that workspace.
 - **Wider fix:** F, from the options check. One rule then covers every
@@ -776,10 +776,10 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
   wait.
 - **Previous examples:** Decision 130 chose A now and D later. Decision
   210 chose C now and B later.
-- **Related:** Decision 213 matters once failed runs keep workspaces.
+- **Related:** Decision 513 matters once failed runs keep workspaces.
 - **Recommendation:** D, from the options check of 9 November 2026. The
   first recommendation was B. D ships routines as soon as B does, and the
-  follow-up then delivers all of decision 209 F, also for a run without an
+  follow-up then delivers all of decision 509 F, also for a run without an
   agent login. F best protects the codebase.
 - **Action:** asked the user, because the options trade the launch of
   routines against the behaviour that the user chose.
@@ -790,18 +790,18 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
   create checks refuse, such as a run without an agent login, stays a
   failed row, because B does not widen the follow-up.
 
-### 213. Choose how a routine stops after repeated failed runs
+### 513. Choose how a routine stops after repeated failed runs
 
-Added on 9 November 2026 from the user's choice of decision 209 F.
+Added on 9 November 2026 from the user's choice of decision 509 F.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
 - **Location:** None.
-- **Background:** Under decision 209 F, each failed run keeps a
+- **Background:** Under decision 509 F, each failed run keeps a
   workspace, and its cloud computer starts before its first turn fails. A
   cause such as a removed agent login stays until the owner acts.
-  Decision 204 A keeps run workspaces as normal workspaces.
+  Decision 504 A keeps run workspaces as normal workspaces.
 - **Problem:** Nothing stops a routine whose runs all fail for one cause
   that only the owner can fix.
 - **Impact if no action:** An hourly routine with a lost login adds 24
@@ -823,7 +823,7 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
   - **D.** Keep the check before the create for a missing agent login and
     expired GitHub access. Such a run creates no workspace and fails with
     a link that fixes the cause. Only a failed start keeps its workspace.
-    It narrows decision 209 F. Effort: Small.
+    It narrows decision 509 F. Effort: Small.
   - **E.** Added by the options check: as B, but a failure that clears by
     itself does not count, such as a rate limit or a cloud computer that
     the provider still prepared. A failed first turn counts, through the
@@ -832,8 +832,8 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
 - **Left out:**
   - A wait that grows after each failed run, up to one day. A forgotten
     routine still adds a workspace each day.
-  - A daily cap of routine starts, option E of decision 203. It breaks the
-    user's choice of decision 203 B.
+  - A daily cap of routine starts, option E of decision 503. It breaks the
+    user's choice of decision 503 B.
   - A notice to the owner alone. The cost goes on while the owner is away,
     and a notice can join any option later.
 - **Wider fix:** E, from the options check. It counts each cause that
@@ -842,7 +842,7 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
 - **Previous examples:** Claude's cloud routines skip runs while GitHub
   access is missing, start again by themselves after a reconnect, and turn
   off after 72 hours.
-- **Related:** Decision 212. Its option D keeps the checks before the
+- **Related:** Decision 512. Its option D keeps the checks before the
   start, so a failed check costs no start, and this rule then counts the
   other causes. The design call "A failed run shows its cause, and the
   routine stays on" changes when B or E is chosen.
@@ -851,11 +851,11 @@ Added on 9 November 2026 from the user's choice of decision 209 F.
   that the provider refuses, and it does not stop a routine for a passing
   failure.
 - **Action:** asked the user, because B and C add a rule that stops runs,
-  and D narrows the user's choice of decision 209 F.
+  and D narrows the user's choice of decision 509 F.
 - **Chosen:** B, by the user on 9 November 2026. Every failed run counts,
   also a failed first turn and a failure that clears by itself.
 
-### 214. Choose whether a run's agent may ask for a command on a Mac
+### 514. Choose whether a run's agent may ask for a command on a Mac
 
 Added on 9 November 2026 from the docs of Milestone 2.
 
@@ -870,7 +870,7 @@ Added on 9 November 2026 from the docs of Milestone 2.
   - **Always allow:** a choice that a person saves in the Mac app. A later
     request with the same command text then runs without a question.
 - **Background:** The owner of a routine is the sender of the first
-  message of each run (decision 201 A). A Mac command request goes to the
+  message of each run (decision 501 A). A Mac command request goes to the
   Mac of the sender of the turn (decision 62). The agent of a pull request
   run reads text that other GitHub accounts write.
 - **Problem:** Text in a pull request can make the agent of a run ask for a
@@ -951,7 +951,7 @@ number names the user's choice. The user can override any part of it.
 - Add trigger offers Hourly, Daily, Weekdays, Weekly, and Custom under
   "Scheduled", and PR opened, PR pushed, and PR merged under "GitHub".
 - A pull request trigger can have an author filter with an "is" list and
-  an "is not" list of GitHub accounts (decision 206).
+  an "is not" list of GitHub accounts (decision 506).
 - Hourly asks for a minute. Daily and Weekdays ask for a time. Weekly asks
   for a day and a time. Custom asks for a cron expression. Each routine
   has one time zone, which the page shows and the owner can change.
@@ -959,7 +959,7 @@ number names the user's choice. The user can override any part of it.
   the form. Each run shows its time, its trigger, its state, and a link
   to its workspace. A failed run shows its cause.
 - A run workspace is a normal workspace in the routine's section
-  (decision 204). Its header names the routine and links to it.
+  (decision 504). Its header names the routine and links to it.
 
 ### Data
 
@@ -993,7 +993,7 @@ number names the user's choice. The user can override any part of it.
     org, sender, and message ID already does.
 - The leave batch of `worker/members/member-data.ts`, which moves the
   workspaces of a member who leaves, also moves that member's routines in
-  that org to the same new owner (decision 208 E). Each moved routine
+  that org to the same new owner (decision 508 E). Each moved routine
   turns off with the reason `owner_left`, and it keeps the name of the
   member who left for the routine page.
 - `workspace_creation_attempts` gets nullable `error_code` and
@@ -1007,7 +1007,7 @@ number names the user's choice. The user can override any part of it.
   branch of the repository. Reason: a resume and the restart near day 14
   pass the default branch today, at `worker/lifecycle/workspace-resume.ts:46`
   and `worker/lifecycle/disk-retention.ts:113`, so a base that only the
-  create knows gets lost at the next start (decision 207 G).
+  create knows gets lost at the next start (decision 507 G).
 - The org purge needs no change. The cascades from `orgs` remove the
   routines and their runs, and no new key points to `org_members`.
 - Each migration takes a free minute in the range of its milestone. The
@@ -1036,10 +1036,10 @@ number names the user's choice. The user can override any part of it.
      its own start.
   4. It stores the workspace ID. When `createWorkspace` throws, it stores
      the failure code and message.
-- A failed run keeps no workspace at launch (decision 212 B). When the
+- A failed run keeps no workspace at launch (decision 512 B). When the
   follow-up of decision 130 D lands, a run whose start fails keeps its
-  workspace in its error state with Try again (decision 209 F).
-- A routine turns off after three runs in a row fail (decision 213 B).
+  workspace in its error state with Try again (decision 509 F).
+- A routine turns off after three runs in a row fail (decision 513 B).
   - A run counts as failed when the run row failed, when its start
     failed, or when its first turn failed. A run whose first turn
     finished resets the count. A skipped run and a queued run do not
@@ -1063,7 +1063,7 @@ number names the user's choice. The user can override any part of it.
     A failed first turn shows the run as `failed` with its cause, not as
     unread or ready. Reason: a failed turn counts as output for the
     workspace state today, so the run would hide the failure. The options
-    check of decisions 212 and 213 found this.
+    check of decisions 512 and 513 found this.
 
 - Run now posts a run with a request ID from the page. The route waits for
   the run starter and returns the run.
@@ -1097,7 +1097,7 @@ number names the user's choice. The user can override any part of it.
   time through `Intl`, and it runs in a Worker. A preset is stored as its
   cron expression, so one rule covers every schedule.
 - A custom cron needs five fields, and its minute field must name one
-  minute. That rule is the "at most once an hour" of decision 203. Each
+  minute. That rule is the "at most once an hour" of decision 503. Each
   preset meets it already.
 - A save, an Active change, and a time zone change compute
   `next_run_at` again. An inactive routine, or one without a schedule,
@@ -1126,14 +1126,14 @@ number names the user's choice. The user can override any part of it.
   of the same routine for the same pull request still starts or works.
   Reason: a run pushes with the owner's token. When its prompt tells it to
   push to the pull request that started it, that push must not start the
-  routine again. The options check of decision 206 found this loop.
+  routine again. The options check of decision 506 found this loop.
 - The callback stores each run with its delivery key, and answers GitHub
   at once. It starts the runs in the background of the request. The
   minute scan starts each run that the background did not start. Reason:
   GitHub waits only 10 seconds for an answer.
 - The run of an opened or pushed pull request creates its branch from the
-  head commit of the event (decision 205). Its base branch is the head
-  branch of the pull request (decision 207 G). The fetch phase fetches
+  head commit of the event (decision 505). Its base branch is the head
+  branch of the pull request (decision 507 G). The fetch phase fetches
   that branch into its remote-tracking ref `refs/remotes/origin/<head
   branch>`, as the start fetches the default branch today. The branch
   phase creates the branch at the head commit of the event. When that
@@ -1161,8 +1161,8 @@ number names the user's choice. The user can override any part of it.
     the pull request merges into, so that "base" names one branch only.
 - The run row in the Runs list and the header of a pull request run link
   to the pull request, from the facts of the run. This adds option D of
-  decision 205 to the chosen A.
-- The author rule of decision 206 C decides which events start a run.
+  decision 505 to the chosen A.
+- The author rule of decision 506 C decides which events start a run.
   - Each pull request trigger can have an author filter with an "is"
     list, an "is not" list, or both. Each list holds GitHub accounts.
   - An event starts a run only when the author of its pull request passes
@@ -1190,21 +1190,21 @@ number names the user's choice. The user can override any part of it.
 
 ### Access
 
-- Every member sees every routine of the org and its runs (decision 202).
+- Every member sees every routine of the org and its runs (decision 502).
 - Every member who can create a workspace can create a routine. The
   creator is its owner. The owner changes only when the owner leaves the
   org: the routine then moves, turned off, to the admin who gets the
-  workspaces of that member (decision 208 E).
+  workspaces of that member (decision 508 E).
 - Only the owner changes a routine, turns it on, and uses Run now. Run now
   does not show on a routine whose triggers are all pull request triggers
-  (decision 210 C).
+  (decision 510 C).
 - Save stays off until the prompt has text, and the Worker refuses a
-  routine whose prompt is empty or holds only spaces (decision 211 B).
+  routine whose prompt is empty or holds only spaces (decision 511 B).
 - An admin can turn a routine off and delete it. The owner can also
   delete it.
 - The org gate already refuses each write in a suspended org.
 - A deleted routine keeps its run workspaces, because they are normal
-  workspaces (decision 204).
+  workspaces (decision 504).
 
 ### Web app
 
@@ -1242,7 +1242,7 @@ answered the decisions of that report and changed none of the calls.
   one, and it needs a secret address.
 - The first version has no filters for label or base branch. Reason:
   Conductor added them nine days after its first routines. The author
-  filter came in with the user's choice of decision 206 C.
+  filter came in with the user's choice of decision 506 C.
 - Pull requests from forks never start a run. Reason: their code is
   untrusted, and a run holds the owner's GitHub access and the org's env
   vars.
@@ -1253,10 +1253,10 @@ answered the decisions of that report and changed none of the calls.
 - A late schedule starts one run, not one for each missed time.
 - The first message of a run is the prompt and the trigger facts.
 - A failed run shows its cause. The routine stays on until three runs in
-  a row fail, as decision 213 B later chose.
+  a row fail, as decision 513 B later chose.
 
 - A suspended owner or org gets no runs. When the owner leaves the org,
-  the routine turns off. Decision 208 E later moved it to an admin too.
+  the routine turns off. Decision 508 E later moved it to an admin too.
 - A Routines link goes in the sidebar, as in Conductor. The mockups come
   before any code.
 - A new protocol doc, `docs/protocol/routines.md`, holds the requirements.
@@ -1271,7 +1271,7 @@ These calls of 9 November 2026 come from the code searches of this plan:
   `worker/workspace-lifecycle.ts`, which have 298 and 296 of their 300
   lines. It also needs hooks for org deletion and Restore. The scan reads
   the org and owner state at each run, so it needs no hooks. Decision
-  201 A named Durable Object alarms in its text, but the user's choice
+  501 A named Durable Object alarms in its text, but the user's choice
   covers a new workspace for each run, not the timer.
 - A run starts its session on the owner's own login, so the share setting
   of decision 116 does not block it. A later message of another member in
@@ -1280,7 +1280,7 @@ These calls of 9 November 2026 come from the code searches of this plan:
 - Run now works while the routine is off. Reason: the owner can test a
   routine before its triggers start runs.
 - A routine can have no trigger. Run now still works, because decision
-  210 C hides Run now only when every trigger is a pull request trigger.
+  510 C hides Run now only when every trigger is a pull request trigger.
 - An empty name saves as "Untitled routine", as in Conductor.
 - The owner's GitHub connection and agent login are checked before each
   create, so a run fails before it spends a start.
@@ -1400,14 +1400,14 @@ variant, and one flow. Each page holds five screens or fewer.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages at both
       sizes, in light and dark.
 - [x] Update the design and the TODOs of this plan for each problem that
-      the mockups show. The mockups raised decisions 207 to 213, which the
+      the mockups show. The mockups raised decisions 507 to 513, which the
       user answered on 9 November 2026, and the design calls of the
       mockups. The mockups draw each answer.
-- [x] Draw the answers: the base branch of a pull request run (207 G), a
-      routine that moved to an admin (208 E), no Run now on a routine with
-      only pull request triggers (210 C), Save off without a prompt
-      (211 B), and a routine that turned off after three failed runs
-      under `app/routines/routine/turned-off` (213 B).
+- [x] Draw the answers: the base branch of a pull request run (507 G), a
+      routine that moved to an admin (508 E), no Run now on a routine with
+      only pull request triggers (510 C), Save off without a prompt
+      (511 B), and a routine that turned off after three failed runs
+      under `app/routines/routine/turned-off` (513 B).
 
 Milestone completed on 9 November 2026. A UI implementor subagent drew
 the screens in seven rounds. The orchestrator re-ran the mockup, lint,
@@ -1429,11 +1429,11 @@ the code milestones can follow them.
 
 - [x] Write `docs/protocol/routines.md`: routines, triggers, runs, the run
       text, access, the schedule limit, a member who leaves, suspensions,
-      and decisions 201 to 213 with their rejected options. Keep it near
+      and decisions 501 to 513 with their rejected options. Keep it near
       250 lines, and split it into linked pages if it passes that. State
-      the author rule and the author filter of decision 206 C, the base
-      branch of decision 207 G, and the turn-off after three failed runs
-      of decision 213 B.
+      the author rule and the author filter of decision 506 C, the base
+      branch of decision 507 G, and the turn-off after three failed runs
+      of decision 513 B.
 
 - [x] Record the risks that stay open in `docs/protocol/routines.md`, as
       `access-and-security.md` does for decisions 105 and 121. Comments,
@@ -1441,19 +1441,19 @@ the code milestones can follow them.
       a pull request run, and the run holds the owner's logins and the
       org's env vars.
 - [x] Update `docs/protocol/workspaces-and-sandboxes.md`: the branch of a
-      pull request run and its start step (decision 205), and the base
+      pull request run and its start step (decision 505), and the base
       branch of each workspace, which Changes compares with from the merge
-      base (decision 207 G).
+      base (decision 507 G).
 - [x] Update `docs/protocol/github-banner.md`: the pull request webhooks
       also start routine runs, and the bar names the base branch of the
-      workspace and opens "Create pull request" into it (decision 207 G).
+      workspace and opens "Create pull request" into it (decision 507 G).
 - [x] Read the Terms in `src/marketing/terms.ts` and the Privacy notice in
       `src/marketing/privacy.ts` in full. Update each sentence that
       restates a fact that this milestone changes, such as how agents run
       on a member's logins.
 - [x] Update `docs/protocol/orgs-and-members.md` and
       `docs/protocol/operator-actions.md`: the routines of a member who
-      leaves move, turned off, with the workspaces (decision 208 E), and a
+      leaves move, turned off, with the workspaces (decision 508 E), and a
       suspended user or org gets no runs.
 
 - [x] Update `docs/architecture.md`: the terms, the minute Cron Trigger,
@@ -1492,7 +1492,7 @@ yet.
   - [x] Test a save with a member, a bot, and an unknown login.
 - [x] Serve the list, read, create, update, and delete routes behind the
       app gate. Check the repository, the section, and the model as New
-      workspace does. Apply the access rules of decision 202.
+      workspace does. Apply the access rules of decision 502.
   - [x] Test that a member reads, that only the owner changes a routine
         and turns it on, and that an admin turns it off and deletes it.
   - [x] Test that a leave moves that owner's routines in that org, turned
@@ -1500,7 +1500,7 @@ yet.
   - [x] Test that a save with an empty prompt, or a prompt of only
         spaces, gets the refusal.
 - [x] Add the routines of the member who leaves to the leave batch of
-      `worker/members/member-data.ts` (decision 208 E).
+      `worker/members/member-data.ts` (decision 508 E).
 - [x] Move the routines of a deleted section to General, and turn off each
       routine whose repository stops being a chosen repository of the org,
       with its reason.
@@ -1538,7 +1538,7 @@ Start a run as a new workspace, and let the owner start one by hand.
       deleted.
 - [x] Count the failed runs in a row of each routine, from the run row,
       the start, and the first turn, and turn the routine off at three
-      (decision 213 B).
+      (decision 513 B).
   - [x] Test that three failed runs in a row turn the routine off with its
         reason, that a finished first turn resets the count, and that a
         skipped run does not count.
@@ -1613,7 +1613,7 @@ Start runs from pull request events, on a branch from the pull request.
 - [x] Add the `pullRequest` callback with its own error boundary. Find the
       matching routines, skip a routine with a run workspace on the head
       branch, apply the author rule and the author filter of decision
-      206 C, store each run or skipped run with its delivery key, and
+      506 C, store each run or skipped run with its delivery key, and
       start the runs in the background.
   - [x] Test with signed recorded payloads, in a new test file, that each
         of the three events starts a run.

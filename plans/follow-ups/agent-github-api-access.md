@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-09, from branch `calummoore/routines-feature-brainstorm`, a new problem of the options check of decisions 207 to 211 of the routines plan.
+- **Added:** 2026-11-09, from branch `calummoore/routines-feature-brainstorm`, a new problem of the options check of decisions 507 to 511 of the routines plan.
 - **Location:** None.
 - **Reason:** The change needs the user's decision on a rule of `docs/protocol/access-and-security.md`, and the routines plan does not change GitHub access.
 

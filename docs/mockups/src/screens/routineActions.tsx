@@ -25,11 +25,11 @@ const deleteButton = (
 
 /**
  * The actions of the routine page, in the header on desktop and at the
- * bottom of a phone (decision 202). The owner saves, uses Run now, and
+ * bottom of a phone (decision 502). The owner saves, uses Run now, and
  * deletes, and a new routine has only Save. An admin turns a routine off
  * and deletes it. Every other member has none. Run now works while the
  * routine is off, and also without a trigger. It does not show on a
- * routine whose triggers are all pull request triggers (decision 210 C).
+ * routine whose triggers are all pull request triggers (decision 510 C).
  * With no action, the page has no bar of actions.
  */
 export function routineActions(props: {

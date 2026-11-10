@@ -62,7 +62,7 @@ export const ownerRoutine: RoutineState = {
 }
 
 /**
- * What the person signed in may do with a routine (decision 202): the
+ * What the person signed in may do with a routine (decision 502): the
  * owner changes it, turns it on, and uses Run now. An admin turns it off
  * and deletes it. Every other member reads it.
  */
@@ -81,7 +81,7 @@ export function accessOf(state: RoutineState, routine: Routine): RoutineAccess {
 
 /**
  * Whether Save has changes to save, or a value that the form refuses: a
- * prompt without text (decision 211 B), or a cron that runs more than once
+ * prompt without text (decision 511 B), or a cron that runs more than once
  * an hour.
  */
 export type SaveState = 'unchanged' | 'changed' | 'refused'

@@ -9,7 +9,7 @@ import { ScreenLink } from '../common/ScreenLink'
 /**
  * The owner, or an admin, confirms Delete, because a deleted routine cannot
  * come back. Its run workspaces stay, because they are normal workspaces
- * (decision 204 A). Delete routine opens the Routines list.
+ * (decision 504 A). Delete routine opens the Routines list.
  */
 export function DeleteRoutineDialog(props: {
   routine: Routine

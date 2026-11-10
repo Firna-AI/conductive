@@ -55,7 +55,7 @@ export type Workspace = {
    * The branch that its work goes to. Changes and each diff compare with
    * it from the merge base, and the pull request bar names it. Without
    * one, the default branch of the repository applies. A pull request run
-   * gets the head branch of its pull request (decision 207 G).
+   * gets the head branch of its pull request (decision 507 G).
    */
   baseBranch?: string
 }

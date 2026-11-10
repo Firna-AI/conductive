@@ -13,7 +13,7 @@ says.
 ## The base branch of a workspace
 
 - Each workspace has a base branch, the branch that its work targets
-  (decision 207 G):
+  (decision 507 G):
   - A workspace that a person or an agent creates has the default branch of
     its repository. The run of a schedule or of Run now has it too.
   - The run of an opened or pushed pull request has the head branch of that
@@ -50,7 +50,7 @@ says.
 ## The branch of a pull request run
 
 - The run of an opened or pushed pull request creates its branch at the
-  head commit of the event (decision 205 A). When that commit is missing,
+  head commit of the event (decision 505 A). When that commit is missing,
   the branch starts at the newest head of the pull request.
 - The run of a merged pull request creates its branch from the base branch
   of the pull request.
