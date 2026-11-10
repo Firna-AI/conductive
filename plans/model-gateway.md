@@ -707,10 +707,14 @@ more approaches of each call.
   for decision 11 K. In profile mode the client sends the turn token of
   an API-key login as a bearer token, with the OAuth beta. On the Claude
   route the gateway accepts that header for an API-key login, and keeps
-  the signed-prefix check of D35. It sends the real key in `x-api-key`.
-  It removes each `anthropic-beta` value that native API-key mode does
-  not send, as Milestone 4a lists. Reason: the upstream request then
-  keeps the shape of a native API-key request.
+  the signed-prefix check of D35. It sends the real key in `x-api-key`,
+  and it removes the `oauth-2025-04-20` value from `anthropic-beta`.
+  It keeps the other values. Milestone 4a found two more profile-only
+  values, `prompt-caching-scope-2026-01-05` and
+  `cache-diagnosis-2026-04-07`. The body uses their features: a global
+  cache scope and a `diagnostics` field. The gateway passes the body
+  unchanged, so these values stay. Reason: the OAuth value names a login
+  mode that an API key does not use, and no body field needs it.
 
 ## Milestone 1: Documentation and protocol
 
@@ -879,24 +883,25 @@ wire types. Keep scripts and proof under `.context/model-gateway/`.
       hook forms, and MCP servers with fake keys and local fake upstreams.
 - [x] Return the mechanism, its proof, and any requirement exception it
       would need. Select no such exception without Cal's answer.
-- [ ] Profile proof for decision 11 K, with the layout of D38, the pinned
+- [x] Profile proof for decision 11 K, with the layout of D38, the pinned
       client, fake upstreams, fake keys, and a loopback-only network:
       normal and background commands, shell-form and exec-form hooks, and
       MCP servers from `.mcp.json` and from the SDK options get no gateway
       address and no turn token. A child with its own key reaches its own
       destination.
-- [ ] Same setup: record each request header name, the `anthropic-beta`
+- [x] Same setup: record each request header name, the `anthropic-beta`
       values, and the user agent in profile mode with the token prefix of
       each login kind, beside native API-key and subscription mode. List
       the values that only profile mode sends (D40), and the markers that
       a keyless request of `@anthropic-ai/sdk` 1.6.0 lacks (D39). Record
       the model that the client picks for background work in each mode.
-- [ ] Same setup: two sessions at once, with two profile names in one
+- [x] Same setup: two sessions at once, with two profile names in one
       config folder, each send only their own token.
 
 Evidence: `.context/model-gateway/reports/m4a-report.md`,
 `m4a-unix-report.md`, `c-restore-report.md`, and
-`profile-probe/report.md`. Cal chose K for gateway decision 11.
+`profile-probe/report.md`, and `m4a-profile-final-report.md`. Cal chose K
+for gateway decision 11.
 
 ## Milestone 5: Login docs for the gateway
 
@@ -1008,8 +1013,8 @@ Milestone 7, so that API-key turns work at each merge.
 
 - [ ] Accept the turn token of an API-key login as a bearer token on the
       Claude route, and keep the signed-prefix check (D35, D40). Send the
-      real key in `x-api-key`. Remove the `anthropic-beta` values that
-      Milestone 4a lists for profile mode only.
+      real key in `x-api-key`. Remove only the `oauth-2025-04-20` value
+      of `anthropic-beta` for an API-key login.
 - [ ] Refuse a request without the agent markers that Milestone 4a names
       (D39), with no turn check and no upstream call. Answer in the
       Anthropic error shape with a stable code.
