@@ -1521,15 +1521,34 @@ Depends on: 10d
 - [x] Run bounded affected tests, types, and scoped checks. Prove and
       repeat any materially changed asynchronous regression. Keep the
       complete final gate in Milestone 11.
-- [ ] Audit the exact two-parent merge and every resolution. Commit and
+- [x] Audit the exact two-parent merge and every resolution. Commit and
       push the result for the final source and plan record.
 
 The previous pushed source has no CI run because this newer main creates
 confirmed PR conflicts. This integration is required for final CI.
 
+## Milestone 10f: Session transcript base integration
+
+Depends on: 10e
+
+- [ ] Integrate captured main `5d56546ceba68d6e19c3a673df1e18460f0164dc`.
+      Preserve transcript copy, shared transcript formatting, clipboard
+      behavior, and the current app and mockup session menu.
+- [ ] Keep Continue notes and branch context through the moved transcript
+      code. Preserve the shared started-turn rule, queued messages, Files
+      ownership, all actions, and current Archive/Restore behavior.
+- [ ] Resolve and audit all current source and document combinations.
+      Keep current public, legal, protocol, and mockup facts aligned.
+- [ ] Run bounded affected checks and any necessary regression proof and
+      ten runs. Audit the two-parent merge, commit, and push the final
+      source with the completed plan record and deletion.
+
+The prior pushed merge has no CI because the transcript change creates
+confirmed base conflicts before CI can start.
+
 ## Milestone 11: Final record and pull request completion
 
-Depends on: 10, 10a, 10b, 10c, 10d, and 10e
+Depends on: 10, 10a, 10b, 10c, 10d, 10e, and 10f
 
 - [ ] Record all checked outcomes and follow-ups. Preserve each dated
       design call and the current test-cost record in the PR description.
