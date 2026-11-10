@@ -65,6 +65,18 @@ function problemWords(problem: FeedbackProblem): {
   }
 }
 
+/** The most lines that the message box shows before its text scrolls. */
+const maxLines = 12
+
+/**
+ * The lines that the message box shows. It grows with the lines of its
+ * text, from its least lines to 12, as the box of the app does while the
+ * person types. A view runs no script, so it draws the grown box.
+ */
+function shownLines(text: string, least: number): number {
+  return Math.min(maxLines, Math.max(least, text.split('\n').length))
+}
+
 /** A control that leads to another screen, when the mockups draw one. */
 function linked(control: ReactElement, to: string | undefined): ReactElement {
   if (!to) return control
@@ -150,8 +162,8 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           />
         ) : null}
         <MessageField
-          lines={phone ? 5 : 6}
-          maxLines={12}
+          lines={shownLines(props.text, phone ? 5 : 6)}
+          maxLines={maxLines}
           placeholder={feedbackPlaceholder}
           text={props.text}
         />

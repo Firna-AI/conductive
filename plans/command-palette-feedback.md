@@ -455,6 +455,13 @@ line that applies a decision of the user names that decision.
 
 - It uses the dialog of the app: a dialog on desktop and a sheet on a
   phone.
+- On a phone, the sheet keeps the rule of every sheet: it stops at 88% of
+  the screen, its handle and title stay, and its body scrolls. The body
+  holds the message box, the notices, the lines, and Cancel and Send, in
+  that order. So a long report keeps each control within reach, after the
+  reply line. `app/feedback/long` draws it with twelve lines, three
+  screenshots, and a failed send. This applies option D of review
+  finding 2, chosen on 10 November 2026.
 - Its title is "Send feedback", as the row. It has a message box, Add
   screenshots, a line that names the context, a reply line, Cancel, and
   Send. Reason: the title already says what Send sends.
@@ -573,6 +580,16 @@ line that applies a decision of the user names that decision.
   - The toast: "Thanks for your feedback", in the success tone.
 - These words live in `docs/mockups/src/components/feedback/feedbackCopy.ts`.
   The app can import them, as it imports the words of the chat files.
+
+### Review fix: phone sheet height
+
+On 10 November 2026, review finding 2 confirmed that the shell Sheet omits
+the scrolling body that its mockup already has. My final call applies
+option D: the shared shell Sheet wraps children in the existing body class.
+The handle and title stay. Content and actions scroll together, with Send
+after the reply line. This preserves the existing 88% limit and every input.
+A long-form mockup and one 375 × 667 browser regression protect the case.
+The separate desktop modal overflow follow-up stays outside this fix.
 
 ### What a message carries
 
@@ -902,9 +919,9 @@ Build the row, the dialog, and the toast as the mockups draw them.
 
 Evidence and README notes: `.context/command-palette-feedback/reports/m5.md`.
 
-## Milestone 6: Verification, commit, review, and pull request
+## Milestone 6: Verification, commit, and review
 
-Depends on: every other milestone
+Depends on: 1, 2, 3, 4, 4a, 5
 
 - [x] Apply option D of review finding 1. Correct the four narrower notice
       descriptions and add the overlapping late-refusal case to the
@@ -938,11 +955,71 @@ Evidence of the merge of `origin/main` with the routines and release 0.6.0:
       renumber the decisions of this plan and their citations.
 - [x] Commit with Conventional Commits and push the branch. Implementation
       commit `4a3795a5` is pushed. Review fixes use follow-up commits.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+## Milestone 7: Long phone feedback mockup
+
+Tags: mockup
+
+Depends on: 5
+
+Review finding 2 showed that a long phone form can hide Send. The mockup
+Sheet already supplies the correct scrolling body. Draw the long report
+with the existing pattern before fixing the shell implementation.
+
+- [x] Add `app/feedback/long`: twelve message lines, three screenshots,
+      and a failed send. Reuse the existing dialog and its copy on both
+      desktop and phone. Keep each catalogue page within five screens.
+- [x] Update the feedback catalogue links and record the intended scroll
+      behavior. The body and actions scroll while the handle and title stay.
+- [x] Run `npm run mockups:check`. Visually check the long form at normal
+      sizes and at 375 × 667. Save evidence under `.context/`. Evidence:
+      `.context/command-palette-feedback/reports/review-fix-2.md`.
+- [x] Record any problem that the mockup shows in this plan. A view runs
+      no script, so it drew the message box at its least lines, and the
+      long form fit the sheet. The mockup dialog now draws the box at the
+      lines of its text, up to 12, as the app grows it.
+
+## Milestone 8: Shared phone sheet scrolling
+
+Tags: ui
+
+Depends on: 7
+
+Apply option D of review finding 2. This fixes the missing body wrapper
+in the shell Sheet. It changes no input, request, requirement, or user choice.
+
+- [x] Make the shell `Sheet` wrap its children in the existing scrolling
+      body class, as the mockup and chat sheets do. Keep the 88% limit,
+      fixed handle and title, and the existing order of content and actions.
+- [x] Add one browser regression for a long failed feedback send at
+      375 × 667. Use twelve lines and three screenshots. Scroll as a person
+      does. Check that Cancel and Send become reachable, then retry the
+      unchanged draft successfully.
+- [x] Show the regression fail on the old layout. Restore the fix and run
+      the new browser test ten consecutive times. Run related dialog and
+      focus tests and targeted static checks.
+- [x] Update internal screen or entry-point docs that the wrapper changes.
+      Save check, test-cost, and screenshot evidence under `.context/`.
+
+Evidence: `.context/command-palette-feedback/reports/review-fix-2.md`.
+
+## Milestone 9: Final record and pull request
+
+Depends on: 6, 7, 8
+
+Finish the checked review fix, preserve the complete plan record, and open
+the pull request. The existing CI runs the complete gate on the final tree.
+
+- [x] Verify the phone fix, its ten browser runs and final validation record.
+      Commit and push the second fix round. No third review-fix round starts
+      without the outcome rules permitting it.
+- [ ] State the required `FEEDBACK_EMAIL` deployment setup in the pull
+      request and final report. The workspace has no deployment credentials
+      or team inbox address. Do not send a real email or merge the pull request.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

@@ -65,6 +65,10 @@ child pages:
   add, because the screenshots of the message would pass 7 MB. Its
   `other-type` variant has a photo that is not a PNG, JPEG, GIF, or WebP
   image.
+- `app/feedback/long` has a long report after a failed send: twelve lines,
+  three screenshots, and the notice. On a phone the sheet stops at its
+  limit, as every sheet does. Its handle and title stay, and its body
+  scrolls, with Cancel and Send last, after the reply line.
 
 `user-flows/send-feedback` goes from the palette through a search, the
 message, a pasted screenshot, and the send, to the toast.

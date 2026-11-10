@@ -43,7 +43,9 @@ export function trapTab(event: KeyboardEvent<HTMLElement>): void {
 
 /**
  * A sheet that rises from the bottom of a phone screen over the dimmed
- * app. A press on the dim area or Escape closes it, and the focus goes back
+ * app. It stops below the top of the screen, as the mockups draw it: its
+ * handle and title stay, and its body scrolls when the content is longer.
+ * A press on the dim area or Escape closes it, and the focus goes back
  * to its trigger. `returnFocus` names that trigger when a render can
  * replace it while the sheet shows, such as the row of a menu that moves
  * the row. `initial` is the part that takes the focus as it opens.
@@ -75,7 +77,7 @@ export function Sheet(props: {
         >
           <span aria-hidden className={styles.handle} />
           <h2 className={styles.title}>{props.title}</h2>
-          {props.children}
+          <div className={styles.body}>{props.children}</div>
         </section>
       </div>
     </Overlay>

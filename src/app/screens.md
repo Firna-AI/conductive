@@ -106,6 +106,10 @@ the command palette and of the Feedback dialog.
 - Each sheet and dialog is a modal layer through `useModalLayer`. A press
   outside it does not move the focus, so the focus goes back to the
   trigger also after a press outside.
+- A sheet stops below the top of a phone screen, at 88% of its height, as
+  the mockup sheet does. Its handle and title stay, and its body scrolls
+  when the content is longer. So the last controls of a long sheet, such
+  as Send after a long feedback draft, stay within a swipe.
 - Escape closes only the newest open layer, such as a menu in a dialog.
   A press outside closes each layer that it misses.
 - [The command palette and Feedback](palette-screens.md) gives the rules

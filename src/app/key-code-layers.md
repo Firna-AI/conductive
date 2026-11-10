@@ -95,7 +95,8 @@ feedback. Each path is relative to `src/app/`, the folder of this page.
   `feedback-test-kit.tsx`.
 - `../shell/ui/Dialog.tsx` and `Sheet.tsx`: their optional `initial` names
   the part that takes the focus as they open. The Feedback dialog passes
-  its message box.
+  its message box. `Sheet` puts its content in the scrolling `.body` of
+  the mockup sheet.
 - [feedbackCopy.ts](../../docs/mockups/src/components/feedback/feedbackCopy.ts):
   the words of the row, the dialog, and the toast that the app and the
   mockups share.

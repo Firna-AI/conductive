@@ -12,6 +12,8 @@ import {
   feedbackMessage,
   feedbackScreenshot,
   largeCapture,
+  longFeedbackMessage,
+  longFeedbackScreenshots,
   otherTypePhoto,
   replyEmail,
 } from '../fixtures/feedback'
@@ -24,10 +26,11 @@ export const feedbackSchema = {
   required: ['draft', 'reply', 'send', 'refusal'],
   properties: {
     /**
-     * The message box: empty, with the message of Cal, or with the message
-     * and the screenshot that Cal pasted.
+     * The message box: empty, with the message of Cal, with the message and
+     * the screenshot that Cal pasted, or with a long report of twelve lines
+     * and three screenshots.
      */
-    draft: { enum: ['empty', 'message', 'screenshot'] },
+    draft: { enum: ['empty', 'message', 'screenshot', 'long'] },
     /**
      * The read of the reply address: ready with the primary verified email
      * of Cal's GitHub account, which the team replies to, ready with none,
@@ -63,6 +66,14 @@ const screenshots: Readonly<
   empty: [],
   message: [],
   screenshot: [feedbackScreenshot],
+  long: longFeedbackScreenshots,
+}
+
+const texts: Readonly<Record<FeedbackState['draft'], string>> = {
+  empty: '',
+  message: feedbackMessage,
+  screenshot: feedbackMessage,
+  long: longFeedbackMessage,
 }
 
 /** The read of the reply address in each state of the schema. */
@@ -114,7 +125,7 @@ export function FeedbackScreen(props: {
         screenshots={screenshots[state.draft]}
         sendTo={paths.feedbackSending}
         sending={state.send === 'sending'}
-        text={state.draft === 'empty' ? '' : feedbackMessage}
+        text={texts[state.draft]}
         viewport={viewport}
       />
     )
