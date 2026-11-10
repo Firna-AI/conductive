@@ -2,12 +2,15 @@ import { waitingEmail } from '../../../docs/mockups/src/fixtures/waitlist'
 import type { AgentLoginStatus } from '../../shared/account'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
+import type { RoutineRun } from '../../shared/routines'
 import type { Workspace } from '../../shared/workspaces'
 import {
   coreFixtures,
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
+import { listRuns } from '../../test-support/fixtures/routine-runs'
+import { routineFixtures } from '../../test-support/fixtures/routines'
 import {
   sampleOperator,
   sampleRecords,
@@ -32,10 +35,42 @@ type CoreFixtures = ReturnType<typeof coreFixtures>
 /** A deleted org stays for 7 days. */
 const DELETE_AFTER = 604_800_000
 
+/** The run that `run=` makes the run of `checkout-autocomplete`. */
+const runOfWorkspace = {
+  'pull-request': 'run-review-prs-opened-482',
+  schedule: 'run-error-triage-hourly-3',
+} as const
+
 /**
- * Acme with the recorded sections, workspaces, settings, build, and
- * members. A starting workspace has the recorded resume step, and a
- * workspace in the error state has the recorded start error.
+ * The runs of the routines. Review pull requests can list the failed or
+ * the skipped runs of the mockups in place of its newest runs. After the
+ * suspension of Acme, it lists its runs as the suspension left them. One
+ * run can have `checkout-autocomplete` as its workspace, which has a chat.
+ */
+function seedRuns(
+  fixtures: ReturnType<typeof routineFixtures>,
+  options: DevOptions,
+): RoutineRun[] {
+  const list = options.reviewRuns ?? (options.suspended ? 'suspended' : null)
+  const review = fixtures.routines.find((item) => item.id === 'review-prs')
+  const runs =
+    list === null || !review
+      ? fixtures.runs
+      : [
+          ...listRuns(review, list),
+          ...fixtures.runs.filter((run) => run.routineId !== review.id),
+        ]
+  const linked = options.runWorkspace && runOfWorkspace[options.runWorkspace]
+  return runs.map((run) =>
+    run.id === linked ? { ...run, workspaceId: FAKE_IDS.workspace } : run,
+  )
+}
+
+/**
+ * Acme with the recorded sections, workspaces, settings, build, members,
+ * and routines with their runs. A starting workspace has the recorded
+ * resume step, and a workspace in the error state has the recorded start
+ * error.
  */
 function acme(
   summary: OrgSummary,
@@ -43,6 +78,7 @@ function acme(
   options: DevOptions,
 ): OrgState {
   const { workspaces } = workspaceFixtures(options.server.workspaceState)
+  const fixtures = routineFixtures(summary.id)
   const starting = workspaceFixtures('starting').detail.start
   const failed = workspaceFixtures('error').detail.error
   const startOf = (workspace: Workspace): [string, StartRecord] => [
@@ -88,6 +124,8 @@ function acme(
     ]),
     currentImageBuildId: core.builds.currentImageBuildId,
     members: core.members,
+    routines: fixtures.routines,
+    runs: seedRuns(fixtures, options),
   }
 }
 

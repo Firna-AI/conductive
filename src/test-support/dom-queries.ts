@@ -3,6 +3,8 @@
 // their text. The finders skip what is not shown and aria-hidden content.
 
 const implicitRoles: Readonly<Record<string, string>> = {
+  A: 'link',
+  ASIDE: 'complementary',
   BUTTON: 'button',
   DIALOG: 'dialog',
   INPUT: 'textbox',

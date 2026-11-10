@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { pullRequest, type BannerState } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
-import type { Workspace } from '../../fixtures/workspaces'
+import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
 import { checksPaths, paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
@@ -18,9 +18,10 @@ import { classes } from '../common/classes'
 import { prStatus, type PrStatus } from './prStatus'
 import styles from './PullRequestBar.module.css'
 
+/** The page of GitHub that opens a pull request into the base branch. */
 function compareUrl(workspace: Workspace): string {
   const repository = repositories[workspace.repository]
-  return `https://github.com/${repository.name}/compare/${repository.defaultBranch}...${workspace.branch}`
+  return `https://github.com/${repository.name}/compare/${baseBranchOf(workspace)}...${workspace.branch}`
 }
 
 /** A link to GitHub. A narrow column keeps only its icon. */
@@ -40,15 +41,22 @@ function GitHubLink(props: { href: string; label: string }) {
   )
 }
 
-/** The branch and the branch that it merges into. */
+/**
+ * The branch and its base branch, which its work goes to. A long base
+ * branch, such as the head branch of a pull request, takes at most half of
+ * the line, so both names show their start.
+ */
 function Branches(props: { workspace: Workspace }) {
   const { workspace } = props
+  const base = baseBranchOf(workspace)
   return (
     <span className={styles.branches}>
       <GitBranch className={styles.muted} size={13} />
       <span className={styles.branch}>{workspace.branch}</span>
       <ArrowRight className={styles.muted} size={12} />
-      {repositories[workspace.repository].defaultBranch}
+      <span className={styles.base} title={base}>
+        {base}
+      </span>
     </span>
   )
 }

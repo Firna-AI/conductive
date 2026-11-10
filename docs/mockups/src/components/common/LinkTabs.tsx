@@ -5,7 +5,8 @@ import styles from './LinkTabs.module.css'
 
 export type LinkTab = {
   label: string
-  to: string
+  /** The screen of the tab. A tab whose screen the mockups lack has none. */
+  to?: string
   /** A count after the label, such as the number of changed files. */
   count?: number
   /**
@@ -41,23 +42,41 @@ export function LinkTabs(props: {
         props.fadeEnd && tabScroll.fadeEnd,
       )}
     >
-      {props.tabs.map((tab) => (
-        <ScreenLink
-          aria-current={tab.selected ? 'page' : undefined}
-          aria-label={tab.title}
-          className={
-            tab.selected ? `${styles.tab} ${styles.selected}` : styles.tab
-          }
-          key={tab.label}
-          title={tab.title}
-          to={tab.to}
-        >
-          {tab.label}
-          {tab.count === undefined ? null : (
-            <span className={styles.count}>{tab.count}</span>
-          )}
-        </ScreenLink>
-      ))}
+      {props.tabs.map((tab) => {
+        const className = tab.selected
+          ? `${styles.tab} ${styles.selected}`
+          : styles.tab
+        const content = (
+          <>
+            {tab.label}
+            {tab.count === undefined ? null : (
+              <span className={styles.count}>{tab.count}</span>
+            )}
+          </>
+        )
+        return tab.to ? (
+          <ScreenLink
+            aria-current={tab.selected ? 'page' : undefined}
+            aria-label={tab.title}
+            className={className}
+            key={tab.label}
+            title={tab.title}
+            to={tab.to}
+          >
+            {content}
+          </ScreenLink>
+        ) : (
+          <span
+            aria-current={tab.selected ? 'page' : undefined}
+            aria-label={tab.title}
+            className={className}
+            key={tab.label}
+            title={tab.title}
+          >
+            {content}
+          </span>
+        )
+      })}
     </nav>
   )
 }

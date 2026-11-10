@@ -21,8 +21,10 @@ import { createRoutes } from './create-routes'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
+import { routineRoutes } from './routine-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
+import { runRoutes } from './run-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
@@ -66,6 +68,8 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentRoutes(backend, options.upload),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
+    ...routineRoutes(backend),
+    ...runRoutes(backend),
     ...operatorRoutes(backend),
   ]
   const fetch = routeFetch(

@@ -176,6 +176,7 @@ export class ChatStore {
   private tail: Promise<unknown> = Promise.resolve()
   private readonly storage: ChatStorage
   private readonly now: () => number
+  private readonly changed: (workspaceId: string) => Promise<void>
   private readonly turnEnds: TurnEndReports
 
   constructor(
@@ -183,10 +184,12 @@ export class ChatStore {
     now: () => number,
     turnEnded: ConstructorParameters<typeof TurnEndReports>[0] = async () =>
       undefined,
+    changed: (workspaceId: string) => Promise<void> = async () => undefined,
   ) {
     this.storage = storage
     this.now = now
     this.turnEnds = new TurnEndReports(turnEnded)
+    this.changed = changed
   }
 
   run<T>(work: () => Promise<T>): Promise<T> {
@@ -264,6 +267,7 @@ export class ChatStore {
     )
     this.turnEnds.committed(workspaceId, endedTurns)
     committed(events)
+    await this.changed(workspaceId)
     return result
   }
 }
