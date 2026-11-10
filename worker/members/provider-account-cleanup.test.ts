@@ -51,7 +51,8 @@ it('stops, retains, and purges each deleted-org resource through its stored acco
        VALUES ('published-second', ?, 'build', 'succeeded', 'org-image', 'boat-second', 1, 1, ?, ?, ?)`,
     ).bind(org.id, admin.user.id, TEST_TIME, TEST_TIME),
     harness.env.DB.prepare(
-      "UPDATE settings SET image_build_id = 'published-second' WHERE org_id = ?",
+      `INSERT INTO org_images (org_id, provider_account, image_name, image_build_id)
+       VALUES (?, 'boat-second', 'org-image', 'published-second')`,
     ).bind(org.id),
   ])
   await stopWorkspace(harness, 'workspace-one', 13)
@@ -99,6 +100,7 @@ it('stops, retains, and purges each deleted-org resource through its stored acco
   ).toEqual({ purged: [org.id], pending: [] })
   expect(providerCalls()).toEqual([
     ['DELETE', '/saved-snapshots/build-image', 'app-org', 'Bearer boat-first'],
+    ['DELETE', '/saved-snapshots/org-image', 'app-org', 'Bearer boat-first'],
     [
       'DELETE',
       '/saved-snapshots/org-image',

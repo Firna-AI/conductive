@@ -4,6 +4,8 @@ import type {
   ImageBuild,
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgImage } from './org-image-data'
 import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { readBuildSnapshot } from './build-log-reader'
@@ -183,6 +185,7 @@ export async function failBuild(
 export async function readBuildHistory(
   db: D1Database,
   orgId: string,
+  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<BuildsResponse> {
   const { results } = await db
     .prepare(
@@ -190,11 +193,8 @@ export async function readBuildHistory(
     )
     .bind(orgId)
     .all<ImageBuild>()
-  const settings = await db
-    .prepare('SELECT image_build_id AS id FROM settings WHERE org_id = ?')
-    .bind(orgId)
-    .first<{ id: string | null }>()
-  return { builds: results, currentImageBuildId: settings?.id ?? null }
+  const image = await readOrgImage(db, orgId, providerAccount)
+  return { builds: results, currentImageBuildId: image?.imageBuildId ?? null }
 }
 
 export async function readBuild(

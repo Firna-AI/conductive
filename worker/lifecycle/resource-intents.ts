@@ -91,7 +91,10 @@ export function buildSandboxIntent(
   return {
     kind: 'sandbox',
     input: {
-      snapshotName: job.previousImageName ?? undefined,
+      snapshotName:
+        job.previousProviderAccount === job.providerAccount
+          ? (job.previousImageName ?? undefined)
+          : undefined,
       name: `image-${job.buildId}`,
       env: repositoryEnvironment(
         capturedRepositoryLocations(

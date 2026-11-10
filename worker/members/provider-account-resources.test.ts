@@ -39,7 +39,14 @@ it('records resource accounts during org deletion and marks only the matching ac
     ),
     db
       .prepare(
-        "UPDATE settings SET org_image_name = 'build-image' WHERE org_id = ?",
+        `UPDATE org_images SET image_name = 'build-image', image_build_id = NULL
+         WHERE org_id = ? AND provider_account = 'boat'`,
+      )
+      .bind(org.id),
+    db
+      .prepare(
+        `INSERT INTO org_images (org_id, provider_account, image_name)
+         VALUES (?, 'boat-second', 'org-image')`,
       )
       .bind(org.id),
     db
@@ -72,6 +79,20 @@ it('records resource accounts during org deletion and marks only the matching ac
     {
       kind: 'snapshot',
       id: 'build-image',
+      providerAccount: 'boat',
+      stoppedAt: null,
+      removedAt: null,
+    },
+    {
+      kind: 'snapshot',
+      id: 'build-image',
+      providerAccount: 'boat-second',
+      stoppedAt: null,
+      removedAt: null,
+    },
+    {
+      kind: 'snapshot',
+      id: 'org-image',
       providerAccount: 'boat-second',
       stoppedAt: null,
       removedAt: null,

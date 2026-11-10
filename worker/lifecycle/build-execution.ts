@@ -23,6 +23,7 @@ import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { privilegedCommand } from '../terminal/privileged'
 import { recoverImageBuildAllocation } from './image-allocation'
 import { startAddedImageBuild } from './first-image-build'
+import { imageIsPublished } from './org-image-data'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -122,27 +123,39 @@ export async function cleanupBuild(
     (job.previousImageName !== job.snapshotName ||
       job.previousProviderAccount !== job.providerAccount)
   ) {
-    if (
-      await imageIsLeased(
-        runtime.env.DB,
-        job.orgId,
-        job.previousImageName,
-        job.previousProviderAccount,
-      )
-    )
-      return false
-    await deleteSnapshotIfPresent(
-      providerForAccount(
-        runtime.env,
-        runtime.dependencies.fetch,
-        job.previousProviderAccount,
-      ),
+    const published = await imageIsPublished(
+      runtime.env.DB,
       job.previousImageName,
+      job.previousProviderAccount,
     )
+    if (!published) {
+      if (
+        await imageIsLeased(
+          runtime.env.DB,
+          job.orgId,
+          job.previousImageName,
+          job.previousProviderAccount,
+        )
+      )
+        return false
+      await deleteSnapshotIfPresent(
+        providerForAccount(
+          runtime.env,
+          runtime.dependencies.fetch,
+          job.previousProviderAccount,
+        ),
+        job.previousImageName,
+      )
+    }
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
   await startAddedImageBuild(runtime, job)
-  await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
+  await scheduleIdleImage(
+    runtime,
+    job.orgId,
+    jobSoftware(job),
+    job.providerAccount,
+  )
   return true
 }
 

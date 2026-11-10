@@ -37,6 +37,7 @@ export function planStatement(
       creation.request.text,
       creation.name ?? null,
       job.orgId,
+      job.providerAccount,
       creation.repositoryId,
       job.workspaceId,
     )

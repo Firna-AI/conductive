@@ -23,7 +23,9 @@ beforeAll(async () => {
 beforeEach(async () => {
   await harness.reset()
   fixture = await backendFixture(harness)
-  await harness.env.DB.prepare('UPDATE settings SET next_image_refresh_at = ?')
+  await harness.env.DB.prepare(
+    'UPDATE org_images SET next_image_refresh_at = ?',
+  )
     .bind(TEST_TIME + 30 * 86_400_000)
     .run()
 })

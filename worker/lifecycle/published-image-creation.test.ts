@@ -64,7 +64,7 @@ it('creates from captured image repositories while current settings and selectio
     }),
   ).rejects.toMatchObject({ status: 404, code: 'repository_not_found' })
   await runtime.env.DB.prepare(
-    'UPDATE settings SET image_build_id = NULL WHERE org_id = ?',
+    "UPDATE org_images SET image_build_id = NULL WHERE org_id = ? AND provider_account = 'boat'",
   )
     .bind(org.id)
     .run()

@@ -51,10 +51,14 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
   })
   boat.lostCreateReplies = 1
   const created = await fixture.run(() =>
-    createWorkspace(runtime, org.id, user, {
-      repositoryId,
-      firstMessage: FIRST_MESSAGE,
-    }),
+    createWorkspace(
+      runtime,
+      org.id,
+      user,
+      { repositoryId, firstMessage: FIRST_MESSAGE },
+      user,
+      'boat-second',
+    ),
   )
   const id = created.workspace.id
   const start = fixture.starts.get(id)

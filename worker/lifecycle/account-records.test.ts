@@ -39,10 +39,15 @@ it('keeps the image account through a creation claim, workspace, and stored star
     software: SOFTWARE,
     now: runtime.dependencies.now(),
   })
-  const job = await prepareCreationRequest(runtime, org.id, user, user, {
-    repositoryId,
-    firstMessage: FIRST_MESSAGE,
-  })
+  const job = await prepareCreationRequest(
+    runtime,
+    org.id,
+    user,
+    user,
+    { repositoryId, firstMessage: FIRST_MESSAGE },
+    undefined,
+    'boat-secondary',
+  )
   expect(job).toMatchObject({ providerAccount: 'boat-secondary' })
   const key = {
     orgId: org.id,

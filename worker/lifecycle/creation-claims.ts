@@ -70,6 +70,7 @@ export async function claimCreation(
         ...values,
         creation.createdAt,
         job.orgId,
+        job.providerAccount,
         creation.repositoryId,
         ...values,
       ),
@@ -79,10 +80,10 @@ export async function claimCreation(
       .prepare(
         `${completed} UNION ALL ${pending}
         UNION ALL SELECT '' AS id, CASE WHEN EXISTS (
-          SELECT 1 ${publishedImageSource} WHERE s.org_id = ?
+          SELECT 1 ${publishedImageSource} WHERE s.org_id = ? AND i.provider_account = ?
         ) THEN 'repository_not_found' ELSE 'image_required' END AS state LIMIT 1`,
       )
-      .bind(...values, ...values, job.orgId),
+      .bind(...values, ...values, job.orgId, job.providerAccount),
   ])
   await requireActiveOrg(db, job.orgId)
   const claim = results[3].results[0]

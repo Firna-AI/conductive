@@ -1,10 +1,11 @@
 import { requireActiveOrg } from '../data/user-access'
 import { HttpError } from '../http'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { runningBuild } from './build-data'
 import type { ImageRuntime } from './image-builds'
 import { pendingImageCleanup } from './image-maintenance-data'
 import type { ImageSoftwareArtifact } from './image-software'
-import { readImageSettings } from './settings-data'
+import { readOrgImage } from './org-image-data'
 import { imageRetryAt } from './image-retry-data'
 
 export const IMAGE_DAY_MS = 86_400_000
@@ -27,6 +28,7 @@ export async function readImageSchedule(
   orgId: string,
   now: number,
   requested: { buildId: string | null; nextAt: number },
+  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<ImageSchedule> {
   const active =
     (await runningBuild(db, orgId)) ?? (await pendingImageCleanup(db, orgId))
@@ -39,23 +41,23 @@ export async function readImageSchedule(
         active === requested.buildId ? requested.nextAt : now,
       ),
     }
-  const settings = await readImageSettings(db, orgId)
+  const image = await readOrgImage(db, orgId, providerAccount)
   const dailyAt =
-    settings.nextImageRefreshAt ??
+    image?.nextImageRefreshAt ??
     (requested.buildId === null ? requested.nextAt : now + IMAGE_DAY_MS)
   const pendingAt =
-    settings.pendingPushRefreshAt === null
+    image?.pendingPushRefreshAt == null
       ? Infinity
       : Math.max(
-          settings.pendingPushRefreshAt,
-          (settings.lastPushRefreshAt ?? -Infinity) + IMAGE_PUSH_MS,
+          image.pendingPushRefreshAt,
+          (image.lastPushRefreshAt ?? -Infinity) + IMAGE_PUSH_MS,
         )
   return {
     buildId: null,
     nextAt: Math.min(dailyAt, pendingAt),
     dailyAt,
     pendingAt,
-    imageName: settings.imageName,
+    imageName: image?.imageName ?? null,
   }
 }
 
@@ -64,12 +66,16 @@ export async function scheduleIdleImage(
   runtime: ImageRuntime,
   orgId: string,
   software: ImageSoftwareArtifact,
+  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<void> {
   const now = runtime.dependencies.now()
-  const next = await readImageSchedule(runtime.env.DB, orgId, now, {
-    buildId: null,
-    nextAt: now + IMAGE_DAY_MS,
-  })
+  const next = await readImageSchedule(
+    runtime.env.DB,
+    orgId,
+    now,
+    { buildId: null, nextAt: now + IMAGE_DAY_MS },
+    providerAccount,
+  )
   if (next.buildId === null) {
     try {
       await requireActiveOrg(runtime.env.DB, orgId)
@@ -78,5 +84,11 @@ export async function scheduleIdleImage(
       throw error
     }
   }
-  await runtime.scheduler.schedule(orgId, software, next.nextAt, next.buildId)
+  await runtime.scheduler.schedule(
+    orgId,
+    software,
+    next.nextAt,
+    next.buildId,
+    providerAccount,
+  )
 }

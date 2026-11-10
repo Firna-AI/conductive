@@ -95,7 +95,8 @@ Disk retention resumes also replace the saved capture.
 ## Provider accounts
 
 [Provider accounts](provider-accounts.md) gives the provider account that
-each record and start job stores, and the client that each call uses.
+each record and start job stores, the client that each call uses, and the
+[org image of each account](provider-accounts.md#org-images).
 
 ## Development
 

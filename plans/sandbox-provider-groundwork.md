@@ -10,8 +10,8 @@ Worker for more than one sandbox provider, and keeps Boat as the only one
 (decision 213). Each record stores the provider account of its sandbox or
 saved snapshot. The Worker picks the client by that account. The proxies
 and the terminal take the port credential from the client. Contract tests
-state what every provider must do. Decision 217 decides whether the org
-image also gets one record for each provider in this change.
+state what every provider must do. The org image also gets one record for
+each provider account, with the pre-launch migration of decision 217.
 
 The behaviour stays the same, so no protocol doc changes. The change adds
 no second provider, no overflow, no operator switch, and no capacity. The
@@ -19,9 +19,11 @@ choice of the second provider waits until after the launch (decision 213).
 The brainstorm notes and sources are in `.context/vercel-provider/`. The
 options checks are in `.context/sandbox-provider-groundwork/`.
 
-Open decisions: 214, 215, and 217 wait for the user. Decision 217 blocks
-Milestone 3. Decisions 214 and 215 block no milestone. Decision 216 waits
-for the choice of the second provider.
+Open decisions: 214 and 215 wait for the user and block no milestone.
+Decision 216 waits for the choice of the second provider. On 9 November
+2026, the user confirmed that the product is not live. The agent selected
+the data-preserving, single-migration path C with the pre-launch deployment
+condition H of decision 217 and resumed Milestone 3.
 
 Contract owners:
 
@@ -58,8 +60,8 @@ Replaced ways:
   Milestone 4.
 - One org image for each org, in `settings.org_image_name`,
   `settings.image_build_id`, and the refresh fields of `settings` → a record
-  for each org and provider account. This way applies only when decision 217
-  moves the org image in this change. Consumers:
+  for each org and provider account. Decision 217 uses one migration and
+  removes the old fields after copying their data. Consumers:
   `worker/app-api/feature-settings-data.ts`,
   `worker/lifecycle/build-admission-data.ts`, `worker/lifecycle/build-data.ts`,
   `worker/lifecycle/disk-retention.ts`, `worker/lifecycle/first-image-build.ts`,
@@ -68,6 +70,12 @@ Replaced ways:
   `worker/lifecycle/repair-data.ts`, `worker/lifecycle/retention-command.ts`,
   `worker/lifecycle/settings-data.ts`, `worker/lifecycle/workspace-resume.ts`,
   `worker/members/creation-checkpoint.ts`, and `worker/members/deletion-data.ts`.
+  The implementation also moves `worker/lifecycle/build-execution.ts`,
+  `worker/lifecycle/retry-creation-data.ts`,
+  `worker/lifecycle/creation-plan-statements.ts`,
+  `worker/lifecycle/creation-claims.ts`,
+  `worker/lifecycle/image-coordinator.ts`, `worker/lifecycle/runtime.ts`,
+  and `worker/members/purge-data.ts`.
   Also the test support and tests
   `worker/chat/integration/outer-seed.test-support.ts`,
   `worker/lifecycle/first-build-admission.test.ts`,
@@ -393,9 +401,13 @@ check added C, D, and E. The recommendation changed from A to B.
 
 ### 217. The deployed Worker still reads the old org image fields
 
-New on 9 November 2026, from the options check.
+On 9 November 2026, the user clarified that the product is not live.
+The agent selected the C migration path with the pre-launch condition H
+within the request to implement all milestones.
+Existing test data must survive. A previous Worker release is not a
+compatibility target for this pre-launch schema change.
 
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large.
 - **Source:** Design.
 - **Category:** Product bug.
 - **Location:** Milestone 3, the org image fields of `settings`, and
@@ -411,8 +423,8 @@ New on 9 November 2026, from the options check.
   it for a deployed Worker.
 - **Impact if no action:** Builds and new workspaces can fail for some
   minutes at the deploy, and a rollback cannot restore a working Worker.
-- **Root question:** When and how does the org image get one record for each
-  provider account, with no break for the deployed Worker?
+- **Root question:** How does the org image move to one record for each
+  provider account, with no lost data or interruption for real users?
 - **Options:**
   - **A.** Move it in this change. Keep the old fields, unread. Drop them in
     a follow-up change after one good deploy. A rollback then reads the
@@ -421,23 +433,48 @@ New on 9 November 2026, from the options check.
     follow-up drops them. A rollback then reads the newest image. Cost: a
     converter that writes two places. Effort: Small.
   - **C.** Move it and drop the old fields in this change. Accept a short
-    failure window at the deploy, and no rollback. Effort: Small.
+    failure window at the deploy, and no Worker-only rollback. Effort: Large.
   - **D.** Leave the org image in `settings` for now. Move it in the plan of
     the second provider, which also decides whether one org can build on two
     providers at once. This removes Milestone 3 and its risk from this
     change. Cost: the provider plan grows by about 30 files. Effort: Small.
+  - **E.** Keep both stores in step with database triggers until a later
+    change drops the triggers and old fields. It keeps old Workers and
+    rollback working, but adds hidden SQL write rules. Effort: Large.
+  - **F.** Use four deploys: dual-write, copy and move readers, stop old
+    writes, then drop the fields. It avoids triggers but keeps temporary
+    code through four releases. Effort: Large.
+  - **G.** Add a deploy migration phase after the health check for drops
+    and renames. A concurrent data move still needs E or F. Effort: Medium.
+  - **H.** Use C only while no real user depends on the app. Deploy this
+    change before launch. If that condition no longer holds, revisit the
+    rollout before merging. Effort: Large, as the complete C work.
+  - **I.** Use C and keep an extra recovery copy of all six fields in an
+    unread table until a cleanup release. It adds a table and follow-up
+    without improving the proven copy. Effort: Large.
 - **Left out:** A deploy that uploads the Worker before the migrations,
-  because the new Worker then runs on the old schema.
-- **Wider fix:** None. Each destructive migration needs its own order.
+  because the new Worker then runs on the old schema. A staged upload only
+  shortens the incompatible window. A settings view with INSTEAD OF
+  triggers breaks the existing changed-row checks. Pausing starts and
+  builds needs an operator switch that this change does not add.
+- **Wider fix:** G, with E or F for a data move, needs a separate production
+  rollout design before a post-launch destructive migration. It is not
+  implemented in this pre-launch change.
 - **Previous examples:** `migrations/202611070003_creation_image_leases.sql`
   dropped and renamed a lease table in one deploy.
 - **Related:** Decision 213, which chose the groundwork.
-- **Recommendation:** D. The org image is the seam that the chosen provider
-  will most likely reshape, because each provider builds images in its own
-  way, and the move needs two deploys. B keeps the most of the groundwork
-  with a safe rollback.
-- **Action:** ask the user, because the user decides how long an old way
-  stays for a deployed Worker.
+- **Recommendation:** H. One data-preserving migration completes the
+  requested work before launch without temporary stores or cleanup code.
+  The first recommendation was D, then C after the user's clarification.
+  H adds the deployment condition found by the options check.
+- **Action:** implement H as an agent call based on the pre-launch
+  clarification and the request to implement all milestones. No agent
+  merges this branch. A later launch before merge requires a new rollout
+  decision.
+- **Chosen:** H, the C path with its pre-launch condition, agent call on
+  9 November 2026. Copy existing image names,
+  build references, and refresh times before removing the old fields.
+  Preserve all other settings and all current application behaviour.
 
 ## Design
 
@@ -492,6 +529,24 @@ These are agent calls of 9 November 2026. The user can change each one.
 - One org keeps one running build at a time. Reason: `runningBuild` and the
   build coordinator assume one build for each org, and with one account the
   behaviour stays the same. The provider plan decides about parallel builds.
+- Agent call, 9 November 2026: `org_images` owns the image name, build
+  pointer, and four refresh times under `(org_id, provider_account)`.
+  A non-unique account/name index supports current snapshot ownership
+  checks. Reason: records can share a snapshot reference without a global
+  cleanup scan or an extra uniqueness restriction.
+- Agent call, 9 November 2026: trusted internal image operations accept an
+  explicit account and default to `boat`. The argument stays outside the
+  browser request shape. No reader selects the newest image across
+  accounts. Reason: publication in another account must not move ordinary
+  workspace placement or expose a provider picker.
+- Agent call, 9 November 2026: keep the org coordinator's existing name and
+  storage key. Its optional account defaults to `boat` for stored legacy
+  states. Cron repair still covers the production default account.
+  Reason: the second provider chooses its multi-account orchestration.
+- Agent call, 9 November 2026: keep any snapshot that an image record still
+  publishes under the same account and name. Finish the cleanup without
+  deleting that snapshot. Reason: a retained pre-migration job can name an
+  image that is now the current image of another account.
 - The image scripts keep Boat's env file path, `/run/ascii-secrets/env.sh`,
   and systemd. A second provider puts its env file at the same path, on
   storage that its saved disk does not keep. When it cannot, the env file
@@ -508,9 +563,11 @@ These are agent calls of 9 November 2026. The user can change each one.
 - `SandboxProvider.fork` has no production caller, so the contract suite
   leaves it out. Reason: a contract for it would make every provider build
   a method that the product never calls.
-- The work starts now. The pull request merges after the launch rush, when
-  the user decides. Reason: the change touches every start path, and it
-  adds no capacity by itself.
+- Agent call, revised 9 November 2026 after the pre-launch clarification:
+  finish this migration before real users depend on the app. Do not merge
+  its destructive migration after launch without a new rollout decision.
+  The user still controls the merge. Reason: the C schema path is not
+  compatible with the old Worker, while all copied data stays intact.
 - User-facing text does not change, and it names no provider (decision 80).
 
 ## Milestone 1: Documentation — completed
@@ -559,23 +616,27 @@ Evidence: `.context/sandbox-provider-groundwork/reports/lifecycle-accounts.md`,
 `reports/tool-member-accounts.md`, `reports/account-readmes.md`, and
 `migration-proof.log` in that evidence directory.
 
-## Milestone 3: One org image for each org and provider account
+## Milestone 3: One org image for each org and provider account — completed
 
-Depends on: 2. Waits for decision 217. Under its option D, this milestone
-is removed.
+Depends on: 2. Decision 217 uses its pre-launch option H, the C migration path.
 
 Each org keeps one org image for each provider account. With one account,
 the behaviour stays the same.
 
-- [ ] Add a D1 migration with a record of the org image for each org and
+- [x] Add a D1 migration with a record of the org image for each org and
       account: the image name, its build, and the refresh fields. Copy the
-      fields of `settings` into it with the account `boat`.
-- [ ] Move each consumer under "Replaced ways" to the new record, with every
+      fields of `settings`, using its referenced build's stored account
+      where available and `boat` for a legacy row without that account.
+- [x] Move each consumer under "Replaced ways" to the new record, with every
       assertion of its tests.
-- [ ] Keep, write, or drop the old fields of `settings`, as decision 217
-      says.
-- [ ] Keep one running build for each org, as the design says.
-- [ ] Update the lifecycle, members, and migrations READMEs.
+- [x] Drop the old image and refresh fields of `settings` after copying
+      their data, as decision 217 H says. Keep no dual-write converter.
+- [x] Keep one running build for each org, as the design says.
+- [x] Update the lifecycle, members, and migrations READMEs.
+
+Evidence: `.context/sandbox-provider-groundwork/m3/image-store-report.md`,
+`image-tests-report.md`, `image-consumers-report.md`, `docs-report.md`, and
+`migration-proof-indexed.log` in that evidence directory.
 
 ## Milestone 4: The client of the stored account — completed
 
@@ -671,10 +732,6 @@ Evidence: `.context/sandbox-provider-groundwork/complete-gate.log` records
 the complete gate on the finished independent groundwork. The live check
 and the org image migration still wait for their required inputs.
 
-- [ ] Run the live check of `image/` on Boat: create a workspace, run a
-      chat turn, open the terminal and a preview, then stop, resume, and
-      archive. Save the output under `.context/sandbox-provider-groundwork/`.
-      Needs: a Boat key from the user.
 - [x] Commit with Conventional Commits and push the branch.
 - [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -686,6 +743,17 @@ Review summary: the read-only review of `4f41d9a1` against `8999b4b4`
 reported no findings. No finding check, fix round, or re-review was needed.
 The report is `.context/reviews/calummoore/vercel-sandbox-provider/round-1-review.md`.
 
+- [x] Run the complete gate again on Milestone 3 and merged `origin/main`
+      at `b9d3f40b`, after the targeted account-image regressions pass.
+
+Evidence: `.context/sandbox-provider-groundwork/m3/complete-gate.log`.
+The subsequent Mac download change from `main` needs the final PR CI gate
+on the combined tree.
+
+- [ ] Commit and push the completed Milestone 3 changes and its updated
+      deployment documentation.
+- [ ] Review the full updated branch after that push. Apply the same
+      finding-check and fix rule, with no changes to test timeouts or gates.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
@@ -694,9 +762,15 @@ The report is `.context/reviews/calummoore/vercel-sandbox-provider/round-1-revie
 
 ## Post-merge follow-up (non-blocking)
 
+- [ ] After the new Worker and schema deploy from `main`, run the real Boat
+      check: create a workspace, run a chat turn, open terminal and preview,
+      stop, resume, and archive. Use an authorized test org and credentials.
+      Finish before public launch. Do not apply this schema to the shared
+      deployment before the new Worker can deploy with it.
 - [ ] Choose the second provider from the launch data, as decision 213
       says: the real peak, Boat's record, the answers of Vercel and
       Superserve about their terms, Sprites, and an own fleet. Decision 216
       then applies.
-- [ ] Under option A or B of decision 217, drop the old org image fields of
-      `settings` after one good deploy.
+- [ ] Design the compatible schema rollout before the first destructive
+      migration after launch. Consider E, F, and G of decision 217 rather
+      than reusing the pre-launch C path.

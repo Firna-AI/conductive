@@ -1,4 +1,3 @@
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { activeAdminPredicate } from './org-data'
 import { CLEANUP_LEASE_MS, lifecycleWritePredicate } from './lifecycle-data'
 
@@ -137,14 +136,13 @@ export async function recordSuspendedResources(
     db
       .prepare(
         `INSERT OR IGNORE INTO org_deletion_resources (org_id, kind, resource_id, provider_account)
-       SELECT s.org_id, 'snapshot', s.org_image_name, COALESCE(b.provider_account, ?)
-         FROM settings s LEFT JOIN image_builds b ON b.id = s.image_build_id AND b.org_id = s.org_id
-           AND b.snapshot_name = s.org_image_name
-         WHERE s.org_id = ? AND s.org_image_name IS NOT NULL AND ${lifecycleWritePredicate}
+       SELECT i.org_id, 'snapshot', i.image_name, i.provider_account
+         FROM org_images i
+         WHERE i.org_id = ? AND i.image_name IS NOT NULL AND ${lifecycleWritePredicate}
        UNION ALL SELECT org_id, 'snapshot', snapshot_name, provider_account FROM image_builds
          WHERE org_id = ? AND snapshot_name IS NOT NULL AND ${lifecycleWritePredicate}`,
       )
-      .bind(DEFAULT_PROVIDER_ACCOUNT, orgId, ...ownership, orgId, ...ownership),
+      .bind(orgId, ...ownership, orgId, ...ownership),
     db
       .prepare(
         `UPDATE org_deletions SET suspended_at = ? WHERE org_id = ? AND ${lifecycleWritePredicate}`,

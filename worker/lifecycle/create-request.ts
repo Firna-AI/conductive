@@ -1,6 +1,7 @@
 import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import { hash } from '../security/crypto'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { requireOrgMember } from './access'
 import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
@@ -32,10 +33,16 @@ export async function prepareCreationRequest(
   sender: User,
   input: WorkspaceCreationInput,
   reservedId?: string,
+  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<WorkspaceStartJob> {
   const { env, dependencies } = runtime
   await requireOrgMember(env.DB, orgId, user.id)
-  const image = await readCreationImage(env.DB, orgId, input.repositoryId)
+  const image = await readCreationImage(
+    env.DB,
+    orgId,
+    input.repositoryId,
+    providerAccount,
+  )
   const { repository } = image
   const id = reservedId ?? dependencies.randomToken()
   const sessionId = dependencies.randomToken()

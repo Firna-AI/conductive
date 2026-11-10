@@ -3,6 +3,7 @@ import type { WorkspaceStorage } from './platform-storage'
 import type { AppEnv } from '../env'
 import type { AppDependencies } from '../env'
 import { HttpError } from '../http'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { createGitHubImageSourceMaterializer } from './image-sources/materialize'
 import { readImageSoftware } from './image-software'
 import { runImageAlarm, type ImageCoordinatorState } from './image-timers'
@@ -50,6 +51,7 @@ export class ImageCoordinator {
       state.orgId,
       this.dependencies.now(),
       state,
+      state.providerAccount,
     )
     if (next.buildId === null) {
       try {
@@ -80,8 +82,16 @@ export class ImageCoordinator {
         this.dependencies,
       ),
       scheduler: {
-        schedule: (orgId, software, nextAt, buildId) =>
-          this.schedule({ orgId, software, nextAt, buildId }),
+        schedule: (orgId, software, nextAt, buildId, providerAccount) =>
+          this.schedule({
+            orgId,
+            software,
+            nextAt,
+            buildId,
+            ...(providerAccount && providerAccount !== DEFAULT_PROVIDER_ACCOUNT
+              ? { providerAccount }
+              : {}),
+          }),
       },
     }
     try {

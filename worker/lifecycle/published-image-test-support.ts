@@ -56,8 +56,16 @@ export async function seedPublishedImage(
       ),
     db
       .prepare(
-        'UPDATE settings SET org_image_name = ?, image_build_id = ? WHERE org_id = ?',
+        `INSERT INTO org_images (org_id, provider_account, image_name, image_build_id)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT (org_id, provider_account) DO UPDATE SET
+           image_name = excluded.image_name, image_build_id = excluded.image_build_id`,
       )
-      .bind(input.imageName, input.buildId, input.orgId),
+      .bind(
+        input.orgId,
+        input.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT,
+        input.imageName,
+        input.buildId,
+      ),
   ])
 }

@@ -5,7 +5,7 @@ import { encrypt } from '../security/crypto'
 import { setupBackendTests } from './backend-test-hooks'
 import { readBuild } from './build-data'
 import { imageRetryFixture, statusFault } from './retry-test-support'
-import { readImageSettings } from './settings-data'
+import { readOrgImage } from './org-image-data'
 import {
   insertSourceJob,
   readSourceJob,
@@ -42,7 +42,7 @@ it('ends an install that never exits at the original build deadline after phase 
   ).toMatchObject({ error: FAILURE, completedAt: TEST_TIME + 3_600_000 })
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
   expect(
-    await readImageSettings(fixture.runtime.env.DB, fixture.org.id),
+    await readOrgImage(fixture.runtime.env.DB, fixture.org.id),
   ).toMatchObject({ imageName: 'last-good-image' })
 })
 
@@ -66,7 +66,7 @@ it('ends a refresh whose computer never becomes ready after reconstruction', asy
   ).toMatchObject({ error: FAILURE })
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
   expect(
-    await readImageSettings(fixture.runtime.env.DB, fixture.org.id),
+    await readOrgImage(fixture.runtime.env.DB, fixture.org.id),
   ).toMatchObject({ imageName: 'last-good-image' })
 })
 
@@ -108,7 +108,7 @@ it('fails a build when its final provider read returns at the deadline before pu
     (await readBuild(fixture.runtime.env.DB, fixture.org.id, image.id)).build,
   ).toMatchObject({ error: FAILURE })
   expect(
-    await readImageSettings(fixture.runtime.env.DB, fixture.org.id),
+    await readOrgImage(fixture.runtime.env.DB, fixture.org.id),
   ).toMatchObject({ imageName: 'last-good-image' })
   expect(fixture.boat.deletedSnapshots).toEqual([publishing.snapshotName])
 })

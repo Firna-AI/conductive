@@ -131,7 +131,7 @@ Production also supplies `deleteOrgState` to remove the image coordinator payloa
   It also receives the call ownership and the complete workspace ID list.
   It returns disk and org-refresh timers to the active lifecycle.
   It must arm these timers before it returns.
-  The timers must check active org state and current disk/settings records before running.
+  The timers must check active org state and current disk, settings, and org image records before running.
   It must keep normal access closed and start no sandbox during the handoff.
   Replace older timer plans for the same org.
   Concurrent calls must reject older generations, even when request IDs match.
@@ -166,7 +166,7 @@ After seven days, it removes all recorded org-image and build snapshots
 before any sandbox deletion. It then removes workspace state and D1 rows.
 The resource journal keeps completed steps after a failure.
 Each journal resource holds its kind, its ID, and its provider account. So equal IDs in two accounts stay two resources.
-The org image takes the account of the build that `settings.image_build_id` names. Without a matching build, it takes `DEFAULT_PROVIDER_ACCOUNT`.
+Each org image of `org_images` enters the journal with the provider account of its own record. The purge also deletes the `org_images` rows of the org.
 The result names purged orgs and orgs that need another attempt.
 D1 ownership records stay until every external cleanup succeeds.
 A cleanup lease separates Restore from cleanup calls.

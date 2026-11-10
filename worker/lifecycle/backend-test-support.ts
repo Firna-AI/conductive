@@ -1,5 +1,6 @@
 import { API_PATHS, type User } from '../../src/shared/api'
 import type { AppDependencies } from '../env'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import {
   createHarness,
   TEST_TIME,
@@ -210,8 +211,17 @@ export async function backendFixture(sharedHarness?: TestHarness) {
       sourceCalls.push(input)
     },
     scheduler: {
-      schedule: async (orgId, software, nextAt, buildId) => {
-        scheduled.push({ orgId, software, nextAt, buildId })
+      schedule: async (orgId, software, nextAt, buildId, providerAccount) => {
+        scheduled.push({
+          orgId,
+          software,
+          nextAt,
+          buildId,
+          ...(providerAccount === undefined ||
+          providerAccount === DEFAULT_PROVIDER_ACCOUNT
+            ? {}
+            : { providerAccount }),
+        })
       },
     },
   }

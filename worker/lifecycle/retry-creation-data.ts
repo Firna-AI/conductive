@@ -51,9 +51,11 @@ export async function pinRetryCreation(
       .bind(
         job.attempt,
         job.orgId,
+        job.providerAccount,
         creation.repositoryId,
         job.workspaceId,
         job.orgId,
+        job.providerAccount,
         creation.repositoryId,
       ),
     db

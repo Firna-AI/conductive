@@ -4,6 +4,7 @@ import { API_PATHS, orgPath } from '../../src/shared/api'
 import { membersPath } from '../../src/shared/members'
 import { orgSettingsPaths } from '../../src/shared/org-settings'
 import { deleteOrgPath, restoreOrgPath } from '../../src/shared/orgs'
+import { readOrgImage } from '../lifecycle/org-image-data'
 import {
   createHarness,
   TEST_TIME,
@@ -27,6 +28,24 @@ afterAll(async () => {
 
 it('hides a deleted org from members and restores stopped workspaces without a provider resume', async () => {
   const { org, admin, member, client } = await deletionFixture(harness)
+  await harness.env.DB.batch([
+    harness.env.DB.prepare(
+      `UPDATE org_images SET last_refresh_at = 11, last_push_refresh_at = 21,
+       pending_push_refresh_at = 31, next_image_refresh_at = 41
+       WHERE org_id = ? AND provider_account = 'boat'`,
+    ).bind(org.id),
+    harness.env.DB.prepare(
+      `INSERT INTO org_images (org_id, provider_account, image_name, last_refresh_at,
+       last_push_refresh_at, pending_push_refresh_at, next_image_refresh_at)
+       VALUES (?, 'boat-second', 'second-org-image', 12, 22, 32, 42)`,
+    ).bind(org.id),
+  ])
+  const imageAccounts = ['boat', 'boat-second']
+  const imagesBefore = await Promise.all(
+    imageAccounts.map((account) =>
+      readOrgImage(harness.env.DB, org.id, account),
+    ),
+  )
   const callsBeforeSuspension: number[] = []
   const suspendOrg = client.hooks.suspendOrg
   client.hooks.suspendOrg = async (orgId, workspaceIds, ownership) => {
@@ -113,6 +132,13 @@ it('hides a deleted org from members and restores stopped workspaces without a p
       .bind(org.id)
       .first('state'),
   ).toBe('stopped')
+  expect(
+    await Promise.all(
+      imageAccounts.map((account) =>
+        readOrgImage(harness.env.DB, org.id, account),
+      ),
+    ),
+  ).toEqual(imagesBefore)
   expect(providerRequests(harness)).toHaveLength(2)
 })
 

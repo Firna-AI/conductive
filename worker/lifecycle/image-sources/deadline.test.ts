@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { createHarness, type TestHarness } from '../../test-support/harness'
 import { advanceImageBuild } from '../image-builds'
 import { readBuild } from '../build-data'
-import { readImageSettings } from '../settings-data'
+import { readOrgImage } from '../org-image-data'
 import { WORKSPACE_TOOLS_DIRECTORY } from '../../tools/image'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
@@ -116,7 +116,7 @@ it('keeps the last good image and deletes the builder after native source failur
   try {
     const { runtime, boat } = await nativeImageRuntime(fixture)
     await fixture.env.DB.prepare(
-      "UPDATE settings SET org_image_name = 'last-good-image' WHERE org_id = ?",
+      "INSERT INTO org_images (org_id, provider_account, image_name) VALUES (?, 'boat', 'last-good-image')",
     )
       .bind(fixture.org.id)
       .run()
@@ -135,7 +135,7 @@ it('keeps the last good image and deletes the builder after native source failur
     expect(boat.commands).toEqual([])
     expect(boat.deletedIds).toEqual(['builder-one'])
     expect(
-      (await readImageSettings(fixture.env.DB, fixture.org.id)).imageName,
+      (await readOrgImage(fixture.env.DB, fixture.org.id))?.imageName,
     ).toBe('last-good-image')
     expect(
       (await readBuild(fixture.env.DB, fixture.org.id, fixture.input.buildId))
