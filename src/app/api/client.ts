@@ -17,6 +17,30 @@ export class ApiError extends Error {
   }
 }
 
+/** One raw file for an upload route, as a `FileTransport` sends it. */
+interface FileRequest {
+  /** The path of the route, with the query that names the file. */
+  path: string
+  file: File
+  /** Gets the number of bytes of the file that the browser sent so far. */
+  progress: (sentBytes: number) => void
+  /** Stops the request, such as after Remove or a change of person. */
+  signal: AbortSignal
+}
+
+/** The status of an answer to a file, and its JSON body, or `null`. */
+export interface FileReply {
+  status: number
+  body: unknown
+}
+
+/**
+ * Sends one raw file with the session cookie, from the address that the
+ * client's fetch uses. It rejects when no answer came, such as offline, or
+ * when `signal` stopped the request.
+ */
+export type FileTransport = (request: FileRequest) => Promise<FileReply>
+
 export interface ApiClient {
   /**
    * The fetch of this client, with its origin and its credentials. A
@@ -31,6 +55,16 @@ export interface ApiClient {
     path: string,
     body: object,
     read: (body: unknown) => T,
+  ): Promise<T>
+  /**
+   * Sends one raw file, as the upload routes take it, through the file
+   * transport of the client. Its answer and its errors read as a write's.
+   */
+  sendFile<T>(
+    path: string,
+    file: File,
+    read: (body: unknown) => T,
+    hooks: Pick<FileRequest, 'progress' | 'signal'>,
   ): Promise<T>
 }
 
@@ -59,8 +93,33 @@ function errorFrom(status: number, body: unknown): ApiError {
   }
 }
 
-/** The JSON client of the browser API. It sends the session cookie. */
-export function createApiClient(fetch: FetchLike): ApiClient {
+/** The value of an answer, or its error, as the API says it. */
+function answer<T>(
+  status: number,
+  body: unknown,
+  read: (body: unknown) => T,
+): T {
+  if (status < 200 || status > 299) throw errorFrom(status, body)
+  try {
+    return read(body)
+  } catch (error) {
+    if (!(error instanceof ParseError)) throw error
+    throw new ApiError(
+      status,
+      'invalid_response',
+      'The app could not read the answer of the server. Try again.',
+    )
+  }
+}
+
+/**
+ * The JSON client of the browser API. It sends the session cookie. `files`
+ * sends the raw files of uploads, so that the browser can measure them.
+ */
+export function createApiClient(
+  fetch: FetchLike,
+  files?: FileTransport,
+): ApiClient {
   async function request<T>(
     path: string,
     init: RequestInit,
@@ -72,18 +131,7 @@ export function createApiClient(fetch: FetchLike): ApiClient {
     } catch {
       throw offline
     }
-    const body = await readJson(response)
-    if (!response.ok) throw errorFrom(response.status, body)
-    try {
-      return read(body)
-    } catch (error) {
-      if (!(error instanceof ParseError)) throw error
-      throw new ApiError(
-        response.status,
-        'invalid_response',
-        'The app could not read the answer of the server. Try again.',
-      )
-    }
+    return answer(response.status, await readJson(response), read)
   }
   return {
     fetch,
@@ -106,6 +154,16 @@ export function createApiClient(fetch: FetchLike): ApiClient {
         },
         read,
       ),
+    sendFile: async (path, file, read, hooks) => {
+      if (!files) throw new Error('This client has no file transport.')
+      let reply: FileReply
+      try {
+        reply = await files({ path, file, ...hooks })
+      } catch {
+        throw offline
+      }
+      return answer(reply.status, reply.body, read)
+    },
   }
 }
 

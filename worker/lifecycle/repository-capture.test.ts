@@ -2,7 +2,11 @@ import { expect, it } from 'vitest'
 
 import { encrypt } from '../security/crypto'
 import { setupBackendTests } from './backend-test-hooks'
-import { SOFTWARE } from './backend-test-support'
+import {
+  SOFTWARE,
+  type backendFixture as createBackendFixture,
+} from './backend-test-support'
+import { seededCompletedWorkspace } from './backend-workspace.test-support'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { startImageBuild } from './image-builds'
@@ -11,18 +15,15 @@ import { orgEnvironmentContext } from './settings-data'
 import { readWorkspace } from './workspace-data'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
+import { seedPublishedImage } from './published-image-test-support'
 
 const fixtureForTest = setupBackendTests()
 
-it('keeps the workspace image folder map at resume and retention after a later selection changes name collisions', async () => {
-  const fixture = fixtureForTest()
-  const { runtime, images, org, user, repositoryId, boat } = fixture
-  await runtime.env.DB.prepare(
-    "UPDATE repositories SET full_name = 'acme/storefront' WHERE id = ?",
-  )
-    .bind(repositoryId)
-    .run()
-  const saveEnvironment = async (secret: string) => {
+function folderEnvironment(
+  fixture: Awaited<ReturnType<typeof createBackendFixture>>,
+) {
+  const { runtime, org } = fixture
+  return async (secret: string) => {
     const ciphertext = await encrypt(
       JSON.stringify({
         APP_SECRET: secret,
@@ -38,6 +39,27 @@ it('keeps the workspace image folder map at resume and retention after a later s
       .bind(ciphertext, org.id)
       .run()
   }
+}
+
+function capturedLocations(repositoryId: string) {
+  return [
+    {
+      repositoryId,
+      directory: '/home/user/code/storefront',
+      variable: 'CONDUCTIVE_REPOSITORY_STOREFRONT_DIR',
+    },
+  ]
+}
+
+it('captures the published image folder map and environment for a created workspace', async () => {
+  const fixture = fixtureForTest()
+  const { runtime, images, org, user, repositoryId, boat } = fixture
+  await runtime.env.DB.prepare(
+    "UPDATE repositories SET full_name = 'acme/storefront' WHERE id = ?",
+  )
+    .bind(repositoryId)
+    .run()
+  const saveEnvironment = folderEnvironment(fixture)
   await saveEnvironment('first-secret')
   await finishImageBuild(
     fixture,
@@ -58,13 +80,7 @@ it('keeps the workspace image folder map at resume and retention after a later s
     }),
   )
   const id = created.workspace.id
-  const captured = [
-    {
-      repositoryId,
-      directory: '/home/user/code/storefront',
-      variable: 'CONDUCTIVE_REPOSITORY_STOREFRONT_DIR',
-    },
-  ]
+  const captured = capturedLocations(repositoryId)
   expect(await workspaceRepositoryLocations(runtime.env.DB, id)).toEqual(
     captured,
   )
@@ -74,6 +90,38 @@ it('keeps the workspace image folder map at resume and retention after a later s
       CONDUCTIVE_REPOSITORY_DIR: '/home/user/code/storefront',
       CONDUCTIVE_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
     },
+  })
+})
+
+it('keeps the captured image folder map at resume and retention after a later build adds name collisions', async () => {
+  const fixture = fixtureForTest()
+  const { runtime, images, org, user, repositoryId, boat } = fixture
+  const captured = capturedLocations(repositoryId)
+  await runtime.env.DB.prepare(
+    "UPDATE repositories SET full_name = 'acme/storefront' WHERE id = ?",
+  )
+    .bind(repositoryId)
+    .run()
+  await seedPublishedImage(runtime.env.DB, {
+    orgId: org.id,
+    buildId: 'captured-folder-image',
+    imageName: 'captured-folder-image',
+    repositories: [
+      {
+        id: repositoryId,
+        orgId: org.id,
+        fullName: 'acme/storefront',
+        defaultBranch: 'main',
+      },
+    ],
+    locations: captured,
+    software: SOFTWARE,
+    now: runtime.dependencies.now(),
+  })
+  const saveEnvironment = folderEnvironment(fixture)
+  await saveEnvironment('first-secret')
+  const { id } = await seededCompletedWorkspace(fixture, {
+    repositoryLocations: captured,
   })
   const row = await readWorkspace(runtime.env.DB, org.id, id)
   if (!row.sandboxId) throw new Error('Missing workspace sandbox')
@@ -141,10 +189,10 @@ it('keeps the workspace image folder map at resume and retention after a later s
   })
   boat.states.set(row.sandboxId, 'archived')
   await runtime.workspace(id).lifecycleStopped()
-  fixture.setTime(runtime.dependencies.now() + 1_123_200_000)
+  await fixture.setTime(runtime.dependencies.now() + 1_123_200_000)
   const platform = fixture.actors.get(id)
   if (!platform) throw new Error('Missing retention controller')
-  await platform.endpoint().alarm()
+  await fixture.advanceTo(runtime.dependencies.now(), id)
   expect(resumedEnvironments[1]).toMatchObject({
     APP_SECRET: 'fresh-secret',
     CONDUCTIVE_REPOSITORY_DIR: '/home/user/code/storefront',

@@ -12,8 +12,9 @@ export const integrationsFeatures: readonly ParityFeature[] = [
     id: 'github-issues',
     area: 'integrations',
     name: 'GitHub issues',
-    status: 'considering',
-    note: 'Starting from GitHub issues and attaching issues are under consideration. Agents can read and manage issues through the GitHub CLI.',
+    status: 'planned',
+    note: 'Starting workspaces from GitHub issues and attaching their details are planned. Agents can already read and manage issues through the GitHub CLI.',
+    due: null,
   },
   {
     id: 'linear',

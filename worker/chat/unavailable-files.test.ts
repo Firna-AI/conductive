@@ -1,12 +1,8 @@
 import { expect, it } from 'vitest'
 
 import { FilesState } from '../files/state'
-import {
-  context,
-  createRunnerLimitsFixture,
-  file,
-  snapshot,
-} from './runner-limits.test-support'
+import { createRunnerLimitsFixture } from './runner-limits.test-support'
+import { context, file, snapshot } from './runner-fixtures.test-support'
 
 it('persists unavailable files and cached trees through receipt, replay, and recovery', async () => {
   const h = await createRunnerLimitsFixture()

@@ -125,8 +125,19 @@ it('uses the active stored sender and inherited owner when a machine tool create
     )
   expect((await request('stale-turn')).status).toBe(403)
   const creating = request(turnId)
+  const deadline = Date.now() + 10_000
+  let queued: { id: string } | null = null
+  while (!queued && Date.now() < deadline)
+    queued = await active.env.DB.prepare(
+      'SELECT id FROM workspaces WHERE org_id = ? AND id NOT IN (?, ?)',
+    )
+      .bind(OUTER_ORG, OUTER_WORKSPACE, OTHER_WORKSPACE)
+      .first<{ id: string }>()
+  if (!queued) throw new Error('The delegated workspace was not admitted.')
+  const completing = completeRetainedCreation(active, queued.id)
   const newId = await allocation
-  expect(await completeRetainedCreation(active, newId)).toEqual({ ok: true })
+  expect(newId).toBe(queued.id)
+  expect(await completing).toEqual({ ok: true })
   const response = await creating
   expect(response.status).toBe(201)
   const created = record(await response.json())

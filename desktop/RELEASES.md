@@ -4,7 +4,7 @@ This file holds the release part of the [Mac app README](README.md).
 [Signed release packages](#signed-release-packages) gives the signing command and its secrets.
 [Releases](#releases) gives the release steps, the release files, and the versions.
 [Updates](#updates) says which builds have the updater on.
-[Packages and updates](../docs/protocol/desktop-app.md#packages-and-updates) in the Mac app protocol states the requirements.
+[Packages and updates](../docs/protocol/desktop-packages-and-updates.md) in the Mac app protocol states the requirements.
 
 ## Signed release packages
 
@@ -20,7 +20,7 @@ After each Electron upgrade, read `LSMinimumSystemVersion` from `Contents/Info.p
 Electron 44 sets the current value to `13.0` because `electron-builder.yml` sets no `minimumSystemVersion`.
 If the value changes, update the oldest macOS version in both places:
 
-- [Packages](../docs/protocol/desktop-app.md#packages) in the Mac app protocol.
+- [Packages](../docs/protocol/desktop-packages-and-updates.md#packages) in the Mac app protocol.
 - `macAppSection.requirement` in [the marketing feature text](../src/marketing/features.ts).
 
 ```sh
@@ -79,7 +79,7 @@ or cancellation.
 
 Each GitHub release of `Firna-AI/remote-code` carries the signed Mac app.
 Installed copies update themselves from these releases.
-[Releases](../docs/protocol/desktop-app.md#releases) in the Mac app protocol states the requirements.
+[Releases](../docs/protocol/desktop-packages-and-updates.md#releases) in the Mac app protocol states the requirements.
 
 `.github/workflows/release.yml` holds the whole release.
 The reusable workflow `desktop-mac-checks.yml` holds the Mac checks, and `desktop-sign.yml` holds the signing steps.
@@ -191,4 +191,4 @@ Only the signing job of a release sets it.
 Manual signing runs, pull request builds, and local builds keep the updater off.
 An unpackaged app never starts the updater.
 In a build with the updater off, Help → Check for updates is disabled.
-[Updates in the app](../docs/protocol/desktop-app.md#updates-in-the-app) states when the app checks and what it shows.
+[Updates in the app](../docs/protocol/desktop-packages-and-updates.md#updates-in-the-app) states when the app checks and what it shows.

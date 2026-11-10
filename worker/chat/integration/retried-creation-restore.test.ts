@@ -151,6 +151,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
     .map((request) => request.command)
   expect(commands).toEqual([
     expect.stringContaining('/run/conductive/startup.sh'),
+    expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
   expect(commands[0]).not.toBe(
     active.boat.commandRequests[commandsBefore - 1]?.command,

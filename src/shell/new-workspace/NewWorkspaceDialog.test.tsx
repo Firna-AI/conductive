@@ -74,8 +74,10 @@ describe('the New workspace dialog', () => {
     typeText(message, task)
     pasteMessage(message, ` Like ${linked.link}.`)
     const draft = tab.app.org(org).newWorkspace(null)
-    await act(() => draft.attach([new File(['Cart notes'], 'notes.txt')]))
-    const [file] = draft.draft.get().attachments
+    const file = new File(['png'], 'postcode-overlap.png', {
+      type: 'image/png',
+    })
+    await act(() => draft.attach([file]))
     press(message, 'Escape')
     await settle()
     const escaped = {
