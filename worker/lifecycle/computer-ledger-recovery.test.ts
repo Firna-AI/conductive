@@ -12,6 +12,7 @@ import {
   START_ALLOCATION_CLEANUP_KEY,
 } from './start-allocation-cleanup'
 import { serializeStartJob } from './start-job-codec'
+import { nativeWorkspaceStorage } from './platform-storage'
 import { createWorkspace } from './workspaces'
 
 const fixtureForTest = setupBackendTests()
@@ -56,14 +57,10 @@ it('keeps the last workspace owner when allocation recovery merges a retained co
   await runtime.env.DB.prepare('DELETE FROM workspaces WHERE id = ?')
     .bind(id)
     .run()
-  await actor.storage.put(
-    'job',
-    START_ALLOCATION_CLEANUP_KEY,
-    serializeStartJob(job),
-  )
+  await actor.storage.put(START_ALLOCATION_CLEANUP_KEY, serializeStartJob(job))
   expect(
     await retryAllocationCleanup(
-      actor.storage,
+      nativeWorkspaceStorage(actor.storage),
       runtime.env,
       runtime.dependencies,
     ),

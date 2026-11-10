@@ -130,3 +130,35 @@ export async function pendingComputerCleanup(
       .all<{ orgId: string; sandboxId: string }>()
   ).results
 }
+
+export async function liveBuildComputerIds(
+  db: D1Database,
+  orgId: string,
+  buildId: string,
+): Promise<string[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT sandbox_id AS id FROM computer_ledger WHERE org_id = ?
+     AND purpose = 'build' AND purpose_id = ? AND deleted_at IS NULL
+     AND create_rejected = 0 AND sandbox_id IS NOT NULL ORDER BY id`,
+    )
+    .bind(orgId, buildId)
+    .all<{ id: string }>()
+  return results.map((row) => row.id)
+}
+
+export async function liveOrgComputer(
+  db: D1Database,
+  orgId: string,
+  sandboxId: string,
+): Promise<boolean> {
+  return (
+    (await db
+      .prepare(
+        `SELECT id FROM computer_ledger WHERE org_id = ? AND sandbox_id = ?
+     AND deleted_at IS NULL AND create_rejected = 0`,
+      )
+      .bind(orgId, sandboxId)
+      .first()) !== null
+  )
+}

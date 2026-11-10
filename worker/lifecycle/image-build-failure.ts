@@ -20,6 +20,7 @@ import {
   ProviderRetryExhausted,
   transientProviderError,
 } from './provider-retry'
+import { liveBuildComputerIds } from './computer-ledger'
 
 export async function handleImageBuildFailure(
   runtime: ImageRuntime,
@@ -85,7 +86,12 @@ export async function handleImageBuildFailure(
   if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
     return false
   if (!provider) {
-    if (job.sandboxId || unresolvedAllocation) return false
+    if (
+      job.sandboxId ||
+      unresolvedAllocation ||
+      (await liveBuildComputerIds(env.DB, job.orgId, job.buildId)).length > 0
+    )
+      return false
     await updateBuildJob(env.DB, buildId, 'done')
     await scheduleIdleImage(runtime, orgId, jobSoftware(job))
     return true

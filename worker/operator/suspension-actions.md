@@ -37,7 +37,10 @@ The action takes these steps, in this order:
    user started. The coordinator stops the build and marks it failed. It
    retries the cleanup until no build sandbox of that build is left.
 4. It reads the live computer ledger and stops detached computers.
-   Each failed Stop stays in the pending lists.
+   One native task per org saves their concrete IDs and its alarm before Stop.
+   Each failed Stop stays in the pending lists and retries every 30 seconds.
+   The task keeps its work after an owner change, a lift, or a runtime restart.
+   Failed task admission fails the request before a detached Stop is sent.
 
 The reply is a `UserSuspensionResponse`: `userId`, `suspendedAt`,
 `pendingWorkspaceIds`, and `pendingBuildIds`. The status is 200 when
@@ -82,6 +85,9 @@ It stops every workspace and unfinished build of the org, whoever owns or starte
 The native workspace and image alarms retry incomplete cleanup after runtime restarts.
 Failed creates stay in `pendingWorkspaceIds` while their ledger entries have pending cleanup, including after their workspace rows are removed.
 The action reads live ledger entries after workspace processing and stops detached computers.
+Both suspension actions use the same persistent org Stop task.
+The task runs without another suspension request.
+It clears a computer only after confirmed Stop, not found, or ledger deletion.
 It lists each pending workspace or build ID once.
 The existing native cleanup alarm retries Delete for computers with pending cleanup.
 Cleanup remains pending until Delete succeeds.

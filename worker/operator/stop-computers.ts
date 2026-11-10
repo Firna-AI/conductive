@@ -1,8 +1,6 @@
 import type { WorkspaceRuntime } from '../lifecycle/workspace-runtime'
-import { providerState } from '../lifecycle/provider-state'
-import { replyOrCurrentState } from '../lifecycle/workspace-actions'
-import { sandboxProvider } from '../sandbox/client'
-import { ProviderError } from '../sandbox/errors'
+import { workspaceBinding } from '../app-api/workspace-state'
+import { computerStopObjectName } from '../lifecycle/computer-stop-task'
 import { suspensionComputers, type ComputerScope } from './computer-data'
 
 /** Lifecycle owners handle current resources. Detached resources still need a Stop. */
@@ -12,27 +10,33 @@ export async function stopRecordedComputers(
   pendingWorkspaceIds: string[],
   pendingBuildIds: string[],
 ): Promise<void> {
-  const { env, dependencies } = runtime
-  const provider = sandboxProvider(env, dependencies.fetch)
+  const { env } = runtime
   const workspaces = new Set(pendingWorkspaceIds)
   const builds = new Set(pendingBuildIds)
-  for (const computer of await suspensionComputers(env.DB, scope)) {
-    if (computer.currentWorkspace || computer.unfinishedBuild) continue
-    let pending = computer.sandboxId === null
-    if (computer.sandboxId) {
-      try {
-        const id = computer.sandboxId
-        const reply = await replyOrCurrentState(provider, id, () =>
-          provider.stop(id),
-        )
-        pending = providerState(reply.state) !== 'stopped'
-      } catch (error) {
-        pending = !(
-          error instanceof ProviderError && error.kind === 'not_found'
-        )
-      }
-    }
-    if (!pending && !computer.cleanupPending) continue
+  const computers = (await suspensionComputers(env.DB, scope)).filter(
+    (computer) => !computer.currentWorkspace && !computer.unfinishedBuild,
+  )
+  const orgs = new Map<string, string[]>()
+  for (const computer of computers) {
+    if (!computer.sandboxId) continue
+    const ids = orgs.get(computer.orgId) ?? []
+    ids.push(computer.sandboxId)
+    orgs.set(computer.orgId, ids)
+  }
+  const pending = new Set<string>()
+  for (const [orgId, ids] of orgs) {
+    const remaining = await workspaceBinding(env)
+      .getByName(computerStopObjectName(orgId), { locationHint: 'weur' })
+      .queueComputerStops(orgId, ids)
+    for (const id of remaining) pending.add(id)
+  }
+  for (const computer of computers) {
+    if (
+      computer.sandboxId &&
+      !pending.has(computer.sandboxId) &&
+      !computer.cleanupPending
+    )
+      continue
     const id = computer.purposeId ?? computer.sandboxId
     if (id) (computer.purpose === 'build' ? builds : workspaces).add(id)
   }

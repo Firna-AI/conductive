@@ -21,6 +21,7 @@ import { installWorkspaceTools } from '../tools/image'
 import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { privilegedCommand } from '../terminal/privileged'
 import { recoverImageBuildAllocation } from './image-allocation'
+import { liveBuildComputerIds } from './computer-ledger'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -98,17 +99,29 @@ export async function cleanupBuild(
     }
     await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
   }
+  const failures: unknown[] = []
+  for (const id of await liveBuildComputerIds(
+    runtime.env.DB,
+    job.orgId,
+    job.buildId,
+  )) {
+    try {
+      await deleteSandboxIfPresent(
+        runtime.env.DB,
+        provider,
+        id,
+        runtime.dependencies.now(),
+      )
+    } catch (error) {
+      failures.push(error)
+    }
+  }
+  if (failures.length > 0) throw failures[0]
   if (job.sandboxId) {
-    await deleteSandboxIfPresent(
-      runtime.env.DB,
-      provider,
-      job.sandboxId,
-      runtime.dependencies.now(),
-    )
     await runtime.env.DB.prepare(
-      'UPDATE image_builds SET sandbox_id = NULL WHERE id = ?',
+      'UPDATE image_builds SET sandbox_id = NULL WHERE id = ? AND org_id = ? AND sandbox_id = ?',
     )
-      .bind(job.buildId)
+      .bind(job.buildId, job.orgId, job.sandboxId)
       .run()
   }
   if (

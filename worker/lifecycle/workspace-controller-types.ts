@@ -13,6 +13,10 @@ import type {
 import type { LifecycleActivitySnapshot } from './input-activity-state'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  queueComputerStops(
+    orgId: string,
+    sandboxIds: readonly string[],
+  ): Promise<string[]>
   lifecycleActivity(checkOnly?: true): Promise<LifecycleActivityResult>
   extendLifecycleInput(
     operation: () => Promise<LifecycleReconciliation>,

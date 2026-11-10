@@ -66,7 +66,7 @@ it('records the workspace owner before create and attaches one computer after a 
     },
   ])
   expect(await computerRecords(runtime.env.DB)).toEqual(observed[0])
-  start.restart()
+  await start.restart()
   await start.advance()
   expect(await computerRecords(runtime.env.DB)).toEqual([
     {
@@ -258,7 +258,7 @@ it('keeps no live computer after a definite first refusal and retains an uncerta
     .providerRetry?.retryAt
   if (retryAt === null || retryAt === undefined)
     throw new Error('Missing retry')
-  fixture.setTime(retryAt)
+  await fixture.setTime(retryAt)
   refuse = true
   await expect(
     advanceImageBuild(images, org.id, uncertainId),

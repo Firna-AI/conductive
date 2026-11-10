@@ -84,6 +84,13 @@ export class WorkspaceLifecycle
     )
   }
 
+  queueComputerStops(
+    orgId: string,
+    sandboxIds: readonly string[],
+  ): Promise<string[]> {
+    return this.run(() => this.controller.queueComputerStops(orgId, sandboxIds))
+  }
+
   async queueLifecycleStart(
     job: StoredWorkspaceStartJob,
     intent?: WorkspaceStartIntent,

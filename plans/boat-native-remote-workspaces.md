@@ -8173,6 +8173,36 @@ Design calls by the implementor, checked by the orchestrator on 9 November
 
 Evidence: `.context/boat-native-remote-workspaces/15u/`.
 
+Fix round 1, 9 November 2026. The user chose option B for review finding 1
+and option C of the check for finding 2. Both findings are High with Rare
+likelihood. The primary orchestrator supplied the review and checks.
+
+Design calls for the fixes:
+
+- Give each org one `org-computer-stops:<orgId>` task. Save the concrete
+  computer IDs and the retry alarm before dispatch, so restart keeps each
+  failed Stop.
+- Keep queued Stop work after a lift or owner change. Clear an ID only
+  after confirmation, not found, or removal from that org's live ledger.
+- Serialize task admission and alarm work through the native lifecycle
+  queue. Reject failed admission with the existing unavailable error,
+  because a pending reply needs a saved retry owner.
+- Keep unresolved allocations with their existing lifecycle owners. The
+  task handles only assigned computer IDs.
+- Make build cleanup read every live ledger computer for the exact org
+  and build. Keep cleanup scheduled until all Deletes are confirmed.
+- Attempt each build computer even when an earlier Delete fails. Keep
+  that failure pending after the other attempts, so one computer cannot
+  block cleanup of the rest.
+- Keep the no-provider failure exit pending while a live build computer
+  remains. Clear only the matching current assignment after deletion.
+- Adapt the ledger tests to the native fixture API from the primary
+  branch. Await its restart and clock writes, and use its storage adapter.
+- Keep the long README detail in local linked guides. Preserve the
+  Settings and Development anchors.
+
+Fix-round evidence: `.context/boat-native-remote-workspaces/15u/fix-round-1/`.
+
 ## Milestone 2c: Doc follow-ups
 
 Depends on: 8o, 8p, 15q, 15r. They change the protocol docs that this

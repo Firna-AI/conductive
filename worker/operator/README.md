@@ -235,23 +235,7 @@ Worker variable.
 
 ## Development
 
-Run `npm run test -- worker/operator` from the repository root, with Node
-24. The tests use local D1 and the fake GitHub and Boat servers.
-They check overview access, state counts, time windows, daily counts, and org order.
-The directory tests check search keys, cursor pages, status, names, and operator access.
-The lift tests check events, access, retained revocations, Restore, and native disk alarms.
-Native operator tests use `nativeSuspensionRuntime` from
-[`native-runtime.test-support.ts`](native-runtime.test-support.ts).
-It supplies the fixture provider for calls from Node.
-The native workspace objects use their own fake outbound service.
-Run `npm run test -- worker/app-api/account-operator.test.ts` to check the account's operator flag.
-
-The tests of sandbox access and of the automatic refreshes live beside
-their code. After a change to them, run:
-
-```sh
-npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-access.test.ts worker/lifecycle/image-refresh.test.ts
-```
+The [operator test guide](tests.md) gives the commands and native provider setup.
 
 ### Key Code
 
@@ -272,9 +256,12 @@ npm run test -- worker/previews worker/terminal/access.test.ts worker/chat/tab-a
 - [`suspend-user.ts`](suspend-user.ts): `suspendUser`, the steps and the
   pending lists.
 - [`computer-data.ts`](computer-data.ts): live ledger computers in the user or org scope.
-- [`stop-computers.ts`](stop-computers.ts): stops detached and retained computers beside the normal lifecycle calls.
+- [`stop-computers.ts`](stop-computers.ts): groups detached computer IDs into their persistent org task.
+  Task admission must succeed before the action reports pending work.
   Failed-computer cleanup stays pending until Delete succeeds.
   A legacy computer without a parent uses its provider ID as the opaque pending identifier.
+- [`computer-stop-task.ts`](../lifecycle/computer-stop-task.ts): saves and retries detached Stops through one native object per org.
+  Confirmed stops and absent or deleted computers leave its pending list.
 - [`data.ts`](data.ts): `recordUserSuspension`, which records the
   suspension and revokes the sign-in sessions and previews, and the
   reads of the owned workspaces and builds.
