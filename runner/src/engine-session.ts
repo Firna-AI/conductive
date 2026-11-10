@@ -29,7 +29,6 @@ export interface ActiveTurn {
   waiting: ProviderInput[]
   output: TurnOutput
   stopped: boolean
-  shutdown: boolean
   provider: ProviderProcess | null
   lifetime: ProviderLifetime | null
   closing: Promise<void>

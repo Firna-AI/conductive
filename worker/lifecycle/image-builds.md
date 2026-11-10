@@ -53,15 +53,33 @@ that has not allocated a sandbox ends without cleanup. An allocation
 already in progress keeps its cleanup ownership. A failed reschedule of
 an existing running build keeps that build running.
 
+`changeShellRepository` in
+[`feature-repositories.ts`](../app-api/feature-repositories.ts) starts a
+build after a save adds a repository. It uses the admin who added it,
+also after a failed build. A repeated save and a removal start no build.
+A failed start keeps the saved choice and writes one fixed warning.
+
 `publishBuild` in [`build-admission-data.ts`](build-admission-data.ts)
 records whether the first good build needs an added build for changed
-settings. Its `cleanup-build` phase keeps that work through coordinator
+settings. A successful build or refresh also gets an added build when its
+repositories lack a chosen repository and the newest build succeeded.
+Its `cleanup-build` phase keeps that work through coordinator
 reconstruction. `cleanupBuild` in [`build-execution.ts`](build-execution.ts)
 finishes resource cleanup before `startAddedImageBuild` in
 [`first-image-build.ts`](first-image-build.ts) starts the added build.
 The added build uses the first admin who is not suspended. A failed start
-keeps the first good image and writes one fixed warning. A failed first
-build starts no added build.
+keeps the published image and writes one fixed warning. A failed build
+starts no added build. A refresh after a failed build gets none either.
+
+`readBuildHistory` in [`build-data.ts`](build-data.ts) returns
+`BuildsResponse.changes` with the build history. `readBuildChanges` in
+[`build-changes-data.ts`](build-changes-data.ts) compares the raw saved
+install script with the newest successful build's script in the requested
+provider account. Before that account's first image, it uses the newest
+build in the same account, in any state. A refresh never becomes this
+script reference. The added and removed repository lists compare the
+chosen repositories with that account's published image. Both lists stay
+empty before the first image.
 
 D1 keeps at most 4 MiB of each build log: the first and the last output.
 A write that passes that budget removes whole rows from the middle.
@@ -182,10 +200,17 @@ states the rule.
 ## Key code
 
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
+- [`build-changes-data.ts`](build-changes-data.ts): `readBuildChanges`, the
+  saved install script change and the added and removed repositories in
+  `BuildsResponse.changes`. It reads the script reference and the published
+  image's repositories for one provider account. The repository read uses
+  the same source as creation admission.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
   which starts changed settings after the first good build finishes cleanup.
+  It also builds waiting repositories after a successful build or refresh,
+  when the newest build succeeded.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
 - [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
 - [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`

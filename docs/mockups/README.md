@@ -56,8 +56,8 @@ share. Its linked pages give the parts of [the chat](design-chat.md), of
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
 moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/chat`, and `app/workspace-menu`, and the New workspace dialog. Its
-linked page,
+`app/chat`, and `app/workspace-menu`, the New workspace dialog, and the
+repositories that wait for a build. Its linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section. Its linked page

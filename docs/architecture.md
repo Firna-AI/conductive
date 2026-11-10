@@ -53,7 +53,8 @@ each feature.
 - **Sandbox:** the Boat sandbox of one workspace. The product calls it a
   cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
-  from. It holds a prepared copy of each repository that the org chose.
+  from. It holds a prepared copy of each repository that the org chose
+  when the build of the image began.
 - **Build:** a run of the install script on a copy of the org image. An org
   without an org image builds on a copy of the software image. A build
   replaces the org image only when it succeeds.
@@ -61,7 +62,8 @@ each feature.
   own software, and no org data. Each deploy run builds the one of its
   version, and a build of an org without an org image starts from it.
 - **Refresh:** an update of the org image that fetches the new commits of
-  each chosen repository. It does not run the install script.
+  each repository that the org image holds. It does not run the install
+  script.
 - **Agent runner:** our program in each sandbox. It runs the agents through
   the agent SDKs, and it reports the files, the changes, and the listening
   ports of its workspace.

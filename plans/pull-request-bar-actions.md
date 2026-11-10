@@ -1103,6 +1103,16 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: Move the unchanged chip bullets, lifecycle key-code list, and alarm block into their linked guides. Reason: Each touched guide stays short while retaining every fact and its earlier navigation.
 - Design call on 10 November 2026: Keep the complete final CI watch in the last pull-request task of Milestone 11. Reason: The plan snapshot and deletion must precede the final push that CI verifies, and the duplicate watch requirement must not create a circular task order.
 
+### Repository build and stopped-turn integration calls
+
+- Design call on 10 November 2026: Keep current instruction branches and the saved branch pair while adopting main's common stopped-turn state. Reason: The runner must preserve input context after main removes the separate shutdown flag.
+- Design call on 10 November 2026: Keep both explicit remote-ref fetch assertions beside main's new repository waiting and unavailable assertions. Reason: Creation must use the published image and captured default branch while explaining the current repository state.
+- Design call on 10 November 2026: Prove and repeat only the materially changed combined creation case in this integration. Reason: Its new waiting-versus-unavailable boundary needs one real requested-repository fault and ten selected passes.
+- Design call on 10 November 2026: Keep automatic builds for added repositories and manual builds for removals and install-script changes. Reason: Main now defines these different build triggers, while existing computers keep their software and protection policy.
+- Design call on 10 November 2026: Keep the current gateway-actions-archive-restore consent revision during the repository-build integration. Reason: Every legal module and consent assertion remains unchanged.
+- Design call on 10 November 2026: Put main's two new creation-claims key-code lines in the existing lifecycle key-code.md guide. Reason: The lifecycle README is a pointer and the entry list must have one full home.
+- Design call on 10 November 2026: Keep main's waiting-repository section in the main mockup catalogue beside the branch's bar row. Reason: The combined catalogue remains 294 lines and needs no additional split.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1500,15 +1510,15 @@ Current source delivery: merge `3e24c158` is pushed. The current integration rep
 
 Depends on: 10d
 
-- [ ] Integrate captured main `20083050b2f427b4ddd30df9aa6843525bb8edd0`.
+- [x] Integrate captured main `20083050b2f427b4ddd30df9aa6843525bb8edd0`.
       Preserve added-repository builds and waiting states, stopped-turn
       changed-file reports, current comparison facts, and preview Open.
-- [ ] Resolve each conflict against both captured parents. Keep all
+- [x] Resolve each conflict against both captured parents. Keep all
       branch actions, Continue, current branch input, work counts, account
       pins, recovery, Files ownership, and current Archive/Restore behavior.
-- [ ] Align affected internal guides, mockups, public guides, and legal
+- [x] Align affected internal guides, mockups, public guides, and legal
       facts. Preserve all current requirements and every active assertion.
-- [ ] Run bounded affected tests, types, and scoped checks. Prove and
+- [x] Run bounded affected tests, types, and scoped checks. Prove and
       repeat any materially changed asynchronous regression. Keep the
       complete final gate in Milestone 11.
 - [ ] Audit the exact two-parent merge and every resolution. Commit and

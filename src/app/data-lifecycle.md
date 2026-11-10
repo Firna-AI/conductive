@@ -33,6 +33,9 @@ of the data that the screens read and write.
 - A repository save adds or removes that repository only. It keeps the
   choices from other saves and other clients. The save queue keeps an add
   before a later remove of the same repository.
+- Each repository save and each save of the install script reads the
+  builds again, because an add starts a build, and each of these saves
+  changes `BuildsResponse.changes`.
 - A read or a Resume reply carries the event number of its state. It shows
   only when no newer state has shown, from the stream or another reply.
   After it, an older stream event changes nothing. A new owner, an
@@ -114,9 +117,10 @@ of the data that the screens read and write.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
-- The Cloud computer tab follows the builds while it shows. When the newest
-  build ends, by any path, the tab reads the settings again, because the
-  server changes them at a build, such as `needsBuild`.
+- The Cloud computer tab follows the builds while it shows. The builds,
+  not the settings, say which saved changes the org image lacks, in
+  `BuildsResponse.changes`. They read again while a build runs and at
+  its end, so the end of a build reads no settings.
 - While the tab shows, `ComputerModel` owns one `BuildLogFollower` for the
   log of the newest build that runs or failed. A newer build replaces the
   follower, so an answer for an older build changes neither the log nor

@@ -134,11 +134,15 @@
 
 /*
  * An item that is off keeps its place, greyed as a Firna control that is
- * off, and takes no hover.
+ * off, and takes no hover. Each part of it fades, except its note, which
+ * keeps the muted colour, so that the reader can read why it is off.
  */
 .disabled,
 .disabled:hover {
   background: none;
+}
+
+.disabled > :not(.detail) {
   opacity: 0.5;
 }
 

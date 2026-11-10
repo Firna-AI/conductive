@@ -1,8 +1,11 @@
 # Port previews
 
-- A preview shows in a frame inside the app, with an "Open in new tab"
-  link. Reason: Safari blocks the cookies of the previewed app inside a
-  frame.
+- A preview shows in a frame inside the app, with an "Open" link that
+  opens it in a new tab. Reason: Safari blocks the cookies of the
+  previewed app inside a frame.
+- The accessible name of the link is "Open in new tab". Reason: the user
+  asked for the short label, and a screen reader user must still hear
+  that the link opens a new tab.
 - The port form lists the servers that listen in the sandbox, from the
   report of the runner (decision 220). The form shows when no preview is
   open, and after "+".

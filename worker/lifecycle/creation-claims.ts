@@ -89,7 +89,12 @@ export async function claimCreation(
   const claim = results[3].results[0]
   if (!claim) throw new Error('The creation claim could not be recorded')
   if (claim.state === 'pending' || claim.state === 'succeeded') return claim
-  throw await imageAdmissionError(db, job.orgId, claim.state)
+  throw await imageAdmissionError(
+    db,
+    job.orgId,
+    claim.state,
+    creation.repositoryId,
+  )
 }
 
 interface PlanRow {

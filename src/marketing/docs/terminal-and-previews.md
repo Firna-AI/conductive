@@ -102,7 +102,7 @@ An existing workspace keeps its installed software after a resume.
 - [Prepare a new cloud computer for the server list](/docs/cloud-computer#apply-setup-changes)
 
 The preview opens inside the workspace.
-Use **Open in new tab** if the app works better in a browser tab.
+Use **Open** to show the app in a new browser tab when it works better there.
 This can help when its cookies or sign-in do not work inside the frame.
 
 ## Manage previews
@@ -130,7 +130,7 @@ Then open **Terminal** again.
 If a preview does not open, check that its server is running.
 Check the port number.
 Try **Reload**, or close the preview before opening it again.
-Use **Open in new tab** if only the framed view fails.
+Use **Open** if only the framed view fails.
 
 ## Understand access to the computer
 

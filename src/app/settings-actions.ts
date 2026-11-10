@@ -4,7 +4,9 @@ import type { OrgModel } from './org-model'
 
 /**
  * Adds or removes one repository of the org. Queued changes keep their
- * order, and each change takes effect at the next build.
+ * order. An add starts a build, and each change changes the repositories
+ * that the org image lacks or still holds, so the builds read again after
+ * the save: the new build and the repository notice show at once.
  */
 export async function setRepositorySelected(
   org: OrgModel,
@@ -19,4 +21,5 @@ export async function setRepositorySelected(
       readRepositories,
     ),
   )
+  void org.reload('builds')
 }

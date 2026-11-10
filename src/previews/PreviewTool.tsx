@@ -45,7 +45,7 @@ export interface PreviewToolProps {
 
 /**
  * The Preview tool: the web servers of the sandbox, each in a frame with an
- * "Open in new tab" link. The user opens a preview by its port, or by a
+ * "Open" link to a new tab. The user opens a preview by its port, or by a
  * click on a server that the runner reports.
  */
 export function PreviewTool(props: PreviewToolProps) {
