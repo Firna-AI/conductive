@@ -62,7 +62,15 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     area: 'automation-and-api',
     name: 'Agents that delegate',
     status: 'available',
-    note: 'Agents can create workspaces and list workspaces, repositories, sections, and models. Managing existing sessions is under consideration.',
+    note: 'Agents create workspaces and list workspaces, repositories, sections, and models. Creating, listing, reading, and messaging sessions are planned.',
+  },
+  {
+    id: 'read-session-transcripts',
+    area: 'automation-and-api',
+    name: 'Read session transcripts',
+    status: 'planned',
+    note: 'Tools that let agents read chats from other sessions and workspaces are planned.',
+    due: null,
   },
   {
     id: 'deep-links',
