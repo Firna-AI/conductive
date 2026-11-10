@@ -8241,6 +8241,16 @@ Design calls by the agents on 9 November 2026:
 
 Evidence: `.context/milestone-2c/reports/` and `.context/milestone-2c/checks/`.
 
+## Milestone 5g: Tests that fail under load
+
+Depends on: 15u. It changes lifecycle tests on the native harness.
+
+Make the tests that fail now and then under the load of the full gate
+reliable. Added on 10 November 2026.
+
+- [ ] Apply option B of `plans/follow-ups/tests-fail-under-load.md`, and
+      delete that item.
+
 ## Milestone 15d: Marketing site
 
 Tags: ui
