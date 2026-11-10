@@ -15,6 +15,7 @@ import {
 } from './deletion-data'
 import { deletionFixture } from './deletion-test-support'
 import { claimLifecycleGeneration } from './lifecycle-data'
+import { computerRecords } from '../lifecycle/computer-ledger.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -99,6 +100,13 @@ it('records resource accounts during org deletion and marks only the matching ac
     },
     {
       kind: 'sandbox',
+      id: 'sandbox-workspace-one',
+      providerAccount: 'boat',
+      stoppedAt: null,
+      removedAt: null,
+    },
+    {
+      kind: 'sandbox',
       id: 'shared-sandbox',
       providerAccount: 'boat',
       stoppedAt: null,
@@ -108,6 +116,13 @@ it('records resource accounts during org deletion and marks only the matching ac
       kind: 'sandbox',
       id: 'cleanup-sandbox',
       providerAccount: 'boat-second',
+      stoppedAt: null,
+      removedAt: null,
+    },
+    {
+      kind: 'sandbox',
+      id: 'build-sandbox',
+      providerAccount: 'boat',
       stoppedAt: null,
       removedAt: null,
     },
@@ -140,6 +155,17 @@ it('records resource accounts during org deletion and marks only the matching ac
     },
     TEST_TIME,
   )
+  expect(
+    (await computerRecords(db))
+      .filter((computer) => computer.sandboxId === 'shared-sandbox')
+      .map((computer) => ({
+        account: computer.providerAccount,
+        deletedAt: computer.deletedAt,
+      })),
+  ).toEqual([
+    { account: 'boat', deletedAt: null },
+    { account: 'boat-second', deletedAt: TEST_TIME },
+  ])
   expect(
     await db
       .prepare('SELECT state FROM workspaces WHERE org_id = ?')

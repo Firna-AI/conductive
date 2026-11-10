@@ -68,10 +68,17 @@ it('stops, retains, and purges each deleted-org resource through its stored acco
   expect(providerCalls()).toEqual([
     [
       'POST',
+      '/sandboxes/sandbox-workspace-one/stop',
+      'app-org',
+      'Bearer boat-first',
+    ],
+    [
+      'POST',
       '/sandboxes/shared-sandbox/stop',
       'second-org',
       'Bearer boat-second',
     ],
+    ['POST', '/sandboxes/build-sandbox/stop', 'app-org', 'Bearer boat-first'],
     ['POST', '/sandboxes/shared-sandbox/stop', 'app-org', 'Bearer boat-first'],
   ])
   harness.boat.requests = []
@@ -107,7 +114,14 @@ it('stops, retains, and purges each deleted-org resource through its stored acco
       'second-org',
       'Bearer boat-second',
     ],
+    [
+      'DELETE',
+      '/sandboxes/sandbox-workspace-one',
+      'app-org',
+      'Bearer boat-first',
+    ],
     ['DELETE', '/sandboxes/shared-sandbox', 'second-org', 'Bearer boat-second'],
+    ['DELETE', '/sandboxes/build-sandbox', 'app-org', 'Bearer boat-first'],
     ['DELETE', '/sandboxes/shared-sandbox', 'app-org', 'Bearer boat-first'],
   ])
 })
