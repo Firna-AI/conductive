@@ -43,11 +43,13 @@ requirements of each feature.
 - **Sandbox:** the Boat sandbox of one workspace. The product calls it a
   cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
-  from. It holds a prepared copy of each repository that the org chose.
+  from. It holds a prepared copy of each repository that the org chose
+  when the build of the image began.
 - **Build:** a run of the install script on a copy of the org image. It
   replaces the org image only when it succeeds.
 - **Refresh:** an update of the org image that fetches the new commits of
-  each chosen repository. It does not run the install script.
+  each repository that the org image holds. It does not run the install
+  script.
 - **Agent runner:** our program in each sandbox. It runs the agents through
   the agent SDKs, and it reports the files and the changes of its
   workspace.

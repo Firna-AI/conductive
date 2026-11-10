@@ -332,9 +332,27 @@ Calls of Milestone 1, 2026-11-10, from the mockups:
   which [The New workspace dialog page shows six screens](follow-ups/new-workspace-dialog-page-six-screens.md)
   records.
 - A removal that the install script still uses fails the next build, as
-  it does today.
-  [A removed repository can fail the next build](follow-ups/removed-repository-fails-install-script.md)
-  records it.
+  it does today, and the log of that build shows the failed `cd`. On
+  2026-11-10 the user chose A, no change, over a sentence in the notice
+  (B) and a warning at the removal (C): "1 = A".
+
+Calls of Milestone 2, 2026-11-10, from the protocol docs:
+
+- The refusal of a waiting repository covers every create, also a
+  create through the agent tools.
+- A waiting repository turns on when a build that holds it succeeds. The
+  app reads the builds again while a build runs, and so it learns of the
+  success.
+- The protocol docs do not name `BuildsResponse.changes`. The READMEs of
+  Milestones 3 and 4 name it.
+- The protocol docs keep the words "an admin who is not suspended" for
+  the starter of an added build.
+- The reason against a build at each removal and each install script
+  change: such a change blocks no new workspace, and each build is a
+  start.
+- The public guides of the marketing site restate the rules of the org
+  image. They came with `origin/main`, so the merge of `origin/main`
+  updates them.
 
 ## Milestone 1: Mockups
 
@@ -379,25 +397,25 @@ Depends on: 1
 State the requirements of decisions 240 and 241 and of the design calls
 above in the protocol docs.
 
-- [ ] `docs/protocol/org-image.md`: an added repository starts a build,
+- [x] `docs/protocol/org-image.md`: an added repository starts a build,
       the added build after a job, a removal waits for a build, and the
       install script notice and the repository notice on both tabs.
       Change the lines of decision 12 and the reason of "A build at each
       save".
-- [ ] `docs/protocol/org-image.md`: say that a refresh fetches the
+- [x] `docs/protocol/org-image.md`: say that a refresh fetches the
       repositories that the org image holds, not each chosen repository.
       The code does this already, and a change of the repositories takes
       effect at a build.
-- [ ] `docs/protocol/create-a-workspace.md`: the repository menu with its
+- [x] `docs/protocol/create-a-workspace.md`: the repository menu with its
       waiting repositories, Send off for a waiting repository, and the
       words of the refusal.
-- [ ] Check `docs/protocol/orgs-and-members.md` and `docs/architecture.md`
+- [x] Check `docs/protocol/orgs-and-members.md` and `docs/architecture.md`
       for each sentence that states the old rule.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
       full. Update each sentence that restates a changed fact.
-- [ ] Check the rows in `src/marketing/from-conductor/` for a listed
+- [x] Check the rows in `src/marketing/from-conductor/` for a listed
       feature that this change ships, starts, or drops.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: Worker and API contract
 
@@ -502,6 +520,8 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this
       plan, and the follow-up items that the change adds.
+- [ ] Merge the pull request when its CI passes and no finding waits for
+      the user. The user asked on 2026-11-10: "merge when ready".
 
 ## Post-merge follow-up (non-blocking)
 
