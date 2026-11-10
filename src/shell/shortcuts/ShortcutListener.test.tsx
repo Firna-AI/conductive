@@ -2,11 +2,10 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
-import { ACCOUNT_PATHS } from '../../shared/account'
 import { sessionPaths } from '../../shared/sessions'
 import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { coreFixtures, FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS } from '../../test-support/fixtures/core'
 import {
   messageText,
   pressInField,
@@ -78,21 +77,8 @@ describe('the shortcut listener', () => {
     }).toEqual({ draft: '', palette: false })
   })
 
-  test('a recorded Enter key with Ctrl stays with the message field, which adds a line on Ctrl+Shift+Enter and sends on Ctrl+Enter', async () => {
-    // The person gave both keys to the palette on the Windows keyboard.
+  test('the message field adds a line on Ctrl+Shift+Enter and sends on Ctrl+Enter', async () => {
     const server = new FakeApiServer()
-    server.json('GET', ACCOUNT_PATHS.account, {
-      ...coreFixtures().account,
-      shortcuts: {
-        mac: [],
-        other: [
-          {
-            command: 'command-palette',
-            keys: ['Ctrl+Enter', 'Ctrl+Shift+Enter'],
-          },
-        ],
-      },
-    })
     const field = await draftField('Ship the fix', server)
     pressInField(field, 'Enter', {
       code: 'Enter',

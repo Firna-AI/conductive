@@ -114,7 +114,7 @@ test('keeps every key in Windows and Linux terminals, also a recorded key withou
   }
 })
 
-test('protects native edit and movement keys in text fields on each system', () => {
+test('protects native edit, movement, and Enter keys in text fields on each system', () => {
   const cases = [
     {
       keyboard: 'mac',
@@ -202,9 +202,28 @@ test('protects native edit and movement keys in text fields on each system', () 
       'text',
     ),
   ).toBe(false)
+  for (const code of ['Enter', 'NumpadEnter']) {
+    for (const focus of ['text', 'single-line-text'] as const) {
+      expect(
+        isTextShortcut(
+          press({
+            key: 'Enter',
+            code,
+            ctrlKey: true,
+            altKey: true,
+            shiftKey: true,
+          }),
+          'mac',
+          tab('chrome'),
+          focus,
+        ),
+        `${code} in ${focus}`,
+      ).toBe(true)
+    }
+  }
 })
 
-test('runs unmodified keys, Mac Option typing, and each Enter key only outside text fields', () => {
+test('runs unmodified keys and Mac Option typing only outside text fields', () => {
   for (const [text, event] of [
     ['K', press({ metaKey: false })],
     ['Shift+K', press({ key: 'K', metaKey: false, shiftKey: true })],
@@ -212,9 +231,6 @@ test('runs unmodified keys, Mac Option typing, and each Enter key only outside t
       'Alt+1',
       press({ key: '¡', code: 'Digit1', metaKey: false, altKey: true }),
     ],
-    // The message field sends on ⌘Enter, and a rename saves on it.
-    ['Meta+Enter', press({ key: 'Enter', code: 'Enter' })],
-    ['Meta+NumpadEnter', press({ key: 'Enter', code: 'NumpadEnter' })],
   ] as const) {
     const keymap = buildShortcutKeymap('mac', [
       { command: 'go-to-checks', keys: [key(text)] },

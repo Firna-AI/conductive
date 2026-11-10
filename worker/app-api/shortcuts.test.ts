@@ -123,17 +123,19 @@ it('rejects a shortcut batch with one wrong change without saving any member', a
 
 it('rejects a fixed shortcut key without changing the account', async () => {
   const cookie = await harness.login()
-  const response = await save(cookie, {
-    keyboard: 'mac',
-    changes: [{ command: 'command-palette', keys: ['Meta+R'] }],
-  })
-  expect(response.status).toBe(400)
-  expect(await response.json()).toEqual({
-    error: {
-      code: 'invalid_input',
-      message: 'Choose a key that is not fixed.',
-    },
-  })
+  for (const key of ['Meta+R', 'Space']) {
+    const response = await save(cookie, {
+      keyboard: 'mac',
+      changes: [{ command: 'command-palette', keys: [key] }],
+    })
+    expect.soft(response.status, key).toBe(400)
+    expect.soft(await response.json(), key).toEqual({
+      error: {
+        code: 'invalid_input',
+        message: 'Choose a key that is not fixed.',
+      },
+    })
+  }
   await expectAccountShortcuts(cookie, { mac: [], other: [] })
 })
 
@@ -167,6 +169,16 @@ it('omits retired or unreadable stored changes from account and save replies', a
       ]),
     ],
     ['model-picker', JSON.stringify(['Meta+R', 'not a current key'])],
+    [
+      'go-to-checks',
+      JSON.stringify([
+        'Meta+Enter',
+        'Ctrl+Shift+Enter',
+        'NumpadEnter',
+        'Space',
+      ]),
+    ],
+    ['stop-agent', JSON.stringify(['Meta+NumpadDivide'])],
     ['new-session', '[]'],
     ['go-to-terminal', '{'],
   ]

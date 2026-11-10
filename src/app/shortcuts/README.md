@@ -23,6 +23,12 @@ commands.
 
 The account stores canonical modifier names, such as `Alt+Meta+N`.
 The key formatter gives Mac symbols or Windows and Linux key names.
+Each press has one canonical key text for recording and matching.
+A keypad key uses the key that it types, except a keypad digit, which keeps
+its keypad name. With Num Lock off, a keypad navigation key uses its typed
+name, such as `ArrowUp`.
+Option keys, top-row digits, and non-Latin letters keep their physical key
+rules.
 The [shared contracts](../../shared/shortcuts.ts) separate an empty key list
 from a null reset in a save. The [shared readers](../../shared/shortcut-read.ts)
 check unknown input before the app or Worker uses it.

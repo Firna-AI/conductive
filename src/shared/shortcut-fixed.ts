@@ -5,9 +5,14 @@ import {
 } from './shortcut-key'
 import { textShortcutKeys } from './shortcut-text-keys'
 
+const enterKeys = ['Ctrl', 'Alt', 'Shift', 'Meta'].reduce(
+  (keys, modifier) => [...keys, ...keys.map((key) => `${modifier}+${key}`)],
+  ['Enter'],
+)
+
 const common = [
-  'Enter',
-  'Shift+Enter',
+  ...enterKeys,
+  'Space',
   'Escape',
   'ArrowUp',
   'ArrowDown',

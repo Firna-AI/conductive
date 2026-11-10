@@ -178,8 +178,10 @@ The git credential payload is not defined yet.
 
 - [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
 - [Shortcut keys](shortcut-key.ts) parse canonical key text from unknown
-  values. [Fixed keys](shortcut-fixed.ts) and [text keys](shortcut-text-keys.ts)
+  values. Only keypad digits have keypad names.
+  [Fixed keys](shortcut-fixed.ts) and [text keys](shortcut-text-keys.ts)
   supply the same rules to the recorder and the Worker.
+  Enter with any modifiers and plain Space are fixed on both keyboards.
 - [Shortcut contracts](shortcuts.ts) define account overrides and batch
   saves. Empty keys remove all bindings. Null in a save restores defaults.
   [Shortcut readers](shortcut-read.ts) check each save as a complete batch.

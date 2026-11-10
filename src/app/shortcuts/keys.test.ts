@@ -39,6 +39,9 @@ test('matches Option keys and top-row digits physically without taking numpad di
   expect(
     matchesShortcut(key('Meta+1'), press({ key: '&', code: 'Digit1' })),
   ).toBe(true)
+  expect
+    .soft(matchesShortcut(key('Meta+&'), press({ key: '&', code: 'Digit1' })))
+    .toBe(false)
   expect(
     matchesShortcut(key('Meta+1'), press({ key: '1', code: 'Numpad1' })),
   ).toBe(false)
@@ -60,6 +63,18 @@ test('matches Option keys and top-row digits physically without taking numpad di
       press({ key: '1', code: 'Numpad1', metaKey: false, altKey: true }),
     ),
   ).toBe(false)
+  expect(
+    matchesShortcut(
+      key('Numpad8'),
+      press({ key: '8', code: 'Numpad8', metaKey: false }),
+    ),
+  ).toBe(true)
+  expect(
+    matchesShortcut(
+      key('Numpad8'),
+      press({ key: 'ArrowUp', code: 'Numpad8', metaKey: false }),
+    ),
+  ).toBe(false)
 })
 
 test('uses the physical letter when a Cyrillic or Greek layout changes its script', () => {
@@ -77,6 +92,9 @@ test('uses the physical letter when a Cyrillic or Greek layout changes its scrip
   ).toBe(true)
   expect(
     matchesShortcut(key('Meta+Q'), press({ key: 'κ', code: 'KeyK' })),
+  ).toBe(false)
+  expect(
+    matchesShortcut(key('Meta+κ'), press({ key: 'κ', code: 'KeyK' })),
   ).toBe(false)
 })
 
@@ -103,6 +121,19 @@ test('records the matching identity and formats each keyboard and accessible hin
       press({ key: '1', code: 'Numpad1', metaKey: false, altKey: true }),
     ),
   ).toBe('Alt+Numpad1')
+  expect
+    .soft(shortcutFromPress(press({ key: '/', code: 'NumpadDivide' })))
+    .toBe('Meta+/')
+  expect
+    .soft(
+      shortcutFromPress(
+        press({ key: 'ArrowUp', code: 'Numpad8', metaKey: false }),
+      ),
+    )
+    .toBe('ArrowUp')
+  expect
+    .soft(shortcutFromPress(press({ key: 'Enter', code: 'NumpadEnter' })))
+    .toBe('Meta+Enter')
   expect(
     shortcutFromPress(
       press({

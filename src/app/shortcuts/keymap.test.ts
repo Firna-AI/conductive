@@ -9,6 +9,7 @@ import {
   replaceShortcutKeys,
   shortcutConflicts,
 } from './keymap'
+import { shortcutFromPress } from './keys'
 import { context, key, press, tab } from './shortcut-test-support'
 
 test('applies ordered overrides and empty removals without changing other defaults', () => {
@@ -48,7 +49,8 @@ test('applies ordered overrides and empty removals without changing other defaul
 
 test('reports conflicts and moves a key from every owner in one replacement batch', () => {
   const keymap = buildShortcutKeymap('mac', [])
-  const change = [key('Meta+K'), key('Meta+/')]
+  const keypad = press({ key: '/', code: 'NumpadDivide' })
+  const change = [key('Meta+K'), key(shortcutFromPress(keypad))]
   expect(shortcutConflicts('go-to-checks', change, keymap)).toEqual([
     { command: 'command-palette', key: 'Meta+K' },
     { command: 'model-picker', key: 'Meta+/' },
@@ -66,6 +68,11 @@ test('reports conflicts and moves a key from every owner in one replacement batc
     closeMenu: false,
   })
   expect(shortcutConflicts('go-to-checks', change, replaced)).toEqual([])
+  expect(decideShortcut(context({ keymap: replaced, press: keypad }))).toEqual({
+    kind: 'command',
+    command: 'go-to-checks',
+    closeMenu: false,
+  })
   expect(decideShortcut(context({ keymap }))).toEqual({
     kind: 'command',
     command: 'command-palette',

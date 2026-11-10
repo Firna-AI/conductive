@@ -39,6 +39,8 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   `SaveShortcutsResponse` from the shared shortcut contracts. The shared
   reader checks the whole request before any write. A contract error
   returns HTTP 400 with `invalid_input` and the reader's message.
+  Enter with any modifiers and plain Space are fixed keys on both keyboards.
+  Only keypad digits can use keypad names in a saved key.
   `shortcuts-data.ts` batches the changes and the reply's read in one D1
   transaction. Null keys delete a row. Empty keys keep an empty override.
   The account's `shortcuts` field carries both keyboards and skips retired

@@ -52,27 +52,12 @@ function otherScript(press: ShortcutPress): boolean {
   )
 }
 
-/** Alt and top-row digits use physical keys. Other keys use their characters. */
+/** Each press matches only the key text that the recorder gives it. */
 export function matchesShortcut(
   key: ShortcutKeyText,
   press: ShortcutPress,
 ): boolean {
-  const chord = shortcutChord(key)
-  const zoomPlus = chord.key === '+' && press.key === '+'
-  if (
-    chord.metaKey !== press.metaKey ||
-    chord.ctrlKey !== press.ctrlKey ||
-    chord.altKey !== press.altKey ||
-    (!zoomPlus && chord.shiftKey !== press.shiftKey)
-  )
-    return false
-  if (/^\d$/.test(chord.key)) return press.code === `Digit${chord.key}`
-  if (chord.key.startsWith('Numpad')) return chord.key === press.code
-  const physical = physicalKey(press.code)
-  if (chord.altKey && physical !== undefined) return chord.key === physical
-  if (/^[A-Z]$/.test(chord.key) && otherScript(press))
-    return chord.key === physical
-  return chord.key === character(press)
+  return key === shortcutFromPress(press)
 }
 
 /** The recorder stores the same key identity that the listener matches. */
@@ -82,11 +67,12 @@ export function shortcutFromPress(
   const physical = physicalKey(press.code)
   const byCode =
     press.altKey || /^Digit\d$/.test(press.code) || otherScript(press)
-  const key = press.code.startsWith('Numpad')
-    ? press.code
-    : byCode && physical !== undefined
-      ? physical
-      : character(press)
+  const key =
+    /^Numpad\d$/.test(press.code) && /^\d$/.test(press.key)
+      ? press.code
+      : byCode && physical !== undefined
+        ? physical
+        : character(press)
   try {
     return shortcutKeyText({
       ...press,

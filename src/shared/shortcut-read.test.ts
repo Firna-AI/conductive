@@ -45,16 +45,20 @@ test('rejects an invalid member of a save before returning a partial batch', () 
     { command: 'go-to-desktop', keys: [] },
     { command: 'new-session', keys: ['Ctrl+Control'] },
     { command: 'new-session', keys: [null] },
+    { command: 'new-session', keys: ['NumpadEnter'] },
+    { command: 'new-session', keys: ['Meta+NumpadDivide'] },
   ]
   for (const change of invalid) {
-    expect(
-      () =>
-        readSaveShortcutsRequest({
-          keyboard: 'other',
-          changes: [{ command: 'command-palette', keys: ['Ctrl+P'] }, change],
-        }),
-      JSON.stringify(change),
-    ).toThrow(ShortcutContractError)
+    expect
+      .soft(
+        () =>
+          readSaveShortcutsRequest({
+            keyboard: 'other',
+            changes: [{ command: 'command-palette', keys: ['Ctrl+P'] }, change],
+          }),
+        JSON.stringify(change),
+      )
+      .toThrow(ShortcutContractError)
   }
   expect(() =>
     readSaveShortcutsRequest({ keyboard: 'linux', changes: [] }),
@@ -90,8 +94,16 @@ test('accepts four keys but refuses a fifth key for one command', () => {
   ).toThrow('Choose at most four keys for a command.')
 })
 
-test('refuses fixed menu and text keys across hosts and both other systems', () => {
+test('refuses fixed control, menu, and text keys across hosts and both other systems', () => {
   for (const [keyboard, text] of [
+    ['mac', 'Meta+Enter'],
+    ['mac', 'Ctrl+Shift+Enter'],
+    ['mac', 'Ctrl+Alt+Shift+Meta+Enter'],
+    ['mac', 'Space'],
+    ['other', 'Meta+Enter'],
+    ['other', 'Ctrl+Shift+Enter'],
+    ['other', 'Ctrl+Alt+Shift+Meta+Enter'],
+    ['other', 'Space'],
     ['mac', 'Meta+R'],
     ['mac', 'Alt+Shift+Meta+V'],
     ['mac', 'Ctrl+K'],
@@ -100,14 +112,16 @@ test('refuses fixed menu and text keys across hosts and both other systems', () 
     ['other', 'Alt+ArrowUp'],
     ['other', 'Shift+F10'],
   ]) {
-    expect(
-      () =>
-        readSaveShortcutsRequest({
-          keyboard,
-          changes: [{ command: 'model-picker', keys: [text] }],
-        }),
-      `${keyboard} ${text}`,
-    ).toThrow('Choose a key that is not fixed.')
+    expect
+      .soft(
+        () =>
+          readSaveShortcutsRequest({
+            keyboard,
+            changes: [{ command: 'model-picker', keys: [text] }],
+          }),
+        `${keyboard} ${text}`,
+      )
+      .toThrow('Choose a key that is not fixed.')
   }
   expect(
     readSaveShortcutsRequest({
@@ -142,6 +156,11 @@ test('skips retired commands and unreadable stored keys while preserving confirm
       keys: ['Meta+P', 'Meta+R', 'not a current key', 'Ctrl+Alt+Meta+P'],
     },
     { command: 'model-picker', keys: ['Meta+R', 'not a current key'] },
+    {
+      command: 'go-to-checks',
+      keys: ['Meta+Enter', 'Ctrl+Shift+Enter', 'NumpadEnter', 'Space'],
+    },
+    { command: 'stop-agent', keys: ['Meta+NumpadDivide'] },
     { command: 'new-session', keys: [] },
   ]
   const expected = [
@@ -187,6 +206,7 @@ test('narrows key text without accepting modifier-only or malformed keys', () =>
   expect(readShortcutKeyText('Meta++')).toBe('Meta++')
   expect(readShortcutKeyText('Shift+Meta+{')).toBe('Shift+Meta+[')
   expect(readShortcutKeyText('Shift+Meta++')).toBe('Meta++')
+  expect(readShortcutKeyText('Alt+Numpad8')).toBe('Alt+Numpad8')
   for (const value of [
     null,
     {},
@@ -195,9 +215,16 @@ test('narrows key text without accepting modifier-only or malformed keys', () =>
     'Ctrl+Ctrl+K',
     'Meta+Escape+K',
     'Meta+\n',
+    'Meta+NumpadDivide',
+    'NumpadEnter',
+    'NumpadAdd',
+    'NumpadSubtract',
+    'NumpadMultiply',
+    'NumpadDecimal',
+    'NumpadEqual',
   ]) {
-    expect(() => readShortcutKeyText(value), JSON.stringify(value)).toThrow(
-      'Choose a valid shortcut key.',
-    )
+    expect
+      .soft(() => readShortcutKeyText(value), JSON.stringify(value))
+      .toThrow('Choose a valid shortcut key.')
   }
 })

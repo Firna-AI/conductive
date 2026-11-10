@@ -71,7 +71,7 @@ function parts(value: string): ShortcutChord | null {
     !character &&
     !namedKeys.has(key) &&
     !/^F([1-9]|1\d|2[0-4])$/.test(key) &&
-    !/^Numpad(\d|Add|Subtract|Multiply|Divide|Decimal|Enter|Equal)$/.test(key)
+    !/^Numpad\d$/.test(key)
   ) {
     return null
   }
