@@ -12,6 +12,7 @@ export const reportKinds: readonly RunnerReportKind[] = [
   'changes.updated',
   'start.updated',
   'workspace.title',
+  'ports.updated',
 ]
 
 export function fullReport(
@@ -62,6 +63,11 @@ export function fullReport(
       return { type: kind, start: { kind: 'create', startedAt: 25, steps: [] } }
     case 'workspace.title':
       return { type: kind, name: `Name ${revision}` }
+    case 'ports.updated':
+      return {
+        type: kind,
+        ports: [{ port: 3000, name: 'vite dev', folder: null }],
+      }
   }
 }
 

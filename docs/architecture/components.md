@@ -136,6 +136,9 @@ against a change in how the agent program reads its credential and its
 model address. The runner runs Codex through the Codex SDK or the Codex
 App Server (decision 36).
 
+The runner finds the listening ports in the sandbox itself, with no Boat
+call (decision 220).
+
 A runner of protocol version 2 or later makes both agent programs send
 their model requests to the [model gateway](../protocol/model-gateway.md). It
 gives each agent program the turn token of its turn, and no agent login. A
@@ -173,4 +176,5 @@ the rules.
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. The app is free, with no limits (decision 81).
+  snapshot. Use of the app is free until billing starts, as
+  [Pricing](../protocol/pricing.md) says.

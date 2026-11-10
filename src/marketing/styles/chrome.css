@@ -202,6 +202,21 @@
 }
 
 /*
+ * Below 900 px a desktop header tightens the space around its links, so
+ * that Pricing fits too. From 760 px, the links then stay inside the
+ * padding of the header. The phone rules below keep their own spacing.
+ */
+@media (max-width: 899.98px) {
+  .header-nav {
+    gap: 0;
+  }
+
+  .header-link {
+    padding: 6px 8px;
+  }
+}
+
+/*
  * A phone keeps the wordmark, Docs, GitHub, and Sign in. They fit beside
  * the wordmark from a width of about 360px, and each link keeps a touch
  * target of 44px.
