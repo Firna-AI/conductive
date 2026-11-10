@@ -4,6 +4,7 @@ import { MACHINE_ORIGIN } from '../chat/harness.test-support'
 import { streamedRequest } from '../http/request-body.test-support'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
+  claudeClientHeaders,
   deferred,
   gatewayHttp,
   gatewayPath,
@@ -64,7 +65,7 @@ it('cancels a held upload and its early answer when the turn check refuses acces
       streamedRequest(
         `${MACHINE_ORIGIN}${gatewayPath('claude')}`,
         upload.body,
-        { 'x-api-key': client.token },
+        { ...claudeClientHeaders, 'x-api-key': client.token },
       ),
     )
     .then((response) => {
