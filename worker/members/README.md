@@ -129,6 +129,10 @@ The test policy uses that margin. Production uses the lifecycle's own policy.
 After seven days, it removes all recorded org-image and build snapshots
 before any sandbox deletion. It then removes workspace state and D1 rows.
 The resource journal keeps completed steps after a failure.
+Its computer inventory reads live entries, each with its provider account, from the [computer ledger](../lifecycle/provider-accounts.md#the-computer-ledger).
+The inventory includes retained computers whose workspace or build record is gone.
+A confirmed computer deletion marks its ledger entry in the same batch as the journal step.
+The ledger entries remain until the org purge removes them through the org reference.
 Each journal resource holds its kind, its ID, and its provider account. So equal IDs in two accounts stay two resources.
 Each org image of `org_images` enters the journal with the provider account of its own record. The purge also deletes the `org_images` rows of the org.
 The result names purged orgs and orgs that need another attempt.

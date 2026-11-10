@@ -19,7 +19,7 @@
   On 10 November 2026, CI run `42780530781`, attempt 1, ran the complete gate on commit `3503d628` of the branch `calummoore/workspace-open-error`. Its app and Worker suite ran 704 files: 2,016 tests passed, 2 failed, and none was skipped. One failure was this timeout:
   - `worker/operator/suspension-race.test.ts:20`, "cancels an in-flight allocation and cleans its delayed computer after actor recovery": `Error: Test timed out in 15000ms.`
 
-  The other failure of that run was an assertion, which `plans/follow-ups/restore-watch-test-flake.md` records. That branch changed no timeout or assertion of this test. The test file and each module that it imports directly equal `main` at `8567cfb6`. Modules that those imports reach in turn changed on that branch, such as `worker/features/alarms.ts`.
+  The other failure of that run was an assertion, which `plans/follow-ups/tests-fail-under-load.md` records. That branch changed no timeout or assertion of this test. The test file and each module that it imports directly equal `main` at `8567cfb6`. Modules that those imports reach in turn changed on that branch, such as `worker/features/alarms.ts`.
 
   On the same commit, the unchanged file then passed alone in a local run: 3 of 3 tests, with no skip, in 5.09 seconds. The case then passed three more local runs alone, with no failure. Each of those runs selected only this case by name, so each reported the 2 other tests of the file as skipped. The await that blocked, the cause, and the load of the CI machine are not known. A pass alone does not show that load caused the timeout.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
