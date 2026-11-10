@@ -142,14 +142,17 @@ The Worker counts received bytes and cancels an overflowing body.
 The exact budget passes. Content-Length does not set the budget.
 Control replies and errors use 1 MiB. Commands use 18 MiB.
 File reads use the caller's decoded byte limit.
-[Boat transport details](boat-transport.md#response-byte-limits) gives the Boat route budgets.
+[Response limits](response-limits.md) gives the byte budget of each fixed
+Boat route, and the errors of a response that passes its budget.
 [The E2B client](e2b/README.md#response-budgets) gives its implemented route budgets.
 
 ## Response failures
 
 Both adapters return safe typed errors without copying provider message text.
 An oversized control reply uses `sandbox_response_too_large` with HTTP 502.
-[Boat response failures](boat-transport.md#response-failures) gives its command and file fallback rules.
+[Response failures](response-limits.md#response-failures) gives the errors
+and cancellation rules when a Boat response passes its byte budget, with its
+command and file fallback rules.
 [The E2B client](e2b/README.md#response-budgets) gives its control error mapping.
 
 ## File reads
@@ -160,9 +163,13 @@ Both preserve the caller's decoded byte limit and exact size result.
 
 ## File writes
 
+`SandboxProvider.writeFile(sandboxId, path, body, sizeBytes)` is an internal streamed write.
+The caller authorizes the workspace and its actual sandbox before calling it.
+Each adapter creates missing parent folders.
+It replaces an existing file only after the upload completes.
 The [Boat file writer](boat-transport.md#file-writes) streams bytes through a signed upload grant.
-The [E2B file writer](e2b/README.md#commands-and-files) streams counted octets to the fixed envd route.
-It validates the path and complete input consumption without buffering the file.
+The [E2B file writer](e2b/README.md#commands-and-files) stages a protected file beside the destination, then replaces the destination atomically.
+It streams counted octets to the fixed envd route, and validates the reply path and complete input consumption without buffering the file.
 
 ## Development
 

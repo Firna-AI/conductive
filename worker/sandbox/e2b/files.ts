@@ -8,6 +8,8 @@ import type { E2bContext } from './context'
 import { envdSession, type EnvdSession } from './envd'
 import { invalidResponse } from './errors'
 import { base64, statFile } from './file-content'
+import fileWriteSource from './file-write.py?raw'
+import { executePython } from './process'
 
 export async function readFile(
   context: E2bContext,
@@ -76,14 +78,45 @@ export async function writeFile(
   body: ReadableStream<Uint8Array>,
   sizeBytes: number,
 ): Promise<void> {
-  let session: EnvdSession
+  let session: EnvdSession | undefined
+  const directory = path.slice(0, path.lastIndexOf('/') + 1)
+  const temporary = `${directory}.conductive-upload-${crypto.randomUUID()}`
+  const config = { path, temporary }
+  const budget = new ResponseBudget('command')
   try {
+    if (!Number.isSafeInteger(sizeBytes) || sizeBytes < 0)
+      throw new ProviderError('invalid_request', 400)
     session = await envdSession(context, sandboxId)
+    await executePython(
+      session,
+      fileWriteSource,
+      { ...config, kind: 'file_write_prepare' },
+      budget,
+      30,
+      'user',
+    )
+    await uploadFile(session, temporary, body, sizeBytes)
+    await executePython(
+      session,
+      fileWriteSource,
+      { ...config, kind: 'file_write_commit' },
+      budget,
+      30,
+      'user',
+    )
   } catch (error) {
     await body.cancel().catch(() => undefined)
+    if (session)
+      await executePython(
+        session,
+        fileWriteSource,
+        { ...config, kind: 'file_write_cleanup' },
+        new ResponseBudget('command'),
+        30,
+        'user',
+      ).catch(() => undefined)
     throw error
   }
-  return uploadFile(session, path, body, sizeBytes)
 }
 
 export async function uploadFile(

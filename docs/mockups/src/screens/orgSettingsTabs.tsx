@@ -19,6 +19,7 @@ import {
 } from '../fixtures/members'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 import { settingsOrg } from './settingsOrgs'
+import { settingsRepositoryNotice } from './settingsRepositoryNotice'
 
 /** The person signed in: Cal, an admin, or Priya, a member who is not. */
 export function settingsViewer(state: OrgSettingsState): PersonKey {
@@ -47,7 +48,7 @@ function readOnlyCause(state: OrgSettingsState): ReadOnlyCause | undefined {
  * suspended org says why nothing changes, so the tab adds nothing.
  */
 const repositoryNotes: Readonly<Record<ReadOnlyCause | 'editable', string>> = {
-  editable: ' A change takes effect at the next build.',
+  editable: ' Adding a repository starts a build.',
   member: ' Only an admin can change them.',
   suspended: '',
 }
@@ -81,6 +82,7 @@ export function TabBody(props: { state: OrgSettingsState }) {
           description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
           title="Repositories"
         >
+          {settingsRepositoryNotice(state, settings)}
           {readOnly ? (
             <OrgRepositoryList repositories={settings.repositories} />
           ) : (
@@ -97,6 +99,7 @@ export function TabBody(props: { state: OrgSettingsState }) {
           envForm={state.envForm}
           org={org.name}
           readOnly={readOnly}
+          repositoryNotice={settingsRepositoryNotice(state, settings)}
           script={state.script}
         />
       )

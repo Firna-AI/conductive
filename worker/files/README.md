@@ -148,7 +148,7 @@ The fallback gets `SandboxProvider` through `orgProviderForAccount`, with the au
 The provider owns the fixed routes, the headers, and the key of that account, such as the app's Boat key or E2B key. On Boat, it also owns the organization pin.
 Its `readFile` returns base64 so a binary file keeps its bytes.
 Boat requests base64 from its API. E2B reads raw bytes through envd and encodes them on the server.
-The [sandbox response policy](../sandbox/README.md#response-byte-limits) defines the reply budgets and the metadata fallback.
+The [sandbox response policy](../sandbox/response-limits.md) defines the reply budgets and the metadata fallback.
 The handler reports the file size with `file_too_large`.
 The provider validates the requested absolute path in its file metadata.
 Boat also validates the content reply path. E2B raw replies have no path field.

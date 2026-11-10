@@ -140,7 +140,9 @@ The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
 page of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
-log, and settings of `ComputerModel`. `useMembersApi(orgId)` in
+log, and settings of `ComputerModel`. The Repositories tab of a member gets
+the live builds of `OrgModel`, for its repository notice.
+`useMembersApi(orgId)` in
 `../shell/settings/members-api.ts` gives one members client for each org,
 over the fetch of the org's client, so a refusal of a suspended org marks
 the org. In a suspended org every person gets the read-only tabs, and the

@@ -1,6 +1,6 @@
 # E2B as a second sandbox provider
 
-Status: Active. On branch `calummoore/e2b-backup-sandbox-provider`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #193](https://github.com/Firna-AI/remote-code/pull/193) is open as a draft on `calummoore/e2b-backup-sandbox-provider`. The plan stays while its real-provider checks remain incomplete.
 
 Boat runs every sandbox and every org image of Conductive (decisions 2 and
 80). The provider groundwork on main, pull request #137 under decision
@@ -588,6 +588,12 @@ The complete change passes the gate and the review.
 - [x] Integrate main's archive restore and shared software images. Keep
       E2B archive recovery read-only and skip its vendor disk restarts.
       Verify same-account software-image selection and template fallback.
+- [ ] Resolve the PR's newer-main conflict. Preserve repository-build
+      notices and .context attachments, and keep new repository/build
+      queries on the fixed org account. Run targeted checks and final CI.
+- [x] Match main's file-write contract on E2B: create missing parents and
+      replace the destination only after a complete validated upload.
+      Preserve old bytes and clean the temporary file after failure.
 - [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -596,7 +602,7 @@ The complete change passes the gate and the review.
       once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
+- [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 

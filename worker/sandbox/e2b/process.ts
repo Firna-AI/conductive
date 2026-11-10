@@ -5,6 +5,7 @@ import { connectFrame, connectFrames } from './connect'
 import { connectFailure } from './envd-errors'
 import { EnvdSession } from './envd'
 import { invalidResponse } from './errors'
+import type { EnvdUser } from './envd-routes'
 
 type ProcessEvent =
   | { kind: 'start'; pid: number }
@@ -72,10 +73,11 @@ export async function* pythonProcess(
   config: Record<string, unknown>,
   budget: ResponseBudget,
   timeoutSeconds: number,
+  user: EnvdUser = 'root',
 ): AsyncGenerator<ProcessEvent> {
   const milliseconds = timeoutSeconds ? (timeoutSeconds + 10) * 1000 : 0
   const response = await session.send({ operation: 'start' }, budget, {
-    user: 'root',
+    user,
     timeoutMs: timeoutSeconds ? milliseconds : 30_000,
     body: connectFrame({
       process: {
@@ -127,6 +129,7 @@ export async function executePython(
   config: Record<string, unknown>,
   budget: ResponseBudget,
   timeoutSeconds: number,
+  user: EnvdUser = 'root',
 ): Promise<void> {
   let success = false
   for await (const current of pythonProcess(
@@ -135,6 +138,7 @@ export async function executePython(
     config,
     budget,
     timeoutSeconds,
+    user,
   )) {
     if (current.kind === 'end')
       success = current.exited && current.exitCode === 0

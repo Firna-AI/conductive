@@ -1,0 +1,34 @@
+# New workspace treats unknown build data as ready
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-10, finding 1 of review round 1, branch `calummoore/new-repo-build-recreation`, plan `plans/added-repository-builds.md`.
+- **Location:** `src/app/repository-changes.ts` (the waiting repositories of a form), `src/shell/new-workspace/useNewWorkspaceForm.ts`, `worker/lifecycle/build-changes-data.ts`, `worker/app-api/feature-repositories.ts`.
+- **Reason:** normal use does not meet it, because the app keeps the builds after their first answer, so the fix rule defers a Rare product bug.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Org image:** the saved snapshot that every new cloud computer of an org starts from.
+  - **Waiting repository:** a chosen repository that the org image does not hold yet. New workspace shows it as off, and Send is off for it.
+  - **Builds reply:** the answer of the builds path of the org settings. Its `changes.addedRepositories` lists the waiting repositories.
+- **Background:**
+  - New workspace reads the chosen repositories and the builds reply in two separate requests.
+  - The form learns which repositories wait only from the builds reply.
+  - When the builds reply has not come yet, or its read failed, the form treats the list of waiting repositories as empty.
+  - The desktop sidebar shares its builds read with the form. That read can be up to 30 seconds old, so it can miss a repository that an admin added a moment ago.
+  - `docs/protocol/create-a-workspace.md`, section "Waiting repositories", requires that the person learns of the wait before the send. The Worker still refuses a create in a waiting repository with "The repository is ready after the next build."
+- **Problem:** A kept draft in a waiting repository can turn Send on while the builds reply is missing, failed, or older than the repository list. The person then gets the refusal of the Worker after the send.
+- **Impact if no action:** In those rare windows, a person sends and gets a refusal in place of the waiting notice. The message stays in the composer.
+- **Root question:** How does New workspace show, before the send, that a repository waits, when its build data is missing, failed, or older than its repository list?
+- **Options:**
+  - **A.** Turn Send and the repository choice off until the builds reply has loaded. Add a case with a delayed reply. This adds a gate on Send, which needs the user. Effort: Small.
+  - **B.** Model the readiness of the repositories as loading, failed, or ready, and derive the choice and Send from it. Add cases with a delayed and a failed reply. Send is off while the readiness is unknown, which needs the user. Effort: Small.
+  - **C.** The repositories reply gives the readiness of each repository with the list, from the same image data as the create check. The app reads the repositories again when a build ends, so that a waiting repository turns on. Effort: Medium.
+  - **D.** At each send, the form reads the builds again and sends only when the fresh answer shows that the repository does not wait. After a failed read, it sends, and the Worker refusal stays the backstop. Effort: Small.
+  - **E.** The builds reply also lists the ready repositories, and the form treats a repository that it does not list as not ready. Send is off while the first read runs or after it fails, which needs the user. Effort: Medium.
+- **Left out:** A refused create alone, and a catch-up after it, fail the goal, because the person learns of the wait only after the send. A create that waits for its build breaks the requirement in `create-a-workspace.md` that rejected such a wait.
+- **Wider fix:** C. It closes the missing, failed, and old-data cases without a new gate on Send.
+- **Previous examples:** The first-build notice of New workspace shows nothing while the builds load or after a failed load, as `src/app/screens.md` records, and the Worker then refuses a create of an org with no good image. That is the same class on `origin/main`, outside the plan that found this item. C can cover it too, when the repositories reply also says whether the org has a good image.
+- **Related:** `plans/follow-ups/builds-reload-joins-stale-read.md`, same area: a builds read after a save can return data from before the save.
+- **Recommendation:** C. It is the only option that closes every case without a new gate on Send.
+- **Action:** fix after merge, apply C, because the likelihood is Rare and the fix gets no harder after the merge.

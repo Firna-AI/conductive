@@ -33,6 +33,30 @@ export class FakeE2bEnvd {
     const url = new URL(request.url)
     if (url.pathname === '/process.Process/Start') {
       const config = await fakeE2bStartConfig(request)
+      if (
+        typeof config.kind === 'string' &&
+        config.kind.startsWith('file_write_')
+      ) {
+        const path = typeof config.path === 'string' ? config.path : ''
+        const temporary =
+          typeof config.temporary === 'string' ? config.temporary : ''
+        if (config.kind === 'file_write_prepare')
+          this.files.set(temporary, new Uint8Array())
+        if (config.kind === 'file_write_commit') {
+          const bytes = this.files.get(temporary)
+          if (!bytes) throw new Error('Missing fake file upload.')
+          this.files.set(path, bytes)
+          this.files.delete(temporary)
+        }
+        if (config.kind === 'file_write_cleanup') this.files.delete(temporary)
+        return fakeE2bFrames(
+          [
+            { event: { start: { pid: 4321 } } },
+            { event: { end: { exited: true } } },
+          ],
+          this.chunkBytes,
+        )
+      }
       if (config.kind === 'preview_ingress') {
         const path =
           typeof config.ingressPath === 'string' ? config.ingressPath : ''
@@ -133,8 +157,10 @@ export class FakeE2bEnvd {
       })
     }
     if (request.method === 'POST') {
-      if (!this.uploadEarly)
+      if (!this.uploadEarly) {
+        this.files.set(path, new Uint8Array())
         this.files.set(path, new Uint8Array(await request.arrayBuffer()))
+      }
       return Response.json([
         {
           path: this.uploadPath ?? path,

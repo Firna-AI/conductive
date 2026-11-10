@@ -1,8 +1,9 @@
 import { useCallback } from 'react'
 import { FolderGit2 } from 'lucide-react'
 import type { Org } from '../shared/api'
-import type { Repository } from '../shared/org-settings'
+import type { BuildsResponse, Repository } from '../shared/org-settings'
 import type { MembersApi } from './api/client'
+import { RepositoryNotice } from './RepositoryNotice'
 import { useResource } from './useResource'
 import { ViewportScope, type Viewport } from './ui/controls'
 import { Loading, LoadFailure } from './ui/Loading'
@@ -52,7 +53,9 @@ export function OrgRepositoryList(props: {
  * admin: the repositories of the org, read-only. Only admins change them,
  * as decision 57 says. In a suspended org everyone sees this tab, and it
  * adds no sentence about admins, because the notice of the org says why.
- * Mount it in the page column of the org settings.
+ * With `builds`, the repository notice above the list names the changes
+ * that the cloud computer does not hold yet. Mount it in the page column
+ * of the org settings.
  */
 export function MemberRepositoriesTab(props: {
   api: MembersApi
@@ -60,6 +63,8 @@ export function MemberRepositoriesTab(props: {
   viewport: Viewport
   /** The org is suspended, so nothing in it changes, also for an admin. */
   suspended?: boolean
+  /** The builds of the org, for the repository notice, as they load. */
+  builds?: BuildsResponse
 }) {
   const { api, org } = props
   const note = props.suspended ? '' : ' Only an admin can change them.'
@@ -71,6 +76,13 @@ export function MemberRepositoriesTab(props: {
         description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
         title="Repositories"
       >
+        {props.builds ? (
+          <RepositoryNotice
+            builds={props.builds}
+            org={org}
+            suspended={props.suspended}
+          />
+        ) : null}
         {state.status === 'loading' ? (
           <Loading label="Loading the repositories" />
         ) : null}

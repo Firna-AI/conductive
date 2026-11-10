@@ -105,8 +105,17 @@ Malformed final status fails safely.
 Public file reads use Stat, bounded binary download, and base64 output.
 The caller supplies the backend limit, normally 5 MiB.
 Content overflow rechecks metadata for the exact size result.
+A public file write first creates the missing parent folders as `user`.
+It stages a mode 600 file beside the destination, as `user`.
+It streams the octets to that file through the low-level `uploadFile`, with the exact byte count and a reply path check.
+Then `os.replace` moves the staged file over the destination.
+An incomplete or rejected upload leaves the destination unchanged.
+Failure cancels the source and attempts to remove the staged file.
+A lost commit reply can leave a complete replacement in place.
 Writes stream octets with counted bytes and require complete source consumption.
 No upload follows a redirect or buffers the whole input file.
+Environment staging still writes through `uploadFile` directly.
+Only the file-write helper runs as `user`. The bootstrap and supervisor helpers keep their root default.
 
 ## Private ports and previews
 

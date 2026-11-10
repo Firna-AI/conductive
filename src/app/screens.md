@@ -75,13 +75,24 @@ what the palette does.
   [Operator section](../shell/operator/README.md) says.
 - The Cloud computer tab names the software of the base image from the
   settings reply. An older reply without it names no software.
-- The notice of a changed install script has the same words for an admin
-  and a member, from `changedScriptNotice`. Until the org has a good build,
-  it says that one more build runs the script while the first build runs,
-  and else that the next build runs it. Until the builds load, it says
-  only that the next build runs it. An admin gets Build computer in the
-  notice only once the org has a good build, because before that the head
-  of the builds offers Try again or Build computer. A member never gets it.
+- The notice of a changed install script shows only while
+  `BuildsResponse.changes.installScript` is true. It has the same words
+  for an admin and a member, from `changedScriptNotice`. Until the org
+  has a good build, it says that one more build runs the script while the
+  first build runs, and else that the next build runs it. An admin gets
+  Build computer in it only once the org has a good build, because before
+  that the head of the builds offers Try again or Build computer.
+- The repository notice of the Repositories and Cloud computer tabs reads
+  `BuildsResponse.changes`, as
+  [The repository notice](../../docs/protocol/org-image.md#the-repository-notice)
+  says, so each of these tabs reads the builds while it shows. Its state
+  comes from `repositoryWaitOf`, and its words and its look from
+  `repositoryChangeCopy.ts` and `RepositoryNotice.tsx` of the mockups. In
+  a suspended org it names no admin who can act. The build history stays
+  closed while a change of the install script or of the repositories
+  waits for a build.
+- A save of the install script and each repository save read the builds
+  again, so the notices and the build that an add starts show at once.
 - A step of a panel, by a key or a drag, starts from the width that the
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
@@ -90,6 +101,9 @@ what the palette does.
   right column and shows it again. The choice holds for every workspace
   of the tab until the page closes. A hidden column stays mounted, so its
   file lists keep their connection and the terminal keeps its session.
+- A menu item that is off keeps its place and fades each of its parts,
+  except its note, so that the reader can read why it is off. The arrow
+  keys and the first focus of the menu skip it.
 - A sheet or a dialog makes the rest of its frame inert through
   `OverlayHost`. It keeps Tab and Shift+Tab inside, also from the layer
   itself and from a text field. When it closes, the frame is active again
@@ -200,9 +214,9 @@ what the palette does.
 - New workspace sends and uploads one at a time: the create waits for the
   files, and the paperclip is off while the create runs. Send, Create, Try
   again, and Enter read one readiness: the text, the files, the agent
-  login, the image of the org, the repository, the model, and an org that
-  is not suspended. In a suspended org, the refused bar takes the place of
-  the composer of the dialog, as on the page.
+  login, the image of the org, the repository and its build, the model,
+  and an org that is not suspended. In a suspended org, the refused bar
+  takes the place of the composer of the dialog, as on the page.
 - While the builds of the org show no good image, New workspace shows the
   notice of the first build on the page and in the dialog, as
   [Create a workspace](../../docs/protocol/create-a-workspace.md#before-the-first-good-build)
@@ -211,6 +225,19 @@ what the palette does.
   `firstBuildCopy.ts` of the mockups. While the builds load or after a
   failed load, no notice shows, and the Worker refuses a create of an org
   with no good image.
+- The shared form shows the
+  [waiting repositories](../../docs/protocol/create-a-workspace.md#waiting-repositories)
+  that `BuildsResponse.changes` lists as added: off in the repository
+  menu, with the note of `menuNotes`, and in the notice over the
+  composer while the repository of the form waits, with the words of
+  `waitingFormText`. The note of the cloud computer under the picker then
+  gives way. The Worker lists no waiting repository before the first good
+  build, so this notice and the notice of the first build never show
+  together. The builds read again while a build runs, so a waiting
+  repository turns on when a build that holds it succeeds. A draft keeps
+  the repository that the form showed at its first text or file
+  (`NewWorkspaceModel`), so a repository that turns on moves no written
+  draft.
 - Every composer reads its send key through `useSendKey`: the chat, the
   page, and the dialog. On a computer, Enter sends and Shift+Enter adds a
   line, as [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)

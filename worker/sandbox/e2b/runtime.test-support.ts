@@ -17,7 +17,7 @@ export async function runtimeDirectory(): Promise<string> {
 }
 
 export async function pythonRuntime(
-  module: 'command-supervisor.py' | 'environment.py',
+  module: 'command-supervisor.py' | 'environment.py' | 'file-write.py',
   driver: string,
 ): Promise<unknown> {
   const directory = await runtimeDirectory()
