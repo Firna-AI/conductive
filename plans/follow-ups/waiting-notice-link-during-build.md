@@ -20,7 +20,7 @@
 - **Impact if no action:** An admin who waits for a new repository must find the settings through the sidebar. The two notices teach two rules for one link.
 - **Root question:** Should an admin reach the cloud computer settings from each build notice over the composer, also while a later build runs?
 - **Options:**
-  - **A.** Keep the rule. The waiting repository notice shows no link while a later build runs. Effort: Small.
+  - **A.** Keep the rule, and give it a true reason: an install script change during a later build waits for Build computer after that build, so a link would invite a change that needs one more build. Change the reason in the protocol doc and in the comment of `WaitingRepositoryNotice`. Effort: Small.
   - **B.** Show the link in each state of the waiting repository notice, as the notice of the first build does. Change the rule and its reason in the protocol doc, `WaitingRepositoryNotice` of the mockups, which the app also uses, the mockup descriptions of `app/new-workspace/waiting-repository`, and `waiting-notice.test.tsx`. Effort: Small.
 - **Left out:** No link in the notice of the first build while its build runs, because it fails the request of the user. Fewer than three approaches are real, because the question is only whether the link shows during a later build.
 - **Wider fix:** None. Both notices already share one label and one destination.
