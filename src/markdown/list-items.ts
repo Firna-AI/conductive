@@ -36,6 +36,12 @@ export interface ListBlocks<Block> {
   items: ListItem<Block>[]
 }
 
+/** The blocks of an item, and the number of its lines that they hold. */
+export interface ItemBlocks<Block> {
+  blocks: Block[]
+  end: number
+}
+
 /** What the caller of `readList` decides. */
 export interface ListRules<Block> {
   /**
@@ -45,9 +51,16 @@ export interface ListRules<Block> {
   startsBlock: (lines: readonly string[], index: number) => boolean
   /**
    * The blocks of one item. Each line of the item comes from one line of
-   * the list, and `start` is the index of the line with its marker.
+   * the list, and `start` is the index of the line with its marker. `lazy`
+   * holds the indexes of the unindented lines. The parse stops at the first
+   * of them that continues no paragraph, and `end` is the number of lines
+   * that it read, so that line and the lines after it leave the item.
    */
-  parseItem: (lines: readonly string[], start: number) => Block[]
+  parseItem: (
+    lines: readonly string[],
+    start: number,
+    lazy: ReadonlySet<number>,
+  ) => ItemBlocks<Block>
   /** Whether `[ ]` or `[x]` at the start of an item is a task box. */
   tasks: boolean
 }
@@ -69,6 +82,15 @@ export function listMarker(line: string): ListMarker | null {
   }
 }
 
+/**
+ * Whether a list can start at this marker directly after a line of a
+ * paragraph: a bullet with text, or a number 1 with text, as in CommonMark.
+ */
+export function interruptsParagraph(marker: ListMarker): boolean {
+  if (marker.content.trim() === '') return false
+  return !marker.ordered || marker.start === 1
+}
+
 function taskOf(lines: string[]): { checked: boolean | null; lines: string[] } {
   const match = /^\[([ xX])\](?: |$)/.exec(lines[0] ?? '')
   if (!match) return { checked: null, lines }
@@ -78,16 +100,18 @@ function taskOf(lines: string[]): { checked: boolean | null; lines: string[] } {
 
 /**
  * Reads the lines of one item from `start`, whose marker is `marker`. The
- * item holds the lines indented to its text, and lazy lines that continue
- * its paragraph. `next` is the index of the first line after the item.
+ * item holds the lines indented to its text, and the unindented lines that
+ * can continue its paragraph. `lazy` holds the indexes of those lines in
+ * `body`. `next` is the index of the first line after the item.
  */
 function itemLines(
   lines: readonly string[],
   start: number,
   marker: ListMarker,
   startsBlock: ListRules<unknown>['startsBlock'],
-): { body: string[]; next: number } {
+): { body: string[]; lazy: Set<number>; next: number } {
   const body = [marker.content]
+  const lazy = new Set<number>()
   let index = start + 1
   while (index < lines.length) {
     const line = lines[index]
@@ -99,12 +123,13 @@ function itemLines(
     else if (indentOf(line) >= marker.offset) {
       body.push(line.slice(marker.offset))
     } else if (!previousBlank && !sibling && !startsBlock(lines, index)) {
+      lazy.add(body.length)
       body.push(line.trimStart())
     } else break
     index += 1
   }
   while (body.length > 1 && body[body.length - 1] === '') body.pop()
-  return { body, next: index }
+  return { body, lazy, next: index }
 }
 
 /**
@@ -127,11 +152,10 @@ export function readList<Block>(
     const task = rules.tasks
       ? taskOf(item.body)
       : { checked: null, lines: item.body }
-    items.push({
-      checked: task.checked,
-      blocks: rules.parseItem(task.lines, index),
-    })
-    index = item.next
+    const parsed = rules.parseItem(task.lines, index, item.lazy)
+    items.push({ checked: task.checked, blocks: parsed.blocks })
+    // An unindented line that continues no paragraph leaves the item.
+    index = parsed.end < item.body.length ? index + parsed.end : item.next
     const line = lines[index]
     const next = line === undefined || isRule(line) ? null : listMarker(line)
     const same =

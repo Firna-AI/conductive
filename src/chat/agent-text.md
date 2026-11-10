@@ -86,6 +86,16 @@ CommonMark. These parts read the lists of both:
   with the block rules of the caller. `tasks` says whether `[ ]` starts a
   task box. The file preview reads task boxes, and the chat shows them as
   text.
+- `readList` passes `parseItem` the unindented lines of the item. Each
+  parser stops at the first of them that continues no paragraph, such as
+  a line after a code block or a table, and returns `end`. That line then
+  leaves the item, as in CommonMark.
+- `interruptsParagraph` says whether a list can start directly after a
+  line of a paragraph: a bullet with text, or the number 1 with text. The
+  chat and the file preview both use it. The chat tracks whether its
+  paragraph is open, so a heading or a rule, which shows as text, still
+  lets a list start under it. A list marker comes before a table, so
+  `- a | b` with a separator row under it starts a list.
 - `src/markdown/lines.ts` holds the line tests that both readers share,
   such as `expandTabs`. Like `table-rows.ts`, these modules import no
   React.

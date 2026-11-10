@@ -1,8 +1,10 @@
 import { expandTabs, indentOf, isBlank, isRule } from '../../markdown/lines'
 import {
+  interruptsParagraph,
   listMarker,
   maxNesting,
   readList,
+  type ItemBlocks,
   type ListItem,
 } from '../../markdown/list-items'
 import { tableStarts, type TableCells } from '../../markdown/table-rows'
@@ -70,9 +72,11 @@ function startsBlock(line: string): boolean {
   if (openingFence(line) || atxHeading.test(line)) return true
   if (isRule(line) || quoteLine.test(line)) return true
   const marker = listMarker(line)
-  if (!marker || marker.content.trim() === '') return false
-  return !marker.ordered || marker.start === 1
+  return marker !== null && interruptsParagraph(marker)
 }
+
+/** A text without unindented lines of a list item. */
+const noLazyLines: ReadonlySet<number> = new Set()
 
 class BlockParser {
   readonly definitions = new Map<string, string>()
@@ -82,6 +86,11 @@ class BlockParser {
   /** The line of the file where the lines of the current parse start. */
   private origin = 0
   private tailLine: number | null = null
+  /**
+   * The unindented lines of the list item that the parse reads. Only a
+   * paragraph continues them, so a block before one of them ends there.
+   */
+  private lazy: ReadonlySet<number> = noLazyLines
 
   /**
    * The line of the file where the text tail starts, or null. A row that
@@ -94,28 +103,42 @@ class BlockParser {
   /**
    * Parses the content of a quote or a list item, one level deeper. Each
    * line of the content comes from one line of the parent, from `start`.
+   * The parse stops at the first line in `lazy` that continues no
+   * paragraph, and `end` is the number of lines that it read.
    */
-  nested = (lines: readonly string[], start: number): MdBlock[] => {
-    if (this.tailLine !== null) return []
+  nested = (
+    lines: readonly string[],
+    start: number,
+    lazy: ReadonlySet<number> = noLazyLines,
+  ): ItemBlocks<MdBlock> => {
+    if (this.tailLine !== null) return { blocks: [], end: lines.length }
     // Quotes and lists nest at most this deep. Deeper content shows as text.
     if (this.depth + 1 >= maxNesting) {
-      return [{ kind: 'paragraph', text: lines.join('\n').trim() }]
+      const text = lines.join('\n').trim()
+      return { blocks: [{ kind: 'paragraph', text }], end: lines.length }
     }
     const origin = this.origin
+    const outerLazy = this.lazy
     this.depth += 1
     this.origin = origin + start
+    this.lazy = lazy
     try {
-      return this.parse(lines)
+      return this.read(lines)
     } finally {
       this.depth -= 1
       this.origin = origin
+      this.lazy = outerLazy
     }
   }
 
-  parse = (lines: readonly string[]): MdBlock[] => {
+  parse = (lines: readonly string[]): MdBlock[] => this.read(lines).blocks
+
+  private read(lines: readonly string[]): ItemBlocks<MdBlock> {
     const blocks: MdBlock[] = []
     let index = 0
     while (index < lines.length && this.tailLine === null) {
+      // A paragraph reads its own lazy lines, so this one ends the item.
+      if (this.lazy.has(index)) return { blocks, end: index }
       const line = lines[index]
       if (isBlank(line)) {
         index += 1
@@ -123,7 +146,7 @@ class BlockParser {
       }
       index = this.block(lines, index, blocks)
     }
-    return blocks
+    return { blocks, end: lines.length }
   }
 
   /** Reads the block at `index` into `blocks`. Returns the next index. */
@@ -135,12 +158,13 @@ class BlockParser {
       const code: string[] = []
       let next = index + 1
       while (next < lines.length && !closesFence(lines[next], fence.marker)) {
+        if (this.lazy.has(next)) break
         const text = lines[next]
         code.push(text.slice(Math.min(fence.indent, indentOf(text))))
         next += 1
       }
       blocks.push({ kind: 'code', text: code.join('\n') })
-      return next + 1
+      return this.lazy.has(next) ? next : next + 1
     }
     const heading = atxHeading.exec(line)
     if (heading) {
@@ -159,9 +183,9 @@ class BlockParser {
       let kept = 0
       const { list, next } = readList<MdBlock>(lines, index, marker, {
         startsBlock: (all, at) => startsBlock(all[at]),
-        parseItem: (item, at) => {
+        parseItem: (item, at, lazy) => {
           if (this.tailLine === null) kept += 1
-          return this.nested(item, at)
+          return this.nested(item, at, lazy)
         },
         tasks: true,
       })
@@ -171,7 +195,8 @@ class BlockParser {
       return next
     }
     if (tableStarts(lines, index)) {
-      const table = parseTable(lines, index, this.tables)
+      const ends = (at: number) => this.lazy.has(at)
+      const table = parseTable(lines, index, this.tables, ends)
       blocks.push(table.block)
       if (!this.tables.open) this.tailLine = this.origin + table.next
       return table.next
@@ -206,7 +231,8 @@ class BlockParser {
         inner.push(text)
       } else break
     }
-    blocks.push({ kind: 'quote', blocks: this.nested(inner, index) })
+    const quote = this.nested(inner, index)
+    blocks.push({ kind: 'quote', blocks: quote.blocks })
     return next
   }
 

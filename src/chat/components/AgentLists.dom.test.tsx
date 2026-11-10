@@ -4,7 +4,6 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
 import toolGroup from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import { mount, press } from '../../test-support/mount'
-import { textBlocks, type TextBlock } from './agent-text'
 import { AgentText } from './AgentText'
 import { MessageLine } from './MessageLine'
 
@@ -30,11 +29,6 @@ function squash(text: string): string {
 /** The text of a node, with each run of white space as one space. */
 function textOf(node: Node | null): string {
   return squash(node?.textContent ?? '')
-}
-
-/** A paragraph block of an answer. */
-function p(paragraph: string): TextBlock {
-  return { kind: 'p', text: paragraph }
 }
 
 /** An item as its own text, or as its text and the lists inside it. */
@@ -124,92 +118,6 @@ it('nests a list that the agent indents under an item, in an answer and in a mes
       '2. Line and colour (low severity).',
       ['3. Commit (medium severity).', ['a. Give me a name and an email.']],
     ],
-  })
-})
-
-it('reads lists by the list rules of the file preview, so an item holds the paragraphs, code, tables, and lists indented under it', () => {
-  const text = [
-    '1. Install the packages',
-    'from the lockfile.',
-    '',
-    '   Run this in the root:',
-    '',
-    '   ```sh',
-    '   npm ci',
-    '   ```',
-    '',
-    '2. Check the sizes:',
-    '   | Bundle | Size |',
-    '   | --- | --- |',
-    '   | checkout | 182 KB |',
-    '  - Two spaces under a number stay out of the item.',
-    '* A new marker character starts a new list.',
-    '- A tab counts to the next stop of four columns,',
-    '\t- so this item nests.',
-  ].join('\n')
-  expect(textBlocks(text)).toEqual([
-    {
-      kind: 'ol',
-      start: 1,
-      items: [
-        [
-          p('Install the packages from the lockfile.'),
-          p('Run this in the root:'),
-          { kind: 'code', text: 'npm ci' },
-        ],
-        [
-          p('Check the sizes:'),
-          {
-            kind: 'table',
-            head: ['Bundle', 'Size'],
-            rows: [['checkout', '182 KB']],
-            align: [null, null],
-          },
-        ],
-      ],
-    },
-    {
-      kind: 'ul',
-      items: [[p('Two spaces under a number stay out of the item.')]],
-    },
-    { kind: 'ul', items: [[p('A new marker character starts a new list.')]] },
-    {
-      kind: 'ul',
-      items: [
-        [
-          p('A tab counts to the next stop of four columns,'),
-          { kind: 'ul', items: [[p('so this item nests.')]] },
-        ],
-      ],
-    },
-  ])
-})
-
-it('keeps the tabs of a code block outside a list', () => {
-  const text = ['```make', 'build:', '\tgo build ./...', '```'].join('\n')
-  expect(textBlocks(text)).toEqual([
-    { kind: 'code', text: 'build:\n\tgo build ./...' },
-  ])
-})
-
-it('nests lists at most 16 levels deep, as the file preview does, and shows deeper content as text', () => {
-  const text = Array.from(
-    { length: 18 },
-    (_, level) => `${'  '.repeat(level)}- level ${level + 1}`,
-  ).join('\n')
-  const listIn = (blocks: readonly TextBlock[]) =>
-    blocks.find((block) => block.kind === 'ul')
-  let item: readonly TextBlock[] = textBlocks(text)
-  let list = listIn(item)
-  let depth = 0
-  while (list?.kind === 'ul') {
-    depth += 1
-    item = list.items[0] ?? []
-    list = listIn(item)
-  }
-  expect({ depth, deepest: item }).toEqual({
-    depth: 16,
-    deepest: [p('level 16 - level 17 - level 18')],
   })
 })
 

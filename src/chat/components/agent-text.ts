@@ -1,8 +1,10 @@
 import { expandTabs, isBlank, isRule } from '../../markdown/lines'
 import {
+  interruptsParagraph,
   listMarker,
   maxNesting,
   readList,
+  type ItemBlocks,
   type ListBlocks,
   type ListRules,
 } from '../../markdown/list-items'
@@ -34,7 +36,7 @@ export type TextList = Extract<TextBlock, { kind: 'ul' | 'ol' }>
 /** The blocks of one list item, from the lines indented under its marker. */
 export type TextItem = readonly TextBlock[]
 
-const heading = /^#{1,6}\s+(.*)$/
+const heading = /^ {0,3}#{1,6}\s+(.*)$/
 const quote = /^ {0,3}>/
 
 function isFence(line: string): boolean {
@@ -53,13 +55,14 @@ function startsBlock(lines: readonly string[], index: number): boolean {
 
 /**
  * Reads the table whose header row is at `index`, up to the first blank
- * line, line without a pipe, or the end of the text. A body row keeps the
- * cells that it has, up to the width of the header, and gets no empty
- * cells. `last` is the index of the last line of the table.
+ * line, line without a pipe, line in `lazy`, or the end of the text. A
+ * body row keeps the cells that it has, up to the width of the header, and
+ * gets no empty cells. `last` is the index of the last line of the table.
  */
 function readTable(
   lines: readonly string[],
   index: number,
+  lazy: ReadonlySet<number>,
 ): { table: TextTable; last: number } {
   const head = readTableRow(lines[index])
   const align = readTableSeparator(lines[index + 1]) ?? head.map(() => null)
@@ -67,7 +70,9 @@ function readTable(
   let last = index + 1
   while (last + 1 < lines.length) {
     const line = lines[last + 1]
-    if (line.trim() === '' || !line.includes('|')) break
+    if (line.trim() === '' || !line.includes('|') || lazy.has(last + 1)) {
+      break
+    }
     rows.push(readTableRow(line).slice(0, head.length))
     last += 1
   }
@@ -81,32 +86,47 @@ function textList(list: ListBlocks<TextBlock>): TextList {
   return { kind: 'ol', start: list.start, items }
 }
 
+/** A text without unindented lines of a list item. */
+const noLazyLines: ReadonlySet<number> = new Set()
+
 /**
  * The blocks of the lines of an answer, or of one list item. `raw` holds
  * the lines with their tabs, which a code block keeps. `depth` counts the
- * lists around the lines.
+ * lists around the lines. The parse stops at the first line in `lazy` that
+ * continues no paragraph, as the list reader asks.
  */
 function parseLines(
   lines: readonly string[],
   raw: readonly string[],
   depth: number,
-): TextBlock[] {
+  lazy: ReadonlySet<number> = noLazyLines,
+): ItemBlocks<TextBlock> {
   const blocks: TextBlock[] = []
   let paragraph: string[] = []
+  // Whether the last line of `paragraph` is its text, so it is open. A
+  // heading or a rule shows as text too, but it closes the paragraph.
+  let open = false
   let code: string[] | null = null
   const flush = () => {
     if (paragraph.length > 0) {
       blocks.push({ kind: 'p', text: paragraph.join(' ') })
     }
     paragraph = []
+    open = false
+  }
+  const finish = (end: number): ItemBlocks<TextBlock> => {
+    flush()
+    if (code) blocks.push({ kind: 'code', text: code.join('\n') })
+    return { blocks, end }
   }
   const rules: ListRules<TextBlock> = {
     startsBlock,
-    parseItem: (item) => itemBlocks(item, depth),
+    parseItem: (item, _start, itemLazy) => itemBlocks(item, depth, itemLazy),
     tasks: false,
   }
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]
+    if (lazy.has(index) && (code !== null || !open)) return finish(index)
     if (code) {
       if (isFence(line)) {
         blocks.push({ kind: 'code', text: code.join('\n') })
@@ -119,51 +139,60 @@ function parseLines(
       code = []
       continue
     }
-    if (tableStarts(lines, index)) {
-      flush()
-      const { table, last } = readTable(lines, index)
-      blocks.push(table)
-      index = last
-      continue
-    }
     const marker = isRule(line) ? null : listMarker(line)
-    if (marker) {
+    if (marker && (!open || interruptsParagraph(marker))) {
       flush()
       const { list, next } = readList(lines, index, marker, rules)
       blocks.push(textList(list))
       index = next - 1
       continue
     }
-    if (isBlank(line)) flush()
-    else paragraph.push(heading.exec(line)?.[1] ?? line.trim())
+    if (tableStarts(lines, index)) {
+      flush()
+      const { table, last } = readTable(lines, index, lazy)
+      blocks.push(table)
+      index = last
+      continue
+    }
+    if (isBlank(line)) {
+      flush()
+      continue
+    }
+    const title = heading.exec(line)
+    paragraph.push(title?.[1] ?? line.trim())
+    open = title === null && !isRule(line)
   }
-  flush()
-  if (code) blocks.push({ kind: 'code', text: code.join('\n') })
-  return blocks
+  return finish(lines.length)
 }
 
 /**
  * The blocks of one list item. Lists nest at most `maxNesting` deep, as in
  * the file preview, so deeper content shows as the text of a paragraph.
  */
-function itemBlocks(lines: readonly string[], depth: number): TextBlock[] {
-  if (depth + 1 < maxNesting) return parseLines(lines, lines, depth + 1)
+function itemBlocks(
+  lines: readonly string[],
+  depth: number,
+  lazy: ReadonlySet<number>,
+): ItemBlocks<TextBlock> {
+  if (depth + 1 < maxNesting) return parseLines(lines, lines, depth + 1, lazy)
   const text = lines
     .map((line) => line.trim())
     .filter((line) => line !== '')
     .join(' ')
-  return text === '' ? [] : [{ kind: 'p', text }]
+  const blocks: TextBlock[] = text === '' ? [] : [{ kind: 'p', text }]
+  return { blocks, end: lines.length }
 }
 
 /**
  * Splits an answer into paragraphs, lists, code blocks, and tables. A list
  * item holds the lines indented under it, by the list rules of the file
- * preview. Text that the agent still writes can end inside a code block,
+ * preview, and a list starts after a line of a paragraph only where
+ * CommonMark lets it. Text that the agent still writes can end inside a code block,
  * which then runs to the end. A header row shows as text until its
  * separator row arrives. A table can start directly after a line of a
  * paragraph or a list.
  */
 export function textBlocks(text: string): TextBlock[] {
   const raw = text.split('\n')
-  return parseLines(raw.map(expandTabs), raw, 0)
+  return parseLines(raw.map(expandTabs), raw, 0).blocks
 }
