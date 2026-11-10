@@ -8,7 +8,7 @@ import { startImageBuild } from './image-builds'
 import { ImageCoordinator } from './image-coordinator'
 import { finishImageBuild } from './image-test-support'
 import { nativeLifecycleStorage } from './native-storage.test-support'
-import { readImageSettings } from './settings-data'
+import { readOrgImage } from './org-image-data'
 
 const fixtureForTest = setupFirstBuildTests()
 afterEach(() => vi.restoreAllMocks())
@@ -153,7 +153,7 @@ it('keeps the first good image and warns once when the added build cannot be sch
   }
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
   await finishImageBuild(fixture, id)
-  expect(await readImageSettings(db, org.id)).toMatchObject({
+  expect(await readOrgImage(db, org.id)).toMatchObject({
     imageBuildId: id,
   })
   const history = await readBuildHistory(db, org.id)

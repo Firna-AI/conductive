@@ -8,7 +8,7 @@ export function setupFirstBuildTests() {
     await db.batch([
       db
         .prepare(
-          'UPDATE settings SET image_build_id = NULL, org_image_name = NULL WHERE org_id = ?',
+          "UPDATE org_images SET image_build_id = NULL, image_name = NULL WHERE org_id = ? AND provider_account = 'boat'",
         )
         .bind(fixture.org.id),
       db

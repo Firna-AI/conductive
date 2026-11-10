@@ -34,6 +34,7 @@ it('keeps failure logs masked across Worker RPC and storage reloads', async () =
       avatarUrl: null,
     }
     const job: WorkspaceStartJob = {
+      providerAccount: 'boat',
       workspaceId: id,
       orgId: 'runtime-org',
       kind: 'create',

@@ -20,3 +20,4 @@
 - **Impact if no action:** Local provider tests and SDK proofs do not show that a deployed Worker, image, and multi-member session work together.
 - **Needs:** The merged and deployed change, a new org image with the runner update, valid Claude and Codex logins, and two org members who permit the test.
 - **Done when:** Both agents report the correct workspace facts and the sender of each message. A sandbox resume keeps each session's instruction text. The stored message and chat contain no added sender line.
+- **Related:** `plans/follow-ups/provider-groundwork-deployed-smoke.md` also runs a chat turn, a stop, and a resume in a deployed workspace. One session can run both items, and each keeps its own checks.

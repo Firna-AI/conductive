@@ -33,3 +33,24 @@
 - **Previous examples:** `plans/follow-ups/org-native-test-under-load.md` records another native integration test that failed under load. A shared cause is unproved.
 - **Recommendation:** A. Captured assertion and completion-order evidence can identify a reproducible cause.
 - **Action:** fix after merge, apply A, because the test is unchanged and no failure detail justifies a correction in this merge. Keep this test in the unchanged complete gate. No new product decision or runtime fix belongs to this merge without new evidence.
+
+## Provider branch merge observation, 10 November 2026
+
+The complete local gate on `calummoore/vercel-sandbox-provider` reproduced
+the same failed case after integrating main `1a9e75a7`.
+The test and its report helper match that main commit exactly.
+The failure is the first command-list assertion at
+`worker/chat/runner-repairs.test.ts:30`.
+It expected `files.snapshot`, `changes.updated`, `start.updated`, and
+`workspace.title`. It received an empty list after `fixture.drain()`.
+
+```text
+AssertionError: expected [] to deeply equal [ 'files.snapshot', …(3) ]
+```
+
+The full test run finished with 1,984 passes, one failure, and no skips.
+An unchanged `npm run test -- worker/chat/runner-repairs.test.ts` rerun
+then passed both tests with no skips.
+No source, assertion, timeout, or test setting changed between those runs.
+The cause remains unproved. The missing first repair commands narrow the
+investigation to event processing, drain completion, or command observation.

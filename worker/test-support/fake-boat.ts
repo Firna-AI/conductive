@@ -9,6 +9,11 @@ export class FakeBoat {
   responseOverride: Response | null = null
   /** One-shot factories return fresh bodies without clone/tee buffering. */
   responseFactories: ((request: Request) => Response)[] = []
+  private readonly accountKeys = new Map<string, string>()
+
+  addAccount(account: { orgId: string; apiKey: string }) {
+    this.accountKeys.set(account.orgId, account.apiKey)
+  }
 
   reset() {
     this.requests = []
@@ -20,7 +25,11 @@ export class FakeBoat {
   fetch: HttpFetch = async (request) => {
     this.requests.push(request.clone())
     const destination = request.headers.get('X-Boat-Org') ?? this.activeOrgId
-    if (destination !== this.orgId)
+    const apiKey =
+      destination === this.orgId
+        ? this.apiKey
+        : this.accountKeys.get(destination)
+    if (apiKey === undefined)
       return Response.json({ ok: false, code: 'not_found' }, { status: 404 })
     const factory = this.responseFactories.shift()
     if (factory) return factory(request)
@@ -35,7 +44,7 @@ export class FakeBoat {
         { status: this.failure.status, headers: { 'Retry-After': '3' } },
       )
     }
-    if (request.headers.get('Authorization') !== `Bearer ${this.apiKey}`)
+    if (request.headers.get('Authorization') !== `Bearer ${apiKey}`)
       return Response.json({ ok: false, code: 'unauthorized' }, { status: 401 })
     const path = new URL(request.url).pathname.replace('/api/v1', '')
     if (path.startsWith('/saved-snapshots')) {

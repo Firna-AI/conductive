@@ -9,6 +9,7 @@ export async function purgeOrgRecords(
   const guard = `EXISTS (SELECT 1 FROM org_deletions WHERE org_id = ? AND lease_token = ? AND purge_started_at IS NOT NULL)`
   const mutations = [
     'DELETE FROM settings WHERE org_id = ?',
+    'DELETE FROM org_images WHERE org_id = ?',
     'DELETE FROM image_builds WHERE org_id = ?',
     'UPDATE workspaces SET created_by_workspace_id = NULL WHERE org_id = ?',
     'DELETE FROM workspaces WHERE org_id = ?',
