@@ -103,6 +103,17 @@ as a follow-up.
 - **Recommendation:** B. A command that runs on the user's own computer is the main new risk of the Mac app.
 - **Action:** the user chose B on 9 November 2026. Milestone 8 applies it.
 
+### 4. The actions of the site
+
+- **Chosen by the user on 10 November 2026:** "this should be sign up (primary) and download (for mac os download) - we shouldn't mention the waitlist on the static site buttons", about the two actions under the hero.
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design, from the user's message on 10 November 2026.
+- **Category:** UX wording.
+- **Location:** `startLabel` in `docs/mockups/src/components/marketing/SiteActions.tsx`, `src/marketing/components/StartButton.astro`, `src/marketing/components/SiteActions.astro`, and the Account column of the footer.
+- **Background:** The main action of each page of the site was "Join the waitlist", from decision 160 of the earlier plan, because a new account waits for app access. The second action was "Sign in". Both start the GitHub sign-in.
+- **Choice:** the main action of the site is "Sign up". The second action of the hero and of the last call to action is a download of the Mac app. No button of the static site names the waitlist.
+- **Action:** the user chose it. Milestones 9 to 11 apply it.
+
 ## Design calls
 
 Agent calls on 8 November 2026, kept on 9 November 2026:
@@ -185,6 +196,37 @@ Agent calls of Milestone 1 on 9 November 2026, from its mockups:
   Reason: Chrome refuses a time value for an animation that scrolling
   drives, such as the fade of the waiting requests in the Mac picture.
 
+Agent calls on 10 November 2026, for decision 4:
+
+- The second action reads "Download for Mac", with the download icon, and
+  leads to the Mac app section. Reason: the site runs no script, so it
+  cannot pick the DMG of the visitor's chip, and the section offers both.
+- The hero and the last call to action share the two actions, so the last
+  call to action of each page changes too. The header keeps Sign in, and
+  its main action becomes Sign up. The footer lists Sign up and Sign in.
+- The sentence under the last call to action keeps the fact that a new
+  account waits for access, but it starts with "Sign up with GitHub", so it
+  matches the button.
+
+Agent calls of Milestones 9 to 11 on 10 November 2026:
+
+- The words of both actions are `siteActionCopy` in
+  `src/marketing/access-copy.ts`, which the site and the mockups both read.
+  `startLabel` of the mockups is gone. Reason: one source for each shared
+  text, as `features.ts` does, and that module already holds the sentence
+  under the last call to action. "Sign in" keeps its copies, because the
+  decision does not change it.
+- `access-copy.ts` changed in Milestone 9, not in Milestone 11. Reason: the
+  mockups read it, so they can draw the new words only from it.
+- The download icon of the second action is 16 px, as the GitHub mark of
+  the main action and the icons of the downloads in the Mac app section.
+  Reason: the large Firna button draws its own icon at 18 px, so the
+  mockup passes the icon as a node.
+- The table notes of the comparison page that name the waitlist stay.
+  Reason: they are not buttons.
+- The docs cite the choice of 10 November 2026 by its date, not as
+  decision 4. Reason: decision 4 of the earlier plan has the same number.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -262,8 +304,12 @@ Depends on: 1, 2, 3
       once, and report. The first review found no findings.
 - [x] Open the first pull request. It keeps this plan. It is
       [PR #128](https://github.com/Firna-AI/remote-code/pull/128).
-- [ ] The user merges it, and then the next release pull request.
-- [ ] Check that both fixed addresses of the latest release give their DMG.
+- [x] The user merges it, and then the next release pull request. At the
+      user's request on 10 November 2026, I squash-merged #128 and then the
+      release pull request #111. Release `v0.3.0` is the first with the fixed
+      DMG names.
+- [x] Check that both fixed addresses of the latest release give their DMG.
+      Both returned 200 on 10 November 2026.
 
 ## Milestone 5: Marketing site
 
@@ -314,7 +360,7 @@ change of the Terms changes the contract with each user.
 
 ## Milestone 7: Second pull request
 
-Depends on: 4, 5, 6, 8
+Depends on: 4, 5, 6, 8, 11
 
 - [x] Merge `main` into the branch, as the `git-merge` skill says.
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
@@ -353,6 +399,47 @@ Apply option B of decision 3. Added on 9 November 2026.
 - [x] Run the targeted tests and the complete gate, commit, push, and
       review the change with the `implementation-review` skill. The second
       review of the branch found no findings.
+
+## Milestone 9: Mockups for Sign up and Download for Mac
+
+Tags: mockup
+
+Depends on: none
+
+- [x] Change the main action to "Sign up" and the second action to
+      "Download for Mac", in `SiteActions.tsx` and wherever the mockups
+      draw the actions of the site.
+- [x] Update `docs/mockups/marketing-site.md`, `docs/mockups/catalogue.md`,
+      the rationale of the marketing entry, and the comparison page notes.
+- [x] Run `npm run mockups:check`, and smoke-test the home page and the
+      comparison page at desktop and phone sizes.
+
+Evidence: `.context/mac-app-downloads/actions/` and the screenshots in
+`.context/mac-app-downloads/shots-actions/`.
+
+## Milestone 10: Docs for the actions of the site
+
+Depends on: 9
+
+- [x] Change the main action in `docs/protocol/conductor-cloud-comparison.md`
+      and `docs/architecture/marketing-site.md`. Read both legal pages in
+      full, as the rule of `AGENTS.md` says. No sentence of the legal pages
+      restates the actions of the site.
+
+## Milestone 11: Site actions
+
+Tags: ui
+
+Depends on: 9, 10
+
+- [x] Change `StartButton.astro`, `SiteActions.astro`, the footer, and
+      `access-copy.ts`, as Milestone 9 draws them.
+- [x] Update the tests and `src/marketing/README.md`.
+- [ ] Run the targeted tests and the complete gate, commit, push, and
+      review the change.
+
+Evidence: `.context/mac-app-downloads/actions/`, with the comparison of the
+site and the mockups in `m11-compare.log`.
 
 ## Post-merge follow-up (non-blocking)
 

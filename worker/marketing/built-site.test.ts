@@ -60,9 +60,9 @@ it('sends every sign-in to the app and shows the request year', async () => {
   expect(html).toContain('Give every coding task its own cloud computer.')
   expect(html).toContain('Give your next task its own cloud computer.')
   const signIns = links(html).filter((link) =>
-    ['Join the waitlist', 'Sign in'].includes(link.text),
+    ['Sign up', 'Sign in'].includes(link.text),
   )
-  expect(signIns).toHaveLength(8)
+  expect(signIns).toHaveLength(6)
   for (const link of signIns) expect(link.href).toBe(`${APP_ORIGIN}/`)
   expect(html).toContain(`© 2027 ${productName}`)
 })
@@ -90,10 +90,26 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
 const latestRelease = (name: string) =>
   `${sourceRepositoryHref}/releases/latest/download/${name}`
 
-it('leads the header Download and footer Mac app links to both chip downloads', async () => {
+it('leads the header, action, and footer links of the Mac app to both chip downloads', async () => {
   const home = await (await get('/')).text()
+  const comparison = await (await get(sitePaths.fromConductor)).text()
+  /** The last call to action of a page: from its title to the footer. */
+  const closing = (page: string, title: string) =>
+    page.slice(page.indexOf(title), page.indexOf('<footer'))
+  const hero = home.slice(home.indexOf('<h1'), home.indexOf(' id="features"'))
   const cases = [
     ['header', home.slice(0, home.indexOf('</header>')), 'Download'],
+    ['hero', hero, 'Download for Mac'],
+    [
+      'home closing',
+      closing(home, 'Give your next task its own cloud computer.'),
+      'Download for Mac',
+    ],
+    [
+      'comparison closing',
+      closing(comparison, parityPageCopy.closing.title),
+      'Download for Mac',
+    ],
     ['footer', home.slice(home.indexOf('<footer')), 'Mac app'],
   ] as const
   for (const [part, html, text] of cases) {

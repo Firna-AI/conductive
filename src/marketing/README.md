@@ -5,10 +5,15 @@ The marketing site is the public site at the root of the product domain,
 the Conductor Cloud comparison page, and a page for an unknown address.
 Visitors need no sign-in. The pages run
 no script and set no cookie. Every sign-in link leads to the app, on the
-`app.` host. The main action, Join the waitlist, and Sign in lead to the
-same sign-in. A new person waits there for app access, as the
-[waitlist protocol](../../docs/protocol/waitlist.md) says, so the words
-promise a place on the waitlist, not use at once.
+`app.` host. The main action, Sign up, and Sign in lead to the same
+sign-in. A new person waits there for app access, as the
+[waitlist protocol](../../docs/protocol/waitlist.md) says. No button names
+the waitlist. The sentence under the last call to action says that a new
+account waits for access, so the page promises no use at once. The second
+action of the hero and of the last call to action, Download for Mac, leads
+to the Mac app section of the home page, because a page runs no script to
+pick the chip of the visitor. The site and the mockups read the words of
+both actions from `siteActionCopy` in `access-copy.ts`.
 
 The shared header links to the public source repository on GitHub.
 The link appears on phones and desktops. On desktops, the header also has
@@ -233,7 +238,7 @@ the status of each Conductor Cloud feature in Conductive.
 [Conductor Cloud comparison](../../docs/protocol/conductor-cloud-comparison.md)
 states its requirements. The link above the home headline and the "From
 Conductor Cloud" link in the Product column of the footer lead to it. Its
-last call to action keeps the waitlist promise of the site.
+last call to action has the sentence and the two actions of the home page.
 
 The modules in `from-conductor/` are the one source of the rows, the
 statuses, the dates, and the words of the page. The chosen mockup,
@@ -329,7 +334,8 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
     rule, and the words of a day.
   - `copy.ts`: the words of the page and of its two entry links, as text
     without markup.
-- `access-copy.ts`: the waitlist sentence under the last call to action.
+- `access-copy.ts`: the words of the two actions of the site, and the
+  sentence under the last call to action.
 - `links.ts`: the source repository address, the Mac app download
   addresses, site paths, and `pageHrefs` for links from another origin.
 - `terms.ts`, `privacy.ts`, `legal-text.ts`: legal pages and the shared

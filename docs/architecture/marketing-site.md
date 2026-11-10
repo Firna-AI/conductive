@@ -19,8 +19,15 @@ decision number names a dated record, as
   [agreement to the Terms](../protocol/access-and-security.md#sign-in)
   before the GitHub sign-in. The Worker serves that page on
   `app.conductive.build`.
-- The main action is "Join the waitlist", because a new account waits for
-  app access. The site does not name Boat, and users need no Boat account
+- The main action is "Sign up". It starts the GitHub sign-in, and a new
+  account then waits for app access. "Sign up" won over "Join the
+  waitlist", as the user chose on 10 November 2026, so no button of the
+  site names the waitlist. The sentence under the last call to action says
+  that a new account waits for access.
+- The second action of the hero and of the last call to action is
+  "Download for Mac". It leads to the Mac app section of the home page,
+  because the site runs no script to pick the chip of the visitor.
+- The site does not name Boat, and users need no Boat account
   (decision 80).
 - The home page has a Mac app section. It links the DMG for Apple silicon
   first, then the DMG for Intel, from the latest release of the public
