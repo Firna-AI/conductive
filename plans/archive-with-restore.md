@@ -419,6 +419,23 @@ Agent call from the finding check, on 10 November 2026:
   both lost replies and interrupted D1 writes without a second alarm
   handoff. The shared ledger alternative is separate follow-up work.
 
+Agent calls from the final review and integration, on 10 November 2026:
+
+- Fix finding 3 with B: isolate each expired Archive resource, then try
+  retention and pending Org Restore under their existing lease checks.
+  Reason: a provider failure must not block independent data preservation.
+- Defer the wider ownership fix as I, which preserves current owners.
+  Reason: the checked replacement D needs approval, and I is the best
+  unblocked structural option after provider verification.
+- Defer the uncertain-computer notice as B. Reason: the rare visible
+  defect needs typed physical certainty and notice states that can be
+  added later without making the change harder.
+- Defer the wider pre-purge step runner D. Reason: it reaches the older
+  failed-Stop path outside this change.
+- Keep the incoming file-tab Resume hook with the new palette actions.
+  Reason: Restore changes no file-tab address, so it stays stopped while a
+  later deliberate file or diff visit still resumes.
+
 ## Milestone 1: Mockups (completed)
 
 Tags: mockup
@@ -747,8 +764,8 @@ Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 4a, 5, 5a
       repeat each new asynchronous regression ten times.
 - [x] Record checked follow-ups for the broader cleanup ownership, the
       rare uncertain-computer notice, and independent pre-purge steps.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -763,6 +780,12 @@ Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 4a, 5, 5a
 Evidence: `.context/archive-with-restore/final-check.log`,
 `.context/archive-with-restore/final-links.log`, and
 `.context/archive-with-restore/final-guide-links.log`.
+
+The fresh review and re-review are complete. Both critical findings were
+fixed in the two authorized fix rounds. The rare notice defect and the
+wider classes have separate follow-up records. No decision needs an answer.
+The completion commit deletes this plan and preserves its dated record in
+PR #138.
 
 ## Post-merge follow-up (non-blocking)
 
