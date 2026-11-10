@@ -6,7 +6,7 @@ import {
   fakeComputerServer,
   mockComputerServer,
 } from '../../test-support/computer-mcp'
-import { runnerHarness, turn } from '../../test-support/harness'
+import { duringTurn, runnerHarness, turn } from '../../test-support/harness'
 import { string } from '../parse'
 import { Runner } from '../runner'
 import { createClaudeFactory } from './claude'
@@ -40,7 +40,11 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
   await runner.idle()
   const first = await sdk.nextUser()
   const uuid1 = string(first.uuid)
-  h.endpoint.send({ ...turn('2'), type: 'message', turnId: 'turn-1' })
+  h.endpoint.send({
+    ...duringTurn(turn('2')),
+    type: 'message',
+    turnId: 'turn-1',
+  })
   await runner.idle()
   const second = await sdk.nextUser()
   const uuid2 = string(second.uuid)
@@ -207,7 +211,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
     model: 'follow-up-model',
     effort: 'medium',
   }
-  h.endpoint.send({ ...fourth, type: 'message', turnId: 'turn-3' })
+  h.endpoint.send({ ...duringTurn(fourth), type: 'message', turnId: 'turn-3' })
   await runner.idle()
   const fourthUuid = string((await sdk.nextUser()).uuid)
   expect(sdk.models.at(-1)).toBe('follow-up-model')

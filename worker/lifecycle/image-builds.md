@@ -27,6 +27,14 @@ Cleanup can still recover uncertain allocations and remove resources.
 A pending start, outcome publication, or failed-computer cleanup keeps suspension pending and its native alarm armed.
 Suspended orgs get no disk retention restart, including after an owner change.
 
+## Runner version
+
+- A full build records the Worker's runner protocol version.
+  A refresh copies the version of the image that it refreshes.
+- Each new computer allocation stores the runner version of its image snapshot before the provider call.
+  This includes a first start, Try again, and a restored allocation.
+  A missing image version counts as version 1.
+
 ## Build jobs
 
 `startImageBuild` in [`image-builds.ts`](image-builds.ts) records a build or
@@ -167,7 +175,7 @@ states the rule.
 
 ## Key code
 
-- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication.
+- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,

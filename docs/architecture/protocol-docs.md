@@ -30,6 +30,8 @@ This page lists each protocol doc and what it covers.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+- [Model gateway](../protocol/model-gateway.md): the turn token, and the
+  Worker routes that add the agent login to each model request.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a

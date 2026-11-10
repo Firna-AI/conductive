@@ -9,7 +9,7 @@ it('bounds normalized and escaped tool detail after filtering each full update',
   const h = await wireFixture()
   await h.runner.start(false)
   const command = turn()
-  command.login.secret = 'x'
+  command.credential.token = 'x'
   h.endpoint.send(command)
   await h.runner.idle()
   const source = '\n'.repeat(32_765) + '😀\ud800"\\tail'
@@ -106,7 +106,7 @@ it('keeps a whole unique-path turn-file prefix within count and JSON byte caps',
   ]
   for (const [index, files] of inputs.entries()) {
     const command = turn(String(index))
-    command.login.secret = 'x'
+    command.credential.token = 'x'
     h.endpoint.send(command)
     await h.runner.idle()
     h.setTurnFiles(files)

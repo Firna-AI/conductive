@@ -72,8 +72,8 @@ of its fetch.
 
 ### Builds and refreshes
 
-[Image builds](image-builds.md) describes build sandboxes, suspension, provider retries,
-logs, snapshot leases, and refresh timers.
+[Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
+provider retries, logs, snapshot leases, and refresh timers.
 
 ## Settings
 
@@ -113,6 +113,8 @@ The native cleanup pointer can therefore change without losing an older failed c
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+- [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
+- [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
   `workspaceView` adds the canonical web link for an explicit app origin.
@@ -176,6 +178,8 @@ The native cleanup pointer can therefore change without losing an older failed c
   for the workspace event filter and file display labels.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
+  It also exposes the trusted `checkTurnToken` RPC through `workspaceRuntime`.
+- [`credential-sender.ts`](credential-sender.ts): the git credential sender lookup, including creation-time access and active stored turns.
 - [`retry-creation.ts`](retry-creation.ts): `retryFailedCreation` reuses the
   first-message admission and workspace identity after a failed first start.
   [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.

@@ -43,8 +43,8 @@ requirements. The [runner README](README.md) gives the rest of the runner.
 - The branch line exists only in the text that reaches the agent. The
   stored message, its events, and the titles from messages use only the
   text that the member wrote.
-- A workspace keeps the runner of its first image. An older runner reads no
-  `branches`, so its sessions get no branch line.
+- Each sandbox keeps the runner of the org image that it starts from. An
+  older runner reads no `branches`, so its sessions get no branch line.
 
 ## Key code
 

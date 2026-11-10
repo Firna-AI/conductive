@@ -114,11 +114,14 @@ It does not hide values in file content, diffs, or Terminal.
 
 A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
-Existing workspaces keep their files and installed software.
+Existing workspaces keep their files.
 
-**Continue** keeps that same computer and software for the workspace's next task.
-It does not apply a newer build to the existing computer.
-To use updated agent software, build the shared setup again, then create a new workspace after that build succeeds.
+**Continue** keeps that same computer for the workspace's next task.
+A new build does not replace the existing computer.
+Installing updated agent software in an older computer does not change its protection for saved agent logins.
+After a current build succeeds, create a new workspace to get that protection.
+
+- [Understand agent login protection](/docs/security#protect-agent-and-github-logins)
 
 After the first successful build, saved repository and install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build runs.

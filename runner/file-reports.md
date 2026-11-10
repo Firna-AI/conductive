@@ -59,9 +59,9 @@ exists:
   for a new report compares the whole report.
 - Each numbered part of a report repeats both counts, and the saved events
   keep them.
-- Existing workspaces keep the runner of their original image. A report
-  from an older runner can lack either count. The Worker and the browser
-  keep that absence as unknown, rather than reporting zero.
+- Each sandbox keeps the runner of the org image that it starts from. A
+  report from an older runner can lack either count. The Worker and the
+  browser keep that absence as unknown, rather than reporting zero.
 
 ## File reads and diffs
 

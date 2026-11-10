@@ -4,7 +4,7 @@ This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
 and the guidance in them, the sender line and the branch line of each
 message, and the base prompt of Claude agents.
-[Chat and events](agents-and-sessions.md#agents) states the agents and
+[Agents and sessions](agents-and-sessions.md#agents) states the agents and
 their sessions. [Agent tools](agent-tools.md) states the tools of the
 agents. The other terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a

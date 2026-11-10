@@ -21,8 +21,8 @@ says.
   and no automatic name replaces it, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says.
-- The workspace keeps the software of its first org image for each later
-  task.
+- The workspace keeps the software of the org image that its sandbox
+  started from, for each later task.
 - Reason: Continue keeps the context of the agents and the warm sandbox, as
   in Conductor.
 - These ways were rejected (decision 223):

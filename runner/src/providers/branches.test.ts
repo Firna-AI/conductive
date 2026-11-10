@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { turn } from '../../test-support/harness'
+import { duringTurn, turn } from '../../test-support/harness'
 import { instructionProviders } from '../../test-support/instructions'
 import { wireFixture } from '../../test-support/wire'
 import { Runner } from '../runner'
@@ -142,7 +142,7 @@ it.each(['claude', 'codex'] as const)(
           },
     )
     h.endpoint.send({
-      ...turn('during', 'bob', agent),
+      ...duringTurn(turn('during', 'bob', agent)),
       type: 'message',
       turnId: first.turnId,
       branches: { ...original, targetBranch: 'trunk' },

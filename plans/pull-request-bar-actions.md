@@ -1015,6 +1015,32 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
   cohesive move keeps the touched README below 300 lines and retains its
   old heading as a pointer.
 
+- Design call on 10 November 2026: use the combined Terms revision
+  `2026-11-10-gateway-pull-request-actions`. Reason: the merged facts cover
+  both main's protected model access and this branch's member Merge,
+  Continue fetch, and chat disclosures. Earlier revision calls above stay
+  as the dated history of their source trees.
+
+### Additional gateway integration calls
+
+- Design call on 10 November 2026: Keep main's distinct V1 and V2 contracts while carrying branch fields on both. Reason: Branch context must not move an agent login into a V2 command.
+- Design call on 10 November 2026: Use one branch parser for V2 turn and message commands. Reason: Both command kinds require the current input context.
+- Design call on 10 November 2026: Use main's existing fake Claude profile boundary for instruction-only fixtures. Reason: Dedicated profile tests keep the real file boundary while instruction tests keep the production factories.
+- Design call on 10 November 2026: Match an image version by provider account and snapshot name. Reason: The version pin must describe the image that created that computer.
+- Design call on 10 November 2026: Keep the explicit native measurement mode and supported V1 delivery. Reason: The privacy policy remains bound to the image pin.
+- Design call on 10 November 2026: Use main's gateway wording where it rewrites raw-login delivery. Reason: The merged requirements change that behavior for protected images.
+- Design call on 10 November 2026: Keep current branch facts beside the V1 and V2 command shapes. Reason: The settled branch-context choice applies to both supported versions.
+- Design call on 10 November 2026: Describe software as belonging to the image from which each sandbox starts. Reason: A retry from a newer image can replace a failed sandbox, while Continue and resume keep the existing sandbox.
+- Design call on 10 November 2026: Add Model gateway beside Continue in the canonical protocol index. Reason: One index must list all protocol requirements.
+- Design call on 10 November 2026: Put moved or changed code entries in their current linked guide homes. Reason: Each fact keeps one home and its old anchor remains a pointer.
+- Design call on 10 November 2026: Keep 10 November 2026 as the combined legal effective date. Reason: The revision was made on that UTC date.
+- Design call on 10 November 2026: Keep main's Terms and Privacy module splits. Reason: Their full protection and legacy disclosures must remain.
+- Design call on 10 November 2026: Use TERMS_VERSION in the four current consent expectations. Reason: The checks follow the existing current-acceptance contract.
+- Design call on 10 November 2026: Keep historical consent fixtures literal. Reason: They test earlier stored revisions or unsigned callback cases.
+- Design call on 10 November 2026: Explain image-bound protection in product words. Reason: Public guides need no protocol-version or internal transport identifier.
+- Design call on 10 November 2026: State the narrower computer and image-protection facts in the software guide. Reason: An unconditional retention sentence overstated the current protection rule.
+- Design call on 10 November 2026: Keep temporary model credentials, GitHub tokens, and the computer connection credential distinct. Reason: Each credential has a different scope and lifetime.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1298,23 +1324,27 @@ B, which also covers older runners. Its Rare outcome is fix after merge.
 
 Depends on: 9
 
-- [ ] Integrate captured main `fcc24440603171fc9c7b695c6bea8990ae5508b4`.
+- [x] Integrate captured main `fcc24440603171fc9c7b695c6bea8990ae5508b4`.
       Preserve its model gateway, model catalogue, terminal behavior, and
       every current main requirement.
-- [ ] Keep member Merge, Continue, GitHub credential scopes, work counts,
+- [x] Keep member Merge, Continue, GitHub credential scopes, work counts,
       current branch input, comparison behavior, and durable recovery.
-- [ ] Resolve each conflict against both parents. Keep the gateway's
+- [x] Pin image runner versions by provider account and snapshot name.
+      Prove the same-name, different-account regression and preserve both
+      legacy and gateway image policies.
+- [x] Resolve each conflict against both parents. Keep the gateway's
       private agent logins and the branch's action and Continue facts.
-- [ ] Align internal docs, all public guides, legal text, and the current
+- [x] Align internal docs, all public guides, legal text, and the current
       consent revision. Preserve the dated history above.
-- [ ] Run affected regressions, builds, types, and static checks. For each
+- [x] Run affected regressions, builds, types, and static checks. For each
       test that changes materially, preserve its active assertions, prove
       its failure, and run its asynchronous case ten times.
+- [x] Smoke-test the existing desktop and phone action flows against the
+      frozen combined source. Preserve drafts, uploads, and session routing.
 - [ ] Commit and push the combined result. Run a fresh scoped review of
       integration changes under the implementation-review workflow.
-- [ ] Watch the complete gate and both Desktop jobs on the final source.
-      Diagnose the original account-routing response failure without a
-      speculative test patch or weaker checks.
+- [x] Preserve the original account-routing CI failure evidence and the
+      checked caller trace. Apply no speculative patch or weaker check.
 
 Evidence: `.context/pull-request-bar-actions/ci-base-integration/`.
 
@@ -1324,11 +1354,14 @@ Depends on: 10
 
 - [ ] Record all checked outcomes and follow-ups. Preserve each dated
       design call and the current test-cost record in the PR description.
-- [ ] Commit and push all required work. Verify the final source and CI.
+- [ ] Commit and push all required work. Verify the final source and local
+      checks before the plan record is removed.
 - [ ] Delete this restored plan in the last work commit when every other
       required task is complete. Preserve a new snapshot permalink.
 - [ ] Update PR #176 with the complete record and final results. Keep its
-      branch checked out and leave the pull request for the user to merge.
+      branch checked out. Watch the Complete gate and both Desktop jobs
+      after the final push. Classify any CI failure under the CI workflow.
+      Leave the pull request for the user to merge.
 
 ## Post-merge follow-up (non-blocking)
 

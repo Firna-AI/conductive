@@ -13,7 +13,7 @@ Their terminal access can reach credentials available on a workspace's cloud com
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 The agent login's share setting controls whose messages spend that login.
-It does not hide the credential from code or terminal users on the same computer.
+It does not keep a running turn's temporary access away from programs or terminal users on the same computer.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -67,11 +67,33 @@ They do not offer a call to read or message another workspace's chat.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
-The cloud computer receives the session's login when a turn needs it.
+On a computer created from a current build, Conductive keeps that login outside the computer.
+The agent's model requests pass through Conductive, which adds the session starter's login before sending them to Anthropic or OpenAI.
 
-A program or member with terminal access there can read or copy that login.
-A copied login can remain usable after the turn ends.
-Removing a login from Account does not revoke a copy held elsewhere.
+Each turn receives a temporary credential for model requests through Conductive.
+It gives no copy of the saved login.
+Programs and members with terminal access can read that credential and use the connected account while the turn runs.
+A copied temporary credential also works outside the cloud computer while that turn runs.
+Programs that keep running can also read the credentials of later turns, including other members' turns.
+
+After **Stop**, that credential starts no new request.
+A model request still running ends within 30 seconds after the turn ends.
+Changing or removing the session starter's login ends the turn at its next model request.
+The same happens if that member loses org access.
+
+Agent settings in a repository can send model requests and the turn's temporary credential to another address.
+Review those settings in repositories you use.
+Conductive keeps no copy of a model request or answer as it passes them on.
+It writes no body or header value from those requests or answers to its logs.
+The normal chat history and Mac command records still stay on the service.
+
+An older computer can still receive the agent login itself.
+A program or terminal user can copy it and keep using it after the turn ends.
+Agent settings in the repository can also send that login to another address.
+Installing newer agent software in an older computer does not remove this risk.
+Ask an admin to run **Build computer**.
+Then create a new workspace from that build for the new protection.
+Removing a saved login does not revoke a copy held elsewhere.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
@@ -80,7 +102,8 @@ Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-A copied credential from another member's workspace can still expose credentials of later turns.
+The computer also uses a credential for its connection to Conductive.
+A copy of that credential can still expose later turn credentials in another member's workspace.
 
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
