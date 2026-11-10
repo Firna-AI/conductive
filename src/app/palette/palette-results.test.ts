@@ -13,7 +13,7 @@ import {
 } from './results-test-kit'
 
 describe('the All tab of the palette', () => {
-  test('with an empty field, the All tab shows five recent workspaces by their latest activity, then the actions and the settings with their pages', () => {
+  test('with an empty field, the All tab shows five recent workspaces by their latest activity, then the actions with Send feedback last, and the settings with their pages', () => {
     const times: Record<string, number> = {
       'invoice-fonts': 10,
       'retry-queue': 9,
@@ -52,7 +52,13 @@ describe('the All tab of the palette', () => {
       ],
       [
         'Actions',
-        ['New workspace', 'Create org', 'Switch to Futex', 'Switch to Firna'],
+        [
+          'New workspace',
+          'Create org',
+          'Switch to Futex',
+          'Switch to Firna',
+          'Send feedback',
+        ],
       ],
       [
         'Settings',

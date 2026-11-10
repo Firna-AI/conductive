@@ -9,6 +9,7 @@ import {
   text,
   type LegalDocument,
 } from './legal-text'
+import { privacyRecipientsSection } from './privacy-recipients'
 import { privacyUsesSection } from './privacy-uses'
 
 /**
@@ -17,7 +18,8 @@ import { privacyUsesSection } from './privacy-uses'
  * and the protocol docs. Both legal pages share the operator details and
  * contact address. The section on what the product uses, and why, is in
  * `privacy-uses.ts`. Its Keys and logins item defines the newer and older
- * cloud computers that the section on who gets the data uses.
+ * cloud computers that the section on who gets the data, in
+ * `privacy-recipients.ts`, uses.
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
@@ -40,109 +42,7 @@ export const privacyDocument: LegalDocument = {
       ],
     },
     privacyUsesSection,
-    {
-      title: 'Who gets your data',
-      blocks: [
-        list(
-          text`Cloudflare runs ${productName} and stores its data.
-            If a workspace has no name, Cloudflare's AI model service can
-            write a short name from the text of its first message. The model
-            requests of the agents in a newer cloud computer, and their
-            answers, pass through ${productName} on Cloudflare. Agent settings
-            in the repository can send these requests to another address
-            instead.`,
-          text`GitHub signs you in, and gives ${productName} access to your
-            repositories through its GitHub App. Each commit made in a cloud
-            computer carries its author's GitHub display name or login and
-            GitHub no-reply address. That address contains the author's GitHub
-            user ID and login. GitHub and each reader of the repository see
-            that name and address. The Mac app also checks
-            GitHub for updates and downloads new versions. These requests
-            send your network address to GitHub.`,
-          text`Resend sends the emails of ${productName}: the invitations of
-            an org, and the email when an operator approves your account. It
-            gets the address and the text of each email.`,
-          text`A cloud computer provider runs the cloud computers of every org
-            for ${productName}, in the account of ${productName}. Your code,
-            your files, and your agent sessions are in them. ${productName}
-            sends the provider the requests that start, stop, and use them.`,
-          text`For a ChatGPT sign-in, OpenAI sends the account owner's email,
-            account ID, and ChatGPT workspace name through ${productName} to
-            the cloud computer. Codex uses them to run on that workspace.
-            Programs and members with terminal access there can read them.
-            ${productName} stores the sign-in encrypted and renews it alone.
-            The real ChatGPT sign-in tokens stay outside every cloud computer.
-            Codex reads a temporary turn credential from a file for its
-            session. The file also holds public account claims and a
-            placeholder refresh token. It is removed when the turn ends.
-            ChatGPT workspace
-            rules can run hooks and MCP commands in the org's cloud computer.
-            Those commands can reach its files and available credentials.`,
-          text`Anthropic and OpenAI get your messages, your files, and your
-            code when an agent works on them. Each Mac command request and its
-            result also go to the agent and to Anthropic or OpenAI.
-            With each message, they also get
-            the GitHub login and the display name of its sender. They also get
-            the name of the workspace branch, which starts with the GitHub
-            login of the first owner of the workspace. From a newer cloud
-            computer, the agents send them through ${productName}, which adds
-            the agent login. With the older software in an older cloud
-            computer, the agents send them directly, with the agent login. In
-            both kinds of cloud computer, agent settings in the repository can
-            send them to another address instead. Each session uses the
-            login of the member who started it. Each run of a routine sends
-            its prompt on the login of the member who owns the routine.
-            Your messages in another
-            member's session use that member's login only when that member
-            lets other members use it. When that member does not share the
-            login, your message starts a new session on your own login. The
-            terms of that provider apply.`,
-          text`The members of your orgs see the workspaces of the org,
-            their chats, and each Mac command request and result. They also see
-            the routines of the org, with their prompts and their runs.
-            A member with a terminal in a cloud computer can read
-            the GitHub token of a turn that runs there. Outside an agent turn,
-            the GitHub CLI uses the workspace owner's account. Each member with
-            a terminal can get that owner's GitHub token without a running
-            turn.`,
-          text`In a newer cloud computer, a member with a terminal or a program
-            in it can read the credential of a turn that runs there. Through
-            ${productName}, that credential can use the login of the member who
-            started the session. It works while the turn runs, also from
-            outside the cloud computer. A program that keeps running, such as a
-            dev server or a program that the startup script starts, can also
-            get the credentials of later turns. This includes the turns of
-            sessions that other members start. Agent settings in the repository
-            can make the agent send its model requests, with their content and
-            the credential of the turn, to another address. A commit, the agent,
-            or other code can change those settings. The setting that lets other
-            members use a login does not change this. After Stop, a credential
-            can start no new request. A request that still runs ends within 30
-            seconds after the turn ends. If the member who started the session
-            removes or changes the login, or loses access to the org, the turn
-            ends at its next model request.`,
-          text`In an older cloud computer, a member with a terminal or a program
-            in it can read the agent login of a turn that runs there. A program
-            that a tool of the agent starts, such as a dev server, can keep the
-            agent login after the turn ends. A member with a terminal can read
-            it there too. Agent settings in the repository can make the agent
-            send that login to another address. A commit, the agent, or other
-            code can change those settings. The setting that lets other members
-            use a login does not change this.`,
-          text`The run of your routine for a pull request reads the comments,
-            reviews, and descriptions of other GitHub accounts. Such text can
-            steer the agent while the run uses your agent login and GitHub
-            token, and the env vars of the org.`,
-          text`The members of your orgs also see who started each session,
-            whose login it uses, and whether it can use that login. They also
-            see whether its starter lets other members use that login.`,
-          text`If the operator suspends your account, the members of your orgs
-            learn that it is suspended. A workspace that you own then says
-            that its owner is suspended, until an operator lifts the
-            suspension.`,
-        ),
-      ],
-    },
+    privacyRecipientsSection,
     {
       title: 'Transfers to other countries',
       blocks: [
@@ -161,6 +61,10 @@ export const privacyDocument: LegalDocument = {
             certification under the UK Extension and its use of standard
             contractual clauses. UK regulations approve transfers covered
             by the UK Extension certification.`,
+          text`Resend processes email data in the United States. Its data
+            processing terms apply the European Commission's standard
+            contractual clauses with the UK International Data Transfer
+            Addendum to restricted UK transfers.`,
           text`The cloud computer provider is based in the United States.
             It reports that its cloud computers and saved snapshots run in
             Germany, Finland, and France. UK adequacy regulations approve
@@ -202,6 +106,11 @@ export const privacyDocument: LegalDocument = {
           it. Panel widths stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
           terms and privacy notices.`,
+        paragraph`The team keeps each feedback email in its inbox while it
+          helps to improve ${productName}. It deletes the email when it no
+          longer helps, or when the sender asks. ${productName} keeps no copy
+          of feedback in its own storage. The app keeps an unsent feedback
+          draft only in the memory of its open tab.`,
         paragraph`To request deletion of your personal data, write to
           ${mailLink(legalAddress)}. Deletion rights depend on applicable
           law and can have exceptions.`,
