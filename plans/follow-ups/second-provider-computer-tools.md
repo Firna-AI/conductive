@@ -1,34 +1,31 @@
-# A second provider gives agents no computer tools
+# Agents on E2B have no computer tools
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
-- **Added:** 2026-11-09, decision 216 of `plans/sandbox-provider-groundwork.md`, branch `calummoore/vercel-sandbox-provider`.
-- **Location:** "Computer tools" in `docs/protocol/agent-tools.md:230`, and `runner/src/providers/computer-mcp.ts:31`.
-- **Reason:** On 10 November 2026, the user chose E2B as the second provider, with one provider account for each org (decision 218 G). So the question now applies to E2B, and the computer tools of the E2B template wait for the answer.
+- **Kind:** Post-merge task.
+- **Added:** 2026-11-09, decision 216 of `plans/sandbox-provider-groundwork.md`, branch `calummoore/vercel-sandbox-provider`. Changed on 2026-11-10 by the user's answer to that decision, on branch `calummoore/e2b-backup-sandbox-provider`.
+- **Location:** "Computer tools" in `docs/protocol/agent-tools.md`, `runner/src/providers/computer-mcp.ts:31`, and the E2B template under `image/e2b/`, which the E2B provider change adds.
+- **Reason:** On 10 November 2026, the user chose to start E2B with no computer tools, and to add them in a later change.
 
-- **Source:** Design. **Category:** Docs or spec.
 - **Terms:**
   - **Computer tools:** the MCP server `computer` that gives the agents browser and desktop actions in the sandbox.
-  - **Cua Driver:** an open-source computer-use driver that can run as such an MCP server.
+  - **Cua Driver:** an open-source computer-use driver, from the `trycua/cua` project under the MIT license, that runs as such an MCP server.
 - **Background:**
-  - "Computer tools" in `docs/protocol/agent-tools.md` says that the agents keep Boat's computer tools, the MCP server `computer` that every sandbox has. The agent runner gives these tools to the agents for browser work on the desktop of the sandbox.
+  - On 10 November 2026, the user chose E2B as the second sandbox provider. Each org runs on one provider account. A new org gets its account from weights that the operator sets, and an operator can choose the account when the operator creates an org.
   - Boat writes the `computer` entry into `/home/user/.claude.json` at each start. `runner/src/providers/computer-mcp.ts` reads that entry and only passes it on.
-  - When the entry is missing, the runner warns "Computer tools are unavailable. The sandbox computer server settings could not be read." Then it runs the agents without computer tools.
-  - The server needs a screen and Chrome in the sandbox.
-  - The app hides the Desktop tool for now, as "Desktop" in `docs/protocol/workspace-tools.md` says. The agents still use the computer tools.
-  - Dated research of 9 November 2026: Superserve sells a computer-use API and an MCP server, but its MCP server needs the Superserve API key. So that server cannot run inside the app's sandboxes. The app keeps its provider key out of every sandbox, as "The app's Boat key" in `docs/protocol/access-and-security.md` says for Boat.
-- **Problem:** On a second provider, the runner finds no `computer` entry. It warns and runs the agents without browser tools.
-- **Impact if no action:** Agents in workspaces on the second provider cannot open or test a web page in a browser.
-- **Root question:** Do agents get browser tools on every provider?
-- **Options:** These are the options as recorded on 9 November 2026. A check of the options on that day added C, D, and E.
-  - **A.** Start without computer tools on the second provider, and add B later. The runner already runs the agents without them. It changes "Computer tools" in the agent tools protocol. Effort: Small.
-  - **B.** Install our own computer tools in the image of the second provider: a virtual screen, Chrome, and the open-source Cua Driver, registered as `computer`. Effort: Medium.
-  - **C.** Ship a headless browser MCP server, such as Playwright MCP, with the runner software. The runner uses it when a sandbox has no `computer` entry. Cost: a browser download in each build, browser tools only, and a change to "Computer tools". Effort: Medium.
-  - **D.** Install our own screen, Chrome, and Cua Driver as `computer` in the shared software step, on every provider. Cost: the app then owns the driver on Boat too, and "Computer tools" changes. Effort: Large.
-  - **E.** The Worker calls the provider's computer-use API through the workspace MCP server, and the provider key stays in the Worker. Cost: it works only where a provider sells such an API, such as Superserve, and each action makes a round trip. Effort: Large.
-- **Left out:** A browser outside the sandbox, because it needs a preview viewer that is not a user session, and the preview rules in `docs/protocol/access-and-security.md` do not allow one.
-- **Wider fix:** D. One set of tools then works on every provider, with no drift between two sets.
-- **Previous examples:** On 8 November 2026, the plan for an E2B backup provider chose to install the Cua Driver on E2B. That plan is `plans/e2b-backup-provider.md` on branch `calummoore/e2b-backup-sandbox-provider`.
-- **Related:** `plans/follow-ups/desktop-stream-on-own-domain.md`: the Desktop tab shows the screen where the computer tools act.
-- **Recommendation:** B. It keeps the "Computer tools" rule with no protocol change, and users cannot see the provider, so a missing browser would have no visible reason. The first recommendation was A. D best protects the codebase.
-- **Action:** ask the user, because the options trade the work of the first version against the same tools on every provider, and no option is clearly best.
+  - When the entry is missing, the runner warns "Computer tools are unavailable. The sandbox computer server settings could not be read." Then it runs the agents without computer tools. This is what an E2B sandbox does under the user's choice.
+  - On Boat, the Cua Driver runs as the systemd user service `cua-driver.service`. It acts on the Xorg display `:0`, at 1920 by 1080, with Chrome.
+  - The user chose option A of the computer tools decision on 10 November 2026: start without computer tools on the second provider, and add option B later. The agent recommended B. The recorded options were:
+    - **A.** Start without computer tools on the second provider, and add B later. It changes "Computer tools" in the agent tools protocol.
+    - **B.** Install a screen, Chrome, and the Cua Driver in the image of the second provider, registered as `computer`.
+    - **C.** Ship a headless browser MCP server, such as Playwright MCP, with the runner, for a sandbox with no `computer` entry.
+    - **D.** Install our own screen, Chrome, and Cua Driver on every provider, also on Boat. It best protects the codebase.
+    - **E.** The Worker calls a provider's computer-use API. Superserve's MCP server needs its API key, so it cannot run inside the app's sandboxes.
+  - The app hides the Desktop tool for now. `plans/follow-ups/desktop-stream-on-own-domain.md` holds the desktop stream, which shows the screen where the computer tools act.
+- **Task:**
+  1. Add a screen on display `:0`, Chrome, and the Cua Driver as a service to the E2B template.
+  2. Register the driver as the MCP server `computer` in `/home/user/.claude.json` and in the Codex settings, as Boat does.
+  3. Change "Computer tools" in `docs/protocol/agent-tools.md` back to tools on every sandbox.
+  4. In a live E2B sandbox, check that an agent takes a screenshot of `:0` and opens a page in Chrome.
+- **Impact if no action:** Agents in E2B workspaces cannot open or test a web page in a browser.
+- **Needs:** The E2B provider on main, with its template. An E2B key for the live check.
+- **Done when:** An agent in an E2B workspace uses the `computer` tools, and the agent tools protocol gives the tools to every sandbox. Then delete this item.
