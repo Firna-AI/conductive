@@ -120,9 +120,20 @@ If a share-setting change fails, the switch returns to its saved value.
 ## Understand access to credentials
 
 Conductive stores agent logins encrypted.
-During a turn, its cloud computer uses the session starter's login.
-Code and members with terminal access on that computer can read or copy it.
-The share switch does not hide it from them.
+A newer cloud computer starts from an org image that keeps the real agent login outside the computer.
+Its model requests and answers pass through Conductive on Cloudflare.
+Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
+The computer receives only a turn credential that works through Conductive while that turn runs.
+
+Code and members with terminal access can read and copy that credential.
+They can use it from outside the computer while the turn runs.
+The share switch does not prevent this access.
+
+An older cloud computer starts from an earlier org image.
+It still permits older software that receives the real agent login.
+Code and terminal users can copy that login and use it after the turn ends.
+Installing newer agent software on that computer does not remove this risk.
+A new org image build keeps real agent logins outside computers created from that image.
 
 Work in an org with people you trust with your agent and GitHub logins.
 

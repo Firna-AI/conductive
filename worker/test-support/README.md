@@ -44,6 +44,17 @@ Backend tests use it without an external account or cloud computer.
 `FakeGitHub.profile` accepts GitHub's `created_at`. Its email pages accept
 the `primary` flag beside `verified`.
 
+`FakeAnthropic` and `FakeOpenAI` supply in-memory model upstreams.
+They accept only the fixed model POST routes on their provider origins.
+Tests inject their `fetch` methods through the Worker's fetch dependency.
+They open no external connection and need no provider account.
+Each fake records requests without cloning or teeing their bodies.
+Its default reply reads the upload once and records its text in `bodies`.
+Set `response` to supply a fresh response after that read.
+Queue `responseFactories` to control upload reads, early replies, failures, or open answer streams.
+Each factory owns the request body read and returns a fresh response.
+The gateway tests use these factories to observe cancellation on the original stream.
+
 Every harness uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
 It applies migrations in filename order with Wrangler's SQL splitter.
 The splitter keeps each trigger body in one statement.
@@ -93,21 +104,8 @@ The harness reset clears factories.
 The runner boundary uses plain TypeScript types.
 Tests need no Cloudflare Durable Object or real WebSocket.
 
-```ts
-import { FakeDurableObjectEndpoint } from './fake-durable-object'
-import { FakeRunner } from './fake-runner'
-
-const endpoint = new FakeDurableObjectEndpoint({
-  workspaceId: 'workspace-1',
-  workspaceToken: 'fake-token',
-})
-const runner = new FakeRunner({ workspaceId: 'workspace-1' })
-await runner.connect(endpoint.connect, {
-  url: endpoint.url,
-  workspaceToken: 'fake-token',
-})
-runner.emit({ type: 'runner.ready' })
-```
+[runnerHarness](../../runner/test-support/harness.ts) connects a `Runner` to `FakeDurableObjectEndpoint`.
+[connectFilesRunner](../files/test-support/runner.ts) connects `FakeRunner` to a backend handler.
 
 The runner implementation injects `endpoint.connect` as its `RunnerConnector`.
 A backend test uses `FakeRunner` with its own connector.
@@ -174,6 +172,9 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `migrations.ts` applies migrations for every test harness.
 - `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
+- `fake-anthropic.ts` supplies the Messages and token-count upstream.
+- `fake-openai.ts` supplies the Responses upstream.
+- `fake-model-upstream.ts` records model requests and supplies fresh response factories.
 - `fake-site.ts` supplies built site files, the sign-in agreement, and the GitHub install return pages.
 - `fake-runner.ts` supplies the runner without an agent SDK.
 - `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.

@@ -84,6 +84,7 @@ export class RunnerConnections {
         generation: 1,
         workspace,
         streamId: null,
+        protocolVersion: null,
         ready: false,
         checkAt: this.dependencies.now() + CONNECTION_CHECK_MS,
       }
@@ -111,6 +112,7 @@ export class RunnerConnections {
       id: record.id,
       workspace: record.workspace,
       streamId: record.streamId,
+      protocolVersion: record.protocolVersion,
       ready: record.ready,
       peer: new AuthenticatedRunner(
         source,
@@ -186,6 +188,7 @@ export class RunnerConnections {
     const record = this.record
     if (this.current !== active || !record) return
     record.streamId = active.streamId
+    record.protocolVersion = active.protocolVersion
     record.ready = active.ready
     if (this.retained) await this.saved?.save(record, record.generation)
   }

@@ -60,11 +60,23 @@ methods of `Workspace`.
 - A runner connection that the object restores after a wake gets no
   `welcome`. So neither `runnerHello` nor `runnerReady` runs again.
 - `runnerEventStored(envelope, publish)` runs after each other stored runner
-  event or refusal marker. It reports `turn.started`, `turn.completed`,
-  `turn.failed`, and `start.updated`, with no time. The lifecycle reads the
-  newest turn end from the committed chat, as
-  [Turn recovery](../../lifecycle/recovery-and-shown-state.md#turn-recovery) says. A
-  refused `turn.completed` or `turn.failed` ends its lifecycle turn.
+  event or refusal marker. It reports `turn.started` and `start.updated`,
+  with no time. It reports no turn end.
+- `turnEnded(workspaceId, turnId, publish, occurredAt)` reports each turn
+  end to the lifecycle by its turn ID. The lifecycle reads the newest turn
+  end from the committed chat, as
+  [Turn recovery](../../lifecycle/recovery-and-shown-state.md#turn-recovery) says.
+  `TurnCompletion.finish` records each end in its transaction, whatever
+  ended the turn. So a refused end event, a failed end that replaces the
+  runner's end, a Stop, and a login failure use this one path. While the
+  receiver fence of the workspace is suspended or purged, the hook makes no
+  lifecycle report. It still starts device cleanup.
+- `turnEnded` runs after the commit of the end, in the same queued task.
+  For a runner event, it runs after the confirm. Runner delivery also
+  reports the waiting ends before it registers a new turn. A failed report
+  is not sent again.
+  [Turn recovery](../../lifecycle/recovery-and-shown-state.md#turn-recovery)
+  repairs the lifecycle turns from the committed chat.
 - A `workspace.title` updates the name of the workspace in D1. It is not
   unread output.
 - `runnerReady` and `runnerEventStored` run after the commit and the

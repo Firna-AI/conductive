@@ -1,9 +1,16 @@
-# The agent runner
+# Agent runner integration
 
-This guide belongs to the [chat backend integration](README.md). It gives
-the rules of runner events and commands that the agent runner and the
-Durable Object share. [Agent runner](../../../docs/protocol/agent-runner.md)
-states the requirements.
+This README gives the seams of the chat backend for the agent runner: the
+runner events, and the runner commands and their credentials.
+[Agent logins and attachments](../logins-and-attachments.md) gives the
+login checks of a turn and the attachment seams.
+[Chat backend integration](../README.md) gives the other seams, and the
+[chat backend README](../../README.md) names the code and its guarantees.
+[Agent runner](../../../../docs/protocol/agent-runner.md) and
+[Agent logins in a sandbox](../../../../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
+state the requirements.
+
+## The agent runner
 
 - The Durable Object stores agent events as the runner sends them. It
   copies only the known fields, and it refuses an unknown event type.
@@ -26,9 +33,18 @@ states the requirements.
 - After a text-only turn, each unanswered message moves to a new turn. So
   one message can come first in a `message` command, then in a new `turn`
   command with a new command ID.
-- Each `turn` and `message` command carries the agent login of the session
-  starter, whoever sent the message. The runner keeps the login of the
-  first command of a turn for the whole turn.
+- A `turn` command carries a credential of the session starter, whoever
+  sent the message. Its shape follows the protocol version of the
+  connection's `hello`:
+  - Version 1: each `turn` and `message` command carries the real agent
+    login. The runner keeps the login of the first command of a turn for
+    the whole turn.
+  - Version 2: the `turn` command carries a turn token, with the agent and
+    the login kind. A `message` command carries no credential. The
+    workspace makes the token after it stores the turn as running.
+- No stored command holds a login or a turn token. Each send adds the
+  credential again. A resent version 2 `turn` command carries the same
+  token, also after a failed send or a restart of the workspace object.
 - An interrupt for a turn that the runner does not run still gets
   `turn.completed` with state `stopped`.
 - A new stream gets each command other than `report.refresh` only after its

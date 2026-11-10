@@ -2,6 +2,7 @@ import type { Miniflare, WebSocket } from 'miniflare'
 import { expect } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { closeSockets } from './adapter-sockets.test-support'
@@ -64,7 +65,11 @@ export function runnerControls(
       ).toContain(1)
       return after
     },
-    connect: async (streamId = 'native-runner', eventNumber = 0) => {
+    connect: async (
+      streamId = 'native-runner',
+      eventNumber = 0,
+      protocolVersion: RunnerProtocolVersion = 1,
+    ) => {
       const response = await runtime.dispatchFetch(
         `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
         {
@@ -79,10 +84,11 @@ export function runnerControls(
       const runner = new OuterFakeRunner(response.webSocket, WORKSPACE_ID, {
         streamId,
         eventNumber,
+        protocolVersion,
       })
       expect(await runner.inbox.next()).toEqual({
         type: 'welcome',
-        protocolVersion: 1,
+        protocolVersion,
         streamId,
         confirmedThrough: eventNumber,
       })

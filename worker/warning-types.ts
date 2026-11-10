@@ -30,6 +30,7 @@ export const SIMPLE_WARNINGS = {
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
   | { kind: keyof typeof SIMPLE_WARNINGS }
+  | { kind: 'runner_protocol_version_mismatch'; workspaceId: WarningId }
   | {
       kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'
       error: ErrorSummary

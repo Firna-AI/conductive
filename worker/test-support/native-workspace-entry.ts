@@ -133,12 +133,15 @@ export class NativeWorkspace extends Workspace {
         await clock.setTime(saved.at)
       }
     })
-    const drain = async () => {
+    const settled = async () => {
       let work: Promise<unknown>
       do {
         work = this.chat.store.settled()
         await work
       } while (work !== this.chat.store.settled())
+    }
+    const drain = async () => {
+      await settled()
       if (errors.length) throw errors.shift()
     }
     this.native = {
@@ -228,6 +231,7 @@ export class NativeWorkspace extends Workspace {
               },
             ],
           ),
+        settled,
         drain,
         drainBackground: async () => {
           while (pending.size) await Promise.allSettled([...pending])

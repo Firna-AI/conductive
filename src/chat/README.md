@@ -147,7 +147,15 @@ check in the Mac app.
   links of a message field, and `linkTarget`, `chat-parts.ts`, the one
   tokenizer of sent messages and answers, `LinksContext.tsx`, the
   workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
-  which draws the parts of a message or an answer.
+  which draws the parts of a message or an answer, with its file chips,
+  and `mention-copy.ts`, the copy of chat text that gives the mention of
+  each file chip in it, and leaves out text that the browser leaves out of
+  a copy.
+- `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
+  the entries that the list offers and their order, and
+  `MentionsContext.tsx`, the files that the chat gets and the tree that
+  the list and the chips find, with one value for each tree, and
+  `MentionIcon.tsx`, the icon of All files for an entry.
 - `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
@@ -170,7 +178,9 @@ check in the Mac app.
   on its draft after a move, and stops with Remove and with the chat.
 - `components/AttachmentChips.tsx`: the file chips of both composers, with
   the measured share of an upload, the sent files, and the notice for files
-  over the size limit, from the mockups' `attachmentCopy.ts`.
+  over the size limit, from the mockups' `attachmentCopy.ts`. The cell of
+  the icon of each draft file removes it, as `ChipIconCell` of the mockups
+  draws it.
 - `state/archive-view.ts`: the tabs and the session history of a
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot

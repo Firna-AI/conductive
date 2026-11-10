@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -59,6 +59,14 @@ it('holds a Claude turn end until its child exits', async () => {
   const child = new FakeChild()
   const h = await fixture(child)
   await h.engine.command(turn())
+  const credentials = join(
+    h.options.home,
+    '.conductive',
+    'anthropic',
+    'credentials',
+  )
+  const profiles = await readdir(credentials)
+  expect(profiles).toHaveLength(1)
   const user = await h.sdk.nextUser()
   const requested = deferred<void>()
   child.onKill = () => requested.resolve()
@@ -73,6 +81,7 @@ it('holds a Claude turn end until its child exits', async () => {
     await Promise.race([requested.promise, ending])
     expect(h.events.map((event) => event.type)).toEqual(['turn.started'])
     expect(child.signals).toEqual(['SIGTERM'])
+    expect(await readdir(credentials)).toEqual(profiles)
   } finally {
     child.exit()
     await ending
@@ -81,6 +90,7 @@ it('holds a Claude turn end until its child exits', async () => {
     type: 'turn.completed',
     state: 'finished',
   })
+  expect(await readdir(credentials)).toEqual([])
 })
 
 it('kills a stuck process at the approved limit and then ends its turn', async () => {

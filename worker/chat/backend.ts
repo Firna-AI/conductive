@@ -8,12 +8,14 @@ import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
+import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
 import {
   authorizeChatBrowser,
   type BrowserAccess,
 } from './browser-authorization'
-import { afterNumber, chatRoute } from './http-routes'
+import { afterNumber } from './http-routes'
+import { browserRouteResponse } from './browser-route-response'
 import {
   BrowserConnections,
   type NativeBrowserConnections,
@@ -21,10 +23,12 @@ import {
 import { authorizeChatRunner } from './runner-authorization'
 import { WorkspaceTitles } from './workspace-titles'
 import { WorkspaceOperations } from './workspace-operations'
+import { ChatWorkspaceBinding } from './workspace-binding'
 import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import { ChatStore, type ChatTransaction } from './store'
+import { reportTurnEnd } from './turn-end-reports'
 import {
   runWorkspaceOperation,
   type WorkspaceOperation,
@@ -40,13 +44,14 @@ import type {
 /** The Durable Object and the in-memory runner adapter use this boundary. */
 export class WorkspaceChat {
   readonly store: ChatStore
+  readonly turnTokens: WorkspaceTurnTokens
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
   readonly runner: RunnerChannel
   readonly browsers: BrowserConnections
   private readonly operations: WorkspaceOperations
   private readonly titles: WorkspaceTitles
-  private workspaceId: string | null = null
+  private readonly binding: ChatWorkspaceBinding
 
   async workspaceSummary(workspaceId?: string): Promise<ChatWorkspaceSummary> {
     return this.operations.summary(workspaceId)
@@ -87,8 +92,13 @@ export class WorkspaceChat {
     native?: NativeBrowserConnections,
   ) {
     this.env = env
-    this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
-    this.store = new ChatStore(storage, this.dependencies.now)
+    this.binding = new ChatWorkspaceBinding(
+      overrides.matchesObject ?? (() => true),
+    )
+    this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
+    this.store = new ChatStore(storage, this.dependencies.now, (report) =>
+      reportTurnEnd(this.store, this.dependencies, this.publish, report),
+    )
     this.titles = new WorkspaceTitles(
       env,
       this.store,
@@ -102,10 +112,17 @@ export class WorkspaceChat {
       (id) => this.bind(id),
       native,
     )
+    this.turnTokens = new WorkspaceTurnTokens(
+      this,
+      env,
+      (id) => this.operation(id),
+      this.dependencies.randomId,
+    )
     this.runner = new RunnerChannel(
       this.store,
       this.dependencies,
       (events) => this.publish(events),
+      (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
       (id) => this.bind(id),
       native,
     )
@@ -113,7 +130,7 @@ export class WorkspaceChat {
       env,
       store: this.store,
       dependencies: this.dependencies,
-      workspaceId: () => this.workspaceId,
+      workspaceId: () => this.binding.id,
       bind: (id) => this.bind(id),
       publish: (events) => this.publish(events),
       closeRunner: () => this.runner.close(),
@@ -127,34 +144,16 @@ export class WorkspaceChat {
       const access = await this.authorizeBrowser(request)
       if (access.suffix === '/events')
         return await browserUpgrade(this, request, access)
-      return await this.store.run(async () => {
-        const write = request.method !== 'GET' && request.method !== 'HEAD'
-        const current = write
-          ? await authorizeChatBrowser(
-              request,
-              this.env,
-              this.dependencies.now(),
-              access.context.body,
-            )
-          : access
-        if (write && current.workspace.archivedAt !== null) {
-          throw new HttpError(
-            409,
-            'workspace_archived',
-            'The archived chat is read-only.',
-          )
-        }
-        const response = await chatRoute(
+      return await this.store.run(() =>
+        browserRouteResponse(
           request,
-          current.suffix,
-          current.context,
-          this.operation(current.workspace.id),
+          access,
+          this.env,
           this.dependencies,
-          access.presentation,
-        )
-        if (write) await this.runner.flush()
-        return privateResponse(response)
-      })
+          (id) => this.operation(id),
+          () => this.runner.flush(),
+        ),
+      )
     } catch (error) {
       return privateResponse(errorResponse(error))
     }
@@ -277,17 +276,7 @@ export class WorkspaceChat {
   }
 
   private bind(workspaceId: string): void {
-    if (
-      !this.dependencies.matchesObject(workspaceId) ||
-      (this.workspaceId && this.workspaceId !== workspaceId)
-    ) {
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    }
-    this.workspaceId = workspaceId
+    this.binding.bind(workspaceId)
   }
 
   private publish = (events: readonly WorkspaceEventEnvelope[]): void => {

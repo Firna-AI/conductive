@@ -83,6 +83,15 @@ export class Workspace extends ReviewWorkspace {
     )
   }
 
+  async issueTurnToken(turnId: string): Promise<string | null> {
+    const workspaceId = await this.chat.store.workspaceId()
+    return workspaceId
+      ? this.chat.runLifecycle(() =>
+          this.chat.turnTokens.forRunningTurn(workspaceId, turnId),
+        )
+      : null
+  }
+
   setRecoveryTime(at: number): void {
     this.recoveryClock.now = at
   }

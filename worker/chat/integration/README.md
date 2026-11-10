@@ -8,8 +8,8 @@ A file name without a folder names a file in `worker/chat/`.
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
 `createWorkspaceIntegration` in `workspace-integration.ts` sets them for
 the workspace object, as [The workspace lifecycle](workspace-lifecycle.md)
-says. Its `runnerEventStored` starts device cleanup at each turn end, also
-after a refused end or a lifecycle error. A later handler must keep it.
+says. Its `turnEnded` starts device cleanup at each turn end, also after a
+refused end or a lifecycle error. A later handler must keep it.
 
 ## Trusted workspace calls
 
@@ -105,8 +105,8 @@ depends on where the code runs:
   the browser gate.
 - The Durable Object checks the machine origin and the token again. So a
   token reaches only the object of its own workspace. A `hello` that names
-  another workspace closes the connection before a welcome, a command, or a
-  login goes out.
+  another workspace closes the connection before a welcome, a command, a
+  login, or a turn token goes out.
 - After the app request gate, `chatLifecycleRoute` in
   `worker/app-api/lifecycle.ts` gives the create, read, resume, and
   activity routes of a workspace to the lifecycle handler. It gives the
@@ -178,8 +178,9 @@ also gives the kept chat and queued messages of a failed admitted create.
 
 ## The agent runner
 
-[The agent runner](runner-rules.md) gives the rules of runner events and
-commands that the agent runner and the Durable Object share.
+[Agent runner integration](runner/README.md#the-agent-runner) gives the
+runner events, the order and the credentials of the runner commands, and
+the report requests.
 
 ## Agent logins and attachments
 

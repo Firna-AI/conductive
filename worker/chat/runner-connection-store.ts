@@ -1,4 +1,5 @@
 import { isRecord } from '../http'
+import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import type { ChatData, ChatStorage, RunnerWorkspaceRecord } from './types'
 
 const KEY = 'native:runner:current'
@@ -9,6 +10,7 @@ export interface StoredRunnerConnection {
   generation: number
   workspace: RunnerWorkspaceRecord
   streamId: string | null
+  protocolVersion: RunnerProtocolVersion | null
   ready: boolean
   checkAt: number
 }
@@ -34,6 +36,12 @@ function readConnection(value: unknown): StoredRunnerConnection {
       typeof value.workspace.archivedAt === 'number'
     ) ||
     !(value.streamId === null || typeof value.streamId === 'string') ||
+    !(
+      value.protocolVersion === undefined ||
+      value.protocolVersion === null ||
+      value.protocolVersion === 1 ||
+      value.protocolVersion === 2
+    ) ||
     typeof value.ready !== 'boolean' ||
     typeof value.checkAt !== 'number' ||
     !Number.isFinite(value.checkAt)
@@ -49,6 +57,12 @@ function readConnection(value: unknown): StoredRunnerConnection {
       archivedAt: value.workspace.archivedAt,
     },
     streamId: value.streamId,
+    protocolVersion:
+      value.protocolVersion === undefined
+        ? value.streamId === null
+          ? null
+          : 1
+        : value.protocolVersion,
     ready: value.ready,
     checkAt: value.checkAt,
   }

@@ -13,7 +13,7 @@ Their terminal access can reach credentials available on a workspace's cloud com
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 The agent login's share setting controls whose messages spend that login.
-It does not hide the credential from code or terminal users on the same computer.
+It does not keep a turn's credential from code or terminal users on the same computer.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -61,10 +61,23 @@ They do not offer a call to read or message another workspace's chat.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
-The cloud computer receives the session's login when a turn needs it.
+A newer cloud computer starts from an org image that keeps the real agent login outside the computer.
+Its model requests and answers pass through Conductive on Cloudflare.
+Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
+The computer receives only a turn credential that works through Conductive while that turn runs.
 
-A program or member with terminal access there can read or copy that login.
-A copied login can remain usable after the turn ends.
+Programs and members with terminal access can copy this credential and use it from elsewhere while the turn runs.
+A program that keeps running can also read credentials of later turns, including other members' sessions.
+The share setting does not prevent this access.
+Repository settings can send model requests, their content, and the turn credential to another address.
+After **Stop**, the credential cannot start another model request.
+A request that already runs ends within 30 seconds after the turn ends.
+
+An older cloud computer starts from an earlier org image.
+It still permits older software that receives the real agent login.
+Programs and terminal users can copy that login and use it after the turn ends.
+Installing newer agent software on that computer does not remove this risk.
+A new org image build keeps real agent logins outside computers created from that image.
 Removing a login from Account does not revoke a copy held elsewhere.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.

@@ -17,6 +17,9 @@ them, and this page lists each protocol doc and what it covers.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
+  - [File mentions](../protocol/file-mentions.md): the list of `@` in the
+    composer, the chips of files and folders, and the removal of each chip
+    of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, and the repair of lost workspace
     updates.
@@ -25,6 +28,8 @@ them, and this page lists each protocol doc and what it covers.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+- [Model gateway](../protocol/model-gateway.md): the turn token, and the
+  Worker routes that add the agent login to each model request.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar and its
   events.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a

@@ -57,6 +57,10 @@ The Durable Object runs the gates itself.
   commands use it too.
 - The runner sends `hello` first, with `RUNNER_PROTOCOL_VERSION` and its
   workspace ID. A new runner connection closes the previous one.
+- The runner version must meet the workspace's stored minimum version.
+  A missing pin counts as version 1. A lower version closes the connection
+  before the welcome or any command. The Worker logs an operator warning.
+  It adds no app message.
 - `AuthenticatedRunner` keeps the token hash of its connection. It checks
   the token rule again before each message that it sends or receives, and
   every 15 seconds while the connection is idle, through the `runner`
@@ -66,8 +70,8 @@ The Durable Object runs the gates itself.
   other workspace gets `404 workspace_not_found`. So does a workspace that
   `matchesObject` refuses, because `WORKSPACES.idFromName` names another
   object.
-- Every login lookup goes through `SessionLogins`. Its credential path uses
-  `readLogin` in `login-access.ts`, the only caller of `resolveLogin`. It
+- `SessionLogins` reads the login of each runner command. Its credential
+  path uses `readLogin` in `login-access.ts`, which calls `resolveLogin`. It
   reads the agent login of a starter or of a linked-session member, for one
   agent. `resolveLogin` first checks the workspace, that user, the sender,
   and the runner token in one D1 read. The workspace must pass the token
@@ -78,21 +82,29 @@ The Durable Object runs the gates itself.
   login available, so `SessionLogins.observe` stores
   `loginAvailable: true` and `loginShared: false`. Send uses the existing
   empty linked session, and queued member commands cannot receive the
-  starter's login while the starter does not share it.
-- Its metadata path, `readLoginMetadata`, reads only the membership, the
-  suspension, the stored login kind, and the share setting of each starter,
-  in one D1 query. It returns a map of `SessionLoginMetadata` by session
-  ID. A valid login gives `loginAvailable: true`, and `loginShared` is true
+  starter's login, or a turn token for it, while the starter does not share
+  it.
+- Two other paths read a login without `SessionLogins`. `admitFirstMessage`
+  in `first-message.ts` calls `resolveLogin` to require a stored login of
+  the sender. The [model gateway](../model-gateway/README.md) reads the
+  starter's login with `gatewayLogin` at each model request of a version 2
+  turn. It checks the access of the starter again first.
+- The `SessionLogins` metadata path uses `readLoginMetadata`.
+  It reads only each starter's membership, suspension, stored login kind, and share setting.
+  One D1 query returns a map of `SessionLoginMetadata` by session ID.
+  A valid login gives `loginAvailable: true`, and `loginShared` is true
   when `no_reuse` is 0. A missing or invalid login gives false for both.
   The workspace must also pass the token rule above. So a suspended starter
   or a refused workspace shows an unavailable login. The result sets only
   `loginAvailable` and `loginShared`, so the session list, the history, and
   the event subscription stay readable. It reads no ciphertext.
 - A revoked or replaced runner token closes that connection without a
-  login, and the command stays queued. A sender who left the org gets no
-  login either. [Session logins](integration/README.md#session-logins) says
-  when the workspace checks the starter's login. The storage never holds a
-  login.
+  login or a turn token, and the command stays queued. A sender who left
+  the org gets neither. [Session logins](integration/README.md#session-logins)
+  says when the workspace checks the starter's login. The storage never
+  holds a login or a turn token. A version 2 turn keeps only a random nonce
+  and the login version. So a resend derives the same turn token, also
+  after a restart of the workspace object.
 
 An org suspension keeps chat history and event subscriptions readable.
 The common browser write gate refuses session and message changes with `org_suspended`.
@@ -145,13 +157,17 @@ access logic, with the access scheduler that the test injects.
   [`runner-connection-store.ts`](runner-connection-store.ts) keeps the
   current physical connection in chunked raw records under
   `native:runner:`. They hold the connection ID, the generation, the
-  workspace record with the token hash, the stream ID, the readiness, and
-  the next check time.
+  workspace record with the token hash, the stream ID, the protocol version
+  of the runner's `hello`, the readiness, and the next check time. They
+  hold no agent login and no turn token. A record saved before the version
+  field counts as version 1 once it has a stream.
 - A new connection raises the generation, and a retired connection leaves
   a tombstone. So a closing older socket cannot take back authority.
 - A restore needs the saved connection ID and generation. It sends no
   `welcome`, and it calls no `runnerHello` or `runnerReady` hook. It
   starts no turn and sends no command.
+- Delivery after a restore uses the saved protocol version. So a version 2
+  runner still gets a turn token in each `turn` command, and no login.
 - A ready restored runner attaches the file channel again with the same
   connection ID. A file request that waits stays live work. It ends with
   its result, or with `file_unavailable` when the connection closes.
