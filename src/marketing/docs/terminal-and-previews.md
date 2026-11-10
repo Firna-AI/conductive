@@ -11,6 +11,10 @@ Open a workspace in an org you belong to.
 Its cloud computer must start before the tools can connect.
 Select **Resume** if the computer is stopped.
 
+For an archived workspace, use **Restore** first if it is available.
+Restore leaves the computer stopped.
+Resume it before opening **Terminal** or **Preview**.
+
 Commands in **Terminal** run on that cloud computer.
 A preview shows a web server that runs there too.
 
@@ -66,23 +70,41 @@ This can include repositories outside the Conductive org.
 ## Preview a running app
 
 1. Start your web server with the agent or **Terminal**.
-2. Note the port that the server reports.
-3. Open **Preview**.
-4. Enter that number in **Port**.
-5. Select **Open preview**.
+2. Open **Preview**.
+3. Select your server in the list.
+
+Each row shows a port and can also show a short program name and repository folder.
+The list updates as servers start and stop.
+Servers that already have an open preview appear in their tabs.
+When the list is empty, the form asks you to start a server in **Terminal** or ask the agent.
+
+To open a server by its port:
+
+1. Note the port that the server reports.
+2. Enter it in **Other port** below the list, or **Port** when only the field appears.
+3. Select **Open preview**.
 
 For example, enter `3000` if your server reports port 3000.
 Use the port of your server when it reports a different one.
-Conductive asks for the port instead of finding it automatically.
+
+An older cloud computer can show only the **Port** field.
+Use the manual steps there.
+If Preview says it needs newer cloud computer software, ask an admin to run **Build computer**.
+After that build succeeds, create a new workspace.
+An existing workspace keeps its installed software after a resume.
+
+- [Prepare a new cloud computer for the server list](/docs/cloud-computer#apply-setup-changes)
 
 The preview opens inside the workspace.
-Use **Open in new tab** if the app works better in a browser tab.
+Use **Open** to show the app in a new browser tab when it works better there.
 This can help when its cookies or sign-in do not work inside the frame.
 
 ## Manage previews
 
-Each preview has a tab named for its port.
-Use **Preview another port** to open another server.
+Each preview tab shows its port and a program name when available.
+The program name uses at most 10 characters, including **…** when shortened.
+Its tooltip and screen reader label give the full name and folder.
+Use **+**, named **Preview another port**, to choose another server or enter its port.
 Use **Reload** to load the selected preview again.
 Use **Close preview** to close it.
 
@@ -102,7 +124,7 @@ Then open **Terminal** again.
 If a preview does not open, check that its server is running.
 Check the port number.
 Try **Reload**, or close the preview before opening it again.
-Use **Open in new tab** if only the framed view fails.
+Use **Open** if only the framed view fails.
 
 ## Understand access to the computer
 
@@ -113,6 +135,7 @@ Members with terminal access can also obtain GitHub credentials available to the
 Conductive offers **Terminal** and **Preview** as workspace tools.
 The Mac app provides a window for Conductive and optional Mac command requests.
 
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 - [Change startup commands](/docs/cloud-computer#run-commands-at-startup)
 - [Read the security guide](/docs/security)
 - [Use the Mac app](/docs/mac-app)

@@ -120,10 +120,20 @@ If a share-setting change fails, the switch returns to its saved value.
 ## Understand access to credentials
 
 Conductive stores agent logins encrypted.
-During a turn, its cloud computer uses the session starter's login.
-Code and members with terminal access on that computer can read or copy it.
-The share switch does not hide it from them.
+A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
+Each turn there gets a temporary credential called a turn token.
+Code and members with terminal access can read or copy that credential.
+They can use it only through Conductive while the turn runs.
+A copied token cannot start a new model request after the turn ends.
 
+An older cloud computer starts from an earlier setup that still permits software to receive the agent login itself.
+Code and members with terminal access can read or copy that login during a turn.
+A copied login can remain usable after the turn ends.
+Installing newer software on that computer does not remove this risk.
+A new build gives the protection to new cloud computers created from its setup.
+Use **Build computer** and a new workspace to get the newer protection.
+
+The share switch does not hide either kind of credential from code or members with terminal access.
 Work in an org with people you trust with your agent and GitHub logins.
 
 - [Understand sessions and chat](/docs/sessions-and-chat)

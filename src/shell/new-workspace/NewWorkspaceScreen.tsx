@@ -33,7 +33,9 @@ function builtWhen(when: When): string {
  * The start of the empty chat, with the repository of the new workspace. An
  * org without chosen repositories asks for them first: an admin gets Choose
  * repositories, and a member reads that an admin chooses them. It asks only
- * after the repositories load, as the dialog does.
+ * after the repositories load, as the dialog does. While the repository of
+ * the form waits for its build, the notice over the composer says when it
+ * is ready, so the note of the cloud computer gives way.
  */
 function Start(props: {
   org: OrgSummary
@@ -48,7 +50,10 @@ function Start(props: {
   const chosen = form.repository
   const unchosen = form.repositories?.length === 0
   const { now, timeZone } = app.services
-  const builtAt = build ? (build.completedAt ?? build.startedAt) : null
+  const builtAt =
+    build && chosen && !form.waiting.ids.has(chosen.id)
+      ? (build.completedAt ?? build.startedAt)
+      : null
   const body = chosen
     ? 'Your first message creates it, on a new branch of the repository.'
     : unchosen
@@ -65,6 +70,7 @@ function Start(props: {
           choose={props.choose}
           chosen={chosen}
           repositories={form.repositories ?? []}
+          waiting={form.waiting}
         />
       ) : unchosen && org.role === 'admin' ? (
         <ActionButton

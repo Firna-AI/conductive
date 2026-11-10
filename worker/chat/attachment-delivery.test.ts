@@ -9,14 +9,15 @@ import {
 } from 'vitest'
 
 import { retryMessagePath, sessionPaths } from '../../src/shared/sessions'
+import { createHarness, type TestHarness } from '../test-support/harness'
 import {
-  createHarness,
-  TEST_TIME,
-  type TestHarness,
-} from '../test-support/harness'
-import { attachmentFixture, FILE_BYTES, held } from './attachment.test-support'
+  attachmentFixture,
+  ATTACHMENT_IGNORE_BYTES,
+  FILE_BYTES,
+  held,
+} from './attachment.test-support'
 import { prepareMessageAttachments } from './attachment-copy'
-import { storeAttachment } from './attachment-storage'
+import { providerCopy } from './attachment-copy.test-support'
 import { WORKSPACE_ID } from './harness.test-support'
 import { messageCommands, startTurn } from './turn-lifecycle.test-support'
 
@@ -32,126 +33,6 @@ afterEach(() => {
 })
 afterAll(async () => {
   await harness.dispose()
-})
-
-function providerCopy(
-  options: {
-    hold?: Promise<void>
-    entered?: () => void
-    fail?: () => boolean
-  } = {},
-) {
-  const paths: string[] = []
-  const copies: Uint8Array[] = []
-  const fetch = async (request: Request) => {
-    if (new URL(request.url).hostname === 'boat.dev') {
-      const body: { path: string } = await request.json()
-      paths.push(body.path)
-      return Response.json({
-        ok: true,
-        type: 'file.upload_url',
-        method: 'PUT',
-        path: body.path,
-        url: 'https://attachment-transfer.test/file',
-        expiresAt: '2099-01-01T00:00:00Z',
-      })
-    }
-    options.entered?.()
-    await options.hold
-    copies.push(new Uint8Array(await request.arrayBuffer()))
-    return new Response(null, { status: options.fail?.() ? 503 : 204 })
-  }
-  return { paths, copies, fetch }
-}
-
-it('copies before delivery and preserves copy proof across reconnects while new messages and computers get fresh copies', async () => {
-  const longMessageId = 'valid-message-'.padEnd(400, 'x')
-  const entered = held<void>()
-  const release = held<void>()
-  const provider = providerCopy({
-    entered: () => entered.resolve(),
-    hold: release.promise,
-  })
-  const fixture = await attachmentFixture(harness, {
-    prepareAttachments: (...args) =>
-      prepareMessageAttachments(harness.env, ...args, provider.fetch),
-  })
-  await harness.env.DB.prepare(
-    'UPDATE workspaces SET sandbox_id = ? WHERE id = ?',
-  )
-    .bind('sandbox-one', WORKSPACE_ID)
-    .run()
-  const upload = (id: string, name: string) =>
-    storeAttachment(
-      harness.env,
-      {
-        orgId: fixture.org.id,
-        uploaderUserId: fixture.owner.id,
-        target: fixture.target,
-        name,
-        kind: 'file',
-        mediaType: 'application/pdf',
-      },
-      FILE_BYTES,
-      { now: () => TEST_TIME, newId: () => id },
-    )
-  const file = await upload('pdf-file', 'Project plan.PDF')
-  const unsafe = await upload('unsafe-file', 'Project plan.pdf/notes')
-  const fileIds = [file.id, unsafe.id]
-  const session = await fixture.createSession()
-  const runner = await fixture.connect()
-  runner.emit({ type: 'runner.ready' })
-  await fixture.drain()
-  const sending = fixture.sendAttachment(session.id, longMessageId, fileIds)
-  await entered.promise
-  expect(runner.commands).toEqual([])
-  release.resolve()
-  expect((await sending).status).toBe(202)
-  await fixture.drainAttachments()
-  expect(provider.copies).toEqual([FILE_BYTES, FILE_BYTES])
-  expect(provider.paths[0]).toMatch(
-    /^\/home\/user\/\.conductive-attachment-[A-Za-z0-9_-]{43}\.pdf$/,
-  )
-  expect(provider.paths[1]).toMatch(
-    /^\/home\/user\/\.conductive-attachment-[A-Za-z0-9_-]{43}$/,
-  )
-  expect(messageCommands(runner, longMessageId)[0]?.attachments[0]?.path).toBe(
-    provider.paths[0],
-  )
-  runner.disconnect()
-  await fixture.connect(runner)
-  await fixture.drainAttachments()
-  expect(provider.copies).toHaveLength(2)
-  runner.disconnect()
-  await harness.env.DB.prepare(
-    'UPDATE workspaces SET sandbox_id = ? WHERE id = ?',
-  )
-    .bind('sandbox-two', WORKSPACE_ID)
-    .run()
-  await fixture.connect(runner)
-  await fixture.drainAttachments()
-  expect(provider.copies).toEqual([
-    FILE_BYTES,
-    FILE_BYTES,
-    FILE_BYTES,
-    FILE_BYTES,
-  ])
-  expect(provider.paths.slice(2)).toEqual(provider.paths.slice(0, 2))
-  expect(
-    (await fixture.sendAttachment(session.id, 'another-file-message', fileIds))
-      .status,
-  ).toBe(202)
-  await fixture.drainAttachments()
-  expect(provider.copies).toEqual([
-    FILE_BYTES,
-    FILE_BYTES,
-    FILE_BYTES,
-    FILE_BYTES,
-    FILE_BYTES,
-    FILE_BYTES,
-  ])
-  expect(provider.paths[4]).not.toBe(provider.paths[0])
-  runner.disconnect()
 })
 
 it('keeps the accepted message and exposes Try again after a copy prevents its turn start', async () => {
@@ -189,7 +70,11 @@ it('keeps the accepted message and exposes Try again after a copy prevents its t
   )
   expect(retry.status).toBe(202)
   await fixture.drainAttachments()
-  expect(provider.copies).toEqual([FILE_BYTES, FILE_BYTES])
+  expect(provider.copies).toEqual([
+    ATTACHMENT_IGNORE_BYTES,
+    ATTACHMENT_IGNORE_BYTES,
+    FILE_BYTES,
+  ])
   expect(
     runner.commands.filter((command) => command.type === 'turn'),
   ).toHaveLength(1)

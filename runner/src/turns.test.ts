@@ -112,7 +112,7 @@ it('combines partial text, steers a turn, and reports actual touched files', asy
   expect(h.warnings).toEqual([])
 })
 
-it('stops a turn without an error and keeps the session on its original agent', async () => {
+it('stops a turn without an error, lists its changed files, and keeps the session on its original agent', async () => {
   const h = await runnerHarness()
   h.endpoint.send(turn())
   await h.runner.idle()
@@ -135,6 +135,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
       state: 'running',
     },
   })
+  await h.write('README.md', 'first\nedited\n')
   h.endpoint.send({
     type: 'interrupt',
     commandId: 'stop-1',
@@ -157,8 +158,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
     turnId: 'turn-1',
     state: 'stopped',
     durationMs: 0,
-    files: [],
-    filesUnavailable: true,
+    files: [{ path: 'README.md', change: 'modified', added: 1, removed: 1 }],
     omittedFileCount: 0,
     userMessageIds: ['message-1', 'message-queued'],
   })

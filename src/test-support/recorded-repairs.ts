@@ -1,3 +1,4 @@
+import { detectedServers } from '../../docs/mockups/src/fixtures/previews'
 import type { RunnerEventRefused } from '../shared/chat-events'
 import type { WorkspaceEvent, WorkspaceEventEnvelope } from '../shared/events'
 import type { RunnerReportKind } from '../shared/runner'
@@ -63,6 +64,8 @@ export function fullReport(kind: RunnerReportKind): WorkspaceEvent {
       }
     case 'workspace.title':
       return { type: kind, name: 'Checkout address autocomplete' }
+    case 'ports.updated':
+      return { type: kind, ports: detectedServers }
   }
 }
 
@@ -112,6 +115,7 @@ const minutesAgo: Readonly<Record<RunnerReportKind, number>> = {
   'start.updated': 5,
   'files.snapshot': 3,
   'changes.updated': 4,
+  'ports.updated': 3,
 }
 
 /**

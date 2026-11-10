@@ -62,7 +62,24 @@ it('creates from captured image repositories while current settings and selectio
       repositoryId: 'new-selection',
       firstMessage: { ...FIRST_MESSAGE, id: 'new-selection-message' },
     }),
-  ).rejects.toMatchObject({ status: 404, code: 'repository_not_found' })
+  ).rejects.toMatchObject({
+    status: 404,
+    code: 'repository_not_found',
+    message: 'The repository is ready after the next build.',
+  })
+  await runtime.env.DB.prepare(
+    "UPDATE repositories SET selected = 0 WHERE id = 'new-selection'",
+  ).run()
+  await expect(
+    createCompletedWorkspace(runtime, org.id, user, {
+      repositoryId: 'new-selection',
+      firstMessage: { ...FIRST_MESSAGE, id: 'removed-selection-message' },
+    }),
+  ).rejects.toMatchObject({
+    status: 404,
+    code: 'repository_not_found',
+    message: 'The repository is not available.',
+  })
   await runtime.env.DB.prepare(
     "UPDATE org_images SET image_build_id = NULL WHERE org_id = ? AND provider_account = 'boat'",
   )

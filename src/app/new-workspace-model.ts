@@ -1,4 +1,5 @@
 import type { AgentChoice } from '../shared/agents'
+import type { BuildsResponse, Repository } from '../shared/org-settings'
 import {
   workspacesPath,
   type CreateWorkspaceRequest,
@@ -15,13 +16,18 @@ import {
 } from './draft-files'
 import { DraftUploads } from './new-workspace-files'
 import type { OrgModel } from './org-model'
-import { asApiError, Store } from './store'
+import { asApiError, Store, valueOf } from './store'
 
 /** The first message of a workspace that does not exist yet. */
 export interface Draft {
   text: string
-  /** `null` until the user picks one, so the screen's default applies. */
-  repositoryId: string | null
+  /**
+   * The repository of the draft, or `null` while the form shows the first
+   * ready repository. A pick of the user stays after a send. Without a
+   * pick, the draft keeps the repository that the form showed at its first
+   * text or file, while the org chooses it, until the send.
+   */
+  repository: { id: string; picked: boolean } | null
   choice: AgentChoice | null
   /** The files, each with its upload. Only ready ones go with the message. */
   files: readonly DraftFile[]
@@ -46,10 +52,31 @@ export function draftReady(draft: Draft): boolean {
 }
 
 /**
+ * The repository that a New workspace form shows while its draft has none:
+ * the first chosen repository that is ready, else the first chosen one. A
+ * chosen repository that the builds list as added waits for a build, as
+ * `waitingRepositoriesOf` says. While the builds load, none waits.
+ */
+export function firstReadyRepository(
+  chosen: readonly Repository[],
+  builds: BuildsResponse | undefined,
+): Repository | undefined {
+  const added = builds?.changes.addedRepositories ?? []
+  const waits = (item: Repository) => added.some(({ id }) => id === item.id)
+  return chosen.find((item) => !waits(item)) ?? chosen[0]
+}
+
+/**
  * New workspace: an empty chat whose first message creates the workspace.
  * When the create request fails, the draft stays, so Try again sends it
  * again. A create and an upload never run together: the create waits for
  * the files, and a file that comes while the create runs does not upload.
+ *
+ * A draft keeps the repository that the form shows when it gets its first
+ * text or file, once the repositories and the builds of the org have
+ * loaded. So a build that turns an earlier repository ready moves no
+ * written draft. A pick of the user wins over it. A kept repository that
+ * the org no longer chose gives way to the one that the form shows.
  *
  * Once the server takes the message, the workspace exists. When its first
  * start fails, the workspace keeps the message in its chat, with the saved
@@ -75,12 +102,17 @@ export class NewWorkspaceModel {
       lifetime: () => org.creations.lifetime,
     })
     this.create = new Store<CreateState>({ state: 'idle' })
+    // A draft that got its text before the repositories and the builds
+    // loaded takes its repository when they load.
+    org.repositories.subscribe(() => this.keepShownRepository())
+    org.builds.subscribe(() => this.keepShownRepository())
   }
 
+  /** A new draft. It keeps the choice and a picked repository of `keep`. */
   private emptyDraft(keep?: Draft): Draft {
     return {
       text: '',
-      repositoryId: keep?.repositoryId ?? null,
+      repository: keep?.repository?.picked ? keep.repository : null,
       choice: keep?.choice ?? null,
       files: [],
       refused: [],
@@ -88,12 +120,39 @@ export class NewWorkspaceModel {
     }
   }
 
+  /**
+   * The draft with the repository that the form shows, once the
+   * repositories and the builds have loaded: a draft with text or a file
+   * takes it when it has no repository yet. A kept repository that the org
+   * no longer chose gives way to it, so the draft follows the form, as a
+   * draft without a repository does. A pick stays.
+   */
+  private withShownRepository(draft: Draft): Draft {
+    const repositories = valueOf(this.org.repositories.get())
+    const builds = valueOf(this.org.builds.get())
+    const kept = draft.repository
+    if (!repositories || !builds || kept?.picked) return draft
+    const chosen = repositories.filter((item) => item.selected)
+    if (kept && chosen.some((item) => item.id === kept.id)) return draft
+    const written = draft.text.trim() !== '' || draft.files.length > 0
+    const shown = written ? firstReadyRepository(chosen, builds) : undefined
+    if (!shown) return kept ? { ...draft, repository: null } : draft
+    return { ...draft, repository: { id: shown.id, picked: false } }
+  }
+
+  private keepShownRepository(): void {
+    this.draft.change((draft) => this.withShownRepository(draft))
+  }
+
   setText(text: string): void {
-    this.draft.change((draft) => ({ ...draft, text }))
+    this.draft.change((draft) => this.withShownRepository({ ...draft, text }))
   }
 
   setRepository(repositoryId: string): void {
-    this.draft.change((draft) => ({ ...draft, repositoryId }))
+    this.draft.change((draft) => ({
+      ...draft,
+      repository: { id: repositoryId, picked: true },
+    }))
   }
 
   setChoice(choice: AgentChoice): void {
@@ -107,7 +166,10 @@ export class NewWorkspaceModel {
    */
   attach(files: readonly File[]): Promise<void> {
     if (this.create.get().state === 'sending') return Promise.resolve()
-    return this.uploads.attach(files)
+    const uploads = this.uploads.attach(files)
+    // The files show at once, before they upload, so the draft has them now.
+    this.keepShownRepository()
+    return uploads
   }
 
   /** Try again on a file whose upload failed, or that the server lost. */
@@ -140,7 +202,7 @@ export class NewWorkspaceModel {
       return null
     }
     const request: CreateWorkspaceRequest = {
-      repositoryId: draft.repositoryId ?? defaults.repositoryId,
+      repositoryId: draft.repository?.id ?? defaults.repositoryId,
       ...(this.sectionId ? { sectionId: this.sectionId } : {}),
       firstMessage: {
         id: draft.messageId,

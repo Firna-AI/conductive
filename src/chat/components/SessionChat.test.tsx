@@ -10,7 +10,10 @@ import {
   FAKE_TIME,
   fakeUser,
 } from '../../test-support/fixtures/core'
-import { senderSnapshot } from '../../test-support/fixtures/workspaces'
+import {
+  senderSnapshot,
+  workspaceFixtures,
+} from '../../test-support/fixtures/workspaces'
 import { blankDraft } from '../state/chat-snapshot'
 import { loginGone, withSessions } from '../state/linked-kit'
 import { historyEntries } from './ChatOverlays'
@@ -42,11 +45,12 @@ describe('SessionChat', () => {
   })
 
   it('shows the start steps after the stored chat, and a message that waits for the sandbox', async () => {
+    const { message } = workspaceFixtures()
     const { markup, text } = await renderChat({
       workspaceState: 'starting',
       conversation: 'queued',
     })
-    expect(text()).toContain('Sends when the sandbox is ready')
+    expect(text()).toContain(message.text)
     expect(text()).toContain(
       'Resuming the sandbox › Resuming with your files as you left them 2m 44s',
     )
@@ -158,6 +162,7 @@ describe('session parts', () => {
         mobile={false}
         onCancelRename={() => {}}
         onClose={() => {}}
+        onCopy={() => {}}
         onMove={() => {}}
         onNew={() => {}}
         onRename={() => {}}

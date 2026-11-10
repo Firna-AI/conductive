@@ -83,8 +83,9 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     id: 'fast-mode',
     area: 'models-and-providers',
     name: 'Fast mode',
-    status: 'considering',
-    note: 'A fast mode for supported models is under consideration.',
+    status: 'planned',
+    note: 'A Fast switch in the model menu is planned for supported models.',
+    due: null,
   },
   {
     id: 'default-models',
@@ -98,7 +99,7 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Model catalogue',
     status: 'available',
-    note: 'Fable 5.2 is available. Adding GPT-6 Astra, GPT-6.1 Terra, and GPT-6 Luna to the model picker is in progress.',
+    note: 'Fable 5.2, GPT-6 Astra, GPT-6.1 Terra, and GPT-6 Luna are available in the model picker.',
   },
   {
     id: 'custom-agent-executables',

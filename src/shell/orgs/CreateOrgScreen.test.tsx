@@ -1,17 +1,42 @@
 import { describe, expect, test } from 'vitest'
+import { routes } from '../../app/router'
+import { Store } from '../../app/store'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { coreFixtures } from '../../test-support/fixtures/core'
+import { installStartScreen } from '../../test-support/github-install'
+import { MacApp, type MacWindow, type MacWindowState } from '../mac/mac-app'
 import { renderScreen, startedApp, textOf } from '../test-render'
 import { CreateOrgScreen } from './CreateOrgScreen'
 
-/** The screen as HTML, after the list of repositories loads. */
-async function screenHtml(reply?: (server: FakeApiServer) => void) {
+const macWindow: MacWindow = {
+  state: new Store<MacWindowState>({
+    mode: 'window',
+    canGoBack: false,
+    canGoForward: false,
+  }),
+  back: () => undefined,
+  forward: () => undefined,
+}
+
+/**
+ * The screen as HTML at `href`, in a browser or in the Mac app, after the
+ * list of repositories loads.
+ */
+async function screenHtml(
+  reply?: (server: FakeApiServer) => void,
+  options: { href?: string; mac?: boolean } = {},
+) {
   const server = new FakeApiServer()
   reply?.(server)
   const app = await startedApp(server)
   await app.account.loadRepositories()
-  return renderScreen(app, <CreateOrgScreen first={false} />)
+  const screen = <CreateOrgScreen first={false} />
+  return renderScreen(
+    app,
+    options.mac ? <MacApp window={macWindow}>{screen}</MacApp> : screen,
+    { href: options.href },
+  )
 }
 
 /** The screen as text, after the list of repositories loads. */
@@ -53,7 +78,7 @@ describe('CreateOrgScreen', () => {
     })
   })
 
-  test('Manage access opens the page of the GitHub App that the account gives, which lists org accounts too', async () => {
+  test('Manage access names the screen of the list in a browser, and opens the page of the GitHub App that the account gives in the Mac app, which lists org accounts too', async () => {
     const githubAppUrl =
       'https://github.com/apps/conductive-staging/installations/new'
     const account = (server: FakeApiServer) =>
@@ -61,14 +86,24 @@ describe('CreateOrgScreen', () => {
         ...coreFixtures().account,
         githubAppUrl,
       })
-    const listed = await screenHtml(account)
-    const empty = await screenHtml((server) => {
-      account(server)
-      noRepositories(server)
-    })
+    const href = routes.createOrg()
+    const listed = await screenHtml(account, { href })
+    const empty = await screenHtml(
+      (server) => {
+        account(server)
+        noRepositories(server)
+      },
+      { href },
+    )
+    const mac = await screenHtml(account, { href, mac: true })
     expect({
-      listed: manageAccessLinks(listed),
-      empty: manageAccessLinks(empty),
-    }).toEqual({ listed: [githubAppUrl], empty: [githubAppUrl] })
+      listed: manageAccessLinks(listed).map(installStartScreen),
+      empty: manageAccessLinks(empty).map(installStartScreen),
+      mac: manageAccessLinks(mac),
+    }).toEqual({
+      listed: [href],
+      empty: [href],
+      mac: [`${githubAppUrl}?state=mac`],
+    })
   })
 })

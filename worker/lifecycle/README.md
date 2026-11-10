@@ -22,7 +22,8 @@ gives the create, read, resume, and activity routes of a workspace to
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
   starts a stopped sandbox briefly, so that Boat keeps its disk.
-- Repair overdue disk alarms and image refreshes from the 15-minute Cron Trigger.
+- Stop and retain archived sandboxes, and delete them after the Restore window.
+- Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
@@ -46,16 +47,15 @@ browser and of previews. Terminal frames report no activity.
 ### Machine route
 
 [Machine route](routes.md#machine-route) gives `handleGitCredential`, the
-git credential route on the machine hostname, and how `createApp` routes
-it.
+git credential route on the machine hostname, the git credential sender,
+and how `createApp` routes it.
 
 ### Workspace Durable Object
 
 [Workspace Durable Object](workspace-object.md) describes the Durable
 Object of each workspace and of each image coordinator. It gives their
 names, the lifecycle steps, the alarm, the start logs, the event socket,
-and the publication of the events. It also gives the creates and resumes
-and the git credential sender.
+and the publication of the events. It also gives the creates and resumes.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
@@ -93,6 +93,10 @@ Definite first create refusals stay as rejected allocation records.
 A refused replay keeps an earlier uncertain request live.
 Each failed computer has its own cleanup flag.
 The native cleanup pointer can therefore change without losing an older failed computer.
+Archive and Restore keep the ledger entry of a retained computer live.
+At the end of Restore, the delete goes through the ledger-aware cleanup of [`cleanup.ts`](cleanup.ts).
+`detachArchiveDisk` then marks the exact account and ID deleted in the same D1 batch that detaches the disk.
+A confirmed missing archived disk uses that batch too.
 
 ### Key Code
 
@@ -105,6 +109,8 @@ The native cleanup pointer can therefore change without losing an older failed c
   the claim, its start plan, and its image lease in one D1 batch. Its
   statements live in [`creation-plan-statements.ts`](creation-plan-statements.ts).
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
+  Its `imageAdmissionError` gives a waiting repository the next-build message.
+  The browser create and the agent tools share that message.
 - [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
 - [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
@@ -116,7 +122,15 @@ The native cleanup pointer can therefore change without losing an older failed c
   [List order](../app-api/README.md#list-order) says.
   The D1 allocation trigger assigns the next org number inside that insert transaction.
   Cleanup keeps the org counter. A read after the insert gets the assigned number.
-- [`archive-workspace.ts`](archive-workspace.ts): `archiveWorkspace`, the guarded archive, cleanup, event, and response with an explicit app origin.
+- [`archive-workspace.ts`](archive-workspace.ts): the guarded Archive without a Git check.
+- [`archive-state.ts`](archive-state.ts): `WorkspaceArchive`, the durable owner of interrupted starts, stop confirmation, retention, deletion, and publication.
+  Its allocation recovery calls `createResource` with the saved account and request, the workspace purpose, and the creator or labelled user as owner.
+  While the recovery fails, it keeps the saved request and its retry alarm, also after the Restore window.
+  It writes a recovered ID to the workspace row before it clears the request and releases the image lease.
+  [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with no env values or startup command.
+  [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
+  [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
+- [`restore-workspace.ts`](restore-workspace.ts): the member Restore route action with an explicit app origin and the fixed expiry check.
 - [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.
@@ -184,17 +198,8 @@ The native cleanup pointer can therefore change without losing an older failed c
   Both take the turn part of the idle time only from the committed chat.
   The [turn recovery](recovery-and-shown-state.md#turn-recovery) gives the
   rules.
-- [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
-  the one input owner of a workspace object, with its minute updates and
-  retries. [`create-input-activity.ts`](create-input-activity.ts) connects
-  it to the lifecycle hooks, the member fence, and `warnWorker`.
-- [`input-activity-local.ts`](input-activity-local.ts): `LifecycleInputState`,
-  the fenced input time in the durable lifecycle state, with its capture
-  and its reconciliation.
-- [`input-activity-update.ts`](input-activity-update.ts) and
-  [`input-activity-data.ts`](input-activity-data.ts): one D1 and provider
-  update. `writeWorkspaceActivity` moves `last_activity_at` forward with
-  `MAX`.
+- [Input activity](routes.md#key-code): the entries of the input owner, its
+  durable input time, and its D1 and provider update.
 - [`durable-start-stop.ts`](durable-start-stop.ts): the saved stop owner of
   failed and cancelled resumes.
 - [`durable-alarm.ts`](durable-alarm.ts): `advanceLifecycleAlarm`, the
@@ -227,7 +232,6 @@ The native cleanup pointer can therefore change without losing an older failed c
 - [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.
   The task saves the account and ID of each computer, and its alarm, before the first provider request.
   Its native RPC and alarm share the lifecycle queue.
-- [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
 - [`cleanup.ts`](cleanup.ts): retries every failed computer of a workspace.
   `deleteSandboxIfPresent` marks the ledger after Delete succeeds or returns not found.
 - [`disk-retention.ts`](disk-retention.ts): `keepWorkspaceDisk`, the
@@ -262,34 +266,13 @@ The native cleanup pointer can therefore change without losing an older failed c
   `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as the
   [Workspace Durable Object](workspace-object.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
-- [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
-- [`image-builds.ts`](image-builds.ts): `startImageBuild` and
-  `advanceImageBuild`, which removes the command journals before a snapshot.
-- [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,
-  which starts changed settings after the first good build finishes cleanup.
-- [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
-- [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
-  replays a saved allocation request and saves the recovered sandbox ID.
-  Failed image jobs retain their unresolved allocation phase until cleanup
-  recovers and deletes the sandbox.
-- [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
-  which splits output into rows and adds the budget statements of
-  [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.
-- [`build-log-reader.ts`](build-log-reader.ts): `readBuildSnapshot`, which
-  reads the build state and its log in one D1 batch.
-- [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
-  `runImageAlarm`.
-- [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
+- [Image builds](image-builds.md#key-code): the entries of the image
+  builds, the refreshes, the build logs, the image coordinator, and the
+  image software and runtime.
 - [Software images](../software-image/README.md): the shared software builds and their cleanup.
-- [`image-software.ts`](image-software.ts): the runner archive check and
-  install/start commands.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
   into a Bash command. [`lifecycleCommand`](command-intents.ts) runs each step once.
-- [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
-  private Node of the org image, and its paths. The
-  [runtime guide](../../image/runtime.md#update-the-node-release) says how to
-  update it.
 - [Repository layout](repository-layout.md#key-code): the repository entries.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and
   `authenticateWorkspaceToken`.
@@ -303,7 +286,8 @@ The native cleanup pointer can therefore change without losing an older failed c
 ### Related Docs
 
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):
-  the org image, the start steps, and stop and resume.
+  the org image. [Life of a workspace](../../docs/protocol/workspace-life.md)
+  gives the start steps, stop and resume, Archive, and Restore.
 - [Access and security](../../docs/protocol/access-and-security.md): what a
   sandbox holds, the workspace token, and GitHub tokens.
 - [Architecture](../../docs/architecture/components.md): the Worker, the workspace

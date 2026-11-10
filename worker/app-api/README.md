@@ -13,13 +13,14 @@ Each handler returns `null` for a path that it does not own. The
 | `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
+| `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
 
 `featureShellRoute` in [feature-shell.ts](feature-shell.ts) serves account GitHub
 access, org creation with initials and repository choices, shared settings,
 repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
-The [archive route](archive.ts) uses the real workspace object to check saved work and remove its sandbox.
+The [archive route](archive.ts) archives and restores a workspace through its workspace object, as [Archive](../../docs/protocol/workspace-life.md#archive) says.
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
@@ -46,9 +47,15 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   first image build after it saves the org, its admin, and its repositories.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
-- The settings reply compares its revision with the published image's
-  build. Before the first image, it uses the newest build. With no build,
-  `needsBuild` is false.
+- A save that adds a repository starts an image build for the admin who
+  added it, also after a failed build. A repeated save and a removal start
+  no build. A running job takes the request without starting another job.
+  A failed start writes one fixed warning through `warnWorker`. The saved
+  choice stays, and the reply keeps the repository list and HTTP 200.
+- The build history reply also gives `BuildsResponse.changes`: the saved
+  install script change and the added and removed repositories. The
+  [image build reader](../lifecycle/image-builds.md#build-jobs) owns the
+  comparison.
 - `getStartedGitHubComplete` owns the `github-app` step in every org state.
   The step is complete when an org of the user that is not deleted has a
   repository through an installation that is not suspended.
@@ -69,18 +76,20 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   [Browser routes](../lifecycle/README.md#browser-routes) says.
 - A workspace path decodes its workspace ID once.
 - An archived workspace keeps its view readable. A view write, a read mark,
-  and a lifecycle action get `409 workspace_archived`.
+  and a lifecycle action other than Restore get `409 workspace_archived`.
 - `chatLifecycleRoute` gives the lifecycle handler the runner archive as a
   getter, so only a build or a refresh reads it. It gives the first message
   of a create to `acceptLifecycleFirstMessage` of the workspace object.
 
 Org suspension keeps shell reads available.
 The common browser gate refuses every org write except Leave.
-The view, read-mark, shared-shell, settings, repository, and archive SQL writes also check stored org state, so an earlier permission read cannot admit a later write.
+The view, read-mark, shared-shell, settings, repository, Archive, and Restore SQL writes also check stored org state, so an earlier permission read cannot admit a later write.
 
 The workspace responses give an org-local number and a canonical web link.
+They give `restoreUntil` while the archived cloud computer exists, including while an expired delete retries.
+Restore refuses an expired window even when the cloud computer remains.
 The request's effective app origin reaches each response constructor explicitly.
-Durable Object reads and Archive receive that origin through their RPC arguments.
+Durable Object reads, Archive, and Restore receive that origin through their RPC arguments.
 The machine tools use the configured app origin instead.
 
 ### List order
@@ -156,8 +165,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   repository reads, saved org initials, and admin repository selection.
 - `feature-org.test.ts` checks the repository requirement, the first build,
   and a failed build start that keeps the org.
-- `feature-settings-builds.test.ts` checks the build revision used by the
-  settings reply before and after the first image.
+- `feature-settings-builds.test.ts` checks the install script change in
+  the build history before and after the first image.
+- `feature-repository-builds.test.ts` checks the admin's repository build,
+  repeated saves, removals, adds after a failed build, and a failed start
+  that keeps the choice.
 
 ### Key code
 
@@ -191,7 +203,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   repositories and starts its first build with `startImageBuild` of the
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
-  the org's saved choices with repositories that its reader can access.
+  the org's saved choices with repositories that its reader can access,
+  and starts a build after an add.
   Their `*-data.ts` files keep queries and guarded writes.
 
 ### Related docs

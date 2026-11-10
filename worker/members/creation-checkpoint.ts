@@ -53,7 +53,7 @@ export async function resumeCreationCheckpoint(
   job.stdoutOffset = 0
   job.stderrOffset = 0
   job.requestedByUserId = userId
-  job.commandAttempt = `${job.attempt}:restore:${generation}`
+  job.commandAttempt = `${saved.commandAttempt ?? job.attempt}:restore:${generation}`
   // Sandbox resume must rebuild runtime files before the runner reconnects.
   if (job.phase === 'runner') job.afterReadyPhase = 'startup'
   else if (
@@ -125,7 +125,9 @@ export async function resumeCreationCheckpoint(
     }
   }
   job.deadlineAt = dependencies.now() + WORKSPACE_START_TIME_LIMIT_MS
-  const accepted = await controller.queueLifecycleStart(job)
+  const accepted = await controller.queueLifecycleStart(job, {
+    kind: 'resume-retained-create',
+  })
   if (accepted)
     await nativeWorkspaceStorage(storage, {
       guarded: true,

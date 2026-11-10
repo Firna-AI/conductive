@@ -73,7 +73,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It gives each turn its turn token. For each model request, it tells the
   model gateway whether the token still works and which login the turn
   uses.
-- It also holds the start steps, the stop timer, and the banner state.
+- It also holds the start steps, the stop timer, the delete timer of an
+  archived workspace, and the banner state.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace
@@ -136,6 +137,9 @@ against a change in how the agent program reads its credential and its
 model address. The runner runs Codex through the Codex SDK or the Codex
 App Server (decision 36).
 
+The runner finds the listening ports in the sandbox itself, with no Boat
+call (decision 220).
+
 A runner of protocol version 2 or later makes both agent programs send
 their model requests to the [model gateway](../protocol/model-gateway.md). It
 gives each agent program the turn token of its turn, and no agent login. A
@@ -173,4 +177,5 @@ the rules.
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. The app is free, with no limits (decision 81).
+  snapshot. Use of the app is free until billing starts, as
+  [Pricing](../protocol/pricing.md) says.
