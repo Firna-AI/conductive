@@ -1,0 +1,32 @@
+# A TypeScript file outside the project map skips promise rules
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, from review round 1 of branch `calummoore/missing-await-lint`, as the blocked wider fix of finding 1.
+- **Location:** `eslint.config.js`, the list `TYPE_PROJECTS` and the blocks that it makes.
+- **Reason:** The recommended option adds a lint failure for a TypeScript file that no project covers, and the user decides each new failure.
+
+- **Terms:**
+  - **Promise rules:** the `typescript-eslint` rules `no-floating-promises` and `no-misused-promises`. They need type information from a TypeScript project.
+  - **Project map:** the list `TYPE_PROJECTS` in `eslint.config.js`. Each entry names folders and the TypeScript project of their `.ts` and `.tsx` files.
+- **Background:**
+  - On 10 November 2026 the user chose to turn on the promise rules for every TypeScript project of the repository. `eslint.config.js` makes one block for each entry of the project map. Only these blocks turn on the rules.
+  - Review round 1 of branch `calummoore/missing-await-lint` found that `desktop/renderer/main.tsx` got neither rule, because the renderer entry matched only `.ts` files. The fix gave every entry the same `.ts` and `.tsx` matcher.
+  - After that fix, all 3,089 tracked TypeScript files get both rules, from the repository root and from `desktop/`.
+  - A file in a folder that the map does not list still gets neither rule, with no report. A check showed this for a new `scripts/new-script.ts` and a new `desktop/preload/bridge.ts`.
+  - typescript-eslint fails a file with "You have used a rule which requires type information" when a promise rule runs on a file with no TypeScript project. The error names the file.
+- **Problem:** A TypeScript file outside the project map passes the lint without the promise rules, and nothing tells the author.
+- **Impact if no action:** A missing `await` in such a file passes the lint. The coverage of the rules shrinks each time a change adds a folder or a project.
+- **Root question:** How does every TypeScript file that the lint checks get both promise rules, also after a change adds a folder or a project?
+- **Options:**
+  - **A.** Change nothing. Each new folder needs a map entry, and the author must remember it. Effort: Small.
+  - **B.** Turn on the promise rules in one block for every TypeScript file, `**/*.{ts,tsx}`, without the virtual script files of the Astro plugin, `**/*.astro/**`. Keep the project map only for the type information. A file that no entry covers then fails the lint with the error above. It adds no lint time. Effort: Small.
+  - **C.** Add a coverage check: a script asks ESLint for the configuration of each TypeScript file, from the root and from `desktop/`, and lists each file without both rules. A one-time run took about 1.3 seconds. It is a new check, and B gives the same protection without it. Effort: Small.
+  - **D.** Use the project service of typescript-eslint instead of the map. It finds the project of each file from the `tsconfig.json` files, as an editor does. Today it misses 4 kinds of file, so the root `tsconfig.json`, `desktop/tsconfig.json`, and a project for `tools/*.ts` must change, and the memory of each lint process needs a new measurement. Effort: Medium.
+  - **E.** Let `eslint.config.js` read the file names of each project through the TypeScript API, and use them as the files of its block. It removes the hand-written folders, but a file that no project holds still passes with no report. Effort: Medium.
+  - **F.** Let `scripts/lint.mjs` find the files of each project through TypeScript and lint each project in its own process. The Mac app lint and editors run ESLint without that script, so they would miss the rules. Effort: Medium.
+- **Left out:** A runtime check of promises, because the user chose lint coverage.
+- **Wider fix:** B, a structural fix: every TypeScript file gets the rules, and a missing map entry stops the lint.
+- **Previous examples:** Finding 1 of review round 1 of branch `calummoore/missing-await-lint`, which `desktop/renderer/main.tsx` showed. No earlier case was found.
+- **Recommendation:** B. One block and one exclusion stop every case, with no added lint time.
+- **Action:** ask the user, because B adds a lint failure for a TypeScript file that no project covers, and the user decides each new failure.

@@ -6,34 +6,30 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 // The promise rules need type information. Each block reads it from the
-// TypeScript project that holds its files, so that no file loads the
-// program of another project.
+// TypeScript project that holds the files of its folders, so that no file
+// loads the program of another project. A folder ending in `**` also holds
+// its subfolders, and the empty folder is the repository root.
 const TYPE_PROJECTS = [
-  { files: ['src/**/*.{ts,tsx}'], project: './tsconfig.app.json' },
+  { folders: ['src/**'], project: './tsconfig.app.json' },
+  { folders: ['worker/**', 'tools'], project: './tsconfig.worker-tests.json' },
+  { folders: [''], project: './tsconfig.node.json' },
   {
-    files: ['worker/**/*.ts', 'tools/*.ts'],
-    project: './tsconfig.worker-tests.json',
-  },
-  { files: ['*.ts'], project: './tsconfig.node.json' },
-  {
-    files: ['desktop/*.ts', 'desktop/src/**/*.ts', 'desktop/scripts/**/*.ts'],
+    folders: ['desktop', 'desktop/src/**', 'desktop/scripts/**'],
     project: './desktop/tsconfig.json',
   },
   {
-    files: ['desktop/renderer/**/*.ts', 'desktop/tests/**/*.ts'],
+    folders: ['desktop/renderer/**', 'desktop/tests/**'],
     project: './desktop/tsconfig.renderer.json',
   },
-  { files: ['runner/**/*.ts'], project: './runner/tsconfig.json' },
+  { folders: ['runner/**'], project: './runner/tsconfig.json' },
+  { folders: ['docs/mockups/src/**'], project: './docs/mockups/tsconfig.json' },
+  { folders: ['image'], project: './image/tsconfig.json' },
   {
-    files: ['docs/mockups/src/**/*.{ts,tsx}'],
-    project: './docs/mockups/tsconfig.json',
-  },
-  { files: ['image/*.ts'], project: './image/tsconfig.json' },
-  {
-    files: ['tools/marketing-pictures/*.ts'],
+    folders: ['tools/marketing-pictures'],
     project: './tools/marketing-pictures/tsconfig.json',
   },
 ]
+const TYPESCRIPT_FILES = '*.{ts,tsx}'
 
 export default defineConfig([
   globalIgnores([
@@ -59,11 +55,16 @@ export default defineConfig([
     },
   },
   // A promise that the code does not await races the code after it.
-  ...TYPE_PROJECTS.map(({ files, project }) => ({
+  ...TYPE_PROJECTS.map(({ folders, project }) => ({
     // The Mac app lint runs this file from `desktop/`. The base path keeps
     // each pattern relative to the repository root there too.
     basePath: import.meta.dirname,
-    files,
+    files: folders.map((folder) =>
+      folder ? `${folder}/${TYPESCRIPT_FILES}` : TYPESCRIPT_FILES,
+    ),
+    // The Astro plugin lints each script of an Astro file as a virtual file
+    // with no TypeScript project.
+    ignores: ['**/*.astro/**'],
     languageOptions: {
       parserOptions: { project, tsconfigRootDir: import.meta.dirname },
     },

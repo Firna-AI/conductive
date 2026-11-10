@@ -6,7 +6,12 @@
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
-const GROUPS = [['src'], ['worker', 'tools/*.ts'], ['desktop', 'docs/mockups']]
+const GROUPS = [
+  ['src'],
+  ['worker', 'tools/*.ts'],
+  ['desktop'],
+  ['docs/mockups'],
+]
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const eslint = fileURLToPath(
