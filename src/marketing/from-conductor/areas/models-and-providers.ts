@@ -98,7 +98,7 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Model catalogue',
     status: 'available',
-    note: 'The model picker includes Fable 5.2 and the supported Claude and Codex models.',
+    note: 'Fable 5.2 is available. Adding GPT-6 Astra, GPT-6.1 Terra, and GPT-6 Luna to the model picker is in progress.',
   },
   {
     id: 'custom-agent-executables',

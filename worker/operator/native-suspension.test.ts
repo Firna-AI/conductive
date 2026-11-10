@@ -5,9 +5,10 @@ import {
   runtimeBundle,
 } from '../lifecycle/real-runtime-test-support'
 import { runningRuntimeWorkspace } from '../lifecycle/runtime-lifecycle-test-support'
-import { imageRuntime, workspaceRuntime } from '../lifecycle/runtime'
+import { imageRuntime } from '../lifecycle/runtime'
 import { startImageBuild } from '../lifecycle/image-builds'
 import { suspendUser } from './suspend-user'
+import { nativeSuspensionRuntime } from './native-runtime.test-support'
 
 let bundle: string
 let fixture: Awaited<ReturnType<typeof realRuntimeFixture>>
@@ -25,7 +26,7 @@ it('retries a suspended native workspace stop after a runtime restart without a 
   const { workspaceId, sandboxId } = await runningRuntimeWorkspace(fixture)
   fixture.boat.failStop = true
   const result = await suspendUser(
-    workspaceRuntime(fixture.env),
+    nativeSuspensionRuntime(fixture),
     11,
     'runtime-user',
   )
@@ -69,7 +70,7 @@ it('schedules suspended image cleanup through the native image runtime', async (
   ).toBeUndefined()
   const at = Date.now() + 60_000
   const result = await suspendUser(
-    workspaceRuntime(fixture.env, { ...runtime.dependencies, now: () => at }),
+    nativeSuspensionRuntime(fixture, { now: () => at }),
     11,
     'runtime-user',
   )
@@ -93,7 +94,7 @@ it('closes an idle native runner after owner suspension through its scheduled ac
     type: 'welcome',
     confirmedThrough: 0,
   })
-  await suspendUser(workspaceRuntime(fixture.env), 11, 'runtime-user')
+  await suspendUser(nativeSuspensionRuntime(fixture), 11, 'runtime-user')
   await fixture.actor(workspaceId).tickRunnerAccess()
   await expect.poll(() => runner.isClosed, { timeout: 10_000 }).toBe(true)
   await runner.closed
