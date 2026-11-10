@@ -938,7 +938,7 @@ Depends on: 5
 
 The protocol docs state the rules of decision 11 K.
 
-- [ ] `docs/protocol/model-gateway.md`: the programs that the agent
+- [x] `docs/protocol/model-gateway.md`: the programs that the agent
       starts get no gateway address from the runner. Claude reads the
       turn token from a file that only the sandbox user can read, and
       the runner removes the file when the turn ends. A settings file in
@@ -947,14 +947,14 @@ The protocol docs state the rules of decision 11 K.
       gateway refuses a request without the markers of the agent program
       (D39). Replace the rule that a repository settings file cannot send
       these requests to another address, with its reason.
-- [ ] `docs/protocol/sandbox-credentials.md`: state these risks for a
+- [x] `docs/protocol/sandbox-credentials.md`: state these risks for a
       sandbox with a version pin of 2 or later. In the version 1 risk,
       replace the sentence that a newer runner closes the settings path:
       a newer runner sends only a turn token on that path.
-- [ ] Read `src/marketing/privacy.ts` and `src/marketing/terms.ts` in
+- [x] Read `src/marketing/privacy.ts` and `src/marketing/terms.ts` in
       full, with their parts. List each sentence that restates a changed
       fact, for Milestone 8a.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 6: Runner protocol version 2 in the Worker
 

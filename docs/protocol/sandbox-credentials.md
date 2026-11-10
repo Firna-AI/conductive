@@ -122,6 +122,9 @@ decision number names a decision of the change that adds the
   decision 5).
 - Risk: while a turn runs, each process in the sandbox can read its turn
   token. A member with a terminal in the sandbox can read it too.
+- Claude reads the token from a file that only the sandbox user can read.
+  Each process of the sandbox runs as that user, so it can read the file
+  (gateway decision 11).
 - Such a process or member can spend the login of the starter through the
   gateway while the turn runs. A copy of the token works in the same way
   outside the sandbox. A request that still runs at the end of the turn
@@ -129,12 +132,17 @@ decision number names a decision of the change that adds the
 - The token works only on the model routes of the gateway.
   [The turn token](model-gateway.md#the-turn-token) states when it works.
   It never gives the login itself.
+- Risk: a settings file in the repository, such as `.claude/settings.json`,
+  can set the address of the model requests of Claude. Claude then sends
+  each model request, with its content and the turn token, to that
+  address. A commit, the agent, or other code in the sandbox can change
+  that file (gateway decision 11).
 - Risk: a process that keeps running in the sandbox can also get the turn
   token of each later turn while that turn runs. This holds also for the
   turns of other starters. Examples of such a process are a server that a
   tool started, and a program that the startup script started. It can
-  read each token from the runner, which holds the token while its turn
-  runs.
+  read each token from the runner, or from the file of Claude, while that
+  turn runs.
 - So the members of one org trust each other with the use of their logins
   while their turns run. The share setting does not keep a turn token away
   from them. No other member and no process in the sandbox can get the
@@ -179,9 +187,10 @@ decision number names a decision of the change that adds the
   address of the model requests of Claude. The agent program then sends
   the real login of the starter to that address.
 - With a change of that file, a commit, the agent, or other code in the
-  sandbox can send the login to any host. A newer runner closes this path
-  for its own turns, as
-  [No login in the sandbox](model-gateway.md#no-login-in-the-sandbox) says.
+  sandbox can send the login to any host. On a newer runner, this path
+  gives only a turn token, as
+  [How the agents reach the gateway](model-gateway.md#how-the-agents-reach-the-gateway)
+  says.
 - So the members of one org trust each other with their logins, also after
   a turn ends. The share setting does not keep a login away from them.
 

@@ -20,6 +20,8 @@ while the change is open. Its pull request keeps them after the merge.
   gateway in place of an agent login.
 - **Upstream:** the provider API that gets a model request from the
   gateway.
+- **Profile:** a pair of Anthropic files that Claude reads: a config file
+  with an address, and a credentials file with a token.
 
 ## No login in the sandbox
 
@@ -28,10 +30,10 @@ while the change is open. Its pull request keeps them after the merge.
   protocol version that its workspace accepts, as
   [The agent runner](agent-runner.md#the-agent-runner) says.
 - Its agent programs send each model request to the gateway, with the
-  turn token of their turn.
-- A settings file in the repository, such as `.claude/settings.json`,
-  cannot send these requests to another address. Reason: such a request
-  gives the turn token to that address.
+  turn token of their turn. A settings file in the repository can send
+  the requests of Claude to another address, as
+  [How the agents reach the gateway](#how-the-agents-reach-the-gateway)
+  says.
 - The gateway adds the agent login of the turn, and sends the request on
   to the upstream.
 - A runner of protocol version 1 gets the agent login itself with each
@@ -48,6 +50,51 @@ while the change is open. Its pull request keeps them after the merge.
   also ties the agent logins to Boat.
 - Agent programs outside the sandbox were rejected, because they need a
   new place to run the agents and new tools.
+
+## How the agents reach the gateway
+
+- The runner gives Claude the gateway address and the turn token in a
+  profile (gateway decision 11).
+- Only the sandbox user can read the credentials file of the profile.
+  [A sandbox with a version pin of 2 or later](sandbox-credentials.md#a-sandbox-with-a-version-pin-of-2-or-later)
+  states the risk of the file.
+- Each session gets its own profile. So the agent of a session sends only
+  the turn token of its own turn.
+- The runner removes the credentials file when the turn ends. When the
+  runner starts, it removes each credentials file that a crash left.
+- The runner puts no gateway address, turn token, proxy, or certificate
+  setting in the environment or the settings of Claude. So no process
+  that the agent starts gets a gateway address from the runner.
+- Each such process keeps the model and the certificate settings of its
+  project. A model request with a key of the project reaches the
+  destination of the project.
+- Reason: Claude copies an address from its environment and its settings
+  into each process that it starts. It copies no address from its
+  profile.
+- A gateway address in the environment or the settings of Claude was
+  rejected. Reason: a process with a key of its own would then send that
+  key to the gateway, which refuses it.
+- A program that restores the settings of the project in each process
+  that the agent starts was rejected. Reason: the agent starts some
+  processes without it.
+- Passing on a request with a key of the project was rejected. Reason:
+  the keys and the requests of the project would then pass through the
+  Worker. Any holder of a key could also use the gateway as a relay.
+- A process without a key of its own can find the profile of Claude. The
+  gateway refuses its requests, as
+  [Requests and answers](#requests-and-answers) says.
+- A settings file in the repository, such as `.claude/settings.json`, can
+  set another address for the model requests of Claude. Claude then sends
+  each model request and the turn token to that address.
+- Reason: such a file can already set hooks, commands that Claude runs
+  during the turn. A hook can read the credentials file. A copy of the
+  token works only as [The turn token](#the-turn-token) says.
+- An empty address in the settings of Claude, which would keep its
+  requests on the gateway, was rejected. Reason: Claude copies that empty
+  value into each process that it starts, and some of those processes
+  then fail.
+- Codex gets the gateway address in its config, and the turn token in its
+  login request. Neither is in the environment of Codex.
 
 ## Addresses
 
@@ -131,6 +178,15 @@ while the change is open. Its pull request keeps them after the merge.
   byte of its body. Rewriting `background` and a closed list of body
   fields were rejected. The rewrite changes a streamed body, and the list
   would block each later Codex update.
+- On the route of Claude, the gateway refuses a request without the
+  markers that only Claude sends (gateway decision 11). Examples are its
+  user agent and its values of the `anthropic-beta` header. The gateway
+  checks no turn and calls no upstream for such a request.
+- Reason: a process without a key of its own can find the profile of
+  Claude. Without the check, its requests would spend the login of the
+  starter.
+- The check is no security boundary. A process that can read the turn
+  token can also copy the markers.
 - No response header and no error body carries the real login. The
   gateway removes the login from them before it sends them on.
 - Reason: [Anthropic's gateway guide](https://code.claude.com/docs/en/llm-gateway-protocol)
@@ -175,6 +231,11 @@ while the change is open. Its pull request keeps them after the merge.
 
 - [A sandbox with a version pin of 2 or later](sandbox-credentials.md#a-sandbox-with-a-version-pin-of-2-or-later)
   states what the processes of a sandbox and the members of its org can
-  do with a turn token.
+  do with a turn token. It also states where a settings file in the
+  repository can send the token.
+- Risk: the marker check passes each request of the agent program of
+  Claude. A process that the agent starts can run that program with no
+  key of its own. That run then spends the login of the starter while the
+  turn runs.
 - Risk: a deploy of the Worker or an update of the Cloudflare runtime can
   end a long answer. The agent program then sends the request again.

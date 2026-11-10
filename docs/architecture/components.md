@@ -112,8 +112,11 @@ App Server (decision 36).
 A runner of protocol version 2 or later makes both agent programs send
 their model requests to the [model gateway](../protocol/model-gateway.md). It
 gives each agent program the turn token of its turn, and no agent login. A
-runner of protocol version 1 gives the agent programs the agent login
-itself. Each sandbox keeps the runner of the org image that it starts
+settings file in the repository can send the requests of Claude to another
+address, as
+[How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
+says. A runner of protocol version 1 gives the agent programs the agent
+login itself. Each sandbox keeps the runner of the org image that it starts
 from.
 
 ## External services
@@ -123,8 +126,9 @@ from.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
   Claude or OpenAI account of the starter of its session. With a runner of
   protocol version 2 or later, the model requests of a turn reach them
-  through the model gateway of the Worker. The gateway keeps no copy of a
-  request or an answer. With a runner of version 1, the agent programs
+  through the model gateway of the Worker. A settings file in the
+  repository can send the requests of Claude to another address instead.
+  The gateway keeps no copy of a request or an answer. With a runner of version 1, the agent programs
   send their model requests from the sandbox to the provider.
 - **Workers AI:** the Cloudflare model service writes the title of each new
   workspace from its first message. Its use bills to the Cloudflare account
