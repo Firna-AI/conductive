@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, from review round 1, finding 1, on the branch `calummoore/chat-title-rename`, which adds the workspace title request.
-- **Location:** `runner/src/output-sanitizer.ts:83`, `OutputSanitizer.filter`.
+- **Location:** `src/shared/output-sanitizer.ts`, `OutputSanitizer.filter`. The original runner-only owner was `runner/src/output-sanitizer.ts:83`.
 - **Reason:** The fix changes the shared output filter of every runner event, which is outside the purpose of the branch that names workspaces. That branch applied the direct fix for its own title request.
 
 - **Source:** Review. **Category:** Security.
@@ -22,5 +22,6 @@
 - **Left out:** A guard that drops an event when a clean-up changed a known credential. It adds a new rejection, which needs the user, and B hides the part without a loss of the event.
 - **Wider fix:** B. It removes the class, whatever the order of a future cut.
 - **Previous examples:** Commit `76b7878` applied tool-output limits after the filter. Commit `66ad57d` protected the parts of a credential in streamed output. The workspace title request was a third case.
+- **Related:** [Tool detail cuts](tool-detail-cut-before-env-filter.md) records the existing tool-detail excerpt before the Worker can filter marked org values. That secret source is not known to the runner. This item keeps its original known-credential scope.
 - **Recommendation:** B. It protects every event from a partial credential, and it needs no rule that each writer must remember.
 - **Action:** fix after merge, apply B, because it changes the shared filter of every runner event, and the title request already has its direct fix.

@@ -1,6 +1,12 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { devStates, devTools, type DevTool } from './devServer'
+import {
+  devPortReports,
+  devStates,
+  devTools,
+  type DevPortReport,
+  type DevTool,
+} from './devServer'
 
 /** The settings of the development page. The address holds all of them. */
 export interface DevParams {
@@ -10,6 +16,8 @@ export interface DevParams {
   state: string
   workspace: string
   preview: string | null
+  /** The report of the listening ports that the fake events hold. */
+  ports: DevPortReport
 }
 
 type DevChanges = Partial<Record<keyof DevParams, string | null>>
@@ -31,6 +39,7 @@ function parse(search: string): DevParams {
     state: oneOf(query.get('state'), devStates[tool]),
     workspace: query.get('workspace') ?? FAKE_IDS.workspace,
     preview: query.get('preview'),
+    ports: oneOf(query.get('ports'), devPortReports),
   }
 }
 

@@ -15,12 +15,20 @@ import {
 export type PreviewsStore = ToolStore<PreviewsState, PreviewsAction>
 
 /**
- * The previews, their revoke events, and the list read. The `load` action of
- * Try again gives the state a new read number, so the list loads again.
+ * The previews, their revoke events, the reports of the listening ports, and
+ * the list read. The `load` action of Try again gives the state a new read
+ * number, so the list loads again. The marker of a failed repair of the
+ * ports becomes an action with its time, for the age of its notice.
  */
 const previewsTool: ToolDefinition<PreviewsState, PreviewsAction> = {
   reducer: previewsReducer,
   initialState: initialPreviews,
+  fromEnvelope: ({ event, occurredAt }) =>
+    event.type === 'runner.event-refused' &&
+    event.repairFailed === true &&
+    event.runnerEventType === 'ports.updated'
+      ? { type: 'ports-repair-failed', at: occurredAt }
+      : event,
   read: {
     key: (state) => state.read,
     run: async ({ requests, signal }) => {

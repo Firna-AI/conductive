@@ -85,7 +85,26 @@ it('publishes one durable revocation per preview on expiry and archive through t
         event: { type: 'preview.revoked', previewId: 'archived-preview' },
       },
     })
+  for (const inbox of tabs) {
+    expect(await inbox.next()).toMatchObject({
+      type: 'event',
+      envelope: {
+        eventNumber: 3,
+        event: { type: 'ports.updated', ports: null },
+      },
+    })
+    expect(await inbox.next()).toMatchObject({
+      type: 'event',
+      envelope: {
+        eventNumber: 4,
+        event: {
+          type: 'workspace.updated',
+          workspace: { state: 'archived' },
+        },
+      },
+    })
+  }
   expect(await active.actor().readChatWorkspaceSummary()).toMatchObject({
-    throughEventNumber: 3,
+    throughEventNumber: 4,
   })
 })

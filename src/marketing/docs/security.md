@@ -13,7 +13,7 @@ Their terminal access can reach credentials available on a workspace's cloud com
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 The agent login's share setting controls whose messages spend that login.
-It does not hide a turn's credential from code or terminal users on the same computer.
+It does not hide credentials available to code or terminal users on the same computer.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -68,18 +68,24 @@ Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
 
 A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
-Each turn there gets a credential that uses the session starter's login through Conductive.
-A program or member with terminal access can read or copy that credential.
-It works through Conductive while that turn runs, also from outside the computer.
-After **Stop**, it can start no new request.
-A request that still runs ends within 30 seconds after the turn ends.
+Each turn there gets a temporary credential called a turn token.
+A program or member with terminal access can read or copy it.
+That token can use the session starter's login through Conductive while the turn runs.
+It also works from outside the cloud computer during that turn.
+
+After **Stop**, the token can start no new request.
+Any request that still runs ends within 30 seconds after the turn ends.
+A program that keeps running can read the tokens of later turns, including turns in other members' sessions.
+Agent settings in the repository can send model requests and their turn token to another address.
 
 An older cloud computer starts from an earlier setup that still permits software to receive the agent login itself.
 A program or member with terminal access can read or copy that login during a turn.
 A copied login can remain usable after the turn ends.
 Removing a login from Account does not revoke a copy held elsewhere.
+
 Installing newer software on that computer does not remove this risk.
 A new build gives the protection to new cloud computers created from its setup.
+Use **Build computer** and a new workspace to get the newer protection.
 
 Agent settings in the repository can send model requests and their credentials to another address.
 
@@ -115,8 +121,9 @@ These values also take priority over an author that a script or an agent writes 
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
 It starts on for a new variable.
+Conductive hides these values in program names and folders before shortening them for display.
 Values and marks changed in settings apply at the computer's next start.
 Earlier chat and logs keep their text.
 
