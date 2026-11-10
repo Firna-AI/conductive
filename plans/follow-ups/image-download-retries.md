@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-10, from branch `calummoore/bootstrap-v113`, a new problem of the options check of the plan for the software image of first builds. Branch `calummoore/build-image-install-order` holds an earlier copy of this item from 2026-11-09.
+- **Added:** 2026-11-10, from branch `calummoore/global-snapshot-simplification`, a new problem of the options check of the plan for the software image of first builds. Branch `calummoore/build-image-install-order` holds an earlier copy of this item from 2026-11-09.
 - **Location:** `image/install.sh:11`, `image/install.sh:21`, `image/install-runtime.sh:18`, and `worker/terminal/service.ts:22`.
 - **Reason:** the problem is outside the software image change, and one fix in a separate branch reaches every build.
 

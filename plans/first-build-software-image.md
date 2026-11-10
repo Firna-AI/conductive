@@ -1,8 +1,8 @@
 # Software image for first builds
 
-Status: Active. On branch `calummoore/bootstrap-v113`, no pull request
-yet. The pull request that completes the work deletes this plan, as the
-`plans` skill says.
+Status: Active. On branch `calummoore/global-snapshot-simplification`,
+no pull request yet. The pull request that completes the work deletes
+this plan, as the `plans` skill says.
 
 The first build of a new org starts from the provider's base image. After
 it copies the repositories, it installs all of the app's own software in
