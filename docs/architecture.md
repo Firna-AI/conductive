@@ -156,6 +156,13 @@ program that the SDK bundles at its own version. A pinned version guards
 against a change in how the agent program reads logins. The runner runs
 Codex through the Codex SDK or the Codex App Server (decision 36).
 
+The sandbox also runs the preview relay, the app's own service on a
+private port. It forwards each preview request to a local port of the
+sandbox. The previewed server then gets its local address as `Host`
+(decision 213).
+[Access and security](protocol/access-and-security.md#port-previews)
+states the rules of the relay.
+
 ### External services
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the

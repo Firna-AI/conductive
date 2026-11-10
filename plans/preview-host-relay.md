@@ -211,6 +211,8 @@ This part follows the answer to decision 214.
   request when the client goes away.
 - It relays WebSocket upgrades with the same header rules, then pipes both
   sockets.
+- Its error answers are short plain text that names no provider. Reason:
+  they show in the preview frame, and user-facing text never names Boat.
 
 ### The route choice in the Worker
 
@@ -235,6 +237,11 @@ This part follows the answer to decision 214.
   only the Worker holds.
 - The relay reaches only ports of its own sandbox. Each process in the
   sandbox can reach them already.
+- The Boat token of port 7682 reaches each port of the sandbox, not one
+  port. Only the Worker holds it, in memory, as it holds the tokens of
+  today. The Worker can host any port with its Boat key already, so the
+  token adds no new reach. The relay drops the `_port_auth` cookie, so the
+  server never sees the token.
 - A server that builds absolute links from `Host` now builds
   `http://localhost:<port>` links. Before, they named the Boat address. The
   browser can open neither, so no case gets worse. Redirects keep working,
@@ -247,21 +254,21 @@ Depends on: none
 The protocol docs state the new requirements, so that the code below can
 meet them.
 
-- [ ] `docs/protocol/access-and-security.md`, "Port previews" and "Proxies
+- [x] `docs/protocol/access-and-security.md`, "Port previews" and "Proxies
       and ports": a previewed server gets `localhost:<port>` as `Host`, and
       `http://localhost:<port>` as the `Origin` of the page's own requests
       (decision 213). Give the reason and the rejected alternatives.
-- [ ] In the same doc: the relay answers only requests that reach it
+- [x] In the same doc: the relay answers only requests that reach it
       through the Boat address of its own port, and it reaches only ports
       of its own sandbox. Restate the redirect rule for the local address.
-- [ ] `docs/protocol/workspace-tools.md`, "Port previews": a server that
+- [x] `docs/protocol/workspace-tools.md`, "Port previews": a server that
       answers only its local address works in a preview with no change to
       its repository. Port 7682 belongs to the relay.
-- [ ] `docs/architecture.md`, "Sandbox software": add the preview relay.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] `docs/architecture.md`, "Sandbox software": add the preview relay.
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
-- [ ] Check the previews row of the comparison page in
+- [x] Check the previews row of the comparison page in
       `src/marketing/from-conductor/`. Change its status only when the
       claim rules ask for it.
 
@@ -312,7 +319,8 @@ sets the behaviour where it does not run.
       transient unit when it does not run, then checks again.
 - [ ] Build the relay request in `worker/previews/headers.ts` and
       `worker/previews/origins.ts`: the relay address, the port header, the
-      `Origin` map, and the redirect map.
+      `Origin` map, and the redirect map. Map a redirect to the local
+      address in every route, as the protocol now says.
 - [ ] Apply decision 214 to a sandbox where the relay does not run. State
       that rule in "Port previews" of `docs/protocol/access-and-security.md`,
       in the same change as the code. Update "Sandbox software" in
@@ -333,6 +341,8 @@ sets the behaviour where it does not run.
         decision 214.
 - [ ] Update `worker/previews/README.md`: the relay route, and the rule for
       a sandbox without the relay in place of the `.on.boat.dev` rule.
+      Name the relay where `docs/architecture/flows.md` describes the
+      preview path.
 - [ ] With option A or D of decision 214: add a follow-up item that
       removes the direct route when no active preview uses it, as the
       stored listener mode shows.

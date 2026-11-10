@@ -466,14 +466,40 @@ The GitHub CLI works outside an agent turn with the workspace owner's account.
   [Previews and their viewers](operator-actions.md#previews-and-their-viewers)
   states the full rules.
 - A revoked or an unknown hostname gets no answer from any sandbox.
+- The preview relay is the app's own service in the sandbox, as
+  [Sandbox software](../architecture.md#sandbox-software) says. While the
+  relay runs, each preview request goes through it to the previewed
+  server, the server on the port of the preview.
+- Through the relay, each request reaches the previewed server with
+  `Host: localhost:<port>`, as a browser in the sandbox would send it
+  (decision 213).
+- Reason: by default, dev servers such as Vite, webpack, and `mokly serve`
+  refuse a `Host` that is not local. The relay makes each such server work
+  with no change to its repository, as a forwarded local port does.
+- These ways to give the server a local `Host` were rejected:
+  - a relay that each user starts by hand, because each user must then
+    start it in each sandbox
+  - a Mokly setting that allows more hostnames, because Vite and webpack
+    projects still need their own setting
+  - a relay option at Boat, because the wait for Boat is unknown
+- Through the relay, a request from the preview's own origin reaches the
+  previewed server with `Origin: http://localhost:<port>` (decision 213).
+  A request from another origin keeps its `Origin`. A request without an
+  `Origin` gets none.
+- Reason: some servers, such as `mokly serve`, refuse a request whose
+  `Origin` does not match its `Host`.
 - The preview proxy adds Boat's `_port_auth` cookie on the server side. It
   drops any `_port_auth` cookie that the browser sends.
 - The preview proxy forwards the cookies of the previewed app. It never
   sends a credential cookie to a sandbox. It drops each credential cookie
   that a sandbox response sets.
-- A redirect to the private address of the port, with `http` or `https`,
-  reaches the browser as a redirect to the preview hostname. Reason: only
-  the proxy can open the private address.
+- A redirect to the local address of the previewed server, with `http` or
+  `https`, reaches the browser as a redirect to the preview hostname. The
+  local address is `localhost`, `127.0.0.1`, or `[::1]`, with the port of
+  the preview.
+- A redirect to the private address of the port reaches the browser in the
+  same way. Reason: the browser cannot reach the server at either address.
+  Only the proxy can open the private address.
 - Each response on the preview domain carries `Referrer-Policy:
   no-referrer`. Reason: other sites have no need for the preview address.
 - These approaches were rejected:
@@ -486,10 +512,27 @@ The GitHub CLI works outside an agent turn with the workspace owner's account.
 
 ## Proxies and ports
 
-- The proxies forward only an allowlist of headers and cookies. They never
-  forward the app's session cookie to a sandbox.
+- The proxies of the Worker forward only an allowlist of headers and
+  cookies. They never forward the app's session cookie to a sandbox.
 - A private port of a sandbox never answers on its public address without
   its token.
+- A preview request reaches only the port of its own preview, whatever the
+  browser sends.
+- The preview relay answers only a request that reaches it through the
+  private address of its own port. It takes no connection from another
+  machine. It refuses each request whose `Host` names another address.
+- Reason: a dev server checks `Host` to stop DNS rebinding. It often
+  listens only on a loopback address. The relay must not open a way past
+  either protection.
+- The relay forwards a request only to a port of its own sandbox. Reason:
+  each process in the sandbox can reach these ports already.
+- A request through the relay reaches the previewed server without Boat's
+  `_port_auth` cookie. Reason: with that cookie, a request can reach each
+  port of the sandbox through the relay, with no check by the Worker.
+- A request through the relay reaches the previewed server with no
+  `Forwarded` or `X-Forwarded-*` header. Reason: the server must see one
+  consistent local request. For example, Next.js compares `Origin` with
+  `X-Forwarded-Host`.
 
 ## Desktop
 
