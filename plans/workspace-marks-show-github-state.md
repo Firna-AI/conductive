@@ -1,6 +1,6 @@
 # Workspace marks show the GitHub state
 
-Status: Active. On branch `calummoore/bootstrap-v143`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/workspace-status-icons`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The mark of a workspace in the workspace list is a 3 × 3 grid of cells.
 Today it draws the state of the agent and of the cloud computer, with one
