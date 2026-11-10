@@ -50,6 +50,8 @@ import { appFrameSources, runnerSoftware } from './configuration'
 import { appSiteResponse } from './marketing/assets'
 import { retryApprovalEmails } from './operator/approval-email'
 import { warnWorker } from './warnings'
+import { routineRunRuntime } from './routines/run-runtime'
+import { scanRoutineSchedules } from './routines/schedule-scan'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -133,7 +135,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             )
           if (path === MACHINE_PATHS.githubWebhook)
             return respond(
-              await productionGitHubWebhook(request, env, dependencies),
+              await productionGitHubWebhook(
+                request,
+                env,
+                dependencies,
+                execution,
+              ),
             )
           if (path === MACHINE_PATHS.gitCredential) {
             const machineEnv = env
@@ -212,7 +219,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
   }
   return {
     fetch: requestBodyEntry(application.fetch),
-    async scheduled(_event: ScheduledController, env: AppEnv): Promise<void> {
+    async scheduled(event: ScheduledController, env: AppEnv): Promise<void> {
+      if (event.cron === '* * * * *') {
+        await scanRoutineSchedules(routineRunRuntime(env, dependencies))
+        return
+      }
+      if (event.cron !== '*/15 * * * *') return
       await cleanupDeletedOrgs(
         env,
         dependencies,

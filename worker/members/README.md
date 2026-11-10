@@ -183,6 +183,8 @@ It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remain
   Otherwise it fails with 409 `last_admin`, which asks to make another member whose account is not suspended an admin.
 - A leave gives the workspaces to the earliest active admin, else to the earliest member who is not suspended, else to the earliest admin.
   A removal gives them to the admin who removes the member.
+- The same leave or removal batch moves the member's routines in that org to that recipient.
+  It turns them off with `owner_left`, clears their next time, and keeps the departing member's name.
 - A reassignment checks its recipient in the same write. A suspended recipient gets 409 `owner_suspended`, and nothing changes.
 - `firstOrgAdmin` and the account-deletion guard of `account.ts` do not use the rule. So that guard still counts every admin.
 

@@ -23,9 +23,10 @@ import {
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
-import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
+import { workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -71,6 +72,8 @@ function backFrom(open: FileTabView): BackLink {
  */
 export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
+  const run = runStartingLog(state)
+  if (run) return run
   if (!isNew(state)) return resumingLog
   return state.name === 'untitled' ? firstSecondLog : creatingLog
 }
@@ -146,7 +149,7 @@ export function ToolContent(props: {
         <TerminalView
           extraKeys={mobile}
           lines={[]}
-          prompt={freshSessionPrompt}
+          prompt={freshPromptFor(state)}
         />
       ) : (
         <TerminalView extraKeys={mobile} lines={workspaceSession} />

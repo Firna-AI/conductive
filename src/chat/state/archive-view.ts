@@ -154,11 +154,11 @@ export function afterRestore(snapshot: ChatSnapshot): ChatSnapshot {
  */
 export async function reloadView(context: ChatContext): Promise<void> {
   const before = context.store.get().view
-  const view = await context.api.view().catch(() => null)
-  if (!context.live() || view === null) return
+  const reply = await context.api.view().catch(() => null)
+  if (!context.live() || reply === null) return
   context.store.update((snapshot) =>
     snapshot.view === before && !isArchived(snapshot)
-      ? { ...snapshot, view: withSessionPlaces(view, snapshot.sessions) }
+      ? { ...snapshot, view: withSessionPlaces(reply.view, snapshot.sessions) }
       : snapshot,
   )
 }

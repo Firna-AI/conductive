@@ -42,6 +42,7 @@ import {
   readSessions,
   readTranscript,
   readView,
+  readViewReply,
 } from './read-responses'
 import { readStoredEvents, readWorkspaceResponse } from './read-workspace'
 
@@ -95,7 +96,9 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
         chatHistoryPath(orgId, workspaceId, sessionId, after, through),
         readStoredEvents,
       ),
-    view: () => client.get(workspaceViewPath(orgId, workspaceId), readView),
+    /** The saved view, with the routine of a run workspace. */
+    view: () =>
+      client.get(workspaceViewPath(orgId, workspaceId), readViewReply),
     saveView: (view: UpdateWorkspaceViewRequest) =>
       client.send('PUT', workspaceViewPath(orgId, workspaceId), view, readView),
     models: () => client.get(MODELS_PATH, readModels),

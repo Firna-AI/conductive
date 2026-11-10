@@ -27,8 +27,8 @@ import { ChatWorkspaceBinding } from './workspace-binding'
 import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
-import { ChatStore, type ChatTransaction } from './store'
-import { reportTurnEnd } from './turn-end-reports'
+import type { ChatStore, ChatTransaction } from './store'
+import { createWorkspaceChatStore } from './workspace-store'
 import {
   runWorkspaceOperation,
   type WorkspaceOperation,
@@ -98,8 +98,11 @@ export class WorkspaceChat {
       overrides.matchesObject ?? (() => true),
     )
     this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
-    this.store = new ChatStore(storage, this.dependencies.now, (report) =>
-      reportTurnEnd(this.store, this.dependencies, this.publish, report),
+    this.store = createWorkspaceChatStore(
+      storage,
+      env,
+      this.dependencies,
+      this.publish,
     )
     this.titles = new WorkspaceTitles(
       env,
@@ -111,7 +114,7 @@ export class WorkspaceChat {
       this.store,
       this.dependencies,
       (id) => this.operation(id),
-      (id) => this.bind(id),
+      (id) => this.binding.bind(id),
       native,
     )
     this.turnTokens = new WorkspaceTurnTokens(
@@ -125,7 +128,7 @@ export class WorkspaceChat {
       this.dependencies,
       (events) => this.publish(events),
       (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
-      (id) => this.bind(id),
+      (id) => this.binding.bind(id),
       native,
     )
     this.operations = new WorkspaceOperations({
@@ -133,7 +136,7 @@ export class WorkspaceChat {
       store: this.store,
       dependencies: this.dependencies,
       workspaceId: () => this.binding.id,
-      bind: (id) => this.bind(id),
+      bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
       closeRunner: () => this.runner.close(),
     })
@@ -167,7 +170,7 @@ export class WorkspaceChat {
       this.env,
       this.dependencies.now(),
     )
-    this.bind(access.workspace.id)
+    this.binding.bind(access.workspace.id)
     return access
   }
 
@@ -177,7 +180,7 @@ export class WorkspaceChat {
     socket?: WebSocket,
   ): Promise<void> {
     const workspace = await authorizeChatRunner(this.env, request)
-    this.bind(workspace.id)
+    this.binding.bind(workspace.id)
     await this.runner.open(workspace, peer, socket)
   }
 
@@ -212,7 +215,7 @@ export class WorkspaceChat {
     workspaceId: string,
     work: (view: ChatTransaction) => Promise<T>,
   ): Promise<T> {
-    this.bind(workspaceId)
+    this.binding.bind(workspaceId)
     return this.store.run(() => this.store.read(workspaceId, work))
   }
 
@@ -221,7 +224,7 @@ export class WorkspaceChat {
     workspaceId: string,
     work: (transaction: ChatTransaction) => Promise<T>,
   ): Promise<T> {
-    this.bind(workspaceId)
+    this.binding.bind(workspaceId)
     return this.store.run(() =>
       this.store.change(workspaceId, work, (events) => this.publish(events)),
     )
@@ -232,7 +235,7 @@ export class WorkspaceChat {
     authorize: () => Promise<void>,
     work: (operation: WorkspaceOperation) => Promise<T>,
   ): Promise<T> {
-    this.bind(workspaceId)
+    this.binding.bind(workspaceId)
     return runWorkspaceOperation(
       this.store,
       workspaceId,
@@ -246,7 +249,7 @@ export class WorkspaceChat {
     workspaceId: string,
     command: RunnerFileCommand,
   ): Promise<boolean> {
-    this.bind(workspaceId)
+    this.binding.bind(workspaceId)
     return this.store.run(async () =>
       this.runner.sendFileCommand(workspaceId, command),
     )
@@ -275,10 +278,6 @@ export class WorkspaceChat {
       this.dependencies,
       this.publish,
     )
-  }
-
-  private bind(workspaceId: string): void {
-    this.binding.bind(workspaceId)
   }
 
   private publish = (events: readonly WorkspaceEventEnvelope[]): void => {

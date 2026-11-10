@@ -15,6 +15,7 @@ export interface GitHubWorkspace {
   repositoryId: number
   fullName: string
   defaultBranch: string
+  baseBranch?: string | null
   installationId: number
 }
 
