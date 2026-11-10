@@ -13,6 +13,11 @@ sent message keeps each chip at its place. A press on a sent chip opens
 the file tab of the copy of the file in the cloud computer. The agent
 reads the path of each file at that place.
 
+The user approved the implementation of all milestones and TODOs of this
+plan on 10 November 2026: "impl all plan milestones and tasks". The user
+did not override the actions of the `models` skill, so the
+`default orchestrator` action runs the milestones.
+
 The message text holds a mention of the copy path of each file, such as
 `@.context/attachments/<digest>/a.png`. The digest comes from the file ID
 only, so the path of a file never changes (decision 262 D). The read lines
