@@ -68,7 +68,7 @@ the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
-| `src/brand.ts`            | The name of the product, "Conductive", and its domains              |
+| `src/brand.ts`            | The product name "Conductive", its domains, and the Mac DMG names   |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 

@@ -1,0 +1,76 @@
+.downloads {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/*
+ * The large Firna button, as a link: the secondary look, and the primary
+ * tone for the main download.
+ */
+.button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 20px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 18px;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.button:hover {
+  background: var(--ui-soft);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ui-primary) 35%, transparent);
+}
+
+.primary {
+  border-color: var(--ui-primary);
+  background: var(--ui-primary);
+  color: var(--ui-on-solid);
+}
+
+.primary:hover {
+  border-color: var(--ui-primary-deep);
+  background: var(--ui-primary-deep);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.requirement {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mobile {
+  align-items: stretch;
+}
+
+.mobile .buttons {
+  flex-direction: column;
+  align-items: stretch;
+}

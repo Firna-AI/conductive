@@ -6,10 +6,10 @@ import styles from './MacScreen.module.css'
 
 /**
  * The screen of a Mac with the Mac app on it, laid out at 1440 × 900 and
- * scaled to the view, in steps, because a view runs no script. A phone
- * view shows the same screen, smaller, because the app is for a Mac only.
- * In a window the app sits on the desktop. In full screen it fills the
- * screen, and macOS hides the window buttons.
+ * scaled to the width of its box, in steps, because a view runs no script.
+ * A phone view shows the same screen, smaller, because the app is for a
+ * Mac only. In a window the app sits on the desktop. In full screen it
+ * fills the screen, and macOS hides the window buttons.
  */
 export function MacScreen(props: {
   mode: WindowMode

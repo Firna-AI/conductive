@@ -40,8 +40,8 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     id: 'routines',
     area: 'automation-and-api',
     name: 'Routines',
-    status: 'planned',
-    note: 'Scheduled and pull request routines are planned. Each run gets a new workspace. Webhook triggers are outside the planned scope.',
+    status: 'in-progress',
+    note: 'Scheduled and pull request routines are in progress. Each run gets a new workspace, with run history and manual runs.',
     due: null,
   },
   {

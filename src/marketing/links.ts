@@ -1,4 +1,14 @@
+import { macDmgNames, type MacChip } from '../../docs/mockups/src/brand'
+
 export const sourceRepositoryHref = 'https://github.com/Firna-AI/remote-code'
+
+/**
+ * The address of the newest DMG of the Mac app for a chip: the file with its
+ * fixed name in the latest release of the source repository.
+ */
+export function macDownloadHref(chip: MacChip): string {
+  return `${sourceRepositoryHref}/releases/latest/download/${macDmgNames[chip]}`
+}
 
 /** The paths of the pages of the site, on the root domain of the product. */
 export const sitePaths = {
