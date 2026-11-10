@@ -1,7 +1,7 @@
 # Port previews
 
 The Preview tool shows the web servers of a workspace's cloud computer. Each
-preview shows in a frame, with an "Open in new tab" link. The workspace
+preview shows in a frame, with an "Open" link to a new tab. The workspace
 screen shows the tool in the tools panel of the right column, and on a phone
 as the Preview page, as
 [the tools part](../shell/workspace/README.md#the-tools-part) says.
