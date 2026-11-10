@@ -85,9 +85,8 @@ decision number names a dated record, as
 - The first build is a normal build. The person who creates the org, its
   first admin, is the starter of that build. Its log and its result show
   on the Cloud computer tab, as for every build.
-- Like each build, a build of an org without an org image starts from the
-  software image. It copies the repositories and runs the install script,
-  with no install of the app's own software, as
+- Like each build, a build of an org without an org image starts on a clean
+  computer. It copies the repositories and runs the install script, as
   [The software image](#the-software-image) says.
 - When the first build cannot start, Create org still creates the org. An
   admin can then start a build on the Cloud computer tab, with Build

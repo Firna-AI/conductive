@@ -150,12 +150,11 @@ export async function startImageBuild(
       installScript: settings.installScript,
       repositories,
       repositoryLocations: locations,
-      previousRepositoryLocations: previousLocations,
+      previousRepositoryLocations:
+        input.kind === 'build' ? [] : previousLocations,
       software,
       softwareVersion:
-        input.kind === 'build' && !image?.imageName
-          ? await softwareVersion(software)
-          : undefined,
+        input.kind === 'build' ? await softwareVersion(software) : undefined,
       previousImageName: image?.imageName ?? null,
       previousRunnerProtocolVersion: previous?.runnerProtocolVersion ?? null,
       now,

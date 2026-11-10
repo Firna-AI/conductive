@@ -7,7 +7,7 @@ export interface RepositoryLocation {
   variable: string
 }
 
-/** Old snapshots keep their original folders until a build moves all contents. */
+/** Refreshes and existing workspaces keep the folders of old snapshots. */
 export function legacyRepositoryDirectory(id: string): string {
   return `/home/user/conductive/repositories/${encodeURIComponent(id)}`
 }

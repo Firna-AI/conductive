@@ -209,7 +209,7 @@ orchestrator.
     missing software image now slows every build, also a later build.
 - [x] Check each relative link of the changed docs. Branch: `conductor/later-builds-from-software-image`.
 
-## Milestone 3: Builds from the software image
+## Milestone 3: Builds from the software image, completed
 
 Depends on: 2
 
@@ -218,14 +218,14 @@ The code changes only the build admission and the build start in
 and the step order of `advanceBuildStep` need no change. When another file
 must change, stop and report it to the orchestrator.
 
-- [ ] Merge `origin/main` with the `git-merge` skill. Branch: `conductor/later-builds-from-software-image`.
-- [ ] Apply design items 1 to 5. In `startImageBuild` in
+- [x] Merge `origin/main` with the `git-merge` skill. Branch: `conductor/later-builds-from-software-image`.
+- [x] Apply design items 1 to 5. In `startImageBuild` in
       `worker/lifecycle/image-builds.ts`, compute the app software version
       for every build, and record an empty previous folder map for a build.
       In `buildSandboxIntent` in `worker/lifecycle/resource-intents.ts`,
       start a build from its pin or the base image, and a refresh as today.
       Delete the build start from `previousImageName`. Branch: `conductor/later-builds-from-software-image`.
-- [ ] Update the tests. Write each new or changed case first, and see it
+- [x] Update the tests. Write each new or changed case first, and see it
       fail on an assertion. Keep each assertion that this change does not
       make false. Branch: `conductor/later-builds-from-software-image`.
   - Ready image: replace the `build` case of
@@ -250,19 +250,19 @@ must change, stop and report it to the orchestrator.
     request.
   - The tests of the added build and the cleanup stay. Add a case there
     only when the code changes that behaviour.
-- [ ] For the pull request description, name each changed test and its
+- [x] For the pull request description, name each changed test and its
       changed behaviour. Give each removed test its reason, its covering
       test, and its proof file under `.context/later-build-software-image/`,
       as the removal rule of the `testing` skill says. Branch: `conductor/later-builds-from-software-image`.
-- [ ] Check the docs of Milestone 2 against the final code. Fix each
+- [x] Check the docs of Milestone 2 against the final code. Fix each
       sentence that the code makes wrong. Branch: `conductor/later-builds-from-software-image`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
 Depends on: 1, 2, 3
 
-- [ ] Merge `origin/main` with the `git-merge` skill. Branch: `conductor/later-builds-from-software-image`.
-- [ ] Run `npm run test --` with the affected test files in
+- [x] Merge `origin/main` with the `git-merge` skill. Branch: `conductor/later-builds-from-software-image`.
+- [x] Run `npm run test --` with the affected test files in
       `worker/lifecycle/`: `software-image-start.test.ts`,
       `image-builds.test.ts`, `repository-capture.test.ts`,
       `repository-layout.test.ts`, `first-image-build.test.ts`,
@@ -271,7 +271,7 @@ Depends on: 1, 2, 3
       `npm run lint`, and `npm run file-length:check`. Run
       `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       complete gate, `npm run check`. Save the evidence and the gate log
-      under `.context/later-build-software-image/`, and name the files here.
+      under `.context/later-build-software-image/`: `gate.log` and `reports/code.md`.
       Branch: `conductor/later-builds-from-software-image`.
 - [ ] Commit with Conventional Commits, and push. Branch: `conductor/later-builds-from-software-image`.
 - [ ] Review the complete local diff against `origin/main` with the
@@ -297,4 +297,4 @@ Depends on: 1, 2, 3
       2026, before this change. The software step took 18 to 29 s, and the
       repository copy took 34 to 124 s, which grows with the number of
       repositories. The sandbox start, the install script, and the save
-      took about 20 s together. These times are observations, not a promise.
+      took about 20 s together. These times are observations, not a promise. Branch: `conductor/later-builds-from-software-image`.

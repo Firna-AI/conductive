@@ -9,7 +9,7 @@
 - **Background:**
   - Decision 107 accepts that a program which an earlier install left in the image can read the clone token of a later copy. `docs/protocol/github-tokens.md` states that risk.
   - Since branch `conductor/later-builds-from-software-image`, each build starts from the software image of its app software version, or from the provider's base image. No repository code has run there. So the build half of option E is done, and the next build removes a planted program.
-  - A refresh still starts from the last org image. It fetches the new commits of each chosen repository, and runs neither the software step nor the install script.
+  - A refresh still starts from the last org image. It fetches the new commits of each repository held in the image, and runs neither the software step nor the install script.
 - **Problem:** A planted program stays in each refreshed image and in every new workspace, until the next build replaces the image.
 - **Impact if no action:** The accepted risk stays for refreshes, as decision 107 says.
 - **Root question:** Should each refresh start where no repository code has run?

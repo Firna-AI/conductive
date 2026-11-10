@@ -30,7 +30,7 @@
     - Refreshes: decision 7 E, chosen on 10 November 2026, keeps a refresh after a push as today. It makes the daily refresh a clean build. Decision 12 is open.
     - Old workspaces: decision 8 B, chosen on 10 November 2026, updates the app software at the later workspace start of an old workspace.
     - The old setup notice: decision 11 C, chosen on 10 November 2026, gives an old workspace a notice. Its action runs the install script when the user chooses.
-    - A missing repository: decision 10 D, chosen on 10 November 2026, copies it at the first workspace start. It also starts a later build when an admin adds a repository.
+    - A missing repository: the user chose decision 10 D on 10 November 2026. It copies the repository at the first workspace start, and starts a later build when an admin adds one. PR #188, squash `b25d8e0d`, already starts that build. It keeps a waiting repository off until a build holds it. The copy at the first workspace start stays open. Open decision 13 covers its conflict with that rule.
   - The larger plan still names its open decisions:
     - 1: the label of the software step.
     - 12: when a daily refresh runs the install script.
@@ -39,8 +39,10 @@
   - Merge `main` into `calummoore/build-image-install-order`.
   - Mark Milestones 3 to 7 of the larger plan done where the two smaller changes cover them, and record the two design differences above.
   - Drop the done later-build parts: their code TODOs, test TODOs, and docs TODOs, and the replaced way of the later-build start. Keep the skip of an empty install script and the records of design item 10.
+  - Mark the automatic added-repository build part of decision 10 D done by PR #188. Keep its first-start copy and decision 13 open.
   - Rewrite the remaining milestones so that they build on the `worker/software-image/` area, on the `software_images` table, and on the clean start of each build.
   - Keep each open decision of the larger plan open, with its recorded number and letters.
+  - After this clean-build change merges, delete `plans/follow-ups/clone-token-risk-new-repository.md`. That item assumes a build copies an added repository on the last org image. Every build now uses a clean software image or base image. Refreshes copy only repositories held in the image. Its claimed extra risk no longer applies.
   - Correct the software-step label decision's mockup background. First-build fixtures already omit that step. A future example of its label needs a fallback-build fixture. Keep the label choice open.
 - **Impact if no action:** The larger plan describes code that already exists in another shape, so its next implementor can build a second software image path. The implementor can also redo the clean later builds.
 - **Needs:** both smaller changes merged on `main`: PR #180, and the pull request of branch `conductor/later-builds-from-software-image`.
