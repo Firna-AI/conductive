@@ -33,6 +33,7 @@ import { checkedMissingPart, importPartOperation } from './part-service'
 import { createR2ImportStorage } from './r2-storage'
 import { completeReservation } from './publication'
 import { currentRepositoryFacts, verifyPrerequisites } from './repository-facts'
+import { readLfsAvailability } from './lfs-availability'
 import { requestImportCleanup } from './cleanup-data'
 import { runImportCleanup } from './cleanup-service'
 import { recoverImportWrite } from './write-recovery'
@@ -194,6 +195,8 @@ export class ImportReservationService {
         workspaceId: await completeReservation(this.env, actor, row, now),
       }
     if (row.state !== 'open') throw importUnavailable()
+    if (event.kind === 'repository.lfs')
+      return readLfsAvailability(this.env, actor, row, this.dependencies, event)
     if (event.kind === 'repository.facts')
       return {
         kind: 'repository.facts',

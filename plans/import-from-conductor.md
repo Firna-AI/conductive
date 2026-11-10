@@ -678,6 +678,26 @@ They do not reopen a user decision. The earlier dated facts stay as history.
   describe the checkout and the Git expansion of an unpushed HEAD before
   the transfer.
 
+- Agent call for the Git LFS objects that GitHub holds, 10 November 2026:
+  add the private control `repository.lfs` to the existing upload
+  operation. The Mac app sends pages of `ImportLfsObject` pairs, each a
+  SHA-256 `oid` and its `sizeBytes`, with its reservation and its facts
+  ID. The Worker reads the GitHub LFS Batch API of the canonical chosen
+  repository, with the stored token of the importer. It returns the same
+  pairs as `available` or `missing`. A matching download action means that
+  GitHub advertises the object now. A matching 404 or 410 means missing.
+  An authentication, rate-limit, network, or invalid reply gets the
+  existing recoverable `github_unavailable`. The Mac app leaves out an
+  unchanged LFS file only when its pair is available. Activation still
+  checks the exact bytes when it fetches the object. No link, header, or
+  token reaches the Mac or the browser. Reason: a commit receipt proves
+  only the pointer. An upload of every LFS file breaks the rule that the
+  import moves only the work that GitHub does not hold. It also lists
+  large unchanged files as left on the Mac. This applies the existing LFS,
+  performance, and exact-byte rules. It changes no schema, manifest, or
+  storage, and it adds no public result, receipt, limit, gate, or
+  requirement.
+
 ### Mockup design calls, 10 November 2026
 
 These are agent calls from Milestone 1, within the decisions in force.
@@ -1150,7 +1170,7 @@ Depends on: 4
 
 ## Milestone 6: The Mac app scan and upload
 
-Depends on: 4
+Depends on: 4, 7c
 
 - [ ] Detect `conductor.db`, and offer the import once.
 - [ ] Ask the user before the first read of Conductor data.
@@ -1161,6 +1181,12 @@ Depends on: 4
       into one Markdown file, as decision 7 says.
 - [ ] Build the bucket data of decision 8 with Git, and upload it with the
       short-lived links.
+- [ ] Let the classification in the Mac app use the `repository.lfs`
+      result of Milestone 7c before the final fingerprint and the
+      prerequisite receipt. Leave out an unchanged Git LFS file only when
+      its pointer matches the source and its pair is available. Upload
+      each other local LFS payload as a changed file, under the 100 MiB
+      rule. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
 - [ ] Leave each changed or untracked file over 100 MiB on the Mac, and list
       it (decision 11).
 - [ ] Count the sessions whose memory file is gone, and list them in the
@@ -1212,11 +1238,55 @@ Agent calls, 10 November 2026:
 
 Verification evidence: `.context/import-from-conductor/milestone-7/final-report.md`.
 
+## Milestone 7c: The Git LFS objects that GitHub holds
+
+Depends on: 4
+
+A file that GitHub holds in Git LFS comes from GitHub at activation, and a
+changed Git LFS file goes as a changed file. A receipt of a commit proves
+that GitHub holds the pointer of a file, not the LFS object that the
+pointer names. This backend milestone adds one private control,
+`repository.lfs`, to the existing upload operation. With the stored token
+of the importer, the Worker reads which LFS objects of the chosen
+repository GitHub holds. Milestone 6 then leaves out of the upload only an
+unchanged file whose object GitHub holds. This milestone changes no
+manifest, storage, public contract, or schema. It adds no limit, gate, or
+refusal, and it changes no requirement.
+
+- [x] Add `ImportLfsObject`, `{ oid: string; sizeBytes: number }`, in the
+      portable `src/shared/conductor-import-lfs.ts`. Add the private
+      `repository.lfs` device event with `reservationId`, `factsId`, and
+      `objects`, and its private control result with `factsId`,
+      `available`, and `missing`, which use the same pairs. Extend their
+      readers. Bound each page so that the event and its acknowledgement
+      each fit one existing frame. Keep each existing control and result
+      as it is.
+- [x] Let the reservation service answer `repository.lfs` from the GitHub
+      LFS Batch API of the canonical chosen repository, with
+      `freshGitHubUserToken` of the stored importer. Check import access,
+      the reservation, and its repository facts before the read, and
+      import access again before the answer. Use HTTPS with no redirect,
+      ignore each LFS address that the source names, and send no download
+      request. A matching download action is available, and a matching
+      404 or 410 is missing. An authentication, rate-limit, network, or
+      invalid reply gets the existing recoverable `github_unavailable`.
+      Store no receipt, and keep the commit receipts as they are.
+- [x] Add the tests through the production private control, as the
+      `testing` skill says: available and missing pairs, invalid and
+      mismatched replies, authentication, rate-limit, and network
+      failures, revoked access, bounded pages, and no token, link, or
+      header in the result.
+- [x] Update the README of each changed area and its linked pages, with
+      `worker/conductor-import/README.md` and
+      `src/shared/conductor-import.md`.
+
+Verification evidence: `.context/import-from-conductor/current/m7c-lfs-facts-report.md`.
+
 ## Milestone 8: Import screens and imported workspaces
 
 Tags: ui
 
-Depends on: 1, 4, 5, 6
+Depends on: 1, 4, 5, 6, 7c
 
 - [ ] Build the entry, the offer, the list, the progress, and the result
       from the mockups.

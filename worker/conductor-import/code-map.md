@@ -8,7 +8,7 @@ These entry points belong to the [import area](README.md).
 - [broker-route.ts](broker-route.ts): `importBrokerRoute`, the operation route of the device broker.
 - [broker.ts](broker.ts): `ImportBroker`, the operations of the paired Mac, their ACK order, their private fragments, and their public stream.
 - [broker-events.ts](broker-events.ts): `applyImportEvent` checks each Mac event against its action and calls the reservation owner.
-- [broker-socket.ts](broker-socket.ts): `sendImportFrame`, and `sendImportControl`, which splits a large private result into acknowledged fragments.
+- [broker-socket.ts](broker-socket.ts): `sendImportFrame`, and `sendImportControl`, which splits a large `repository.prerequisites` result into acknowledged fragments. It sends each other result in one `import.ack`.
 - [broker-types.ts](broker-types.ts): `ImportOperation`, the state of one operation.
 - [scan-state.ts](scan-state.ts): `importScanState` adds the org state of each scan row.
 - [public-values.ts](public-values.ts): `publicImportReservation` removes the source fingerprint for the page.
@@ -26,8 +26,10 @@ These entry points belong to the [import area](README.md).
 - [part-data.ts](part-data.ts): the part records, the stored targets, the missing-part pages, and the verified marks.
 - [part-service.ts](part-service.ts): `importPartOperation` and `checkedMissingPart`, the target, seal, and retry steps.
 - [target-data.ts](target-data.ts): `importTargetPage`, the older targets of one part.
-- [repository-facts.ts](repository-facts.ts): `currentRepositoryFacts` and `verifyPrerequisites`, with the GitHub token of the importer.
+- [repository-facts.ts](repository-facts.ts): `currentRepositoryFacts` and `verifyPrerequisites`, with the GitHub token of the importer. `importRepositoryContext` checks current access and the chosen repository, and gets that token.
 - [repository-data.ts](repository-data.ts): the stored facts, the receipts, and the verified prerequisites.
+- [lfs-availability.ts](lfs-availability.ts): `readLfsAvailability`, the `repository.lfs` control. It checks the facts, the access, and the repository around each GitHub read.
+- [lfs-batch.ts](lfs-batch.ts): `readLfsBatch`, one fixed Batch request to GitHub, and the check of its reply. Download links and headers never leave it.
 
 ## Publication and old documents
 
@@ -61,3 +63,4 @@ These entry points belong to the [import area](README.md).
 - [manifest.test-support.ts](manifest.test-support.ts): a fixed snapshot, its manifest entries, and their bytes.
 - [git-disk.test-support.ts](git-disk.test-support.ts): `invalidGitDiskSnapshots`, the snapshots with invalid Git disk facts that the parser must refuse.
 - [member.test-support.ts](member.test-support.ts): `importReader` adds a second member who reads old documents.
+- [lfs.test-support.ts](lfs.test-support.ts): `prepareLfs` reserves the source and reads its facts. It also gives the fixed Batch replies and the pairs of the LFS tests.

@@ -71,3 +71,15 @@ It describes the reservation of one imported workspace, from the first control o
 - Each comparison that GitHub returns must have the captured head as its base and the requested candidate as its head. Otherwise the request fails, and it stores no receipt.
 - [`repository-data.ts`](repository-data.ts) keeps the facts, the receipt, and each verified pair with the reservation. The manifest names each prerequisite with its receipt ID, and `closeManifest` checks the receipt against the source and its HEAD.
 - The Mac needs no Conductor login and no Git credential of its own for this check. A later activation must still check each prerequisite against GitHub at that time.
+
+### Git LFS availability
+
+- After `repository.facts`, the Mac can send `repository.lfs` with the facts ID and one page of `ImportLfsObject` pairs. Each pair is the SHA-256 `oid` of an LFS object and its `sizeBytes`.
+- `readLfsAvailability` in [`lfs-availability.ts`](lfs-availability.ts) needs facts of the same reservation and branch. Before each GitHub read, after it, and before the answer, it checks current access, the open reservation, and the repository ID and name of the facts.
+- `readLfsBatch` in [`lfs-batch.ts`](lfs-batch.ts) posts a `download` request to the Git LFS Batch API of the chosen repository on `github.com`. It sends `freshGitHubUserToken` of the stored importer as a Basic Git credential.
+- It builds the address only from the stored name of the chosen repository, never from a value of the Mac or the source. It follows no redirect, and it needs HTTP 200.
+- A valid download action for the exact OID and size puts the pair in `available`. A 404 or 410 error for the exact pair puts it in `missing`. Each list keeps the order of the request.
+- `available` means that GitHub advertises the object now. It is not a download, and it checks no bytes.
+- Each other reply fails the whole control with 502 `github_unavailable`, with no partial lists. Examples are an authentication, rate-limit, network, or redirect failure, and an unexpected, duplicate, mismatched, or invalid object. The reservation stays for an explicit retry.
+- The Worker drops each download link, header, and expiry, and it sends no download request. The reply holds only the facts ID and the pairs. The Worker stores none of them, and it writes no receipt.
+- This read takes no part in the commit receipts or in their base and head checks. The Mac must finish its classification and its source fingerprint before it sends `repository.prerequisites`.

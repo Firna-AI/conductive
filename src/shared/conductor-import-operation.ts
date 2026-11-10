@@ -1,5 +1,9 @@
 import type { DevicePairing } from './device.ts'
 import type {
+  ImportLfsRequest,
+  ImportLfsResult,
+} from './conductor-import-lfs.ts'
+import type {
   ImportManifestEntry,
   ImportSnapshot,
 } from './conductor-import-manifest.ts'
@@ -63,6 +67,7 @@ export interface ImportRepositoryFacts {
 }
 
 export type ImportDeviceEvent =
+  | ImportLfsRequest
   | {
       kind: 'status'
       available: boolean
@@ -118,6 +123,7 @@ export type ImportDeviceEvent =
     }
 
 export type ImportControlResult =
+  | ImportLfsResult
   | { kind: 'accepted' }
   | { kind: 'reservation'; reservation: ImportReservation }
   | { kind: 'missing'; parts: ImportPart[]; nextCursor: number | null }

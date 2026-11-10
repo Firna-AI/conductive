@@ -18,6 +18,7 @@ The [import area](../../worker/conductor-import/README.md) gives the Worker side
 | [conductor-import-operation.ts](conductor-import-operation.ts) | Scan rows and row states, private and public reservations, page actions, Mac events, control results, public events, and the frames between the Worker and the Mac |
 | [conductor-import-operation-read.ts](conductor-import-operation-read.ts) | `readImportAction`, `readImportScanRow`, `readImportDeviceFrame`, and `readImportDeviceEvent` |
 | [conductor-import-control-read.ts](conductor-import-control-read.ts) | `readImportWorkerFrame`, for the Mac main process only |
+| [conductor-import-lfs.ts](conductor-import-lfs.ts) | `ImportLfsObject`, the private `repository.lfs` request and result, their readers, and `importLfsPage`, as [Git LFS availability](#git-lfs-availability) says |
 | [conductor-import-public-read.ts](conductor-import-public-read.ts) | `readImportPublicEvent`, for the desktop page |
 | [conductor-import-documents-read.ts](conductor-import-documents-read.ts) | `readConductorOldDocuments`, for the pages of old-document metadata |
 | [conductor-import-manifest.ts](conductor-import-manifest.ts) | `ImportSnapshot`, the manifest records, `ImportManifestPage`, and `importDocumentFile` |
@@ -64,9 +65,18 @@ The [import area](../../worker/conductor-import/README.md) gives the Worker side
 - `readImportGitDisk` requires nonnegative safe integers, the object format of the snapshot, and counts and sizes that agree with each other. It adds no total limit and no safety factor.
 - The stored and restored bytes of the content objects keep their meaning. The Git disk facts do not change them.
 
+## Git LFS availability
+
+- `ImportLfsObject` holds the `oid` of a Git LFS object and its `sizeBytes`. The `oid` is always a lowercase SHA-256, also in a repository with SHA-1 Git objects. The size is a nonnegative safe integer.
+- The private `repository.lfs` event of the Mac holds the reservation ID, the facts ID, and one page of pairs. The private result holds the facts ID and the same pairs, in `available` and `missing`.
+- `readImportLfsRequest` merges two equal pairs, and it refuses two sizes for one OID. `readImportLfsResult` refuses an OID that shows twice. Both keep only these fields.
+- `readImportDeviceEvent` and `readImportWorkerFrame` use these readers. No public event holds a pair.
+- [Git LFS availability](../../worker/conductor-import/reservations.md#git-lfs-availability) gives what the Worker reads and what `available` means.
+
 ## Pages and limits
 
 - `DEVICE_FRAME_LIMIT_BYTES` in `device.ts` is 1,000,000. Each encoded frame stays strictly below it, and `importWire` throws for a larger one.
 - `importPage(values, envelope)` returns the longest first slice of a list whose complete encoded envelope fits. It counts the JSON escaping. Call it again for the rest of the list.
+- `importLfsPage(objects, context)` returns the longest first slice of pairs whose complete `import.frame` request and largest possible `import.ack` both fit. The context gives the operation ID, the sequence, the reservation ID, and the facts ID.
 - `IMPORT_PART_BYTES` is 1,000,000 decoded bytes. Split a larger object into more parts.
 - No limit applies to a whole package, an old document, a session file, or the number of parts.

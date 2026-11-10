@@ -4,6 +4,7 @@ import type {
   ImportDeviceFrame,
   ImportScanRow,
 } from './conductor-import-operation.ts'
+import { readImportLfsRequest } from './conductor-import-lfs.ts'
 import {
   readImportManifestEntry,
   readImportSnapshot,
@@ -80,6 +81,7 @@ export function readImportDeviceFrame(value: unknown): ImportDeviceFrame {
 
 export function readImportDeviceEvent(value: unknown): ImportDeviceEvent {
   const row = importObject(value)
+  if (row.kind === 'repository.lfs') return readImportLfsRequest(row)
   if (row.kind === 'done') return { kind: 'done' }
   if (row.kind === 'failed') {
     const code = row.code

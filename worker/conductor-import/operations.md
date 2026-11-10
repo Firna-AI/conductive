@@ -36,6 +36,7 @@ It describes how the Worker relays an import operation between the desktop page 
 - Each encoded frame and each public event line stays below 1,000,000 UTF-8 bytes. `importWire` refuses a larger one.
 - `importPage` splits a list after it counts the complete encoded envelope, with its JSON escaping. The broker splits the scan rows into as many `scan` events as they need.
 - A large `repository.prerequisites` result goes as numbered `import.part` frames, by `sendImportControl` of [`broker-socket.ts`](broker-socket.ts). The Mac answers each with `import.part.ack`, and the broker waits for it before it sends the next part. The final `import.ack` then has the same receipt ID and empty lists.
+- Each other result goes in one `import.ack`. `importLfsPage` sizes each `repository.lfs` request page, so that the request and its largest possible `import.ack` both fit one frame.
 - No limit applies to the length of a list or a result, or to the number of parts.
 
 ## What the page gets
@@ -45,5 +46,5 @@ It describes how the Worker relays an import operation between the desktop page 
 - An `unfinished` row gives its reservation ID only to its importer. Another member gets `null`, and so cannot retry that source.
 - A `progress` event holds the public reservation, without the source fingerprint, and the in-flight bytes that the Mac reports. Only verified parts count in `storedBytes`.
 - `status`, `result.files`, `result.sessions`, `done`, and `failed` pass through. A `complete` event names the local ID and the new workspace ID.
-- The page never gets an upload link, a manifest, a native session recipe, a repository proof, a source path, or a byte of the upload.
+- The page never gets an upload link, a manifest, a native session recipe, a repository proof, an LFS availability result, a source path, or a byte of the upload.
 - The Worker keeps no copy of a scan list or of an import result.

@@ -36,7 +36,7 @@ const PROOF = `query ImportPrerequisite($owner:String!,$name:String!,$ref:String
   }
 }`
 
-async function context(
+export async function importRepositoryContext(
   env: AppEnv,
   actor: ImportActor,
   row: ReservationRow,
@@ -73,7 +73,7 @@ export async function currentRepositoryFacts(
   row: ReservationRow,
   dependencies: AppDependencies,
 ): Promise<ImportRepositoryFacts> {
-  const read = await context(env, actor, row, dependencies)
+  const read = await importRepositoryContext(env, actor, row, dependencies)
   const value = importObject(
     (
       await graphql(dependencies.fetch, read.token, FACTS, {
@@ -99,7 +99,7 @@ export async function currentRepositoryFacts(
     defaultHeadOid: oid(value.defaultBranchRef),
     observedAt: dependencies.now(),
   }
-  await context(env, actor, row, dependencies)
+  await importRepositoryContext(env, actor, row, dependencies)
   await storeRepositoryProof(
     env.DB,
     actor,
@@ -133,7 +133,7 @@ export async function verifyPrerequisites(
       typeof saved.defaultBranch === 'string' ? saved.defaultBranch : '',
     defaultHeadOid: importNullableText(saved.defaultHeadOid),
   }
-  const read = await context(env, actor, row, dependencies)
+  const read = await importRepositoryContext(env, actor, row, dependencies)
   if (facts.repositoryId !== read.repository.id || facts.branch !== row.branch)
     throw importUnavailable()
   const heads = [
@@ -187,7 +187,7 @@ export async function verifyPrerequisites(
       verified.push({ oid: candidate, headOid: found })
     } else missing.push(candidate)
   }
-  await context(env, actor, row, dependencies)
+  await importRepositoryContext(env, actor, row, dependencies)
   await storeRepositoryProof(
     env.DB,
     actor,

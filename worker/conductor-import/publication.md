@@ -37,7 +37,9 @@ It describes how a complete reservation becomes a workspace, how members read it
 - `readPublishedManifestPage(env, orgId, workspaceId, cursor)` returns the private manifest in pages, with the native session recipes and the exact prerequisites.
 - `readPublishedPartRange(env, orgId, workspaceId, partId, range, signal)` reads one bounded range of one verified part.
 
-They mint no bucket credential, and they check no access. Their caller owns these duties:
+They mint no bucket credential, and they check no access.
+No call returns a result of `repository.lfs`, because the Worker stores none, as [Git LFS availability](reservations.md#git-lfs-availability) says.
+Their caller owns these duties:
 
 - Authorize the activation, the member, the owner, the image, and the current start before each read.
 - Check the disk before the transfer. Combine the Git disk facts of the snapshot and its content byte totals with the actual free disk. Count each file reference, the filesystem allocation, the Git indexes, the LFS copies, and the room to stage the work. After the delivery, check the actual tree, pack, and LFS facts before any change to the checkout.

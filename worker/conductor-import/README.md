@@ -10,7 +10,7 @@ It then publishes the workspace with no cloud computer, and members read the old
 
 - Relay each import operation between one desktop page and its paired Mac, as [Import operations](operations.md) says.
 - Keep one reservation for each imported workspace, with its source slot, its seven-day expiry, its manifest, and its upload links, as [Reservations](reservations.md) says.
-- Read the current GitHub facts of the chosen repository for the Mac, with the token of the importer on the Worker.
+- Read the current GitHub facts of the chosen repository for the Mac, with the token of the importer on the Worker. They are its heads, its commit prerequisites, and the current availability of its Git LFS objects, as [Reservations](reservations.md#current-github-facts) says.
 - Publish the workspace only after each part is stored and checked, as [Publication and old documents](publication.md) says.
 - Serve the old documents to the members of the org, in every state of the workspace.
 - Give a later activation its trusted reads and its work-only cleanup.
@@ -35,6 +35,7 @@ Run `npm run test -- worker/conductor-import` from the repository root with Node
 The tests use local D1, native SQLite Durable Objects, and the local R2 bucket of the [test harness](../test-support/README.md), with a fixed clock and fixed IDs.
 `broker.test.ts` and `broker-http.test.ts` run the real Worker entry with an authenticated Mac socket.
 `repository-facts.test.ts` uses the fake GitHub of the harness.
+The `lfs-*.test.ts` files answer each GitHub read with a fixed reply. `lfs.test-support.ts` holds those replies and their pairs.
 Local R2 does not accept signed links, so no test sends a PUT through one, as [Live proof](storage.md#live-proof) says.
 
 ### Key Code

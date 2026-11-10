@@ -3,6 +3,7 @@ import type {
   ImportReservation,
   ImportWorkerFrame,
 } from './conductor-import-operation.ts'
+import { readImportLfsResult } from './conductor-import-lfs.ts'
 import type { ImportUploadTarget } from './conductor-import-storage.ts'
 import { readImportAction } from './conductor-import-operation-read.ts'
 import { readImportPart } from './conductor-import-manifest-read.ts'
@@ -64,6 +65,7 @@ function readTarget(value: unknown): ImportUploadTarget {
 
 function readImportControlResult(value: unknown): ImportControlResult {
   const row = importObject(value)
+  if (row.kind === 'repository.lfs') return readImportLfsResult(row)
   if (row.kind === 'accepted') return { kind: row.kind }
   if (row.kind === 'complete')
     return { kind: row.kind, workspaceId: importText(row.workspaceId) }
