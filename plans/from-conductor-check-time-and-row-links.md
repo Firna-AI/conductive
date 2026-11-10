@@ -347,11 +347,11 @@ Depends on: 1, 1a, 2, 3
       on the agent tools protocol, the active import plan with its user
       decision, and the proxy settings of the browser. No live check of a
       production cloud computer ran.
-- [ ] Merge `origin/main` with the `git-merge` skill. When a full check
+- [x] Merge `origin/main` with the `git-merge` skill. When a full check
       of the rows merged first, use its time as the check time.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -362,9 +362,16 @@ Depends on: 1, 1a, 2, 3
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 
+Evidence: `.context/from-conductor-check-time-and-row-links/m4/` and
+`.context/reviews/calummoore/from-conductor-timestamp-and-links/`. The
+complete gate passed on `415c8ca5`. Review round 1 found finding 10, fixed
+in `69055960`. Round 2 found findings 11 and 12, and the check of 12 found
+13. All three are fixed in the last fix round.
+
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy, open `https://conductive.build/from-conductor#file-tree`
+- [x] After the deploy, open `https://conductive.build/from-conductor#file-tree`
       on a computer and a phone. Check the check line, the opened row,
       and the link icon. Add this to
-      `plans/follow-ups/marketing-site-deployed-smoke-test.md`.
+      `plans/follow-ups/marketing-site-deployed-smoke-test.md`. Added
+      there, so the follow-up item holds the task after the merge.
