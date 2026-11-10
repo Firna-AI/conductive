@@ -164,6 +164,15 @@ while the change is open. Its pull request keeps them after the merge.
   credential or a cookie of the request.
 - The allowed request headers include name patterns, such as `anthropic-*`,
   so that the new headers of a later agent program pass.
+- When the agent login of a turn is an Anthropic API key, its turn token
+  can be in `x-api-key` or in a bearer `Authorization` header (gateway
+  decision 11). The upstream gets the real key in `x-api-key`.
+- Reason: Claude sends the turn token from its profile as a bearer
+  token, also for an API key.
+- When the agent login of a turn is an Anthropic API key, the gateway
+  removes only the `oauth-2025-04-20` value from `anthropic-beta`.
+- Reason: an API key does not use the OAuth login mode. No field of the
+  request body needs that value.
 - The gateway sends back only allowed response headers.
 - The gateway passes each request body unchanged. It passes each answer
   body unchanged.

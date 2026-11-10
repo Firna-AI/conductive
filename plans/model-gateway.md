@@ -1011,16 +1011,20 @@ The Claude route accepts the requests of Claude's profile mode, and
 refuses the requests of other programs (decision 11 K). Merge it before
 Milestone 7, so that API-key turns work at each merge.
 
-- [ ] Accept the turn token of an API-key login as a bearer token on the
+- [x] Accept the turn token of an API-key login as a bearer token on the
       Claude route, and keep the signed-prefix check (D35, D40). Send the
       real key in `x-api-key`. Remove only the `oauth-2025-04-20` value
       of `anthropic-beta` for an API-key login.
-- [ ] Refuse a request without the agent markers that Milestone 4a names
+      Branch: `conductor/model-gateway-m6a-gateway-profile-requests`.
+- [x] Refuse a request without the agent markers that Milestone 4a names
       (D39), with no turn check and no upstream call. Answer in the
       Anthropic error shape with a stable code.
-- [ ] Add the focused tests in `worker/model-gateway/`. Keep every
+      Branch: `conductor/model-gateway-m6a-gateway-profile-requests`.
+- [x] Add the focused tests in `worker/model-gateway/`. Keep every
       current assertion.
-- [ ] Update `worker/model-gateway/README.md`.
+      Branch: `conductor/model-gateway-m6a-gateway-profile-requests`.
+- [x] Update `worker/model-gateway/README.md`.
+      Branch: `conductor/model-gateway-m6a-gateway-profile-requests`.
 
 ## Milestone 7: Runner on the gateway
 

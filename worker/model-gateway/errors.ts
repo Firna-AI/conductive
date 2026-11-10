@@ -5,6 +5,7 @@ type TurnRefusal = Extract<TurnTokenCheck, { ok: false }>['reason']
 export type GatewayRefusal =
   | TurnRefusal
   | 'model_route_not_found'
+  | 'model_client_not_allowed'
   | 'agent_mismatch'
   | 'model_gateway_unavailable'
   | 'model_upstream_unavailable'
@@ -35,6 +36,10 @@ const refusals = {
     'The agent login is not available. Connect it again.',
   ],
   model_route_not_found: [404, 'The model route is not available.'],
+  model_client_not_allowed: [
+    403,
+    'Use Claude for model requests on this route.',
+  ],
   agent_mismatch: [403, 'Use the model route for this turn.'],
   model_gateway_unavailable: [
     503,

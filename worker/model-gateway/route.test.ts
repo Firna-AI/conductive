@@ -12,6 +12,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import {
+  claudeClientHeaders,
   gatewayHttp,
   gatewayPath,
   expectedWorkspace,
@@ -64,7 +65,10 @@ it('forwards each model route with the starter login of its credential kind', as
         {
           body,
           headers: {
-            'anthropic-beta': 'oauth-2025-04-20,future-beta',
+            'anthropic-beta':
+              item.agent === 'claude'
+                ? 'claude-code-20250219,oauth-2025-04-20,oauth-2025-04-20-preview,future-beta'
+                : 'oauth-2025-04-20,future-beta',
             originator: 'conductive',
             'session-id': 'session',
             'thread-id': 'thread',
@@ -96,7 +100,11 @@ it('forwards each model route with the starter login of its credential kind', as
       ).toBe(false)
       expect(JSON.stringify([...sent.headers])).not.toContain(client.token)
       expect(sent.headers.get('anthropic-beta')).toBe(
-        'oauth-2025-04-20,future-beta',
+        item.agent === 'codex'
+          ? 'oauth-2025-04-20,future-beta'
+          : item.kind === 'api-key'
+            ? 'claude-code-20250219,oauth-2025-04-20-preview,future-beta'
+            : 'claude-code-20250219,oauth-2025-04-20,oauth-2025-04-20-preview,future-beta',
       )
       for (const [name, value] of [
         ['originator', 'conductive'],
@@ -243,7 +251,10 @@ it('mounts the gateway only on the machine surface before runner routing', async
   const path = gatewayPath('claude')
   const application = createApp()
   const machine = await application.fetch(
-    new Request(`${MACHINE_ORIGIN}${path}`, { method: 'POST' }),
+    new Request(`${MACHINE_ORIGIN}${path}`, {
+      method: 'POST',
+      headers: claudeClientHeaders,
+    }),
     { ...harness.env, MACHINE_ORIGIN },
   )
   expect(machine.status).toBe(401)
