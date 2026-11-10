@@ -2,22 +2,21 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { ManualDelay } from '../../app/test-kit'
-import {
-  orgSettingsPaths,
-  type BuildsResponse,
-} from '../../shared/org-settings'
+import { workspacesPath } from '../../shared/workspaces'
+import { byRole } from '../../test-support/dom-queries'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
-import { goodBuild, imageBuilds } from '../settings/test-builds'
-import { settle } from '../test-mount'
+import { click, settle } from '../test-mount'
+import { bodiesOf } from '../workspace/kept-test-kit'
 import {
   buildsOf,
+  buildSucceeds,
   menuRows,
-  newest,
   newWorkspace,
+  pickerOf,
   shown,
   withDashboard,
   type Wait,
@@ -81,15 +80,7 @@ describe('the repository menu of New workspace', () => {
     })
     const before = shown(view).send
     // The build ends with success, and the org image holds the repository.
-    const built = { ...newest.building, state: 'succeeded' as const }
-    server.json('GET', orgSettingsPaths.builds(FAKE_IDS.org), {
-      ...imageBuilds([]),
-      builds: [built, goodBuild],
-      currentImageBuildId: built.id,
-    } satisfies BuildsResponse)
-    // The builds read again on their timer while a build runs.
-    await delay.runAll()
-    await settle()
+    await buildSucceeds(server, delay)
     expect({
       before,
       after: shown(view),
@@ -109,6 +100,49 @@ describe('the repository menu of New workspace', () => {
         off: false,
         checked: true,
       },
+    })
+  })
+
+  test('a written draft with no pick keeps its repository when the build of an earlier repository succeeds, and Send creates the workspace there', async () => {
+    holdAnimationFrames()
+    const delay = new ManualDelay()
+    // acme/storefront comes first in the menu, and it waits for the build.
+    const { server, view } = await newWorkspace({
+      builds: buildsOf('building', ['storefront']),
+      delay,
+    })
+    const before = shown(view).picker
+    await buildSucceeds(server, delay)
+    const after = shown(view)
+    const storefront = menuRows(view).find(
+      (row) => row.name === 'acme/storefront',
+    )
+    // The picker closes its menu, then Send creates the workspace.
+    click(pickerOf(view))
+    click(byRole('button', 'Send', view))
+    await settle()
+    const [sent] = await bodiesOf(
+      server,
+      'POST',
+      workspacesPath(FAKE_IDS.org),
+      0,
+    )
+    expect({ before, after, storefront, sent }).toEqual({
+      before: 'Repository: acme/billing-service',
+      after: {
+        notices: [],
+        spinner: false,
+        picker: 'Repository: acme/billing-service',
+        send: true,
+        note: true,
+      },
+      storefront: {
+        name: 'acme/storefront',
+        note: null,
+        off: false,
+        checked: false,
+      },
+      sent: expect.objectContaining({ repositoryId: 'billing-service' }),
     })
   })
 })

@@ -386,6 +386,14 @@ Calls of the review, 2026-11-10:
   org-wide.
 - The install script comparison and the repository lists of `changes`
   use the provider account of the org image that they describe.
+- A draft keeps the repository that the form showed at its first text
+  or file, once the repositories and the builds have loaded. A pick
+  always wins. A send keeps only a pick, so the next draft starts at the
+  first ready repository again. Reason: finding 6 of review round 2, a
+  written draft moved to a repository whose build ended.
+- A stored repository that the org no longer chose gives way to the first
+  ready one, as on `origin/main`. A picked one stays, as the follow-up
+  item about a kept draft with a removed repository records.
 
 ## Milestone 1: Mockups
 

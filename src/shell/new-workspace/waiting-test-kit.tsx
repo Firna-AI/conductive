@@ -12,7 +12,12 @@ import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { repositoryFixtures } from '../../test-support/fixtures/repositories'
-import { buildOf, changed, imageBuilds } from '../settings/test-builds'
+import {
+  buildOf,
+  changed,
+  goodBuild,
+  imageBuilds,
+} from '../settings/test-builds'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import { NewWorkspaceScreen } from './NewWorkspaceScreen'
@@ -22,7 +27,7 @@ import { NewWorkspaceScreen } from './NewWorkspaceScreen'
 const { org } = FAKE_IDS
 
 /** The newest build of each state of a waiting repository. */
-export const newest = {
+const newest = {
   building: buildOf('add', 'running', 60_000),
   failed: buildOf('add', 'failed', 600_000),
   // No build runs, and the newest build is the good one.
@@ -123,11 +128,35 @@ export function shown(view: HTMLElement) {
   }
 }
 
-/** Opens the repository menu, and gives each row: name, note, off, checked. */
-export function menuRows(view: HTMLElement) {
+/**
+ * The build of `newest.building` succeeds, and the org image holds each
+ * chosen repository. The page learns of it when the builds read again on
+ * their timer while a build runs, which `delay` runs.
+ */
+export async function buildSucceeds(
+  server: FakeApiServer,
+  delay: ManualDelay,
+): Promise<void> {
+  const built = { ...newest.building, state: 'succeeded' as const }
+  server.json('GET', orgSettingsPaths.builds(org), {
+    ...imageBuilds([]),
+    builds: [built, goodBuild],
+    currentImageBuildId: built.id,
+  } satisfies BuildsResponse)
+  await delay.runAll()
+  await settle()
+}
+
+/** The repository picker of the page. It fails when the page shows none. */
+export function pickerOf(view: HTMLElement): HTMLElement {
   const picker = view.querySelector<HTMLElement>('[aria-label^="Repository: "]')
   if (!picker) throw new Error('The page has no repository picker.')
-  click(picker)
+  return picker
+}
+
+/** Opens the repository menu, and gives each row: name, note, off, checked. */
+export function menuRows(view: HTMLElement) {
+  click(pickerOf(view))
   const menu = byRole('menu', 'Repository', view)
   return Array.from(menu.querySelectorAll('[role^="menuitem"]'), (row) => ({
     name: row.querySelector(`.${menuStyles.label}`)?.textContent,

@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-09, finding 1 of review round 1 and a new problem of its check, branch `calummoore/box-auto-build-onboarding`, plan `plans/automatic-first-build.md`.
+- **Added:** 2026-11-09, finding 1 of review round 1 and a new problem of its check, branch `calummoore/box-auto-build-onboarding`, plan `plans/automatic-first-build.md`. Extended on 2026-11-10 with finding 7 of review round 2 and two new problems of its check, branch `calummoore/new-repo-build-recreation`, plan `plans/added-repository-builds.md`: the decision of the added build can go stale while cleanup waits.
 - **Location:** `cleanupBuild` in `worker/lifecycle/build-execution.ts` (the `done` write before `startAddedImageBuild`), `startAddedImageBuild` in `worker/lifecycle/first-image-build.ts`, `publishBuild` in `worker/lifecycle/build-admission-data.ts`, `pendingImageCleanup` in `worker/lifecycle/image-maintenance-data.ts`, `worker/lifecycle/image-coordinator.ts`, and `refreshImagesForPush` and `runImageAlarm` in `worker/lifecycle/image-timers.ts`.
 - **Reason:** both ways to lose the build need a rare timing, and the fix is not harder after the merge.
 
@@ -23,9 +23,9 @@
   - After the first good build publishes, the org has an image, so `refreshImagesForPush` can start a refresh during the cleanup. A refresh only fetches the repositories of the current image, and runs no install script.
   - `startImageBuild` returns the ID of a running build in place of a new one. So when a refresh runs at the end of the cleanup, no added build is recorded.
   - Review round 1 reproduced the first case: after a lost database reply that follows the `done` write, a rebuilt coordinator held one good build, no added build, and only the daily refresh.
-- **Problem:** The added build is lost when the Worker stops or a database reply is lost after the `done` write. A failed start or a push refresh at the end of cleanup can lose it too. A competing refresh gives no warning.
+- **Problem:** The added build is lost when the Worker stops or a database reply is lost after the `done` write. A failed start or a push refresh at the end of cleanup can lose it too. A competing refresh gives no warning. The same gap also lets the decision go stale: `publishBuild` checks that the newest build succeeded only in the publication batch, and cleanup can wait for an image lease or a failed delete. An admin can start a newer build in that wait. When that build fails, the start after cleanup still starts a build by itself, which the rule that the app starts no build by itself after a failed build forbids. An admin who removes the added repository in that wait also gets a build that no chosen repository needs.
 - **Impact if no action:** A repository added during a successful job, or settings saved during the first good build, can stay outside the image. The admin must find Build computer, which the protocol says is not needed.
-- **Root question:** How does each change that needs an added build get that build, also when cleanup or its start fails or stops?
+- **Root question:** How does each change that needs an added build get exactly that build, while all of its conditions still hold, also when cleanup or its start fails or stops?
 - **Options:**
   - **A.** Keep `cleanup-build` until the added build is recorded, and give that build a stable ID so that a retry cannot start it twice. End the job when the start is refused, and keep it open only on a short fault. It leaves the refresh case open. Effort: Small.
   - **B.** Make build admission record the added build and complete its preceding job in one D1 batch, and make a repeated admission return the same build. It leaves the refresh case open. Effort: Medium.
@@ -35,5 +35,5 @@
 - **Left out:** Moving the `done` write alone, because a failed added build can then start again after another lost reply, and the protocol forbids a build by itself after a failure. A test alone, because it keeps no build request. No change, because the protocol and the Cloud computer tab promise the added build.
 - **Wider fix:** D. One batch ties each job that needs an added build to that build, so no later step and no refresh can separate them.
 - **Previous examples:** Commit `6ae0ffde`, "fix(lifecycle): recover recorded snapshot intents", fixed a similar recovery gap through shared resource creation.
-- **Recommendation:** D. It closes both cases. The review and its check recommended B for the first case alone.
+- **Recommendation:** D. It closes both cases. The review and its check recommended B for the first case alone. D also records the added build in the batch that decides it, so a newer failed build or a removal cannot come between the decision and the record. The check of finding 7 of 2026-11-10 recommended the same fix.
 - **Action:** fix after merge, apply D, because both cases are rare and the fix is not harder after the merge.

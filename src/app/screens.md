@@ -228,7 +228,10 @@ what the palette does.
   gives way. The Worker lists no waiting repository before the first good
   build, so this notice and the notice of the first build never show
   together. The builds read again while a build runs, so a waiting
-  repository turns on when a build that holds it succeeds.
+  repository turns on when a build that holds it succeeds. A draft keeps
+  the repository that the form showed at its first text or file
+  (`NewWorkspaceModel`), so a repository that turns on moves no written
+  draft.
 - Every composer reads its send key through `useSendKey`: the chat, the
   page, and the dialog. On a computer, Enter sends and Shift+Enter adds a
   line, as [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)

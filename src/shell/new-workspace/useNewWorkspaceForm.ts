@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import {
   draftReady,
+  firstReadyRepository,
   type CreateState,
   type Draft,
   type NewWorkspaceModel,
@@ -31,8 +32,8 @@ export interface NewWorkspaceForm {
   /** The repositories that the org chose, or `undefined` while they load. */
   repositories: readonly Repository[] | undefined
   /**
-   * The repository that the user picked, else the first chosen one that is
-   * ready, else the first chosen one.
+   * The repository of the draft, else the first chosen one that is ready,
+   * else the first chosen one.
    */
   repository: Repository | undefined
   /** The chosen repositories that wait for a build, which the menu shows off. */
@@ -60,10 +61,12 @@ export interface NewWorkspaceForm {
  * readiness for every way to send, and the send. The readiness reads the
  * text and the files of the draft, the agent login, the org image, the
  * repository, the model, and the suspension of the org. The form picks the
- * first ready repository, and a kept draft keeps its own, also while it
- * waits for a build. When the server accepts the create, the app opens the
- * new workspace, also when the form closed while the create ran. `open`
- * goes to another page from a notice, such as Connect.
+ * first ready repository. A draft keeps its own, also while it waits for a
+ * build: the pick of the user, or the repository that the form showed at
+ * its first text or file, as `NewWorkspaceModel` says. When the server
+ * accepts the create, the app opens the new workspace, also when the form
+ * closed while the create ran. `open` goes to another page from a notice,
+ * such as Connect.
  */
 export function useNewWorkspaceForm(
   org: OrgSummary,
@@ -83,9 +86,8 @@ export function useNewWorkspaceForm(
   useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
   const repositories = loaded?.filter((item) => item.selected)
   const waiting = waitingRepositoriesOf(builds)
-  const firstReady =
-    repositories?.find((item) => !waiting.ids.has(item.id)) ?? repositories?.[0]
-  const repositoryId = draft.repositoryId ?? firstReady?.id
+  const repositoryId =
+    draft.repository?.id ?? firstReadyRepository(repositories ?? [], builds)?.id
   const repository = repositories?.find((item) => item.id === repositoryId)
   const choice = draft.choice ?? account?.defaultChoice
   const notice = useBlockingNotice(choice, models, open)
