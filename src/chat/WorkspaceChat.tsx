@@ -14,6 +14,7 @@ import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
 import { LinksProvider, type ChatLinks } from './links/LinksContext'
+import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import { sessionState, type ChatSnapshot } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
@@ -53,6 +54,12 @@ export interface ChatViewProps {
   onOpenPage?: (to: string) => void
   /** The notice of an agent with no login leads to its Connect form. */
   onConnectAgent?: (agent: Agent) => void
+  /**
+   * The files of the workspace that the composer lists after `@`, and what
+   * a press on a file chip opens, as `ChatMentions` says. Without it, the
+   * composer has no list, and a message shows each mention as text.
+   */
+  mentions?: ChatMentions
   /** The start steps and the sandbox bar that the app draws, as `ChatHost` says. */
   host?: ChatHost
   /**
@@ -162,18 +169,23 @@ function ChatBody(
       />
     </>
   )
+  const mentions = props.mentions ?? null
   if (!mobile) {
     return (
       <LinksProvider value={links}>
-        <div className={styles.column}>{body}</div>
+        <MentionsProvider value={mentions}>
+          <div className={styles.column}>{body}</div>
+        </MentionsProvider>
       </LinksProvider>
     )
   }
   return (
     <LinksProvider value={links}>
-      <TouchScreen>
-        <div className={styles.phone}>{body}</div>
-      </TouchScreen>
+      <MentionsProvider value={mentions}>
+        <TouchScreen>
+          <div className={styles.phone}>{body}</div>
+        </TouchScreen>
+      </MentionsProvider>
     </LinksProvider>
   )
 }

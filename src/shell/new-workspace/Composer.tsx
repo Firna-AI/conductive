@@ -4,11 +4,12 @@ import styles from '../../../docs/mockups/src/components/chat/Composer.module.cs
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { useStore } from '../../app/store'
+import { DraftFiles } from '../../chat/components/AttachmentChips'
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import { useSendKey } from '../../chat/components/send-key'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import { ModelPicker } from '../ui/ModelPicker'
-import { AttachButton, AttachmentList, UploadError } from './parts'
+import { AttachButton, UploadError } from './parts'
 
 /**
  * The composer of a new workspace: attached files above the text, then the
@@ -36,9 +37,9 @@ export function Composer(props: {
     <div className={styles.wrap}>
       <div className={styles.composer}>
         {draft.attachments.length > 0 ? (
-          <AttachmentList
+          <DraftFiles
             attachments={draft.attachments}
-            remove={(id) => props.model.detach(id)}
+            onRemove={(id) => props.model.detach(id)}
           />
         ) : null}
         <ChipTextField

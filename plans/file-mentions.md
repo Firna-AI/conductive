@@ -325,6 +325,30 @@ that work:
   the name of a chip in the field without its link. The app opens the
   file on a press on the name.
 
+### What the implementation changed
+
+Milestones 2 to 5 ran on 9 and 10 November 2026. These are my calls from
+that work:
+
+- A press on a folder chip opens the folder and each folder that holds
+  it, and All files scrolls the row of the folder into view. Reason: a
+  folder deep in a large tree would else open out of sight.
+- The kept files have one shared connection: the Files part and the chat
+  each connect them, and the last one to stop stops them. Reason: the
+  chat needs the tree on a phone before a visit to Files, and two
+  connections would read the stream twice.
+- Each row of the list names itself as "name, folder" to a screen
+  reader. Reason: the two texts would else run together.
+- An archived workspace shows each mention of its messages as text,
+  because it has no file lists. The protocol doc says so.
+- The first change after a draft comes back is not one step of undo, for
+  a removal with the × as for every edit, because the history of the
+  editor starts after it. Reason: the field already works this way, and
+  the change would touch every edit.
+- The list takes its keys before the send key, and Esc stops at the list.
+  Reason: Enter must never send while the list is open.
+- The chat development page lists the tree of the Files development page.
+
 ### Design calls
 
 Each call is my own, made on 9 November 2026.
@@ -385,18 +409,18 @@ Draw the list, the file chips, and the × of each chip of the composer.
 
 Depends on: 1
 
-- [ ] Write `docs/protocol/file-mentions.md` with the requirements of the
+- [x] Write `docs/protocol/file-mentions.md` with the requirements of the
       list, the chips, the text form, the press, and the path that the
       agent gets. Link it from `docs/architecture.md` and from
       `docs/protocol/chat-and-events.md`.
-- [ ] Update `docs/protocol/workspace-links.md` with the × of a chip in the
+- [x] Update `docs/protocol/workspace-links.md` with the × of a chip in the
       message field.
-- [ ] Update the attached files of the composer in
+- [x] Update the attached files of the composer in
       `docs/protocol/chat-and-events.md`.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: The × of the existing chips
 
@@ -408,19 +432,19 @@ Milestone 8p of [the main plan](boat-native-remote-workspaces.md) also
 changes the attached files of the composer. The branch that merges second
 keeps both changes.
 
-- [ ] Use the shared icon part of a chip from the mockups,
+- [x] Use the shared icon part of a chip from the mockups,
       `ChipIconCell` and `ChipEndRemove` in
       `docs/mockups/src/components/chat/ChipRemove.tsx`, which swaps the
       icon for a × while a pointer is over it.
-- [ ] Use it in the workspace chip of the message field, through the
+- [x] Use it in the workspace chip of the message field, through the
       `removal` prop of `WorkspaceChip`. The × removes the chip as one step
       of undo.
-- [ ] Use it in the attached files, with the classes of
+- [x] Use it in the attached files, with the classes of
       `AttachmentChips.module.css`. Remove the × at the end on desktop.
-- [ ] Where no pointer hovers, show the × at the end of each chip, as
+- [x] Where no pointer hovers, show the × at the end of each chip, as
       decision 217 says. An attached file keeps its × button of touch
       size there.
-- [ ] Add DOM tests for the removal from the field and from the files.
+- [x] Add DOM tests for the removal from the field and from the files.
 
 ## Milestone 4: The list
 
@@ -428,18 +452,19 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Add the module of the text form to the chat, with unit tests. The
+- [x] Add the module of the text form to the chat, with unit tests. The
       mockup `fileMentions.ts` gives the order of the rows.
-- [ ] Use the list of the mockups, `FileMentionList` and its styles.
-- [ ] Give the chat the kept files of the workspace, connected while the
+- [x] Use the list of the mockups: `MentionList`, which the mockups'
+      `FileMentionList` also draws, and its styles.
+- [x] Give the chat the kept files of the workspace, connected while the
       chat shows.
-- [ ] Add the match and the order of the rows, with unit tests.
-- [ ] Add the list to the message field: the query, the keys, the rows,
+- [x] Add the match and the order of the rows, with unit tests.
+- [x] Add the list to the message field: the query, the keys, the rows,
       and the states. A pick inserts the text form.
-- [ ] Add a file tree to the chat development page.
-- [ ] Add DOM tests: the keys, a pick, Enter that does not send, and the
+- [x] Add a file tree to the chat development page.
+- [x] Add DOM tests: the keys, a pick, Enter that does not send, and the
       states.
-- [ ] Update `src/chat/README.md`.
+- [x] Update `src/chat/README.md`.
 
 ## Milestone 5: File chips
 
@@ -447,13 +472,13 @@ Tags: ui
 
 Depends on: 3, 4
 
-- [ ] Add the file chip and the folder chip to the message field, with
+- [x] Add the file chip and the folder chip to the message field, with
       `FileChip` of the mockups: a pick, the draft, a paste, a copy, and
       the ×.
-- [ ] Show the chips in sent messages.
-- [ ] Open a file, or show a folder in All files, on a press.
-- [ ] Add DOM tests for the chip, the draft, and the press.
-- [ ] Update `src/chat/README.md` and `src/files/README.md`.
+- [x] Show the chips in sent messages.
+- [x] Open a file, or show a folder in All files, on a press.
+- [x] Add DOM tests for the chip, the draft, and the press.
+- [x] Update `src/chat/README.md` and `src/files/README.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

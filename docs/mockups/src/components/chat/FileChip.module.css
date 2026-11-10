@@ -3,3 +3,18 @@
   flex-shrink: 0;
   color: var(--ui-muted);
 }
+
+/* The name of a chip in a message box, which opens the file on a press. */
+.open {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.open:hover {
+  text-decoration: underline;
+}

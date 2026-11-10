@@ -10,6 +10,8 @@ import {
   pressInField,
   typeMessage,
 } from '../../../test-support/message-field'
+import { byRole } from '../../../test-support/dom-queries'
+import { press } from '../../../test-support/mount'
 import { chipName, linked, listed, mountField } from './chip-field-test-kit'
 
 describe('the chip text field', () => {
@@ -50,6 +52,29 @@ describe('the chip text field', () => {
       stepped: { draft: `Compare X${linked.link}`, chips: [chipName] },
       deleted: { draft: 'Compare X', chips: [] },
       backspace: { draft: 'Compare X', chips: [] },
+    })
+  })
+
+  test('a press on the × of the mark of a chip removes it, and undo brings it back', async () => {
+    const view = await mountField()
+    typeMessage(view.field, 'Compare ')
+    pasteMessage(view.field, `${linked.link} now`)
+    const remove = byRole(
+      'button',
+      `Remove W-${linked.number} ${linked.name}`,
+      view.field,
+    )
+    await press(remove)
+    const removed = { draft: view.draft(), chips: view.chips() }
+    pressInField(view.field, 'z', { ctrlKey: true })
+    expect({
+      tabIndex: remove.tabIndex,
+      removed,
+      undone: { draft: view.draft(), chips: view.chips() },
+    }).toEqual({
+      tabIndex: -1,
+      removed: { draft: 'Compare  now', chips: [] },
+      undone: { draft: `Compare ${linked.link} now`, chips: [chipName] },
     })
   })
 

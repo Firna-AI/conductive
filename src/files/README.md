@@ -20,15 +20,29 @@ development pages and the tests run them against the fake API of
 ## Integration
 
 The tab keeps one `WorkspaceFiles` store for each workspace whose Files
-part showed, beside its kept chat. The Files part connects it through
-`useWorkspaceStore` of [the web app](../app/README.md). A stable `create`
-finds the kept store, or makes it. It starts nothing. A stable `connect`
-starts the store and returns its stop:
+part or chat showed, beside its kept chat. The Files part connects it
+through `useWorkspaceStore` of [the web app](../app/README.md). A stable
+`create` finds the kept store, or makes it. It starts nothing. A stable
+`connect` starts the store and returns its stop. The chat of the shell
+connects the same store while it shows, for the list of `@` and the file
+chips, so several parts share one connection, which stops after the last
+part stops:
 
 ```ts
+const connections = new WeakMap<WorkspaceFiles, number>()
+
 function startFiles(files: WorkspaceFiles): () => void {
-  files.start()
-  return () => files.stop()
+  const count = connections.get(files) ?? 0
+  connections.set(files, count + 1)
+  if (count === 0) files.start()
+  let stopped = false
+  return () => {
+    if (stopped) return
+    stopped = true
+    const left = (connections.get(files) ?? 1) - 1
+    connections.set(files, left)
+    if (left === 0) files.stop()
+  }
 }
 
 const create = useCallback(
@@ -50,6 +64,11 @@ When the connection drops, the stream opens again as
 [Data lifecycle](../app/README.md#data-lifecycle) says. So a return shows
 the lists at once, and the socket asks only for the events after the last
 complete point. Give `files` to the screens.
+
+A press on a folder chip in the chat calls `revealFolder(path)`. It opens
+the folder and each folder that holds it, and All files scrolls the row of
+the folder into view, as
+[File mentions](../../docs/protocol/file-mentions.md) says.
 
 The store reads each message of the subscription from `unknown`: the stored
 history first, in one or more pages, then the live events. The pages of

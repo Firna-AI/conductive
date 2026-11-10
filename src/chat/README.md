@@ -93,6 +93,15 @@ stops its own controller:
   chip of the file shows the label of its path, `displayPath`, which hides
   each secret value, as [Labels of paths](../files/README.md#labels-of-paths)
   says.
+- `mentions` gives the composer the files and folders of the workspace for
+  the list of `@`, and the open of a file chip, as `ChatMentions` in
+  `mentions/MentionsContext.tsx` says. `files` is a store of the kept file
+  tree: the `WorkspaceFiles` of the Files screens fits it. `openFile`
+  opens a file as a press in All files does, `showFolder` shows All files
+  with a folder open, and `href` gives the address of the page of a chip.
+  Without `mentions`, the composer has no list, and a message shows each
+  mention as text, as
+  [File mentions](../../docs/protocol/file-mentions.md) says.
 - `onOpenPage` gets the page of a workspace chip in a sent message or an
   answer, such as `/orgs/acme/workspaces/<id>/files`, after a plain click.
   The app opens it in the same window. A click with a modifier key stays
@@ -119,10 +128,11 @@ stops its own controller:
   takes the place of the composer.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
-- The chat sets no CSS position. A dialog or a sheet covers the nearest
-  positioned frame: the app frame. The lifted tab of a drag, and the tab
-  menu on desktop, draw on `document.body` with a fixed position, because
-  the row clips what it holds.
+- The chat sets no CSS position, except on the message box of a composer,
+  so the list of `@` lies just above the box. A dialog or a sheet covers
+  the nearest positioned frame: the app frame. The lifted tab of a drag,
+  and the tab menu on desktop, draw on `document.body` with a fixed
+  position, because the row clips what it holds.
 - The menus, the dialogs, and the sheets of the chat note themselves in
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while
@@ -465,9 +475,22 @@ owner that keeps the draft of each session, as the chat does.
 `components/ComposerDrafts.dom.test.tsx` switches the sessions of the
 chat after a delete, and moves the draft of a composer with its identity.
 Undo stays with its draft in both.
-`components/chip-field/field-text.test.ts` checks the separator rule. The
-DOM tests focus, type, paste, clear, and read the field through
+`components/chip-field/field-text.test.ts` checks the separator rule, for
+links and for mentions. `components/chip-field/MentionList.dom.test.tsx`
+opens the list of `@`, moves its highlight, picks with Enter and Tab,
+closes it with Esc and a space, shows its one-line states, and checks that
+Enter then sends nothing. `components/chip-field/FileChips.dom.test.tsx`
+restores file chips from a draft, opens a file and a folder, removes a chip
+with its ×, pastes a mention, and follows the tree.
+`components/chip-field/mention-field-test-kit.tsx` mounts the field with the
+files of a chat. `components/AttachmentChips.dom.test.tsx` removes an
+attached file with the cell of its icon, and on a phone with its × at the
+end. The DOM tests focus, type, paste, clear, and read the field through
 `src/test-support/message-field.ts`.
+`mentions/mention-text.test.ts` reads and writes mentions, and
+`mentions/mention-rows.test.ts` orders the rows of the list.
+`links/chat-parts-mentions.test.ts` reads mentions in a sent message, and
+`links/FileLink.dom.test.tsx` opens a file and a folder from its chip.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
@@ -513,8 +536,13 @@ check in the Mac app.
   states.
 - `components/chip-field/`: `ChipTextField`, the message field of every
   composer, over Lexical. `chip-nodes.tsx` holds the chip node and the
-  node of a link that waits for its workspace. `field-content.ts` turns
-  plain text into nodes and back, and reconciles the chips with the list.
+  node of a link that waits for its workspace. `file-mention-nodes.tsx`
+  holds the file chip node and the node of a mention that waits for its
+  entry. `field-content.ts` turns plain text into nodes and back, and
+  reconciles the chips with the list. `mention-content.ts` reconciles the
+  file chips with the tree, finds the query of `@`, and puts a pick in its
+  place. `mention-plugins.tsx` holds the list of `@` and the reconcile of
+  the file chips.
   `field-text.ts` joins the parts of the plain text with the separator
   rule. `field-plugins.tsx` holds the value, paste, copy, Enter, editable,
   and reconcile plugins. `focus-plugins.tsx` holds the handle that focuses
@@ -527,7 +555,11 @@ check in the Mac app.
   links of a message field, and `linkTarget`, `chat-parts.ts`, the one
   tokenizer of sent messages and answers, `LinksContext.tsx`, the
   workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
-  which draws the parts of a message or an answer.
+  which draws the parts of a message or an answer, with its file chips.
+- `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
+  the entries that the list offers and their order, and
+  `MentionsContext.tsx`, the files that the chat gets and the tree that
+  the list and the chips find.
 - `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat

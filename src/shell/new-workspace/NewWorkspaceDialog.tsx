@@ -6,6 +6,7 @@ import styles from '../../../docs/mockups/src/components/new-workspace/NewWorksp
 import { useNavigation } from '../../app/navigation'
 import { defaultSection } from '../../app/sections'
 import { useStore, valueOf } from '../../app/store'
+import { DraftFiles } from '../../chat/components/AttachmentChips'
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useSendKey } from '../../chat/components/send-key'
@@ -18,12 +19,7 @@ import { Overlay, useModalLayer } from '../ui/Overlay'
 import { trapTab } from '../ui/Sheet'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
 import { ChooseRepositoriesNotice } from './notices'
-import {
-  AttachButton,
-  AttachmentList,
-  RepositoryMenu,
-  UploadError,
-} from './parts'
+import { AttachButton, RepositoryMenu, UploadError } from './parts'
 import local from './new-workspace.module.css'
 import { OrgLinks } from './OrgLinks'
 import { useNewWorkspaceForm } from './useNewWorkspaceForm'
@@ -141,9 +137,9 @@ function DialogCard(props: {
         <>
           <div className={styles.body}>
             {form.draft.attachments.length > 0 ? (
-              <AttachmentList
+              <DraftFiles
                 attachments={form.draft.attachments}
-                remove={(id) => model.detach(id)}
+                onRemove={(id) => model.detach(id)}
               />
             ) : null}
             <OrgLinks orgId={org.id}>

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useSyncExternalStore, type MouseEvent, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { classes } from '../common/classes'
 import { useControlSizes } from '../common/touch'
@@ -7,16 +7,52 @@ import styles from './ChipRemove.module.css'
 /**
  * How a chip of the composer can go (decision 215). `name` names the chip
  * in the button "Remove <name>". A view runs no script and has no pointer,
- * so `pointer` draws the chip with the pointer over its icon.
+ * so `pointer` draws the chip with the pointer over its icon. The app gives
+ * `onRemove`, which removes the chip.
  */
 export type ChipRemoval = {
   name: string
   pointer?: boolean
+  onRemove?: () => void
 }
 
-/** Whether no pointer hovers here: the phone views of the mockups. */
+/** A device whose main pointer cannot hover, such as a touch screen. */
+const noHoverQuery = '(hover: none)'
+
+function canMatch(): boolean {
+  return (
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+  )
+}
+
+function subscribe(listener: () => void): () => void {
+  if (!canMatch()) return () => undefined
+  const query = window.matchMedia(noHoverQuery)
+  query.addEventListener('change', listener)
+  return () => query.removeEventListener('change', listener)
+}
+
+function snapshot(): boolean {
+  return canMatch() && window.matchMedia(noHoverQuery).matches
+}
+
+/**
+ * Whether no pointer hovers here: the phone layout, or a device whose main
+ * pointer cannot hover, such as a tablet in the desktop layout. A view of
+ * the mockups has no window, so only its phone layout counts.
+ */
 export function useNoHover(): boolean {
-  return useControlSizes().field === 'lg'
+  const touch = useControlSizes().field === 'lg'
+  const noHover = useSyncExternalStore(subscribe, snapshot, () => false)
+  return touch || noHover
+}
+
+/**
+ * A press on a button inside the text keeps the caret in the text, so the
+ * removal of a chip leaves the focus in the field.
+ */
+function keepCaret(event: MouseEvent) {
+  event.preventDefault()
 }
 
 /**
@@ -46,6 +82,8 @@ export function ChipIconCell(props: {
         styles.remove,
         props.removal.pointer && styles.pointer,
       )}
+      onClick={props.removal.onRemove}
+      onMouseDown={props.focusable ? undefined : keepCaret}
       tabIndex={props.focusable ? 0 : -1}
       type="button"
     >
@@ -56,8 +94,8 @@ export function ChipIconCell(props: {
 }
 
 /**
- * The × at the end of a chip of the composer, where no pointer hovers, as
- * on a phone (decision 217). It shows at all times.
+ * The × at the end of a chip in the text, where no pointer hovers, as on a
+ * phone (decision 217). It shows at all times.
  */
 export function ChipEndRemove(props: { removal: ChipRemoval }) {
   if (!useNoHover()) return null
@@ -65,6 +103,9 @@ export function ChipEndRemove(props: { removal: ChipRemoval }) {
     <button
       aria-label={`Remove ${props.removal.name}`}
       className={styles.end}
+      onClick={props.removal.onRemove}
+      onMouseDown={keepCaret}
+      tabIndex={-1}
       type="button"
     >
       <X aria-hidden size={14} />

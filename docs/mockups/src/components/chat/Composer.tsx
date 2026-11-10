@@ -7,11 +7,8 @@ import { ScreenLink } from '../common/ScreenLink'
 import { ActionButton, IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import { AttachmentChips } from './AttachmentChips'
-import {
-  FileMentionList,
-  MentionAnchor,
-  type MentionTree,
-} from './FileMentionList'
+import { FileMentionList, type MentionTree } from './FileMentionList'
+import { MentionAnchor } from './MentionList'
 import { MessageField } from './MessageField'
 import { ModelPicker } from './ModelPicker'
 import { SessionLoginLabel, type SessionLogin } from './SessionLogin'

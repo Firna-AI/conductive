@@ -87,7 +87,10 @@ says.
 - The composer names no login when a message runs on the user's own login.
   A name for the own login was rejected, because it tells the user nothing
   new.
-- The composer attaches files to a message.
+- The composer attaches files to a message. Each attached file has a ×
+  that removes it, as
+  [Remove a chip of the composer](file-mentions.md#remove-a-chip-of-the-composer)
+  says.
 - [The send key](create-a-workspace.md#the-send-key) gives the key that
   sends a message from the composer (decision 143).
 - The composer shows a notice when the user has no login for the agent of
@@ -185,6 +188,12 @@ says.
 
 - [Workspace links](workspace-links.md) says how chat text and the message
   field of each composer show a link to a workspace of the org, as a chip.
+
+## File mentions
+
+- [File mentions](file-mentions.md) says how the composer of a workspace
+  chat lists the files and folders of the workspace after `@`, and how a
+  message shows them as chips.
 
 ## What the chat shows
 

@@ -23,9 +23,16 @@ export function FileChip(props: {
   entry: MentionEntry
   opener?: (chip: ChipOpener) => ReactNode
   removal?: ChipRemoval
+  /** The label of the name, when it differs from the last part of the path. */
+  name?: string
+  /** The label of the whole path, for the title. */
+  title?: string
+  /** In a message box, a press on the name opens the file. */
+  onOpen?: () => void
 }) {
   const { entry, removal } = props
-  const name = entryName(entry)
+  const name = props.name ?? entryName(entry)
+  const nameText = <span className={base.name}>{name}</span>
   const icon = (
     <EntryIcon
       className={styles.icon}
@@ -36,7 +43,7 @@ export function FileChip(props: {
   )
   const chip: ChipOpener = {
     className: useChipClass(removal),
-    title: entry.folder ? `${entry.path}/` : entry.path,
+    title: props.title ?? (entry.folder ? `${entry.path}/` : entry.path),
     children: (
       <>
         {removal ? <ChipIconCell icon={icon} removal={removal} /> : icon}
@@ -44,7 +51,19 @@ export function FileChip(props: {
           <span className={a11y.hidden}>
             {entry.folder ? 'Folder ' : 'File '}
           </span>
-          <span className={base.name}>{name}</span>
+          {props.onOpen ? (
+            <button
+              className={styles.open}
+              onClick={props.onOpen}
+              onMouseDown={(event) => event.preventDefault()}
+              tabIndex={-1}
+              type="button"
+            >
+              {nameText}
+            </button>
+          ) : (
+            nameText
+          )}
         </span>
         {removal ? <ChipEndRemove removal={removal} /> : null}
       </>

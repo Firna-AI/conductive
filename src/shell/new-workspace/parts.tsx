@@ -1,17 +1,7 @@
 import { useRef } from 'react'
-import {
-  ChevronDown,
-  FileText,
-  FolderGit2,
-  ImageIcon,
-  Paperclip,
-  X,
-} from 'lucide-react'
-import chips from '../../../docs/mockups/src/components/chat/AttachmentChips.module.css'
-import { formatSize } from '../../../docs/mockups/src/components/chat/sizes'
+import { ChevronDown, FolderGit2, Paperclip } from 'lucide-react'
 import type { ApiError } from '../../app/api/client'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
-import type { Attachment } from '../../shared/messages'
 import type { Repository } from '../../shared/org-settings'
 import { ActionButton, IconButton, type ActionTone } from '../ui/actions'
 import { MenuButton } from '../ui/Menu'
@@ -56,33 +46,6 @@ export function RepositoryMenu(props: {
         </ActionButton>
       )}
     />
-  )
-}
-
-/** The files attached to the first message, each with a way to remove it. */
-export function AttachmentList(props: {
-  attachments: readonly Attachment[]
-  remove: (id: string) => void
-}) {
-  return (
-    <ul aria-label="Attached files" className={chips.chips}>
-      {props.attachments.map((file) => {
-        const Icon = file.kind === 'image' ? ImageIcon : FileText
-        return (
-          <li className={chips.chip} key={file.id}>
-            <Icon aria-hidden className={chips.icon} size={13} />
-            <span className={chips.name}>{file.name}</span>
-            <span className={chips.size}>{formatSize(file.sizeBytes)}</span>
-            <IconButton
-              icon={X}
-              label={`Remove ${file.name}`}
-              onPress={() => props.remove(file.id)}
-              quiet
-            />
-          </li>
-        )
-      })}
-    </ul>
   )
 }
 
