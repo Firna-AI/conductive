@@ -15,6 +15,7 @@ import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
+import { feedbackRoute } from './app-api/feedback'
 
 export { routeDevice } from './devices/router'
 
@@ -25,6 +26,8 @@ export async function route(
   dependencies: AppDependencies,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const feedback = await feedbackRoute(request, env, context, dependencies)
+  if (feedback) return feedback
   const waitlist = await waitlistRoute(request, env, context, dependencies)
   if (waitlist) return waitlist
   const operator = await handleOperatorRequest(

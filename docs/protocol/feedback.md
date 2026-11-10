@@ -120,7 +120,10 @@ draws the dialog at `app/feedback`, on desktop and on a phone.
 - The app version is the version number of the app and the short commit
   of its build. The web app and the Mac app both give it.
 - The Worker adds the user ID, the GitHub login, the numeric GitHub ID,
-  the `User-Agent` header of the request, and the time of the send.
+  and the `User-Agent` header of the request.
+- The `Date` header of the delivered email gives the time of the send. A
+  time in the text was rejected, because a retry of the same draft would
+  then send a second email.
 - The Worker keeps the org ID only when the person is a member of that
   org. It keeps the workspace ID only when the workspace belongs to that
   org. Otherwise it leaves out that ID, and sends the rest. Reason: the
@@ -175,6 +178,9 @@ draws the dialog at `app/feedback`, on desktop and on a phone.
   a new press of Send tries again.
 - A repeat of a send of the same draft sends one email, also after a lost
   reply. A send of a changed draft sends a new email.
+- [Resend keeps each delivery key for 24 hours](https://resend.com/changelog/idempotency-keys).
+  So a repeat more than 24 hours after the first try can send a second
+  email.
 - A close without a send keeps the draft in the memory of the tab. The next
   open of the dialog shows it, and a send clears it. Reason: an Escape by
   mistake loses nothing, and the browser keeps nothing in its storage.

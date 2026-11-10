@@ -535,7 +535,8 @@ line that applies a decision of the user names that decision.
 - The app version is the version of `package.json` and the short commit
   of the build. The web build and the Mac app build stamp it.
 - The Worker adds the user ID, the GitHub login, the GitHub ID, the
-  `User-Agent` header of the request, and the time.
+  `User-Agent` header of the request. The delivered email's date gives the
+  time, as the email design below says.
 - The message carries no page address and no name of an org or a
   workspace. Reason: the address of a file view holds the file path, and a
   name can hold private words. The IDs let the team find the org in the
@@ -598,6 +599,16 @@ line that applies a decision of the user names that decision.
   body, as the key of an invitation does. Reason: a second press of Send
   after a lost reply sends one email. A changed draft gets a new key,
   because Resend refuses a key that it saw with another body.
+- The key hashes both the user ID and the draft ID. This is my
+  implementation call of 10 November 2026. Reason: the key then stays at
+  140 characters, within Resend's limit, for any accepted draft ID.
+- Resend keeps a delivery key for 24 hours. A repeat after that window can
+  send another email. This is the limit of the selected email service,
+  with no feedback copy stored in the app.
+- The email's standard delivery date supplies the time of the send. The
+  plain text has no separate Worker timestamp. This is my implementation
+  call of 10 November 2026. Reason: a retry after the Worker clock moves
+  keeps the same payload and delivery key.
 - On a local app origin with a team inbox configured, the Worker writes
   the email to its log and sends nothing, as it does for the other emails.
   It needs no Resend key. Reason: the missing-inbox rule still applies to
@@ -722,28 +733,32 @@ Depends on: 2
 
 Add the two routes, the email, and the body limit, with their tests.
 
-- [ ] Add the shared types and limits in `src/shared/feedback.ts`.
-- [ ] Give the shared mail sender in `worker/mail-sender.ts` a sender
+- [x] Add the shared types and limits in `src/shared/feedback.ts`.
+- [x] Give the shared mail sender in `worker/mail-sender.ts` a sender
       name, a reply address, and attachments. An attachment is a checked
       image kind with its bytes, and the sender writes its name and type,
       as decision 274 chose. Keep the invitation and approval emails as
       they are, with their tests.
-- [ ] Add the check of the first bytes of PNG, JPEG, GIF, and WebP files
+- [x] Add the check of the first bytes of PNG, JPEG, GIF, and WebP files
       to `src/shared/`, so that the dialog and the Worker share it.
-- [ ] Add `GET /api/feedback` and `POST /api/feedback` after the app
+- [x] Add `GET /api/feedback` and `POST /api/feedback` after the app
       request gate, with the checks, the context, and the email of the
       design.
-- [ ] Declare the 10 MB body limit of `POST /api/feedback` at the Worker
+- [x] Declare the 10 MB body limit of `POST /api/feedback` at the Worker
       entry.
-- [ ] Add `FEEDBACK_EMAIL` to `AppEnv`, with the local log and the 503
+- [x] Add `FEEDBACK_EMAIL` to `AppEnv`, with the local log and the 503
       without it.
-- [ ] Test with the fake Resend: the email fields, the reply address with
+- [x] Test with the fake Resend: the email fields, the reply address with
       and without an email, the attachments, one email for a repeated
       draft, a new email for a changed draft, each refusal, a renamed file
       of another type, the IDs of an org of which the person is not a
       member, and the local log.
-- [ ] Update the [Worker README](../worker/README.md) and the
+- [x] Update the [Worker README](../worker/README.md) and the
       [app API README](../worker/app-api/README.md).
+
+Evidence and README entry-point notes:
+`.context/command-palette-feedback/reports/m3.md`. The docs implementor
+owns the remaining README task.
 
 ## Milestone 4: The feedback client of the web app
 
