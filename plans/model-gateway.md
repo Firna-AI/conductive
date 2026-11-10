@@ -1228,17 +1228,17 @@ Depends on: every other milestone
 
 - [x] Run the check of decision 12 A on Cal's Mac, for an API key and for a
       subscription token. Record the results under `.context/model-gateway/real-check/`.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Copy the merge justifications of
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Copy the merge justifications of
       `.context/model-gateway/merge-main-ab58-justification.md` into the pull
       request description, as the `git-merge` skill says.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Delete `plans/follow-ups/agent-logins-readable-in-sandbox.md`, which
+- [x] Delete `plans/follow-ups/agent-logins-readable-in-sandbox.md`, which
       this change fixes.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
@@ -1247,6 +1247,10 @@ Depends on: every other milestone
       plan, and the follow-up items that the change adds.
 
 ## Post-merge follow-up (non-blocking)
+
+Both tasks below became follow-up items when the plan was deleted:
+`plans/follow-ups/gateway-real-login-smoke.md` and
+`plans/follow-ups/gateway-request-logs-check.md`.
 
 - [ ] On the deployed Worker, with a real login of each kind, check that
       an answer streams in steps, that an answer of more than 20 minutes

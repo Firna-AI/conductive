@@ -3786,7 +3786,8 @@ Conductor's sandbox worker.
   - **D.** Run the agent programs outside the sandbox.
 - **Recommendation:** A.
 - **Chosen:** A, as a later follow-up, by the user on 8 November 2026:
-  `plans/follow-ups/agent-logins-readable-in-sandbox.md`. It reverses the
+  [the agent-login follow-up item](https://github.com/Firna-AI/remote-code/blob/60b5b8d7fe1fa394687bdc125636c4eabd155c57/plans/follow-ups/agent-logins-readable-in-sandbox.md). The model gateway change fixed it
+  on 10 November 2026 and deleted the item. It reverses the
   earlier rejection of a login proxy when it lands. Before it covers
   Claude subscription tokens, check that the permission of decision 37
   covers a proxy.
