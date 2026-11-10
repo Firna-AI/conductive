@@ -551,6 +551,38 @@ Replaced ways:
 - **Action:** ask the user, because B adds behaviour at the key boundary
   that no requirement covers.
 
+### Decision 198: The place of This Mac in the palette's Account group
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `src/app/palette/commands.ts` (`accountSettingIds`) and the
+  mockup page `mac-app/command-palette`.
+- **Background:** The palette's Settings tab lists the sections of the
+  Account page in its Account group. In the Mac app the group also holds
+  This Mac. On `main`, the app lists This Mac after New workspaces. This
+  plan's mockup `mac-app/command-palette` draws This Mac after Sign-in, in
+  the order of the General tab, where This Mac follows Sign-in.
+- **Problem:** The mockup and the app put This Mac in different places.
+  The protocol says only that the group holds This Mac in the Mac app, and
+  that Keyboard shortcuts ends the group.
+- **Impact if no action:** The mockup and the product disagree on one
+  row.
+- **Root question:** Where does This Mac stand in the Account group of the
+  palette in the Mac app?
+- **Options:**
+  - **A.** After Sign-in, as the General tab orders its sections. This
+    changes one list and one test of the app. Effort: Small.
+  - **B.** After New workspaces, as `main` has it. This changes the
+    mockup. Effort: Small.
+- **Left out:** Other places, because no source draws or asks for them.
+- **Wider fix:** None. One list holds the order.
+- **Previous examples:** None found.
+- **Recommendation:** A. The palette then follows the order of the
+  General tab, which the person already knows.
+- **Action:** ask the user, because the choice decides which side of a
+  mismatch between the mockup and the product is right.
+
 ## Design
 
 ### Commands and default keys
@@ -1082,25 +1114,43 @@ Tags: ui
 
 Depends on: 1, 4, 5
 
-- [ ] Add the tab at `/account/shortcuts` with its groups and rows. List
+- [x] Add the tab at `/account/shortcuts` with its groups and rows. List
       the fixed keys too, also those of changes that merged first, such
       as the tab menu key ⇧F10.
-- [ ] Add the recorder, Replace, Reset, Reset all, the kept-key line, and
+- [x] Add the recorder, Replace, Reset, Reset all, the kept-key line, and
       the save errors. Save through the account model.
-- [ ] Add the search field of decision 195 with the palette's matcher,
+- [x] Add the search field of decision 195 with the palette's matcher,
       and the line of a search without a match.
-- [ ] From the questions of Milestone 5 part B: Switch to org 1 to 9 runs
+- [x] From the questions of Milestone 5 part B: Switch to org 1 to 9 runs
       on each page that shows the org rail; Next workspace that needs input
       starts from the top of the list with no open workspace (a model
       rule); the org tiles of the rail, the All files, Changes, and Checks
       tabs, and the Archive button of the pull request bar show their keys
       in their hints.
-- [ ] Apply the person's changes to the keymap from the account reply.
-- [ ] Add the Keyboard shortcuts row to the palette's Settings tab.
-- [ ] Happy-dom tests: a recorded key saves and runs, Replace moves a key,
+- [x] Apply the person's changes to the keymap from the account reply.
+- [x] Add the Keyboard shortcuts row to the palette's Settings tab.
+- [x] Happy-dom tests: a recorded key saves and runs, Replace moves a key,
       and Reset brings back the default.
-- [ ] Smoke-test in Chrome on desktop and phone, in light and dark. Save
-      the screenshots under `.context/keyboard-shortcuts/`.
+- [x] Smoke-test in Chrome on desktop and phone, in light and dark. Save
+      the screenshots under `.context/keyboard-shortcuts/`. Evidence:
+      `.context/keyboard-shortcuts/reports/m6-ui.md` and
+      `.context/keyboard-shortcuts/m6/shots/final/`.
+- Agent calls of 2026-11-10, from Milestone 6:
+  - A plain Tab and Shift+Tab leave the recorder, so a keyboard user
+    reaches Remove and Cancel, and the recorder does not take them. Tab
+    with a modifier records. Reason: no keyboard trap, and a plain Tab
+    shortcut would take the key that moves the focus on every page.
+  - A refused key names its one fixed row on the keyboard, also a Mac app
+    row such as Reload in a browser; with several rows or none, the line
+    says that the key is a fixed shortcut.
+  - Keys that equal the defaults save as a reset, so the account stores
+    only changes. A key that the row already has changes nothing.
+  - While a recorder shows, no key runs a command, any Escape cancels, and
+    a new search ends the recording. One save runs at a time.
+  - The focus returns to the new key, to Add shortcut or +, to Replace, or
+    after Reset all to the search field.
+  - Next workspace that needs input also starts from the top when the open
+    workspace is hidden in a collapsed section.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

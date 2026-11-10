@@ -2,10 +2,11 @@ import { expect, test } from 'vitest'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { listedCommands } from './listed-commands'
 import type { PaletteOffer } from './page-actions'
+import { actionGroups } from './palette-groups'
 import type { PaletteBase } from './palette-source'
 import { acme, firna, futex, source } from './results-test-kit'
 
-test('the palette lists the command of each row: the offered actions, its own rows, a Switch to row by the place of its org in the rail, and Repositories settings', () => {
+test('the palette lists the command of each row but Switch to org, which the rail runs, and a Switch to row shows the key of the place of its org in the rail', () => {
   const run = () => undefined
   const offers: PaletteOffer[] = [
     { scope: { kind: 'window' }, actions: [{ id: 'hide-sidebar', run }] },
@@ -27,10 +28,17 @@ test('the palette lists the command of each row: the offered actions, its own ro
   }
   const commands = (overrides: Partial<PaletteBase>) =>
     listedCommands(source(overrides)).map(({ command }) => command)
+  // The command of each Switch to row, whose key the row shows.
+  const switches = (overrides: Partial<PaletteBase>) =>
+    actionGroups(source(overrides))
+      .flatMap((group) => group.rows)
+      .flatMap((row) =>
+        row.kind === 'command' && row.lead.kind === 'org' ? [row.command] : [],
+      )
   expect({
     page: commands({ offers, openWorkspaceId: 'open' }),
-    futex: commands({ org: futex }),
-    deleted: commands({ orgs: [acme, deleted, firna] }),
+    futex: switches({ org: futex }),
+    deleted: switches({ orgs: [acme, deleted, firna] }),
     suspended: commands({ suspended: true }),
   }).toEqual({
     page: [
@@ -38,19 +46,12 @@ test('the palette lists the command of each row: the offered actions, its own ro
       'new-workspace',
       'new-section',
       'create-org',
-      'org-2',
-      'org-3',
       'toggle-sidebar',
       'repositories-settings',
+      'keyboard-shortcuts',
     ],
-    futex: [
-      'new-workspace',
-      'create-org',
-      'org-1',
-      'org-3',
-      'repositories-settings',
-    ],
-    deleted: ['new-workspace', 'create-org', 'org-3', 'repositories-settings'],
-    suspended: ['create-org', 'org-2', 'org-3', 'repositories-settings'],
+    futex: ['org-1', 'org-3'],
+    deleted: ['org-3'],
+    suspended: ['create-org', 'repositories-settings', 'keyboard-shortcuts'],
   })
 })

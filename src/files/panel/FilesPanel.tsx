@@ -14,7 +14,7 @@ import {
 import { ActionButton } from '../ui/actions'
 import { EmptyState, Loading } from '../ui/EmptyState'
 import { LayoutRoot } from '../ui/layout'
-import { LinkTabs, type LinkTab } from '../ui/LinkTabs'
+import { LinkTabs, type CommandKey, type LinkTab } from '../ui/LinkTabs'
 import { PanelBar } from '../ui/PanelBar'
 import { ChangeList } from './ChangeList'
 import { FileTree } from './FileTree'
@@ -146,8 +146,13 @@ export function FilesPanel(props: {
    * function. The default is the clock of the browser.
    */
   now?: () => number
+  /**
+   * The key of the command that opens each list, which the tooltip of its
+   * tab shows and its link names to a screen reader.
+   */
+  listKeys?: Partial<Record<FileListKind, CommandKey>>
 }) {
-  const { files, list, navigation } = props
+  const { files, list, navigation, listKeys } = props
   const snapshot = useFilesSnapshot(files)
   const open = isFilesTab(props.activeTab) ? props.activeTab : null
   const count = snapshot.changes?.summary.files ?? 0
@@ -156,17 +161,20 @@ export function FilesPanel(props: {
       label: 'All files',
       to: { kind: 'list', list: 'all' },
       selected: list === 'all',
+      commandKey: listKeys?.all,
     },
     {
       label: 'Changes',
       to: { kind: 'list', list: 'changes' },
       count: count > 0 ? count : undefined,
       selected: list === 'changes',
+      commandKey: listKeys?.changes,
     },
     {
       label: 'Checks',
       to: { kind: 'list', list: 'checks' },
       selected: list === 'checks',
+      commandKey: listKeys?.checks,
     },
   ]
   const listProps = { files, snapshot, open, navigation }

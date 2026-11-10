@@ -2,7 +2,12 @@ import {
   shortcutDigits,
   type ShortcutCommandId,
 } from '../../shared/shortcut-commands'
-import { actionTexts, orgSettings, type CommandText } from '../palette/commands'
+import {
+  accountSettings,
+  actionTexts,
+  orgSettings,
+  type CommandText,
+} from '../palette/commands'
 
 type ShortcutGroup = 'General' | 'View' | 'Navigation' | 'Workspace' | 'Chat'
 type ShortcutScope =
@@ -39,11 +44,13 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
   command('command-palette', 'General', 'every-page', 'Command palette', [
     'search',
   ]),
-  command('keyboard-shortcuts', 'General', 'palette', 'Keyboard shortcuts', [
-    'keys',
-    'hotkeys',
-    'keybindings',
-  ]),
+  command(
+    'keyboard-shortcuts',
+    'General',
+    'palette',
+    accountSettings['keyboard-shortcuts'].label,
+    accountSettings['keyboard-shortcuts'].words,
+  ),
   command('account-page', 'General', 'every-page', 'Account page', [
     'settings',
     'preferences',

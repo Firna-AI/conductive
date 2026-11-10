@@ -21,7 +21,11 @@ export interface ShortcutWorkspace {
   readonly needsInput: boolean
 }
 
-/** The caller supplies visible rows, after collapsed sections and groups hide. */
+/**
+ * The caller supplies visible rows, after collapsed sections and groups hide.
+ * Next workspace that needs input starts from the top of the list when no
+ * shown row is open, such as on the list page.
+ */
 export function workspaceForShortcut(
   command: ShortcutCommandId,
   shown: readonly ShortcutWorkspace[],
@@ -32,7 +36,11 @@ export function workspaceForShortcut(
   )
   if (numbered >= 0) return shown[numbered]?.id
   const current = shown.find((workspace) => workspace.id === currentId)
-  if (!current) return undefined
+  if (!current) {
+    return command === 'next-needs-input'
+      ? shown.find((workspace) => workspace.needsInput)?.id
+      : undefined
+  }
   if (command === 'previous-workspace' || command === 'next-workspace') {
     return stepShortcutItem(
       shown,

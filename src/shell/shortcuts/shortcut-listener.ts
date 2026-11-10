@@ -18,6 +18,8 @@ export interface ShortcutPage {
   readonly offers: ShortcutOffers
   /** The elements of the terminals, as their owners mark them. */
   readonly terminals: ReadonlySet<HTMLElement>
+  /** The recorders of the Keyboard shortcuts tab that wait for a key. */
+  readonly recorders: ReadonlySet<HTMLElement>
   readonly layers: OpenLayers
 }
 
@@ -91,8 +93,8 @@ export function handleShortcutPress(press: KeyPress, page: ShortcutPage): void {
     keymap: page.keymap,
     ...offersOf(page),
     focus: focusOf(press.target, page.terminals),
-    // The app has no recorder of keys yet.
-    recording: false,
+    // While a recorder shows, it waits for a key, and no key runs a command.
+    recording: page.recorders.size > 0,
     menu: page.layers.menuOpen() ? 'closable' : 'closed',
   })
   if (decision.kind === 'pass') return

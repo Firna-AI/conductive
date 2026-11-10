@@ -35,6 +35,16 @@ test('counts shown workspace rows and wraps navigation including the next row th
       'only',
     ),
   ).toBeUndefined()
+  // With no open row, as on the list page, the step starts from the top.
+  const listPage = [
+    { id: 'quiet', needsInput: false },
+    { id: 'first-asking', needsInput: true },
+    { id: 'second-asking', needsInput: true },
+  ]
+  expect(workspaceForShortcut('next-needs-input', listPage, '')).toBe(
+    'first-asking',
+  )
+  expect(workspaceForShortcut('next-workspace', listPage, '')).toBeUndefined()
   expect(orgForShortcut('org-2', ['first-org', 'last-org'])).toBe('last-org')
   expect(stepShortcutItem(['low', 'high'], 'high', 1)).toBe('low')
   expect(stepShortcutItem(['first-tab', 'last-tab'], 'first-tab', -1)).toBe(

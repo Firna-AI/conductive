@@ -97,6 +97,11 @@ app.
 - The recorder says "Press the keys" until the person presses a key.
 - Escape cancels the recording, and so does Cancel. The row then keeps its
   keys.
+- A plain Tab and Shift+Tab move the focus out of the recorder, to Remove
+  and Cancel, so the recorder does not take them. Reason: a keyboard user
+  must be able to leave the recorder, and a plain Tab shortcut would take
+  the key that moves the focus on every page. Tab with a modifier records
+  as any key does.
 - While the recorder replaces a key, it also offers Remove. Remove takes
   that key off the command, and saves at once. A command can lose every
   key this way.

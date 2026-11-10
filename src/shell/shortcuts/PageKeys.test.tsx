@@ -36,26 +36,43 @@ describe('the keys of the commands of a page', () => {
       address: navigation.href(),
     }
     if (dialog) press(dialog, 'Escape')
-    // Futex is the second org of the rail.
-    const switched = pressHintKey(app, 'org-2', document.body)
+    // The Keyboard shortcuts row of the Settings tab opens the tab.
+    const shortcuts = pressHintKey(app, 'keyboard-shortcuts', document.body)
     await settle()
     expect({
       opened,
-      switched: { prevented: switched.defaultPrevented, at: navigation.href() },
+      shortcuts: {
+        prevented: shortcuts.defaultPrevented,
+        at: navigation.href(),
+      },
     }).toEqual({
       opened: { place: 'Acme · General', address: routes.account() },
-      switched: { prevented: true, at: routes.org('futex') },
+      shortcuts: { prevented: true, at: routes.accountTab('shortcuts') },
+    })
+  })
+
+  test('the rail opens the org at the place of each key, also the org that the palette works on', async () => {
+    const { app, navigation } = await openPaletteTab(routes.account())
+    const step = async (command: ShortcutCommandId) => {
+      const key = pressHintKey(app, command, document.body)
+      await settle()
+      return { prevented: key.defaultPrevented, at: navigation.href() }
+    }
+    // The palette works on Acme here, so it has no Switch to row for Acme.
+    const steps = { first: await step('org-1'), second: await step('org-2') }
+    expect(steps).toEqual({
+      first: { prevented: true, at: routes.org(org) },
+      second: { prevented: true, at: routes.org('futex') },
     })
   })
 
   test('a key whose command the page does not offer does nothing and goes on to the browser', async () => {
     const { app, navigation } = await openPaletteTab(routes.org(org))
-    // The list page has no right column and no open workspace. The palette
-    // works on Acme there, so it has no Switch to row for Acme.
+    // The list page has no right column, no open workspace, and no composer.
     const commands: ShortcutCommandId[] = [
       'toggle-right-column',
       'archive-workspace',
-      'org-1',
+      'focus-message',
     ]
     const prevented = commands.map(
       (command) => pressHintKey(app, command, document.body).defaultPrevented,

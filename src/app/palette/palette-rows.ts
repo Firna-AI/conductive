@@ -2,7 +2,7 @@ import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/
 import type { OrgSummary } from '../../shared/orgs'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import type { Workspace } from '../../shared/workspaces'
-import { routes, type SettingsTab } from '../router'
+import { routes, type AccountTab, type SettingsTab } from '../router'
 import {
   accountSettingIds,
   accountSettings,
@@ -198,7 +198,18 @@ export function orgSettingRows(
   }))
 }
 
-/** The sections of the Account page. Each row opens the tab that holds it. */
+/** The tab of the Account page that holds a section, or that a row is. */
+function accountTabOf(id: AccountSettingId): AccountTab {
+  if (id === 'new-workspaces') return 'preferences'
+  if (id === 'keyboard-shortcuts') return 'shortcuts'
+  return 'general'
+}
+
+/**
+ * The sections of the Account page, then its Keyboard shortcuts tab. Each
+ * row opens the tab that holds it. Keyboard shortcuts runs the command of
+ * the keys that opens the tab, whose key it shows.
+ */
 export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
   return accountSettingIds
     .filter((id) => mac || id !== 'this-mac')
@@ -209,9 +220,7 @@ export function accountRows(mac: boolean, withDetail: boolean): CommandRow[] {
       label: accountSettings[id].label,
       words: accountSettings[id].words,
       detail: withDetail ? accountLabel : undefined,
-      href:
-        id === 'new-workspaces'
-          ? routes.accountTab('preferences')
-          : routes.account(),
+      href: routes.accountTab(accountTabOf(id)),
+      ...commandOf(id === 'keyboard-shortcuts' ? 'keyboard-shortcuts' : null),
     }))
 }

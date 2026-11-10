@@ -10,7 +10,7 @@ export const SETTINGS_TABS = [
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
-export const ACCOUNT_TABS = ['general', 'preferences'] as const
+export const ACCOUNT_TABS = ['general', 'preferences', 'shortcuts'] as const
 
 export type AccountTab = (typeof ACCOUNT_TABS)[number]
 

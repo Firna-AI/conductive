@@ -52,7 +52,9 @@ const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe, delay 
   Give it a value that changes each minute.
 - After a merge, the bar shows Archive only to the workspace owner and the
   admins (decision 42). `onArchive` opens the app's Archive flow, with its
-  check for unpushed work. The bar itself archives nothing.
+  check for unpushed work. The bar itself archives nothing. `archiveKey`
+  gives the key of the app's Archive command, as the tooltip of Archive
+  and a name for `aria-keyshortcuts`.
 - `checksHref` is the app address of the Checks tab, because tabs are links.
   `onOpenChecks` lets the app's router open the tab in place.
 - A failed load shows one Try again on each screen: in the bar on desktop,

@@ -47,7 +47,8 @@ check unknown input before the app or Worker uses it.
   menus, recording, and focus.
 - [text-keys.ts](text-keys.ts): text field and terminal protection.
 - [navigation.ts](navigation.ts): list steps, numbered rows, and exact
-  workspace row and divider keys.
+  workspace row and divider keys. Next workspace that needs input starts
+  from the top of the shown rows when no shown row is open.
 
 ## Checks
 

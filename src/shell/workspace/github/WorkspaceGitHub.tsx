@@ -12,6 +12,7 @@ import { PullRequestBar } from '../../../github/PullRequestBar'
 import { PullRequestRow } from '../../../github/PullRequestRow'
 import { useGitHubState } from '../../../github/useGitHubState'
 import { useOrgServices } from '../../context'
+import { shortcutLabels, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
 import { useFilesNavigation } from '../files/files-navigation'
 import { githubSubscribe } from './github-events'
@@ -69,13 +70,18 @@ function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
 /**
  * The pull request bar at the top of the right column, or the row under the
  * header of a phone, whose pull request opens the Checks tab. After a merge,
- * Archive opens the app's Archive question.
+ * Archive opens the app's Archive question, and its tooltip shows the key
+ * of Archive workspace.
  */
 export function PullRequestPart(props: { context: WorkspaceContext }) {
   const { context } = props
   const github = useGitHubFeed()
   const navigation = useFilesNavigation(context)
   const now = useNow(60_000)
+  const archiveKey = shortcutLabels(
+    'Archive',
+    useShortcutHint('archive-workspace'),
+  )
   if (!github) return null
   if (context.viewport === 'phone') {
     return (
@@ -92,6 +98,7 @@ export function PullRequestPart(props: { context: WorkspaceContext }) {
   }
   return (
     <PullRequestBar
+      archiveKey={archiveKey}
       github={github}
       now={now}
       onArchive={context.archive}

@@ -1,7 +1,7 @@
 import { Archive, CircleAlert } from 'lucide-react'
 import type { Timestamp } from '../shared/api'
 import type { Workspace } from '../shared/workspaces'
-import { ActionButton } from './ActionButton'
+import { ActionButton, type CommandKey } from './ActionButton'
 import { canArchive, type GitHubViewer } from './archive'
 import {
   Branches,
@@ -28,6 +28,8 @@ export interface PullRequestBarProps {
    * when the app offers no Archive, as in a suspended org.
    */
   onArchive: (() => void) | null
+  /** The key of the command of Archive, which its tooltip shows. */
+  archiveKey?: CommandKey
 }
 
 /**
@@ -96,7 +98,11 @@ export function PullRequestBar(props: PullRequestBarProps) {
       ) : null}
       <span className={styles.actions}>
         {archive ? (
-          <ActionButton icon={Archive} onPress={archive}>
+          <ActionButton
+            commandKey={props.archiveKey}
+            icon={Archive}
+            onPress={archive}
+          >
             Archive
           </ActionButton>
         ) : null}

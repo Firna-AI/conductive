@@ -98,8 +98,8 @@ export function pressCommand(
 
 /**
  * Presses the key that the hints of the command show in the host of the
- * app: the first default key of the command that works there, such as ⌥⌘N
- * in a Chrome tab on a Mac, which keeps ⌘N.
+ * app: the first key of the command that works there, with the changes of
+ * the account, such as ⌥⌘N in a Chrome tab on a Mac, which keeps ⌘N.
  */
 export function pressHintKey(
   app: AppModel,
@@ -107,7 +107,8 @@ export function pressHintKey(
   target?: EventTarget,
 ): KeyboardEvent {
   const { platform, host } = app.services
-  const keymap = buildShortcutKeymap(platform, [])
+  const changes = app.account.account.get()?.shortcuts[platform] ?? []
+  const keymap = buildShortcutKeymap(platform, changes)
   const key = firstShortcutKey(command, keymap, platform, host)
   if (key === undefined) throw new Error(`${command} has no key here.`)
   return pressShortcut(key, target)

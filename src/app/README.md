@@ -158,8 +158,10 @@ the workspace stores, and the raw event streams of feature stores.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the command palette, the focus, saved drafts, New workspace as a page or a dialog,
+layers, the focus, saved drafts, New workspace as a page or a dialog,
 with the send key that every composer shares, and the waitlist.
+[Command palette and keys](palette-and-keys.md) gives the rules of the
+command palette and of the keyboard shortcuts.
 
 ## Rules for this code
 
@@ -239,9 +241,10 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
   through the file transport of the services: `api/xhr-files.ts` in the
   browser and in the Mac app. `api/read-*.ts`: the readers.
-  [api/read-core.ts](api/read-core.ts) reads both shortcut keyboards with
-  the shared reply reader. A malformed account structure remains an
-  `invalid_response` error from the API client.
+  [api/read-core.ts](api/read-core.ts) reads both shortcut keyboards and
+  the reply of a shortcut save with the shared reply readers. A malformed
+  account structure remains an `invalid_response` error from the API
+  client.
 - `attachment-upload.ts`: `uploadAttachment`, the one upload of a file for
   both composers. `draft-files.ts`: `DraftFile`, the upload state of each
   file of a draft, and `runFileJob`. `new-workspace-files.ts`:
@@ -287,8 +290,10 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   gives the words of the notice of a changed install script, which the
   Cloud computer tab of an admin and of a member show.
 - `account-model.ts`: the agent logins with their share setting, the
-  default model, the New workspace view, the GitHub App installations,
-  and the repositories that Create org offers. A screen watches the
+  default model, the New workspace view, the shortcut changes of each
+  keyboard, the GitHub App installations, and the repositories that
+  Create org offers. `saveShortcuts` saves one batch of changes for one
+  keyboard and keeps the confirmed changes of the reply. A screen watches the
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
   waitlist state for the invite code of the account.
@@ -376,9 +381,11 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   a query word matches it. `../shell/palette/PaletteList.tsx` draws it
   before the name. `commands.ts` holds the labels, the search words, and
   `actionCommands`, the command of the keys of each action. Each command
-  row names its command in `CommandRow.command`.
+  row names its command in `CommandRow.command`. The Account group of the
+  Settings tab ends with Keyboard shortcuts, which opens that tab.
   `listed-commands.ts` gives `listedCommands`, the commands that the
   palette lists now with their rows, which the keys of the palette run.
+  It leaves out Switch to org 1 to 9, which the org rail runs.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
   and gives `switchCommand`, the key of the Switch to row of an org by its
@@ -396,10 +403,15 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   settings read, and the list and the repositories of the org with their
   load states. `PaletteStatus.tsx` draws the status part.
 - `../shell/shortcuts/`: the shortcut layer: the one key listener on
-  `AppServices.onKey`, the commands that the parts of the page offer, the
-  terminals that keep their keys, the open layers, and the key hints. Its
+  `AppServices.onKey`, the keymap with the changes of the account, the
+  commands that the parts of the page offer, the terminals that keep
+  their keys, the recorder mark, the open layers, and the key hints. Its
   [README](../shell/shortcuts/README.md) says how a key goes, and which
   part of the page offers each command.
+- `../shell/account/shortcuts/`: the Keyboard shortcuts tab of the
+  account, with its recorder, Replace, Remove, Reset, Reset all, and
+  search. Its [README](../shell/account/shortcuts/README.md) gives its
+  rules.
 - `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
   which say whether they closed, and the modal layers with their owners.
   The shortcut listener reads them before a key runs a command, and the

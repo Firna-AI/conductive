@@ -20,7 +20,11 @@ import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
 import { ShortcutContractError } from '../../shared/shortcut-key'
-import { readShortcutPreferences } from '../../shared/shortcut-read'
+import {
+  readSaveShortcutsResponse,
+  readShortcutPreferences,
+} from '../../shared/shortcut-read'
+import type { SaveShortcutsResponse } from '../../shared/shortcuts'
 import { getStartedOrder } from '../get-started'
 import {
   choice,
@@ -147,14 +151,24 @@ export function readLogin(value: unknown): AgentLoginStatus {
   }
 }
 
-function readShortcuts(value: unknown) {
+/** A shared shortcut reader whose contract error is a parse error of the reply. */
+function shortcutReply<T>(read: (value: unknown) => T, value: unknown): T {
   try {
-    return readShortcutPreferences(value)
+    return read(value)
   } catch (error) {
     if (error instanceof ShortcutContractError)
       throw new ParseError(error.message)
     throw error
   }
+}
+
+function readShortcuts(value: unknown) {
+  return shortcutReply(readShortcutPreferences, value)
+}
+
+/** The confirmed changes of the keyboard that a shortcut save saved. */
+export function readSavedShortcuts(value: unknown): SaveShortcutsResponse {
+  return shortcutReply(readSaveShortcutsResponse, value)
 }
 
 export function readAccount(value: unknown): AccountResponse {

@@ -115,9 +115,13 @@ export const accountSettingIds = [
   'agents',
   'new-workspaces',
   'this-mac',
+  'keyboard-shortcuts',
 ] as const
 
-/** A section of the Account page. `this-mac` shows in the Mac app only. */
+/**
+ * A section of the Account page, or its Keyboard shortcuts tab, which ends
+ * the list. `this-mac` shows in the Mac app only.
+ */
 export type AccountSettingId = (typeof accountSettingIds)[number]
 
 export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =
@@ -130,4 +134,8 @@ export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =
       words: ['model', 'effort', 'default'],
     },
     'this-mac': { label: 'This Mac', words: ['device', 'commands'] },
+    'keyboard-shortcuts': {
+      label: 'Keyboard shortcuts',
+      words: ['keys', 'hotkeys', 'keybindings'],
+    },
   }

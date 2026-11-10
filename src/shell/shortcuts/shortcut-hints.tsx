@@ -65,6 +65,19 @@ export function shortcutTip(
 }
 
 /**
+ * The tooltip and the key name of a control that a part outside the shell
+ * draws, such as a tab of the Files lists, which takes them as plain props.
+ */
+export function shortcutLabels(
+  label: string,
+  hint: ShortcutHint | undefined,
+): { readonly title: string; readonly aria: string } | undefined {
+  return hint === undefined
+    ? undefined
+    : { title: `${label} (${hint.text})`, aria: hint.aria }
+}
+
+/**
  * The tooltip of a control of a library that takes no `title`, such as a
  * Firna button. The wrapper has no box, so the control keeps its layout.
  */

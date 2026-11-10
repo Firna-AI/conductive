@@ -1,4 +1,11 @@
-import { useState, type ReactNode, type Ref, type SyntheticEvent } from 'react'
+import {
+  useCallback,
+  useState,
+  type ReactNode,
+  type Ref,
+  type RefCallback,
+  type SyntheticEvent,
+} from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
@@ -127,19 +134,33 @@ export function IconButton(
     quiet?: boolean
     /** The command of the keys that the button runs. */
     shortcut?: ShortcutCommandId
+    /** Takes the element of the button, for an owner that moves the focus to it. */
+    buttonRef?: RefCallback<unknown>
   },
 ) {
   const Icon = props.icon
   const control = useControlSizes()
   const hint = useShortcutHint(props.shortcut)
   const keyRef = useAriaShortcut(hint)
+  const { buttonRef } = props
+  const bothRefs = useCallback(
+    (element: unknown) => {
+      keyRef(element)
+      buttonRef?.(element)
+    },
+    [keyRef, buttonRef],
+  )
   const button = (
     <Button
       {...triggerProps(props)}
       accessibilityLabel={props.label}
       boxSize={control.height}
       busy={props.busy}
-      buttonRef={props.shortcut === undefined ? undefined : keyRef}
+      buttonRef={
+        props.shortcut === undefined && buttonRef === undefined
+          ? undefined
+          : bothRefs
+      }
       disabled={props.disabled}
       iconNode={
         <Icon

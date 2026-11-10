@@ -2,7 +2,8 @@
 
 This area holds the keyboard shortcuts of the shell: the one key listener
 of the app, the commands that the parts of the page offer to the keys, the
-terminals that keep their keys, and the open menus and modal layers. The
+terminals that keep their keys, the recorder of the Keyboard shortcuts tab,
+and the open menus and modal layers. The
 [shortcut model](../../app/shortcuts/README.md) decides each key. This
 layer reads the page, asks the model, and acts on the decision. The
 [keyboard shortcut protocol](../../../docs/protocol/keyboard-shortcuts.md)
@@ -35,15 +36,20 @@ gives the rules.
   repeat decision, and the listener stops it without a run.
 - A press that the model passes goes on to the page and the browser
   untouched.
-- The app has no recorder of keys yet, so the listener tells the model
-  that nothing records.
+- While the recorder of the [Keyboard shortcuts tab](../account/shortcuts/README.md)
+  shows, it waits for a key, so the listener tells the model that a
+  recorder records, and no key runs a command. The recorder marks itself
+  with `useShortcutRecorder`, and takes the keys that reach it.
 
 ## The keymap
 
 `useKeymap` in `ShortcutProvider.tsx` is the one place where the keymap
-comes from. The listener and every key hint read it there. It holds the
-default keys of the keyboard of the person. The changes that a person
-saves in the account do not apply yet.
+comes from. The listener, every key hint, and the Keyboard shortcuts tab
+read it there, the tab through `useShortcutKeymap`. It holds the keys of
+the keyboard of the person: the defaults, with the changes that the
+account holds for that keyboard. A save of the tab changes the account,
+so the keys and the hints follow it at once. Before the account loads,
+each command has its default keys.
 
 ## Offer a command
 
@@ -70,7 +76,8 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
 | Commands | Owner |
 | --- | --- |
 | Command palette | `PaletteProvider.tsx` |
-| Each command that the palette lists: New workspace, New section, Archive workspace, the Go to rows, New session, Session history, Create org, Switch to org 1 to 9, Repositories settings, and Hide or show the sidebar | `PaletteKeys.tsx` of the palette, from the rows of `listedCommands` |
+| Each command that the palette lists: New workspace, New section, Archive workspace, the Go to rows, New session, Session history, Create org, Repositories settings, Keyboard shortcuts, and Hide or show the sidebar | `PaletteKeys.tsx` of the palette, from the rows of `listedCommands` |
+| Switch to org 1 to 9 | `OrgRail.tsx`, while the rail shows, for each org by its place, also the org of the page and a deleted org |
 | Account page | `Signed` in `Shell.tsx`, on each page of the signed-in app |
 | Workspace list | `OrgRoutes.tsx`, on each page of an org that is not deleted |
 | Hide or show the right column | `RightColumnToggle` in `WorkspaceColumns.tsx` |
@@ -85,6 +92,8 @@ of its row, also while the palette is closed. So a key and its row do the
 same thing, and the key runs only where the palette lists the row, as
 [Where a command runs](../../../docs/protocol/keyboard-shortcuts.md#where-a-command-runs)
 says. Each row of the palette names its command in `CommandRow.command`.
+A Switch to row names the command of the place of its org, whose key it
+shows, but the rail runs that key, so `listedCommands` leaves it out.
 
 ## Mark a terminal
 
@@ -113,8 +122,12 @@ return <TerminalTool screenRef={terminal} {...props} />
   this. `ShortcutTip` gives the tooltip to a Firna button, which takes no
   `title`, and `useAriaShortcut` names the key on it through its ref. A
   link takes `shortcutTip(label, hint)` as its `title`.
-- The org tiles of the rail keep their drawn hint with the name of the
-  org, and name their key only in `aria-keyshortcuts`.
+- The drawn hint of an org tile in the rail shows the name of the org and
+  the key chips of its key. The link names the key in
+  `aria-keyshortcuts`.
+- A part outside the shell, such as the tabs of the Files lists and the
+  Archive of the pull request bar, takes the tooltip and the key name as
+  plain props, from `shortcutLabels(label, hint)`.
 
 ## Mount
 
@@ -125,7 +138,7 @@ open layers that the palette and every UI kit read.
 ## Checks
 
 ```sh
-npm run test -- src/shell/shortcuts src/shell/palette src/shell/list src/shell/layout src/shell/workspace/WorkspaceKeys.test.tsx
+npm run test -- src/shell/shortcuts src/shell/palette src/shell/list src/shell/layout src/shell/workspace/WorkspaceKeys.test.tsx src/shell/account/shortcuts
 ```
 
 The tests mount the whole app in happy-dom with `openPaletteTab`, which
@@ -134,21 +147,25 @@ hears the keys of the window as a browser gives them.
 or as the hints show them in the host of the app, with `pressHintKey`. It
 records the keys that reach an element, and offers a command from a test.
 `PageKeys.test.tsx` and `../workspace/WorkspaceKeys.test.tsx` run a
-command of each owner from its key. `KeyHints.test.tsx` checks the hints
-in a browser tab and in the phone layout.
+command of each owner from its key, also the org keys of the rail.
+`KeyHints.test.tsx` checks the hints in a browser tab and in the phone
+layout. `pressHintKey` presses the key of the keymap with the changes of
+the account.
 
 ### Key Code
 
 - [ShortcutProvider.tsx](ShortcutProvider.tsx): `ShortcutProvider`, the
-  layer of the tab, and `useKeymap`, the one source of the keymap.
+  layer of the tab, and `useKeymap`, the one source of the keymap, with
+  the changes of the account.
 - [shortcut-listener.ts](shortcut-listener.ts): `handleShortcutPress`,
   which reads the page for one press, calls the model, and acts.
 - [shortcut-offers.ts](shortcut-offers.ts): `ShortcutOffers`, the offered
   commands and the command that owns the open layer.
 - [shortcut-context.ts](shortcut-context.ts): `useShortcutOffer`,
-  `useShortcutOffers`, `useShortcutTerminal`, and `useShortcutKey`.
+  `useShortcutOffers`, `useShortcutTerminal`, `useShortcutRecorder`,
+  `useShortcutKeymap`, and `useShortcutKey`.
 - [shortcut-hints.tsx](shortcut-hints.tsx): `useShortcutHint`,
-  `useAriaShortcut`, `shortcutTip`, and `ShortcutTip`.
+  `useAriaShortcut`, `shortcutTip`, `shortcutLabels`, and `ShortcutTip`.
 - [PaletteKeys.tsx](../palette/PaletteKeys.tsx): the keys of the commands
   that the palette lists.
 - [shortcut-test-kit.tsx](shortcut-test-kit.tsx): `pressShortcut`,
@@ -158,4 +175,5 @@ in a browser tab and in the phone layout.
 
 - [Keyboard shortcuts](../../../docs/protocol/keyboard-shortcuts.md)
 - [Keyboard shortcuts: the keys](../../../docs/protocol/keyboard-shortcuts-keys.md)
+- [Keyboard shortcuts: the settings tab](../../../docs/protocol/keyboard-shortcuts-tab.md)
 - [Command palette](../../../docs/protocol/command-palette.md)

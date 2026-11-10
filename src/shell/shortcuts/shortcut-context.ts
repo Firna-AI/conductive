@@ -21,7 +21,9 @@ export interface ShortcutLayer {
   readonly offers: ShortcutOffers
   /** The elements of the terminals, which keep the keys that a shell reads. */
   readonly terminals: Set<HTMLElement>
-  /** The keys of each command for the keyboard of the person. */
+  /** The recorders of the Keyboard shortcuts tab that wait for a key. */
+  readonly recorders: Set<HTMLElement>
+  /** The keys of each command for the keyboard of the person, with their changes. */
   readonly keymap: ShortcutKeymap
 }
 
@@ -97,6 +99,35 @@ export function useShortcutTerminal(): RefCallback<HTMLElement> {
     },
     [terminals],
   )
+}
+
+/**
+ * The ref of the recorder of the Keyboard shortcuts tab, which waits for a
+ * key while it shows. No key runs a command meanwhile, so the recorder
+ * hears each key that the page gets.
+ */
+export function useShortcutRecorder(): RefCallback<HTMLElement> {
+  const recorders = useContext(ShortcutContext)?.recorders
+  return useCallback(
+    (element: HTMLElement | null) => {
+      if (!element || !recorders) return undefined
+      recorders.add(element)
+      return () => {
+        recorders.delete(element)
+      }
+    },
+    [recorders],
+  )
+}
+
+/**
+ * The keys of each command for the keyboard of the person, with the
+ * changes of the account, as the keys and the hints use them.
+ */
+export function useShortcutKeymap(): ShortcutKeymap {
+  const layer = useContext(ShortcutContext)
+  if (!layer) throw new Error('The app has no shortcut layer.')
+  return layer.keymap
 }
 
 /**

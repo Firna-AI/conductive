@@ -77,7 +77,8 @@ The screens:
   age. The notices show under each of the three tabs, and they have no
   Dismiss. The `now` prop
   gives the clock of the ages. Pass a stable function. The default is
-  `Date.now`.
+  `Date.now`. The `listKeys` prop gives the key of the command that opens
+  each list, as a tooltip and a name for `aria-keyshortcuts` of its tab.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode.
 - `DiffPage` shows the diff of one changed file.

@@ -77,19 +77,19 @@ describe('the Actions and Settings tabs of the palette', () => {
     })
   })
 
-  test('the Settings tab shows the tabs of the org settings, then the Account sections, with This Mac in the Mac app, and their pages in a search', () => {
+  test('the Settings tab shows the tabs of the org settings, then the Account sections, with This Mac in the Mac app, and Keyboard shortcuts last, and their pages in a search', () => {
     const tab = (overrides: Partial<PaletteSource>, text = '') =>
       paletteResults(query({ tab: 'settings', text }), source(overrides))
     const general = tab({}).groups[0]?.rows[0]
-    const preferences = tab({}).groups[1]?.rows.find(
-      (row) => row.key === 'account:new-workspaces',
-    )
+    const account = (key: string) =>
+      tab({}).groups[1]?.rows.find((row) => row.key === `account:${key}`)
     expect({
       browser: shown(tab({})),
       mac: shown(tab({ mac: true }))[1],
       search: shown(tab({}, 'env')),
       generalOpens: general?.kind === 'command' ? general.href : null,
-      preferencesOpens: preferences?.href,
+      preferencesOpens: account('new-workspaces')?.href,
+      shortcutsOpens: account('keyboard-shortcuts')?.href,
     }).toEqual({
       browser: [
         [
@@ -98,10 +98,21 @@ describe('the Actions and Settings tabs of the palette', () => {
         ],
         ['Account', accountRows],
       ],
-      mac: ['Account', [...accountRows, 'This Mac']],
+      mac: [
+        'Account',
+        [
+          'Sign-in',
+          'GitHub',
+          'Agents',
+          'New workspaces',
+          'This Mac',
+          'Keyboard shortcuts',
+        ],
+      ],
       search: [['Acme settings', ['Cloud computer · Acme settings']]],
       generalOpens: routes.settings(acme.id, 'general'),
       preferencesOpens: routes.accountTab('preferences'),
+      shortcutsOpens: routes.accountTab('shortcuts'),
     })
   })
 })

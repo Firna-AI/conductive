@@ -3,6 +3,7 @@ import { replacesLists } from '../../../../docs/mockups/src/components/workspace
 import { useServices } from '../../../app/services'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type {
+  FileListKind,
   FilesLayout,
   FilesNavigation,
   FilesTab,
@@ -10,7 +11,9 @@ import type {
 import { DiffPage } from '../../../files/page/DiffPage'
 import { FilePage } from '../../../files/page/FilePage'
 import { FilesPanel } from '../../../files/panel/FilesPanel'
+import type { CommandKey } from '../../../files/ui/LinkTabs'
 import { ChecksList } from '../../../github/ChecksList'
+import { shortcutLabels, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext, WorkspaceFeatures } from '../features'
 import { useGitHubFeed } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
@@ -72,6 +75,18 @@ function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
 }
 
 /**
+ * The keys of Go to All files, Go to Changes, and Go to Checks, for the
+ * tooltips of the tabs of the lists.
+ */
+function useListKeys(): Partial<Record<FileListKind, CommandKey>> {
+  return {
+    all: shortcutLabels('All files', useShortcutHint('go-to-all-files')),
+    changes: shortcutLabels('Changes', useShortcutHint('go-to-changes')),
+    checks: shortcutLabels('Checks', useShortcutHint('go-to-checks')),
+  }
+}
+
+/**
  * All files, Changes, and Checks, in the right column on desktop and in the
  * Files tab of a phone, where a file or a diff shows as a page. This part
  * connects the kept files of the workspace. Checks shows the GitHub state of
@@ -87,6 +102,7 @@ function FilesPart(props: { context: WorkspaceContext }) {
   const place = filesPlace(context.view)
   useAddressList(context.savedView, place?.kind === 'list' ? place.list : null)
   const tab = tabOf(place)
+  const listKeys = useListKeys()
   const layout = context.viewport === 'phone' ? 'phone' : 'desktop'
   if (layout === 'phone' && tab) {
     return (
@@ -106,6 +122,7 @@ function FilesPart(props: { context: WorkspaceContext }) {
       files={files}
       layout={layout}
       list={place?.kind === 'list' ? place.list : (saved?.fileList ?? 'all')}
+      listKeys={listKeys}
       navigation={navigation}
       now={now}
       placeholder={sandboxPlaceholder(context)}
