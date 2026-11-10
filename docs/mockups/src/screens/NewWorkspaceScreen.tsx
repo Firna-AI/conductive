@@ -70,6 +70,8 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const building = state.org === 'new' && state.firstBuild !== 'succeeded'
   const failed = !suspended && state.result === 'error'
   const draft = newWorkspaceDraft(state)
+  // Send leads to the create flow, which draws the task of Saved carts.
+  const linked = state.draft === 'workspace-link'
   const text =
     state.org === 'new' && state.draft !== 'empty' ? page.draft : draft.text
   const notices = formNotices(state, failed, !building)
@@ -85,7 +87,8 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     )
   }
   // A first message with files leads to the screen of its queued files.
-  // The file screens draw Acme, so the attach button of Firna leads nowhere.
+  // The file screens draw the Saved carts task of Acme, so the attach button
+  // of Firna and of a linked task leads nowhere.
   const created =
     state.files === 'ready' ? paths.attachmentsQueued : paths.creating
   return (
@@ -93,7 +96,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
       composer={{
         attachments: draft.files,
         attachTo:
-          state.files === 'none' && !failed && state.org !== 'new'
+          state.files === 'none' && !failed && !linked && state.org !== 'new'
             ? paths.newWorkspaceFiles
             : undefined,
         blocked: building || waits(state),
@@ -102,7 +105,9 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
-          failed || state.org === 'new' || text === '' ? undefined : created,
+          failed || linked || state.org === 'new' || text === ''
+            ? undefined
+            : created,
       }}
       empty={
         suspended ? undefined : (

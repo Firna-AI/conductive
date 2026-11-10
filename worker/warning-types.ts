@@ -13,6 +13,10 @@ export const SIMPLE_WARNINGS = {
     'Could not start the first cloud computer build.',
   added_image_build_start_failed:
     'Could not start the added cloud computer build.',
+  approval_email_delivery_failed:
+    'Approval email delivery failed. The email remains pending.',
+  approval_email_retry_failed:
+    'The retry of approval emails failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',
   attachment_upload_cleanup_retry: 'An attachment upload cleanup will retry.',
   activity_timestamp_failed: 'Workspace activity timestamp could not be saved.',

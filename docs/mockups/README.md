@@ -52,8 +52,8 @@ share.
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages, the entries that moved,
-the child pages of `app/account`, `app/orgs/suspended`, `app/banner`, and
-`app/chat`, and the New workspace dialog.
+the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
+`app/chat`, and `app/workspace-links`, and the New workspace dialog.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared
@@ -66,7 +66,7 @@ shows them in the New workspace dialog.
 
 | Folder or file            | Contents                                                            |
 | ------------------------- | ------------------------------------------------------------------- |
-| `src/entries/`            | The Mokly root: entry modules, folder records, and the flows        |
+| `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files      |
@@ -74,7 +74,7 @@ shows them in the New workspace dialog.
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
-| `src/brand.ts`            | The name of the product, "Conductive", and its domains              |
+| `src/brand.ts`            | The product name "Conductive", its domains, and the Mac DMG names   |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 
@@ -125,16 +125,29 @@ workspace screen draws them, as `app/chat/masked-paths` shows.
 the steps of Get started, and the notice for an agent that is not
 connected.
 
+## The waitlist
+
+[The waitlist](orgs-and-logins.md#the-waitlist) gives the screen of a
+person without app access, the invite codes and invite links, and the
+invite code on the Account page.
+
 ## The Mac app
 
 [The Mac app](mac-app.md) gives the screens of the Mac app: its window, the
-commands that an agent runs on the Mac, and This Mac.
+waitlist, the commands that an agent runs on the Mac, and This Mac.
 
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the Terms, Privacy, and not-found pages, and the page before
-GitHub. The pictures are captures of real screens, such as the workspace
+pictures, the Terms, Privacy, and not-found pages, the comparison page,
+and the page before GitHub. The comparison page is the chosen design at
+`marketing/from-conductor/one-table`.
+[Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)
+states its requirements. It draws the real rows: its rows, statuses, dates,
+and words come from `src/marketing/from-conductor/`, the modules that the
+site also reads, as
+[the marketing site README](../../src/marketing/README.md#the-comparison-page)
+says. The pictures are captures of real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the
 [capture steps](../../src/marketing/README.md#pictures).

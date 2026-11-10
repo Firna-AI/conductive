@@ -17,7 +17,9 @@
     "archive",
     "composer",
     "attachments",
+    "workspace-links",
     "files",
+    "tabs",
     "tools",
     "panels"
   ]

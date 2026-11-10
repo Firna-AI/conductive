@@ -51,7 +51,7 @@ gives their rules.
   a create. A repeat returns the same message and adds no history.
 - `readChatWorkspaceSummary()` returns the last event number, the last
   event number with visible output, and whether a dispatched turn runs.
-- `readChatWorkspaceResponse(orgId, workspaceId)` returns the reply of a
+- `readChatWorkspaceResponse(orgId, workspaceId, appOrigin)` returns the reply of a
   workspace read or Resume and that summary, as
   [Browser routes](../lifecycle/README.md#browser-routes) says.
 
@@ -189,6 +189,14 @@ retry route for `Session.retryMessageId`.
 [Report repairs](report-repairs.md) says how the chat backend asks the
 runner for one fresh full report after it refuses an update. It describes
 the stored records, the refusal checks, and the sends before each confirm.
+
+`workspace-events.ts` defines the private saved event shape and presents browser events.
+Each authorized connection captures its app origin and immutable workspace number.
+Replay and live events get the same fields before they reach the browser.
+Older saved workspace updates can omit number and link.
+Presentation fills both fields while it keeps each saved name, state, time, and event number.
+The HTTP history route uses the same presentation.
+No origin is saved in the workspace object.
 
 ## Tests
 

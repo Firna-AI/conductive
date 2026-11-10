@@ -1,6 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
+import { capturePagePath } from '../../../screens/marketingPictureCaptures'
 import {
-  capturePagePath,
   marketingPictures,
   type MarketingPictureKey,
 } from '../../../screens/marketingPictureList'
@@ -17,7 +17,7 @@ function capturePage(key: MarketingPictureKey) {
     path: capturePagePath(key),
     title: `${key.charAt(0).toUpperCase()}${key.slice(1)} picture`,
     description: `The part of the screen that the ${key} picture of the home page shows, at its own size and without a frame. Desktop: ${desktop.label}. Phone: ${mobile.label}.`,
-    rationale: `The capture command opens this page at the size of its screen, and saves the part at the top left corner as the file of the picture, so it reads no markup of the screens. The list in marketingPictureList.ts gives the screen, the part, the scale, and the label of each layout, and the home page and the site read the same list.${shared ? ' Both layouts show the same part of a phone screen, so the command saves one file from the mobile view.' : ''}`,
+    rationale: `The capture command opens this page at the size of its screen, and saves the part at the top left corner as the file of the picture, so it reads no markup of the screens. The list in marketingPictureList.ts gives the screen, the part, the scale, and the label of each layout, and the home page and the site read the same list.${shared ? ' Both layouts show the same part of the same screen, so the command saves one file from the mobile view.' : ''}`,
     relatedDocs: [],
     tags: ['picture-capture'],
     props: {},
@@ -35,6 +35,7 @@ const pages = {
   tools: capturePage('tools'),
   org: capturePage('org'),
   phone: capturePage('phone'),
+  mac: capturePage('mac'),
 } satisfies Record<MarketingPictureKey, unknown>
 
 export const heroCapture = pages.hero
@@ -44,3 +45,4 @@ export const reviewCapture = pages.review
 export const toolsCapture = pages.tools
 export const orgCapture = pages.org
 export const phoneCapture = pages.phone
+export const macCapture = pages.mac

@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import { Button } from '@firna/ui/button'
-import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, Paperclip } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
@@ -10,12 +9,12 @@ import {
   DraftFiles,
   OversizeNotice,
 } from '../../chat/components/AttachmentChips'
+import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import { useSendKey } from '../../chat/components/send-key'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import { IconButton } from '../ui/actions'
 import { ModelPicker } from '../ui/ModelPicker'
 import ui from '../ui/ui.module.css'
-import { useCursorAtEnd } from './useCursorAtEnd'
 
 /**
  * The composer of a new workspace: attached files above the text, then the
@@ -25,7 +24,8 @@ import { useCursorAtEnd } from './useCursorAtEnd'
  * decides for Send and Try again. Enter sends as in every composer: on a
  * computer, Enter sends and Shift+Enter adds a line. While the create runs,
  * the text and the attach button are off. A kept message shows with the
- * cursor at its end.
+ * cursor at its end. A pasted workspace link shows as a chip, which
+ * `OrgLinks` finds.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
@@ -41,7 +41,6 @@ export function Composer(props: {
   const files = useRef<HTMLInputElement>(null)
   const sending = create.state === 'sending'
   const sendKey = useSendKey(props.ready, props.send)
-  const message = useCursorAtEnd(draft.text)
   return (
     <>
       <OversizeNotice
@@ -49,7 +48,7 @@ export function Composer(props: {
         refused={draft.refused}
       />
       <div className={styles.wrap}>
-        <div className={styles.composer} onKeyDownCapture={sendKey}>
+        <div className={styles.composer}>
           {draft.files.length > 0 ? (
             <DraftFiles
               files={draft.files}
@@ -57,19 +56,17 @@ export function Composer(props: {
               onRetry={(id) => void props.model.retryFile(id)}
             />
           ) : null}
-          <InputFrame
-            accessibilityLabel="Message"
+          <ChipTextField
+            caretAtEnd
             editable={!sending}
-            focusIndicator="none"
-            inputRef={message}
+            label="Message"
+            lines={2}
             maxLines={8}
-            multiline
-            numberOfLines={2}
             onChangeText={(text) => props.model.setText(text)}
+            onEnter={sendKey}
+            owner={props.model}
             placeholder="Describe the task"
-            size={control.field}
             value={draft.text}
-            variant="seamless"
           />
           <div className={styles.bar}>
             <IconButton

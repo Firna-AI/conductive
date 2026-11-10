@@ -17,6 +17,7 @@ import { SESSION_COOKIE } from '../security/cookies'
 import { sign } from '../security/crypto'
 import { saveGitHubTokens } from '../security/github-tokens'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
+import { seedAppAccess } from '../test-support/app-access'
 
 export const operatorModels = [
   {
@@ -233,11 +234,14 @@ export async function seedBootIdentity(
     githubLogin: 'octocat',
     displayName: 'Octocat',
     avatarUrl: null,
+    primaryVerifiedEmail: null,
+    githubCreatedAt: null,
   },
 ): Promise<string> {
   const [, , userId, sessionId] = harness.reserveTokens(4)
   const expiresAt = TEST_TIME + 604_800_000
   await saveUser(harness.env.DB, userId, profile, TEST_TIME, TERMS_VERSION)
+  await seedAppAccess(harness.env.DB, [userId], TEST_TIME)
   await saveGitHubTokens(
     harness.env,
     userId,

@@ -12,6 +12,11 @@ import { workspacesPath } from '../../shared/workspaces'
 import { byLabel, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { coreFixtures } from '../../test-support/fixtures/core'
+import {
+  asMessageField,
+  isMessageField,
+  pressInField,
+} from '../../test-support/message-field'
 import { holdAnimationFrames } from '../../test-support/mount'
 import { Shell } from '../Shell'
 import { mountScreen, settle } from '../test-mount'
@@ -117,12 +122,8 @@ export function newWorkspaceRow(root: HTMLElement): HTMLElement {
 }
 
 /** The message field of a form: in the dialog, or in the main area. */
-export function messageIn(root: HTMLElement): HTMLTextAreaElement {
-  const field = byLabel('Message', root)
-  if (!(field instanceof HTMLTextAreaElement)) {
-    throw new Error('The form has no message field.')
-  }
-  return field
+export function messageIn(root: HTMLElement): HTMLElement {
+  return asMessageField(byLabel('Message', root))
 }
 
 /** The main area of the tab, beside the sidebar. */
@@ -137,11 +138,14 @@ export const focusIn = (area: HTMLElement) =>
   area.contains(document.activeElement)
 
 /**
- * Presses a key on an element, as the keyboard does. It gives whether the
- * app kept the key from the element, so that, in a text field, the key adds
- * no line.
+ * Presses a key on an element, as the keyboard does. The result says
+ * whether the browser's own action was stopped. A message field commits
+ * its change through its public test helper.
  */
-export function keyDown(target: HTMLElement, init: KeyboardEventInit): boolean {
+export function keyDown(target: Element, init: KeyboardEventInit): boolean {
+  if (isMessageField(target)) {
+    return pressInField(target, init.key ?? '', init).defaultPrevented
+  }
   const event = new KeyboardEvent('keydown', {
     bubbles: true,
     cancelable: true,

@@ -93,7 +93,7 @@ it('warns and changes nothing when the release is already published', async () =
 })
 
 it.each([
-  ['Conductive-0.1.0-mac-arm64.dmg', 'Missing the arm64 DMG file'],
+  ['Conductive-mac-arm64.dmg', 'Missing the arm64 DMG file'],
   [
     'Conductive-0.1.0-mac-arm64.zip',
     'Missing release file: Conductive-0.1.0-mac-arm64.zip',
@@ -102,7 +102,7 @@ it.each([
     'Conductive-0.1.0-mac-arm64.zip.blockmap',
     'Missing release file: Conductive-0.1.0-mac-arm64.zip.blockmap',
   ],
-  ['Conductive-0.1.0-mac-x64.dmg', 'Missing the x64 DMG file'],
+  ['Conductive-mac-x64.dmg', 'Missing the x64 DMG file'],
   [
     'Conductive-0.1.0-mac-x64.zip',
     'Missing release file: Conductive-0.1.0-mac-x64.zip',

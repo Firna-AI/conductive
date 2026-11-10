@@ -29,6 +29,7 @@ export const workspaceStateSchema = {
     'ports',
     'focus',
     'tab',
+    'tabRow',
     'composer',
     'resize',
     'rightColumn',
@@ -39,6 +40,7 @@ export const workspaceStateSchema = {
     'paths',
     'org',
     'palette',
+    'copyLink',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -96,12 +98,24 @@ export const workspaceStateSchema = {
       ],
     },
     /**
+     * The tab row, from decisions 186 to 188: each tab where it opened, the
+     * drag of a tab, the code file after its move between the two
+     * sessions, a full row with more tabs than fit, scrolled to the shown
+     * tab, or the rename field in the first session tab after Rename
+     * session in its tab menu. The drag lifts the code file on desktop,
+     * and on a phone the second session, because a phone shows only the
+     * sessions.
+     */
+    tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
+    /**
      * The composer: empty, with a message that is not sent yet, with
      * attached files, with its picker open, or with a message for an agent
      * that is not connected. Or with a message in a session whose starter's
      * login is not available, or whose starter keeps that login for their
      * own messages. With files, a file can still upload, its upload can fail,
      * or a file over the size limit can stay out of the message.
+     * `workspace-link` holds a message with a pasted link to another
+     * workspace of the org, which shows as a chip.
      */
     composer: {
       enum: [
@@ -115,6 +129,7 @@ export const workspaceStateSchema = {
         'no-agent',
         'no-starter-login',
         'not-shared',
+        'workspace-link',
       ],
     },
     /** The user drags the handle of the right column to widen it. */
@@ -126,8 +141,9 @@ export const workspaceStateSchema = {
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, or the
-     * question of Archive, with work that is not pushed or with none.
+     * before a running session closes, the owner of the workspace, the
+     * question of Archive, with work that is not pushed or with none, or
+     * the tab menu of the first session.
      */
     overlay: {
       enum: [
@@ -137,6 +153,7 @@ export const workspaceStateSchema = {
         'reassign',
         'archive-unpushed',
         'archive-pushed',
+        'tab-menu',
       ],
     },
     /** The person signed in: an admin of the org, or a member who is not. */
@@ -175,6 +192,12 @@ export const workspaceStateSchema = {
      * opens it from the list, so a phone shows the palette of the list.
      */
     palette: { enum: paletteViews },
+    /**
+     * The label of the workspace number in the header, which copies the
+     * link of the workspace: as it is, or just after a press, while it
+     * shows for a moment that the copy worked or failed.
+     */
+    copyLink: { enum: ['none', 'copied', 'failed'] },
   },
 } as const
 
@@ -194,6 +217,7 @@ export const readyWorkspace: WorkspaceState = {
   ports: 'open',
   focus: 'chat',
   tab: 'session',
+  tabRow: 'opened',
   composer: 'empty',
   resize: 'none',
   rightColumn: 'shown',
@@ -204,6 +228,7 @@ export const readyWorkspace: WorkspaceState = {
   paths: 'plain',
   org: 'active',
   palette: 'closed',
+  copyLink: 'none',
 }
 
 /**

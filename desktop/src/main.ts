@@ -66,7 +66,7 @@ const createAppWindow = () => {
   installNavigation(window.webContents, configuration.appOrigin, {
     load: (url) => window.loadURL(url),
     external: (url) => shell.openExternal(url),
-    signIn: () => signIn.start(),
+    signIn: (code) => signIn.start(code),
     preview: (url) =>
       openPreviewInBrowser(url, {
         appOrigin: configuration.appOrigin,
@@ -114,12 +114,12 @@ startDesktop({
       exchange: (request) => fetch(request),
       saveCookie: (cookie) => rendererSession.cookies.set(cookie),
       flushCookies: () => rendererSession.cookies.flushStore(),
-      signedIn: async () => {
+      signedIn: async (path) => {
         if (active && !active.isDestroyed()) {
           if (active.isMinimized()) active.restore()
           active.show()
           active.focus()
-          await active.loadURL(`${DESKTOP_ORIGIN}/`)
+          await active.loadURL(`${DESKTOP_ORIGIN}${path}`)
         }
       },
     })

@@ -28,7 +28,7 @@ import { randomToken } from './security/crypto'
 import { finishDesktopSignIn } from './security/desktop-auth'
 import { DESKTOP_EXCHANGE_PATH } from './security/desktop-contract'
 import { desktopCors, desktopPreflight } from './security/desktop-origin'
-import { checkOrigin } from './security/gate'
+import { checkOrigin, sessionGate } from './security/gate'
 import { membersGate } from './members/gate'
 import { productionMembersHooks } from './members/composition'
 import { cleanupDeletedOrgs } from './members/cleanup'
@@ -38,6 +38,8 @@ import { isAgentToolPath } from './tools/lists'
 import { productionGitHubWebhook } from './github/composition'
 import { appFrameSources, runnerSoftware } from './configuration'
 import { appSiteResponse } from './marketing/assets'
+import { retryApprovalEmails } from './operator/approval-email'
+import { warnWorker } from './warnings'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -85,6 +87,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             const preflight = desktopPreflight(request)
             if (preflight) return privateResponse(preflight)
           }
+          if (upgrade && !appApi)
+            await sessionGate(request, env, dependencies.now())
           if (
             path === GITHUB_SETUP_PATH &&
             (request.method === 'GET' || request.method === 'HEAD') &&
@@ -165,7 +169,11 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           dependencies.randomToken,
         )
         if (chatResponse) return respond(chatResponse)
-        const featureResponse = await routeWorkspaceFeatures(request, env)
+        const featureResponse = await routeWorkspaceFeatures(
+          request,
+          env,
+          dependencies.now(),
+        )
         if (featureResponse) return respond(featureResponse)
         const context = await membersGate(request, env, dependencies.now())
         return respond(
@@ -193,6 +201,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         imageRuntime(env, dependencies),
         () => runnerSoftware(env),
       )
+      // Last, so that a slow or failed email never holds back the repairs.
+      try {
+        await retryApprovalEmails(env, dependencies)
+      } catch {
+        warnWorker({ kind: 'approval_email_retry_failed' })
+      }
     },
   }
 }

@@ -4,6 +4,7 @@
     "files",
     "no-login",
     "not-created",
-    "no-repositories"
+    "no-repositories",
+    "workspace-link"
   ]
 }

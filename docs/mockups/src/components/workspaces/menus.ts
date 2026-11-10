@@ -6,8 +6,8 @@ import type { MenuEntry } from '../common/Menu'
  * section. Deleting a section moves its workspaces to the default section.
  */
 export const sectionMenu: readonly MenuEntry[] = [
-  { kind: 'item', label: 'Rename', icon: Pencil },
   { kind: 'item', label: 'New workspace', icon: Plus },
+  { kind: 'item', label: 'Rename section', icon: Pencil },
   { kind: 'item', label: 'New section', icon: FolderPlus },
   { kind: 'divider' },
   { kind: 'item', label: 'Delete section', icon: Trash2, tone: 'danger' },

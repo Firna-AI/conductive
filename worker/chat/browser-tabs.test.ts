@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
-} from '../../src/shared/events'
+} from './workspace-events'
 import { BrowserTabs } from './browser-tabs'
 it('sends events only before the grant deadline when scheduled callbacks do not run', async () => {
   let now = 0

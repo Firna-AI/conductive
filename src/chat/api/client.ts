@@ -1,4 +1,5 @@
 import type { ApiClient } from '../../app/api/client'
+import { readWorkspaces } from '../../app/api/read-workspaces'
 import { uploadAttachment } from '../../app/attachment-upload'
 import type { UploadHooks } from '../../app/draft-files'
 import { ACCOUNT_PATHS } from '../../shared/account'
@@ -22,7 +23,11 @@ import {
   workspaceViewPath,
   type UpdateWorkspaceViewRequest,
 } from '../../shared/workspace-view'
-import { workspacePath, workspacePaths } from '../../shared/workspaces'
+import {
+  workspacePath,
+  workspacePaths,
+  workspacesPath,
+} from '../../shared/workspaces'
 import {
   readAccount,
   readChangeModel,
@@ -63,6 +68,8 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
   return {
     workspace: () =>
       client.get(workspacePath(orgId, workspaceId), readWorkspaceResponse),
+    /** The visible workspaces of the org, including archived workspaces. */
+    workspaces: () => client.get(workspacesPath(orgId), readWorkspaces),
     resume: () =>
       client.send(
         'POST',

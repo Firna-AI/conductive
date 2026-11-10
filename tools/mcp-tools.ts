@@ -31,7 +31,7 @@ export const WORKSPACE_MCP_TOOLS = [
   {
     name: 'create_workspace',
     description:
-      "Create a workspace in this org with this workspace's owner, and start its first message immediately.",
+      "Create a workspace in this org with this workspace's owner, and start its first message immediately. The reply includes its number and web link. A workspace link in a message names that workspace. A workspace link in an answer shows as a chip.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -84,7 +84,7 @@ export const WORKSPACE_MCP_TOOLS = [
   {
     name: 'list_workspaces',
     description:
-      'List the name, branch, and state of every workspace in this org.',
+      'List the number, web link, name, branch, and state of every workspace in this org. A workspace link in a message names that workspace. A workspace link in an answer shows as a chip.',
     inputSchema: { type: 'object', properties: {} },
     annotations: {
       readOnlyHint: true,

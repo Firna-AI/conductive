@@ -8,13 +8,14 @@ import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
+import { providerMessage } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
 import type { ProviderFactory, ProviderInput } from './types'
 
 function input(command: ProviderInput) {
   return [
-    { type: 'text', text: command.message.text, text_elements: [] },
+    { type: 'text', text: providerMessage(command.message), text_elements: [] },
     ...command.attachments.flatMap((attachment) => {
       const metadata = command.message.attachments.find(
         (item) => item.id === attachment.attachmentId,
@@ -135,6 +136,7 @@ export function createCodexFactory(
             model: choice.model,
             modelProvider: 'conductive',
             cwd: options.cwd,
+            developerInstructions: options.instructions,
             approvalPolicy: 'never',
             sandbox: 'danger-full-access',
           },

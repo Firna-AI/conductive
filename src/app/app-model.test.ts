@@ -103,7 +103,7 @@ describe('AppModel', () => {
     held.holdAnswer('POST', createPath)
     const answer = form.send(defaults, opened)
 
-    server.json('GET', API_PATHS.session, { user: fakeUsers[1] })
+    server.signIn(fakeUsers[1])
     await app.start()
     // What the other person sees at once, before the late answer.
     const free = { create: form.create.get(), draft: form.draft.get() }

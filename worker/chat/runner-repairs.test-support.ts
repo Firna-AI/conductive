@@ -1,4 +1,4 @@
-import type { WorkspaceEvent } from '../../src/shared/events'
+import type { WorkspaceEvent } from './workspace-events'
 import {
   RUNNER_EVENT_MAX_BYTES,
   type RunnerEvent,

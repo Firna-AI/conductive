@@ -16,6 +16,14 @@ import type {
 } from '../../shared/operator'
 import { FAKE_TIME, fakeUser } from './core'
 import {
+  sampleAccessRecords,
+  sampleCodes,
+  sampleUserAccess,
+  sampleWaitlist,
+  type AccessRecords,
+} from './operator-access'
+import {
+  daysBefore,
   SAMPLE_IDS,
   sampleOrgs,
   sampleUsers,
@@ -27,13 +35,11 @@ const MINUTE = 60_000
 const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
 
-/** A time some days before `now`, earlier in that day, so day 0 is past. */
-function daysBefore(now: number, days: number): number {
-  return now - days * DAY - 2 * HOUR
-}
-
-/** The suspensions and the deletions of the samples, which can change. */
-export interface OperatorRecords {
+/**
+ * The suspensions and the deletions of the samples, and the records of the
+ * waitlist: the approvals, the codes, and the pause. They can change.
+ */
+export interface OperatorRecords extends AccessRecords {
   orgSuspensions: Map<string, OperatorSuspension>
   orgDeletions: Map<string, { deletedAt: number; purgeAt: number | null }>
   userSuspensions: Map<number, OperatorSuspension>
@@ -47,14 +53,20 @@ export const sampleOperator = {
 
 /**
  * The records of the mockups at `now`: Hexwave suspended 25 minutes ago,
- * Dana Kim suspended 2 days ago, and Pinecrest deleted 3 days ago.
+ * Dana Kim suspended 2 days ago with her referral code, and Pinecrest
+ * deleted 3 days ago. The waitlist records are those of
+ * `sampleAccessRecords`.
  */
 export function sampleRecords(now = FAKE_TIME): OperatorRecords {
   const suspended = (ago: number) => ({
     suspendedAt: now - ago,
     operator: sampleOperator,
   })
+  const userSuspensions = new Map([
+    [SAMPLE_IDS.suspendedUser, suspended(2 * DAY - 72 * MINUTE)],
+  ])
   return {
+    ...sampleAccessRecords(now, sampleOperator, userSuspensions),
     orgSuspensions: new Map([
       [SAMPLE_IDS.suspendedOrg, suspended(25 * MINUTE)],
     ]),
@@ -64,9 +76,7 @@ export function sampleRecords(now = FAKE_TIME): OperatorRecords {
         { deletedAt: now - 3 * DAY, purgeAt: now + 4 * DAY },
       ],
     ]),
-    userSuspensions: new Map([
-      [SAMPLE_IDS.suspendedUser, suspended(2 * DAY - 72 * MINUTE)],
-    ]),
+    userSuspensions,
   }
 }
 
@@ -106,11 +116,13 @@ export function sampleUserDetail(
   records: OperatorRecords,
   now = FAKE_TIME,
 ): OperatorUserDetail {
+  const joinedAt = daysBefore(now, user.joinedDaysAgo)
   return {
     githubId: user.githubId,
     login: user.login,
     name: user.name,
-    joinedAt: daysBefore(now, user.joinedDaysAgo),
+    joinedAt,
+    ...sampleUserAccess(user, records, now),
     workspaces: { total: user.owned, running: user.running },
     orgs: sampleOrgs.flatMap((org) => {
       const role = org.members[user.login]
@@ -152,6 +164,11 @@ export function orgRow(
 /** The row of a user in the Users tab, from their page. */
 export function userRow(user: OperatorUserDetail): OperatorUserSummary {
   return {
+    appAccess: user.appAccess,
+    approvalEmail: user.approvalEmail,
+    hasVerifiedEmail: user.hasVerifiedEmail,
+    githubCreatedAt: user.githubCreatedAt,
+    referralCode: user.referralCode,
     githubId: user.githubId,
     login: user.login,
     name: user.name,
@@ -165,11 +182,12 @@ export function userRow(user: OperatorUserDetail): OperatorUserSummary {
 /**
  * The numbers of the Overview of the mockups, for the 30 UTC days up to
  * the day of `readAt`. The largest orgs are those of the samples, so that
- * each opens its page.
+ * each opens its page, and `waiting` counts the people who wait.
  */
 export function operatorOverview(
   orgs: readonly OperatorOrgDetail[],
   readAt = FAKE_TIME,
+  waiting = 0,
 ): OperatorOverview {
   const today = Math.floor(readAt / DAY)
   const dated = (days: readonly { count: number }[]) =>
@@ -186,6 +204,7 @@ export function operatorOverview(
   return {
     readAt,
     users: operatorTotals.users,
+    waiting,
     orgs: operatorTotals.orgs,
     workspaces: operatorTotals.workspaces,
     running: { ...runningComputers },
@@ -208,5 +227,13 @@ export function operatorFixtures(now = FAKE_TIME) {
   const records = sampleRecords(now)
   const orgs = sampleOrgs.map((org) => sampleOrgDetail(org, records, now))
   const users = sampleUsers.map((user) => sampleUserDetail(user, records, now))
-  return { overview: operatorOverview(orgs, now), orgs, users }
+  const waitlist = sampleWaitlist(records, records.userSuspensions, now)
+  return {
+    overview: operatorOverview(orgs, now, waitlist.length),
+    orgs,
+    users,
+    waitlist,
+    codes: sampleCodes(records),
+    pause: records.pause,
+  }
 }

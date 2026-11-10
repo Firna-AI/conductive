@@ -56,6 +56,7 @@ export async function createOuterRuntime(
   bundle: string,
   options: {
     appOrigin?: string
+    appOriginBinding?: string | null
     port?: number
     assetsDirectory?: string
     https?: boolean
@@ -103,7 +104,9 @@ export async function createOuterRuntime(
                 worker: 'outer-chat-tests',
                 exportName: 'Workspace',
               },
-              APP_ORIGIN: text(appOrigin),
+              ...(options.appOriginBinding === null
+                ? {}
+                : { APP_ORIGIN: text(options.appOriginBinding ?? appOrigin) }),
               MACHINE_ORIGIN: text(OUTER_MACHINE_ORIGIN),
               GITHUB_CLIENT_ID: text('outer-client'),
               GITHUB_CLIENT_SECRET: text('outer-client-secret'),

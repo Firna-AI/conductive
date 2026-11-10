@@ -3,6 +3,7 @@ import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
 import { CreateFailedNotice } from '../components/new-workspace/notices'
 import { firstMessageDrafts, type Attachment } from '../fixtures/attachments'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
+import { followUpTask } from '../fixtures/workspaceLinkConversations'
 import { savedCarts } from '../fixtures/workspaces'
 
 /**
@@ -10,8 +11,11 @@ import { savedCarts } from '../fixtures/workspaces'
  * the New workspace dialog share, as properties of their schemas.
  */
 export const newWorkspaceFormProperties = {
-  /** The text of the message: none yet, or the task. */
-  draft: { enum: ['empty', 'message'] },
+  /**
+   * The text of the message: none yet, the task, or a task with a pasted
+   * link to an earlier workspace, which shows as a chip.
+   */
+  draft: { enum: ['empty', 'message', 'workspace-link'] },
   /**
    * The files of the message: none, a file that uploads beside one that
    * waits for its turn, or all uploaded. The app stores each upload until
@@ -47,6 +51,7 @@ export const taskPlaceholder = 'Describe the task'
 const draftTexts: Readonly<Record<NewWorkspaceFormState['draft'], string>> = {
   empty: '',
   message: savedCartsMessage,
+  'workspace-link': followUpTask,
 }
 
 /**

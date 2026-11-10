@@ -5,6 +5,7 @@ import { SESSION_COOKIE } from '../security/cookies'
 import { encrypt, sign } from '../security/crypto'
 import { saveGitHubTokens } from '../security/github-tokens'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
+import { seedAppAccess } from '../test-support/app-access'
 
 export async function seedBackendLogin(harness: TestHarness, userId: string) {
   const db = harness.env.DB
@@ -83,6 +84,7 @@ export async function seedBackend(harness: TestHarness) {
       .bind(`general-${org.id}`, org.id, TEST_TIME),
   ])
   await Promise.all([
+    seedAppAccess(db, [user.id], TEST_TIME),
     seedBackendLogin(harness, user.id),
     saveGitHubTokens(
       harness.env,

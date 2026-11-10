@@ -3,7 +3,7 @@ import type { RunnerEventRefusalReason } from '../../src/shared/chat-events'
 import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
-} from '../../src/shared/events'
+} from '../chat/workspace-events'
 import {
   RUNNER_PROTOCOL_VERSION,
   type RunnerCommand,

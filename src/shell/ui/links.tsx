@@ -16,16 +16,23 @@ export interface LinkTab {
 /**
  * A row of tabs. Each tab is a link, so each view has its own address.
  * `wrap` puts the tabs in three columns, so that every tab shows on a phone.
+ * `flow` keeps the tabs on one line while they fit, and moves the rest to a
+ * second line.
  */
 export function LinkTabs(props: {
   label: string
   tabs: readonly LinkTab[]
   wrap?: boolean
+  flow?: boolean
 }) {
   return (
     <nav
       aria-label={props.label}
-      className={classes(tabs.tabs, props.wrap && tabs.wrap)}
+      className={classes(
+        tabs.tabs,
+        props.wrap && tabs.wrap,
+        props.flow && tabs.flow,
+      )}
     >
       {props.tabs.map((tab) => (
         <AppLink

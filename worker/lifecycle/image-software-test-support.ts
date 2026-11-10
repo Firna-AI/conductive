@@ -53,6 +53,19 @@ export async function imageSoftwareFixture() {
       { mode: 0o755 },
     )
   }
+  const github = join(root, 'usr/bin/gh')
+  await writeFile(
+    join(commands, 'apt-get'),
+    `#!/bin/sh
+printf 'apt-get %s\\n' "$*" >> ${shellQuote(calls)}
+if [ "$1" = install ]; then
+  mkdir -p ${shellQuote(dirname(github))}
+  printf '#!/bin/sh\\nprintf "gh-ready\\\\n"\\n' > ${shellQuote(github)}
+  chmod 755 ${shellQuote(github)}
+fi
+`,
+    { mode: 0o755 },
+  )
   await writeFile(
     join(commands, 'curl'),
     `#!/bin/sh
@@ -92,6 +105,13 @@ cp ${shellQuote(archive)} "$output"
     commands,
     installation,
     credentialHelper: join(root, 'usr/local/bin/conductive-git-credential'),
+    githubCli: (args: readonly string[]) =>
+      imageTestProcess(
+        '/bin/sh',
+        [join(root, 'usr/local/bin/gh'), ...args],
+        '',
+        env,
+      ),
     install: () =>
       imageTestProcess(
         '/bin/sh',

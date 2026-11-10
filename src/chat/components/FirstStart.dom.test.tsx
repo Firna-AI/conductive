@@ -21,12 +21,15 @@ import { fetchFiles } from '../../test-support/fake-files'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import {
+  asMessageField,
+  pressInField,
+  typeMessage,
+} from '../../test-support/message-field'
+import {
   holdAnimationFrames,
   mount,
   MOUNTED_TEST_TIMEOUT,
   press,
-  pressKey,
-  typeText,
   waitFor,
 } from '../../test-support/mount'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
@@ -104,11 +107,10 @@ describe('the chat of a new workspace without a host', () => {
       />,
     )
 
-    const box = await waitFor(
-      () => queryByRole('textbox', 'Message'),
-      'the message box',
+    const box = asMessageField(
+      await waitFor(() => queryByRole('textbox', 'Message'), 'the message box'),
     )
-    await typeText(box, 'Keep a saved cart for 30 days.')
+    typeMessage(box, 'Keep a saved cart for 30 days.')
     const uploadPath = attachmentUploadPath(org, {
       type: 'workspace',
       workspaceId: ws,
@@ -126,7 +128,7 @@ describe('the chat of a new workspace without a host', () => {
       picker.dispatchEvent(new Event('change', { bubbles: true }))
     })
     expect(blocked(byRole('button', 'Send'))).toBe(true)
-    await pressKey('Enter')
+    pressInField(box, 'Enter')
     expect(sends()).toHaveLength(0)
     held.release('POST', uploadPath)
     await waitFor(
@@ -134,7 +136,7 @@ describe('the chat of a new workspace without a host', () => {
       'the completed upload',
     )
     expect(blocked(byRole('button', 'Send'))).toBe(false)
-    await pressKey('Enter')
+    pressInField(box, 'Enter')
     await waitFor(() => sends().length === 1, 'the send during the start')
 
     await emit({
@@ -149,7 +151,10 @@ describe('the chat of a new workspace without a host', () => {
     )
     expect(queryByRole('button', 'Try again')).not.toBeNull()
     expect(queryByRole('textbox', 'Message')).not.toBeNull()
-    await typeText(byRole('textbox', 'Message'), 'Add an index on the user ID.')
+    typeMessage(
+      asMessageField(byRole('textbox', 'Message')),
+      'Add an index on the user ID.',
+    )
     await press(byRole('button', 'Send'))
     await waitFor(() => sends().length === 2, 'the send after the failure')
 

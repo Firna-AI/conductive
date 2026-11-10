@@ -1,5 +1,6 @@
 import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
-import type { OrgRole } from '../shared/api'
+import type { SessionResponse } from '../shared/account'
+import { API_PATHS, type OrgRole, type User } from '../shared/api'
 import { chatHistoryPath } from '../shared/events'
 import type { BannerState } from '../shared/github'
 import type { WorkspaceState } from '../shared/workspaces'
@@ -84,6 +85,14 @@ export class FakeApiServer implements FakeRouteWriter {
         created.workspace.id,
       ],
     )
+  }
+
+  /** Serves the session of `user`, with app access, as a sign-in of that person does. */
+  signIn(user: User): void {
+    this.json('GET', API_PATHS.session, {
+      user,
+      appAccess: true,
+    } satisfies SessionResponse)
   }
 
   json(method: FakeMethod, path: string, body: unknown, status = 200): void {

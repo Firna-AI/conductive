@@ -1,102 +1,63 @@
-import { Ban } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import {
-  suspendedUserBody,
-  type QuestionTarget,
-} from '../../../docs/mockups/src/components/operator/operatorCopy'
-import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { Check } from 'lucide-react'
+import { useToast } from '@firna/ui/toast'
+import type { QuestionTarget } from '../../../docs/mockups/src/components/operator/operatorCopy'
 import { readOperatorUser } from '../../app/api/read-operator-pages'
+import { approveUser, disableCode } from '../../app/operator-access'
 import { OperatorTarget } from '../../app/operator-target'
 import { routes } from '../../app/router'
-import { useServices } from '../../app/services'
-import { roleLabels } from '../../members/people'
+import { asApiError } from '../../app/store'
 import {
   operatorUserPath,
   userSuspensionPath,
   type OperatorUserDetail,
 } from '../../shared/operator'
 import { useApp } from '../context'
+import { ActionButton } from '../ui/actions'
 import { Loaded } from '../settings/LoadState'
-import { formatCount, formatLongDay } from './format'
+import { ApproveDialog } from './ApproveDialog'
+import { DisableCodeDialog } from './CodeDialogs'
 import { OperatorPage } from './OperatorPage'
 import { LiftDialog, SuspendDialog } from './TargetDialogs'
-import { suspensionTitle, TargetAction, useTargetPage } from './TargetPage'
-import { EmptyRows, TargetList, TargetRow } from './TargetParts'
-
-/** The notice of a suspended user, at the top of their page. */
-function UserNotice(props: {
-  user: OperatorUserDetail
-  stopping: number | null
-}) {
-  const { user } = props
-  const { now, timeZone } = useServices()
-  if (!user.suspension) return null
-  return (
-    <Notice
-      body={suspendedUserBody(`@${user.login}`, props.stopping ?? 0)}
-      icon={Ban}
-      title={suspensionTitle(user.suspension, now(), timeZone)}
-    />
-  )
-}
+import { TargetAction, useTargetPage, type Question } from './TargetPage'
+import { UserDetails } from './UserDetails'
 
 /**
- * The page of a user for the operator: their state, their name and other
- * details, the workspaces that they own, and their orgs with their roles. Each
- * org opens the page of that org. A user without a name on GitHub has no Name
- * row.
+ * The actions of the header: Suspend user, or Lift for a suspended user.
+ * A person who waits also has Approve, unless a suspension holds them.
  */
-function UserDetails(props: {
+function UserActions(props: {
   user: OperatorUserDetail
-  stopping: number | null
+  ask: (question: Question) => void
 }) {
-  const { user } = props
-  const { timeZone } = useServices()
-  const { total, running } = user.workspaces
+  const { user, ask } = props
+  const suspended = user.suspension !== null
   return (
     <>
-      <UserNotice stopping={props.stopping} user={user} />
-      <Section title="Details">
-        <DetailList
-          rows={[
-            ...(user.name ? [{ term: 'Name', value: user.name }] : []),
-            { term: 'GitHub ID', value: String(user.githubId), mono: true },
-            { term: 'Joined', value: formatLongDay(user.joinedAt, timeZone) },
-            {
-              term: 'Workspaces',
-              value: `${formatCount(total)} owned, ${formatCount(running)} running`,
-            },
-          ]}
-        />
-      </Section>
-      <Section title="Orgs">
-        {user.orgs.length === 0 ? (
-          <EmptyRows>{`The orgs of @${user.login} show here.`}</EmptyRows>
-        ) : (
-          <TargetList label={`Orgs of @${user.login}`}>
-            {user.orgs.map((org) => (
-              <TargetRow
-                end={roleLabels[org.role]}
-                key={org.id}
-                target={{ kind: 'org', name: org.name, initials: org.initials }}
-                to={routes.operatorOrg(org.id)}
-              />
-            ))}
-          </TargetList>
-        )}
-      </Section>
+      <TargetAction ask={ask} kind="user" suspended={suspended} />
+      {user.appAccess.state === 'waiting' && !suspended ? (
+        <ActionButton
+          icon={Check}
+          onPress={() => ask('approve')}
+          tone="primary"
+        >
+          Approve
+        </ActionButton>
+      ) : null}
     </>
   )
 }
 
 /**
- * The page of one user, from the Users tab or a link, with Suspend, or Lift for
- * a suspended user. On the operator's own page, the question before a
- * suspension warns first. After either, the page reads the user again.
+ * The page of one user, from the Users tab or a link, with Suspend, or Lift
+ * for a suspended user, and Approve for a person who waits. On the
+ * operator's own page, the question before a suspension warns first. The
+ * question before the suspension of a user whose referral code still lets
+ * people in offers to disable it too. After each write, the page reads the
+ * user again.
  */
 export function UserPage(props: { githubId: number; self: boolean }) {
   const app = useApp()
+  const { toast } = useToast()
   const page = useTargetPage(
     () =>
       new OperatorTarget(
@@ -114,18 +75,45 @@ export function UserPage(props: { githubId: number; self: boolean }) {
   const named: QuestionTarget | null = user
     ? { kind: 'user', name: `@${user.login}` }
     : null
+  const code = user?.referralCode ?? null
+  const active = code?.state === 'active' ? code : null
   const close = () => ask(null)
+  /**
+   * Suspends the user, and then disables the referral code when the
+   * operator kept the offer on. A suspension of the operator's own account
+   * ends the session, so there the code goes first. A failed disable after
+   * the suspension names what failed, and the page still shows the code.
+   */
+  const suspend = async (disable: boolean) => {
+    if (!disable || !active) return target.suspend()
+    if (props.self) {
+      await disableCode(app, active.code)
+      return target.suspend()
+    }
+    await target.suspend()
+    try {
+      await disableCode(app, active.code)
+    } catch (error) {
+      toast({
+        title: `The referral code of ${named?.name ?? 'the user'} wasn't disabled`,
+        description: asApiError(error).message,
+        tone: 'error',
+      })
+      return
+    }
+    await target.detail.refresh()
+  }
+  const approve = async () => {
+    await approveUser(app, props.githubId)
+    await target.detail.refresh()
+  }
+  const disableReferral = async (text: string) => {
+    await disableCode(app, text)
+    await target.detail.refresh()
+  }
   return (
     <OperatorPage
-      actions={
-        user ? (
-          <TargetAction
-            ask={ask}
-            kind="user"
-            suspended={user.suspension !== null}
-          />
-        ) : undefined
-      }
+      actions={user ? <UserActions ask={ask} user={user} /> : undefined}
       back={{ label: 'Users', to: routes.operatorUsers() }}
       subtitle={user?.name ?? undefined}
       tab="users"
@@ -136,18 +124,43 @@ export function UserPage(props: { githubId: number; self: boolean }) {
         retry={() => target.detail.refresh()}
         value={detail}
       >
-        {(value) => <UserDetails stopping={page.stopping} user={value} />}
+        {(value) => (
+          <UserDetails
+            disableCode={() => ask('disable-code')}
+            stopping={page.stopping}
+            user={value}
+          />
+        )}
       </Loaded>
       {named && question === 'suspend' ? (
         <SuspendDialog
           close={close}
+          referralCode={active?.code}
           self={props.self}
-          suspend={() => target.suspend()}
+          suspend={suspend}
           target={named}
         />
       ) : null}
       {named && question === 'lift' ? (
         <LiftDialog close={close} lift={() => target.lift()} target={named} />
+      ) : null}
+      {user && question === 'approve' ? (
+        <ApproveDialog
+          approve={approve}
+          close={close}
+          person={{
+            login: user.login,
+            name: user.name,
+            verifiedEmail: user.hasVerifiedEmail,
+          }}
+        />
+      ) : null}
+      {active && question === 'disable-code' ? (
+        <DisableCodeDialog
+          close={close}
+          code={active}
+          disable={() => disableReferral(active.code)}
+        />
       ) : null}
     </OperatorPage>
   )

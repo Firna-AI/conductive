@@ -58,6 +58,7 @@ export function reassignRetentionOwner(fixture: Fixture, id: string) {
       readWorkspace: async (orgId, workspaceId) =>
         workspaceView(
           await readWorkspace(fixture.runtime.env.DB, orgId, workspaceId),
+          fixture.runtime.env.APP_ORIGIN,
         ),
     },
   )

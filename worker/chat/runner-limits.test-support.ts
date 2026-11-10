@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import type { ChatTransaction } from './store'
 import type { NativeChatCallbacks } from '../test-support/native-chat-resolvers'

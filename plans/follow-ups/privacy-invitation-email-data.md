@@ -17,7 +17,7 @@
   - Each email gives Resend the invited email address, the org name, the name of the member who invited, and the invitation link.
   - At each sign-in, the app reads the verified emails of the GitHub account and stores them. A stored email that matches an invitation shows that invitation to the person.
   - `docs/protocol/orgs-and-members.md` states both facts as requirements.
-  - The Privacy page is a draft. A lawyer reviews it before the app opens to other people.
+  - The Privacy page identifies Firna Ltd as the operator and uses its legal contact address.
   - The page has two lists. "What Conductive uses, and why" says what the app keeps. "Who gets your data" names the outside parties that get data.
   - "Who gets your data" names Cloudflare, GitHub, Anthropic, and OpenAI. It names the cloud computer provider only in general words, because a rule in `AGENTS.md` keeps that name out of user-facing text. No such rule covers Resend.
   - The email invitations came in commit `b33e083` on 6 November 2026. The legal-pages rule came on 8 November 2026. So no rule asked that change to update the legal pages.
@@ -25,7 +25,7 @@
   - "Who gets your data" names no email provider, but each invitation sends personal data to Resend.
   - "What Conductive uses, and why" does not list the verified emails. It also does not say that an invitation holds the email address of the invited person.
   - The "External services" list in `docs/architecture.md` does not name Resend either.
-- **Impact if no action:** The draft that goes to the lawyer omits one recipient and one kind of stored data. Once the deployed Worker sends from `mail.conductive.build`, real invitation data goes to Resend, and the page does not say so.
+- **Impact if no action:** The Privacy page omits one recipient and one kind of stored data. Once the deployed Worker sends from `mail.conductive.build`, real invitation data goes to Resend, and the page does not say so.
 - **Root question:** How does the Privacy page tell people what the app does with the email addresses of the invitation feature?
 - **Options:**
   - **A.** Name Resend in "Who gets your data", with the data that it gets. Also add the verified emails and the invited email address to "What Conductive uses, and why". Also add Resend to "External services". Effort: Small.
@@ -36,7 +36,7 @@
   - No third naming approach exists. The page names either the service or its kind.
 - **Wider fix:** None. The legal-pages rule now covers this class. It came two days after the email invitations, which explains this gap.
 - **Previous examples:** Commit `3f3d7b9`, on 7 November 2026, corrected the legal drafts after the login-sharing feature changed whose login a session uses.
-- **Recommendation:** A. The page names every other outside party, except the cloud computer provider that a repository rule keeps unnamed. B protects the page better if the email provider changes. The GDPR asks for "the recipients or categories of recipients", so both forms can work, and the lawyer review can confirm.
+- **Recommendation:** A. The page names every other outside party, except the cloud computer provider that a repository rule keeps unnamed. B protects the page better if the email provider changes. Both forms identify the recipient of the invitation data.
 - **Action:** ask the user, because both texts are correct, and no copy rule picks one.
 
 Example text for option A:

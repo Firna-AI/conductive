@@ -1,8 +1,10 @@
 import { expect, it } from 'vitest'
 
-import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import { TEST_TIME } from '../test-support/harness'
-import { WorkspaceEventJournal } from './durable-journal'
+import {
+  WorkspaceEventJournal,
+  type LifecyclePublication as WorkspaceResponse,
+} from './durable-journal'
 import { nativeLifecycleStorage } from './native-storage.test-support'
 import type { WorkspaceEventPublication } from './workspace-platform'
 

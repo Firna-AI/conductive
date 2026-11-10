@@ -1,5 +1,4 @@
 import { Button } from '@firna/ui/button'
-import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
@@ -8,6 +7,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import { ActionButton, IconButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
 import { AttachmentChips } from './AttachmentChips'
+import { MessageField } from './MessageField'
 import { ModelPicker } from './ModelPicker'
 import { SessionLoginLabel, type SessionLogin } from './SessionLogin'
 import styles from './Composer.module.css'
@@ -78,9 +78,9 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
  * for the uploads of the files, whose chips show their state. When a
  * message spends the agent login of another member, a label after the
  * model picker names that login, so the box keeps its place.
+ * A pasted workspace link shows as a chip, and the draft keeps the plain link.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
-  const { field } = useControlSizes()
   const steers = props.running && props.startsSession !== true
   const placeholder = steers
     ? 'Steer the agent while it works'
@@ -94,17 +94,11 @@ export function Composer(props: ComposerState & { lines?: number }) {
         {props.attachments.length > 0 ? (
           <AttachmentChips attachments={props.attachments} />
         ) : null}
-        <InputFrame
-          accessibilityLabel="Message"
-          focusIndicator="none"
+        <MessageField
+          lines={props.lines ?? 2}
           maxLines={8}
-          multiline
-          numberOfLines={props.lines ?? 2}
-          onChangeText={noop}
           placeholder={placeholder}
-          size={field}
-          value={props.draft}
-          variant="seamless"
+          text={props.draft}
         />
         <div className={styles.bar}>
           {props.attachTo ? (

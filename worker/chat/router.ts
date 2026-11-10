@@ -2,6 +2,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { tokenWorkspace } from './queries'
+import { sessionGate } from '../security/gate'
 import { attachmentRoute } from './attachment-routes'
 
 export async function routeRunner(
@@ -34,6 +35,7 @@ export async function routeChat(
     /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:events|history|sessions(?:\/.*)?)$/,
   )
   if (!match) return null
+  await sessionGate(request, env, now())
   let workspaceId: string
   try {
     workspaceId = decodeURIComponent(match[1])

@@ -19,6 +19,7 @@ import {
 } from '../security/desktop-contract'
 import { encrypt, hash, sign } from '../security/crypto'
 import { applyMigrations } from '../test-support/migrations'
+import { seedAppAccess } from '../test-support/app-access'
 import { TOOL_TURN_HEADER } from '../../tools/context'
 
 export const APP = 'https://app.conductive.test'
@@ -122,6 +123,7 @@ export async function deviceFixture() {
       )
       .bind(await encrypt('login', agentLoginContext('sender', 'claude'), KEY)),
   ])
+  await seedAppAccess(db, ['owner', 'sender', 'outsider'], 1)
   const sockets: WebSocket[] = []
   const closed = new Set<WebSocket>()
   const remember = (socket: WebSocket) => {

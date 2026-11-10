@@ -57,7 +57,7 @@ the lost lines, the turns, the work fold of each ended turn, and Try again.
 - Each session log takes the `session.updated` records of its session with its other events.
   It keeps the `retryMessageId` of the record with the highest event number as `Transcript.retryMessageId`.
   So a record that arrives late, such as in a history load, never brings back an older Try again or hides a newer one.
-- A record from a read or a reply counts at the event number of its state, as the [record order rule](README.md#rules-for-this-code) says.
+- A record from a read or a reply counts at the event number of its state, as the [record order rule](loads-and-sends.md#record-order) says.
   `SessionLog.offer` in [`state/session-log.ts`](state/session-log.ts) folds it at its place in the event order.
 - `retryItemId` picks one failed item. A turn that continues the unanswered messages of a finished turn takes their IDs.
   So a late failure of the older turn can name the same message. Then only the item of the newer known turn offers Try again.

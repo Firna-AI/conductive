@@ -163,6 +163,8 @@ it('keeps account data and Get started isolated from other users and deleted org
     githubLogin: 'other',
     displayName: 'Other',
     avatarUrl: null,
+    primaryVerifiedEmail: null,
+    githubCreatedAt: null,
   })
   expect(await (await harness.request(GET_STARTED_PATH, other)).json()).toEqual(
     {

@@ -79,7 +79,10 @@ export async function existingWorkspace(
     },
   })
   await fixture.runtime.workspace(id).lifecyclePrepared()
-  return workspaceView(await readWorkspace(env.DB, fixture.org.id, id))
+  return workspaceView(
+    await readWorkspace(env.DB, fixture.org.id, id),
+    env.APP_ORIGIN,
+  )
 }
 
 export function completedWorkspace(

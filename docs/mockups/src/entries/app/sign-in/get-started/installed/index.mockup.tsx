@@ -14,7 +14,7 @@ export const getStartedInstalled = defineScreen({
   relatedDocs: [],
   propSchema: getStartedSchema,
   props: { ...getStartedFirstRun, step: 'org' },
-  useCasePaths: ['user-flows/sign-up'],
+  useCasePaths: ['user-flows/join'],
   render: (props, context) => (
     <GetStartedScreen state={props} viewport={context.viewport} />
   ),

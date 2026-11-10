@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { InputFrame } from '@firna/ui/input'
 import {
   ChevronDown,
   CornerDownLeft,
@@ -8,13 +7,12 @@ import {
 } from 'lucide-react'
 import type { AgentChoice } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
-import { noop } from '../../noop'
 import { AttachmentChips } from '../chat/AttachmentChips'
+import { MessageField } from '../chat/MessageField'
 import { ModelPicker } from '../chat/ModelPicker'
 import { ActionButton, IconButton } from '../common/actions'
 import { classes } from '../common/classes'
 import dialog from '../common/ConfirmDialog.module.css'
-import { useControlSizes } from '../common/touch'
 import styles from './NewWorkspaceDialog.module.css'
 
 /** The repository of the new workspace, as a compact picker. */
@@ -84,13 +82,13 @@ export type NewWorkspaceDialogProps = {
  * New workspace as a wide, compact dialog over the dimmed app, drawn open,
  * for a computer. The repository picker sits at the top left, and the org
  * and the section of the new workspace at the top right. The message and
- * its files fill the middle. The model picker sits at the bottom left, and
- * the attach button and Create at the bottom right. A phone always opens
- * the page instead. The files show the chips of every composer, and Create
- * waits for their uploads, as Send does.
+ * its files fill the middle, and a pasted link to a workspace of the org
+ * shows as a chip, as in the composer. The model picker sits at the bottom
+ * left, and the attach button and Create at the bottom right. A phone
+ * always opens the page instead. The files show the chips of every
+ * composer, and Create waits for their uploads, as Send does.
  */
 export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
-  const { field } = useControlSizes()
   const uploads = props.attachments.some((file) => file.state !== undefined)
   return (
     <div className={dialog.layer}>
@@ -111,17 +109,11 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
           {props.attachments.length > 0 ? (
             <AttachmentChips attachments={props.attachments} />
           ) : null}
-          <InputFrame
-            accessibilityLabel="Message"
-            focusIndicator="none"
+          <MessageField
+            lines={7}
             maxLines={14}
-            multiline
-            numberOfLines={7}
-            onChangeText={noop}
             placeholder={props.placeholder}
-            size={field}
-            value={props.text}
-            variant="seamless"
+            text={props.text}
           />
         </div>
         {props.notices.length > 0 ? (

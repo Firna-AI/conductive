@@ -45,7 +45,10 @@ export function productionMembersHooks(
       return workspaceForViewer(
         env,
         userId,
-        workspaceView(await readWorkspace(env.DB, orgId, workspaceId)),
+        workspaceView(
+          await readWorkspace(env.DB, orgId, workspaceId),
+          env.APP_ORIGIN,
+        ),
       )
     },
     async suspendOrg(orgId, workspaceIds, ownership) {

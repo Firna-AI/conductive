@@ -1,4 +1,4 @@
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { RunnerCommand, RunnerLogin } from '../../src/shared/runner'
 import { DeliveryState } from './delivery-state'
 import { RunnerAccessDenied, SenderAccessDenied } from './login-access'

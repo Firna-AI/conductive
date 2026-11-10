@@ -133,7 +133,7 @@ says.
   member. The chat does not show it.
 - The reply to the message does not wait for the title. The workspace
   then takes the title as its name, as
-  [Workspace and session names](chat-and-events.md#workspace-and-session-names) says.
+  [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
 - When the request fails, the name of the workspace does not change. The
   app then asks again when it accepts the next message with text in the
   workspace. It asks only while the workspace has no name.
@@ -205,3 +205,7 @@ says.
 - When a send names a draft file that the app deleted, the composer shows
   that file as a failed upload. Its Try again uploads the file again from
   the device.
+
+## Workspace links
+
+[Workspace links](workspace-links.md) states how each composer, sent message, and agent answer shows workspace links.

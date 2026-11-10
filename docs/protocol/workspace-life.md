@@ -43,7 +43,7 @@ says.
   start steps show the time limit of the start.
 - A build or a refresh that passes its time limit fails in the same way as
   after any other error. So the last good image stays, as
-  [The org image](workspaces-and-sandboxes.md#the-org-image) says.
+  [The org image](org-image.md#the-org-image) says.
 - A start that passes its time limit fails in the same way as after any
   other error. So a failed create keeps its workspace in the error state,
   as [Create a workspace](create-a-workspace.md#a-failed-first-start) says.

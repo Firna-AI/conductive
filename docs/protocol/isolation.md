@@ -20,8 +20,8 @@ says.
 - An operator is the one exception. An operator can suspend or lift any
   user or org, as [Operator actions](operator-actions.md) says. In the
   [operator section](operator-section.md#what-the-section-shows), an
-  operator also reads counts, names, IDs, dates, roles, and states across
-  every org (decisions 142, 144, and 147).
+  operator also reads counts, names, IDs, dates, roles, states, and codes
+  across every org (decisions 142, 144, 147, and 160).
 - The operator section shows no chat, file, env value, agent login, or
   email address. Its org search takes the ID of a cloud computer or a
   preview address only to find its org.

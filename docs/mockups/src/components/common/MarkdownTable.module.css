@@ -1,0 +1,36 @@
+/*
+ * A table wider than its place scrolls sideways inside this box, so the
+ * text around it keeps its width.
+ */
+.table {
+  overflow-x: auto;
+}
+
+/*
+ * Separate borders with no spacing: each cell draws its right and bottom
+ * lines, and the table draws its top and left lines. So one 1px line stands
+ * between two cells, as with collapsed borders. With collapsed borders,
+ * Chrome lays out a table in time that grows with the width of its header
+ * times its rows, also when a short row spans the missing columns.
+ */
+.table table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-top: 1px solid var(--ui-border);
+  border-left: 1px solid var(--ui-border);
+  font-size: var(--ui-text-sm);
+}
+
+.table th,
+.table td {
+  padding: 5px 10px;
+  border-right: 1px solid var(--ui-border);
+  border-bottom: 1px solid var(--ui-border);
+  text-align: left;
+}
+
+.table th {
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
+}

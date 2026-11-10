@@ -121,7 +121,7 @@ deployment at `conductive.build`. It does not wait for CI, as
   so that one change renames the product.
 - Never use "Claude Code" as a name of the product or of its features.
   Write "agents powered by Claude and Codex", as
-  [Names in the product](docs/protocol/chat-and-events.md#names-in-the-product)
+  [Names in the product](docs/protocol/agents-and-sessions.md#names-in-the-product)
   says.
 - Never name Boat in user-facing text: the app, the Mac app, the marketing
   site, Get started, and the legal pages. Write "cloud computer" or
@@ -134,6 +134,12 @@ deployment at `conductive.build`. It does not wait for CI, as
   `src/marketing/privacy.ts`. In the same change, update each sentence of
   the legal pages that restates the fact. A search for the old words is
   not enough, because a legal page can restate a fact in other words.
+- The comparison page at `conductive.build/from-conductor` gives each
+  listed Conductor Cloud feature a status. Its rows live in
+  `src/marketing/from-conductor/`. When a change ships, starts, or drops a
+  listed feature, update the status of its row in the same change. The
+  claim rules are in
+  [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md#statuses).
 
 ## Product
 

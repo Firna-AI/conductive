@@ -1,0 +1,42 @@
+/*
+ * The field that renames a session, in place of the label of its tab in
+ * `WorkspaceTabs`, as the app draws it. It shows only in a tab with the
+ * state `.renaming`. It takes about the width of the title, up to the
+ * widest title of a tab.
+ */
+.rename {
+  width: auto;
+  min-width: 0;
+  max-width: 168px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  outline: none;
+  box-sizing: border-box;
+  field-sizing: content;
+}
+
+.rename:focus {
+  border-color: var(--ui-primary);
+}
+
+/*
+ * A view runs no script, so a span stands for the field, which opens
+ * focused, and it draws the selected title in the colours of a selection.
+ */
+.rename.renameFocused {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-color: var(--ui-primary);
+  white-space: nowrap;
+}
+
+.renameSelection {
+  background: Highlight;
+  color: HighlightText;
+}

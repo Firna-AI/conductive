@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import { Button } from '@firna/ui/button'
-import { InputFrame } from '@firna/ui/input'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import { filesWait } from '../../app/draft-files'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
@@ -13,6 +12,7 @@ import {
 import type { Draft } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
 import { DraftFiles, OversizeNotice } from './AttachmentChips'
+import { ChipTextField } from './chip-field/ChipTextField'
 import local from './chat.module.css'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
@@ -60,9 +60,9 @@ export interface ComposerProps {
  * message spends the agent login of another member, a label after the
  * model picker names that login, so the box keeps its place. Enter follows
  * the shared rule of `useSendKey`: on desktop, Enter sends and Shift+Enter
- * starts a new line.
- * The composer reads Enter before the text field does, so Enter never adds
- * a line to a message that it sends.
+ * starts a new line. The text field asks the send key before it adds a
+ * line, so Enter never adds a line to a message that it sends. A pasted
+ * workspace link shows as a chip, and the draft keeps the plain link.
  */
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
@@ -71,7 +71,7 @@ export function Composer(props: ComposerProps) {
   const empty = draft.text.trim() === '' && draft.files.length === 0
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
   const steers = props.running && props.startsSession !== true
-  const onKeyDown = useSendKey(!off, props.onSend)
+  const sendKey = useSendKey(!off, props.onSend)
   return (
     <>
       <OversizeNotice
@@ -79,7 +79,7 @@ export function Composer(props: ComposerProps) {
         refused={draft.refused}
       />
       <div className={styles.wrap}>
-        <div className={styles.composer} onKeyDownCapture={onKeyDown}>
+        <div className={styles.composer}>
           {draft.files.length > 0 ? (
             <DraftFiles
               files={draft.files}
@@ -87,19 +87,17 @@ export function Composer(props: ComposerProps) {
               onRetry={props.onRetryFile}
             />
           ) : null}
-          <InputFrame
-            accessibilityLabel="Message"
-            focusIndicator="none"
+          <ChipTextField
+            label="Message"
+            lines={2}
             maxLines={8}
-            multiline
-            numberOfLines={2}
             onChangeText={props.onChangeText}
+            onEnter={sendKey}
+            owner={draft.id}
             placeholder={
               steers ? 'Steer the agent while it works' : 'Message the agent'
             }
-            size={control.field}
             value={draft.text}
-            variant="seamless"
           />
           <div className={styles.bar}>
             <IconButton

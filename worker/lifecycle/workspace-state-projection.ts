@@ -1,15 +1,17 @@
 import type { AgentChoice } from '../../src/shared/agents'
-import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { updateWorkspaceTitle } from '../chat/queries'
 import { canFillWorkspaceTitle } from '../chat/workspace-title'
 import type { DurableLifecycleState, LifecyclePublisher } from './durable-types'
-import type { WorkspaceEventJournal } from './durable-journal'
+import type {
+  LifecyclePublication,
+  WorkspaceEventJournal,
+} from './durable-journal'
 import {
   persistLifecycleState,
   readWorkspace,
-  workspaceView,
+  workspaceRecord,
 } from './workspace-data'
 
 interface ProjectionOptions {
@@ -24,7 +26,7 @@ interface ProjectionOptions {
 }
 
 type ProjectionWrite =
-  { response: WorkspaceResponse } | { titleError: unknown } | undefined
+  { response: LifecyclePublication } | { titleError: unknown } | undefined
 
 /** Both callers already own the workspace chat queue. This class adds no queue. */
 export class WorkspaceStateProjection {
@@ -62,7 +64,7 @@ export class WorkspaceStateProjection {
       before.updatedAt,
     )
     const title = await this.options.latestTitle(current.workspaceId)
-    if (title && canFillWorkspaceTitle(workspaceView(before))) {
+    if (title && canFillWorkspaceTitle(before)) {
       try {
         await updateWorkspaceTitle(
           env.DB,
@@ -78,7 +80,7 @@ export class WorkspaceStateProjection {
     const row = await readWorkspace(env.DB, current.orgId, current.workspaceId)
     return {
       response: {
-        workspace: workspaceView(row),
+        workspace: workspaceRecord(row),
         start: current.start,
         error: current.error,
       },

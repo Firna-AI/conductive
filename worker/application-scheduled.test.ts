@@ -113,3 +113,34 @@ it('leaves stored deadlines and image state unchanged when no repair is overdue'
   expect(await coordinator.alarmAt()).toBeNull()
   expect(fixture.requests).toEqual([])
 })
+
+it('warns and finishes the scheduled repairs when the approval email retry fails', async () => {
+  const db = fixture.env.DB
+  const failing = new Proxy(db, {
+    get(target, property, receiver) {
+      if (property !== 'prepare') return Reflect.get(target, property, receiver)
+      return (sql: string) => {
+        if (sql.includes('approval_emails'))
+          throw new Error('approval emails are not readable')
+        return target.prepare(sql)
+      }
+    },
+  })
+  const warnings: unknown[] = []
+  const warn = console.warn
+  console.warn = (message: unknown) => warnings.push(message)
+  try {
+    await expect(
+      createApp().scheduled(event, { ...fixture.env, DB: failing }),
+    ).resolves.toBeUndefined()
+  } finally {
+    console.warn = warn
+  }
+  expect(warnings).toEqual([
+    {
+      kind: 'approval_email_retry_failed',
+      message:
+        'The retry of approval emails failed. It runs again at the next timer.',
+    },
+  ])
+})

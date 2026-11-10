@@ -8,11 +8,11 @@ import type { WorkspaceLifecycleTransport } from '../lifecycle/workspace-transpo
 import type { Workspace } from '../workspace'
 import type { NativeRequests } from './native-requests'
 import type { NativeChatObservers } from './native-chat-observers'
-import type { WorkspaceEventEnvelope } from '../../src/shared/events'
 import type {
   ChatHistoryResponse,
   WorkspaceEvent,
-} from '../../src/shared/events'
+  WorkspaceEventEnvelope,
+} from '../chat/workspace-events'
 import type { ChangesResponse, FileTreeResponse } from '../../src/shared/files'
 import type { Attachment } from '../../src/shared/messages'
 import type { AttachmentStorageInput } from '../chat/attachment-storage'
