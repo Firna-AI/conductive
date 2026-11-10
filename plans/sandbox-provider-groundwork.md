@@ -750,10 +750,17 @@ Evidence: `.context/sandbox-provider-groundwork/m3/complete-gate.log`.
 The subsequent Mac download change from `main` needs the final PR CI gate
 on the combined tree.
 
-- [ ] Commit and push the completed Milestone 3 changes and its updated
+- [x] Commit and push the completed Milestone 3 changes and its updated
       deployment documentation.
-- [ ] Review the full updated branch after that push. Apply the same
+- [x] Review the full updated branch after that push. Apply the same
       finding-check and fix rule, with no changes to test timeouts or gates.
+
+Review summary: the fresh full-branch review of `3fcd6b84` against
+`c49a4f8e` reported no findings and no outside-scope problems. No finding
+checks, fix round, or re-review was needed. The later merge `32755c74`
+only preserves marketing comparison data from `main`; provider code is
+unchanged. Evidence is `.context/reviews/calummoore/vercel-sandbox-provider/round-2-review.md`.
+
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
