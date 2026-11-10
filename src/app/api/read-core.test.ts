@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 
 import { readLogin } from './read-core'
 
-test('reads a connected Codex access token with its share setting', () => {
+test('reads a connected Codex ChatGPT sign-in with its share setting', () => {
   expect(
     readLogin({
       agent: 'codex',

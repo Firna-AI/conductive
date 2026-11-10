@@ -8,17 +8,18 @@ import { useControlSizes } from '../../../docs/mockups/src/components/common/tou
 import styles from '../../../docs/mockups/src/components/settings/AgentConnectForm.module.css'
 import { SecretForm } from '../../app/secret-form'
 import { useStore } from '../../app/store'
+import type { SaveAgentLoginRequest } from '../../shared/account'
 import type { Agent } from '../../shared/agents'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { ExternalLink } from '../ui/links'
+import { ChatGptSignIn } from './ChatGptSignIn'
 import { agentNames, loginLabels, type LoginKind } from './labels'
 
 /** The pages where a user makes the secret of a login. */
 const secretPages = {
   anthropicKey: 'https://console.anthropic.com/settings/keys',
   openAiKey: 'https://platform.openai.com/api-keys',
-  codexToken: 'https://chatgpt.com/admin/access-tokens',
 } as const
 
 /** The agent login API stores the secret without a test of it. */
@@ -26,9 +27,9 @@ const keepHint = `${productName} keeps it encrypted, and never shows it again.`
 
 /**
  * The kinds of each agent in the order of the switch of its form. The first
- * kind starts selected. Most members have an OpenAI API key, and a Codex
- * access token needs a ChatGPT Business or Enterprise workspace, so the API
- * key comes first for Codex.
+ * kind starts selected. An OpenAI API key needs no step before it, and the
+ * ChatGPT sign-in needs a setting of ChatGPT first, so the API key comes
+ * first for Codex.
  */
 const connectKinds: Readonly<
   Record<Agent, readonly [LoginKind, ...LoginKind[]]>
@@ -37,16 +38,35 @@ const connectKinds: Readonly<
   codex: ['api-key', 'token'],
 }
 
+/** The agent and the kind that the save of a secret sends, as one pair. */
+type SecretLogin = SaveAgentLoginRequest extends infer Save
+  ? Save extends SaveAgentLoginRequest
+    ? Omit<Save, 'secret'>
+    : never
+  : never
+
 /**
- * What a form asks for: the words that say what to paste and where to get
- * it, then the label and the placeholder of the field.
+ * A secret to paste: the login that its save names, the words that say what
+ * to paste and where to get it, then the label and the placeholder of the
+ * field.
  */
-type SecretAsk = { text: ReactNode; label: string; placeholder: string }
+type SecretAsk = {
+  type: 'secret'
+  login: SecretLogin
+  text: ReactNode
+  label: string
+  placeholder: string
+}
+
+/** What a form asks for: a secret, or the ChatGPT sign-in, with no field. */
+type Ask = SecretAsk | { type: 'chatgpt-sign-in' }
 
 /** What each agent asks for, by the kind that the switch selects. */
-const asks: Readonly<Record<Agent, Readonly<Record<LoginKind, SecretAsk>>>> = {
+const asks: Readonly<Record<Agent, Readonly<Record<LoginKind, Ask>>>> = {
   claude: {
     token: {
+      type: 'secret',
+      login: { agent: 'claude', kind: 'token' },
       text: (
         <>
           Run <code className={styles.code}>claude setup-token</code> on your
@@ -57,6 +77,8 @@ const asks: Readonly<Record<Agent, Readonly<Record<LoginKind, SecretAsk>>>> = {
       placeholder: 'Paste the token',
     },
     'api-key': {
+      type: 'secret',
+      login: { agent: 'claude', kind: 'api-key' },
       text: (
         <>
           Paste an API key of your Anthropic account.{' '}
@@ -71,6 +93,8 @@ const asks: Readonly<Record<Agent, Readonly<Record<LoginKind, SecretAsk>>>> = {
   },
   codex: {
     'api-key': {
+      type: 'secret',
+      login: { agent: 'codex', kind: 'api-key' },
       text: (
         <>
           Paste an API key of your OpenAI account.{' '}
@@ -82,20 +106,7 @@ const asks: Readonly<Record<Agent, Readonly<Record<LoginKind, SecretAsk>>>> = {
       label: 'OpenAI API key',
       placeholder: 'Paste the key',
     },
-    token: {
-      text: (
-        <>
-          Paste an access token from your ChatGPT Business or Enterprise
-          workspace, with the Codex scope. The owner of that workspace must
-          allow access tokens and local Codex use.{' '}
-          <ExternalLink href={secretPages.codexToken}>
-            Make one in ChatGPT
-          </ExternalLink>
-        </>
-      ),
-      label: 'Codex access token',
-      placeholder: 'Paste the token',
-    },
+    token: { type: 'chatgpt-sign-in' },
   },
 }
 
@@ -128,54 +139,34 @@ function SecretField(props: {
 }
 
 /**
- * The form that connects an agent, open under its row. Its switch chooses
- * the kind of the login: a subscription token or an API key for Claude,
- * and an API key or an access token for Codex. The first kind of the agent
- * starts selected. The secret leaves the browser once, in the save, with
- * the chosen kind. A failed save keeps the secret in the field and shows
- * why. Cancel shows when `close` is set.
+ * The words, the field, and the buttons of a secret. The secret leaves the
+ * browser once, in the save, with the chosen kind. A failed save keeps the
+ * secret in the field and shows why.
  */
-export function AgentConnectForm(props: {
-  agent: Agent
+function SecretFields(props: {
+  ask: SecretAsk
+  form: SecretForm
   close?: () => void
   connected: () => void
 }) {
   const app = useApp()
-  const { field } = useControlSizes()
-  const [form] = useState(() => new SecretForm())
-  const kinds = connectKinds[props.agent]
-  const [kind, setKind] = useState<LoginKind>(kinds[0])
-  const state = useStore(form.state)
-  const ask = asks[props.agent][kind]
+  const state = useStore(props.form.state)
   const submit = () => {
-    void form
-      .submit((secret) =>
-        app.account.saveLogin({ agent: props.agent, kind, secret }),
-      )
+    void props.form
+      .submit((secret) => app.account.saveLogin({ ...props.ask.login, secret }))
       .then((saved) => {
         if (saved) props.connected()
       })
   }
   return (
-    <div className={styles.form}>
-      <SegmentedControl
-        accessibilityLabel="Connect with"
-        disabled={state.saving}
-        onChange={setKind}
-        options={kinds.map((item) => ({
-          label: loginLabels[props.agent][item],
-          value: item,
-        }))}
-        size={field}
-        value={kind}
-      />
-      <p className={styles.text}>{ask.text}</p>
-      <SecretField ask={ask} form={form} submit={submit} />
+    <>
+      <p className={styles.text}>{props.ask.text}</p>
+      <SecretField ask={props.ask} form={props.form} submit={submit} />
       {state.error ? (
         <Notice
           body={state.error.message}
           icon={TriangleAlert}
-          title={`${agentNames[props.agent]} wasn't connected`}
+          title={`${agentNames[props.ask.login.agent]} wasn't connected`}
           tone="danger"
         />
       ) : null}
@@ -189,6 +180,54 @@ export function AgentConnectForm(props: {
           Connect
         </ActionButton>
       </div>
+    </>
+  )
+}
+
+/**
+ * The form that connects an agent, open under its row. Its switch chooses
+ * the kind of the login: a subscription token or an API key for Claude,
+ * and an API key or the ChatGPT plan for Codex. `kind` starts selected, by
+ * default the first kind of the agent. A secret has its field and Connect.
+ * The ChatGPT plan has the steps of its sign-in, which another kind stops.
+ * Cancel shows when `close` is set. `connected` runs after a save or a
+ * sign-in.
+ */
+export function AgentConnectForm(props: {
+  agent: Agent
+  kind?: LoginKind
+  close?: () => void
+  connected: () => void
+}) {
+  const { field } = useControlSizes()
+  const [form] = useState(() => new SecretForm())
+  const kinds = connectKinds[props.agent]
+  const [kind, setKind] = useState<LoginKind>(props.kind ?? kinds[0])
+  const state = useStore(form.state)
+  const ask = asks[props.agent][kind]
+  return (
+    <div className={styles.form}>
+      <SegmentedControl
+        accessibilityLabel="Connect with"
+        disabled={state.saving}
+        onChange={setKind}
+        options={kinds.map((item) => ({
+          label: loginLabels[props.agent][item],
+          value: item,
+        }))}
+        size={field}
+        value={kind}
+      />
+      {ask.type === 'secret' ? (
+        <SecretFields
+          ask={ask}
+          close={props.close}
+          connected={props.connected}
+          form={form}
+        />
+      ) : (
+        <ChatGptSignIn close={props.close} connected={props.connected} />
+      )}
     </div>
   )
 }

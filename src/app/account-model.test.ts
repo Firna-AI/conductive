@@ -12,7 +12,7 @@ import { seedState } from './dev/seed'
 import { HeldRequests, testServices } from './test-kit'
 
 describe('AccountModel', () => {
-  test('saves Codex tokens through the dev backend and keeps sharing until the kind changes', async () => {
+  test('a ChatGPT sign-in through the dev backend connects Codex not shared, a new sign-in keeps the share setting, and a change of kind takes the default of the new kind', async () => {
     const server = new FakeApiServer()
     const backend = createBackend(
       seedState(readDevOptions('?login=none')),
@@ -27,32 +27,44 @@ describe('AccountModel', () => {
     )
     const app = new AppModel(testServices(server, { fetch }))
     await app.start()
-    const save = (kind: 'token' | 'api-key', secret = 'codex-secret') =>
-      app.account.saveLogin({ agent: 'codex', kind, secret })
-    await expect(save('token')).resolves.toBeUndefined()
-    expect(app.account.login('codex')).toEqual({
+    const signIn = async () => {
+      const { handle } = await app.account.startCodexSignIn()
+      const waiting = await app.account.pollCodexSignIn(handle)
+      const connected = await app.account.pollCodexSignIn(handle)
+      return [waiting.state, connected.state]
+    }
+    const codex = (noReuse: boolean, kind: 'token' | 'api-key' = 'token') => ({
       agent: 'codex',
       connected: true,
-      kind: 'token',
-      noReuse: true,
+      kind,
+      noReuse,
       updatedAt: FAKE_TIME,
     })
+    const states = await signIn()
+    const connected = app.account.login('codex')
     await app.account.setNoReuse('codex', false)
-    await save('token', 'rotated-token')
-    expect(app.account.login('codex')).toMatchObject({
-      kind: 'token',
-      noReuse: false,
-    })
+    await signIn()
+    const again = app.account.login('codex')
     await app.account.setNoReuse('codex', true)
-    await save('api-key')
-    expect(app.account.login('codex')).toMatchObject({
+    await app.account.saveLogin({
+      agent: 'codex',
       kind: 'api-key',
-      noReuse: false,
+      secret: 'codex-key',
     })
-    await save('token')
-    expect(app.account.login('codex')).toMatchObject({
-      kind: 'token',
-      noReuse: true,
+    const key = app.account.login('codex')
+    await signIn()
+    expect({
+      states,
+      connected,
+      again,
+      key,
+      token: app.account.login('codex'),
+    }).toEqual({
+      states: ['waiting', 'connected'],
+      connected: codex(true),
+      again: codex(false),
+      key: codex(false, 'api-key'),
+      token: codex(true),
     })
   })
 

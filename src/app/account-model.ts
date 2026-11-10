@@ -1,12 +1,15 @@
 import {
   ACCOUNT_PATHS,
   agentLoginPath,
+  codexDevicePath,
   type AccountResponse,
   type AgentLoginStatus,
   type GitHubInstallationsResponse,
   type GitHubRepositoriesResponse,
   type NewWorkspaceView,
+  type PollCodexDeviceResponse,
   type SaveAgentLoginRequest,
+  type StartCodexDeviceResponse,
   type UpdateAgentLoginRequest,
   type UpdateAgentLoginResponse,
 } from '../shared/account'
@@ -16,6 +19,8 @@ import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
 import { ignore, nested, record } from './api/parse'
 import {
   readChoice,
+  readCodexDevicePoll,
+  readCodexDeviceStart,
   readGitHubRepositories,
   readInstallations,
   readLogin,
@@ -31,9 +36,10 @@ import { load, loading, Store, type Loadable, type Readable } from './store'
 /**
  * The account of the person signed in: the agent logins, the preferences,
  * and the GitHub App installations. A secret goes to the Worker in a write
- * and never comes back: the account shows only the kind of each login and
- * its share setting, which says whether other members' messages in the
- * sessions of the person run on it.
+ * and never comes back, and the Worker keeps the tokens of a ChatGPT
+ * sign-in: the account shows only the kind of each login and its share
+ * setting, which says whether other members' messages in the sessions of
+ * the person run on it.
  */
 export class AccountModel {
   readonly account = new Store<AccountResponse | null>(null)
@@ -169,6 +175,39 @@ export class AccountModel {
     )
     this.changeLogin(request.agent)
     this.putLogin(saved)
+  }
+
+  /**
+   * Starts a ChatGPT sign-in of Codex. The Worker asks OpenAI for a code,
+   * and keeps the sign-in under the handle of the answer. No token comes to
+   * the browser.
+   */
+  startCodexSignIn(): Promise<StartCodexDeviceResponse> {
+    return this.services.api.send(
+      'POST',
+      ACCOUNT_PATHS.codexDevice,
+      {},
+      readCodexDeviceStart,
+    )
+  }
+
+  /**
+   * Asks the Worker for the state of the ChatGPT sign-in of `handle`. At the
+   * end of a sign-in, the Worker saved the login, so the account shows it as
+   * the Codex login, as a save does.
+   */
+  async pollCodexSignIn(handle: string): Promise<PollCodexDeviceResponse> {
+    const answer = await this.services.api.send(
+      'POST',
+      codexDevicePath(handle),
+      {},
+      readCodexDevicePoll,
+    )
+    if (answer.state === 'connected') {
+      this.changeLogin(answer.login.agent)
+      this.putLogin(answer.login)
+    }
+    return answer
   }
 
   /**
