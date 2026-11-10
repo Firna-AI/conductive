@@ -85,8 +85,9 @@ These docs belong to this doc:
   `Origin` (decision 60).
 - The hostname for machines is `api.conductive.build`. It serves the
   GitHub webhooks, the agent tools, the agent runner, the git credential
-  helper, and the [model gateway](model-gateway.md). Its gate checks a
-  webhook signature or a workspace token in place of the sign-in.
+  helper, the [model gateway](model-gateway.md), and the software image
+  route of the deploy run. Its gate checks a webhook signature or a
+  workspace token in place of the sign-in.
 - The gate also accepts a one-use build grant, but only on
   `/v1/internal/image-source/credential`, the route that gives the Git
   command of a build its read token (decision 90).
@@ -94,6 +95,18 @@ These docs belong to this doc:
   gateway (decision 120). These routes accept no other credential.
   [The turn token](model-gateway.md#the-turn-token) states when a turn
   token works.
+- The gate also accepts the token of a deploy run, but only on
+  `/v1/deploy/software-image`, the route that builds the
+  [software image](org-image.md#the-software-image). Each deploy run makes
+  a new random token. The Worker keeps only its SHA-256 digest, and
+  accepts it only for the Worker version of that deploy run, for 30
+  minutes after that version was made.
+- Reason: this token needs no stored secret and no setup. A shared secret
+  in GitHub and in the Worker, a GitHub OIDC token, and a route with no
+  credential were rejected.
+- The route refuses a request with a cookie or an `Origin` header. While
+  an older Worker version answers, the route says so, and the deploy run
+  asks again.
 - Each route of `api.conductive.build` has a path under `/v1/`
   (decision 102).
 - Paths without a version were rejected. Reason: a later change to the

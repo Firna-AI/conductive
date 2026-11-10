@@ -44,6 +44,7 @@ async function fixture() {
       kind: 'api-key' as const,
       token: 'sk-ant-api-turn-token',
     },
+    commitAuthor: null,
     choice: turn().message.choice,
     conversationId: null,
     instructions: '',

@@ -16,6 +16,15 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         operator sees the age of the account when you wait for app
         access. Your login and display name also tell the agents who sent
         each message.`,
+      text`Commit authors: each commit in a cloud computer names the person
+        whose GitHub token Git uses as author and committer. In a workspace
+        with older cloud computer software, agent commits name the workspace
+        owner. The name is
+        their GitHub display name, or their login when the display name is
+        missing or unusable. ${productName} uses their GitHub user ID and
+        login to make their GitHub no-reply address,
+        <id>+<login>@users.noreply.github.com. The address lets GitHub link
+        the commit to their account without showing their private email.`,
       text`Your GitHub emails: at each sign-in, ${productName} keeps the
         verified email addresses of your GitHub account, and which one is
         primary. An org invitation reaches you through one of them. The

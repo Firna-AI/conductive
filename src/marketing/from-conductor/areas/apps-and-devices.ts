@@ -6,7 +6,7 @@ export const appsAndDevicesFeatures: readonly ParityFeature[] = [
     area: 'apps-and-devices',
     name: 'Mac app',
     status: 'available',
-    note: 'Mac downloads support Apple silicon and Intel. Join the waitlist and open private port previews in the Mac app.',
+    note: 'Mac downloads support Apple silicon and Intel. Open private port previews in the Mac app.',
   },
   {
     id: 'app-updates',

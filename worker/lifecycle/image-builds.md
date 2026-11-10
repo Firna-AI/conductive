@@ -9,8 +9,9 @@ image and the clone token of each copy.
 
 ## Build sandboxes
 
-- A build sandbox starts from the current org image, or as a new default
-  sandbox for the first build. Its env holds only the folder variables.
+- A build sandbox starts from the current org image. A first build uses a
+  matching ready software image, or a new default sandbox without one.
+  Its env holds only the folder variables.
 - Risk: a program with root access that an earlier install left in that
   image can read the clone token of a later copy. That token can only read
   its own repository, which the image already holds. The Worker revokes it
@@ -67,7 +68,12 @@ A write that passes that budget removes whole rows from the middle.
 The line `[N output bytes omitted]` takes their place in the event order.
 
 - A build loads the chosen repositories, installs the image software, runs
-  the install script with Bash, and saves a snapshot. A refresh only loads
+  the install script with Bash, and saves a snapshot. A first build that
+  pins a matching ready software image starts from it and skips the
+  software step. Admission records the pin in the job insert. The pin stays
+  until the job reaches `done`, including its cleanup. The
+  [software image backend](../software-image/README.md) owns these images.
+  A refresh only loads
   the repositories of the current image again, and saves a snapshot.
 - The org image changes only when the new snapshot is ready. Each job
   deletes every live ledger computer of that org and build, and keeps its history and log.
