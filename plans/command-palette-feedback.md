@@ -11,15 +11,15 @@ inbox through Resend. The team can reply to the primary verified email of
 the person's GitHub account.
 
 The user chose this approach in a brainstorm on 10 November 2026, with
-decisions 218, 219, and 220. The user answered decisions 222 and 224 on the
-same day. Decisions 221 and 223 are open. The change does not cover these:
+decisions 270, 271, and 272. The user answered decisions 274 and 276 on the
+same day. Decisions 273 and 275 are open. The change does not cover these:
 
 - A log of the recent errors of the app. The user chose it for a follow-up
-  item, in decision 219.
+  item, in decision 271.
 - Other entry points, such as the Help menu of the Mac app.
 - A copy of the feedback in the app's database, or a page that lists it.
 - A limit on how often a person can send. The user chose it for a
-  follow-up item, in decision 224.
+  follow-up item, in decision 276.
 
 Contract owners:
 
@@ -38,20 +38,22 @@ Contract owners:
 
 ## Decisions
 
-The decision numbers continue from the highest number on `origin/main` on
-10 November 2026, which was 217. The last milestone checks them for a
-collision before the pull request.
+This plan takes the decision numbers 270 to 276. It first took 218 to
+224, the next free numbers. On 10 November 2026, `origin/main` used 218 and
+219 for other decisions, and numbers up to 247. Other open plans take the
+next free numbers, so a block above them avoids a new collision. The last
+milestone checks the numbers again before the pull request.
 
 Two options checks ran on 10 November 2026. The first ran over decisions
-218 to 221. It kept the chosen options of 218, 219, and 220, and it added
-options to each. It changed the recommendation of 221 from B to D. Its new
-problems gave decisions 222, 223, and 224, and design changes. The second
-ran over decisions 222 to 224. It added options to each, and changed the
-recommendations of 222 and 224. Its new problems gave more design changes,
+270 to 273. It kept the chosen options of 270, 271, and 272, and it added
+options to each. It changed the recommendation of 273 from B to D. Its new
+problems gave decisions 274, 275, and 276, and design changes. The second
+ran over decisions 274 to 276. It added options to each, and changed the
+recommendations of 274 and 276. Its new problems gave more design changes,
 and the follow-up item `plans/follow-ups/invitation-email-send-limit.md`.
 Their reports are in `.context/command-palette-feedback/`.
 
-### 218. Choose where feedback goes
+### 270. Choose where feedback goes
 
 Added on 9 November 2026 by the brainstorm of this change.
 
@@ -65,7 +67,7 @@ Added on 9 November 2026 by the brainstorm of this change.
     repository of the team. Effort: Small.
   - **C.** Dialog, sent by email. The Worker emails each message through
     Resend to a team inbox. Effort: Medium. With the screenshots of
-    decision 219, the whole plan is Large.
+    decision 271, the whole plan is Large.
   - **D.** Dialog, filed as an issue in a private GitHub repository of the
     team, with a new GitHub token. The GitHub API cannot attach a file to
     an issue. Effort: Medium.
@@ -91,7 +93,7 @@ Added on 9 November 2026 by the brainstorm of this change.
   in-app dialog like the Feedback dialog of Conductor. It reuses the email
   sender of the Worker, and the team can reply from its inbox.
 
-### 219. Choose what a message carries
+### 271. Choose what a message carries
 
 Added on 9 November 2026 by the brainstorm of this change.
 
@@ -120,7 +122,7 @@ Added on 9 November 2026 by the brainstorm of this change.
   item. Reason: screenshots carry most bug reports about screens, and the
   context lets the team find the workspace.
 
-### 220. Choose how the team replies
+### 272. Choose how the team replies
 
 Added on 9 November 2026 by the brainstorm of this change.
 
@@ -147,7 +149,7 @@ Added on 9 November 2026 by the brainstorm of this change.
   `origin/main` keeps that email in `users.primary_verified_email` for the
   approval email of the waitlist. So C needs no new stored data.
 
-### 221. Choose whether the Terms cover feedback
+### 273. Choose whether the Terms cover feedback
 
 Added on 10 November 2026 while this plan was written. Open.
 
@@ -192,17 +194,17 @@ Added on 10 November 2026 while this plan was written. Open.
     options check.
 - **Left out:** A Feedback section with more rules. Its length is a detail
   of B, and a rule on private code in screenshots belongs with
-  decision 223.
+  decision 275.
 - **Wider fix:** None. A new feature has no class of defect to prevent.
 - **Previous examples:** None found.
-- **Related:** Decision 223 says how long the team keeps feedback.
+- **Related:** Decision 275 says how long the team keeps feedback.
 - **Recommendation:** D, in place of B. A new revision applies only at the
   next sign-in, so with B alone, a send from an open session stays under
   the old Terms for up to 7 days. The line near Send covers that gap.
 - **Action:** ask the user, because the option changes the legal terms of
   the service, and no requirement covers feedback.
 
-### 222. Choose how the team opens screenshots safely
+### 274. Choose how the team opens screenshots safely
 
 Added on 10 November 2026 from the options check.
 
@@ -215,7 +217,7 @@ Added on 10 November 2026 from the options check.
   - **Media type:** the type that the browser gives a file, such as
     `image/png`. A crafted request can give any type and any name.
 - **Background:**
-  - Decision 219 lets a person add screenshots to feedback.
+  - Decision 271 lets a person add screenshots to feedback.
   - The Worker sends each screenshot to the team inbox as an attachment,
     through Resend. Resend takes the type of an attachment from its file
     name, unless the request of the Worker gives the type.
@@ -248,7 +250,7 @@ Added on 10 November 2026 from the options check.
     checked image kind with its bytes. The sender writes the file name and
     the type itself, so no caller can pass a name or a type from a
     request. A later attachment, such as the log of option D of
-    decision 219, falls under the same rule. Effort: Small. Added by the
+    decision 271, falls under the same rule. Effort: Small. Added by the
     options check.
   - **E.** B, and the Worker redraws each screenshot through the Images
     service of Cloudflare before the send. The devices of the team then
@@ -265,7 +267,7 @@ Added on 10 November 2026 from the options check.
 - **Previous examples:** The upload route of a chat file takes any type,
   in `worker/chat/attachment-routes.ts`. Those files go to the cloud
   computer of the workspace, not to an inbox.
-- **Related:** Decision 219 chose the screenshots.
+- **Related:** Decision 271 chose the screenshots.
 - **Recommendation:** D, in place of B. It costs the same as B, and the
   screenshot tools of macOS, Windows, and Linux save PNG or JPEG files.
   E best protects the devices of the team.
@@ -273,7 +275,7 @@ Added on 10 November 2026 from the options check.
   dialog and the route.
 - **Chosen:** D, by the user on 10 November 2026.
 
-### 223. Choose where and how long the team keeps feedback
+### 275. Choose where and how long the team keeps feedback
 
 Added on 10 November 2026 from the options check. Open.
 
@@ -286,7 +288,7 @@ Added on 10 November 2026 from the options check. Open.
   - **Team inbox:** the mailbox that gets each feedback email. The Worker
     secret `FEEDBACK_EMAIL` holds its address.
 - **Background:**
-  - Decision 218 sends feedback by email to the team inbox. The app keeps
+  - Decision 270 sends feedback by email to the team inbox. The app keeps
     no copy.
   - The Privacy page says how long each kind of data stays. UK data
     protection law asks for that time, or for the rules that set it. The
@@ -328,7 +330,7 @@ Added on 10 November 2026 from the options check. Open.
   section.
 - **Previous examples:** The Privacy page gives a time for unsent files
   and for a deleted org: 7 days each.
-- **Related:** Decision 221 covers the use of feedback in the Terms.
+- **Related:** Decision 273 covers the use of feedback in the Terms.
 - **Recommendation:** C, in place of A, which the options check kept with
   a fixed reason. C needs no timer, and no fact that only the operator
   knows. It stays true when the team moves its inbox. D best covers the
@@ -337,7 +339,7 @@ Added on 10 November 2026 from the options check. Open.
   host are legal choices of the operator. A and B also need the host of
   the team inbox.
 
-### 224. Choose how often one person can send feedback
+### 276. Choose how often one person can send feedback
 
 Added on 10 November 2026 from the options check.
 
@@ -448,7 +450,7 @@ line that waits for an open decision names it.
 - It uses the dialog of the app: a dialog on desktop and a sheet on a
   phone.
 - It has a message box, Add screenshots, a line that names the context, a
-  reply line, Cancel, and Send feedback. Decision 221 can add a line near
+  reply line, Cancel, and Send feedback. Decision 273 can add a line near
   Send.
 - The message box takes the focus. It follows
   [the send key](../docs/protocol/create-a-workspace.md#the-send-key) of
@@ -457,7 +459,7 @@ line that waits for an open decision names it.
 - Add screenshots opens the file picker. A paste of an image into the
   message box, or a drop on the dialog, adds it too. Each screenshot shows
   as a chip with its name, its size, and Remove.
-- The dialog takes PNG, JPEG, GIF, and WebP files, as decision 222 chose.
+- The dialog takes PNG, JPEG, GIF, and WebP files, as decision 274 chose.
   It runs the same check of the first bytes as the Worker, from shared
   code. So a renamed file of another type fails at once, with a message
   that names the four types.
@@ -509,12 +511,12 @@ line that waits for an open decision names it.
 - `POST /api/feedback` takes a JSON body: a draft ID, the text, the
   context, and the screenshots, each with its bytes in base64.
 - The route declares a body limit of 10 MB at the Worker entry, as the
-  chosen option of decision 219 said. Reason: a larger JSON body holds
+  chosen option of decision 271 said. Reason: a larger JSON body holds
   more memory, and an isolate has 128 MB for all of its requests, as
   decision 144 found.
 - The Worker refuses blank text with HTTP 400, and screenshots over 7 MB
   in all with HTTP 413. It refuses a file whose first bytes are not a PNG,
-  JPEG, GIF, or WebP image with HTTP 400, as decision 222 chose.
+  JPEG, GIF, or WebP image with HTTP 400, as decision 274 chose.
   Reason: the dialog never sends them, so only a crafted request meets
   these refusals.
 - Without a team inbox, the route answers HTTP 503. A refused email gives
@@ -524,7 +526,7 @@ line that waits for an open decision names it.
   a person sees only the waitlist, which has no palette.
 - The Worker keeps no copy of the feedback. Outside a local app origin,
   its log holds no feedback text.
-- No limit on the number of sends, as decision 224 chose. An operator
+- No limit on the number of sends, as decision 276 chose. An operator
   suspends a person who misuses it. A follow-up item adds a limit of 10
   feedback sends in an hour for each person.
 
@@ -543,7 +545,7 @@ line that waits for an open decision names it.
   and the org.
 - Each screenshot goes as an attachment. The shared mail sender takes an
   attachment only as a checked image kind with its bytes, and it writes the
-  file name and the type itself, as decision 222 chose. So no caller can
+  file name and the type itself, as decision 274 chose. So no caller can
   pass a name or a type from a request, and Resend never takes the type
   from such a name.
 - The delivery key holds the user ID, the draft ID, and a hash of the
@@ -556,14 +558,14 @@ line that waits for an open decision names it.
 ### The legal pages and the docs
 
 - The Privacy page names the feedback data, its route through Resend to
-  the team inbox, and the reply address. Decision 223 gives the host and
+  the team inbox, and the reply address. Decision 275 gives the host and
   the time. The page also gets a new effective date.
 - The row of `FEEDBACK_EMAIL` in `docs/deployment.md` says that the team
   inbox must match what the Privacy page says about its host.
 - The Privacy page gets a sentence on how Resend sends data out of the UK.
   Reason: the page names Resend as a recipient, but its section on
   transfers does not name it, and feedback adds free text and screenshots.
-- Decision 221 gives the Terms text.
+- Decision 273 gives the Terms text.
 - The architecture doc names Resend under "External services", with the
   invitation, approval, and feedback emails.
 - The protocol doc `docs/protocol/command-palette.md` has 259 lines, above
@@ -585,7 +587,7 @@ Depends on: none
 
 Draw the palette row, the Feedback dialog with its states, and the user
 flow, for desktop and for a phone. Read the `mockups` and `product-ui`
-skills first. The line that decision 221 can add near Send waits for its
+skills first. The line that decision 273 can add near Send waits for its
 answer.
 
 - [ ] Add the Help group with Send feedback to the Actions tab of
@@ -634,11 +636,11 @@ the dialog, the routes, and the email. Delegate the legal pages to the
 - [ ] Read both legal pages in full. Update each sentence that the
       feedback facts change: the uses of data, the recipients, the
       retention, the GitHub emails, and the effective date. The host and
-      the time wait for decision 223.
+      the time wait for decision 275.
 - [ ] Add how Resend transfers data out of the UK to "Transfers to other
       countries", from the published terms of Resend. Name the source in
       the commit.
-- [ ] Apply decision 221 to the Terms page and `TERMS_VERSION`. This TODO
+- [ ] Apply decision 273 to the Terms page and `TERMS_VERSION`. This TODO
       waits for the answer.
 - [ ] Update `plans/follow-ups/privacy-invitation-email-data.md`: remove
       the parts that `origin/main` and this change complete.
@@ -654,7 +656,7 @@ Add the two routes, the email, and the body limit, with their tests.
 - [ ] Give the shared mail sender in `worker/mail-sender.ts` a sender
       name, a reply address, and attachments. An attachment is a checked
       image kind with its bytes, and the sender writes its name and type,
-      as decision 222 chose. Keep the invitation and approval emails as
+      as decision 274 chose. Keep the invitation and approval emails as
       they are, with their tests.
 - [ ] Add the check of the first bytes of PNG, JPEG, GIF, and WebP files
       to `src/shared/`, so that the dialog and the Worker share it.
@@ -732,11 +734,11 @@ Depends on: every other milestone
       deployment to the team inbox before the merge. Without it, each send
       gets HTTP 503, and the comparison row is not true.
 - [ ] Add the follow-up item `plans/follow-ups/feedback-recent-app-errors.md`
-      for option D of decision 219.
+      for option D of decision 271.
 - [ ] Add the follow-up item `plans/follow-ups/feedback-send-limit.md` for
-      option B of decision 224: 10 feedback sends in an hour for each
+      option B of decision 276: 10 feedback sends in an hour for each
       person. Invitations do not count.
-- [ ] Search `origin/main` for decisions 218 to 224. On a collision,
+- [ ] Search `origin/main` for decisions 270 to 276. On a collision,
       renumber the decisions of this plan and their citations.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
