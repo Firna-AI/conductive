@@ -20,6 +20,16 @@ The root Vitest setup builds one current Worker bundle for each run and watch re
 Native fixtures read that bundle from the provided test context.
 Standalone callers build on demand and reuse that bundle only within their process.
 
+`createChatFixture` in [`harness.test-support.ts`](../chat/harness.test-support.ts) connects its fake runner and browser tabs through `nativeChatTransport` in [`native-transport.test-support.ts`](../chat/native-transport.test-support.ts).
+Its `drain` waits for batched runner input, connection closes, queued chat work, and sends to the fake runner or a browser tab.
+
+In the lifecycle fixture, the `advance` of each `backendActor` in [`backend-test-platform.ts`](../lifecycle/backend-test-platform.ts) first waits for the work in the chat queue of its native object.
+Its endpoint and its entry in the fixture's `starts` use the same `advance`.
+The call then moves the clock and runs the due alarms of that object.
+So a manual advance after `nextQueued()` reads the last alarm that the start admission saved.
+`run` in [`backend-pump.test-support.ts`](../lifecycle/backend-pump.test-support.ts) moves the clock only to an alarm of an object that holds a saved start job.
+Advance the alarms that follow a finished start with `advance` or `advanceTo`.
+
 `createHarness` also supplies the private local R2 attachment bucket.
 Reset removes its file records and objects between tests.
 `attachment-r2.ts` wraps local R2 deletion for controlled cleanup failures.

@@ -17,8 +17,6 @@ export function storedStartJobs(storage: Pick<DurableObjectStorage, 'get'>) {
 
 export function backendStart(
   actor: BackendActor,
-  now: () => number,
-  advanceTo: (at: number) => Promise<unknown>,
   accepted: () => StoredWorkspaceStartJob | undefined,
 ) {
   return {
@@ -27,12 +25,7 @@ export function backendStart(
         await actor.storage.get<StoredWorkspaceStartJob>(START_JOB_KEY)
       return job ? readStartJob(job) : undefined
     },
-    advance: async () => {
-      await actor.ready
-      await advanceTo(
-        Math.max(now(), (await actor.storage.getAlarm()) ?? now()),
-      )
-    },
+    advance: actor.advance,
     wait: () => actor.endpoint().waitLifecycleStart(),
     restart: actor.restart,
     lastAccepted: () => {
