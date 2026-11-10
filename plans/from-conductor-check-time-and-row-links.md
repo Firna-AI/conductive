@@ -336,12 +336,17 @@ The page shows the check line and the row links of the mockup.
 
 Depends on: 1, 1a, 2, 3
 
-- [ ] Check four open facts of the new rows before the pull request, and
+- [x] Check four open facts of the new rows before the pull request, and
       fix a row when its fact fails: agents on a production cloud
       computer have a browser (`claude-agent-in-chrome`), Conductor still
       has Codex goals (`codex-goals-and-personalities`), the import of
       local workspaces is still planned (`local-workspaces`), and the web
       app follows the proxy of the browser (`proxy-support`).
+      Conductor 0.86.0 says "Removed Codex goals and message queuing", so
+      that row is now `codex-personalities`. The other three facts stand
+      on the agent tools protocol, the active import plan with its user
+      decision, and the proxy settings of the browser. No live check of a
+      production cloud computer ran.
 - [ ] Merge `origin/main` with the `git-merge` skill. When a full check
       of the rows merged first, use its time as the check time.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.

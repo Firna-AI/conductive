@@ -158,11 +158,11 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     note: 'Agents can create another workspace with a first message. Messages to existing sessions are under consideration.',
   },
   {
-    id: 'codex-goals-and-personalities',
+    id: 'codex-personalities',
     area: 'agents-and-chat',
-    name: 'Codex goals and personalities',
+    name: 'Codex personalities',
     status: 'considering',
-    note: 'Codex goals and personality settings are under consideration. Describe the goal and the working style in your message.',
+    note: 'Codex personality settings are under consideration. Describe the working style that you want in your message.',
   },
   {
     id: 'voice-mode',
