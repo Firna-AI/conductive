@@ -94,8 +94,9 @@ export const ownPress: Pick<HTMLAttributes<HTMLElement>, 'onPointerDown'> = {
  * first scrolls the page. Escape ends a drag with no drop. The click that
  * ends a lifted press reaches nothing, also the click that a finger sends
  * after it lets go. A finger opens no menu of the browser, and no press
- * starts a native drag. A scroll during a drag, of the page or of any
- * element, finds the drop place again.
+ * starts a native drag. A press of a mouse or a pen that opens a menu ends,
+ * so the menu takes the pointer. A scroll during a drag, of the page or of
+ * any element, finds the drop place again.
  *
  * `bind(item, from)` gives the handlers of the element where a drag starts.
  * `locate` finds the drop place at each move of the pointer, and `drop`
@@ -108,6 +109,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
   const dragging = useRef<PointerDrag<T, P> | null>(null)
   const clickWait = useRef<(() => void) | null>(null)
   const start = useRef<(press: Press<T, P>) => void>(() => undefined)
+  const end = useRef<() => void>(() => undefined)
   useEffect(() => {
     latest.current = options
   })
@@ -226,6 +228,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       })
       if (next.touch) next.timer = setTimeout(() => lift(next), longPress)
     }
+    end.current = () => finish(false)
     return () => {
       finish(false)
       clickWait.current?.()
@@ -256,8 +259,12 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
         lifted: false,
       })
     },
+    // A finger keeps its press for the drag, so its long press opens no
+    // menu. A mouse press ends, so a menu that it opens, such as after a
+    // click with Ctrl on a Mac, takes the pointer.
     onContextMenu: (event) => {
       if (press.current?.touch) event.preventDefault()
+      else if (press.current) end.current()
     },
     onDragStart: (event) => event.preventDefault(),
   })

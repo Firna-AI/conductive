@@ -6,6 +6,7 @@ import links from '../../../docs/mockups/src/components/workspaces/SidebarLinks.
 import { latestBuild } from '../../app/org-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
+import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
 import { useSidebarShown } from '../mac/mac-app'
@@ -86,7 +87,11 @@ export function NewWorkspaceLink(props: {
  * org shows its sections read-only, without New workspace. While the
  * sidebar shows, its list offers New section to the command palette.
  */
-export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
+export function Sidebar(props: {
+  org: OrgSummary
+  current: ListCurrent
+  user: User
+}) {
   const { org, current } = props
   const { suspended } = useOrgAccess(org)
   const shown = useSidebarShown()
@@ -115,6 +120,7 @@ export function Sidebar(props: { org: OrgSummary; current: ListCurrent }) {
             current?.screen === 'workspace' ? current.workspaceId : null
           }
           variant="sidebar"
+          viewer={props.user}
         />
       </div>
     </>

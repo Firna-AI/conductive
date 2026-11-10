@@ -123,3 +123,24 @@ it('returns a private preview error for failed upstream calls without exposing p
   ).toBe(404)
   expect(harness.requests).toHaveLength(0)
 })
+
+it('closes a preview socket when its sandbox ID moves to another provider account', async () => {
+  const setup = await openPreview(harness)
+  const response = await setup.handler.proxy(
+    setup.previewRequest(`${setup.previewUrl}/socket`, {
+      headers: { Upgrade: 'websocket' },
+    }),
+  )
+  expect(response.status).toBe(101)
+  await harness.env.DB.prepare(
+    "UPDATE workspaces SET provider_account = 'boat-second' WHERE id = ?",
+  )
+    .bind(setup.workspaceId)
+    .run()
+  const received = harness.serverSockets[0].nextMessage()
+  harness.upstreamSockets[0].emit('old account output')
+  expect(await received).toBe(null)
+  expect(harness.serverSockets[0].sent).toEqual([])
+  expect(harness.serverSockets[0].closed?.code).toBe(1008)
+  expect(harness.upstreamSockets[0].closed?.code).toBe(1008)
+})

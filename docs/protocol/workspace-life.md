@@ -40,7 +40,10 @@ says.
   rejected, because it does not end a wait for a cloud computer that never
   becomes ready.
 - While a build runs, the Cloud computer tab shows its time limit. The
-  start steps show the time limit of the start.
+  start steps do not show the time limit of the start.
+- Reason: the user needs the start limit only when a start passes it, and
+  that failed start names the limit. A note of the limit under the steps of
+  each start was rejected, because it does not change what the user does.
 - A build or a refresh that passes its time limit fails in the same way as
   after any other error. So the last good image stays, as
   [The org image](org-image.md#the-org-image) says.
@@ -109,10 +112,15 @@ says.
   are not committed and for commits that are not pushed.
 - When the check finds such work, the question lists it. The user can then
   archive anyway or cancel.
+- When the check does not finish, the question says so and names the
+  failure. It offers Try again and Cancel.
+- The app archives nothing without a finished check.
 - Reason: an archive without the check can delete work that was never
   pushed.
 - The pull request bar offers Archive after the merge, as
-  [GitHub banner](github-banner.md#banner-states) says.
+  [GitHub banner](github-banner.md#banner-states) says. The menu of a
+  workspace row offers it too, as [Archive](workspace-menu.md#archive)
+  says.
 - An archived workspace has no file lists and no tools. A phone shows only
   its chat.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may

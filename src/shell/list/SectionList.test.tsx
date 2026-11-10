@@ -7,7 +7,7 @@ import { HeldRequests } from '../../app/test-kit'
 import { workspacePath } from '../../shared/workspaces'
 import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { click, mountScreen, press, settle } from '../test-mount'
 import { startedApp } from '../test-render'
@@ -46,7 +46,12 @@ describe('the workspace list', () => {
       app,
       <>
         <input aria-label="Search" />
-        <OrgList orgId={org} selectedId={null} variant="sidebar" />
+        <OrgList
+          orgId={org}
+          selectedId={null}
+          variant="sidebar"
+          viewer={fakeUser}
+        />
       </>,
     )
     await settle()

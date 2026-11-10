@@ -5,7 +5,9 @@ import {
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
 import { paths } from '../../paths'
+import { classes } from '../common/classes'
 import { LoadFailure } from '../common/LoadFailure'
+import type { RowFocus } from './rowControls'
 import type {
   ListDrag,
   ListMenu,
@@ -21,7 +23,8 @@ import styles from './Sidebar.module.css'
  * link, New workspace, Search, and the sections of the org. A suspended org
  * shows its sections without New workspace and without their menus,
  * because nothing in it can change. A list that did not load shows its
- * failure in place of the sections.
+ * failure in place of the sections. An open menu of a row may pass the
+ * edge of the sidebar.
  */
 export function Sidebar(props: {
   org: Org
@@ -36,6 +39,10 @@ export function Sidebar(props: {
   drag?: ListDrag
   /** The archived workspaces, which show in an open Archived group. */
   archived?: readonly WorkspaceRow[]
+  /** The Archived group shows collapsed, with its count. */
+  archivedCollapsed?: boolean
+  /** The row whose menu, field, or hover the view draws. */
+  focus?: RowFocus
   /** The operator suspended the org. */
   suspended?: boolean
   /** The workspace list of the org did not load. */
@@ -45,6 +52,7 @@ export function Sidebar(props: {
   shortcuts?: ShortcutChanges
 }) {
   const suspended = props.suspended ?? false
+  const drawing = props.focus?.drawing.kind
   return (
     <>
       <div className={styles.top}>
@@ -55,7 +63,13 @@ export function Sidebar(props: {
           to={suspended ? paths.suspendedSettings : undefined}
         />
       </div>
-      <div className={styles.scroll} data-mokly-scroll="workspace-list">
+      <div
+        className={classes(
+          styles.scroll,
+          drawing === 'menu' && styles.unclipped,
+        )}
+        data-mokly-scroll="workspace-list"
+      >
         <div className={styles.links}>
           {suspended ? null : (
             <NewWorkspaceLink
@@ -74,8 +88,10 @@ export function Sidebar(props: {
         ) : (
           <SectionList
             archived={props.archived}
+            archivedCollapsed={props.archivedCollapsed}
             drag={props.drag}
             menu={props.menu}
+            focus={props.focus}
             readOnly={suspended}
             sections={props.sections}
             variant="sidebar"

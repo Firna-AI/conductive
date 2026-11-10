@@ -6,6 +6,7 @@ import type { ApiError } from '../../app/api/client'
 import { groupWorkspaces, type SectionGroup } from '../../app/sections'
 import { useStore } from '../../app/store'
 import { useNow } from '../../app/time'
+import type { User } from '../../shared/api'
 import { useOrgModel } from '../context'
 import { usePaletteOffer } from '../palette/palette-context'
 import { LoadFailure } from '../ui/LoadFailure'
@@ -13,7 +14,7 @@ import ui from '../ui/ui.module.css'
 import type { SectionActions } from './SectionHeader'
 import { SectionList } from './SectionList'
 import { useListActions } from './useListActions'
-import { useListArchive } from './useListArchive'
+import { useRowMenus } from './useRowMenus'
 import type { RowVariant } from './WorkspaceRow'
 import list from './list.module.css'
 
@@ -79,13 +80,15 @@ function useLocalCollapse(actions: SectionActions) {
 
 /**
  * The workspaces of an org in their sections, as the sidebar and the list
- * page show them, with the field of a new section at the end. `readOnly`
- * shows them without changes, for a suspended org. `offerActions` says
- * that the page shows this list, so it offers New section to the command
+ * page show them, with the field of a new section at the end. Each row has
+ * the menu of the actions that `viewer` can use. `readOnly` shows them
+ * without changes or menus, for a suspended org. `offerActions` says that
+ * the page shows this list, so it offers New section to the command
  * palette, and its rows take the keys of the workspaces.
  */
 export function OrgList(props: {
   orgId: string
+  viewer: User
   variant: RowVariant
   selectedId: string | null
   readOnly?: boolean
@@ -98,7 +101,6 @@ export function OrgList(props: {
   const workspaces = useStore(org.workspaces)
   const now = useNow(30_000)
   const { actions, move, adding, create, cancelAdding } = useListActions(org)
-  const archive = useListArchive(org, readOnly)
   const local = useLocalCollapse(actions)
   usePaletteOffer(
     props.offerActions && !readOnly
@@ -109,6 +111,19 @@ export function OrgList(props: {
       : null,
   )
   useEffect(() => org.watch('list'), [org])
+  const groups =
+    sections.state === 'ready' && workspaces.state === 'ready'
+      ? groupWorkspaces(sections.value, workspaces.value)
+      : { sections: [], archived: [] }
+  const { menus, archiveAction, layer } = useRowMenus({
+    orgId: props.orgId,
+    viewer: props.viewer,
+    groups: groups.sections,
+    archived: groups.archived,
+    selectedId: props.selectedId,
+    readOnly,
+    move,
+  })
   const failure = (error: ApiError) => (
     <LoadFailure
       error={error}
@@ -129,14 +144,14 @@ export function OrgList(props: {
       </div>
     )
   }
-  const groups = groupWorkspaces(sections.value, workspaces.value)
   return (
     <>
       <SectionList
         actions={readOnly ? local.actions : actions}
-        archiveAction={archive.actionFor}
+        archiveAction={archiveAction}
         archived={groups.archived}
         groups={readOnly ? local.apply(groups.sections) : groups.sections}
+        menus={menus}
         move={move}
         now={now}
         offersKeys={props.offerActions ?? false}
@@ -144,10 +159,10 @@ export function OrgList(props: {
         selectedId={props.selectedId}
         variant={props.variant}
       />
-      {archive.dialog}
       {adding && !readOnly ? (
         <NewSectionField cancel={cancelAdding} create={create} />
       ) : null}
+      {layer}
     </>
   )
 }

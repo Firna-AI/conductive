@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { FetchLike } from '../../app/api/client'
 import { memoryNavigation } from '../../app/navigation'
 import { windowKeys, type AppServices, type Platform } from '../../app/services'
 import { Store } from '../../app/store'
@@ -41,6 +42,8 @@ export async function openPaletteTab(
     viewport?: Viewport
     server?: FakeApiServer
     events?: AppServices['events']
+    /** The fetch of the app, such as one of `HeldRequests`. */
+    fetch?: FetchLike
     mac?: boolean
     macWindow?: MacWindow
     beside?: ReactNode
@@ -58,6 +61,7 @@ export async function openPaletteTab(
           system: options.platform === 'mac' ? 'mac' : 'windows',
         },
     events: options.events ?? recordingSocket(server).source,
+    fetch: options.fetch,
   })
   const navigation = memoryNavigation(href)
   const shell = options.mac ? (

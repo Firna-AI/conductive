@@ -1,0 +1,32 @@
+# Design a compatible rollout for schema drops
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Post-merge task.
+- **Added:** 2026-11-09, from the options check of decision 217 on branch `calummoore/vercel-sandbox-provider`.
+- **Location:** `.github/workflows/deploy.yml:210` and `.github/workflows/deploy.yml:221`, `docs/automatic-deploys.md:134`, and `migrations/202611092305_org_images.sql:24-29`.
+- **Reason:** The design is needed only for a destructive migration after the launch, and no such migration exists yet.
+
+- **Terms:**
+  - **Destructive migration:** a D1 migration that drops or renames a column or a table, or moves data that a deployed Worker version reads.
+  - **Old Worker:** the Worker version that runs before a deploy uploads the new one.
+- **Background:**
+  - The `Deploy` workflow in `.github/workflows/deploy.yml` runs on each push to `main`. It applies every pending D1 migration with `npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc`, at line 210.
+  - Only then does it upload the Worker with `npx wrangler deploy`, at line 221. Then it checks that `https://app.conductive.build/api/health` answers.
+  - So the old Worker runs on the new schema between the migrations and the upload. A failed upload leaves it there until the next deploy.
+  - `npx wrangler rollback` restores an earlier Worker version, but it does not undo a D1 migration. D1 Time Travel restores the database to an earlier minute, and it loses each D1 write after that minute.
+  - So a destructive migration can break the old Worker during that window. It also breaks a rollback of the Worker alone to a version that reads the dropped field.
+  - `migrations/202611092305_org_images.sql` is such a migration. It moves six fields of `settings` to `org_images`, one record for each org and provider account: `org_image_name`, `image_build_id`, `last_refresh_at`, `last_push_refresh_at`, `pending_push_refresh_at`, and `next_image_refresh_at`.
+  - That migration copies all data first, then drops the six fields. It keeps no bridge for an older Worker on purpose. On 9 November 2026, the user said that the app is not live yet, so the move deploys before real users depend on the app.
+  - "When a deploy fails" in `docs/automatic-deploys.md` gives its recovery: a fix forward, or D1 Time Travel together with a Worker rollback.
+  - A check of the rollout options on 9 November 2026 left out three approaches. Uploading the Worker before the migrations fails, because the new Worker then runs on the old schema. A staged upload with `wrangler versions` makes the window shorter, but it allows no rollback. A `settings` view with INSTEAD OF triggers fails, because SQLite does not count the changes made through such triggers, and the old push refresh claim needs that count.
+- **Task:**
+  - Before the first destructive migration after the launch, design a rollout that keeps the old Worker and a Worker rollback working. Compare at least these approaches:
+    - **Expand and contract:** add the new fields, keep the old and the new fields in step in D1, for example with sync triggers, and drop the old fields in a later change. Cost: SQL rules that the TypeScript code does not show, and tests in both directions.
+    - **A staged move:** the code writes both places. A migration copies again, and the readers move. The writes to the old fields stop. A last migration drops them. Cost: about four pull requests and four deploys.
+    - **Drops after the health check:** the deploy applies a separate list of destructive migrations only after the Worker upload and the health check. This list does not copy what the old Worker writes during a move. So a move still needs one of the first two approaches.
+  - For each approach, say how it handles a write by the old Worker during the window, a failed upload, and a Worker rollback.
+  - Do not change the deploy workflow before the user approves the requirements.
+- **Impact if no action:** The first destructive migration after the launch breaks builds and new workspaces between the migration and the Worker upload. No Worker rollback can then restore a working app, and D1 Time Travel loses the writes since the migration.
+- **Needs:** A planned production schema change after the launch that drops, renames, or moves data that a deployed Worker reads. The user's approval of the rollout requirements.
+- **Done when:** A reviewed rollout approach handles a write by the old Worker during the deploy window, a failed upload, and a Worker rollback. The user approved its requirements, and `docs/automatic-deploys.md` states them. This item does not block a change that deploys before the launch.
+- **Related:** `plans/follow-ups/branch-test-writes-dropped-image-field.md` covers open branches that still write one of the same six dropped fields. Both items come from the same migration.

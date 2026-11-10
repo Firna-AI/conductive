@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import type { Workspace } from '../../shared/workspaces'
+import type { RowMenus } from './row-menu'
 import { WorkspaceRow, type RowVariant } from './WorkspaceRow'
 
 /**
@@ -20,7 +21,8 @@ export function archivedOpen(
  * The archived workspaces at the end of the list (decision 16). The group
  * is the app's own, not a section of the org, so it has no menu, and it is
  * collapsed until the user opens it, as `archivedOpen` says. An archived
- * workspace opens with its chat read-only.
+ * workspace opens with its chat read-only. An admin's row has a menu that
+ * reassigns the workspace.
  */
 export function ArchivedGroup(props: {
   rows: readonly Workspace[]
@@ -29,6 +31,7 @@ export function ArchivedGroup(props: {
   now: number
   open: boolean
   onToggle: (open: boolean) => void
+  menus?: RowMenus
 }) {
   const { open } = props
   const Chevron = open ? ChevronDown : ChevronRight
@@ -55,6 +58,7 @@ export function ArchivedGroup(props: {
           {props.rows.map((row) => (
             <li key={row.id}>
               <WorkspaceRow
+                menu={props.menus?.(row)}
                 now={props.now}
                 selected={row.id === props.selectedId}
                 variant={props.variant}

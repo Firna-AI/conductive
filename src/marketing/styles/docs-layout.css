@@ -1,0 +1,150 @@
+/*
+ * The pages of the docs: the guides, the page, and its contents, in three
+ * columns at the width of the header. The guides and the contents stay in
+ * view while the page scrolls. The values follow the docs mockup in
+ * docs/mockups/src/components/marketing/docs/. A narrower window puts the
+ * contents in a box under the lead, and a phone, below 760px as
+ * `phoneMedia` in picture-styles.ts says, shows one column. The page holds
+ * the parts of both layouts. The stylesheet of each part shows the part
+ * for the width of the window, after the rules that give it its display.
+ */
+.docs {
+  display: grid;
+  grid-template-areas:
+    'side head contents'
+    'side body contents'
+    'side foot contents';
+  grid-template-columns: var(--ui-sidebar-width) minmax(0, 1fr) 184px;
+  grid-template-rows: auto auto 1fr;
+  column-gap: 48px;
+  width: 100%;
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+  box-sizing: border-box;
+  /*
+   * A word longer than its line, such as a long address, breaks, so the
+   * page never scrolls sideways. A table keeps the width of its longest
+   * word and scrolls by itself, and code keeps its lines.
+   */
+  overflow-wrap: break-word;
+}
+
+.docs-side {
+  position: sticky;
+  top: 24px;
+  grid-area: side;
+  align-self: start;
+  max-height: calc(var(--ui-screen-height) - 48px);
+  overflow-y: auto;
+}
+
+/* The top of a guide: the group, the title, and the lead. */
+.docs-head {
+  display: flex;
+  grid-area: head;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 32px;
+}
+
+.docs-label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: var(--ui-label-case);
+}
+
+.docs-title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 36px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.docs-lead {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.docs-contents {
+  position: sticky;
+  top: 24px;
+  grid-area: contents;
+  align-self: start;
+}
+
+.docs-body {
+  grid-area: body;
+}
+
+.docs-foot {
+  grid-area: foot;
+  align-self: start;
+  margin-top: 56px;
+}
+
+/* A narrower window keeps the guides, and puts the contents under the lead. */
+@media (max-width: 1119.98px) {
+  .docs {
+    grid-template-areas:
+      'side head'
+      'side contents'
+      'side body'
+      'side foot';
+    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: 40px;
+  }
+
+  .docs-contents {
+    position: static;
+    margin-bottom: 32px;
+    padding: 16px 18px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+  }
+}
+
+/* A phone: one column, under the docs menu. */
+@media (max-width: 759.98px) {
+  .docs {
+    display: flex;
+    flex-direction: column;
+    padding: 32px 20px 72px;
+  }
+
+  .docs-side {
+    display: none;
+  }
+
+  .docs-head {
+    padding-bottom: 24px;
+  }
+
+  .docs-title {
+    font-size: 30px;
+  }
+
+  .docs-lead {
+    font-size: 16px;
+  }
+
+  .docs-contents {
+    align-self: stretch;
+    margin-bottom: 28px;
+    padding: 0;
+    border: none;
+  }
+
+  .docs-foot {
+    align-self: stretch;
+    margin-top: 48px;
+  }
+}

@@ -1,6 +1,7 @@
 import { warnWorker } from '../warnings'
 import { warningCode, WarningId } from '../warning-values'
-import type { AppEnv } from '../env'
+import type { AppDependencies, AppEnv } from '../env'
+import { providerForAccount } from '../sandbox/client'
 import { HttpError } from '../http'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -64,7 +65,7 @@ export async function finishFailedStart(
   storage: StartJobStorage,
   job: WorkspaceStartJob,
   provider: SandboxProvider | undefined,
-  now: () => number,
+  dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
   finishResumeFailure: ResumeStartFailure,
 ): Promise<WorkspaceStartResult | null> {
   const failure = job.failure ?? {
@@ -108,20 +109,24 @@ export async function finishFailedStart(
       admission: await creationAdmissionResponse(env, endpoint, job, first),
     })
   const row = await env.DB.prepare(
-    'SELECT sandbox_id AS sandboxId FROM workspaces WHERE id = ? AND org_id = ?',
+    'SELECT sandbox_id AS sandboxId, provider_account AS providerAccount FROM workspaces WHERE id = ? AND org_id = ?',
   )
     .bind(job.workspaceId, job.orgId)
-    .first<{ sandboxId: string | null }>()
+    .first<{ sandboxId: string | null; providerAccount: string }>()
   let sandboxId = job.allocatedSandboxId ?? row?.sandboxId
+  const providerAccount =
+    job.allocatedSandboxId || !row?.sandboxId
+      ? job.providerAccount
+      : row.providerAccount
   let cleanupPending = false
   if (!sandboxId && job.createPayloadCiphertext) {
     const canDefer = () =>
-      job.failure?.timeLimit || startTimeLimitReached(job, now())
+      job.failure?.timeLimit || startTimeLimitReached(job, dependencies.now())
     if (!canDefer()) {
       if (!provider) return null
       sandboxId = await allocateWorkspace(
         env,
-        provider,
+        providerForAccount(env, dependencies.fetch, job.providerAccount),
         storage,
         job,
         async () => {
@@ -140,13 +145,15 @@ export async function finishFailedStart(
       workspaceId: job.workspaceId,
       orgId: job.orgId,
       sandboxId,
+      providerAccount,
     })
-  await revokeWorkspaceToken(env.DB, job.workspaceId, now())
+  await revokeWorkspaceToken(env.DB, job.workspaceId, dependencies.now())
   await detachFailedSandbox(
     env.DB,
     job.orgId,
     job.workspaceId,
     sandboxId ?? null,
+    providerAccount,
   )
   await markCreationFailed(env.DB, job.workspaceId)
   if (accepted)
@@ -162,8 +169,18 @@ export async function finishFailedStart(
   if (sandboxId) {
     try {
       if (!provider) throw new Error('Provider unavailable')
-      await deleteSandboxIfPresent(provider, sandboxId)
-      await clearSandboxCleanup(env.DB, job.workspaceId, sandboxId)
+      await deleteSandboxIfPresent(
+        env.DB,
+        providerForAccount(env, dependencies.fetch, providerAccount),
+        { sandboxId, providerAccount },
+        dependencies.now(),
+      )
+      await clearSandboxCleanup(
+        env.DB,
+        job.workspaceId,
+        sandboxId,
+        providerAccount,
+      )
     } catch {
       cleanupPending = true
     }
