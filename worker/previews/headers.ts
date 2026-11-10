@@ -1,3 +1,4 @@
+import { PREVIEW_RELAY_PORT_HEADER } from '../../src/shared/previews'
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
 import { DESKTOP_SESSION_COOKIE } from '../security/desktop-contract'
 import type { PortCredential, PrivatePort } from '../sandbox/provider'
@@ -74,15 +75,18 @@ function copyHeaders(source: Headers, names: readonly string[]): Headers {
 export function portRequest(
   request: Request,
   port: PrivatePort,
-  terminalAuth?: string,
+  target: string | number,
   stream?: { body: ReadableStream<Uint8Array> | null; signal: AbortSignal },
 ): Request {
+  const terminalAuth = typeof target === 'string' ? target : undefined
   const url = portUrl(request, port, terminalAuth !== undefined)
   const headers = terminalAuth
     ? new Headers()
     : copyHeaders(request.headers, requestHeaders)
-  const origin = upstreamOrigin(request, port, terminalAuth !== undefined)
+  const origin = upstreamOrigin(request, port, target)
   if (origin !== null) headers.set('Origin', origin)
+  if (typeof target === 'number')
+    headers.set(PREVIEW_RELAY_PORT_HEADER, String(target))
   const cookies = terminalAuth
     ? []
     : (request.headers.get('Cookie') ?? '').split(';').flatMap((value) => {
@@ -120,6 +124,7 @@ export function portResponseHeaders(
   upstream: Response,
   request: Request,
   port: PrivatePort,
+  previewPort: number,
 ): Headers {
   const headers = copyHeaders(upstream.headers, responseHeaders)
   for (const value of upstream.headers.getSetCookie()) {
@@ -133,7 +138,7 @@ export function portResponseHeaders(
   }
   const location = upstream.headers.get('Location')
   if (location) {
-    const rewritten = previewLocation(location, request, port)
+    const rewritten = previewLocation(location, request, port, previewPort)
     if (rewritten !== null) headers.set('Location', rewritten)
   }
   for (const name of port.credential.stripHeaders) headers.delete(name)
