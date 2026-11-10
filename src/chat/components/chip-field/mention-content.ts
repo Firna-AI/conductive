@@ -7,6 +7,9 @@ import {
   $isLineBreakNode,
   $isRangeSelection,
   $isTextNode,
+  mergeRegister,
+  TextNode,
+  type LexicalEditor,
   type LexicalNode,
   type NodeKey,
 } from 'lexical'
@@ -18,6 +21,7 @@ import {
   $createMentionTextNode,
   $isFileMentionNode,
   $isMentionTextNode,
+  MentionTextNode,
 } from './file-mention-nodes'
 
 /** Whether the tree holds the entry that a mention names. */
@@ -57,6 +61,45 @@ export function $reconcileMentions(tree: MentionTree): void {
     }
     node.replace($createMentionTextNode(node.getTextContent()))
   }
+}
+
+/**
+ * Makes a mention that waits ordinary text, with the caret where it was.
+ * The text then joins the plain text beside it.
+ */
+function $toPlainText(node: MentionTextNode): void {
+  const selection = $getSelection()
+  const points = $isRangeSelection(selection)
+    ? [selection.anchor, selection.focus].filter(
+        (point) => point.key === node.getKey(),
+      )
+    : []
+  const offsets = points.map((point) => point.offset)
+  const plain = $createTextNode(node.getTextContent())
+  node.replace(plain)
+  points.forEach((point, index) =>
+    point.set(plain.getKey(), offsets[index], 'text'),
+  )
+}
+
+/**
+ * Keeps a mention that waits from catching typed text. An edit inside the
+ * mention, or text typed right after it with no space, continues it, so it
+ * becomes ordinary text. Then the list of `@` reads the whole query, and a
+ * tree that loads later makes no chip of it. A typed space stays outside,
+ * so the mention still waits for its entry.
+ */
+export function registerWaitingMentions(editor: LexicalEditor): () => void {
+  return mergeRegister(
+    editor.registerNodeTransform(MentionTextNode, (node) => {
+      if (!node.isMention()) $toPlainText(node)
+    }),
+    editor.registerNodeTransform(TextNode, (node) => {
+      const previous = node.getPreviousSibling()
+      if (!$isMentionTextNode(previous)) return
+      if (/^\S/.test(node.getTextContent())) $toPlainText(previous)
+    }),
+  )
 }
 
 /** The query of the list of `@`: the text from `@` to the caret. */

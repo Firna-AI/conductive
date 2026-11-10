@@ -48,8 +48,8 @@ export function useNoHover(): boolean {
 }
 
 /**
- * A press on a button inside the text keeps the caret in the text, so the
- * removal of a chip leaves the focus in the field.
+ * A press on a button inside the text takes no focus, so the focus and the
+ * caret stay where they were: in the field when it had the focus.
  */
 function keepCaret(event: MouseEvent) {
   event.preventDefault()

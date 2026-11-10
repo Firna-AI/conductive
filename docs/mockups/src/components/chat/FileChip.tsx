@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import type { MentionEntry } from '../../fixtures/fileMentions'
 import a11y from '../common/a11y.module.css'
-import { EntryIcon } from '../files/fileIcons'
 import { ChipEndRemove, ChipIconCell, type ChipRemoval } from './ChipRemove'
 import { entryName } from './entryPaths'
 import base from './InlineChip.module.css'
@@ -17,10 +16,14 @@ import styles from './FileChip.module.css'
  * In a sent message, `opener` makes the chip the element that opens the
  * file, as a press in All files does. In a message box, `removal` gives the
  * chip the cell of its icon, which a pointer turns into a × that removes
- * the chip, and a press on the name opens the file.
+ * the chip, and a press on the name opens the file. The caller gives the
+ * icon, so the app draws the icons of its own All files. `mention` marks
+ * the chip with its text, so a copy of a sent message can give it.
  */
 export function FileChip(props: {
   entry: MentionEntry
+  icon: ReactNode
+  mention?: string
   opener?: (chip: ChipOpener) => ReactNode
   removal?: ChipRemoval
   /** The label of the name, when it differs from the last part of the path. */
@@ -33,16 +36,10 @@ export function FileChip(props: {
   const { entry, removal } = props
   const name = props.name ?? entryName(entry)
   const nameText = <span className={base.name}>{name}</span>
-  const icon = (
-    <EntryIcon
-      className={styles.icon}
-      folder={entry.folder}
-      name={name}
-      size={12}
-    />
-  )
+  const icon = <span className={styles.icon}>{props.icon}</span>
   const chip: ChipOpener = {
     className: useChipClass(removal),
+    'data-mention': props.mention,
     title: props.title ?? (entry.folder ? `${entry.path}/` : entry.path),
     children: (
       <>

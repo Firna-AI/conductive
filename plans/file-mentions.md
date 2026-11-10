@@ -247,8 +247,9 @@ was asked.
   unavailable" when no tree is available, and "Nothing matches “<query>”".
 - The list notes itself in the open layers of the app shell, as a menu of
   the chat does.
-- The list builds on `@lexical/react/LexicalTypeaheadMenuPlugin`, which
-  the installed `@lexical/react` 0.53 holds.
+- The list has its own plugin of the field. The typeahead plugin of
+  Lexical was left out, because its trigger reads only one plain text node
+  at the caret.
 
 ### The chips
 
@@ -341,10 +342,13 @@ that work:
   reader. Reason: the two texts would else run together.
 - An archived workspace shows each mention of its messages as text,
   because it has no file lists. The protocol doc says so.
-- The first change after a draft comes back is not one step of undo, for
-  a removal with the × as for every edit, because the history of the
-  editor starts after it. Reason: the field already works this way, and
-  the change would touch every edit.
+- The undo history of the field starts from the content at mount, so the
+  first change, such as a removal with the ×, is one step of undo, as in a
+  plain text field. This came from review round 1.
+- A copy of chat text gives the mention of each file chip in it, also
+  across several messages. A copy without a file chip stays native.
+- A mention that waits for its entry becomes ordinary text when typing
+  continues it, so a restored query keeps its list.
 - The list takes its keys before the send key, and Esc stops at the list.
   Reason: Enter must never send while the list is open.
 - The chat development page lists the tree of the Files development page.

@@ -49,6 +49,18 @@ describe('file chips in the message field', () => {
     })
   })
 
+  test('a removal with the × as the first change after a draft shows is one step of undo', async () => {
+    const view = await mountMentionField({ value: draft })
+    await press(byRole('button', 'Remove lib', view.field))
+    const removed = view.chips()
+    pressInField(view.field, 'z', { ctrlKey: true })
+    expect({ removed, undone: view.chips(), text: view.draft() }).toEqual({
+      removed: ['File useAddressAutocomplete.ts'],
+      undone: ['File useAddressAutocomplete.ts', 'Folder lib'],
+      text: draft,
+    })
+  })
+
   test('a pasted mention becomes a chip, and typed text stays text', async () => {
     const view = await mountMentionField()
     typeMessage(view.field, 'See @README.md and ')

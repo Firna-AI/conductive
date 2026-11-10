@@ -1,3 +1,4 @@
+import { EntryIcon } from '../files/fileIcons'
 import { entryFolder, entryName } from './entryPaths'
 import { mentionRows } from './fileMentions'
 import { MentionList } from './MentionList'
@@ -31,7 +32,9 @@ export function FileMentionList(props: { query: string; tree: MentionTree }) {
         key: entry.path,
         name: entryName(entry),
         folder: entryFolder(entry),
-        isFolder: entry.folder,
+        icon: (
+          <EntryIcon folder={entry.folder} name={entryName(entry)} size={14} />
+        ),
       }))}
     />
   )

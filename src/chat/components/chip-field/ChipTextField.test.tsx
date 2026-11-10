@@ -78,6 +78,20 @@ describe('the chip text field', () => {
     })
   })
 
+  test('a removal with the × as the first change after mount is one step of undo', async () => {
+    const view = await mountField({ value: `See ${linked.link} now` })
+    await press(
+      byRole('button', `Remove W-${linked.number} ${linked.name}`, view.field),
+    )
+    const removed = view.draft()
+    pressInField(view.field, 'z', { ctrlKey: true })
+    expect({ removed, undone: view.draft(), chips: view.chips() }).toEqual({
+      removed: 'See  now',
+      undone: `See ${linked.link} now`,
+      chips: [chipName],
+    })
+  })
+
   test('a draft that comes back shows its chips, and undo keeps it', async () => {
     const view = await mountField()
     typeMessage(view.field, 'An older draft')

@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import type { ReactNode } from 'react'
 import { describe, expect, test } from 'vitest'
 import type { FileEntry } from '../../shared/files'
 import { accessibleName } from '../../test-support/dom-queries'
@@ -10,6 +11,7 @@ import {
   type ChatMentions,
 } from '../mentions/MentionsContext'
 import { LinkedText } from './LinkedText'
+import { useMentionCopy } from './mention-copy'
 import { LinksProvider } from './LinksContext'
 
 const entries: FileEntry[] = [
@@ -17,7 +19,25 @@ const entries: FileEntry[] = [
   { path: 'README.md', name: 'README.md', kind: 'file', change: null },
 ]
 
-async function mountText(text: string, mentions: boolean) {
+function Copying(props: { children: ReactNode }) {
+  useMentionCopy()
+  return props.children
+}
+
+/** Copies the whole content of `root`, as Ctrl+A and Ctrl+C do. */
+function copyAll(root: Element) {
+  document.getSelection()?.selectAllChildren(root)
+  const data = new DataTransfer()
+  const event = new ClipboardEvent('copy', {
+    bubbles: true,
+    cancelable: true,
+    clipboardData: data,
+  })
+  document.dispatchEvent(event)
+  return { kept: event.defaultPrevented, text: data.getData('text/plain') }
+}
+
+async function mountText(text: string | string[], mentions: boolean) {
   const opened: string[] = []
   const shown: string[] = []
   const snapshot = {
@@ -31,10 +51,17 @@ async function mountText(text: string, mentions: boolean) {
     showFolder: (path) => shown.push(path),
     href: (item) => `/files/${item.path}`,
   }
+  const texts = Array.isArray(text) ? text : [text]
   const { container } = await mount(
     <LinksProvider value={{ links: { orgId: FAKE_IDS.org, workspaces: [] } }}>
       <MentionsProvider value={value}>
-        <LinkedText mentions={mentions} text={text} />
+        <Copying>
+          {texts.map((item) => (
+            <p key={item}>
+              <LinkedText mentions={mentions} text={item} />
+            </p>
+          ))}
+        </Copying>
       </MentionsProvider>
     </LinksProvider>,
   )
@@ -58,6 +85,22 @@ describe('file chips in a sent message', () => {
       titles: ['README.md', 'src/lib/'],
       opened: ['README.md'],
       shown: ['src/lib'],
+    })
+  })
+
+  test('a copy across two messages gives the mention of each file chip, and a copy without one stays native', async () => {
+    const view = await mountText(
+      ['Move @README.md into @src/lib/ now', 'Then read @README.md'],
+      true,
+    )
+    const withChips = copyAll(view.container)
+    const answer = await mountText('Moved @README.md', false)
+    expect({ withChips, plain: copyAll(answer.container) }).toEqual({
+      withChips: {
+        kept: true,
+        text: 'Move @README.md into @src/lib/ now\nThen read @README.md',
+      },
+      plain: { kept: false, text: '' },
     })
   })
 

@@ -1,7 +1,7 @@
 import {
   createContext,
+  useCallback,
   useContext,
-  useMemo,
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
@@ -53,11 +53,23 @@ export type MentionTree =
 const loading: MentionTree = { state: 'loading' }
 const unavailable: MentionTree = { state: 'unavailable' }
 
-/** The tree of a snapshot. A saved tree that is marked unavailable still shows. */
+/** The ready tree of each tree of the files, so a reader keeps one value. */
+const readyTrees = new WeakMap<object, MentionTree>()
+
+/**
+ * The tree of a snapshot. A saved tree that is marked unavailable still
+ * shows. The value stays the same while the tree stays the same, so a
+ * change of another part of the files, such as an open folder, draws no
+ * message again.
+ */
 function treeOf(snapshot: MentionFilesSnapshot): MentionTree {
   const { tree } = snapshot
   if (tree && (tree.entries.size > 0 || !snapshot.treeUnavailable)) {
-    return { state: 'ready', entries: tree.entries }
+    const known = readyTrees.get(tree)
+    if (known) return known
+    const ready: MentionTree = { state: 'ready', entries: tree.entries }
+    readyTrees.set(tree, ready)
+    return ready
   }
   if (snapshot.treeUnavailable || snapshot.treeError) return unavailable
   return loading
@@ -86,18 +98,19 @@ function followNothing(): () => void {
   return () => undefined
 }
 
-const noFiles = (): MentionFilesSnapshot | null => null
-
-/** The tree that the chat follows now, or null without mentions. */
-export function useMentionTree(): MentionTree | null {
+/**
+ * The tree that the chat follows now, or null without mentions. A reader
+ * that `follows` nothing, such as an answer, gets null and follows no
+ * change.
+ */
+export function useMentionTree(follows = true): MentionTree | null {
   const mentions = useChatMentions()
-  const files = mentions?.files ?? null
-  const snapshot = useSyncExternalStore(
-    files?.subscribe ?? followNothing,
-    files?.getSnapshot ?? noFiles,
-    files?.getSnapshot ?? noFiles,
+  const files = follows ? (mentions?.files ?? null) : null
+  const read = useCallback(
+    () => (files ? treeOf(files.getSnapshot()) : null),
+    [files],
   )
-  return useMemo(() => (snapshot ? treeOf(snapshot) : null), [snapshot])
+  return useSyncExternalStore(files?.subscribe ?? followNothing, read, read)
 }
 
 /**

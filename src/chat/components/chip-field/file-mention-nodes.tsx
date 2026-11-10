@@ -12,6 +12,7 @@ import {
   type NodeKey,
 } from 'lexical'
 import { FileChip } from '../../../../docs/mockups/src/components/chat/FileChip'
+import { MentionIcon } from '../../mentions/MentionIcon'
 import { mentionAt } from '../../mentions/mention-text'
 import {
   findMentioned,
@@ -52,6 +53,7 @@ function FieldFileChip(props: { source: string; nodeKey: NodeKey }) {
   return (
     <FileChip
       entry={{ path: entry.path, folder }}
+      icon={<MentionIcon entry={entry} size={12} />}
       name={entry.name}
       onOpen={() =>
         folder ? mentions.showFolder(entry.path) : mentions.openFile(entry.path)

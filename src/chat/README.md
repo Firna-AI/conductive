@@ -490,7 +490,11 @@ end. The DOM tests focus, type, paste, clear, and read the field through
 `mentions/mention-text.test.ts` reads and writes mentions, and
 `mentions/mention-rows.test.ts` orders the rows of the list.
 `links/chat-parts-mentions.test.ts` reads mentions in a sent message, and
-`links/FileLink.dom.test.tsx` opens a file and a folder from its chip.
+`links/FileLink.dom.test.tsx` opens a file and a folder from its chip, and
+copies messages with file chips. The workspace screen's
+`FileMentions.test.tsx` lists the files on a phone before a visit to
+Files, and opens a file and a folder from their chips, also into a hidden
+right column.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
@@ -540,9 +544,11 @@ check in the Mac app.
   holds the file chip node and the node of a mention that waits for its
   entry. `field-content.ts` turns plain text into nodes and back, and
   reconciles the chips with the list. `mention-content.ts` reconciles the
-  file chips with the tree, finds the query of `@`, and puts a pick in its
-  place. `mention-plugins.tsx` holds the list of `@` and the reconcile of
-  the file chips.
+  file chips with the tree, finds the query of `@`, puts a pick in its
+  place, and turns a waiting mention into text when typing continues it.
+  `mention-plugins.tsx` holds the list of `@` and the reconcile of the file
+  chips. `undo-plugin.tsx` holds the undo history, which starts from the
+  content at mount, so the first change is one step of undo.
   `field-text.ts` joins the parts of the plain text with the separator
   rule. `field-plugins.tsx` holds the value, paste, copy, Enter, editable,
   and reconcile plugins. `focus-plugins.tsx` holds the handle that focuses
@@ -555,11 +561,14 @@ check in the Mac app.
   links of a message field, and `linkTarget`, `chat-parts.ts`, the one
   tokenizer of sent messages and answers, `LinksContext.tsx`, the
   workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
-  which draws the parts of a message or an answer, with its file chips.
+  which draws the parts of a message or an answer, with its file chips,
+  and `mention-copy.ts`, the copy of chat text that gives the mention of
+  each file chip in it.
 - `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
   the entries that the list offers and their order, and
   `MentionsContext.tsx`, the files that the chat gets and the tree that
-  the list and the chips find.
+  the list and the chips find, with one value for each tree, and
+  `MentionIcon.tsx`, the icon of All files for an entry.
 - `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat

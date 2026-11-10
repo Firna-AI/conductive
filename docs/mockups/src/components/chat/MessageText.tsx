@@ -1,6 +1,7 @@
 import type { MentionEntry } from '../../fixtures/fileMentions'
 import inline from '../common/InlineText.module.css'
 import { ScreenLink } from '../common/ScreenLink'
+import { EntryIcon } from '../files/fileIcons'
 import { previewPaths } from '../files/previewPaths'
 import { workspaceLabel } from '../workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
@@ -16,6 +17,11 @@ function chipOf(row: WorkspaceRow): ChipWorkspace {
     name: row.workspace.name,
     status: row.status,
   }
+}
+
+/** The icon of an entry, as the All files of the mockups draws it. */
+function iconOf(entry: MentionEntry) {
+  return <EntryIcon folder={entry.folder} name={entryName(entry)} size={12} />
 }
 
 /**
@@ -53,7 +59,9 @@ export function MessageText(props: { text: string; mentions?: boolean }) {
           return (
             <FileChip
               entry={part.entry}
+              icon={iconOf(part.entry)}
               key={index}
+              mention={part.source}
               opener={
                 to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined
               }
@@ -117,7 +125,11 @@ export function DraftText(props: { text: string; pointer?: boolean }) {
           const name = entryName(part.entry)
           return (
             <span contentEditable={false} key={index}>
-              <FileChip entry={part.entry} removal={{ name, pointer }} />
+              <FileChip
+                entry={part.entry}
+                icon={iconOf(part.entry)}
+                removal={{ name, pointer }}
+              />
             </span>
           )
         }

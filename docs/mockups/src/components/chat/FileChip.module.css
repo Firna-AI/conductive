@@ -1,5 +1,6 @@
 /* The icon of the file or the folder, in the muted colour of All files. */
 .icon {
+  display: inline-flex;
   flex-shrink: 0;
   color: var(--ui-muted);
 }

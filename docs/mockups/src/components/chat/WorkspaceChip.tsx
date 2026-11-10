@@ -27,6 +27,8 @@ export type ChipOpener = {
   className: string
   /** The whole name, which a narrow line can cut short. */
   title: string
+  /** The text that a copy of a file chip gives: its mention. */
+  'data-mention'?: string
   children: ReactNode
 }
 

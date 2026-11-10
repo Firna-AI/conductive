@@ -14,6 +14,7 @@ import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
 import { LinksProvider, type ChatLinks } from './links/LinksContext'
+import { useMentionCopy } from './links/mention-copy'
 import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import { sessionState, type ChatSnapshot } from './state/chat-snapshot'
@@ -111,6 +112,7 @@ function ChatBody(
     snapshot.overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
   const links = useLinks(controller, props.onOpenPage)
+  useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
   const reopen = useCallback(

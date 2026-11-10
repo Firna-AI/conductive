@@ -2,7 +2,6 @@ import { useState, type Ref } from 'react'
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary'
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
 import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin'
 import fieldStyles from '../../../../docs/mockups/src/components/chat/ChipTextField.module.css'
 import { classes } from '../../../../docs/mockups/src/components/common/classes'
@@ -14,6 +13,7 @@ import local from './chip-field.module.css'
 import { $setFieldText } from './field-content'
 import { FileMentionNode, MentionTextNode } from './file-mention-nodes'
 import { MentionPlugin, MentionReconcilePlugin } from './mention-plugins'
+import { UndoPlugin } from './undo-plugin'
 import {
   CopyPlugin,
   EditablePlugin,
@@ -120,7 +120,7 @@ export function ChipTextField(props: ChipTextFieldProps) {
           }
         />
       </div>
-      <HistoryPlugin />
+      <UndoPlugin />
       <ValuePlugin
         onChangeText={props.onChangeText}
         owner={props.owner}

@@ -2,7 +2,7 @@ import type { FileEntry } from '../../shared/files'
 import { canMention } from './mention-text'
 
 /** The most rows that the list shows. A longer query narrows it. */
-export const MENTION_ROW_LIMIT = 100
+const MENTION_ROW_LIMIT = 100
 
 /** The label of the whole path of an entry: the real path when it hides nothing. */
 function pathLabel(entry: FileEntry): string {

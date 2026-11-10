@@ -16,6 +16,7 @@ import {
 import { MentionList } from '../../../../docs/mockups/src/components/chat/MentionList'
 import { useMenuLayer } from '../../../shell/ui/layers'
 import { useChatLinks } from '../../links/LinksContext'
+import { MentionIcon } from '../../mentions/MentionIcon'
 import { folderLabel, mentionRows } from '../../mentions/mention-rows'
 import {
   useMentionTree,
@@ -26,6 +27,7 @@ import {
   $mentionQuery,
   $pickMention,
   $reconcileMentions,
+  registerWaitingMentions,
   type MentionQuery,
 } from './mention-content'
 
@@ -44,10 +46,13 @@ function focused(editor: LexicalEditor): boolean {
 /**
  * Brings the file chips in line with each new tree, as `$reconcileMentions`
  * says. It adds no step of undo, keeps the caret, and never takes the focus.
+ * A mention that waits for its entry becomes text when typing continues it,
+ * as `registerWaitingMentions` says.
  */
 export function MentionReconcilePlugin() {
   const [editor] = useLexicalComposerContext()
   const tree = useMentionTree()
+  useEffect(() => registerWaitingMentions(editor), [editor])
   useEffect(() => {
     if (!tree) return
     const tag = focused(editor)
@@ -209,7 +214,7 @@ export function MentionPlugin(props: { host: HTMLElement | null }) {
         key: entry.path,
         name: entry.name,
         folder: folderLabel(entry),
-        isFolder: entry.kind === 'directory',
+        icon: <MentionIcon entry={entry} size={14} />,
       }))}
     />,
     props.host,

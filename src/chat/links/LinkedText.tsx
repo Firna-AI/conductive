@@ -3,6 +3,7 @@ import { WorkspaceChip } from '../../../docs/mockups/src/components/chat/Workspa
 import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
 import type { FileEntry } from '../../shared/files'
 import { isPlainClick } from '../../shell/ui/AppLink'
+import { MentionIcon } from '../mentions/MentionIcon'
 import {
   findMentioned,
   useChatMentions,
@@ -44,13 +45,15 @@ function LinkChip(props: { target: LinkTarget }) {
  * to All files with the folder open, as a press in All files opens them
  * (decision 213). A click with a modifier key stays with the browser.
  */
-function FileLink(props: { entry: FileEntry }) {
+function FileLink(props: { entry: FileEntry; source: string }) {
   const mentions = useChatMentions()
   const { entry } = props
   const folder = entry.kind === 'directory'
   return (
     <FileChip
       entry={{ path: entry.path, folder }}
+      icon={<MentionIcon entry={entry} size={12} />}
+      mention={props.source}
       name={entry.name}
       opener={
         mentions
@@ -79,7 +82,9 @@ function Part(props: { part: ChatPart }) {
   if (part.kind === 'code') {
     return <code className={inline.code}>{part.text}</code>
   }
-  if (part.kind === 'file') return <FileLink entry={part.entry} />
+  if (part.kind === 'file') {
+    return <FileLink entry={part.entry} source={part.source} />
+  }
   return <LinkChip target={part.target} />
 }
 
@@ -101,8 +106,8 @@ function runsOf(parts: readonly ChatPart[]): Run[] {
 
 /** The lookup of the mentions of a message, while the chat has a tree. */
 function useMentionLookup(read: boolean): MentionLookup | undefined {
-  const tree = useMentionTree()
-  if (!read || !tree) return undefined
+  const tree = useMentionTree(read)
+  if (!tree) return undefined
   return (mention) => findMentioned(tree, mention.path, mention.folder)
 }
 

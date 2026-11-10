@@ -4,10 +4,11 @@ import { describe, expect, test } from 'vitest'
 import {
   messageText,
   pressInField,
+  typeAtEnd,
   typeMessage,
 } from '../../../test-support/message-field'
 import { mountField } from './chip-field-test-kit'
-import { mountMentionField } from './mention-field-test-kit'
+import { entry, mountMentionField, sampleTree } from './mention-field-test-kit'
 
 describe('the list of @', () => {
   test('@ and a query open the list in the host above the box, with the best matches first and the first highlighted', async () => {
@@ -107,6 +108,48 @@ describe('the list of @', () => {
       none: 'Nothing matches “addr”',
       sends: 0,
     })
+  })
+
+  test('a draft that comes back with a query lets typing continue the query, and a tree that loads makes no chip of it', async () => {
+    const view = await mountMentionField({
+      tree: null,
+      value: 'Read @src/app/checkout',
+    })
+    typeAtEnd(view.field, '/Addr')
+    const rowsWhileLoading = view.line()
+    await view.setTree(sampleTree)
+    expect({
+      rowsWhileLoading,
+      rows: view.rows(),
+      chips: view.chips(),
+      draft: view.draft(),
+    }).toEqual({
+      rowsWhileLoading: 'Loading files…',
+      rows: ['AddressForm.tsx, src/app/checkout/'],
+      chips: [],
+      draft: 'Read @src/app/checkout/Addr',
+    })
+  })
+
+  test('a draft that comes back with a query of no entry lets typing narrow the list', async () => {
+    const view = await mountMentionField({ value: 'Read @addr' })
+    typeAtEnd(view.field, 'essF')
+    expect({ rows: view.rows(), draft: view.draft() }).toEqual({
+      rows: ['AddressForm.tsx, src/app/checkout/'],
+      draft: 'Read @addressF',
+    })
+  })
+
+  test('each row shows the icon that All files gives its entry', async () => {
+    const view = await mountMentionField({
+      tree: [entry('scripts', 'directory'), entry('scripts/app.py')],
+    })
+    typeMessage(view.field, 'Run @app')
+    const icons = Array.from(
+      document.querySelectorAll('[role="option"] svg'),
+      (icon) => icon.getAttribute('class'),
+    )
+    expect(icons).toEqual([expect.stringContaining('lucide-file-code')])
   })
 
   test('a field without the files of a chat, as in New workspace, opens no list', async () => {

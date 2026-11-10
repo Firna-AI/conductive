@@ -14,7 +14,10 @@ import { ChipTextField } from './ChipTextField'
 // Mounts the message field of a chat with the files of its workspace, as
 // the composer does, for the tests of the list of `@` and the file chips.
 
-function entry(path: string, kind: FileEntry['kind'] = 'file'): FileEntry {
+export function entry(
+  path: string,
+  kind: FileEntry['kind'] = 'file',
+): FileEntry {
   return { path, name: path.split('/').at(-1) ?? path, kind, change: null }
 }
 

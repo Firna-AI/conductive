@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import type { FileEntry } from '../../shared/files'
-import { folderLabel, MENTION_ROW_LIMIT, mentionRows } from './mention-rows'
+import { folderLabel, mentionRows } from './mention-rows'
 
 function entry(path: string, kind: FileEntry['kind'] = 'file'): FileEntry {
   return { path, name: path.split('/').at(-1) ?? path, kind, change: null }
@@ -60,8 +60,8 @@ describe('the rows of the list of @', () => {
     expect(paths(mentionRows([...tree, hidden, quoted], 'app.ts'))).toEqual([])
   })
 
-  test('the list shows at most the row limit, and the folder label ends with /', () => {
-    const many = Array.from({ length: MENTION_ROW_LIMIT + 5 }, (_, index) =>
+  test('the list shows at most 100 rows, and the folder label ends with /', () => {
+    const many = Array.from({ length: 105 }, (_, index) =>
       entry(`notes/note-${String(index).padStart(3, '0')}.md`),
     )
     const rows = mentionRows(many, 'note')
@@ -69,6 +69,6 @@ describe('the rows of the list of @', () => {
       count: rows.length,
       folder: folderLabel(rows[0]),
       top: folderLabel(entry('README.md')),
-    }).toEqual({ count: MENTION_ROW_LIMIT, folder: 'notes/', top: '' })
+    }).toEqual({ count: 100, folder: 'notes/', top: '' })
   })
 })

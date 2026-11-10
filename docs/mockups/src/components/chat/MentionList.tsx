@@ -1,6 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { classes } from '../common/classes'
-import { EntryIcon } from '../files/fileIcons'
 import styles from './FileMentionList.module.css'
 
 /** A row of the list of `@`: the labels of one file or folder. */
@@ -10,7 +9,8 @@ export type MentionListRow = {
   name: string
   /** The folder that holds the entry, with a final `/`, or '' at the root. */
   folder: string
-  isFolder: boolean
+  /** The icon, as All files draws it. The caller gives it. */
+  icon: ReactNode
 }
 
 /**
@@ -69,12 +69,7 @@ export function MentionList(props: {
           ref={keep(index)}
           role="option"
         >
-          <EntryIcon
-            className={styles.icon}
-            folder={row.isFolder}
-            name={row.name}
-            size={14}
-          />
+          <span className={styles.icon}>{row.icon}</span>
           <span className={styles.name}>{row.name}</span>
           {row.folder ? (
             <span className={styles.folder}>{row.folder}</span>
