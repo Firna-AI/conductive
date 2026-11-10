@@ -76,6 +76,29 @@ describe('the work of a turn', () => {
     ])
   })
 
+  it('keeps the newest run of a running turn open between its calls and while a message waits, and folds it when the turn ends', async () => {
+    const { chat, markup } = await renderChat({ conversation: 'running' })
+    const read = 'Read src/app/checkout/AddressForm.tsx'
+    // The recorded read is done, and the agent has not started a new call.
+    expect(seen(markup())).toContain(
+      `I will check the checkout form. 1 tool call ${read} Working 2m 41s`,
+    )
+
+    chat.emit(update('lint', 'npm run lint', 0, 'running'))
+    chat.emit(update('lint', 'npm run lint', 0))
+    // The agent reads a message that waits at its next call.
+    const steer = { ...message, id: 'steer-1', text: 'Also debounce it.' }
+    chat.emit({ type: 'message.accepted', message: steer })
+    expect(seen(markup())).toContain(
+      `2 tool calls ${read} Ran npm run lint ${steer.text} Working 2m 41s`,
+    )
+
+    chat.emit(ended('finished'))
+    expect(seen(markup())).toContain(
+      'I will check the checkout form. 2 tool calls 4m 12s',
+    )
+  })
+
   it('keeps the last message of a stopped turn and the calls that the stop cut off in view', async () => {
     const { chat, markup } = await renderChat({ conversation: 'running' })
     chat.emit(said('answer-2', 'Next I will run the tests.'))

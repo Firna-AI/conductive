@@ -9,13 +9,18 @@ export type WorkItem = Extract<
   { kind: 'agent' | 'tool' | 'mac-command' | 'lost' }
 >
 
+/** An item that the chat draws on its own: a tool call joins a run instead. */
+export type SingleItem = Exclude<ChatItem, { kind: 'tool' }>
+
 /**
  * A chat item, a run of tool calls that the chat shows as one group, or a
- * run of the work of an ended turn that folds into one line.
+ * run of the work of an ended turn that folds into one line. A run grows
+ * when the working line follows it, because the agent can still add calls
+ * to it.
  */
 export type ChatEntry =
-  | { kind: 'item'; item: ChatItem }
-  | { kind: 'tools'; id: string; calls: ToolCallItem[] }
+  | { kind: 'item'; item: SingleItem }
+  | { kind: 'tools'; id: string; calls: ToolCallItem[]; growing: boolean }
   | { kind: 'work'; id: string; steps: WorkItem[] }
 
 /** Whether an item ends its turn: the turn finished, stopped, or failed. */
@@ -106,14 +111,22 @@ export function groupItems(items: readonly ChatItem[]): ChatEntry[] {
   const runOf = new Map(runs.map((run) => [run[0].id, run] as const))
   const folded = new Set(runs.flat().map((item) => item.id))
   const entries: ChatEntry[] = []
-  for (const item of items) {
+  for (const [index, item] of items.entries()) {
     const run = runOf.get(item.id)
     if (run) entries.push({ kind: 'work', id: `work-${item.id}`, steps: run })
     if (folded.has(item.id)) continue
     const last = entries.at(-1)
-    if (item.kind !== 'tool') entries.push({ kind: 'item', item })
-    else if (last?.kind === 'tools') last.calls.push(item)
-    else entries.push({ kind: 'tools', id: item.id, calls: [item] })
+    if (item.kind !== 'tool') {
+      entries.push({ kind: 'item', item })
+      continue
+    }
+    const tools: Extract<ChatEntry, { kind: 'tools' }> =
+      last?.kind === 'tools'
+        ? last
+        : { kind: 'tools', id: item.id, calls: [], growing: false }
+    if (tools !== last) entries.push(tools)
+    tools.calls.push(item)
+    tools.growing = items.at(index + 1)?.kind === 'working'
   }
   return entries
 }

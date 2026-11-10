@@ -56,7 +56,8 @@ chips.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
-  the work fold of each ended turn, and Try again.
+  the run of tool calls that grows while its turn runs, the work fold of
+  each ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
   stays in place when the user opens or closes it, also for a run of calls.
@@ -195,6 +196,7 @@ check in the Mac app.
   `foldedWork` finds the work of each ended turn that folds, as the
   [transcript rules](transcript.md) say. `groupEntries` makes the entries
   that the chat draws, and puts each insert at its place, also in a fold.
+  It marks the run of tool calls that grows, which shows each call.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.

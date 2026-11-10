@@ -1,7 +1,6 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, CircleStop, Clock } from 'lucide-react'
-import type { ChatItem } from '../../fixtures/conversations'
 import { people, type PersonKey } from '../../fixtures/members'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
@@ -9,12 +8,12 @@ import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
 import { AttachmentChips } from './AttachmentChips'
+import type { SingleItem } from './groupItems'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
 import { MessageText } from './MessageText'
-import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
 import styles from './ChatItemView.module.css'
 
@@ -30,10 +29,10 @@ function stoppedLine(by: PersonKey | undefined, viewer: PersonKey): string {
 }
 
 /**
- * One item of a chat transcript. `viewer` is the person signed in, who
- * reads the transcript.
+ * One item of a chat transcript, other than a tool call, which joins a run
+ * of tool calls. `viewer` is the person signed in, who reads the transcript.
  */
-export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
+export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
   const { item, viewer } = props
   const theme = useSharedUiTheme()
   switch (item.kind) {
@@ -60,8 +59,6 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
           <AgentBlocks blocks={item.blocks} bullets={item.bullets} />
         </div>
       )
-    case 'tool':
-      return <ToolGroup calls={[item]} />
     case 'mac-command':
       return <MacCommand request={item.request} state={item.state} />
     case 'turn-end':
