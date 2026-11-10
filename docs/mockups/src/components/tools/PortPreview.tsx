@@ -82,7 +82,9 @@ function PortPreview(props: { adding: boolean }) {
           <>
             <IconButton icon={RotateCw} label="Reload" />
             <span className={styles.link}>
-              <ExternalLink href={previewUrl}>Open in new tab</ExternalLink>
+              <ExternalLink href={previewUrl} label="Open in new tab">
+                Open
+              </ExternalLink>
             </span>
             <IconButton icon={X} label="Close preview" />
           </>

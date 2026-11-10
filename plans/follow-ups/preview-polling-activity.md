@@ -16,7 +16,7 @@
   - "Stop and resume" in `docs/protocol/workspaces-and-sandboxes.md:202-209` states the rule and its reason. A forgotten tab must not keep a sandbox running, and a stop must not cut off real work.
   - The proxy reports each preview HTTP request and each WebSocket handshake that passes its access checks, at `worker/previews/proxy.ts:102`.
   - The input owner then moves the idle stop to 30 minutes later. It also sets the auto-stop of the provider to 1,860 seconds, as "Input activity" in `worker/lifecycle/README.md` says.
-  - The workspace screen shows a preview in a frame while its Preview tool shows, in `src/previews/PreviewFrame.tsx`. "Open in new tab" opens the same preview in a tab of its own, and the Mac app can open it in the default browser.
+  - The workspace screen shows a preview in a frame while its Preview tool shows, in `src/previews/PreviewFrame.tsx`. The "Open" link opens the same preview in a tab of its own, and the Mac app can open it in the default browser.
   - Input in the frame does not reach the input listener of the app page, because the events of a frame stay in the frame. So the requests of a preview are the only sign of work in it today.
   - The Worker revokes a preview when its sandbox stops, when the user closes it, and 24 hours after it opens. "Port previews" in `docs/protocol/terminal-previews-and-desktop.md` states this. A request of a revoked preview gets 404 and does not count.
   - The proxy already tells a page load from other requests with the `Sec-Fetch-Dest` header, for the refresh of its port listener, at `worker/previews/proxy.ts:99-101`.
