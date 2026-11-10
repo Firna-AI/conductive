@@ -9,20 +9,21 @@ lets a member drop files on the composer of the chat, of the New workspace
 page, and of the New workspace dialog. Each file then shows as a chip in
 the text at the caret, as a file chip of the `@` list does. A file from
 the paperclip goes there too, and the row above the text goes away. The
-sent message keeps each chip at its place, and the agent reads the path of
-each file at that place.
+sent message keeps each chip at its place. A press on a sent chip opens
+the file tab of the copy of the file in the cloud computer. The agent
+reads the path of each file at that place.
 
-The message text holds a mention of the path where the Worker copies the
-file, such as `@.context/attachments/<digest>/a.png`, as decision 262
-says. The user chose option C of decision 262 on 10 November 2026. The
-options check then added option D, a path that depends only on the file,
-and recommends it. So decision 262 waits for the user again. The design
-below follows C, and "What decision 262 changes" lists each part that D
-changes. The read lines after the text stay as decision 244 says.
+The message text holds a mention of the copy path of each file, such as
+`@.context/attachments/<digest>/a.png`. The digest comes from the file ID
+only, so the path of a file never changes (decision 262 D). The read lines
+after the text stay as decision 244 says. Decision 265, how an image looks
+when its file tab opens, waits for the user.
 
 This change does not cover a paste of a file or an image, a drop of a
-folder's files, or a drop on other parts of the app. The brainstorm notes
-and the report of the options check are in `.context/composer-file-drops/`.
+folder's files, or a drop on other parts of the app. A picture of each
+image in the sent message is option D or E of decision 265. The
+brainstorm notes and the reports of the options checks are in
+`.context/composer-file-drops/`.
 
 Contract owners:
 
@@ -31,8 +32,11 @@ Contract owners:
 - [Workspace links](../docs/protocol/workspace-links.md#the-message-field).
 - [Session transcripts](../docs/protocol/session-transcripts.md).
 - [Agents and sessions](../docs/protocol/agents-and-sessions.md#sessions).
+- [Tools of a workspace](../docs/protocol/workspace-tools.md#files-and-changes),
+  for the file tab of an image.
 - The [chat README](../src/chat/README.md) and
   [Loads, records, and sends](../src/chat/loads-and-sends.md).
+- The [files README](../src/files/README.md).
 - The [app README](../src/app/README.md), for New workspace.
 - [Chat attachment storage and delivery](../worker/chat/attachments.md).
 - The [shared contracts README](../src/shared/README.md).
@@ -45,18 +49,19 @@ Replaced ways:
   message field. Consumers: `DraftFiles` and `DraftChip` in
   `src/chat/components/AttachmentChips.tsx`, the chat `Composer.tsx`, the
   New workspace `Composer.tsx`, their tests, the composer states of the
-  mockups, and the docs that name the row. Moved in Milestones 1, 2, and 6.
-  Deleted in Milestone 6.
+  mockups, and the docs that name the row. Moved in Milestones 1, 2, and 7.
+  Deleted in Milestone 7.
 - Remove through `onRemoveFile` of each composer → removal of the chip
   from the text, which takes its file off the draft. Consumers: the
   `onRemoveFile` props, `removeFile` in
   `src/chat/state/attachment-actions.ts`, `NewWorkspaceModel.removeFile`,
-  and `DraftUploads.remove`. Moved in Milestone 6. Deleted in Milestone 6.
-- `attachmentPath` and `safeName` of `worker/chat/attachment-record.ts` →
-  one path builder in `src/shared/`, which the Worker and the development
-  fakes share. With option C of decision 262, the browser uses it too.
-  Consumers: `attachment-claims.ts`, `attachment-copy.ts`, and their
-  tests. Moved and deleted in Milestone 3.
+  and `DraftUploads.remove`. Moved and deleted in Milestone 7.
+- A copy path from the message ID and the file ID → a copy path from the
+  file ID only, built once in `src/shared/`. Consumers: `attachmentPath`
+  and `safeName` of `worker/chat/attachment-record.ts`,
+  `attachment-claims.ts`, the path check of `attachment-copy.ts`, the docs
+  that state the digest, and their tests. Moved and deleted in
+  Milestone 3.
 - `src/chat/mentions/mention-text.ts` → the same syntax module in
   `src/shared/`, because the Worker reads mentions too. Consumers: the
   chip field, `chat-parts.ts`, `mention-rows.ts`, `mention-copy.ts`, and
@@ -158,14 +163,11 @@ a better root question, and a new recommendation.
   message's copy has its own folder.
 - **Recommendation:** D, changed from C by the options check on 10
   November 2026. The path of a file then never changes, so no part of the
-  app must build or rewrite it, at the cost of a rare second write of the
-  same bytes to one path. C stays a sound choice, and it keeps the copy
-  rules of the Worker as they are.
+  app must build or rewrite it.
 - **Action:** ask the user, because D changes the folder rule of
-  decision 242 in `docs/protocol/messages-and-attachments.md`, and C, the
-  earlier choice of the user, has real trade-offs against D.
-- **Chosen:** C, by the user on 10 November 2026, before the options
-  check added D, E, and F. The decision waits for the user again.
+  decision 242 in `docs/protocol/messages-and-attachments.md`.
+- **Chosen:** C, by the user on 10 November 2026. Then D, by the user on
+  10 November 2026, after the options check added it.
 
 ### 2. Where a file from the paperclip goes
 
@@ -210,6 +212,130 @@ better root question. It kept the recommendation.
 - **Action:** ask the user, because A removes a part that is on `main`.
 - **Chosen:** A, by the user on 10 November 2026. The options check kept
   A, so the choice stands.
+
+### 3. What a press on a sent file does
+
+Decision 264. Added on 10 November 2026 from the message of the user that
+chose decision 262 D. Changed on 10 November 2026 by the options check,
+which added option D and kept the recommendation.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design. **Category:** Docs or spec.
+- **Location:** `src/chat/links/LinkedText.tsx:50`
+- **Background:** A press on a file chip of a sent message opens the file
+  tab, as a press in All files does (decision 213). The Worker copies
+  each attached file into `.context/attachments/` of the repository
+  folder when its turn starts. Git ignores that folder, so All files does
+  not list the copies. The file tab reads any path of the repository.
+- **Problem:** The design of decision 262 gave the chip of a sent file no
+  press.
+- **Impact if no action:** A member cannot see an attached file again
+  after Send.
+- **Root question:** How does a member see an attached file of a sent
+  message?
+- **Options:**
+  - **A.** The chip opens nothing. It shows the name and the size only.
+    Effort: Small.
+  - **B.** A press opens the file tab of the copy in the cloud computer,
+    as a press on a file chip opens its file. Effort: Small.
+  - **C.** A press opens the file from the app's own storage, which keeps
+    each file up to 25 MB for the life of the workspace. It works while
+    the cloud computer is stopped, and in an archived workspace. It gives
+    the original bytes, also after an agent changed the copy. It needs a
+    new read route with its access checks. Effort: Large.
+  - **D.** Added by the options check. As B. Where the copy cannot show,
+    the member downloads the original from the app's storage. This covers
+    an archived workspace, a message that has not gone out, a copy that
+    failed or that an agent deleted, and a file over 5 MiB. With decision
+    262 D, the Worker finds the stored file of a copy path, because the
+    path comes from the file ID only. It needs the read route of C, the
+    fallback states of the sent chip and the file tab, and a rule in
+    `docs/protocol/isolation.md` for who can read a stored file. The
+    route also serves options C and D of decision 265. Effort: Large.
+- **Left out:**
+  - A view outside the file tab, such as a dialog over the chat: it
+    breaks the user's choice, which names "the preview page".
+  - The copies in All files: it breaks a requirement that stays in
+    `docs/protocol/repository-folders.md#the-context-folder`, which keeps
+    the context folder out of All files.
+- **Wider fix:** None, because this is a design choice.
+- **Previous examples:** File chips open their files (decision 213).
+- **Recommendation:** B, kept by the options check. The user asked for
+  it: "because its in .context, when the user clicks on it, they see the
+  preview page as with any file that's presented". D can add the stored
+  original later with no change to B.
+- **Action:** ask the user, because B adds a press that no requirement
+  covers.
+- **Chosen:** B, by the user on 10 November 2026. The options check kept
+  B, so the choice stands.
+
+### 4. How an attached image looks when it opens
+
+Decision 265. Added on 10 November 2026 by the working agent, from
+decision 264. Changed on 10 November 2026 by the options check, which
+added options D and E and a better root question. It kept the
+recommendation.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. **Category:** Docs or spec.
+- **Location:** `src/files/page/FileBody.tsx:28`
+- **Background:** A press on a sent file opens its file tab (decision
+  264 B). The file tab shows Markdown rendered, and other text with line
+  numbers. It shows each other file, also a PNG or a JPEG, as "Download
+  this file to open it". The file tab reads at most 5 MiB of a file, and
+  over that limit it offers no Download. Most attached files are
+  screenshots, and an attached file can hold up to 25 MB. The words of
+  the user, "the image will be part of the message embed", can mean the
+  chip, or a picture of the image in the message.
+- **Problem:** A press on an attached screenshot shows no picture, only a
+  Download button.
+- **Impact if no action:** A member must download each screenshot to see
+  it.
+- **Root question:** How does a member see the picture of an attached
+  image? The options check wrote this question, because the options also
+  choose where the picture shows and which bytes it uses.
+- **Options:**
+  - **A.** The file tab as it is. An image shows "Download this file to
+    open it". Effort: Small.
+  - **B.** An image view in the file tab. A PNG, JPEG, GIF, or WebP file
+    up to the 5 MiB read limit shows as a picture that fits the tab. This
+    holds for every image of the workspace, also one from All files. A
+    larger image keeps the state of the read limit, "Open this file in
+    the terminal". Effort: Medium.
+  - **C.** As B, and the file tab of an attached image over 5 MiB reads
+    the image from the app's own storage, up to 25 MB. It needs a new
+    read route for attached files, with its access checks. Effort: Large.
+  - **D.** Added by the options check. As B, and each attached image of
+    a sent message also shows as a small picture in the message, from the
+    app's storage. A press on the picture opens the file tab. The picture
+    shows also while the cloud computer is stopped, in an archived
+    workspace, and up to 25 MB. It needs the read route of C, a read rule
+    in `docs/protocol/isolation.md`, and a fixed box for each picture, so
+    that a late picture does not move the chat. The Mac app loads its page
+    from its own scheme, so each picture there needs a fetch and a data
+    URL. Effort: Large.
+  - **E.** Added by the options check. As B, and each attached image of a
+    sent message also shows as a picture in the message, read from its
+    copy, with no new route. It shows no picture while the cloud computer
+    is stopped or starts, in an archived workspace, or over 5 MiB. Each
+    picture is a read of up to 5 MiB, so a chat with many screenshots
+    makes many large reads. Each picture also needs the fixed box of D.
+    Effort: Large.
+- **Left out:**
+  - A view outside the file tab: it breaks decision 264 B, which opens
+    the file tab.
+  - A higher read limit: the Boat file read stops at 5 MiB, as
+    `docs/protocol/workspace-tools.md#files-and-changes` says, and that
+    reason holds.
+- **Wider fix:** None, because this is a design choice.
+- **Previous examples:** None found.
+- **Recommendation:** B, kept by the options check. A press on a
+  screenshot then shows the screenshot in the preview page that the user
+  named, for each image of the workspace, with no new route. C helps for
+  Retina screenshots of a whole screen, which can pass 5 MiB. D fits best
+  if "the message embed" means a picture in the message.
+- **Action:** ask the user, because the options have real trade-offs,
+  and B to E add a view that the request does not name.
 
 ## Design
 
@@ -259,23 +385,25 @@ test, unless it names a decision.
   Try again takes the keyboard focus.
 - The × of the icon cell removes the chip where a pointer hovers. Where
   no pointer hovers, a × at the end removes it (decision 217).
+- A press on the name of a chip in the field opens nothing. Reason: the
+  cloud computer gets the file only when the turn of its message starts.
 - A chip that leaves the text takes its file off the draft and stops its
   upload. Undo brings back the chip and the file. A ready file comes back
   ready, and a stopped upload starts again. Reason: the draft never sends
   a file that its text does not show.
-- A copy or a cut of a chip in the field gives the name of its file as
-  plain text. Reason: with C, the path does not exist before Send,
-  because the chat makes the message ID at Send. "What decision 262
-  changes" gives the copy with D.
+- A copy or a cut of a ready chip gives its mention, as for a file chip.
+  A copy or a cut of a chip that uploads or failed gives the name of its
+  file. A paste of a mention of a file of the draft gives its chip back,
+  also of a file whose chip left the text. A paste in another composer
+  gives the mention as text.
 - A cut and a paste, or a drag, inside the same field keeps each chip
   with its file. The field keeps the field text of its last copy, cut, or
   drag, with its marks. A paste or a drop whose plain text is that copy
   takes the kept text, and each mark of a file of the draft becomes its
   chip again. A drag of a workspace chip or a file chip then keeps it as
-  a chip too. A paste in another place gives the plain text. Reason: the
-  browser's own drag gives only the words that a chip shows, so a drag
-  turns the chip into text and takes its file off the draft. The options
-  check found this.
+  a chip too. Reason: the browser's own drag gives only the words that a
+  chip shows, so a drag turns the chip into text and takes its file off
+  the draft. The options check found this.
 
 ### The draft and the send
 
@@ -289,17 +417,13 @@ test, unless it names a decision.
 - The draft keeps each file whose chip left the text as a detached file
   until the draft ends, so that undo can bring it back. A send, a
   sign-out, and a new draft end the detached files.
-- Send marks the draft as sending, then builds the text: each mark
-  becomes `@` and the path of its file. With C, the browser builds each
-  path from the message ID, the attachment ID, and the stored name. The
-  send then sends that text, with the attachment IDs in the order of the
-  chips.
-- With C, the path builder uses Web Crypto. The app already needs a
-  secure context for `crypto.randomUUID`, and the Mac app's scheme is
-  secure, so the browser has it.
+- The upload reply gives the `path` of each file (decision 262 D). Send
+  writes `@` and that path at each mark, and it sends the attachment IDs
+  in the order of the chips. Send waits until each file is ready, as now,
+  so each file has its path.
 - After a send, the draft text clears when it is still the draft text,
-  with its marks, that the send took. A failed send keeps the draft, its
-  marks, and its message ID. So Send again sends the same text.
+  with its marks, that the send took. A failed send keeps the draft and
+  its marks. So Send again sends the same text.
 - Each change that takes a file off the draft without its chip also
   takes its mark out of the text: a send whose text the member changed
   during the send, a model change that keeps fewer files, and a sign-out.
@@ -309,17 +433,47 @@ test, unless it names a decision.
   The Worker only compares and returns that text.
 - The New workspace message still needs words outside its chips, as
   now. A message in a chat can hold only files, as now.
-- A sign-out on New workspace drops the files and their marks.
+
+### The copy path
+
+- The copy path of a file is `.context/attachments/<digest>/<safe name>`.
+  The digest is 32 lowercase hexadecimal characters from the file ID
+  only (decision 262 D). The safe name keeps its rule.
+- Each message still copies its files before it goes out, so a later
+  message with the same file, such as Try again, writes the same bytes to
+  the same path again. Reason: Try again then gives the agent the
+  original bytes. A copy proof for each file was not chosen, because a
+  later message would then read a copy that an agent changed or deleted.
+- Two messages with the same file on one computer at the same time can
+  write one path while an agent reads it. Only a send whose reply was
+  lost, then an edit and a new send, makes such messages.
+- A command stored before the change holds an old path. Its copy fails
+  once, and Try again works. No converter stays, because the project is
+  not in production.
 
 ### The sent message
 
-- The Worker gives each file of a sent message its `path`, the relative
-  path of decision 242, when it accepts the message. A stored message from
-  before this change has no path. Its files show under the message.
+- Each file of a sent message has its `path`. A stored message from
+  before this change has a path of the old rule. Its text holds no
+  mention of it, so its files show under the message.
 - A mention in a sent message whose path is the path of one of its files
   shows as a chip of that file, with its kind, its name, and its size.
-  This holds in every chat, also in an archived one, because the chip
-  comes from the message itself.
+  The chip shows in every chat, also in an archived one, because it comes
+  from the message itself.
+- A press on a sent chip opens the file tab of its path, as a press on a
+  file chip does (decision 264 B). A press may start a stopped cloud
+  computer, as the open of any file does. All files does not list the
+  copy, so the tab shows "File" until its read names the copy by its safe
+  name, as for each path that no list names.
+- The chip opens nothing while its message has not gone out to the
+  agent, as while it waits for the cloud computer, or after the copy of
+  its files failed. Reason: the copy comes with the turn, and a message
+  goes out only after its copy. The chip opens nothing in a chat without
+  the files of its workspace, such as in an archived workspace.
+- A press on a chip whose copy an agent deleted, or that a later cloud
+  computer does not hold, shows "This file moved or was deleted", as for
+  each file. Option D of decision 264 would offer the original there. The
+  options check found this case.
 - A file of the message with no chip in its text shows under the message,
   as now.
 - A copy of a sent chip gives its mention, as for a file chip.
@@ -336,40 +490,33 @@ test, unless it names a decision.
 - In a transcript copy, each mention of a file of the message becomes the
   name of the file. The attachments line lists only the files that the
   text does not show.
-- With C, Try again sends under a new message ID, so the Worker rewrites
-  each mention of a file of the message to the new path. The folder rule
-  of decision 242 stays.
+- Try again sends the same text and the same files, under a new message
+  ID, as now. Each path stays right, because it comes from the file only.
 - The browser, the Worker, and the development fakes share one mention
-  syntax in `src/shared/`. The Worker and the fakes share one path
-  builder there, and with C the browser uses it too.
+  syntax in `src/shared/`. The Worker and the development fakes share one
+  path builder there. The browser reads each path from the replies.
 
-### What decision 262 changes
+### The image view
 
-The design above follows C, the earlier choice of the user. With D, these
-parts change, and the rest stays:
+These calls hold when the user chooses decision 265 B, C, D, or E.
 
-- The digest of the copy folder comes from the file ID only. The folder
-  rule of decision 242 in `docs/protocol/messages-and-attachments.md` and
-  the path rules in `worker/chat/attachments.md` change.
-- The upload reply gives the `path` of each file, and Send writes it at
-  each mark. The browser has no path code and no Web Crypto.
-- Try again sends the same text, with no rewrite.
-- A copy of a ready chip in the field gives its mention. A paste of a
-  mention of a file of the draft gives its chip back. A chip that uploads
-  or failed still gives its name.
-- Each message still copies its files before it goes out, so a later
-  message with the same file, such as Try again, writes the same bytes to
-  the same path again. My call: keep one copy for each message, as now,
-  so that Try again gives the agent the original bytes. A copy proof for
-  each file was not chosen, because a later message would then read a
-  copy that an agent changed or deleted.
-- Two messages with the same file on one computer at the same time can
-  then write one path while an agent reads it. The composers make such
-  messages only after a send whose reply was lost, and an edit and a new
-  send.
-- A command stored before the change holds an old path. Its copy fails
-  once, and Try again works. No converter stays, because the project is
-  not in production.
+- The file tab shows a PNG, JPEG, GIF, or WebP file as a picture, by the
+  name of the file. Reason: the runner gives `text/plain` for a GIF and a
+  WebP file, and the Boat file read gives `application/octet-stream` for
+  each binary file. The options check found this.
+- The picture comes from a `data:` address of the bytes that the file
+  response holds. Reason: the content security policy of both apps lets
+  an image load from `data:`, but not from `blob:`. The options check
+  found this.
+- The picture keeps its proportions and fits the width and the height of
+  the tab. A smaller picture keeps its size.
+- When the browser cannot draw the bytes, the tab shows "Download this
+  file to open it", as for each binary file now. The options check found
+  this case.
+- The header of the tab keeps Copy and Download. Copy is off for a
+  picture, as for every binary file now.
+- An SVG file stays text with line numbers, as now. Reason: its source is
+  what a member edits.
 
 ## Milestone 1: Mockups
 
@@ -378,15 +525,16 @@ Tags: mockup
 Depends on: none
 
 The mockups show the chips in the text in each composer, the drop state,
-the drop at a place, a folder that was not attached, and the chips of a
-sent message. Each page keeps a desktop and a phone variant.
+the drop at a place, a folder that was not attached, the chips of a sent
+message, and the file tab that a sent chip opens. Each page keeps a
+desktop and a phone variant.
 
 - [ ] Add a pure mockup part for the file chip of the message field, on
       `InlineChip.module.css`, `ChipRemove`, `attachmentCopy.ts`, and
       `sizes.ts`: the icon cell with each glyph, the name, the muted
       label, Try again in a failed chip, and the × of each pointer kind.
 - [ ] Add a pure mockup part for the file chip of a sent message: the
-      kind icon, the name, and the muted size.
+      kind icon, the name, the muted size, and its look as a link.
 - [ ] Put the file chips into the text of the message field mockup, and
       remove the row of attached files above the text.
 - [ ] Update `app/composer`: two uploaded files in a sentence.
@@ -396,13 +544,17 @@ sent message. Each page keeps a desktop and a phone variant.
 - [ ] Add `app/attachments/drop`: files over the box with the drop caret
       in the text, the files at that place after the drop, and a folder
       that was not attached. Its phone variant shows a pick at the caret.
+- [ ] Add `app/attachments/open`: the file tab that a press on a sent
+      screenshot opens, with the view that decision 265 chooses.
 - [ ] Update `app/file-mentions/chips/attached-file`: remove a file chip
       of the text.
 - [ ] Update `app/new-workspace/files` and every New workspace state
       that shows files.
+- [ ] With decision 265 B to E, add an image to `app/files`: the file tab
+      of a picture.
 - [ ] Add the flow `user-flows/drop-a-file`: a drag of a screenshot onto
-      the chat box, the drop, the upload, Send, and the sent message with
-      the agent's answer.
+      the chat box, the drop, the upload, Send, the sent message with the
+      agent's answer, and the file tab that a press on the chip opens.
 - [ ] Update the rows of `docs/mockups/catalogue.md`.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages, and save
       the screenshots under `.context/composer-file-drops/`.
@@ -413,24 +565,27 @@ sent message. Each page keeps a desktop and a phone variant.
 
 Depends on: 1
 
-The protocol docs state the requirements of decisions 262 and 263 and of
+The protocol docs state the requirements of decisions 262 to 265 and of
 the design calls above that are requirements.
 
 - [ ] Update `docs/protocol/messages-and-attachments.md`: the drop, the
       place of each file, the chip in the text, the mention in the text,
-      the sent chips, the files under the message, the order of the
-      files, Try again, the workspace title request, folders, and drops
-      outside the box. With D, also change the folder rule of decision
-      242.
+      the copy path from the file ID, the sent chips and their press, the
+      files under the message, the order of the files, Try again, the
+      workspace title request, folders, and drops outside the box.
 - [ ] Update `docs/protocol/file-mentions.md`: the mention of an attached
-      file, the sent chip of each file of the message, and the removal of
-      a file chip of the text in place of the row above it.
+      file, the sent chip of each file of the message and its press, and
+      the removal of a file chip of the text in place of the row above
+      it.
 - [ ] Update `docs/protocol/workspace-links.md#the-message-field`: the
       field holds the chips of attached files too.
 - [ ] Update `docs/protocol/session-transcripts.md`: the names in place
       of the mentions, and the attachments line.
 - [ ] Update `docs/protocol/agents-and-sessions.md#sessions`: the names
       in a session title, and no title from a message with only files.
+- [ ] With decision 265 B to E, update
+      `docs/protocol/workspace-tools.md#files-and-changes`: the picture of
+      an image file.
 - [ ] Read `docs/protocol/create-a-workspace.md` and
       `docs/architecture.md`, and update each sentence about the files of
       a message.
@@ -438,51 +593,46 @@ the design calls above that are requirements.
       page in `src/marketing/privacy.ts` in full. Update each sentence
       that restates a changed fact.
 - [ ] Read each public guide in `src/marketing/docs/` in full. Update each
-      sentence about attached files, such as in `sessions-and-chat.md`.
+      sentence about attached files and about the file tab, such as in
+      `sessions-and-chat.md`.
 - [ ] Read the `attachments` row in
       `src/marketing/from-conductor/areas/agents-and-chat.ts`, and update
       its note when it restates a changed fact.
 - [ ] Check each relative link of each changed Markdown file.
 
-## Milestone 3: Shared paths, sent paths, titles, and Try again
+## Milestone 3: Shared paths, sent paths, titles, and copies
 
 Depends on: 2
 
-The Worker, the browser, and the development fakes share the mention
-syntax and the path builder. Each sent file carries its path. Titles,
-transcript copies, and Try again read the mentions of the files. The
-TODOs marked C or D apply only to that option of decision 262.
+The Worker and the development fakes share the mention syntax and the
+path builder. Each file has its path from the upload on. Titles and
+transcript copies read the mentions of the files.
 
 - [ ] Move `src/chat/mentions/mention-text.ts` to `src/shared/`, and move
       each consumer and test to it.
 - [ ] Move `attachmentPath`, `safeName`, and `ATTACHMENTS_DIRECTORY` to
-      `src/shared/attachment-paths.ts`. Move the Worker consumers and the
-      tests of the path.
-- [ ] D: make the digest come from the file ID only, in the path builder
-      and in the path check of `worker/chat/attachment-copy.ts`.
-- [ ] Add the path of each file to `src/shared/messages.ts`. C: a sent
-      attachment has `path: string | null`. D: every attachment has it,
-      also the upload reply, and `src/app/attachment-upload.ts` reads it.
-- [ ] Set `path` of each file in `resolveMessageAttachments`. Read it in
-      `src/chat/api/read-chat.ts` and `src/app/api/read-workspaces.ts`,
-      with null for a stored message without it.
+      `src/shared/attachment-paths.ts`. Make the digest come from the
+      file ID only. Move the Worker consumers, the path check of
+      `worker/chat/attachment-copy.ts`, and the tests of the path.
+- [ ] Add `path` to the attachment of `src/shared/messages.ts`. Give it in
+      the upload reply and in each sent message, through
+      `publicAttachment`. Read it in `src/app/api/read-workspaces.ts` and
+      `src/chat/api/read-chat.ts`, with null for a stored message
+      without it.
 - [ ] Add `src/shared/attachment-mentions.ts`: the file of a mention, the
-      text with the names of the files, and the test for own words. C:
-      also the move of the paths to another message ID.
+      text with the names of the files, and the test for own words.
 - [ ] Use the names in `worker/chat/session-titles.ts` and
       `worker/chat/workspace-titles.ts`. Start no title from a message
       with only file mentions.
-- [ ] C: rewrite the paths of the text in `retryMessage` of
-      `worker/chat/send-message.ts`.
 - [ ] Use the names and the shorter attachments line in
       `src/shared/transcript/markdown-items.ts`.
 - [ ] Give the development fakes in `src/chat/dev/`, `src/app/dev/`, and
-      `src/test-support/` the paths and the titles. C: also the rewrite.
-- [ ] Update `worker/chat/attachments.md` and `src/shared/README.md`. D:
-      also the copy rule of a later message with the same file.
-- [ ] Add the tests of the path of a sent file, the titles, and the copy.
-      C: also the rewrite. D: also the path of an upload. See each fail
-      first.
+      `src/test-support/` the paths and the titles.
+- [ ] Update `worker/chat/attachments.md`, with the copy of a later
+      message with the same file, and `src/shared/README.md`.
+- [ ] Add the tests of the path of an upload and of a sent file, the
+      copy of a later message with the same file, the titles, and the
+      transcript copy. See each fail first.
 
 ## Milestone 4: Sent messages show each file at its place
 
@@ -495,12 +645,37 @@ Depends on: 1, 3
 - [ ] Draw that part in `src/chat/links/LinkedText.tsx` with the mockup
       part of the sent chip. Give it the mention for a copy, as
       `mention-copy.ts` reads it.
+- [ ] Make a press on a sent chip open the file tab of its path, through
+      the `openFile` and the `href` of the chat files. Open nothing while
+      its message waits, or without the files of the workspace.
 - [ ] Make `UserBubble` give the files to the text, and make `SentFiles`
       list only the files without a chip.
 - [ ] Update the key code of `src/chat/README.md`.
-- [ ] Add the tests of the sent chip, the shorter list, and the copy.
+- [ ] Add the tests of the sent chip, its press, the shorter list, and
+      the copy.
 
-## Milestone 5: The file chip of the message field
+## Milestone 5: Images in the file tab
+
+Tags: ui
+
+Depends on: 1, 2
+
+This milestone holds only with decision 265 B, C, D, or E. With C or D,
+a backend milestone for the read route from the app's storage comes
+first. With D or E, a UI milestone for the picture in the sent message
+comes after it.
+
+- [ ] Show a PNG, JPEG, GIF, or WebP file as a picture in
+      `src/files/page/FileBody.tsx`, by the name of the file, from a
+      `data:` address of the bytes of the file response.
+- [ ] Show "Download this file to open it" when the browser cannot draw
+      the bytes.
+- [ ] Update `src/files/README.md`.
+- [ ] Add the tests of a picture, a GIF from the runner, a picture from
+      the Boat file read, bytes that the browser cannot draw, an SVG
+      file, and an image over the read limit.
+
+## Milestone 6: The file chip of the message field
 
 Tags: ui
 
@@ -513,13 +688,14 @@ composer puts one there yet.
       text, and the text without its marks.
 - [ ] Add the decorator node of an attached file to
       `src/chat/components/chip-field/`, with the mark as its text.
-- [ ] Give the field its files through a source: the file of each mark
-      and Try again. Drop a mark of a file that the draft does not hold.
+- [ ] Give the field its files through a source: the file of each mark,
+      the file of each path, and Try again. Drop a mark of a file that
+      the draft does not hold.
 - [ ] Write each mark with the spaces of a mention in `$fieldText`.
 - [ ] Draw the chip with the mockup part and the live state of its file.
-- [ ] Make a copy of a file chip give the name of its file. D: a ready
-      chip gives its mention, and a paste of that mention gives the chip
-      back.
+- [ ] Make a copy of a ready chip give its mention, and a copy of another
+      chip give its name. Make a paste of a mention of a file of the
+      draft give its chip back.
 - [ ] Add the caret at a point of the field, from the caret position of
       the browser.
 - [ ] Keep the field text of the last copy, cut, or drag, with its marks.
@@ -533,20 +709,20 @@ composer puts one there yet.
       cut and paste, the drag inside the field, and each state of the
       chip.
 
-## Milestone 6: Each composer puts its files in the text
+## Milestone 7: Each composer puts its files in the text
 
 Tags: ui
 
-Depends on: 3, 4, 5
+Depends on: 3, 4, 6
 
 - [ ] Make the attach of each draft give the new file IDs at once, while
       the uploads run.
 - [ ] Bring the files of each draft in line with the marks of each new
       text: detach and stop a file whose chip left, and bring back a
       detached file whose chip came back.
-- [ ] Build the text of each send from the marks and the paths, after
-      the draft is marked as sending. Clear the draft text when it is
-      still the draft text, with its marks, that the send took.
+- [ ] Build the text of each send from the marks and the paths of the
+      files. Clear the draft text when it is still the draft text, with
+      its marks, that the send took.
 - [ ] Take the mark of each file out of the text when the file leaves
       the draft without its chip: a send whose text changed during the
       send, a model change that keeps fewer files, and a sign-out.
@@ -562,11 +738,11 @@ Depends on: 3, 4, 5
       that leave with their files, the order of the files, and New
       workspace.
 
-## Milestone 7: Drops into each composer
+## Milestone 8: Drops into each composer
 
 Tags: ui
 
-Depends on: 6
+Depends on: 7
 
 - [ ] Add a drop hook for the message box: file drags only, the drop
       state, no drop while the composer takes no change, and the split of
@@ -585,12 +761,13 @@ Depends on: 6
 - [ ] Update `src/chat/README.md` and `src/app/README.md`.
 - [ ] Add the DOM tests of the drop, the drop state, a box that takes no
       change, a folder, and a drop outside the box.
-- [ ] Smoke-test a drop in Chrome on the development page and in the app.
-      Save the screenshots under `.context/composer-file-drops/`.
+- [ ] Smoke-test a drop in Chrome on the development page and in the app,
+      then a press on the sent chip. Save the screenshots under
+      `.context/composer-file-drops/`.
 
-## Milestone 8: Verification, commit, review, and pull request
+## Milestone 9: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3, 4, 5, 6, 7
+Depends on: 1, 2, 3, 4, 5, 6, 7, 8
 
 - [ ] Run the targeted tests and `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
@@ -609,4 +786,5 @@ Depends on: 1, 2, 3, 4, 5, 6, 7
 
 - [ ] On the test deployment, drop a screenshot into a chat of a running
       workspace. Check that the agent reads the file at the path of the
-      mention, and that the sent message shows the chip.
+      mention, that the sent message shows the chip, and that a press on
+      the chip opens the file.
