@@ -942,7 +942,7 @@ Evidence of the merge of `origin/main` with the routines and release 0.6.0:
 - [x] Smoke-test the row and the dialog with `npm run dev`, on the dev
       fake. The Worker tests of Milestone 3 cover the email, because the
       dev app does not call the Worker.
-- [ ] Ask the user to set the Worker secret `FEEDBACK_EMAIL` of the
+- [x] Ask the user to set the Worker secret `FEEDBACK_EMAIL` of the
       deployment to the team inbox before the merge. Without it, each send
       gets HTTP 503, and the comparison row is not true.
 - [x] Add the follow-up item `plans/follow-ups/feedback-recent-app-errors.md`
@@ -1017,9 +1017,10 @@ the pull request. The existing CI runs the complete gate on the final tree.
 - [x] Verify the phone fix, its ten browser runs and final validation record.
       Commit and push the second fix round. No third review-fix round starts
       without the outcome rules permitting it.
-- [ ] State the required `FEEDBACK_EMAIL` deployment setup in the pull
+- [x] State the required `FEEDBACK_EMAIL` deployment setup in the pull
       request and final report. The workspace has no deployment credentials
-      or team inbox address. Do not send a real email or merge the pull request.
+      or team inbox address. The setup request was sent on 10 November 2026.
+      Do not send a real email or merge the pull request.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

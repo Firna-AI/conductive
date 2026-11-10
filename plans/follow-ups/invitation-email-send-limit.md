@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-10, from the second options check of the plan `plans/command-palette-feedback.md`, branch `calummoore/command-palette-feedback-option`.
 - **Location:** `worker/members/route.ts:121` (the invite route), `worker/mail-sender.ts` (the shared mail sender), and the section on invitations of `docs/protocol/orgs-and-members.md`.
-- **Reason:** The problem is in code on `origin/main` that the feedback plan does not change, and a limit adds a new refusal, which the user decides.
+- **Reason:** The feedback work does not change invitation limits. A limit adds a new refusal, which the user decides.
 
 - **Source:** Review. **Category:** Security.
 - **Terms:**
@@ -26,7 +26,7 @@
   - **C.** The shared mail sender applies limits to each email that a person's request starts: a limit for each person, and a daily limit for the whole app below the send quota. The approval email stays outside the limits, because an operator starts it. Each later kind of email gets the limits by default. Effort: Medium.
 - **Left out:** A limit in the Members tab alone, because a crafted request skips it.
 - **Wider fix:** C. Each kind of email that a person starts then has a limit by default.
-- **Previous examples:** The plan `plans/command-palette-feedback.md` asks the same question for feedback emails, as its decision 276. The follow-up item `plans/follow-ups/draft-attachment-quota.md` asks it for the draft files of the chat.
+- **Previous examples:** The feedback route in `worker/app-api/feedback.ts` also sends without a frequency limit. `plans/follow-ups/feedback-send-limit.md` records the chosen feedback-only limit for a later change. The follow-up item `plans/follow-ups/draft-attachment-quota.md` asks it for the draft files of the chat.
 - **Related:** The feedback emails have the same problem. On 10 November 2026, the user chose no limit for them for now, and a later limit of 10 feedback sends in an hour for each person, which counts only feedback emails. So that limit does not cover invitations, and this item stays open.
 - **Recommendation:** C. One rule in the sender protects every email that a person starts, and it keeps room in the quota for the approval emails.
 - **Action:** ask the user, because each option except A adds a new refusal.

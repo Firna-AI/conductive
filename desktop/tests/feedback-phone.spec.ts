@@ -85,7 +85,7 @@ test('on a small phone a long feedback draft that failed to send keeps Cancel an
       await page.evaluate(() => [window.innerWidth, window.innerHeight]),
     ).toEqual([phone.width, phone.height])
     await expect(page.getByRole('button', { name: 'Search' })).toBeVisible()
-    await page.keyboard.press('Control+K')
+    await page.getByRole('button', { name: 'Search', exact: true }).click()
     await page.getByRole('combobox', { name: 'Search' }).fill('feedback')
     await page.keyboard.press('Enter')
     const sheet = page.getByRole('dialog', { name: 'Send feedback' })
