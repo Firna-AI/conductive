@@ -130,7 +130,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   rejected, because the provider does not document that path.
 - A plain drag selects text on the screen, and the user can copy it, such
   as with Cmd+C on a Mac. This also holds while a program in the shell,
-  such as tmux, uses the mouse (decision 214).
+  such as tmux, uses the mouse (decision 246).
 - The wheel, the right button, and the middle button still reach such a
   program, so the wheel scrolls the output history. A held Cmd on a Mac,
   or Ctrl on Windows and Linux, gives a click or a drag to the program.
@@ -138,7 +138,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   A copy through the clipboard writes of the program was rejected, because
   any process in the sandbox could then write the user's clipboard.
 - When the connection ends, the user can still select and copy the text
-  that stays on the screen (decision 213).
+  that stays on the screen (decision 245).
 - Reason: the screen keeps its output so that the user can still use it,
   such as an error message.
 - When the user ends the shell, such as with `exit`, the next connection

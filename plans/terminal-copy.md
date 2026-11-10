@@ -12,10 +12,13 @@ goes to tmux on every platform. On a Mac, no held key selects a part, and
 Cmd+A copies only the whole screen.
 
 The user chose to turn off mouse reports when the connection ends
-(decision 213, option A, 9 November 2026). The user also chose normal
+(decision 245, option A, 9 November 2026). The user also chose normal
 select while connected: a plain drag selects in the page, and the program
-still gets the wheel (decision 214, option C, 10 November 2026). This
-change does not cover touch selection on phones. The brainstorm notes, the scripts, and the evidence
+still gets the wheel (decision 246, option C, 10 November 2026). This
+change does not cover touch selection on phones. Decisions 245 and 246
+were numbered 213 and 214 until 10 November 2026. They moved because
+`origin/main` and open branches used 213 to 244 for other decisions. The
+choices and their dates did not change. The brainstorm notes, the scripts, and the evidence
 are in `.context/terminal-copy/`. The options check of both decisions is
 `.context/terminal-copy/options-check-report.md`.
 
@@ -39,7 +42,7 @@ Contract owners:
 
 ## Decisions
 
-### Decision 213: Text can't be selected after a disconnect
+### Decision 245: Text can't be selected after a disconnect
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Small.
 - **Source:** Design. Item 1 of the brainstorm of 9 November 2026. The
@@ -56,7 +59,7 @@ Contract owners:
   nothing, and only the whole screen can be copied.
 - **Impact if no action:** The user can't copy a chosen part, such as one
   error line, after a disconnect. On a Mac, Reconnect does not help,
-  because of decision 214.
+  because of decision 246.
 - **Root question:** How does the user select and copy a chosen part of
   the text that stays on the screen after the connection ends?
 - **Options:**
@@ -82,13 +85,13 @@ Contract owners:
   modes that tmux uses. Then no program can keep the mouse after the end.
 - **Previous examples:** #115, commit `e6ebc09`, turned on tmux mouse
   support. No earlier case of this kind was found.
-- **Related:** Decision 214. With its options C or F, this fix becomes a
+- **Related:** Decision 246. With its options C or F, this fix becomes a
   safety net only. With its other options, this fix is needed.
 - **Recommendation:** A. It fixes the reported case in the browser and in
   the Mac app with the smallest change and no new UI.
 - **Action:** apply A. The user chose A on 9 November 2026.
 
-### Decision 214: A Mac can't copy a part while connected
+### Decision 246: A Mac can't copy a part while connected
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Design. Item 2 of the brainstorm of 9 November 2026. The
@@ -202,7 +205,7 @@ Contract owners:
 - **Previous examples:** #115, commit `e6ebc09`. The open Conductor
   workspace "Terminal scroll looping" works on the same tmux mouse
   setting. It has no code change yet.
-- **Related:** Decision 213. With C or F, its fix becomes a safety net
+- **Related:** Decision 245. With C or F, its fix becomes a safety net
   only. With the other options, its fix is needed. The scroll-looping
   workspace: D, E, and G change the wheel handling that it studies, so it
   needs this answer too.
@@ -249,7 +252,7 @@ Contract owners:
 - 10 November 2026, agent's call: a tap on a phone follows the same rule
   as a click. Reason: a phone has no Cmd or Ctrl key, and a tap in tmux
   selects only the pane.
-- 10 November 2026, agent's call: the fix of decision 213 stays, as the
+- 10 November 2026, agent's call: the fix of decision 245 stays, as the
   user chose. Reason: after the end, the screen then shows the text cursor
   and selects without a sent-again press.
 
@@ -262,14 +265,14 @@ the screen, while connected and after the end.
 
 - [x] In the Terminal section of `docs/protocol/workspace-tools.md`, add
       the requirement: when the connection ends, the user can still select
-      and copy a part of the text of the screen (decision 213). Add its
+      and copy a part of the text of the screen (decision 245). Add its
       reason: the screen keeps its output so that the user can use it,
       such as an error.
 - [x] In the same section, add the requirement: a plain drag selects text
       in the screen, also while a program, such as tmux, uses the mouse.
       The wheel still reaches the program. A held Cmd on a Mac, or Ctrl on
       Windows and Linux, gives a click or a drag to the program
-      (decision 214). Add its reason, and the rejected clipboard writes
+      (decision 246). Add its reason, and the rejected clipboard writes
       from the sandbox: any process in the sandbox could then write the
       user's clipboard.
 - [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
@@ -280,7 +283,7 @@ the screen, while connected and after the end.
       of the connection: a drag still selects the text, and Cmd+C copies
       it.
 - [x] In the Behaviour section of `src/terminal/README.md`, add the
-      selection rule of decision 214: a plain drag selects, the wheel and
+      selection rule of decision 246: a plain drag selects, the wheel and
       the right and middle buttons reach the program, and a held Cmd or
       Ctrl gives a click or a drag to the program.
 
@@ -349,12 +352,15 @@ Depends on: every other milestone
 
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
       Gate log: `.context/terminal-copy/gate.log`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch. Commit
+      `e71f5952`, then a merge of `origin/main` with an empty remerge diff.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Round 1 on `e71f5952` found no findings and nothing
+      outside the scope, so no fix round ran. Report:
+      `.context/reviews/calummoore/disconnected-terminal-text-selection/round-1-review.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
