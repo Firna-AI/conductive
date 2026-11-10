@@ -4,7 +4,15 @@ import {
   type CreateWorkspaceResponse,
   type Workspace,
 } from '../../shared/workspaces'
-import { maybeText, nested, record, text, texts } from '../api/parse'
+import {
+  choice,
+  maybeText,
+  nested,
+  record,
+  text,
+  texts,
+  type JsonObject,
+} from '../api/parse'
 import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
 import { requireOrg, type DevBackend } from './backend'
@@ -52,13 +60,22 @@ function readFirstMessage(value: unknown): SendMessageRequest {
   }
 }
 
+/** The existing branch that a create continues, or `null` for a new one. */
+function existingBranch(fields: JsonObject): string | null {
+  if (fields.branch === undefined) return null
+  const branch = record(fields.branch, 'branch')
+  if (choice(branch, 'type', ['new', 'existing']) === 'new') return null
+  return requiredText(branch, 'name')
+}
+
 /**
  * Create workspace. The first message makes it, in the section of the
  * request or else in General. It has no name, as in the Worker, and the fake
- * writes no title, as local development has no title model. Its branch is
- * the login of the user, a city, and four random characters. A first message
- * that contains `fail` stands for a cloud computer that did not start: the
- * fake makes nothing, and the app keeps the draft.
+ * writes no title, as local development has no title model. A new branch is
+ * the login of the user, a city, and four random characters. A workspace on
+ * an existing branch keeps the name of that branch. A first message that
+ * contains `fail` stands for a cloud computer that did not start: the fake
+ * makes nothing, and the app keeps the draft.
  */
 function createWorkspace(
   backend: DevBackend,
@@ -68,6 +85,7 @@ function createWorkspace(
   const fields = record(body)
   const first = readFirstMessage(fields.firstMessage)
   const repositoryId = requiredText(fields, 'repositoryId')
+  const existing = existingBranch(fields)
   if (org.currentImageBuildId === null)
     throw new RouteError(
       409,
@@ -106,7 +124,7 @@ function createWorkspace(
   }
   const city = cityFor(org)
   const id = newWorkspaceId(org, city)
-  const branch = `${user.githubLogin}/${id}`
+  const branch = existing ?? `${user.githubLogin}/${id}`
   const at = backend.now()
   const workspace: Workspace = {
     id,
@@ -126,7 +144,7 @@ function createWorkspace(
   }
   org.workspaces = [workspace, ...org.workspaces]
   org.created.add(id)
-  const plan = createPlan(org.org.name, repository, branch)
+  const plan = createPlan(org.org.name, repository, branch, existing !== null)
   const start = runStart(backend, org, id, 'create', plan)
   const sessionId = backend.newId()
   const attachments = first.attachmentIds.flatMap(

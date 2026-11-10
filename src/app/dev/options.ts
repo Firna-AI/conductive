@@ -6,6 +6,7 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
+import type { DevBranchMode } from './branch-routes'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -20,6 +21,8 @@ const CONVERSATIONS = [
 ] as const satisfies readonly RecordedChatScenario[]
 
 const UPLOADS = ['wait', 'fail'] as const satisfies readonly DevUploadMode[]
+
+const BRANCHES = ['wait', 'fail'] as const satisfies readonly DevBranchMode[]
 
 const BANNERS = [
   'none',
@@ -69,6 +72,8 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   opens, as a sandbox does that stops while its workspace is open.
  * - `upload=wait|fail`: each file upload never ends, or the first upload of
  *   each file name fails once, so Try again works.
+ * - `branches=wait|fail`: each read of the branch picker never ends, or the
+ *   first read fails once, so Try again works.
  * - `shareSave=fail`: each change of the share setting of an agent login
  *   fails, so the account shows that the change was not saved.
  * - `waiting=1`: the user is Sam Okafor, who waits for app access, with a
@@ -99,6 +104,8 @@ export interface DevOptions {
   stopAfterMs: number | null
   /** What each file upload does. */
   upload: DevUploadMode
+  /** What each read of the branch picker does. */
+  branches: DevBranchMode
   shareSaveFails: boolean
   /** The user waits for app access, with a verified email or none. */
   waiting: 'verified' | 'none' | null
@@ -145,6 +152,7 @@ export function readDevOptions(search: string): DevOptions {
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
     upload: pick(params, 'upload', UPLOADS) ?? 'ready',
+    branches: pick(params, 'branches', BRANCHES) ?? 'ready',
     shareSaveFails: params.get('shareSave') === 'fail',
     waiting,
     invited: params.get('invited') === '1',

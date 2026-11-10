@@ -1,0 +1,25 @@
+/*
+ * The quiet link of the branch line opens the picker, so it is a button
+ * with the look of the link of the mockups: no box, the font of the line,
+ * and a line under it only on hover.
+ */
+.link {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  border-radius: var(--ui-radius-sm);
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}

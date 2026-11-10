@@ -1149,14 +1149,40 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Build the quiet branch control on the page and in the desktop
-      dialog. Keep the current choice and draft when the picker opens.
-- [ ] Build the search, loading, failure, and no-match states. Keep New
+- [x] Build the quiet branch control on the page and in the desktop
+      dialog. Keep the current choice and draft when the picker opens. Branch: `conductor/import-from-conductor-branch-picker-ui`.
+- [x] Build the search, loading, failure, and no-match states. Keep New
       branch available. Change the first-message helper so it does not
-      promise a new branch after an existing branch was chosen.
-- [ ] Build the fork row and chosen state that decision 15 requires.
-- [ ] Add the web app tests, as the `testing` skill says.
-- [ ] Update `src/app/README.md`.
+      promise a new branch after an existing branch was chosen. Branch: `conductor/import-from-conductor-branch-picker-ui`.
+- [x] Build the fork row and chosen state that decision 15 requires. Branch: `conductor/import-from-conductor-branch-picker-ui`.
+- [x] Add the web app tests, as the `testing` skill says. Branch: `conductor/import-from-conductor-branch-picker-ui`.
+- [x] Update `src/app/README.md`. Branch: `conductor/import-from-conductor-branch-picker-ui`.
+
+Agent calls, 10 November 2026:
+
+- Use Show more for paging, as the existing lists do. A failed later page
+  keeps the loaded rows and offers Try again.
+- Search after the existing 300 ms pause, or at Enter. Enter in the search
+  sends no message. The form keeps its search and rows across a picker
+  close, while a close stops pending search and paging work.
+- Focus the search on a computer and the checked row in a phone sheet.
+  Show more focuses the first added row. This keeps keyboard use clear
+  and keeps the phone keyboard from covering the initial list.
+- Keep the native create request unchanged for New branch. Use the
+  existing API fields for all row details, with no invented branch age or
+  fork name.
+- Capture the New workspace dialog opener once through the existing
+  focus callback. This preserves the opener when development effect
+  replay lets the message editor take the focus again.
+- Verify that development-only focus case in Chrome. The DOM test runner
+  does not reproduce the editor's focus timing. Keep the browser proof
+  as evidence within the approved scope, without a new browser gate.
+- Fit the desktop picker to the visible window before focus moves into
+  it. Keep its wide-window placement, shift left only when needed, and
+  let the rows scroll in the available height. This keeps the whole
+  picker reachable at the narrow desktop boundary and after resizing.
+
+Verification evidence: `.context/import-from-conductor/milestone-7/final-report.md`.
 
 ## Milestone 8: Import screens and imported workspaces
 

@@ -25,7 +25,13 @@ pull request bar, and the owner picker. A host can give its own parts, as
   upload keeps running, and with `?upload=fail` the first upload of the
   page fails once, so Try again works. `?sent=<percent>` makes the dev
   fixture `dev/progress-fixture.ts` report that share of each file as
-  sent, so `?upload=wait&sent=64` shows the measured state. Create org of the dev fake
+  sent, so `?upload=wait&sent=64` shows the measured state.
+  `dev/branch-routes.ts` gives each chosen repository the branches and the
+  open pull requests of the mockups, four to a page, with the search of
+  the Worker. With `?branches=wait` each read of the branch picker keeps
+  loading, and with `?branches=fail` the first read fails once, so Try
+  again works. A create on an existing branch keeps the name of that
+  branch, and its start steps check that branch out. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
   stay through rename, delete, and restore. Settings changes during the
@@ -155,6 +161,46 @@ the account and Get started, sign-in, invitations, orgs, panels and
 layers, the command palette, the focus, saved drafts, New workspace as a page or a dialog,
 with the send key that every composer shares, and the waitlist.
 
+## The branch of a new workspace
+
+[The choice of the branch](../../docs/protocol/continue-a-branch.md#the-choice-of-the-branch)
+states the requirements.
+
+- The page shows the branch on a line under its repository picker, with
+  Use an existing branch, or Change after a choice. The dialog shows a
+  quiet picker beside its repository picker. Both use `useBranchPicker`
+  of `../shell/new-workspace/useBranchPicker.tsx`, with `BranchLine` and
+  `BranchControl` of `BranchChoice.tsx`, and `BranchMenu.tsx` draws the
+  picker.
+- New branch is the default. `Draft.branch` of `new-workspace-model.ts`
+  keeps the chosen row, so the page and the dialog of one draft show the
+  same choice, and a close or a failed create keeps it. `chooseBranch`
+  also keeps the repository of the row. Another repository, and a create
+  that the server accepts, start a new branch again. A create on New
+  branch names no branch, and Try again sends the same choice.
+- `BranchList` of `branch-list.ts` reads the list route of the Worker, at
+  `repositoryBranchesPath`, through the services of the org, so a refusal
+  of a suspended org marks the org. `api/read-workspace-branches.ts` reads
+  each page. A search runs after a pause of 300 ms, or at Enter, which
+  sends no message. The list follows the cursor of a page that a search
+  leaves empty before it says that nothing matches. Show more loads the
+  next page.
+- The list belongs to the form. It keeps its search and its rows while the
+  picker closes and opens again, and a new form reads them again. A close
+  stops the pause and each read, and an answer after a close, another
+  search, or another repository changes nothing.
+- The server leaves out the default branch and gives the availability of
+  each pull request. `branch-options.ts` holds the rules of a row that the
+  draft and the picker share. A pull request whose branch is in another
+  repository is a row that is off, with Open on GitHub.
+- On a computer the picker hangs below its control, and `within-window.ts`
+  keeps it inside the window: it moves left and caps its height as the
+  window needs. The search field takes the focus, and the arrow keys move
+  from it down the rows. Escape and a press outside close only the picker,
+  and the focus goes back to its control. Show more gives the focus to the
+  first row of its page. A phone shows the picker in a sheet, which gives
+  the focus to the checked row.
+
 ## Rules for this code
 
 - A screen reads data only through a model and `useStore`. A model sends the
@@ -211,6 +257,9 @@ mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
 clicks, types, and lets the answers of the fake API settle.
 `../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
 for the tests of New workspace as a page or a dialog, and of its send key.
+`../shell/new-workspace/branch-test-kit.ts` serves the branch rows of the
+mockups for those tabs, and reads the rows of the open branch picker as a
+person meets them.
 
 ## Key code
 
