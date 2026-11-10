@@ -10,7 +10,7 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
@@ -30,11 +30,26 @@ Leave keeps the existing last-active-admin rule and native owner-change maintena
   `CONDUCTIVE_DEFAULT_CHOICE`, as
   [Deployment inputs](../../docs/deployment.md#models) says. A missing or
   invalid value gives a 503 on its own route only.
-- An account reply reads `user_preferences` and the records of the agent
+- An account reply reads `user_preferences`, `user_shortcuts`, and the records of the agent
   logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- `PUT /api/account/shortcuts` takes `SaveShortcutsRequest` and returns
+  `SaveShortcutsResponse` from the shared shortcut contracts. The shared
+  reader checks the whole request before any write. A contract error
+  returns HTTP 400 with `invalid_input` and the reader's message.
+  `shortcuts-data.ts` batches the changes and the reply's read in one D1
+  transaction. Null keys delete a row. Empty keys keep an empty override.
+  The account's `shortcuts` field carries both keyboards and skips retired
+  commands. The shared reply reader drops unreadable or fixed stored keys.
+  It preserves valid keys in order and keeps empty overrides. A change
+  that loses every key falls back to defaults. Each unreadable stored row,
+  including bad JSON, is skipped without blocking the account or save reply.
+  The Worker logs fixed warning text when it skips unreadable data.
+  The foreign key deletes these rows
+  with their user. [Storage](../../docs/protocol/keyboard-shortcuts.md#storage)
+  gives the requirements.
 - A new login or a change of kind sets `noReuse` to true for a Claude
   subscription token and false for an API key. Replacing a secret of the
   same kind keeps its preference. A `PATCH` changes only that login's
@@ -119,10 +134,15 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 
 - `boot.test.ts` checks the boot routes, the saved preferences, the
   encrypted logins, and a missing model list. Two users save different
-  defaults, New workspace views, and logins, both with a Claude login.
+  defaults, New workspace views, shortcut changes, and logins, both with a Claude login.
   After each save and a delete, each reads only their own account and
   Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
+  `boot-account-isolation.test-support.ts` holds its two-user scenario.
+- `shortcuts.test.ts` checks ordered saves, empty overrides, reset by row
+  deletion, separate keyboards, rejected batches, fixed keys, and retired
+  commands in account and save replies. Its stored-data cases also check
+  recovery from unreadable keys and JSON without losing valid keys.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
 - `agent-login-reuse.test.ts` checks the login-kind defaults, the private
@@ -165,6 +185,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [`get-started-data.ts`](get-started-data.ts), and
   [`models.ts`](models.ts): the account, its logins, Get started, and the
   model variables.
+- [`shortcuts-data.ts`](shortcuts-data.ts): account shortcut reads and
+  atomic batch saves, checked with the shared shortcut readers.
 - [`get-started-github.ts`](get-started-github.ts):
   `getStartedGitHubComplete`, the one owner of the `github-app` step.
 - [`shell.ts`](shell.ts) and [`shell-data.ts`](shell-data.ts): the lists of

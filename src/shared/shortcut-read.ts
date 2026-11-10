@@ -44,17 +44,19 @@ function list(value: unknown, limit = Infinity): unknown[] {
   return value
 }
 
+function keyOf(value: unknown, keyboard: ShortcutKeyboard): ShortcutKeyText {
+  const key = readShortcutKeyText(value)
+  if (isFixedShortcut(key, keyboard)) {
+    throw new ShortcutContractError('Choose a key that is not fixed.')
+  }
+  return key
+}
+
 function keysOf(value: unknown, keyboard: ShortcutKeyboard): ShortcutKeyText[] {
   if (!Array.isArray(value) || value.length > SHORTCUT_KEYS_LIMIT) {
     throw new ShortcutContractError('Choose at most four keys for a command.')
   }
-  return value.map((value) => {
-    const key = readShortcutKeyText(value)
-    if (isFixedShortcut(key, keyboard)) {
-      throw new ShortcutContractError('Choose a key that is not fixed.')
-    }
-    return key
-  })
+  return value.map((value) => keyOf(value, keyboard))
 }
 
 /** A write validates the whole batch before its caller can save anything. */
@@ -81,7 +83,17 @@ function readChanges(
     const change = record(value)
     // An older stored command can outlive its entry in the current app.
     if (!isShortcutCommandId(change.command)) return []
-    return [{ command: change.command, keys: keysOf(change.keys, keyboard) }]
+    const storedKeys = list(change.keys, SHORTCUT_KEYS_LIMIT)
+    const keys = storedKeys.flatMap((value) => {
+      try {
+        return [keyOf(value, keyboard)]
+      } catch (error) {
+        if (error instanceof ShortcutContractError) return []
+        throw error
+      }
+    })
+    if (storedKeys.length > 0 && keys.length === 0) return []
+    return [{ command: change.command, keys }]
   })
 }
 

@@ -1011,16 +1011,22 @@ Depends on: 2, 3. Agent call, 2026-11-10: the Worker checks each command
 and each key with the shared ids and key text of Milestone 3, so it waits
 for them.
 
-- [ ] Add the migration of the shortcut table, with a free prefix after
+- [x] Add the migration of the shortcut table, with a free prefix after
       the newest migration on `main`, and its line in
       `migrations/README.md`.
-- [ ] Add the write route and the changes in the account reply. Check the
+- [x] Add the write route and the changes in the account reply. Check the
       commands, the keys, and the sizes.
-- [ ] Add the route to the dev fake routes and to the test fakes.
-- [ ] Add a case to the existing account isolation test: one person's
+- [x] Add the route to the dev fake routes and to the test fakes.
+- [x] Add a case to the existing account isolation test: one person's
       changes never reach another person's reply.
-- [ ] Worker tests: a list with one wrong change saves nothing, and a
-      fixed key is rejected.
+- [x] Worker tests: a list with one wrong change saves nothing, and a
+      fixed key is rejected. Evidence:
+      `.context/keyboard-shortcuts/reports/m4-non-ui.md`.
+- [x] Agent call, 2026-11-10, from the review of the milestone: a stored
+      key that a later version cannot read, or that the fixed list now
+      holds, is dropped from the account reply with a Worker warning, and
+      a stored change that loses every key falls back to the defaults.
+      Reason: graceful handling; a stale row must not break the account.
 
 ## Milestone 5: Keys in the app
 

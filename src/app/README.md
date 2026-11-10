@@ -84,6 +84,12 @@ The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
 Workspace readers keep the number and link that the Worker supplies.
 
+The development fake saves shortcut batches through `dev/shortcut-routes.ts`.
+It checks the whole batch with the shared reader before it changes state.
+It keeps each keyboard separate, preserves empty key lists, and removes
+an override when the request sends null keys.
+The next account read returns both keyboards.
+
 ## Composition
 
 `App` in `src/App.tsx` takes three props:
@@ -222,6 +228,9 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. `api/read-*.ts`: the readers.
+  [api/read-core.ts](api/read-core.ts) reads both shortcut keyboards with
+  the shared reply reader. A malformed account structure remains an
+  `invalid_response` error from the API client.
 - `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
   store over the event source of the app, with the reconnect rules of
   [Data lifecycle](data-lifecycle.md).

@@ -127,6 +127,7 @@ export async function createHarness() {
           'org_deletion_workspaces',
           'org_deletions',
           'user_preferences',
+          'user_shortcuts',
           'agent_logins',
           'preview_hostnames',
           'workspace_views',

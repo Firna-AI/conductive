@@ -123,7 +123,7 @@ test('refuses fixed menu and text keys across hosts and both other systems', () 
   ).toEqual([{ command: 'model-picker', keys: ['Alt+Shift+ArrowUp'] }])
 })
 
-test('skips retired stored commands while preserving confirmed empty overrides', () => {
+test('skips retired commands and unreadable stored keys while preserving confirmed empty overrides', () => {
   expect(
     readSaveShortcutsResponse({
       keyboard: 'mac',
@@ -135,6 +135,30 @@ test('skips retired stored commands while preserving confirmed empty overrides',
   ).toEqual({
     keyboard: 'mac',
     changes: [{ command: 'new-session', keys: [] }],
+  })
+  const stored = [
+    {
+      command: 'command-palette',
+      keys: ['Meta+P', 'Meta+R', 'not a current key', 'Ctrl+Alt+Meta+P'],
+    },
+    { command: 'model-picker', keys: ['Meta+R', 'not a current key'] },
+    { command: 'new-session', keys: [] },
+  ]
+  const expected = [
+    { command: 'command-palette', keys: ['Meta+P', 'Ctrl+Alt+Meta+P'] },
+    { command: 'new-session', keys: [] },
+  ]
+  const reply = { keyboard: 'mac', changes: stored }
+  expect(() => readSaveShortcutsResponse(reply)).not.toThrow()
+  expect(readSaveShortcutsResponse(reply)).toEqual({
+    keyboard: 'mac',
+    changes: expected,
+  })
+  const preferences = { mac: stored, other: [] }
+  expect(() => readShortcutPreferences(preferences)).not.toThrow()
+  expect(readShortcutPreferences(preferences)).toEqual({
+    mac: expected,
+    other: [],
   })
   expect(isShortcutCommandId('go-to-desktop')).toBe(false)
   expect(isShortcutCommandId('workspace-9')).toBe(true)

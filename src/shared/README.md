@@ -152,8 +152,12 @@ The git credential payload is not defined yet.
   supply the same rules to the recorder and the Worker.
 - [Shortcut contracts](shortcuts.ts) define account overrides and batch
   saves. Empty keys remove all bindings. Null in a save restores defaults.
-  [Shortcut readers](shortcut-read.ts) check complete batches and replies.
-  The account response does not carry these contracts yet.
+  [Shortcut readers](shortcut-read.ts) check each save as a complete batch.
+  Reply readers drop unreadable or fixed keys and keep the other keys in order.
+  A change that loses every key falls back to defaults. An empty stored list
+  still removes every key.
+  `AccountResponse.shortcuts` carries both keyboards.
+  `ACCOUNT_PATHS.shortcuts` names the batch save route.
 
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.

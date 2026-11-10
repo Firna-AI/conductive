@@ -74,6 +74,14 @@ and body for stable delivery retries. A missing verified email saves the
 disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
 owns email delivery and code management.
 
+`202611101200_shortcuts.sql` adds `user_shortcuts`.
+Each row holds one account's changed command for one keyboard, with its
+ordered keys as JSON. An empty list keeps a command without keys.
+The primary key keeps each account, keyboard, and command separate.
+Deleting the user deletes these rows through the foreign key.
+[Keyboard shortcuts](../docs/protocol/keyboard-shortcuts.md#storage)
+states the storage rules.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

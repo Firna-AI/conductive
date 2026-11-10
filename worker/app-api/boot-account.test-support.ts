@@ -10,6 +10,7 @@ import {
 } from '../../src/shared/account'
 import type { AgentChoice } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
+import type { SaveShortcutsRequest } from '../../src/shared/shortcuts'
 import { readAccount } from '../../src/app/api/read-core'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 
@@ -79,6 +80,7 @@ export function isolationAccountStates(
     operator: false,
     defaultChoice: choice,
     newWorkspaceView: 'page',
+    shortcuts: { mac: [], other: [] },
     githubAppUrl: harnessGitHubAppUrl,
     agentLogins: noLogins,
     agentLoginComplete: false,
@@ -87,6 +89,7 @@ export function isolationAccountStates(
     operator: false,
     defaultChoice: choice,
     newWorkspaceView: 'page',
+    shortcuts: { mac: [], other: [] },
     githubAppUrl: harnessGitHubAppUrl,
     agentLogins: firstLogins,
     agentLoginComplete: true,
@@ -99,6 +102,7 @@ export function isolationAccountStates(
     operator: false,
     defaultChoice: choice,
     newWorkspaceView: 'page',
+    shortcuts: { mac: [], other: [] },
     githubAppUrl: harnessGitHubAppUrl,
     agentLogins: otherClaudeLogin,
     agentLoginComplete: true,
@@ -122,10 +126,14 @@ export async function expectAccountState(
 ): Promise<void> {
   const response = await harness.request(ACCOUNT_PATHS.account, cookie)
   expect(response.status).toBe(200)
-  const { user, ...account } = readAccount(await response.json())
+  const body: unknown = await response.json()
+  const { user } = readAccount(body)
   const { agentLoginComplete, ...expectedAccount } = expected
   expect(user.githubLogin).toBe(profile.githubLogin)
-  expect(account, `${profile.githubLogin} account`).toEqual(expectedAccount)
+  expect(body, `${profile.githubLogin} account`).toEqual({
+    user,
+    ...expectedAccount,
+  })
   const started = await harness.request(GET_STARTED_PATH, cookie)
   expect(started.status).toBe(200)
   expect(await started.json(), `${profile.githubLogin} Get started`).toEqual({
@@ -143,7 +151,10 @@ export async function putAccountValue(
   cookie: string,
   path: string,
   body:
-    SaveAgentLoginRequest | SetDefaultModelRequest | SetNewWorkspaceViewRequest,
+    | SaveAgentLoginRequest
+    | SetDefaultModelRequest
+    | SetNewWorkspaceViewRequest
+    | SaveShortcutsRequest,
 ): Promise<void> {
   const response = await harness.request(path, cookie, {
     method: 'PUT',

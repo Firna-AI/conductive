@@ -19,6 +19,8 @@ import type { MessageSender } from '../../shared/messages'
 import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
+import { ShortcutContractError } from '../../shared/shortcut-key'
+import { readShortcutPreferences } from '../../shared/shortcut-read'
 import { getStartedOrder } from '../get-started'
 import {
   choice,
@@ -28,6 +30,7 @@ import {
   maybeNested,
   maybeText,
   nested,
+  ParseError,
   record,
   text,
 } from './parse'
@@ -144,12 +147,23 @@ export function readLogin(value: unknown): AgentLoginStatus {
   }
 }
 
+function readShortcuts(value: unknown) {
+  try {
+    return readShortcutPreferences(value)
+  } catch (error) {
+    if (error instanceof ShortcutContractError)
+      throw new ParseError(error.message)
+    throw error
+  }
+}
+
 export function readAccount(value: unknown): AccountResponse {
   const account = record(value, 'account')
   return {
     user: nested(account, 'user', readUser),
     defaultChoice: nested(account, 'defaultChoice', readChoice),
     newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
+    shortcuts: nested(account, 'shortcuts', readShortcuts),
     agentLogins: items(account, 'agentLogins', readLogin),
     operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),

@@ -57,6 +57,9 @@ mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
 Writes return recorded replies. They do not change backend state.
+The account fixture includes empty shortcut changes for both keyboards.
+The recorded shortcut save answers for the Mac keyboard.
+Override that reply to test another keyboard or saved changes.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
 Set the next reply with `server.json(method, path, body, status)`.
