@@ -29,7 +29,7 @@
   - **B.** Find why a step can run without due work, and make `actor.advance()` wait for the work that the create queues. Effort: Medium.
 - **Left out:** A retry, a sleep, a skip, or a longer time limit, because the `testing` skill does not allow them without the user, and they hide the cause. Change nothing, because the gate then fails now and then.
 - **Wider fix:** B, because the same step counts drive the other lifecycle tests of the backend fixture.
-- **Previous examples:** `plans/follow-ups/disk-retention-stale-stop-test-flake.md` and `plans/follow-ups/restore-watch-test-flake.md`, two other lifecycle tests of the backend fixture that failed in CI of the same branch and passed on a rerun.
-- **Related:** `plans/follow-ups/disk-retention-stale-stop-test-flake.md` and `plans/follow-ups/restore-watch-test-flake.md` may share a cause in the backend fixture. One fix in the fixture can close all three.
+- **Previous examples:** `plans/follow-ups/disk-retention-stale-stop-test-flake.md` and `plans/follow-ups/tests-fail-under-load.md`, two other lifecycle tests of the backend fixture that failed in CI of the same branch and passed on a rerun.
+- **Related:** `plans/follow-ups/disk-retention-stale-stop-test-flake.md` and `plans/follow-ups/tests-fail-under-load.md` may share a cause in the backend fixture. One fix in the fixture can close all three.
 - **Recommendation:** B. It removes the dependence on machine speed for every test that counts steps.
 - **Action:** fix after merge, apply B, because the branch that saw the failure changed no lifecycle code, and one fix in a separate branch reaches every open branch.

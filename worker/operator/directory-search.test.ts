@@ -120,6 +120,27 @@ it('finds orgs by each exact resource key and literal name text, including close
     ).toEqual(test.id === null ? [] : [{ id: test.id, match: test.match }])
     expect(result.nextCursor, test.q).toBeNull()
   }
+  await harness.env.DB.batch([
+    harness.env.DB.prepare('DELETE FROM lifecycle_sandbox_cleanup'),
+    harness.env.DB.prepare('DELETE FROM workspaces'),
+    harness.env.DB.prepare('DELETE FROM image_builds'),
+    harness.env.DB.prepare('UPDATE computer_ledger SET deleted_at = ?').bind(
+      TEST_TIME,
+    ),
+  ])
+  for (const q of [
+    'workspace-computer',
+    'build-computer',
+    'cleanup-computer',
+    'listener-computer',
+    'terminal-computer',
+  ]) {
+    const result = await orgList(harness, cookie, { q })
+    expect(
+      result.orgs.map((org) => ({ id: org.id, match: org.match })),
+      q,
+    ).toEqual([{ id: 'target-org', match: 'cloud-computer-id' }])
+  }
 })
 
 it('finds users by login, name, and exact numeric GitHub ID without treating LIKE symbols as wildcards', async () => {
