@@ -14,7 +14,7 @@ import {
 import { allocateSoftwareImage, AttemptChanged } from './resources'
 import type { SoftwareImage, SoftwareImageRuntime } from './types'
 
-export async function cleanupSoftwareImage(
+async function cleanupSoftwareImage(
   runtime: SoftwareImageRuntime,
   image: SoftwareImage,
 ): Promise<void> {

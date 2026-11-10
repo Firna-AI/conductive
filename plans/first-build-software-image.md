@@ -393,9 +393,10 @@ Depends on: 3
 
 Depends on: 1, 2, 3, 4, 5, 6, 7
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
       Run each new asynchronous test 10 times, as the `testing` skill
-      says.
+      says. Evidence: `.context/first-build-software-image/gate.log` and
+      `.context/first-build-software-image/repeat-proof.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

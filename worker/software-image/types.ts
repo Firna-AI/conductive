@@ -1,7 +1,7 @@
 import type { AppDependencies, AppEnv } from '../env'
 
-export type SoftwareImageState = 'building' | 'ready' | 'failed' | 'deleting'
-export type SoftwareImagePhase =
+type SoftwareImageState = 'building' | 'ready' | 'failed' | 'deleting'
+type SoftwareImagePhase =
   | 'create'
   | 'allocating'
   | 'tools'
