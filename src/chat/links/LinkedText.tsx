@@ -42,8 +42,8 @@ function LinkChip(props: { target: LinkTarget }) {
 
 /**
  * A file or a folder in a sent message: a link of the app to the file, or
- * to All files with the folder open, as a press in All files opens them
- *. A click with a modifier key stays with the browser.
+ * to All files with the folder open, as a press in All files opens them.
+ * A click with a modifier key stays with the browser.
  */
 function FileLink(props: { entry: FileEntry; source: string }) {
   const mentions = useChatMentions()

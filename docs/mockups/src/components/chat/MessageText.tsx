@@ -103,10 +103,9 @@ export function holdsChips(
  * of the org and each mention of the tree as a chip. A chip is one unit of
  * the text, which the caret steps over and Backspace removes whole, so it
  * is not editable inside the editable field. Each chip starts with the
- * cell of its icon, which a pointer turns into a × that removes it
- *. In the app a press on the name of a file chip opens the
- * file. A view has no pointer, so `pointer` draws it over the icon of the
- * first chip.
+ * cell of its icon, which a pointer turns into a × that removes it. In
+ * the app a press on the name of a file chip opens the file. A view has no
+ * pointer, so `pointer` draws it over the icon of the first chip.
  */
 export function DraftText(props: { text: string; pointer?: boolean }) {
   const rows = useChatWorkspaces()

@@ -33,9 +33,9 @@ const linkStates = [
 /**
  * The chip in the field: the pure chip of the mockups, with the current
  * name and state of its workspace. It opens nothing. The × of its state
- * mark removes it as one step of undo, while the field takes changes
- *. Until the field turns a chip whose workspace left the
- * list into text, it shows the link.
+ * mark removes it as one step of undo, while the field takes changes.
+ * Until the field turns a chip whose workspace left the list into text, it
+ * shows the link.
  */
 function FieldChip(props: { source: string; href: string; nodeKey: NodeKey }) {
   const [editor] = useLexicalComposerContext()
