@@ -86,6 +86,9 @@ not have, and the files that the cloud computer could not read.
   list with plain text, such as "47 more files". A stopped turn shows no
   file list, so its line ends with the count, such as
   "You stopped the agent · 5 changed files not listed".
+  The user kept this rule on 10 November 2026: Changes shows the changed
+  files of the branch. A file row above the stopped line was rejected, and so
+  was a count that opens the list.
   `LostLine` draws a refused runner event as one centred, muted line at its
   place, which names the lost data and why, such as "A tool update was lost
   because it was too large". It never shows the lost data, and a phone wraps

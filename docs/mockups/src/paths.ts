@@ -115,6 +115,10 @@ export const paths = {
     'app/org-settings/cloud-computer/first-build/failed',
   firstBuildComputerNoBuild:
     'app/org-settings/cloud-computer/first-build/no-build',
+  repositoriesChangedFailed:
+    'app/org-settings/cloud-computer/repositories-changed/build-failed',
+  repositoriesChangedNoBuild:
+    'app/org-settings/cloud-computer/repositories-changed/no-build',
   members: 'app/org-settings/members',
   removeMember: 'app/org-settings/members/remove',
   deleteOrg: 'app/org-settings/delete',

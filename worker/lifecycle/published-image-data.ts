@@ -30,16 +30,29 @@ export async function imageAdmissionError(
   db: D1Database,
   orgId: string,
   code: ImageAdmissionFailure,
+  repositoryId?: string,
 ): Promise<HttpError> {
-  return code === 'image_required'
-    ? new HttpError(
-        409,
-        code,
-        (await runningBuild(db, orgId))
-          ? 'The cloud computer is still being prepared.'
-          : 'The cloud computer needs a build. Ask an org admin to build it.',
-      )
-    : new HttpError(404, code, 'The repository is not available.')
+  if (code === 'image_required')
+    return new HttpError(
+      409,
+      code,
+      (await runningBuild(db, orgId))
+        ? 'The cloud computer is still being prepared.'
+        : 'The cloud computer needs a build. Ask an org admin to build it.',
+    )
+  const selected = await db
+    .prepare(
+      'SELECT id FROM repositories WHERE org_id = ? AND id = ? AND selected = 1',
+    )
+    .bind(orgId, repositoryId ?? null)
+    .first<{ id: string }>()
+  return new HttpError(
+    404,
+    code,
+    selected
+      ? 'The repository is ready after the next build.'
+      : 'The repository is not available.',
+  )
 }
 
 export async function readImageRepositories(
@@ -96,7 +109,12 @@ export async function readCreationImage(
     (entry) => entry.id === repositoryId && entry.orgId === orgId,
   )
   if (!repository)
-    throw await imageAdmissionError(db, orgId, 'repository_not_found')
+    throw await imageAdmissionError(
+      db,
+      orgId,
+      'repository_not_found',
+      repositoryId,
+    )
   return {
     ...image,
     startupScript: readSavedScript(image.startupScript),

@@ -1,4 +1,5 @@
 import { ChevronRight, CircleAlert } from 'lucide-react'
+import { changeWaits } from '../app/repository-changes'
 import type {
   BuildLogEvent,
   BuildsResponse,
@@ -90,8 +91,9 @@ function Log(props: { log: readonly BuildLogEvent[] | null }) {
  * its result, the log of a build that runs or failed, and the history. A
  * refresh only fetches commits, so the card counts the runs of the install
  * script, as the tab of an admin does. A failed build leaves the last good
- * build in use. A member who is not an admin gets no actions here
- * (decision 57).
+ * build in use. The history stays closed while a saved change of the
+ * install script or of the repositories waits for a build. A member who is
+ * not an admin gets no actions here, because only an admin builds.
  */
 export function BuildCard(props: {
   builds: BuildsResponse
@@ -125,7 +127,7 @@ export function BuildCard(props: {
       {finished.length > 0 ? (
         <details
           className={styles.history}
-          open={newest?.state === 'succeeded'}
+          open={newest?.state === 'succeeded' && !changeWaits(props.builds)}
         >
           <summary className={styles.summary}>
             <ChevronRight aria-hidden className={styles.chevron} size={14} />

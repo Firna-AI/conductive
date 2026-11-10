@@ -13,20 +13,6 @@ import { Store, type Loadable, type Readable } from './store'
 
 export type ScriptKind = 'installScript' | 'startupScript'
 
-/** The newest build at one look: its ID and state, and whether it ended. */
-interface Newest {
-  key: string
-  ended: boolean
-}
-
-/** The newest build, or `null` while the builds load. */
-function newestOf(builds: Loadable<BuildsResponse>): Newest | null {
-  if (builds.state !== 'ready') return null
-  const build = latestBuild(builds.value)
-  if (!build) return { key: '', ended: false }
-  return { key: `${build.id} ${build.state}`, ended: build.state !== 'running' }
-}
-
 /** The build whose log the tab shows: the newest, while it runs or failed. */
 function logTarget(builds: BuildsResponse): ImageBuild | undefined {
   const latest = latestBuild(builds)
@@ -58,8 +44,6 @@ export class ComputerModel {
   /** `stop` counts one up, so an older request knows that its tab closed. */
   private generation = 0
   private following: (() => void)[] = []
-  /** The newest build at the last look, or `null` before the builds load. */
-  private newest: Newest | null = null
   private logFollowing: Following | null = null
 
   constructor(org: OrgModel, delay: Delay = org.services.delay) {
@@ -79,16 +63,16 @@ export class ComputerModel {
 
   /**
    * The tab shows. It reads the settings, and it follows the builds of the
-   * org and the log of the newest build until `stop`. When the newest
-   * build ends, by any path, the settings read again, because the server
-   * changes them at a build: a success clears `needsBuild`.
+   * org and the log of the newest build until `stop`. The builds, not the
+   * settings, say which saved changes the org image lacks, such as a
+   * changed install script. They read again while a build runs and at its
+   * end, so the end of a build reads no settings.
    */
   start(): void {
     this.unfollow()
-    this.newest = newestOf(this.org.builds.get())
     this.following = [
       this.org.watch('builds'),
-      this.org.builds.subscribe(() => this.followBuilds()),
+      this.org.builds.subscribe(() => this.followLog()),
     ]
     this.followLog()
     void this.load()
@@ -102,15 +86,6 @@ export class ComputerModel {
   load(): Promise<void> {
     const run = this.generation
     return this.saved.read(() => run === this.generation)
-  }
-
-  private followBuilds(): void {
-    this.followLog()
-    const newest = newestOf(this.org.builds.get())
-    if (newest?.key === this.newest?.key) return
-    const known = this.newest !== null
-    this.newest = newest
-    if (known && newest?.ended) void this.load()
   }
 
   /**
@@ -163,12 +138,18 @@ export class ComputerModel {
     )
   }
 
-  saveScript(kind: ScriptKind, script: string): Promise<void> {
-    return this.write(
-      kind === 'installScript'
-        ? { installScript: script }
-        : { startupScript: script },
-    )
+  /**
+   * Saves a script. A save of the install script reads the builds again,
+   * because they say whether the org image ran the saved script, so the
+   * notice of a changed install script shows at once.
+   */
+  async saveScript(kind: ScriptKind, script: string): Promise<void> {
+    if (kind === 'startupScript') {
+      await this.write({ startupScript: script })
+      return
+    }
+    await this.write({ installScript: script })
+    void this.org.reload('builds')
   }
 
   /**

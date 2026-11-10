@@ -83,8 +83,9 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     id: 'fast-mode',
     area: 'models-and-providers',
     name: 'Fast mode',
-    status: 'considering',
-    note: 'A fast mode for supported models is under consideration.',
+    status: 'planned',
+    note: 'A Fast switch in the model menu is planned for supported models.',
+    due: null,
   },
   {
     id: 'default-models',

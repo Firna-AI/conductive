@@ -4721,7 +4721,7 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
 - The preview proxy sets `Referrer-Policy: no-referrer` on each response.
   Reason: the default policy sends the preview origin, which is the
   credential, to other sites.
-- Each preview has an "Open in new tab" link. Reason: Safari blocks the
+- Each preview has an "Open" link to a new tab. Reason: Safari blocks the
   preview app's own cookies inside a frame.
 - The Worker asks Boat for a new desktop URL on each page load. The URL
   works for 10 minutes and carries its token in the fragment.

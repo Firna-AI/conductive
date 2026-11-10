@@ -6,7 +6,15 @@ export const terminalScriptsAndPreviewsFeatures: readonly ParityFeature[] = [
     area: 'terminal-scripts-and-previews',
     name: 'Workspace terminal',
     status: 'available',
-    note: 'One cloud terminal keeps running through disconnects, with text selection and copying while programs use the mouse. Terminal tabs are under consideration.',
+    note: 'One cloud terminal keeps running through disconnects, with text selection and copying while programs use the mouse.',
+  },
+  {
+    id: 'terminal-tabs',
+    area: 'terminal-scripts-and-previews',
+    name: 'Terminal tabs',
+    status: 'planned',
+    note: 'Shared terminal tabs with separate shells are planned.',
+    due: null,
   },
   {
     id: 'big-terminal-mode',
@@ -55,7 +63,7 @@ export const terminalScriptsAndPreviewsFeatures: readonly ParityFeature[] = [
     area: 'terminal-scripts-and-previews',
     name: 'In-app browser',
     status: 'available',
-    note: 'Port previews open inside the app, with Open in new tab. Sending notes from the page to the agent is under consideration.',
+    note: 'Port previews open inside the app or in a browser tab. Sending notes from the page to the agent is under consideration.',
   },
   {
     id: 'spotlight-testing',
