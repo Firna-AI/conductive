@@ -10,7 +10,7 @@
   - **Marketing picture:** a still capture of a mockup screen that the public site shows. Git keeps each picture as a file under `src/marketing/pictures/`.
   - **Capture:** one run of `npm run marketing:pictures`. It opens each built mockup page in headless Chrome and writes its picture again.
 - **Background:**
-  - `npm run marketing:pictures` captures 26 marketing pictures. A person runs it after a change to a screen that a picture shows, and commits the changed pictures.
+  - `npm run marketing:pictures` makes 14 captures and writes 28 picture files, as `src/marketing/pictures.md` says. Before the Mac picture came, it wrote 26 files. A person runs it after a change to a screen that a picture shows, and commits the changed pictures.
   - Before each picture, the capture waits for `document.fonts.ready` and for the images, at `tools/marketing-pictures/page.ts:50`.
   - The capture launches `google-chrome` with `--headless=new`, `--font-render-hinting=none`, and `--force-color-profile=srgb`, at `tools/marketing-pictures/cdp.ts:140`.
   - The mockups take their monospace font from the system: `'SF Mono', ui-monospace, Menlo, 'Source Code Pro', Consolas, 'Liberation Mono', monospace`, at `docs/mockups/src/design/metrics.ts:8`. Nobody checked which of these fonts drew the digits.
@@ -19,6 +19,8 @@
   - Run 1 ended with exit 0 after 1 min 38 s. 25 of the 26 pictures were byte-identical to the committed files. `src/marketing/pictures/review-desktop-dark.webp` changed in 2,934 pixels.
   - All changed pixels were digits of monospace text: "#482" in the pull request bar, the count of the Changes tab, and the line counts of the Changes list, such as "+158 −48" and "+64". The digits stood about 1 to 2 px lower than in the committed picture.
   - Run 2 ended with exit 0 after 1 min 19 s. All 26 pictures were byte-identical to the committed files, and `git status` showed no changed picture.
+  - On 10 November 2026, another cloud sandbox with Amazon Linux 2023 and Google Chrome 157.0.8103.50 ran the capture twice. The two runs gave byte-identical files.
+  - Against the committed files, those runs changed `src/marketing/pictures/hero-desktop-light.webp` in 36,671 pixels, with no change of its screen. The changes were anti-aliased text, such as the monospace lines of the terminal, and a person cannot see them at the size of the site.
 - **Problem:** Two captures of the same pages on the same machine gave different pixels for one picture. The cause is unknown.
 - **Impact if no action:** A capture can change a committed picture when no screen changed. A person can then commit noise, or look for a screen change that does not exist.
 - **Root question:** How does each capture of the same page draw the same pixels?

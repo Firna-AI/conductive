@@ -15,6 +15,7 @@
   - `worker/lifecycle/runner-environment.test.ts`: `Test timed out in 15000ms`, then its worker ran out of memory and stopped with SIGABRT.
   - Two existing Git tests of the runner: `Test timed out in 5000ms`.
   Each test passed alone, and the complete gate passed twice on the same machine with no other load.
+- On 10 November 2026, the main merge into `calummoore/waitlist-global-toggle-brainstorm` ran selected tests beside type, lint, format, file-length, app-build, and mockup checks. `worker/lifecycle/disk-retention.test.ts > keeps a stopped disk through startup and stop failures without a stale stop after user open` failed with `Error: Test timed out in 15000ms.` The other 170 tests passed. Both tests of that file then passed alone with no assertion or timeout change. This branch changes neither that test nor its lifecycle implementation. The suspected source is machine load during the native fixture work.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

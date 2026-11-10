@@ -91,6 +91,7 @@ export function ToolsPart(props: {
 }) {
   const { context } = props
   const services = useOrgServices(context.org.id)
+  const { now } = useServices()
   const navigation = useToolNavigation(context)
   const connect = useTerminalConnect()
   const { org, workspace, toolEvents } = context
@@ -126,6 +127,7 @@ export function ToolsPart(props: {
       ) : null}
       {tool === 'preview' ? (
         <PreviewTool
+          now={now}
           route={navigation.preview}
           touch={touch}
           workspace={toolWorkspace}

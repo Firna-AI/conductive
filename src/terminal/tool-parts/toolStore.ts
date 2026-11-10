@@ -2,7 +2,10 @@ import type {
   WorkspaceIdentity,
   WorkspaceStore,
 } from '../../app/workspace-store'
-import type { WorkspaceEvent } from '../../shared/events'
+import type {
+  WorkspaceEvent,
+  WorkspaceEventEnvelope,
+} from '../../shared/events'
 import type { ApiFetch } from './request'
 import {
   subscribeToWorkspace,
@@ -46,6 +49,12 @@ export interface ToolDefinition<S, A> {
   initialState: S
   /** A tool without a read takes only its own actions and the events. */
   read?: ToolRead<S, A>
+  /**
+   * The action of one event of the workspace, for a tool that needs more of
+   * the envelope than its event, such as the time of the event. Without it,
+   * the reducer takes each event as it is.
+   */
+  fromEnvelope?: (envelope: WorkspaceEventEnvelope) => A | WorkspaceEvent
 }
 
 /** One connection of the store. Each `connect` makes a new one. */
@@ -116,10 +125,12 @@ export class ToolStore<S, A> implements WorkspaceStore<S> {
   connect(source: ToolSource): () => void {
     const connection: Connection = { source }
     this.connection = connection
+    const { fromEnvelope } = this.tool
     const stopEvents = subscribeToWorkspace(
       { workspaceId: this.workspace.workspaceId, subscribe: source.subscribe },
-      (event) => {
-        if (this.connection === connection) this.apply(event)
+      (envelope) => {
+        if (this.connection !== connection) return
+        this.apply(fromEnvelope ? fromEnvelope(envelope) : envelope.event)
       },
     )
     this.queueRead()
