@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-10, from branch `calummoore/cloudflare-worker-error-tracking`, item 1 of the change that turns on Issues.
-- **Location:** `errorResponse` in `worker/http.ts:14`, the catch-all in `worker/application.ts:182`, and `warnWorker` in `worker/warnings.ts:21`.
+- **Location:** `errorResponse` in `worker/http.ts:14`, the catch-all in `worker/application.ts:191`, and `warnWorker` in `worker/warnings.ts:21`.
 - **Reason:** B and C trade detail against the risk of a secret in a log, so the user chooses.
 
 - **Terms:**
@@ -13,7 +13,7 @@
 - **Background:**
   - Issues records each uncaught exception, each `5xx` reply, and each error log line of the Worker. It groups them into issues on the Worker page of the Cloudflare dashboard.
   - When the Worker meets an error that it did not expect, a catch-all replies `500 internal_error` and writes no log line.
-  - `warnWorker` is the only log call of the Worker. It writes fixed text and allowlisted fields. It never copies an error message, because a message can hold a secret or a user's text, as `worker/README.md` says.
+  - `warnWorker` is the only log call of the deployed Worker. It writes fixed text and allowlisted fields. It never copies an error message, because a message can hold a secret or a user's text, as `worker/README.md` says.
   - `docs/protocol/isolation.md` says that the Boat key never goes into a log. `docs/protocol/terminal-previews-and-desktop.md` says the same of a preview grant.
   - The Issues guide of Cloudflare says to pass each caught error to `console.error()`. Its investigate page also says: "Do not add secrets, access tokens, or sensitive request content to span attributes, logs, or error messages."
   - The built Worker is not minified. Cloudflare documents source mapping only for uncaught exceptions. So logged stack lines can name the built bundle, not the TypeScript files.
