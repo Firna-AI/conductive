@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { retryMessagePath } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
+import { FakeRunner } from '../test-support/fake-runner'
 import { attachmentFixture, held } from './attachment.test-support'
 import { connectAttachmentEngine } from './attachment-engine.test-support'
 import { WORKSPACE_ID } from './harness.test-support'
@@ -32,7 +33,9 @@ it('cancels a running copy failure before the real engine starts Try again witho
   })
   const file = await fixture.upload()
   const session = await fixture.createSession()
-  const runner = await fixture.connect()
+  const runner = await fixture.connect(
+    new FakeRunner({ workspaceId: WORKSPACE_ID, protocolVersion: 2 }),
+  )
   runner.emit({ type: 'runner.ready' })
   await fixture.drain()
   const engine = await connectAttachmentEngine(fixture, runner)

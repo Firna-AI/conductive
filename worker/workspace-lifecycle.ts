@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers'
-import type { RunnerEvent } from '../src/shared/runner'
+import type { RunnerLifecycleEvent } from './lifecycle/runner-lifecycle'
 import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
@@ -11,7 +11,7 @@ import {
   type WorkspaceChatResolvers,
 } from './chat/workspace-integration'
 import { DeviceRuntime } from './devices/runtime'
-import { activeStoredTurn } from './devices/access'
+import { credentialSender } from './lifecycle/credential-sender'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type {
@@ -35,6 +35,7 @@ import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { ComputerIdentity } from './lifecycle/computer-ledger'
+import type { TurnTokenCheck } from './model-gateway/types'
 
 export class WorkspaceLifecycle
   extends DurableObject<WorkspaceCompositionEnv>
@@ -221,20 +222,17 @@ export class WorkspaceLifecycle
   }
 
   async credentialSender(turnId: string): Promise<string | null> {
-    return this.chat.runLifecycle(async () => {
-      const preparing = await this.controller.credentialSender(turnId)
-      if (preparing) return preparing
-      const state = await this.controller.readLifecycle()
-      if (!state || state.state === 'stopped' || state.state === 'archived')
-        return null
-      return (
-        (await activeStoredTurn(this.chat, state.workspaceId, turnId))
-          ?.senderId ?? null
-      )
-    })
+    return credentialSender(this.chat, this.controller, turnId)
   }
 
-  async reportRunnerLifecycle(event: RunnerEvent): Promise<void> {
+  async checkTurnToken(token: string): Promise<TurnTokenCheck> {
+    const workspaceId = await this.chat.store.workspaceId()
+    return workspaceId
+      ? this.chat.turnTokens.check(workspaceId, token)
+      : { ok: false, reason: 'turn_not_active' }
+  }
+
+  async reportRunnerLifecycle(event: RunnerLifecycleEvent): Promise<void> {
     return this.run(() => this.controller.reportRunnerLifecycle(event))
   }
 
