@@ -2,10 +2,28 @@ import app, { Workspace as ProductionWorkspace } from '../index'
 import type { ReceiverOwnership } from '../members/workspace-receiver'
 import type { AppEnv } from '../env'
 import { featureResult } from './result'
+import type {
+  WorkspaceCompositionEnv,
+  WorkspaceChatResolvers,
+} from '../chat/workspace-integration'
+import type { ConnectionScheduler } from '../security/connection-access'
 
 export class Workspace extends ProductionWorkspace {
   private suspensions = 0
   private readonly observers = new Map<number, () => void>()
+  private readonly alarmClock: { now?: number }
+
+  constructor(
+    context: DurableObjectState,
+    env: WorkspaceCompositionEnv,
+    now: () => number = Date.now,
+    resolvers: WorkspaceChatResolvers = {},
+    activitySchedule?: ConnectionScheduler,
+  ) {
+    const clock: { now?: number } = {}
+    super(context, env, () => clock.now ?? now(), resolvers, activitySchedule)
+    this.alarmClock = clock
+  }
 
   async suspendMemberLifecycle(
     ownership: ReceiverOwnership,
@@ -30,8 +48,18 @@ export class Workspace extends ProductionWorkspace {
     })
   }
 
-  advanceStartAlarm(): Promise<void> {
-    return this.alarm()
+  async advanceStartAlarm(): Promise<void> {
+    await this.alarm()
+    await this.settledAlarms()
+  }
+  async runSecurityAlarmAt(at: number): Promise<void> {
+    this.alarmClock.now = at
+    try {
+      await this.alarm()
+      await this.settledAlarms()
+    } finally {
+      delete this.alarmClock.now
+    }
   }
   async inspectFeatureState() {
     return [...(await this.ctx.storage.list()).entries()]

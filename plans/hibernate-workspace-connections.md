@@ -1,7 +1,8 @@
 # Hibernate workspace connections
 
 Status: Active. On branch `calummoore/workspace-open-error`, no pull request yet.
-This is a plan-only change. Implementation waits for approval of this plan.
+The user approved all milestones on 9 November 2026.
+Implementation is in progress.
 The pull request that completes the work deletes this plan.
 
 Conductive keeps a Durable Object for each workspace and another for each
@@ -91,6 +92,15 @@ does not clear their prefixes, reset event numbers, or alter acknowledgement rul
 Actual disconnect, process eviction with socket closure, and hibernation
 remain separate paths, with their existing recovery and cleanup semantics.
 
+Design calls, 9 November 2026: keep only trusted routing identity in attachments.
+Store public Mac metadata in chunked records to avoid attachment limits.
+Use a durable generation and retirement tombstone to preserve current authority.
+Use raw storage for native identity and security alarms only; lifecycle writes stay fenced.
+Defer regular alarm scheduling without consuming their deadlines while fenced.
+Keep pending request timers, because their requests remain active work.
+Use explicit fixture readiness, because automatic pongs do not complete queued work.
+Await socket closure and runtime shutdown together to complete native fixture cleanup.
+
 ### Access and alarms
 
 Design call, 9 November 2026: preserve the current access and liveness timing.
@@ -123,6 +133,11 @@ settings reply, an activity write, a model timeout, and an active proxy.
 Do not discard their pending promises or weaken their limits to force sleep.
 Genuine in-flight work finishes through its current completion path.
 
+Design calls, 10 November 2026: keep bounded per-tab link context in attachments.
+Keep each presented peer stable for identity-based cleanup.
+Return from native alarms before slow work; retain regular claims and security retries durably.
+Keep manual fixture readiness explicit, and clear stale regular deferral on guarded Restore.
+
 ### Tool proxy boundary
 
 Terminal and preview bridges retain their current behavior in this change.
@@ -131,6 +146,10 @@ No terminal is disconnected because a panel hides or a connection becomes idle.
 No running terminal command is sacrificed to obtain a lower duration number.
 The Mac broker remains a separate object that can sleep independently.
 Document and measure this limit instead of claiming that every open workspace sleeps.
+
+Design calls, 10 November 2026: keep runner authority and variable metadata in chunked native state.
+Store one delivery connection ID with each pending command or repair, outside its wire value.
+Restore ready file ownership directly; run token alarms outside queued chat work.
 
 ### Replacement and compatibility
 
@@ -156,13 +175,15 @@ Depends on: none
 
 Explain the new transport ownership and verify the requirements before implementation.
 
-- [ ] Read the contract owners in full, including runner token revocation and Mac command cancellation.
-- [ ] Update the chat, device, and security READMEs for native socket restoration, alarm ownership, and testing entry points.
-- [ ] Document the active terminal and preview limitation in the relevant area README.
-- [ ] Keep protocol requirements unchanged when only internal mechanics change.
+- [x] Read the contract owners in full, including runner token revocation and Mac command cancellation.
+- [x] Update the chat, device, and security READMEs for native socket restoration, alarm ownership, and testing entry points.
+- [x] Document the active terminal and preview limitation in the relevant area README.
+- [x] Keep protocol requirements unchanged when only internal mechanics change.
       Raise any new boundary choice before dependent code starts.
       If a protocol or architecture fact changes, read both legal pages in full and update restated facts.
-- [ ] Keep deferred runner liveness and preview activity decisions outside this change.
+- [x] Keep deferred runner liveness and preview activity decisions outside this change.
+
+Documentation evidence: `.context/hibernation/milestone-1-docs-report.md`.
 
 ## Milestone 2: Native lifecycle and Mac broker
 
@@ -170,14 +191,16 @@ Depends on: 1
 
 Introduce the shared native transport with the contained Mac role first.
 
-- [ ] Add trusted socket roles, bounded attachments, native event dispatch, and restoration at the workspace boundary.
-- [ ] Convert the Mac broker socket and restore its existing pairing without calling its new-connection path again.
-- [ ] Preserve durable pending commands and current connection authority across wake.
-- [ ] Add heartbeat auto-responses, timestamp-based lease freshness, and alarm-driven session checks at the preserved cadence.
-- [ ] Scope auto-responses to Mac broker objects, including after restoration.
-- [ ] Keep settings request promises, command deadlines, approvals, and replacement behavior intact.
-- [ ] Extend existing native device integration cases for wake, replacement, expired access, and command completion with the original socket.
-- [ ] Remove the Mac role's old ordinary-accept and callback handlers after its consumers move.
+- [x] Add trusted socket roles, bounded attachments, native event dispatch, and restoration at the workspace boundary.
+- [x] Convert the Mac broker socket and restore its existing pairing without calling its new-connection path again.
+- [x] Preserve durable pending commands and current connection authority across wake.
+- [x] Add heartbeat auto-responses, timestamp-based lease freshness, and alarm-driven session checks at the preserved cadence.
+- [x] Scope auto-responses to Mac broker objects, including after restoration.
+- [x] Keep settings request promises, command deadlines, approvals, and replacement behavior intact.
+- [x] Extend existing native device integration cases for wake, replacement, expired access, and command completion with the original socket.
+- [x] Remove the Mac role's old ordinary-accept and callback handlers after its consumers move.
+
+Evidence: `.context/hibernation/milestone-2-report.md`.
 
 ## Milestone 3: Browser events and access grants
 
@@ -185,14 +208,17 @@ Depends on: 2
 
 Move live browser tabs to the native lifecycle while retaining ordered delivery.
 
-- [ ] Convert browser event acceptance and restore registrations, tab identity, and grant deadlines.
-- [ ] Move browser refresh and expiry timers to shared alarm deadlines.
-- [ ] Preserve history-first admission, event ordering, duplicate prevention, and stopped or archived chat access.
-- [ ] Preserve sign-out, removal, suspension, and expiry handling before history and every live send.
-- [ ] Run security deadlines despite paused, deleted, or stale lifecycle fences, without bypassing the fences on lifecycle writes.
-- [ ] Extend the native chat integration case to deliver new events to the original browser socket after forced hibernation.
-- [ ] Extend existing access cases to cover wake with expired or revoked access, using the fixture clock and alarm controls.
-- [ ] Remove the browser role's old ordinary-accept and lifetime-timer path after all consumers move.
+- [x] Convert browser event acceptance and restore registrations, tab identity, and grant deadlines.
+- [x] Move browser refresh and expiry timers to shared alarm deadlines.
+- [x] Preserve history-first admission, event ordering, duplicate prevention, and stopped or archived chat access.
+- [x] Preserve sign-out, removal, suspension, and expiry handling before history and every live send.
+- [x] Run security deadlines despite paused, deleted, or stale lifecycle fences, without bypassing the fences on lifecycle writes.
+- [x] Retain security alarm sources while background tasks run or reset, and restore regular scheduling without a stale fence delay.
+- [x] Extend the native chat integration case to deliver new events to the original browser socket after forced hibernation.
+- [x] Extend existing access cases to cover wake with expired or revoked access, using the fixture clock and alarm controls.
+- [x] Remove the browser role's old ordinary-accept and lifetime-timer path after all consumers move.
+
+Evidence: `.context/hibernation/milestone-3-report.md`.
 
 ## Milestone 4: Runner transport and delivery
 
@@ -200,14 +226,16 @@ Depends on: 3
 
 Make runner wake transparent to the wire protocol and accepted turns.
 
-- [ ] Convert the runner socket and restore its stream, readiness, token hash, connection ID, and file channel binding.
-- [ ] Preserve delivery progress without an unbounded socket attachment or a new acknowledgement format.
-- [ ] Move runner token timers to shared alarm deadlines and keep current checks before delivery and login release.
-- [ ] Preserve runner cursor, confirmation, retry, repair, model, interrupt, and turn de-duplication behavior across wake.
-- [ ] Extend native runner integration cases for output and command delivery through the original socket after wake.
-- [ ] Verify wake does not restart a turn, resend an ended turn, lose file results, or revive a replaced runner.
-- [ ] Verify a Mac heartbeat cannot bypass runner message authorization through an inherited auto-response.
-- [ ] Remove the runner's old ordinary-accept and lifetime-timer path after all consumers move.
+- [x] Convert the runner socket and restore its stream, readiness, token hash, connection ID, and file channel binding.
+- [x] Preserve delivery progress without an unbounded socket attachment or a new acknowledgement format.
+- [x] Move runner token timers to shared alarm deadlines and keep current checks before delivery and login release.
+- [x] Preserve runner cursor, confirmation, retry, repair, model, interrupt, and turn de-duplication behavior across wake.
+- [x] Extend native runner integration cases for output and command delivery through the original socket after wake.
+- [x] Verify wake does not restart a turn, resend an ended turn, lose file results, or revive a replaced runner.
+- [x] Verify a Mac heartbeat cannot bypass runner message authorization through an inherited auto-response.
+- [x] Remove the runner's old ordinary-accept and lifetime-timer path after all consumers move.
+
+Evidence: `.context/hibernation/milestone-4-report.md`.
 
 ## Milestone 5: Combined behavior and local smoke check
 
@@ -215,12 +243,14 @@ Depends on: 4
 
 Verify the full workspace composition and the retained active-work limits.
 
-- [ ] Check every production server socket role and timer caller for a leftover old role path.
-- [ ] Verify lifecycle, access, lease, preview, and GitHub deadlines coexist in the shared alarm helper.
-- [ ] Check close and error cleanup runs once, including after wake and connection replacement.
-- [ ] Run a native smoke check with browser, runner, and Mac sockets through wake and live operations.
-- [ ] Verify terminal and preview bridges continue to work and retain their documented active duration behavior.
-- [ ] Record the allowed idle case with no active proxy or unfinished request. Do not promise a measured saving before runtime evidence exists.
+- [x] Check every production server socket role and timer caller for a leftover old role path.
+- [x] Verify lifecycle, access, lease, preview, and GitHub deadlines coexist in the shared alarm helper.
+- [x] Check close and error cleanup runs once, including after wake and connection replacement.
+- [x] Run a native smoke check with browser, runner, and Mac sockets through wake and live operations.
+- [x] Verify terminal and preview bridges continue to work and retain their documented active duration behavior.
+- [x] Record the allowed idle case with no active proxy or unfinished request. Do not promise a measured saving before runtime evidence exists.
+
+Evidence: `.context/hibernation/milestone-5-report.md`.
 
 ## Verification design
 
@@ -246,10 +276,11 @@ Native API inspection evidence is in `.context/hibernation/miniflare-api.txt`.
 
 Depends on: 5
 
-- [ ] Run targeted native device, chat, access, file, and lifecycle tests for the changed behavior.
-- [ ] Run typecheck, lint, format, file length, and export checks. Keep TypeScript files below the repository's line limit.
-- [ ] Install the root, desktop, and runner check dependencies, then run the complete `npm run check` gate.
-- [ ] Verify every relative link of changed Markdown and record native smoke and test evidence under `.context/hibernation/`.
+- [x] Run targeted native device, chat, access, file, and lifecycle tests for the changed behavior.
+- [x] Run typecheck, lint, format, file length, and export checks. Keep TypeScript files below the repository's line limit.
+- [x] Install the root, desktop, and runner check dependencies, then run the complete `npm run check` gate.
+- [x] Clear completed regular deferral and adapt lifecycle alarm fixtures without changing deadlines or weakening assertions.
+- [x] Verify every relative link of changed Markdown and record native smoke and test evidence under `.context/hibernation/`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push.
       Fix the `fix now` findings, record deferred or open findings under `plans/follow-ups/`, re-review once, and report.

@@ -53,7 +53,15 @@ export class Workspace extends FeatureWorkspace {
         },
       },
       at,
-      () => [{ storage: this.ctx.storage, fire: () => super.alarm() }],
+      () => [
+        {
+          storage: this.ctx.storage,
+          fire: async () => {
+            await super.alarm()
+            await this.settledAlarms()
+          },
+        },
+      ],
     )
   }
 

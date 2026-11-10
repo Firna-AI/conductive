@@ -3,8 +3,9 @@ import { START_JOB_KEY } from '../../lifecycle/start-storage'
 import type { StoredWorkspaceStartJob } from '../../lifecycle/start-job-codec'
 
 export class Workspace extends ProductionWorkspace {
-  advanceStartAlarm(): Promise<void> {
-    return this.alarm()
+  async advanceStartAlarm(): Promise<void> {
+    await this.alarm()
+    await this.settledAlarms()
   }
 
   async readStartPhase() {

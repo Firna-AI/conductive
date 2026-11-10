@@ -87,14 +87,14 @@ export async function createRunnerLimitsFixture(
   const publish = (events: readonly WorkspaceEventEnvelope[]) => {
     published.push(...structuredClone(events))
   }
-  let channel = new RunnerChannel(store, dependencies, publish)
+  let channel = new RunnerChannel(store, dependencies, publish, () => undefined)
   let peer: RunnerPeer
   let streamId = 'stream'
   const connect = async (stream = streamId, restart = false) => {
     streamId = stream
     if (restart) {
       store = new ChatStore(storage, () => 25)
-      channel = new RunnerChannel(store, dependencies, publish)
+      channel = new RunnerChannel(store, dependencies, publish, () => undefined)
     }
     peer = {
       send: (message) => {

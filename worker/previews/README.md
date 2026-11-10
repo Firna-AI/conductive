@@ -168,6 +168,9 @@ The request and response streams read only when their consumer requests data.
 They read one chunk at a time. No cached authorization or time window permits data.
 Completed HTTP connections release their registry entries.
 
+A preview socket uses `bridgeSocket` with an outbound socket to the sandbox.
+An open preview socket or HTTP stream keeps its workspace object active, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
+
 Set `dependencies.onActivity` to report each input to the input owner of the
 workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
 That call returns at once. The proxy writes no D1 activity time. Each preview

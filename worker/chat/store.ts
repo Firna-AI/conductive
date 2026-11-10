@@ -96,6 +96,30 @@ export class ChatTransaction extends ChatRecords {
       )
     )?.command
   }
+  async commandDelivered(
+    commandId: string,
+    connectionId: string,
+  ): Promise<boolean> {
+    return (
+      (await this.data.get<{ deliveredTo?: string }>(key('command', commandId)))
+        ?.deliveredTo === connectionId
+    )
+  }
+  async saveCommandDelivery(
+    commandId: string,
+    connectionId: string,
+  ): Promise<void> {
+    const record = await this.data.get<{
+      command: PendingCommand
+      order: number
+      deliveredTo?: string
+    }>(key('command', commandId))
+    if (record)
+      await this.data.put(key('command', commandId), {
+        ...record,
+        deliveredTo: connectionId,
+      })
+  }
   saveTurn(turn: StoredTurn): Promise<void> {
     return this.summary
       .turn(turn, this.now)

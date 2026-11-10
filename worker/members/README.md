@@ -76,6 +76,7 @@ A late older suspension must therefore fail at its receiver write.
 Payload deletion must preserve its rejection of stale calls while older calls can still arrive.
 Purge reads and deletes small batches. Each batch checks the same generation and preserves the fence.
 The normal storage adapter rejects chat, device, feature, and alarm writes after that fence is purged.
+Native socket records and the `browser`, `runner`, and `devices` alarm sources use raw storage instead. So a suspended or purged fence does not refuse their writes, and the alarm runs them before its fence checks, as [Alarms](../README.md#alarms) says.
 Late summary reads cannot recreate chat metadata. Suspended stop callbacks can still write their final events.
 The production receiver keeps a stopped create checkpoint after Delete, before or after allocation.
 Restore starts no sandbox. The normal resume route requeues that create when the workspace opens.

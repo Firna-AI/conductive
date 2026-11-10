@@ -47,7 +47,13 @@ export class RunnerDelivery {
       view.pending(),
     )
     for (const command of pending) {
-      if (!isCurrent() || active.delivered.has(command.commandId)) continue
+      if (
+        !isCurrent() ||
+        (await this.store.read(active.workspace.id, (view) =>
+          view.commandDelivered(command.commandId, active.id),
+        ))
+      )
+        continue
       const current = await this.store.read(active.workspace.id, (view) =>
         view.command(command.commandId),
       )
@@ -115,8 +121,7 @@ export class RunnerDelivery {
           )
         return false
       }
-      active.delivered.add(command.commandId)
-      await this.dispatch.sent(active.workspace.id, command)
+      await this.dispatch.sent(active.workspace.id, command, active.id)
     }
     return advanced
   }

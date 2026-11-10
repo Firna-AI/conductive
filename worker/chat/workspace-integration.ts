@@ -22,18 +22,22 @@ import { WorkspaceChat } from './backend'
 import { firstMessageIdentity } from './first-message'
 import { projectWorkspaceTitle } from './workspace-title'
 import type { ChatCallbackPublisher, ChatDependencies } from './types'
+import { WorkspaceSockets } from '../native-sockets'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
   Pick<
     ChatDependencies,
     | 'resolveAttachments'
-    | 'scheduleRunnerCheck'
     | 'scheduleBrowserCheck'
     | 'randomId'
     | 'runTitleModel'
+    | 'readConnectionAccess'
+    | 'readRunnerAccess'
+    | 'browserOpened'
+    | 'browserClosed'
   >
->
+> & { socketAutoResponseAt?: (socket: WebSocket) => number | null }
 
 function callbackPublisher(publish: ChatCallbackPublisher): LifecyclePublisher {
   return ({ event, occurredAt }) => publish(event, occurredAt)
@@ -63,7 +67,8 @@ export function createWorkspaceIntegration(
       return response
     },
   }
-  const alarms = new WorkspaceAlarms(storage)
+  const alarms = new WorkspaceAlarms(storage, context.storage)
+  const sockets = new WorkspaceSockets(context)
   const stoppedHooks: ((id: string) => Promise<void>)[] = []
   const files = new WorkspaceFiles(
     durableFilesStorage(storage),
@@ -71,96 +76,104 @@ export function createWorkspaceIntegration(
   )
   const matches = (name: string) =>
     env.WORKSPACES.idFromName(name).equals(context.id)
-  const chat: WorkspaceChat = new WorkspaceChat(storage, env, {
-    ...resolvers,
-    now,
-    matchesObject: matches,
-    waitUntil: (promise) => context.waitUntil(promise),
-    runnerAttached: (_workspaceId, connectionId, send) => {
-      files.runner.attach(connectionId, (command) => {
-        context.waitUntil(
-          send(command).then(
-            (sent) => {
-              if (!sent) files.runner.detach(connectionId)
-            },
-            () => files.runner.detach(connectionId),
-          ),
-        )
-      })
-    },
-    runnerDetached: (connectionId) => files.runner.detach(connectionId),
-    receiveFileResult: async (value, connectionId) => {
-      files.runner.receive(connectionId, value)
-    },
-    runnerHello: async (_id, publish) =>
-      controller.recoverLifecycle(callbackPublisher(publish)),
-    runnerReady: async (_id, publish) => {
-      await controller.reportRunnerLifecycle(
-        { type: 'runner.ready' },
-        callbackPublisher(publish),
-      )
-      await controller.acknowledgeLifecycleFirstMessage(
-        callbackPublisher(publish),
-      )
-    },
-    runnerDisconnected: async (_id, publish) =>
-      controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
-    turnDispatching: async (_id, turn, publish) => {
-      const state = await controller.readLifecycle()
-      if (!state) return true
-      if (!['ready', 'working', 'unread', 'input'].includes(state.state))
-        return false
-      await controller.registerLifecycleTurn(turn, callbackPublisher(publish))
-      const registered = await controller.readLifecycle()
-      return registered?.state === 'working'
-    },
-    turnDispatchFailed: async (_id, turnId, publish) =>
-      controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
-    runnerEventStored: async (envelope, publish) => {
-      const event = envelope.event
-      const lifecyclePublish = callbackPublisher(publish)
-      try {
-        if (event.type === 'runner.event-refused') {
-          if (
-            event.turnId &&
-            (event.runnerEventType === 'turn.completed' ||
-              event.runnerEventType === 'turn.failed')
+  const chat: WorkspaceChat = new WorkspaceChat(
+    storage,
+    env,
+    {
+      ...resolvers,
+      now,
+      matchesObject: matches,
+      waitUntil: (promise) => context.waitUntil(promise),
+      browserAlarm: (at) => alarms.set('browser', at),
+      runnerAlarm: (at) => alarms.set('runner', at),
+      runnerAttached: (_workspaceId, connectionId, send) => {
+        files.runner.attach(connectionId, (command) => {
+          context.waitUntil(
+            send(command).then(
+              (sent) => {
+                if (!sent) files.runner.detach(connectionId)
+              },
+              () => files.runner.detach(connectionId),
+            ),
           )
-            await controller.finishLifecycleTurn(
-              event.turnId,
+        })
+      },
+      runnerDetached: (connectionId) => files.runner.detach(connectionId),
+      receiveFileResult: async (value, connectionId) => {
+        files.runner.receive(connectionId, value)
+      },
+      runnerHello: async (_id, publish) =>
+        controller.recoverLifecycle(callbackPublisher(publish)),
+      runnerReady: async (_id, publish) => {
+        await controller.reportRunnerLifecycle(
+          { type: 'runner.ready' },
+          callbackPublisher(publish),
+        )
+        await controller.acknowledgeLifecycleFirstMessage(
+          callbackPublisher(publish),
+        )
+      },
+      runnerDisconnected: async (_id, publish) =>
+        controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
+      turnDispatching: async (_id, turn, publish) => {
+        const state = await controller.readLifecycle()
+        if (!state) return true
+        if (!['ready', 'working', 'unread', 'input'].includes(state.state))
+          return false
+        await controller.registerLifecycleTurn(turn, callbackPublisher(publish))
+        const registered = await controller.readLifecycle()
+        return registered?.state === 'working'
+      },
+      turnDispatchFailed: async (_id, turnId, publish) =>
+        controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
+      runnerEventStored: async (envelope, publish) => {
+        const event = envelope.event
+        const lifecyclePublish = callbackPublisher(publish)
+        try {
+          if (event.type === 'runner.event-refused') {
+            if (
+              event.turnId &&
+              (event.runnerEventType === 'turn.completed' ||
+                event.runnerEventType === 'turn.failed')
+            )
+              await controller.finishLifecycleTurn(
+                event.turnId,
+                lifecyclePublish,
+                envelope.occurredAt,
+              )
+          } else if (
+            event.type === 'turn.started' ||
+            event.type === 'turn.completed' ||
+            event.type === 'turn.failed' ||
+            event.type === 'start.updated'
+          ) {
+            await controller.reportRunnerLifecycle(
+              event,
               lifecyclePublish,
               envelope.occurredAt,
             )
-        } else if (
-          event.type === 'turn.started' ||
-          event.type === 'turn.completed' ||
-          event.type === 'turn.failed' ||
-          event.type === 'start.updated'
-        ) {
-          await controller.reportRunnerLifecycle(
-            event,
-            lifecyclePublish,
-            envelope.occurredAt,
+          }
+          await projectWorkspaceTitle(env.DB, envelope, now())
+        } finally {
+          if (
+            event.type === 'turn.completed' ||
+            event.type === 'turn.failed' ||
+            (event.type === 'runner.event-refused' &&
+              (event.runnerEventType === 'turn.completed' ||
+                event.runnerEventType === 'turn.failed'))
           )
+            context.waitUntil(devices.reconcile())
         }
-        await projectWorkspaceTitle(env.DB, envelope, now())
-      } finally {
-        if (
-          event.type === 'turn.completed' ||
-          event.type === 'turn.failed' ||
-          (event.type === 'runner.event-refused' &&
-            (event.runnerEventType === 'turn.completed' ||
-              event.runnerEventType === 'turn.failed'))
-        )
-          context.waitUntil(devices.reconcile())
-      }
+      },
     },
-  })
+    { sockets, storage: context.storage },
+  )
   const devices = new DeviceRuntime(
     env,
     storage,
     chat,
     matches,
+    { context, sockets, autoResponseAt: resolvers.socketAutoResponseAt },
     (when) => alarms.set('devices', when),
     now,
     async (request, at, publish) => {
@@ -251,6 +264,7 @@ export function createWorkspaceIntegration(
     controller,
     files,
     alarms,
+    sockets,
     withGeneration: async <T>(operation: () => Promise<T>): Promise<T> => {
       const prior = generation
       generation =

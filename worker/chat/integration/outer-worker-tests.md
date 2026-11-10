@@ -77,10 +77,12 @@ npm run test -- worker/chat/integration
 - `workspace-lifecycle.test-support.ts` holds the fixture of the two
   workspace tests.
 - `journey-entry.test-support.ts` adds `advanceStartAlarm` to the
-  production `Workspace`. `driveWorkspaceStart` in
-  `workspace-start.test-support.ts` uses it to run each start phase without
-  a wait for the timers. `completeWorkspaceResume` of the same file waits
-  for the end of a resume after its reply, and fails on a failed start.
+  production `Workspace`. It calls `alarm`, then awaits `settledAlarms`,
+  because the native alarm handler returns before its tracked work ends.
+  `driveWorkspaceStart` in `workspace-start.test-support.ts` uses it to run
+  each start phase without a wait for the timers. `completeWorkspaceResume`
+  of the same file waits for the end of a resume after its reply, and fails
+  on a failed start.
 - `workspace-review-entry.test-support.ts` holds a `Workspace` with a
   fixed clock, a wait for queued starts, a read of the start checkpoint,
   and `advanceStartAlarm`. All state changes use the production object.

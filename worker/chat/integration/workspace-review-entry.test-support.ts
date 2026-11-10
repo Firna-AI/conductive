@@ -55,8 +55,9 @@ export class Workspace extends ProductionWorkspace {
     return this.ctx.storage.get(START_JOB_KEY)
   }
 
-  advanceStartAlarm(): Promise<void> {
-    return this.alarm()
+  async advanceStartAlarm(): Promise<void> {
+    await this.alarm()
+    await this.settledAlarms()
   }
 }
 

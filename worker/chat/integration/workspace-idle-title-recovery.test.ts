@@ -56,8 +56,10 @@ it('retries a failed title publication after the original idle stop and then all
   })
   const idleAt = DEVICE_TEST_NOW + 1_800_000
   await actor.advanceStartAlarm(idleAt)
-  expect(await actor.recoveryAdvanceRuns()).toBe(1)
-  expect(await actor.recoveryAlarmAt()).toBe(idleAt + 30_000)
+  expect(await actor.recoveryLifecycleRuns()).toBe(1)
+  expect(await actor.recoveryLifecycleAlarmAt()).toBe(idleAt + 30_000)
+  expect(await actor.recoveryRunnerAlarmAt()).toBe(idleAt + 15_000)
+  expect(await actor.recoveryAlarmAt()).toBe(idleAt + 15_000)
   expect(await actor.readLifecycle()).toMatchObject({
     state: 'stopped',
     lastActivityAt: DEVICE_TEST_NOW,
@@ -72,10 +74,10 @@ it('retries a failed title publication after the original idle stop and then all
       .bind(OUTER_WORKSPACE)
       .first(),
   ).toEqual({ state: 'ready', name: '' })
-  expect(await actor.recoveryAlarmAt()).toBe(idleAt + 30_000)
+  expect(await actor.recoveryLifecycleAlarmAt()).toBe(idleAt + 30_000)
   await active.env.DB.prepare('DROP TRIGGER fail_idle_title').run()
   await actor.advanceStartAlarm(idleAt + 30_000)
-  expect(await actor.recoveryAdvanceRuns()).toBe(1)
+  expect(await actor.recoveryLifecycleRuns()).toBe(1)
   expect(await actor.recoveryAlarmAt()).toBe(idleAt + 1_123_200_000)
   expect(
     await active.env.DB.prepare(

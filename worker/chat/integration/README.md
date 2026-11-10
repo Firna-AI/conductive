@@ -172,6 +172,8 @@ methods of `Workspace`.
   it before. It reports the event to the lifecycle. A runner that is ready
   before the start is prepared gets its turns only after that. Their
   messages and model changes wait behind them.
+- A runner connection that the object restores after a wake gets no
+  `welcome`. So neither `runnerHello` nor `runnerReady` runs again.
 - `runnerEventStored(envelope, publish)` runs after each other stored runner
   event or refusal marker. It reports `turn.started`, `turn.completed`,
   `turn.failed`, and `start.updated`, with their stored `occurredAt`. A
@@ -207,13 +209,17 @@ methods of `Workspace`.
   with visible output, and whether a dispatched turn runs. Its record
   commits with the events and the turns. Queued turns do not count as
   working.
-- Known limit: `Workspace.alarm` holds the queue during one lifecycle
+- Known limit: the regular alarm task holds the queue during one lifecycle
   phase. A phase can make several provider requests. Each can take up to 30
   seconds, 65 for a file read, or 610 for a command. So a slow phase
   delays the chat reads, the messages, and the runner receipts of that
-  workspace.
+  workspace. The native alarm handler returns before that task ends, and
+  the access deadlines do not wait for it, as
+  [Alarms](../../README.md#alarms) says.
 
-## Milestone 9: files
+<a id="milestone-9-files"></a>
+
+## Files
 
 - The Durable Object joins file parts with `RunnerFileReports` on
   `ChatTransaction.files`. It stores each complete report before the confirm.
@@ -223,6 +229,7 @@ methods of `Workspace`.
   `false` result means that no runner got the request.
 - `runnerAttached(workspaceId, connectionId, send)` attaches the file broker when a physical runner is ready.
   The callback keeps the physical identity across commands. `runnerDetached(connectionId)` removes that connection.
+  A ready runner that the object restores after a wake attaches again with the same connection ID.
 - `receiveFileResult(value, connectionId)` gets each `file.read.result` and
   `file.diff.result` message from that physical connection without payload checks. Validate the message in the
   hook. File results never enter the history.
@@ -245,40 +252,12 @@ methods of `Workspace`.
 - [The GitHub server integration](../../github/README.md#server-integration)
   gives the routes, the scheduled reads, and the refresh operation.
 
-## Milestone 7r: the agent runner
+<a id="milestone-7r-the-agent-runner"></a>
 
-- The Durable Object stores agent events as the runner sends them. It
-  copies only the known fields, and it refuses an unknown event type.
-- It requires and preserves tool-detail and turn-file omission counts.
-  These counts are non-negative safe integers.
-- It requires file-report revisions, part numbers, and part counts as positive
-  safe integers.
-- `runner.event-refused` is workspace-only. The runner parser refuses it.
-- So the runner maps the SDK events, removes the text that an SDK adds,
-  and maps each result to `userMessageIds`.
-- `turn.started` names the sender of the turn and its message IDs. Each
-  agent event names a started turn of its session, including an ended turn.
-- A valid late event adds data only. It changes neither the turn's end nor
-  the session's active turn. An event for a never-started turn gets
-  `turn_not_active`.
-- An event that breaks these rules or a cap gets a refusal marker and a
-  confirm. The runner must not send it again.
-- Deduplicate the commands by `commandId`. A new connection gets each
-  pending command again.
-- After a text-only turn, each unanswered message moves to a new turn. So
-  one message can come first in a `message` command, then in a new `turn`
-  command with a new command ID.
-- Each `turn` and `message` command carries the agent login of the session
-  starter, whoever sent the message. The runner keeps the login of the
-  first command of a turn for the whole turn.
-- An interrupt for a turn that the runner does not run still gets
-  `turn.completed` with state `stopped`.
-- A new stream gets each command other than `report.refresh` only after its
-  `runner.ready` event. A stream that sent `runner.ready` before gets them
-  right after the `welcome`.
-- A `report.refresh` command can come right after the `welcome`, before
-  `runner.ready`, and during a running turn. Answer it with a full report of
-  its kind.
+## The agent runner
+
+[The agent runner](runner-rules.md) gives the rules of runner events and
+commands that the agent runner and the Durable Object share.
 
 ## Agent logins and attachments
 

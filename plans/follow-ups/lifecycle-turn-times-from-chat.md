@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-08, from PR #53, branch `conductor/boat-native-remote-workspaces-milestone-8m`, round 1, finding 16, with the new problem and option E of its check.
-- **Location:** `applyLifecycleTurn` at `worker/lifecycle/durable-turns.ts:20`, `DurableLifecycle.turn` at `worker/lifecycle/durable.ts:180-191`, `flushPending` at `worker/chat/runner-delivery.ts:82-101`, and `turnDispatching` and `turnDispatchFailed` at `worker/chat/workspace-integration.ts:107-117`.
+- **Location:** `applyLifecycleTurn` at `worker/lifecycle/durable-turns.ts:20`, `DurableLifecycle.turn` at `worker/lifecycle/durable.ts:172-183`, `flushPending` at `worker/chat/runner-delivery.ts:88-107`, and `turnDispatching` and `turnDispatchFailed` at `worker/chat/workspace-integration.ts:118-128`.
 - **Reason:** The bug needs a rare order of reconnect, resend, and replay, and E changes the lifecycle turn code that Milestone 5e also changes.
 
 - **Terms:**
@@ -12,22 +12,22 @@
   - **Idle time:** `lastActivityAt` in the lifecycle state of the workspace object. The idle stop comes 30 minutes after it, when no turn runs.
   - **Committed chat summary:** the turn facts that the chat stores with its events. `readChatRecovery` gives the running turns and `lastTurnEndedAt`, the stored time of the newest turn end.
 - **Background:**
-  - A sandbox stops after 30 minutes without user activity and without a running agent turn, as `docs/protocol/workspaces-and-sandboxes.md:202-203` says.
-  - Milestone 8m made the stored turn times set the idle time. A repair, a `hello`, a heartbeat, or a restart never starts a new idle period, as `worker/lifecycle/workspace-object.md:192-194` says.
-  - On the normal path, a runner turn event gives `DurableLifecycle.turn` its stored `occurredAt`. Without a time, `turn` uses the current time, at `worker/lifecycle/durable.ts:184`.
+  - A sandbox stops after 30 minutes without user activity and without a running agent turn, as `docs/protocol/workspaces-and-sandboxes.md:160-161` says.
+  - Milestone 8m made the stored turn times set the idle time. A repair, a `hello`, a heartbeat, or a restart never starts a new idle period, as `worker/lifecycle/workspace-object.md:231-233` says.
+  - On the normal path, a runner turn event gives `DurableLifecycle.turn` its stored `occurredAt`. Without a time, `turn` uses the current time, at `worker/lifecycle/durable.ts:176`.
   - `applyLifecycleTurn` and `recoverLifecycleTurns` always keep the later time, at `worker/lifecycle/durable-turns.ts:20` and `:34-37`.
-  - At each runner `hello`, the workspace repairs the turns from the committed chat summary. Then it sends each pending command again, at `worker/chat/runner-channel.ts:139-150`.
+  - At each runner `hello`, the workspace repairs the turns from the committed chat summary. Then it sends each pending command again, at `worker/chat/runner-channel.ts:123-137`.
   - Replayed runner events queue when they arrive, so the resend and the replay race.
   - A turn command stays pending until `turn.started` arrives, at `worker/chat/turn-events.ts:78-86`. `canDispatch` accepts a running turn, at `worker/chat/turn-lifecycle.ts:62`. So each new connection sends the command again.
   - The runner ignores a repeated command, at `runner/src/engine.ts:25` and `runner/src/engine-turns.ts:46-47`.
 - **Problem:**
   - The connection drops before the workspace stores `turn.started`. The runner stores the turn end on its own disk. At the reconnect, the resend runs before the replay.
-  - The resend calls `turnDispatching`, at `worker/chat/runner-delivery.ts:82-94`. It registers the turn again through `registerTrustedTurn`, which passes no time, at `worker/lifecycle/runner-lifecycle.ts:63`. So the idle time becomes the current time.
+  - The resend calls `turnDispatching`, at `worker/chat/runner-delivery.ts:88-100`. It registers the turn again through `registerTrustedTurn`, which passes no time, at `worker/lifecycle/runner-lifecycle.ts:63`. So the idle time becomes the current time.
   - The replayed older end and the repair keep that later time.
-  - A failed resend has the same effect. When the connection closes during the `turnDispatching` of a resend, `turnDispatchFailed` ends the lifecycle turn at the current time, at `worker/chat/runner-delivery.ts:95-101`. The chat turn still runs.
+  - A failed resend has the same effect. When the connection closes during the `turnDispatching` of a resend, `turnDispatchFailed` ends the lifecycle turn at the current time, at `worker/chat/runner-delivery.ts:101-107`. The chat turn still runs.
   - After a failed resend, the workspace also shows `ready` while the agent works, until the next alarm or `hello` repairs the turns.
   - No test sends the command again before its replayed end.
-- **Impact if no action:** The idle alarm moves to the reconnect time plus 30 minutes, at `worker/lifecycle/durable-scheduling.ts:31`. The sandbox runs longer by the time between the turn end and the reconnect, up to 30 minutes. A manual stop is the only workaround.
+- **Impact if no action:** The idle alarm moves to the reconnect time plus 30 minutes, at `worker/lifecycle/durable-scheduling.ts:47`. The sandbox runs longer by the time between the turn end and the reconnect, up to 30 minutes. A manual stop is the only workaround.
 - **Root question:** Which sources may set the idle time, and how does each other lifecycle turn update leave it unchanged?
 - **Options:**
   - **A.** Pass the stored start time of the turn through each repeated registration. This adds time handling to the dispatch path. Effort: Small.

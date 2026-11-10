@@ -9,6 +9,7 @@ import type { StoredWorkspaceStartJob } from './start-job-codec'
 import type { FirstWorkspaceMessage, PendingTurn } from './workspace-runtime'
 import { assertReceiverActive } from '../members/receiver-fence'
 import type { ReceiverStorage } from '../members/receiver-storage'
+import { scheduleWorkspaceAlarm } from '../features/alarms'
 
 export interface WorkspaceValues {
   lifecycle: DurableLifecycleState
@@ -136,9 +137,7 @@ export function nativeWorkspaceStorage(
         if (guarded) await assertReceiverActive(native, generation())
         if (at === null) await native.delete('alarm:lifecycle')
         else await native.put('alarm:lifecycle', at)
-        const values = await native.list<number>({ prefix: 'alarm:' })
-        if (values.size) await native.setAlarm(Math.min(...values.values()))
-        else await native.deleteAlarm()
+        await scheduleWorkspaceAlarm(native)
       }
       return operation(
         alarms

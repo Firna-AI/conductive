@@ -1,6 +1,5 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import {
-  presentWorkspaceMessage,
   type WorkspaceEvent,
   type WorkspaceEventEnvelope,
 } from './workspace-events'
@@ -15,9 +14,11 @@ import {
   authorizeChatBrowser,
   type BrowserAccess,
 } from './browser-authorization'
-import { subscribeBrowser } from './browser-subscription'
 import { afterNumber, chatRoute } from './http-routes'
-import { BrowserTabs } from './browser-tabs'
+import {
+  BrowserConnections,
+  type NativeBrowserConnections,
+} from './browser-connections'
 import { authorizeChatRunner } from './runner-authorization'
 import { WorkspaceTitles } from './workspace-titles'
 import { WorkspaceOperations } from './workspace-operations'
@@ -42,8 +43,8 @@ export class WorkspaceChat {
   readonly store: ChatStore
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
-  private readonly runner: RunnerChannel
-  private readonly browsers: BrowserTabs
+  readonly runner: RunnerChannel
+  readonly browsers: BrowserConnections
   private readonly operations: WorkspaceOperations
   private readonly titles: WorkspaceTitles
   private workspaceId: string | null = null
@@ -84,6 +85,7 @@ export class WorkspaceChat {
     storage: ChatStorage,
     env: AppEnv,
     overrides: Partial<ChatDependencies> = {},
+    native?: NativeBrowserConnections,
   ) {
     this.env = env
     this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
@@ -94,9 +96,19 @@ export class WorkspaceChat {
       this.dependencies,
       (events) => this.publish(events),
     )
-    this.browsers = new BrowserTabs(this.dependencies)
-    this.runner = new RunnerChannel(this.store, this.dependencies, (events) =>
-      this.publish(events),
+    this.browsers = new BrowserConnections(
+      this.store,
+      this.dependencies,
+      (id) => this.operation(id),
+      (id) => this.bind(id),
+      native,
+    )
+    this.runner = new RunnerChannel(
+      this.store,
+      this.dependencies,
+      (events) => this.publish(events),
+      (id) => this.bind(id),
+      native,
     )
     this.operations = new WorkspaceOperations({
       env,
@@ -157,10 +169,14 @@ export class WorkspaceChat {
     return access
   }
 
-  async connectRunner(request: Request, peer: RunnerPeer): Promise<void> {
+  async connectRunner(
+    request: Request,
+    peer: RunnerPeer,
+    socket?: WebSocket,
+  ): Promise<void> {
     const workspace = await authorizeChatRunner(this.env, request)
     this.bind(workspace.id)
-    await this.runner.open(workspace, peer)
+    await this.runner.open(workspace, peer, socket)
   }
 
   receiveRunner(peer: RunnerPeer, value: unknown): Promise<void> {
@@ -245,19 +261,9 @@ export class WorkspaceChat {
     access: BrowserAccess,
     after: number,
     peer: BrowserPeer,
+    socket?: WebSocket,
   ): Promise<() => void> {
-    return subscribeBrowser({
-      store: this.store,
-      browsers: this.browsers,
-      operation: this.operation(access.workspace.id),
-      access,
-      after,
-      peer: {
-        send: (message) =>
-          peer.send(presentWorkspaceMessage(message, access.presentation)),
-        close: () => peer.close(),
-      },
-    })
+    return this.browsers.subscribe(access, after, peer, socket)
   }
 
   private operation(workspaceId: string): ChatOperation {

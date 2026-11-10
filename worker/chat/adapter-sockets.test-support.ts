@@ -1,6 +1,7 @@
 import { WebSocket } from 'miniflare'
 
 export class SocketInbox {
+  readonly received: unknown[] = []
   private readonly values: unknown[] = []
   private readonly readers: ((value: unknown) => void)[] = []
 
@@ -9,6 +10,7 @@ export class SocketInbox {
       if (typeof event.data !== 'string')
         throw new Error('Expected a text socket message.')
       const value: unknown = JSON.parse(event.data)
+      this.received.push(value)
       const reader = this.readers.shift()
       if (reader) reader(value)
       else this.values.push(value)

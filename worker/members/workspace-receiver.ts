@@ -5,6 +5,7 @@ import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 import type { WorkspaceDisk } from './maintenance-contract'
 import type { StoredWorkspaceStartJob } from '../lifecycle/start-job-codec'
 import { CREATE_CHECKPOINT_KEY } from './creation-checkpoint'
+import { scheduleWorkspaceAlarm } from '../features/alarms'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import {
   LIFECYCLE_FENCE_KEY,
@@ -149,9 +150,7 @@ export class WorkspaceMembersReceiver {
         }
         if (await transaction.get<string>('lifecycle:cleanup'))
           await transaction.put('alarm:lifecycle', this.now() + 5_000)
-        const alarms = await transaction.list<number>({ prefix: 'alarm:' })
-        if (alarms.size)
-          await transaction.setAlarm(Math.min(...alarms.values()))
+        await scheduleWorkspaceAlarm(transaction, { resumeRegular: true })
       },
     )
   }
