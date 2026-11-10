@@ -8,8 +8,8 @@ The marketing site includes SVG shapes from
 [Lucide 0.577.0](https://github.com/lucide-icons/lucide/blob/0.577.0/LICENSE).
 The copied icons are `cloud`, `users`, `list-tree`, `square-plus`,
 `panels-top-left`, `archive`, `circle-check`, `contrast`, `circle-dashed`,
-`arrow-right-left`, `circle-ellipsis`, `circle-minus`, `calendar-check`, and
-`arrow-right`.
+`arrow-right-left`, `circle-ellipsis`, `circle-minus`, `calendar-check`,
+`arrow-right`, `menu`, `chevron-down`, and `arrow-left`.
 
 File: `src/marketing/icon-shapes.ts`.
 

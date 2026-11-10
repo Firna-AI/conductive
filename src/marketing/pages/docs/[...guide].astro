@@ -1,0 +1,34 @@
+---
+import type { InferGetStaticPropsType } from 'astro'
+import { getCollection, render } from 'astro:content'
+import { guidePages, guideParam } from '../../docs-guides'
+import DocsLayout from '../../layouts/DocsLayout.astro'
+
+/*
+ * The public docs: the overview at `/docs`, and each other guide at
+ * `/docs/<id>`. Each page is one Markdown file of the `docs` collection.
+ * The menu, the previous and next links, and the addresses all come from
+ * the same entries, so the docs keep one list of their guides.
+ */
+export async function getStaticPaths() {
+  return guidePages(await getCollection('docs')).map((page) => ({
+    params: { guide: guideParam(page.guide.id) },
+    props: page,
+  }))
+}
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>
+
+const { entry, guide, groups, previous, next } = Astro.props
+const { Content, headings } = await render(entry)
+---
+
+<DocsLayout
+  guide={guide}
+  groups={groups}
+  previous={previous}
+  next={next}
+  sections={headings.filter((heading) => heading.depth === 2)}
+>
+  <Content />
+</DocsLayout>
