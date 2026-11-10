@@ -17,6 +17,8 @@
     "head_sampling_rate": 1,
     // A query string can hold a sign-in code or a preview credential.
     "redact_query_string": true,
+    // Issues groups failures. A deploy without this key turns it off.
+    "issues": { "enabled": true },
   },
   "routes": [
     { "pattern": "conductive.build", "custom_domain": true },
