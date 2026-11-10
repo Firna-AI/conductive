@@ -27,9 +27,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'attachments',
     area: 'agents-and-chat',
     name: 'Attachments',
-    status: 'in-progress',
-    note: 'File attachments are in progress. The planned limit is 25 MB for each file.',
-    due: null,
+    status: 'available',
+    note: 'Attach files of up to 25 MB each to a message. Agents can read them in the workspace.',
   },
   {
     id: 'terminal-context',
