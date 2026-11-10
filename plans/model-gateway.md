@@ -448,11 +448,12 @@ Added on 10 November 2026 from Milestone 4a. Cal chose A on 10 November
 - **Recommendation:** A. It tests the riskiest assumption of K before the merge.
 - **Action:** ask the user, because the check needs Cal's credentials and sends requests to Anthropic.
 - **Chosen by Cal on 10 November 2026:** A. The script is `.context/model-gateway/real-check/check.sh`, saved on Cal's Mac as `~/conductive-gateway-check.sh`. Milestone 10 runs it.
+- **Result on 10 November 2026:** Anthropic answered HTTP 200 to each request: today's shape and the profile shape with an API key, and today's shape, the profile shape, and the profile shape with the 1-hour cache with a subscription token. Record: `.context/model-gateway/real-check/results.md`.
 
 ### 13. Subscription turns may lose the 1-hour cache
 
-Added on 10 November 2026 from Milestone 4a. Pending: no option is
-selected.
+Added on 10 November 2026 from Milestone 4a. Cal chose B on 10 November
+2026.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Implementation.
@@ -472,6 +473,7 @@ selected.
 - **Evidence:** a loopback probe on 10 November 2026 showed that the pinned client in profile mode with `CLAUDE_CODE_PROMPT_CACHE_TTL=1h` sends `extended-cache-ttl-2025-04-11` and `"ttl": "1h"` on its main requests: `.context/model-gateway/profile-probe/report.md`.
 - **Recommendation:** B. It keeps today's cache for subscription turns at almost no cost.
 - **Action:** ask the user, because it changes how fast subscription limits get used.
+- **Chosen by Cal on 10 November 2026:** B. Milestone 7a applies it. The real check of decision 12 confirmed that Anthropic accepts the 1-hour cache in profile mode with a subscription token.
 
 ## Design
 
@@ -1113,6 +1115,23 @@ requests to the gateway with the turn token.
       of version 1 (decision 2 A).
       Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
 
+## Milestone 7a: The 1-hour cache for subscription turns
+
+Depends on: 7
+
+Claude keeps the 1-hour prompt cache of a subscription turn under the
+profile transport (gateway decision 13 B).
+
+- [ ] Claude: for a turn whose credential is a Claude subscription token,
+      the runner gives the `claude` program
+      `CLAUDE_CODE_PROMPT_CACHE_TTL=1h`. An API-key turn and a native login
+      of the measure tool get no such setting.
+- [ ] Add the focused runner tests: the setting for a subscription token,
+      and no setting for an API key.
+- [ ] `docs/protocol/model-gateway.md`, section "How the agents reach the
+      gateway": a subscription turn keeps the 1-hour prompt cache, with
+      the reason and gateway decision 13. Update `runner/agent-logins.md`.
+
 ## Milestone 8: Privacy page
 
 Tags: ui
@@ -1172,7 +1191,7 @@ Evidence: `.context/model-gateway/final-m9/report.md`.
 
 Depends on: every other milestone
 
-- [ ] Run the check of decision 12 A on Cal's Mac, for an API key and for a
+- [x] Run the check of decision 12 A on Cal's Mac, for an API key and for a
       subscription token. Record the results under `.context/model-gateway/real-check/`.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
