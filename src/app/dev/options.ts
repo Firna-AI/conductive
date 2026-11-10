@@ -21,6 +21,9 @@ const CONVERSATIONS = [
 /** The run lists of Review pull requests that the mockups also draw. */
 const REVIEW_RUNS = ['failed', 'skipped'] as const
 
+/** The runs whose workspace `checkout-autocomplete` can be. */
+const RUN_WORKSPACES = ['pull-request', 'schedule'] as const
+
 const BANNERS = [
   'none',
   'no-commits',
@@ -58,6 +61,9 @@ const BANNERS = [
  *   fails, so the account shows that the change was not saved.
  * - `runs=failed|skipped`: the Runs list of Review pull requests holds a
  *   failed run of each cause, or the skipped runs of accounts outside Acme.
+ * - `run=pull-request|schedule`: `checkout-autocomplete` is the workspace
+ *   of a run, of Review pull requests for #482 or of an hourly run of
+ *   Triage new errors. So its header shows the line of the run.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -73,6 +79,8 @@ export interface DevOptions {
   shareSaveFails: boolean
   /** The run list of Review pull requests in place of its newest runs. */
   reviewRuns: (typeof REVIEW_RUNS)[number] | null
+  /** The run whose workspace `checkout-autocomplete` is, or null. */
+  runWorkspace: (typeof RUN_WORKSPACES)[number] | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -102,6 +110,7 @@ export function readDevOptions(search: string): DevOptions {
     stopAfterMs: stopAfter(params.get('stop')),
     shareSaveFails: params.get('shareSave') === 'fail',
     reviewRuns: pick(params, 'runs', REVIEW_RUNS) ?? null,
+    runWorkspace: pick(params, 'run', RUN_WORKSPACES) ?? null,
   }
 }
 

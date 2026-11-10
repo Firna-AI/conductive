@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { routinePaths } from '../../shared/routines'
+import { workspaceViewPath } from '../../shared/workspace-view'
+import { readViewReply } from '../../chat/api/read-responses'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -144,6 +146,32 @@ describe('the runs of the dev fake', () => {
       error: {
         code: 'agent_login_required',
         message: 'Connect Claude to run this routine.',
+      },
+    })
+  })
+
+  test('the view of a run workspace names its routine and the pull request of its run', async () => {
+    const path = workspaceViewPath(orgId, FAKE_IDS.workspace)
+    const routineOf = async (search: string) =>
+      (await setup(search).api.get(path, readViewReply)).routine
+    expect({
+      person: await routineOf(''),
+      pullRequest: await routineOf('?run=pull-request'),
+      schedule: await routineOf('?run=schedule'),
+    }).toEqual({
+      person: null,
+      pullRequest: {
+        id: 'review-prs',
+        name: 'Review pull requests',
+        pullRequest: {
+          number: 482,
+          url: 'https://github.com/acme/storefront/pull/482',
+        },
+      },
+      schedule: {
+        id: 'error-triage',
+        name: 'Triage new errors',
+        pullRequest: null,
       },
     })
   })

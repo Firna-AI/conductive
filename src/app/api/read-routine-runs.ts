@@ -48,7 +48,9 @@ function readRunTrigger(value: unknown): RoutineRunTrigger {
       }
     case 'run-now':
       return { kind }
-    case 'pull-request':
+    case 'pull-request': {
+      // The account that a skip names. Older runs and other runs have none.
+      const skipLogin = maybeText(trigger, 'skipLogin')
       return {
         kind,
         event: choice(trigger, 'event', EVENTS),
@@ -57,7 +59,9 @@ function readRunTrigger(value: unknown): RoutineRunTrigger {
         headBranch: text(trigger, 'headBranch'),
         headSha: text(trigger, 'headSha'),
         baseBranch: text(trigger, 'baseBranch'),
+        ...(skipLogin === null ? {} : { skipLogin }),
       }
+    }
   }
 }
 

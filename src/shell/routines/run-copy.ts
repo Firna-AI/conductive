@@ -83,11 +83,30 @@ export function failureCopy(
   return { text: run.error?.message || 'The first turn failed.', action: null }
 }
 
+/** The verb of the account that caused each pull request event. */
+const senderVerbs = {
+  opened: 'Opened',
+  pushed: 'Pushed',
+  merged: 'Merged',
+} as const
+
 /**
- * Why a run was skipped. A suspended org names the org. Each other reason
- * is the words of the API, such as an author outside the org.
+ * Why a run was skipped. An account outside the org shows by its login, so
+ * the owner knows which account to add to "Author is". The author opened
+ * the pull request. The sender caused the event: it opened, pushed to, or
+ * merged the pull request. A suspended org names the org. Each other
+ * reason, and an older skip without a login, is the words of the API.
  */
 export function skipCopy(run: RoutineRun, orgName: string): string {
-  if (run.error?.code === 'org_suspended') return `${orgName} is suspended.`
+  const code = run.error?.code
+  if (code === 'org_suspended') return `${orgName} is suspended.`
+  const { trigger } = run
+  if (trigger.kind === 'pull-request' && trigger.skipLogin) {
+    const outside = `@${trigger.skipLogin}, not a member of ${orgName}.`
+    if (code === 'author_not_allowed') return `Opened by ${outside}`
+    if (code === 'sender_not_allowed') {
+      return `${senderVerbs[trigger.event]} by ${outside}`
+    }
+  }
   return run.error?.message || 'This run was skipped.'
 }

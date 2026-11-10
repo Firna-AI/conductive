@@ -5,7 +5,12 @@ import {
   type RoutineRunResponse,
   type RoutineRunsResponse,
 } from '../../shared/routines'
+import {
+  workspaceViewPath,
+  type WorkspaceViewResponse,
+} from '../../shared/workspace-view'
 import { runsPage } from '../../test-support/fixtures/routine-runs'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { record } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
 import { startWorkspace } from './create-routes'
@@ -131,7 +136,31 @@ function runNow(
   return json(reply, 201)
 }
 
-/** The runs of a routine, and Run now. */
+/**
+ * The saved view of a run workspace, with its routine and the pull request
+ * of a pull request run, as the Worker joins them. Another workspace gets
+ * the recorded reply.
+ */
+function viewReply(org: OrgState, workspaceId: string): Response | null {
+  const run = org.runs.find((item) => item.workspaceId === workspaceId)
+  const routine = org.routines.find((item) => item.id === run?.routineId)
+  if (!run || !routine) return null
+  const { trigger } = run
+  const reply: WorkspaceViewResponse = {
+    ...workspaceFixtures().view,
+    routine: {
+      id: routine.id,
+      name: routine.name,
+      pullRequest:
+        trigger.kind === 'pull-request'
+          ? { number: trigger.number, url: trigger.url }
+          : null,
+    },
+  }
+  return json(reply)
+}
+
+/** The runs of a routine, Run now, and the view of a run workspace. */
 export function runRoutes(backend: DevBackend): Route[] {
   const orgOf = (org: string) => requireOrg(backend.state, org)
   return [
@@ -146,6 +175,11 @@ export function runRoutes(backend: DevBackend): Route[] {
       path: routinePaths.runNow(ID.org, ID.routine),
       answer: ({ params, body }) =>
         runNow(backend, orgOf(params.org), params.routine, body),
+    },
+    {
+      method: 'GET',
+      path: workspaceViewPath(ID.org, ID.workspace),
+      answer: ({ params }) => viewReply(orgOf(params.org), params.workspace),
     },
   ]
 }

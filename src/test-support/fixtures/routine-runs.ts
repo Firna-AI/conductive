@@ -35,11 +35,15 @@ export function timeOf(when: string): number {
   return FAKE_TIME - Number(match[1]) * unit
 }
 
-/** The trigger of a run that a pull request of the routine's repository started. */
+/**
+ * The trigger of a run that a pull request of the routine's repository
+ * started, with the login of the account that a skip names.
+ */
 export function pullRequestTrigger(
   repositoryId: string,
   event: RoutinePullRequestEvent,
   number: number,
+  skipLogin?: string,
 ): RoutineRunTrigger {
   return {
     kind: 'pull-request',
@@ -49,6 +53,7 @@ export function pullRequestTrigger(
     headBranch: 'cal/saved-carts',
     headSha: '4f2a9c1',
     baseBranch: 'main',
+    ...(skipLogin === undefined ? {} : { skipLogin }),
   }
 }
 
@@ -89,11 +94,18 @@ function skipOf(skip: SkipReason): { code: string; message: string } {
   }
 }
 
+/** The login of the account outside the org that a skip names, if any. */
+function skipLogin(run: Run): string | undefined {
+  if (run.state !== 'skipped' || run.skip.who === 'org') return undefined
+  return run.skip.login
+}
+
 /**
  * A run of a mockup list, as the Worker gives it. A run in the state of a
- * workspace has one. A queued, failed, or skipped run has none. Each run
- * is a little older than the run before it, so the order of the list
- * holds when two runs have the same age.
+ * workspace has one. A queued, failed, or skipped run has none. A skip of
+ * an author or a sender keeps the login of that account. Each run is a
+ * little older than the run before it, so the order of the list holds when
+ * two runs have the same age.
  */
 function apiRun(routine: Routine, run: Run, index: number): RoutineRun {
   const at = timeOf(run.when) - index
@@ -106,6 +118,7 @@ function apiRun(routine: Routine, run: Run, index: number): RoutineRun {
             routine.repositoryId,
             run.trigger.event,
             run.trigger.number,
+            skipLogin(run),
           )
   const workspace = !['queued', 'failed', 'skipped'].includes(run.state)
   return {

@@ -195,8 +195,9 @@ fake API, with its address options, its controls, and the test command.
   the host over the app's own parts.
 - `WorkspaceHeader.tsx` and `WorkspaceColumns.tsx`: the header, the
   columns, and the tab bar of a phone. `RunLine.tsx`: the line under the
-  header of a run workspace, which links to its routine.
-  `RunLine.test.tsx` checks the line and its link.
+  header of a run workspace, which links to its routine, and to the pull
+  request of a pull request run. `RunLine.test.tsx` checks the line and
+  its links.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into

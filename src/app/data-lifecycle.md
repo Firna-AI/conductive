@@ -33,8 +33,9 @@ of the data that the screens read and write.
   newest page leaves no gap. Run now shows its run first at once, and the
   Routines list takes it as the last run. A later read of the runs brings
   its next state.
-- The chat reads the routine of a run workspace with the saved view, at
-  each load of the chat. The header shows it until the next load.
+- The chat reads the routine of a run workspace, with the pull request of
+  its run, with the saved view, at each load of the chat. The header shows
+  them until the next load.
 - A list write shows its change at once, and a failure takes back that
   change only. An answer confirms only the fields of its write: a move
   answer sets the section of the workspace, not its state. A workspace

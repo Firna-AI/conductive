@@ -127,7 +127,7 @@ describe('the Runs list of a routine', () => {
     })
   })
 
-  test('a skipped run says why it started no workspace', async () => {
+  test('a skipped run says why it started no workspace, and names the account outside the org', async () => {
     const skipped = (await reviewRuns('skipped')).view
     const skippedRows = await rows(skipped)
     skipped.remove()
@@ -138,8 +138,8 @@ describe('the Runs list of a routine', () => {
     }).toEqual({
       skippedRows: [
         'PR opened #490 2m Working',
-        'PR opened #489 12m Skipped The pull request author is outside the org and is not in Author is.',
-        'PR pushed #483 40m Skipped The event sender is outside the org and is not in Author is.',
+        'PR opened #489 12m Skipped Opened by @rui-silva, not a member of Acme.',
+        'PR pushed #483 40m Skipped Pushed by @github-actions[bot], not a member of Acme.',
         'PR opened #483 2h Ready',
       ],
       suspended: 'PR pushed #485 1m Skipped Acme is suspended.',

@@ -187,8 +187,8 @@ members from the models of the app.
   shown session, then the workspace and the session list again. The stream
   starts after the history's `throughEventNumber`, so no change between the
   reads and the stream gets lost. The read of the view also gives the
-  routine of a run workspace, which the snapshot keeps as `routine` for the
-  header of the workspace.
+  routine of a run workspace, with the pull request of a pull request run.
+  The snapshot keeps it as `routine` for the header of the workspace.
 - The chat writes no browser storage. The drafts stay in memory, and the
   server keeps the open tabs through the view route. A kept controller
   lives only in the memory of its tab, so a reload or a new tab starts

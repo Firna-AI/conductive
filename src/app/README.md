@@ -24,9 +24,13 @@ pull request bar, and the owner picker. A host can give its own parts, as
   its custom initials through rename, delete, and restore. Acme has the
   routines of the mockups, each with the runs that its page in the mockups
   lists. `?runs=failed` or `?runs=skipped` gives Review pull requests the
-  failed or the skipped runs of the mockups. The fake has no workspaces
-  for these runs, so the workspace list stays as the mockups draw it, and
-  the link of such a run opens no workspace. The other orgs have no
+  failed or the skipped runs of the mockups. A skipped run names the
+  account outside Acme by its login. The fake has no workspaces for these
+  runs, so the workspace list stays as the mockups draw it, and the link
+  of such a run opens no workspace. `?run=pull-request` or `?run=schedule`
+  makes `checkout-autocomplete` the workspace of one run, so its header
+  shows the line of that run, with the pull request of a pull request run.
+  The other orgs have no
   routines, so their Routines page shows its empty state. A save of a
   routine checks the prompt, each custom cron, and the time zone, as the
   Worker does. Its author filter knows the members of the org and a few
@@ -248,9 +252,11 @@ clicks, types, and lets the answers of the fake API settle.
 - `../shell/routines/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
   the state, the trigger, the pull request, and the time of each run, and
   the link to its workspace. `run-copy.ts`: the cause of a failed run and
-  the reason of a skipped run in words. `RunNow.tsx`: Run now of the owner.
+  the reason of a skipped run in words, with the login of an account
+  outside the org. `RunNow.tsx`: Run now of the owner.
 - `../shell/workspace/RunLine.tsx`: the line under the header of a run
-  workspace, which links to its routine.
+  workspace, which links to its routine, and to the pull request of a pull
+  request run.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.

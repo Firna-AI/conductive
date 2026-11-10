@@ -162,8 +162,11 @@ export function readView(value: unknown): WorkspaceView {
   }
 }
 
-/** The routine whose run made the workspace. */
-export type RunRoutine = NonNullable<WorkspaceViewResponse['routine']>
+/**
+ * The routine whose run made the workspace, with the pull request of a
+ * pull request run, or null for a run of a schedule or of Run now.
+ */
+export type RunRoutine = Required<NonNullable<WorkspaceViewResponse['routine']>>
 
 /** The saved view, and the routine of a run workspace. */
 export interface ViewReply {
@@ -172,9 +175,19 @@ export interface ViewReply {
   routine: RunRoutine | null
 }
 
+function readPullRequest(value: unknown): RunRoutine['pullRequest'] {
+  const pullRequest = record(value, 'pull request')
+  return { number: count(pullRequest.number), url: text(pullRequest.url) }
+}
+
 function readRunRoutine(value: unknown): RunRoutine {
   const routine = record(value, 'routine')
-  return { id: text(routine.id), name: text(routine.name) }
+  const pullRequest = optional(nullable(readPullRequest))(routine.pullRequest)
+  return {
+    id: text(routine.id),
+    name: text(routine.name),
+    pullRequest: pullRequest ?? null,
+  }
 }
 
 export function readViewReply(value: unknown): ViewReply {

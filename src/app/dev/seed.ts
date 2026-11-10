@@ -25,10 +25,17 @@ type CoreFixtures = ReturnType<typeof coreFixtures>
 /** A deleted org stays for 7 days. */
 const DELETE_AFTER = 604_800_000
 
+/** The run that `run=` makes the run of `checkout-autocomplete`. */
+const runOfWorkspace = {
+  'pull-request': 'run-review-prs-opened-482',
+  schedule: 'run-error-triage-hourly-3',
+} as const
+
 /**
  * The runs of the routines. Review pull requests can list the failed or
  * the skipped runs of the mockups in place of its newest runs. After the
- * suspension of Acme, it lists its runs as the suspension left them.
+ * suspension of Acme, it lists its runs as the suspension left them. One
+ * run can have `checkout-autocomplete` as its workspace, which has a chat.
  */
 function seedRuns(
   fixtures: ReturnType<typeof routineFixtures>,
@@ -36,9 +43,17 @@ function seedRuns(
 ): RoutineRun[] {
   const list = options.reviewRuns ?? (options.suspended ? 'suspended' : null)
   const review = fixtures.routines.find((item) => item.id === 'review-prs')
-  if (list === null || !review) return fixtures.runs
-  const others = fixtures.runs.filter((run) => run.routineId !== review.id)
-  return [...listRuns(review, list), ...others]
+  const runs =
+    list === null || !review
+      ? fixtures.runs
+      : [
+          ...listRuns(review, list),
+          ...fixtures.runs.filter((run) => run.routineId !== review.id),
+        ]
+  const linked = options.runWorkspace && runOfWorkspace[options.runWorkspace]
+  return runs.map((run) =>
+    run.id === linked ? { ...run, workspaceId: FAKE_IDS.workspace } : run,
+  )
 }
 
 /**

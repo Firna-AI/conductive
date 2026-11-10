@@ -1743,7 +1743,7 @@ Show the runs, and let the owner start one.
       run workspaces.
 - [x] Add Run now for the owner. Read the runs again every 10 seconds
       while the page shows, and when the page gets the focus.
-- [ ] Show the routine link in the header of a run workspace, and the
+- [x] Show the routine link in the header of a run workspace, and the
       pull request link for a pull request run, in the header and in the
       Runs list.
 - [x] Let the pull request bar name the base branch of the workspace, and
@@ -1751,7 +1751,7 @@ Show the runs, and let the owner start one.
 - [x] Mark the chip of a refused login and open its filter, from the field
       of Milestone 8b.
 
-  - [ ] Test Run now, the states of the runs, and the header links.
+  - [x] Test Run now, the states of the runs, and the header links.
 - [x] Update the web app README.
 
 The UI implementor built Milestone 9 on 10 November 2026, and the
@@ -1789,11 +1789,16 @@ Tags: ui
 
 Depends on: 9a
 
-- [ ] Show "for #<number>" with its link in the run line of a pull request
+- [x] Show "for #<number>" with its link in the run line of a pull request
       run.
-- [ ] Show the words of a skipped run with the account login, as the
+- [x] Show the words of a skipped run with the account login, as the
       mockups write them.
-  - [ ] Test both.
+  - [x] Test both.
+
+Milestone completed on 10 November 2026, and with it the open TODOs of
+Milestone 9. The UI implementor subagent built it. The orchestrator
+re-ran the 596 tests of `src` and the static checks. The handoff is in
+`.context/routines/reports/m9b-ui.md`.
 
 ## Milestone 10: Verification, commit, review, and pull request
 
