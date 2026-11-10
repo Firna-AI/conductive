@@ -52,6 +52,11 @@ export const privacyDocument: LegalDocument = {
           text`Resend sends the emails of ${productName}: the invitations of
             an org, and the email when an operator approves your account. It
             gets the address and the text of each email.`,
+          text`Better Stack gets the error reports described above, and keeps
+            them in the European Union. The app in your browser and the Mac
+            app window send their reports straight to Better Stack. These
+            requests send your network address to Better Stack, and it can
+            store that address with each of those reports.`,
           text`A cloud computer provider runs the cloud computers of every org
             for ${productName}, in the account of ${productName}. Your code,
             your files, and your agent sessions are in them. ${productName}
@@ -105,6 +110,15 @@ export const privacyDocument: LegalDocument = {
             certification under the UK Extension and its use of standard
             contractual clauses. UK regulations approve transfers covered
             by the UK Extension certification.`,
+          text`Better Stack keeps the error reports in the European Union. UK
+            adequacy regulations approve transfers to countries in the
+            European Economic Area. Better Stack's published data processing
+            terms also let it and its subprocessors process personal data in
+            the United States and other countries. For covered transfers,
+            those terms use its certification under the UK Extension to the
+            EU-US Data Privacy Framework. Otherwise, they apply the European
+            Commission's standard contractual clauses with the UK
+            International Data Transfer Addendum.`,
           text`The cloud computer provider is based in the United States.
             It reports that its cloud computers and saved snapshots run in
             Germany, Finland, and France. UK adequacy regulations approve
@@ -135,6 +149,7 @@ export const privacyDocument: LegalDocument = {
           using ${productName}. Workspace chat history and Mac command records
           stay while their org exists, including while a cloud computer is
           stopped.`,
+        paragraph`Better Stack keeps each error report for 90 days.`,
         paragraph`A connected agent login stays until you remove or replace
           it. Panel widths stay in your browser until you clear its saved
           data. The providers above can keep their own records under their

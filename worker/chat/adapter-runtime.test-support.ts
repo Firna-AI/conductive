@@ -23,7 +23,10 @@ export async function createAdapterRuntime(
       minify: false,
       target: 'es2022',
       lib: { entry: entryPoint, formats: ['es'] },
-      rolldownOptions: { external: ['cloudflare:workers'] },
+      rolldownOptions: {
+        platform: 'neutral',
+        external: ['cloudflare:workers', /^node:/],
+      },
     },
   })
   const outputs = (Array.isArray(bundle) ? bundle : [bundle]).flatMap(
@@ -43,6 +46,7 @@ export async function createAdapterRuntime(
         config: {
           name: 'chat-adapter-tests',
           compatibilityDate: '2026-11-06',
+          compatibilityFlags: ['nodejs_compat'],
           exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
           env: {
             DB: { type: 'd1', id: 'chat-db' },

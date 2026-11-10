@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { DiffResponse, FileResponse } from '../../src/shared/files'
 import { isRecord } from '../http'
 import { FileTooLargeError, invalidFileResponse } from './errors'
@@ -27,8 +28,8 @@ export function fileBytes(
     return Uint8Array.from(atob(file.content), (character) =>
       character.charCodeAt(0),
     )
-  } catch {
-    throw invalidFileResponse()
+  } catch (error) {
+    throw linkWorkerError(invalidFileResponse(), error)
   }
 }
 

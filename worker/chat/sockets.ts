@@ -4,6 +4,7 @@ import { HttpError } from '../http'
 import type { WorkspaceChat } from './backend'
 import type { BrowserAccess } from './browser-authorization'
 import { afterNumber } from './http-routes'
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 
 function socketPair(request: Request) {
   if (
@@ -67,9 +68,12 @@ export async function runnerUpgrade(
       chat.disconnectRunner(peer)
       return
     }
-    void chat
-      .receiveRunner(peer, message)
-      .catch(() => chat.disconnectRunner(peer))
+    void chat.reporting.callback(() =>
+      chat.receiveRunner(peer, message).catch((error: unknown) => {
+        captureUnexpectedWorkerFailure('runner_message_failed', error)
+        chat.disconnectRunner(peer)
+      }),
+    )
   })
   server.addEventListener('close', () => chat.disconnectRunner(peer))
   server.addEventListener('error', () => chat.disconnectRunner(peer))

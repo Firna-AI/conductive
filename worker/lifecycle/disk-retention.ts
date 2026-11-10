@@ -1,3 +1,5 @@
+import { linkWorkerError } from '../error-reporting/causes'
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { providerState, type ProviderState } from './provider-state'
 import { requireActiveUser } from '../data/user-access'
 import { WorkspaceStartError } from './workspace-start'
@@ -58,8 +60,10 @@ export async function keepWorkspaceDisk(
   try {
     status = providerState((await provider.get(sandboxId)).state)
   } catch (error) {
-    if (progress.phase === 'stop' && progress.error !== null)
+    if (progress.phase === 'stop' && progress.error !== null) {
+      captureUnexpectedWorkerFailure('lifecycle_retry_failed', error)
       return { done: false, error: progress.error }
+    }
     throw error
   }
   progress = await expireRetention(context, progress, deadlineAt)
@@ -200,8 +204,8 @@ export async function finishDiskMaintenance(
       })
     )
       return
-  } catch {
-    throw new WorkspaceStartError(null)
+  } catch (error) {
+    throw linkWorkerError(new WorkspaceStartError(null), error)
   }
   throw new WorkspaceStartError(null)
 }

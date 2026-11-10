@@ -1,3 +1,4 @@
+import { captureWorkerWarning } from '../error-reporting/policy'
 import { warnWorker } from '../warnings'
 import { jobSoftware, type BuildJob } from './build-data'
 import { startImageBuild, type ImageRuntime } from './image-builds'
@@ -28,7 +29,9 @@ export async function startAddedImageBuild(
       },
       job.providerAccount,
     )
-  } catch {
-    warnWorker({ kind: 'added_image_build_start_failed' })
+  } catch (error) {
+    const warning = { kind: 'added_image_build_start_failed' } as const
+    warnWorker(warning)
+    captureWorkerWarning(warning, error)
   }
 }

@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { FileResponse } from '../../src/shared/files'
 import { decodeUtf8 } from '../../src/shared/utf8'
 import type { AppEnv, HttpFetch } from '../env'
@@ -49,9 +50,13 @@ export async function readBoatFile(
   } catch (error) {
     if (error instanceof ProviderError) {
       if (error.kind === 'not_found')
-        throw new HttpError(404, 'file_not_found', 'The file is not available.')
-      if (error.kind === 'invalid_response') throw invalidFileResponse()
-      throw fileUnavailable()
+        throw linkWorkerError(
+          new HttpError(404, 'file_not_found', 'The file is not available.'),
+          error,
+        )
+      if (error.kind === 'invalid_response')
+        throw linkWorkerError(invalidFileResponse(), error)
+      throw linkWorkerError(fileUnavailable(), error)
     }
     throw error
   }

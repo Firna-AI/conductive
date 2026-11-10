@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceEventPeer as BrowserPeer,
@@ -138,7 +139,8 @@ export class BrowserTabs {
         if (deadline <= this.dependencies.now()) this.close(peer)
         else registration.deadline = deadline
       })
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('connection_authorization_failed', error)
       for (const [peer, registration] of snapshot)
         if (this.peers.get(peer) === registration) this.close(peer)
     } finally {

@@ -5,6 +5,7 @@ import type {
 import type { AppEnv } from '../env'
 import { randomToken } from '../security/crypto'
 import { warnWorker } from '../warnings'
+import { captureWorkerWarning } from '../error-reporting/policy'
 import {
   insertAttachment,
   publishAttachment,
@@ -99,8 +100,10 @@ export async function storeAttachment(
       const current = await readAttachment(env.DB, id)
       if (current) await deleteAttachment(env, current)
       else await bucket.delete(record.objectKey)
-    } catch {
-      warnWorker({ kind: 'attachment_upload_cleanup_retry' })
+    } catch (cleanupError) {
+      const warning = { kind: 'attachment_upload_cleanup_retry' } as const
+      warnWorker(warning)
+      captureWorkerWarning(warning, cleanupError)
     }
     throw error
   }

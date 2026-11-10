@@ -22,7 +22,7 @@ function activityFixture(update: (at: number) => Promise<void>) {
       updates.push(at)
       await update(at)
     },
-    warn: (message) => warnings.push(message),
+    warn: (warning) => warnings.push(warning),
   })
   return { clock, local, updates, warnings, pending, owner }
 }

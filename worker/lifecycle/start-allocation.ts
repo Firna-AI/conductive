@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { AppEnv } from '../env'
 import { isRecord } from '../http'
 import { ProviderError } from '../sandbox/errors'
@@ -114,6 +115,8 @@ export async function allocateWorkspace(
       )
     )
       throw error
+    if (!(error instanceof ProviderError && error.kind === 'conflict'))
+      captureUnexpectedWorkerFailure('lifecycle_retry_failed', error)
     return null
   }
 }

@@ -16,7 +16,7 @@ export async function termsConsentResponse(
       { continueAddress, siteOrigin },
       { status: 200, cacheControl: 'no-store' },
     )
-  } catch {
-    return siteUnavailable()
+  } catch (error) {
+    return siteUnavailable(error)
   }
 }

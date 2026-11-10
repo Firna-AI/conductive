@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { HttpFetch } from '../env'
 import { ProviderError } from './errors'
 import { readSandboxFile } from './file-read'
@@ -68,8 +69,8 @@ export class BoatClient implements SandboxProvider {
     let url: URL
     try {
       url = new URL(value.url)
-    } catch {
-      throw new ProviderError('invalid_response', 502)
+    } catch (error) {
+      throw linkWorkerError(new ProviderError('invalid_response', 502), error)
     }
     const token = url.searchParams.get('_token')
     if (
@@ -112,8 +113,8 @@ export class BoatClient implements SandboxProvider {
     let url: URL
     try {
       url = new URL(value.desktopUrl)
-    } catch {
-      throw new ProviderError('invalid_response', 502)
+    } catch (error) {
+      throw linkWorkerError(new ProviderError('invalid_response', 502), error)
     }
     const fragment = new URLSearchParams(url.hash.slice(1))
     if (

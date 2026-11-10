@@ -25,6 +25,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { authenticateWorkspaceToken } from './tokens'
 import { advanceScheduledAlarms } from './scheduled-alarms.test-support'
 import { exerciseRepairBudget } from './repair-budget-native-test-support'
+import { nativeReportingFixture } from './reporting-runtime.test-support'
 
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
@@ -33,11 +34,14 @@ export class WorkspaceRuntimeFixture extends Workspace {
     ReturnType<typeof holdResumeCompletionCheckpoint> | undefined
   private readonly clock: ManualChatClock
   private readonly chatIds: string[]
+  private readonly reports: ReturnType<typeof nativeReportingFixture>
 
   constructor(context: DurableObjectState, env: LifecycleEnvironment) {
     const clock = new ManualChatClock(Date.now())
     const chatIds: string[] = []
-    super(context, env, clock.now, {
+    const reports = nativeReportingFixture(context, env, clock.now)
+    super(reports.state, env, clock.now, {
+      reporting: reports.reporting,
       randomId: () => chatIds.shift() ?? crypto.randomUUID(),
       scheduleRunnerCheck: clock.schedule,
       scheduleBrowserCheck: clock.schedule,
@@ -58,6 +62,28 @@ export class WorkspaceRuntimeFixture extends Workspace {
     })
     this.clock = clock
     this.chatIds = chatIds
+    this.reports = reports
+  }
+
+  async failAlarmForReporting() {
+    const original = this.reports.arm()
+    let rethrown = false
+    try {
+      await this.alarm()
+    } catch (error) {
+      rethrown = error === original
+    }
+    await this.reports.runtime.flush()
+    return { rethrown, events: JSON.stringify(this.reports.events) }
+  }
+
+  armReportingFailure(): void {
+    this.reports.arm()
+  }
+
+  async reportingEvents() {
+    await this.reports.runtime.flush()
+    return JSON.stringify(this.reports.events)
   }
 
   nextChatIds(ids: string[]): void {

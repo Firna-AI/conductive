@@ -1,3 +1,8 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
+import {
+  workspaceErrorReporting,
+  type WorkspaceErrorReporting,
+} from '../error-reporting/workspace'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { ToolDependencies } from '../previews/types'
@@ -66,6 +71,7 @@ export class TerminalRegistration {
 
 /** Frames use a bounded registration. One scheduled query refreshes every live identity. */
 export class TerminalConnections {
+  private readonly reporting: WorkspaceErrorReporting
   private readonly env: AppEnv
   private readonly dependencies: ToolDependencies
   private readonly registrations = new Set<TerminalRegistration>()
@@ -76,6 +82,9 @@ export class TerminalConnections {
   constructor(env: AppEnv, dependencies: ToolDependencies) {
     this.env = env
     this.dependencies = dependencies
+    this.reporting =
+      dependencies.reporting ??
+      workspaceErrorReporting(env, undefined, dependencies.errorReporting)
   }
 
   async add(
@@ -103,10 +112,9 @@ export class TerminalConnections {
   }
 
   private schedule(work: () => Promise<void>, delay: number) {
-    return (this.dependencies.terminalSchedule ?? scheduleConnectionCheck)(
-      work,
-      delay,
-    )
+    return this.reporting.schedule(
+      this.dependencies.terminalSchedule ?? scheduleConnectionCheck,
+    )(work, delay)
   }
 
   private schedulePoll(delay: number): void {
@@ -163,7 +171,8 @@ export class TerminalConnections {
         if (deadline <= this.dependencies.now()) registration.cancel()
         else registration.deadline = deadline
       })
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('connection_authorization_failed', error)
       for (const registration of snapshot) registration.cancel()
     } finally {
       this.checking = false

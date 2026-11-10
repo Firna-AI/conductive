@@ -1,3 +1,4 @@
+import { captureWorkerWarning } from '../error-reporting/policy'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { AppEnv } from '../env'
 import { warnWorker } from '../warnings'
@@ -41,7 +42,11 @@ export class WorkspaceTitles {
         continue
       this.pending = true
       this.dependencies.waitUntil(
-        this.request(workspaceId, event.message.text).finally(() => {
+        (
+          this.dependencies.reporting?.background(() =>
+            this.request(workspaceId, event.message.text),
+          ) ?? this.request(workspaceId, event.message.text)
+        ).finally(() => {
           this.pending = false
         }),
       )
@@ -103,10 +108,12 @@ export class WorkspaceTitles {
           )
       })
     } catch (error) {
-      warnWorker({
+      const warning = {
         kind: 'workspace_title_save_failed',
         error: errorSummary(error),
-      })
+      } as const
+      warnWorker(warning)
+      captureWorkerWarning(warning, error)
     }
   }
 }

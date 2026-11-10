@@ -18,7 +18,7 @@ export async function githubSetupPage(
       { siteOrigin },
       { status: 200, cacheControl: 'no-store', head },
     )
-  } catch {
-    return siteUnavailable()
+  } catch (error) {
+    return siteUnavailable(error)
   }
 }

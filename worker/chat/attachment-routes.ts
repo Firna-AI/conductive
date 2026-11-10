@@ -4,6 +4,7 @@ import type {
 } from '../../src/shared/messages'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
+import { linkWorkerError } from '../error-reporting/causes'
 import { fixedUploadBody } from '../http/fixed-upload-body'
 import { rawUploadRoute } from '../http/raw-upload-routes'
 import { gate } from '../security/gate'
@@ -80,12 +81,15 @@ export async function attachmentRoute(
     const interrupted = transfer.failed()
     await transfer.cancel(error)
     if (error instanceof HttpError) throw error
-    throw new HttpError(
-      interrupted ? 400 : 503,
-      interrupted
-        ? 'attachment_upload_interrupted'
-        : 'attachment_upload_failed',
-      'The file upload did not finish. Try again.',
+    throw linkWorkerError(
+      new HttpError(
+        interrupted ? 400 : 503,
+        interrupted
+          ? 'attachment_upload_interrupted'
+          : 'attachment_upload_failed',
+        'The file upload did not finish. Try again.',
+      ),
+      error,
     )
   }
 }

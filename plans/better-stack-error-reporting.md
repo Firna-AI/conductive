@@ -2,6 +2,9 @@
 
 Status: Active. On branch `calummoore/betterstack-implementation-brainstorm`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
+The user approved implementation of all milestones and tasks on 10 November
+2026. Decisions 1D, 2B, 3A, 4A, and 5D remain in force.
+
 Today an unexpected failure of Conductive leaves almost no trace. The
 Worker answers an unknown error with HTTP 500 and writes no line that
 names the cause. Some catches hide a failure completely. Only Workers Logs
@@ -375,6 +378,16 @@ The user can override any of them.
 - The client build makes hidden source maps. A `.assetsignore` file in
   `public/` keeps every `.map` file out of the deployed assets. Reason: no
   map ever ships, also when a later step fails.
+- Agent call, 10 November 2026: all builds inject the same release and
+  deterministic debug IDs without uploading. A separate uploader runs
+  only with complete operator settings. This lets a matching local build
+  upload maps for an automatically deployed commit, with no token in CI.
+  The local proof compares JavaScript bytes, IDs, and actual upload
+  manifests. The operator must compare the deployed modules too.
+- Agent call, 10 November 2026: Mac builds inject debug IDs with maps and
+  uploads off. Worker frames use synthetic root bundle names that match
+  private legacy artifacts. Cloudflare's map upload stays off after
+  Better Stack upload and cleanup. Both plugin and CLI telemetry stay off.
 - When the operator's upload settings are present, `@sentry/vite-plugin`
   uploads the maps of the web app and the Worker under the release, and
   then deletes them. Without the settings, or when an upload fails, the
@@ -383,6 +396,11 @@ The user can override any of them.
 - The upload token is a Better Stack Telemetry API token. It stays in the
   shell of the operator who deploys, never in the repository, CI, or the
   Worker.
+- Agent call, 10 November 2026: the upload settings are `SENTRY_AUTH_TOKEN`,
+  `SENTRY_URL`, `SENTRY_ORG`, `SENTRY_WORKER_PROJECT`, and
+  `SENTRY_BROWSER_PROJECT`. Separate project settings send each bundle to
+  its own application. The public browser DSN lives in
+  `src/shared/error-reporting.ts`.
 - Mac builds upload no maps yet. A follow-up item records that step for
   the Mac release work of `plans/conductive-desktop-notarization.md`.
 
@@ -405,6 +423,16 @@ The user can override any of them.
 
 **Order and verification.**
 
+Agent calls after main integration, 10 November 2026: main's kind-based
+typed-warning API and structured object log remain canonical. The
+reporting layer selects safe fields from that API, with IDs kept log-only.
+This supersedes the earlier branch-only warning modules and JSON-string
+log design. Main's legal modules, `privacy.ts` and `privacy-uses.ts`, keep
+all Better Stack facts and all current Mac and attachment facts. Its
+architecture components and protocol list remain their canonical homes.
+The integration retains main's completed doc splits and removes only
+redundant branch copies after their facts and links move.
+
 - Milestone 3 does the follow-up `typed-worker-warnings.md` first. Reason:
   one typed API then keeps free text out of both Workers Logs and Better
   Stack.
@@ -422,25 +450,34 @@ Depends on: none
 The Privacy page tells users about the error reports. Its text lives in
 `src/marketing/privacy.ts`, and the mockup catalogue draws the same text.
 
-- [ ] In "What Conductive uses, and why", add the error reports: what a
+- [x] In "What Conductive uses, and why", add the error reports: what a
       browser report holds, what a server report holds, and their use to
       find and fix failures.
-- [ ] In "Who gets your data", name Better Stack (decision 5), with its EU
+- [x] In "Who gets your data", name Better Stack (decision 5), with its EU
       hosting, the data that it gets, and the IP address that it can store
       for each browser report.
-- [ ] In "Transfers to other countries", add Better Stack from its
+- [x] In "Transfers to other countries", add Better Stack from its
       published data processing terms.
-- [ ] In "How long Conductive keeps data", say that Better Stack keeps
+- [x] In "How long Conductive keeps data", say that Better Stack keeps
       each error report for 90 days.
-- [ ] Say that an org invitation keeps the email address that the admin
+- [x] Say that an org invitation keeps the email address that the admin
       invited, as option A of
       `plans/follow-ups/privacy-invitation-email-data.md` asks.
-- [ ] Check that the lawful basis paragraph covers the error reports. It
+- [x] Check that the lawful basis paragraph covers the error reports. It
       names legitimate interests to operate and secure the service.
-- [ ] Run `npm run mockups:check`. Smoke-test the Privacy mockup and the
+- [x] Run `npm run mockups:check`. Smoke-test the Privacy mockup and the
       built Privacy page.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/better-stack-error-reporting/milestone-1-report.md`.
+
+Agent call, 10 November 2026: the Privacy page's recipient and transfer
+sections move to `src/marketing/privacy-recipients.ts`, to keep each file
+below 300 lines. Its effective date is 10 November 2026. Milestone 2 names
+the new file in the marketing README. It also states the operator's EU
+region check, which the approved EU hosting requires. The existing Resend
+transfer gap and the mockup footer gap get separate follow-up items.
 
 ## Milestone 2: Documentation and protocol
 
@@ -449,7 +486,7 @@ Depends on: 1
 The docs state the requirements and the decisions in force for the work
 below.
 
-- [ ] Write `docs/protocol/error-reporting.md`: the parts that report, the
+- [x] Write `docs/protocol/error-reporting.md`: the parts that report, the
       enablement, the capture boundary, the event fields of each part, the
       data that never goes out, the repeat limits, the release and the
       environment, the failure safety, the browser connection, and the
@@ -457,24 +494,35 @@ below.
       requirement: error events over log shipping (decision 1), the Worker
       and web app scope (decision 2), the direct browser connection
       (decision 3), and no uptime checks (decision 4).
-- [ ] Change the network rule of the content security policy in
+- [x] Change the network rule of the content security policy in
       `docs/protocol/access-and-security.md`: pages can also call the
       origin of the browser error reports (decision 3).
-- [ ] Add Better Stack to "External services" and "Where data lives" in
+- [x] Add Better Stack to "External services" and "Where data lives" in
       `docs/architecture.md`, and link the new doc under "Protocol docs".
-- [ ] Add Resend to "External services" too. Then delete
+- [x] Add Resend to "External services" too. Then delete
       `plans/follow-ups/privacy-invitation-email-data.md`, because this
       milestone and Milestone 1 apply its option A.
-- [ ] Add `CONDUCTIVE_ERROR_TRACKING_DSN` to the secrets of
+- [x] Add `CONDUCTIVE_ERROR_TRACKING_DSN` to the secrets of
       `docs/deployment.md`. Add the browser DSN, the upload settings, the
       build steps of a release with maps, and the Better Stack settings.
-- [ ] Link the new doc from the "Docs" list of `README.md`.
-- [ ] Add the naming rule of decision 5 to the "Legal pages" section of
+- [x] Link the new doc from the "Docs" list of `README.md`.
+- [x] Add the naming rule of decision 5 to the "Legal pages" section of
       `src/marketing/README.md`. Add Better Stack's data processing terms
       to its review sources.
-- [ ] Read both legal pages in full, as the legal-pages rule says. Update
+- [x] Read both legal pages in full, as the legal-pages rule says. Update
       each sentence that a changed fact touches.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
+
+Evidence: `.context/better-stack-error-reporting/milestone-2-report.md`.
+
+Agent calls, 10 November 2026: repeat suppression uses a sliding minute
+and replaces the oldest sent key at the bound, as Bookfolio does. A partial
+set of upload settings disables uploads with a warning. Browser startup
+and transport failures leave the app usable. Neither diagnostics nor
+build output may disclose a key. The browser uses the same strict DSN
+parser as the Worker. These calls implement the approved privacy and
+failure-safety rules. The source-map build investigation checks matching
+local uploads for automatic deployments, with no upload token in CI.
 
 ## Milestone 3: Typed Worker warnings
 
@@ -484,117 +532,166 @@ Option D of `plans/follow-ups/typed-worker-warnings.md`: each warning
 becomes fixed text with typed values, so that no free text reaches Workers
 Logs or Better Stack.
 
-- [ ] Replace `warnWorker(message: string)` with a warning of a fixed text
+- [x] Replace `warnWorker(message: string)` with a warning of a fixed text
       key and typed values: IDs, phases, numbers, booleans, and known
       codes. Accept IDs and codes only as checked or branded values.
-- [ ] Make `errorSummary` return typed values.
-- [ ] Mark each value kind as log-only or reportable. IDs stay log-only.
-- [ ] Move each consumer of the replaced way, with its tests.
-- [ ] Keep the regression test of the terminal start warning in
+- [x] Make `errorSummary` return typed values.
+- [x] Mark each value kind as log-only or reportable. IDs stay log-only.
+- [x] Move each consumer of the replaced way, with its tests.
+- [x] Keep the regression test of the terminal start warning in
       `worker/terminal/service.test.ts`.
-- [ ] Delete the free-text API and
+- [x] Delete the free-text API and
       `plans/follow-ups/typed-worker-warnings.md`.
-- [ ] Update `worker/README.md`.
-- [ ] Run the targeted tests and the early check.
+- [x] Update `worker/README.md`.
+- [x] Run the targeted tests and the early check.
+
+Evidence: `.context/better-stack-error-reporting/milestone-3-report.md`
+and `milestone-3-docs-report.md` in the same folder.
+
+Agent call, 10 November 2026: the warning catalog has one typed object for
+each warning, with checked private wrappers for diagnostic text. Each log
+record separates `values` from log-only `ids`. Invalid diagnostic values
+are omitted, without changing an app result.
 
 ## Milestone 4: Release, browser DSN, and source maps
 
 Depends on: 2
 
-- [ ] Add one build helper that gives `conductive@<commit SHA>`, or no
+- [x] Add one build helper that gives `conductive@<commit SHA>`, or no
       release outside a Git checkout. Use it in `vite.config.ts` for the
       web app and the Worker, and in `desktop/vite.config.ts` for the Mac
       window.
-- [ ] Add the shared module in `src/shared/` with the public browser DSN,
+- [x] Add the shared module in `src/shared/` with the public browser DSN,
       empty for now, and its origin.
-- [ ] Turn on hidden source maps in the client build. Add
+- [x] Turn on hidden source maps in the client build. Add
       `public/.assetsignore` with `*.map`.
-- [ ] Add `@sentry/vite-plugin` with `npm install`. It runs only when the
+- [x] Add `@sentry/vite-plugin` with `npm install`. It runs only when the
       upload settings are present. It uploads the maps of the web app and
       the Worker under the release, then deletes them. It warns and goes
       on when an upload fails.
-- [ ] Build without upload settings. Check that the deployable assets hold
+- [x] Build without upload settings. Check that the deployable assets hold
       no `.map` file. Save the evidence under
       `.context/better-stack-error-reporting/`.
+
+Evidence: `.context/better-stack-error-reporting/milestone-4-report.md`.
+The upload instances are conditional. No-upload instrumentation also runs
+without settings, as the design refinement above explains. The docs
+implementor updates the frozen API's README and operator guide in the same
+change. Three unused shared exports await their consumers in Milestones 5
+and 7. The final gate keeps its exports check unchanged.
 
 ## Milestone 5: Worker error reporting module
 
 Depends on: 3, 4
 
-- [ ] Add `@sentry/cloudflare` with `npm install`. Turn on
+- [x] Add `@sentry/cloudflare` with `npm install`. Turn on
       `nodejs_compat` in `wrangler.jsonc`. Check that `npm run typecheck`
       still checks the Worker production code without Node types.
-- [ ] Add a Worker module with the DSN check, the environment, the
+- [x] Add a Worker module with the DSN check, the environment, the
       release, the SDK setup, the allowlist filter in `beforeSend`, the
       route template, the repeat suppression, and one capture function for
       each classification.
-- [ ] Add `CONDUCTIVE_ERROR_TRACKING_DSN` to the Worker environment type.
-- [ ] Test with a fake transport and an injected clock, with no network:
-  - [ ] A hostile error and request: its message, a URL with a query,
+- [x] Add `CONDUCTIVE_ERROR_TRACKING_DSN` to the Worker environment type.
+- [x] Test with a fake transport and an injected clock, with no network:
+  - [x] A hostile error and request: its message, a URL with a query,
         headers, and IDs reach no event.
-  - [ ] The filter drops an event that it cannot rebuild, and a second
+  - [x] The filter drops an event that it cannot rebuild, and a second
         pass gives the same event.
-  - [ ] The route template keeps the known segments and replaces the
+  - [x] The route template keeps the known segments and replaces the
         others.
-  - [ ] The suppression limits for each key, for all keys, and for the
+  - [x] The suppression limits for each key, for all keys, and for the
         number of keys.
-  - [ ] A missing DSN sends nothing. An invalid DSN writes one warning and
+  - [x] A missing DSN sends nothing. An invalid DSN writes one warning and
         sends nothing.
-- [ ] Run the targeted tests.
+- [x] Run the targeted tests.
+
+Evidence: `.context/better-stack-error-reporting/milestones-5-6-report.md`.
 
 ## Milestone 6: Worker capture points
 
 Depends on: 5
 
-- [ ] Report each final 5xx response of the Worker's `fetch` once, with
+- [x] Reconcile the reporting implementation with main's native runtime,
+      attachments, lifecycle task and alarm changes, and canonical typed
+      warnings. Preserve all main behavior and assertions. Re-inventory
+      the new catches and warnings. Run the required proofs again on the
+      integrated tree.
+- [x] Report each final 5xx response of the Worker's `fetch` once, with
       the caught error when one exists.
-- [ ] Report a failed `alarm` of the `Workspace` Durable Object, then
+- [x] Report a failed `alarm` of the `Workspace` Durable Object, then
       throw the error again.
-- [ ] Report a failed cron run, then throw the error again.
-- [ ] Write the inventory of the warnings and of the catches that hide an
+- [x] Report a failed cron run, then throw the error again.
+- [x] Write the inventory of the warnings and of the catches that hide an
       unexpected failure. Mark each warning as reported or log-only.
       Report each hidden failure, such as a failed runner message in
       `worker/chat/sockets.ts` and a failed org cleanup in
       `worker/members/cleanup.ts`. Keep a busy cleanup lease silent.
-- [ ] Test: an unknown error gives one 500 and one event. A 4xx gives no
+- [x] Test: an unknown error gives one 500 and one event. A 4xx gives no
       event. A returned 503 gives one event. A failed alarm gives one
       event and still throws. A failed org cleanup gives one event, and a
       busy lease gives none. A failed report does not change the
       response.
-- [ ] Update `worker/README.md`.
-- [ ] Smoke-test with the Worker DSN, when the user gives it. In
+- [x] Update `worker/README.md`.
+- [x] Smoke-test with the Worker DSN, when the user gives it. In
       `npm run dev`, set an invalid `CONDUCTIVE_MODELS` in `.dev.vars`, open
       `/api/models`, and check one `development` event with only the kept
       fields. This also proves that Better Stack takes events from
       `@sentry/cloudflare`. Without the DSN, record the step as blocked.
 
+Evidence: `.context/better-stack-error-reporting/milestones-5-6-report.md`.
+The live Worker smoke test was not run. No real DSN was provided. The
+activation follow-up retains that blocked check. Native workerd tests
+proved local SDK delivery and the default transport without a provider
+account. The complete gate's preview failures are under diagnosis.
+
+Agent calls, 10 November 2026: preserve safe causes through a bounded
+private Durable Object handoff and remove it at trusted receivers and the
+final public boundary. Capture final HTTP status after body limiting.
+Use one isolated scope per operation and detached callback. Keep verified
+diagnostic snapshots through both SDK filters. Use manual redirects in
+the Worker transport because workerd rejects the browser's error mode.
+
 ## Milestone 7: Web app and Mac window reporting
 
 Depends on: 4
 
-- [ ] Add `@sentry/react` with `npm install`.
-- [ ] Add the shared browser module: the enablement, the SDK setup with
+- [x] Add `@sentry/react` with `npm install`.
+- [x] Add the shared browser module: the enablement, the SDK setup with
       the allowlist filter in `beforeSend`, the `screen` tag, and
       `user.id`.
-- [ ] Call it before the first render in `src/main.tsx` and in
+- [x] Call it before the first render in `src/main.tsx` and in
       `desktop/renderer/main.tsx`, and pass React's root error callbacks.
-- [ ] Set `user.id` after sign-in, and clear it at sign-out.
-- [ ] Add the browser DSN origin to `connect-src` in
+- [x] Set `user.id` after sign-in, and clear it at sign-out.
+- [x] Add the browser DSN origin to `connect-src` in
       `appContentSecurityPolicy`, for the Worker and the Mac build.
-- [ ] Test: a hostile event loses every field that the list does not
+- [x] Test: a hostile event loses every field that the list does not
       keep. The `screen` tag never holds an address. The enablement rules
       hold, also for the Mac window's app origin. The policy names the
       origin only when the DSN is set.
-- [ ] Update `src/app/README.md` and `desktop/README.md`.
+- [x] Update `src/app/README.md` and `desktop/README.md`.
+
+Evidence: `.context/better-stack-error-reporting/milestone-7-report.md`
+and `milestone-7-docs-report.md` in the same folder.
+
+Agent calls, 10 November 2026: both filter stages use the same approved
+snapshot and exact object identity. Original stacks pass the shared
+message-prefix check, then the browser validates loaded bundle/debug-ID
+pairs. A fresh native startup probe selects headerless parsing only where
+the browser uses that format. Identity follows both ready and waiting
+accounts and clears for other states. Real Chrome capture and the actual
+default-disabled app were checked with a fake final transport.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Set the browser DSN constant when the user gives it. Without it, the
+- [x] Preserve main's provider-account isolation and workspace-menu changes
+      during final integration. Check the clean merges and rerun the gate
+      on the integrated tree before the implementation commit.
+- [x] Set the browser DSN constant when the user gives it. Without it, the
       browser stays off, and a follow-up item records the step.
-- [ ] Record a follow-up item for the source maps of Mac builds.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Record a follow-up item for the source maps of Mac builds.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -606,6 +703,34 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+The browser DSN remains empty. `better-stack-activation.md` retains its
+activation and credentialed smoke steps. `mac-renderer-source-maps.md`
+retains the Mac map work. The other post-merge tasks have standalone
+source-map and first-event follow-up items. The branch also records the
+existing Resend transfer, Worker fixture typecheck, and stale preview-link
+problems without changing their unrelated behavior.
+
+Verification evidence is under `.context/better-stack-error-reporting/`.
+The first full gate stopped after branch-caused preview dependency
+snapshot failures. Main passed the focused comparison. The fix retains
+the live dependency object, and all 40 preview tests pass. A later early
+gate run was interrupted for a clean merge of main's release 0.4.0.
+`complete-gate-final.log` records the final integrated gate.
+
+The later `complete-gate-verified.log` passed the full gate after the cache,
+promise-observation, and callback-entry corrections. A subsequent fetch
+found main's provider-account and workspace-menu changes. The branch
+preserves those additions in merge `4b74089a` and checks the integrated
+tree before the implementation commit. The tested snapshot is retained.
+
+The final integrated gate passed in `complete-gate-ready.log`. It covers
+all repository and runner tests, all static checks, the production build,
+and strict mockups. The unchanged restore-watch test failed once in the
+prior run and passed its single file rerun. Its existing follow-up keeps
+the exact assertion and rerun result. No source or test rule changed for
+that observation. Manual Markdown links pass. Live Better Stack checks
+remain blocked by the missing credentials.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -108,16 +108,22 @@ export async function brokerBrowserRoute(
       try {
         value = deviceFrame(event.data)
       } catch {
-        void broker.serial(() =>
-          broker.connection === connection ? broker.drop() : Promise.resolve(),
+        void broker.reporting.background(() =>
+          broker.serial(() =>
+            broker.connection === connection
+              ? broker.drop()
+              : Promise.resolve(),
+          ),
         )
         return
       }
-      void broker.receive(connection, value)
+      void broker.reporting.background(() => broker.receive(connection, value))
     })
     const close = () => {
-      void broker.serial(() =>
-        broker.connection === connection ? broker.drop() : Promise.resolve(),
+      void broker.reporting.background(() =>
+        broker.serial(() =>
+          broker.connection === connection ? broker.drop() : Promise.resolve(),
+        ),
       )
     }
     server.addEventListener('close', close)

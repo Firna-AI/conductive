@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { suspendedOrgError } from '../data/org-access'
 import {
   readWorkspaceAccessStop,
@@ -183,7 +184,8 @@ async function stopForAccess(
       await input.alarms.set('lifecycle', null)
     }
     return true
-  } catch {
+  } catch (error) {
+    captureUnexpectedWorkerFailure('workspace_suspension_failed', error)
     await storage.setAlarm(dependencies.now() + 30_000)
     return false
   }

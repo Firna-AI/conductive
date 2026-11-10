@@ -10,136 +10,13 @@ pull request bar, and the owner picker. A host can give its own parts, as
 
 ## Run it
 
-- `npm run dev` serves the app at `http://127.0.0.1:5173` with the fake API
-  of `src/test-support/`. Development only: `main.tsx` loads it behind
-  `import.meta.env.DEV`, so the production build never bundles it.
-- The local Worker serves the page. The
-  [Get started steps](../../README.md#get-started) give its local setup.
-- The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
-  browser shows on the next read. Query options choose a preview state, for
-  example `?role=member`, `?workspace=starting`, `?firstRun=org`,
-  `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
-  `?waiting=1`, `?paused=1`, or
-  `?paths=masked`. `dev/options.ts` lists them. `dev/attachment-routes.ts`
-  keeps the uploaded files of both composers. With `?upload=wait` each
-  upload keeps running, and with `?upload=fail` the first upload of the
-  page fails once, so Try again works. `?sent=<percent>` makes the dev
-  fixture `dev/progress-fixture.ts` report that share of each file as
-  sent, so `?upload=wait&sent=64` shows the measured state. Create org of the dev fake
-  requires at least one repository and starts a simulated build. Its
-  repository catalogue keeps the saved choices, and its custom initials
-  stay through rename, delete, and restore. Settings changes during the
-  first good build start one added build. The fake compares settings
-  revisions with builds as the Worker does.
-- `?operator=1` makes the dev user an operator, so the rail and the org
-  switcher show Operator. The [operator section](../shell/operator/README.md)
-  then shows the sample orgs, users, people who wait, and codes of the
-  mockups. Suspend, Lift, Approve, New code, Disable, and the pause of
-  sign-ups change them. A suspension of Acme, Futex, or Firna also
-  suspends that org in the state of the fake, so the fake refuses each
-  write of that org with `org_suspended`. The open app does not read its orgs again, so its pages
-  of that org show the suspension only after such a refusal. Without the
-  option, each operator request gets `operator_required`, as the Worker
-  does.
-- `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
-  app access with a verified email, so the app shows only the
-  [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
-  account without a verified email. Sam starts as a new account, as
-  `?firstRun=github-app` does. With `?operator=1` nobody waits, because
-  an operator gets app access. With `?waiting`, `?invited=1` adds an
-  invitation of Acme, whose Accept makes Sam a member with app access. A
-  join link, such as `/join/V7MKC-2QDXH?waiting=1`, uses its code at once.
-  `?paused=1` pauses
-  sign-ups: each use of a code, and the Accept of a person who waits, get
-  `signups_paused`. The Account page shows the pause, and the operator
-  section shows its notice.
-  `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
-  invite code of a user with app access, also on the page of that user in
-  the operator section.
-- The waitlist and the operator section share one pause and one set of
-  codes, as they share the database of the Worker. The codes are those of
-  the operator mockups, with a referral code for each sample user with
-  app access. For example, `V7MKC-2QDXH` works, `M4QTX-7HKWD` is the
-  referral code of Mira Santos, `9PTXC-4WHMN` is used up, `HM3PE-7KWQT`
-  is disabled, and a code that the mockups do not list is not found. A
-  code that works counts its use, and gives app access and a new invite
-  code, so Get started opens. With `?operator=1`, a pause or a Disable in
-  the operator section shows on the Account page of the operator.
-- The fake keeps its state in the page. A reload starts again from the
-  options, so Sam waits again, and the codes and the pause are those of
-  the options. An operator never waits, so a pause or a new code of the
-  operator section cannot reach the waitlist screen.
-- The workspace screen shows the real chat over the dev fake. The fake
-  answers each chat write with a recorded reply, changes no state, and
-  sends no event. So a sent message stays pending, and a new session adds
-  no tab.
-- One counter numbers the events of all workspaces of the dev fake, and its
-  event source ignores the workspace. So an event of another workspace
-  leaves a gap in the event numbers of the chat. At the next event of the
-  open workspace, the chat opens its stream again, and the history fills
-  the gap. Each such event costs one more connection, and the chat still
-  applies the later events. Use `npm run dev` for the chat load and the
-  kept chat. The
-  [chat development page](../chat/dev/README.md) has a fake with state for
-  live events and writes.
-- The production build uses `live-services.ts`: the Worker on the origin of
-  the page, its event socket, and an `XMLHttpRequest` for each raw file
-  upload, which measures the bytes that the browser sent.
-
-The development fake keeps each org's workspace number counter.
-A create gets the next number and a web link on the fake API origin.
-Workspace readers keep the number and link that the Worker supplies.
+[Run it](run-it.md) gives how the app runs in development, with the fake
+API and its preview options, and in the production build.
 
 ## Composition
 
-`App` in `src/App.tsx` takes three props:
-
-| Prop         | What it gives                                                                  |
-| ------------ | ------------------------------------------------------------------------------ |
-| `services`   | `AppServices` from `services.ts`: the API, the events, the clock, the storage  |
-| `navigation` | The address bar: `browserNavigation(window)`, or `memoryNavigation` in tests   |
-| `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
-
-The workspace screen draws the frame, the header, the start steps, the
-Archive question, and the states of the sandbox. The real chat fills the
-centre by default. The `tabs`, `transcript`, and `composer` slots replace it
-with the shell's own chat column, as
-[The chat of the workspace](../shell/workspace/README.md#the-chat-of-the-workspace)
-says. Each feature is a function
-of `WorkspaceContext`, which gives the org, the workspace, the viewer, the
-sandbox state, whether the workspace is read-only, what a part shows while
-the sandbox does not run, the layout, the address after the workspace, the
-ordered event stream, the saved view of the kept chat, the events of the
-tools, and the Archive action. The feature clients send through the
-services of the org, from `useOrgServices`, whose client and fetch mark the
-org on `org_suspended`. The shell gives
-its own `files`, `tools`, `pullRequest`, and `owner` parts, as
-[the workspace screen](../shell/workspace/README.md#the-files-part) says. A
-part of the host takes the place of the shell's own part. A missing
-feature leaves its place empty.
-
-| Feature       | Place |
-| ------------- | ----- |
-| `tabs`        | The tabs of the shell's own chat column, in place of the chat |
-| `transcript`  | The history of that column, before the start steps |
-| `composer`    | The composer of that column while the sandbox runs or starts |
-| `center`      | A part in place of the whole chat. Without it, the chat shows the file or diff tab of the address |
-| `files`       | All files, Changes, and Checks. The shell gives its own |
-| `tools`       | Terminal and Preview. The shell gives its own |
-| `pullRequest` | The pull request bar, or the row on a phone. The shell gives its own |
-| `owner`       | The owner picker that reassigns a workspace. The shell gives its own |
-
-The org settings mount the members UI of `../members/`: `MembersSettings`
-for the Members tab, Delete org in the General tab of an admin, the restore
-page of a deleted org, and the read-only Repositories and Cloud computer
-tabs of a member. The Cloud computer tab of a member gets the live builds,
-log, and settings of `ComputerModel`. `useMembersApi(orgId)` in
-`../shell/settings/members-api.ts` gives one members client for each org,
-over the fetch of the org's client, so a refusal of a suspended org marks
-the org. In a suspended org every person gets the read-only tabs, and the
-restore page offers no Restore. A removal reads the list and the members
-of the org again. Delete org and Restore give their answers to
-`AppModel.putOrg`.
+[Composition](composition.md) gives the props of `App`, the parts that a
+host gives to the workspace screen, and the members UI of the org settings.
 
 ## Data lifecycle
 
@@ -154,6 +31,12 @@ the workspace stores, and the raw event streams of feature stores.
 the account and Get started, sign-in, invitations, orgs, panels and
 layers, the command palette, the focus, saved drafts, New workspace as a page or a dialog,
 with the send key that every composer shares, and the waitlist.
+
+## Error reporting
+
+[Error reporting](error-reporting.md) gives the browser error reporter that
+the web app and the Mac app window share: when it starts, what it keeps, its
+two privacy rebuilds, its entry points, and its focused checks.
 
 ## Rules for this code
 
@@ -216,6 +99,6 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the file uploads, the
-models, the waitlist and its codes, and the workspace list. It also covers
-the event streams, the drag, the operator section, the command palette, the
-layers, the frames, and New workspace.
+models, the error reporter, the waitlist and its codes, and the workspace
+list. It also covers the event streams, the drag, the operator section, the
+command palette, the layers, the frames, and New workspace.

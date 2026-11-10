@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { parseGitHubTokens, type GitHubTokenBundle } from './github-token-data'
@@ -31,11 +32,14 @@ export async function refreshGitHubTokens(
     const tokens = parseGitHubTokens(value, now)
     if (!tokens) throw new Error('GitHub returned an invalid token')
     return tokens
-  } catch {
-    throw new HttpError(
-      502,
-      'github_refresh_failed',
-      'GitHub access failed. Sign in with GitHub again.',
+  } catch (error) {
+    throw linkWorkerError(
+      new HttpError(
+        502,
+        'github_refresh_failed',
+        'GitHub access failed. Sign in with GitHub again.',
+      ),
+      error,
     )
   }
 }

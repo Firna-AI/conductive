@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { AppDependencies, AppEnv } from '../env'
 import { requireOrgMember } from '../lifecycle/access'
 import { requireActiveWorkspaceOwner } from '../data/user-access'
@@ -118,6 +119,7 @@ export async function resumeCreationCheckpoint(
     }
   } catch (error) {
     if (!(error instanceof HttpError)) throw error
+    captureUnexpectedWorkerFailure('creation_checkpoint_failed', error)
     job.failure = {
       code: error.code,
       message: error.message,

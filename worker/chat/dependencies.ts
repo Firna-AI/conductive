@@ -17,6 +17,7 @@ import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { filterRunnerOutput } from './runner-output'
+import { workspaceErrorReporting } from '../error-reporting/workspace'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -28,6 +29,13 @@ export function chatDependencies(
   workspaceId: () => string | null,
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
+  const reporting =
+    overrides.reporting ?? workspaceErrorReporting(env, overrides.waitUntil)
+  const waitUntil =
+    overrides.waitUntil ??
+    ((pending: Promise<unknown>) => {
+      void pending.catch(() => undefined)
+    })
   return {
     readAutomaticTitleWorkspace: (id) =>
       readAutomaticTitleWorkspace(env.DB, id),
@@ -35,8 +43,6 @@ export function chatDependencies(
     filterRunnerOutput: (transaction, workspace, input) =>
       filterRunnerOutput(env, transaction, workspace, input),
     now: Date.now,
-    scheduleBrowserCheck: scheduleConnectionCheck,
-    scheduleRunnerCheck: scheduleConnectionCheck,
     readRunnerAccess: (id, tokenHash) =>
       runnerTokenAllowed(env.DB, id, tokenHash),
     readConnectionAccess: (tabs, now) =>
@@ -81,11 +87,16 @@ export function chatDependencies(
     turnDispatchFailed: async () => undefined,
     browserOpened: async () => undefined,
     browserClosed: async () => undefined,
-    waitUntil: (promise) => {
-      void promise.catch(() => undefined)
-    },
     matchesObject: () => true,
     ...overrides,
+    reporting,
+    scheduleBrowserCheck: reporting.schedule(
+      overrides.scheduleBrowserCheck ?? scheduleConnectionCheck,
+    ),
+    scheduleRunnerCheck: reporting.schedule(
+      overrides.scheduleRunnerCheck ?? scheduleConnectionCheck,
+    ),
+    waitUntil: (pending) => waitUntil(reporting.observe(pending)),
     resolveLogin: loginResolver(env, workspaceId, overrides.resolveLogin),
   }
 }

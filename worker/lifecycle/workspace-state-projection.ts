@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { AgentChoice } from '../../src/shared/agents'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -92,6 +93,10 @@ export class WorkspaceStateProjection {
     const result = await this.write(now)
     if (result && 'titleError' in result) {
       if (!publish) throw result.titleError
+      captureUnexpectedWorkerFailure(
+        'workspace_projection_failed',
+        result.titleError,
+      )
       return false
     }
     if (result && 'response' in result)

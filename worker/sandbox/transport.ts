@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { HttpFetch } from '../env'
 import { HttpError, isRecord } from '../http'
 import {
@@ -94,8 +95,8 @@ export class BoatTransport {
           ),
         }),
       )
-    } catch {
-      throw new ProviderError('unavailable', 503)
+    } catch (error) {
+      throw linkWorkerError(new ProviderError('unavailable', 503), error)
     }
     let value: unknown
     try {
@@ -109,16 +110,19 @@ export class BoatTransport {
     } catch (error) {
       if (error instanceof BodyBudgetExceeded) {
         if (response.ok && route.operation === 'readFile') throw error
-        throw new HttpError(
-          502,
-          command ? 'command_output_too_large' : 'sandbox_response_too_large',
-          command
-            ? 'The command output is too large.'
-            : 'The cloud computer response is too large.',
+        throw linkWorkerError(
+          new HttpError(
+            502,
+            command ? 'command_output_too_large' : 'sandbox_response_too_large',
+            command
+              ? 'The command output is too large.'
+              : 'The cloud computer response is too large.',
+          ),
+          error,
         )
       }
       if (!response.ok) throw providerError(response, null)
-      throw new ProviderError('invalid_response', 502)
+      throw linkWorkerError(new ProviderError('invalid_response', 502), error)
     }
     if (!response.ok) throw providerError(response, value)
     if (

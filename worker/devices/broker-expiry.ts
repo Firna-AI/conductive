@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { DeviceBroker } from './broker'
 import type { BrokerRequest, DeviceConnection } from './broker-types'
 
@@ -26,7 +27,8 @@ export async function expireDeviceCommand(
         truncated: false,
       },
     })
-  } catch {
+  } catch (error) {
+    captureUnexpectedWorkerFailure('device_state_update_failed', error)
     /* The workspace may already have deleted its request state. */
   } finally {
     await broker.forget(item)

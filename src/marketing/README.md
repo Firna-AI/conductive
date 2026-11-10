@@ -160,112 +160,28 @@ files on success, failure, or interruption.
 ## Legal pages
 
 The Terms and Privacy pages show their title, introduction, and sections.
-The operator is Firna Ltd, registered in England and Wales.
-`legalOperator` in `legal-text.ts` holds its company number, registered
-office, and VAT number. Both pages use those details. Each page keeps its
-own effective date. The Terms use the law of England and Wales and preserve
-mandatory consumer protections.
-The facts about the service come from the
-[architecture doc](../../docs/architecture.md) and the
-[protocol docs](../../docs/protocol/). The Privacy page names what the
-waitlist, the invite codes, and each record of app access keep, the
-GitHub token and the verified emails that each sign-in keeps, and Resend,
-which sends the emails, from
-[The record of app access](../../docs/protocol/waitlist.md#the-record-of-app-access).
+[Legal pages](legal-pages.md) gives their operator, the sources of their
+facts, their shared text, and the sources for their review.
 
 When you change a fact in the architecture doc or in a protocol doc, read
 both legal pages in full. The legal pages are the Terms page in
-`src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts`.
-In the same change, update each sentence of the legal pages that restates
-the fact. A search for the old words is not enough, because a legal page
-can restate a fact in other words.
+`src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts`
+and `src/marketing/privacy-uses.ts`. In the same change, update each
+sentence of the legal pages that restates the fact. A search for the old
+words is not enough, because a legal page can restate a fact in other words.
 
-The words of the legal pages, of the page for an unknown address, and of
-the sign-in agreement are text without markup. `terms.ts`, `privacy.ts` with `privacy-uses.ts`,
-and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
-`components/RunningText.astro` build their HTML for the site. The mockups and the sign-in screen of the app render the same text
-with React. So every surface shows the same words.
-
-Sources for the review:
-
-- The ICO guidance on the privacy information to give:
-  <https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/individual-rights/the-right-to-be-informed/what-privacy-information-should-we-provide/>.
-  It lists the identity and the contact, the purposes and the lawful
-  basis, the recipients, transfers to other countries, retention, the
-  rights, and complaints. The Privacy page has a section for each.
-- The [ICO guide to lawful bases](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/a-guide-to-lawful-basis/)
-  explains contract, legitimate interests, and legal obligations.
-- [Data protection complaints](https://www.gov.uk/data-protection/make-a-complaint)
-  gives the contact details of the Information Commissioner's Office.
-- [Article 13 of the UK GDPR](https://www.legislation.gov.uk/eur/2016/679/article/13)
-  states the information that a notice must give about international transfers.
-- The [UK-US data bridge guidance](https://www.gov.uk/government/publications/uk-us-data-bridge-supporting-documents/uk-us-data-bridge-factsheet-for-uk-organisations)
-  and [its regulations](https://www.legislation.gov.uk/uksi/2023/1028/contents)
-  cover transfers to US organisations certified under the UK Extension.
-- [Cloudflare's data processing terms](https://www.cloudflare.com/cloudflare-customer-dpa/)
-  and [GitHub's privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
-  describe their published transfer protections.
-- [Anthropic's privacy policy](https://www.anthropic.com/legal/privacy),
-  [its data processing terms](https://www.anthropic.com/legal/data-processing-addendum),
-  and [OpenAI's data processing terms](https://openai.com/policies/data-processing-addendum/)
-  describe protections under the account that an agent session uses.
-- Boat's terms: <https://boat.dev/terms>. They cover the allowed use of
-  the app's Boat organization, and they make the operator answer for what
-  users do in it. The Terms and Privacy pages do not name the cloud computer
-  provider or link to its terms. The Acceptable use section passes on
-  those rules in its own words.
-- [Boat's privacy policy](https://boat.dev/privacy) reports its EU hosting
-  locations and says that an Article 28 agreement is available on request.
-  Its public policy does not prove that Firna has that agreement.
-
-Each sign-in accepts the current revision of the Terms. The agreement sits
-beside Continue with GitHub, as
-[Terms consent](../../worker/security/README.md#terms-consent) says. The
-Terms page also has a Suspension section and a Report abuse section. The
-[operator action](../../worker/operator/README.md) suspends an account.
-The Suspension section explains how to request a review and warns that
-a stopped cloud computer can lose its disk.
-
-The footer and the Report abuse section use `abuseAddress` from
-`legal-text.ts`: `abuse@` and the product domain. Legal and privacy contact
-links use `legalAddress`: `legal@` and the product domain.
-No code or setup in this repository creates those mailboxes.
+The Privacy page names each outside service that gets user data, except
+the cloud computer provider. A repository rule keeps the name of that
+provider out of user-facing text, as [AGENTS.md](../../AGENTS.md) says.
+Reason: a description by kind would hide a name that the app shows, such as
+the address of Better Stack in the content security policy of each app
+page. Each later service follows this rule with no new decision.
 
 ## The comparison page
 
-The page at `/from-conductor` shows people who move from Conductor Cloud
-the status of each Conductor Cloud feature in Conductive.
-[Conductor Cloud comparison](../../docs/protocol/conductor-cloud-comparison.md)
-states its requirements. The link above the home headline and the "From
-Conductor Cloud" link in the Product column of the footer lead to it. Its
-last call to action has the sentence and the two actions of the home page.
-
-The modules in `from-conductor/` are the one source of the rows, the
-statuses, the dates, and the words of the page. The chosen mockup,
-`marketing/from-conductor/one-table`, reads the same modules, so the page
-and its mockup show the same rows. One table serves both layouts with CSS
-only: a computer shows the merged Area cell of each area, and a phone shows
-the Area cell of each row. `### Key code` names each module and part.
-[AGENTS.md](../../AGENTS.md) says when a change must update a row.
-
-To change a row, edit it in the file of its area under
-`from-conductor/areas/`, and keep its `id`. A new area also needs its entry
-in `areas.ts` and its place in `features.ts`.
-
-Keep each row true:
-
-- Check each status with the claim rules of the protocol doc. A mockup or
-  a plan alone never proves Available.
-- Write each note in one or two plain sentences, with at most 25 words.
-  Say what Conductive does, or what to do instead. Name a limit only with
-  the way around it.
-- Name no sandbox provider, internal name, or decision number in a note.
-  Copy no Conductor text.
-- Give a due date only for a dated commitment that the team recorded.
-  Never add an example date.
-- Keep the evidence of each status and the scope audit out of the rows and
-  out of the page.
-- After a full check of every row, set the check date that the page shows.
+[The comparison page](from-conductor/README.md) gives the page at
+`/from-conductor`, the one source of its rows, how to change a row, and the
+rules that keep each row true.
 
 ## Development
 

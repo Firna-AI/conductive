@@ -41,7 +41,7 @@ export async function appSiteResponse(
     const url = new URL(request.url)
     url.pathname = '/'
     return await assets.fetch(new Request(url, request))
-  } catch {
-    return siteUnavailable()
+  } catch (error) {
+    return siteUnavailable(error)
   }
 }

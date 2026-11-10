@@ -45,6 +45,8 @@ export class Workspace extends AttachmentWorkspace {
       ...lifecycleDependencies(),
       now,
       terminalSchedule: activitySchedule,
+      errorReporting: this.reporting.runtime,
+      reporting: this.reporting,
     }
     const matches = (id: string) =>
       env.WORKSPACES.idFromName(id).equals(context.id)
@@ -167,46 +169,54 @@ export class Workspace extends AttachmentWorkspace {
   }
 
   async alarm(): Promise<void> {
-    if (!(await this.members.active())) return
-    const fence = await this.members.readFence()
-    if (
-      fence &&
-      !(await orgLifecycleActive(this.env.DB, fence.orgId, fence.generation))
-    ) {
-      await this.integration.alarms.defer(this.now(), this.now() + 30_000)
-      await this.integration.alarms.set('lifecycle:access', this.now() + 30_000)
-      return
-    }
-    await runWorkspaceAlarms(this.integration.alarms, this.now, {
-      lifecycle: () => this.alarmLifecycle(),
-      github: () => this.github.alarm(),
-      previews: () =>
-        expireWorkspacePreviews(
-          this.integration.storage,
-          this.integration.alarms,
-          this.features.previews,
-        ),
-      devices: () => this.devices.alarm(),
-      publishRevocations: async () => {
-        const workspaceId = await this.integration.storage.get<string>(
-          'previews:workspace-id',
+    return this.reporting.alarm(async () => {
+      if (!(await this.members.active())) return
+      const fence = await this.members.readFence()
+      if (
+        fence &&
+        !(await orgLifecycleActive(this.env.DB, fence.orgId, fence.generation))
+      ) {
+        await this.integration.alarms.defer(this.now(), this.now() + 30_000)
+        await this.integration.alarms.set(
+          'lifecycle:access',
+          this.now() + 30_000,
         )
-        if (workspaceId) await this.features.publishRevocations(workspaceId)
-      },
+        return
+      }
+      await runWorkspaceAlarms(this.integration.alarms, this.now, {
+        lifecycle: () => this.alarmLifecycle(),
+        github: () => this.github.alarm(),
+        previews: () =>
+          expireWorkspacePreviews(
+            this.integration.storage,
+            this.integration.alarms,
+            this.features.previews,
+          ),
+        devices: () => this.devices.alarm(),
+        publishRevocations: async () => {
+          const workspaceId = await this.integration.storage.get<string>(
+            'previews:workspace-id',
+          )
+          if (workspaceId) await this.features.publishRevocations(workspaceId)
+        },
+      })
     })
   }
 
   async fetch(request: Request): Promise<Response> {
-    if (hostSurface(request, this.env) === 'preview')
-      return this.features.previews.proxy(request)
-    const feature = await this.features.fetch(request)
-    if (feature) return feature
-    if (/\/github(?:\/checks)?$/.test(new URL(request.url).pathname))
-      return handleGitHubRead(request, this.env, {
-        now: this.now,
-        refresh: (workspace, signal) => this.github.refresh(workspace, signal),
-      })
-    return this.fetchChat(request)
+    return this.reporting.fetch(async () => {
+      if (hostSurface(request, this.env) === 'preview')
+        return this.features.previews.proxy(request)
+      const feature = await this.features.fetch(request)
+      if (feature) return feature
+      if (/\/github(?:\/checks)?$/.test(new URL(request.url).pathname))
+        return handleGitHubRead(request, this.env, {
+          now: this.now,
+          refresh: (workspace, signal) =>
+            this.github.refresh(workspace, signal),
+        })
+      return this.fetchChat(request)
+    })
   }
 
   checkWorkspaceArchive(orgId: string, workspaceId: string, userId: string) {

@@ -1,4 +1,7 @@
 import { insertBuild } from './build-admission-data'
+import { captureWorkerWarning } from '../error-reporting/policy'
+import { errorSummary } from '../warning-values'
+import { WarningId } from '../warning-values'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -253,12 +256,22 @@ export async function advanceImageBuild(
     if (!done) await progressImageRetry(env.DB, buildId)
     return done
   } catch (error) {
-    return handleImageBuildFailure(runtime, {
+    const result = await handleImageBuildFailure(runtime, {
       orgId,
       buildId,
       provider,
       firstAllocation,
       error,
     })
+    captureWorkerWarning(
+      {
+        kind: 'image_build_failed',
+        buildId: WarningId.checked(buildId),
+        phase: job.phase,
+        error: errorSummary(error),
+      },
+      error,
+    )
+    return result
   }
 }

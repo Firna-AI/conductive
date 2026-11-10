@@ -1,4 +1,5 @@
 import type { ApiErrorBody } from '../src/shared/api'
+import { rememberResponseError } from './error-reporting/causes'
 
 export class HttpError extends Error {
   readonly status: number
@@ -13,21 +14,27 @@ export class HttpError extends Error {
 
 export function errorResponse(error: unknown): Response {
   if (error instanceof HttpError) {
-    return Response.json(
-      {
-        error: { code: error.code, message: error.message },
-      } satisfies ApiErrorBody,
-      { status: error.status },
+    return rememberResponseError(
+      Response.json(
+        {
+          error: { code: error.code, message: error.message },
+        } satisfies ApiErrorBody,
+        { status: error.status },
+      ),
+      error,
     )
   }
-  return Response.json(
-    {
-      error: {
-        code: 'internal_error',
-        message: 'The request failed. Try again.',
-      },
-    } satisfies ApiErrorBody,
-    { status: 500 },
+  return rememberResponseError(
+    Response.json(
+      {
+        error: {
+          code: 'internal_error',
+          message: 'The request failed. Try again.',
+        },
+      } satisfies ApiErrorBody,
+      { status: 500 },
+    ),
+    error,
   )
 }
 

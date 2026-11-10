@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import credentialScript from '../../image/git-credential-helper.mjs?raw'
 import credentialStart from '../../image/git-credential-helper.sh?raw'
 import githubCli from '../../image/github-cli.sh?raw'
@@ -33,11 +34,14 @@ export function readImageSoftware(value: unknown): ImageSoftwareArtifact {
   let url: URL
   try {
     url = new URL(value.url)
-  } catch {
-    throw new HttpError(
-      503,
-      'runner_software_unavailable',
-      'The cloud computer software is not available. Try again later.',
+  } catch (error) {
+    throw linkWorkerError(
+      new HttpError(
+        503,
+        'runner_software_unavailable',
+        'The cloud computer software is not available. Try again later.',
+      ),
+      error,
     )
   }
   if (

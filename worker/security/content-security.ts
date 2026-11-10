@@ -11,10 +11,11 @@ export function appContentSecurityPolicy(
     "img-src 'self' data: https://avatars.githubusercontent.com",
     "font-src 'self'",
     `frame-src 'self' ${frameSources.join(' ')}`.trim(),
-    `connect-src 'self' ${appOrigin} ${socketOrigin}`,
+    `connect-src 'self' ${appOrigin} ${socketOrigin}${BROWSER_ERROR_TRACKING_ORIGIN ? ` ${BROWSER_ERROR_TRACKING_ORIGIN}` : ''}`,
     "object-src 'none'",
     "base-uri 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
   ].join('; ')
 }
+import { BROWSER_ERROR_TRACKING_ORIGIN } from '../../src/shared/error-reporting.ts'

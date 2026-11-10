@@ -1,4 +1,5 @@
 import { ProviderError } from './errors'
+import { linkWorkerError } from '../error-reporting/causes'
 import { fileWriteBody } from './file-write-body'
 import type { BoatTransport } from './transport'
 
@@ -16,8 +17,8 @@ function uploadUrl(value: Record<string, unknown>, path: string): string {
   let url: URL
   try {
     url = new URL(value.url)
-  } catch {
-    throw new ProviderError('invalid_response', 502)
+  } catch (error) {
+    throw linkWorkerError(new ProviderError('invalid_response', 502), error)
   }
   if (url.protocol !== 'https:' || url.username || url.password)
     throw new ProviderError('invalid_response', 502)
@@ -46,6 +47,9 @@ export async function writeSandboxFile(
     if (!transfer.complete()) throw new ProviderError('unavailable', 503)
   } catch (error) {
     await (transfer ? transfer.cancel() : body.cancel()).catch(() => undefined)
+    const cause = transfer?.failure()
+    if (typeof error === 'object' && error !== null && cause !== undefined)
+      linkWorkerError(error, cause)
     throw error
   }
 }

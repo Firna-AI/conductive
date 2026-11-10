@@ -44,6 +44,17 @@ The Mac check and signing workflows set both origins when they build the app.
 Packaged apps use their bundled configuration.
 They ignore runtime environment overrides.
 
+The renderer uses the same Git release as the web app and the Worker.
+Its build also injects deterministic bundle debug IDs.
+It generates no source maps and uploads no source maps.
+[Error reporting setup](../docs/deployment/error-reporting.md) gives the source map steps of the web app and the Worker.
+The window uses the same error reporter as the web app, as [Error reporting](../docs/protocol/error-reporting.md) states.
+Its page origin is `conductive-app://desktop`, so the configured app origin of the build decides whether it reports.
+`desktop/renderer/main.tsx` passes `__CONDUCTIVE_APP_ORIGIN__` to the shared initializer.
+The reporter never uses the keyboard platform or the page origin to choose production.
+The loaded bundles and their debug IDs still give the real Mac frame locations.
+The main process sends no reports.
+
 The application menu starts GitHub sign-in in the browser.
 The `conductive://` callback carries an expiring, one-use handoff.
 The main process holds its verifier and installs a separate desktop session cookie.
@@ -263,7 +274,7 @@ The package includes only `dist/app/` and `dist/bundle/`.
 ### Key code
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
-- [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
+- [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`. It starts the browser error reporter before the first render.
 - [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.

@@ -1,4 +1,4 @@
-import { SIMPLE_WARNINGS, type WorkerWarning } from './warning-types'
+import { warningMessage, type WorkerWarning } from './warning-types'
 import type { ErrorSummary } from './warning-values'
 
 export type WarningRecord = ReturnType<typeof warningFields>
@@ -27,19 +27,19 @@ function warningFields(warning: WorkerWarning) {
     case 'workspace_title_request_failed':
       return {
         kind: warning.kind,
-        message: 'The workspace title request failed.',
+        message: warningMessage(warning),
         error: errorFields(warning.error),
       }
     case 'workspace_title_save_failed':
       return {
         kind: warning.kind,
-        message: 'The workspace title could not be saved.',
+        message: warningMessage(warning),
         error: errorFields(warning.error),
       }
     case 'workspace_start_failed':
       return {
         kind: warning.kind,
-        message: 'A workspace start failed.',
+        message: warningMessage(warning),
         workspaceId: warning.workspaceId.text,
         phase: warning.phase,
         error: errorFields(warning.error),
@@ -47,7 +47,7 @@ function warningFields(warning: WorkerWarning) {
     case 'workspace_start_ended':
       return {
         kind: warning.kind,
-        message: 'A workspace start ended as failed.',
+        message: warningMessage(warning),
         workspaceId: warning.workspaceId.text,
         phase: warning.phase,
         code: warning.code,
@@ -56,14 +56,14 @@ function warningFields(warning: WorkerWarning) {
     case 'workspace_first_message_failed':
       return {
         kind: warning.kind,
-        message: 'A workspace could not admit its first message.',
+        message: warningMessage(warning),
         workspaceId: warning.workspaceId.text,
         error: errorFields(warning.error),
       }
     case 'terminal_start_failed':
       return {
         kind: warning.kind,
-        message: 'The terminal of a workspace did not start.',
+        message: warningMessage(warning),
         workspaceId: warning.workspaceId.text,
         exitCode: warning.exitCode,
         timedOut: warning.timedOut,
@@ -71,7 +71,7 @@ function warningFields(warning: WorkerWarning) {
     case 'image_build_failed':
       return {
         kind: warning.kind,
-        message: 'An image build failed.',
+        message: warningMessage(warning),
         buildId: warning.buildId.text,
         phase: warning.phase,
         error: errorFields(warning.error),
@@ -79,26 +79,26 @@ function warningFields(warning: WorkerWarning) {
     case 'runner_message_failed':
       return {
         kind: warning.kind,
-        message: 'The runner of a workspace closes after a failed message.',
+        message: warningMessage(warning),
         workspaceId: warning.workspaceId.text,
         error: errorFields(warning.error),
       }
     case 'lifecycle_repair_limited':
       return {
         kind: warning.kind,
-        message: 'Lifecycle repair limited its checks.',
+        message: warningMessage(warning),
         resource: warning.resource,
         limit: warning.limit,
       }
     case 'lifecycle_repair_pending':
       return {
         kind: warning.kind,
-        message: 'Lifecycle repair left checks pending.',
+        message: warningMessage(warning),
         workspaces: warning.workspaces,
         orgs: warning.orgs,
       }
     default:
-      return { kind: warning.kind, message: SIMPLE_WARNINGS[warning.kind] }
+      return { kind: warning.kind, message: warningMessage(warning) }
   }
 }
 

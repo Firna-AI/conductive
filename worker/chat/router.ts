@@ -1,3 +1,4 @@
+import { consumeWorkspaceDiagnosticResponse } from '../error-reporting/response-diagnostics'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -64,10 +65,5 @@ export async function forwardWorkspaceRequest(
   const response = await env.WORKSPACES.get(
     env.WORKSPACES.idFromName(workspaceId),
   ).fetch(request)
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: response.headers,
-    ...(response.webSocket && { webSocket: response.webSocket }),
-  })
+  return consumeWorkspaceDiagnosticResponse(response)
 }

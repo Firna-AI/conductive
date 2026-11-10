@@ -42,7 +42,10 @@ async function source() {
         entry: 'worker/devices/test-worker.test-support.ts',
         formats: ['es'],
       },
-      rolldownOptions: { external: ['cloudflare:workers'] },
+      rolldownOptions: {
+        platform: 'neutral',
+        external: ['cloudflare:workers', /^node:/],
+      },
     },
   })
   const outputs = (Array.isArray(built) ? built : [built]).flatMap((value) =>
@@ -66,6 +69,7 @@ export async function deviceFixture() {
         config: {
           name: 'device-tests',
           compatibilityDate: '2026-11-06',
+          compatibilityFlags: ['nodejs_compat'],
           exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
           env: {
             DB: { type: 'd1', id: 'device-db' },

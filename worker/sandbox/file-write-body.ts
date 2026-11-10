@@ -1,4 +1,5 @@
 import { ProviderError } from './errors'
+import { linkWorkerError } from '../error-reporting/causes'
 
 /** Forward chunks without a file-sized buffer and require the declared byte count. */
 export function fileWriteBody(
@@ -9,6 +10,7 @@ export function fileWriteBody(
   let received = 0
   let finished = false
   let complete = false
+  let failure: unknown
   async function cancel() {
     if (finished) return
     finished = true
@@ -38,14 +40,17 @@ export function fileWriteBody(
             throw new ProviderError('unavailable', 503)
           }
           controller.enqueue(value)
-        } catch {
+        } catch (error) {
+          failure = error
           await cancel().catch(() => undefined)
-          controller.error(new ProviderError('unavailable', 503))
+          controller.error(
+            linkWorkerError(new ProviderError('unavailable', 503), error),
+          )
         }
       },
       cancel,
     },
     { highWaterMark: 0 },
   )
-  return { body, complete: () => complete, cancel }
+  return { body, complete: () => complete, cancel, failure: () => failure }
 }

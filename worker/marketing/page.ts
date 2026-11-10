@@ -1,3 +1,4 @@
+import { rememberResponseError } from '../error-reporting/causes'
 import {
   SITE_FOLDER,
   type SiteFile,
@@ -54,10 +55,11 @@ export async function pageResponse(
   })
 }
 
-export function siteUnavailable(): Response {
+export function siteUnavailable(error?: unknown): Response {
   warnWorker({ kind: 'marketing_site_unavailable' })
-  return new Response(null, {
+  const response = new Response(null, {
     status: 503,
     headers: { 'Cache-Control': 'no-store' },
   })
+  return error === undefined ? response : rememberResponseError(response, error)
 }

@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../../error-reporting/causes'
 import type {
   CommandOffsets,
   CommandStatus,
@@ -30,8 +31,8 @@ export class SourceCommandPort {
   async start(command: string): Promise<StartedCommand> {
     try {
       return await this.provider.startCommand(this.sandboxId, command)
-    } catch {
-      throw new UncertainSourceCommandStart()
+    } catch (error) {
+      throw linkWorkerError(new UncertainSourceCommandStart(), error)
     }
   }
 

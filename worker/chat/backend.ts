@@ -29,6 +29,10 @@ import {
   type WorkspaceOperation,
 } from './workspace-operation'
 import { browserUpgrade, runnerUpgrade } from './sockets'
+import {
+  workspaceErrorReporting,
+  type WorkspaceErrorReporting,
+} from '../error-reporting/workspace'
 import type {
   BrowserPeer,
   ChatDependencies,
@@ -38,6 +42,7 @@ import type {
 
 /** The Durable Object and the in-memory runner adapter use this boundary. */
 export class WorkspaceChat {
+  readonly reporting: WorkspaceErrorReporting
   readonly store: ChatStore
   private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
@@ -86,6 +91,7 @@ export class WorkspaceChat {
   ) {
     this.env = env
     this.dependencies = chatDependencies(env, () => this.workspaceId, overrides)
+    this.reporting = this.dependencies.reporting ?? workspaceErrorReporting(env)
     this.store = new ChatStore(storage, this.dependencies.now)
     this.titles = new WorkspaceTitles(
       env,

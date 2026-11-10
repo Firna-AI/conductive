@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../../error-reporting/causes'
 import type { AppEnv } from '../../env'
 import { decrypt, hash } from '../../security/crypto'
 import { HttpError, privateResponse } from '../../http'
@@ -51,11 +52,14 @@ export async function handleImageSourceCredential(
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },
       }),
     )
-  } catch {
-    throw new HttpError(
-      502,
-      'build_access_unavailable',
-      'The build access could not load.',
+  } catch (error) {
+    throw linkWorkerError(
+      new HttpError(
+        502,
+        'build_access_unavailable',
+        'The build access could not load.',
+      ),
+      error,
     )
   }
 }

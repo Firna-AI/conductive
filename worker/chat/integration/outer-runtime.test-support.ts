@@ -38,7 +38,10 @@ export async function outerWorkerBundle(
       minify: false,
       target: 'es2022',
       lib: { entry: entryPath, formats: ['es'] },
-      rolldownOptions: { external: ['cloudflare:workers'] },
+      rolldownOptions: {
+        platform: 'neutral',
+        external: ['cloudflare:workers', /^node:/],
+      },
     },
   })
   const outputs = (Array.isArray(bundle) ? bundle : [bundle]).flatMap(
@@ -93,6 +96,7 @@ export async function createOuterRuntime(
           config: {
             name: 'outer-chat-tests',
             compatibilityDate: '2026-11-06',
+            compatibilityFlags: ['nodejs_compat'],
             exports: {
               Workspace: { type: 'durable-object', storage: 'sqlite' },
             },

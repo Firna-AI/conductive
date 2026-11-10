@@ -1,3 +1,5 @@
+import { scheduledWorker } from './application-scheduled'
+import { transferResponseError } from './error-reporting/causes'
 import { API_PATHS } from '../src/shared/api'
 import { MACHINE_PATHS } from '../src/shared/agent-tools'
 import { GITHUB_SETUP_PATH } from '../src/shared/github-setup'
@@ -19,8 +21,7 @@ import {
   handleImageSourceCredential,
   IMAGE_SOURCE_CREDENTIAL_PATH,
 } from './lifecycle/image-sources/credential'
-import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
-import { repairLifecycleAlarms } from './lifecycle/repair'
+import { workspaceRuntime } from './lifecycle/runtime'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -30,16 +31,13 @@ import { DESKTOP_EXCHANGE_PATH } from './security/desktop-contract'
 import { desktopCors, desktopPreflight } from './security/desktop-origin'
 import { checkOrigin, sessionGate } from './security/gate'
 import { membersGate } from './members/gate'
-import { productionMembersHooks } from './members/composition'
-import { cleanupDeletedOrgs } from './members/cleanup'
 import { routePreview, routeWorkspaceFeatures } from './features/router'
 import { productionAgentTools } from './tools/composition'
 import { isAgentToolPath } from './tools/lists'
 import { productionGitHubWebhook } from './github/composition'
-import { appFrameSources, runnerSoftware } from './configuration'
+import { appFrameSources } from './configuration'
 import { appSiteResponse } from './marketing/assets'
-import { retryApprovalEmails } from './operator/approval-email'
-import { warnWorker } from './warnings'
+import { workerFetchEntry } from './error-reporting/entry'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -100,7 +98,10 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             const asset = path.startsWith(`/${SITE_FOLDER}/`)
               ? await appSiteResponse(request, env.ASSETS)
               : await env.ASSETS.fetch(request)
-            const response = new Response(asset.body, asset)
+            const response = transferResponseError(
+              asset,
+              new Response(asset.body, asset),
+            )
             response.headers.set(
               'Content-Security-Policy',
               appContentSecurityPolicy(env.APP_ORIGIN, appFrameSources(env)),
@@ -189,24 +190,13 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     },
   }
   return {
-    fetch: requestBodyEntry(application.fetch),
-    async scheduled(_event: ScheduledController, env: AppEnv): Promise<void> {
-      await cleanupDeletedOrgs(
-        env,
-        dependencies,
-        productionMembersHooks(env, dependencies),
-      )
-      await repairLifecycleAlarms(
-        workspaceRuntime(env, dependencies),
-        imageRuntime(env, dependencies),
-        () => runnerSoftware(env),
-      )
-      // Last, so that a slow or failed email never holds back the repairs.
-      try {
-        await retryApprovalEmails(env, dependencies)
-      } catch {
-        warnWorker({ kind: 'approval_email_retry_failed' })
-      }
+    fetch: workerFetchEntry(requestBodyEntry(application.fetch), dependencies),
+    scheduled(
+      _event: ScheduledController,
+      env: AppEnv,
+      execution?: Pick<ExecutionContext, 'waitUntil'>,
+    ): Promise<void> {
+      return scheduledWorker(env, dependencies, execution)
     },
   }
 }

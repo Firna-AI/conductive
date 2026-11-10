@@ -172,8 +172,12 @@ Later screens add the frame and connection sources that they need.
 - Scripts and fonts load only from the page's own origin.
 - Styles can also use inline values.
 - Images can also use data URLs and `https://avatars.githubusercontent.com`.
-- Network calls reach only the page's own origin and the configured app
-  origin, with its matching WebSocket origin.
+- Network calls reach only the page's own origin, the configured app origin
+  with its matching WebSocket origin, and the origin of the error reports.
+- The origin of the error reports is the origin of the browser DSN. The
+  policy names it only while that DSN is valid. The web app sends its
+  reports there directly, as
+  [The browser connection](error-reporting.md#the-browser-connection) says.
 - Frames load only from the page's own origin, the configured app origin,
   and the configured HTTPS frame origins.
 - Pages use no plugin objects or base elements.

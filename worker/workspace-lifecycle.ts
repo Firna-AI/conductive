@@ -34,6 +34,10 @@ import type { WorkspaceStartIntent } from './lifecycle/start-types'
 import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
+import {
+  workspaceErrorReporting,
+  type WorkspaceErrorReporting,
+} from './error-reporting/workspace'
 
 export class WorkspaceLifecycle
   extends DurableObject<WorkspaceCompositionEnv>
@@ -43,6 +47,7 @@ export class WorkspaceLifecycle
   protected readonly controller: WorkspaceController
   protected readonly devices: DeviceRuntime
   protected readonly context: DurableObjectState
+  protected readonly reporting: WorkspaceErrorReporting
   protected readonly activity: ReturnType<typeof createWorkspaceInputActivity>
   private readonly activityNow: () => number
 
@@ -58,7 +63,13 @@ export class WorkspaceLifecycle
     super(context, env)
     this.context = context
     this.activityNow = now
-    const integration = createWorkspaceIntegration(context, env, now, resolvers)
+    this.reporting =
+      resolvers.reporting ??
+      workspaceErrorReporting(env, (pending) => context.waitUntil(pending))
+    const integration = createWorkspaceIntegration(context, env, now, {
+      ...resolvers,
+      reporting: this.reporting,
+    })
     this.integration = integration
     this.chat = integration.chat
     this.devices = integration.devices
@@ -66,7 +77,11 @@ export class WorkspaceLifecycle
     this.activity = createWorkspaceInputActivity(
       context,
       env,
-      { ...lifecycleDependencies(), now },
+      {
+        ...lifecycleDependencies(),
+        now,
+        errorReporting: this.reporting.runtime,
+      },
       integration,
       (operation) =>
         this.chat.runLifecycle(() => integration.withGeneration(operation)),
@@ -75,12 +90,14 @@ export class WorkspaceLifecycle
   }
 
   protected run<T>(operation: () => Promise<T>): Promise<T> {
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const result = await operation()
-        await this.chat.flushRunner()
-        return result
-      }),
+    return this.reporting.run(() =>
+      this.chat.runLifecycle(() =>
+        this.integration.withGeneration(async () => {
+          const result = await operation()
+          await this.chat.flushRunner()
+          return result
+        }),
+      ),
     )
   }
 
@@ -254,7 +271,7 @@ export class WorkspaceLifecycle
     target: string,
     operation: unknown,
   ): Promise<DeviceOperationResult> {
-    return this.devices.operation(target, operation)
+    return this.reporting.run(() => this.devices.operation(target, operation))
   }
 
   protected async fetchChat(request: Request): Promise<Response> {
@@ -262,7 +279,9 @@ export class WorkspaceLifecycle
     if (deviceResponse) return deviceResponse
     const response = await this.chat.fetch(request)
     if (request.method !== 'GET' && request.method !== 'HEAD')
-      this.context.waitUntil(this.devices.reconcile())
+      this.context.waitUntil(
+        this.reporting.background(() => this.devices.reconcile()),
+      )
     return response
   }
 }

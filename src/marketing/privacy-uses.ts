@@ -52,9 +52,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         lifts it.`,
       text`Your session: a cookie of the app keeps you signed in. A
         second cookie protects the GitHub sign-in while it runs.`,
-      text`Your orgs: the orgs, members, roles, invites, sections,
+      text`Your orgs: the orgs, members, roles, invitations, sections,
         repositories, workspaces, scripts, and settings that you and your
-        team make. They run the service.`,
+        team make. They run the service. Each org invitation keeps the
+        email address that the admin invited.`,
       text`Keys and logins: the env var values of each org, and your
         Claude or OpenAI logins. ${productName} stores them encrypted. It
         uses your login only for the turns of the sessions that you start.
@@ -78,6 +79,20 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         open it, to show it to you.`,
       text`GitHub events: the state of the pull requests and the checks
         of your branches, which GitHub sends to ${productName}.`,
+      text`Error reports: when ${productName} fails in a way that it does
+        not expect, it makes an error report. A report from the app in
+        your browser or the Mac app window holds the type of error and
+        the ${productName} version. It also holds the place in the
+        ${productName} code where the error happened. It holds the kind of
+        screen that you had open, and your ${productName} user ID while
+        you are signed in. It also holds the names and versions of your
+        browser and operating system. A report from the server holds the
+        type of error, the place in the code, and the version. It also
+        holds the part of the service that failed, the kind of request,
+        and its result. It also holds Cloudflare's reference of the
+        request. No report holds your GitHub login or name, your
+        messages, your files, your code, page addresses, or secrets. The
+        operator uses the reports to find and fix failures.`,
       text`Panel widths: your browser keeps the widths of the panels of
         the app. They stay in your browser.`,
     ),

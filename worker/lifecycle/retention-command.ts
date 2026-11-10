@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { SandboxProvider } from '../sandbox/provider'
 import { lifecycleCommand } from './command-intents'
 import type { DiskRetentionResult } from './durable-types'
@@ -71,7 +72,8 @@ export async function advanceRetentionCommand(
           error = 'The startup script failed during disk retention.'
       }
     }
-  } catch {
+  } catch (failure) {
+    captureUnexpectedWorkerFailure('lifecycle_retry_failed', failure)
     error = 'The startup script could not run during disk retention.'
   }
   if (context.dependencies.now() >= deadlineAt)

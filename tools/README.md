@@ -6,9 +6,11 @@ They call the machine route `/v1/tools/workspaces` from the [shared contract](..
 They also list repositories, sections, and models through that contract's machine routes.
 Mac commands use `/v1/tools/mac-command` from [the device contract](../src/shared/device.ts).
 The [Worker handler](../worker/tools/README.md) verifies the workspace token and the calling turn.
+The `build/` folder also holds the Node helpers of the production build, as [Build helpers](#build-helpers) says.
 
-The tools require Node 24.
+The workspace CLI and MCP server require Node 24.
 They use its native TypeScript support and need no runtime npm packages.
+The build helpers use the root development dependencies.
 
 ## Use
 
@@ -142,12 +144,29 @@ No workspace token, agent login, or org environment value enters the image asset
 [Production composition](../worker/tools/README.md#production-composition) gives the image build step that installs these tools.
 [Workspace tools](../runner/agent-tools.md#workspace-tools) gives their registration for each agent.
 
+## Build helpers
+
+The build helpers run in Node, outside the Worker and the browser.
+[release.ts](build/release.ts) reads the checkout commit for both Vite configs.
+[error-reporting.ts](build/error-reporting.ts) gives each build deterministic release and debug-ID instrumentation.
+It also controls separate browser and Worker map uploads and removes the maps.
+The [upload policy](build/source-map-upload.ts) requires a release and all five operator settings.
+Upload failures warn and return normally.
+[Error reporting setup](../docs/deployment/error-reporting.md) gives the operator's settings and upload steps.
+
 ## Development
 
 Run `npm run test -- worker/tools` from the repository root.
-The tests import every module under `tools/`.
-The existing Worker TypeScript project therefore checks these modules with strict settings.
-No root test or TypeScript configuration change is needed.
+The tests import every module of the workspace CLI and MCP server.
+The TypeScript project of the Worker tests therefore checks these modules with strict settings.
+A new module of the CLI or the MCP server needs no root test or TypeScript configuration change.
+
+The build helpers need Node types, so the Node TypeScript project, `tsconfig.node.json`, checks them.
+Their tests use the root Vitest runner:
+
+```sh
+npm run test -- tools/build
+```
 
 The Mac command tests of the CLI and MCP adapters live in `worker/devices/tools.test.ts`.
 They run against a local Worker runtime and cover Stop.
@@ -162,6 +181,10 @@ Run them with `npm run test -- worker/devices/tools.test.ts`.
 - [device-client.ts](device-client.ts) creates Mac commands and polls their returned URL keys.
 - [input.ts](input.ts) parses the shared create request without changing message text.
 - [runtime.ts](runtime.ts) reads runtime configuration without storing credentials.
+- [build/release.ts](build/release.ts): `readBuildRelease` gives `conductive@<commit SHA>` for the full commit of the checkout, or no release outside Git.
+- [build/error-reporting.ts](build/error-reporting.ts): `instrumentErrorReporting` injects the release and the debug IDs with no upload. `errorReportingBuild` adds it, the browser and Worker map uploads, and the map removal to the root build.
+- [build/source-map-upload.ts](build/source-map-upload.ts): `readSourceMapUploadSettings` reads the five upload settings, and `runSourceMapUpload` turns an upload failure into a warning.
+- [build/source-map-cleanup.ts](build/source-map-cleanup.ts): `removeSourceMaps` deletes the maps of one build output, and warns when it cannot.
 
 The MCP implementation follows the official [lifecycle](https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle),
 [stdio transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports),

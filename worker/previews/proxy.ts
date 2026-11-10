@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
@@ -15,12 +16,17 @@ import { PreviewRegistry } from './registry'
 import { bridgeSocket } from './socket'
 import { readPreviewAccess } from './viewer-access'
 import type { ToolDependencies } from './types'
+import {
+  workspaceErrorReporting,
+  type WorkspaceErrorReporting,
+} from '../error-reporting/workspace'
 
 export class PreviewProxy {
   private readonly env: AppEnv
   private readonly dependencies: ToolDependencies
   private readonly ports: PrivatePorts
   private readonly registry: PreviewRegistry
+  private readonly reporting: WorkspaceErrorReporting
 
   constructor(
     env: AppEnv,
@@ -29,8 +35,11 @@ export class PreviewProxy {
   ) {
     this.env = env
     this.dependencies = dependencies
+    this.reporting =
+      dependencies.reporting ??
+      workspaceErrorReporting(env, undefined, dependencies.errorReporting)
     this.ports = ports
-    this.registry = new PreviewRegistry(env, dependencies)
+    this.registry = new PreviewRegistry(env, dependencies, this.reporting)
   }
 
   closePreview(workspaceId: string, id: string): void {
@@ -108,9 +117,12 @@ export class PreviewProxy {
           signal: connection.signal,
         })
         upstream = await this.dependencies.fetch(outgoing)
-      } catch {
+      } catch (error) {
         this.ports.invalidate(row, row.port)
-        throw new ProviderError('unavailable', 503)
+        throw linkWorkerError(
+          new ProviderError('unavailable', 503),
+          connection.failure ?? error,
+        )
       }
       if ([401, 403].includes(upstream.status))
         this.ports.invalidate(row, row.port)
@@ -131,11 +143,15 @@ export class PreviewProxy {
             throw new ProviderError('invalid_response', 502)
           headers.set('Sec-WebSocket-Protocol', protocol)
         }
-        const bridge = bridgeSocket(upstream, this.dependencies, {
-          headers,
-          authorize: scope.authorize,
-          onClose: () => connection?.close(),
-        })
+        const bridge = bridgeSocket(
+          upstream,
+          { ...this.dependencies, reporting: this.reporting },
+          {
+            headers,
+            authorize: scope.authorize,
+            onClose: () => connection?.close(),
+          },
+        )
         connection.watch(bridge.close)
         return bridge.response
       }

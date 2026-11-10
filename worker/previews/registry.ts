@@ -6,6 +6,8 @@ import { PreviewConnection } from './connection'
 import type { PreviewRecord } from './store'
 import { readPreviewAccess } from './viewer-access'
 import type { ToolDependencies } from './types'
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
+import type { WorkspaceErrorReporting } from '../error-reporting/workspace'
 
 class PreviewScope {
   readonly row: PreviewRecord
@@ -13,6 +15,7 @@ class PreviewScope {
   private readonly connections = new Set<PreviewConnection>()
   private closed = false
   private readonly empty: () => void
+  private readonly authorizationFailed: (error: unknown) => void
 
   constructor(
     env: AppEnv,
@@ -20,9 +23,14 @@ class PreviewScope {
     row: PreviewRecord,
     identity: PreviewConnectionIdentity,
     empty: () => void,
+    reporting: WorkspaceErrorReporting,
   ) {
     this.row = row
     this.empty = empty
+    this.authorizationFailed = (error) =>
+      reporting.callback(() =>
+        captureUnexpectedWorkerFailure('preview_authorization_failed', error),
+      )
     this.authorization = new AuthorizationBatch(async () => {
       const current = this.closed
         ? null
@@ -48,10 +56,14 @@ class PreviewScope {
   authorize = () => this.authorization.check()
 
   connect(): PreviewConnection {
-    const connection = new PreviewConnection(this.authorize, () => {
-      this.connections.delete(connection)
-      if (this.connections.size === 0) this.empty()
-    })
+    const connection = new PreviewConnection(
+      this.authorize,
+      () => {
+        this.connections.delete(connection)
+        if (this.connections.size === 0) this.empty()
+      },
+      this.authorizationFailed,
+    )
     this.connections.add(connection)
     if (this.closed) connection.close()
     return connection
@@ -68,10 +80,16 @@ export class PreviewRegistry {
   private readonly scopes = new Map<string, PreviewScope>()
   private readonly env: AppEnv
   private readonly dependencies: ToolDependencies
+  private readonly reporting: WorkspaceErrorReporting
 
-  constructor(env: AppEnv, dependencies: ToolDependencies) {
+  constructor(
+    env: AppEnv,
+    dependencies: ToolDependencies,
+    reporting: WorkspaceErrorReporting,
+  ) {
     this.env = env
     this.dependencies = dependencies
+    this.reporting = reporting
   }
 
   get(row: PreviewRecord, identity: PreviewConnectionIdentity): PreviewScope {
@@ -97,6 +115,7 @@ export class PreviewRegistry {
         () => {
           if (this.scopes.get(key) === scope) this.scopes.delete(key)
         },
+        this.reporting,
       )
       this.scopes.set(key, scope)
     }

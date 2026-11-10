@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import {
   INVITE_CODE_ERROR_PARAMETER,
   joinPath,
@@ -28,6 +29,7 @@ export async function signInAppAccess(
       await redeemInviteCode(env.DB, user.id, inviteCode, now)
     } catch (error) {
       if (!(error instanceof HttpError)) throw error
+      captureUnexpectedWorkerFailure('sign_in_access_failed', error)
       const path = joinPath(displayAccessCode(normalizeAccessCode(inviteCode)))
       const destination = new URL(path, env.APP_ORIGIN)
       destination.searchParams.set(INVITE_CODE_ERROR_PARAMETER, error.code)

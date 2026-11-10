@@ -29,6 +29,24 @@
   Make the test deterministic after the cause is known.
   Keep every existing marker, deadline, sandbox-read, and command-count assertion.
   Add no test retry, sleep, permanent skip, quarantine, or longer timeout.
+
+  On 10 November 2026, the complete gate of the Better Stack branch at
+  merge `4b74089a` reproduced the same case. The full suite passed 2,055
+  tests and failed this one, across 716 files. It printed the assertion:
+
+  ```text
+  AssertionError: expected [ { sandboxId: 'bx_1', …(2) }, …(1) ] to have a length of 1 but got 2
+  worker/lifecycle/restore-watch.test.ts:82:35
+  expect(markerCommands(fixture)).toHaveLength(1)
+  ```
+
+  The assertion runs after resume, before the test advances the fake clock
+  by another 5,000 ms. The case took 1,512 ms in that failed run.
+  A single rerun of the unchanged file passed all 11 tests, with zero
+  failures or skips. No source, assertion, timeout, or runner setting
+  changed. The test file still matched `main` at `2f329f9d`.
+  The ordering suspected above remains unconfirmed. This observation
+  establishes no direct cause in the reporting change.
 - **Impact if no action:** The complete gate can fail intermittently and require another full run.
 - **Needs:** The repository, Node 24, local D1, and the existing test fakes. No deployed service or real provider account is needed.
 - **Done when:** The cause is recorded and the case passes ten selected runs without weakening its checks. The normal full suite also passes. No new gate or runner restriction is added.

@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { ChangesResponse, FileTreeResponse } from '../../src/shared/files'
 import { isRecord } from '../http'
 import { invalidFileResponse } from './errors'
@@ -96,8 +97,8 @@ async function readChunks(
   }
   try {
     return JSON.parse(chunks.join(''))
-  } catch {
-    throw invalidFileResponse()
+  } catch (error) {
+    throw linkWorkerError(invalidFileResponse(), error)
   }
 }
 

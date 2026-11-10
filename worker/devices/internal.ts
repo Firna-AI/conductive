@@ -5,6 +5,7 @@ import type {
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { Workspace } from '../workspace'
+import { consumeWorkspaceDiagnosticResponse } from '../error-reporting/response-diagnostics'
 
 export type DeviceOperationValue =
   | {
@@ -34,12 +35,7 @@ export function deviceStub(
 }
 /** Fetched response headers are immutable. Preserve socket upgrades when copying. */
 export function deviceResponse(response: Response): Response {
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: response.headers,
-    ...(response.webSocket && { webSocket: response.webSocket }),
-  })
+  return consumeWorkspaceDiagnosticResponse(response)
 }
 export async function deviceCall(
   env: AppEnv,

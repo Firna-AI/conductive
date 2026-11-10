@@ -1,3 +1,5 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
+import { workspaceErrorReporting } from '../error-reporting/workspace'
 import { HttpError } from '../http'
 import { WorkspaceFiles } from '../files/workspace'
 import { durableFilesStorage } from '../files/storage'
@@ -37,6 +39,7 @@ export type WorkspaceChatResolvers = Partial<
     | 'scheduleBrowserCheck'
     | 'randomId'
     | 'runTitleModel'
+    | 'reporting'
   >
 > & { callbackObservers?: WorkspaceCallbackObservers }
 
@@ -50,12 +53,17 @@ export function createWorkspaceIntegration(
   now: () => number,
   resolvers: WorkspaceChatResolvers = {},
 ) {
+  const reporting =
+    resolvers.reporting ??
+    workspaceErrorReporting(env, (pending) => context.waitUntil(pending))
   const storage = receiverStorage(context.storage)
   let generation: number | undefined
   const original = lifecycleDependencies()
   const dependencies = {
     ...original,
     now,
+    errorReporting: reporting.runtime,
+    reporting,
     fetch: async (request: Request) => {
       await assertReceiverActive(storage, generation)
       const response = await original.fetch(request)
@@ -88,7 +96,15 @@ export function createWorkspaceIntegration(
             (sent) => {
               if (!sent) files.runner.detach(connectionId)
             },
-            () => files.runner.detach(connectionId),
+            (error: unknown) => {
+              if (!files.runner.detach(connectionId, error))
+                reporting.callback(() =>
+                  captureUnexpectedWorkerFailure(
+                    'background_task_failed',
+                    error,
+                  ),
+                )
+            },
           ),
         )
       })
@@ -157,7 +173,7 @@ export function createWorkspaceIntegration(
                 (event.runnerEventType === 'turn.completed' ||
                   event.runnerEventType === 'turn.failed'))
             )
-              context.waitUntil(devices.reconcile())
+              context.waitUntil(reporting.background(() => devices.reconcile()))
           }
         },
       },
@@ -223,7 +239,8 @@ export function createWorkspaceIntegration(
             })),
           }
         }),
-      chatRecovered: () => context.waitUntil(devices.reconcile()),
+      chatRecovered: () =>
+        context.waitUntil(reporting.background(() => devices.reconcile())),
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (
@@ -247,7 +264,7 @@ export function createWorkspaceIntegration(
       stopped: async (id) => {
         for (const hook of stoppedHooks) await hook(id)
         await chat.stopWorkspace(id)
-        context.waitUntil(devices.reconcile())
+        context.waitUntil(reporting.background(() => devices.reconcile()))
       },
     },
   )

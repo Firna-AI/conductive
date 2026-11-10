@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { AppEnv } from '../env'
 import type { StartJobStorage } from './start-types'
 import {
@@ -21,7 +22,8 @@ export async function publishCreationResult(
     else await markCreationFailed(env.DB, record.workspaceId)
     await storage.clearPublication()
     return true
-  } catch {
+  } catch (error) {
+    captureUnexpectedWorkerFailure('creation_publication_failed', error)
     await storage.schedulePublication()
     return false
   }

@@ -48,7 +48,7 @@ export async function siteResponse(
         head: request.method === 'HEAD',
       },
     )
-  } catch {
-    return siteUnavailable()
+  } catch (error) {
+    return siteUnavailable(error)
   }
 }

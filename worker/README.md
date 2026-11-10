@@ -95,6 +95,55 @@ The repair checks at most 50 workspaces and 50 orgs per run.
 It defers failed calls and logs counts when either limit leaves work pending.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
 
+## Error reporting
+
+The Worker and its Durable Objects send each unexpected failure to Better
+Stack Errors. [Error reporting](../docs/protocol/error-reporting.md) states
+what a report holds, and
+[Error reporting setup](../docs/deployment/error-reporting.md) gives the
+steps of the operator.
+
+- The Worker secret `CONDUCTIVE_ERROR_TRACKING_DSN` turns reporting on. A
+  missing DSN turns it off. An invalid DSN also turns it off, and the Worker
+  writes one fixed warning, which never holds the DSN.
+- `workerFetchEntry` is the HTTP entry with reporting. Its final capture
+  runs after `requestBodyEntry`, so each final response with a status from
+  500 to 599 reports once.
+- `runWorkspaceAlarm` of `error-reporting/entry.ts` reports a failed alarm
+  of a workspace Durable Object. It is not the lifecycle function of the
+  same name in `lifecycle/workspace-alarm.ts`. `runWorkerCron` reports a
+  failed cron run. Both then throw the original error again, so the alarm
+  and the cron run still fail.
+- `captureUnexpectedWorkerFailure` reports a failure that a catch would
+  hide. `captureWorkerWarning` reports a warning of an unexpected failure,
+  by the rule of
+  [What the Worker reports](../docs/protocol/error-reporting.md#what-the-worker-reports).
+- A reported warning carries only an explicit reporting projection of its
+  typed fields. Its IDs stay in Workers Logs.
+- These capture points stay silent for a normal refusal, a busy cleanup
+  lease, a failure of the user's own script, a repair budget, and a warning
+  whose error the code throws again. Each final 5xx response still reports
+  once.
+- `workspaceErrorReporting` gives each callback of a Durable Object a fresh
+  reporting scope. Its reports leave through `waitUntil`, so a report can
+  still go out after a socket upgrade answers 101.
+- A Durable Object can hand the cause of a 5xx response to the Worker in a
+  bounded private response header. The header holds only the sanitized
+  class, frames, and code, and the sender strips each untrusted hint.
+- Each trusted receiver consumes that cause and removes the header. The
+  final public entry removes it too. No raw error is serialized.
+- The `beforeSend` filter rebuilds each event from the fields of the
+  protocol, and the final transport rebuilds it again. The transport sends
+  only the exact event object and ID that the filter approved. It drops
+  attachments, fallback events, and every other kind of telemetry.
+- The Worker uses `verifiedErrorStack` from `src/shared/error-stack.ts` in
+  its strict V8 form. So a message with several lines never becomes a
+  frame.
+- A failure to report never changes a response, an alarm result, or a cron
+  result.
+
+The other modules of `error-reporting/` support these entry points.
+
 ## Development
 
 Run commands from the repository root with Node 24.
@@ -106,6 +155,7 @@ It also checks the runner start script.
 Run `node worker/chat/integration/run-browser-harness.mjs` to serve a production app build through the local Worker, with fake Boat and GitHub.
 [Outer Worker tests](chat/integration/outer-worker-tests.md#browser-harness) gives its settings.
 Run `npm run test -- worker/operator` to check the overview and the suspension of users and orgs.
+Run `npm run test -- worker/error-reporting worker/application-error-reporting.test.ts worker/lifecycle/workspace-reporting.test.ts src/shared/error-stack.test.ts` to check the reporter, its capture points, and the stack guard.
 The [test support area](test-support/README.md) supplies local D1 and fake providers.
 [Deployment inputs](../docs/deployment.md) lists the bindings, variables, and secrets of a deployment.
 
@@ -113,6 +163,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
+- [application-scheduled.ts](application-scheduled.ts): `scheduledWorker` runs the work of the Cron Trigger: the cleanup, the lifecycle repair, and the approval email retries.
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
 - [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk and image alarms from the Cron Trigger.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
@@ -127,6 +178,11 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. It writes one structured object with fixed text and selected safe fields. It copies no extra caller field, token, error message, request body, command output, or response body. `WarningRecord` names the logged object type. `CommandFailed` carries a failed command's state, exit code, and time-out.
 - [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too.
 - [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name.
+- [error-reporting/entry.ts](error-reporting/entry.ts): `workerFetchEntry`, `runWorkspaceAlarm`, and `runWorkerCron`, the reporting boundaries of a request, an alarm, and a cron run.
+- [error-reporting/runtime.ts](error-reporting/runtime.ts): `createWorkerErrorRuntime`, the private reporter on the real SDK.
+- [error-reporting/policy.ts](error-reporting/policy.ts): `captureWorkerWarning` and `captureUnexpectedWorkerFailure` decide which warnings and caught failures report.
+- [error-reporting/workspace.ts](error-reporting/workspace.ts): `workspaceErrorReporting`, the fresh reporting scope of each Durable Object callback.
+- [error-reporting/response-diagnostics.ts](error-reporting/response-diagnostics.ts) owns the bounded private cause that a Durable Object hands to the Worker with a 5xx response.
 - [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of each alarm run of a workspace object. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
 - [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the devices, the previews, and GitHub. [Workspace Durable Object](lifecycle/workspace-object.md) gives its rules.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
@@ -144,6 +200,8 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [Architecture](../docs/architecture.md)
 - [Deployment inputs](../docs/deployment.md)
 - [Access and security](../docs/protocol/access-and-security.md)
+- [Error reporting](../docs/protocol/error-reporting.md)
+- [Error reporting setup](../docs/deployment/error-reporting.md)
 - [Waitlist](../docs/protocol/waitlist.md)
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Agent runner](../docs/protocol/agent-runner.md)

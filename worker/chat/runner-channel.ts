@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
 import type { WorkspaceEventEnvelope } from './workspace-events'
@@ -157,7 +158,8 @@ export class RunnerChannel {
         )
       void this.store
         .run(() => this.flush())
-        .catch(() => {
+        .catch((error: unknown) => {
+          captureUnexpectedWorkerFailure('runner_message_failed', error)
           if (this.current === active) this.close()
           active.peer.close()
         })

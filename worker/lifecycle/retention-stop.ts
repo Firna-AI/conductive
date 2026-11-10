@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { DiskRetentionResult } from './durable-types'
 import { providerState, type ProviderState } from './provider-state'
@@ -37,7 +38,10 @@ export async function stopRetention(
       eligible: true,
     }
   } catch (failure) {
-    if (error !== null) return { done: false, error }
+    if (error !== null) {
+      captureUnexpectedWorkerFailure('lifecycle_retry_failed', failure)
+      return { done: false, error }
+    }
     throw failure
   }
 }

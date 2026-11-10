@@ -9,10 +9,18 @@ export class PreviewConnection {
   private parts = 1
   private closed = false
   private released = false
+  private headersFinished = false
+  failure: unknown
+  private readonly authorizationFailed: (error: unknown) => void
 
-  constructor(authorize: () => Promise<void>, release: () => void) {
+  constructor(
+    authorize: () => Promise<void>,
+    release: () => void,
+    authorizationFailed: (error: unknown) => void = () => {},
+  ) {
     this.authorize = authorize
     this.release = release
+    this.authorizationFailed = authorizationFailed
   }
 
   get signal(): AbortSignal {
@@ -25,6 +33,7 @@ export class PreviewConnection {
   }
 
   finishHeaders(): void {
+    this.headersFinished = true
     this.parts--
     this.finish()
   }
@@ -78,6 +87,7 @@ export class PreviewConnection {
           this.watch(cancel)
         },
         pull: async (value) => {
+          let authorizing = false
           try {
             const next = await reader.read()
             if (finished) return
@@ -86,9 +96,14 @@ export class PreviewConnection {
               finish()
               return
             }
+            authorizing = true
             await this.authorize()
             if (!finished && !this.closed) value.enqueue(next.value)
           } catch (error) {
+            if (authorizing) {
+              this.failure = error
+              if (this.headersFinished) this.authorizationFailed(error)
+            }
             if (!(error instanceof HttpError) && !finished) {
               value.error(error)
               finish()

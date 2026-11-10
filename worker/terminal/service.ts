@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { AppEnv } from '../env'
 import { workspaceTarget } from '../previews/access'
 import { WorkspaceTools } from '../previews/provider'
@@ -139,8 +140,8 @@ export async function startWorkspaceTerminal(
       file.file.encoding === 'base64'
         ? atob(file.file.content)
         : file.file.content
-  } catch {
-    throw new ProviderError('invalid_response', 502)
+  } catch (error) {
+    throw linkWorkerError(new ProviderError('invalid_response', 502), error)
   }
   if (file.file.sizeBytes !== 64 || !/^[a-f0-9]{64}$/.test(password))
     throw new ProviderError('invalid_response', 502)

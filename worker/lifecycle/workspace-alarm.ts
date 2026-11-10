@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { WorkspaceAlarms } from '../features/alarms'
 import type { WorkspaceStorage } from './platform-storage'
 import type { AppDependencies, AppEnv } from '../env'
@@ -46,7 +47,8 @@ export async function runWorkspaceAlarm(input: {
     if (due.has('lifecycle:changed') || recoveringRun) {
       try {
         await lifecycle.retryChanged()
-      } catch {
+      } catch (error) {
+        captureUnexpectedWorkerFailure('workspace_projection_failed', error)
         /* The publication marker keeps its new retry time. */
       }
     }
@@ -110,7 +112,8 @@ export async function runWorkspaceAlarm(input: {
                   ),
             )
           }
-        } catch {
+        } catch (error) {
+          captureUnexpectedWorkerFailure('lifecycle_retry_failed', error)
           await input.startStorage.setAlarm(dependencies.now() + 30_000)
         }
       }
@@ -142,7 +145,8 @@ export async function runWorkspaceAlarm(input: {
       try {
         await lifecycle.alarm()
         if (!state) await alarms.set('lifecycle', null)
-      } catch {
+      } catch (error) {
+        captureUnexpectedWorkerFailure('lifecycle_retry_failed', error)
         const deadlineAt = (await lifecycle.read())?.diskRetentionDeadlineAt
         const now = dependencies.now()
         await alarms.set(
@@ -176,7 +180,8 @@ async function advanceCleanup(
       })
       return
     }
-  } catch {
+  } catch (error) {
+    captureUnexpectedWorkerFailure('lifecycle_retry_failed', error)
     /* The cleanup owner keeps its retry time. */
   }
   await storage.setAlarm(dependencies.now() + 30_000)

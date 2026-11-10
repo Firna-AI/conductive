@@ -3,7 +3,9 @@ import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
 
-export const SIMPLE_WARNINGS = {
+const SIMPLE_WARNINGS = {
+  error_tracking_dsn_invalid:
+    'Worker error reporting is disabled because its DSN is invalid.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   github_app_slug_invalid:
     'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',
@@ -72,3 +74,29 @@ export type WorkerWarning =
       workspaces: number
       orgs: number
     }
+
+const messages = {
+  ...SIMPLE_WARNINGS,
+  workspace_title_request_failed: 'The workspace title request failed.',
+  workspace_title_save_failed: 'The workspace title could not be saved.',
+  workspace_start_failed: 'A workspace start failed.',
+  workspace_start_ended: 'A workspace start ended as failed.',
+  workspace_first_message_failed:
+    'A workspace could not admit its first message.',
+  terminal_start_failed: 'The terminal of a workspace did not start.',
+  image_build_failed: 'An image build failed.',
+  runner_message_failed:
+    'The runner of a workspace closes after a failed message.',
+  lifecycle_repair_limited: 'Lifecycle repair limited its checks.',
+  lifecycle_repair_pending: 'Lifecycle repair left checks pending.',
+} as const satisfies Record<WorkerWarning['kind'], string>
+
+export function warningMessage(warning: Pick<WorkerWarning, 'kind'>): string {
+  return messages[warning.kind]
+}
+
+export function isWorkerWarningKind(
+  value: unknown,
+): value is WorkerWarning['kind'] {
+  return typeof value === 'string' && Object.hasOwn(messages, value)
+}

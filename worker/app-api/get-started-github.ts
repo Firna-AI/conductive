@@ -1,3 +1,4 @@
+import { captureWorkerWarning } from '../error-reporting/policy'
 import { requireActiveUser } from '../data/user-access'
 import type { AppDependencies, AppEnv } from '../env'
 import { date, githubFailure, integer, nodes, object } from '../github/parsers'
@@ -45,8 +46,10 @@ export async function getStartedGitHubComplete(
       if (count >= integer(value.total_count)) return false
       if (!installations.length) throw githubFailure()
     }
-  } catch {
-    warn({ kind: 'github_installation_status_failed' })
+  } catch (error) {
+    const warning = { kind: 'github_installation_status_failed' } as const
+    warn(warning)
+    captureWorkerWarning(warning, error)
     return false
   }
 }

@@ -38,8 +38,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - One Cloudflare Worker serves the web app, the marketing site, the API,
   the proxies to sandboxes, and the GitHub webhook endpoint.
 - It holds the GitHub App key, the Boat key, the key that signs the session
-  cookies, and the key that encrypts the stored secrets. The browser never
-  holds them.
+  cookies, the key that encrypts the stored secrets, and the DSN of its
+  error reports. The browser never holds them.
 - It reaches Boat through one provider adapter, so that a later change can
   add another provider. It calls only a fixed list of Boat routes.
 - It calls each sandbox and each saved snapshot through the client of its
@@ -131,3 +131,9 @@ Codex through the Codex SDK or the Codex App Server (decision 36).
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. The app is free, with no limits (decision 81).
+- **Resend:** sends the org invitations and the approval emails, from
+  `invites@mail.conductive.build`.
+- **Better Stack Errors:** takes the reports of unexpected failures, in two
+  applications in the EU. The Worker sends its own reports. The web app and
+  the Mac app window send theirs directly from the page, as
+  [Error reporting](../protocol/error-reporting.md) says.

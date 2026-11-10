@@ -22,10 +22,16 @@ export async function runtimeBundle(): Promise<string> {
     configFile: false,
     logLevel: 'silent',
     build: {
-      ssr: `${import.meta.dirname}/workspace-runtime-test-worker.ts`,
+      lib: {
+        entry: `${import.meta.dirname}/workspace-runtime-test-worker.ts`,
+        formats: ['es'],
+      },
+      minify: false,
+      target: 'es2022',
       write: false,
-      rollupOptions: {
-        external: ['cloudflare:workers'],
+      rolldownOptions: {
+        platform: 'neutral',
+        external: ['cloudflare:workers', /^node:/],
         output: { format: 'es' },
       },
     },
@@ -62,6 +68,7 @@ export async function realRuntimeFixture(bundle: string) {
           config: {
             name: 'workspace-runtime-test',
             compatibilityDate: '2026-11-06',
+            compatibilityFlags: ['nodejs_compat'],
             exports: {
               WorkspaceRuntimeFixture: {
                 type: 'durable-object',

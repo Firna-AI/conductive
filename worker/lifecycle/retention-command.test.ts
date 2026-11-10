@@ -11,6 +11,19 @@ const DEADLINE = TEST_TIME + 1_124_460_000
 const FAILURE =
   'The cloud computer did not start within the 20-minute limit. Try again.'
 
+it('keeps the saved maintenance error when its startup command cannot run', async () => {
+  const fixture = await retentionCommandFixture(await backendFixture())
+  fixture.boat.beforeCommand = async (command) => {
+    if (command.includes('/run/conductive/retention-startup.sh'))
+      throw new Error('Injected maintenance command failure')
+  }
+  await fixture.platform.endpoint().advance()
+  expect(await fixture.progress()).toEqual({
+    phase: 'stop',
+    error: 'The startup script could not run during disk retention.',
+  })
+})
+
 it('polls a retained never-ending maintenance script across reconstruction and stops it at the original deadline', async () => {
   const fixture = await retentionCommandFixture(await backendFixture())
   const { boat, platform } = fixture
