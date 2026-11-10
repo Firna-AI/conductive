@@ -38,7 +38,7 @@ export async function advanceBuildStep(
   if (job.phase === 'allocating') {
     if (!recoveringAllocation && job.startedByUserId)
       await requireActiveUser(env.DB, job.startedByUserId)
-    await allocateImageBuild(env.DB, provider, job)
+    await allocateImageBuild(env.DB, provider, job, recoveringAllocation)
     return false
   }
   if (!job.sandboxId) throw new Error('Missing build sandbox')
@@ -56,6 +56,7 @@ export async function advanceBuildStep(
       await clearBuildCommands(provider, job.sandboxId, job.buildId)
     await requireActiveOrg(env.DB, orgId)
     const snapshot = await createResource(
+      runtime.env.DB,
       provider,
       buildSnapshotIntent(env.DB, job),
     )
