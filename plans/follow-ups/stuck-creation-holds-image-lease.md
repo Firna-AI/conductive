@@ -1,0 +1,38 @@
+# A stuck workspace creation blocks image cleanup
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, from the build-time investigation on branch `calummoore/build-time-increase`.
+- **Location:** `worker/lifecycle/build-execution.ts:155`, `worker/lifecycle/image-timers.ts:124`, `worker/lifecycle/image-schedule.ts:34`, `worker/lifecycle/workspaces.ts:71`, and `migrations/202611070003_creation_image_leases.sql:23`.
+- **Reason:** The options change deployed data or add a time limit to workspace creation, which no requirement covers, so the user decides.
+
+- **Source:** Implementation. **Category:** Product bug.
+- **Terms:**
+  - **Org image:** the saved snapshot that each new cloud computer of an org starts from. Each build makes a new one.
+  - **Image lease:** a row of the D1 table `image_leases` that stops an org image from being deleted while a workspace creation uses it.
+  - **Creation claim:** the first step of a workspace creation. One D1 batch saves the attempt, its start plan, and its image lease.
+  - **Image coordinator:** the Durable Object that runs the builds, refreshes, and cleanups of one org, one step for each alarm.
+- **Background:**
+  - A workspace creation saves its claim first, in `claimCreation` of `worker/lifecycle/creation-claims.ts`. The claim names the org image that the new cloud computer starts from.
+  - The start then runs in steps in the workspace object. The lease stops a build that ends in that time from deleting the image.
+  - Three events end a lease: the new cloud computer is ready, the creation leaves the pending state, or the workspace is deleted. The trigger `image_leases_creation_finished` deletes the lease when the attempt leaves the pending state.
+  - After a build succeeds, `cleanupBuild` in `worker/lifecycle/build-execution.ts` deletes the previous org image. When a lease holds that image, it returns and tries again at the next alarm.
+  - `readImageSchedule` in `worker/lifecycle/image-schedule.ts` treats a waiting cleanup as active work. So `runImageAlarm` in `worker/lifecycle/image-timers.ts` advances that cleanup again 1 s later, and it never reaches the daily refresh.
+  - A running build goes first, so a waiting cleanup does not slow builds.
+  - Evidence from the deployed database on 2026-11-10: the build of org `X6K5FFR3yoqyD5D1WfZdCk4GCk8QNz65J_GzQ5WkiOM` from 2026-11-09 17:05 UTC still waited in the `cleanup` phase. Its previous image was `image-4epmyzxllgti6ylbevrvs2gaqjuyymqqkmhrqjogqbwmdcw7527a`.
+  - One lease held that image: the creation of workspace `G2NOoS91y1ySeY8oKRbX0qhp6GOzAZ1ry8tPb-FXmjM`, from 2026-11-09 14:37:02 UTC. It was still pending. It had its start plan, but no workspace row, no computer ledger row, and no failure. The same person made no other creation within 15 minutes of it.
+  - It was the only waiting cleanup in the database.
+  - The cause of the stuck creation is unknown. The workspace object's storage would show whether it ever got the start. A deploy started 55 s after the claim.
+- **Problem:** A creation that stays pending keeps its lease forever, because no code ends a pending creation after a time limit. The cleanup of the next build then waits forever.
+- **Impact if no action:** The image coordinator of the org runs every second until the lease goes. The old snapshot stays with the sandbox provider. The daily refresh cannot start while the cleanup waits.
+- **Root question:** How does an org recover when a workspace creation never ends and keeps its image lease?
+- **Options:**
+  - **A.** Mark that one creation as failed in the deployed database: `UPDATE workspace_creation_attempts SET state = 'failed' WHERE workspace_id = 'G2NOoS91y1ySeY8oKRbX0qhp6GOzAZ1ry8tPb-FXmjM' AND state = 'pending'`. The trigger deletes the lease, and the next alarm ends the cleanup. The cause stays. Effort: Small.
+  - **B.** Make a cleanup that waits for a lease check again after some minutes, not after 1 s, and let the daily refresh run in the meantime. The old snapshot still stays. Effort: Small.
+  - **C.** Find why the creation stayed pending. Give a pending creation a time limit that fails it and releases its lease. This adds a rule to [Create a workspace](../../docs/protocol/create-a-workspace.md). Effort: Medium.
+  - **D.** Apply A now, then build B and C in one branch. Effort: Medium.
+- **Left out:** Delete the image while a lease holds it, because a workspace start could then lose its image.
+- **Wider fix:** C. A time limit removes each case in which a lost creation holds a lease forever.
+- **Previous examples:** None found.
+- **Recommendation:** D. A stops the loop of one second today, and B and C keep a lost creation from doing it again.
+- **Action:** ask the user, because A writes to the deployed database, and C adds a time limit that no requirement covers.
