@@ -23,8 +23,9 @@ On 10 November 2026 the user asked to stack this branch on Conductor
 workspace 400, the Worker model proxy of decision 120 on branch
 `conductor/model-gateway-worker-model-proxy-decision-120`, with its plan
 [`plans/model-gateway.md`](https://github.com/Firna-AI/remote-code/blob/5399faaa/plans/model-gateway.md), which that branch deleted when its work completed. This branch merged that branch on the same day.
-The plan reads the request as option D of decision 172. Decision 173 asks
-how the gateway runs Codex on an access token.
+The plan reads the request as option D of decision 172. For decision 173,
+the user chose B on 10 November 2026: Codex runs its own token mode
+through new gateway routes, with a turn token. Decision 174 is open.
 
 Related work: the plan `plans/own-endpoint-logins.md` on branch
 `calummoore/cli-proxy-setup` adds an own endpoint login to the same connect
@@ -227,6 +228,7 @@ D to G, corrected option B, and kept the recommendation B.
 - **Previous examples:** Gateway decision 11 K of 10 November 2026 moved the turn token of Claude from a private descriptor into a file that each process can read while the turn runs.
 - **Recommendation:** B. Codex then uses the access token as OpenAI documents for app-server automation, and it applies the rules of the workspace, while the real token stays in the Worker. F best protects the sandbox of the org, because B lets the hooks and MCP commands of the ChatGPT admin run there.
 - **Action:** ask the user, because A skips the workspace policy, B changes a requirement of the gateway, and no option is clearly best.
+- **Chosen by the user on 10 November 2026:** B.
 
 ### 174. What a token turn does when the runner cannot run it
 
@@ -286,6 +288,18 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
 - The Codex form lists "API key" first and selects it. "Access token" comes
   second. Reason: most members have an API key, and a token needs a
   Business or Enterprise workspace.
+- The calls of 10 November 2026 for decision 173 B:
+  - Codex reaches the gateway through gateway addresses in its settings
+    and in `CODEX_AUTHAPI_BASE_URL`, not through a relay in the runner.
+    Reason: a relay needs a local certificate authority, which
+    `docs/protocol/model-gateway.md` gives as a reason against an HTTPS
+    proxy.
+  - The gateway follows the workspace routing in the Worker, and Codex
+    sees no routed origin. Reason: a routed origin would move Codex off
+    the gateway.
+  - A workspace rule that moves Codex off the gateway fails the turn.
+    Reason: Codex then sends only the turn token to OpenAI, which refuses
+    it, and the real token stays in the Worker.
 - The next four calls about the runner route date from before decision
   172. Decision 172 D replaced them: the real token stays in the Worker,
   and decision 173 decides the route.
@@ -459,7 +473,7 @@ kind `token`. The database stores it.
 - [x] Update the login lines of `worker/app-api/README.md` and
       `worker/chat/README.md`.
 
-## Milestone 4: Runner
+## Milestone 4: Gateway routes and runner token mode
 
 Depends on: 3
 
@@ -470,8 +484,9 @@ Blocked on 9 November 2026 by decision 172. The variable route passes the
 token to processes that Codex starts, and the bearer setting skips the
 requests of the token mode. The runner holds no change. The evidence is in
 `.context/codex-access-token/runner/report.md`. The user chose the gateway
-on 10 November 2026, so the open TODOs below wait for decisions 173 and
-174, which replace them.
+on 10 November 2026 (decision 172 D) and its token mode route
+(decision 173 B). The TODOs below build that route. Decision 174 stays
+open and changes no TODO here.
 
 - [x] Find the model provider settings that the pinned Codex needs for an
       access token. Read its protocol schema with
@@ -479,21 +494,40 @@ on 10 November 2026, so the open TODOs below wait for decisions 173 and
 - [x] Try the route of `experimental_bearer_token` in the `config` of
       `thread/start` and `thread/resume`. Use it when Codex accepts the
       token on it. Codex skips the requests of the token mode on it.
-- [ ] Otherwise, in `runner/src/providers/codex.ts`, start the app server
-      for a token with `CODEX_ACCESS_TOKEN` in its environment only. Send no
-      login request, and set the shell environment rule of Codex that
-      removes `CODEX_ACCESS_TOKEN` from shell commands.
-- [ ] Keep the API key route and its provider as they are.
-- [ ] Add tests in `runner/src/providers/codex-login.test.ts`: the token
-      takes only the chosen route, no login request carries it, and the API
-      key route does not change. For the variable route, the token is only
-      in the environment of the app server, and the shell rule is set.
-- [ ] Check that the output filter hides the token in agent output.
-- [ ] Update the opening lines that list the login kinds, and the sections
-      "The agent environment" and "Codex", of `runner/agent-logins.md`.
-- [ ] Make the token route text of
-      `plans/follow-ups/agent-login-in-tool-processes.md` name only the
-      chosen route.
+- [ ] Gateway, `worker/model-gateway/`: add the routes of the Codex token
+      mode for a turn whose login is a Codex access token, on a fixed list:
+      the `whoami` request of `auth.openai.com`, the rule bundle, the account
+      check and routing, the model list, and `POST` of the Codex model
+      route of `chatgpt.com/backend-api/codex`. Put in the real token, and
+      pass only the headers that these routes need, such as
+      `chatgpt-account-id`.
+- [ ] Gateway: keep Codex on the gateway. Follow the workspace routing in
+      the Worker, and give Codex no routed origin. Refuse a WebSocket
+      upgrade, so that Codex falls back to HTTP. Handle the zstd bodies, or
+      turn request compression off in the runner.
+- [ ] Gateway: give the turn token of a Codex access token the `at-` form,
+      so that Codex picks its token mode.
+- [ ] Runner: accept a Codex credential of the kind `token`. Start the app
+      server with the turn token in `CODEX_ACCESS_TOKEN`, the gateway
+      address in `CODEX_AUTHAPI_BASE_URL`, and the gateway in the ChatGPT
+      base address of its settings. Set the shell environment rule that
+      removes both variables from shell commands. Keep the API key route
+      as it is.
+- [ ] When a workspace rule moves Codex off the gateway, the turn fails
+      with a cause, and the real token never leaves the Worker.
+- [ ] Tests: the gateway routes and their refusals, the header list, the
+      `at-` turn token, the routing in the Worker, and the runner's token
+      start. Check that the output filter hides the turn token.
+- [ ] Protocol: state in `docs/protocol/model-gateway.md` the routes of the
+      token kind, the turn token and the gateway address in the environment
+      of Codex for this kind (decision 173 B), and the owner metadata that
+      reaches the sandbox. State in `docs/protocol/isolation.md` that the
+      hooks and MCP commands of a ChatGPT workspace rule run in the sandbox
+      of the org. Update the risks in `docs/protocol/tokens-and-secrets.md`.
+- [ ] Read both legal pages and every public guide in full, and update each
+      sentence that restates a changed fact.
+- [ ] Update `runner/agent-logins.md`, `runner/README.md`, and
+      `worker/model-gateway/README.md`.
 
 ## Milestone 5: Connect form
 
@@ -524,6 +558,23 @@ it.
       token" and its share switch.
 - [x] Smoke-test the account page in `npm run dev` at phone and desktop
       sizes. Save the screenshots under `.context/codex-access-token/`.
+
+## Milestone 5b: Public guides and comparison
+
+Depends on: 4
+
+The public guides and the comparison page say that Codex connects with a
+Codex access token.
+
+- [ ] Update `src/marketing/docs/agent-logins.md` and
+      `src/marketing/docs/get-started.md` for the Codex access token, as
+      [Website docs](../docs/protocol/website-docs.md) says.
+- [ ] Update the Codex row in `src/marketing/from-conductor/` from "in
+      progress" to its shipped status, as
+      [Conductor Cloud comparison](../docs/protocol/conductor-cloud-comparison.md#statuses)
+      says.
+- [ ] Read every other public guide in full, and update each sentence that
+      restates a changed fact.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
