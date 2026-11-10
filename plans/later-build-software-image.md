@@ -273,7 +273,7 @@ Depends on: 1, 2, 3
       complete gate, `npm run check`. Save the evidence and the gate log
       under `.context/later-build-software-image/`: `gate.log` and `reports/code.md`.
       Branch: `conductor/later-builds-from-software-image`.
-- [ ] Commit with Conventional Commits, and push. Branch: `conductor/later-builds-from-software-image`.
+- [x] Commit with Conventional Commits, and push. Branch: `conductor/later-builds-from-software-image`.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push, with its finding
       checks. Report the findings, then apply the fix rule: fix the
