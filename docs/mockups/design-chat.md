@@ -104,12 +104,15 @@ not have, and the files that the cloud computer could not read.
 ## Workspace and file chips
 
 - `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
-  the org as a chip in a line of text: a small rounded pill with the
-  `StatusGlyph` of the workspace, its label in a muted colour, and its
-  current name. Its height is the height of the line less 2 px, so a line
-  with a chip keeps its height. A chip is never wider than its line or
-  than 22 times the size of its font, and a long name is cut short. It
-  takes no fixtures, so the app can use it too.
+  the org as a chip in a line of text: a small rounded pill with the list
+  mark of the workspace, `WorkspaceMark`, its label in a muted colour, and
+  its current name. Its height is the height of the line less 2 px, so a
+  line with a chip keeps its height. A chip is never wider than its line
+  or than 22 times the size of its font, and a long name is cut short. It
+  takes no fixtures, so the app can use it too. A chip whose workspace
+  gives no GitHub state at all draws `StatusGlyph`, the mark of the
+  header, in place of the list mark. The app gives no GitHub state yet,
+  so its chips draw that mark.
   - `MessageText` shows the chips in sent messages and in answers, as
     links to the screens of the workspaces. A Markdown link to a
     workspace shows as the chip alone, and a link in code stays code. A

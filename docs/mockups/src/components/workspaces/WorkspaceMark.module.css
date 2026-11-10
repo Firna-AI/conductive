@@ -1,0 +1,94 @@
+/*
+ * The list mark: the GitHub state of the pull request in one colour.
+ * `MarkGrid.module.css` gives the grid and the shape of each cell.
+ * `--mark-off` is the opacity of a cell that is not lit, and `--mark-rest`
+ * the opacity of a cell of the ring between two passes of the light. The
+ * ring rests above the centre, so that a mark that moves keeps its colour.
+ */
+.mark {
+  --mark-off: 0.3;
+  --mark-rest: 0.5;
+}
+
+.checksFailed {
+  color: var(--ui-rose);
+}
+
+.checksRunning {
+  color: var(--ui-amber);
+}
+
+.checksPassed {
+  color: var(--ui-success);
+}
+
+.merged {
+  color: var(--ui-merged);
+}
+
+/*
+ * Without a GitHub state, every cell is dim grey: clearly dimmer than a
+ * mark in colour, and brighter than an archived mark.
+ */
+.none {
+  --mark-off: 0.45;
+  --mark-rest: 0.45;
+  color: var(--ui-muted);
+}
+
+/* An archived workspace: every cell faint, whatever its GitHub state. */
+.archived {
+  --mark-off: 0.16;
+  color: var(--ui-muted);
+}
+
+.cell {
+  opacity: var(--mark-off);
+}
+
+.lit {
+  opacity: 1;
+}
+
+/* A bright head runs clockwise around the ring, with a fading tail. */
+@keyframes chase {
+  0% {
+    opacity: 1;
+  }
+
+  45%,
+  100% {
+    opacity: var(--mark-rest);
+  }
+}
+
+/* The whole grid dims, then lights again. */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.chase {
+  animation: chase 960ms linear infinite;
+}
+
+.pulse {
+  animation: pulse 1600ms ease-in-out infinite;
+}
+
+/*
+ * Without motion, the lit cells keep the state: the ring of an agent that
+ * works, and the middle column of an agent that needs input.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .chase,
+  .pulse {
+    animation: none;
+  }
+}

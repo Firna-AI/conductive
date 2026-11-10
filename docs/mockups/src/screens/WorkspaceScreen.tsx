@@ -23,6 +23,7 @@ import { conversations } from '../fixtures/conversations'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
+import { bannerSummary } from '../fixtures/pullRequests'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { openableWorkspaceRecords } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -82,7 +83,10 @@ export function WorkspaceScreen(props: {
   // admin sees. A suspended org refuses the start of every owner.
   const ownerRefused = state.sandbox === 'refused' && !suspended
   const owner = ownerRefused ? suspendedOwner : record.owner
-  const workspace = { ...record, owner, name: workspaceName(state, record) }
+  const name = workspaceName(state, record)
+  // Its row in the list shows the GitHub state of its pull request bar.
+  const github = bannerSummary(state.banner)
+  const workspace = { ...record, owner, name, github }
   const status = activityOf(state)
   const archived = state.sandbox === 'archived'
   const readOnly = archived || suspended

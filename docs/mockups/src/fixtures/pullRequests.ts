@@ -25,6 +25,14 @@ export const bannerStates = [
 
 export type BannerState = (typeof bannerStates)[number]
 
+/**
+ * The GitHub state of the pull request of a workspace, which the mark of
+ * the workspace list shows in one colour: its checks run, failed, or
+ * passed, or it merged. A workspace without one has `null`.
+ */
+export type GitHubSummary =
+  'checks-running' | 'checks-failed' | 'checks-passed' | 'merged'
+
 export type PullRequest = {
   number: number
   title: string
@@ -83,6 +91,25 @@ export const checksByState: Readonly<Record<BannerState, readonly Check[]>> = {
   draft: allPassed,
   closed: allPassed,
   blocked: allPassed,
+}
+
+/**
+ * The GitHub state of the pull request in a banner state. The merge wins
+ * over the checks, a failed check wins over one that runs, and a pull
+ * request without checks has none. A branch without a pull request and a
+ * pull request closed without a merge have none either.
+ */
+export function bannerSummary(state: BannerState): GitHubSummary | null {
+  if (state === 'none' || state === 'no-commits' || state === 'closed') {
+    return null
+  }
+  if (state === 'merged') return 'merged'
+  const checks = checksByState[state]
+  if (checks.some((check) => check.state === 'failed')) return 'checks-failed'
+  if (checks.some((check) => check.state === 'running')) {
+    return 'checks-running'
+  }
+  return checks.length > 0 ? 'checks-passed' : null
 }
 
 /** The review state that GitHub reports, when the pull request has one. */

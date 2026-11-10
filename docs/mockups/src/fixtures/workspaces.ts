@@ -2,6 +2,7 @@ import { appDomain } from '../brand'
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type PersonKey } from './members'
 import { orgs, type Org } from './orgs'
+import type { GitHubSummary } from './pullRequests'
 import type { RepositoryKey } from './repositories'
 import type { SectionKey } from './sections'
 
@@ -58,6 +59,12 @@ export type Workspace = {
   choice: AgentChoice
   /** The status in the workspace list when the app opens. */
   status: ActivityStatus
+  /**
+   * The GitHub state of its pull request when the app opens, which the
+   * list mark shows in colour. `null` is a branch without a pull request,
+   * a pull request without checks, or one closed without a merge.
+   */
+  github: GitHubSummary | null
   /** The time since the last activity, such as `2h`. */
   updated: string
   /**
@@ -96,6 +103,7 @@ export const checkoutAutocomplete: Workspace = {
   section: 'checkout',
   choice: defaultChoice,
   status: 'stopped',
+  github: 'checks-passed',
   updated: '2h',
   owner: 'cal',
 }
@@ -118,6 +126,7 @@ export const savedCarts: Workspace = {
   section: 'general',
   choice: defaultChoice,
   status: 'starting',
+  github: null,
   updated: 'now',
   owner: 'cal',
 }
@@ -138,7 +147,7 @@ export const codex: AgentChoice = {
 
 type Details = Pick<
   Workspace,
-  'number' | 'repository' | 'section' | 'status' | 'updated'
+  'number' | 'repository' | 'section' | 'status' | 'github' | 'updated'
 > & {
   /** The ID of the workspace in its link. */
   id: string
@@ -165,6 +174,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'marketing-site',
     section: 'general',
     status: 'starting',
+    github: null,
     updated: 'now',
   }),
   workspace(
@@ -176,6 +186,7 @@ export const workspaceList: readonly Workspace[] = [
       repository: 'billing-service',
       section: 'general',
       status: 'error',
+      github: 'checks-failed',
       updated: '40m',
       owner: 'priya',
     },
@@ -187,6 +198,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'marketing-site',
     section: 'general',
     status: 'stopped',
+    github: 'merged',
     updated: '3d',
     owner: 'priya',
   }),
@@ -199,6 +211,7 @@ export const workspaceList: readonly Workspace[] = [
       repository: 'storefront',
       section: 'checkout',
       status: 'working',
+      github: 'checks-running',
       updated: 'now',
     },
     codex,
@@ -209,6 +222,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'billing-service',
     section: 'checkout',
     status: 'unread',
+    github: 'checks-passed',
     updated: '5m',
   }),
   workspace('apple-pay', 'Apple Pay button', {
@@ -217,6 +231,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'storefront',
     section: 'checkout',
     status: 'ready',
+    github: 'checks-failed',
     updated: '12m',
   }),
   checkoutAutocomplete,
@@ -226,6 +241,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'storefront',
     section: 'infra',
     status: 'ready',
+    github: null,
     updated: '20m',
   }),
   workspace('retry-queue', 'Move retries to a queue', {
@@ -234,6 +250,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'billing-service',
     section: 'infra',
     status: 'stopped',
+    github: 'checks-running',
     updated: '2d',
     owner: 'jonas',
   }),

@@ -242,7 +242,13 @@ and declare `movedFrom`. `app/banner/blocked` has a merge conflict, requested
 changes, a draft, and a pull request closed without a merge. A conflict and
 requested changes tint the bar amber. `app/banner/no-commits` has a branch
 without commits, whose bar offers no Create pull request, as in
-`app/new-workspace/creating` and `first-turn`.
+`app/new-workspace/creating` and `first-turn`. On each of these pages, the
+row of the workspace in the list shows the GitHub state of the bar: amber
+while checks run, red after a failed check, green after passed checks,
+and purple after the merge. A conflict, requested changes, a draft, and a
+block keep the green of the passed checks. A branch without a pull request
+or without commits, and a pull request closed without a merge, show the
+dim mark.
 
 `app/archive` draws Archive and Restore of Checkout address autocomplete,
 from decisions 1 and 2 of PR #138. Its canonical screen has the archived

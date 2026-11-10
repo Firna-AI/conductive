@@ -15,6 +15,7 @@ export function orgRows(sections: readonly SidebarSection[]): WorkspaceRow[] {
   const archived = archivedWorkspaceList.map((workspace): WorkspaceRow => ({
     workspace,
     status: 'archived',
+    github: workspace.github,
     selected: false,
   }))
   return [...sections.flatMap((section) => section.rows), ...archived]

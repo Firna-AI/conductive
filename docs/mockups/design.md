@@ -4,18 +4,20 @@ The [mockups README](README.md) gives the commands, the folder layout,
 how a screen is built, and links to the other pages.
 
 The design is Graphite: dark-first, with near-black surfaces, cool greys, and
-one bright sky accent for what is active, such as the selected rail item, a
-working agent, and the main action. It is dense, with small radii, and its
-labels (tabs, section names, times) use the monospace font in capitals. The
-light scheme uses the same cool greys and a darker accent.
+one bright sky accent for what is active, such as the selected rail item,
+the mark of a working agent in the header, and the main action. It is
+dense, with small radii, and its labels (tabs, section names, times) use
+the monospace font in capitals. The light scheme uses the same cool greys
+and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
-status mark, the name, and the time, and it moves to another section by
-drag and drop. Archive covers the time on hover only, without moving the
-row content, and Restore does so in the Archived group. Selection and
+mark in the colour of its GitHub state, the name, and the time, and it
+moves to another section by drag and drop. Archive covers the time on
+hover only, without moving the row content, and Restore does so in the
+Archived group. Selection and
 keyboard focus alone keep the time visible. A right click on a row opens
 the menu of the workspace. The centre column has a slim header that names
 the
@@ -191,12 +193,28 @@ sessions as tabs above the chat, and four tabs at the bottom.
     over the name and down to the bottom edge of the header.
 - [Workspace and file chips](design-chat.md#workspace-and-file-chips) gives
   the workspace links, file mentions, the list of `@`, and chip removal.
-- `StatusGlyph` in `src/components/workspaces/` draws the state of a
-  workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
-  working and starting move with CSS. A finished turn is a full bright green
-  square, and ready is one bright cell on a faint green grid. A workspace
-  whose agent waits for the user, such as for the approval of a command,
-  shows Needs input: a middle column in the accent colour that pulses.
+- `WorkspaceMark` in `src/components/workspaces/` draws the list mark of a
+  workspace, which the list, the rows of the command palette, and the
+  workspace chips show. It is a 3 × 3 dot-matrix square in one colour for
+  the GitHub state of the pull request: rose when checks failed, amber
+  while checks run, the success green when checks passed, and the
+  `merged` purple after the merge. Without a GitHub state, every cell is
+  dim grey. An archived workspace keeps faint grey cells, whatever its
+  GitHub state. A light runs around the ring while the agent works, and the
+  centre cell stays dim. The whole square pulses while the agent waits for
+  the user, such as for the approval of a command. Every other mark is
+  still, so only bold text marks unread output. With reduced motion, the
+  ring or the middle column stays lit, and the other cells stay dim.
+  `listMarkLabel` in `status.ts` beside it gives the words that screen
+  readers hear, such as "Checks failed, Working". The mark imports no
+  fixture value, so the app uses it too.
+- `StatusGlyph` beside it draws the state of the agent and the cloud
+  computer, as the header and the operator section show it, on the same
+  grid, from `MarkGrid`. Each state has its own shape, and working and
+  starting move with CSS. A finished turn is a full bright green square,
+  and ready is one bright cell on a faint green grid. A workspace whose
+  agent waits for the user shows Needs input: a middle column in the accent
+  colour that pulses.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no

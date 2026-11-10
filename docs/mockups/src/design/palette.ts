@@ -25,6 +25,8 @@ type AppColors = {
   warning: string
   /** The outline of a mark on a warning fill, such as `amberSoft`. */
   warningBorder: string
+  /** A merged pull request, in GitHub's purple. */
+  merged: string
   codeKeyword: string
   codeString: string
   codeComment: string
@@ -85,6 +87,7 @@ export const darkPalette: Palette = {
   dangerBorder: '#4d1f22',
   warning: '#f2b84b',
   warningBorder: '#4d3a12',
+  merged: '#a371f7',
   codeKeyword: '#c792ea',
   codeString: '#a5e075',
   codeComment: '#6b7380',
@@ -138,6 +141,7 @@ export const lightPalette: Palette = {
   dangerBorder: '#f2c9cb',
   warning: '#b7860b',
   warningBorder: '#ecd49a',
+  merged: '#8250df',
   codeKeyword: '#7c3aed',
   codeString: '#15803d',
   codeComment: '#6b7280',

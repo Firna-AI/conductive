@@ -1,8 +1,10 @@
 import type { ComponentProps, ReactNode } from 'react'
+import type { GitHubSummary } from '../../fixtures/pullRequests'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { activityPresentation } from '../workspaces/status'
+import { activityPresentation, listMarkLabel } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { WorkspaceMark } from '../workspaces/WorkspaceMark'
 import {
   ChipEndRemove,
   ChipIconCell,
@@ -18,8 +20,36 @@ export type ChipWorkspace = {
   label: string
   /** The current name. */
   name: string
-  /** The current state, which the state mark draws. */
+  /** The current state of its agent and its cloud computer. */
   status: ComponentProps<typeof StatusGlyph>['status']
+  /**
+   * The GitHub state of its pull request, which the list mark shows in
+   * colour, or `null` without one. A chip whose workspace gives no GitHub
+   * state at all leaves it out, and draws the shape mark of the header in
+   * place of the list mark.
+   */
+  github?: GitHubSummary | null
+}
+
+/** The mark of a chip, and the words that screen readers hear for it. */
+type ChipMark = { mark: ReactNode; words: string }
+
+/**
+ * The list mark with the GitHub state, or the shape mark of the header when
+ * the workspace gives no GitHub state.
+ */
+function chipMark(workspace: ChipWorkspace): ChipMark {
+  const { github, status } = workspace
+  if (github === undefined) {
+    return {
+      mark: <StatusGlyph status={status} />,
+      words: activityPresentation[status].label,
+    }
+  }
+  return {
+    mark: <WorkspaceMark github={github} status={status} />,
+    words: listMarkLabel(github, status),
+  }
 }
 
 /** What the element that opens the page of a chip gets from it. */
@@ -46,11 +76,12 @@ export function useChipClass(removal: ChipRemoval | undefined): string {
 }
 
 /**
- * A workspace in a line of text: a small rounded pill with the state mark
+ * A workspace in a line of text: a small rounded pill with the list mark
  * of the workspace, its label in a muted colour, and its current name. A
- * narrow line cuts the name short. Screen readers also hear the state. The
- * chip takes the height of the line around it, so it sits in a message, an
- * answer, or a message box and keeps the height of the line.
+ * narrow line cuts the name short. Screen readers also hear the GitHub
+ * state and the state of the workspace. The chip takes the height of the
+ * line around it, so it sits in a message, an answer, or a message box and
+ * keeps the height of the line.
  *
  * In a sent message or an answer, `opener` makes the chip the element that
  * opens its workspace, such as a link. A chip in a message box has none: it
@@ -63,10 +94,10 @@ export function WorkspaceChip(props: {
   opener?: (chip: ChipOpener) => ReactNode
   removal?: ChipRemoval
 }) {
-  const { label, name, status } = props.workspace
+  const { label, name } = props.workspace
   const { removal } = props
   const className = useChipClass(removal)
-  const mark = <StatusGlyph status={status} />
+  const { mark, words } = chipMark(props.workspace)
   const chip: ChipOpener = {
     className,
     title: name,
@@ -77,9 +108,7 @@ export function WorkspaceChip(props: {
           <span className={styles.label}>{label}</span>{' '}
           <span className={base.name}>{name}</span>
         </span>
-        <span className={a11y.hidden}>
-          , {activityPresentation[status].label}
-        </span>
+        <span className={a11y.hidden}>, {words}</span>
         {removal ? <ChipEndRemove removal={removal} /> : null}
       </>
     ),

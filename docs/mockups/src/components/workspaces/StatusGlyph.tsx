@@ -1,13 +1,8 @@
 import type { CSSProperties } from 'react'
 import type { ActivityStatus } from '../../fixtures/workspaces'
 import { classes } from '../common/classes'
+import { cells, MarkGrid, ring, ringDelay } from './MarkGrid'
 import styles from './StatusGlyph.module.css'
-
-/** The cells of the 3 × 3 grid, row by row from the top left. */
-const cells = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const
-
-/** The outer ring of the grid, clockwise from the top left. */
-const ring = [0, 1, 2, 5, 8, 7, 6, 3]
 
 /**
  * The cells that each state lights. Each state has its own shape, so the
@@ -32,8 +27,7 @@ const shapes: Readonly<Record<ActivityStatus, readonly number[]>> = {
   archived: [],
 }
 
-/** One turn of the working ring, and one wave of the starting row, in ms. */
-const turn = 960
+/** One wave of the starting row, in ms. */
 const wave = 1200
 
 /**
@@ -41,9 +35,7 @@ const wave = 1200
  * negative, so every view shows the motion already under way.
  */
 function delay(status: ActivityStatus, cell: number): CSSProperties {
-  if (status === 'working') {
-    return { animationDelay: `${(ring.indexOf(cell) * turn) / 8 - turn}ms` }
-  }
+  if (status === 'working') return ringDelay(cell)
   if (status === 'starting') {
     return { animationDelay: `${(cell - 3) * 200 - wave}ms` }
   }
@@ -51,25 +43,25 @@ function delay(status: ActivityStatus, cell: number): CSSProperties {
 }
 
 /**
- * The state of a workspace as a small dot-matrix square: a 3 × 3 grid whose
- * lit cells draw the state. Working moves around the ring, starting fills
- * the middle row, and a workspace that needs input pulses.
+ * The state of the agent and the cloud computer of a workspace, as the
+ * header shows it: a 3 × 3 dot-matrix square whose lit cells draw the
+ * state. Working moves around the ring, starting fills the middle row, and
+ * a workspace that needs input pulses.
  */
 export function StatusGlyph(props: { status: ActivityStatus }) {
-  const lit = new Set(shapes[props.status])
+  const { status } = props
+  const lit = new Set(shapes[status])
   return (
-    <span aria-hidden className={classes(styles.glyph, styles[props.status])}>
-      {cells.map((cell) =>
-        lit.has(cell) ? (
-          <span
-            className={`${styles.cell} ${styles.on}`}
-            key={cell}
-            style={delay(props.status, cell)}
-          />
-        ) : (
-          <span className={styles.cell} key={cell} />
-        ),
-      )}
-    </span>
+    <MarkGrid
+      cell={(cell) =>
+        lit.has(cell)
+          ? {
+              className: classes(styles.cell, styles.on),
+              style: delay(status, cell),
+            }
+          : { className: styles.cell }
+      }
+      className={styles[status]}
+    />
   )
 }

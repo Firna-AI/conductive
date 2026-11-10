@@ -96,6 +96,26 @@ My calls, on 10 November 2026:
 17. One shared function gives the GitHub state for the bar and for the
     copy, so the bar and the mark cannot disagree.
 
+The mockup milestone added these calls on 10 November 2026:
+
+18. The `merged` purple is GitHub's: `#a371f7` in the dark scheme and
+    `#8250df` in the light scheme. Its contrast on the sidebar is 5.84:1
+    and 4.62:1.
+19. A mark without a GitHub state is grey at an opacity of 0.45, and an
+    archived mark is grey at 0.16, so the two stay apart.
+20. The ring of a working mark rests at 0.5 between two passes of the
+    light, and its centre stays at 0.3, also without motion. Reason: at
+    0.3, a moving amber mark looked pale in the light scheme.
+21. With reduced motion, a still ring differs from a full mark only by its
+    dim centre. Kept, because the ring keeps eight of nine cells in the
+    colour. Rejected: four lit corners, because they show less colour.
+22. Screen readers hear no GitHub state for an archived workspace, because
+    its mark shows no colour.
+23. The header keeps its green "Ready" mark also beside a red bar, because
+    the user chose to keep the header as it is.
+24. The bar keeps its neutral merge state. A purple merge in the bar waits
+    for the user, in `plans/follow-ups/merged-bar-has-no-purple.md`.
+
 ## Contracts
 
 - `GitHubSummary` in `src/shared/github.ts`: `'checks-running'`,
@@ -141,34 +161,35 @@ Depends on: none
 The list, the palette, and the chips get the new mark, at both sizes and
 in both schemes. The header keeps its mark.
 
-- [ ] Add a purple `merged` colour to both schemes in
+- [x] Add a purple `merged` colour to both schemes in
       `docs/mockups/src/design/palette.ts`. Check its contrast on the
       sidebar.
-- [ ] Add the list mark beside `StatusGlyph` in
+- [x] Add the list mark beside `StatusGlyph` in
       `docs/mockups/src/components/workspaces/`, with design calls 1 to 7.
       Red is `--ui-rose`, amber `--ui-amber`, green `--ui-success`, purple
       `--ui-merged`, and dim `--ui-muted`.
-- [ ] Give each workspace fixture its GitHub summary. Mix every colour
+- [x] Give each workspace fixture its GitHub summary. Mix every colour
       with a still mark, a working mark, and a mark that needs input. The
       open workspace takes the summary of the bar state of its screen, so
       its row and its bar agree.
-- [ ] Use the mark in the mockup parts `WorkspaceRow.tsx`,
+- [x] Use the mark in the mockup parts `WorkspaceRow.tsx`,
       `PaletteRows.tsx`, and `WorkspaceChip.tsx`, with the words of design
       call 10. The chip keeps the converter of the replaced ways.
-- [ ] Keep `StatusGlyph` in the header and in the operator section. Make
+- [x] Keep `StatusGlyph` in the header and in the operator section. Make
       its comments say that it draws the state of the agent and the cloud
       computer.
-- [ ] Update each text that describes the list mark: the App shell
+- [x] Update each text that describes the list mark: the App shell
       rationale, the other entries that describe a mark,
       `docs/mockups/design.md`, and the catalogue pages.
-- [ ] Update the label of the phone picture in `marketingPictureList.ts`.
+- [x] Update the label of the phone picture in `marketingPictureList.ts`.
       Capture the pictures again with `npm run marketing:pictures`, and
       look at each changed picture.
-- [ ] Run `npm run mockups:check`. Smoke-test the App shell, the palette,
+- [x] Run `npm run mockups:check`. Smoke-test the App shell, the palette,
       and the workspace links pages, at both sizes and in both schemes.
       Save the screenshots under `.context/workspace-marks-show-github-state/`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+- Evidence: `.context/workspace-marks-show-github-state/m1/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -208,6 +229,8 @@ The Worker keeps the copy in D1 and gives it in each workspace record.
 - [ ] Add `GitHubSummary` and `githubSummary` to `src/shared/github.ts`.
       Make `pullBanner` use it for its check states, and delete
       `failedCheck` when no caller is left.
+- [ ] Make `GitHubSummary` of `docs/mockups/src/fixtures/pullRequests.ts`
+      the shared type from `src/shared/github.ts`, so one union exists.
 - [ ] Add `Workspace.github`. Add the migration
       `migrations/<YYYYMMDDHHMM>_workspace_github_summary.sql`, and
       describe it in the migrations README.
@@ -245,6 +268,8 @@ The app draws the new mark from the GitHub summary of each record.
       `src/shell/palette/PaletteList.tsx`, and through `chipOf` in
       `src/chat/links/LinksContext.tsx`, with the words of design call 10.
 - [ ] Delete the converter of the chip, and make its summary required.
+      Delete the sentence of `docs/mockups/design-chat.md` that says that
+      the app gives no GitHub state yet.
 - [ ] Make `workspacesWait` in `src/app/org-model.ts` give the short wait
       while a workspace has running checks.
 - [ ] Give each workspace of the fake API, the dev fakes, and the test
