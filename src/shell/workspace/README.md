@@ -160,6 +160,10 @@ fake API, with its address options, its controls, and the test command.
   the saved view. It also checks a failed chat load, the diff of a turn on
   a phone, a stopped, starting, and refused sandbox, and an archived
   workspace.
+- `files/StartingPages.test.tsx`: mounts the whole app over the fake API at
+  a file address and at a diff address while the sandbox starts. It checks
+  the sandbox panel in place of the page, with no read, and the read once
+  the workspace is ready.
 - `app-features.tsx`: the shell's own files, pull request, and owner
   parts, which `useFeatures` puts under the parts of the host. The screen
   draws its own tools panel when the host gives no `tools` part.

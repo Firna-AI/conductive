@@ -81,6 +81,11 @@ The screens:
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode.
 - `DiffPage` shows the diff of one changed file.
+- The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
+  of the page, for example with a sandbox state. The page then reads
+  nothing, and its header offers no Copy and no Download. A diff keeps its
+  changed lines from Changes. When the placeholder goes, the page reads at
+  once.
 - `FileTabItem` is the closable tab of a file or a diff, as a list item
   for the tab row of the centre column on desktop. `onClose` asks the shell
   to close the tab. It takes the tab styles of the mockups' `WorkspaceTabs`,

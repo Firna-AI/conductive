@@ -27,7 +27,12 @@ import {
   useWorkspaceFiles,
 } from './workspace-files'
 
-/** A file tab or a diff tab as a page, which keeps its tab in the saved view. */
+/**
+ * A file tab or a diff tab as a page, which keeps its tab in the saved view.
+ * The page shows the state of the sandbox in place of its content, and reads
+ * nothing, where the lists show it in their place, such as while the
+ * sandbox starts.
+ */
 function TabPage(props: {
   context: WorkspaceContext
   files: WorkspaceFiles
@@ -42,6 +47,7 @@ function TabPage(props: {
     files: props.files,
     layout: props.layout,
     navigation: props.navigation,
+    placeholder: sandboxPlaceholder(props.context),
     targets,
   }
   return tab.kind === 'file' ? (

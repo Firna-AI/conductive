@@ -41,10 +41,19 @@ export function FilePage(props: {
   navigation: FilesNavigation
   layout: FilesLayout
   targets?: FileActionTargets
+  /**
+   * Shows in place of the file, such as the state of a sandbox that starts.
+   * The page then reads nothing, so it offers no Copy and no Download.
+   */
+  placeholder?: ReactNode
 }) {
-  const { files, tab, navigation } = props
+  const { files, tab, navigation, placeholder } = props
   const snapshot = useFilesSnapshot(files)
-  const { state, retry } = useFollowed(files, readFile, tab.path)
+  const { state, retry } = useFollowed(
+    files,
+    readFile,
+    placeholder ? null : tab.path,
+  )
   const actions = useFileActions(files.client, tab.path, props.targets)
   const reply = state?.status === 'ready' ? state.value : null
   const label = pageLabel(snapshot, tab.path, 'file', reply)
@@ -54,7 +63,9 @@ export function FilePage(props: {
     text?.kind === 'text' && !(markdown && tab.mode === 'preview')
   const download = state?.status === 'ready' ? actions.download : undefined
   let body: ReactNode = <LoadingFile />
-  if (state?.status === 'failed' && state.error.kind !== 'aborted') {
+  if (placeholder) {
+    body = placeholder
+  } else if (state?.status === 'failed' && state.error.kind !== 'aborted') {
     body = <ReadError error={state.error} onRetry={retry} subject="file" />
   } else if (text) {
     body = (

@@ -17,6 +17,7 @@
     - On 10 November 2026, the full gate failed this test again. The local run followed a merge of main `1a9e75a7` into `calummoore/vercel-sandbox-provider`. The test and its report helper matched that main commit. The run had 1,984 passes, one failure, and no skips.
     - The first command-list assertion, at line 30, expected `files.snapshot`, `changes.updated`, `start.updated`, and `workspace.title`. It received an empty list after `fixture.drain()`: `AssertionError: expected [] to deeply equal [ 'files.snapshot', …(3) ]`.
     - An unchanged rerun of `npm run test -- worker/chat/runner-repairs.test.ts` then passed both tests in the file, with no skips. The cause is unproved. The empty list narrows the suspected source to event processing, drain completion, or command observation.
+    - Later on 10 November 2026, the full gate of `calummoore/sandbox-startup-diff-error` failed it with the same text, at line 30, with 2,033 passes. That branch changes no Worker code. The first isolated rerun, directly after the gate, failed in the same way. Two later isolated reruns in the same tree passed. A clean worktree of main `a1bbd7f8` passed three runs, one of them with the branch diff applied. So the test can fail without the load of the full gate.
   - `worker/lifecycle/provisioning.test.ts`: "recovers an accepted create after its caller closes and the actor restarts".
   - `worker/lifecycle/disk-retention.test.ts`: "keeps a stopped disk through startup and stop failures without a stale stop after user open".
 

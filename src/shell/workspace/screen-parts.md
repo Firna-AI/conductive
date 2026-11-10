@@ -79,6 +79,12 @@ Each folder of a path is a part of the address. Another address under
   Changes, and Checks stays. A refused panel has the words of its cause,
   as [A refused start](refused-start.md) says. An archived workspace has no
   file lists, and its right column shows the archived panel.
+- A file or diff page shows the same sandbox panel in place of its
+  content, on desktop and on a phone, and reads nothing. So an open tab
+  waits until the sandbox is ready, as
+  [Start steps](../../../docs/protocol/workspace-life.md#start-steps) says.
+  Its header keeps the name of the file, and a diff keeps its changed
+  lines. The page reads when the panel goes.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
 
