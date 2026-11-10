@@ -1,7 +1,7 @@
 # Commit author in cloud computers
 
-Status: Active. On branch `calummoore/git-identity-error`, no pull request
-yet. The pull request that completes the work deletes this plan, as the
+Status: Active. [PR #181](https://github.com/Firna-AI/remote-code/pull/181)
+is open. The pull request that completes the work deletes this plan, as the
 `plans` skill says.
 
 Git in a cloud computer has no author name and no author email. So each
@@ -499,7 +499,7 @@ Depends on: every other milestone
 
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
       Evidence: `.context/commit-author-in-cloud-computers/gate-1.log`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

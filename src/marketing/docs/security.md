@@ -37,6 +37,9 @@ Its sender is the person whose message started that turn.
 | Commit outside a turn, including Terminal and scripts | The workspace owner, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
 
+In a workspace with older cloud computer software, agent commits name the workspace owner.
+[Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
+
 Other members' messages can spend a session starter's account while that person shares the login.
 Without sharing, another member's message starts a new session on their own login.
 The agent can identify the member who sent each message.

@@ -122,6 +122,10 @@ A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
+A build also installs the newest Conductive cloud computer software.
+An existing workspace keeps the software of the setup that it started from, also after a resume.
+To get newer software, start a new workspace after an admin runs **Build computer**.
+
 After the first successful build, saved repository and install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build runs.
 

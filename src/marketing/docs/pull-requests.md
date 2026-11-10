@@ -34,6 +34,8 @@ GitHub operations in an agent turn use the person whose message started that tur
 Commands in the shared Terminal use the workspace owner's GitHub account.
 
 Commits in each place name that same person as both author and committer.
+In a workspace with older cloud computer software, agent commits name the workspace owner.
+[Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
 Conductive uses their GitHub display name, or their login when the display name is missing or unusable.
 Each commit uses their private GitHub no-reply address, `<id>+<login>@users.noreply.github.com`.
 Here, `<id>` is their GitHub user ID and `<login>` is their GitHub login.

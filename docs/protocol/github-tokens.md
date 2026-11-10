@@ -45,6 +45,11 @@ commits name as their author.
 - In an agent turn, the author is the sender of the turn, the member whose
   message started the turn. A message that another member sends during the
   turn does not change the author.
+- A sandbox keeps the agent runner of its org image, also after a resume.
+  In a sandbox whose runner gives an agent no turn author, the commits of
+  each agent turn name the workspace owner. The member starts a new
+  workspace after an admin runs Build computer to get the turn sender as
+  the author.
 - Outside an agent turn, such as in the shared terminal or in the startup
   script, the author is the workspace owner.
 - The author of the first commit that the app pushes to an empty
