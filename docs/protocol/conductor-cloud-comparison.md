@@ -20,9 +20,10 @@ shut-down day is 20 November 2026. The terms are those of the
   a public GitHub board, and a view in the app. Reason: visitors decide
   before they sign up, and links and searches reach the site.
 - The page has the header and the footer of the site. It ends with the
-  last call to action of the site. Its main action, "Join the waitlist",
-  starts the GitHub sign-in. A new account then waits for app access, as
-  [Waitlist](waitlist.md) says.
+  last call to action of the site. Its main action, "Sign up", starts the
+  GitHub sign-in. A new account then waits for app access, as
+  [Waitlist](waitlist.md) says. Its second action, "Download for Mac",
+  leads to the Mac app section of the home page.
 - The page is static content. It runs no script, sets no cookie, has no
   tracking, and reads no user data.
 - So the page has no search, filter, or sort control. A visitor uses the
