@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-09, from the branch `calummoore/resend-email-setup`.
-- **Location:** `src/marketing/privacy.ts:39-41` (the GitHub account item), `src/marketing/privacy.ts:50-52` (the orgs item), `src/marketing/privacy.ts:75-105` (the "Who gets your data" list), and `docs/architecture.md:145-152` (the "External services" list).
+- **Location:** `src/marketing/privacy.ts:39-41` (the GitHub account item), `src/marketing/privacy.ts:50-52` (the orgs item), `src/marketing/privacy.ts:75-105` (the "Who gets your data" list), and `docs/architecture/components.md:125-139` (the "External services" list).
 - **Reason:** On 9 November 2026, the user chose to merge the change of the sender domain first and to decide the wording of this legal text later.
 
 - **Source:** Review. **Category:** Docs or spec.
@@ -24,7 +24,7 @@
 - **Problem:**
   - "Who gets your data" names no email provider, but each invitation sends personal data to Resend.
   - "What Conductive uses, and why" does not list the verified emails. It also does not say that an invitation holds the email address of the invited person.
-  - The "External services" list in `docs/architecture.md` does not name Resend either.
+  - The "External services" list in `docs/architecture/components.md` does not name Resend either.
 - **Impact if no action:** The Privacy page omits one recipient and one kind of stored data. Once the deployed Worker sends from `mail.conductive.build`, real invitation data goes to Resend, and the page does not say so.
 - **Root question:** How does the Privacy page tell people what the app does with the email addresses of the invitation feature?
 - **Options:**
@@ -36,6 +36,7 @@
   - No third naming approach exists. The page names either the service or its kind.
 - **Wider fix:** None. The legal-pages rule now covers this class. It came two days after the email invitations, which explains this gap.
 - **Previous examples:** Commit `3f3d7b9`, on 7 November 2026, corrected the legal drafts after the login-sharing feature changed whose login a session uses.
+- **Related:** `plans/follow-ups/privacy-invitation-item-stale.md` corrects this item. The Privacy page already names Resend and the verified emails, so two of its gaps are stale.
 - **Recommendation:** A. The page names every other outside party, except the cloud computer provider that a repository rule keeps unnamed. B protects the page better if the email provider changes. Both forms identify the recipient of the invitation data.
 - **Action:** ask the user, because both texts are correct, and no copy rule picks one.
 
@@ -44,4 +45,4 @@ Example text for option A:
 - "Who gets your data": "Resend sends the invitation emails. It gets the invited email address, the org name, the name of the member who invited, and the invitation link."
 - The GitHub account item: add "and the verified email addresses of the account. They match you to the invitations that name one of them."
 - The orgs item: change "invites" to "invites, with the email address that each invite names".
-- `docs/architecture.md`, under "External services": "**Resend:** sends the invitation emails, from `invites@mail.conductive.build`."
+- `docs/architecture/components.md`, under "External services": "**Resend:** sends the invitation emails, from `invites@mail.conductive.build`."

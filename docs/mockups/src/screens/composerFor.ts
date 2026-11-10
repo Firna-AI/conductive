@@ -1,4 +1,5 @@
 import type { ComposerState } from '../components/chat/Composer'
+import type { MentionTree } from '../components/chat/FileMentionList'
 import {
   attachmentDraft,
   draftAttachments,
@@ -7,6 +8,7 @@ import {
   type Attachment,
 } from '../fixtures/attachments'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
+import { mentionChipsDraft, mentionDrafts } from '../fixtures/fileMentions'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
@@ -38,6 +40,7 @@ const composerFiles: Partial<
   'upload-failed': failedAttachments,
   'too-large': draftAttachments,
   picker: draftAttachments,
+  'attachment-pointer': draftAttachments,
 }
 
 /** The composer states whose Send leads to the message with its files. */
@@ -45,6 +48,38 @@ const sendsFiles = new Set<WorkspaceState['composer']>([
   'attachments',
   'too-large',
 ])
+
+/** The draft and the tree of each state that opens the list of `@`. */
+const mentionLists: Partial<
+  Record<WorkspaceState['composer'], { draft: string; tree: MentionTree }>
+> = {
+  'mention-query': { draft: mentionDrafts.query, tree: 'latest' },
+  'mention-start': { draft: mentionDrafts.start, tree: 'latest' },
+  'mention-none': { draft: mentionDrafts.none, tree: 'latest' },
+  'mention-loading': { draft: mentionDrafts.query, tree: 'loading' },
+  'mention-unavailable': { draft: mentionDrafts.query, tree: 'unavailable' },
+}
+
+/** The pointer that a state draws over the icon of a chip of the composer. */
+function pointerOf(state: WorkspaceState): ComposerState['pointer'] {
+  if (state.composer === 'attachment-pointer') {
+    return { kind: 'attachment', name: draftAttachments[0].name }
+  }
+  const chip =
+    state.composer === 'file-chip-pointer' ||
+    state.composer === 'workspace-link-pointer'
+  return chip ? { kind: 'chip' } : undefined
+}
+
+/** The draft of a state with chips: file chips, or a workspace link. */
+function chipDraft(composer: WorkspaceState['composer']): string | undefined {
+  if (composer === 'file-chips' || composer === 'file-chip-pointer') {
+    return mentionChipsDraft
+  }
+  const link =
+    composer === 'workspace-link' || composer === 'workspace-link-pointer'
+  return link ? workspaceLinkDraft : undefined
+}
 
 /** An agent turn runs on a ready sandbox. */
 export function isRunning(state: WorkspaceState): boolean {
@@ -77,7 +112,8 @@ export function isRunning(state: WorkspaceState): boolean {
  * a new workspace. The message waits for the sandbox.
  *
  * A message with a pasted link to another workspace shows the link as a
- * chip, and the draft keeps the plain link.
+ * chip, and the draft keeps the plain link. `@` opens the list of the
+ * files and folders above the box, and a picked entry shows as a chip.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -92,13 +128,15 @@ export function composerFor(
     state.composer === 'no-starter-login' || state.composer === 'not-shared'
   const opensLinked = !fresh && linkedState && starter !== undefined
   const files = fresh ? undefined : composerFiles[state.composer]
+  const mention = fresh ? undefined : mentionLists[state.composer]
+  const chips = fresh ? undefined : chipDraft(state.composer)
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
   else if (files) draft = attachmentDraft
   else if (!fresh && (noLogin || linkedState)) draft = followUpDraft
-  else if (!fresh && state.composer === 'workspace-link') {
-    draft = workspaceLinkDraft
-  } else if (!fresh && state.composer === 'draft') {
+  else if (mention) draft = mention.draft
+  else if (chips) draft = chips
+  else if (!fresh && state.composer === 'draft') {
     draft = isNew(state) ? savedCartsDraft : followUpDraft
   }
   let sendTo: string | undefined
@@ -119,5 +157,7 @@ export function composerFor(
     startsSession: opensLinked,
     blocked: needsLogin,
     sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),
+    mention: mention?.tree,
+    pointer: fresh ? undefined : pointerOf(state),
   }
 }

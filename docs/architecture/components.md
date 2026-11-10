@@ -2,7 +2,8 @@
 
 This page describes each component of Conductive, its responsibilities, and
 its boundaries. It uses the terms of the
-[architecture doc](../architecture.md#terms). A decision number names a
+[architecture doc](../architecture.md#terms). The [flows page](flows.md)
+describes how the components work together. A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
 
@@ -40,6 +41,11 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It holds the GitHub App key, the Boat key, the key that signs the session
   cookies, and the key that encrypts the stored secrets. The browser never
   holds them.
+- It runs the model gateway. The gateway takes the model requests of the
+  agent programs in a sandbox, with the
+  [turn token](../protocol/model-gateway.md#terms) of their turn. It adds the
+  agent login of the turn, and forwards each request to Anthropic or
+  OpenAI. [Model gateway](../protocol/model-gateway.md) states its rules.
 - It reaches Boat through one provider adapter, so that a later change can
   add another provider. It calls only a fixed list of Boat routes.
 - It calls each sandbox and each saved snapshot through the client of its
@@ -64,6 +70,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   Boat's machines.
 - It holds the open tabs, the connection of the agent runner, and the
   messages that wait for the sandbox.
+- It gives each turn its turn token. For each model request, it tells the
+  model gateway whether the token still works and which login the turn
+  uses.
 - It also holds the start steps, the stop timer, and the banner state.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
@@ -111,21 +120,45 @@ Every org image holds the app's own sandbox software:
 
 - the agent runner, a Node program that runs as an always-on service
 - the terminal service, on a private port
+- the preview relay, on a private port
 - the agent tools: an MCP server and a CLI that create and list workspaces
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 
 The agent runner runs Claude through the Claude Agent SDK, with the agent
 program that the SDK bundles at its own version. A pinned version guards
-against a change in how the agent program reads logins. The runner runs
-Codex through the Codex SDK or the Codex App Server (decision 36).
+against a change in how the agent program reads its credential and its
+model address. The runner runs Codex through the Codex SDK or the Codex
+App Server (decision 36).
+
+A runner of protocol version 2 or later makes both agent programs send
+their model requests to the [model gateway](../protocol/model-gateway.md). It
+gives each agent program the turn token of its turn, and no agent login. A
+settings file in the repository can send the requests of Claude to another
+address, as
+[How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
+says. A runner of protocol version 1 gives the agent programs the agent
+login itself. Each sandbox keeps the runner of the org image that it starts
+from.
+
+The preview relay forwards each preview request to a local port of the
+sandbox. The previewed server then gets its local address as `Host`
+(decision 218).
+[Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
+states the rules of the relay.
 
 ## External services
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn bills to the own
-  Claude or OpenAI account of the starter of its session.
+  Claude or OpenAI account of the starter of its session. With a runner of
+  protocol version 2 or later, the model requests of a turn reach them
+  through the model gateway of the Worker. A settings file in the
+  repository can send the requests of Claude to another address instead.
+  The gateway keeps no copy of a request or an answer. With a runner of
+  version 1, the agent programs send their model requests from the sandbox
+  to the provider.
 - **Workers AI:** the Cloudflare model service writes a title for a
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).

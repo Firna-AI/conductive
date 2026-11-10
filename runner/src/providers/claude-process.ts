@@ -11,25 +11,30 @@ import type { ProviderLifetime } from './lifetime'
 
 export function spawnClaudeProcess(
   request: SpawnOptions,
-  login: RunnerLogin,
+  login: RunnerLogin | null,
   lifetime: ProviderLifetime,
 ): SpawnedProcess {
   const descriptor =
-    login.kind === 'token'
+    login &&
+    (login.kind === 'token'
       ? 'CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR'
-      : 'CLAUDE_CODE_API_KEY_FILE_DESCRIPTOR'
+      : 'CLAUDE_CODE_API_KEY_FILE_DESCRIPTOR')
   const child = spawn(request.command, request.args, {
     cwd: request.cwd,
-    env: { ...request.env, [descriptor]: '3' },
-    stdio: ['pipe', 'pipe', 'ignore', 'pipe'],
+    env: descriptor ? { ...request.env, [descriptor]: '3' } : request.env,
+    stdio: login
+      ? ['pipe', 'pipe', 'ignore', 'pipe']
+      : ['pipe', 'pipe', 'ignore'],
   })
   const exited = lifetime.register(child)
   const credential = child.stdio[3]
   const { stdin, stdout } = child
-  if (!stdin || !stdout || !(credential instanceof Writable)) {
+  if (!stdin || !stdout || (login && !(credential instanceof Writable))) {
     void lifetime.close()
     throw new Error('The agent login pipe is unavailable.')
   }
+  if (!login || !(credential instanceof Writable))
+    return Object.assign(child, { stdin, stdout })
   credential.once('error', () => {
     credential.destroy()
     void lifetime.close()

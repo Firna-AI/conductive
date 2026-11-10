@@ -39,11 +39,19 @@ export const plansAndPricingFeatures: readonly ParityFeature[] = [
     note: 'Cloud computers have no separate fee today. The coming Free, Plus, Pro, and Ultra plans each include cloud hours, as the pricing page shows.',
   },
   {
+    id: 'pricing-page',
+    area: 'plans-and-pricing',
+    name: 'Pricing page',
+    status: 'in-progress',
+    note: 'A public page with Free, Plus, Pro, and Ultra prices and included cloud hours is in progress.',
+    due: null,
+  },
+  {
     id: 'plan-and-billing-pages',
     area: 'plans-and-pricing',
     name: 'Plan and billing pages',
     status: 'planned',
-    note: 'The pricing page shows the coming plans. A billing tab in the app is planned, and Conductive stays free until billing starts.',
+    note: 'Org pages for managing plans and billing are planned. Conductive stays free until billing starts.',
     due: null,
   },
 ]

@@ -59,7 +59,16 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         Claude or OpenAI logins. ${productName} stores them encrypted. It
         uses your login only for the turns of the sessions that you start.
         The messages of other members in those sessions use it only when
-        you let other members use that login.`,
+        you let other members use that login. A newer cloud computer starts
+        from an org image that requires ${productName} to keep agent logins
+        outside the cloud computer. ${productName} enforces this requirement
+        for computers that start from that image. Each turn of your sessions
+        there gets only a credential that works through ${productName}
+        while that turn runs. An older cloud computer starts from an earlier
+        org image. ${productName} still permits older software there that
+        receives your login itself. Installing newer software in that cloud
+        computer does not remove this risk. A new image build gives the
+        protection to each cloud computer that starts from it.`,
       text`Your work: ${productName} keeps your messages and the answers
         of the agents as the chat history of each workspace. It also
         keeps the last file list and the last summary of changes of each
@@ -73,9 +82,18 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         The result says how the command ended. They let you and the
         agent follow the command. Always-allowed commands and 15-minute
         permissions stay only on your Mac.`,
-      text`Your code: it stays in the cloud computers that ${productName}
-        runs for your org. ${productName} reads a file or a diff when you
-        open it, to show it to you.`,
+      text`Your code: your repositories and files live in the cloud
+        computers that ${productName} runs for your org. ${productName}
+        reads a file or a diff when you open it, to show it to you. In a
+        newer cloud computer, the agents send their requests to the models
+        of Anthropic or OpenAI through ${productName}. Agent settings in the
+        repository can send them to another address instead. These model
+        requests can hold your messages, your files, and your code.
+        ${productName} adds the login that the session uses, and passes
+        each request on. When it passes on these model requests and their
+        answers, it keeps no copy of them. It writes no body or header value
+        of them to its logs. ${productName} still keeps the chat history and
+        the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
         of your branches, which GitHub sends to ${productName}.`,
       text`Panel widths: your browser keeps the widths of the panels of

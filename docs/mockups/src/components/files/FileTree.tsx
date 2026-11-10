@@ -1,16 +1,9 @@
-import {
-  ChevronDown,
-  ChevronRight,
-  File,
-  FileCode,
-  FileText,
-  Folder,
-  FolderOpen,
-} from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { TreeEntry } from '../../fixtures/files'
 import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
 import { ChangeIcon } from './ChangeIcon'
+import { EntryIcon } from './fileIcons'
 import { previewPaths } from './previewPaths'
 import styles from './FileTree.module.css'
 
@@ -24,23 +17,18 @@ function Disclosure(props: { entry: TreeEntry }) {
   )
 }
 
-function EntryIcon(props: { entry: TreeEntry }) {
-  const { entry } = props
-  const icon = { className: styles.icon, size: 14 }
-  if (entry.folder) {
-    return entry.open ? <FolderOpen {...icon} /> : <Folder {...icon} />
-  }
-  if (/\.(tsx?|json)$/.test(entry.name)) return <FileCode {...icon} />
-  if (entry.name.endsWith('.md')) return <FileText {...icon} />
-  return <File {...icon} />
-}
-
 function Row(props: { entry: TreeEntry; open: boolean }) {
   const { entry } = props
   const content = (
     <>
       <Disclosure entry={entry} />
-      <EntryIcon entry={entry} />
+      <EntryIcon
+        className={styles.icon}
+        folder={entry.folder}
+        name={entry.name}
+        open={entry.open}
+        size={14}
+      />
       <span className={styles.name}>{entry.name}</span>
       {entry.change ? <ChangeIcon change={entry.change} /> : null}
     </>

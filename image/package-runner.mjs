@@ -130,6 +130,7 @@ async function packageRunner() {
     await mkdir(join(stage, 'runner'), { recursive: true })
     for (const [source, destination] of [
       ['dist/runner/runner.mjs', 'main.mjs'],
+      ['dist/runner/relay.mjs', 'relay.mjs'],
       ['dist/runner/measure.mjs', 'measure.mjs'],
       ['dist/runner/compare.mjs', 'compare.mjs'],
       ['runner/package.json', 'package.json'],

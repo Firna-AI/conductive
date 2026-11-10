@@ -4,6 +4,7 @@ import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
 import type { DurableLifecycleState } from './durable-types'
 import type { MaskedStartLog } from './masked-start-log'
+import type { TurnTokenEndpoint } from '../model-gateway/types'
 import type {
   WorkspaceStartJob,
   WorkspaceStartIntent,
@@ -64,7 +65,7 @@ export interface WorkspaceLifecycleEndpoint {
 export interface WorkspaceRuntime {
   env: AppEnv
   dependencies: AppDependencies
-  workspace(id: string): WorkspaceLifecycleEndpoint
+  workspace(id: string): WorkspaceLifecycleEndpoint & TurnTokenEndpoint
 }
 
 export interface FirstWorkspaceMessage {
