@@ -1030,6 +1030,18 @@ Verification evidence: `.context/import-from-conductor/current/milestone-3-repor
 
 Depends on: 2
 
+- [x] Add and test the private portable storage port and R2 adapter for
+      short-lived plain PUT targets, verified sealed parts, bounded reads,
+      streamed old documents, and prefix deletion. Keep temporary upload
+      keys separate from sealed keys. This subtask adds no route, schema,
+      reservation, or activation wiring. Branch: `conductor/import-from-conductor-private-storage`.
+      Storage design calls, 10 November 2026: scope the port to one org and
+      reservation, separate work and document groups, and use atomic
+      create-only sealed keys. Reason: upload replay and concurrent seals
+      must preserve the verified bytes. Use five-minute PUT targets and
+      caller-supplied part and read bounds. Reason: bound each operation
+      without a package or document total limit. Evidence:
+      `.context/import-from-conductor/storage-report.md`.
 - [ ] Let a workspace record exist with no first message and no cloud
       computer, with the "from Conductor" flag and the local Conductor ID,
       with its migration. Record Not active and whether activation
