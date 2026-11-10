@@ -3,9 +3,11 @@ import {
   isDesktopAddress,
 } from '../../worker/security/desktop-contract.js'
 import { isPreviewLaunchPath } from '../../worker/security/preview-launch-path.js'
+import { INVITE_CODE_PARAMETER } from '../../src/shared/waitlist.ts'
 
 export type Navigation =
-  | { action: 'allow' | 'drop' | 'sign-in' }
+  | { action: 'allow' | 'drop' }
+  | { action: 'sign-in'; inviteCode?: string }
   | { action: 'external' | 'load' | 'preview'; url: string }
 
 export type NavigationSource = 'trusted-main' | 'untrusted'
@@ -58,7 +60,10 @@ export function navigationTarget(
     (isDesktopAddress(url) || url.origin === appOrigin) &&
     url.pathname === '/api/auth/github'
   ) {
-    return { action: 'sign-in' }
+    const inviteCode = url.searchParams.get(INVITE_CODE_PARAMETER)
+    return inviteCode === null
+      ? { action: 'sign-in' }
+      : { action: 'sign-in', inviteCode }
   }
   if (isDesktopAddress(url)) {
     return popup ? { action: 'load', url: url.href } : { action: 'allow' }
@@ -81,7 +86,7 @@ export function installNavigation(
   dependencies: {
     load(url: string): Promise<unknown>
     external(url: string): Promise<unknown>
-    signIn(): Promise<unknown>
+    signIn(inviteCode?: string): Promise<unknown>
     preview(url: string): Promise<unknown>
     warn(error: unknown): void
   },
@@ -104,7 +109,7 @@ export function installNavigation(
     if (result.action === 'load')
       void dependencies.load(result.url).catch(dependencies.warn)
     if (result.action === 'sign-in')
-      void dependencies.signIn().catch(dependencies.warn)
+      void dependencies.signIn(result.inviteCode).catch(dependencies.warn)
     if (result.action === 'preview')
       void dependencies.preview(result.url).catch(dependencies.warn)
   }

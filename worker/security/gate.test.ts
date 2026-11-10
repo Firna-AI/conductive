@@ -252,7 +252,10 @@ it('accepts only a JSON object for writes before route dispatch', async () => {
     },
     body: '{"name":"Team"}',
   })
-  expect(valid.status).toBe(201)
+  expect(valid.status).toBe(400)
+  expect(await valid.json()).toMatchObject({
+    error: { code: 'repository_required' },
+  })
 })
 
 it('creates the org and admin together and lists only the user’s orgs', async () => {

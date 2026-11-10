@@ -1,5 +1,5 @@
 import type { AgentCreateWorkspaceResponse } from '../../src/shared/agent-tools'
-import type { AgentChoice } from '../../src/shared/agents'
+import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
 
 export interface ToolWorkspaceCreation {
@@ -9,6 +9,7 @@ export interface ToolWorkspaceCreation {
   sectionId: string
   choice: AgentChoice
   firstMessage: string
+  name?: string
   sender: MessageSender
   createdByWorkspaceId: string
 }
@@ -21,6 +22,7 @@ export interface CallingTurn {
 
 /** The composition root supplies the lifecycle and the workspace's turn store. */
 export interface AgentToolServices {
+  models(): Promise<readonly AgentModel[]>
   /** Return only an active turn belonging to this exact workspace and turn ID. */
   callingTurn(workspaceId: string, turnId: string): Promise<CallingTurn | null>
   /** Account policy supplies the default when no saved preference exists. */
@@ -28,7 +30,7 @@ export interface AgentToolServices {
   /**
    * Create through the normal lifecycle, using the latest good image. Keep the
    * first message durably and start it immediately as sender, not as owner.
-   * Do not leave a workspace behind when its sandbox cannot start.
+   * Keep an accepted workspace and its first message when its sandbox cannot start.
    */
   createWorkspace(
     input: ToolWorkspaceCreation,

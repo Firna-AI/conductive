@@ -48,10 +48,7 @@ export async function requestWorkspaceTitle(
       run(model, input, { signal: controller.signal }),
       deadline,
     ])
-    const answer =
-      typeof result === 'object' && result !== null && 'response' in result
-        ? result.response
-        : undefined
+    const answer = readTitleAnswer(result)
     const title = typeof answer === 'string' ? cleanTitle(answer) : ''
     if (!title) throw new Error('The title answer is empty.')
     return title
@@ -61,4 +58,23 @@ export async function requestWorkspaceTitle(
   } finally {
     clearTimeout(timer)
   }
+}
+
+function readTitleAnswer(result: unknown): string | undefined {
+  if (typeof result !== 'object' || result === null) return undefined
+  if ('response' in result && typeof result.response === 'string') {
+    return result.response
+  }
+  if (!('choices' in result) || !Array.isArray(result.choices)) return undefined
+  const choice: unknown = result.choices[0]
+  if (typeof choice !== 'object' || choice === null || !('message' in choice)) {
+    return undefined
+  }
+  const message = choice.message
+  return typeof message === 'object' &&
+    message !== null &&
+    'content' in message &&
+    typeof message.content === 'string'
+    ? message.content
+    : undefined
 }

@@ -16,12 +16,14 @@ import {
   sampleOrgDetail,
   sampleUserDetail,
 } from '../../test-support/fixtures/operator'
+import { sampleWaitlist } from '../../test-support/fixtures/operator-access'
 import {
   sampleOrgs,
   sampleUsers,
 } from '../../test-support/fixtures/operator-samples'
 import type { DevBackend } from './backend'
 import { searchOrgs, searchUsers } from './operator-search'
+import { operatorWaitlistRoutes } from './operator-waitlist-routes'
 import { ID, json, RouteError, type Route } from './router'
 
 /** The samples count their days back from the first time of the dev clock. */
@@ -33,7 +35,8 @@ function ids(count: number, prefix: string): string[] {
 
 /**
  * The operator section of the dev fake: the sample orgs and users of the
- * mockups, which Suspend and Lift change. Only an operator, from
+ * mockups, which Suspend and Lift change, and the waitlist, the codes, and
+ * the pause of `operatorWaitlistRoutes`. Only an operator, from
  * `operator=1`, gets an answer, as the Worker says. A suspension of an org
  * of the user also suspends it in the state of the fake, so the fake
  * refuses each write of that org with `org_suspended`. The open app does
@@ -92,7 +95,9 @@ export function operatorRoutes(backend: DevBackend): Route[] {
         const orgs = sampleOrgs.map((org) =>
           sampleOrgDetail(org, records(), BASE),
         )
-        return json(operatorOverview(orgs, backend.now()))
+        const { userSuspensions } = records()
+        const waiting = sampleWaitlist(records(), userSuspensions, BASE)
+        return json(operatorOverview(orgs, backend.now(), waiting.length))
       },
     },
     {
@@ -192,5 +197,6 @@ export function operatorRoutes(backend: DevBackend): Route[] {
         } satisfies UserSuspensionLiftResponse)
       },
     },
+    ...operatorWaitlistRoutes({ backend, base: BASE, guard, userOf, operator }),
   ]
 }

@@ -20,8 +20,8 @@ import { ChatColumn } from './WorkspaceColumns'
 
 /**
  * The kept chat of the workspace, with the parts that the shell draws, and
- * the open files: their tabs after the session tabs, and `content`, a file
- * or diff tab in place of the chat of the session.
+ * the open files: their tabs at their places in the tab row, and `content`,
+ * a file or diff tab in place of the chat of the session.
  */
 function KeptChat(props: {
   context: WorkspaceContext
@@ -39,11 +39,12 @@ function KeptChat(props: {
       clock={clock}
       content={props.content}
       controller={props.chat}
-      extraTabs={files.extraTabs}
       host={props.host}
       onConnectAgent={(agent) => go(routes.account(agent))}
       onOpenDiff={files.onOpenDiff}
+      onOpenPage={go}
       readOnly={context.readOnly}
+      renderTab={files.renderTab}
       viewport={context.viewport === 'phone' ? 'mobile' : 'desktop'}
     />
   )

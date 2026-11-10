@@ -41,10 +41,31 @@ const columns: Readonly<Record<Viewport, TableColumn[]>> = {
   ],
 }
 
-/** The line under the login: the state of a suspended user, or the name. */
+/**
+ * The line under the login: the state of a suspended user or of a person
+ * who waits, or the name.
+ */
 function detailOf(row: UserRow) {
-  if (row.status === 'suspended') return <TargetState status={row.status} />
+  if (row.status !== 'active') return <TargetState status={row.status} />
   return row.name
+}
+
+/** The users whose own page the catalogue draws. Others open Dana Kim. */
+const userPagePaths: Readonly<Record<string, string>> = {
+  'rho-9': paths.operatorUserInviteCode,
+  'tide-sam': paths.operatorUserReferralCode,
+}
+
+/** The page of each state, or the page drawn for the user. */
+function pageOf(row: UserRow): string {
+  switch (row.status) {
+    case 'suspended':
+      return paths.operatorUserSuspended
+    case 'waiting':
+      return paths.operatorUserWaiting
+    case 'active':
+      return userPagePaths[row.login] ?? paths.operatorUser
+  }
 }
 
 function cell(row: UserRow, key: string) {
@@ -63,17 +84,7 @@ function cell(row: UserRow, key: string) {
               }}
             />
           }
-          name={
-            <NameLink
-              to={
-                row.status === 'suspended'
-                  ? paths.operatorUserSuspended
-                  : paths.operatorUser
-              }
-            >
-              @{row.login}
-            </NameLink>
-          }
+          name={<NameLink to={pageOf(row)}>@{row.login}</NameLink>}
         />
       )
     case 'joined':

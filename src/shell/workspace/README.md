@@ -14,6 +14,11 @@ say. A host can give its own parts instead, as
 states of the cloud computer are in `app/shell`, and the notices are in
 `app/chat/lost-updates`.
 
+The workspace list offers Archive over the time of each permitted row on
+hover only. Selection and keyboard focus alone keep the time visible.
+The header has no Archive button. The list uses the same Archive question
+as the command palette and the pull request bar.
+
 ## The kept workspace
 
 [The kept workspace](kept-workspace.md) gives the parts that the tab keeps
@@ -23,7 +28,7 @@ for each workspace that it showed, and what a return reads again.
 
 [The chat of the workspace](screen-parts.md#the-chat-of-the-workspace)
 gives how `ChatArea` draws the kept chat in the centre, with its file
-tabs.
+tabs at their places in the tab row.
 
 ## The Files part
 
@@ -32,8 +37,8 @@ of the shell, their addresses, and the saved view.
 
 ## The tools part
 
-[The tools part](screen-parts.md#the-tools-part) gives the Terminal,
-Preview, and Desktop tools of the shell, and their addresses.
+[The tools part](screen-parts.md#the-tools-part) gives the Terminal and
+Preview tools of the shell, the hidden Desktop tool, and their addresses.
 
 ## The GitHub part
 
@@ -139,8 +144,9 @@ fake API, with its address options, its controls, and the test command.
   of the chat of the session, or the shell's own column for the chat slots.
 - `files/files-features.tsx`: the Files part, which connects the kept
   files, and the file or diff page of the centre.
-- `files/chat-files.tsx`: the file tabs, named by the labels of the kept
-  files, and the diff links of the kept chat, and the way back to the chat
+- `files/chat-files.tsx`: the file tabs of the kept chat, named by the
+  labels of the kept files, at their places in the tab row with the props
+  that the row gives each tab, the diff links, and the way back to the chat
   when a session becomes active.
 - `files/files-navigation.ts`: the navigation of the Files screens, and
   the changes of the saved view that the address and the pages make.
@@ -200,6 +206,16 @@ fake API, with its address options, its controls, and the test command.
   columns, the toggle of the right column, and the tab bar of a phone.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
+- `CopyLink.tsx`: the label of the number, such as `W-395`, as the Copy
+  link button of the header, as
+  [Copy link](../../../docs/protocol/workspace-links.md#copy-link) says.
+  It copies `workspace.link` through `AppServices.copy`, so the copy holds
+  no tab path. "Link copied" shows for 2 seconds through
+  `AppServices.delay`. A failed copy asks to try again until the next
+  press, as the file page does. On desktop the button follows the name,
+  and the repository fills the `.metas` group. On a phone
+  it leads the line under the name. `CopyLink.test.tsx` mounts the whole
+  app and presses the button for a copy and for a failed copy.
 - `SandboxNotice.tsx`, `StartingCard.tsx`, and `ArchiveDialog.tsx`: the
   states of the cloud computer, the start steps, and the Archive question.
   `refusedStart` in `SandboxNotice.tsx` turns a refused start error into
@@ -210,10 +226,13 @@ fake API, with its address options, its controls, and the test command.
 
 ## Related docs
 
-- [Lost workspace updates](../../../docs/protocol/chat-and-events.md#lost-workspace-updates):
+- [Lost workspace updates](../../../docs/protocol/agent-runner.md#lost-workspace-updates):
   the repair, and the notice of a failed repair.
 - [Start steps](../../../docs/protocol/workspaces-and-sandboxes.md#start-steps)
   and [Workspace states](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-states).
+- [Workspace numbers and links](../../../docs/protocol/workspaces-and-sandboxes.md#workspace-numbers-and-links)
+  and [Workspace links](../../../docs/protocol/workspace-links.md): the
+  number, the link, and Copy link.
 - [Web app: data and composition](../../app/README.md): the models, the
   event stream, and the features.
 - [The chat](../../chat/README.md): the chat that fills the centre.

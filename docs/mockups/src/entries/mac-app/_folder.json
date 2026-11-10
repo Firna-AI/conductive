@@ -2,6 +2,7 @@
   "title": "Mac app",
   "order": [
     "window",
+    "waitlist",
     "commands",
     "requests",
     "stop",

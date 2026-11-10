@@ -61,7 +61,7 @@ function RenameField(props: {
 
 /**
  * The header of a section: its name, which collapses it, its count while
- * collapsed, and its menu with Rename, New workspace, New section, and
+ * collapsed, and its menu with New workspace, Rename section, New section, and
  * Delete section. General, the default section, cannot be deleted. A
  * read-only list, as in a suspended org, shows no menu.
  */
@@ -78,15 +78,15 @@ export function SectionHeader(props: {
   const entries: MenuEntry[] = [
     {
       kind: 'item',
-      label: 'Rename',
-      icon: Pencil,
-      onSelect: () => setRenaming(true),
-    },
-    {
-      kind: 'item',
       label: 'New workspace',
       icon: Plus,
       onSelect: () => actions.newWorkspace(section),
+    },
+    {
+      kind: 'item',
+      label: 'Rename section',
+      icon: Pencil,
+      onSelect: () => setRenaming(true),
     },
     {
       kind: 'item',

@@ -2,21 +2,17 @@
  * The one list of the pictures of the marketing site. Each picture is a
  * still capture of a real screen of the mockups. The marketing mockup, the
  * site, and the capture command all read this list, so no copy of a label,
- * a size, a crop, or a scale can go stale.
+ * a size, a crop, or a scale can go stale. `marketingPictureCaptures.ts`
+ * gives the capture page and the files of each picture.
  *
  * This module imports nothing, so that the browser bundles, the Worker, and
  * the capture command in Node can all import it.
  */
 
 /** The layouts of the marketing site, which are the views of the mockups. */
-const pictureLayouts = ['desktop', 'mobile'] as const
+export const pictureLayouts = ['desktop', 'mobile'] as const
 
 export type PictureLayout = (typeof pictureLayouts)[number]
-
-/** The colour schemes of each picture file. */
-export const pictureSchemes = ['light', 'dark'] as const
-
-export type PictureScheme = (typeof pictureSchemes)[number]
 
 /** A size in CSS px. */
 export type ScreenSize = { readonly width: number; readonly height: number }
@@ -83,6 +79,7 @@ export const marketingPictureKeys = [
   'tools',
   'org',
   'phone',
+  'mac',
 ] as const
 
 export type MarketingPictureKey = (typeof marketingPictureKeys)[number]
@@ -101,12 +98,20 @@ const startingLabel =
   'A new workspace: the first message waits while the cloud computer starts and creates the branch'
 const reviewLabel =
   'The pull request is ready to merge, over the five changed files and their added and removed lines'
-const toolsLabel =
-  'The terminal of the cloud computer runs the dev server, beside the Preview and Desktop tabs'
+const toolsLabel = 'The terminal of the cloud computer runs the dev server'
 const orgLabel =
   'The cloud computer of the org: its last build, Build computer, and the history of builds'
 const phoneLabel =
   'The workspace list on a phone: each workspace shows whether its agent works, is done, or waits'
+const macLabel =
+  'The Mac app in its own window: an agent asks to run a command on this Mac, with Deny and Allow'
+
+/**
+ * The window of the Mac app from its left edge to the end of the chat: the
+ * window buttons, the sidebar, and the command that waits. The Mac app has
+ * no phone layout, so both layouts show this part.
+ */
+const macCrop: ScreenCrop = { x: 72, y: 44, width: 855, height: 812 }
 
 /**
  * Every picture of the home page. `marketingPictures.tsx` gives each one its
@@ -236,63 +241,11 @@ export const marketingPictures: Readonly<
       scale: 0.74,
     },
   },
-}
-
-/**
- * The catalogue path of the capture page of a picture. The page shows the
- * part of the screen of each layout at scale 1, from its top left corner,
- * without a frame. The desktop and mobile views of the page show the
- * desktop and mobile layouts of the picture. Open the page at the size of
- * its screen, because a screen can size a part, such as a menu, from the
- * height of the window.
- */
-export function capturePagePath(key: MarketingPictureKey): string {
-  return `marketing/pictures/${key}`
-}
-
-/** One file of a picture for each scheme, as the capture command writes it. */
-export type PictureCapture = {
-  readonly key: MarketingPictureKey
-  /** The view of the capture page that the command captures. */
-  readonly layout: PictureLayout
-  /** The layouts of the site that show the file. */
-  readonly layouts: readonly PictureLayout[]
-  /** The file name without its scheme and its extension. */
-  readonly stem: string
-  /** The size of the part, at the top left corner of the page, in CSS px. */
-  readonly size: ScreenSize
-}
-
-function captureOf(
-  picture: MarketingPicture,
-  layout: PictureLayout,
-): PictureCapture {
-  const { width, height } = picture[layout].crop
-  const shared = picture.files === 'shared'
-  return {
-    key: picture.key,
-    layout,
-    layouts: shared ? pictureLayouts : [layout],
-    stem: shared ? picture.key : `${picture.key}-${layout}`,
-    size: { width, height },
-  }
-}
-
-/**
- * Every capture of every picture. A shared picture has one capture, from
- * its mobile view, which both layouts show.
- */
-export const pictureCaptures: readonly PictureCapture[] =
-  marketingPictureKeys.flatMap((key) => {
-    const picture = marketingPictures[key]
-    if (picture.files === 'shared') return [captureOf(picture, 'mobile')]
-    return pictureLayouts.map((layout) => captureOf(picture, layout))
-  })
-
-/** The file name of a capture in one scheme, such as `hero-desktop-dark.webp`. */
-export function pictureFileName(
-  capture: PictureCapture,
-  scheme: PictureScheme,
-): string {
-  return `${capture.stem}-${scheme}.webp`
+  mac: {
+    key: 'mac',
+    frame: 'excerpt',
+    files: 'shared',
+    desktop: { label: macLabel, screen: 'desktop', crop: macCrop, scale: 0.72 },
+    mobile: { label: macLabel, screen: 'desktop', crop: macCrop, scale: 0.37 },
+  },
 }

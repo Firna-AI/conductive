@@ -18,6 +18,15 @@
   overflow-y: auto;
 }
 
+/*
+ * The mockups open folds through a state, and a view runs no script. So a
+ * chat with open folds starts at its top, as after the user opens a fold
+ * there: the line of the fold stays in place, and its list opens below it.
+ */
+.fromTop {
+  flex-direction: column;
+}
+
 .transcript {
   display: flex;
   flex-direction: column;

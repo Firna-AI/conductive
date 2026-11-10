@@ -1,6 +1,5 @@
 import { newWorkspaceConversations } from '../../../../docs/mockups/src/fixtures/newWorkspaceConversations'
 import { startErrors } from '../../../../docs/mockups/src/fixtures/starting'
-import { API_PATHS } from '../../../shared/api'
 import {
   chatHistoryPath,
   type WorkspaceEventEnvelope,
@@ -103,6 +102,6 @@ export function seedFirstStart(
     throughEventNumber: events.length,
   })
   fakeGitHub(server, id, 'no-commits', created.workspace.branch)
-  if (member) server.json('GET', API_PATHS.session, { user: fakeUsers[1] })
+  if (member) server.signIn(fakeUsers[1])
   return id
 }

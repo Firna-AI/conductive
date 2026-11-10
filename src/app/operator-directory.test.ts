@@ -21,7 +21,12 @@ describe('OperatorDirectory', () => {
     server.json('GET', operatorOrgsPath({ q: 'hex' }), named('hex'))
     const held = new HeldRequests(server)
     const app = await startedApp(server, { fetch: held.fetch })
-    const directory = new OperatorDirectory(app, operatorOrgsPath, readOrgsPage)
+    const directory = new OperatorDirectory(
+      app,
+      operatorOrgsPath,
+      readOrgsPage,
+      (row) => row.id,
+    )
     held.holdAnswer('GET', operatorOrgsPath())
     const close = directory.watch('a')
     close()

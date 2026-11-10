@@ -1,9 +1,11 @@
 import type { Viewport } from '@mokly/mokly'
 import { Ban, TriangleAlert } from 'lucide-react'
 import { ActionButton } from '../common/actions'
+import { CheckOption } from '../common/CheckOption'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+import { disableCodeOffer } from './accessCopy'
 import {
   selfSuspendWarning,
   suspendQuestion,
@@ -15,12 +17,15 @@ import {
  * the members keep, what a lift does not bring back, and that the files of
  * a stopped workspace can be deleted. For a deleted org it says that no
  * admin can restore the org while it is suspended. For the operator's own
- * account it warns first.
+ * account it warns first. For a user with a referral code that still
+ * works, it offers to disable that code too, on by default.
  */
 export function SuspendDialog(props: {
   target: QuestionTarget
   /** The operator suspends their own account. */
   self?: boolean
+  /** The referral code of the user, when it still lets people in. */
+  referral?: string
   viewport: Viewport
   /** The page that Cancel returns to, and the page after the suspension. */
   cancel: string
@@ -50,6 +55,13 @@ export function SuspendDialog(props: {
       {suspendQuestion(props.target).map((text) => (
         <DialogText key={text}>{text}</DialogText>
       ))}
+      {props.referral ? (
+        <CheckOption
+          checked
+          hint={disableCodeOffer.hint(props.referral)}
+          label={disableCodeOffer.label}
+        />
+      ) : null}
     </ConfirmDialog>
   )
 }

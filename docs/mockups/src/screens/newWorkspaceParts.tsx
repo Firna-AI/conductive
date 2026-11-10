@@ -6,6 +6,7 @@ import {
   type Attachment,
 } from '../fixtures/attachments'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
+import { followUpTask } from '../fixtures/workspaceLinkConversations'
 import { savedCarts } from '../fixtures/workspaces'
 
 /**
@@ -13,8 +14,11 @@ import { savedCarts } from '../fixtures/workspaces'
  * the New workspace dialog share, as properties of their schemas.
  */
 export const newWorkspaceFormProperties = {
-  /** The message: none yet, the task, or the task with an attached file. */
-  draft: { enum: ['empty', 'message', 'file'] },
+  /**
+   * The message: none yet, the task, the task with an attached file, or a
+   * task with a pasted link to an earlier workspace, which shows as a chip.
+   */
+  draft: { enum: ['empty', 'message', 'file', 'workspace-link'] },
   /**
    * The agent of the chosen model: connected, or not connected. Then a
    * notice leads to its Connect form, and the message waits.
@@ -49,6 +53,7 @@ export const newWorkspaceDrafts: Readonly<
   empty: { text: '', attachments: [] },
   message: { text: savedCartsMessage, attachments: [] },
   file: { text: savedCartsMessage, attachments: newWorkspaceAttachments },
+  'workspace-link': { text: followUpTask, attachments: [] },
 }
 
 /** The model and the effort of the first message. */
@@ -69,10 +74,11 @@ export function waits(state: NewWorkspaceFormState): boolean {
 export function formNotices(
   state: NewWorkspaceFormState,
   failed: boolean,
+  ready = true,
 ): ReactNode[] {
   const notices: ReactNode[] = []
   if (failed) {
-    notices.push(<CreateFailedNotice key="failed" />)
+    notices.push(<CreateFailedNotice key="failed" ready={ready} />)
   }
   if (state.login === 'missing') {
     notices.push(<ConnectAgentNotice choice={newWorkspaceChoice} key="login" />)

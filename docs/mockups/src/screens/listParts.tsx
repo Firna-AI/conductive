@@ -3,36 +3,49 @@ import { ScreenLink } from '../components/common/ScreenLink'
 import { ActionButton } from '../components/common/actions'
 import a11y from '../components/common/a11y.module.css'
 import { EmptyState } from '../components/common/EmptyState'
+import { LoadFailure } from '../components/common/LoadFailure'
+import { AppFrame } from '../components/layout/AppFrame'
+import { acmeRail } from '../components/layout/OrgRail'
+import responsive from '../components/layout/responsive.module.css'
 import { OrgTile } from '../components/orgs/OrgTile'
 import {
   SuspendedOrgAbove,
   SuspendedOrgNotice,
+  SuspendedOrgPanel,
 } from '../components/orgs/SuspendedOrgNotice'
 import type { MenuStyle } from '../components/workspaces/SectionList'
 import { SectionList } from '../components/workspaces/SectionList'
-import type {
-  ListDrag,
-  ListMenu,
-  SidebarSection,
+import {
+  suspendedSections,
+  type ListDrag,
+  type ListMenu,
+  type SidebarSection,
 } from '../components/workspaces/sections'
+import { Sidebar } from '../components/workspaces/Sidebar'
 import {
   NewWorkspaceLink,
   SearchLink,
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
-import { deletedOrg, orgs, type Org } from '../fixtures/orgs'
+import { deletedOrg, orgs, suspendedOrg, type Org } from '../fixtures/orgs'
+import type { Membership } from '../fixtures/members'
 import { paletteShortcut } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
-/** The action that starts a new workspace, in an empty main area. */
-const newWorkspaceAction = (
-  <ScreenLink asChild to={paths.newWorkspace}>
-    <ActionButton icon={Plus} tone="primary">
-      New workspace
-    </ActionButton>
-  </ScreenLink>
-)
+/**
+ * The action that starts a new workspace, in an empty main area. `to` is
+ * the New workspace page of the org.
+ */
+function NewWorkspaceAction(props: { to?: string }) {
+  return (
+    <ScreenLink asChild to={props.to ?? paths.newWorkspace}>
+      <ActionButton icon={Plus} tone="primary">
+        New workspace
+      </ActionButton>
+    </ScreenLink>
+  )
+}
 
 /**
  * The header of the list page on a phone. A phone has no rail, so the org
@@ -62,17 +75,24 @@ export function ListHeader(props: {
  * The workspace list as a page: on a phone, and in a narrow window. A
  * suspended org shows its notice first, and no New workspace and no
  * section menus, because nothing in it can change. Search opens the
- * command palette. Its key shows only in a desktop window.
+ * command palette. Its key shows only in a desktop window. A list that did
+ * not load shows its failure in place of the sections.
+ * `newWorkspaceTo` is the New workspace page of the org, such as that
+ * of a new org.
  */
 export function HomeList(props: {
   org: Org
   sections: readonly SidebarSection[]
+  viewer: Membership
   menu?: ListMenu
   menuStyle: MenuStyle
   drag?: ListDrag
   suspended?: boolean
+  newWorkspaceTo?: string
   /** Show ⌘K, the key of the palette, beside Search. */
   keys?: boolean
+  /** The workspace list of the org did not load. */
+  failed?: boolean
 }) {
   const suspended = props.suspended ?? false
   return (
@@ -84,22 +104,66 @@ export function HomeList(props: {
       <div className={styles.scroll} data-mokly-scroll="workspace-page">
         {suspended ? <SuspendedOrgNotice org={props.org} /> : null}
         <div className={styles.links}>
-          {suspended ? null : <NewWorkspaceLink variant="page" />}
+          {suspended ? null : (
+            <NewWorkspaceLink to={props.newWorkspaceTo} variant="page" />
+          )}
           <SearchLink
             shortcut={props.keys ? paletteShortcut() : undefined}
             variant="page"
           />
         </div>
-        <SectionList
-          drag={props.drag}
-          menu={props.menu}
-          menuStyle={props.menuStyle}
-          readOnly={suspended}
-          sections={props.sections}
-          variant="page"
-        />
+        {props.failed ? (
+          <LoadFailure title="The workspaces didn't load" />
+        ) : (
+          <SectionList
+            drag={props.drag}
+            menu={props.menu}
+            menuStyle={props.menuStyle}
+            readOnly={suspended}
+            sections={props.sections}
+            variant="page"
+            viewer={props.viewer}
+          />
+        )}
       </div>
     </>
+  )
+}
+
+/**
+ * The list of a suspended org on desktop. The main area shows the notice
+ * of the org in place of New workspace. A narrow window shows the list as
+ * a page, with the notice at its top.
+ */
+export function SuspendedList(props: { viewer: Membership }) {
+  const org = orgs[suspendedOrg]
+  const sections = suspendedSections()
+  return (
+    <AppFrame
+      rail={{ ...acmeRail, suspended: suspendedOrg }}
+      sidebar={
+        <Sidebar
+          org={org}
+          sections={sections}
+          suspended
+          viewer={props.viewer}
+        />
+      }
+    >
+      <div className={`${responsive.wideOnly} ${styles.choose}`}>
+        <SuspendedOrgPanel org={org} />
+      </div>
+      <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
+        <HomeList
+          keys
+          menuStyle="anchored"
+          org={org}
+          sections={sections}
+          suspended
+          viewer={props.viewer}
+        />
+      </div>
+    </AppFrame>
   )
 }
 
@@ -107,7 +171,7 @@ export function HomeList(props: {
 export function ChooseWorkspace() {
   return (
     <EmptyState
-      action={newWorkspaceAction}
+      action={<NewWorkspaceAction />}
       icon={PanelLeft}
       title="Choose a workspace"
     />
@@ -120,13 +184,16 @@ export type NewOrg = {
   repositories: readonly { name: string; used: boolean }[]
 }
 
-/** The main area of a new org, which has no workspaces yet. */
-export function NewOrgEmpty(props: { org: NewOrg }) {
+/**
+ * The main area of a new org, which has no workspaces yet. `newWorkspaceTo`
+ * is the New workspace page of the org.
+ */
+export function NewOrgEmpty(props: { org: NewOrg; newWorkspaceTo?: string }) {
   const { org } = props
   const used = org.repositories.filter((item) => item.used)
   return (
     <EmptyState
-      action={newWorkspaceAction}
+      action={<NewWorkspaceAction to={props.newWorkspaceTo} />}
       body={`Workspaces of ${org.name} start in ${used.map((item) => item.name).join(' or ')}.`}
       icon={Plus}
       title={`Start the first workspace in ${org.name}`}

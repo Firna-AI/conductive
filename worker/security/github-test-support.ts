@@ -10,6 +10,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { OAUTH_COOKIE, SESSION_COOKIE } from './cookies'
+import { seedAppAccess } from '../test-support/app-access'
 
 export function expiringGitHubReply(
   access = 'ghu_original',
@@ -99,6 +100,7 @@ export class GitHubTokenTestApp {
       'SELECT id FROM users WHERE github_id = 7',
     ).first<string>('id')
     if (!userId) throw new Error('Sign-in did not save the user')
+    await seedAppAccess(this.harness.env.DB, [userId], this.now)
     return { userId, response, session }
   }
 }

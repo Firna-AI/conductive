@@ -33,8 +33,10 @@ interface KeptWorkspace extends ShownWorkspace {
 
 /**
  * The inputs of a kept chat from the app models that own them: the account,
- * the org, the models, and the members. So a login that the account screen
- * saves, or a new default model, shows in the kept chat at once.
+ * the org, the models, the members, and the workspace list of the org. So a
+ * login that the account screen saves, a new default model, or a rename of a
+ * linked workspace shows in the kept chat at once. The chat watches the list
+ * while it shows, as the sidebar does.
  */
 function chatSources(app: AppModel, org: OrgModel): ChatSources {
   return {
@@ -48,6 +50,11 @@ function chatSources(app: AppModel, org: OrgModel): ChatSources {
       get: () => valueOf(org.members.get()) ?? null,
       subscribe: org.members.subscribe,
     },
+    workspaces: {
+      get: () => valueOf(org.workspaces.get()) ?? null,
+      subscribe: org.workspaces.subscribe,
+    },
+    watchWorkspaces: () => org.watch('list'),
   }
 }
 

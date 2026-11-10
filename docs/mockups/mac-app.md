@@ -7,8 +7,14 @@ The Mac app is the web app in a window of macOS, from decision 62. Its
 screens live under `mac-app`, and their parts in `src/components/mac/`.
 
 - `MacScreen` lays the screen of a Mac out at 1440 × 900 and scales it to
-  the view in steps of `--mac-scale`, because a view runs no script. The
-  app has no phone layout, so a phone view shows the same screen, smaller.
+  the width of its box in steps of `--mac-scale`, because a view runs no
+  script. The box is a size container, as the app frame is, so a picture
+  of the marketing site shows the screen at its own size. The app has no
+  phone layout, so a phone view shows the same screen, smaller.
+- The Mac app section of [the marketing site](marketing-site.md) shows a
+  picture of `mac-app/commands`. A change to that screen needs a new
+  capture, with the
+  [capture steps](../../src/marketing/README.md#pictures).
 - The window has no title bar. The red, yellow, and green window buttons
   sit inset at the top left of the left panel, above every layer of the
   app, as macOS draws them. `WindowControls` keeps their space, then shows
@@ -18,6 +24,12 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   draws the window controls and a banner of the Mac app. The account of
   the Mac app keeps the sidebar of the org and adds the This Mac section,
   and the Keyboard shortcuts tab.
+- A person without app access sees the waitlist in the window, as
+  `mac-app/waitlist` shows. The page has no top bar of its own, so in the
+  Mac app the header of `SignInFrame` is the top bar of the window. It is
+  as high as the other top bars, with a smaller lockup, and it moves the
+  window. In a window it keeps the space of the window buttons free, and
+  in full screen it gives that space back.
 - An agent can ask to run a command on the Mac of the person who sent the
   turn. The request waits as a compact message just above the composer,
   from `PendingCommand` in `src/components/chat/`: the exact command, the
@@ -47,7 +59,9 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,
-  or Mac not available.
+  or Mac not available. When its turn ends, the card folds with the work
+  of the turn at its place, from decision 151, as
+  `app/chat/work/mac-command` shows.
 - The Mac app gives the page every key, so it shows keyboard shortcuts
   before a browser does. A browser waits for decisions 192 and 194. The
   account adds the Keyboard shortcuts tab, from decision 190, which

@@ -25,7 +25,10 @@ export function runtimeOwnershipHooks(fixture: RuntimeFixture) {
       workspaceRuntime(fixture.env),
     ),
     readWorkspace: async (orgId: string, id: string) =>
-      workspaceView(await readWorkspace(fixture.env.DB, orgId, id)),
+      workspaceView(
+        await readWorkspace(fixture.env.DB, orgId, id),
+        fixture.env.APP_ORIGIN,
+      ),
   }
 }
 

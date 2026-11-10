@@ -13,6 +13,8 @@ the model. Send and create do not wait for the answer.
 through the replaceable `runTitleModel` dependency. It sends only the first
 4,000 text characters, with no attachments. It asks for three to five
 words, limits the answer to 32 tokens, and aborts after 15 seconds.
+It reads either the model's `response` text or the first chat completion's
+`message.content`. The deployment configuration supplies the title model.
 `title-text.ts` cleans the first line with text. It removes title labels,
 quotes, and Markdown marks, then applies the shared session title rules.
 

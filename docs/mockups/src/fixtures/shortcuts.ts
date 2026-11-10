@@ -34,7 +34,6 @@ export type CommandId =
   | 'go-to-checks'
   | 'go-to-terminal'
   | 'go-to-preview'
-  | 'go-to-desktop'
   | 'new-session'
   | 'session-history'
   | 'focus-message'
@@ -146,7 +145,6 @@ export const shortcutGroups: readonly ShortcutGroup[] = [
       command('go-to-checks', 'Go to Checks'),
       command('go-to-terminal', 'Go to Terminal', '⌘J'),
       command('go-to-preview', 'Go to Preview'),
-      command('go-to-desktop', 'Go to Desktop'),
     ],
   },
   {

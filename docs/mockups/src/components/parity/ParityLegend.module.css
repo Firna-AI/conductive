@@ -1,0 +1,68 @@
+/* A quiet box with a full outline. No edge of the box has its own colour. */
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 22px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-xxl);
+  background: var(--ui-sidebar);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 15px;
+  font-weight: var(--ui-weight-heading);
+}
+
+.items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meaning {
+  margin: 0 0 0 22px;
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--ui-border);
+  color: var(--ui-ink2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ruleIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--ui-primary);
+}
+
+.mobile {
+  padding: 16px;
+}
+
+.mobile .items {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px 16px;
+}
+
+.mobile .meaning {
+  margin-left: 0;
+}

@@ -16,6 +16,7 @@ import { items, record } from './api/parse'
 import { readSection } from './api/read-core'
 import { readWorkspaces } from './api/read-workspaces'
 import {
+  readBuildResponse,
   readBuilds,
   readMembers,
   readRepositories,
@@ -49,10 +50,19 @@ const activeStates: ReadonlySet<WorkspaceState> = new Set([
   'starting',
 ])
 
-const listWait: RefreshWait<ListData> = (list) =>
-  list?.workspaces.some((workspace) => activeStates.has(workspace.state))
+/**
+ * The wait of a shown workspace list: short while one of its workspaces is
+ * active. A chat that reads the list itself uses it too.
+ */
+export const workspacesWait: RefreshWait<readonly Workspace[]> = (
+  workspaces,
+) =>
+  workspaces?.some((workspace) => activeStates.has(workspace.state))
     ? activeWait
     : idleWait
+
+const listWait: RefreshWait<ListData> = (list) =>
+  workspacesWait(list?.workspaces)
 
 const buildsWait: RefreshWait<BuildsResponse> = (builds) =>
   builds?.builds.some((build) => build.state === 'running')
@@ -204,6 +214,25 @@ export class OrgModel {
     return valueOf(this.workspaces.get())?.find(
       (item) => item.id === workspaceId,
     )
+  }
+
+  /**
+   * Build computer, and Try again after a failed build. The new build goes
+   * to the builds, so each screen that shows them follows it. An answer
+   * with a build that ended already, such as one that failed at its start,
+   * reads the builds again while `current` says that its screen shows.
+   */
+  async startBuild(current: () => boolean = () => true): Promise<void> {
+    const started = await this.services.api.send(
+      'POST',
+      orgSettingsPaths.builds(this.orgId),
+      {},
+      readBuildResponse,
+    )
+    this.putBuild(started.build)
+    if (current() && started.build.state !== 'running') {
+      void this.reload('builds')
+    }
   }
 
   /** Puts a newer record of a build in the history, newest first. */

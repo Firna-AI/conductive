@@ -1,7 +1,7 @@
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { MaskedStartLog } from './masked-start-log'
-import type { ProvisionedWorkspace } from './workspace-response'
+import type { SavedProvisionedWorkspace } from './workspace-response'
 import type { RepositoryLocation } from './repository-locations'
 import type { SavedScript } from './saved-script'
 import type { ProviderRetryState } from './provider-retry'
@@ -52,7 +52,7 @@ export type WorkspaceRunningStartJob = WorkspaceStartData &
     | {
         kind: 'create'
         phase: WorkspaceMachinePhase
-        admission: ProvisionedWorkspace
+        admission: SavedProvisionedWorkspace
       }
   )
 
@@ -70,6 +70,7 @@ interface WorkspaceCreation {
   repositoryId: string
   sectionId?: string
   city: string
+  name?: string
   branch: string
   sessionId: string
   request: SendMessageRequest
@@ -81,7 +82,7 @@ export type WorkspaceStartResult<Log = MaskedStartLog> =
   | { ok: false; error: { code: string; message: string; log: Log | null } }
 
 export type WorkspaceCreationAdmission =
-  | { ok: true; created: ProvisionedWorkspace }
+  | { ok: true; created: SavedProvisionedWorkspace }
   | Extract<WorkspaceStartResult<null>, { ok: false }>
 
 export interface CompletedWorkspaceCreation {

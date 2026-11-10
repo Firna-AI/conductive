@@ -19,6 +19,7 @@ import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { shellQuote } from './commands'
 import { imageNodeExecutable } from './image-runtime'
 import { stagedImageSoftware } from './image-software-staging-test-support'
+import { imageTestProcess } from '../tools/image-test-process'
 
 async function diskFiles(root: string): Promise<Record<string, string>> {
   const entries = await readdir(root, { recursive: true, withFileTypes: true })
@@ -51,20 +52,43 @@ export async function credentialLauncher(
   const secrets = join(root, 'run/ascii-secrets')
   const launcher = join(root, 'conductive-git-credential')
   const commands = join(root, 'caller-bin')
+  const githubCli = join(root, 'usr/local/bin/gh')
+  const nativeGithubCli = join(root, 'usr/bin/gh')
   const node = imageNodeExecutable(root)
   try {
     const files = stagedImageSoftware(root)
     const source = files.get('git-credential-helper.sh')
     const program = files.get('git-credential-helper.mjs')
-    if (source === undefined || program === undefined)
+    const github = files.get('github-cli.sh')
+    if (source === undefined || program === undefined || github === undefined)
       throw new Error('The staged credential helper is missing.')
     await mkdir(dirname(node), { recursive: true })
     await mkdir(secrets, { recursive: true })
     await mkdir(commands, { recursive: true })
+    await mkdir(dirname(githubCli), { recursive: true })
+    await mkdir(dirname(nativeGithubCli), { recursive: true })
     await writeFile(join(commands, 'node'), '#!/bin/sh\nexit 73\n', {
       mode: 0o755,
     })
-    await writeFile(launcher, source)
+    await writeFile(launcher, source, { mode: 0o755 })
+    await symlink(
+      launcher,
+      join(dirname(githubCli), 'conductive-git-credential'),
+    )
+    await writeFile(githubCli, github, { mode: 0o755 })
+    await writeFile(
+      nativeGithubCli,
+      `#!${process.execPath}
+import { readFileSync } from 'node:fs'
+process.stdout.write(JSON.stringify({
+  args: process.argv.slice(2),
+  token: process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN ?? null,
+  input: readFileSync(0, 'utf8'),
+}))
+process.exitCode = 7
+`,
+      { mode: 0o755 },
+    )
     await writeFile(join(installation, 'git-credential-helper.mjs'), program)
     await symlink(process.execPath, node)
     await writeFile(
@@ -76,12 +100,31 @@ export async function credentialLauncher(
     )
     return {
       files: () => diskFiles(root),
-      run: (turnId: string, input: string): Promise<CommandResult> =>
+      runGitHub: (
+        turnId: string,
+        args: readonly string[],
+        input = '',
+        environment: Readonly<Record<string, string>> = {},
+      ) =>
+        imageTestProcess('/bin/sh', [githubCli, ...args], input, {
+          HOME: root,
+          TMPDIR: root,
+          LC_ALL: 'C',
+          TZ: 'UTC',
+          NODE_OPTIONS: `--import=data:text/javascript;base64,${Buffer.from(preload).toString('base64')}`,
+          CONDUCTIVE_TURN_ID: turnId,
+          ...environment,
+        }),
+      run: (
+        turnId: string,
+        input: string,
+        args: readonly string[] = ['get'],
+      ): Promise<CommandResult> =>
         new Promise((resolve) => {
           let stdinFailure = ''
           const child = execFile(
             '/bin/sh',
-            [launcher, 'get'],
+            [launcher, ...args],
             {
               cwd: root,
               env: isolatedProcessEnvironment({

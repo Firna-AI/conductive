@@ -6,7 +6,11 @@ import { SiteFooter } from './SiteFooter'
 import { SiteHeader, type SiteLinks } from './SiteHeader'
 import styles from './SitePage.module.css'
 
-const links: SiteLinks = { home: paths.marketing, signIn: paths.signIn }
+const links: SiteLinks = {
+  home: paths.marketing,
+  fromConductor: paths.fromConductor,
+  signIn: paths.signIn,
+}
 
 /** The year of the copyright line. A view reads no clock. */
 const year = 2026
@@ -32,7 +36,7 @@ export function SitePage(props: {
       {bare ? null : (
         <SiteFooter
           links={links}
-          tagline="Coding agents on cloud computers, in your browser."
+          tagline="Coding agents on cloud computers, in your browser or the Mac app."
           viewport={viewport}
           year={year}
         />

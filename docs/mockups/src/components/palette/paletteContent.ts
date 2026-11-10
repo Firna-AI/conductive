@@ -1,7 +1,7 @@
+import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
 import type { ShortcutChanges } from '../../fixtures/shortcutChanges'
-import { archivedWorkspaceList } from '../../fixtures/workspaces'
 import {
   workspaceSections,
   type OpenWorkspace,
@@ -13,6 +13,7 @@ import {
   workspaceActions,
   type Command,
 } from './paletteCommands'
+import { matchingRows } from './paletteSearch'
 import {
   accountSettings,
   orgSettings,
@@ -21,18 +22,21 @@ import {
 import {
   palettePlaceholders,
   paletteQueries,
+  paletteStatuses,
   phonePlaceholders,
   viewTabs,
   type OpenPaletteView,
+  type PaletteStatus,
   type PaletteTab,
 } from './paletteViews'
 
 export type PaletteRow =
-  | { kind: 'workspace'; row: WorkspaceRow }
+  /** `number` is the label of the number, when the query matches it. */
+  | { kind: 'workspace'; row: WorkspaceRow; number?: string }
   /** `detail` names the page of a setting in a mixed list. */
   | { kind: 'command'; command: Command; detail?: string }
 
-export type PaletteGroup = { label: string; rows: readonly PaletteRow[] }
+type PaletteGroup = { label: string; rows: readonly PaletteRow[] }
 
 /** The two filters of the Workspaces tab. */
 export type PaletteFilters = {
@@ -49,6 +53,11 @@ export type PaletteContent = {
   placeholder: { desktop: string; mobile: string }
   filters?: PaletteFilters
   groups: readonly PaletteGroup[]
+  /**
+   * The workspace data that did not load. The spinner or the notice stands
+   * first, in place of the workspace groups, and the other groups follow.
+   */
+  status?: PaletteStatus
   /** The line of a tab that has no row to show while the field is empty. */
   empty?: string
 }
@@ -118,49 +127,27 @@ function settingRows(context: PaletteContext): PaletteRow[] {
   ]
 }
 
-/** Whether each word of the query is in one of the texts, in any case. */
-function matches(query: string, texts: readonly string[]): boolean {
-  const haystack = texts.join(' ').toLowerCase()
-  return query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((word) => word !== '')
-    .every((word) => haystack.includes(word))
-}
-
-function workspaceTexts(row: WorkspaceRow): string[] {
-  const { workspace } = row
-  return [
-    workspace.name,
-    workspace.branch,
-    repositories[workspace.repository].name,
-  ]
-}
-
-function rowTexts(row: PaletteRow): readonly string[] {
-  if (row.kind === 'workspace') return workspaceTexts(row.row)
-  return [row.command.label, ...(row.command.words ?? [])]
-}
-
 /**
  * The results of a query on the All tab: the workspaces, the actions, and
- * the settings that match, then the archived workspaces that match.
+ * the settings that match, then the archived workspaces that match. Without
+ * the workspace data, only the actions and the settings can match.
  */
 function searchGroups(
   query: string,
   active: readonly WorkspaceRow[],
   context: PaletteContext,
+  loaded: boolean,
 ): PaletteGroup[] {
   const groups: PaletteGroup[] = [
-    { label: 'Workspaces', rows: workspaceRows(active) },
+    { label: 'Workspaces', rows: loaded ? workspaceRows(active) : [] },
     { label: 'Actions', rows: commandRows(actionsOf(context)) },
     { label: 'Settings', rows: settingRows(context) },
-    { label: 'Archived', rows: workspaceRows(archivedRows) },
+    { label: 'Archived', rows: loaded ? workspaceRows(archivedRows) : [] },
   ]
   return groups
     .map((group) => ({
       label: group.label,
-      rows: group.rows.filter((row) => matches(query, rowTexts(row))),
+      rows: matchingRows(query, group.rows),
     }))
     .filter((group) => group.rows.length > 0)
 }
@@ -230,6 +217,8 @@ function groupsOf(
       return archivedGroups()
     case 'workspaces-empty':
       return archivedGroups(emptyRepository)
+    case 'workspaces-unavailable':
+      return []
     case 'actions': {
       const open = context.open
       const own: PaletteGroup[] = open
@@ -254,8 +243,18 @@ function groupsOf(
         { label: 'Account', rows: commandRows(accountSettings(context)) },
       ]
     case 'search':
+    case 'number':
+    case 'number-part':
     case 'no-results':
-      return searchGroups(paletteQueries[view] ?? '', active, context)
+    case 'search-loading':
+    case 'search-unavailable':
+    case 'search-repositories-unavailable':
+      return searchGroups(
+        paletteQueries[view] ?? '',
+        active,
+        context,
+        paletteStatuses[view] === undefined,
+      )
   }
 }
 
@@ -268,6 +267,7 @@ export function paletteContent(
   const query = paletteQueries[view] ?? ''
   const tabFilters = tab === 'workspaces' ? filters(view) : undefined
   const groups = groupsOf(view, context)
+  const status = paletteStatuses[view]
   return {
     tab,
     query,
@@ -277,8 +277,9 @@ export function paletteContent(
     },
     filters: tabFilters,
     groups,
+    status,
     empty:
-      tabFilters && query === '' && groups.length === 0
+      tabFilters && query === '' && groups.length === 0 && !status
         ? emptyLine(tabFilters)
         : undefined,
   }

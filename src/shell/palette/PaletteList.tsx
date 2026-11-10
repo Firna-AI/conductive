@@ -11,10 +11,12 @@ import { activityPresentation } from '../../../docs/mockups/src/components/works
 import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
 import type { PaletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'
+import type { PaletteRead } from '../../app/palette/palette-source'
 import { formatAgo } from '../../app/time'
 import ui from '../ui/ui.module.css'
 import local from './palette.module.css'
 import { PaletteEmpty } from './PaletteEmpty'
+import { PaletteStatusPart } from './PaletteStatus'
 import { RowLead } from './RowLead'
 import { nameLabel } from '../../shared/name-label'
 
@@ -34,6 +36,11 @@ function opensElsewhere(event: MouseEvent): boolean {
   )
 }
 
+/**
+ * What a row shows. A workspace shows its state mark, the label of its
+ * number while the query matches that label, its name, its repository, and
+ * the age of its latest activity.
+ */
 function RowContent(props: { row: PaletteRow; now: number }) {
   const { row } = props
   if (row.kind === 'command') {
@@ -55,6 +62,9 @@ function RowContent(props: { row: PaletteRow; now: number }) {
       <span className={styles.lead}>
         <StatusGlyph status={workspace.state} />
       </span>
+      {row.numberLabel ? (
+        <span className={styles.number}>{row.numberLabel}</span>
+      ) : null}
       <span className={styles.label}>{nameLabel(workspace.name)}</span>
       <span className={styles.repository}>{row.repository}</span>
       <span className={styles.end}>
@@ -133,9 +143,9 @@ function Row(props: {
 }
 
 /**
- * The results in their groups, as the listbox of the search field. The
- * highlighted option is the one that Enter runs. The list scrolls under
- * the search field and the tabs.
+ * The results: the status part of data that did not load, then the groups
+ * as the listbox of the search field. The highlighted option is the one
+ * that Enter runs. Both scroll under the search field and the tabs.
  */
 export function PaletteList(props: {
   results: PaletteResults
@@ -144,10 +154,10 @@ export function PaletteList(props: {
   active: number
   now: number
   onRun: (row: PaletteRow) => void
-  retry: () => Promise<void>
+  retry: (reads: readonly PaletteRead[]) => Promise<void>
 }) {
-  const { groups, empty } = props.results
-  if (empty) return <PaletteEmpty empty={empty} retry={props.retry} />
+  const { groups, empty, status } = props.results
+  if (empty) return <PaletteEmpty empty={empty} />
   const starts = groups.map((_, at) =>
     groups.slice(0, at).reduce((sum, group) => sum + group.rows.length, 0),
   )
@@ -177,14 +187,20 @@ export function PaletteList(props: {
     </div>
   ))
   return (
-    <div
-      aria-label="Results"
-      className={styles.results}
-      id={props.listboxId}
-      onMouseDown={keepFieldFocus}
-      role="listbox"
-    >
-      {body}
+    <div className={styles.results}>
+      {status ? (
+        <PaletteStatusPart retry={props.retry} status={status} />
+      ) : null}
+      {groups.length > 0 ? (
+        <div
+          aria-label="Results"
+          id={props.listboxId}
+          onMouseDown={keepFieldFocus}
+          role="listbox"
+        >
+          {body}
+        </div>
+      ) : null}
     </div>
   )
 }

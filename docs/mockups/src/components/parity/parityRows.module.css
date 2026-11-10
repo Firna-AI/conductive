@@ -1,0 +1,105 @@
+/*
+ * The table of Conductor Cloud features: the header, the rows, and their
+ * cells. The table sets `.mobile` on an ancestor for a phone.
+ */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.head th {
+  padding: 0 20px 10px 0;
+  border-bottom: 1px solid var(--ui-border2);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: var(--ui-label-case);
+}
+
+/* Each row sits on a neutral hairline, as the rows of a table do. */
+.row > * {
+  padding: 14px 20px 14px 0;
+  border-bottom: 1px solid var(--ui-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.row > :last-child {
+  padding-right: 0;
+}
+
+.name {
+  color: var(--ui-ink);
+  font-size: 15px;
+  font-weight: var(--ui-weight-heading);
+  line-height: 1.45;
+}
+
+/* The status, with the due day under it when the feature has one. */
+.status > * {
+  display: flex;
+  width: fit-content;
+}
+
+/* The first line of the status takes the height of the line of the name. */
+.status > :first-child {
+  line-height: 22px;
+}
+
+.status > * + * {
+  margin-top: 4px;
+}
+
+.note {
+  color: var(--ui-ink2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* A phone keeps the column names for screen readers only. */
+.mobile .head {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A phone stacks the cells of each row, so the page keeps its width. */
+.mobile .table,
+.mobile .table tbody {
+  display: block;
+}
+
+.mobile .row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.mobile .row > * {
+  padding: 0;
+  border-bottom: 0;
+}
+
+.mobile .status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+}
+
+.mobile .status > :first-child {
+  line-height: 1.35;
+}
+
+.mobile .status > * + * {
+  margin-top: 0;
+}

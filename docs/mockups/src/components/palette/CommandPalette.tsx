@@ -153,11 +153,7 @@ function PalettePage(props: { content: PaletteContent }) {
           <Filters filters={content.filters} mobile />
         </div>
       ) : null}
-      <PaletteResults
-        empty={content.empty}
-        groups={content.groups}
-        query={content.query}
-      />
+      <PaletteResults content={content} />
       {content.filters?.repositoryMenu ? (
         <Sheet title="Repository">
           <Menu
@@ -197,12 +193,7 @@ export function CommandPalette(props: {
           <SearchField content={content} mobile={false} />
         </div>
         <TabBar content={content} mac={props.context.mac} mobile={false} />
-        <PaletteResults
-          empty={content.empty}
-          groups={content.groups}
-          query={content.query}
-          shortcuts={props.context.shortcuts}
-        />
+        <PaletteResults content={content} shortcuts={props.context.shortcuts} />
       </section>
     </div>
   )

@@ -1,0 +1,53 @@
+# An address with leading slashes shows not-found
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-09, from `calummoore/workspace-link-widget-brainstorm`, a new problem outside the scope that the finding check of review round 1, finding 2, found at commit `6f35b06`.
+- **Location:** `src/app/navigation.ts:79`, in `useRoute`.
+- **Reason:** The defect is in the app's reader of the current address, outside the workspace link chips change, so a separate branch fixes it.
+
+- **Terms:**
+  - **Current address:** the path and query of the page that the browser or Mac app shows, supplied by `useHref` in `src/app/navigation.ts`.
+  - **Network-path reference:** an address whose first two slashes make a URL parser read the next segment as a hostname.
+  - **Mac app:** the Electron shell for macOS. It shows the web app from its own origin, `conductive-app://desktop`, and its window has no address bar.
+- **Background:**
+  - `useRoute` in `src/app/navigation.ts` gives the screen of the current address. `Shell` uses it to choose the screen, at `src/shell/Shell.tsx:161`. `src/shell/palette/use-palette-source.ts:54` uses it too.
+  - At line 79, `useRoute` runs `new URL(href, 'https://app.invalid')`. It passes the path and the query of the result to `parseRoute` in `src/app/router.ts`.
+  - `parseRoute` drops empty path segments, at `src/app/router.ts:144`. So it reads `//orgs/acme/workspaces/id` as the page of workspace `id`, as it reads `/orgs/acme/workspaces/id`.
+  - The Worker serves the web app for each path of the app hostname that does not start with `/api/`, in `worker/application.ts`. So a browser that opens `https://app.conductive.build//orgs/acme/workspaces/id` gets the app.
+  - In the Mac app, `navigationTarget` in `desktop/src/navigation.ts` loads a link of the app hostname in the window. It keeps the path, the query, and the hash, on `conductive-app://desktop`.
+  - `exportHandler` in `desktop/src/export-handler.ts` then serves the start page of the web app for a path with no file. So the Mac app reaches `useRoute` with the same path.
+  - `docs/protocol/workspace-links.md` says: "The app resolves each link as a browser does before it looks for the workspace." So chat shows `https://app.conductive.build//orgs/acme/workspaces/id` as a chip of workspace `id`.
+  - No protocol doc names an address with doubled slashes. `docs/protocol/operator-section.md` says that the app shows its not-found page "at any unknown address". `parseRoute` decides which addresses are known.
+- **Problem:**
+  - Take the current address `https://app.conductive.build//orgs/acme/workspaces/id`. Its path is `//orgs/acme/workspaces/id`.
+  - `new URL('//orgs/acme/workspaces/id', 'https://app.invalid')` reads that path as a network-path reference. The result has host `orgs` and path `/acme/workspaces/id`.
+  - `parseRoute` then reads `acme` as the first segment, and it returns the not-found screen. So the app shows not-found where `parseRoute` alone reads the page of the workspace.
+  - Three slashes give the same host. A doubled slash later in the path, such as `/orgs//acme/workspaces/id`, still shows the workspace, because only leading slashes make a network-path reference.
+- **Evidence:**
+  - A Node URL probe on 9 November 2026: `new URL('//orgs/acme/workspaces/id?tab=1', 'https://app.invalid')` gives `https://orgs/acme/workspaces/id?tab=1`, with host `orgs` and path `/acme/workspaces/id`.
+  - The same probe with one slash, `new URL('/orgs/acme/workspaces/id/files?line=2', 'https://app.invalid')`, keeps host `app.invalid` and the whole path.
+  - The same probe joined as text, `new URL('https://app.invalid' + '//orgs/acme/workspaces/id?tab=1')`, keeps host `app.invalid` and the path `//orgs/acme/workspaces/id`.
+  - No test calls `useRoute`. `src/app/router.test.ts` tests `parseRoute` and the route builders.
+- **Impact if no action:**
+  - A person who opens such an address sees the not-found page of the app, not the workspace. In the Mac app, the person has no address bar to correct the address.
+  - Chat shows a link with the same address as a chip of the workspace. So the chat and the current address disagree about the same link.
+  - The likelihood is Rare. The app never makes such an address: its links come from `routes` in `src/app/router.ts`, and `workspaceLink` at `worker/data/workspace-link.ts:20` builds each workspace link with one slash.
+  - So only an address that a person types or edits, or a link that another tool joins with an extra slash, meets the defect. The person can open the workspace from the workspace list.
+- **Root question:** Which screen does the app show for a current address whose path starts with two or more slashes?
+- **Options:**
+  - **A.** Read the current address as a path, not as a relative URL. Details:
+    - For example, join it to the base origin as text, ``new URL(`https://app.invalid${href}`)``, or split the path and the query at the first `?`. `href` always starts with a slash, because `browserNavigation` gives `location.pathname` and then `location.search`.
+    - `useRoute` then gives the screen that `parseRoute` reads, also for `//orgs/acme/workspaces/id`.
+    - Add a test beside `src/app/navigation.ts`. Read `//orgs/acme/workspaces/id?tab=1` with `memoryNavigation`, and expect that workspace with its query. Check that `/orgs/acme/workspaces/id/files?line=2` keeps its screen.
+    - Cost: the current address keeps its doubled slash until the next move inside the app. Effort: Small.
+  - **B.** Change nothing. Cost: such an address keeps the not-found page, while chat shows the same link as a chip of the workspace. Effort: Small.
+  - **C.** Do A, then replace the current address with the address of the same screen with one slash, with `navigation.replace`. Cost: the app changes an address that the person did not change. `src/app/router.ts` has a builder for each screen, but no one function that turns a route back into its address, so the fix needs one. Effort: Medium.
+- **Left out:**
+  - Make `parseRoute` show not-found for empty leading segments, so the router and `useRoute` agree. The chip reader also uses `parseRoute`, so such links would stop showing as chips. That breaks the rule in `docs/protocol/workspace-links.md`.
+  - A redirect in the Worker from such a path to one slash. The Mac app loads its pages from its own origin without the Worker, so its not-found page stays. A covers both.
+- **Wider fix:** None, because `useRoute` is the one reader of the current address.
+- **Previous examples:** The related chip item below has the same address pattern in chat. No other case found.
+- **Related:** [chip-leading-slashes-wrong-host.md](chip-leading-slashes-wrong-host.md): the same doubled-slash address in chat chips, where a press goes to host `orgs`. Its fix builds each chip address with one slash, so chips stop making such addresses. This item covers an address that a person opens directly. The two fixes are independent.
+- **Recommendation:** A. It makes `useRoute` give the screen of the current address, as its comment says, at Small effort. It applies to the current address the same reading that `docs/protocol/workspace-links.md` gives a link in chat.
+- **Action:** fix after merge, apply A, because the defect is outside the workspace link chips change, and a separate branch fixes it.

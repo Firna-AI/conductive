@@ -20,6 +20,13 @@ export const newWorkspaceDialog = defineScreen({
   ),
   variants: [
     {
+      slug: 'first-build',
+      title: 'First build',
+      description:
+        'Firna has no good image yet. The dialog keeps the written task and shows the first build above its footer. Create stays off until a build succeeds. The phone shows the same notice on the New workspace page.',
+      props: { draft: 'message', org: 'new', firstBuild: 'running' },
+    },
+    {
       slug: 'no-login',
       title: 'Agent not connected',
       description:
@@ -43,6 +50,15 @@ export const newWorkspaceDialog = defineScreen({
       description:
         'Acme has chosen no repositories yet, so the dialog has no repository picker, and Create is off. The notice asks to choose the repositories of Acme first. For an admin, Choose repositories closes the dialog and opens the Repositories tab of the org settings. A member who is not an admin reads that an admin of Acme chooses its repositories first, without the button.',
       props: { repositories: 'none' },
+    },
+    {
+      slug: 'workspace-link',
+      title: 'Workspace link',
+      description:
+        'The task names an earlier workspace. Cal pasted the link of Checkout address autocomplete, the workspace under the dialog, and the message shows it as a chip at once, with the ready state that the list shows. Create is on.',
+      rationale:
+        'The dialog turns a pasted link into a chip, as the message boxes of the New workspace page and of the chat do, from decision 211. The chip finds its workspace in the list of the screen, as the chat does. The first message keeps the plain link.',
+      props: { draft: 'workspace-link' },
     },
   ],
 })

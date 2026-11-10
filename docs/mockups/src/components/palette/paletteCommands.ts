@@ -9,7 +9,6 @@ import {
   History,
   ListChecks,
   MessageSquarePlus,
-  Monitor,
   Plus,
   SquareTerminal,
 } from 'lucide-react'
@@ -74,12 +73,6 @@ const rightColumnActions: readonly Command[] = [
     words: ['port'],
     to: paths.preview,
     shortcut: 'go-to-preview',
-  },
-  {
-    label: 'Go to Desktop',
-    lead: icon(Monitor),
-    to: paths.desktop,
-    shortcut: 'go-to-desktop',
   },
 ]
 

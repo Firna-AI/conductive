@@ -3,7 +3,8 @@
 This guide belongs to [Web app: data and composition](README.md). It
 gives the rules of the screens of the app shell: the account and Get
 started, sign-in, invitations, orgs, panels and layers, the command
-palette, the focus, saved drafts, and New workspace as a page or a dialog. The
+palette, the focus, saved drafts, New workspace as a page or a dialog, and
+[the waitlist](#the-waitlist). The
 [command palette protocol](../../docs/protocol/command-palette.md) states
 what the palette does.
 
@@ -18,6 +19,15 @@ what the palette does.
   the last org offers Create org again, and a connect on Account completes
   its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
   screen reads them through `AppModel.getStarted`.
+- Once the org exists, the org step shows its cloud computer from the
+  builds of the org, as
+  [Get started](../../docs/protocol/orgs-and-members.md#get-started) says:
+  preparing with its time, ready, the failure with its saved message, or no
+  build yet. A failed load of the builds shows Try again in its place. Only
+  a person who may change the settings of the org gets Try again and Open
+  the log, or Build computer. The finish takes its words from the same
+  state. Until the builds load, it shows Open without words. Open is a
+  secondary button after a failed build or with no build.
 - The sign-in screen shows the agreement to the Terms and the Privacy
   notice above Continue with GitHub. Its words come from `termsAgreement`
   in `src/marketing/legal-text.ts`, and its links lead to the marketing
@@ -48,7 +58,8 @@ what the palette does.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the
-  GitHub IDs of the chosen ones.
+  GitHub IDs of the chosen ones. Create org stays off until the person
+  chooses at least one, also while the list is empty or did not load.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
 - A suspended org shows its notice, and no action that it refuses, as
@@ -58,6 +69,13 @@ what the palette does.
   [Operator section](../shell/operator/README.md) says.
 - The Cloud computer tab names the software of the base image from the
   settings reply. An older reply without it names no software.
+- The notice of a changed install script has the same words for an admin
+  and a member, from `changedScriptNotice`. Until the org has a good build,
+  it says that one more build runs the script while the first build runs,
+  and else that the next build runs it. Until the builds load, it says
+  only that the next build runs it. An admin gets Build computer in the
+  notice only once the org has a good build, because before that the head
+  of the builds offers Try again or Build computer. A member never gets it.
 - A step of a panel, by a key or a drag, starts from the width that the
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
@@ -108,15 +126,22 @@ what the palette does.
   closes the palette first. Its action runs once the palette has left
   the page, so a field that the action opens can take the focus, and a
   question shows alone.
+- The palette reads the list and the repositories of its org through
+  `OrgModel.watch` while it is open, and shares those reads with the list
+  of the page. So the list and the palette show the same failure, and Try
+  again in either one reads the list again. The palette has no copy of
+  its own. Its Try again reads again each part that failed, through
+  `OrgModel.reload`.
 - `AppModel.lastOrg` keeps the org that the tab opened last, in memory
   only. The Account sidebar of the Mac app and the palette on a page
   without an org read it through `keptOrg`.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
-  focused row link out of the page and the focus falls to the page, the
+  focused row out of the page and the focus falls to the page, the
   new link of the same workspace takes it, also after a failed move puts
   the row back. When the user moves the focus away, a later read of the
-  list leaves the focus there.
+  list leaves the focus there. Focus on any row control counts, including
+  Archive. A replacement row takes the focus on its workspace link.
 - An editor of a saved value, such as a script or the org name, stays
   mounted through its saves (`useSavedDraft`). When the saved value
   changes, a draft that the user did not change takes the new value, and
@@ -169,16 +194,73 @@ what the palette does.
 - New workspace sends and uploads one at a time: the create waits for the
   files, and the paperclip is off while the create runs. Send, Create, Try
   again, and Enter read one readiness: the text, the files, the agent
-  login, the repository, the model, and an org that is not suspended. In
-  a suspended org, the refused bar takes the place of the composer of the
-  dialog, as on the page.
+  login, the image of the org, the repository, the model, and an org that
+  is not suspended. In a suspended org, the refused bar takes the place of
+  the composer of the dialog, as on the page.
+- While the builds of the org show no good image, New workspace shows the
+  notice of the first build on the page and in the dialog, as
+  [Create a workspace](../../docs/protocol/create-a-workspace.md#before-the-first-good-build)
+  says, and Send, Create, and Try again stay off. The shared form watches
+  the builds and owns the notice. Its words come from
+  `firstBuildCopy.ts` of the mockups. While the builds load or after a
+  failed load, no notice shows, and the Worker refuses a create of an org
+  with no good image.
 - Every composer reads its send key through `useSendKey`: the chat, the
   page, and the dialog. On a computer, Enter sends and Shift+Enter adds a
   line, as [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)
   says. Enter does nothing while the message cannot go, and it belongs to
   an input method that composes a word. In the phone layout, Enter adds a
   line.
+- The page and the dialog of New workspace use the chip text field of the
+  chat as their message field, as
+  [The message field](../../docs/protocol/workspace-links.md#the-message-field)
+  says. `OrgLinks` gives its chips the workspaces of the org, which the
+  form watches while it shows. The page shows 2 to 8 lines, as the chat
+  does, and the dialog shows 7 to 14 lines. The field of the dialog takes
+  the focus through the handle of the field. While a create runs, the
+  field takes no change, and it keeps the focus.
 - A create request that fails keeps the message in the form, with "The
   workspace wasn't created". Try again sends the same message ID. A failed
   first start keeps its workspace instead, as
   [Creation recovery](creation-recovery.md#a-failed-first-start) says.
+
+## The waitlist
+
+[Waitlist](../../docs/protocol/waitlist.md) and
+[Invite and referral codes](../../docs/protocol/waitlist-codes.md) state
+the requirements. The mockups `app/sign-in/waitlist`, `app/sign-in/join`,
+`mac-app/waitlist`, and `app/account/invites` draw the screens.
+
+- A session without app access shows only the waitlist, at every address,
+  also at `/operator`. `Waiting` in `../shell/waitlist/` shows it. Get
+  started, the rail, and the command palette stay closed.
+- The waitlist shares `SignInFrame` with the sign-in. It names the address
+  of the approval email, or, without a verified email, promises no email.
+  It shows the invitations of the person with Accept, the code field with
+  Use code, and the GitHub account with Sign out. Its words come from
+  `waitlistCopy.ts`.
+- A typed code that does not work shows its reason under the field, and
+  the field keeps its text. The pause shows above the field, and only
+  after it stopped a code. Use code with an empty field moves the focus to
+  the field and sends nothing.
+- When the pause stops an Accept, a notice above the invitations says so,
+  and the invitation stays. Another failed Accept shows its cause with Try
+  again, as the invitations of `/` do.
+- In the Mac app on desktop, the header of the waitlist is the top bar of
+  the window. It moves the window, and in a window it keeps the space of
+  the window buttons free. The page has no strip of window controls. A
+  phone layout keeps the strip of `PhoneFrame`, as other pages do.
+- A visitor who is not signed in at a join link, `/join/<code>`, gets the
+  sign-in with the code of the link. Continue with GitHub carries the code
+  in `acceptedTermsSignInPath`.
+- For a person who waits, a join link changes the address to `/` and uses
+  its code at once. The loading state shows while the code runs. A code
+  that does not work shows the notice of its reason above the empty field.
+  The `invite_code_error` of a failed sign-in shows its notice and uses
+  the code no more.
+- For a person with app access, a join link uses no code, and `/` opens as
+  usual.
+- The Account page ends with the invite code of the user, after the model
+  of new workspaces: the invite link with Copy, the code, and the invites
+  left. It has the states of the pause, of every invite used, and of a code
+  that an operator turned off. Its words come from `inviteCodeCopy.ts`.

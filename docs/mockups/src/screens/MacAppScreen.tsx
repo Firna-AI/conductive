@@ -14,6 +14,7 @@ import {
 import { checkoutAutocomplete } from '../fixtures/workspaces'
 import { AccountScreen, accountGeneral } from './AccountScreen'
 import { NewWorkspaceScreen, newWorkspaceForm } from './NewWorkspaceScreen'
+import { WaitlistScreen, type WaitlistState } from './WaitlistScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
 
@@ -34,9 +35,12 @@ export const macAppSchema = {
     window: { enum: ['window', 'full-screen'] },
     /**
      * The page of the app: a workspace, the empty New workspace, the
-     * account, or its Keyboard shortcuts tab.
+     * account, its Keyboard shortcuts tab, or the waitlist of a person
+     * without app access.
      */
-    page: { enum: ['workspace', 'new-workspace', 'account', 'shortcuts'] },
+    page: {
+      enum: ['workspace', 'new-workspace', 'account', 'shortcuts', 'waitlist'],
+    },
     /**
      * A command that an agent asks to run on this Mac: none, the request
      * above the composer, the request of a longer time limit, the request
@@ -112,6 +116,14 @@ function workspaceFor(command: MacAppState['command']): WorkspaceState {
   return { ...readyWorkspace, conversation: conversations[command] }
 }
 
+/** A person who waits, with no code tried yet, as on the web app. */
+const waitingState: WaitlistState = {
+  email: 'verified',
+  code: 'none',
+  from: 'field',
+  invitations: 'none',
+}
+
 function pageFor(state: MacAppState): ReactNode {
   const shortcuts: ShortcutChanges =
     state.shortcuts === 'edited' ? editedShortcuts : {}
@@ -152,6 +164,8 @@ function pageFor(state: MacAppState): ReactNode {
           viewport="desktop"
         />
       )
+    case 'waitlist':
+      return <WaitlistScreen state={waitingState} viewport="desktop" />
   }
 }
 

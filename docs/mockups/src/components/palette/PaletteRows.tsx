@@ -13,7 +13,8 @@ import { OrgTile } from '../orgs/OrgTile'
 import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import type { CommandLead } from './paletteCommands'
-import type { PaletteGroup, PaletteRow } from './paletteContent'
+import type { PaletteContent, PaletteRow } from './paletteContent'
+import { PaletteStatusPart } from './PaletteStatus'
 import styles from './CommandPalette.module.css'
 
 function Lead(props: { lead: CommandLead }) {
@@ -57,8 +58,10 @@ function shortcutOf(
 
 /**
  * One result. A workspace shows its state mark, its name, its repository,
- * and the age of its last activity, as the list does. A command shows its
- * icon, its label, the page of a setting in a mixed list, and its key.
+ * and the age of its last activity, as the list does. When the query
+ * matches the label of its number, the label leads the name, as in a chip.
+ * A command shows its icon, its label, the page of a setting in a mixed
+ * list, and its key.
  */
 function Row(props: {
   row: PaletteRow
@@ -81,6 +84,9 @@ function Row(props: {
         <span className={styles.lead}>
           <StatusGlyph status={status} />
         </span>
+        {row.number ? (
+          <span className={styles.number}>{row.number}</span>
+        ) : null}
         <span className={styles.label}>{workspace.name}</span>
         <span className={styles.repository}>
           {repositories[workspace.repository].name}
@@ -133,27 +139,25 @@ function EmptyTab(props: { line: string }) {
 
 /**
  * The results in their groups. The first row is highlighted, so Enter runs
- * it. The list scrolls under the search field and the tabs. `empty` is the
- * line of a tab without rows while the field is empty. With the person's
- * `shortcuts`, each command row ends with its first key.
+ * it. The list scrolls under the search field and the tabs. The status
+ * part of data that did not load stands first, and alone when the tab has
+ * no row. A tab without rows and without a status part shows its empty
+ * line while the field is empty, and "Nothing matches" for a query. With
+ * the person's `shortcuts`, each command row ends with its first key.
  */
 export function PaletteResults(props: {
-  groups: readonly PaletteGroup[]
-  query: string
-  empty?: string
+  content: PaletteContent
   shortcuts?: ShortcutChanges
 }) {
-  if (props.groups.length === 0) {
-    return props.empty ? (
-      <EmptyTab line={props.empty} />
-    ) : (
-      <NoResults query={props.query} />
-    )
+  const { groups, query, empty, status } = props.content
+  if (groups.length === 0 && !status) {
+    return empty ? <EmptyTab line={empty} /> : <NoResults query={query} />
   }
-  const first = props.groups[0]?.rows[0]
+  const first = groups[0]?.rows[0]
   return (
     <div className={styles.results} data-mokly-scroll="palette-results">
-      {props.groups.map((group) => (
+      <PaletteStatusPart content={props.content} />
+      {groups.map((group) => (
         <section
           aria-label={group.label}
           className={styles.group}
