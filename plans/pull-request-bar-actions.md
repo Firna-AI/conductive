@@ -1141,6 +1141,9 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: Keep Create pull request guidance aligned with the workspace base. Reason: Ordinary work uses the repository default while a PR run uses its recorded Your work goes to target.
 - Design call on 10 November 2026: Capture the current marketing pictures from the combined mockups. Reason: Both main's run links and the branch's action controls must appear in the resolved images.
 - Design call on 10 November 2026: Clarify current base targets in the protocols and existing public guides. Reason: The run message keeps its initial target, while the bar and successful Continue record the current workspace base under existing approved rules.
+- Design call on 10 November 2026: Move unchanged toast and copy state fields into feedbackState.ts. Reason: The existing sibling schema pattern keeps the combined workspace state below the current 300-line limit.
+- Design call on 10 November 2026: Keep fresh combined hero and Mac captures and restore only the measured mobile icon noise. Reason: Both parents share the mobile content, while the four conflicted images must reflect current routine navigation and action controls.
+- Design call on 10 November 2026: Use the existing member-merge surface for the outgoing browser action check. Reason: The routine development surface returns a recorded message for every send, so its run-link and action-display checks are reported separately.
 
 ## Milestone 1: Mockups
 
@@ -1610,7 +1613,7 @@ Depends on: 11
 - [x] Run bounded affected checks, meaningful proofs and ten runs for
       materially changed async regressions. Keep every active assertion.
       Smoke-test changed action/run links and preserve drafts and uploads.
-- [ ] Audit the two-parent merge and every resolution. Commit and push
+- [x] Audit the two-parent merge and every resolution. Commit and push
       all completed source and preserve the full final record.
 
 The preceding delivery passed all 2,605 Complete gate tests and both Mac
@@ -1618,9 +1621,30 @@ jobs on final head `b1dd3619`. GitHub tested virtual merge `1a85d0ee` into
 release main `89425cec`. Main's later routines change now creates conflicts.
 The completed delivery above remains history and is not reopened.
 
-## Milestone 13: Renewed final record and CI
+## Milestone 14: Hibernating workspace base integration
 
 Depends on: 12
+
+- [ ] Integrate captured main `247c772afaf09cae29856f67dc4ada41b646cb20`.
+      Preserve hibernating browser, runner and device connections, native
+      socket recovery, alarm ownership, access expiry and membership fences.
+- [ ] Keep private member Merge jobs, durable Continue reservations,
+      credential scopes, branch/base context, notes, files and queued turns
+      correct through wake-up and reconstruction.
+- [ ] Resolve and audit all runtime and document combinations. Preserve
+      current public, legal and comparison facts without a new policy.
+- [ ] Run bounded affected checks and required material regression proofs
+      and repeats. Keep source, types, tests and protocol contracts aligned.
+- [ ] Audit the two-parent merge and resolutions. Commit and push all
+      current source for the final record and complete final-head CI.
+
+The routines merge `51616db4` is pushed and locally verified. Main's later
+hibernation change creates confirmed conflicts before its CI can start.
+The earlier green `b1dd3619` remains evidence for that earlier tree only.
+
+## Milestone 15: Renewed final record and CI
+
+Depends on: 14
 
 - [ ] Record current outcomes, all dated calls, test costs and follow-ups
       in PR #176. Preserve every earlier choice and completed milestone.
