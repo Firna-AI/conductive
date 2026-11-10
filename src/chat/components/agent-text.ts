@@ -1,3 +1,11 @@
+import { expandTabs, isBlank, isRule } from '../../markdown/lines'
+import {
+  listMarker,
+  maxNesting,
+  readList,
+  type ListBlocks,
+  type ListRules,
+} from '../../markdown/list-items'
 import {
   readTableRow,
   readTableSeparator,
@@ -15,32 +23,32 @@ export type TextTable = { kind: 'table' } & TableCells<string>
  */
 export type TextBlock =
   | { kind: 'p'; text: string }
-  | { kind: 'ul'; items: readonly string[] }
-  | { kind: 'ol'; start: number; items: readonly string[] }
+  | { kind: 'ul'; items: readonly TextItem[] }
+  | { kind: 'ol'; start: number; items: readonly TextItem[] }
   | { kind: 'code'; text: string }
   | TextTable
 
-/** A list of an answer while the parse adds its items. */
-type OpenList =
-  | { kind: 'ul'; items: string[] }
-  | { kind: 'ol'; start: number; items: string[] }
+/** A list of an answer. */
+export type TextList = Extract<TextBlock, { kind: 'ul' | 'ol' }>
 
-const bullet = /^\s*[-*+]\s+(.*)$/
-/** A number of one to nine digits, as Markdown allows in a list marker. */
-const numbered = /^\s*(\d{1,9})[.)]\s+(.*)$/
+/** The blocks of one list item, from the lines indented under its marker. */
+export type TextItem = readonly TextBlock[]
+
 const heading = /^#{1,6}\s+(.*)$/
+const quote = /^ {0,3}>/
+
+function isFence(line: string): boolean {
+  return line.trimStart().startsWith('```')
+}
 
 /**
- * The item that a line starts, with its text, or null for another line. A
- * new list takes its kind and, for a numbered list, its start from it.
+ * Whether the line at `index` starts a block, so it ends the text of a list
+ * item. A heading and a quote show as text, but they still end the item.
  */
-function listItem(line: string): { list: OpenList; text: string } | null {
-  const point = bullet.exec(line)
-  if (point) return { list: { kind: 'ul', items: [] }, text: point[1] }
-  const step = numbered.exec(line)
-  if (!step) return null
-  const start = Number(step[1])
-  return { list: { kind: 'ol', start, items: [] }, text: step[2] }
+function startsBlock(lines: readonly string[], index: number): boolean {
+  const line = lines[index]
+  if (isFence(line) || heading.test(line) || quote.test(line)) return true
+  return tableStarts(lines, index)
 }
 
 /**
@@ -66,35 +74,47 @@ function readTable(
   return { table: { kind: 'table', head, rows, align }, last }
 }
 
+/** A list from the list reader, as a block of an answer. */
+function textList(list: ListBlocks<TextBlock>): TextList {
+  const items = list.items.map((item) => item.blocks)
+  if (!list.ordered) return { kind: 'ul', items }
+  return { kind: 'ol', start: list.start, items }
+}
+
 /**
- * Splits an answer into paragraphs, lists, code blocks, and tables. Text
- * that the agent still writes can end inside a code block, which then runs
- * to the end. A header row shows as text until its separator row arrives.
- * A table can start directly after a line of a paragraph or a list.
+ * The blocks of the lines of an answer, or of one list item. `raw` holds
+ * the lines with their tabs, which a code block keeps. `depth` counts the
+ * lists around the lines.
  */
-export function textBlocks(text: string): TextBlock[] {
+function parseLines(
+  lines: readonly string[],
+  raw: readonly string[],
+  depth: number,
+): TextBlock[] {
   const blocks: TextBlock[] = []
   let paragraph: string[] = []
-  let list: OpenList | null = null
   let code: string[] | null = null
   const flush = () => {
-    if (paragraph.length > 0)
+    if (paragraph.length > 0) {
       blocks.push({ kind: 'p', text: paragraph.join(' ') })
-    if (list) blocks.push(list)
+    }
     paragraph = []
-    list = null
   }
-  const lines = text.split('\n')
+  const rules: ListRules<TextBlock> = {
+    startsBlock,
+    parseItem: (item) => itemBlocks(item, depth),
+    tasks: false,
+  }
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]
     if (code) {
-      if (line.trimStart().startsWith('```')) {
+      if (isFence(line)) {
         blocks.push({ kind: 'code', text: code.join('\n') })
         code = null
-      } else code.push(line)
+      } else code.push(raw[index])
       continue
     }
-    if (line.trimStart().startsWith('```')) {
+    if (isFence(line)) {
       flush()
       code = []
       continue
@@ -106,28 +126,44 @@ export function textBlocks(text: string): TextBlock[] {
       index = last
       continue
     }
-    const item = listItem(line)
-    if (item) {
-      if (paragraph.length > 0 || (list && list.kind !== item.list.kind)) {
-        flush()
-      }
-      list ??= item.list
-      list.items.push(item.text)
-      continue
-    }
-    if (line.trim() === '') {
+    const marker = isRule(line) ? null : listMarker(line)
+    if (marker) {
       flush()
+      const { list, next } = readList(lines, index, marker, rules)
+      blocks.push(textList(list))
+      index = next - 1
       continue
     }
-    if (list && /^\s+\S/.test(line)) {
-      const last = list.items.length - 1
-      list.items[last] = `${list.items[last]} ${line.trim()}`
-      continue
-    }
-    if (list) flush()
-    paragraph.push(heading.exec(line)?.[1] ?? line.trim())
+    if (isBlank(line)) flush()
+    else paragraph.push(heading.exec(line)?.[1] ?? line.trim())
   }
   flush()
   if (code) blocks.push({ kind: 'code', text: code.join('\n') })
   return blocks
+}
+
+/**
+ * The blocks of one list item. Lists nest at most `maxNesting` deep, as in
+ * the file preview, so deeper content shows as the text of a paragraph.
+ */
+function itemBlocks(lines: readonly string[], depth: number): TextBlock[] {
+  if (depth + 1 < maxNesting) return parseLines(lines, lines, depth + 1)
+  const text = lines
+    .map((line) => line.trim())
+    .filter((line) => line !== '')
+    .join(' ')
+  return text === '' ? [] : [{ kind: 'p', text }]
+}
+
+/**
+ * Splits an answer into paragraphs, lists, code blocks, and tables. A list
+ * item holds the lines indented under it, by the list rules of the file
+ * preview. Text that the agent still writes can end inside a code block,
+ * which then runs to the end. A header row shows as text until its
+ * separator row arrives. A table can start directly after a line of a
+ * paragraph or a list.
+ */
+export function textBlocks(text: string): TextBlock[] {
+  const raw = text.split('\n')
+  return parseLines(raw.map(expandTabs), raw, 0)
 }

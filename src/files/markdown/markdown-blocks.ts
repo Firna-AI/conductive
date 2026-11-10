@@ -1,13 +1,12 @@
-import { tableStarts, type TableCells } from '../../markdown/table-rows'
+import { expandTabs, indentOf, isBlank, isRule } from '../../markdown/lines'
 import {
-  closesFence,
-  expandTabs,
-  indentOf,
-  isBlank,
-  isRule,
-  openingFence,
-} from './markdown-lines'
-import { listMarker, parseList } from './markdown-lists'
+  listMarker,
+  maxNesting,
+  readList,
+  type ListItem,
+} from '../../markdown/list-items'
+import { tableStarts, type TableCells } from '../../markdown/table-rows'
+import { closesFence, openingFence } from './markdown-lines'
 import { parseTable, TableBudget } from './markdown-tables'
 import { takeDefinitions } from './markdown-text'
 
@@ -34,11 +33,8 @@ export type MdBlock<Inline = string> =
   /** The rest of the file as typed, after a row passed the table budget. */
   | { kind: 'literal'; text: string }
 
-export interface MdListItem<Inline = string> {
-  /** A task item is done or not done. Null for other items. */
-  checked: boolean | null
-  blocks: MdBlock<Inline>[]
-}
+/** An item of a list: its task box, and its blocks. */
+export type MdListItem<Inline = string> = ListItem<MdBlock<Inline>>
 
 /** The blocks of a file with raw inline text, before the inline parse. */
 export interface MarkdownBlocks {
@@ -78,9 +74,6 @@ function startsBlock(line: string): boolean {
   return !marker.ordered || marker.start === 1
 }
 
-/** Quotes and lists nest at most this deep. Deeper content shows as text. */
-const maxDepth = 16
-
 class BlockParser {
   readonly definitions = new Map<string, string>()
   private depth = 0
@@ -104,7 +97,8 @@ class BlockParser {
    */
   nested = (lines: readonly string[], start: number): MdBlock[] => {
     if (this.tailLine !== null) return []
-    if (this.depth + 1 >= maxDepth) {
+    // Quotes and lists nest at most this deep. Deeper content shows as text.
+    if (this.depth + 1 >= maxNesting) {
       return [{ kind: 'paragraph', text: lines.join('\n').trim() }]
     }
     const origin = this.origin
@@ -163,14 +157,18 @@ class BlockParser {
     const marker = listMarker(line)
     if (marker) {
       let kept = 0
-      const list = parseList(lines, index, marker, startsBlock, (item, at) => {
-        if (this.tailLine === null) kept += 1
-        return this.nested(item, at)
+      const { list, next } = readList<MdBlock>(lines, index, marker, {
+        startsBlock: (all, at) => startsBlock(all[at]),
+        parseItem: (item, at) => {
+          if (this.tailLine === null) kept += 1
+          return this.nested(item, at)
+        },
+        tasks: true,
       })
       // The items after the start of the tail are in the tail.
-      if (list.block.kind === 'list') list.block.items.splice(kept)
-      blocks.push(list.block)
-      return list.next
+      list.items.splice(kept)
+      blocks.push({ kind: 'list', ...list })
+      return next
     }
     if (tableStarts(lines, index)) {
       const table = parseTable(lines, index, this.tables)

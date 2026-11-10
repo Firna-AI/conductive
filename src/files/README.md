@@ -206,6 +206,11 @@ tests keep their static markup checks in Node.
   block. `pairRuns` in `markdown/markdown-delimiters.ts` pairs its `*` and
   `_` markers by the CommonMark rules. `nestParts` in
   `markdown/markdown-nesting.ts` builds the nested content from the pairs.
+- `markdown/markdown-blocks.ts`: `parseBlocks`, the blocks of a file. It
+  reads each list with `readList` of `../markdown/list-items.ts`, the list
+  reader that the chat shares, and the line tests of
+  `../markdown/lines.ts`. [List parts](../chat/agent-text.md#list-parts)
+  gives the rules of the shared list code.
 - `markdown/markdown-tables.ts`: `parseTable`, which reads one table of a
   file and fills its short rows, and `TableBudget`, the empty cells that
   the tables of one file may add. It reads each row with

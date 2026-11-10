@@ -12,6 +12,17 @@ requirements.
 - `textBlocks` checks for a code fence before it checks for a table, so a
   table in a code block stays code. A `table` block, `TextTable`, can start
   directly after a line of a paragraph or a list.
+- `textBlocks` reads each list with the list reader that it shares with
+  the file preview, as [List parts](#list-parts) says. It parses the lines
+  of each item with its own block rules, so a `TextItem` holds the lists,
+  paragraphs, code blocks, and tables that the agent indents under the
+  item. Past `maxNesting` levels, the lines of an item join into one
+  paragraph.
+- `textBlocks` replaces tabs with spaces before it reads the structure, as
+  the file preview does. A code block outside a list takes its text from
+  the lines with their tabs, so it keeps them.
+- An item of one paragraph draws its text alone, in `AgentText` and in a
+  message line, as in the file preview. Another item draws its blocks.
 - `AgentBlocks` draws the blocks of a message in order. `AgentText` and the
   open body of `MessageLine` share it. A table draws through
   `MarkdownTable`. A paragraph, a list item, and a table cell draw their
@@ -21,19 +32,21 @@ requirements.
   Markdown numbers it. So a list that starts at 2, such as the rest of a
   list after a bulleted list, shows 2. `AgentText` gives that number to
   the `start` of the `ol`. A message line writes each number from it. As
-  in Markdown, a number has one to nine digits, so a longer number starts
-  no list.
+  in CommonMark, a number has one to nine digits, so a longer number
+  starts no list.
 - `AgentText`, `LinkedText`, and `MessageLine` draw React text and
   elements only. So HTML in a message shows as text.
 - A `<summary>` holds only phrasing content. So `MessageLine` draws each
   block as a span, which CSS shows as a block while the line is open. A
   table cannot go into the line, so a closed line shows a table as its
   cells, with a middle dot between two cells.
-- An open line keeps the blocks before the first table in its summary. The
-  table and the blocks after it draw under the summary, only while the line
-  is open, so a closed line lays out no hidden table.
-- A line that starts with a table keeps its closed text in a visually
-  hidden span. So the open line keeps a name for a screen reader. That
+- An open line keeps the blocks before the first table in its summary.
+  When a list holds that table, at any depth, the summary keeps the blocks
+  before that list. The table or its list, and the blocks after it, draw
+  under the summary, only while the line is open, so a closed line lays
+  out no hidden table.
+- A line that starts with a table, or with a list that holds one, keeps
+  its closed text in a visually hidden span. So the open line keeps a name for a screen reader. That
   hidden copy shows no chips, so the keyboard cannot reach a link in it.
 
 ## Workspace chips
@@ -57,6 +70,25 @@ requirements.
   a work fold shows chips too. A click on a chip there stays with the
   chip, so the line does not toggle, and a click with a modifier key opens
   a new tab as on any link.
+
+## List parts
+
+[Chat Markdown](../../docs/protocol/chat-markdown.md#lists) says that agent
+messages and the file preview share their list rules, the list rules of
+CommonMark. These parts read the lists of both:
+
+- `src/markdown/list-items.ts` holds them. `listMarker` reads the marker
+  of an item. `readList` reads the items of one list and the lines that
+  belong to each item: the lines indented to its text, and lazy lines that
+  continue its paragraph. `maxNesting` is the depth limit of both views.
+- Each caller of `readList` gives its own rules. `startsBlock` says which
+  line ends the text of an item. `parseItem` parses the lines of one item
+  with the block rules of the caller. `tasks` says whether `[ ]` starts a
+  task box. The file preview reads task boxes, and the chat shows them as
+  text.
+- `src/markdown/lines.ts` holds the line tests that both readers share,
+  such as `expandTabs`. Like `table-rows.ts`, these modules import no
+  React.
 
 ## Table parts
 

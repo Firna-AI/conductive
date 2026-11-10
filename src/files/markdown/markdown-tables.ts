@@ -1,6 +1,6 @@
+import { isBlank } from '../../markdown/lines'
 import { readTableRow, readTableSeparator } from '../../markdown/table-rows'
 import type { MdBlock } from './markdown-blocks'
-import { isBlank } from './markdown-lines'
 
 /** The empty cells that the tables of one file may add to fill short rows. */
 const maxAddedCells = 65_536
