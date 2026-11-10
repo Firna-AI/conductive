@@ -24,6 +24,60 @@ export async function checkPricingPage(
     const page = parse(await response.text())
     expect(page.title).toBe(`Pricing – ${productName}`)
     expect(
+      [...page.querySelectorAll('main .pricing-card')].map((card) => ({
+        name: card.querySelector('h2')?.textContent.trim(),
+        price: card.querySelector('.pricing-amount')?.textContent.trim(),
+        unit: card.querySelector('.pricing-unit')?.textContent.trim(),
+        facts: [...card.querySelectorAll('.pricing-fact')].map((fact) =>
+          fact.textContent.replace(/\s+/g, ' ').trim(),
+        ),
+      })),
+    ).toEqual([
+      {
+        name: 'Free',
+        price: '$0',
+        unit: 'per month',
+        facts: [
+          '20 cloud hours a month for the org',
+          'Up to 3 workspaces, not counting archived ones',
+          'One free org for each person',
+        ],
+      },
+      {
+        name: 'Plus',
+        price: '$20',
+        unit: 'per member per month',
+        facts: [
+          '275 cloud hours a month for each member',
+          'Unlimited workspaces',
+          'Unlimited cloud computers at once',
+          'Extra hours at $0.07 each',
+        ],
+      },
+      {
+        name: 'Pro',
+        price: '$50',
+        unit: 'per member per month',
+        facts: [
+          '700 cloud hours a month for each member',
+          'Unlimited workspaces',
+          'Unlimited cloud computers at once',
+          'Extra hours at $0.07 each',
+        ],
+      },
+      {
+        name: 'Ultra',
+        price: '$200',
+        unit: 'per member per month',
+        facts: [
+          '2,750 cloud hours a month for each member',
+          'Unlimited workspaces',
+          'Unlimited cloud computers at once',
+          'Extra hours at $0.07 each',
+        ],
+      },
+    ])
+    expect(
       links(
         [...page.querySelectorAll('header nav a[aria-current="page"]')]
           .map((link) => link.outerHTML)

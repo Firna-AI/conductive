@@ -403,7 +403,7 @@ Evidence: `.context/pricing-page/reports/milestone-3.md`.
 Depends on: 1, 2, 3, and 4
 
 - [x] Run the targeted tests and `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
