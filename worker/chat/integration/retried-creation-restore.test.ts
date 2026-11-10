@@ -77,6 +77,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
       orgId: OUTER_ORG,
       buildId: `${imageName}-build`,
       imageName,
+      runnerProtocolVersion: 1,
       repositories: [
         {
           id: OUTER_REPOSITORY,

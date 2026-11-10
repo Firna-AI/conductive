@@ -1029,28 +1029,37 @@ Depends on: 6, 4a
 The runner speaks version 2 only. Its agent programs send their model
 requests to the gateway with the turn token.
 
-- [ ] The provider adapters take an endpoint and a credential (D23).
-- [ ] Claude: write the profile pair of D38 at each turn, and start the
+- [x] The provider adapters take an endpoint and a credential (D23).
+      Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
+- [x] Claude: write the profile pair of D38 at each turn, and start the
       `claude` program with its config folder and profile name. Give it
       no descriptor credential and no address, token, proxy, or
       certificate setting. Remove the credentials file at the end of the
       turn, at the close of the session, and at runner start (decision
       11 K).
-- [ ] Codex: put the gateway in `base_url` of the model provider. Send the
+      Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
+- [x] Codex: put the gateway in `base_url` of the model provider. Send the
       turn token with `account/login/start` (D2, D10).
-- [ ] The output filter hides the turn token (D16).
-- [ ] The packaged runner and each new image build advertise protocol
+      Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
+- [x] The output filter hides the turn token (D16).
+      Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
+- [x] The packaged runner and each new image build advertise protocol
       version 2 (D34).
-- [ ] Move each runner consumer of the replaced ways. Remove the runner's
+      Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
+- [x] Move each runner consumer of the replaced ways. Remove the runner's
       real-login handling from its production version 2 turn path.
-- [ ] Move `runner/src/providers/claude-login.test.ts` and
+      Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
+- [x] Move `runner/src/providers/claude-login.test.ts` and
       `codex-login.test.ts` to the turn token and the gateway address,
       with every assertion. Add tests for the profile pair: its paths,
       modes, content, one name for each session, and its removal.
-- [ ] Update `runner/agent-logins.md`, `runner/README.md`,
+      Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
+- [x] Update `runner/agent-logins.md`, `runner/README.md`,
       `runner/scripts/README.md`, and `image/developer-scripts.md`.
-- [ ] Limit `plans/follow-ups/agent-login-in-tool-processes.md` to runners
+      Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
+- [x] Limit `plans/follow-ups/agent-login-in-tool-processes.md` to runners
       of version 1 (decision 2 A).
+      Branch: `conductor/model-gateway-m7-runner-on-the-gateway`.
 
 ## Milestone 8: Privacy page
 

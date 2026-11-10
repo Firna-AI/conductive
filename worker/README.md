@@ -16,7 +16,7 @@ The [chat backend](chat/README.md) owns the sessions, the messages, and the even
 The [lifecycle](lifecycle/README.md) records each image's runner version and copies it before each new computer allocation.
 The chat backend refuses a runner below that pin before the welcome or any command.
 It accepts runner protocol versions 1 and 2 at or above the pin.
-The packaged runner still sends version 1, and each image build records version 1.
+The packaged runner sends version 2, and each full image build records version 2.
 The [operator area](operator/README.md) owns the operator's app-wide numbers,
 suspensions, waitlist approvals, invite codes, and sign-up pause.
 New accounts wait for app access unless an operator identity or a valid join
@@ -137,7 +137,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity).
 - [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
-  The `turn` commands of a version 2 runner carry these tokens. The packaged runner still uses version 1.
+  The `turn` commands of a version 2 runner carry these tokens. The packaged runner uses version 2.
 - [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. Messages use fixed safe text and numeric repair counts. They hold no token, raw error, request body, command output, or response data. `errorSummary` names a caught error by its class, its status, and a known provider code, never by its message. `CommandFailed` carries the state, the exit code, and the time-out of a failed sandbox command.
 - [features/alarms.ts](features/alarms.ts) keeps separate durable alarm deadlines for lifecycle, devices, previews, and GitHub.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.

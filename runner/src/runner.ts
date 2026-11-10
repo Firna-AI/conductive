@@ -1,7 +1,11 @@
-import type { RunnerEvent, RunnerReportRefresh } from '../../src/shared/runner'
+import type {
+  RunnerEvent,
+  RunnerReportRefresh,
+  WorkspaceToRunnerV2 as WorkspaceToRunner,
+} from '../../src/shared/runner'
 import type {
   RunnerConnectionRequest,
-  RunnerConnectorV1 as RunnerConnector,
+  RunnerConnector as TransportRunnerConnector,
 } from '../../src/shared/runner-transport'
 import { checkpoint, changedSince } from './checkpoint'
 import { AgentEngine } from './engine'
@@ -17,8 +21,11 @@ import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 import { Repository } from './repository'
 import { SerialQueue } from './serial-queue'
 import { workspaceToolRuntime } from './providers/workspace-tools'
+import { clearClaudeCredentials } from './providers/claude-profile'
 import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
+
+type RunnerConnector = TransportRunnerConnector<WorkspaceToRunner>
 
 export interface RunnerOptions extends WorkspaceContext {
   workspaceId: string
@@ -91,7 +98,8 @@ export class Runner {
         if (!this.stopped) options.disconnected()
       },
       command: (command) => {
-        if ('login' in command) this.sanitizer.add(command.login.secret)
+        if (command.type === 'turn')
+          this.sanitizer.add(command.credential.token)
         const action =
           command.type === 'file.read' || command.type === 'file.diff'
             ? this.files.request(command).then((response) => {
@@ -140,6 +148,7 @@ export class Runner {
 
   async connect(): Promise<void> {
     if (!this.warmed) {
+      await clearClaudeCredentials(this.options.home)
       await this.options.warm()
       this.warmed = true
     }

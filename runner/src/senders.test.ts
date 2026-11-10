@@ -1,6 +1,6 @@
 import { expect, it, onTestFinished } from 'vitest'
 
-import { runnerHarness, turn } from '../test-support/harness'
+import { duringTurn, runnerHarness, turn } from '../test-support/harness'
 import { Runner } from './runner'
 import { EventStore } from './state'
 
@@ -9,14 +9,18 @@ it('delivers every member message on the running login and resumes stored conver
   h.endpoint.send(turn())
   await h.runner.idle()
   const alice = h.providers.latest
-  h.endpoint.send({ ...turn('2', 'bob'), type: 'message', turnId: 'turn-1' })
+  h.endpoint.send({
+    ...duringTurn(turn('2', 'bob')),
+    type: 'message',
+    turnId: 'turn-1',
+  })
   const queued = turn('queued', 'bob')
   queued.message.choice = {
     agent: 'claude',
     model: 'bob-model',
     effort: 'medium',
   }
-  h.endpoint.send({ ...queued, type: 'message', turnId: 'turn-1' })
+  h.endpoint.send({ ...duringTurn(queued), type: 'message', turnId: 'turn-1' })
   await h.runner.idle()
   expect(alice.messages.map((message) => message.message.id)).toEqual([
     'message-1',
@@ -49,10 +53,11 @@ it('delivers every member message on the running login and resumes stored conver
   await h.runner.idle()
   expect(h.providers.processes).toHaveLength(1)
   expect(alice.closed).toBe(false)
-  expect(alice.options.login).toEqual({
+  expect(alice.options.credential).toEqual({
+    type: 'gateway',
     agent: 'claude',
     kind: 'token',
-    secret: 'secret-alice',
+    token: 'secret-alice',
   })
   expect(h.store.snapshot.sessions[0]?.providerSessionId).toBe('conversation-1')
   expect(alice.choices.at(-1)).toEqual({
@@ -73,7 +78,7 @@ it('delivers every member message on the running login and resumes stored conver
   })
   expect(alice.closed).toBe(true)
   const next = turn('3', 'bob')
-  next.login = turn().login
+  next.credential = turn().credential
   h.endpoint.send(next)
   await h.runner.idle()
   alice.emit({ type: 'delta', messageId: 'late', text: 'stale process output' })
@@ -82,7 +87,12 @@ it('delivers every member message on the running login and resumes stored conver
     'stale process output',
   )
   expect(h.providers.processes).toHaveLength(2)
-  expect(h.providers.latest.options.login.secret).toBe('secret-alice')
+  expect(h.providers.latest.options.credential).toEqual({
+    type: 'gateway',
+    agent: 'claude',
+    kind: 'token',
+    token: 'secret-alice',
+  })
   expect(h.providers.latest.options.conversationId).toBe('conversation-1')
   expect(h.endpoint.runnerEvents.at(-1)?.event).toMatchObject({
     type: 'turn.started',
@@ -103,12 +113,12 @@ it('delivers every member message on the running login and resumes stored conver
   onTestFinished(() => restored.close())
   await restored.start(false)
   const resumed = turn('restart', 'bob')
-  resumed.login = turn().login
+  resumed.credential = turn().credential
   h.endpoint.send(resumed)
   await restored.idle()
   const firstPart = h.providers.latest
   h.endpoint.send({
-    ...turn('4', 'bob'),
+    ...duringTurn(turn('4', 'bob')),
     type: 'message',
     turnId: 'turn-restart',
   })
@@ -122,11 +132,16 @@ it('delivers every member message on the running login and resumes stored conver
   expect(h.providers.latest).toBe(firstPart)
   expect(firstPart.closed).toBe(false)
   expect(h.providers.latest.options.conversationId).toBe('conversation-1')
-  expect(h.providers.latest.options.login.secret).toBe('secret-alice')
+  expect(h.providers.latest.options.credential).toEqual({
+    type: 'gateway',
+    agent: 'claude',
+    kind: 'token',
+    token: 'secret-alice',
+  })
   expect(JSON.stringify(await h.storage.read())).not.toContain('secret-bob')
   const failed = h.providers.latest
   h.endpoint.send({
-    ...turn('failure-next', 'charlie'),
+    ...duringTurn(turn('failure-next', 'charlie')),
     type: 'message',
     turnId: 'turn-restart',
   })
