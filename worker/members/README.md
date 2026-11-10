@@ -122,7 +122,7 @@ Production also supplies `deleteOrgState` to remove the image coordinator payloa
   In `retention` mode, it performs only due restarts through `retention.restart`.
   It then schedules the new stop's next keepalive.
   In `restore` mode, it only plans dates. It must start no sandbox.
-  Build sandboxes and archived workspaces do not enter this hook.
+  Build sandboxes stay outside this hook. Retained archived disks enter until their window ends.
   The lifecycle keeps its restart policy here, including its margin before day 14.
   It must await every capability call before it returns.
   A hook failure keeps the org pending for retry.
@@ -157,6 +157,7 @@ Restore makes no provider resume call. Old preview hostnames stay revoked.
 
 Schedule `cleanupDeletedOrgs` with all hooks except `readWorkspace`.
 It retries stops and controlled retention during the restore window.
+[`archive-cleanup.ts`](archive-cleanup.ts) deletes expired archived disks under the same cleanup lease.
 Retention continues before each pending Restore handoff attempt.
 Choose a cleanup interval plus retry budget smaller than the lifecycle's
 margin between its keepalive date and the disk's 14-day expiry.

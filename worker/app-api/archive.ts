@@ -82,22 +82,33 @@ export async function archiveRoute(
     path === workspacePaths.archiveCheck(orgId, id) && request.method === 'GET'
   const archive =
     path === workspacePaths.archive(orgId, id) && request.method === 'POST'
-  if (!check && !archive) return null
+  const restore =
+    path === workspacePaths.restore(orgId, id) && request.method === 'POST'
+  if (!check && !archive && !restore) return null
   const object = workspaceBinding(env).getByName(id)
   return Response.json(
     check
       ? requireFeatureResult(
           await object.checkWorkspaceArchive(orgId, id, context.user.id),
         )
-      : requireFeatureResult(
-          await object.archiveWorkspace(
-            orgId,
-            id,
-            context.user.id,
-            context.body?.discardUnpushedWork === true,
-            env.APP_ORIGIN,
+      : restore
+        ? requireFeatureResult(
+            await object.restoreWorkspace(
+              orgId,
+              id,
+              context.user.id,
+              env.APP_ORIGIN,
+            ),
+          )
+        : requireFeatureResult(
+            await object.archiveWorkspace(
+              orgId,
+              id,
+              context.user.id,
+              context.body?.discardUnpushedWork === true,
+              env.APP_ORIGIN,
+            ),
           ),
-        ),
   )
 }
 

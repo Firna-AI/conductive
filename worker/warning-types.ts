@@ -1,6 +1,7 @@
 import type { BuildPhase } from './lifecycle/build-data'
 import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
+import type { WorkspaceArchiveState } from './lifecycle/archive-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
 
 export const SIMPLE_WARNINGS = {
@@ -27,6 +28,12 @@ export const SIMPLE_WARNINGS = {
 
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
+  | {
+      kind: 'workspace_archive_failed'
+      workspaceId: WarningId
+      phase: WorkspaceArchiveState['phase']
+      error: ErrorSummary
+    }
   | { kind: keyof typeof SIMPLE_WARNINGS }
   | {
       kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'

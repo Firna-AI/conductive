@@ -22,7 +22,8 @@ gives the create, read, resume, and activity routes of a workspace to
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
   starts a stopped sandbox briefly, so that Boat keeps its disk.
-- Repair overdue disk alarms and image refreshes from the 15-minute Cron Trigger.
+- Stop and retain archived sandboxes, and delete them after the Restore window.
+- Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
@@ -127,7 +128,12 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
   [List order](../app-api/README.md#list-order) says.
   The D1 allocation trigger assigns the next org number inside that insert transaction.
   Cleanup keeps the org counter. A read after the insert gets the assigned number.
-- [`archive-workspace.ts`](archive-workspace.ts): `archiveWorkspace`, the guarded archive, cleanup, event, and response with an explicit app origin.
+- [`archive-workspace.ts`](archive-workspace.ts): the guarded Archive without a Git check.
+- [`archive-state.ts`](archive-state.ts): `WorkspaceArchive`, the durable owner of interrupted starts, stop confirmation, retention, deletion, and publication.
+  [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with no env values or startup command.
+  [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
+  [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
+- [`restore-workspace.ts`](restore-workspace.ts): the member Restore route action with an explicit app origin and the fixed expiry check.
 - [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.

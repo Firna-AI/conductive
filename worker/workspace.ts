@@ -241,24 +241,24 @@ export class Workspace extends AttachmentWorkspace {
           discard,
           origin,
           {
-            revokePreviews: () =>
-              this.features.revokeWorkspace(workspaceId, true),
-            stopChat: () => this.chat.stopWorkspace(workspaceId),
-            clearLifecycle: async () => {
-              await this.integration.storage.delete([
-                'lifecycle:start-job',
-                'lifecycle:create-publication',
-              ])
-              this.controller.cancelLifecycleWaiters()
-              await this.controller.clearLifecycle()
-            },
-            publish: (workspace) =>
-              this.chat.commitWorkspaceEvent(workspaceId, {
-                type: 'workspace.updated',
-                workspace,
-              }),
+            archiveLifecycle: () =>
+              this.controller.archiveLifecycle(workspaceId),
+            reserveArchive: () => this.controller.reserveArchive(workspaceId),
           },
         ),
+      ),
+    )
+  }
+
+  restoreWorkspace(
+    orgId: string,
+    workspaceId: string,
+    userId: string,
+    origin: string,
+  ) {
+    return featureResult(() =>
+      this.run(() =>
+        this.controller.restoreWorkspace(orgId, workspaceId, userId, origin),
       ),
     )
   }

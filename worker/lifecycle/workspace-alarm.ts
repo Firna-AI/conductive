@@ -11,6 +11,7 @@ import { START_JOB_KEY } from './start-storage'
 import { retryAllocationCleanup } from './start-allocation-cleanup'
 import { startAlarmDeadline } from './start-provider-retry'
 import type { WorkspaceAccessStop } from './workspace-suspension'
+import type { WorkspaceArchive } from './archive-state'
 
 export async function runWorkspaceAlarm(input: {
   storage: WorkspaceStorage
@@ -24,6 +25,7 @@ export async function runWorkspaceAlarm(input: {
   starts: WorkspaceStartCoordinator
   lifecycle: DurableLifecycle
   accessStop: WorkspaceAccessStop
+  archive: WorkspaceArchive
 }): Promise<void> {
   const { storage, env, dependencies, alarms, lifecycle } = input
   const run = await alarms.begin(dependencies.now(), (source) =>
@@ -50,6 +52,7 @@ export async function runWorkspaceAlarm(input: {
         /* The publication marker keeps its new retry time. */
       }
     }
+    if (requested('lifecycle:archive')) await input.archive.advance()
     const legacyPublication =
       due.has('lifecycle') &&
       !(await alarms.has('lifecycle:publication')) &&

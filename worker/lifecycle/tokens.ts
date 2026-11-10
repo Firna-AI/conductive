@@ -1,7 +1,9 @@
-import { activeWorkspaceOwnerPredicate } from '../data/sandbox-access'
 import { requireActiveOrg } from '../data/user-access'
 import type { AppEnv } from '../env'
-import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
+import {
+  workspaceTokenAccessPredicate,
+  workspaceTokenResourcePredicate,
+} from '../data/workspace-token-access'
 import { HttpError } from '../http'
 import { decrypt, encrypt, hash } from '../security/crypto'
 
@@ -47,7 +49,7 @@ export async function storeWorkspaceToken(
   await env.DB.prepare(
     `INSERT INTO workspace_tokens
        (workspace_id, token_hash, ciphertext, created_at)
-     SELECT ?, ?, ?, ? FROM workspaces w WHERE w.id = ? AND ${activeWorkspaceOwnerPredicate}
+     SELECT ?, ?, ?, ? FROM workspaces w WHERE w.id = ? AND ${workspaceTokenResourcePredicate}
      ON CONFLICT(workspace_id) DO UPDATE SET token_hash = excluded.token_hash,
        ciphertext = excluded.ciphertext, created_at = excluded.created_at, revoked_at = NULL
      WHERE workspace_tokens.revoked_at IS NOT NULL`,

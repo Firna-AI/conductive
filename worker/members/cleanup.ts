@@ -30,6 +30,7 @@ import {
   purgeOrgAttachments,
 } from '../chat/attachment-cleanup'
 import { warnWorker } from '../warnings'
+import { cleanupOrgArchives } from './archive-cleanup'
 
 export async function cleanupDeletedOrgs(
   env: AppEnv,
@@ -61,6 +62,7 @@ export async function cleanupDeletedOrgs(
             hooks,
           )
           if (dependencies.now() < org.deletesAt) {
+            await cleanupOrgArchives(env, org.id, token, dependencies)
             await maintainDeletedOrg(env, org.id, token, dependencies, hooks)
             await finishPendingRestore(env, org.id, token, dependencies, hooks)
             return

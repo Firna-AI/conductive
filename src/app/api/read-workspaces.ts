@@ -51,6 +51,7 @@ export function readWorkspace(value: unknown): Workspace {
     createdAt: count(workspace, 'createdAt'),
     updatedAt: count(workspace, 'updatedAt'),
     archivedAt: maybeCount(workspace, 'archivedAt'),
+    restoreUntil: maybeCount(workspace, 'restoreUntil'),
   }
 }
 

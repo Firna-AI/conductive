@@ -42,6 +42,9 @@ within the [retry window](image-builds.md#provider-retries), except a source
 command start. For a workspace object, it:
 
 - runs the queued start of a create or a resume, one phase at a time
+- finishes Archive initialization and uncertain allocation recovery before normal start work
+- stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline
+- clears Restore when the provider confirms that a retained computer is missing
 - repairs the running turns from the committed chat before its deadline
   and idle decisions, as
   [Turn recovery](recovery-and-shown-state.md#turn-recovery) says
@@ -66,7 +69,9 @@ scheduler of the object alarm. Each owner of a timed task stores its own
 due time there. The lifecycle owners are the lifecycle state, the start,
 and the publication of a create result. The `changed` retry, the delete of
 a failed create, the access stop, and the image coordinator are lifecycle
-owners too. The Mac devices, the previews, and GitHub store their due
+owners too. Archive owns `lifecycle:archive` separately. Its saved phases keep
+allocation recovery, stop confirmation, retention, and deletion across reconstruction.
+Its publication retries include confirmed deletion, even while the state stays archived. The Mac devices, the previews, and GitHub store their due
 times there too.
 
 - Each write that changes a due time sets the object alarm to the earliest

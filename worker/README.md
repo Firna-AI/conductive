@@ -69,7 +69,7 @@ Use the same configured sources in the web app and Mac app.
 The model list and the default model come from Worker variables, as [Deployment inputs](../docs/deployment.md#models) says.
 
 The Worker also serves org settings, repository choices, sections, member writes,
-workspace metadata and archive, image builds and logs, account GitHub access,
+workspace metadata, Archive, and Restore, image builds and logs, account GitHub access,
 and pending invitations with explicit acceptance.
 The [feature shell](app-api/feature-shell.ts) implements the shared shell writes.
 The [workspace features](features/workspace.ts) dispatch files, terminal,
@@ -90,7 +90,7 @@ A Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
 It also retries pending approval emails until delivery or 24 hours from
 approval. [Approval delivery](operator/README.md#approval-email-delivery)
 describes the saved messages and delivery keys.
-It also repairs overdue workspace disk alarms and org image refreshes after a 15-minute grace period.
+It also repairs overdue workspace disk and archive alarms and org image refreshes after a 15-minute grace period.
 The repair checks at most 50 workspaces and 50 orgs per run.
 It defers failed calls and logs counts when either limit leaves work pending.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
@@ -114,7 +114,7 @@ The [test support area](test-support/README.md) supplies local D1 and fake provi
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
-- [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk and image alarms from the Cron Trigger.
+- [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk, archive, and image alarms from the Cron Trigger.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.

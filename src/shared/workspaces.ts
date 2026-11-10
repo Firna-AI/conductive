@@ -2,6 +2,17 @@ import type { AgentChoice } from './agents'
 import { orgPath, type Timestamp } from './api'
 import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
 
+export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
+
+export function workspaceRestoreUntil(
+  archivedAt: number | null,
+  sandboxId: string | null,
+): number | null {
+  return archivedAt !== null && sandboxId !== null
+    ? archivedAt + WORKSPACE_RESTORE_MS
+    : null
+}
+
 export function workspacesPath(orgId: string): string {
   return `${orgPath(orgId)}/workspaces`
 }
@@ -16,6 +27,7 @@ export const workspacePaths = {
   archiveCheck: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/archive-check`,
   archive: (orgId: string, id: string) => `${workspacePath(orgId, id)}/archive`,
+  restore: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restore`,
 } as const
 
 /** `input`: the agent waits for the user, such as for a command approval. */
@@ -44,6 +56,7 @@ export interface Workspace {
   createdAt: Timestamp
   updatedAt: Timestamp
   archivedAt: Timestamp | null
+  restoreUntil: Timestamp | null
 }
 
 export interface StartStep {

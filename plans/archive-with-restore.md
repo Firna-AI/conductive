@@ -374,6 +374,31 @@ Agent calls from the documentation of Milestone 2, on 10 November 2026:
   only after the delete, and before that gives the day when Restore ended.
   Reason: each promise of the bar stays true. Milestone 2a draws that bar.
 
+Agent calls from Milestone 3, on 10 November 2026:
+
+- `archivedAt` uses the physical request clock. `updatedAt` increases on each
+  Archive and Restore, also when that clock does not move. Reason: the
+  Restore window and physical stop date stay exact, and clients can order
+  successive actions.
+- Each new Archive reserves a native revision and an alarm before its D1
+  write. Its durable owner and unfinished-creation command identity use
+  that revision. Reason: two Archive cycles can share a physical timestamp,
+  and a crash between D1 and native initialization must preserve ownership.
+- Archive keeps uncertain allocation requests and unfinished creation
+  phases. Recovery ends the pending start without failed-create deletion.
+  Reason: Restore must retain the files and finish preparation on the next
+  open.
+- D1 retains the earlier archive disk-restart deadline as a Cron repair
+  signal. Reason: repair must bridge an older stopped disk before the
+  provider can remove it, even when the archive delete is later.
+
+- Workspace metadata writes keep the existing `updatedAt` as a minimum.
+  They need no extra increment. Reason: a same-clock Rename or Reassign
+  must not erase the logical time of an earlier Archive or Restore.
+- Deleted-org maintenance includes retained archived disks until their
+  archive window ends. It keeps physical stop dates and uses no secrets.
+  Reason: Org Restore must keep the files that a workspace can still Restore.
+
 ## Milestone 1: Mockups (completed)
 
 Tags: mockup
@@ -505,7 +530,7 @@ the Archive question changes under the user's approved decision.
 Evidence: `.context/archive-with-restore/m2a-m2b/evidence.md` and
 `.context/archive-with-restore/m2b-docs-evidence.md`.
 
-## Milestone 3: Worker: Archive keeps the cloud computer, and Restore
+## Milestone 3: Worker: Archive keeps the cloud computer, and Restore (completed)
 
 Depends on: 2, 2a, 2b
 
@@ -513,47 +538,70 @@ Archive stops and keeps the cloud computer with no check. The workspace
 object deletes it 14 days later. A new route restores the workspace. The
 check route stays until Milestone 5, because the app still calls it.
 
-- [ ] Archive runs no check. `archiveWorkspace` no longer calls
+- [x] Archive runs no check. `archiveWorkspace` no longer calls
       `readArchiveCheck`, and it ignores `discardUnpushedWork`.
-- [ ] Archive stops a running or starting cloud computer and keeps it. It
+- [x] Archive stops a running or starting cloud computer and keeps it. It
       ends a start that runs. It keeps `sandbox_id`, revokes the workspace
       token and the previews, and stops the chat, as today.
-- [ ] The workspace object deletes the cloud computer 14 days after the
+- [x] The workspace object deletes the cloud computer 14 days after the
       Archive. Its alarm deletes the cloud computer with the existing
       cleanup retry, clears `sandbox_id`, and publishes `workspace.updated`.
       The 15-minute Cron Trigger repairs an overdue delete, as
       `repairLifecycleAlarms` repairs an overdue disk restart.
-- [ ] An archived workspace keeps its day-14 restart only when the delete
+- [x] An archived workspace keeps its day-14 restart only when the delete
       comes later than 14 days after its last confirmed stop. That restart
       resumes with no secrets, runs no startup script, and stops.
-- [ ] Add `POST /api/orgs/:org/workspaces/:id/restore` and
+- [x] Add `POST /api/orgs/:org/workspaces/:id/restore` and
       `workspacePaths.restore`. It allows every member of an active org,
       as decision 2 chose. It refuses a workspace without a kept
       cloud computer with 409 and a message that says why. It clears
       `archived_at`, sets the stopped state, publishes `workspace.updated`,
       and returns the workspace. A repeat returns the restored workspace.
-- [ ] Restore sets the day-14 restart again, 13 days after the last
+- [x] Restore sets the day-14 restart again, 13 days after the last
       confirmed stop, or at once when that time has passed.
-- [ ] Add `restoreUntil` to `Workspace` in `src/shared/workspaces.ts` and
+- [x] Keep workspace metadata timestamps at their existing minimum, so
+      Rename and Reassign preserve Archive and Restore ordering.
+- [x] Keep retained archived disks through deleted-org maintenance, with
+      their physical stop dates and the earlier archive expiry.
+- [x] Detach the matching archived disk when its provider confirms it is
+      missing. Keep unknown-account and transient failures pending.
+- [x] Add `restoreUntil` to `Workspace` in `src/shared/workspaces.ts` and
       to each workspace reply.
-- [ ] Confirm that Delete org deletes a kept archived cloud computer, and
+- [x] Confirm that Delete org deletes a kept archived cloud computer, and
       that the operator counts still count archived workspaces.
-- [ ] Add tests at the lowest level that fails without the change, as the
+- [x] Add tests at the lowest level that fails without the change, as the
       `testing` skill says. Show that each one fails without the change.
-  - [ ] Archive of a stopped workspace runs no command and deletes
+  - [x] Archive of a stopped workspace runs no command and deletes
         nothing. It keeps `sandbox_id` and revokes the token.
-  - [ ] Archive of a running workspace stops its cloud computer.
-  - [ ] Restore within 14 days gives a stopped workspace. A resume then
+  - [x] Archive of a running workspace stops its cloud computer.
+  - [x] Restore within 14 days gives a stopped workspace. A resume then
         gives the cloud computer a fresh token.
-  - [ ] The alarm deletes the cloud computer after 14 days, and a Restore
+  - [x] The alarm deletes the cloud computer after 14 days, and a Restore
         after the delete gets 409.
-  - [ ] A member who is not the owner or an admin can Restore.
-  - [ ] A restored workspace that stays closed gets its day-14 restart.
-  - [ ] The restart of an archived cloud computer gets no secrets. A
+  - [x] A member who is not the owner or an admin can Restore.
+  - [x] A restored workspace that stays closed gets its day-14 restart.
+  - [x] The restart of an archived cloud computer gets no secrets. A
         workspace that Archive stopped gets no restart.
-  - [ ] The Cron Trigger repairs an overdue delete.
-  - [ ] Delete org deletes a kept archived cloud computer.
-- [ ] Run the targeted Worker tests and `npm run typecheck`.
+  - [x] The Cron Trigger repairs an overdue delete.
+  - [x] Delete org deletes a kept archived cloud computer.
+- [x] Run the targeted Worker tests and `npm run typecheck`.
+
+Evidence: `.context/archive-with-restore/m3-evidence.md`.
+
+## Milestone 3a: Align the new public guides
+
+Depends on: 3
+
+Main added public Markdown guides during this work. Their Archive facts
+must match the approved feature when the pull request merges.
+
+- [ ] Read every guide in `src/marketing/docs/` in full, under the new
+      repository rule and the public-guide writing rules.
+- [ ] Update every sentence that restates Archive, its check or question,
+      retention, Restore, or workspace permissions. Preserve unrelated
+      instructions and stable guide addresses and anchors.
+- [ ] Check changed guide links and record the guide coverage under
+      `.context/archive-with-restore/`. Add no prose tests.
 
 ## Milestone 4: App: Archive at once, and Restore
 
@@ -603,7 +651,7 @@ Depends on: 4
 
 ## Milestone 6: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 2a, 2b, 3, 4, 5
+Depends on: 1, 2, 2a, 2b, 3, 3a, 4, 5
 
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Then run
       the targeted tests and the complete gate, `npm run check`.

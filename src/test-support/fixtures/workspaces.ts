@@ -47,6 +47,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
       state: workspace.key === FAKE_IDS.workspace ? state : workspace.status,
       createdAt: FAKE_TIME - (index + 1) * 86_400_000,
       updatedAt: FAKE_TIME - index * 60_000,
+      restoreUntil: null,
       archivedAt:
         workspace.key === FAKE_IDS.workspace && state === 'archived'
           ? FAKE_TIME

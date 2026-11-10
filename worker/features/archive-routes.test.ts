@@ -12,6 +12,8 @@ import {
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { readWorkspace } from '../lifecycle/workspace-data'
+import { readWorkspaceResponse } from '../../src/app/api/read-workspaces'
+import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import { boatRoute } from '../sandbox/routes'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
 
@@ -20,11 +22,46 @@ let fixture: FeatureFixture | undefined
 beforeAll(async () => {
   bundle = await outerWorkerBundle('worker/features/entry.test-support.ts')
 })
+
+it('returns the Restore contract through HTTP and refuses a legacy archive without a disk', async () => {
+  const active = (fixture = await featureFixture(bundle))
+  await active.env.DB.prepare(
+    "UPDATE workspaces SET state = 'archived', archived_at = ?, sandbox_id = NULL WHERE id = ?",
+  )
+    .bind(DEVICE_TEST_NOW, OUTER_WORKSPACE)
+    .run()
+  const restore = () =>
+    active.request(workspacePaths.restore(OUTER_ORG, OUTER_WORKSPACE), {
+      method: 'POST',
+      body: '{}',
+      headers: { Cookie: active.cookies.memberCookie },
+    })
+  const absent = await restore()
+  expect(absent.status).toBe(409)
+  expect(await absent.json()).toMatchObject({
+    error: {
+      code: 'workspace_restore_unavailable',
+    },
+  })
+  await active.env.DB.prepare(
+    "UPDATE workspaces SET sandbox_id = 'bx_retained' WHERE id = ?",
+  )
+    .bind(OUTER_WORKSPACE)
+    .run()
+  const response = await restore()
+  expect(response.status).toBe(200)
+  expect(readWorkspaceResponse(await response.json()).workspace).toMatchObject({
+    state: 'stopped',
+    archivedAt: null,
+    restoreUntil: null,
+  })
+  expect((await restore()).status).toBe(200)
+})
 afterEach(async () => {
   await fixture?.dispose()
 })
 
-it('checks actual unpushed work before archive and preserves read-only chat after sandbox deletion', async () => {
+it('archives without checking unpushed work and preserves read-only chat while retaining the sandbox', async () => {
   const active = (fixture = await featureFixture(bundle))
   await active.env.DB.prepare(
     "UPDATE workspaces SET sandbox_id = 'bx_archive' WHERE id = ?",
@@ -57,14 +94,14 @@ it('checks actual unpushed work before archive and preserves read-only chat afte
   expect(
     (await archive(true, { Cookie: active.cookies.memberCookie })).status,
   ).toBe(403)
-  expect((await archive(false)).status).toBe(409)
+  expect((await archive(false)).status).toBe(200)
   expect(active.boat.deletedIds).toEqual([])
   const archived = await archive(true)
   expect(archived.status).toBe(200)
   expect(await archived.json()).toMatchObject({
     workspace: { state: 'archived' },
   })
-  expect(active.boat.deletedIds).toEqual(['bx_archive'])
+  expect(active.boat.deletedIds).toEqual([])
   const history = await active.request(
     chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, sessionId),
   )
@@ -81,7 +118,7 @@ it('checks actual unpushed work before archive and preserves read-only chat afte
   ).toBe(404)
 })
 
-it('preserves the sandbox when an archive check is unavailable and allows retry after recovery', async () => {
+it('keeps the temporary check endpoint while Archive ignores its failure', async () => {
   let commandUnavailable = true
   const sandboxId = 'bx_archive_stopped'
   const commandRoute = boatRoute({ operation: 'command', sandboxId })
@@ -119,14 +156,15 @@ it('preserves the sandbox when an archive check is unavailable and allows retry 
     workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
     { method: 'POST', body: JSON.stringify({ discardUnpushedWork: true }) },
   )
-  expect.soft(blockedArchive.status).toBe(409)
-  expect.soft(await blockedArchive.json()).toEqual(unavailable)
+  expect.soft(blockedArchive.status).toBe(200)
+  expect
+    .soft(await blockedArchive.json())
+    .toMatchObject({ workspace: { state: 'archived' } })
   expect(
     await readWorkspace(active.env.DB, OUTER_ORG, OUTER_WORKSPACE),
   ).toMatchObject({
-    state: 'stopped',
+    state: 'archived',
     sandboxId,
-    archivedAt: null,
   })
   expect(active.boat.deletedIds).toEqual([])
   expect(active.boat.resumeIds).toEqual([])
@@ -149,5 +187,5 @@ it('preserves the sandbox when an archive check is unavailable and allows retry 
   expect(await archived.json()).toMatchObject({
     workspace: { state: 'archived' },
   })
-  expect(active.boat.deletedIds).toEqual([sandboxId])
+  expect(active.boat.deletedIds).toEqual([])
 })

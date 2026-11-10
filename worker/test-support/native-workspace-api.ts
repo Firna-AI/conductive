@@ -106,6 +106,9 @@ export interface NativeWorkspaceApi {
     Pick<
       Workspace,
       | 'scheduleImage'
+      | 'archiveWorkspace'
+      | 'restoreWorkspace'
+      | 'resumeMemberCreation'
       | 'reportRunnerLifecycle'
       | 'registerLifecycleTurn'
       | 'finishLifecycleTurn'

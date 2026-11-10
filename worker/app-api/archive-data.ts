@@ -32,8 +32,8 @@ export async function markWorkspaceArchived(
 ): Promise<void> {
   await env.DB.batch([
     env.DB.prepare(
-      `UPDATE workspaces SET archived_at = ?, state = 'archived', sandbox_id = NULL,
-      next_disk_keepalive_at = NULL, updated_at = ? WHERE id = ? AND org_id = ?
+      `UPDATE workspaces SET archived_at = ?, state = 'archived',
+      updated_at = MAX(?, updated_at + 1) WHERE id = ? AND org_id = ? AND archived_at IS NULL
       AND EXISTS (SELECT 1 FROM orgs o JOIN org_members m ON m.org_id = o.id
         JOIN users u ON u.id = m.user_id AND u.suspended_at IS NULL
         WHERE o.id = workspaces.org_id AND o.deleted_at IS NULL AND m.user_id = ?
@@ -44,10 +44,6 @@ export async function markWorkspaceArchived(
       `UPDATE workspace_tokens SET revoked_at = COALESCE(revoked_at, ?)
       WHERE workspace_id = ? AND EXISTS (SELECT 1 FROM workspaces WHERE id = ? AND state = 'archived')`,
     ).bind(now, id, id),
-    env.DB.prepare(
-      `DELETE FROM image_leases WHERE workspace_id = ? AND EXISTS
-      (SELECT 1 FROM workspaces WHERE id = ? AND state = 'archived')`,
-    ).bind(id, id),
   ])
   await requireActiveOrg(env.DB, orgId)
 }

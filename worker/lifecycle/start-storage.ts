@@ -121,7 +121,7 @@ export function durableStartStorage(
           return false
         for (const key of old.keys()) await transaction.delete(key)
         await transaction.delete(RESULT)
-        if (intent?.kind === 'retry-failed-create') {
+        if (intent && intent.kind !== 'continue') {
           await transaction.delete(CREATE_RESULT)
           await transaction.delete(PUBLICATION)
           await taskWorkspaceTransaction(
