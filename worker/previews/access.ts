@@ -51,7 +51,11 @@ export async function verifyTarget(
     target.workspaceId,
     userId,
   )
-  if (!current.sandboxId || current.sandboxId !== target.sandboxId) {
+  if (
+    !current.sandboxId ||
+    current.sandboxId !== target.sandboxId ||
+    current.providerAccount !== target.providerAccount
+  ) {
     throw new HttpError(
       404,
       'workspace_not_found',

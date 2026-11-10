@@ -42,6 +42,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   holds them.
 - It reaches Boat through one provider adapter, so that a later change can
   add another provider. It calls only a fixed list of Boat routes.
+- It calls each sandbox and each saved snapshot through the client of its
+  provider account. It takes that account from its own records, as it
+  takes the sandbox or the saved snapshot.
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
@@ -63,6 +66,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   messages that wait for the sandbox.
 - It also holds the start steps, the stop timer, the delete timer of an
   archived workspace, and the banner state.
+- For each start, it keeps the provider account with the org image and the
+  sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace
   still shows its chat.
 - It revokes the preview hostnames of its workspace.
@@ -91,6 +96,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - Every org runs in the app's Boat account (decision 80). That account
   holds every org image and every sandbox of every org. Its plan limits
   apply to all orgs together.
+- Boat is the only provider for now, and the app's Boat account is the
+  only provider account (decision 213). The records still name the account
+  of each sandbox and saved snapshot. So a second provider can come later,
+  and each existing one keeps working in its own account.
 - The app does not depend on Boat webhooks. The agent runner reports when
   a sandbox is ready. The Worker reads the state of a sandbox from Boat's
   API when it needs it.

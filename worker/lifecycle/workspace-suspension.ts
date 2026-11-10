@@ -86,6 +86,7 @@ export class WorkspaceAccessStop {
             checked.input.env.DB,
             workspaceId,
             checked.row.sandboxId,
+            checked.row.providerAccount,
           )),
         )
       if (checked.result === undefined && !checked.startPending && allowed)
@@ -143,6 +144,7 @@ async function stopForAccess(
           orgId: row.orgId,
         },
         row.sandboxId,
+        row.providerAccount,
       ),
     )
     if (result === 'pending') {

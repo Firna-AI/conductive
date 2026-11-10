@@ -78,9 +78,16 @@ export type SandboxFileRead =
   | { kind: 'too_large'; sizeBytes: number; limitBytes: number }
 
 export type PortMode = 'localhost' | 'network'
+export interface PortCredential {
+  readonly headers: Readonly<Record<string, string>>
+  readonly stripCookies: readonly string[]
+  readonly stripHeaders: readonly string[]
+  readonly stripQueryParameters: readonly string[]
+}
+
 export interface PrivatePort {
   origin: string
-  token: string
+  credential: PortCredential
 }
 export type SandboxDesktop =
   { kind: 'ready'; url: string } | { kind: 'starting' }

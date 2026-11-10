@@ -63,7 +63,12 @@ it('rebuilds the startup runtime of a retained terminal checkpoint after Restore
     startupPrepared: true,
   })
   expect(
-    await terminalPassword(active.env, id, String(original.allocatedSandboxId)),
+    await terminalPassword(
+      active.env,
+      id,
+      String(original.allocatedSandboxId),
+      String(original.providerAccount),
+    ),
   ).toBe('c'.repeat(64))
   expect(active.boat.starts).toHaveLength(1)
   expect(active.boat.deletedIds).toEqual([])

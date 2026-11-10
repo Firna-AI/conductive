@@ -5,7 +5,7 @@ import { boatRoute } from '../sandbox/routes'
 import { setupBackendTests } from './backend-test-hooks'
 import { readBuild } from './build-data'
 import { imageRetryFixture } from './retry-test-support'
-import { readImageSettings } from './settings-data'
+import { readOrgImage } from './org-image-data'
 
 const backendFixture = setupBackendTests()
 
@@ -101,7 +101,7 @@ it.each([
     expect(fixture.boat.deletedIds).toEqual(['bx_1'])
     expect(fixture.boat.states.size).toBe(0)
     expect(
-      await readImageSettings(fixture.runtime.env.DB, fixture.org.id),
+      await readOrgImage(fixture.runtime.env.DB, fixture.org.id),
     ).toMatchObject({ imageName: 'last-good-image' })
   },
 )
