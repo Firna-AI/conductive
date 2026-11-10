@@ -87,12 +87,16 @@ export class WorkspaceStateProjection {
     }
   }
 
-  async changed(publish?: LifecyclePublisher): Promise<void> {
+  async changed(publish?: LifecyclePublisher): Promise<boolean> {
     const now = this.options.dependencies.now()
     const result = await this.write(now)
-    if (result && 'titleError' in result && !publish) throw result.titleError
+    if (result && 'titleError' in result) {
+      if (!publish) throw result.titleError
+      return false
+    }
     if (result && 'response' in result)
       await this.options.journal.publishLifecycle(result.response, now, publish)
+    return true
   }
 
   async deviceChanged(

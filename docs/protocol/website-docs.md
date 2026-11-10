@@ -168,5 +168,5 @@ of the guides, at `marketing/docs` in the
   [Access and security](access-and-security.md) does not state.
 - A guide that says who can reach code, logins, tokens, or env vars gives
   the facts of Access and security. An example is
-  [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox).
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox).
 - A guide agrees with the Terms and Privacy pages of the site.

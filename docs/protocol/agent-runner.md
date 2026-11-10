@@ -3,7 +3,9 @@
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
 runner, its events and their limits, its turns, and the repair of lost
-workspace updates. The terms are those of the
+workspace updates. It belongs to
+[Chat and events](chat-and-events.md), which covers the agents, the
+sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -77,14 +79,19 @@ says.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model or the effort to the runner.
 - Each turn also brings the agent login of the starter of its session, as
-  [Agent logins in a sandbox](access-and-security.md#agent-logins-in-a-sandbox)
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.
 - Each turn that the runner accepts gets exactly one end: `turn.completed`
   or `turn.failed`. This holds also when Stop, a shutdown, or a crash of
   the runner comes before the agent starts.
 - The runner keeps a record of each accepted turn across a crash and a
   restart, until the workspace confirms the end of the turn. The workspace
-  sends no command for a turn after it stores the end of that turn.
+  sends no turn or message command for a turn after it stores the end of
+  that turn.
+- After a failed file copy ends a running turn, the workspace can still
+  send Stop for that turn, to cancel the agent. That turn still shows as
+  failed. Reason: the failure in [Attachments](messages-and-attachments.md#attachments) ends the turn
+  at once, with no new wait for the agent.
 - At a shutdown, the runner sends a stopped end for each accepted turn that
   has no end. After a restart, it does the same for each turn that it
   accepted before the restart. It starts no agent for such a turn.
@@ -113,7 +120,7 @@ says.
   [Files and changes](workspace-tools.md#files-and-changes) says.
   File results are not part of the chat history.
 
-### Lost workspace updates
+## Lost workspace updates
 
 - The file tree, the changes list, the start steps, and the workspace name
   belong to no session. A later full report of the same kind replaces each

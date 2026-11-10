@@ -5,14 +5,15 @@ import {
   sourceRepositoryHref,
   type SiteSection,
 } from '../links'
-import { featuresHref, signInHref } from '../request-values'
+import { featuresHref, macAppHref, signInHref } from '../request-values'
 import GitHubMark from './GitHubMark.astro'
 import StartButton from './StartButton.astro'
 import Wordmark from './Wordmark.astro'
 
 /*
- * The top of each page: the lockup, Features, Docs, GitHub, Sign in, and
- * the main action. A phone keeps the lockup, Docs, GitHub as its mark, and
+ * The top of each page: the lockup, Features, Download, Docs, GitHub, Sign
+ * in, and the main action. Features and Download lead to their sections of
+ * the home page. A phone keeps the lockup, Docs, GitHub as its mark, and
  * Sign in. `current` is the section of the page, such as the docs, which
  * the header marks for sight and for screen readers.
  */
@@ -28,6 +29,9 @@ const inDocs = current === 'docs'
     <nav aria-label="Site" class="header-nav">
       <a class="header-link header-wide" href={featuresHref}>
         Features
+      </a>
+      <a class="header-link header-wide" href={macAppHref}>
+        Download
       </a>
       <a
         aria-current={inDocs ? 'true' : undefined}

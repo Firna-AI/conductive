@@ -2,13 +2,14 @@ import { expect, it } from 'vitest'
 
 import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { barrier } from '../previews/stream-test-support'
+import type { WorkerWarning } from '../warning-types'
 import { InputActivityOwner } from './input-activity-owner'
 
 function activityFixture(update: (at: number) => Promise<void>) {
   const clock = new ManualChatClock(1_000_000)
   const local: number[] = []
   const updates: number[] = []
-  const warnings: string[] = []
+  const warnings: WorkerWarning[] = []
   const pending: Promise<void>[] = []
   const owner = new InputActivityOwner({
     now: clock.now,
@@ -82,8 +83,8 @@ it('keeps local input current during a held update and retries after its failure
   expect(fixture.updates).toEqual([1_000_000, 1_060_001])
   expect(maximum).toBe(1)
   expect(fixture.warnings).toEqual([
-    'Workspace activity update failed.',
-    'Workspace activity update failed.',
+    { kind: 'activity_update_failed' },
+    { kind: 'activity_update_failed' },
   ])
   await fixture.clock.advance(59_999)
   expect(fixture.updates).toEqual([1_000_000, 1_060_001])

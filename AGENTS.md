@@ -121,7 +121,7 @@ deployment at `conductive.build`. It does not wait for CI, as
   so that one change renames the product.
 - Never use "Claude Code" as a name of the product or of its features.
   Write "agents powered by Claude and Codex", as
-  [Names in the product](docs/protocol/chat-and-events.md#names-in-the-product)
+  [Names in the product](docs/protocol/agents-and-sessions.md#names-in-the-product)
   says.
 - Never name Boat in user-facing text: the app, the Mac app, the marketing
   site, Get started, and the legal pages. Write "cloud computer" or

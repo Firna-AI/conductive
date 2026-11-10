@@ -1,11 +1,11 @@
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-import type { ChatDependencies } from './types'
+import type { ChatFixtureOptions } from './harness.test-support'
 
 export async function createFirstMessageFixture(
   harness: TestHarness,
-  overrides: Partial<ChatDependencies> = {},
+  overrides: ChatFixtureOptions = {},
 ) {
   const fixture = await createChatFixture(harness, overrides)
   const first: FirstWorkspaceMessage = {

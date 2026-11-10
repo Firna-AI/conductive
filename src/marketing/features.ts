@@ -3,11 +3,24 @@ import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketi
 import type { FeatureIconName } from './icon-shapes'
 
 /**
- * The words of the features of the home page. The site renders them as HTML,
- * and the mockups render them with React in
- * docs/mockups/src/screens/MarketingScreen.tsx, so both show the same
- * words, icons, and pictures, in the same order.
+ * The words of the site that the mockups also show: the lines that sum up
+ * the product, and the features of the home page. The site renders them as
+ * HTML, and the mockups render them with React in
+ * docs/mockups/src/screens/MarketingScreen.tsx and its parts, so both show
+ * the same words, icons, and pictures, in the same order.
  */
+
+/** The lines that sum up the product. Both name the browser and the Mac app. */
+export const productSummary = {
+  /**
+   * The sentence under the headline of the home page. It is also the
+   * description of the home page, which a search result can show.
+   */
+  heroText:
+    'Agents powered by Claude and Codex work on their own branch, in a full clone of your repository. You follow along and review the work from any browser or from the Mac app.',
+  /** The line under the lockup in the footer of each page. */
+  tagline: 'Coding agents on cloud computers, in your browser or the Mac app.',
+} as const
 
 /** One feature of the app: what it does, and a real screen that shows it. */
 export type Feature = {

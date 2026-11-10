@@ -5,7 +5,7 @@ how a screen is built, and links to the other pages.
 
 | Path                | What it shows                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |
-| `marketing`         | The home page of the site: the app, its features, the Mac app downloads, and Join the waitlist |
+| `marketing`         | The home page of the site: the app, its features, the Mac app downloads, and Sign up |
 | `marketing/docs`    | The overview of the public docs, then a guide, with its Docs menu or its contents open on a phone |
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
@@ -21,7 +21,7 @@ how a screen is built, and links to the other pages.
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, the first build of a new org, its error, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, the first build of a new org, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -29,6 +29,7 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
+| `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
@@ -40,7 +41,8 @@ how a screen is built, and links to the other pages.
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/command-palette`, `app/orgs`,
-`app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
+`app/orgs/suspended`, `app/account`, `app/new-workspace`,
+`app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
@@ -49,9 +51,10 @@ content comes from, and links to `marketing/from-conductor/one-table`,
 which links back to it. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
-`app/account`, `app/sign-in/waitlist`, `app/new-workspace`, and `app/org-settings/cloud-computer` moved into their own
-folders and kept their paths, so that each of those pages shows only its
-canonical screen. `app/sign-in/get-started` moved into its own folder and
+`app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
+`app/new-workspace/dialog`, and `app/org-settings/cloud-computer` moved
+into their own folders and kept their paths, so that each of those pages
+shows only its canonical screen. `app/sign-in/get-started` moved into its own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
 the page shows only its canonical screen. Get started is the only first
@@ -105,9 +108,9 @@ decision 151. The mockups draw it for Firna, the first org of the sign-up:
 
 `app/account` shows the General tab of the account. Its tabs are links, as
 the tabs of the org settings are. `app/account/preferences` shows the
-Preferences tab, from decision 142: the New workspaces section with Model
-and effort, and the choice of how New workspace opens on a computer, the
-page or a dialog. Its `not-saved` variant shows a save that failed, which
+Preferences tab, from decision 142 of PR #73: the New workspaces section
+with Model and effort, and the choice of how New workspace opens on a
+computer, the page or a dialog. Its `not-saved` variant shows a save that failed, which
 keeps the saved choice. `app/account/setup`, `app/account/connect-claude`,
 and `app/account/connect-codex` show General before the first connections,
 and with the Connect form of each agent open.
@@ -115,14 +118,16 @@ and with the Connect form of each agent open.
 failed to save, with its saved value and the cause beside the switch.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
-workspace of `app`, for a user who chose the dialog. Its variants show a
-draft with an attached file and the notice of a missing agent login, a
+workspace of `app`, for a user who chose the dialog. Its states are child
+pages. `first-build` shows Firna before its first good build, with the
+notice and Create off. The other child pages show files that upload, a
+draft with uploaded files and the notice of a missing agent login, a
 create request that failed, an org without chosen repositories, and a
-pasted workspace link as a chip. A phone
-always opens the page, so each phone view shows the New workspace page in
-the same state. `user-flows/create-workspace-dialog` goes from Preferences
-through the dialog to the new workspace. The `first-build` variant shows
-Firna before its first good build, with the notice and Create off.
+pasted workspace link as a chip. The dialog uses the file chips of
+`app/new-workspace/files`. A phone always opens the page, so each phone
+view shows the New workspace page in the same state.
+`user-flows/create-workspace-dialog` goes from Preferences through the
+dialog to the new workspace.
 
 The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
 an account without app access, and the person waits until an operator
@@ -172,78 +177,9 @@ shows stopped. Its child pages:
   the notice of the org above the page of the deleted org, with its date,
   and no Restore.
 
-`app/operator` shows the Overview tab of the operator, the person who runs
-the app for everyone, from decision 142. It holds live counts across every
-org, as decision 144 chose for now. A line under the users counts the
-people on the waitlist, from decision 160. The Orgs and Users tabs come from
-decision 147, and they find a suspended org or user. The Waitlist and
-Invite codes tabs come from decision 160. Its child pages:
-
-- `app/operator/menu` has Operator in the rail, above the account, and in
-  the org switcher of a phone, under Account. Only an operator sees it.
-- `app/operator/orgs` has the Orgs tab: the newest orgs, a search by name,
-  a search by preview address, and a search with no match.
-- `app/operator/org` has the page of an org, with the names of its
-  members, and Suspend org. Its child pages have the question before the
-  suspension, the suspended org with Lift, the question before the lift,
-  from decision 145, and a deleted org. The child page of the deleted org
-  has its question before a suspension, the deleted org that is also
-  suspended, and its question before a lift. They say that no admin can
-  restore a suspended org, and that a lift leaves the org deleted.
-- `app/operator/users` has the Users tab: the newest users, with Waiting
-  under a person on the waitlist, a search, and a search with no match.
-- `app/operator/user` has the page of a user, with the name, the age of
-  the GitHub account, how and when they got app access, their referral
-  code with Copy, Copy join link, and who used it, and Suspend user. Its
-  child pages are below.
-- `app/operator/waitlist` has the Waitlist tab: the people who wait, oldest
-  first, a search, the question before Approve, the list after two
-  approvals, one with its email not sent yet, and an empty waitlist.
-- `app/operator/codes` has the Invite codes tab: Sign-ups with Pause
-  sign-ups, the search, and the invite codes with their uses and states.
-  Each code has Copy, and a code that works also has Copy join link. Its
-  child pages are below.
-- `app/operator/error` has the numbers that could not load, with Try
-  again. Its `loading` variant has the page while it reads the numbers.
-
-The child pages of `app/operator/user` follow. The first two were variants
-of `app/operator/user` and kept their paths:
-
-- `app/operator/user/suspend` has the question before a suspension, with
-  the offer to disable the referral code of the user. Its `self` variant
-  has the warning before the operator suspends their own account. The
-  variant moved from `app/operator/user/self` and declares `movedFrom`.
-- `app/operator/user/suspended` has the suspended user, whose referral
-  code the suspension disabled. Its `lift` variant has the question before
-  the lift. The variant moved from `app/operator/user/lift` and declares
-  `movedFrom`.
-- `app/operator/user/waiting` has a person on the waitlist, with Approve
-  beside Suspend user. Its variants have the question before Approve, the
-  page after the approval with its email not sent yet, and with its email
-  sent. Its `approve-no-email` variant has the question for a person whose
-  GitHub account has no verified email: no email goes out, and the person
-  sees the app access at their next visit.
-- `app/operator/user/access` has a user who came in with an invite code.
-  Its variants have a user who came in with a referral code, with an org
-  invitation, which names the org and the admin who sent it, and as an
-  operator. Its `email-not-sent` variant has an approval whose email never
-  went, because the GitHub account has no verified email.
-- `app/operator/user/referral` has the question before the disable of a
-  referral code. Its `disabled` variant has the disabled code.
-
-The child pages of `app/operator/codes`:
-
-- `app/operator/codes/new` has New code with its label and use limit. Its
-  `made` variant has the new code at the top of the list.
-- `app/operator/codes/disable` has the question before the disable of an
-  invite code. Its `disabled` variant has the disabled code in the list.
-- `app/operator/codes/search` has a search that finds an invite code by
-  its text. The search also takes the label of an invite code and the
-  GitHub login of the owner of a referral code. Its variants have a search
-  that finds the referral code of a user, and a search with no match.
-- `app/operator/codes/pause` has the question before Pause sign-ups. Its
-  variants have the Invite codes tab while sign-ups are paused, with
-  Resume sign-ups, and the same notice on the Waitlist and the Overview.
+[The operator section](operator-section.md) gives `app/operator`: its
+Overview tab, its child pages, and the child pages of `app/operator/user`
+and `app/operator/codes`.
 
 `app/command-palette` shows the All tab of the command palette over the
 list of Acme. Its child pages:
@@ -333,7 +269,7 @@ with chips in Checkout address autocomplete, `W-395`. Its child pages:
 
 The message box of New workspace shows a pasted link as a chip in
 `app/new-workspace/workspace-link`, a child page of `app/new-workspace`,
-and in the `workspace-link` variant of `app/new-workspace/dialog`.
+and in the `workspace-link` child page of `app/new-workspace/dialog`.
 The flow `user-flows/link-a-workspace` goes from the copy to the answer,
 and ends with a press on the chip, which opens
 `app/new-workspace/first-turn`.

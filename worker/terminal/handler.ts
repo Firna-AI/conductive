@@ -2,7 +2,6 @@ import { terminalPaths, type TerminalResponse } from '../../src/shared/terminal'
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
 import {
-  recordActivity,
   requireRunning,
   toolError,
   toolRequest,
@@ -122,9 +121,7 @@ export function createTerminalHandler(
           }),
           authorize: registration.check,
           onClose: registration.dispose,
-          fromBrowser: terminalFrames(auth, () =>
-            recordActivity(dependencies, target.workspaceId),
-          ),
+          fromBrowser: terminalFrames(auth),
         })
         registration.attach(bridge.close)
         await registration.check()

@@ -1,10 +1,4 @@
-import { execFile } from 'node:child_process'
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, relative } from 'node:path'
-import process from 'node:process'
-import { promisify } from 'node:util'
-import { afterAll, beforeAll, expect, it } from 'vitest'
+import { beforeAll, expect, it } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
 import { parityAreas } from '../../src/marketing/from-conductor/areas'
@@ -18,13 +12,10 @@ import { docsPath, pageHrefs, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'
 import { githubSetupResponse } from '../github-setup'
-import { isolatedProcessEnvironment } from '../test-support/process-environment'
-import { SiteBinding, type SiteAssetFile } from '../test-support/site-binding'
-import {
-  checkGuideRoutes,
-  checkScrollRegions,
-  expectedPolicy,
-} from './built-docs.test-support'
+import type { SiteBinding } from '../test-support/site-binding'
+import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
+import { checkMacDownloads } from './built-site-downloads.test-support'
+import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
 import { termsConsentResponse } from './consent'
 import {
   decodeHtml,
@@ -38,46 +29,11 @@ import { siteResponse } from './site'
 const SITE = 'https://conductive.test'
 const APP_ORIGIN = 'https://app.conductive.test'
 const NOW = Date.UTC(2027, 0, 15)
-let folder: string | undefined
 let assets: SiteBinding
 
 beforeAll(async () => {
-  folder = await mkdtemp(join(tmpdir(), 'conductive-site-'))
-  await promisify(execFile)(
-    'node_modules/.bin/astro',
-    ['build', '--force', '--outDir', folder],
-    {
-      env: isolatedProcessEnvironment({ PATH: process.env.PATH, CI: 'true' }),
-    },
-  )
-  const files = new Map<string, SiteAssetFile>()
-  const types: Readonly<Record<string, string>> = {
-    html: 'text/html',
-    json: 'application/json',
-    webp: 'image/webp',
-    svg: 'image/svg+xml',
-    ico: 'image/x-icon',
-    png: 'image/png',
-    woff2: 'font/woff2',
-  }
-  for (const entry of await readdir(folder, {
-    recursive: true,
-    withFileTypes: true,
-  })) {
-    if (!entry.isFile()) continue
-    const path = join(entry.parentPath, entry.name)
-    files.set(`/${SITE_FOLDER}/${relative(folder, path)}`, {
-      body: new Uint8Array(await readFile(path)),
-      contentType:
-        types[entry.name.split('.').at(-1) ?? ''] ?? 'application/octet-stream',
-    })
-  }
-  assets = new SiteBinding(files)
+  assets = await buildSiteAssets()
 }, 30_000)
-
-afterAll(async () => {
-  if (folder) await rm(folder, { recursive: true, force: true })
-})
 
 const get = (path: string) =>
   siteResponse(
@@ -94,9 +50,9 @@ it('sends every sign-in to the app and shows the request year', async () => {
   expect(html).toContain('Give every coding task its own cloud computer.')
   expect(html).toContain('Give your next task its own cloud computer.')
   const signIns = links(html).filter((link) =>
-    ['Join the waitlist', 'Sign in'].includes(link.text),
+    ['Sign up', 'Sign in'].includes(link.text),
   )
-  expect(signIns).toHaveLength(8)
+  expect(signIns).toHaveLength(6)
   for (const link of signIns) expect(link.href).toBe(`${APP_ORIGIN}/`)
   expect(html).toContain(`© 2027 ${productName}`)
 })
@@ -118,6 +74,10 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
       /lawyer review|A lawyer reviews|To confirm:|To write:|draft-field/,
     )
   }
+})
+
+it('leads the header, action, and footer links of the Mac app to both chip downloads', async () => {
+  await checkMacDownloads(get, SITE)
 })
 
 it('names no sandbox provider on home, legal, docs, and comparison pages', async () => {

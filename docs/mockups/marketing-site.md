@@ -8,18 +8,26 @@ header, a hero with a short link, a short headline, one sentence, and a
 large picture of the app, then one section for each feature, the Mac app
 with its downloads, the smaller features, a last call to action, and a footer. The short link above the
 headline, "From Conductor Cloud? Compare the features", leads to the page
-for people who move from Conductor Cloud. Both actions, "Join the waitlist"
-and "Sign in", lead to `app/sign-in`. A new person waits for app access,
-so the main action promises a place on the waitlist, not use at once.
-The title of the last call to action, "Give your next task its own cloud
-computer.", promises no use at once either.
-`startLabel` in `src/components/marketing/SiteActions.tsx` holds its words
-for the header, the hero, the last call to action, and the footer. The
-parts live in `src/components/marketing/`.
+for people who move from Conductor Cloud.
+
+The hero and the last call to action show the two actions of the site. The
+main action, "Sign up", has the GitHub mark and leads to `app/sign-in`,
+where a new person gets an account that waits for app access. The second
+action, "Download for Mac", has the download icon and leads to the Mac app
+section, because the site runs no script to pick the chip of the visitor.
+No button of the site names the waitlist, as the user chose on 10 November
+2026. The sentence under the last call to action says that a new account
+waits for access, so the page promises no use at once. The title of the
+last call to action, "Give your next task its own cloud computer.",
+promises no use at once either. `siteActionCopy` in
+[`access-copy.ts`](../../src/marketing/access-copy.ts) holds the words of
+both actions for the header, the hero, the last call to action, and the
+footer, and the site reads the same words. The parts live in
+`src/components/marketing/`.
 
 The header of a desktop has Features, Download, Docs, GitHub, Sign in, and
-Join the waitlist. Features and Download lead to the features and to the
-Mac app section of the home page. A phone keeps the wordmark, Docs,
+the main action, Sign up. Features and Download lead to the features and
+to the Mac app section of the home page. A phone keeps the wordmark, Docs,
 GitHub, and Sign in. Each link of the phone header is a 44 px target.
 There GitHub shows only its mark, in a square named "GitHub", so that the
 links fit on a 360 px phone. The header links to the public source
@@ -29,8 +37,9 @@ space of the [brand rules](../brand/README.md#rules): 15 px, half its
 tile. So the phone header is 60 px high, with a gap of 15 px after the
 wordmark, and the footer keeps 15 px under it. The Product column of the
 footer lists Docs after Features, and it has Mac app. Features and Mac app
-lead to the same sections as in the header. The Docs links of the header
-and the footer lead to the docs overview, `marketing/docs`.
+lead to the same sections as in the header. The Account column of the
+footer has Sign up and Sign in. The Docs links of the header and the
+footer lead to the docs overview, `marketing/docs`.
 [The docs](#the-docs) gives its layout.
 
 The site keeps still captures of the workspace screen, the org settings cloud computer tab, the phone workspace list, and the Mac app.

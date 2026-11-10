@@ -11,8 +11,7 @@ Complete access to Conductive in your browser before you use the Mac app.
 Select **Sign in** in this site's header.
 Use your invite code, accept an org invitation, or return after approval.
 
-The downloads below are version 0.2.0.
-Complete the waitlist steps in the browser for that version.
+Complete the waitlist steps in the browser.
 Then return to the Mac app after your account has access.
 
 - [Get access to Conductive](/docs/get-started#get-access)
@@ -23,8 +22,8 @@ Choose the installer for your Mac's processor.
 Use Apple silicon for an Apple M-series chip.
 Use Intel for an Intel processor.
 
-- [Download for Apple silicon](https://github.com/Firna-AI/remote-code/releases/download/v0.2.0/Conductive-0.2.0-mac-arm64.dmg)
-- [Download for Intel](https://github.com/Firna-AI/remote-code/releases/download/v0.2.0/Conductive-0.2.0-mac-x64.dmg)
+- [Download for Apple silicon](https://github.com/Firna-AI/remote-code/releases/latest/download/Conductive-mac-arm64.dmg)
+- [Download for Intel](https://github.com/Firna-AI/remote-code/releases/latest/download/Conductive-mac-x64.dmg)
 - [See published releases](https://github.com/Firna-AI/remote-code/releases/latest)
 
 1. Open the downloaded DMG.

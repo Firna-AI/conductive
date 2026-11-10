@@ -19,11 +19,11 @@ which sends the emails, from
 [The record of app access](../../docs/protocol/waitlist.md#the-record-of-app-access).
 
 The words of the legal pages, of the page for an unknown address, and of
-the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`,
-and `legal-text.ts` hold them. `layouts/LegalPage.astro` and
-`components/RunningText.astro` build their HTML for the site. The mockups
-and the sign-in screen of the app render the same text with React. So
-every surface shows the same words.
+the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`
+with `privacy-uses.ts`, and `legal-text.ts` hold them.
+`layouts/LegalPage.astro` and `components/RunningText.astro` build their
+HTML for the site. The mockups and the sign-in screen of the app render the
+same text with React. So every surface shows the same words.
 
 Sources for the review:
 

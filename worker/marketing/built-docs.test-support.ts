@@ -1,10 +1,9 @@
-import { createHash } from 'node:crypto'
 import { Window, type Document, type Element } from 'happy-dom'
 import { expect } from 'vitest'
 
 import { productName } from '../../docs/mockups/src/brand'
 import { docsPath } from '../../src/marketing/links'
-import { inlineStyles, links } from './html.test-support'
+import { links } from './html.test-support'
 
 function element(root: Document | Element, selector: string) {
   const matches = root.querySelectorAll(selector)
@@ -110,21 +109,6 @@ function checkGuidePage(document: Document, path: string) {
     ).toBeGreaterThan(0)
   }
   return headings.map((heading) => heading.id)
-}
-
-export function expectedPolicy(page: string) {
-  const hashes = inlineStyles(page).map(
-    (css) => `'sha256-${createHash('sha256').update(css).digest('base64')}'`,
-  )
-  return [
-    "default-src 'none'",
-    `style-src ${hashes.join(' ')}`,
-    "img-src 'self'",
-    "font-src 'self'",
-    "base-uri 'none'",
-    "form-action 'none'",
-    "frame-ancestors 'none'",
-  ].join('; ')
 }
 
 export async function checkGuideRoutes(

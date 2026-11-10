@@ -68,8 +68,8 @@ it('titles a later session from its first text message and publishes ordered upd
   expect((await fixture.send(later.id, 'another-message')).session.title).toBe(
     'Name this session',
   )
-  ownerTab.close()
-  memberTab.close()
+  await ownerTab.close()
+  await memberTab.close()
 })
 
 it('keeps a member name given to a later session before its first message', async () => {
@@ -114,7 +114,7 @@ it('keeps an attachment-only session untitled until it accepts text', async () =
   expect(response.status).toBe(202)
   const accepted: SendMessageResponse = await response.json()
   expect(accepted.session.title).toBeNull()
-  fixture.restart()
+  await fixture.restart()
   const next = await fixture.send(
     later.id,
     'text-after-image',

@@ -20,6 +20,6 @@ export async function startAddedImageBuild(
       software: jobSoftware(job),
     })
   } catch {
-    warnWorker('Could not start the added cloud computer build.')
+    warnWorker({ kind: 'added_image_build_start_failed' })
   }
 }

@@ -189,9 +189,9 @@ check the absence of scripts and the policy through the Worker.
 
 These docs own the contract of the public guides and their layout:
 
-- [Architecture](../../docs/architecture.md#marketing-site).
+- [Architecture of the marketing site](../../docs/architecture/marketing-site.md).
 - [Access and security](../../docs/protocol/access-and-security.md#hostnames-and-gates).
-- [Product names](../../docs/protocol/chat-and-events.md#names-in-the-product).
+- [Product names](../../docs/protocol/agents-and-sessions.md#names-in-the-product).
 - [The provider](../../docs/protocol/workspaces-and-sandboxes.md#the-provider).
 - The [marketing README](README.md).
 - The [marketing mockups](../../docs/mockups/marketing-site.md).
@@ -209,16 +209,16 @@ pages.
 | --- | --- | --- |
 | Overview | `/docs` | [Architecture](../../docs/architecture.md) |
 | Get started | `/docs/get-started` | [Orgs and members](../../docs/protocol/orgs-and-members.md#get-started) |
-| Agent logins | `/docs/agent-logins` | [Chat and events](../../docs/protocol/chat-and-events.md#agents), [Security](../../docs/protocol/access-and-security.md) |
-| Workspaces | `/docs/workspaces` | [Create a workspace](../../docs/protocol/create-a-workspace.md), [Workspaces](../../docs/protocol/workspaces-and-sandboxes.md) |
-| Sessions and chat | `/docs/sessions-and-chat` | [Chat and events](../../docs/protocol/chat-and-events.md) |
+| Agent logins | `/docs/agent-logins` | [Agents and sessions](../../docs/protocol/agents-and-sessions.md#agents), [Security](../../docs/protocol/access-and-security.md), [Tokens and secrets](../../docs/protocol/tokens-and-secrets.md#agent-logins), [Isolation of orgs and sandboxes](../../docs/protocol/isolation.md#agent-logins-in-a-sandbox) |
+| Workspaces | `/docs/workspaces` | [Create a workspace](../../docs/protocol/create-a-workspace.md), [Workspaces](../../docs/protocol/workspaces-and-sandboxes.md), [Life of a workspace](../../docs/protocol/workspace-life.md) |
+| Sessions and chat | `/docs/sessions-and-chat` | [Chat and events](../../docs/protocol/chat-and-events.md), [Messages and attachments](../../docs/protocol/messages-and-attachments.md) |
 | Files and changes | `/docs/files-and-changes` | [Workspace tools](../../docs/protocol/workspace-tools.md#files-and-changes) |
-| Terminal and previews | `/docs/terminal-and-previews` | [Workspace tools](../../docs/protocol/workspace-tools.md) |
+| Terminal and previews | `/docs/terminal-and-previews` | [Workspace tools](../../docs/protocol/workspace-tools.md), [Terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md) |
 | Pull requests | `/docs/pull-requests` | [GitHub banner](../../docs/protocol/github-banner.md) |
-| Cloud computer | `/docs/cloud-computer` | [Org image](../../docs/protocol/workspaces-and-sandboxes.md#the-org-image) |
+| Cloud computer | `/docs/cloud-computer` | [Org image](../../docs/protocol/org-image.md#the-org-image) |
 | Orgs and members | `/docs/orgs-and-members` | [Orgs and members](../../docs/protocol/orgs-and-members.md) |
-| Mac app | `/docs/mac-app` | [Mac app](../../docs/protocol/desktop-app.md), [Releases](../../desktop/RELEASES.md) |
-| Security | `/docs/security` | [Access and security](../../docs/protocol/access-and-security.md), [Agent tools](../../docs/protocol/agent-tools.md) |
+| Mac app | `/docs/mac-app` | [Mac app](../../docs/protocol/desktop-app.md), [Mac packages and updates](../../docs/protocol/desktop-packages-and-updates.md), [Mac app sign-in](../../docs/protocol/desktop-sign-in.md), [Permissions and Mac commands](../../docs/protocol/desktop-commands.md), [Releases](../../desktop/RELEASES.md) |
+| Security | `/docs/security` | [Access and security](../../docs/protocol/access-and-security.md), [Isolation of orgs and sandboxes](../../docs/protocol/isolation.md), [Tokens and secrets](../../docs/protocol/tokens-and-secrets.md), [Terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md), [Agent tools](../../docs/protocol/agent-tools.md) |
 
 - The Mac app guide must use the release state at writing time.
 - The live sandbox desktop is currently hidden. Do not describe it as an
