@@ -85,6 +85,7 @@ it.each([
     vi.stubEnv('CLAUDE_CODE_OAUTH_TOKEN', 'inherited-token')
     vi.stubEnv('OPENAI_API_KEY', 'inherited-openai-key')
     vi.stubEnv('CLAUDE_CODE_REMOTE', '1')
+    vi.stubEnv('CLAUDE_CODE_PROMPT_CACHE_TTL', '1h')
     vi.stubEnv('CONDUCTIVE_MEASURE_LOGIN', 'private-test-login')
     const h = fixture(kind)
     const provider = await createClaudeFactory(
@@ -103,6 +104,7 @@ it.each([
     expect(Object.hasOwn(request[2]?.env ?? {}, 'CLAUDE_CODE_REMOTE')).toBe(
       false,
     )
+    expect(request[2]?.env?.CLAUDE_CODE_PROMPT_CACHE_TTL).toBeUndefined()
     expect(h.bytes).toEqual(['private-test-login\n'])
     await h.closed.promise
     expect(h.child.signals).toEqual([])

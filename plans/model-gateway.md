@@ -1122,15 +1122,18 @@ Depends on: 7
 Claude keeps the 1-hour prompt cache of a subscription turn under the
 profile transport (gateway decision 13 B).
 
-- [ ] Claude: for a turn whose credential is a Claude subscription token,
+- [x] Claude: for a turn whose credential is a Claude subscription token,
       the runner gives the `claude` program
       `CLAUDE_CODE_PROMPT_CACHE_TTL=1h`. An API-key turn and a native login
       of the measure tool get no such setting.
-- [ ] Add the focused runner tests: the setting for a subscription token,
+      Branch: `conductor/model-gateway-m7a-subscription-cache`.
+- [x] Add the focused runner tests: the setting for a subscription token,
       and no setting for an API key.
-- [ ] `docs/protocol/model-gateway.md`, section "How the agents reach the
+      Branch: `conductor/model-gateway-m7a-subscription-cache`.
+- [x] `docs/protocol/model-gateway.md`, section "How the agents reach the
       gateway": a subscription turn keeps the 1-hour prompt cache, with
       the reason and gateway decision 13. Update `runner/agent-logins.md`.
+      Branch: `conductor/model-gateway-m7a-subscription-cache`.
 
 ## Milestone 8: Privacy page
 
