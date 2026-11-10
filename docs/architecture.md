@@ -62,7 +62,9 @@ requirements of each feature.
 - **Workspace start:** a start of the sandbox of one workspace. Each one
   is a first workspace start or a later workspace start.
 - **First workspace start:** the start that creates the sandbox of a new
-  workspace from the org image.
+  workspace from the org image. It updates only the one repository of the
+  workspace: it fetches the default branch and creates the workspace
+  branch in the folder of that repository.
 - **Later workspace start:** each resume of the sandbox of a workspace,
   also the restart near day 14 of a stop.
 - **Agent runner:** our program in each sandbox. It runs the agents through

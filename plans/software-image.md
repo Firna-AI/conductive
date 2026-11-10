@@ -149,7 +149,14 @@ Each item marked "my call" is a design call of the planning agent, made on
     My call: the action runs the install script of the current org image,
     from the folder of the workspace's repository, with the env vars of
     the workspace, and shows its output.
-14. **Docs.** My call: the requirements of the software image go to a new
+14. **First workspace start.** It updates only the one repository of the
+    workspace, as today: it fetches the default branch and creates the
+    workspace branch. The other repositories of the org image stay as the
+    image holds them. When decision 13 allows a copy of a missing
+    repository, the start copies only that one repository. The user said
+    so on 10 November 2026: "install repo (not repos - because each
+    workspace only needs one of them)".
+15. **Docs.** My call: the requirements of the software image go to a new
     protocol page, `docs/protocol/software-image.md`. Each long protocol
     doc gets only a link and the lines that must change, because
     `plans/follow-ups/protocol-docs-split.md` owns the split of the long
