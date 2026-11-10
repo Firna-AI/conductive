@@ -86,6 +86,32 @@
   pointer-events: auto;
 }
 
+/*
+ * A view runs no script, so it draws a hover with `.hovered`, such as on
+ * the row of a menu that a right click opened: the fill of a hover, and
+ * Archive over the time on a row that the person can archive. `.held`
+ * keeps the row of a menu in a sheet marked with the same fill.
+ */
+.hovered .row,
+.held .row {
+  background: var(--ui-soft);
+}
+
+.hovered .selected,
+.held .selected {
+  background: var(--ui-selected);
+}
+
+.archivable.hovered .time {
+  visibility: hidden;
+}
+
+.archivable.hovered .archive {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
 /* The row under the pointer: a raised card with a full outline. */
 .lifted {
   border: 1px solid var(--ui-border2);

@@ -3,6 +3,7 @@ import { createHarness, TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import type { ProxySocket, SocketRuntime } from './types'
 import { toolsActivity } from './activity.test-support'
 import { relayResponse } from './relay.test-support'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 class TestSocket implements ProxySocket {
   binaryType: 'blob' | 'arraybuffer' = 'blob'
@@ -256,10 +257,10 @@ export async function createToolsHarness() {
         ).bind(org.id),
         core.env.DB.prepare(
           `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, name, branch,
-           sandbox_id, state, created_at, updated_at, last_activity_at)
+           sandbox_id, provider_account, state, created_at, updated_at, last_activity_at)
            SELECT 'workspace-one', ?, 'repo-one', creator_user_id, 'Task', 'octocat/task',
-           'bx_one', 'ready', ?, ?, ? FROM orgs WHERE id = ?`,
-        ).bind(org.id, now, now, now, org.id),
+           'bx_one', ?, 'ready', ?, ?, ? FROM orgs WHERE id = ?`,
+        ).bind(org.id, DEFAULT_PROVIDER_ACCOUNT, now, now, now, org.id),
       ])
       const request = (path: string, init: RequestInit = {}) => {
         const headers = new Headers(init.headers)

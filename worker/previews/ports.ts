@@ -9,11 +9,12 @@ import type { ToolDependencies, WorkspaceTarget } from './types'
 interface CachedPort {
   workspaceId: string
   sandboxId: string | null
+  providerAccount: string
   descriptor: Promise<PrivatePort>
   pending: boolean
 }
 
-/** Plaintext relay tokens live only here, keyed by workspace and sandbox. */
+/** Cache plaintext relay credentials by workspace, account, and sandbox. */
 export class PrivatePorts {
   private readonly cache = new Map<string, CachedPort>()
   private readonly env: AppEnv
@@ -25,7 +26,11 @@ export class PrivatePorts {
   }
 
   private key(target: WorkspaceTarget): string {
-    return JSON.stringify([target.workspaceId, target.sandboxId])
+    return JSON.stringify([
+      target.workspaceId,
+      target.providerAccount,
+      target.sandboxId,
+    ])
   }
 
   invalidateWorkspace(workspaceId: string): void {
@@ -53,7 +58,8 @@ export class PrivatePorts {
     for (const [key, value] of this.cache) {
       if (
         value.workspaceId === target.workspaceId &&
-        value.sandboxId !== target.sandboxId
+        (value.sandboxId !== target.sandboxId ||
+          value.providerAccount !== target.providerAccount)
       )
         this.cache.delete(key)
     }
@@ -75,6 +81,7 @@ export class PrivatePorts {
     const entry = {
       workspaceId: target.workspaceId,
       sandboxId: target.sandboxId,
+      providerAccount: target.providerAccount,
       descriptor,
       pending: true,
     }

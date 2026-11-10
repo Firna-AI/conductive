@@ -19,7 +19,8 @@ export function readWorkspaceTarget(
 ): Promise<WorkspaceAccessTarget | null> {
   return db
     .prepare(
-      `SELECT w.org_id AS orgId, w.id AS workspaceId, w.sandbox_id AS sandboxId, w.state,
+      `SELECT w.org_id AS orgId, w.id AS workspaceId, w.sandbox_id AS sandboxId,
+       w.provider_account AS providerAccount, w.state,
        CASE WHEN ${activeOrgPredicate('o')} THEN 1 ELSE 0 END AS orgActive,
        CASE WHEN ${activeWorkspaceOwnerPredicate} THEN 1 ELSE 0 END AS ownerActive,
        CASE WHEN ${sandboxAccessPredicate} THEN 1 ELSE 0 END AS sandboxAllowed

@@ -42,18 +42,20 @@ export async function pinRetryCreation(
       .prepare(
         `UPDATE workspace_creation_plans SET
         (start_attempt, startup_script, environment_ciphertext, image_name, default_branch,
-          repositories_json, repository_locations_json) =
+          repositories_json, repository_locations_json, provider_account) =
         (SELECT ?, s.startup_script, s.env_vars_ciphertext, b.snapshot_name,
           json_extract(repository.value, '$.defaultBranch'), j.repositories_json,
-          j.repository_locations_json ${publishedRepositorySource})
+          j.repository_locations_json, b.provider_account ${publishedRepositorySource})
       WHERE workspace_id = ? AND EXISTS (SELECT 1 ${publishedRepositorySource})`,
       )
       .bind(
         job.attempt,
         job.orgId,
+        job.providerAccount,
         creation.repositoryId,
         job.workspaceId,
         job.orgId,
+        job.providerAccount,
         creation.repositoryId,
       ),
     db

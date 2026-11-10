@@ -3,24 +3,35 @@
   border-bottom: 1px solid var(--ui-border);
 }
 
+/*
+ * The header is at least twice as high as the lockup. So the lockup keeps
+ * the clear space of half a tile above it and below it.
+ */
 .header-inner {
   display: flex;
   align-items: center;
   gap: 16px;
   max-width: 1184px;
   height: 64px;
+  min-height: calc(var(--ui-lockup-height) * 2);
   margin: 0 auto;
   padding: 0 32px;
   box-sizing: border-box;
 }
 
+/* The links keep their size. In a narrow header, the lockup gives way. */
 .header-nav {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 4px;
   margin-left: auto;
 }
 
+/*
+ * A label never wraps, so each link keeps one line when a narrow desktop
+ * window leaves the header little room.
+ */
 .header-link {
   display: inline-flex;
   align-items: center;
@@ -32,9 +43,16 @@
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .header-link:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+/* The section of the page, such as Docs on a page of the docs. */
+.header-current {
   background: var(--ui-soft);
   color: var(--ui-ink);
 }
@@ -46,23 +64,29 @@
 .wordmark {
   display: inline-flex;
   align-items: center;
+  min-width: 0;
   min-height: var(--ui-touch-min);
   text-decoration: none;
 }
 
 /*
- * The lockup of the brand: the tile and the name, unchanged. It scales with
- * its own proportions. Its tile is 20px high, so the 10px gap under it in
- * the footer keeps the clear space of half a tile that the brand asks for.
+ * The lockup of the brand: the tile and the name, unchanged. It has the
+ * height of the lockup token, as in the mockups, and it keeps its own
+ * proportions. Its tile fills that height. When the header of a narrow
+ * phone has less space than the lockup needs, the lockup shrinks to fit
+ * beside the links. So the page never scrolls sideways.
  */
 .wordmark picture,
 .wordmark img {
   display: block;
+  min-width: 0;
 }
 
 .wordmark img {
   width: auto;
-  height: 20px;
+  max-width: 100%;
+  height: var(--ui-lockup-height);
+  object-fit: contain;
 }
 
 .footer {
@@ -86,12 +110,13 @@
   box-sizing: border-box;
 }
 
+/* The gap under the lockup is the clear space of half a tile. */
 .footer-brand {
   display: flex;
   flex: 1;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: calc(var(--ui-lockup-height) / 2);
 }
 
 .footer-tagline {
@@ -176,19 +201,54 @@
   color: var(--ui-ink);
 }
 
-/* A phone keeps the wordmark, GitHub, and Sign in. */
+/*
+ * A phone keeps the wordmark, Docs, GitHub, and Sign in. They fit beside
+ * the wordmark from a width of about 360px, and each link keeps a touch
+ * target of 44px.
+ */
 @media (max-width: 759.98px) {
   .header-inner {
     height: 56px;
-    padding: 0 12px 0 20px;
+    padding: 0 8px 0 20px;
+  }
+
+  .header-nav {
+    gap: 0;
   }
 
   .header-nav > :last-child {
     margin-left: 0;
   }
 
+  .header-link {
+    box-sizing: border-box;
+    padding: 0 8px;
+  }
+
   .header-wide {
     display: none;
+  }
+
+  /* GitHub shows only its mark, in a square touch target, named GitHub. */
+  .header-mark {
+    position: relative;
+    justify-content: center;
+    width: var(--ui-touch-min);
+    padding: 0;
+  }
+
+  .header-mark svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .header-mark-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .footer {

@@ -16,6 +16,7 @@ import {
 } from 'miniflare'
 import { terminalPaths } from '../../src/shared/terminal'
 import { cacheTerminalPassword } from '../terminal/credentials'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 export class TerminalActivityUpstream {
   private readonly messages: string[] = []
@@ -62,6 +63,7 @@ export async function openActivityTerminal(fixture: ActivityFixture) {
       orgId: OUTER_ORG,
       workspaceId: OUTER_WORKSPACE,
       sandboxId: 'bx_activity',
+      providerAccount: DEFAULT_PROVIDER_ACCOUNT,
       state: 'ready',
     },
     'b'.repeat(64),

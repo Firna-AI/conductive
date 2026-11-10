@@ -8,7 +8,7 @@ import { refreshImagesForPush, runImageAlarm } from './image-timers'
 import { finishImageBuild as finish } from './image-test-support'
 import { joinedMember } from '../operator/suspension-test-support'
 import { suspendUser } from '../operator/suspend-user'
-import { readImageSettings } from './settings-data'
+import { readOrgImage } from './org-image-data'
 
 const backendFixture = setupBackendTests()
 
@@ -34,7 +34,7 @@ it('refreshes the captured repositories and revision with push throttling and a 
         'UPDATE settings SET revision = 2, install_script = ? WHERE org_id = ?',
       ).bind('echo changed-install', org.id),
     ])
-    fixture.setTime(TEST_TIME + 1_000)
+    await fixture.setTime(TEST_TIME + 1_000)
     expect(
       await refreshImagesForPush(images, {
         githubRepositoryId: 2,
@@ -79,7 +79,7 @@ it('refreshes the captured repositories and revision with push throttling and a 
         software: SOFTWARE,
       }),
     ).toEqual([])
-    fixture.setTime(TEST_TIME + 1_801_000)
+    await fixture.setTime(TEST_TIME + 1_801_000)
     const busy = await startImageBuild(images, {
       orgId: org.id,
       userId: user.id,
@@ -111,7 +111,7 @@ it('refreshes the captured repositories and revision with push throttling and a 
       buildId: null,
       nextAt: TEST_TIME + 88_201_000,
     })
-    fixture.setTime(TEST_TIME + 88_201_000)
+    await fixture.setTime(TEST_TIME + 88_201_000)
     if (!next) throw new Error('Missing scheduled daily timer')
     await runImageAlarm(images, next)
     expect(
@@ -147,7 +147,7 @@ it('uses an active admin for automatic refreshes and leaves timers unchanged whe
   await finish(fixture, pushId)
   const daily = fixture.scheduled.at(-1)
   if (!daily) throw new Error('Missing daily refresh schedule')
-  fixture.setTime(daily.nextAt)
+  await fixture.setTime(daily.nextAt)
   await expect(runImageAlarm(images, daily)).resolves.toBeUndefined()
   const dailyId = fixture.scheduled.at(-1)?.buildId
   if (!dailyId) throw new Error('Missing daily refresh build')
@@ -157,13 +157,13 @@ it('uses an active admin for automatic refreshes and leaves timers unchanged whe
   })
   await finish(fixture, dailyId)
   const noAdminAt = TEST_TIME + 172_800_000
-  fixture.setTime(noAdminAt)
+  await fixture.setTime(noAdminAt)
   await runtime.env.DB.batch([
     runtime.env.DB.prepare(
       'UPDATE users SET suspended_at = ? WHERE id = ?',
     ).bind(noAdminAt, admin.id),
     runtime.env.DB.prepare(
-      'UPDATE settings SET pending_push_refresh_at = ? WHERE org_id = ?',
+      "UPDATE org_images SET pending_push_refresh_at = ? WHERE org_id = ? AND provider_account = 'boat'",
     ).bind(noAdminAt, org.id),
   ])
   await expect(
@@ -178,7 +178,7 @@ it('uses an active admin for automatic refreshes and leaves timers unchanged whe
   if (!pending) throw new Error('Missing idle image schedule')
   await expect(runImageAlarm(images, pending)).resolves.toBeUndefined()
   expect(fixture.scheduled).toHaveLength(before)
-  expect(await readImageSettings(runtime.env.DB, org.id)).toMatchObject({
+  expect(await readOrgImage(runtime.env.DB, org.id)).toMatchObject({
     lastPushRefreshAt: TEST_TIME,
     pendingPushRefreshAt: noAdminAt,
   })

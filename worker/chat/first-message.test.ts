@@ -101,9 +101,9 @@ it('starts the assigned first session untitled and keeps repeated admission unch
     session: { id: first.sessionId, title: null },
   })
   expect(memberTab.messages).toEqual(ownerTab.messages)
-  fixture.restart()
+  await fixture.restart()
   expect(await acceptFirst()).toEqual(accepted)
   expect(await fixture.history(first.sessionId)).toEqual(history)
-  ownerTab.close()
-  memberTab.close()
+  await ownerTab.close()
+  await memberTab.close()
 })

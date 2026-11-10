@@ -38,5 +38,5 @@ it('keeps a member name given to the first session before the workspace title', 
       .filter((message) => message.type === 'event')
       .map(({ envelope }) => envelope.event.type),
   ).toEqual(['workspace.title'])
-  tab.close()
+  await tab.close()
 })

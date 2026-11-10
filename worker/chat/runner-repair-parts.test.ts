@@ -1,11 +1,10 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { FakeRunner } from '../test-support/fake-runner'
 import { FilesState } from '../files/state'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { chatFilesStorage } from './files-storage'
-import { snapshot } from './runner-limits.test-support'
+import { snapshot } from './runner-fixtures.test-support'
 import {
   fullReport,
   oversizedReport,
@@ -13,7 +12,6 @@ import {
   refusedEvents,
   workspaceEvents,
 } from './runner-repairs.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -24,7 +22,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it.each([
   { count: 'valid', partCount: 2 },
   { count: 'missing', partCount: undefined },
@@ -55,7 +52,7 @@ it.each([
       (await refusedEvents(fixture)).map((event) => event.repairFailed),
     ).toEqual([undefined, undefined])
     expect(refreshCommands(runner)).toEqual([request])
-    fixture.restart()
+    await fixture.restart()
     await fixture.connect(runner)
     expect(refreshCommands(runner)).toEqual([request, request])
     runner.emit(oversizedReport('files.snapshot', 4, 2, 2))
@@ -94,7 +91,6 @@ it.each([
     expect(refreshCommands(runner)).toEqual([request, request, later])
   },
 )
-
 it('treats a full replacement from a new stream as a repair without joining old parts', async () => {
   const fixture = await createChatFixture(harness)
   const first = await fixture.connect()
@@ -123,7 +119,6 @@ it('treats a full replacement from a new stream as a repair without joining old 
   expect(refreshCommands(second)).toHaveLength(2)
   expect((await refusedEvents(fixture)).at(-1)?.repairFailed).toBeUndefined()
 })
-
 it('marks a malformed requested report as a failed repair when its generation is unavailable', async () => {
   const fixture = await createChatFixture(harness)
   const runner = await fixture.connect()
@@ -145,7 +140,6 @@ it('marks a malformed requested report as a failed repair when its generation is
   ])
   expect(refreshCommands(runner)).toHaveLength(1)
 })
-
 it('recognizes an accepted new part one at the refused unapplied revision after restart', async () => {
   const fixture = await createChatFixture(harness)
   const runner = await fixture.connect()
@@ -161,7 +155,7 @@ it('recognizes an accepted new part one at the refused unapplied revision after 
   ).toEqual([undefined, undefined])
   runner.emit(fullReport('files.snapshot', 2, 1, 2))
   await fixture.drain()
-  fixture.restart()
+  await fixture.restart()
   await fixture.connect(runner)
   runner.emit(oversizedReport('files.snapshot', 2, 2, 2))
   await fixture.drain()

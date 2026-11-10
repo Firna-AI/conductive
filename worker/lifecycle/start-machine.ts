@@ -105,6 +105,7 @@ export async function advanceStartMachine(
       if (!sandboxId) return null
     } else {
       job.allocatedSandboxId = row.sandboxId
+      job.providerAccount = row.providerAccount
       await storage.update(job)
       const current = await provider.get(row.sandboxId)
       const status = providerState(current.state)

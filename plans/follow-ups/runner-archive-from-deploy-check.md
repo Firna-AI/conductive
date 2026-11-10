@@ -19,4 +19,4 @@
 - **Impact if no action:** A wrong URL or digest would fail every new image build, and nobody would see it until an org needs a new image.
 - **Needs:** A deploy run with both settings, and a test org in the deployed app.
 - **Done when:** a new image build installs the archive that the deploy published, and an agent answers in a workspace on it. Then delete this item.
-- **Related:** `plans/follow-ups/first-automatic-deploys-check.md` checks the deploy run first.
+- **Related:** `plans/follow-ups/first-automatic-deploys-check.md` checks the deploy run first. `plans/follow-ups/provider-groundwork-deployed-smoke.md` also runs an image build and an agent answer on the deployed app, so one session can run both items.

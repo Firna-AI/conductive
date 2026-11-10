@@ -1,12 +1,8 @@
 import { expect, it } from 'vitest'
-
 import { FilesState } from '../files/state'
 import type { FilesStorage } from '../files/storage'
-import {
-  createRunnerLimitsFixture,
-  snapshot,
-} from './runner-limits.test-support'
-
+import { createRunnerLimitsFixture } from './runner-limits.test-support'
+import { snapshot } from './runner-fixtures.test-support'
 function fileStorage(
   fixture: Awaited<ReturnType<typeof createRunnerLimitsFixture>>,
 ): FilesStorage {
@@ -25,7 +21,6 @@ function fileStorage(
     },
   }
 }
-
 it('joins trees and independent changes parts before projection, live publication, and confirm across restart', async () => {
   const fixture = await createRunnerLimitsFixture()
   const files = new FilesState(fileStorage(fixture))
@@ -80,7 +75,6 @@ it('joins trees and independent changes parts before projection, live publicatio
     throughEventNumber: 7,
   })
 })
-
 it('discards refused and superseded assemblies, keeps complete reports, and isolates streams', async () => {
   const fixture = await createRunnerLimitsFixture()
   const files = new FilesState(fileStorage(fixture))
@@ -109,7 +103,6 @@ it('discards refused and superseded assemblies, keeps complete reports, and isol
     ),
   ).toHaveLength(3)
 })
-
 it('refuses inconsistent parts, duplicate paths, and gaps or interleaving in tree deltas', async () => {
   const fixture = await createRunnerLimitsFixture()
   const delta = (revision: number) => ({
@@ -151,17 +144,16 @@ it('refuses inconsistent parts, duplicate paths, and gaps or interleaving in tre
     })),
   ])
 })
-
 it('rolls back file part assembly and projection when the receipt commit fails', async () => {
   const fixture = await createRunnerLimitsFixture()
   await fixture.receive(1, snapshot(1, 1, 2, ['first']))
-  fixture.failCursorCommit(2)
+  await fixture.failCursorCommit(2)
   await expect(fixture.receive(2, snapshot(1, 2, 2, ['last']))).rejects.toThrow(
     'Injected storage failure',
   )
   expect(fixture.published).toEqual([])
   expect(await new FilesState(fileStorage(fixture)).tree()).toBeNull()
-  fixture.storage.beforeCommit = null
+  await fixture.clearFaults()
   await fixture.connect('stream', true)
   await fixture.receive(2, snapshot(1, 2, 2, ['last']))
   expect(
@@ -171,7 +163,6 @@ it('rolls back file part assembly and projection when the receipt commit fails',
   ).toEqual(['first', 'last'])
   expect((await fixture.history()).events).toHaveLength(1)
 })
-
 it('refuses inconsistent changes metadata and empty multipart reports', async () => {
   const changes = (partNumber: number, patch = {}) => ({
     type: 'changes.updated',

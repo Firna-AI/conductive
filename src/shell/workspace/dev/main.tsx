@@ -15,6 +15,7 @@ import { createFilesClient } from '../../../files/api/files-client'
 import { WorkspaceFiles } from '../../../files/model/files-store'
 import type { WorkspaceSocketMessage } from '../../../shared/events'
 import { FakeApiServer } from '../../../test-support/fake-api'
+import { fetchFiles } from '../../../test-support/fake-files'
 import { FAKE_TIME } from '../../../test-support/fixtures/core'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { storeFailedRepairs } from '../../../test-support/recorded-repairs'
@@ -58,7 +59,7 @@ function ofWorkspace(
 }
 
 const app = new AppModel({
-  api: createApiClient(server.fetch),
+  api: createApiClient(server.fetch, fetchFiles(server.fetch)),
   events: {
     open: (target, handlers) =>
       server.events.subscribe(

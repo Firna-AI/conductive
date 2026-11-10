@@ -6,6 +6,7 @@ import { Sheet } from '../components/common/Sheet'
 import { orgLinks } from '../components/orgs/orgLinks'
 import { AccountAvatar, OrgTile } from '../components/orgs/OrgTile'
 import { sectionMenu } from '../components/workspaces/menus'
+import type { RowMenuOpen } from '../components/workspaces/RowMenu'
 import { orgList, type OrgKey } from '../fixtures/orgs'
 import { menuSection, sections } from '../fixtures/sections'
 import { paths } from '../paths'
@@ -97,6 +98,22 @@ export function SectionSheet() {
   return (
     <Sheet title={section.name}>
       <Menu entries={sectionMenu} label={section.name} placement="sheet" />
+    </Sheet>
+  )
+}
+
+/**
+ * The menu of a workspace row, as a phone layout shows it after a right
+ * click or the menu keys: a sheet with the name of the workspace. A choice
+ * with a submenu, such as Move to section, shows its choices in the sheet
+ * in place of the menu.
+ */
+export function WorkspaceMenuSheet(props: { menu: RowMenuOpen }) {
+  const { menu } = props
+  const shown = menu.submenu ?? menu
+  return (
+    <Sheet title={menu.label}>
+      <Menu entries={shown.entries} label={shown.label} placement="sheet" />
     </Sheet>
   )
 }

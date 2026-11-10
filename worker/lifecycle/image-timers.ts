@@ -1,4 +1,4 @@
-import { activeOrgIdPredicate, activeOrgPredicate } from '../data/org-access'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import type { ImageSoftwareArtifact } from './image-software'
 import { runningBuild } from './build-data'
 import {
@@ -11,13 +11,16 @@ import {
   IMAGE_PUSH_MS,
   readImageSchedule,
 } from './image-schedule'
-import {
-  firstActiveOrgAdmin,
-  firstOrgAdmin,
-  readImageSettings,
-} from './settings-data'
+import { firstActiveOrgAdmin, firstOrgAdmin } from './settings-data'
 import { cleanupOrgImageSources } from './image-sources/cleanup'
 import { imageRetryAt } from './image-retry-data'
+import { readOrgImage } from './org-image-data'
+import {
+  claimPushRefresh,
+  consumePendingPushRefresh,
+  markPendingPushRefresh,
+  pushedImageRepositories,
+} from './org-image-refresh-data'
 
 export { IMAGE_POLL_MS } from './image-schedule'
 
@@ -30,62 +33,56 @@ export async function refreshImagesForPush(
     ref: string
     software: ImageSoftwareArtifact
   },
+  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<readonly string[]> {
-  const { results } = await runtime.env.DB.prepare(
-    `SELECT r.org_id AS orgId, json_extract(entry.value, '$.defaultBranch') AS defaultBranch
-     FROM settings s JOIN image_build_jobs j ON j.build_id = COALESCE(s.image_build_id,
-       (SELECT id FROM image_builds WHERE org_id = s.org_id AND state = 'running'))
-     JOIN json_each(j.repositories_json) entry
-     JOIN repositories r ON r.id = json_extract(entry.value, '$.id') AND r.org_id = s.org_id
-     JOIN orgs ON orgs.id = r.org_id WHERE r.github_repository_id = ? AND orgs.deleted_at IS NULL
-     AND ${activeOrgPredicate('orgs')}
-     AND (? IS NULL OR EXISTS (SELECT 1 FROM github_installations i
-       WHERE i.id = r.installation_id AND i.id = ? AND i.suspended_at IS NULL))`,
+  const repositories = await pushedImageRepositories(
+    runtime.env.DB,
+    input,
+    providerAccount,
   )
-    .bind(
-      input.githubRepositoryId,
-      input.installationId ?? null,
-      input.installationId ?? null,
-    )
-    .all<{ orgId: string; defaultBranch: string }>()
   const builds: string[] = []
-  for (const repository of results) {
+  for (const repository of repositories) {
     if (input.ref !== `refs/heads/${repository.defaultBranch}`) continue
     const admin = await firstActiveOrgAdmin(runtime.env.DB, repository.orgId)
     if (!admin) continue
-    const settings = await readImageSettings(runtime.env.DB, repository.orgId)
+    const image = await readOrgImage(
+      runtime.env.DB,
+      repository.orgId,
+      providerAccount,
+    )
     if (
-      settings.lastPushRefreshAt !== null &&
-      settings.lastPushRefreshAt > runtime.dependencies.now() - IMAGE_PUSH_MS
+      image?.lastPushRefreshAt != null &&
+      image.lastPushRefreshAt > runtime.dependencies.now() - IMAGE_PUSH_MS
     )
       continue
     if (await runningBuild(runtime.env.DB, repository.orgId)) {
-      await runtime.env.DB.prepare(
-        `UPDATE settings SET pending_push_refresh_at = COALESCE(pending_push_refresh_at, ?) WHERE org_id = ? AND ${activeOrgIdPredicate('settings.org_id')}`,
+      await markPendingPushRefresh(
+        runtime.env.DB,
+        repository.orgId,
+        providerAccount,
+        runtime.dependencies.now(),
       )
-        .bind(runtime.dependencies.now(), repository.orgId)
-        .run()
       continue
     }
-    const claim = await runtime.env.DB.prepare(
-      `UPDATE settings SET last_push_refresh_at = ?, pending_push_refresh_at = NULL WHERE org_id = ?
-       AND org_image_name IS NOT NULL AND ${activeOrgIdPredicate('settings.org_id')}
-       AND (last_push_refresh_at IS NULL OR last_push_refresh_at <= ?)`,
+    const claimed = await claimPushRefresh(
+      runtime.env.DB,
+      repository.orgId,
+      providerAccount,
+      runtime.dependencies.now(),
+      runtime.dependencies.now() - IMAGE_PUSH_MS,
     )
-      .bind(
-        runtime.dependencies.now(),
-        repository.orgId,
-        runtime.dependencies.now() - IMAGE_PUSH_MS,
-      )
-      .run()
-    if (!claim.meta.changes) continue
+    if (!claimed) continue
     builds.push(
-      await startImageBuild(runtime, {
-        orgId: repository.orgId,
-        userId: admin.userId,
-        kind: 'refresh',
-        software: input.software,
-      }),
+      await startImageBuild(
+        runtime,
+        {
+          orgId: repository.orgId,
+          userId: admin.userId,
+          kind: 'refresh',
+          software: input.software,
+        },
+        providerAccount,
+      ),
     )
   }
   return builds
@@ -93,6 +90,7 @@ export async function refreshImagesForPush(
 
 export interface ImageCoordinatorState {
   orgId: string
+  providerAccount?: string
   software: ImageSoftwareArtifact
   buildId: string | null
   nextAt: number
@@ -103,6 +101,7 @@ export async function runImageAlarm(
   runtime: ImageRuntime,
   state: ImageCoordinatorState,
 ): Promise<void> {
+  const providerAccount = state.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT
   if (!(await firstOrgAdmin(runtime.env.DB, state.orgId))) {
     if (
       !(await cleanupOrgImageSources(
@@ -119,6 +118,7 @@ export async function runImageAlarm(
     state.orgId,
     runtime.dependencies.now(),
     state,
+    providerAccount,
   )
   if (next.buildId !== null) {
     const done = await advanceImageBuild(runtime, state.orgId, next.buildId)
@@ -132,6 +132,7 @@ export async function runImageAlarm(
           runtime.dependencies.now() + IMAGE_POLL_MS,
         ),
         next.buildId,
+        providerAccount,
       )
     return
   }
@@ -141,23 +142,29 @@ export async function runImageAlarm(
       state.software,
       next.nextAt,
       null,
+      providerAccount,
     )
     return
   }
   const admin = await firstActiveOrgAdmin(runtime.env.DB, state.orgId)
   if (!admin || !next.imageName) return
   if (next.pendingAt <= runtime.dependencies.now()) {
-    await runtime.env.DB.prepare(
-      `UPDATE settings SET pending_push_refresh_at = NULL, last_push_refresh_at = ? WHERE org_id = ? AND ${activeOrgIdPredicate('settings.org_id')}`,
+    await consumePendingPushRefresh(
+      runtime.env.DB,
+      state.orgId,
+      providerAccount,
+      runtime.dependencies.now(),
     )
-      .bind(runtime.dependencies.now(), state.orgId)
-      .run()
   }
-  await startImageBuild(runtime, {
-    orgId: state.orgId,
-    userId: admin.userId,
-    kind: 'refresh',
-    software: state.software,
-    dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
-  })
+  await startImageBuild(
+    runtime,
+    {
+      orgId: state.orgId,
+      userId: admin.userId,
+      kind: 'refresh',
+      software: state.software,
+      dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
+    },
+    providerAccount,
+  )
 }

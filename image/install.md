@@ -15,7 +15,7 @@ Risk: a program with root access that an earlier install left in that
 image can read the clone token of a later copy. That token can only read
 its own repository, which the image already holds. The Worker revokes it
 when the copy ends, as
-[GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
+[GitHub tokens](../docs/protocol/github-tokens.md)
 says.
 
 The software step of a build calls `installImageSoftware`. It writes the

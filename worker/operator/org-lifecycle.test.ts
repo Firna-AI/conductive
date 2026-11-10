@@ -10,6 +10,8 @@ import { SOFTWARE } from '../lifecycle/backend-test-support'
 import { createWorkspace } from '../lifecycle/workspaces'
 import { advanceImageBuild, startImageBuild } from '../lifecycle/image-builds'
 import { readImageSettings } from '../lifecycle/settings-data'
+import { readOrgImage } from '../lifecycle/org-image-data'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { refreshImagesForPush, runImageAlarm } from '../lifecycle/image-timers'
 import {
   authenticateWorkspaceToken,
@@ -42,11 +44,12 @@ it('stops every org owner and refuses new starts, token replacement, builds, and
       .run()
 
   await fixture.runtime.env.DB.prepare(
-    'UPDATE settings SET pending_push_refresh_at = 1 WHERE org_id = ?',
+    'UPDATE org_images SET pending_push_refresh_at = 1 WHERE org_id = ? AND provider_account = ?',
   )
-    .bind(fixture.org.id)
+    .bind(fixture.org.id, DEFAULT_PROVIDER_ACCOUNT)
     .run()
   const before = await readImageSettings(fixture.runtime.env.DB, fixture.org.id)
+  const beforeImage = await readOrgImage(fixture.runtime.env.DB, fixture.org.id)
 
   const beforeStops: { tokens: number; previews: number }[] = []
   const runtime = {
@@ -127,6 +130,9 @@ it('stops every org owner and refuses new starts, token replacement, builds, and
   expect(
     await readImageSettings(fixture.runtime.env.DB, fixture.org.id),
   ).toEqual(before)
+  expect(await readOrgImage(fixture.runtime.env.DB, fixture.org.id)).toEqual(
+    beforeImage,
+  )
   expect(fixture.boat.starts).toHaveLength(2)
   expect(fixture.boat.resumeIds).toEqual([])
   const database = fixture.runtime.env.DB
@@ -152,6 +158,7 @@ it('stops every org owner and refuses new starts, token replacement, builds, and
     fixture.runtime.env.DB = database
   }
   expect(await readImageSettings(database, fixture.org.id)).toEqual(before)
+  expect(await readOrgImage(database, fixture.org.id)).toEqual(beforeImage)
 })
 
 it('does not admit a build or replace a token when org suspension wins its database write', async () => {
@@ -242,7 +249,7 @@ it('refuses image publication when org suspension wins the final database write'
   } finally {
     env.DB = database
   }
-  expect(await readImageSettings(database, fixture.org.id)).toMatchObject({
+  expect(await readOrgImage(database, fixture.org.id)).toMatchObject({
     imageName: 'last-good-image',
     imageBuildId: 'published-image',
   })

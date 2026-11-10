@@ -118,10 +118,15 @@ export class PreviewProxy {
         throw new ProviderError('unavailable', 503)
       }
       await scope.authorize()
-      const headers = portResponseHeaders(upstream, request, row.port)
+      const headers = portResponseHeaders(upstream, request, port, row.port)
       if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
         const protocol = upstream.headers.get('Sec-WebSocket-Protocol')
-        if (protocol) {
+        if (
+          protocol &&
+          !port.credential.stripHeaders.some(
+            (name) => name.toLowerCase() === 'sec-websocket-protocol',
+          )
+        ) {
           const offered = (request.headers.get('Sec-WebSocket-Protocol') ?? '')
             .split(',')
             .map((value) => value.trim())

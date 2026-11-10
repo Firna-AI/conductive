@@ -1,6 +1,10 @@
 import type { HttpFetch } from '../env'
 import { HttpError, isRecord } from '../http'
-import { BodyBudgetExceeded, readBoundedJson } from '../http/bounded-body'
+import {
+  BodyBudgetExceeded,
+  readBoundedBody,
+  readBoundedJson,
+} from '../http/bounded-body'
 import { ProviderError, providerError } from './errors'
 import { fileResponseBudget } from './file-response'
 import { boatRoute, type BoatRoute } from './routes'
@@ -18,6 +22,40 @@ export class BoatTransport {
     this.key = key
     this.fetch = fetch
     this.orgId = orgId
+  }
+
+  async uploadFile(
+    url: string,
+    body: ReadableStream<Uint8Array>,
+  ): Promise<void> {
+    let response: Response
+    try {
+      const init = {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body,
+        redirect: 'manual' as const,
+        credentials: 'omit' as const,
+        signal: AbortSignal.timeout(65_000),
+        duplex: 'half' as const,
+      }
+      response = await this.fetch(new Request(url, init))
+    } catch {
+      throw new ProviderError('unavailable', 503)
+    }
+    try {
+      if (response.body) await readBoundedBody(response.body, RESPONSE_BUDGET)
+    } catch (error) {
+      if (error instanceof BodyBudgetExceeded)
+        throw new HttpError(
+          502,
+          'sandbox_response_too_large',
+          'The cloud computer response is too large.',
+        )
+      if (!response.ok) throw providerError(response, null)
+      throw new ProviderError('invalid_response', 502)
+    }
+    if (!response.ok) throw providerError(response, null)
   }
 
   async request(

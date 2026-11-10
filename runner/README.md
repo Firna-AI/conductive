@@ -139,7 +139,7 @@ These facts belong to this implementation, not to the protocol docs.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no login and starts no agent.
 - The runner protocol carries no GitHub token.
-  [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
+  [GitHub tokens](../docs/protocol/github-tokens.md)
   states how a sandbox gets GitHub access.
 
 ## Event limits
@@ -193,7 +193,7 @@ It adds `X-Conductive-Relay: 1` to every response, including errors and upgrade 
 It replaces any value for this header that the previewed server sends.
 The Worker uses the mark to distinguish relay answers from provider answers.
 The Worker removes the mark before it sends the answer to the browser.
-The [preview requirements](../docs/protocol/access-and-security.md#port-previews)
+The [preview requirements](../docs/protocol/terminal-previews-and-desktop.md#port-previews)
 state its access rules.
 
 [`src/relay/main.ts`](src/relay/main.ts) starts the relay.
@@ -313,6 +313,7 @@ tools that time the first agent start after a resume.
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `message.ts` puts the sender line before the text of each message.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
+  `attachment-description.ts` describes each attached file to both agents.
   The [tool entry points](agent-tools.md#key-code) cover both MCP servers.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of
@@ -326,13 +327,13 @@ tools that time the first agent start after a resume.
 
 ## Related docs
 
-- [Architecture: sandbox software](../docs/architecture.md#sandbox-software)
+- [Architecture: sandbox software](../docs/architecture/components.md#sandbox-software)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
-- [Chat and events: agents](../docs/protocol/chat-and-events.md#agents)
+- [Chat and events: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)
-- [Access and security: agent logins in a sandbox](../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
-- [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+- [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
+- [Workspaces and sandboxes: files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)
 - [Agent tools: workspace tools](../docs/protocol/agent-tools.md#workspace-tools)
 - [Shared contracts](../src/shared/README.md)

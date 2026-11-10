@@ -106,7 +106,7 @@ it('forwards terminal and preview input and runner state during a failed provide
   expect(browser.readyState).toBe(WebSocket.READY_STATE_OPEN)
   await active.actor().waitForLocalActivity()
   expect(await active.actor().readLifecycle()).toMatchObject({
-    lastActivityAt: active.now + 60_000,
+    lastActivityAt: active.now + 20_000,
   })
   expect(deadlines).toEqual([{ ttlSeconds: 1860 }, { ttlSeconds: 1860 }])
   expect(maximum).toBe(1)

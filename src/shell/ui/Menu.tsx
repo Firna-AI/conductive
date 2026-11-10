@@ -1,19 +1,22 @@
-import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { Check } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
 import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
-import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
 import { useMenuLayer } from './layers'
-import { useDismiss, useLayerFocus } from './Overlay'
+import { MenuList } from './MenuList'
+import { useDismiss } from './Overlay'
 import { Sheet } from './Sheet'
 import { useViewport } from './viewport'
 import ui from './ui.module.css'
 
-type MenuAction = {
+export type MenuAction = {
   kind: 'item'
   label: string
   onSelect: () => void
+  /**
+   * What the item stands for, such as a section, when two items can have
+   * the same label. Else the label names the item.
+   */
+  id?: string
   icon?: LucideIcon
   /** A mark in place of the icon, such as an avatar. */
   mark?: ReactNode
@@ -25,116 +28,23 @@ type MenuAction = {
   disabled?: boolean
 }
 
+/**
+ * An item that shows choices: beside the menu at a point, or in place of
+ * the menu in a phone sheet. The owner of the menu draws the choices.
+ */
+export type MenuSubmenu = {
+  kind: 'submenu'
+  id: string
+  label: string
+  icon?: LucideIcon
+}
+
 export type MenuEntry =
   | MenuAction
+  | MenuSubmenu
   | { kind: 'label'; label: string }
   | { kind: 'note'; text: string }
   | { kind: 'divider' }
-
-function moveFocus(event: KeyboardEvent<HTMLDivElement>, close: () => void) {
-  const items = Array.from(
-    event.currentTarget.querySelectorAll<HTMLElement>(
-      '[role^="menuitem"]:not(:disabled)',
-    ),
-  )
-  const at = items.findIndex((item) => item === document.activeElement)
-  const last = items.length - 1
-  const targets: Record<string, number> = {
-    ArrowDown: at >= last ? 0 : at + 1,
-    ArrowUp: at <= 0 ? last : at - 1,
-    Home: 0,
-    End: last,
-  }
-  if (event.key === 'Tab') close()
-  const target = targets[event.key]
-  if (target === undefined) return
-  event.preventDefault()
-  items[target]?.focus()
-}
-
-function Item(props: { entry: MenuAction; close: () => void }) {
-  const { entry } = props
-  const Icon = entry.icon
-  const choice = entry.checked !== undefined
-  let lead: ReactNode = null
-  if (entry.mark) lead = <span className={menu.mark}>{entry.mark}</span>
-  else if (Icon) lead = <Icon aria-hidden className={menu.icon} size={14} />
-  return (
-    <button
-      aria-checked={choice ? entry.checked : undefined}
-      className={classes(
-        menu.item,
-        ui.plainButton,
-        ui.menuItem,
-        entry.tone === 'danger' && menu.danger,
-      )}
-      disabled={entry.disabled}
-      onClick={() => {
-        props.close()
-        entry.onSelect()
-      }}
-      role={choice ? 'menuitemradio' : 'menuitem'}
-      tabIndex={-1}
-      type="button"
-    >
-      {lead}
-      <span className={menu.label}>{entry.label}</span>
-      {entry.detail ? (
-        <span className={menu.detail}>{entry.detail}</span>
-      ) : null}
-      {entry.checked ? (
-        <Check aria-hidden className={menu.check} size={14} />
-      ) : null}
-    </button>
-  )
-}
-
-/** An open menu. The arrow keys move between its items. */
-function MenuList(props: {
-  label: string
-  entries: readonly MenuEntry[]
-  placement: MenuPlacement
-  close: () => void
-  wide?: boolean
-}) {
-  const list = useRef<HTMLDivElement>(null)
-  // A menu in a sheet leaves the focus to the sheet, which is modal.
-  useLayerFocus(list, { modal: false, enabled: props.placement !== 'sheet' })
-  return (
-    <div
-      aria-label={props.label}
-      className={classes(
-        menu.menu,
-        menu[props.placement],
-        props.wide && menu.wide,
-      )}
-      onKeyDown={(event) => moveFocus(event, props.close)}
-      ref={list}
-      role="menu"
-    >
-      {props.entries.map((entry, index) => {
-        switch (entry.kind) {
-          case 'item':
-            return <Item close={props.close} entry={entry} key={entry.label} />
-          case 'label':
-            return (
-              <div className={menu.group} key={entry.label} role="none">
-                {entry.label}
-              </div>
-            )
-          case 'note':
-            return (
-              <p className={menu.note} key={`note-${index}`} role="none">
-                {entry.text}
-              </p>
-            )
-          case 'divider':
-            return <hr className={menu.divider} key={`divider-${index}`} />
-        }
-      })}
-    </div>
-  )
-}
 
 export interface MenuTriggerState {
   open: boolean

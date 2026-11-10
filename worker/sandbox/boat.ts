@@ -1,6 +1,7 @@
 import type { HttpFetch } from '../env'
 import { ProviderError } from './errors'
 import { readSandboxFile } from './file-read'
+import { writeSandboxFile } from './file-write'
 import {
   readCommand,
   readCommandStatus,
@@ -29,6 +30,15 @@ export class BoatClient implements SandboxProvider {
 
   readFile(sandboxId: string, path: string, maxBytes: number) {
     return readSandboxFile(this.transport, sandboxId, path, maxBytes)
+  }
+
+  writeFile(
+    sandboxId: string,
+    path: string,
+    body: ReadableStream<Uint8Array>,
+    sizeBytes: number,
+  ): Promise<void> {
+    return writeSandboxFile(this.transport, sandboxId, path, body, sizeBytes)
   }
 
   async privatePort(
@@ -78,7 +88,15 @@ export class BoatClient implements SandboxProvider {
     ) {
       throw new ProviderError('invalid_response', 502)
     }
-    return { origin: url.origin, token }
+    return {
+      origin: url.origin,
+      credential: {
+        headers: { Cookie: `_port_auth=${token}` },
+        stripCookies: ['_port_auth'],
+        stripHeaders: [],
+        stripQueryParameters: ['_token', '_port_auth'],
+      },
+    }
   }
 
   async desktop(sandboxId: string): Promise<SandboxDesktop> {

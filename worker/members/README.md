@@ -32,11 +32,12 @@ Bind the org ID and actor ID for that predicate.
 This keeps a concurrent role change or deletion from permitting a stale write.
 `activeAdminPredicate` counts only an admin whose account is not suspended.
 
-Deleted-org work gets its provider from `deletedOrgProvider` in `cleanup-provider.ts`.
-It first checks the cleanup lease of the org.
-It then calls `sandboxProvider` from the [sandbox area](../sandbox/README.md), which uses the app's one Boat key.
+Deleted-org work calls `requireDeletedOrgCleanup(env, orgId, leaseToken)` in `cleanup-provider.ts` before the provider call of each resource.
+It checks the cleanup lease of the org, and it returns 404 `org_not_found` without one.
+Each resource and each retained disk then gets the client of its own stored provider account from `providerForAccount` of the [sandbox area](../sandbox/README.md).
 Under a cleanup lease, a provider failure returns 502 `org_cleanup_failed`.
-A refused Boat key is such a failure. The recovery state stays for a retry.
+A refused Boat key is such a failure, and so is an unknown provider account. The recovery state stays for a retry.
+`ignoreAlreadyRemoved` counts only a provider `not_found` as already removed. So the journal keeps each resource of an unknown account.
 
 A suspended org stays visible to its members.
 Every member write except voluntary Leave uses the shared active-org check and SQL predicate.
@@ -106,7 +107,7 @@ Production also supplies `deleteOrgState` to remove the image coordinator payloa
 - `suspendOrg` stops org access before resource enumeration.
   It must reject new starts and writes for the deleted org.
   It must drain pending workspace starts and image builds.
-  It must retain their sandbox IDs and snapshot names in D1.
+  It must retain their sandbox IDs and snapshot names in D1, each with its provider account.
   It must close existing browser and runner access.
   It must disable normal idle, refresh, and disk keepalive timers.
   It must handle builds even when the workspace list is empty.
@@ -130,7 +131,7 @@ Production also supplies `deleteOrgState` to remove the image coordinator payloa
   It also receives the call ownership and the complete workspace ID list.
   It returns disk and org-refresh timers to the active lifecycle.
   It must arm these timers before it returns.
-  The timers must check active org state and current disk/settings records before running.
+  The timers must check active org state and current disk, settings, and org image records before running.
   It must keep normal access closed and start no sandbox during the handoff.
   Replace older timer plans for the same org.
   Concurrent calls must reject older generations, even when request IDs match.
@@ -164,8 +165,18 @@ The test policy uses that margin. Production uses the lifecycle's own policy.
 After seven days, it removes all recorded org-image and build snapshots
 before any sandbox deletion. It then removes workspace state and D1 rows.
 The resource journal keeps completed steps after a failure.
+Each journal resource holds its kind, its ID, and its provider account. So equal IDs in two accounts stay two resources.
+Each org image of `org_images` enters the journal with the provider account of its own record. The purge also deletes the `org_images` rows of the org.
 The result names purged orgs and orgs that need another attempt.
 D1 ownership records stay until every external cleanup succeeds.
+Attachment cleanup follows the same rule.
+Workspace purge removes its R2 files after the workspace receiver fence drains its work.
+Org purge also removes draft files and files of failed creation attempts.
+An R2 failure keeps the deletion record and leaves the org pending for retry.
+The scheduled handler sweeps expired unsent attachments before org work.
+Its claimed-file check runs in the workspace chat queue, beside message admission.
+An accepted file of a surviving workspace stays until purge.
+See [chat attachments](../chat/attachments.md) for the storage boundary and expiry proof.
 A cleanup lease separates Restore from cleanup calls.
 An expired lease permits a later attempt after a worker stops.
 
@@ -174,6 +185,7 @@ It checks the current lease before every operation.
 The disk lists of maintenance, retention, and Restore leave out each workspace whose owner the [operator suspended](../operator/README.md).
 The capability also refuses to restart such a workspace, so retention starts no cloud computer of a suspended user.
 A restart must be due at its stored keepalive date.
+Each stop, keepalive date, and restart write matches its sandbox by the sandbox ID and the provider account together.
 It resumes with `noEnv` and empty env vars, then stops the sandbox.
 It supplies no workspace token, agent login, or org secret.
 Keep runner, preview, user startup, and agent access suspended in retention mode.
@@ -256,7 +268,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - [workspace-receiver.ts](workspace-receiver.ts) preserves the receiver fence while it removes workspace payloads.
 - [receiver-fence.ts](receiver-fence.ts) checks generations in storage transactions.
 - [receiver-storage.ts](receiver-storage.ts) prevents normal data and alarm writes after purge.
-- [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access and token checks. A create without a sandbox also needs its image pin.
+- [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access and token checks. A create without a sandbox also needs its image pin, with the same image name and provider account. A create with a retained sandbox takes the account of the workspace record.
 - `gate.ts` extends the request gate for deleted-org access and shared writes.
 - `route.ts` defines HTTP dispatch and the required integration hooks.
 - `membership.ts` manages roles, removal, leave, and the last-admin rule.
@@ -274,7 +286,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `lifecycle-data.ts` allocates generations and guards lifecycle writes and renewal.
 - `restore.ts` implements the retryable Restore handoff.
 - `cleanup-lease.ts` scopes cleanup work and maps its failures to `org_cleanup_failed`.
-- `cleanup-provider.ts` checks the cleanup lease before it gives deleted-org work a provider.
+- `cleanup-provider.ts` exports `requireDeletedOrgCleanup`, the cleanup lease check before each provider call, and `ignoreAlreadyRemoved`.
 - `cleanup.ts` implements scheduled provider and data cleanup.
 - `account.ts` exposes the last-admin account-deletion guard.
 - `*-data.ts` owns the D1 queries and the guarded mutation predicates.

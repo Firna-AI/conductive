@@ -91,6 +91,15 @@ The Durable Object runs the gates itself.
   header, the session cookie, the org membership, and the body of writes.
 - `findChatWorkspace` then reads the workspace from D1. The workspace must
   belong to that org, and the org must not be deleted.
+- Each browser write then enters the serial queue of the object. In the
+  queue, `authorizeChatBrowser` checks the access again, with the body that
+  the gate already read and the time of the queued check. It runs
+  `gateAccess`, the [access checks](../security/README.md#access-checks) of
+  the gate, and reads the workspace and its archive state again. This
+  repeats the D1 reads of the first check. So a write that waited for its
+  body or for the queue gets the refusal that a new request would get. An
+  example is `401 sign_in_required` after a sign-out. The write saves
+  nothing. Reads and the events socket take no second check.
 - Each open tab holds a `workspace` identity. The
   [shared connection reader](../security/README.md#open-connections) of
   the security area gives it a grant with a deadline. The `workspace` kind
@@ -160,7 +169,8 @@ The Durable Object runs the gates itself.
 
 An org suspension keeps chat history and event subscriptions readable.
 The common browser write gate refuses session and message changes with `org_suspended`.
-The same check runs inside the browser write queue before session or message changes.
+The second access check of each browser write refuses such a change again in the queue.
+This also holds when the suspension starts while the change waits.
 The shared token rule refuses runners and agent logins for the org.
 
 ## History and event order
@@ -195,10 +205,20 @@ npm run test -- worker/chat
 npm run typecheck
 ```
 
-[Chat backend tests](tests.md) names the test support files and what each
-group of tests covers.
+The shared chat and runner fixtures run the production workspace object in Miniflare with native SQLite.
+Their restart helpers evict the real object.
+[Chat backend tests](tests.md) names the native controls and each group of tests.
+
+`write-access.test.ts` holds a rename at its body read or in the queue.
+Then one access fact ends, such as a sign-out, a removal from the org, or
+an archive. The rename gets the refusal that a new request would get, and
+saves nothing. A new refused request leaves its body unread.
 
 ## Seams for other milestones
+
+[Chat attachments](attachments.md) gives the internal storage boundary, acceptance proof, copy preparation and order, agent input, and cleanup integration.
+Attachment copies use the provider account of the workspace record.
+Each copy checks that account and the sandbox ID before each file and after the last file.
 
 [Chat backend integration](integration/README.md) gives the seams for other
 features. It covers the hooks, the trusted workspace calls, the workspace
@@ -235,7 +255,9 @@ tests through the production Worker entry.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
   turns as stopped when the lifecycle state becomes stopped or error.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
-  the object.
+  the object. With the body that the gate already read, it runs
+  `gateAccess` in place of `gate`, and finds the workspace again.
+  `WorkspaceChat.fetch` uses this form in the queue for each browser write.
 - `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
   token checks before the runner connection opens.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
@@ -270,6 +292,8 @@ tests through the production Worker entry.
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
   check.
+- `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
+  send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.
@@ -305,16 +329,16 @@ tests through the production Worker entry.
 
 ## Related docs
 
-- [Chat and events: Messages](../../docs/protocol/chat-and-events.md#messages)
+- [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)
-- [Access and security: Agent logins in a sandbox](../../docs/protocol/access-and-security.md#agent-logins-in-a-sandbox)
-- [Access and security: The workspace token](../../docs/protocol/access-and-security.md#the-workspace-token)
+- [Access and security: Agent logins in a sandbox](../../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
+- [Access and security: The workspace token](../../docs/protocol/tokens-and-secrets.md#the-workspace-token)
 - [Operator actions: Workspace tokens and runners](../../docs/protocol/operator-actions.md#workspace-tokens-and-runners)
-- [Architecture: Workspace Durable Object](../../docs/architecture.md#workspace-durable-object)
+- [Architecture: Workspace Durable Object](../../docs/architecture/components.md#workspace-durable-object)
 - [Shared contracts](../../src/shared/README.md)
 - [Backend and runner fakes](../test-support/README.md)
 - [Browser fakes](../../src/test-support/README.md)

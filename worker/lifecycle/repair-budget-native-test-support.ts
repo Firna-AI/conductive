@@ -1,4 +1,5 @@
 import type { AppEnv } from '../env'
+import type { WarningRecord } from '../warnings'
 import { imageRuntime } from './runtime'
 import { repairLifecycleAlarms } from './repair'
 
@@ -6,7 +7,7 @@ import { repairLifecycleAlarms } from './repair'
 export async function exerciseRepairBudget(env: AppEnv, now: number) {
   const workspaceCalls: string[] = []
   const orgCalls: string[] = []
-  const warnings: string[][] = []
+  const warnings: WarningRecord[] = []
   const dependencies = {
     now: () => now,
     fetch,
@@ -34,23 +35,21 @@ export async function exerciseRepairBudget(env: AppEnv, now: number) {
     sha256: 'a'.repeat(64),
   })
   const warn = console.warn
-  console.warn = (message: unknown) => {
-    warnings.push([
-      typeof message === 'string' ? message : 'Unexpected warning',
-    ])
+  console.warn = (message: WarningRecord) => {
+    warnings.push(message)
   }
   try {
     const first = await repairLifecycleAlarms(runtime, images, software)
     const firstWorkspaces = [...workspaceCalls]
     const firstOrgs = [...orgCalls]
-    const firstWarnings = warnings.map((values) => [...values])
+    const firstWarnings = [...warnings]
     const movedWorkspaces = await env.DB.prepare(
       'SELECT COUNT(*) AS count FROM workspaces WHERE next_disk_keepalive_at = ?',
     )
       .bind(now)
       .first<number>('count')
     const movedOrgs = await env.DB.prepare(
-      'SELECT COUNT(*) AS count FROM settings WHERE next_image_refresh_at = ?',
+      'SELECT COUNT(*) AS count FROM org_images WHERE next_image_refresh_at = ?',
     )
       .bind(now)
       .first<number>('count')

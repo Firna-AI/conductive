@@ -28,10 +28,11 @@ export async function insertPreview(
 ): Promise<boolean> {
   const result = await db
     .prepare(
-      `INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at, listener_sandbox_id)
-     SELECT ?, ?, w.org_id, w.id, ?, ?, ?, w.sandbox_id FROM workspaces w
+      `INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at,
+       listener_sandbox_id, provider_account)
+     SELECT ?, ?, w.org_id, w.id, ?, ?, ?, w.sandbox_id, w.provider_account FROM workspaces w
      JOIN org_members m ON m.org_id = w.org_id
-     WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ?
+     WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ? AND w.provider_account = ?
      AND ${sandboxAccessPredicate} AND m.user_id = ?`,
     )
     .bind(
@@ -43,6 +44,7 @@ export async function insertPreview(
       target.workspaceId,
       target.orgId,
       target.sandboxId,
+      target.providerAccount,
       userId,
     )
     .run()
@@ -90,12 +92,20 @@ export async function savePreviewSandbox(
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE preview_hostnames SET listener_sandbox_id = ?
+      `UPDATE preview_hostnames SET listener_sandbox_id = ?, provider_account = ?
        WHERE workspace_id = ? AND org_id = ? AND revoked_at IS NULL
        AND EXISTS (SELECT 1 FROM workspaces w
-         WHERE w.id = preview_hostnames.workspace_id AND w.sandbox_id = ?)`,
+         WHERE w.id = preview_hostnames.workspace_id
+         AND w.sandbox_id = ? AND w.provider_account = ?)`,
     )
-    .bind(target.sandboxId, target.workspaceId, target.orgId, target.sandboxId)
+    .bind(
+      target.sandboxId,
+      target.providerAccount,
+      target.workspaceId,
+      target.orgId,
+      target.sandboxId,
+      target.providerAccount,
+    )
     .run()
 }
 

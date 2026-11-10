@@ -89,7 +89,13 @@ export async function allocateWorkspace(
         persist: () => storage.update(job),
       })
       job.allocatedSandboxId = sandbox.id
-      await assignSandbox(env.DB, job.orgId, job.workspaceId, sandbox.id)
+      await assignSandbox(
+        env.DB,
+        job.orgId,
+        job.workspaceId,
+        sandbox.id,
+        job.providerAccount,
+      )
       await storage.update(job)
     }
     await assignSandbox(
@@ -97,6 +103,7 @@ export async function allocateWorkspace(
       job.orgId,
       job.workspaceId,
       job.allocatedSandboxId,
+      job.providerAccount,
     )
     return job.allocatedSandboxId
   } catch (error) {
