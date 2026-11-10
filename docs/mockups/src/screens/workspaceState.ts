@@ -129,7 +129,8 @@ export const workspaceStateSchema = {
      * own messages. With files, a file can still upload, its upload can fail,
      * or a file over the size limit can stay out of the message.
      * `workspace-link` holds a message with a pasted link to another
-     * workspace of the org, which shows as a chip.
+     * workspace of the org, which shows as a chip. `picker-unlisted` opens
+     * the picker on an own endpoint whose model list lacks a model.
      *
      * The `mention-` states open the list of `@`: with a query, without
      * one, with no match, while the tree loads, and with no tree.
@@ -147,6 +148,7 @@ export const workspaceStateSchema = {
         'upload-failed',
         'too-large',
         'picker',
+        'picker-unlisted',
         'no-agent',
         'no-starter-login',
         'not-shared',

@@ -9,6 +9,7 @@ export const conversationKeys = [
   'interrupted',
   'sandbox-stopped',
   'failed',
+  'model-not-served',
   'queued',
   'queued-follow-up',
   'queued-retry',

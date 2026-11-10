@@ -37,6 +37,12 @@ could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
+`app/chat/endpoint-models` is a proposal for option G of decision 10 of
+the own endpoint plan, not chosen yet. In a session of Cal, the picker
+marks Fable 5.1 as "Not listed", because the model list of Cal's proxy
+does not name it, and the model stays a choice. Its `not-served` variant
+has a turn on Fable 5.1 that stopped, whose notice names the model ID and
+no host. Its `member` variant has the same notice as Priya sees it.
 
 `app/routines` lists the routines of Acme, which the Routines link below
 New workspace opens. Its child pages:

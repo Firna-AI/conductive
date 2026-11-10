@@ -21,6 +21,7 @@ import { agentKeys, type AgentKey } from '../fixtures/agents'
 import {
   accountLogins,
   endpointLogins,
+  unlistedModelLogins,
   type AgentLogin,
   type AgentLogins,
 } from '../fixtures/logins'
@@ -75,10 +76,13 @@ export const accountSchema = {
      * The own endpoint login: none, the open form on the own endpoint kind
      * with an empty address, with a typed address that the shared rule
      * changes before the save, or with an address that the rule refused, or
-     * the logins after the connect. Except for `none`, every connected login
-     * runs on Cal's proxy.
+     * the logins after the connect. `unlisted` has those logins when the
+     * model list of the proxy lacks a Claude model of the app. Except for
+     * `none`, every connected login runs on Cal's proxy.
      */
-    ownEndpoint: { enum: ['none', 'form', 'typed', 'refused', 'connected'] },
+    ownEndpoint: {
+      enum: ['none', 'form', 'typed', 'refused', 'connected', 'unlisted'],
+    },
   },
 } as const
 
@@ -101,11 +105,17 @@ const connectedRail: RailState = { orgs: orgList, current: 'account' }
 /** At the first run the rail has no org yet. */
 const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 
+/** The saved logins of each state of the own endpoint login. */
+function savedLogins(ownEndpoint: AccountState['ownEndpoint']): AgentLogins {
+  if (ownEndpoint === 'none') return accountLogins
+  return ownEndpoint === 'unlisted' ? unlistedModelLogins : endpointLogins
+}
+
 /** The logins of the agents in a state, without the agent of the form. */
 function loginsFor(state: AccountState): AgentLogins {
   const logins: Partial<Record<AgentKey, AgentLogin>> = {}
   if (state.connections === 'not-connected') return logins
-  const saved = state.ownEndpoint === 'none' ? accountLogins : endpointLogins
+  const saved = savedLogins(state.ownEndpoint)
   for (const key of agentKeys) {
     const login = saved[key]
     if (login && key !== state.form) logins[key] = login

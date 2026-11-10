@@ -1,4 +1,5 @@
 import type { AgentKey } from './agents'
+import { proxyModelCheck, type ModelListCheck } from './endpointModels'
 
 /**
  * How a user connects an agent: Claude with a subscription token from
@@ -25,9 +26,12 @@ export const agentLoginKinds: Readonly<
 /**
  * A connected login, as the account shows it: its kind, and the host of an
  * own endpoint. The key and the full address never go back to the browser.
+ * `models` is the last read of the model list of an own endpoint, when that
+ * list lacks models of the app.
  */
 export type AgentLogin =
-  { kind: 'token' | 'api-key' } | { kind: 'endpoint'; host: string }
+  | { kind: 'token' | 'api-key' }
+  | { kind: 'endpoint'; host: string; models?: ModelListCheck }
 
 /** The agents that a user connected, and how. */
 export type AgentLogins = Readonly<Partial<Record<AgentKey, AgentLogin>>>
@@ -44,6 +48,15 @@ const endpointHost = 'proxy.example.com'
 /** The logins of the account after Cal connected both agents to the proxy. */
 export const endpointLogins: AgentLogins = {
   claude: { kind: 'endpoint', host: endpointHost },
+  codex: { kind: 'endpoint', host: endpointHost },
+}
+
+/**
+ * The same logins when the model list of the proxy lacks a Claude model of
+ * the app. The list names every Codex model of the app.
+ */
+export const unlistedModelLogins: AgentLogins = {
+  claude: { kind: 'endpoint', host: endpointHost, models: proxyModelCheck },
   codex: { kind: 'endpoint', host: endpointHost },
 }
 

@@ -16,6 +16,7 @@ import { AccountAvatar } from '../orgs/OrgTile'
 import { StatusText } from '../common/StatusText'
 import { AgentConnectForm } from './AgentConnectForm'
 import type { EndpointEntry } from './EndpointFields'
+import { EndpointModels } from './EndpointModels'
 import { LoginEndpoint } from './LoginEndpoint'
 import { LoginShare } from './LoginShare'
 import { Section } from './Section'
@@ -98,9 +99,11 @@ export type OpenAgentForm = {
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
  * login. An own endpoint login shows its kind with the host of its endpoint
- * under its row, so that a phone shows both in full. `form` opens the
- * Connect form of an agent under its row. `removable` gives each connected
- * login its Remove, and `shares` its share setting, as on the account.
+ * under its row, so that a phone shows both in full. Under them come the
+ * models of the app that the model list of the endpoint does not name, with
+ * Refresh. `form` opens the Connect form of an agent under its row.
+ * `removable` gives each connected login its Remove, and `shares` its share
+ * setting, as on the account.
  */
 export function AgentList(props: {
   logins: AgentLogins
@@ -148,6 +151,9 @@ export function AgentList(props: {
             </div>
             {login?.kind === 'endpoint' ? (
               <LoginEndpoint host={login.host} kind={loginLabels.endpoint} />
+            ) : null}
+            {login?.kind === 'endpoint' && login.models ? (
+              <EndpointModels agent={agents[key].name} check={login.models} />
             ) : null}
             {login && props.shares ? (
               <LoginShare

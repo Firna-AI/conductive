@@ -163,6 +163,10 @@ it. Its `codex` variant has the form of Codex on that kind. Its `refused`
 variant has an `http://localhost` address that the shared address rule
 refused. Its `connected` variant has both agents on an own endpoint, each
 with its host and its share switch on.
+`app/account/endpoint-models` is a proposal for option G of decision 10
+of the own endpoint plan, not chosen yet. Both agents run on Cal's proxy,
+whose model list does not name Fable 5.1. The Claude row says so, with the
+model ID, the time of the last read of the list, and Refresh.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its states are child

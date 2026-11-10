@@ -40,6 +40,11 @@ export type ComposerState = {
    * agent opens a new session with the draft (decision 51).
    */
   sessionAgent?: AgentKey
+  /**
+   * The models that the model list of the viewer's own endpoint does not
+   * name, in a session of the viewer on that login. The picker marks them.
+   */
+  unlisted?: readonly string[]
   /** The text of an empty box. */
   placeholder?: string
   /** The screen that Send leads to, when the mockups draw it. */
@@ -145,6 +150,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
               choice={props.choice}
               open={props.picker}
               sessionAgent={props.sessionAgent}
+              unlisted={props.unlisted}
             />
             {props.sessionLogin ? (
               <SessionLoginLabel {...props.sessionLogin} />

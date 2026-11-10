@@ -7,6 +7,7 @@
     "lost-data",
     "lost-updates",
     "unavailable-files",
-    "masked-paths"
+    "masked-paths",
+    "endpoint-models"
   ]
 }

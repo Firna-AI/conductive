@@ -6,6 +6,7 @@ import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
+import { endpointConversations } from './endpointModels'
 import { changedFiles, type ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
 import {
@@ -251,6 +252,7 @@ export const conversations: Readonly<
       text: 'Claude is overloaded right now.',
     },
   ],
+  ...endpointConversations({ history, followUp: followUpDraft }),
   ...newWorkspaceConversations,
   ...macConversations(history),
   ...lostConversations(history),
