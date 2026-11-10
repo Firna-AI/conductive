@@ -119,7 +119,7 @@ it.each(['claude', 'codex'] as const)(
         ? {
             role: 'user',
             content:
-              'Sender: Alice Example Member (@alice)\n\n  Keep this text.\n\nAnd this line.  \nAttached file: /uploads/image.png\nAttached file: /uploads/notes.txt',
+              'Sender: Alice Example Member (@alice)\n\n  Keep this text.\n\nAnd this line.  \nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png"}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt"}',
           }
         : {
             input: [
@@ -128,10 +128,15 @@ it.each(['claude', 'codex'] as const)(
                 text: 'Sender: Alice Example Member (@alice)\n\n  Keep this text.\n\nAnd this line.  ',
                 text_elements: [],
               },
+              {
+                type: 'text',
+                text: 'Attached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png"}',
+                text_elements: [],
+              },
               { type: 'localImage', path: '/uploads/image.png' },
               {
                 type: 'text',
-                text: 'Attached file: /uploads/notes.txt',
+                text: 'Attached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt"}',
                 text_elements: [],
               },
             ],

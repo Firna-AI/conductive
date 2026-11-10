@@ -4367,6 +4367,106 @@ Added on 8 November 2026, from review finding 3 of branch
 Each item below is an agent call of 5 November 2026 unless it says
 otherwise. The user can override any of them.
 
+**Chat attachments.** Orchestrator calls of 8 November 2026 for decision
+132 A and the user's choice D of decision 144 on the same day.
+
+- Send one raw file per request with `application/octet-stream`. Keep one
+  shared list of the two raw routes and their 25,000,000-byte limit for
+  the Worker entry and the app gate. Reason: a JSON route must not get the
+  raised limit. Every other write keeps its JSON rule and existing limit.
+- Require `Content-Length` and pipe the entry's counted body through
+  `FixedLengthStream` into R2. Reason: R2 requires a known stream length,
+  and the Worker must not buffer a complete file.
+- Put the name and media type in the URL. Put the first-message ID there
+  for a new workspace, under its org path. Reason: the desktop preflight
+  allows no extra metadata header, and the gate must check the org first.
+- Use `XMLHttpRequest` for measured upload progress. Keep the file pending
+  until the server accepts it. Reason: `fetch` reports no upload progress,
+  and sent bytes alone do not prove that the file reached storage.
+
+- Keep file bytes in one private R2 bucket and indexed ownership, upload,
+  claim, and cleanup records in D1. Check accepted use in the chat queue
+  before an expired claim can delete a file. Reason: the file store and
+  chat store cannot commit together, so a claim alone does not prove
+  message acceptance.
+- Use the fixed provider route `POST /sandboxes/{id}/files/upload-url`
+  for a copy into the cloud computer. Stream the R2 object to the exact
+  signed address that the route returns before the agent command goes
+  out. Keep the address inside the provider adapter, send no provider
+  credential with the transfer, and follow no redirect. Reason: the
+  [provider reference](https://docs.boat.dev/api/reference/agent/create-upload-url)
+  permits files of any size and a streamed body. The runner connection
+  would need a new protocol for chunks, acknowledgements, and recovery.
+- Run the provider copy outside the serial chat queue. Re-enter the queue
+  for stored copy proof, current access checks, and dispatch. Reason: Stop
+  and runner event confirmations must continue while a file transfers.
+- Give each accepted message its own safe file paths. Keep copy proof for
+  the message and its destination cloud computer, as the fix round 2
+  entry below says. Reason: another message or a redelivery must not
+  overwrite a file that an agent is reading.
+- Use 25,000,000 bytes for 25 MB, as the existing request body policy uses
+  decimal MB. The limit notice gives no formatted file size, because the
+  shared size formatter uses units of 1024.
+- Copy the files of a message that joins a running turn before its command
+  goes out. Reason: that message can arrive after the turn starts. A turn
+  that cannot start after a failed copy uses the existing failed-turn and
+  Try again behaviour.
+- Fix round 1 of PR #71, finding 2, option B, 8 November 2026: check the
+  pending commands in stored order for send, wait, or skip. A message that
+  waits for its copy holds the later messages of its turn, in accepted
+  order. Stop and other turns do not wait. A failed copy fails its own
+  turn, queued or running, through the existing failed-turn and Try again
+  behaviour. The failure adds no wait for later messages. Reason: a later
+  message can correct an earlier one. A rule that holds all work of the
+  workspace during a copy was rejected, because it blocks Stop and
+  unrelated turns.
+- Agent call of 8 November 2026, needed for the failure rule of finding 2:
+  when a failed copy ends a running turn, the same commit saves the
+  existing `interrupt` command for that turn. That interrupt goes out
+  although the turn has ended, also again after a reconnect. The late end
+  of that turn from the runner removes only that interrupt. The interrupt
+  changes no public turn or session state. Reason: a failure in the Worker
+  alone leaves the agent running, so Try again gets `turn_running` from the
+  runner. This adds no Worker wait, runner command, message format, or
+  runner change. The protocol now sends no turn or message command after a
+  stored turn end, but lets this Stop cancel the agent after a copy
+  failure. The approved immediate failure with no new wait is the reason.
+  The reconnect and cleanup mechanics stay in the Worker guides.
+- Fix round 1 of PR #71, finding 3, option D, 8 November 2026: one shared
+  description gives both agents the original name, media type, and copied
+  path of each file. Codex keeps its local image input. Each copy path
+  ends in the safe extension of the immutable stored filename: 1 to 10
+  ASCII letters or digits, in lowercase. Other filenames get no extension.
+  Reason: a digest path alone hides the name and the type, and the
+  extension lets the agent choose its local reader. A wrong extension in a
+  filename can make the agent choose the wrong reader.
+- A draft whose stored file is gone uses the failed file chip and Try
+  again. Try again uploads its kept local file. Reason: this keeps the
+  approved draft expiry and the existing file recovery in one flow.
+- Fix round 2 of PR #71, finding 5, option B, chosen by the user on
+  9 November 2026: give each accepted message and destination cloud
+  computer one shared copy owner and one stored copy proof. The copy
+  writes each file only to the computer that its owner selected. A
+  continuation gets a new command ID but keeps the message and its file
+  paths. So it uses the owner and the proof of that message, and starts
+  no second copy. A reconnect to the same computer joins the owner too.
+  A finished copy saves its proof also when its first command or
+  connection is gone. A failed copy fails the turn of the current pending
+  command of that message, only while the newest connection of the owner
+  is live. A failure for an old computer fails no command on the new
+  computer. The fix keeps the file paths and rules for command IDs. The copy
+  stays outside the serial chat queue. Stop, the access checks, the
+  failed-turn path, Try again, and restarts keep their behaviour. This
+  replaces the copy proof for each command of the first design. Reason:
+  with an owner and a proof for each command, a continuation started a
+  second copy to the same paths, also while the first copy still ran. A
+  late copy could then overwrite the changes of the agent. One owner for
+  each message and computer protects the files at their actual
+  destination, so a command change can create no second writer. The
+  other options were A, which delays the copy of a continuation until
+  the earlier copy ends, and C, which gives each command its own paths
+  and keeps extra copies.
+
 **Components.**
 
 - The web app is React with Vite, and it uses `futex-ai/ui` components,
@@ -5458,24 +5558,79 @@ path that this milestone changes.
 Apply the `fix after merge` items of the workspace lifecycle. Added on 8
 November 2026.
 
-- [ ] Apply option B of `plans/follow-ups/shared-object-alarm.md`, and
+- [x] Apply option B of `plans/follow-ups/shared-object-alarm.md`, and
       delete that item. The one alarm scheduler stores a due time for each
       pending task, also for each failed `changed` hook. Each write that
       changes a due time sets the alarm to the earliest one.
-- [ ] Apply option B of `plans/follow-ups/terminal-setup-passes-start-limit.md`,
-      and delete that item.
-- [ ] Apply option E of `plans/follow-ups/lifecycle-turn-times-from-chat.md`,
-      and delete that item.
-- [ ] Apply option C of `plans/follow-ups/native-entries-advance-alarms.md`,
-      and delete that item.
-- [ ] Apply option C of `plans/follow-ups/terminal-replies-count-as-activity.md`,
-      and delete that item.
-- [ ] Apply option D of `plans/follow-ups/concurrency-callback-errors.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option B of `plans/follow-ups/terminal-setup-passes-start-limit.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option E of `plans/follow-ups/lifecycle-turn-times-from-chat.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option C of `plans/follow-ups/native-entries-advance-alarms.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option C of `plans/follow-ups/terminal-replies-count-as-activity.md`,
+      and delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option D of `plans/follow-ups/concurrency-callback-errors.md`,
       and delete that item. Added on 8 November 2026.
-- [ ] Apply option A of `plans/follow-ups/activity-for-suspended-owner.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
+- [x] Apply option A of `plans/follow-ups/activity-for-suspended-owner.md`,
       and delete that item. Added on 8 November 2026.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5e`.
 
-## Milestone 5f: Tests on the real workspace object
+Completed on 8 November 2026. Agent calls of that date:
+
+- Extend the existing feature scheduler through native and typed storage
+  ports, so all tasks share one scheduling rule.
+- Keep due markers through each handler. A successful device handler
+  clears only its unchanged lease. Check its revision inside the final
+  transaction, so a replacement at the same time survives.
+- Clear each completed access retry, also when no lifecycle state remains.
+  Clear an image retry when a successful run schedules no next task.
+  This keeps completed work out of the next alarm.
+- Keep the first failed `changed` retry during ordinary writes. Move it
+  forward only when that retry starts, so another write cannot delay it.
+  A best-effort title failure returns its outcome and keeps the marker.
+- Let the start own progress while its job exists. Restore the normal
+  lifecycle timer after completion, so the runner wait uses its deadline.
+  Give result publication its own deadline, because it can overlap a
+  resume. A publication retry does not block idle work or an access stop.
+- Store each result publication and its initial due time in one
+  transaction, so a restart cannot lose that retry. Release a removed
+  job or publication deadline when Archive clears its record.
+- Keep the generic alarm marker that member Restore writes. The receiving
+  lifecycle owner gives restored image, start, or cleanup work its task slot.
+  Claim an older publication at that wake only when its new slot is absent,
+  so a current retry keeps its own due time.
+- Run terminal setup and its password read in separate saved phases,
+  within the existing shown startup step. This keeps command polling
+  separate from the later bounded file read.
+- Keep `startWorkspaceTerminal` as the one password-read implementation.
+  This preserves existing setup callers without a compatibility wrapper.
+- Save `startup` as the Restore continuation when a create enters terminal
+  setup, so a retained checkpoint rebuilds its runtime files.
+- Use the same future initial time for the native object and HTTP jobs.
+  Advance the stored records alarm for initial admission, so no fixture
+  depends on automatic alarm delivery at real time.
+- Wait for D1 admission before driving a delegated create. The provider
+  allocation signal cannot arrive before that drive starts.
+- Return an expected D1 failure as plain test-control data. This keeps its
+  exact assertion when native RPC cannot transport the original error.
+- Split the two long lifecycle guides into companion pages. Keep their
+  old section headings as links, so existing incoming anchors still work.
+
+Verification evidence: `.context/boat-native-remote-workspaces/5e/summary.md`.
+
+Fix round 2, 9 November 2026. Agent call:
+
+- Treat any existing lifecycle run lease as recovery at the next lifecycle
+  run. Runs execute one at a time. This keeps an earlier task wake from
+  consuming the lease before recovery. The query of due times stays based
+  on timestamps.
+
+Fix-round evidence: `.context/boat-native-remote-workspaces/5e/fix-round-2/summary.md`.
+
+## Milestone 5f: Tests on the real workspace object (completed)
 
 Depends on: 5e, 8m. Both change the lifecycle and chat tests that this
 milestone moves.
@@ -5484,14 +5639,30 @@ Apply the `fix after merge` items of the Worker tests. Added on 8 November
 2026. One native harness serves the chat tests and the lifecycle tests, as
 both items recommend.
 
-- [ ] Apply option D of `plans/follow-ups/chat-tests-on-real-object.md` and
+- [x] Apply option D of `plans/follow-ups/chat-tests-on-real-object.md` and
       option E of `plans/follow-ups/lifecycle-tests-on-real-object.md`, with
       one native harness. Delete both items.
-- [ ] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5f`.
+- [x] Apply option C of `plans/follow-ups/harness-test-speed.md` (decision
       113), and delete that item.
-- [ ] Apply option A of `plans/follow-ups/start-time-limit-test-under-load.md`
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5f`.
+- [x] Apply option A of `plans/follow-ups/start-time-limit-test-under-load.md`
       after the move to the real object, and delete that item. Added on 8
       November 2026.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-5f`.
+
+9 November 2026. Agent calls:
+
+- Share one native runtime, D1, and R2 per test file. Keep each test's data isolated.
+- Run ordinary lifecycle calls through the production RPC and log codecs.
+- Keep transaction faults on live native transactions. Keep synchronous peer faults inside the native runtime.
+- Reset the real object context before eviction. This releases native request timers without changing production deadlines.
+- Keep the cancellation epoch proof on a focused native controller path. Ordinary RPC calls share the production chat queue.
+- Observe queries, decryption, warnings, and request bodies inside the native runtime. Host spies cannot observe those calls.
+- Batch prerequisite records and split independent long cases. Keep every product assertion, table row, and tested transition.
+- Include the new primary-branch naming tests. Keep their current expected values and native restart checks.
+
+Verification evidence: `.context/boat-native-remote-workspaces/5f/`.
 
 ## Milestone 6: App shell and workspaces
 
@@ -6406,26 +6577,46 @@ Tags: ui
 Depends on: 8m, 15i. They change the chat path, the composer, and the
 deletion purge that this milestone extends.
 
-Apply decision 132 A. Added on 8 November 2026.
+Apply decisions 132 A and 144 D. Added on 8 November 2026.
 
-- [ ] Draw each missing attachment state in the mockups, such as upload
+Completed on 8 November 2026 after the complete gate and the phone and
+desktop app/mockup comparison.
+
+Scope decision, 8 November 2026: The user chose A, extending this
+workspace to the shared attachment contracts, request body budget,
+first-message composer, metadata migration, cleanup RPC, test support,
+architecture, Terms, and mockup catalogue docs. The alternative was to
+wait for the primary orchestrator to land those shared changes first.
+Reason: one branch can verify the complete attachment flow. Changes in
+the workspace object and the first-start path stay specific to
+attachments, so that Milestones 5e and 8o can change the nearby code.
+
+- [x] Draw each missing attachment state in the mockups, such as upload
       progress, a failed upload with Try again, a file over the limit, and
       the files of a sent message. Then build them, and compare each with
       its mockup.
-- [ ] Store each upload in one R2 bucket, with a limit of 25 MB for each
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+- [x] Store each upload in one R2 bucket, with a limit of 25 MB for each
       file and a record of each file. Only a message of the uploader, in
       the workspace or the new workspace that the upload names, can use
       the file.
-- [ ] When the turn of a message starts, copy each of its files into the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+- [x] When the turn of a message starts, copy each of its files into the
       cloud computer at its path. The Worker has no provider route that
       writes a file yet. Add one to the fixed list of provider routes, or
       send the file through the runner connection, as a design call.
-- [ ] Delete the files of a workspace with the workspace, also in the
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+- [x] Delete the files of a workspace with the workspace, also in the
       purge of a deleted org, and an unsent draft file after 7 days.
-- [ ] Add the bucket to `docs/deployment.md` and to the Worker
-      configuration. State the rules in `docs/protocol/messages-and-turns.md`
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+- [x] Add the bucket to `docs/deployment.md` and to the Worker
+      configuration. State the rules in `docs/protocol/chat-and-events.md`
       and `docs/protocol/access-and-security.md`, and the stored files on
       the privacy page, with "(decision 132)".
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8p`.
+
+Evidence: `.context/milestone-8p/reports/` and
+`.context/milestone-8p/compare/` in the milestone workspace.
 
 ## Milestone 8q: Chat client follow-ups
 
@@ -7155,7 +7346,7 @@ requirements in force, so they add no numbered decision.
 - Give production file reads a fixed limit of 5 MiB, or 5,242,880 bytes.
   Reason: the protocol requires a size limit for a file read. Boat's file
   read stops at 5 MiB, so the fallback to it cannot read more.
-  [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
   states the value and its reason.
 - This milestone also owns a minimal public seam in `src/chat` for file
   tabs. The chat takes content that replaces the session chat but keeps
@@ -7166,7 +7357,7 @@ requirements in force, so they add no numbered decision.
 - This milestone also owns a `will-download` policy that lets a trusted
   Download in the Mac app save its file. It also owns the desktop tests
   and `desktop/README.md` of that policy. Other downloads stay cancelled.
-  Reason: [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  Reason: [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
   lets the header of a file tab download the file. The Mac app cancelled
   every download.
 - Add the new forward migration `202611071600_org_initials.sql` in the
@@ -7183,7 +7374,7 @@ requirements in force, so they add no numbered decision.
   workspaces. Reason: a recoverable API failure stays visible, and the
   other routes stay usable. The mockup `app/sign-in/invitations` draws it.
 - The stopped and error workspace mockups keep the saved All files and
-  Changes lists, as [Files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+  Changes lists, as [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
   requires. The tools panel and the composer keep their sandbox notices.
 - The Worker and the Mac build get the same trusted HTTPS desktop stream
   origins in `CONDUCTIVE_FRAME_SOURCES`, with no token and no wildcard
@@ -7776,10 +7967,30 @@ these items change.
 Apply the `fix after merge` items of the chat writes. Added on 8 November
 2026.
 
-- [ ] Apply option C of `plans/follow-ups/chat-access-before-queued-writes.md`,
+- [x] Apply option C of `plans/follow-ups/chat-access-before-queued-writes.md`,
       and delete that item.
-- [ ] Apply option B of `plans/follow-ups/chat-open-edits-after-read-only.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8r`.
+- [x] Apply option B of `plans/follow-ups/chat-open-edits-after-read-only.md`,
       and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-8r`.
+
+Implementation calls by the orchestrator on 9 November 2026:
+
+- Reuse the shared access checks inside the browser write queue. This
+  keeps the refusal order and codes equal to a new request. The queued
+  check makes four D1 reads, in place of the earlier org-only read.
+- Keep the parsed body separate from the fresh access context. The gate
+  also keeps the raw-upload branch that the attachment work added after
+  the follow-up item was written.
+- Derive the permitted overlay in a private helper beside `ChatBody`.
+  Keep only the session history while the chat is read-only. Use the
+  same value for the tabs, the dialogs, and the history clock. The store
+  keeps its overlay, as option B requires.
+- The primary update adds an operator action that lifts a suspension.
+  An open page learns of the lift only after a reload. Its kept chat
+  therefore stays read-only for the visit, so option B still applies.
+
+Evidence: `.context/boat-native-remote-workspaces/8r/orchestrator-checks.md`.
 
 ## Milestone 15s: Shell list follow-ups
 
@@ -7823,10 +8034,51 @@ Depends on: 5e. Its one alarm scheduler changes the GitHub alarms.
 Apply the `fix after merge` items of the GitHub code. Added on 8 November
 2026.
 
-- [ ] Apply option B of `plans/follow-ups/github-push-refresh-isolation.md`,
+- [x] Apply option B of `plans/follow-ups/github-push-refresh-isolation.md`,
       and delete that item.
-- [ ] Apply option E of `plans/follow-ups/shared-github-app-credentials.md`,
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13c`.
+- [x] Apply option E of `plans/follow-ups/shared-github-app-credentials.md`,
       and delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-13c`.
+
+Design calls by the implementor, checked by the orchestrator on 9 November
+2026:
+
+- Limit refresh isolation to push deliveries. Other events keep their
+  existing failure responses and delivery retries.
+- Accept `github_pending` for a push after its workspace stores a fresh
+  read. Push refreshes start at attempt zero, so the retry bound permits
+  that read.
+- Keep one current PEM key in the shared credential module. Both callers
+  reuse its import, and a failed token request clears that cache entry.
+- Accept PEM text or an imported `CryptoKey` in the shared flow. Production
+  image copies pass PEM text and their injected clock. The existing native
+  test caller keeps its imported key, without a change to shared fixtures.
+
+Evidence: `.context/boat-native-remote-workspaces/13c/orchestrator-checks.md`.
+
+Fix round 1, 9 November 2026. The user selected:
+
+- Finding 1, option D: keep the push-decision tests and add one native
+  push case. Prove retry storage, its due alarm, real eviction, and the
+  alarm's committed result before a browser read.
+- Finding 2, option C: use PEM text and a required clock in every image
+  credential caller and test. This replaces the earlier imported-key
+  compatibility call.
+- Finding 1, option E after the merge: move the GitHub tests to the one
+  native workspace harness. The
+  [follow-up item](follow-ups/github-tests-on-real-object.md) records that
+  wider move.
+
+Continuation on 9 November 2026. The user approved one bounded native
+case diagnostic round. That round did not produce a concrete fix. Under
+the user's fallback, keep the unfinished native case and its helper
+additions out of this branch. Record the wait markers and remaining
+uncertainty in the native-harness follow-up. Option E uses the one native
+harness from Milestone 5f, pull request #102. Finding 2 option C proceeds
+through the gate and CI. No further answer is needed for this case.
+
+Fix-round evidence: `.context/boat-native-remote-workspaces/13c/fix-round-1/summary.md`.
 
 ## Milestone 15t: Typed Worker warnings
 
@@ -7836,8 +8088,35 @@ most warnings live.
 Apply the wider fix of findings 1 and 6 of the review of the deploy fixes.
 Added on 8 November 2026.
 
-- [ ] Apply option D of `plans/follow-ups/typed-worker-warnings.md`, and
+- [x] Apply option D of `plans/follow-ups/typed-worker-warnings.md`, and
       delete that item.
+      Branch: `conductor/boat-native-remote-workspaces-milestone-15t`.
+
+Design calls by the implementor, checked by the orchestrator on 9 November
+2026:
+
+- Use a structured warning union. Each kind selects fixed text and typed
+  metadata. Select every logged field explicitly, including nested error
+  fields, because structural assignment can retain extra caller fields.
+- Check IDs against the canonical base64url format of `randomToken`.
+  Other values become `unknown` in logs only. Do not widen the check for
+  short fixture IDs or UUIDs that production does not use.
+- Use allowlists for HTTP codes, provider codes, and command states.
+  Unknown HTTP codes and command states become `unknown`. Unknown provider
+  codes become `null`. Keep numeric status and outcome fields.
+- Use the fixed kind `error` for generic errors. A custom constructor name
+  can hold private text, as an error message can.
+- Keep warning kinds and checked values in separate modules. This keeps
+  the logger short and gives callers the types and checks that they need.
+  Keep `CommandFailed` in its existing module, so its other caller needs
+  no import change.
+- Keep the current detached terminal path. Its warning and integration
+  regression moved to the lifecycle code. The named terminal service test
+  now checks the current command path directly, with markers in both
+  stdout and stderr. Keep the existing lifecycle failure and password-read
+  assertions.
+
+Evidence: `.context/boat-native-remote-workspaces/15t/orchestrator-checks.md`.
 
 ## Milestone 15u: One record of every cloud computer
 
@@ -7854,12 +8133,35 @@ Apply option F of finding 10 of PR #52. Added on 8 November 2026.
 Depends on: 8o, 8p, 15q, 15r. They change the protocol docs that this
 milestone splits.
 
+Status: Complete on `conductor/boat-native-remote-workspaces-milestone-2c`.
+
 Apply the `fix after merge` items of the docs. Added on 8 November 2026.
 
-- [ ] Apply option A of `plans/follow-ups/protocol-docs-split.md`, and
-      delete that item.
-- [ ] Apply option A of `plans/follow-ups/readme-feature-list.md`, and
-      delete that item.
+Design calls by the agents on 9 November 2026:
+
+- Move whole sections in their original order into topic pages. Keep
+  position-dependent sections together, so their words keep their meaning.
+- Move Components out of the architecture doc. Keep Terms, the original
+  introductions, and the existing Flows split, so existing context stays.
+- Promote the headings of Components, Tools of a workspace, and The agent
+  runner to page titles. This follows the Flows page and keeps each anchor.
+- List the topic pages under their entry docs in both doc lists. Include
+  Repository folders, so the lists show every protocol doc.
+- Keep whole-doc links on an entry doc unless their sentence names one
+  moved topic. Change only link targets and keep line breaks, to preserve
+  each sentence and make its change clear.
+- Keep four navigation headings for five links outside the owned paths.
+  This keeps those links valid without an edit outside the scope.
+- Mark the incomplete Mac app with plain text. Add attachments and Mac
+  commands as current key features. Leave the operator pages out of the
+  feature list because only the operator uses them.
+
+- [x] Apply option A of `plans/follow-ups/protocol-docs-split.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-2c`.
+- [x] Apply option A of `plans/follow-ups/readme-feature-list.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-2c`.
+
+Evidence: `.context/milestone-2c/reports/` and `.context/milestone-2c/checks/`.
 
 ## Milestone 15d: Marketing site
 

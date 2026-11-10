@@ -42,7 +42,7 @@ the lost lines, the turns, the work fold of each ended turn, and Try again.
   A marker of an ended turn, of a turn that never started, or without a turn ends nothing.
 - The work of a turn folds when `Transcript.turns` shows that the turn ended, as `hasEnded` says: its end arrived, or a newer turn started.
   Then the work before the answer of each part becomes one work fold, as
-  [The work of a turn](../../docs/protocol/messages-and-turns.md#the-work-of-a-turn) says. A running turn folds nothing.
+  [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn) says. A running turn folds nothing.
 - The items of an ended turn, as `turnOf` gives them, split into parts at each of its user items.
   The answer of a part is its last `agent` item, with the `agent` items directly before it. An insert between two of them ends the answer.
   The answer and each later item of the part stay in view, such as the calls that a stop cut off. The row where the turn ended stays in view too.
@@ -52,7 +52,7 @@ the lost lines, the turns, the work fold of each ended turn, and Try again.
   A run folds only when it holds a `tool` or an `agent` item.
 - An insert, such as a Mac command card, that follows a folded item joins that work fold at its place. An insert never starts a work fold.
 - Try again shows only on the failed item that names the retry message of the newest session record, as
-  [Messages](../../docs/protocol/messages-and-turns.md#messages) says. The order of the transcript items gives no permission.
+  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says. The order of the transcript items gives no permission.
   A read-only chat offers no Try again.
 - Each session log takes the `session.updated` records of its session with its other events.
   It keeps the `retryMessageId` of the record with the highest event number as `Transcript.retryMessageId`.

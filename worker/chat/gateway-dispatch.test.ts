@@ -16,13 +16,13 @@ it('keeps a protocol 2 credential after a failed send and dispatches queued mess
   const first = await fixture.send(session.id, 'failed-send')
   await fixture.send(session.id, 'queued-follow-up')
   let credential: string | undefined
-  fixture.transport.dropOutgoing = (message) => {
-    if (message.type === 'turn') {
-      credential = message.credential?.token
-      throw new Error('Injected gateway turn send failure')
-    }
-    return false
-  }
+  await fixture.setSendRule({
+    type: 'turn',
+    error: 'Injected gateway turn send failure',
+  })
+  fixture.observeOutgoing((message) => {
+    if (message.type === 'turn') credential = message.credential?.token
+  })
   const runner = new FakeRunner({
     workspaceId: WORKSPACE_ID,
     protocolVersion: 2,
@@ -40,8 +40,8 @@ it('keeps a protocol 2 credential after a failed send and dispatches queued mess
     started: false,
     gateway: { nonce: expect.any(String) },
   })
-  fixture.transport.dropOutgoing = () => false
-  fixture.restart()
+  await fixture.setSendRule(null)
+  await fixture.restart()
   await fixture.connect(runner)
   expect(runner.commands).toMatchObject([
     {
@@ -53,9 +53,11 @@ it('keeps a protocol 2 credential after a failed send and dispatches queued mess
   ])
   expect(runner.commands[1]).not.toHaveProperty('credential')
   expect(runner.commands[1]).not.toHaveProperty('login')
-  expect(JSON.stringify([...fixture.storage.records])).not.toContain(credential)
-  expect(JSON.stringify([...fixture.storage.records])).not.toContain(
+  expect(JSON.stringify([...(await fixture.snapshot()).records])).not.toContain(
+    credential,
+  )
+  expect(JSON.stringify([...(await fixture.snapshot()).records])).not.toContain(
     `secret-${fixture.owner.id}-claude`,
   )
-  fixture.chat.closeConnections()
+  await fixture.chat.closeConnections()
 })

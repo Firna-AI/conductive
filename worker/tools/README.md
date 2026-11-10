@@ -70,8 +70,9 @@ The value keeps the inherited owner separate from the first message sender.
 The lifecycle service must keep the first message durably and start it at once.
 It must use the latest good org image.
 It must use the sender's agent login.
-A failed first start keeps the accepted workspace and its number.
-The create call reports that failure.
+After admission, a failed first start keeps the accepted workspace, its number, and its first message.
+The create call reports that failure, as
+[A failed first start](../../docs/protocol/create-a-workspace.md#a-failed-first-start) says.
 
 An org suspension refuses the shared workspace token rule before agent tool calls.
 The same rule prevents Mac commands and their later approvals and results.
@@ -123,7 +124,7 @@ The [runner](../../runner/README.md) supplies the machine origin, workspace toke
 and active turn ID at runtime. The image stores no such credential.
 
 No git credential endpoint is implemented here.
-[GitHub tokens](../../docs/protocol/sandbox-credentials.md#github-tokens) states its rule.
+[GitHub tokens](../../docs/protocol/github-tokens.md) states its rule.
 
 ## Checks
 

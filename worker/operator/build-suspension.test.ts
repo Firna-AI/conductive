@@ -84,7 +84,7 @@ it('recovers an uncertain image allocation after suspension and removes the comp
   ).providerRetry?.retryAt
   if (typeof retryAt !== 'number')
     throw new Error('Missing allocation retry deadline')
-  fixture.setTime(retryAt)
+  await fixture.setTime(retryAt)
   let complete = false
   for (let step = 0; step < 5 && !complete; step++)
     complete = await advanceImageBuild(fixture.images, fixture.org.id, buildId)

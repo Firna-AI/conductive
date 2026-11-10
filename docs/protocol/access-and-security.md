@@ -8,16 +8,17 @@ dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A gateway decision number names a decision of the change that adds
 the [model gateway](model-gateway.md), as that doc says.
 
-This page holds sign-in, the Worker gates and body limits, and the content
-security policy. It also holds org isolation, the app's Boat key, and
-secrets that users enter. These pages hold the other parts of this doc:
+These docs belong to this doc:
 
-- [Sandbox credentials](sandbox-credentials.md): what a sandbox holds, the
-  agent logins and the turn tokens in a sandbox, and the workspace token.
-- [GitHub tokens](github-tokens.md): Git, the GitHub CLI, and the
-  repository copies of image builds and refreshes.
-- [Terminal and previews](terminal-and-previews.md): the terminal, the port
-  previews, the proxies, and the desktop.
+- [Isolation of orgs and sandboxes](isolation.md): the checks that keep
+  the orgs apart, the app's Boat key, what a sandbox holds, and the agent
+  logins and the turn tokens in a sandbox.
+- [Tokens and secrets](tokens-and-secrets.md): the workspace token, the
+  GitHub tokens, the secrets that users enter, and the agent logins that
+  users connect.
+- [Terminal, previews, and desktop](terminal-previews-and-desktop.md): the
+  security of the terminal, the port previews, the proxies, and the
+  desktop.
 
 ## Sign-in
 
@@ -54,7 +55,7 @@ secrets that users enter. These pages hold the other parts of this doc:
   app at once was rejected (decision 126).
 - The session lives in a signed cookie that is HttpOnly, Secure, and
   SameSite=Lax.
-- The [Mac app](desktop-app.md#the-sign-in-session) has a separate session
+- The [Mac app](desktop-sign-in.md#the-sign-in-session) has a separate session
   cookie, with its own origin rule.
 - The sign-in page and the footer of the marketing site link to the Terms
   and Privacy pages (decision 35).
@@ -67,9 +68,12 @@ secrets that users enter. These pages hold the other parts of this doc:
   `Origin` header, and a JSON body for each write.
 - Reason: an upgrade without an `Origin` check lets preview code open chat
   sockets.
-- The gate of `app.conductive.build` also checks app access, as
+- The gate also checks app access, as
   [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
   says (decision 161).
+- The two attachment upload routes take raw bytes in place of a JSON body
+  (decision 144). [Attachment uploads](#attachment-uploads) states their
+  conditions. Every other write needs a JSON body.
 - The health check and GitHub sign-in with its callback need no sign-in.
   The callback checks its `state` value instead.
 - The Mac app's public sign-in exchange also needs no sign-in.
@@ -98,7 +102,7 @@ secrets that users enter. These pages hold the other parts of this doc:
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 - The marketing site at `conductive.build` needs no sign-in.
 
-The [Mac app](desktop-app.md#the-worker-and-the-desktop-origin) states the
+The [Mac app](desktop-sign-in.md#the-worker-and-the-desktop-origin) states the
 additional origin that the app gate accepts.
 
 ## Request bodies
@@ -126,13 +130,50 @@ A lint was rejected because a read through another name escapes it.
   own HTTP 413 answer comes first.
 - A higher limit, such as the 128 MB that Anthropic's API accepts, was
   rejected, because it needs a zone of the Business or Enterprise plan.
-- The Worker counts the bytes that arrive. It does not use the
+- The Worker counts the bytes that arrive. It does not rely on the
   `Content-Length` header for the limit.
 - The Worker stops reading a body as soon as the body passes its limit.
 - A body above its limit gets HTTP 413 with the error code
   `body_too_large`. The error says "The request is too large. Send less
   data."
 - A WebSocket upgrade has no body. The Worker drops a body sent with one.
+
+### Attachment uploads
+
+Decision 144 sends each attached file as raw bytes in one request. The
+Worker streams the bytes into storage, so it never holds the whole file in
+memory. One JSON body with Base64 was rejected, because one upload of
+25 MB then uses about 100 MB of memory. Uploads in parts were rejected,
+because they need stored part state. An upload straight to the bucket was
+rejected, because it needs a new secret, CORS rules, and a new host.
+
+- Two routes take the raw bytes of one file in one `POST` (decision 144).
+  One uploads a draft file of an org, and the other a file of a workspace.
+- Only these two routes take raw bytes and have the higher limit. A route
+  added later gets neither.
+- A request needs the content type `application/octet-stream`. The gate
+  refuses a request with no content type or with another content type.
+- A request needs a `Content-Length` header. The Worker refuses a request
+  without it.
+- The body limit of these routes is 25,000,000 bytes, the file limit of
+  [Attachments](messages-and-attachments.md#attachments). The Worker counts the
+  bytes that arrive, as for every body.
+- A body or a `Content-Length` above that limit gets HTTP 413 with the
+  error code `attachment_too_large`, in place of `body_too_large`.
+- A body whose bytes do not match its `Content-Length` stores no file.
+- The query of the URL carries the file name as `name`, and its media type
+  as `mediaType`. The upload of a draft file also carries the ID of the
+  first message as `messageId`.
+- For these routes, the gate keeps all its other checks:
+  - the host, the sign-in, and app access
+  - the `Origin` header
+  - the membership of the org
+  - the checks that refuse a write to the org, such as during a suspension
+- Reason: like a JSON body, `application/octet-stream` needs a preflight,
+  so a page on another site cannot send such a request. A request with no
+  content type needs no preflight, so the gate refuses it.
+- Reason: the URL carries the file name and the media type, so the
+  preflight allows no new request header.
 
 ## Content security policy
 
@@ -152,107 +193,13 @@ Later screens add the frame and connection sources that they need.
 - Other pages cannot frame the app.
 - Forms submit only to the page's own origin.
 
-## Orgs and workspaces
+## Agent logins in a sandbox
 
-- One Boat key reaches the sandboxes and the saved snapshots of all orgs
-  (decision 80). So the key does not keep the orgs apart. The checks in
-  this section do.
-- A request reaches an org, its workspaces, and their sandboxes only for a
-  member of that org.
-- An operator is the one exception. An operator can suspend or lift any
-  user or org, as [Operator actions](operator-actions.md) says. In the
-  [operator section](operator-section.md#what-the-section-shows), an
-  operator also reads counts, names, IDs, dates, roles, states, and codes
-  across every org (decisions 142, 144, 147, and 160).
-- The operator section shows no chat, file, env value, agent login, or
-  email address. Its org search takes the ID of a cloud computer or a
-  preview address only to find its org.
-- An open tab loses its workspace connection within 30 seconds after its
-  user loses access: a removal from the org, a sign-out, or a deleted
-  org (decision 70). The workspace checks the access of its open tabs
-  again at most every 30 seconds, and closes each tab that fails. A
-  [suspension](operator-actions.md#sessions-and-sign-in) of the user ends
-  that access too.
-- A runner connection gets no agent login and no turn token after its
-  workspace token is revoked. The workspace checks the token again before
-  it sends each of them.
-  [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)
-  states the checks of an open runner connection.
-- No request names a sandbox or a saved snapshot. The Worker takes each
-  one from its own records, and only from the records of an org that the
-  request may reach.
-- Before each sandbox call, the Worker checks in its records that the
-  sandbox belongs to a workspace or a build of that org.
-- The Worker calls only a fixed list of Boat routes. It has no general
-  pass-through to Boat.
-- Lifecycle, saved snapshot, file metadata, and error replies from Boat
-  can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
-- A successful command reply from Boat can contain at most 18 MiB, or
-  18,874,368 bytes. The limit includes the whole JSON body.
-- A reply above these budgets gets HTTP 502, even when Boat permits it.
-  For a command reply, the error says "The command output is too large."
-- [Orgs and members](orgs-and-members.md#members-and-roles) states the
-  rules of each role.
+- [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
+  states how a login reaches the sandbox, its share setting, and its
+  risk. It also states the turn tokens and the risks of each version pin.
 
-## The app's Boat key
+## GitHub tokens
 
-- One Boat key, the app's own, runs every sandbox and every org image
-  (decision 80). The Worker holds it as a Worker secret.
-- The key never goes to the browser, into a sandbox, into a log, or into
-  a saved snapshot. Reason: the key reaches the sandboxes of every org.
-- The key is limited to one Boat environment and to the actions that the
-  app uses.
-- The app's Boat account is a Boat organization of its own. It holds no
-  other Boat work of the operator (decisions 5 and 80).
-- Every Boat call names that organization. A Boat user can reach several
-  organizations, so a change of the active one in Boat moves no work of
-  the app.
-
-## Secrets that users enter
-
-- The app stores the env var values and the agent logins encrypted.
-- The values of env vars are write-only. The settings never return a
-  stored value to the browser, whatever the mark of the env var.
-- An admin marks each env var of the org as secret or not secret
-  (decision 133). Each env var is secret until an admin clears its mark.
-  The value of a secret env var is a secret value.
-- An admin can change the mark of an env var without a new value.
-- A changed mark applies at the next start of each sandbox, as a changed
-  value does. The chat history and the start logs from before that start
-  keep their text.
-- The Durable Object of the workspace hides each exact copy of a secret
-  value in the text that screens show from each runner event. It does
-  this before it checks, stores, or sends the event. It uses the values
-  and the marks of the last start of the sandbox.
-- The Durable Object does this for each runner, also for an older runner
-  from an org image or a saved disk. It also hides a copy that consecutive
-  text events of one answer split.
-- Reason: an org image or a saved disk can hold an older runner. A filter
-  of secret values in the runner was rejected, because an older runner
-  does not have it.
-- The app keeps the real path of each file and the real name of the
-  default branch. Reads, diffs, and the file lists use them. The browser
-  gets these real values, so a secret value can show in the data that the
-  browser gets and sends (decision 145).
-- Screens show a separate label of each path and branch name. The label
-  hides each exact copy of a secret value.
-- Reason: a hidden path or branch name names nothing real, and two hidden
-  paths can become equal. File IDs in place of real paths were rejected,
-  because they change the file API.
-- The runner hides the workspace token and the agent logins in the text
-  that screens show, before it saves or sends an event.
-- A start log hides each exact copy of a secret value and of the workspace
-  token before a browser gets it.
-- The app does not hide the value of an env var that is not secret. So
-  each reader of the chat or of a start log can see such a value.
-- Reason: the admin knows which values are secrets. A length rule, where
-  only values of 8 or more characters count, was rejected, because it
-  guesses. A mask of every value was rejected, because it also hides
-  short, common values, such as `1`, in ordinary text.
-- Risk: the app hides only exact copies of a value. A changed or encoded
-  value still shows. File content, diff content, and the terminal hide no
-  value.
-  The mark does not keep a value from the agent or from a member with a
-  terminal, because each sandbox gets every env var.
-- Risk: the runner does not hide secret values. So its saved events on the
-  disk of the sandbox can hold them, as the agent sessions there do.
+- [GitHub tokens](github-tokens.md) states how Git, the GitHub CLI, and
+  repository copies get their GitHub tokens. Outside a turn, the GitHub CLI uses the workspace owner's account.

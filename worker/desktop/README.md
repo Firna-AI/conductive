@@ -27,4 +27,4 @@ The message gives the abuse address.
 - [The tools adapter](../previews/provider.ts) checks access and maps the provider's ready or starting result.
 - [The sandbox provider](../sandbox/README.md) owns the fixed desktop route and its typed parser.
 
-See [terminal and previews](../../docs/protocol/terminal-and-previews.md#desktop).
+See [access and security](../../docs/protocol/terminal-previews-and-desktop.md#desktop).

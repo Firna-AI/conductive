@@ -56,7 +56,7 @@ it('mounts build history, logs and admin starts and installs workspace tools in 
     software: OUTER_SOFTWARE,
     previousImageName: 'outer-image',
     previousRunnerProtocolVersion: null,
-    now: Date.now(),
+    now: await active.actor(`org-image:${OUTER_ORG}`).testAlarmTime(),
   })
   await active.env.DB.batch([
     active.env.DB.prepare(

@@ -36,7 +36,12 @@ describe('gateway login changes', () => {
     runner.disconnect()
     await fixture.drain()
     await replaceGatewayLogin(fixture)
-    expect(await Promise.all([check(), check()])).toEqual([
+    expect(
+      await fixture.actor.api.controls.checkTurnTokens(WORKSPACE_ID, [
+        token,
+        token,
+      ]),
+    ).toEqual([
       { ok: false, reason: 'agent_login_changed' },
       { ok: false, reason: 'turn_not_active' },
     ])
@@ -133,9 +138,9 @@ describe('gateway login changes', () => {
       login: { agent: 'claude', kind: 'api-key', secret: 'new-login' },
     })
     expect(await check()).toEqual({ ok: false, reason: 'turn_not_active' })
-    first.close()
-    second.close()
-    fixture.chat.closeConnections()
+    await first.close()
+    await second.close()
+    await fixture.chat.closeConnections()
   })
 
   it.each([
@@ -212,7 +217,7 @@ describe('gateway login changes', () => {
         )?.state,
       ).toBe('failed')
       runner.disconnect()
-      fixture.chat.closeConnections()
+      await fixture.chat.closeConnections()
     },
   )
 })

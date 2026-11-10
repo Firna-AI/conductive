@@ -50,4 +50,10 @@
       "migrations_dir": "migrations",
     },
   ],
+  "r2_buckets": [
+    {
+      "binding": "CHAT_ATTACHMENTS",
+      "bucket_name": "conductive-chat-attachments",
+    },
+  ],
 }

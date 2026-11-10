@@ -73,9 +73,9 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
       expect(JSON.stringify(client.runner.received)).not.toContain(
         client.secret,
       )
-      expect(JSON.stringify([...client.fixture.storage.records])).not.toContain(
-        client.token,
-      )
+      expect(
+        JSON.stringify([...(await client.fixture.snapshot()).records]),
+      ).not.toContain(client.token)
       const changedMode = client.token.replace(
         prefix,
         prefix === 'sk-ant-api-' ? 'sk-ant-oat01-' : 'sk-ant-api-',

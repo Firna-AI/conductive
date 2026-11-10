@@ -49,8 +49,8 @@ describe('workspace turn tokens', () => {
     })
     await fixture.connect(runner)
     expect(await issue()).toBe(token)
-    fixture.chat.closeConnections()
-    fixture.restart()
+    await fixture.chat.closeConnections()
+    await fixture.restart()
     await fixture.connect(runner)
     expect(await issue()).toBe(token)
     expect((await check()).ok).toBe(true)
@@ -61,7 +61,9 @@ describe('workspace turn tokens', () => {
       nonce: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
       loginVersion: TEST_TIME,
     })
-    expect(JSON.stringify([...fixture.storage.records])).not.toContain(token)
+    expect(
+      JSON.stringify([...(await fixture.snapshot()).records]),
+    ).not.toContain(token)
     expect(JSON.stringify(runner.received)).not.toContain(token)
     runner.emit(terminalEvent(turn, 'finished'))
     await fixture.drain()
@@ -79,7 +81,7 @@ describe('workspace turn tokens', () => {
     const nextToken = await issueGatewayToken(fixture, next?.activeTurnId ?? '')
     expect(nextToken).not.toBeNull()
     expect(nextToken).not.toBe(token)
-    fixture.chat.closeConnections()
+    await fixture.chat.closeConnections()
   })
 
   it('does not issue a token before the turn runs', async () => {
@@ -99,7 +101,7 @@ describe('workspace turn tokens', () => {
         )
       )?.gateway,
     ).toBeUndefined()
-    fixture.chat.closeConnections()
+    await fixture.chat.closeConnections()
   })
 
   it.each(['stopping', 'closed', 'inactive'] as const)(
@@ -128,7 +130,7 @@ describe('workspace turn tokens', () => {
       expect(await check()).toEqual({ ok: false, reason: 'turn_not_active' })
       expect(await issue()).toBeNull()
       expect(turnEnds(await fixture.history(session.id))).toEqual([])
-      fixture.chat.closeConnections()
+      await fixture.chat.closeConnections()
     },
   )
 
@@ -162,6 +164,6 @@ describe('workspace turn tokens', () => {
       )?.state,
     ).toBe('running')
     expect(turnEnds(await fixture.history(session.id))).toEqual([])
-    fixture.chat.closeConnections()
+    await fixture.chat.closeConnections()
   })
 })

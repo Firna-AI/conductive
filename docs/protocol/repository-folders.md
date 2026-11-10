@@ -36,7 +36,7 @@ number names a dated record, as
   the folder of its own repository.
 - The sandbox of a build or a refresh gets only the folder variables, which
   hold no secret. Only the Git command that copies a repository gets a read
-  token, as [GitHub tokens](sandbox-credentials.md#github-tokens) says.
+  token, as [GitHub tokens](tokens-and-secrets.md#github-tokens) says.
 
 ## Folders over time
 

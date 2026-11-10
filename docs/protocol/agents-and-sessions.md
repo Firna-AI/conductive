@@ -31,7 +31,7 @@ says.
   - with a model of the other agent
   - with the first message of a new workspace
   - with a message that starts a new session, as
-    [Messages](messages-and-turns.md#messages) says
+    [Messages](messages-and-attachments.md#messages) says
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
 - While the starter shares the login, the messages of the other members
@@ -41,7 +41,7 @@ says.
   conversation. A login for each sender was rejected for that reason.
 - The login of the workspace owner for all sessions was rejected. Reason:
   each member who starts a session spends their own login.
-- [Sandbox credentials](sandbox-credentials.md#agent-logins-in-a-sandbox)
+- [Access and security](isolation.md#agent-logins-in-a-sandbox)
   states how a login reaches the sandbox, its share setting, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
 
@@ -66,8 +66,8 @@ says.
   [Workspace and session names](#workspace-and-session-names) says when
   the app gives it a title.
 - When the workspace takes a title as its name, as
-  [Messages](messages-and-turns.md#messages) says, the first session takes
-  the title too (decision 181).
+  [Messages](messages-and-attachments.md#messages) says, the first session takes the
+  title too (decision 181).
 - Each other session takes its title from the first message with text that
   the workspace accepts in that session (decision 181). The title is the
   first line with text of that message.
@@ -170,8 +170,7 @@ says.
   record, a missing name is null in `title`.
 - An automatic name is a name that the app gives on its own. These names
   are automatic:
-  - the title of a workspace, as
-    [Messages](messages-and-turns.md#messages) says
+  - the title of a workspace, as [Messages](messages-and-attachments.md#messages) says
   - a workspace name that the agent runner reports, as
     [Lost workspace updates](agent-runner.md#lost-workspace-updates) says
   - the title that a session takes, as [Sessions](#sessions) says

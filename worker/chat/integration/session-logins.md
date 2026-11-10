@@ -5,8 +5,8 @@ starter of each session, the two login paths of `SessionLogins`, and the
 linked sessions.
 
 [Agents](../../../docs/protocol/agents-and-sessions.md#agents),
-[Messages](../../../docs/protocol/messages-and-turns.md#messages), and
-[Agent logins in a sandbox](../../../docs/protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
+[Messages](../../../docs/protocol/messages-and-attachments.md#messages), and
+[Agent logins in a sandbox](../../../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
 state the rules.
 
 - Each creation path stores its authenticated user as `Session.startedBy`:

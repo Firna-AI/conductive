@@ -100,11 +100,11 @@ says.
 - A Mac command of a turn goes to the Mac of the sender of the turn, the
   member whose message started the turn. The GitHub token of the turn also
   belongs to that member, as
-  [GitHub tokens](sandbox-credentials.md#github-tokens) says.
+  [GitHub tokens](github-tokens.md) says.
 - A message that another member sends during the turn changes neither.
 - Reason: the Worker takes the sender of a Mac command or a Git operation
   from its own record of the turn.
-  [The workspace token](sandbox-credentials.md#the-workspace-token) states
+  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   this rule. Agent code runs in the sandbox, so a sender that the sandbox
   names can be false.
 - Risk: a member can type a false sender line in a message. The agent can
@@ -133,7 +133,7 @@ says.
 - A tool that returns facts that change, such as the pull request state,
   was rejected. It widens what the workspace token allows, and agents still
   need instructions to call it.
-  [The workspace token](sandbox-credentials.md#the-workspace-token) states
+  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   what the token allows.
 
 ## How each agent gets them

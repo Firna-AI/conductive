@@ -20,6 +20,12 @@ import { closeSockets } from '../adapter-sockets.test-support'
 import { CLAUDE } from '../harness.test-support'
 import { record } from '../inputs'
 import { readChatHistoryPages } from './history-pages.test-support'
+import {
+  expireAndReadFirstStartFile,
+  FIRST_START_FILE_BYTES,
+  firstStartAttachmentTransfer,
+  uploadFirstStartFile,
+} from './first-start-attachments.test-support'
 import type { Workspace } from './journey-entry.test-support'
 import {
   createOuterRuntime,
@@ -56,8 +62,10 @@ afterEach(async () => {
 it('retries the same failed workspace with a fresh token and dispatches every stored message once in order', async () => {
   const directory = '.context/boat-native-remote-workspaces/8o/worker'
   await mkdir(directory, { recursive: true })
+  const transfer = firstStartAttachmentTransfer()
   const active = (fixture = await createOuterRuntime(bundle, {
     persistencePath: await mkdtemp(`${directory}/retry-runtime-`),
+    outbound: transfer.outbound,
   }))
   const saveSetup = async (script: string, value: string) => {
     const ciphertext = await encrypt(
@@ -72,13 +80,14 @@ it('retries the same failed workspace with a fresh token and dispatches every st
       .run()
   }
   await saveSetup('echo initial-startup', 'initial-value')
+  const attachment = await uploadFirstStartFile(active, 'kept-first')
   const input = {
     repositoryId: OUTER_REPOSITORY,
     firstMessage: {
       id: 'kept-first',
       text: 'First task',
       choice: CLAUDE,
-      attachmentIds: [],
+      attachmentIds: [attachment.id],
     },
   }
   const create = () =>
@@ -90,6 +99,12 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   const response = await create()
   expect(response.status).toBe(201)
   const created = readCreated(await response.json())
+  expect(created.firstMessage).toMatchObject({
+    id: 'kept-first',
+    text: 'First task',
+    attachments: [attachment],
+    choice: CLAUDE,
+  })
   const id = created.workspace.id
   let bindings = await active.runtime.getBindings<{
     WORKSPACES: DurableObjectNamespace<Workspace>
@@ -101,6 +116,7 @@ it('retries the same failed workspace with a fresh token and dispatches every st
       method: 'POST',
       body: JSON.stringify({
         ...input.firstMessage,
+        attachmentIds: [],
         id: messageId,
         text: messageId,
       }),
@@ -115,6 +131,16 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   ).toMatchObject({
     ok: false,
     error: { code: 'workspace_start_failed' },
+  })
+  expect(
+    await expireAndReadFirstStartFile(active, id, attachment.id),
+  ).toMatchObject({
+    claim: {
+      state: 'claimed',
+      claimedWorkspaceId: id,
+      claimedMessageId: 'kept-first',
+    },
+    bytes: FIRST_START_FILE_BYTES,
   })
   expect((await send('queued-after-failure')).status).toBe(202)
   const before = await readChatHistoryPages(
@@ -257,4 +283,12 @@ it('retries the same failed workspace with a fresh token and dispatches every st
     createdAt: created.workspace.createdAt,
   })
   expect(final.firstMessage.id).toBe('kept-first')
+  expect(final.firstMessage.attachments).toEqual([attachment])
+  expect(transfer.copies).toEqual([FIRST_START_FILE_BYTES])
+  expect(
+    await expireAndReadFirstStartFile(active, id, attachment.id),
+  ).toMatchObject({
+    claim: { state: 'claimed', claimedWorkspaceId: id },
+    bytes: FIRST_START_FILE_BYTES,
+  })
 })

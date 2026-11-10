@@ -116,10 +116,18 @@ npm run test -- worker/chat
 npm run typecheck
 ```
 
-[Chat backend tests](tests.md) names the test support files and what each
-group of tests covers.
+The shared chat and runner fixtures run the production workspace object in Miniflare with native SQLite.
+Their restart helpers evict the real object.
+[Chat backend tests](tests.md) names the native controls and each group of tests.
+
+`write-access.test.ts` holds a rename at its body read or in the queue.
+Then one access fact ends, such as a sign-out, a removal from the org, or
+an archive. The rename gets the refusal that a new request would get, and
+saves nothing. A new refused request leaves its body unread.
 
 ## Seams for other milestones
+
+[Chat attachments](attachments.md) gives the internal storage boundary, acceptance proof, copy preparation and order, agent input, and cleanup integration.
 
 [Chat backend integration](integration/README.md) gives the seams for other
 features. It covers the hooks, the trusted workspace calls, the workspace
@@ -127,7 +135,9 @@ events, the outer Worker, and the lifecycle. It also covers the files, the
 GitHub state, the agent runner, the logins and attachments, the session
 logins, and the test fixtures. Its
 [Agent runner integration](integration/runner/README.md) page gives the
-runner events, the runner commands, the agent logins, and the attachments.
+runner events and the runner commands. Its
+[Agent logins and attachments](integration/logins-and-attachments.md) page
+gives the agent logins and the attachments.
 Its [Outer Worker tests](integration/outer-worker-tests.md) guide gives the
 tests through the production Worker entry.
 
@@ -162,7 +172,9 @@ tests through the production Worker entry.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
   turns as stopped when the lifecycle state becomes stopped or error.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
-  the object.
+  the object. With the body that the gate already read, it runs
+  `gateAccess` in place of `gate`, and finds the workspace again.
+  `WorkspaceChat.fetch` uses this form in the queue for each browser write.
 - `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
   token checks before the runner connection opens.
 - `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
@@ -207,6 +219,8 @@ tests through the production Worker entry.
   version 2 command.
   [The agent runner](integration/runner/README.md#the-agent-runner) gives
   the rules of both versions.
+- `ordered-dispatch.ts`: `dispatchInOrder` and `commandDispatchState`, the
+  send, wait, or skip check of each pending command in stored order.
 - `report-repairs.ts`, `repair-refusal.ts`, and `repair-delivery.ts`: the
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.
@@ -253,14 +267,14 @@ tests through the production Worker entry.
 
 ## Related docs
 
-- [Messages and turns: Messages](../../docs/protocol/messages-and-turns.md#messages)
+- [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)
-- [Sandbox credentials: Agent logins in a sandbox](../../docs/protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
-- [Sandbox credentials: The workspace token](../../docs/protocol/sandbox-credentials.md#the-workspace-token)
+- [Access and security: Agent logins in a sandbox](../../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
+- [Access and security: The workspace token](../../docs/protocol/tokens-and-secrets.md#the-workspace-token)
 - [Operator actions: Workspace tokens and runners](../../docs/protocol/operator-actions.md#workspace-tokens-and-runners)
 - [Architecture: Workspace Durable Object](../../docs/architecture/components.md#workspace-durable-object)
 - [Shared contracts](../../src/shared/README.md)

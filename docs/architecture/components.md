@@ -1,7 +1,7 @@
 # Components
 
-This page describes each component of Conductive and its
-responsibilities. It uses the terms of the
+This page describes each component of Conductive, its responsibilities, and
+its boundaries. It uses the terms of the
 [architecture doc](../architecture.md#terms). The [flows page](flows.md)
 describes how the components work together. A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -9,9 +9,7 @@ says.
 
 ## Marketing site
 
-- The static public pages at the root of `conductive.build`. The
-  [marketing site page](marketing-site.md) gives their
-  responsibilities and boundaries.
+The [marketing site page](marketing-site.md) gives the responsibilities and boundaries of the public site.
 
 ## Web app
 
@@ -33,10 +31,8 @@ says.
 ## Mac app
 
 - An Electron shell for macOS, as [Mac app](../protocol/desktop-app.md) says.
-- Its packages and its updates come from the GitHub releases of the
-  public source repository, as
-  [Packages and updates](../protocol/desktop-app.md#packages-and-updates)
-  says.
+- Its packages and updates come from the GitHub releases of the public source repository, as
+  [Packages and updates](../protocol/desktop-packages-and-updates.md) says.
 
 ## Worker
 
@@ -59,9 +55,9 @@ says.
 ## D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, and the active preview hostnames. It
-  also holds the app access of each user, the codes and their uses, the
-  pause, and the state of each approval email.
+  repositories, workspaces, settings, the active preview hostnames, and the
+  records of attached files. D1 also holds app access, codes and their uses,
+  the sign-up pause, and the state of approval emails.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -78,6 +74,22 @@ says.
 - Its storage keeps the chat history, so a stopped or archived workspace
   still shows its chat.
 - It revokes the preview hostnames of its workspace.
+
+## Attachment storage
+
+- One R2 bucket holds the bytes of the files that users attach to chat
+  messages, and D1 holds their records (decision 132). The bucket holds the
+  files of every org, so the Worker's own records keep the orgs apart, as
+  [Access and security](../protocol/isolation.md#orgs-and-workspaces)
+  says.
+- Only the Worker reads and writes the bucket. The browser sends each file
+  as raw bytes in one request, and the Worker streams it into the bucket
+  (decision 144).
+- Before the agent runner gets a message, the Worker copies the files of
+  the message into the sandbox, through an upload address that Boat gives
+  for each file.
+- [Chat and events](../protocol/messages-and-attachments.md#attachments) states how
+  long a file stays.
 
 ## Boat
 
@@ -128,10 +140,11 @@ from.
   protocol version 2 or later, the model requests of a turn reach them
   through the model gateway of the Worker. A settings file in the
   repository can send the requests of Claude to another address instead.
-  The gateway keeps no copy of a request or an answer. With a runner of version 1, the agent programs
-  send their model requests from the sandbox to the provider.
-- **Workers AI:** the Cloudflare model service writes the title of each new
-  workspace from its first message. Its use bills to the Cloudflare account
-  of the app (decision 184).
+  The gateway keeps no copy of a request or an answer. With a runner of
+  version 1, the agent programs send their model requests from the sandbox
+  to the provider.
+- **Workers AI:** the Cloudflare model service writes a title for a
+  workspace that has no name, from its first message. Its use bills to the
+  Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. The app is free, with no limits (decision 81).

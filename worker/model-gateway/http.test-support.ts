@@ -7,6 +7,7 @@ import {
   WORKSPACE_ID,
 } from '../chat/harness.test-support'
 import { terminalEvent } from '../chat/turn-lifecycle.test-support'
+import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { requestBodyEntry } from '../http/request-body'
 import { FakeAnthropic } from '../test-support/fake-anthropic'
 import { FakeOpenAI } from '../test-support/fake-openai'
@@ -37,6 +38,7 @@ export async function gatewayHttp(
     protocolVersion,
   })
   const { fixture } = turn
+  const clock = new ManualChatClock(fixture.clock.now())
   const anthropic = new FakeAnthropic()
   const openai = new FakeOpenAI()
   const checks: string[] = []
@@ -51,9 +53,9 @@ export async function gatewayHttp(
   const fetch = requestBodyEntry(async (request) => {
     const response = await routeModelGateway(request, {
       dependencies: {
-        now: fixture.clock.now,
+        now: clock.now,
         randomToken: () => 'unused',
-        scheduleGatewayCheck: fixture.clock.schedule,
+        scheduleGatewayCheck: clock.schedule,
         fetch: (request) =>
           new URL(request.url).hostname === 'api.anthropic.com'
             ? anthropic.fetch(request)
@@ -96,6 +98,18 @@ export async function gatewayHttp(
   }
   return {
     ...turn,
+    fixture: {
+      ...fixture,
+      clock: {
+        ...fixture.clock,
+        now: clock.now,
+        schedule: clock.schedule,
+        advance: async (milliseconds: number) => {
+          await fixture.clock.advance(milliseconds)
+          await clock.advance(milliseconds)
+        },
+      },
+    },
     anthropic,
     openai,
     checks,
@@ -106,7 +120,7 @@ export async function gatewayHttp(
     fetch: (request: Request) => fetch(request, fixture.env),
     secret: `secret-${fixture.member.id}-${choice.agent}`,
     async dispose() {
-      fixture.chat.closeConnections()
+      await fixture.chat.closeConnections()
     },
     async finish() {
       turn.runner.emit(terminalEvent(turn.turn, 'finished'))

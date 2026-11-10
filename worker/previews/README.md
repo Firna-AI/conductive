@@ -218,7 +218,7 @@ The [sandbox provider](../sandbox/README.md) owns the fixed `host` and `desktop`
 routes, provider factory, organization pin, parsers, transport, commands, and file reads.
 The feature adapter holds a `SandboxProvider`. It holds no plaintext key.
 
-See [terminal and previews](../../docs/protocol/terminal-and-previews.md#port-previews),
+See [access and security](../../docs/protocol/terminal-previews-and-desktop.md#port-previews),
 the [Mac app](../../docs/protocol/desktop-app.md#port-previews),
 and the official [port API](https://docs.boat.dev/api/reference/agent/expose-a-port)
 and [port cookie rules](https://docs.boat.dev/hosting#who-can-open-a-protected-url).

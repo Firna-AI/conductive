@@ -20,7 +20,8 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 1. A tab sends a message to the Worker. The Durable Object forwards it to
    the agent runner, with the turn token of its turn. A runner of protocol
    version 1 gets the agent login of the starter of the session in place
-   of the token.
+   of the token. The Worker first copies the files of the message from the
+   attachment storage into the sandbox.
 2. The runner gives the message to the agent through the SDK. It numbers
    each agent event and sends it to the Durable Object.
 3. The agent sends each model request to the model gateway of the Worker,
@@ -54,7 +55,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 ## Stops
 
 - The Durable Object stops a sandbox when the stop rule of
-  [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md#stop-and-resume)
+  [Workspaces and sandboxes](../protocol/workspace-life.md#stop-and-resume)
   says so.
 - Near day 14 of a stop, the app starts the sandbox briefly and stops it
   again, so that Boat keeps its disk (decision 43).

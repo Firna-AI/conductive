@@ -1,10 +1,7 @@
 import { expect, it } from 'vitest'
 
-import {
-  choice,
-  context,
-  createRunnerLimitsFixture,
-} from './runner-limits.test-support'
+import { createRunnerLimitsFixture } from './runner-limits.test-support'
+import { choice, context } from './runner-fixtures.test-support'
 
 it('marks late events after refused turn boundaries and strips runner marks from active events', async () => {
   const fixture = await createRunnerLimitsFixture()

@@ -34,7 +34,7 @@ These facts belong to this implementation, not to the protocol docs.
   their settings, runtime context, and process lifetime.
 - No command carries an agent login or a GitHub token. Each `turn` command
   carries a turn token for the model gateway, as [Agent logins](agent-logins.md)
-  says. [GitHub tokens](../docs/protocol/sandbox-credentials.md#github-tokens)
+  says. [GitHub tokens](../docs/protocol/github-tokens.md)
   states how a sandbox gets GitHub access.
 - `agentInstructions` builds the agent instructions of each agent from the
   configuration. Claude gets its seven base rules and that text as
@@ -91,7 +91,7 @@ These facts belong to this implementation, not to the protocol docs.
   does not end the active turn, and it frees no sent message. When such a
   result lists sent messages that still wait, it answers them as usual. So
   each result stays with the
-  [messages that it answers](../docs/protocol/messages-and-turns.md#what-the-chat-shows).
+  [messages that it answers](../docs/protocol/chat-and-events.md#what-the-chat-shows).
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, and
@@ -272,6 +272,7 @@ tools that time the first agent start after a resume.
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `message.ts` puts the sender line before the text of each message.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
+  `attachment-description.ts` describes each attached file to both agents.
   The [tool entry points](agent-tools.md#key-code) cover both MCP servers,
   and the [login entry points](agent-logins.md#key-code) cover the credentials.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
@@ -291,8 +292,8 @@ tools that time the first agent start after a resume.
 - [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)
-- [Sandbox credentials: agent logins in a sandbox](../docs/protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
-- [Workspaces and sandboxes: files and changes](../docs/protocol/workspaces-and-sandboxes.md#files-and-changes)
+- [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
+- [Workspaces and sandboxes: files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)
 - [Agent tools: workspace tools](../docs/protocol/agent-tools.md#workspace-tools)
 - [Shared contracts](../src/shared/README.md)

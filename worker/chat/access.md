@@ -10,6 +10,15 @@ The Durable Object runs the gates itself.
   header, the session cookie, the org membership, and the body of writes.
 - `findChatWorkspace` then reads the workspace from D1. The workspace must
   belong to that org, and the org must not be deleted.
+- Each browser write then enters the serial queue of the object. In the
+  queue, `authorizeChatBrowser` checks the access again, with the body that
+  the gate already read and the time of the queued check. It runs
+  `gateAccess`, the [access checks](../security/README.md#access-checks) of
+  the gate, and reads the workspace and its archive state again. This
+  repeats the D1 reads of the first check. So a write that waited for its
+  body or for the queue gets the refusal that a new request would get. An
+  example is `401 sign_in_required` after a sign-out. The write saves
+  nothing. Reads and the events socket take no second check.
 - Each open tab holds a `workspace` identity. The
   [shared connection reader](../security/README.md#open-connections) of
   the security area gives it a grant with a deadline. The `workspace` kind
@@ -83,5 +92,6 @@ The Durable Object runs the gates itself.
 
 An org suspension keeps chat history and event subscriptions readable.
 The common browser write gate refuses session and message changes with `org_suspended`.
-The same check runs inside the browser write queue before session or message changes.
+The second access check of each browser write refuses such a change again in the queue.
+This also holds when the suspension starts while the change waits.
 The shared token rule refuses runners and agent logins for the org.

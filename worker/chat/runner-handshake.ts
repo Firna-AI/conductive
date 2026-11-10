@@ -3,6 +3,7 @@ import type { RunnerHello } from '../../src/shared/runner'
 import { RunnerFileReports } from '../files/runner-reports'
 import { HttpError } from '../http'
 import { warnWorker } from '../warnings'
+import { WarningId } from '../warning-values'
 import type { ChatStore } from './store'
 import type { ActiveRunner, ChatDependencies } from './types'
 
@@ -23,9 +24,10 @@ export async function prepareRunnerHello(
     active.workspace.id,
   )
   if (requiredVersion === null || message.protocolVersion < requiredVersion) {
-    warnWorker(
-      `The runner of workspace ${active.workspace.id} closes because its protocol version does not meet the workspace version pin.`,
-    )
+    warnWorker({
+      kind: 'runner_protocol_version_mismatch',
+      workspaceId: WarningId.checked(active.workspace.id),
+    })
     active.peer.close()
     return null
   }

@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the
 Markdown of agent messages in the chat, with their tables.
-[Messages and turns](messages-and-turns.md) holds the messages, the live
-text, and the work of a turn. The terms are those of the
+[Chat and events](chat-and-events.md) holds the messages, the live text,
+and the work of a turn. The terms are those of the
 [architecture doc](../architecture.md#terms). The
 [mockup catalogue](../mockups/catalogue.md) draws tables in agent messages
 at `app/chat/tables`, and in the open work of a turn at
@@ -29,7 +29,7 @@ at `app/chat/tables`, and in the open work of a turn at
   and table cells. A code block shows its text with no formatting.
 - HTML in an agent message shows as text, also in a table.
 - Reason: sandbox code is untrusted, as
-  [Trust boundaries](../architecture.md#trust-boundaries) says, and it can
+  [Trust boundaries](../architecture/data-and-trust.md#trust-boundaries) says, and it can
   shape the text of an agent message.
 - The chat keeps this small set of Markdown. The full Markdown of the file
   preview was rejected for the chat, because it also changes the headings,
@@ -125,7 +125,7 @@ at `app/chat/tables`, and in the open work of a turn at
 ## While the agent writes
 
 - Agent text reaches the open tabs while the agent writes it, as
-  [What the chat shows](messages-and-turns.md#what-the-chat-shows) says. The
+  [What the chat shows](chat-and-events.md#what-the-chat-shows) says. The
   chat shows each update at once.
 - Each update shows the text so far in the same way as a complete agent
   message with the same text. So no formatting waits for the end of the
@@ -154,7 +154,7 @@ at `app/chat/tables`, and in the open work of a turn at
 ## Tables in the work of a turn
 
 - An open work fold shows each agent message as one message line, as
-  [The work of a turn](messages-and-turns.md#the-work-of-a-turn) says.
+  [The work of a turn](chat-and-events.md#the-work-of-a-turn) says.
 - A closed message line stays one line. It shows each table as its cells
   in row order, from the header row, with a middle dot, `·`, between two
   cells.

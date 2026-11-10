@@ -96,7 +96,7 @@ are a record, not a question.
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Security.
-- **Location:** `runner/src/providers/claude-process.ts`, `readAgentLogin` in `worker/chat/queries.ts`, and the sections "Agent logins in a sandbox" and "Agent logins" of `docs/protocol/sandbox-credentials.md`.
+- **Location:** `runner/src/providers/claude-process.ts`, `readAgentLogin` in `worker/chat/queries.ts`, the section "Agent logins in a sandbox" of `docs/protocol/isolation.md`, and the section "Agent logins" of `docs/protocol/tokens-and-secrets.md`.
 - **Terms:**
   - **Provider check:** Cal's record that Anthropic's permission of decision 37 of the main plan covers a Worker that holds a subscription token and adds it to each model request.
 - **Background:**
@@ -216,7 +216,7 @@ are a record, not a question.
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Security.
-- **Location:** `open` in `worker/chat/runner-channel.ts`, `worker/chat/runner-input.ts`, and the risk of decision 124 in `docs/protocol/sandbox-credentials.md`.
+- **Location:** `open` in `worker/chat/runner-channel.ts`, `worker/chat/runner-input.ts`, and the risk of decision 124 in `docs/protocol/isolation.md`.
 - **Terms:**
   - **Workspace token:** the secret that a cloud computer uses to call the Worker. Each process there can read it.
 - **Background:**
@@ -273,7 +273,7 @@ are a record, not a question.
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Security.
-- **Location:** `readAgentLogin` and `senderLoginAccess` in `worker/chat/queries.ts`, and the section "Agent logins in a sandbox" of `docs/protocol/sandbox-credentials.md`.
+- **Location:** `readAgentLogin` and `senderLoginAccess` in `worker/chat/queries.ts`, and the section "Agent logins in a sandbox" of `docs/protocol/isolation.md`.
 - **Background:**
   - Today the runner gets the login once, with the `turn` command, and keeps it for the whole turn. A change of the saved login applies at the next turn.
   - The gateway adds the login to each model request, so it can read the saved login at each request.

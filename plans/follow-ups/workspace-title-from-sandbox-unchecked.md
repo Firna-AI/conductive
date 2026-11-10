@@ -10,7 +10,7 @@
 - **Terms:**
   - **Workspace token:** the secret of one workspace that its sandbox holds. The agent runner proves itself with it when it connects to the Worker.
   - **`workspace.title`:** the runner event that carries a new workspace name. The Worker stores the name in its database and sends it to the workspace list of each member of the org.
-- **Background:** The agent runner connects to the Durable Object of its workspace with the workspace token, as "The workspace token" in `docs/protocol/sandbox-credentials.md` says. The agent tool processes get the same token in the variable `CONDUCTIVE_WORKSPACE_TOKEN`, so any code in the sandbox can read it. The Worker takes the name of each `workspace.title` event as it is: also an empty name, or a name near the event limit of 1 MiB.
+- **Background:** The agent runner connects to the Durable Object of its workspace with the workspace token, as "The workspace token" in `docs/protocol/tokens-and-secrets.md` says. The agent tool processes get the same token in the variable `CONDUCTIVE_WORKSPACE_TOKEN`, so any code in the sandbox can read it. The Worker takes the name of each `workspace.title` event as it is: also an empty name, or a name near the event limit of 1 MiB.
 - **Problem:** Any code in the sandbox can connect as the runner and set any workspace name, of any length.
 - **Impact if no action:** A dependency or a script in the sandbox can show misleading text, or a very long name, in the workspace list of each member of the org.
 - **Root question:** Which workspace names does the Worker accept from a sandbox?

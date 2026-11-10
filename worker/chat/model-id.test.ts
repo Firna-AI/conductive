@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import {
   sessionPath,
   sessionPaths,
@@ -14,7 +13,6 @@ import {
   createChatFixture,
   WORKSPACE_ID,
 } from './harness.test-support'
-
 describe('client-selected model session IDs', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -26,7 +24,6 @@ describe('client-selected model session IDs', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('retries one model-created session without overwriting later work and rejects occupied IDs', async () => {
     const fixture = await createChatFixture(harness)
     const source = await fixture.createSession()
@@ -90,7 +87,7 @@ describe('client-selected model session IDs', () => {
     const session = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
       view.session('__proto__'),
     )
-    fixture.restart()
+    await fixture.restart()
     const retry = await fixture.fetch(
       path,
       request,

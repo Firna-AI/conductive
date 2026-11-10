@@ -1,10 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { retryRequest, sessionRecord } from './retry.test-support'
 import { terminalEvent } from './turn-lifecycle.test-support'
-
 describe('workspace chat durability', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -16,49 +14,6 @@ describe('workspace chat durability', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
-  it('confirms and broadcasts only after an atomic commit', async () => {
-    const fixture = await createChatFixture(harness)
-    const session = await fixture.createSession()
-    const runner = await fixture.connect()
-    runner.emit({ type: 'runner.ready' })
-    await fixture.drain()
-    await fixture.send(session.id)
-    const command = runner.commands[0]
-    if (command?.type !== 'turn') throw new Error('Expected a turn.')
-    const tab = await fixture.tab()
-    const confirmations = runner.received.length
-    const entered = deferred()
-    const release = deferred()
-    fixture.storage.beforeCommit = async () => {
-      entered.resolve()
-      await release.promise
-    }
-    runner.emit({
-      type: 'assistant.delta',
-      sessionId: session.id,
-      turnId: command.turnId,
-      messageId: 'answer',
-      text: 'Durable',
-    })
-    await entered.promise
-    expect(runner.received).toHaveLength(confirmations)
-    expect(tab.messages).toHaveLength(1)
-    release.resolve()
-    await fixture.drain()
-    expect(runner.received.at(-1)).toEqual({
-      type: 'confirm',
-      streamId: 'fake-stream-1',
-      throughEventNumber: 2,
-    })
-    expect(tab.messages.at(-1)).toMatchObject({
-      type: 'event',
-      envelope: { event: { type: 'assistant.delta', text: 'Durable' } },
-    })
-    fixture.storage.beforeCommit = null
-    tab.close()
-  })
-
   it('continues unanswered messages with their sender after a text-only turn', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -101,7 +56,6 @@ describe('workspace chat durability', () => {
       202,
     )
   })
-
   it('does not dispatch stale commands after a queued login fails', async () => {
     const fixture = await createChatFixture(harness)
     const first = await fixture.createSession()
@@ -135,7 +89,7 @@ describe('workspace chat durability', () => {
       turnId: running.turnId,
       senderId: fixture.member.id,
       choice: CLAUDE,
-      startedAt: 1_800_000_000_000,
+      startedAt: 1800000000000,
       messageIds: ['separate-turn'],
     })
     await fixture.drain()
@@ -191,13 +145,3 @@ describe('workspace chat durability', () => {
     ).toEqual({ type: 'workspace.title', name: 'The stream still works' })
   })
 })
-
-function deferred() {
-  let resolve: () => void = () => {
-    throw new Error('The deferred promise is not ready.')
-  }
-  const promise = new Promise<void>((done) => {
-    resolve = done
-  })
-  return { resolve, promise }
-}

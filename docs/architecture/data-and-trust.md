@@ -16,6 +16,8 @@ decision number names a dated record, as
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
 | The Boat key and the other keys of the Worker                                | Worker secrets                           |
 | Chat history and banner state                                                | The workspace Durable Object             |
+| Files attached to chat messages | The attachment storage, an R2 bucket |
+| The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
 | Panel widths                                                                 | The browser, or the Mac app              |
@@ -24,11 +26,11 @@ decision number names a dated record, as
 
 - The org is the boundary between tenants. A request reaches an org only
   for a member of that org. An operator is the one exception, as
-  [Orgs and workspaces](../protocol/access-and-security.md#orgs-and-workspaces)
+  [Orgs and workspaces](../protocol/isolation.md#orgs-and-workspaces)
   says.
 - The one Boat key reaches the sandboxes and the saved snapshots of every
   org (decision 80). So the Worker's own records keep the orgs apart, as
-  [Access and security](../protocol/access-and-security.md#orgs-and-workspaces)
+  [Access and security](../protocol/isolation.md#orgs-and-workspaces)
   says.
 - The Boat key never goes to the browser, into a sandbox, into a log, or
   into a saved snapshot.
@@ -51,5 +53,5 @@ decision number names a dated record, as
   a version pin of 1 behind the boundary of the gateway.
 - The members of one org can reach the turn token or the login in a
   sandbox, as
-  [Sandbox credentials](../protocol/sandbox-credentials.md#agent-logins-in-a-sandbox)
+  [Access and security](../protocol/isolation.md#agent-logins-in-a-sandbox)
   says.

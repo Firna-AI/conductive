@@ -38,7 +38,7 @@ while the change is open. Its pull request keeps them after the merge.
   to the upstream.
 - A runner of protocol version 1 gets the agent login itself with each
   turn, as
-  [Agent logins in a sandbox](sandbox-credentials.md#agent-logins-in-a-sandbox)
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says (gateway decision 2).
   [The agent runner](agent-runner.md#the-agent-runner) states which
   runner versions a workspace accepts.
@@ -56,7 +56,7 @@ while the change is open. Its pull request keeps them after the merge.
 - The runner gives Claude the gateway address and the turn token in a
   profile (gateway decision 11).
 - Only the sandbox user can read the credentials file of the profile.
-  [A sandbox with a version pin of 2 or later](sandbox-credentials.md#a-sandbox-with-a-version-pin-of-2-or-later)
+  [A sandbox with a version pin of 2 or later](isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
   states the risk of the file.
 - Each session gets its own profile. So the agent of a session sends only
   the turn token of its own turn.
@@ -152,7 +152,7 @@ while the change is open. Its pull request keeps them after the merge.
 
 - The upstream is Anthropic for a Claude subscription token or an
   Anthropic API key. It is OpenAI for an OpenAI API key.
-- [Agent logins](sandbox-credentials.md#agent-logins) states that both
+- [Agent logins](tokens-and-secrets.md#agent-logins) states that both
   providers confirmed this use of their logins.
 - The gateway forwards only a fixed list of model routes for each agent.
   Examples are the Messages API of Anthropic and the Responses API of
@@ -238,7 +238,7 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## Risks
 
-- [A sandbox with a version pin of 2 or later](sandbox-credentials.md#a-sandbox-with-a-version-pin-of-2-or-later)
+- [A sandbox with a version pin of 2 or later](isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
   states what the processes of a sandbox and the members of its org can
   do with a turn token. It also states where a settings file in the
   repository can send the token.

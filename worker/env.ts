@@ -4,6 +4,7 @@ import type { Workspace } from './workspace'
 
 export interface AppEnv {
   DB: D1Database
+  CHAT_ATTACHMENTS?: R2Bucket
   APP_ORIGIN: string
   MARKETING_ORIGIN?: string
   MACHINE_ORIGIN?: string

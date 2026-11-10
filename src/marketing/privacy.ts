@@ -9,14 +9,15 @@ import {
   text,
   type LegalDocument,
 } from './legal-text'
-import { privacyRecipientsSection } from './privacy-recipients'
+import { privacyUsesSection } from './privacy-uses'
 
 /**
  * The privacy notice follows the list of privacy information in the ICO
  * guidance that the README names. The facts come from the architecture
  * and the protocol docs. Both legal pages share the operator details and
- * contact address. The section on who gets the data is in
- * `privacy-recipients.ts`.
+ * contact address. The section on what the product uses, and why, is in
+ * `privacy-uses.ts`. Its Keys and logins item defines the newer and older
+ * cloud computers that the section on who gets the data uses.
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
@@ -38,99 +39,87 @@ export const privacyDocument: LegalDocument = {
         paragraph`For privacy questions, contact ${mailLink(legalAddress)}.`,
       ],
     },
+    privacyUsesSection,
     {
-      title: `What ${productName} uses, and why`,
+      title: 'Who gets your data',
       blocks: [
         list(
-          text`Your GitHub account: your GitHub user ID, login, display name,
-            avatar, and the date when you created the account. They sign you
-            in, and they show who owns and who sends each piece of work. The
-            operator sees the age of the account when you wait for app
-            access. Your login and display name also tell the agents who sent
-            each message.`,
-          text`Your GitHub emails: at each sign-in, ${productName} keeps the
-            verified email addresses of your GitHub account, and which one is
-            primary. An org invitation reaches you through one of them. The
-            approval email goes to the primary one.`,
-          text`Your GitHub token: the sign-in gives ${productName} a GitHub
-            token for your account. ${productName} stores it encrypted, for
-            every account, also while you wait for app access. It uses the
-            token to read GitHub for you, and for the git calls of your
-            turns.`,
-          text`The waitlist: a new account waits for app access, and sees only
-            the waitlist until then. ${productName} records when and how you
-            got app access. The record names the operator who approved you,
-            the invite code that you used, or the org invitation that you
-            accepted, with its org and the admin who sent it. It lets the
-            operator trace misuse back to a code or a person.`,
-          text`Invite codes: each account with app access has an invite code
-            with 5 invites. ${productName} keeps who used each code, and when.
-            You see how many of your invites are left, but not who used them.
-            The operator sees both.`,
-          text`The approval email: when an operator approves your account,
-            ${productName} sends one email to the primary verified email of
-            your GitHub account, and keeps whether it went. A failed send
-            goes again for up to 24 hours. An account without a verified
-            email gets no email.`,
-          text`Your agreement: you accept the current version of the terms at
-            each sign-in. ${productName} keeps the latest version that you
-            accepted, and the time when you first accepted it. They show that
-            you accepted the terms.`,
-          text`A suspension: if the operator suspends your account,
-            ${productName} records the time and the operator who suspended
-            it. An operator can lift the suspension, and ${productName}
-            records each lift in the same way. It keeps every record. A
-            suspension keeps your cloud computers stopped until an operator
-            lifts it.`,
-          text`Your session: a cookie of the app keeps you signed in. A
-            second cookie protects the GitHub sign-in while it runs.`,
-          text`Your orgs: the orgs, members, roles, invites, sections,
-            repositories, workspaces, scripts, and settings that you and your
-            team make. They run the service.`,
-          text`Keys and logins: the env var values of each org, and your
-            Claude or OpenAI logins. ${productName} stores them encrypted. It
-            uses your login only for the turns of the sessions that you start.
-            The messages of other members in those sessions use it only when
-            you let other members use that login. A newer cloud computer starts
-            from an org image that requires ${productName} to keep agent logins
-            outside the cloud computer. ${productName} enforces this requirement
-            for computers that start from that image. Each turn of your sessions
-            there gets only a credential that works through ${productName}
-            while that turn runs. An older cloud computer starts from an earlier
-            org image. ${productName} still permits older software there that
-            receives your login itself. Installing newer software in that cloud
-            computer does not remove this risk. A new image build gives the
-            protection to each cloud computer that starts from it.`,
-          text`Your work: ${productName} keeps your messages and the answers
-            of the agents as the chat history of each workspace. It also
-            keeps the last file list and the last summary of changes of each
-            workspace. The files that you attach go to the cloud computer of
-            the workspace.`,
-          text`Your code: your repositories and files live in the cloud
-            computers that ${productName} runs for your org. ${productName}
-            reads a file or a diff when you open it, to show it to you. In a
-            newer cloud computer, the agents send their requests to the models
-            of Anthropic or OpenAI through ${productName}. Agent settings in the
-            repository can send them to another address instead. These model
-            requests can hold your messages, your files, and your code.
-            ${productName} adds the login that the session uses, and passes
-            each request on.
-            When it passes on these model requests and their answers, it keeps
-            no copy of them. It writes no body or header value of them to its
-            logs. ${productName} still keeps the chat history above.`,
-          text`GitHub events: the state of the pull requests and the checks
-            of your branches, which GitHub sends to ${productName}.`,
-          text`Panel widths: your browser keeps the widths of the panels of
-            the app. They stay in your browser.`,
+          text`Cloudflare runs ${productName} and stores its data.
+            If a workspace has no name, Cloudflare's AI model service can
+            write a short name from the text of its first message. The model
+            requests of the agents in a newer cloud computer, and their
+            answers, pass through ${productName} on Cloudflare. Agent settings
+            in the repository can send these requests to another address
+            instead.`,
+          text`GitHub signs you in, and gives ${productName} access to your
+            repositories through its GitHub App. The Mac app also checks
+            GitHub for updates and downloads new versions. These requests
+            send your network address to GitHub.`,
+          text`Resend sends the emails of ${productName}: the invitations of
+            an org, and the email when an operator approves your account. It
+            gets the address and the text of each email.`,
+          text`A cloud computer provider runs the cloud computers of every org
+            for ${productName}, in the account of ${productName}. Your code,
+            your files, and your agent sessions are in them. ${productName}
+            sends the provider the requests that start, stop, and use them.`,
+          text`Anthropic and OpenAI get your messages, your files, and your
+            code when an agent works on them. Each Mac command request and its
+            result also go to the agent and to Anthropic or OpenAI.
+            With each message, they also get
+            the GitHub login and the display name of its sender. They also get
+            the name of the workspace branch, which starts with the GitHub
+            login of the first owner of the workspace. From a newer cloud
+            computer, the agents send them through ${productName}, which adds
+            the agent login. With the older software in an older cloud
+            computer, the agents send them directly, with the agent login. In
+            both kinds of cloud computer, agent settings in the repository can
+            send them to another address instead. Each session uses the
+            login of the member who started it. Your messages in another
+            member's session use that member's login only when that member
+            lets other members use it. When that member does not share the
+            login, your message starts a new session on your own login. The
+            terms of that provider apply.`,
+          text`The members of your orgs see the workspaces of the org,
+            their chats, and each Mac command request and result.
+            A member with a terminal in a cloud computer can read
+            the GitHub token of a turn that runs there. Outside an agent turn,
+            the GitHub CLI uses the workspace owner's account. Each member with
+            a terminal can get that owner's GitHub token without a running
+            turn.`,
+          text`In a newer cloud computer, a member with a terminal or a program
+            in it can read the credential of a turn that runs there. Through
+            ${productName}, that credential can use the login of the member who
+            started the session. It works while the turn runs, also from
+            outside the cloud computer. A program that keeps running, such as a
+            dev server or a program that the startup script starts, can also
+            get the credentials of later turns. This includes the turns of
+            sessions that other members start. Agent settings in the repository
+            can make the agent send its model requests, with their content and
+            the credential of the turn, to another address. A commit, the agent,
+            or other code can change those settings. The setting that lets other
+            members use a login does not change this. After Stop, a credential
+            can start no new request. A request that still runs ends within 30
+            seconds after the turn ends. If the member who started the session
+            removes or changes the login, or loses access to the org, the turn
+            ends at its next model request.`,
+          text`In an older cloud computer, a member with a terminal or a program
+            in it can read the agent login of a turn that runs there. A program
+            that a tool of the agent starts, such as a dev server, can keep the
+            agent login after the turn ends. A member with a terminal can read
+            it there too. Agent settings in the repository can make the agent
+            send that login to another address. A commit, the agent, or other
+            code can change those settings. The setting that lets other members
+            use a login does not change this.`,
+          text`The members of your orgs also see who started each session,
+            whose login it uses, and whether it can use that login. They also
+            see whether its starter lets other members use that login.`,
+          text`If the operator suspends your account, the members of your orgs
+            learn that it is suspended. A workspace that you own then says
+            that its owner is suspended, until an operator lifts the
+            suspension.`,
         ),
-        paragraph`Where data protection law requires a lawful basis, the
-          operator relies on performance of a contract to provide the
-          service to you. It relies on legitimate interests to operate and
-          secure the service and prevent abuse. It also uses personal data
-          when necessary to comply with a legal obligation.`,
       ],
     },
-    privacyRecipientsSection,
     {
       title: 'Transfers to other countries',
       blocks: [
@@ -169,14 +158,17 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         paragraph`When an admin deletes an org, ${productName} deletes the data
           of the org after 7 days, unless an admin restores it.`,
+        paragraph`${productName} keeps each file that you send with a message
+          until it deletes the workspace of the message. It deletes an unsent
+          file 7 days after you upload it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and
           suspension records do not automatically expire when you stop
-          using ${productName}. Workspace chat history stays while its org
-          exists, including while a cloud computer is stopped.
-          When ${productName} passes on model requests and their answers, it
-          keeps no copy of them.`,
+          using ${productName}. Workspace chat history and Mac command records
+          stay while their org exists, including while a cloud computer is
+          stopped. When ${productName} passes on model requests and their
+          answers, it keeps no copy of them.`,
         paragraph`A connected agent login stays until you remove or replace
           it. Panel widths stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
@@ -220,10 +212,11 @@ export const privacyDocument: LegalDocument = {
     {
       title: 'Cookies',
       blocks: [
-        paragraph`This site sets no cookies. The app sets one cookie that
-          keeps you signed in, and one that protects the GitHub sign-in while
-          it runs.`,
-        paragraph`The sign-in cookie lasts for up to 7 days. The GitHub
+        paragraph`This site sets no cookies. The web app and the Mac app each
+          set their own cookie that keeps you signed in. Only the Mac app's
+          cookie store holds its session cookie. Another cookie protects the
+          GitHub sign-in while it runs.`,
+        paragraph`Each sign-in cookie lasts for up to 7 days. The GitHub
           sign-in protection cookie lasts for up to 10 minutes. These
           cookies support sign-in and security. They use secure connections
           and cannot be read by page scripts.`,

@@ -4,7 +4,7 @@ This page belongs to the [agent runner](README.md). It gives the facts of
 this implementation about agent logins and turn tokens.
 [How the agents reach the gateway](../docs/protocol/model-gateway.md#how-the-agents-reach-the-gateway)
 states the requirements.
-[A sandbox with a version pin of 2 or later](../docs/protocol/sandbox-credentials.md#a-sandbox-with-a-version-pin-of-2-or-later)
+[A sandbox with a version pin of 2 or later](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
 states the accepted risks.
 
 An agent login is the Claude subscription token, the Anthropic API key, or
@@ -17,7 +17,7 @@ uses a real login, which a developer gives it.
 
 An older org image can hold a runner of protocol version 1. Such a runner
 gets the agent login itself with each turn, as
-[A sandbox with a version pin of 1](../docs/protocol/sandbox-credentials.md#a-sandbox-with-a-version-pin-of-1)
+[A sandbox with a version pin of 1](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-1)
 says.
 
 ## The turn token
@@ -181,7 +181,7 @@ because no runner command carries a login.
   reads the credentials file of a running turn on purpose.
 - A copy of a turn token works only as
   [The turn token](../docs/protocol/model-gateway.md#the-turn-token) says.
-  [A sandbox with a version pin of 2 or later](../docs/protocol/sandbox-credentials.md#a-sandbox-with-a-version-pin-of-2-or-later)
+  [A sandbox with a version pin of 2 or later](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
   states these accepted risks.
 - The descriptor pipe of the measure tool stops only the automatic copy of
   the developer login into new processes. A process of the same user can

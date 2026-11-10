@@ -40,6 +40,10 @@ the message field of each composer, and Stop.
   drag of a tab, and no answer to a Mac command. Its empty state names only
   the session history.
 
+When the chat becomes read-only, it hides an open rename or close question.
+The session history stays open. The tab keeps its old name, and the sandbox bar says why.
+`ChatBody` applies this rule for both hosts.
+
 ## Record order
 
 - Each reply, read, and event with a session record, or with the workspace
@@ -67,7 +71,7 @@ the message field of each composer, and Stop.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as
-  [Messages](../../docs/protocol/messages-and-turns.md#messages) says.
+  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says.
 - A failed first start shows the error state and a failed step of the
   create start, as `failedFirstStart` in
   [`../app/first-start.ts`](../app/first-start.ts) says. Its bar sits above
