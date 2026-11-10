@@ -35,6 +35,7 @@ it('ignores input after completion and accepts its explicit continuation turn', 
     ...late,
     type: 'turn' as const,
     credential: turn().credential,
+    commitAuthor: null,
     commandId: 'continuation-late',
     turnId: 'turn-2',
   }
