@@ -1222,8 +1222,9 @@ Depends on: 1, 3
       tests. Evidence: `.context/keyboard-shortcuts/reports/m8-ui.md`. A
       keypad digit shows as "Num 8" everywhere a key shows, and
       `aria-keyshortcuts` names it by the digit that the browser reports.
-- [ ] Run the checks, the tests, and the complete gate. Delete the two
-      follow-up items that the answers settle.
+- [x] Run the checks, the tests, and the complete gate. Delete the two
+      follow-up items that the answers settle. Evidence:
+      `.context/keyboard-shortcuts/m7/gate-3.log`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
