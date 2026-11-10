@@ -21,7 +21,7 @@ status or the note of an existing row.
 
 Contract owners:
 
-- [Conductor Cloud comparison](../docs/protocol/conductor-cloud-comparison.md).
+- [Conductor comparison](../docs/protocol/conductor-comparison.md).
 - The [marketing site README](../src/marketing/README.md).
 - The mockup notes in [the marketing site mockups](../docs/mockups/marketing-site.md)
   and in [the From Conductor page](../docs/mockups/src/entries/marketing/from-conductor/index.md).
@@ -46,7 +46,7 @@ Replaced ways:
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `src/marketing/from-conductor/features.ts`, `src/marketing/components/ParityIntro.astro`, `docs/protocol/conductor-cloud-comparison.md` under "Scope".
+- **Location:** `src/marketing/from-conductor/features.ts`, `src/marketing/components/ParityIntro.astro`, `docs/protocol/conductor-comparison.md` under "The check time".
 - **Background:** The protocol doc requires the page to show the day of the last full check of its rows. The check day holds no time. It is the last sentence of a grey paragraph.
 - **Problem:** The page gives no time, and its day is easy to miss. A visitor cannot see how current the list is.
 - **Impact if no action:** A visitor cannot judge how far to trust a status when they plan a move from Conductor Cloud.
@@ -72,7 +72,7 @@ Replaced ways:
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `src/marketing/components/ParityTable.astro`, `docs/protocol/conductor-cloud-comparison.md` under "The page".
+- **Location:** `src/marketing/components/ParityTable.astro`, `docs/protocol/conductor-comparison.md` under "Row links".
 - **Terms:**
   - **No-script rule:** the protocol doc says that the page runs no script. The security policy of the site blocks every script, and the built-site test fails on a script tag.
 - **Background:** Each row has a unique id in its data, such as `file-tree`. The rows in the HTML have no id.
@@ -103,7 +103,7 @@ The options check of both decisions ran on 10 November 2026. Its report is
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `src/marketing/from-conductor/`, `docs/protocol/conductor-cloud-comparison.md` under "Scope".
+- **Location:** `src/marketing/from-conductor/`, `docs/protocol/conductor-comparison.md` under "Scope".
 - **Background:** The page lists Conductor Cloud features only, and a note at its top says so. The protocol doc records that scope, because Conductive replaces Conductor Cloud.
 - **Problem:** A visitor who uses local Conductor workspaces on a Mac finds none of their features in the list.
 - **Impact if no action:** That visitor cannot compare Conductor with Conductive.
@@ -254,34 +254,39 @@ The mockup lists the features of local Conductor workspaces too, says
 
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1a
+Depends on: 1. It needs decisions 3 and 4, not the new rows of Milestone 1a.
 
 The protocol doc and the README state the requirements and the decisions
 of this change.
 
-- [ ] Move `docs/protocol/conductor-cloud-comparison.md` to
+- [x] Move `docs/protocol/conductor-cloud-comparison.md` to
       `docs/protocol/conductor-comparison.md`, titled "Conductor
       comparison". Update every link to it, in `AGENTS.md`, the
-      READMEs, the architecture docs, the mockup notes, and this plan.
-- [ ] Update the protocol doc:
-  - [ ] The scope: every Conductor feature, local and cloud, with no
+      READMEs, the architecture docs, the mockup notes, the follow-up
+      item of the deployed smoke test, and this plan.
+- [x] Update the protocol doc:
+  - [x] The scope: every Conductor feature, local and cloud, with no
         scope note, with decision 3 and its reason. The page says
         "Conductor", with decision 4.
-  - [ ] The check time: its date and time in UTC, on its own line at the
+  - [x] The check time: its date and time in UTC, on its own line at the
         top, with decision 1 and its reason.
-  - [ ] Row links: the address of each row, the lasting id, when the
+  - [x] Row links: the address of each row, the lasting id, when the
         icon shows, how a visitor copies the address, the opened row,
         and an unknown id, with decision 2 and its reason.
-  - [ ] Accessibility: the name of each row link, and the row header
+  - [x] Accessibility: the name of each row link, and the row header
         that reads only the name of its feature.
-- [ ] Update `src/marketing/README.md`: the scope of the rows, the rule
-      for the check time, the id as the address of a row, and the key
-      code of `features.ts`, `dates.ts`, and `copy.ts`.
-- [ ] Say "Conductor" for the page in `AGENTS.md`, `README.md`,
-      `docs/architecture.md`, and `docs/architecture/marketing-site.md`,
-      as the design call "Where Conductor Cloud stays" says.
-- [ ] Read the Terms page and the Privacy page in full. Update each
-      sentence that restates a changed fact.
+- [x] Update `src/marketing/README.md` and its page
+      `src/marketing/comparison.md`: the scope of the rows, the rule for
+      the check time, the id as the address of a row, and the key code of
+      `features.ts`, `dates.ts`, and `copy.ts`.
+- [x] Say "Conductor" for the page in `AGENTS.md`, `README.md`,
+      `docs/architecture.md` with its pages `protocol-docs.md` and
+      `marketing-site.md`, as the design call "Where Conductor Cloud
+      stays" says.
+- [x] Read the Terms page, the Privacy page, and each public guide in
+      full. Update each sentence that restates a changed fact.
+
+Evidence: `.context/from-conductor-check-time-and-row-links/m2/`.
 
 ## Milestone 3: Site
 

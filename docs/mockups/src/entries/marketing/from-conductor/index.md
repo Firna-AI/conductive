@@ -19,7 +19,7 @@ phone and desktop sizes, in light and dark.
   site and the mockup read the same modules, so they show the same rows.
 - An In progress or Planned row shows its due date only when the team
   records a dated commitment. Without one, it shows "No date yet".
-- `docs/protocol/conductor-cloud-comparison.md` states the claim rule of
+- `docs/protocol/conductor-comparison.md` states the claim rule of
   each status.
 
 ## The page
