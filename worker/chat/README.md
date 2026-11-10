@@ -188,8 +188,8 @@ tests through the production Worker entry.
   that can still start a secret, so a new stream cannot complete such a
   secret. That state, the filtered events, and the raw cursor of the
   stream commit in one transaction. The shared field policy keeps
-  operational paths and masks display labels. It masks each port name and
-  folder before the shared post-filter label bound and the second parse.
+  operational paths and masks display labels. It masks each complete port
+  name and folder before the workspace display excerpt and the second parse.
 - `runner-output.ts` also moves the answer ends of older stream records
   into the workspace record, at the first accepted receipt without that
   record. Held text stays with its own stream, because the held text of
@@ -208,8 +208,10 @@ tests through the production Worker entry.
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.
 - `delivery-state.ts`: dispatch state before sending and queued-state restoration.
-- `port-reports.ts`: the bounded listener-list parser. Runner reports
-  require a sorted unique array. Only a workspace stop publishes a null list.
+- `port-reports.ts`: the listener-list parser, final port-label excerpts, and
+  displayed-label checks. Private labels stay complete for the output filter.
+  Runner reports require a sorted unique array. Only a workspace stop
+  publishes a null list.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
   `parseRunnerEnvelope` applies the byte limits to the raw message.

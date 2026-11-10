@@ -453,6 +453,19 @@ all report states. Reuse the message styles for the centred states.
 Reason: a report must not replace an input while the user types. The
 same input then keeps its text, focus, selection, and invalid mark.
 
+**From review finding 2.** My calls of 10 November 2026: apply option B.
+Keep complete selected labels through the private event and the final
+secret filter. The Worker owns the displayed 40 and 120 character cuts.
+The private payload budget is 512 KiB, within the existing 1 MiB envelope.
+A label that cannot fit becomes wholly unavailable, and its port stays.
+Reason: another private text cut can repeat the same secret leak.
+Use the process executable link for identity. An unidentifiable rewritten
+interpreter title gives no name. Reason: a title can contain unselected
+arguments. The browser behavior and displayed limits remain the same.
+The shared display-bound test moves to the Worker owner with every
+assertion retained. The existing tool-detail cutoff is a separate
+follow-up in `plans/follow-ups/tool-detail-cut-before-env-filter.md`.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -646,6 +659,31 @@ Apply option A. Keep one mounted editing row and the existing visual states.
       Smoke-test the same panel and phone layouts.
 
 Evidence: `.context/preview-port-detection/finding-1-fix-report.md`.
+
+## Milestone 5b: Filter complete private port labels
+
+Depends on: 3, 4, 5a
+
+Confirmed review finding 2 needs option B. The private report keeps the
+complete selected label until the final secret filter. The stored and
+shown labels keep the approved 40 and 120 character limits.
+
+- [x] Add boundary regressions for complete selected names and folders
+      through scanner, private reports, Worker filtering, and saved replay.
+- [x] Remove every premature label cut, including the runner event bound.
+      Keep raw outbox, refresh, reconnect, and parser phases consistent.
+- [x] Keep the private report within its existing budget without creating
+      fragments. Omit whole optional labels when needed and keep each port.
+- [x] Confirm the selected program from reliable process metadata. A
+      rewritten process title must not expose unselected arguments.
+- [x] Apply display limits only after the final filter. Preserve names,
+      folder rules, port validation, public behavior, and earlier tests.
+- [x] Run targeted checks, new asynchronous cases ten times, and the runner
+      build. Align phase documentation and check the legal facts.
+
+Evidence: `.context/preview-port-detection/finding-2-fix-report.md`.
+Both legal pages and the Privacy uses module were read in full. Their
+public facts remain correct.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

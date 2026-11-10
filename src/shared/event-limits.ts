@@ -4,7 +4,6 @@ import {
   TURN_COMPLETED_MAX_FILES,
 } from './chat-events'
 import type { RunnerEvent } from './runner'
-import { PORT_FOLDER_MAX_CHARACTERS, PORT_NAME_MAX_CHARACTERS } from './ports'
 
 const encoder = new TextEncoder()
 
@@ -44,28 +43,6 @@ function uniquePaths<T extends { path: string }>(items: readonly T[]): T[] {
 
 /** Apply excerpts only after complete-source secret filtering. */
 export function boundChatEvent(event: RunnerEvent): RunnerEvent {
-  if (event.type === 'ports.updated')
-    return {
-      ...event,
-      ports: event.ports.map((port) => {
-        const folder = port.folder === null ? null : Array.from(port.folder)
-        return {
-          ...port,
-          name:
-            port.name === null
-              ? null
-              : Array.from(port.name)
-                  .slice(0, PORT_NAME_MAX_CHARACTERS)
-                  .join(''),
-          folder:
-            folder === null
-              ? null
-              : folder.length > PORT_FOLDER_MAX_CHARACTERS
-                ? `…${folder.slice(-(PORT_FOLDER_MAX_CHARACTERS - 1)).join('')}`
-                : port.folder,
-        }
-      }),
-    }
   if (event.type === 'tool.updated') {
     const excerpt = toolDetail(event.tool.detail)
     return {

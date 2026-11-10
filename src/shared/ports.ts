@@ -10,11 +10,12 @@ export interface ListeningPort {
 
 export interface RunnerPortsUpdated {
   type: 'ports.updated'
+  /** Complete selected labels. Only the workspace applies display excerpts after its final filter. */
   ports: readonly ListeningPort[]
 }
 
 export interface PortsUpdated {
   type: 'ports.updated'
-  /** Null means that this workspace has no current runner report. */
+  /** Final filtered display labels. Null means that this workspace has no current runner report. */
   ports: readonly ListeningPort[] | null
 }

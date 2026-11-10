@@ -20,6 +20,7 @@ import { workspaceToolRuntime } from './providers/workspace-tools'
 import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
 import { PortReporter, type PortReporterOptions } from './ports'
+import { privatePortReport } from './port-report-budget'
 
 export interface RunnerOptions extends WorkspaceContext {
   workspaceId: string
@@ -186,7 +187,12 @@ export class Runner {
       const failures: unknown[] = []
       for (const safe of prepared ? [event] : this.sanitizer.accept(event)) {
         try {
-          await this.link.emit(boundChatEvent(safe), reportCommandId)
+          await this.link.emit(
+            safe.type === 'ports.updated'
+              ? privatePortReport(safe, this.options.warn)
+              : boundChatEvent(safe),
+            reportCommandId,
+          )
         } catch (error) {
           if (
             safe.type === 'turn.thinking' ||

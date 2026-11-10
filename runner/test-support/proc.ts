@@ -51,6 +51,7 @@ export function procFixture() {
       inodes: string[],
       command: string[],
       cwd: string,
+      executable = command[0] ?? '',
     ) => {
       if (!pids.includes(pid)) pids.push(pid)
       lists.set('/proc', [...pids])
@@ -62,6 +63,10 @@ export function procFixture() {
         links.set(`/proc/${pid}/fd/${index}`, `socket:[${inode}]`)
       files.set(`/proc/${pid}/cmdline`, `${command.join('\0')}\0`)
       links.set(`/proc/${pid}/cwd`, cwd)
+      links.set(
+        `/proc/${pid}/exe`,
+        executable.startsWith('/') ? executable : `/usr/bin/${executable}`,
+      )
     },
     unreadable: (pid: string) => {
       files.delete(`/proc/${pid}/cmdline`)

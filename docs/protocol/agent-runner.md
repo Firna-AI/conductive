@@ -159,12 +159,19 @@ says.
     that folder and the path below it, such as `api` or `api/server`.
   - Outside these folders, the port has no folder. Reason: no path outside
     the repositories reaches the browser.
-- A report holds at most 64 ports, in the order of their numbers. A name
-  has at most 40 characters. A folder has at most 120 characters, and a
-  longer folder keeps its end, after "…", because the end tells servers
-  apart.
-- Reason: the event stays far below the runner event limit, and rows do
-  not move under the pointer.
+- A report holds at most 64 ports, in the order of their numbers.
+- The private runner report keeps each selected label complete until the
+  workspace filters secret values. No display cut precedes that filter.
+- Each private report meets the runner envelope byte limit. When complete
+  optional labels cannot fit the private budget, they become unavailable
+  as whole labels. Their ports stay in the report. A private cut was
+  rejected, because a longer secret can cross that cut too.
+- The workspace stores and sends names of at most 40 characters and
+  folders of at most 120 characters, after the secret filter. A longer
+  folder keeps its end, after "…", because the end tells servers apart.
+- Reason: stored and displayed reports stay small, and rows do not move
+  under the pointer. Complete filter input prevents app-created secret
+  fragments.
 - The runner sends the list when it changes, and once after each connect,
   also when it is empty. It also answers a `report.refresh` of the kind
   `ports.updated`, as [Lost workspace updates](#lost-workspace-updates)

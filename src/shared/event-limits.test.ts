@@ -50,27 +50,3 @@ it('retains earlier omission counts when bounding an older runner excerpt again'
     omittedFileCount: 10,
   })
 })
-
-it('bounds port labels after redaction expands their text without splitting a character', () => {
-  expect(
-    boundChatEvent({
-      type: 'ports.updated',
-      ports: [
-        {
-          port: 3000,
-          name: '[redacted]'.repeat(5),
-          folder: `[redacted]/${'🦊'.repeat(120)}`,
-        },
-      ],
-    }),
-  ).toEqual({
-    type: 'ports.updated',
-    ports: [
-      {
-        port: 3000,
-        name: '[redacted]'.repeat(4),
-        folder: `…${'🦊'.repeat(119)}`,
-      },
-    ],
-  })
-})

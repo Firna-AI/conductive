@@ -68,7 +68,10 @@ it('keeps only safe program names and an allowed next word without reading envir
     { command: ['node', '/repo/server.js', 'dev2'], name: 'server.js' },
     { command: ['node', '/repo/server.js', 'Secret'], name: 'server.js' },
     { command: ['node', '-e', 'Secret42'], name: null },
-    { command: [`/repo/${'x'.repeat(50)}`, 'serve'], name: 'x'.repeat(40) },
+    {
+      command: [`/repo/${'x'.repeat(50)}`, 'serve'],
+      name: `${'x'.repeat(50)} serve`,
+    },
   ]
   h.sockets(cases.map((_, index) => ({ port: 3000 + index })))
   for (const [index, test] of cases.entries())
@@ -88,7 +91,7 @@ it('keeps only safe program names and an allowed next word without reading envir
   expect(h.reads.some((path) => path.endsWith('/environ'))).toBe(false)
 })
 
-it('limits folders to repository paths and keeps the end of long folders', async () => {
+it('keeps complete folders only within repository paths', async () => {
   const h = fixture()
   const tail = 'a'.repeat(119)
   const cases = [
@@ -99,7 +102,7 @@ it('limits folders to repository paths and keeps the end of long folders', async
     { cwd: '/home/user/code', folder: null },
     { cwd: '/home/user/code-other/private', folder: null },
     { cwd: '/tmp/private', folder: null },
-    { cwd: `/home/user/code/web/long/${tail}`, folder: `…${tail}` },
+    { cwd: `/home/user/code/web/long/${tail}`, folder: `long/${tail}` },
   ]
   h.sockets(cases.map((_, index) => ({ port: 3000 + index })))
   for (const [index, test] of cases.entries())
@@ -140,5 +143,37 @@ it('caches metadata for a socket and recovers when a process exits during lookup
   h.process('12', ['102'], ['astro', 'dev'], '/home/user/code/api')
   expect(await h.scanner.scan()).toEqual([
     { port: 3000, name: 'astro dev', folder: 'api' },
+  ])
+})
+
+it('keeps complete selected labels and discards a rewritten interpreter title', async () => {
+  const h = fixture()
+  h.sockets([{ port: 3000 }, { port: 3001 }])
+  h.process(
+    '10',
+    ['3000'],
+    [
+      'node',
+      '/repo/development-server-entry-point',
+      'secretpass',
+      '--token=UNSELECTED',
+    ],
+    `/home/user/code/web/secretpass/${'z'.repeat(115)}`,
+    '/usr/local/bin/node',
+  )
+  h.process(
+    '11',
+    ['3001'],
+    ['vite --token FAKE_TOKEN_42'],
+    '/home/user/code/web/app',
+    '/usr/local/bin/node',
+  )
+  expect(await h.scanner.scan()).toEqual([
+    {
+      port: 3000,
+      name: 'development-server-entry-point secretpass',
+      folder: `secretpass/${'z'.repeat(115)}`,
+    },
+    { port: 3001, name: null, folder: 'app' },
   ])
 })

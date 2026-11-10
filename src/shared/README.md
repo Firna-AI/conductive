@@ -30,9 +30,12 @@ Storage and network failures remain unconfirmed.
 After a refused file tree, changes list, start steps, workspace name, or port list,
 `RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
 It carries no login. A redelivery keeps its command ID.
-`ports.ts` defines `ListeningPort`, the full runner report, and the browser
-report whose null list means no current report. It owns the count and label
-limits. `terminal.ts` owns `TERMINAL_PORT`, shared by the runner exclusion
+`ports.ts` defines the common listening-port fields and both report phases.
+`RunnerPortsUpdated` carries complete selected private labels.
+`PortsUpdated` carries final filtered display labels, with a null list when
+there is no current report. The display limits apply only after the workspace
+filter. The module owns those limits and the shared count limit.
+`terminal.ts` owns `TERMINAL_PORT`, shared by the runner exclusion
 and the terminal backend.
 [Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
 that report, its limits, and its refresh kind.
@@ -83,8 +86,10 @@ The Worker keeps the held text in the encrypted state of its runner stream.
 It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
 It saves both before it confirms the corresponding raw event.
 
-`event-limits.ts` applies the same excerpt and port-label caps after either filter.
+`event-limits.ts` applies the same chat excerpt caps after either filter.
 Its UTF-8 byte count works in the Worker and Node.
+The workspace's [port report owner](../../worker/chat/port-reports.ts)
+shortens port labels only after its final filter.
 
 `chat-events.ts` caps serialized tool detail at 64 KiB.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.

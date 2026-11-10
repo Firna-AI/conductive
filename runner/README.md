@@ -226,6 +226,8 @@ tools that time the first agent start after a resume.
 - `src/proc-ports.ts`, `src/socket-table.ts`, and `src/port-metadata.ts`:
   socket-table reads, listener filters, and safe process names and folders.
 - `src/ports.ts`: `PortReporter`, its stable list, scan queue, and timer lifetime.
+- `src/port-report-budget.ts`: complete private port labels or whole-label
+  omission within the report budget, after runner credential filtering.
 - `src/file-parts.ts`: full report parts and bounded tree deltas.
 - `src/file-updates.ts`: the full tree or the tree delta of each scan, and
   the check for a new changes report.

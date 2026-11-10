@@ -83,12 +83,13 @@ export class ProcPortScanner {
         if (inode && remaining.has(inode)) owned.add(inode)
       }
       if (!owned.size) continue
-      const [command, folder] = await Promise.all([
+      const [command, folder, executable] = await Promise.all([
         this.reader.read(`/proc/${pid}/cmdline`).catch(() => null),
         this.reader.link(`/proc/${pid}/cwd`).catch(() => null),
+        this.reader.link(`/proc/${pid}/exe`).catch(() => null),
       ])
       const metadata = {
-        name: portName(command),
+        name: portName(command, executable),
         folder: portFolder(folder, this.options.home, this.options.cwd),
       }
       for (const inode of owned) {

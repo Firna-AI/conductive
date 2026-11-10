@@ -8,8 +8,6 @@ import type { RunnerEvent, RunnerEventEnvelope } from '../../src/shared/runner'
 import type { WorkspaceStart } from '../../src/shared/workspaces'
 import {
   PORT_REPORT_MAX_PORTS,
-  PORT_NAME_MAX_CHARACTERS,
-  PORT_FOLDER_MAX_CHARACTERS,
   type ListeningPort,
 } from '../../src/shared/ports'
 import { parseChoice } from './commands'
@@ -122,12 +120,7 @@ function port(value: unknown): ListeningPort {
   const port = integer(input.port)
   const name = nullable(input.name)
   const folder = nullable(input.folder)
-  if (
-    port < 1 ||
-    port > 65535 ||
-    (name !== null && Array.from(name).length > PORT_NAME_MAX_CHARACTERS) ||
-    (folder !== null && Array.from(folder).length > PORT_FOLDER_MAX_CHARACTERS)
-  )
+  if (port < 1 || port > 65535)
     throw new Error('The saved listening port exceeds its limits.')
   return { port, name, folder }
 }

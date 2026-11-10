@@ -7,8 +7,9 @@ The runner keeps each event within the limits that
 [Agent runner](../docs/protocol/agent-runner.md) and
 [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
 state. The [shared contracts](../src/shared/README.md) hold the constants.
-No variable changes them, and the runner protocol stays at version 1. Each
-byte budget measures the event or field after the output filter.
+No variable changes them, and the runner protocol stays at version 1.
+Runner byte budgets apply after its known-credential filter. Displayed
+port-label limits apply later, after the workspace's marked-env filter.
 
 - A tool detail keeps the longest prefix that fits
   [`TOOL_DETAIL_MAX_BYTES`](../src/shared/chat-events.ts), and
@@ -31,8 +32,15 @@ byte budget measures the event or field after the output filter.
 - A confirm can also cover a refusal marker that the workspace stored for
   an event. The runner then removes that event from its outbox and does
   not send it again. The runner never sends a refusal marker.
-- `ports.updated` sends a full list of at most 64 ports. Names keep at most
-  40 characters, and folders keep at most 120. The shared bound applies
-  again after secret filtering, without splitting a Unicode character.
+- `ports.updated` sends a full list of at most 64 ports. Its private names
+  and folders stay complete through the runner filter, outbox, refresh,
+  reconnect, and workspace filter. No private prefix or tail cut is safe.
+- The runner gives its serialized port report a conservative 512 KiB budget.
+  It keeps each port row and fits whole optional labels in port order, name
+  first. A label that does not fit becomes null and gets a local warning.
+  The complete envelope still passes the existing 1 MiB outbox check.
+- After the workspace filter, its port report owner keeps names at 40
+  characters and folders at 120. A long folder keeps its end after "…".
+  These final excerpts never split a Unicode character.
   [Listening ports](../docs/protocol/agent-runner.md#listening-ports)
   gives the limits of that report: its ports, its names, and its folders.
