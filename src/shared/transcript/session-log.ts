@@ -1,69 +1,7 @@
-import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
-import type { Session } from '../../shared/sessions'
-import type { ChatStreamEvent, StreamEnvelope } from '../api/read-workspace'
+import type { Session } from '../sessions'
+import type { ChatEnvelope } from './session-events'
 import { emptyTranscript, foldEvent, type Transcript } from './transcript'
 import { foldRecord } from './turn-records'
-
-export interface ChatEnvelope {
-  eventNumber: number
-  occurredAt: number
-  event: SessionEvent
-  /** The workspace marked an agent event of a turn that had ended. */
-  late: boolean
-}
-
-/**
- * A chat event of one session: an event of its transcript, or a record of
- * the session.
- */
-export type SessionEvent =
-  | Exclude<ChatEvent, { type: 'runner.event-refused' }>
-  | (RunnerEventRefused & { sessionId: string })
-
-/** The event as a session event, or null for an event of no session. */
-export function asSessionEvent(
-  event: ChatStreamEvent | null,
-): SessionEvent | null {
-  if (!event) return null
-  switch (event.type) {
-    case 'workspace.updated':
-    case 'workspace.title':
-    case 'start.updated':
-      return null
-    case 'runner.event-refused':
-      return event.sessionId === null
-        ? null
-        : { ...event, sessionId: event.sessionId }
-    default:
-      return event
-  }
-}
-
-export function sessionOf(event: SessionEvent): string {
-  switch (event.type) {
-    case 'message.accepted':
-      return event.message.sessionId
-    case 'session.updated':
-      return event.session.id
-    default:
-      return event.sessionId
-  }
-}
-
-/** The chat events and records of one session, from workspace envelopes. */
-export function chatEventsOf(
-  sessionId: string,
-  envelopes: readonly StreamEnvelope[],
-): ChatEnvelope[] {
-  const events: ChatEnvelope[] = []
-  for (const { eventNumber, occurredAt, event, late } of envelopes) {
-    const sessionEvent = asSessionEvent(event)
-    if (sessionEvent && sessionOf(sessionEvent) === sessionId) {
-      events.push({ eventNumber, occurredAt, event: sessionEvent, late })
-    }
-  }
-  return events
-}
 
 /** A record of the session, and the event number whose state it holds. */
 export interface PlacedRecord {

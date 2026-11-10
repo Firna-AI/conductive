@@ -1,3 +1,4 @@
+import { copyText } from './clipboard'
 import { appDomain } from '../../docs/mockups/src/brand'
 import { createApiClient } from './api/client'
 import { xhrFileTransport } from './api/xhr-files'
@@ -48,6 +49,6 @@ export function createLiveServices(target: Window): AppServices {
     newId: () => target.crypto.randomUUID(),
     leave: (url) => target.location.assign(url),
     appOrigin: appHostOrigin(target.location),
-    copy: (text) => target.navigator.clipboard.writeText(text),
+    copy: (text) => copyText(target, text),
   }
 }

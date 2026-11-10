@@ -5,6 +5,7 @@ import tabScroll from '../../../docs/mockups/src/components/workspace/TabScroll.
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { ownPress } from '../../app/pointer-drag'
 import { useSidewaysWheel } from '../../app/sideways-wheel'
+import type { TranscriptDetail } from '../../shared/sessions'
 import type { WorkspaceTab } from '../../shared/workspace-view'
 import type { TabPlace } from '../state/tab-order'
 import { IconButton } from '../ui/actions'
@@ -37,15 +38,18 @@ function keptTab(tabs: readonly RowTab[], renaming: string | null) {
  * for a new session on the same branch and cloud computer, and the clock of
  * the session history. Every tab closes. A tab moves by drag and drop, or
  * by a long press on a phone, as `useTabDrag` says, and its tab menu renames
- * a session and moves a tab one place, as `useTabMenu` says. A row whose
- * tabs do not fit scrolls sideways, as `useRowScroll` says. On desktop the
- * history and the tab menu open beside their trigger; a phone shows them as
- * sheets.
+ * a session, copies its transcript, and moves a tab one place, as
+ * `useTabMenu` says. A row whose tabs do not fit scrolls sideways, as
+ * `useRowScroll` says. On desktop the history and the tab menu open beside
+ * their trigger; a phone shows them as sheets.
  */
 export function SessionTabs(props: {
   tabs: readonly RowTab[]
   mobile: boolean
-  /** A read-only chat: no new session, no tab menu, and no move. */
+  /**
+   * A read-only chat: no new session and no move, and the tab menu holds
+   * only the items that change nothing, such as the copies.
+   */
   readOnly: boolean
   renaming: string | null
   historyOpen: boolean
@@ -55,6 +59,8 @@ export function SessionTabs(props: {
   onStartRename: (id: string) => void
   onRename: (id: string, title: string) => void
   onCancelRename: () => void
+  /** Copies the transcript of a session, during the press of its item. */
+  onCopy: (id: string, detail: TranscriptDetail) => void
   onMove: (tab: WorkspaceTab, place: TabPlace) => void
   onNew: () => void
   onShowHistory: (open: boolean) => void
@@ -71,10 +77,11 @@ export function SessionTabs(props: {
   const moves = useTabMoves({ tabs, nodes, onMove: props.onMove })
   const menu = useTabMenu({
     tabs,
-    enabled,
+    readOnly: props.readOnly,
     renaming,
     onRename: props.onStartRename,
     onStep: moves.step,
+    onCopy: props.onCopy,
   })
   const drag = useTabDrag({
     tabs,
@@ -101,7 +108,7 @@ export function SessionTabs(props: {
   const parts = (tab: RowTab, index: number) => {
     const key = rowKey(tab)
     return {
-      item: menu.item(tab, drag.item(tab, index)),
+      item: menu.item(tab, index, drag.item(tab, index)),
       link: { ref: nodes.linkRef(key) },
       close: ownPress,
     }

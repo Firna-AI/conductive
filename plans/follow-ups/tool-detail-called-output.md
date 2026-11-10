@@ -1,0 +1,32 @@
+# Tool detail is called output but holds a description
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-09, from branch `calummoore/session-transcript-copy`, a new problem of the options check of the plan `plans/copy-session-transcripts.md`.
+- **Location:** `runner/src/providers/tool.ts:27`, `src/shared/chat-events.ts:10`, `docs/protocol/chat-and-events.md:102`, and `docs/mockups/src/components/chat/lostCopy.ts:67` and `:72`.
+- **Reason:** The mismatch is already on `main`, and the transcript change does not change these lines.
+
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **Tool detail:** the `detail` field of a tool call in a chat event, the type `ToolCall` in `src/shared/chat-events.ts`. It holds at most 64 KiB, and `omittedDetailBytes` counts the part that the runner cut.
+- **Background:**
+  - The runner maps each tool call of Claude and of Codex with `mapTool` in `runner/src/providers/tool.ts`.
+  - `mapTool` puts the `description` argument of the call into `detail`, such as "Run the tests". It sends no output of the tool. A tool result changes only the state of the call, in `runner/src/providers/claude-events.ts`.
+  - The comment of `TOOL_DETAIL_MAX_BYTES` says that "A 64 KiB excerpt keeps tool output below the event budget".
+  - `docs/protocol/chat-and-events.md` says that the line of a fold shows "the total size of the output that the runner left out".
+  - The chat says "1.2 MB left out" for one call and "1.2 MB of output left out" for a run, from `leftOutOfCall` and `leftOutOfRun` in `docs/mockups/src/components/chat/lostCopy.ts`.
+  - The runner has sent the description since its first version, in commit `91518996` of 6 November 2026.
+- **Problem:** The protocol, a comment, and the words of the chat call the tool detail "output", but it holds the description of the call. No tool output reaches the chat.
+- **Impact if no action:** A reader of the protocol expects tool output in the chat and in a copied transcript. A description longer than 64 KiB, which is rare, shows "of output left out", which is wrong.
+- **Root question:** What does the detail of a tool call show the member: the description of the call, or its output?
+- **Options:**
+  - **A.** Keep the description. Change the comment, the protocol sentence, and the chat words so that they say "detail", not "output". Effort: Small.
+  - **B.** Send an excerpt of the tool output in the detail, up to 64 KiB, and show it in the chat. Cost: a larger stored history, a new display of the output, and the masking of secret values in more text. Effort: Large.
+  - **C.** Send both, the description and an excerpt of the output, in two fields. Cost: as B, and a new field in the chat event. Effort: Large.
+- **Left out:** No change. It keeps the wrong words.
+- **Wider fix:** None. The class is one mismatch between a protocol doc and the code, and the `documentation` skill already says to change the wrong side.
+- **Previous examples:** None found.
+- **Related:** `docs/protocol/session-transcripts.md`: a copied transcript repeats the words of the chat, so its full copy also says "of output left out" when it repeats this line.
+- **Recommendation:** A. The chat was built around the description, and tool output needs its own design of size, masking, and display.
+- **Action:** ask the user, because the user decides which side of a mismatch between a protocol doc and the code is right.

@@ -1,10 +1,12 @@
-import type {
-  Agent,
-  AgentChoice,
-  AgentModel,
-  Effort,
+import {
+  effortLabels,
+  findModel,
+  type Agent,
+  type AgentChoice,
+  type AgentModel,
+  type Effort,
 } from '../../shared/agents'
-import { effortFor, effortLabels, findModel } from '../state/format'
+import { effortFor } from '../state/format'
 import type { MenuEntry } from '../ui/Menu'
 
 const agentOrder: readonly Agent[] = ['claude', 'codex']

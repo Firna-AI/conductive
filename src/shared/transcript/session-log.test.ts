@@ -1,10 +1,11 @@
 import { expect, it } from 'vitest'
-import type {
-  AgentChatEvent,
-  RunnerEventRefused,
-} from '../../shared/chat-events'
-import { readStoredEvents, type StreamEnvelope } from '../api/read-workspace'
-import { chatEventsOf, SessionLog } from './session-log'
+import type { AgentChatEvent, RunnerEventRefused } from '../chat-events'
+import {
+  readStoredEvents,
+  type StreamEnvelope,
+} from '../../chat/api/read-workspace'
+import { chatEventsOf } from './session-events'
+import { SessionLog } from './session-log'
 import type { Transcript } from './transcript'
 
 /** The chat line of a refusal marker, at its place in the transcript. */

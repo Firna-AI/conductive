@@ -1,6 +1,6 @@
-import { hasEnded, turnOf } from '../state/known-turns'
-import { isEnd } from '../state/placement'
-import type { Transcript, TranscriptItem } from '../state/transcript'
+import { hasEnded, turnOf } from './known-turns'
+import { isEnd } from './item-placement'
+import type { Transcript, TranscriptItem } from './transcript'
 
 /**
  * An item of the work of a turn that a work fold can hold: a message of the
