@@ -834,6 +834,18 @@ terminal or chat input". Agent calls of the same day apply it:
 - The recorder treats the text keys of the system as fixed keys, as the
   Text group lists them.
 - The tab says once which keys the terminal keeps.
+- User answers of 2026-11-10 to review items 4 and 10 (the findings file
+  of the branch holds them, with their options):
+  - Item 4 = B: Enter with any modifier, the keypad Enter, and plain Space
+    are fixed keys on both keyboards, because they press or choose a
+    focused control and send or add a line in the message field. The
+    recorder refuses them, the Worker rejects them, and the account reply
+    drops a stored one.
+  - Item 10 = B: a keypad key records as the key that it types, except a
+    keypad digit, which stays a key of the keypad. Each press then has one
+    key text, so the conflict check, Replace, Reset, and the fixed check
+    compare exact keys. The recorder refuses the keypad twins of fixed
+    keys, and the Worker refuses the other keypad names.
 - Agent calls of 2026-11-10, from review round 1, findings 1 and 2: on
   Windows and Linux the terminal keeps every key, also a key that a person
   records without Ctrl or Alt, such as P or F2; this replaces "every key
@@ -1004,6 +1016,9 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
 - [x] Draw the key of each org in the hover hint of its tile in the org
       rail, from the questions of Milestone 5 part B. Evidence:
       `.context/keyboard-shortcuts/shots/round4/`.
+- [ ] Draw the user's answers to review items 4 and 10: the fixed row of
+      the keys of a focused control, the refused line of such a key, and
+      the name of a keypad digit.
       Evidence: `.context/keyboard-shortcuts/shots/round3/`.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark.
@@ -1050,6 +1065,8 @@ block only the Linux rules, which follow the answers.
 - [x] Check each relative link of each changed Markdown file. Evidence:
       `.context/keyboard-shortcuts/m2/link-check.log`.
 - [ ] Add the Linux rules after decisions 196 and 197.
+- [ ] State the user's answers to review items 4 and 10 under "Fixed
+      keys" and "How a key matches".
 
 ## Milestone 3: The key model
 
@@ -1073,6 +1090,9 @@ the layout switch rule until the answers.
       `.context/keyboard-shortcuts/reports/m3-non-ui.md`.
 - [ ] Add the Linux tab keys and the layout switch rule after decisions 196
       and 197.
+- [ ] Apply the user's answers to review items 4 and 10 in the model and
+      the shared contracts, with tests: the fixed rule of the keys of a
+      focused control, and one key text for each press.
 
 ## Milestone 4: Storage on the Worker
 
@@ -1185,6 +1205,18 @@ Depends on: 1, 4, 5
     after Reset all to the search field.
   - Next workspace that needs input also starts from the top when the open
     workspace is hidden in a collapsed section.
+
+## Milestone 8: The review answers in the tab
+
+Tags: ui
+
+Depends on: 1, 3
+
+- [ ] Apply the user's answers to review items 4 and 10 in the tab: the
+      fixed row, the refused line, and the name of a keypad digit, with
+      tests.
+- [ ] Run the checks, the tests, and the complete gate. Delete the two
+      follow-up items that the answers settle.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
