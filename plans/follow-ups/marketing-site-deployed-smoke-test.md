@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
-- **Added:** 2026-11-08, from the branch `calummoore/astro-marketing-site-switch`, the post-merge task of its plan. Extended on 2026-11-09 from `calummoore/conductor-feature-parity-list` with the Conductor Cloud comparison page. Extended on 2026-11-09 from `calummoore/docs-section-brainstorm` with the public Markdown guides.
+- **Added:** 2026-11-08, from the branch `calummoore/astro-marketing-site-switch`, the post-merge task of its plan. Extended on 2026-11-09 from `calummoore/conductor-feature-parity-list` with the Conductor Cloud comparison page. Extended on 2026-11-09 from `calummoore/docs-section-brainstorm` with the public Markdown guides. Extended on 2026-11-10 from `calummoore/from-conductor-timestamp-and-links` with the check time, the row links, and the local Conductor features of the comparison page.
 - **Location:** None.
 - **Reason:** The check needs the change deployed to `conductive.build`, which happens only after the merge.
 
@@ -21,8 +21,10 @@
   4. Check that each sign-in link leads to `https://app.conductive.build/`, that the footer shows the current year, and that the pictures, the font, and `/favicon.ico` load.
   5. On the home page, follow the link above the headline. On another page, follow "From Conductor" in the Product column of the footer. Check that each link opens `https://conductive.build/from-conductor` with status `200`.
   6. On the comparison page, check these points against `src/marketing/from-conductor/` at the deployed commit:
-     - The top says "Conductor Cloud features only.", and it gives the read-only day and the shut-down day of Conductor Cloud.
-     - One table has the columns Area, Conductor feature, In Conductive, and Notes. It has one group for each area and one row for each feature. On 9 November 2026, that was 15 areas and 164 rows.
+     - The top has no scope note. It gives the read-only day and the shut-down day of Conductor's cloud workspaces. Its last line is "Last checked" and a date and a time in UTC, such as "10 November 2026 at 02:07 UTC", from `parityCheckedAt` in `src/marketing/from-conductor/features.ts`.
+     - One table has the columns Area, Conductor feature, In Conductive, and Notes. It has one group for each area and one row for each feature, local and cloud. On 10 November 2026, that was 15 areas and 198 rows.
+     - Open `https://conductive.build/from-conductor#file-tree`. The page shows the File tree row near the top of the window, with a quiet fill and its link icon. An address with an unknown id, such as `#no-such-row`, opens the top of the page.
+     - On a computer, the link icon of a row shows only while the pointer is over its name, status, or note, while the link has keyboard focus, or on the opened row. On a phone, every row shows its icon. The menu of the browser copies the address of a row from its icon.
      - The status and the note of three rows from different areas match their files in `src/marketing/from-conductor/areas/`.
      - A row shows a due date only when its data has one. On 9 November 2026, no row had one, so each In progress and Planned row showed "No date yet".
      - The page source has no `<script` element.
@@ -38,7 +40,7 @@
       Check the current guide, previous and next links, and the header and footer Docs links.
   11. Check that `/docs/overview` and `/docs/unknown-page` return 404.
       A HEAD request to `/docs/get-started` returns 200 with no body.
-- **Impact if no action:** A deployment that leaves out the site files would show visitors an empty `503` on `conductive.build`, and nobody would notice until a visitor reports it. A broken comparison page or entry link would leave Conductor Cloud users without the list while they move. A broken guide or Docs link would leave visitors without the public guides.
+- **Impact if no action:** A deployment that leaves out the site files would show visitors an empty `503` on `conductive.build`, and nobody would notice until a visitor reports it. A broken comparison page or entry link would leave Conductor users without the list while they move. A broken guide or Docs link would leave visitors without the public guides.
 - **Needs:** The merged change, including the public Markdown guides, deployed to the production Worker.
 - **Done when:** Each page, the comparison page with both entry links, and the agreement page show on the deployed site with today's headers, and the logs show no site warning.
   The public guides show there with the same headers.
