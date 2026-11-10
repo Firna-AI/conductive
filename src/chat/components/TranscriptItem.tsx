@@ -1,4 +1,4 @@
-import { CircleAlert, CircleStop, Clock } from 'lucide-react'
+import { CircleAlert, CircleStop } from 'lucide-react'
 import type { MessageSender, UserMessage } from '../../shared/messages'
 import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
@@ -20,8 +20,8 @@ import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
 
 /**
- * A message that a person sent, and whether it waits for the sandbox. Each
- * part in backticks is code, and each workspace link is a chip.
+ * A message that a person sent. Each part in backticks is code, and each
+ * workspace link is a chip.
  */
 export function UserBubble(props: { message: UserMessage }) {
   const { message } = props
@@ -32,12 +32,6 @@ export function UserBubble(props: { message: UserMessage }) {
       </div>
       {message.attachments.length > 0 ? (
         <SentFiles attachments={message.attachments} />
-      ) : null}
-      {message.state === 'queued' ? (
-        <span className={styles.queued}>
-          <Clock size={12} />
-          Sends when the sandbox is ready
-        </span>
       ) : null}
     </div>
   )

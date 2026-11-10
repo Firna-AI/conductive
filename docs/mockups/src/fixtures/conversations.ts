@@ -49,6 +49,7 @@ export type ChatItem =
       text: string
       /** The files of the message, which show under it. */
       attachments?: readonly Attachment[]
+      /** Waits in the queue of the workspace until the sandbox is ready. */
       queued?: boolean
       /** Sent while a turn runs: it joins that turn as a new part. */
       during?: true

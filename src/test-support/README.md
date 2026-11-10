@@ -42,7 +42,7 @@ The small samples exercise joining without large fixtures.
 Current changes fixtures include `unpushedCommits`. The HTTP fixture has
 one commit, and the later recorded report has two, so readers see a change.
 
-`recorded-repairs.ts` records the lost updates without a session: the file tree, the changes list, the start steps, and the workspace name.
+`recorded-repairs.ts` records the lost updates without a session: the file tree, the changes list, the start steps, the workspace name, and the list of servers.
 `firstLoss(kind)` gives the marker of a first loss. For the file tree, it is a refused tree delta.
 After a first loss, the workspace asks for a fresh full report, and the browser shows nothing.
 `refusedReport(kind, true)` gives the marker of the refused fresh report, with `repairFailed: true`. It marks a failed repair, which shows a notice.

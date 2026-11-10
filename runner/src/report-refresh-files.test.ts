@@ -11,6 +11,7 @@ it('accepts every report refresh kind without a session or login', () => {
     refresh('changes.updated'),
     refresh('start.updated'),
     refresh('workspace.title'),
+    refresh('ports.updated'),
   ]
   const parsed: unknown[] = []
   expect(() => {

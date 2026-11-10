@@ -13,7 +13,7 @@ Their terminal access can reach credentials available on a workspace's cloud com
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 The agent login's share setting controls whose messages spend that login.
-It does not keep a running turn's temporary access away from programs or terminal users on the same computer.
+It does not hide credentials available to code or terminal users on the same computer.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -72,33 +72,37 @@ They do not offer a call to read or message another workspace's chat.
 
 Conductive stores your connected agent login encrypted.
 Account shows its status and kind without returning the stored value.
-On a computer created from a current build, Conductive keeps that login outside the computer.
+
+A cloud computer from a new **Build computer** keeps the stored agent login outside that computer.
 The agent's model requests pass through Conductive, which adds the session starter's login before sending them to Anthropic or OpenAI.
 
-Each turn receives a temporary credential for model requests through Conductive.
-It gives no copy of the saved login.
-Programs and members with terminal access can read that credential and use the connected account while the turn runs.
-A copied temporary credential also works outside the cloud computer while that turn runs.
-Programs that keep running can also read the credentials of later turns, including other members' turns.
+Each turn gets a temporary credential called a turn token.
+It gives no copy of the stored login.
+A program or member with terminal access can read or copy it.
+That token can use the session starter's login through Conductive while the turn runs.
+It also works from outside the cloud computer during that turn.
 
-After **Stop**, that credential starts no new request.
-A model request still running ends within 30 seconds after the turn ends.
+After **Stop**, the token can start no new request.
+Any request that still runs ends within 30 seconds after the turn ends.
 Changing or removing the session starter's login ends the turn at its next model request.
 The same happens if that member loses org access.
+Programs that keep running can read the tokens of later turns, including turns in other members' sessions.
+Agent settings in the repository can send model requests and their turn token to another address.
 
-Agent settings in a repository can send model requests and the turn's temporary credential to another address.
 Review those settings in repositories you use.
 Conductive keeps no copy of a model request or answer as it passes them on.
 It writes no body or header value from those requests or answers to its logs.
 The normal chat history and Mac command records still stay on the service.
 
-An older computer can still receive the agent login itself.
-A program or terminal user can copy it and keep using it after the turn ends.
+An older cloud computer can still receive the agent login itself.
+A program or member with terminal access can copy it.
+A copied login can remain usable after the turn ends.
 Agent settings in the repository can also send that login to another address.
-Installing newer agent software in an older computer does not remove this risk.
+Installing newer software in an older computer does not remove this risk.
+Removing a login from Account does not revoke a copy held elsewhere.
+
 Ask an admin to run **Build computer**.
 Then create a new workspace from that build for the new protection.
-Removing a saved login does not revoke a copy held elsewhere.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
@@ -134,8 +138,9 @@ These values also take priority over an author that a script or an agent writes 
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
 It starts on for a new variable.
+Conductive hides these values in program names and folders before shortening them for display.
 Values and marks changed in settings apply at the computer's next start.
 Earlier chat and logs keep their text.
 

@@ -1063,6 +1063,13 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
 - Design call on 10 November 2026: Move the bar design block unchanged into design-bar.md. Reason: The touched design guide stays short while retaining its visual requirements.
 - Design call on 10 November 2026: Move the runner Key code block unchanged into runner/key-code.md. Reason: The README keeps its commands and old Key code heading while remaining below 300 lines.
 
+### Preview base integration calls
+
+- Design call on 10 November 2026: Keep main's turn-token term with the complete gateway explanation. Reason: The new wording and existing credential lifetime disclosures describe the same current protection.
+- Design call on 10 November 2026: Keep build wording as includes current software. Reason: A prepared software image can avoid repeating installation.
+- Design call on 10 November 2026: Keep server-list storage and action history as separate Privacy facts. Reason: They describe different retained records.
+- Design call on 10 November 2026: Keep the Terms revision during the preview base update. Reason: The Terms are unchanged and new processing text belongs in Privacy.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1392,9 +1399,25 @@ The gateway review was interrupted before a verdict because GitHub found
 new base conflicts. The complete local gate passed on `5f4d1744` before
 this integration. No passing result is claimed for the later tree yet.
 
+## Milestone 10b: Preview base conflict integration
+
+Depends on: 10a implementation and local verification
+
+- [x] Integrate captured main `1e6e28b7912bbcf22ff1e096d0c1d9bbd89af87e`.
+      Keep port detection, report contracts, queued-label removal, and all
+      current branch and main requirements.
+- [x] Resolve the bounded guide, public-text, and transcript conflicts.
+      Preserve Continue notes and one Files owner.
+- [x] Run types, bounded affected tests, and static checks on the frozen
+      combined tree. Preserve existing assertions and exact source.
+- [ ] Commit and push. Complete a fresh fixed-source review and watch CI.
+
+GitHub reported the pushed `ead84a4c` as conflicting, so no full CI run
+started on that head. Its bounded backend and UI verification passed.
+
 ## Milestone 11: Final record and pull request completion
 
-Depends on: 10 and 10a
+Depends on: 10, 10a, and 10b
 
 - [ ] Record all checked outcomes and follow-ups. Preserve each dated
       design call and the current test-cost record in the PR description.

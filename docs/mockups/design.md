@@ -58,11 +58,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   +, the heading of the empty chat that + opens, and each model of the
   other agent say it.
 - While a sandbox starts, also for the first time, Send queues each
-  message in the workspace. Each queued message shows "Sends when the
-  sandbox is ready", as `app/new-workspace/waiting` shows. After a failed
-  first start, the bar of the error sits above the composer, so members
-  can still queue messages, as `app/new-workspace/error` shows. Every
-  other bar of the sandbox takes the place of the composer.
+  message in the workspace, as `app/new-workspace/waiting` shows. A queued
+  message has no label of its own, because the start steps under the chat
+  already show the wait. After a failed first start, the bar of the error
+  sits above the composer, so members can still queue messages, as
+  `app/new-workspace/error` shows. Every other bar of the sandbox takes
+  the place of the composer.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button or its tab, at the pointer of
   a right click, or in a `Sheet` on a phone. Firna's own menu rows are

@@ -8,14 +8,19 @@ part.
   and their defaults, the state file, and the reconnect after each drop.
 - [`src/relay/server.ts`](src/relay/server.ts): starts the preview relay.
   The HTTP and upgrade handlers share the header rules and target connection code.
-- `src/runner.ts`: `Runner` joins the connection, agents, file reports,
-  and report requests.
+- `src/runner.ts`: `Runner` joins the connection, agents, file and port
+  reports, and report requests.
 - `src/instructions.ts`: `agentInstructions`, as [its guide](agent-instructions.md#key-code) says.
 - [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
   [output field policy](../src/shared/output-fields.ts): the one filter
   shared with the Worker. The runner supplies the workspace and turn tokens.
 - [`event-limits.ts`](../src/shared/event-limits.ts): portable UTF-8 byte
   accounting and the shared tool and turn-summary caps.
+- `src/proc-ports.ts`, `src/socket-table.ts`, and `src/port-metadata.ts`:
+  socket-table reads, listener filters, and safe process names and folders.
+- `src/ports.ts`: `PortReporter`, its stable list, scan queue, and timer lifetime.
+- `src/port-report-budget.ts`: complete private port labels or whole-label
+  omission within the report budget, after runner credential filtering.
 - [File reports](file-reports.md#key-code): the scans, the file tree, the
   branch changes and their base, the report parts, and Git comparisons.
 - `src/link.ts`, `src/state.ts`, `src/socket.ts`, `src/commands.ts`, and

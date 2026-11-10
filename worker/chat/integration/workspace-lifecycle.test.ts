@@ -1,9 +1,13 @@
 import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
-import { chatHistoryPath } from '../../../src/shared/events'
+import {
+  chatHistoryPath,
+  workspaceEventsPath,
+} from '../../../src/shared/events'
 import { sessionPaths } from '../../../src/shared/sessions'
-import { closeSockets } from '../adapter-sockets.test-support'
+import { closeSockets, SocketInbox } from '../adapter-sockets.test-support'
+import { array } from '../agent-events'
 import { CLAUDE } from '../harness.test-support'
 import { record, string } from '../inputs'
 import { outerWorkerBundle } from './outer-runtime.test-support'
@@ -14,6 +18,17 @@ import { createLifecycleChatFixture } from './workspace-lifecycle.test-support'
 let bundle: string
 let fixture: Awaited<ReturnType<typeof createLifecycleChatFixture>> | undefined
 const sockets: WebSocket[] = []
+const portReport = {
+  type: 'ports.updated',
+  ports: [{ port: 3000, name: 'vite dev', folder: 'apps/web' }],
+} as const
+
+function activity(db: D1Database) {
+  return db
+    .prepare('SELECT last_activity_at, updated_at FROM workspaces WHERE id = ?')
+    .bind(OUTER_WORKSPACE)
+    .first()
+}
 beforeAll(async () => {
   bundle = await outerWorkerBundle()
 })
@@ -99,6 +114,15 @@ it('joins runner readiness, reconnect, confirmed stop and the next queued turn w
     message: { id: 'follow-up', state: 'sent' },
   })
   expect(await active.actor().credentialSender('first-turn')).toBe('owner')
+  const beforePorts = await active.actor().readLifecycle()
+  const activityBeforePorts = await activity(active.env.DB)
+  runner.emit(portReport)
+  expect(await runner.inbox.next()).toMatchObject({
+    type: 'confirm',
+    throughEventNumber: 2,
+  })
+  expect(await active.actor().readLifecycle()).toEqual(beforePorts)
+  expect(await activity(active.env.DB)).toEqual(activityBeforePorts)
   await closeSockets(socket)
   expect(await active.actor().readLifecycle()).toMatchObject({
     runnerConnected: false,
@@ -111,7 +135,7 @@ it('joins runner readiness, reconnect, confirmed stop and the next queued turn w
   const resumed = new OuterFakeRunner(second)
   expect(await resumed.inbox.next()).toMatchObject({
     type: 'welcome',
-    confirmedThrough: 1,
+    confirmedThrough: 2,
   })
   expect(await resumed.inbox.next()).toMatchObject({
     type: 'turn',
@@ -133,6 +157,21 @@ it('joins runner readiness, reconnect, confirmed stop and the next queued turn w
     runnerConnected: false,
   })
   expect(await active.actor().credentialSender('first-turn')).toBeNull()
+  const browserResponse = await active.request(
+    workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE),
+    { headers: { Upgrade: 'websocket' } },
+  )
+  expect(browserResponse.status).toBe(101)
+  const browser = browserResponse.webSocket
+  if (!browser) throw new Error('The browser socket is missing.')
+  sockets.push(browser)
+  const browserInbox = new SocketInbox(browser)
+  browser.accept()
+  const history = record(record(await browserInbox.next()).history)
+  const ports = array(history.events, record)
+    .map((envelope) => record(envelope.event))
+    .filter((event) => event.type === 'ports.updated')
+  expect(ports).toEqual([portReport, { type: 'ports.updated', ports: null }])
   const stopped = await active.request(
     chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, 'first-session'),
   )
@@ -180,7 +219,7 @@ it('joins runner readiness, reconnect, confirmed stop and the next queued turn w
   const next = new OuterFakeRunner(third)
   expect(await next.inbox.next()).toMatchObject({
     type: 'welcome',
-    confirmedThrough: 1,
+    confirmedThrough: 2,
   })
   const command = record(await next.inbox.next())
   expect(command).toMatchObject({
