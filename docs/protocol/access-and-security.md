@@ -467,9 +467,13 @@ The GitHub CLI works outside an agent turn with the workspace owner's account.
   states the full rules.
 - A revoked or an unknown hostname gets no answer from any sandbox.
 - The preview relay is the app's own service in the sandbox, as
-  [Sandbox software](../architecture.md#sandbox-software) says. While the
-  relay runs, each preview request goes through it to the previewed
-  server, the server on the port of the preview.
+  [Sandbox software](../architecture.md#sandbox-software) says. Each preview
+  request goes through it to the previewed server, the server on the port
+  of the preview.
+- The Worker refuses previews with 409 `preview_relay_unavailable` without
+  a running relay, because the app is not live and the Worker keeps one route.
+  Decision 214 rejects a direct fallback, installation at preview open,
+  startup by the Worker, and software updates at each workspace start.
 - Through the relay, each request reaches the previewed server with
   `Host: localhost:<port>`, as a browser in the sandbox would send it
   (decision 213).
@@ -497,9 +501,6 @@ The GitHub CLI works outside an agent turn with the workspace owner's account.
   `https`, reaches the browser as a redirect to the preview hostname. The
   local address is `localhost`, `127.0.0.1`, or `[::1]`, with the port of
   the preview.
-- A redirect to the private address of the port reaches the browser in the
-  same way. Reason: the browser cannot reach the server at either address.
-  Only the proxy can open the private address.
 - Each response on the preview domain carries `Referrer-Policy:
   no-referrer`. Reason: other sites have no need for the preview address.
 - These approaches were rejected:

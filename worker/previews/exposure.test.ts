@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { previewsPath, type PreviewResponse } from '../../src/shared/previews'
+import {
+  PREVIEW_RELAY_PORT,
+  PREVIEW_RELAY_PORT_HEADER,
+  previewsPath,
+  type PreviewResponse,
+} from '../../src/shared/previews'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 import { launchPreview } from './launch-test-support'
 import { openPreview } from './stream-test-support'
@@ -16,29 +21,26 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('preserves a loopback server relay and shares its descriptor across preview hostnames and modules', async () => {
+it('hosts the relay in localhost mode and reuses it for modules and page loads', async () => {
   const base = harness.dependencies.fetch
-  const modes: unknown[] = []
-  let commands = 0
+  const hosts: unknown[] = []
+  const commands: unknown[] = []
   harness.dependencies.fetch = async (request) => {
     const path = new URL(request.url).pathname
-    if (path.endsWith('/commands')) {
-      commands++
-      return Response.json({
-        ok: true,
-        type: 'command.finished',
-        exitCode: 0,
-        timedOut: false,
-        stderr: '',
-        stdout:
-          'LISTEN 0 128 127.0.0.1:3000 0.0.0.0:*\nLISTEN 0 128 10.0.0.5:3000 0.0.0.0:*\n',
-      })
-    }
-    if (path.endsWith('/host')) modes.push(await request.clone().json())
+    if (path.endsWith('/commands')) commands.push(await request.clone().json())
+    if (path.endsWith('/host')) hosts.push(await request.clone().json())
     return base(request)
   }
   const setup = await openPreview(harness)
-  expect(modes).toEqual([{ port: 3000, public: false, localhost: true }])
+  expect(hosts).toEqual([
+    { port: PREVIEW_RELAY_PORT, public: false, localhost: true },
+  ])
+  expect(commands).toEqual([
+    {
+      command: 'systemctl is-active --quiet conductive-preview-relay.service',
+      timeoutSeconds: 600,
+    },
+  ])
   const another = await setup.handler.fetch(
     setup.request(previewsPath(setup.orgId, setup.workspaceId), {
       method: 'POST',
@@ -51,7 +53,7 @@ it('preserves a loopback server relay and shares its descriptor across preview h
     setup.request,
     second.preview.url,
   )
-  const before = { commands, hosts: modes.length }
+  const before = { commands: commands.length, hosts: hosts.length }
   for (const browser of [
     { previewUrl: setup.previewUrl, request: setup.previewRequest },
     secondBrowser,
@@ -63,25 +65,19 @@ it('preserves a loopback server relay and shares its descriptor across preview h
       expect(await response.text()).toBe('preview content')
     }
   }
-  expect({ commands, hosts: modes.length }).toEqual(before)
-  expect(
-    await harness.env.DB.prepare(
-      'SELECT DISTINCT listener_mode AS mode FROM preview_hostnames',
-    ).all(),
-  ).toMatchObject({ results: [{ mode: 'localhost' }] })
-  const document = await setup.handler.proxy(
-    setup.previewRequest(setup.previewUrl, {
-      headers: { 'Sec-Fetch-Dest': 'iframe' },
-    }),
-  )
-  expect(await document.text()).toBe('preview content')
-  expect({ commands, hosts: modes.length }).toEqual({
-    commands: before.commands + 1,
-    hosts: before.hosts + 1,
-  })
+  expect({ commands: commands.length, hosts: hosts.length }).toEqual(before)
+  for (const destination of ['document', 'iframe']) {
+    const document = await setup.handler.proxy(
+      setup.previewRequest(setup.previewUrl, {
+        headers: { 'Sec-Fetch-Dest': destination },
+      }),
+    )
+    expect(await document.text()).toBe('preview content')
+  }
+  expect({ commands: commands.length, hosts: hosts.length }).toEqual(before)
 })
 
-it('invalidates a rejected descriptor without replaying a write and refreshes a changed sandbox in network mode', async () => {
+it('invalidates a rejected descriptor without replaying a write and resolves the relay in a changed sandbox', async () => {
   const setup = await openPreview(harness)
   const base = harness.dependencies.fetch
   let writes = 0
@@ -123,8 +119,12 @@ it('invalidates a rejected descriptor without replaying a write and refreshes a 
   )
   expect(host?.url).toBe('https://boat.dev/api/v1/sandboxes/bx_new/host')
   expect(await host?.json()).toEqual({
-    port: 3000,
+    port: PREVIEW_RELAY_PORT,
     public: false,
-    localhost: false,
+    localhost: true,
   })
+  const upstream = harness.requests.find(
+    (request) => new URL(request.url).hostname !== 'boat.dev',
+  )
+  expect(upstream?.headers.get(PREVIEW_RELAY_PORT_HEADER)).toBe('3000')
 })

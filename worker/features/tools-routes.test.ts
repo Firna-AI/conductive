@@ -5,7 +5,7 @@ import { desktopPath } from '../../src/shared/desktop'
 import { previewsPath } from '../../src/shared/previews'
 import { terminalPaths } from '../../src/shared/terminal'
 import { workspaceEventsPath } from '../../src/shared/events'
-import { record, string } from '../chat/inputs'
+import { number, record, string } from '../chat/inputs'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
 import {
   OUTER_ORG,
@@ -39,14 +39,29 @@ it('serves terminal and fresh desktop URLs and launches a preview through its se
           headers: { 'Content-Type': 'text/plain' },
         })
       }
-      if (url.pathname.endsWith('/host'))
+      if (url.pathname.endsWith('/host')) {
+        const port = number(record(await request.clone().json()).port)
         return Response.json({
           ok: true,
           type: 'port.hosted',
-          port: 3000,
-          url: 'https://sandbox-3000.on.boat.dev?_token=server-port-token',
+          port,
+          url: `https://sandbox-${port}.on.boat.dev?_token=server-port-token`,
           access: 'private',
           isProtected: true,
+        })
+      }
+      if (
+        url.pathname.endsWith('/commands') &&
+        record(await request.clone().json()).command ===
+          'systemctl is-active --quiet conductive-preview-relay.service'
+      )
+        return Response.json({
+          ok: true,
+          type: 'command.finished',
+          exitCode: 0,
+          stdout: '',
+          stderr: '',
+          timedOut: false,
         })
       if (url.pathname.endsWith('/desktop'))
         return Response.json({
@@ -62,7 +77,6 @@ it('serves terminal and fresh desktop URLs and launches a preview through its se
   )
     .bind(OUTER_WORKSPACE)
     .run()
-  active.boat.synchronousOutput = 'LISTEN 0 128 0.0.0.0:3000 0.0.0.0:*\n'
   await cacheTerminalPassword(
     active.env,
     {

@@ -142,12 +142,14 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   link. Reason: Safari blocks the cookies of the previewed app inside a
   frame.
 - Some servers accept only requests to their local address, such as a dev
-  server that checks `Host`. While the preview relay runs in the sandbox,
-  such a server works in a preview with no change to its repository
-  (decision 213). [Port previews](access-and-security.md#port-previews)
+  server that checks `Host`. Such a server works in a preview with no change
+  to its repository (decision 213).
+  [Port previews](access-and-security.md#port-previews)
   states the `Host` and the `Origin` that the server gets.
-- The sandbox keeps port 7682 for the relay. While the relay runs, a
-  preview of port 7682 shows an error.
+- A workspace whose cloud computer has no running relay refuses previews.
+  The user starts a new workspace after an admin runs Build computer.
+- The sandbox keeps port 7682 for the relay. A preview of port 7682 shows
+  an error.
 
 ## Desktop
 

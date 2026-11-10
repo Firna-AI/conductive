@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import {
+  PREVIEW_RELAY_PORT,
+  PREVIEW_RELAY_PORT_HEADER,
+} from '../../src/shared/previews'
 import { SESSION_COOKIE } from '../security/cookies'
 import { TEST_TIME } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
@@ -27,17 +31,26 @@ it('proxies WebSocket frames without keeping an idle workspace active and closes
         Upgrade: 'websocket',
         'Sec-WebSocket-Protocol': 'hot-reload',
         Cookie: `_port_auth=forged; shop=blue; ${SESSION_COOKIE}=app-session`,
+        Origin: setup.previewUrl,
+        'Sec-Fetch-Site': 'same-origin',
+        [PREVIEW_RELAY_PORT_HEADER]: '9999',
       },
     }),
   )
   expect(response.status).toBe(101)
   expect(response.headers.get('Referrer-Policy')).toBe('no-referrer')
   expect(response.headers.get('Sec-WebSocket-Protocol')).toBe('hot-reload')
-  expect(
-    harness.requests
-      .find((request) => new URL(request.url).hostname !== 'boat.dev')
-      ?.headers.get('Cookie'),
-  ).toBe('shop=blue; _port_auth=server-port-token')
+  const forwarded = harness.requests.find(
+    (request) => new URL(request.url).hostname !== 'boat.dev',
+  )
+  expect(forwarded?.url).toBe(
+    `https://sandbox-${PREVIEW_RELAY_PORT}.on.boat.dev/socket`,
+  )
+  expect(forwarded?.headers.get('Cookie')).toBe(
+    'shop=blue; _port_auth=server-port-token',
+  )
+  expect(forwarded?.headers.get(PREVIEW_RELAY_PORT_HEADER)).toBe('3000')
+  expect(forwarded?.headers.get('Origin')).toBe('http://localhost:3000')
   const upstream = harness.upstreamSockets[0]
   const browser = harness.serverSockets[0]
   const incoming = browser.nextMessage()
@@ -73,6 +86,7 @@ it('proxies WebSocket frames without keeping an idle workspace active and closes
 it('returns a private preview error for failed upstream calls without exposing provider secrets', async () => {
   const setup = await openPreview(harness)
   expect(setup.response.status).toBe(201)
+  const handler = createPreviewHandler(harness.env, harness.dependencies)
   const base = harness.dependencies.fetch
   let hostResponse = () =>
     Response.json(
@@ -83,7 +97,7 @@ it('returns a private preview error for failed upstream calls without exposing p
     new URL(request.url).pathname.endsWith('/host')
       ? Promise.resolve(hostResponse())
       : base(request)
-  const response = await setup.handler.proxy(
+  const response = await handler.proxy(
     setup.previewRequest(setup.previewUrl, {
       headers: { 'Sec-Fetch-Dest': 'document' },
     }),
@@ -97,12 +111,12 @@ it('returns a private preview error for failed upstream calls without exposing p
     Response.json({
       ok: true,
       type: 'port.hosted',
-      port: 3000,
+      port: PREVIEW_RELAY_PORT,
       access: 'private',
       isProtected: true,
       url: 'https://attacker.test/?_token=server-port-token',
     })
-  const invalid = await setup.handler.proxy(
+  const invalid = await handler.proxy(
     setup.previewRequest(setup.previewUrl, {
       headers: { 'Sec-Fetch-Dest': 'document' },
     }),
@@ -119,7 +133,7 @@ it('returns a private preview error for failed upstream calls without exposing p
     .run()
   harness.requests.length = 0
   expect(
-    (await setup.handler.proxy(setup.previewRequest(setup.previewUrl))).status,
+    (await handler.proxy(setup.previewRequest(setup.previewUrl))).status,
   ).toBe(404)
   expect(harness.requests).toHaveLength(0)
 })

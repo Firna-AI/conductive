@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import {
+  PREVIEW_RELAY_PORT,
+  PREVIEW_RELAY_PORT_HEADER,
+} from '../../src/shared/previews'
 import { SESSION_COOKIE } from '../security/cookies'
 import { DESKTOP_SESSION_COOKIE } from '../security/desktop-contract'
 import { TEST_TIME } from '../test-support/harness'
@@ -33,6 +37,7 @@ it('proxies HTTP with explicit headers and keeps only preview app cookies', asyn
         'X-Private': 'secret',
         'Content-Type': 'application/x-www-form-urlencoded',
         'If-Match': 'version-1',
+        [PREVIEW_RELAY_PORT_HEADER]: '9999',
       },
     }),
   )
@@ -44,7 +49,10 @@ it('proxies HTTP with explicit headers and keeps only preview app cookies', asyn
     (request) => new URL(request.url).hostname !== 'boat.dev',
   )
   if (!upstream) throw new Error('Missing preview request')
-  expect(upstream.url).toBe('https://sandbox-3000.on.boat.dev/shop?q=1')
+  expect(upstream.url).toBe(
+    `https://sandbox-${PREVIEW_RELAY_PORT}.on.boat.dev/shop?q=1`,
+  )
+  expect(upstream.headers.get(PREVIEW_RELAY_PORT_HEADER)).toBe('3000')
   expect(upstream.redirect).toBe('manual')
   expect(upstream.headers.get('Cookie')).toBe(
     'shop=blue; _port_auth=server-port-token',
@@ -57,23 +65,14 @@ it('proxies HTTP with explicit headers and keeps only preview app cookies', asyn
   expect(await harness.status()).toEqual({ activity: TEST_TIME + 1000 })
 })
 
-it('rewrites upstream redirects and strips reserved response cookies and headers', async () => {
+it('rewrites local redirects and strips reserved response cookies and headers', async () => {
   const setup = await openPreview(harness)
   expect(setup.response.status).toBe(201)
+  const base = harness.dependencies.fetch
   harness.dependencies.fetch = async (request) => {
-    if (new URL(request.url).hostname === 'boat.dev') {
-      return Response.json({
-        ok: true,
-        type: 'port.hosted',
-        port: 3000,
-        access: 'private',
-        isProtected: true,
-        url: 'https://sandbox-3000.on.boat.dev?_token=server-port-token',
-      })
-    }
+    if (new URL(request.url).hostname === 'boat.dev') return base(request)
     const headers = new Headers({
-      Location:
-        'https://sandbox-3000.on.boat.dev/login?_token=server-port-token',
+      Location: 'http://localhost:3000/login?_token=server-port-token',
       'X-Secret': 'secret',
       'Referrer-Policy': 'unsafe-url',
     })
@@ -89,14 +88,21 @@ it('rewrites upstream redirects and strips reserved response cookies and headers
     )
     return new Response(null, { status: 302, headers })
   }
-  for (const scheme of ['https', 'http']) {
+  for (const address of [
+    'http://localhost:3000',
+    'https://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://127.0.0.1:3000',
+    'http://[::1]:3000',
+    'https://[::1]:3000',
+  ]) {
     const fetch = harness.dependencies.fetch
     harness.dependencies.fetch = async (request) => {
       const upstream = await fetch(request)
       if (upstream.headers.has('Location'))
         upstream.headers.set(
           'Location',
-          `${scheme}://sandbox-3000.on.boat.dev/login?_token=server-port-token`,
+          `${address}/login?_token=server-port-token`,
         )
       return upstream
     }
@@ -114,7 +120,7 @@ it('rewrites upstream redirects and strips reserved response cookies and headers
   }
 })
 
-it('maps same-origin form and fetch Origins to the private port while preserving foreign and missing Origins', async () => {
+it('maps same-origin form and fetch Origins to localhost while preserving foreign and missing Origins', async () => {
   const setup = await openPreview(harness)
   const base = harness.dependencies.fetch
   const origins: (string | null)[] = []
@@ -141,9 +147,9 @@ it('maps same-origin form and fetch Origins to the private port while preserving
     expect(await response.text()).toBe('accepted')
   }
   expect(origins).toEqual([
-    'https://sandbox-3000.on.boat.dev',
-    'https://sandbox-3000.on.boat.dev',
-    'https://sandbox-3000.on.boat.dev',
+    'http://localhost:3000',
+    'http://localhost:3000',
+    'http://localhost:3000',
     'https://another-preview.test',
     null,
   ])

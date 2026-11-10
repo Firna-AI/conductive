@@ -96,26 +96,23 @@ export class PreviewProxy {
         )
       const scope = this.registry.get(row, identity)
       connection = scope.connect()
-      const destination = request.headers.get('Sec-Fetch-Dest')
-      const refresh = destination === 'document' || destination === 'iframe'
-      const port = await this.ports.get(row, refresh)
+      const port = await this.ports.get(row)
       recordActivity(this.dependencies, row.workspaceId)
       await scope.authorize()
       let upstream: Response
       try {
-        const outgoing = portRequest(request, port, undefined, {
+        const outgoing = portRequest(request, port, row.port, {
           body: connection.wrap(request.body),
           signal: connection.signal,
         })
         upstream = await this.dependencies.fetch(outgoing)
       } catch {
-        this.ports.invalidate(row, row.port)
+        this.ports.invalidate(row)
         throw new ProviderError('unavailable', 503)
       }
-      if ([401, 403].includes(upstream.status))
-        this.ports.invalidate(row, row.port)
+      if ([401, 403].includes(upstream.status)) this.ports.invalidate(row)
       await scope.authorize()
-      const headers = portResponseHeaders(upstream, request, port)
+      const headers = portResponseHeaders(upstream, request, row.port)
       if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
         const protocol = upstream.headers.get('Sec-WebSocket-Protocol')
         if (protocol) {

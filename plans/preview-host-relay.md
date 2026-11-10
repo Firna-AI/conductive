@@ -322,42 +322,42 @@ Depends on: 1, 2
 Every preview goes through the relay. A sandbox where the relay does not
 run refuses previews, as decision 214 chose.
 
-- [ ] Replace the listener check in `worker/previews/listeners.ts` and
+- [x] Replace the listener check in `worker/previews/listeners.ts` and
       `worker/previews/ports.ts` with the check of the relay unit, as the
       design says.
-- [ ] Refuse an open, and the requests of a preview, with 409
+- [x] Refuse an open, and the requests of a preview, with 409
       `preview_relay_unavailable` when the relay does not run.
-- [ ] Build the relay request in `worker/previews/headers.ts` and
+- [x] Build the relay request in `worker/previews/headers.ts` and
       `worker/previews/origins.ts`: the relay address, the port header, the
       `Origin` map, and the redirect map for the local address. Keep the
       terminal behaviour.
-- [ ] Delete the direct route: the `ss` check, the listener modes of
+- [x] Delete the direct route: the `ss` check, the listener modes of
       previews, the map of the Boat address in preview redirects, and the
       reads and writes of `listener_mode` and `listener_sandbox_id`. Add a
       follow-up item that drops both columns after this change deploys.
-- [ ] Update the docs in the same change as the code:
-  - [ ] `docs/protocol/access-and-security.md`: the refusal of decision
+- [x] Update the docs in the same change as the code:
+  - [x] `docs/protocol/access-and-security.md`: the refusal of decision
         214, with its reason and the rejected options. Remove the redirect
         rule for the private address.
-  - [ ] `docs/protocol/workspace-tools.md`: the refusal, in place of the
+  - [x] `docs/protocol/workspace-tools.md`: the refusal, in place of the
         words "while the relay runs".
-  - [ ] `docs/architecture.md`: list the relay in the software of each org
+  - [x] `docs/architecture.md`: list the relay in the software of each org
         image.
-  - [ ] `docs/architecture/flows.md`: name the relay on the preview path.
-- [ ] Test in `worker/previews/` with the fake Boat server:
-  - [ ] When the relay unit runs, the open hosts port 7682 in localhost
+  - [x] `docs/architecture/flows.md`: name the relay on the preview path.
+- [x] Test in `worker/previews/` with the fake Boat server:
+  - [x] When the relay unit runs, the open hosts port 7682 in localhost
         mode. Each request and each WebSocket upgrade goes to its Boat
         address with the port header.
-  - [ ] When the relay unit does not run, the open and the proxy answer
+  - [x] When the relay unit does not run, the open and the proxy answer
         409 `preview_relay_unavailable`, and no request reaches Boat's
         address.
-  - [ ] A same-origin `Origin` becomes `http://localhost:<port>`. A foreign
+  - [x] A same-origin `Origin` becomes `http://localhost:<port>`. A foreign
         `Origin` stays.
-  - [ ] A redirect to `http://localhost:<port>/x` or
+  - [x] A redirect to `http://localhost:<port>/x` or
         `http://127.0.0.1:<port>/x` reaches the browser on the preview
         hostname.
-  - [ ] A page load runs no check of the relay unit.
-- [ ] Update `worker/previews/README.md`: the relay route and the refusal,
+  - [x] A page load runs no check of the relay unit.
+- [x] Update `worker/previews/README.md`: the relay route and the refusal,
       in place of the `.on.boat.dev` rule.
 
 ## Milestone 4: Verification, commit, review, and pull request

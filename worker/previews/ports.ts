@@ -1,22 +1,19 @@
+import { PREVIEW_RELAY_PORT } from '../../src/shared/previews'
 import type { AppEnv } from '../env'
-import { listenerMode } from './listeners'
+import type { PrivatePort } from '../sandbox/provider'
 import { WorkspaceTools } from './provider'
-import type { PortMode, PrivatePort } from '../sandbox/provider'
-import { savePreviewMode, type PreviewRecord } from './store'
+import { requirePreviewRelay } from './relay'
+import { savePreviewSandbox } from './store'
 import type { ToolDependencies, WorkspaceTarget } from './types'
 
-interface Descriptor {
-  mode: PortMode
-  port: PrivatePort
-}
 interface CachedPort {
   workspaceId: string
   sandboxId: string | null
-  descriptor: Promise<Descriptor>
+  descriptor: Promise<PrivatePort>
   pending: boolean
 }
 
-/** Plaintext port tokens live only here, keyed by workspace, sandbox, and port. */
+/** Plaintext relay tokens live only here, keyed by workspace and sandbox. */
 export class PrivatePorts {
   private readonly cache = new Map<string, CachedPort>()
   private readonly env: AppEnv
@@ -27,8 +24,8 @@ export class PrivatePorts {
     this.dependencies = dependencies
   }
 
-  private key(target: WorkspaceTarget, port: number): string {
-    return JSON.stringify([target.workspaceId, target.sandboxId, port])
+  private key(target: WorkspaceTarget): string {
+    return JSON.stringify([target.workspaceId, target.sandboxId])
   }
 
   invalidateWorkspace(workspaceId: string): void {
@@ -36,37 +33,23 @@ export class PrivatePorts {
       if (value.workspaceId === workspaceId) this.cache.delete(key)
   }
 
-  invalidate(target: WorkspaceTarget, port: number): void {
-    this.cache.delete(this.key(target, port))
+  invalidate(target: WorkspaceTarget): void {
+    this.cache.delete(this.key(target))
   }
 
-  async open(
-    target: WorkspaceTarget,
-    port: number,
-    userId: string,
-  ): Promise<Descriptor> {
-    return this.resolve(target, port, undefined, false, userId)
+  async open(target: WorkspaceTarget, userId: string): Promise<PrivatePort> {
+    return this.resolve(target, true, userId)
   }
 
-  async get(row: PreviewRecord, refresh: boolean): Promise<PrivatePort> {
-    const descriptor = await this.resolve(
-      row,
-      row.port,
-      row.listenerSandboxId === row.sandboxId
-        ? (row.listenerMode ?? undefined)
-        : undefined,
-      refresh,
-    )
-    return descriptor.port
+  get(target: WorkspaceTarget): Promise<PrivatePort> {
+    return this.resolve(target)
   }
 
   private resolve(
     target: WorkspaceTarget,
-    port: number,
-    fallback?: PortMode,
     refresh = false,
     userId?: string,
-  ): Promise<Descriptor> {
+  ): Promise<PrivatePort> {
     for (const [key, value] of this.cache) {
       if (
         value.workspaceId === target.workspaceId &&
@@ -74,7 +57,7 @@ export class PrivatePorts {
       )
         this.cache.delete(key)
     }
-    const key = this.key(target, port)
+    const key = this.key(target)
     const existing = this.cache.get(key)
     if (existing && (!refresh || existing.pending)) return existing.descriptor
     const descriptor = (async () => {
@@ -84,10 +67,10 @@ export class PrivatePorts {
         this.dependencies.fetch,
         userId,
       )
-      const mode = await listenerMode(provider, port, fallback)
-      const hosted = await provider.privatePort(port, mode)
-      await savePreviewMode(this.env.DB, target, port, mode)
-      return { mode, port: hosted }
+      await requirePreviewRelay(provider)
+      const hosted = await provider.privatePort(PREVIEW_RELAY_PORT, 'localhost')
+      await savePreviewSandbox(this.env.DB, target)
+      return hosted
     })()
     const entry = {
       workspaceId: target.workspaceId,

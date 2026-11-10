@@ -43,8 +43,6 @@ interface AccessRow {
   port: number
   previewExpiresAt: number
   credentialExpiresAt: number
-  listenerMode: PreviewRecord['listenerMode']
-  listenerSandboxId: string | null
 }
 
 export type ConnectionScheduler = (
@@ -79,8 +77,7 @@ export async function readConnectionAccess(
      SELECT requested.connectionNumber, sessions.expires_at AS expiresAt,
        p.id AS previewId, p.hostname, w.org_id AS orgId, w.id AS workspaceId,
        w.sandbox_id AS sandboxId, w.state, p.port, p.expires_at AS previewExpiresAt,
-       requested.expiresAt AS credentialExpiresAt,
-       p.listener_mode AS listenerMode, p.listener_sandbox_id AS listenerSandboxId FROM requested
+       requested.expiresAt AS credentialExpiresAt FROM requested
      JOIN sessions ON sessions.id = requested.sessionId AND sessions.user_id = requested.userId
        AND sessions.expires_at > ?
      JOIN users u ON u.id = requested.userId AND u.suspended_at IS NULL
@@ -120,8 +117,6 @@ export async function readConnectionAccess(
             state: row.state,
             port: row.port,
             expiresAt: row.previewExpiresAt,
-            listenerMode: row.listenerMode,
-            listenerSandboxId: row.listenerSandboxId,
           },
         }
       : {}),

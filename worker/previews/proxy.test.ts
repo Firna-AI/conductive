@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { createPreviewHandler } from './handler'
 import { openPreview } from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
@@ -16,6 +17,7 @@ afterAll(async () => {
 
 it('blocks the old sandbox port when ownership changes during the provider host call', async () => {
   const setup = await openPreview(harness)
+  const handler = createPreviewHandler(harness.env, harness.dependencies)
   harness.requests.length = 0
   const fetch = harness.dependencies.fetch
   harness.dependencies.fetch = async (request) => {
@@ -29,7 +31,7 @@ it('blocks the old sandbox port when ownership changes during the provider host 
     }
     return response
   }
-  const response = await setup.handler.proxy(
+  const response = await handler.proxy(
     setup.previewRequest(setup.previewUrl, {
       headers: { 'Sec-Fetch-Dest': 'document' },
     }),

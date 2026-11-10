@@ -147,6 +147,7 @@ Every org image holds the app's own sandbox software:
 
 - the agent runner, a Node program that runs as an always-on service
 - the terminal service, on a private port
+- the preview relay, on a private port
 - the agent tools: an MCP server and a CLI that create and list workspaces
 - a git credential helper that gets a fresh GitHub token for each git
   operation
@@ -156,8 +157,7 @@ program that the SDK bundles at its own version. A pinned version guards
 against a change in how the agent program reads logins. The runner runs
 Codex through the Codex SDK or the Codex App Server (decision 36).
 
-The sandbox also runs the preview relay, the app's own service on a
-private port. It forwards each preview request to a local port of the
+The preview relay forwards each preview request to a local port of the
 sandbox. The previewed server then gets its local address as `Host`
 (decision 213).
 [Access and security](protocol/access-and-security.md#port-previews)
