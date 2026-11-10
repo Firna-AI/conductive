@@ -35,7 +35,7 @@ Contract owners:
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `worker/terminal/scripts.ts:102`, `src/shell/workspace/tools/ToolsPart.tsx`, `docs/protocol/workspace-tools.md:109`.
+- **Location:** `worker/terminal/scripts.ts:103`, `src/shell/workspace/tools/ToolsPart.tsx`, `docs/protocol/workspace-tools.md:109`.
 - **Terms:**
   - **tmux:** a program in the cloud computer that keeps each shell running when the browser connection drops (decision 118).
   - **ttyd:** the program in the cloud computer that joins a browser socket to a tmux client.
