@@ -54,8 +54,8 @@ export const appsAndDevicesFeatures: readonly ParityFeature[] = [
     id: 'help-and-feedback',
     area: 'apps-and-devices',
     name: 'Help and feedback',
-    status: 'planned',
-    note: 'Feedback messages and screenshots from the command palette are planned. Contact details are on the Terms and Privacy pages.',
+    status: 'in-progress',
+    note: 'Feedback messages and screenshots from the command palette are in progress. Contact details are on the Terms and Privacy pages.',
     due: null,
   },
   {
