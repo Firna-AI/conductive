@@ -254,5 +254,9 @@ the merge.
 - [Command palette: empty and unavailable states](protocol/command-palette-states.md):
   what the palette shows while its workspace data loads or did not load,
   and when a tab or a search has no row.
+- [Keyboard shortcuts](protocol/keyboard-shortcuts.md): the commands that
+  keys run, where a key goes, and where the changes of a person live, with
+  [the keys](protocol/keyboard-shortcuts-keys.md) and
+  [the settings tab](protocol/keyboard-shortcuts-tab.md).
 - [Conductor Cloud comparison](protocol/conductor-cloud-comparison.md): the
   public page with the status of each Conductor Cloud feature.

@@ -11,11 +11,14 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 
 ## Opening and closing
 
-- The palette key is ⌘K on a Mac, and Ctrl+K on Windows and Linux
-  (decision 145). Reason: most palettes use this key, also the palette of
-  Conductor, and browsers let the page take it.
-- Only the palette has a key. The rows of the palette show no keys.
-- Keys for other commands were rejected for this version.
+- Each key of the Command palette command is a palette key. Its default key
+  is ⌘K on a Mac, and Ctrl+K on Windows and Linux (decision 145). Reason:
+  most palettes use this key, also the palette of Conductor, and browsers
+  let the page take it.
+- A person can change the palette key on the Keyboard shortcuts tab, as
+  for each other command (decision 190).
+  [Keyboard shortcuts](keyboard-shortcuts.md) gives the rules of every
+  shortcut.
 - The palette key opens the palette on each page of the signed-in app.
   [Where the key goes](#where-the-key-goes) gives the exceptions.
 - A person who waits for app access sees only the
@@ -31,39 +34,22 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   palette, the focus goes back to where it was before the palette opened.
 - The palette has no address of its own. Unlike the other tabs of the app,
   its tabs and its filters do not change the address.
-- When the palette key opens or closes the palette, the browser does not
-  also run its own action for that key.
 
 ## Where the key goes
 
-- While another dialog or a sheet is open, the palette key does nothing.
-  Reason: that layer holds the focus, and the page under it takes no
-  input.
-- While a menu is open, the palette key closes it and opens the palette.
-- While an open menu does not close, such as during a change that it runs,
-  the palette key does nothing, as over a dialog.
-- On a Mac, Ctrl+K does not open the palette. Reason: Ctrl+K keeps its
-  meaning in the text fields of a Mac.
-- Ctrl+K in the terminal goes to the terminal, and does not open the
-  palette. Reason: shells use Ctrl+K to delete to the end of the line.
-- On a Mac, ⌘K opens the palette also from the terminal.
-- A ⌘K that clears the terminal, as in the terminal apps of a Mac, was
-  rejected, so that the palette key works the same everywhere. In the
-  terminal of a workspace, `clear` or Ctrl+L clears the screen.
-- While a port preview or the live desktop has the focus, the palette key
-  goes to its frame and does not open the palette. Reason: the frame comes
-  from another origin, so the page does not get its keys.
-- A click outside the frame gives the keys back to the app.
-- The menu bar of the Mac app has no Search item. Reason: the page hears
-  ⌘K itself. The menu cannot run an action inside the page, because the
-  page has no bridge, as [Permissions](desktop-app.md#permissions) says.
+- The palette key follows the rules of every shortcut in
+  [Where a key goes](keyboard-shortcuts.md#where-a-key-goes). They cover an
+  open dialog or menu, the terminal, a text field, and the frame of a port
+  preview.
 
 ## Entry points
 
 - A Search row under New workspace opens the palette. The sidebar and the
   list page show it at the top of the workspace list.
-- On desktop, the Search row shows the palette key: ⌘K on a Mac, and Ctrl K
-  on Windows and Linux. Reason: the row teaches the key.
+- On desktop, the Search row shows the palette key of the person: the
+  first palette key that works where the page runs. With the default keys,
+  it shows ⌘K on a Mac, and Ctrl K on Windows and Linux. Reason: the row
+  teaches the key.
 - On a phone, the Search row shows no key.
 - A phone opens the palette from the list page.
 - A search button in the header of a phone workspace was rejected, because
@@ -138,6 +124,13 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 - A setting row shows an icon and its label. On the All tab and in a
   search, it also shows the page that holds it, such as "Acme settings" or
   "Account".
+- On desktop, an action row or a setting row whose command has a key ends
+  with the first key of that command that works where the page runs. So
+  New workspace shows ⌥⌘N in a Chrome tab on a Mac, because that tab keeps
+  ⌘N.
+- A workspace row shows no key. Reason: the palette orders the workspaces
+  by activity, not by their place in the list.
+- On a phone, no row shows a key.
 - A workspace row opens its workspace.
 - A row that opens a page is a link. So a ⌘-click on a Mac, or a Ctrl-click
   on Windows and Linux, opens the page in a new tab. In the Mac app,
@@ -222,7 +215,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   of the org settings: General, Repositories, Cloud computer, and Members.
   Its label is the name of the org and "settings", such as "Acme settings".
 - The second group, Account, holds the sections of the Account page:
-  Sign-in, GitHub, Agents, and New workspaces.
+  Sign-in, GitHub, Agents, and New workspaces. It ends with Keyboard
+  shortcuts, the third tab of the Account page.
 - In the Mac app, the Account group also holds
   [This Mac](desktop-app.md#saved-choices).
 - A row of the org settings opens its tab. A row of the Account group

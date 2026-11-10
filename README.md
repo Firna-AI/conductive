@@ -52,6 +52,7 @@ These features are planned. The protocol docs state each one.
 - Orgs with members, sections, reassignment, Archive, and Delete org.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
+- Keyboard shortcuts, which each person can change on the Account page.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
 
@@ -287,6 +288,9 @@ The web app lives under `src/`, and the Cloudflare Worker under `worker/`.
   - [Invite and referral codes](docs/protocol/waitlist-codes.md)
   - [Command palette](docs/protocol/command-palette.md)
   - [Command palette: empty and unavailable states](docs/protocol/command-palette-states.md)
+  - [Keyboard shortcuts](docs/protocol/keyboard-shortcuts.md)
+  - [Keyboard shortcuts: the keys](docs/protocol/keyboard-shortcuts-keys.md)
+  - [Keyboard shortcuts: the settings tab](docs/protocol/keyboard-shortcuts-tab.md)
   - [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md):
     the public page for people who move from Conductor Cloud
 - [Mockups](docs/mockups/README.md): the design and the catalogue.

@@ -8,7 +8,8 @@
 
 - **Terms:**
   - **WCAG 2.2 success criterion 2.5.7:** the rule "Dragging Movements", level AA. Each action that a drag does also works with a single pointer, such as a click, without a drag.
-- **Background:** The workspace list of an org shows its workspaces in sections. `docs/protocol/orgs-and-members.md` says: "A workspace moves to another section by drag and drop. On a phone, a long press lifts the row." The code also moves a focused row with Alt and Up or Down, and a screen reader hears the new place (`src/shell/list/SectionList.tsx`, around line 79). No doc states the keys.
+- **Background:** The workspace list of an org shows its workspaces in sections. `docs/protocol/orgs-and-members.md` says: "A workspace moves to another section by drag and drop. On a phone, a long press lifts the row." The code also moves a focused row with Alt and Up or Down, and a screen reader hears the new place (`src/shell/list/SectionList.tsx`, around line 79). The keys are stated as fixed keys in
+  `docs/protocol/keyboard-shortcuts-keys.md`.
 - **Problem:** A person who uses only a pointer, and cannot drag, has no way to move a workspace to another place or section.
 - **Impact if no action:** That person cannot sort the workspace list. The list misses WCAG 2.2 success criterion 2.5.7.
 - **Root question:** How does a person who cannot drag move a workspace to another place or section?

@@ -22,10 +22,12 @@ decision number names a dated record, as
 
 ### The preference
 
-- The Account page has two tabs, General and Preferences, each with its
-  own address. Preferences holds the New workspaces section, with Model
-  and effort and the choice of how New workspace opens (decision 142).
-  General holds the other sections of the account.
+- The Account page has three tabs, General, Preferences, and Keyboard
+  shortcuts, each with its own address. Preferences holds the New
+  workspaces section, with Model and effort and the choice of how New
+  workspace opens (decision 142). General holds the other sections of the
+  account. [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md)
+  gives the third tab.
 - Reason: all the settings of new workspaces then sit together. The
   section on General, with only the new choice on Preferences, was
   rejected, because the user then looks in two places.

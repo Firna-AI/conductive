@@ -107,6 +107,8 @@ says.
   section.
 - A workspace moves to another section by drag and drop. On a phone, a
   long press lifts the row.
+- A focused row also moves by keys.
+  [Fixed keys](keyboard-shortcuts-keys.md#fixed-keys) gives the keys.
 - Deleting a section moves its workspaces to General. Reason: no workspace
   gets lost.
 - The app keeps the archived workspaces in the Archived group at the end

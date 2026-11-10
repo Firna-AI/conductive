@@ -734,6 +734,24 @@ The user chose D: the row move takes Alt with Up or Down and no other
 modifier, and the divider takes the arrows with no modifier or with
 Shift, through the matcher of the model. The list shows them as fixed.
 
+Agent calls, 2026-11-10, from the questions of Milestone 2:
+
+- Each keyboard has one list of fixed keys, the same in every host and on
+  every system. The Mac list holds the keys of the menus of the Mac app
+  also in a browser. The Windows and Linux list holds the text keys of
+  both systems. Reason: the Worker knows only the keyboard, and a key
+  recorded in a browser also applies in the Mac app, where ⌘R must still
+  reload.
+- Open workspace 1 to 9, and Previous and Next workspace, count only the
+  rows that the workspace list shows. Reason: a key does what the control
+  of the page does, and a hidden row has no control.
+- A key that steps through a list wraps at its end. Reason: the menus of
+  the app and the tabs of the palette wrap.
+- A command that the palette lists runs where the palette offers it, so
+  New workspace also runs from the Account page, and Repositories
+  settings runs for each member who sees it in the palette. Reason: "The
+  palette's offers give both."
+
 User requirement, 2026-11-10: "make sure we don't clobber things like the
 terminal or chat input". Agent calls of the same day apply it:
 
@@ -819,6 +837,19 @@ Agent calls, 2026-11-08 and 2026-11-09:
 - A failed save shows its error on the row. The row keeps the saved keys.
 - The palette's Settings tab gets a Keyboard shortcuts row, and ⌘⌥/ opens
   the tab.
+- Agent calls, 2026-11-10, from the questions of Milestone 2:
+  - While the recorder replaces a key, it offers Remove beside Cancel.
+    Remove takes that key off the command and saves at once. Reason: the
+    reason of decision 192 B and the storage of an empty key list need a
+    way to remove a key. Backspace in the recorder was the other way, but
+    it hides the control and stops a person from recording Backspace.
+  - When another command holds a default key, Reset shows the conflict
+    line of that key with Replace and Cancel. Reason: Reset then follows
+    the conflict rule of a recorded key.
+  - Each save error names what failed: "Model picker wasn't reset. Try
+    again.", "⌘/ wasn't removed. Try again.", and "The shortcuts weren't
+    reset. Try again." under Reset all. Reason: the copy rules ask an
+    error to name what failed.
 - The palette rows, the Search row, and the tooltips show the person's
   key of each command.
 
@@ -898,6 +929,8 @@ The Keyboard shortcuts tab, its states, and the keys in the palette.
       without a match, in the Mac app, in a browser, and on a phone.
 - [x] Draw the line of the tab that says which keys the terminal keeps,
       from the user requirement of 2026-11-10.
+- [ ] Draw Remove in the recorder and the conflict line of a Reset, from
+      the agent calls of Milestone 2, in the Mac app and in a browser.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages in light
       and dark.
   - [x] The Mac app pages: `mac-app/shortcuts`, its child pages, and
@@ -921,28 +954,34 @@ Depends on: 1. Agent call, 2026-11-10: Milestone 2 starts while the Linux
 TODO of Milestone 1 waits for decisions 196 and 197. The open decisions
 block only the Linux rules, which follow the answers.
 
-- [ ] Write `docs/protocol/keyboard-shortcuts.md`: the commands, the
+- [x] Write `docs/protocol/keyboard-shortcuts.md`: the commands, the
       fixed keys, where a key goes, the kept keys and the second keys
       (decision 191), the browser's own keys (decision 192), the row move
       and the divider (decision 193), the keys of Windows and Linux
       (decision 194), the tab and its search (decisions 190 and 195),
       the keys that the terminal and the text fields keep (user
       requirement of 2026-11-10), and the storage scope.
-- [ ] Update `docs/protocol/command-palette.md`: the palette key is a
+- [x] Update `docs/protocol/command-palette.md`: the palette key is a
       shortcut with ⌘K or Ctrl+K as its default, and the rows show the
       keys. Remove "Only the palette has a key" and the rejection of keys
       for other commands.
-- [ ] Update `docs/protocol/desktop-app.md`: the page hears each key
-      first, and the menu keys are fixed.
-- [ ] Add the doc to the protocol lists of `docs/architecture.md` and
+- [x] Update `docs/protocol/desktop-app.md`: the page hears each key
+      first, and the menu keys are fixed. Agent call, 2026-11-10: the new
+      doc holds these rules in "The Mac app", and `desktop-app.md` stays
+      as it is, because it states no key rule.
+- [x] Add the doc to the protocol lists of `docs/architecture.md` and
       `README.md`.
-- [ ] Read both legal pages in full. Confirm that "settings that you and
+- [x] Read both legal pages in full. Confirm that "settings that you and
       your team make" covers the stored keys, or update the sentence.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file. Evidence:
+      `.context/keyboard-shortcuts/m2/link-check.log`.
+- [ ] Add the Linux rules after decisions 196 and 197.
 
 ## Milestone 3: The key model
 
-Depends on: 2
+Depends on: 2. Agent call, 2026-11-10: Milestone 3 starts while the Linux
+TODOs wait for decisions 196 and 197. It leaves out the Linux tab keys and
+the layout switch rule until the answers.
 
 - [ ] Add the shared command ids, the key text, and the request and reply
       types under `src/shared/`.
