@@ -11,6 +11,8 @@ import {
   OUTER_ORG,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
+import { readWorkspace } from '../lifecycle/workspace-data'
+import { boatRoute } from '../sandbox/routes'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
 
 let bundle: string
@@ -77,4 +79,75 @@ it('checks actual unpushed work before archive and preserves read-only chat afte
   expect(
     (await active.request(filePaths.tree(OUTER_ORG, OUTER_WORKSPACE))).status,
   ).toBe(404)
+})
+
+it('preserves the sandbox when an archive check is unavailable and allows retry after recovery', async () => {
+  let commandUnavailable = true
+  const sandboxId = 'bx_archive_stopped'
+  const commandRoute = boatRoute({ operation: 'command', sandboxId })
+  const active = (fixture = await featureFixture(bundle, {
+    outbound: async (request, fallback) => {
+      if (
+        commandUnavailable &&
+        request.method === commandRoute.method &&
+        new URL(request.url).pathname.endsWith(commandRoute.path)
+      )
+        return Response.json(
+          { ok: false, code: 'sandbox_not_running' },
+          { status: 409 },
+        )
+      return fallback(request)
+    },
+  }))
+  await active.env.DB.prepare(
+    "UPDATE workspaces SET sandbox_id = ?, state = 'stopped' WHERE id = ?",
+  )
+    .bind(sandboxId, OUTER_WORKSPACE)
+    .run()
+  const unavailable = {
+    error: {
+      code: 'sandbox_unavailable',
+      message: 'Open the workspace to check its saved work. Then try again.',
+    },
+  }
+  const check = await active.request(
+    workspacePaths.archiveCheck(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect.soft(check.status).toBe(409)
+  expect.soft(await check.json()).toEqual(unavailable)
+  const blockedArchive = await active.request(
+    workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
+    { method: 'POST', body: JSON.stringify({ discardUnpushedWork: true }) },
+  )
+  expect.soft(blockedArchive.status).toBe(409)
+  expect.soft(await blockedArchive.json()).toEqual(unavailable)
+  expect(
+    await readWorkspace(active.env.DB, OUTER_ORG, OUTER_WORKSPACE),
+  ).toMatchObject({
+    state: 'stopped',
+    sandboxId,
+    archivedAt: null,
+  })
+  expect(active.boat.deletedIds).toEqual([])
+  expect(active.boat.resumeIds).toEqual([])
+
+  commandUnavailable = false
+  active.boat.synchronousOutput = '\0' + '0\n'
+  const retriedCheck = await active.request(
+    workspacePaths.archiveCheck(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect(retriedCheck.status).toBe(200)
+  expect(await retriedCheck.json()).toEqual({
+    uncommittedFiles: [],
+    unpushedCommits: 0,
+  })
+  const archived = await active.request(
+    workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
+    { method: 'POST', body: JSON.stringify({ discardUnpushedWork: false }) },
+  )
+  expect(archived.status).toBe(200)
+  expect(await archived.json()).toMatchObject({
+    workspace: { state: 'archived' },
+  })
+  expect(active.boat.deletedIds).toEqual([sandboxId])
 })

@@ -8,6 +8,7 @@ import type { RequestContext } from '../security/gate'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { orgSandboxProvider } from '../sandbox/client'
+import { ProviderError } from '../sandbox/errors'
 import { repositoryLocation } from '../lifecycle/repository-locations'
 import { workspaceRepositoryLocations } from '../lifecycle/repository-location-data'
 import { shellQuote } from '../lifecycle/commands'
@@ -35,10 +36,15 @@ export async function readArchiveCheck(
     orgId,
     dependencies.fetch,
   )
-  const result = await provider.runCommand(
-    row.sandboxId,
-    `set -eu\ncd ${shellQuote(directory)}\ngit status --porcelain=v1 -z\nprintf '\\0'\ngit rev-list --count HEAD --not --remotes`,
-  )
+  const result = await provider
+    .runCommand(
+      row.sandboxId,
+      `set -eu\ncd ${shellQuote(directory)}\ngit status --porcelain=v1 -z\nprintf '\\0'\ngit rev-list --count HEAD --not --remotes`,
+    )
+    .catch((error: unknown) => {
+      if (error instanceof ProviderError) throw checkUnavailable()
+      throw error
+    })
   if (result.exitCode !== 0 || result.timedOut) throw checkUnavailable()
   const separator = result.stdout.lastIndexOf('\0')
   const count = result.stdout.slice(separator + 1).trim()
