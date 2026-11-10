@@ -41,6 +41,13 @@ Contract owners:
   against a fake model endpoint, with the runner's environment.
 - `.context/fast-mode/options-check.md` holds the options check of the
   decisions below, and the sources that it read.
+- `.context/fast-mode/257/` holds the mockup pictures of the options of
+  decision 257, and the scratch patch that drew them.
+- On 2026-11-10 the user said that fast mode does not need usage credits.
+  The Claude Code fast mode docs and the text of the pinned Claude program
+  say that a Claude subscription pays for fast mode only from usage
+  credits. A Claude API key and Codex use none. The post-merge test checks
+  a subscription without usage credits.
 
 ## Decisions
 
@@ -101,10 +108,11 @@ Contract owners:
     route checks neither the starter nor the share switch.
   - Each message then carries the choice of the session. This also holds
     for a message of the starter.
-  - Fast mode costs more on each kind of login. A Claude subscription pays
-    for it from usage credits, also while plan usage is left. An API key
-    pays a higher price for each token. Codex says "increased usage" for its
-    Fast tier.
+  - Fast mode costs more on each kind of login. Anthropic's fast mode docs
+    say that a Claude subscription pays for it only from usage credits, also
+    while plan usage is left. A Claude API key pays a higher price for each
+    token, and uses no usage credits. Codex uses no usage credits either. It
+    says "increased usage" for its Fast tier.
   - Each change of speed reads the conversation again without the cache.
 - **Problem:** If fast follows the rule of the model and the effort, any
   member can turn it on. Then the starter's login pays the higher price, also
@@ -170,10 +178,13 @@ Contract owners:
 - **Location:** `runner/src/providers/claude-events.ts:51` and `src/shared/chat-events.ts:69`.
 - **Background:**
   - A turn can run at standard speed while Fast is on. These are the causes:
-    - Claude has no usage credits. Through the Agent SDK, Claude then
-      retries each fast request at standard speed. It sends a `system`
-      notification once in each turn, and fast mode stays on.
-    - Claude reaches the fast mode rate limit and waits for a cooldown.
+    - Claude reaches its fast rate limit and waits for a cooldown. This can
+      happen on every kind of login. Claude then says "Fast limit reached"
+      and the time until the reset.
+    - A Claude subscription has no usage credits. Through the Agent SDK,
+      Claude then retries each fast request at standard speed. It sends a
+      `system` notification once in each turn, and fast mode stays on.
+    - A Team or Enterprise org of Claude has not turned fast mode on.
     - OpenAI serves a Fast request at standard speed. Only the
       `service_tier` field of the answer shows it, and the Codex app server
       does not pass it on.
