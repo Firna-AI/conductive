@@ -24,36 +24,39 @@ const types: Readonly<Record<string, string>> = {
 
 /**
  * Builds the Astro site once into a temporary folder, and serves its files
- * through a fake static assets binding. `remove` deletes the folder.
+ * from memory through a fake static assets binding. The folder is removed
+ * on every exit, also when the build or a file read fails.
  */
-export async function buildSiteAssets(): Promise<{
-  assets: SiteBinding
-  remove(): Promise<void>
-}> {
+export async function buildSiteAssets(): Promise<SiteBinding> {
   const folder = await mkdtemp(join(tmpdir(), 'conductive-site-'))
-  await promisify(execFile)(
-    'node_modules/.bin/astro',
-    ['build', '--outDir', folder],
-    {
-      env: isolatedProcessEnvironment({ PATH: process.env.PATH, CI: 'true' }),
-    },
-  )
-  const files = new Map<string, SiteAssetFile>()
-  for (const entry of await readdir(folder, {
-    recursive: true,
-    withFileTypes: true,
-  })) {
-    if (!entry.isFile()) continue
-    const path = join(entry.parentPath, entry.name)
-    files.set(`/${SITE_FOLDER}/${relative(folder, path)}`, {
-      body: new Uint8Array(await readFile(path)),
-      contentType:
-        types[entry.name.split('.').at(-1) ?? ''] ?? 'application/octet-stream',
-    })
-  }
-  return {
-    assets: new SiteBinding(files),
-    remove: () => rm(folder, { recursive: true, force: true }),
+  try {
+    await promisify(execFile)(
+      'node_modules/.bin/astro',
+      ['build', '--outDir', folder],
+      {
+        env: isolatedProcessEnvironment({
+          PATH: process.env.PATH,
+          CI: 'true',
+        }),
+      },
+    )
+    const files = new Map<string, SiteAssetFile>()
+    for (const entry of await readdir(folder, {
+      recursive: true,
+      withFileTypes: true,
+    })) {
+      if (!entry.isFile()) continue
+      const path = join(entry.parentPath, entry.name)
+      files.set(`/${SITE_FOLDER}/${relative(folder, path)}`, {
+        body: new Uint8Array(await readFile(path)),
+        contentType:
+          types[entry.name.split('.').at(-1) ?? ''] ??
+          'application/octet-stream',
+      })
+    }
+    return new SiteBinding(files)
+  } finally {
+    await rm(folder, { recursive: true, force: true })
   }
 }
 

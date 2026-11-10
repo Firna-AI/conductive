@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, it } from 'vitest'
+import { beforeAll, expect, it } from 'vitest'
 
 import { macDmgNames, productName } from '../../docs/mockups/src/brand'
 import { macAppSection } from '../../src/marketing/features'
@@ -33,17 +33,10 @@ const SITE = 'https://conductive.test'
 const APP_ORIGIN = 'https://app.conductive.test'
 const NOW = Date.UTC(2027, 0, 15)
 let assets: SiteBinding
-let removeSite: (() => Promise<void>) | undefined
 
 beforeAll(async () => {
-  const site = await buildSiteAssets()
-  assets = site.assets
-  removeSite = site.remove
+  assets = await buildSiteAssets()
 }, 30_000)
-
-afterAll(async () => {
-  await removeSite?.()
-})
 
 const get = (path: string) =>
   siteResponse(
