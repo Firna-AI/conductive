@@ -48,8 +48,8 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'rename-a-workspace',
     area: 'workspaces-and-branches',
     name: 'Rename a workspace',
-    status: 'planned',
-    note: 'Workspace rename from the row’s context menu is planned. Chat sessions can already be renamed.',
+    status: 'in-progress',
+    note: 'Workspace rename from the row’s context menu is in progress. Chat sessions can already be renamed.',
     due: null,
   },
   {
