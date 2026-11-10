@@ -13,6 +13,7 @@
   - `src/marketing/README.md`, `docs/mockups/marketing-site.md`, and `docs/mockups/README.md` say to run `npm run marketing:pictures` and commit the pictures when a screen that they show changes. A person checks each picture before it goes public.
   - These doc rules did not stop three stale sets: commit `9ad3d12` after a header change, commit `e9827da` after a merge, and the branch `calummoore/tab-drag-and-drop`, which removed the Rename button of a session tab and left ten pictures with the button.
   - On 10 November 2026, they did not stop two more. The branch `calummoore/sandbox-time-limit-removal` removed the note of the start limit and left it in the four start pictures, until its review found them. The Mac pictures kept the header Archive button after commit `c02744f0`, as `plans/follow-ups/mac-pictures-show-header-archive.md` says.
+  - On the same day, a capture on the branch `calummoore/file-selector-list`, with `main` at `1a9e75a` merged, also found the stale Mac pictures. `mac-light.webp` and `mac-dark.webp` still draw an Archive button in the workspace header, which the current mockup no longer draws. That branch changed no header, so it kept the old files.
   - Two builds of the same tree give byte-identical capture pages and style sheets.
 - **Problem:** Nothing tells a branch that a picture of the public site no longer matches its screen.
 - **Impact if no action:** The public site can show controls that the app no longer has, until someone notices.

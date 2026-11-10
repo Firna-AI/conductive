@@ -1,3 +1,5 @@
+import type { FileEntry } from '../../shared/files'
+import { mentionAt, type Mention } from '../mentions/mention-text'
 import {
   bareLinkAt,
   linkTarget,
@@ -11,6 +13,7 @@ export type ChatPart =
   | { kind: 'text'; text: string; strong: boolean }
   | { kind: 'code'; text: string }
   | { kind: 'chip'; source: string; target: LinkTarget; strong: boolean }
+  | { kind: 'file'; source: string; entry: FileEntry; strong: boolean }
 
 /** A token of chat text, before the list of the org names its links. */
 type Token =
@@ -18,6 +21,7 @@ type Token =
   | { kind: 'code'; text: string }
   | { kind: 'mark' }
   | { kind: 'link'; href: string; source: string; markdown: boolean }
+  | { kind: 'mention'; mention: Mention }
 
 /** What a reading of chat text looks for, besides code. */
 interface Reading {
@@ -25,7 +29,12 @@ interface Reading {
   marks: boolean
   /** Links count. A Markdown link of no workspace reads again without them. */
   links: boolean
+  /** Mentions of files count, as in a message of a member. */
+  mentions: boolean
 }
+
+/** Finds the entry of the file tree that a mention names. */
+export type MentionLookup = (mention: Mention) => FileEntry | undefined
 
 /**
  * The Markdown link whose `[` stands at `at`, or null. Its label ends at the
@@ -90,6 +99,11 @@ function tokens(text: string, reading: Reading): Token[] {
       index += add({ kind: 'mark' }, 2)
       continue
     }
+    const mention = reading.mentions ? mentionAt(text, index) : null
+    if (mention) {
+      index += add({ kind: 'mention', mention }, mention.source.length)
+      continue
+    }
     const link = !reading.links
       ? null
       : text[index] === '['
@@ -116,12 +130,14 @@ function tokens(text: string, reading: Reading): Token[] {
  * workspace of the list. Each other link shows its source as before: a
  * Markdown link with the code and the bold of its source. With `strong`,
  * as in an answer, `**` marks bold around text and chips. Bold ends at
- * code, as it did before.
+ * code, as it did before. With `mentions`, as in a message of a member,
+ * each mention of an entry of the file tree is a file chip, and each other
+ * mention stays text.
  */
 export function chatParts(
   text: string,
   links: WorkspaceLinks,
-  options: { strong: boolean },
+  options: { strong: boolean; mentions?: MentionLookup },
 ): ChatPart[] {
   const parts: ChatPart[] = []
   let strong = false
@@ -137,16 +153,33 @@ export function chatParts(
       else if (token.kind === 'code') {
         strong = false
         parts.push(token)
+      } else if (token.kind === 'mention') {
+        const { source } = token.mention
+        const entry = options.mentions?.(token.mention)
+        if (entry) parts.push({ kind: 'file', source, entry, strong })
+        else addText(source)
       } else {
         const target = linkTarget(token.href, links)
         if (target) {
           parts.push({ kind: 'chip', source: token.source, target, strong })
         } else if (token.markdown) {
-          take(tokens(token.source, { marks: options.strong, links: false }))
+          take(
+            tokens(token.source, {
+              marks: options.strong,
+              links: false,
+              mentions: false,
+            }),
+          )
         } else addText(token.source)
       }
     }
   }
-  take(tokens(text, { marks: options.strong, links: true }))
+  take(
+    tokens(text, {
+      marks: options.strong,
+      links: true,
+      mentions: options.mentions !== undefined,
+    }),
+  )
   return parts
 }

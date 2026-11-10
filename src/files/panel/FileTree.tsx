@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-react'
 import type { TreeRow } from '../model/tree-rows'
 import type { FileMode, FilesNavigation } from '../navigation'
@@ -43,6 +44,8 @@ function RowContent(props: { row: TreeRow }) {
 /**
  * Every file of the branch, as a tree. A folder opens and closes. A file
  * row is a link to its file tab, and the row of the open file is marked.
+ * The row of `revealed`, a folder that a press on its chip showed, scrolls
+ * into view.
  */
 export function FileTree(props: {
   rows: readonly TreeRow[]
@@ -51,7 +54,21 @@ export function FileTree(props: {
   openMode: FileMode
   navigation: FilesNavigation
   onFolder: (path: string, open: boolean) => void
+  revealed?: { path: string; count: number } | null
 }) {
+  // The row of each path, so a revealed folder can scroll into view. The
+  // markup holds no real path, because a real path can hold a secret value.
+  const rowsByPath = useRef(new Map<string, HTMLLIElement>())
+  const { revealed } = props
+  useEffect(() => {
+    if (!revealed) return
+    const row = rowsByPath.current.get(revealed.path)
+    row?.scrollIntoView?.({ block: 'nearest' })
+  }, [revealed])
+  const keep = (path: string) => (row: HTMLLIElement | null) => {
+    if (row) rowsByPath.current.set(path, row)
+    else rowsByPath.current.delete(path)
+  }
   return (
     <ul aria-label="All files" className={styles.tree}>
       {props.rows.map((row) => {
@@ -59,7 +76,7 @@ export function FileTree(props: {
         const indent = { paddingLeft: 6 + row.depth * 14 }
         const open = entry.path === props.openPath
         return (
-          <li key={entry.path}>
+          <li key={entry.path} ref={keep(entry.path)}>
             {entry.kind === 'directory' ? (
               <button
                 aria-expanded={row.expanded}
