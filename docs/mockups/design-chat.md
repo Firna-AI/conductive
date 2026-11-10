@@ -12,7 +12,9 @@ not have, and the files that the cloud computer could not read.
   browser sent, such as "64%", the place of its size. Before the first
   measurement, the spinner of a working agent and "Uploading" show, so no
   chip shows a made-up share. A failed upload tints the whole chip
-  rose and offers Try again and Remove. Send waits for both states.
+  rose and offers Try again and Remove. Send waits for both states. In the
+  composer the glyph sits in the cell of its icon, so the × that takes its
+  place under a pointer is Remove, in each state.
   `AttachmentStates.module.css` holds the styles of the states, and
   `attachmentCopy.ts` holds their words. A file over 25 MB never becomes a
   chip: a notice over the composer names it, gives the limit, and offers
