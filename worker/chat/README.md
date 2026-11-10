@@ -170,7 +170,8 @@ tests through the production Worker entry.
   sets the hooks, and gives the Mac devices the shared state writer.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
-  lifecycle events.
+  lifecycle events. Its stop transaction clears the port report with
+  `ports: null`, including when the workspace has no previews.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
 - `session-titles.ts`: the empty-name rule for the first session's workspace
@@ -211,7 +212,8 @@ tests through the production Worker entry.
   that can still start a secret, so a new stream cannot complete such a
   secret. That state, the filtered events, and the raw cursor of the
   stream commit in one transaction. The shared field policy keeps
-  operational paths and masks display labels.
+  operational paths and masks display labels. It masks each complete port
+  name and folder before the workspace display excerpt and the second parse.
 - `runner-output.ts` also moves the answer ends of older stream records
   into the workspace record, at the first accepted receipt without that
   record. Held text stays with its own stream, because the held text of
@@ -239,6 +241,10 @@ tests through the production Worker entry.
   report repair of each kind, its start or failure at a refusal, and its
   sends before the confirm.
 - `delivery-state.ts`: dispatch state before sending and queued-state restoration.
+- `port-reports.ts`: the listener-list parser, final port-label excerpts, and
+  displayed-label checks. Private labels stay complete for the output filter.
+  Runner reports require a sorted unique array. Only a workspace stop
+  publishes a null list.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
   `parseRunnerEnvelope` applies the byte limits to the raw message.

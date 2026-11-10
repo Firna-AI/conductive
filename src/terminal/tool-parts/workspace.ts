@@ -1,7 +1,4 @@
-import type {
-  WorkspaceEvent,
-  WorkspaceEventEnvelope,
-} from '../../shared/events'
+import type { WorkspaceEventEnvelope } from '../../shared/events'
 import type { ApiFetch } from './request'
 
 /**
@@ -37,14 +34,15 @@ export function workspaceKey(workspace: ToolRequests): string {
 }
 
 /**
- * Subscribes to the events of one workspace. `onEvent` gets each event of
- * that workspace in the order of its `subscribe`, and no event of another.
+ * Subscribes to the events of one workspace. `onEnvelope` gets each event of
+ * that workspace in its envelope, in the order of its `subscribe`, and no
+ * event of another.
  */
 export function subscribeToWorkspace(
   workspace: Pick<ToolWorkspace, 'workspaceId' | 'subscribe'>,
-  onEvent: (event: WorkspaceEvent) => void,
+  onEnvelope: (envelope: WorkspaceEventEnvelope) => void,
 ): () => void {
   return workspace.subscribe((envelope) => {
-    if (envelope.workspaceId === workspace.workspaceId) onEvent(envelope.event)
+    if (envelope.workspaceId === workspace.workspaceId) onEnvelope(envelope)
   })
 }

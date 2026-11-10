@@ -88,7 +88,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
       text`Your work: ${productName} keeps your messages and the answers
         of the agents as the chat history of each workspace. It also
         keeps the last file list and the last summary of changes of each
-        workspace. The files that you attach to a message stay in the
+        workspace. With the chat history, it keeps each list of the
+        servers that run in the cloud computer of a workspace: the port,
+        a short program name, and the folder of each server. The files
+        that you attach to a message stay in the
         storage of ${productName} at Cloudflare. When the agent starts
         work on the message, ${productName} copies them to the cloud
         computer of the workspace.`,

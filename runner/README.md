@@ -3,7 +3,7 @@
 The agent runner is the program of Conductive in each cloud computer, a
 Boat sandbox. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
-repository.
+repository and the listening ports.
 
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It speaks runner protocol version 2. It sends numbered events. It gets
@@ -105,7 +105,7 @@ These facts belong to this implementation, not to the protocol docs.
   `turns` records of accepted turns. It holds the conversation reference and
   the agent instructions of each session. It also holds the last
   `start.updated` and `workspace.title` events, and the ID of each answered
-  [report request](#report-requests). It holds no other command data, no
+  [report request](reports.md). It holds no other command data, no
   login, and no turn token. The runner saves a turn record before the
   session save. The saves of `turn.started` and its end update that record.
   A turn stopped before its start also has a saved end record.
@@ -155,70 +155,13 @@ the outbox size check.
 
 ## Report requests
 
-The workspace sends a `report.refresh` command when it needs a fresh full
-report of one kind.
-[Lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
-states the requirements.
-
-- The runner takes a request without a session or a credential. The agents
-  never get it. So a running turn keeps its agent process and its input.
-- After the `welcome`, the runner takes commands while the refresh after the
-  connect still runs. So a request does not wait for `runner.ready`.
-- A `files.snapshot` or `changes.updated` request scans the repository again.
-  It sends a full report of that kind only, in numbered parts.
-- The repository watcher, the refresh after each connect, and these two
-  report requests share one scan queue. So such a report request waits for
-  each earlier scan. The events of two scans never interleave. File reads
-  and diffs do not use this queue.
-- A watcher scan compares each kind with the last scan of that kind. So a
-  request for one kind hides no later update of the other kind.
-- The runner keeps the latest `start.updated` and `workspace.title`
-  reports in memory. Each saved state includes them. A confirm does not
-  remove them. They stay after a restart.
-- A `start.updated` or `workspace.title` request selects the current
-  report and appends its filtered copy in one store operation. It saves
-  the copy before it sends it, with a new event number.
-- Until the runner accepts an event of that kind, such a request sends
-  nothing. The runner has no source of new start steps or new workspace
-  names yet.
-- The runner skips a command ID that it has seen. When the runner answers
-  with a report, the save of the last report event also saves the ID. So a
-  repeat of that ID after a reconnect or a restart sends nothing. If the
-  runner process ends before that save, a repeat after the restart gets a
-  new answer. The outbox still resends an unconfirmed answer.
-- A state file from an older runner has no saved events of these two kinds
-  and no saved IDs. The runner still reads it.
+The [report guide](reports.md) gives full report requests, their saved
+receipts, and the listening-port scan and scheduling boundaries.
 
 ## Preview relay
 
-The preview relay connects preview requests to servers in the sandbox.
-It gives each server `Host: localhost:<port>`.
-It streams HTTP bodies and WebSocket traffic.
-It adds `X-Conductive-Relay: 1` to every response, including errors and upgrade handshakes.
-It replaces any value for this header that the previewed server sends.
-The Worker uses the mark to distinguish relay answers from provider answers.
-The Worker removes the mark before it sends the answer to the browser.
-The [preview requirements](../docs/protocol/terminal-previews-and-desktop.md#port-previews)
-state its access rules.
-
-[`src/relay/main.ts`](src/relay/main.ts) starts the relay.
-With one systemd descriptor for its own process ID, the relay listens on descriptor 3.
-Without those activation variables, it listens on `127.0.0.1:7682`.
-[`startPreviewRelay`](src/relay/server.ts) takes a listen port and target
-addresses for tests.
-The build writes its bundle to `dist/runner/relay.mjs`.
-The archive stores that bundle as `runner/relay.mjs`.
-It uses only built-in Node modules.
-
-The [image installer](../image/install.md) installs a separate relay service.
-It also installs and enables `conductive-preview-relay.socket`.
-The socket holds port 7682 while the relay service restarts.
-Both units stay enabled, so the service starts without waiting for a preview request.
-A runner restart does not restart the relay.
-A workspace gets the relay only from a new image build.
-A refresh installs no software.
-An existing workspace keeps the software of its image, also after a resume.
-Start a new workspace from the new image to get the relay.
+The [preview relay guide](preview-relay.md) gives its entry points, build,
+service, and socket activation.
 
 ## Commands
 
@@ -291,14 +234,19 @@ tools that time the first agent start after a resume.
   and their defaults, the state file, and the reconnect after each drop.
 - [`src/relay/server.ts`](src/relay/server.ts): starts the preview relay.
   The HTTP and upgrade handlers share the header rules and target connection code.
-- `src/runner.ts`: `Runner` joins the connection, agents, file reports,
-  and report requests.
+- `src/runner.ts`: `Runner` joins the connection, agents, file and port
+  reports, and report requests.
 - `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
 - [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
   [output field policy](../src/shared/output-fields.ts): the one filter
   shared with the Worker. The runner supplies the workspace and turn tokens.
 - [`event-limits.ts`](../src/shared/event-limits.ts): portable UTF-8 byte
   accounting and the shared tool and turn-summary caps.
+- `src/proc-ports.ts`, `src/socket-table.ts`, and `src/port-metadata.ts`:
+  socket-table reads, listener filters, and safe process names and folders.
+- `src/ports.ts`: `PortReporter`, its stable list, scan queue, and timer lifetime.
+- `src/port-report-budget.ts`: complete private port labels or whole-label
+  omission within the report budget, after runner credential filtering.
 - `src/file-parts.ts`: full report parts and bounded tree deltas.
 - `src/file-updates.ts`: the full tree or the tree delta of each scan, and
   the check for a new changes report.
@@ -337,6 +285,7 @@ tools that time the first agent start after a resume.
 - [Architecture: sandbox software](../docs/architecture/components.md#sandbox-software)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Agent runner: listening ports](../docs/protocol/agent-runner.md#listening-ports)
 - [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)
 - [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
