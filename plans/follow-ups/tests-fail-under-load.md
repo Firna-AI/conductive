@@ -25,6 +25,7 @@
   It reported `Test timed out in 15000ms`. The full run had 1,968 passed tests and this one failure.
   All three tests in that file then passed in one unchanged isolated rerun.
   This additional case has one isolated rerun, not a ten-run result.
+  The same case failed the same way on 10 November 2026, in a complete gate of the branch `calummoore/bootstrap-v124`, which changed only `wrangler.jsonc` and Markdown. That run had 2,031 passed tests and this one failure. All three tests in the file then passed in one unchanged isolated rerun.
   No source, assertion, or timeout changed.
   The suspected source is the same admission and alarm readiness ordering as the provisioning case.
   The queued-job notification can precede the final alarm schedule.

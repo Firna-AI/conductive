@@ -10,7 +10,7 @@
   - **Workers Logs:** Cloudflare's store of the Worker's logs. It keeps each warning of the Worker and a record of each request.
   - **Request record:** the record that Cloudflare writes for each request. It can hold the IP address, the location, and the address of the request.
   - **Privacy page:** the public Privacy notice of the marketing site.
-- **Background:** The first deploy turned on Workers Logs to find its defects. Commit `24146f2` removes the query string of each address from the request records, because a query can hold a sign-in code (finding 2). Cloudflare keeps the logs for some days. The Privacy page says that Cloudflare runs the app and stores its data. It does not name the request records or their retention period.
+- **Background:** The first deploy turned on Workers Logs to find its defects. Commit `24146f2` removes the query string of each address from the request records, because a query can hold a sign-in code (finding 2). Cloudflare keeps the logs for some days. The Privacy page says that Cloudflare runs the app and stores its data. It does not name the request records or their retention period. Since 10 November 2026, `wrangler.jsonc` also turns on Issues, Cloudflare's error tracking. Issues can keep the invocation and request details of each failed request for 7 days, also of each failed preview page.
 - **Problem:** The request records keep the IP address, the location, and the address of each request, also of each preview page, and the Privacy page does not say so.
 - **Impact if no action:** Users are not told about these records. If the app does not need them, it keeps personal data with no use.
 - **Root question:** Does the app keep a record of each request, and how does the privacy page tell users?

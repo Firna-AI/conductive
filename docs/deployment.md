@@ -31,6 +31,20 @@ examples.
   Worker and of its Durable Objects. It removes the query string of each
   request URL from the logs, because a query string can hold a sign-in
   code, a preview credential, or the name of an attached file.
+- `wrangler.jsonc` also turns on Issues, the error tracking of Workers,
+  which is in open beta. Issues groups each uncaught exception, each
+  `5xx` reply, and each error log line of the Worker into issues. The
+  Worker page of the Cloudflare dashboard lists them under Issues.
+  - Each deploy sets Issues from `wrangler.jsonc`. A switch in the
+    dashboard alone ends at the next deploy.
+  - Cloudflare keeps the details of each occurrence for 7 days.
+  - The preview proxy passes each `5xx` reply of a preview through, so
+    the failures of the programs in the sandboxes become issues too.
+  - Issues sends no alert by itself. An automation in the dashboard sends
+    an issue to a chat, an incident tool, a webhook, or a coding agent.
+  - Issues shows no cause for an unexpected error that the Worker
+    catches. The reply is then `500 internal_error`, and the Worker logs
+    no error line.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
