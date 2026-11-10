@@ -1,15 +1,9 @@
-import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
   CircleAlert,
   Clock,
   GitBranchPlus,
-  GitCompareArrows,
   GitMerge,
-  GitPullRequestCreateArrow,
-  MessageSquareCode,
-  Upload,
-  Wrench,
 } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
@@ -23,20 +17,12 @@ import {
   barLabels,
   barMessageText,
   mergeLabels,
-  type AgentAction,
   type BarMessageKind,
 } from './barCopy'
+import { agentIcons } from './barIcons'
 import type { BarAction, BarModel } from './barModel'
 import { BarGitHubLink, GitHubLink } from './barParts'
 import styles from './BarActions.module.css'
-
-const agentIcons: Readonly<Record<AgentAction, LucideIcon>> = {
-  'create-pull-request': GitPullRequestCreateArrow,
-  'commit-and-push': Upload,
-  'fix-checks': Wrench,
-  'resolve-conflicts': GitCompareArrows,
-  'address-review': MessageSquareCode,
-}
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge

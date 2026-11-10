@@ -195,7 +195,8 @@ with the send key that every composer shares, and the waitlist.
 
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
 fake API, requests or answers that wait for the test (also two at one
-path), a manual timer with the wait of each pending timer, a manual page
+path), a manual timer with the wait of each pending timer, which can run
+only the timers of one wait, a manual page
 focus, visibility, input, and keys, and a recording event source.
 `../shell/test-render.tsx` draws a screen with every provider through
 server rendering, after the test loads its data. A test that needs focus
@@ -293,8 +294,9 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   of a row wait while one of them saves.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.
-- `events.ts`: the ordered event stream, the event socket, and
-  `openSocket`, the terminal socket on the same origin as the events.
+- `events.ts`: the ordered event stream, its count of reconnects, the event
+  socket, and `openSocket`, the terminal socket on the same origin as the
+  events.
 - `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
   the store of its workspace, and the `create` and `connect` functions that
   the view supplies.

@@ -1,8 +1,10 @@
 import { expect, it } from 'vitest'
+import type { BarInput } from './barView'
 import type { GitHubFeed } from './githubStore'
 import { PullRequestRow } from './PullRequestRow'
 import {
   branchFeed,
+  controlsOf,
   linksIn,
   readyFeed,
   render,
@@ -14,15 +16,25 @@ const checksHref = '/acme/checkout-autocomplete/checks'
 const compareUrl =
   'https://github.com/acme/storefront/compare/main...calummoore:checkout-autocomplete?expand=1'
 
-function renderRow(github: GitHubFeed): string {
-  return render(<PullRequestRow checksHref={checksHref} github={github} />)
+function renderRow(
+  github: GitHubFeed,
+  input: Partial<Omit<BarInput, 'snapshot'>> = {},
+): string {
+  return render(
+    <PullRequestRow
+      checksHref={checksHref}
+      controls={controlsOf(github, input)}
+      github={github}
+    />,
+  )
 }
 
-it('opens the checks from a pull request, and GitHub from a branch without one', () => {
+it('opens the checks from a pull request, and from a branch without one when the bar has an action or a link', () => {
   const rows = [
     renderRow(readyFeed(snapshotOf('ready-to-merge'))),
     renderRow(readyFeed(snapshotOf('blocked'))),
     renderRow(branchFeed('none', compareUrl)),
+    renderRow(branchFeed('no-commits', null), { localWork: 'yes' }),
     renderRow(branchFeed('no-commits', null)),
   ]
 
@@ -41,7 +53,11 @@ it('opens the checks from a pull request, and GitHub from a branch without one',
     },
     {
       text: 'Create pull request',
-      links: [{ text: 'Create pull request', href: compareUrl }],
+      links: [{ text: 'Create pull request', href: checksHref }],
+    },
+    {
+      text: 'Create pull request',
+      links: [{ text: 'Create pull request', href: checksHref }],
     },
     { text: 'No commits yet', links: [] },
   ])

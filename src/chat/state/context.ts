@@ -28,6 +28,12 @@ export interface ChatContext {
   /** The model changes whose new session has not shown yet, by its ID. */
   readonly moves: Map<string, PendingMove>
   readonly newId: () => string
+  /**
+   * The client ID of each fixed prompt that did not send, by its session and
+   * its text. So a second try in that session is the same message, and the
+   * same prompt in another session is a new one.
+   */
+  readonly prompts: Map<string, string>
   /** A new identity for a draft that a session starts after its draft moved. */
   readonly newDraftId: () => string
   readonly saveView: (view: WorkspaceView) => void

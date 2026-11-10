@@ -128,6 +128,15 @@ function listText(items: readonly string[]): string {
   return `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`
 }
 
+/**
+ * Who requested changes: the reviewers by login, or "A reviewer" when GitHub
+ * names no login, as for the review of a deleted account.
+ */
+function requesters(reviewers: readonly string[]): string {
+  if (reviewers.length === 0) return 'A reviewer'
+  return listText(reviewers.map((login) => `@${login}`))
+}
+
 const commitAndPush =
   'Commit the changes that are not committed, with a clear message, and push this branch.'
 
@@ -149,6 +158,6 @@ export function agentPrompt(action: AgentAction, facts: PromptFacts): string {
     case 'resolve-conflicts':
       return `Pull request #${facts.number} has conflicts with \`${facts.base}\`. Fetch \`origin/${facts.base}\` and merge it into this branch. Resolve each conflict, run the tests, then commit and push.`
     case 'address-review':
-      return `${listText(facts.reviewers.map((login) => `@${login}`))} requested changes on ${pr}. Read the open review comments with \`gh\`, make the changes, then commit and push. Don't reply on GitHub. If \`gh\` is missing or fails, stop and say that \`gh\` failed.`
+      return `${requesters(facts.reviewers)} requested changes on ${pr}. Read the open review comments with \`gh\`, make the changes, then commit and push. Don't reply on GitHub. If \`gh\` is missing or fails, stop and say that \`gh\` failed.`
   }
 }

@@ -41,11 +41,11 @@ the `AppModel` of the tab, for the signed-in user.
   them follow the stream of the model before it opens, as the notices do.
   They keep the revokes of previews, and give each tool the kept revokes
   first, then the live events.
-- The tab also keeps the `WorkspaceFiles` of each workspace whose Files
-  part showed. The Files part connects it while it shows, so a return
-  shows the lists at once, and its socket asks only for the events after
-  its last event number. A sign-out stops and forgets it with the other
-  kept parts.
+- The tab also keeps the `WorkspaceFiles` of each workspace that it
+  showed. The workspace screen connects it while it shows a workspace that
+  is not archived, so a return shows the lists at once, and its socket asks
+  only for the events after its last event number. A sign-out stops and
+  forgets it with the other kept parts.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
   and reads the stored history again.
 - The memory has no size limit. It keeps each workspace that the tab

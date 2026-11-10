@@ -56,8 +56,11 @@ export type BarFacts = {
    */
   localWork: boolean
   access: GitHubAccess
-  /** The merge method that GitHub gives the viewer. */
-  method: MergeMethod
+  /**
+   * The merge method that GitHub gives the viewer, or null when the
+   * repository allows no method. Merge needs a method.
+   */
+  method: MergeMethod | null
   appAction: AppAction
   /** A turn runs in a session of the workspace. */
   turnRuns: boolean
@@ -103,10 +106,10 @@ function linkOf(banner: BannerState): GitHubLinkKind | undefined {
  * The one main action of a state before the merge. Local work comes first:
  * Commit and push takes the place of Merge and of the fixes. An agent
  * action needs write access, or an access that the Worker could not read.
- * Merge needs write access that the Worker read.
+ * Merge needs write access that the Worker read, and a merge method.
  */
 function mainAction(facts: BarFacts): BarAction | undefined {
-  const { banner } = facts
+  const { banner, method } = facts
   const agent = (action: AgentAction): BarAction | undefined =>
     facts.access === 'read' ? undefined : { kind: 'agent', action }
   if (banner === 'none') return agent('create-pull-request')
@@ -118,9 +121,11 @@ function mainAction(facts: BarFacts): BarAction | undefined {
   if (fix) return agent(fix)
   const mayMerge =
     facts.access === 'write' && facts.appAction !== 'merge-no-right'
-  if (banner !== 'ready-to-merge' || !mayMerge) return undefined
+  if (banner !== 'ready-to-merge' || !mayMerge || method === null) {
+    return undefined
+  }
   const busy = facts.appAction === 'merging'
-  return { kind: 'merge', method: facts.method, busy }
+  return { kind: 'merge', method, busy }
 }
 
 /** A refusal of GitHub stays under the bar of Ready to merge. */

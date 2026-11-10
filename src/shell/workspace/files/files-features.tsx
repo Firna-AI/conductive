@@ -10,9 +10,10 @@ import type {
 import { DiffPage } from '../../../files/page/DiffPage'
 import { FilePage } from '../../../files/page/FilePage'
 import { FilesPanel } from '../../../files/panel/FilesPanel'
+import { ChecksActions } from '../../../github/BarButtons'
 import { ChecksList } from '../../../github/ChecksList'
 import type { WorkspaceContext, WorkspaceFeatures } from '../features'
-import { useGitHubFeed } from '../github/WorkspaceGitHub'
+import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
@@ -21,11 +22,7 @@ import {
   useFilesNavigation,
   useOpenTab,
 } from './files-navigation'
-import {
-  useFileTargets,
-  useKeptFiles,
-  useWorkspaceFiles,
-} from './workspace-files'
+import { useFileTargets, useKeptFiles } from './workspace-files'
 
 /** A file tab or a diff tab as a page, which keeps its tab in the saved view. */
 function TabPage(props: {
@@ -74,14 +71,16 @@ function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
 /**
  * All files, Changes, and Checks, in the right column on desktop and in the
  * Files tab of a phone, where a file or a diff shows as a page. This part
- * connects the kept files of the workspace. Checks shows the GitHub state of
- * the workspace screen, also while the sandbox shows in place of the lists.
+ * reads the kept files that the workspace screen connects. Checks shows the
+ * GitHub state of the workspace screen, also while the sandbox shows in
+ * place of the lists. On a phone, the actions of the bar top the Checks tab.
  */
 function FilesPart(props: { context: WorkspaceContext }) {
   const { context } = props
-  const files = useWorkspaceFiles(context)
+  const files = useKeptFiles(context)
   const navigation = useFilesNavigation(context)
   const github = useGitHubFeed()
+  const bar = useScreenBar()
   const { now } = useServices()
   const saved = useSavedView(context.savedView)
   const place = filesPlace(context.view)
@@ -99,10 +98,18 @@ function FilesPart(props: { context: WorkspaceContext }) {
       />
     )
   }
+  const checks = github ? (
+    <>
+      {layout === 'phone' ? (
+        <ChecksActions controls={bar?.controls ?? null} />
+      ) : null}
+      <ChecksList github={github} />
+    </>
+  ) : undefined
   return (
     <FilesPanel
       activeTab={tab}
-      checks={github ? <ChecksList github={github} /> : undefined}
+      checks={checks}
       files={files}
       layout={layout}
       list={place?.kind === 'list' ? place.list : (saved?.fileList ?? 'all')}

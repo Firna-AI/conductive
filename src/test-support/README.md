@@ -64,6 +64,14 @@ The GitHub action routes answer as a member with write access and the
 `merge-<workspace ID>`, and the poll of that job returns a completed merge.
 Each banner with a pull request carries `FAKE_GITHUB_HEAD_SHA` as the head
 that the bar shows, which the action client sends back.
+`fake-bar.ts` sets the other answers of the actions of the bar: the
+member's access, the end of a merge with the Worker's safe words, the local
+work as a route reply and a newer changes report in the stream, and the
+start and the poll of Continue. `continuedEvents` gives the events of a
+Continue: the workspace on its new branch, a note in each session, the
+changes report of the new branch, and its GitHub state. `fake-bar-dev.ts`
+gives `scenarioFetch`, which answers as the Worker does with its state, for
+the development pages.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
 Set the next reply with `server.json(method, path, body, status)`.

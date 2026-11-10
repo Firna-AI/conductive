@@ -1,5 +1,6 @@
 import { CircleAlert, CircleStop, Clock } from 'lucide-react'
-import type { UserMessage } from '../../shared/messages'
+import type { MessageSender, UserMessage } from '../../shared/messages'
+import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import {
@@ -58,6 +59,15 @@ function stoppedLine(by: string | null, readers: ChatReaders): string {
   const member = readers.members.find((item) => item.id === by)
   if (!member) return 'The agent stopped'
   return `${member.displayName ?? member.githubLogin} stopped the agent`
+}
+
+/**
+ * Who pressed Continue: "You" to that member, and the name that the note
+ * keeps of the member to the others, also after the member left the org.
+ */
+function continuedBy(member: MessageSender, readers: ChatReaders): string {
+  if (member.id === readers.viewerId) return 'You'
+  return member.displayName ?? member.githubLogin
 }
 
 /** The newest end of a turn, with the data that its rows do not keep. */
@@ -165,5 +175,13 @@ export function ItemView(props: {
       )
     case 'lost':
       return <LostEventLine marker={item.marker} />
+    case 'continued':
+      return (
+        <ContinuedLine
+          base={item.baseBranch}
+          branch={item.branch}
+          who={continuedBy(item.member, props.readers)}
+        />
+      )
   }
 }

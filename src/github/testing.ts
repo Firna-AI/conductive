@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
 import type { BannerState } from '../shared/github'
 import { toolFixtures } from '../test-support/fixtures/tools'
 import type { PullRequestBanner } from './bannerStatus'
+import { barViewOf, type BarControls, type BarInput } from './barView'
 import type { GitHubSnapshot } from './githubClient'
 import type { GitHubFeed, GitHubState } from './githubStore'
 
@@ -87,6 +89,35 @@ export function branchFeed(
     },
     checks: { state: 'waiting-for-pull-request', checks: [] },
   })
+}
+
+/**
+ * The bar actions of a ready feed, from the real rules: by default a member
+ * with write access and the squash method, a sandbox without local work, no
+ * turn, and Archive for the viewer. `onAction` records each press. Null for
+ * a feed that shows no state.
+ */
+export function controlsOf(
+  github: GitHubFeed,
+  input: Partial<Omit<BarInput, 'snapshot'>> = {},
+  onAction: (action: BarAction) => void = () => undefined,
+): BarControls | null {
+  const { state } = github
+  if (state.status !== 'ready') return null
+  const view = barViewOf({
+    snapshot: state.snapshot,
+    capabilities: {
+      status: 'ready',
+      capabilities: { canWrite: true, mergeMethod: 'squash' },
+    },
+    localWork: 'no',
+    outcome: null,
+    turnRuns: false,
+    readOnly: false,
+    archivable: true,
+    ...input,
+  })
+  return { view, onAction }
 }
 
 /** The fake's banner of a state that has a pull request. */

@@ -6,6 +6,9 @@ import {
   readMergeResponse,
 } from './githubActionParse'
 
+/** The safe words of an action that ended with no known result. */
+export const unfinishedAction = 'The GitHub action did not finish. Try again.'
+
 export class GitHubActionError extends Error {
   readonly code: string | null
   constructor(code: string | null, message: string) {
@@ -37,17 +40,11 @@ export function createGitHubActions(fetch: FetchLike, target: WorkspaceTarget) {
       const error = actionRecord(actionRecord(value)?.error)
       throw new GitHubActionError(
         typeof error?.code === 'string' ? error.code : null,
-        typeof error?.message === 'string'
-          ? error.message
-          : 'The GitHub action did not finish. Try again.',
+        typeof error?.message === 'string' ? error.message : unfinishedAction,
       )
     }
     const parsed = parse(value)
-    if (parsed === null)
-      throw new GitHubActionError(
-        null,
-        'The GitHub action did not finish. Try again.',
-      )
+    if (parsed === null) throw new GitHubActionError(null, unfinishedAction)
     return parsed
   }
   return {

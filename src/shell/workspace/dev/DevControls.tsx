@@ -8,7 +8,6 @@ import {
   refusedReport,
   treeUpdate,
 } from '../../../test-support/recorded-repairs'
-import type { WorkspaceFiles } from '../../../files/model/files-store'
 import styles from './DevPage.module.css'
 
 const kinds: readonly (readonly [string, RunnerReportKind])[] = [
@@ -24,13 +23,22 @@ const kinds: readonly (readonly [string, RunnerReportKind])[] = [
  * full report, which clears it. A tree update leaves the notice of All
  * files. "Open the workspace again" starts a new view of the kept notices.
  */
+/** The tree revision of the newest tree event of the fake stream. */
+function treeRevision(server: FakeApiServer): number {
+  let revision = 0
+  for (const { event } of server.events.history(0).events) {
+    if (event.type === 'files.snapshot') revision = event.tree.revision
+    if (event.type === 'files.changed') revision = event.delta.revision
+  }
+  return revision
+}
+
 export function DevControls(props: {
   server: FakeApiServer
-  files: WorkspaceFiles
   now: () => number
   onNewView: () => void
 }) {
-  const { server, files } = props
+  const { server } = props
   const emit = (event: WorkspaceEvent) =>
     server.events.emit(nextEnvelope(server.events, event, props.now()))
   const button = (label: string, event: () => WorkspaceEvent) => (
@@ -50,7 +58,7 @@ export function DevControls(props: {
       ))}
       <div className={styles.row}>
         {button('Send a tree update', () =>
-          treeUpdate((files.getSnapshot().tree?.revision ?? 0) + 1),
+          treeUpdate(treeRevision(server) + 1),
         )}
         <button onClick={props.onNewView} type="button">
           Open the workspace again

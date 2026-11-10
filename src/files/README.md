@@ -24,11 +24,13 @@ an unknown count from zero.
 
 ## Integration
 
-The tab keeps one `WorkspaceFiles` store for each workspace whose Files
-part showed, beside its kept chat. The Files part connects it through
-`useWorkspaceStore` of [the web app](../app/README.md). A stable `create`
-finds the kept store, or makes it. It starts nothing. A stable `connect`
-starts the store and returns its stop:
+The tab keeps one `WorkspaceFiles` store for each workspace that it showed,
+beside its kept chat. The workspace screen connects it once, for the whole
+screen, through `useWorkspaceStore` of [the web app](../app/README.md), so
+the pull request bar knows the local work on every tab. The Files part and
+the other parts that show files only read it. A stable `create` finds the
+kept store, or makes it. It starts nothing. A stable `connect` starts the
+store and returns its stop:
 
 ```ts
 function startFiles(files: WorkspaceFiles): () => void {

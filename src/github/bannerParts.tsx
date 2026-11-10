@@ -1,6 +1,8 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { ArrowRight, ArrowUpRight, GitBranch } from 'lucide-react'
+import { GitHubMark } from '../../docs/mockups/src/components/common/GitHubMark'
+import { touchControl } from '../../docs/mockups/src/design/metrics'
 import type { GitHubBanner } from '../shared/github'
 import type { BannerStatus } from './bannerStatus'
 import styles from './PullRequestBar.module.css'
@@ -23,20 +25,29 @@ export function MutedSpinner(props: { size: number }) {
 }
 
 /**
- * A link to GitHub, which opens in a new tab. A narrow column keeps only its
- * icon, and the link keeps its name.
+ * A link to GitHub, which opens in a new tab. Beside an action in a narrow
+ * column, or in a very narrow one, the GitHub mark takes the place of the
+ * words and the arrow, and the link keeps its name as a tooltip. With
+ * `touch`, its words take the size of the button labels of a phone.
  */
-export function GitHubLink(props: { href: string; label: string }) {
+export function GitHubLink(props: {
+  href: string
+  label: string
+  touch?: boolean
+}) {
   return (
     <a
       aria-label={props.label}
       className={styles.action}
       href={props.href}
       rel="noreferrer"
+      style={props.touch ? { fontSize: touchControl.labelSize } : undefined}
       target="_blank"
+      title={props.label}
     >
+      <GitHubMark className={styles.mark} size={13} />
       <span className={styles.actionLabel}>{props.label}</span>
-      <ArrowUpRight aria-hidden size={13} />
+      <ArrowUpRight aria-hidden className={styles.arrow} size={13} />
     </a>
   )
 }

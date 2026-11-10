@@ -174,6 +174,18 @@ export function isRunning(snapshot: ChatSnapshot, sessionId: string): boolean {
   return sessionState(snapshot, sessionId).transcript.turn !== null
 }
 
+/**
+ * A turn runs or stops in a session of the workspace, open or closed, as
+ * its record or its transcript says.
+ */
+export function anyTurnRuns(snapshot: ChatSnapshot): boolean {
+  const records = [...snapshot.sessions, ...snapshot.history]
+  return (
+    records.some((session) => session.activeTurnId !== null) ||
+    snapshot.sessions.some((session) => isRunning(snapshot, session.id))
+  )
+}
+
 /** Holds the snapshot, and tells React when it changes. */
 export class ChatStore {
   private snapshot: ChatSnapshot = initialSnapshot

@@ -114,9 +114,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   links to GitHub, from decisions 220 to 228. `barModel.ts` in
   `src/components/workspace/` holds the rule: the action of each state, with
   the local work, the GitHub access of the viewer, and an action of the app
-  that runs. `barCopy.ts` beside it holds the labels, the messages under the
-  bar, and the fixed prompts of the agent actions. Both import no fixture,
-  so the app can use them too.
+  that runs, and Merge needs a merge method. `barCopy.ts` beside it holds
+  the labels, the messages under the bar, and the fixed prompts of the agent
+  actions. Address review names "A reviewer" when GitHub names no login of
+  a reviewer. `barIcons.ts` holds the icon of each agent action. They import
+  no fixture, so the app uses them too.
   - The main action takes the primary tone. An agent action sends its fixed
     prompt, so the chat shows it as a message of the member who clicked.
     Merge names its method, such as "Squash and merge", and a spinner shows

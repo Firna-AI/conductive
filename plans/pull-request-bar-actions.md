@@ -619,6 +619,28 @@ has a pull request. The mockups settled the labels, as
 - Design call: an archived workspace and a suspended org show no actions,
   only links. Reason: a suspended org allows no change, and Archive
   follows the same rule today.
+- Design call on 10 November 2026: while the first read of the member's
+  access runs, the bar offers no agent action and no Merge. A failed read
+  offers the agent actions and no Merge. Write access without an allowed
+  merge method offers the agent actions and no Merge. Reason: a known
+  reader must not see an action that then goes away, and the Worker gives
+  no method when the repository allows none.
+- Design call on 10 November 2026: the bar reads the member's access at
+  each mount and after each reconnect of the ordered stream. So a return to
+  a kept workspace reads it again. Reason: the access can change while the
+  tab is away or offline.
+- Design call on 10 November 2026: Merge waits until the changes report
+  shows. An absent count of an older runner stays unknown, and the changed
+  files alone decide then. No zero takes the place of the count. Reason: no
+  merge leaves known work behind, and older workspaces age out.
+- Design call on 10 November 2026, at root's request: the workspace screen
+  connects the kept files once for the whole screen, also while a phone
+  shows the chat, and every other part only reads that store. Reason: a
+  phone on the chat must know the local work to offer Create pull request.
+- Design call on 10 November 2026: a GitHub state of another branch than
+  the workspace's shows as loading, with one fresh read, and a new branch
+  of the workspace makes a new action state. Reason: no old Merge,
+  Continue, or question stays after a Continue, also of another member.
 
 ### Agent actions
 
@@ -685,6 +707,25 @@ has a pull request. The mockups settled the labels, as
     #<number>. Read the open review comments with `gh`, make the changes,
     then commit and push. Don't reply on GitHub. If `gh` is missing or
     fails, stop and say that `gh` failed."
+- Mockup design call on 10 November 2026, accepted by root: when GitHub
+  names no login of a reviewer, Address review starts "A reviewer requested
+  changes on pull request #<number>." Reason: GitHub drops the login of the
+  review of a deleted account, and the prompt must not start with a gap.
+- Design call on 10 November 2026: Fix checks names each check whose state
+  makes the Worker show Checks failed: failed, timed out, cancelled, and
+  action required. It shows only while the checks name one. Reason: the
+  list of the prompt is then never empty.
+- Design call on 10 November 2026: the chat keeps the client ID of a prompt
+  that did not send for a second try in its own session. The same prompt in
+  another session is a new message. A press while a prompt sends does
+  nothing. Reason: a lost reply makes no second message, and another
+  session never replays the request.
+- Design call on 10 November 2026: a prompt that did not go out shows the
+  chat of its session, where the composer names the cause: a missing login
+  or a failed send. Without an open session, the chat shows. A sent prompt
+  keeps the view. A linked reply moves no draft, with the rule of a draft
+  that cannot move. Reason: the member sees each failure where the
+  composer names it, and keeps the view and the draft otherwise.
 
 ### Merge
 
@@ -739,6 +780,15 @@ has a pull request. The mockups settled the labels, as
 - Mockup design call: after a moved head, Merge stays. After a missing
   right, the bar hides Merge. Reason: a merge of the new head can work
   after a review, and a merge without the right fails again.
+- Design call on 10 November 2026: the bar reads a pending merge or
+  Continue job again after one second, with the timer of the app. Reason:
+  the wait is a choice of the app, not a product limit.
+- Design call on 10 November 2026: after a completed merge, the bar reads
+  the GitHub state once, and Merging shows until a newer GitHub state shows.
+  A refusal or a failure shows until a newer GitHub state or the next
+  press. A merge that fails without a refusal, such as for an expired job,
+  shows the app's safe words with Open on GitHub. Reason: "until the bar
+  reads the state again", and an unknown result is not a refusal.
 
 ### Continue
 
@@ -836,6 +886,16 @@ has a pull request. The mockups settled the labels, as
   its bytes. The runner reads its known branch lines once. Unreadable
   branch identity stays unknown and gets a current branch line.
   Reason: legacy sessions must keep their context without guessed facts.
+- Design call on 10 November 2026: a tab ends Continue when its ordered
+  stream reaches the event number of the reply. Reason: the workspace on
+  its new branch and the note of each session then show.
+- Design call on 10 November 2026: a stopped Continue shows the Worker's
+  safe words, and a refusal because a turn runs shows the wait line.
+  Reason: the words of a clash then show only for a real clash.
+- Design call on 10 November 2026: the note names the member of its event,
+  as its display name or else its login, and "You" to that member. Each new
+  branch has one note in a session. Reason: the stopped line names its
+  member in the same way, and a repeat must not show twice.
 
 ### Labels and messages
 
@@ -866,6 +926,8 @@ the `product-ui` skill. `barCopy.ts` of the mockups holds them.
   "Cancel" and "Continue anyway". One commit "stays on its local branch".
 - The note of Continue: "<member> continued on <branch>, a new branch from
   <base>".
+- Address review without a known reviewer: "A reviewer requested changes on
+  pull request #<number>.", a mockup design call of 10 November 2026.
 
 ### Layouts
 
@@ -1019,21 +1081,23 @@ Tags: ui
 
 Depends on: 1, 4
 
-- [ ] Read the member's merge right and method when the bar loads and
+- [x] Read the member's merge right and method when the bar loads and
       after a reconnect.
-- [ ] Show Merge in Ready to merge for a member who may merge, with the
+- [x] Show Merge in Ready to merge for a member who may merge, with the
       method in its label. Merge runs on one click, and local work hides
       it, as decision 228 chose.
-- [ ] Show the merge that runs, and each refusal, as the mockups draw
+- [x] Show the merge that runs, and each refusal, as the mockups draw
       them.
-- [ ] Show the actions at the top of the Checks tab on a phone, with the
+- [x] Show the actions at the top of the Checks tab on a phone, with the
       line under the bar and the link to GitHub, as the mockups draw them.
-- [ ] Take the layout of a bar with an action from the mockups: beside an
+- [x] Take the layout of a bar with an action from the mockups: beside an
       action, a column narrower than 520 px drops the detail, and the
       GitHub link keeps only the GitHub mark.
-- [ ] Test the bar for each right, each refusal, and the phone.
-- [ ] Smoke-test Merge in the development page of the GitHub banner.
-- [ ] Update `src/github/README.md` and `src/shell/workspace/screen-parts.md`.
+- [x] Test the bar for each right, each refusal, and the phone.
+- [x] Smoke-test Merge in the development page of the GitHub banner.
+- [x] Update `src/github/README.md` and `src/shell/workspace/screen-parts.md`.
+
+Evidence: `.context/pull-request-bar-actions/ui/report.md`.
 
 ## Milestone 6: Agent actions in the bar
 
@@ -1041,24 +1105,26 @@ Tags: ui
 
 Depends on: 1, 3, 4
 
-- [ ] Give the bar a way to send a prompt to the session that the member
+- [x] Give the bar a way to send a prompt to the session that the member
       saw last, with the send rules of the composer.
-- [ ] Take the fixed prompts and the labels from
+- [x] Take the fixed prompts and the labels from
       `docs/mockups/src/components/workspace/barCopy.ts`, which imports no
       fixture. Give them the pull request number, the base, the failed
       checks, and the reviewers.
-- [ ] Show the agent action of each state, as "Actions by state" lists
+- [x] Show the agent action of each state, as "Actions by state" lists
       it, to a member with write access. Show Commit and push in the
       place of the main action while local work exists (decision 228).
-- [ ] Open the Checks tab from the phone row also when the branch has no
+- [x] Open the Checks tab from the phone row also when the branch has no
       pull request and the bar has an action or a link. Move the link that
       creates the pull request on GitHub to the top of that tab, as the
       mockups draw it.
-- [ ] Test each state, local work, a member without write access, a
+- [x] Test each state, local work, a member without write access, a
       blocked send, and a send during a turn.
-- [ ] Smoke-test each action in the development page of the GitHub
+- [x] Smoke-test each action in the development page of the GitHub
       banner.
-- [ ] Update `src/github/README.md` and `src/chat/README.md`.
+- [x] Update `src/github/README.md` and `src/chat/README.md`.
+
+Evidence: `.context/pull-request-bar-actions/ui/report.md`.
 
 ## Milestone 7: Continue in the Worker and the runner
 
@@ -1097,17 +1163,19 @@ Tags: ui
 
 Depends on: 1, 7
 
-- [ ] Show Continue beside Archive after a merge, to every member
+- [x] Show Continue beside Archive after a merge, to every member
       (decision 224).
-- [ ] Show the question with local work, the branch change that runs, a
+- [x] Show the question with local work, the branch change that runs, a
       failed Continue, and Continue while a turn runs, as the mockups draw
       them.
-- [ ] Show the note of Continue in each session, with `ContinuedLine` of
+- [x] Show the note of Continue in each session, with `ContinuedLine` of
       the mockups, which takes no fixtures.
-- [ ] Test the action, the question, a failure, and the bar after
+- [x] Test the action, the question, a failure, and the bar after
       Continue.
-- [ ] Smoke-test Continue in the development page.
-- [ ] Update `src/github/README.md` and `src/chat/README.md`.
+- [x] Smoke-test Continue in the development page.
+- [x] Update `src/github/README.md` and `src/chat/README.md`.
+
+Evidence: `.context/pull-request-bar-actions/ui/report.md`.
 
 ## Milestone 9: Verification, commit, review, and pull request
 

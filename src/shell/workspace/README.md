@@ -102,10 +102,11 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
   calls `chat.hide()`. A connect starts nothing for a workspace that the
   tab no longer keeps.
 
-The context of the features gives the kept chat as `savedView`, and the
-tool events as `toolEvents`. The Files part takes the kept files of the tab
-through `useWorkspaceStore`, as
-[the Files screens](../../files/README.md#integration) show.
+The context of the features gives the kept chat as `savedView` and as
+`chat`, and the tool events as `toolEvents`. `KeptFilesConnection`
+connects the kept files of the tab through `useWorkspaceStore`, as
+[the Files screens](../../files/README.md#integration) show, and the parts
+that show files read the same store.
 
 Place `<HeaderNoticeBars notices={notices} />` directly after the
 header. It draws `notices.shown` with the CSS module of the
@@ -142,8 +143,8 @@ fake API, with its address options, its controls, and the test command.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, the open file tabs, and the file page in place
   of the chat of the session, or the shell's own column for the chat slots.
-- `files/files-features.tsx`: the Files part, which connects the kept
-  files, and the file or diff page of the centre.
+- `files/files-features.tsx`: the Files part, which reads the kept files
+  that the screen connects, and the file or diff page of the centre.
 - `files/chat-files.tsx`: the file tabs of the kept chat, named by the
   labels of the kept files, at their places in the tab row with the props
   that the row gives each tab, the diff links, and the way back to the chat
@@ -180,7 +181,18 @@ fake API, with its address options, its controls, and the test command.
   ordered stream, with the kept revokes of previews.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
-  the ordered stream.
+  the ordered stream. `github/bar-controls.ts` gives the one action state of
+  the bar and its controls, and `github/bar-feed.ts` shows a GitHub state of
+  another branch as loading.
+- `files/kept-files.tsx`: `KeptFilesConnection`, the one connection of the
+  kept files for the whole screen.
+- `ContinueDialog.tsx`: the question of Continue with the local work.
+- `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,
+  `github/BarContinue.test.tsx`, and `files/KeptFiles.test.tsx`: mount the
+  whole app over the fake API. They check Merge and its refusals, the
+  phone Checks top, the prompts from a file and a phone, a prompt that did
+  not send, Continue with its question, a stop, the wait for a turn, the
+  new branch and its note, and the local work of a phone on the chat tab.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped

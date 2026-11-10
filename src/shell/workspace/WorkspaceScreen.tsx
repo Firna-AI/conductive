@@ -23,7 +23,9 @@ import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
 import { ArchiveDialog } from './ArchiveDialog'
 import { ChatArea } from './ChatArea'
+import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
+import { KeptFilesConnection } from './files/kept-files'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { sandboxView } from './sandbox-view'
@@ -162,6 +164,7 @@ export function WorkspaceScreen(props: {
     view: props.view,
     stream: model.stream,
     savedView: chat,
+    chat,
     toolEvents: toolEvents.subscribe,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => void model.archive.start()
@@ -211,10 +214,12 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  // The Archive question, and the actions of the screen for the palette.
+  // The questions of Archive and Continue, and the actions of the screen
+  // for the palette.
   const dialog = (
     <>
       <ArchiveDialog archive={model.archive} workspace={workspace} />
+      <ContinueDialog />
       <WorkspacePaletteActions chat={chat} context={context} />
     </>
   )
@@ -243,27 +248,33 @@ export function WorkspaceScreen(props: {
       </div>
     )
     // An archived workspace on a phone shows only its chat: no pull request
-    // row and no Checks, so it reads no GitHub state.
+    // row and no Checks, so it reads no GitHub state and no files.
     if (archived) return screen
-    return <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
+    return (
+      <KeptFilesConnection context={context}>
+        <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
+      </KeptFilesConnection>
+    )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <WorkspaceGitHub context={context}>
-      <WorkspaceMacBar context={context} />
-      <div className={body.body}>
-        <div className={body.chat}>
-          {header}
-          <HeaderNoticeBars notices={notices} />
-          {chatArea}
+    <KeptFilesConnection context={context}>
+      <WorkspaceGitHub context={context}>
+        <WorkspaceMacBar context={context} />
+        <div className={body.body}>
+          <div className={body.chat}>
+            {header}
+            <HeaderNoticeBars notices={notices} />
+            {chatArea}
+          </div>
+          <RightColumn
+            files={files}
+            pullRequest={features.pullRequest?.(context)}
+            tools={sandbox === 'archived' ? undefined : tools}
+          />
+          {dialog}
         </div>
-        <RightColumn
-          files={files}
-          pullRequest={features.pullRequest?.(context)}
-          tools={sandbox === 'archived' ? undefined : tools}
-        />
-        {dialog}
-      </div>
-    </WorkspaceGitHub>
+      </WorkspaceGitHub>
+    </KeptFilesConnection>
   )
 }

@@ -113,6 +113,8 @@ export function turnOf(
       )
     case 'lost':
       return item.marker.turnId
+    case 'continued':
+      return null
     default:
       return item.turnId
   }

@@ -55,13 +55,15 @@ function holdsWork(draft: Draft): boolean {
  * accepted one. The source gets a new empty draft. The draft stays when the
  * source holds another draft now, when another send of the draft waits, or
  * when the new session holds unfinished work. Then a source with unfinished
- * work stays shown. The new session loads its own history.
+ * work stays shown. The new session loads its own history. A send that
+ * moves no draft, such as a fixed prompt, gives no `draftId`, and takes the
+ * rule of a draft that cannot move.
  */
 export async function showTarget(
   context: ChatContext,
   from: string,
   target: string | null,
-  draftId: string,
+  draftId: string | null,
 ): Promise<void> {
   if (!context.live() || target === null || target === from) return
   const snapshot = context.store.get()
@@ -69,6 +71,7 @@ export async function showTarget(
   if (!open || snapshot.activeSessionId !== from) return
   const source = sessionState(snapshot, from).draft
   const movable =
+    draftId !== null &&
     source.id === draftId &&
     !source.sending &&
     !holdsWork(sessionState(snapshot, target).draft)

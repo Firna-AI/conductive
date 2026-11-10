@@ -1,18 +1,17 @@
-import { Archive, CircleAlert } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import type { Timestamp } from '../shared/api'
-import type { Workspace } from '../shared/workspaces'
 import { ActionButton } from './ActionButton'
-import { canArchive, type GitHubViewer } from './archive'
 import {
   Branches,
   classes,
-  GitHubLink,
   loadFailedText,
   loadingText,
   MutedSpinner,
   StateLabel,
 } from './bannerParts'
 import { bannerDetail, bannerStatus } from './bannerStatus'
+import { BarButtons, BarMessageLine } from './BarButtons'
+import type { BarControls } from './barView'
 import type { GitHubFeed } from './githubStore'
 import styles from './PullRequestBar.module.css'
 
@@ -20,35 +19,37 @@ export interface PullRequestBarProps {
   github: GitHubFeed
   /** The clock of the relative times, such as the time of the merge. */
   now: Timestamp
-  /** The owner and the state of the workspace decide whether Archive shows. */
-  workspace: Pick<Workspace, 'owner' | 'state'>
-  viewer: GitHubViewer
   /**
-   * Opens the app's Archive flow, with its check for unpushed work, or null
-   * when the app offers no Archive, as in a suspended org.
+   * The actions, the link, and the message of the GitHub state that shows,
+   * from the one action state of the screen. Null while no state shows.
    */
-  onArchive: (() => void) | null
+  controls: BarControls | null
+}
+
+function Pending() {
+  return (
+    <div className={styles.bar}>
+      <span className={styles.pending}>
+        <MutedSpinner size={12} />
+        {loadingText}
+      </span>
+    </div>
+  )
 }
 
 /**
  * The pull request bar at the top of the right column. It shows the GitHub
- * state of the workspace branch, and links to GitHub. A branch without a
- * pull request shows its target, and a link that creates the pull request
- * once the branch has a commit. After the merge, the workspace owner and the
- * admins see Archive, as decisions 16 and 42 say.
+ * state of the workspace branch, its main action, and a link to GitHub. A
+ * branch without a pull request shows its target, Create pull request, and
+ * a link that creates the pull request on GitHub once GitHub has a commit.
+ * A message, such as a refusal of GitHub, shows under the bar. Beside an
+ * action, a narrow bar drops its detail and keeps only the GitHub mark of
+ * its link.
  */
 export function PullRequestBar(props: PullRequestBarProps) {
   const { state, retry } = props.github
-  if (state.status === 'loading') {
-    return (
-      <div className={styles.bar}>
-        <span className={styles.pending}>
-          <MutedSpinner size={12} />
-          {loadingText}
-        </span>
-      </div>
-    )
-  }
+  const { controls } = props
+  if (state.status === 'loading') return <Pending />
   if (state.status === 'error') {
     return (
       <div className={styles.bar}>
@@ -61,47 +62,48 @@ export function PullRequestBar(props: PullRequestBarProps) {
       </div>
     )
   }
+  if (!controls) return <Pending />
   const { banner, checks } = state.snapshot
+  const { view } = controls
+  const withActions = view.actions.length > 0 && styles.withActions
+  const message = view.message ? (
+    <BarMessageLine message={view.message} />
+  ) : null
+  const actions = (
+    <span className={styles.actions}>
+      <BarButtons controls={controls} />
+    </span>
+  )
   if (banner.pullRequest === null) {
-    const createUrl =
-      banner.state === 'none' ? banner.createPullRequestUrl : null
     return (
-      <div className={styles.bar}>
-        <Branches banner={banner} />
-        {createUrl ? (
-          <GitHubLink href={createUrl} label="Create pull request" />
-        ) : (
-          <span className={styles.note}>
-            {banner.state === 'none' ? 'No pull request yet' : 'No commits yet'}
-          </span>
-        )}
-      </div>
+      <>
+        <div className={classes(styles.bar, withActions)}>
+          <Branches banner={banner} />
+          {view.note ? (
+            <span className={styles.note}>{view.note}</span>
+          ) : (
+            actions
+          )}
+        </div>
+        {message}
+      </>
     )
   }
   const status = bannerStatus(banner, checks.checks)
   const detail = bannerDetail(banner, checks.checks, props.now)
-  const { onArchive } = props
-  const archive =
-    banner.state === 'merged' && canArchive(props.workspace, props.viewer)
-      ? onArchive
-      : null
   return (
-    <div className={classes(styles.bar, styles[status.tone])}>
-      <span className={styles.number}>{`#${banner.pullRequest.number}`}</span>
-      <StateLabel status={status} />
-      {detail ? (
-        <span className={styles.detail} title={detail}>
-          {detail}
-        </span>
-      ) : null}
-      <span className={styles.actions}>
-        {archive ? (
-          <ActionButton icon={Archive} onPress={archive}>
-            Archive
-          </ActionButton>
+    <>
+      <div className={classes(styles.bar, styles[status.tone], withActions)}>
+        <span className={styles.number}>{`#${banner.pullRequest.number}`}</span>
+        <StateLabel status={status} />
+        {detail ? (
+          <span className={styles.detail} title={detail}>
+            {detail}
+          </span>
         ) : null}
-        <GitHubLink href={banner.pullRequest.url} label="Open on GitHub" />
-      </span>
-    </div>
+        {actions}
+      </div>
+      {message}
+    </>
   )
 }
