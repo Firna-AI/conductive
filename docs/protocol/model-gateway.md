@@ -93,6 +93,16 @@ while the change is open. Its pull request keeps them after the merge.
   requests on the gateway, was rejected. Reason: Claude copies that empty
   value into each process that it starts, and some of those processes
   then fail.
+- When the agent login of a turn is a Claude subscription token, Claude
+  asks for a prompt cache of 1 hour (gateway decision 13). Anthropic
+  keeps the earlier part of the conversation in that cache, so that the
+  next request can reuse it.
+- Reason: Claude asks for 1 hour by itself only when it is signed in to a
+  Claude subscription. From a profile, it cannot tell that a subscription
+  is behind the turn token. So it would ask for about 5 minutes.
+- A cache of about 5 minutes was rejected. Reason: after each pause of
+  more than 5 minutes, the next request writes the cache again. That uses
+  the limits of the subscription faster.
 - Codex gets the gateway address in its config, and the turn token in its
   login request. Neither is in the environment of Codex.
 

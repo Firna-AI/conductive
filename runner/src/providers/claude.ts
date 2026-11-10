@@ -59,6 +59,11 @@ export function createClaudeFactory(
     )
     const credentials = await preparation
     const env = providerEnvironment(options.home, options.tools)
+    if (
+      options.credential.type === 'gateway' &&
+      options.credential.kind === 'token'
+    )
+      env.CLAUDE_CODE_PROMPT_CACHE_TTL = '1h'
     if (credentials) {
       env.ANTHROPIC_CONFIG_DIR = credentials.directory
       env.ANTHROPIC_PROFILE = credentials.name
