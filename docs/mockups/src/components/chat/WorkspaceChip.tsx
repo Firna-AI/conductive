@@ -3,8 +3,7 @@ import type { GitHubSummary } from '../../fixtures/pullRequests'
 import type { ActivityStatus } from '../../fixtures/workspaces'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { activityPresentation, listMarkLabel } from '../workspaces/status'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { listMarkLabel } from '../workspaces/status'
 import { WorkspaceMark } from '../workspaces/WorkspaceMark'
 import {
   ChipEndRemove,
@@ -25,32 +24,9 @@ export type ChipWorkspace = {
   status: ActivityStatus
   /**
    * The GitHub state of its pull request, which the list mark shows in
-   * colour, or `null` without one. A chip whose workspace gives no GitHub
-   * state at all leaves it out, and draws the shape mark of the header in
-   * place of the list mark.
+   * colour, or `null` without one.
    */
-  github?: GitHubSummary | null
-}
-
-/** The mark of a chip, and the words that screen readers hear for it. */
-type ChipMark = { mark: ReactNode; words: string }
-
-/**
- * The list mark with the GitHub state, or the shape mark of the header when
- * the workspace gives no GitHub state.
- */
-function chipMark(workspace: ChipWorkspace): ChipMark {
-  const { github, status } = workspace
-  if (github === undefined) {
-    return {
-      mark: <StatusGlyph status={status} />,
-      words: activityPresentation[status].label,
-    }
-  }
-  return {
-    mark: <WorkspaceMark github={github} status={status} />,
-    words: listMarkLabel(github, status),
-  }
+  github: GitHubSummary | null
 }
 
 /** What the element that opens the page of a chip gets from it. */
@@ -95,10 +71,10 @@ export function WorkspaceChip(props: {
   opener?: (chip: ChipOpener) => ReactNode
   removal?: ChipRemoval
 }) {
-  const { label, name } = props.workspace
+  const { label, name, github, status } = props.workspace
   const { removal } = props
   const className = useChipClass(removal)
-  const { mark, words } = chipMark(props.workspace)
+  const mark = <WorkspaceMark github={github} status={status} />
   const chip: ChipOpener = {
     className,
     title: name,
@@ -109,7 +85,7 @@ export function WorkspaceChip(props: {
           <span className={styles.label}>{label}</span>{' '}
           <span className={base.name}>{name}</span>
         </span>
-        <span className={a11y.hidden}>, {words}</span>
+        <span className={a11y.hidden}>, {listMarkLabel(github, status)}</span>
         {removal ? <ChipEndRemove removal={removal} /> : null}
       </>
     ),

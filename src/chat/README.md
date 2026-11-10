@@ -159,7 +159,8 @@ check in the Mac app.
   which draws the parts of a message or an answer, with its file chips,
   and `mention-copy.ts`, the copy of chat text that gives the mention of
   each file chip in it, and leaves out text that the browser leaves out of
-  a copy.
+  a copy. `chipOf` in `LinksContext.tsx` gives what a chip shows of its
+  workspace.
 - `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
   the entries that the list offers and their order, and
   `MentionsContext.tsx`, the files that the chat gets and the tree that

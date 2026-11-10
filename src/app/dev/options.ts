@@ -55,7 +55,8 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `role=admin|member`: the role of the user in the recorded orgs.
  * - `workspace=<state>`: the state of `checkout-autocomplete`.
  * - `conversation=<scenario>`: its recorded chat, such as `running`.
- * - `banner=<state>`: its GitHub banner, such as `merged`.
+ * - `banner=<state>`: its GitHub banner, such as `merged`. Its list mark
+ *   shows the GitHub state of that bar.
  * - `paths=masked`: two files whose real paths hold a fake secret value,
  *   with their labels, in the file lists and at the end of each turn.
  * - `firstRun=github-app|org|agent-login`: Get started is not done from

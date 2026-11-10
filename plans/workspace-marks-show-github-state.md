@@ -156,6 +156,19 @@ The backend milestone added these calls on 10 November 2026:
     and the other mark consumers are optional observations. Reason: this
     keeps the original post-merge task and uses the repository's real CI.
 
+The app milestone added these calls on 10 November 2026:
+
+33. The wait helpers move to `src/app/org-waits.ts`. Reason: the extra
+    running-check rule would take `org-model.ts` past 300 lines. Each
+    consumer imports the new owner, without an old re-export.
+34. Running checks in any workspace give the short wait, including an
+    archived workspace. Reason: the planned rule covers every workspace
+    of the org, and webhooks also refresh archived workspaces.
+35. The fake uses the shared summary function with its actual banner and
+    checks. A caller can set `github`, including null. Reason: fake and
+    real records must follow the same rule. The existing `banner` URL
+    option covers the smoke states, so no new URL option is needed.
+
 ## Contracts
 
 - `GitHubSummary` in `src/shared/github.ts`: `'checks-running'`,
@@ -193,7 +206,10 @@ Replaced ways:
   also deletes `failedCheck` when no caller is left.
 - A converter for one milestone: from Milestone 1 to Milestone 4, a chip
   without a GitHub summary draws the shape mark, so the app keeps its
-  chips until it gives the summary.
+  chips until it gives the summary. Removed in Milestone 4 after every
+  chip consumer gives the required summary.
+- The wait helpers in `org-model.ts` → `org-waits.ts`. Consumers:
+  `OrgModel` and the chat workspace list. Moved in Milestone 4.
 
 ## Milestone 1: Mockups
 
@@ -314,25 +330,28 @@ The app draws the new mark from the GitHub summary of each record.
 - [x] Read `github` in the three readers of the workspace record:
       `src/app/api/read-workspaces.ts`, `src/chat/api/read-workspace.ts`,
       and `src/members/api/parseCore.ts`.
-- [ ] Draw the list mark in `src/shell/list/WorkspaceRow.tsx`,
+- [x] Draw the list mark in `src/shell/list/WorkspaceRow.tsx`,
       `src/shell/palette/PaletteList.tsx`, and through `chipOf` in
       `src/chat/links/LinksContext.tsx`, with the words of design call 10.
-- [ ] Delete the converter of the chip, and make its summary required.
+- [x] Delete the converter of the chip, and make its summary required.
       Delete the sentence of `docs/mockups/design-chat.md` that says that
       the app gives no GitHub state yet.
-- [ ] Make `workspacesWait` in `src/app/org-model.ts` give the short wait
+- [x] Make `workspacesWait` in `src/app/org-waits.ts` give the short wait
       while a workspace has running checks.
-- [ ] Give each workspace of the fake API, the dev fakes, and the test
+- [x] Give each workspace of the fake API, the dev fakes, and the test
       fixtures its summary. Let the fake API set it.
-- [ ] Add tests, and see each fail first:
-  - [ ] A row, a palette row, and a chip say the GitHub state in words.
+- [x] Add tests, and see each fail first:
+  - [x] A row, a palette row, and a chip say the GitHub state in words.
         Extend `WorkspaceStates.test.tsx` and the existing palette and chip
         tests.
-  - [ ] `workspacesWait` gives the short wait for running checks.
-- [ ] Update the README of each changed area.
-- [ ] Smoke-test with `npm run dev`: the sidebar, the palette, and a chip
+  - [x] `workspacesWait` gives the short wait for running checks.
+- [x] Update the README of each changed area.
+- [x] Smoke-test with `npm run dev`: the sidebar, the palette, and a chip
       show each colour, and the mark moves while the agent works. Save the
       screenshots under `.context/workspace-marks-show-github-state/`.
+- Evidence: `.context/workspace-marks-show-github-state/m4/`,
+  `.context/workspace-marks-show-github-state/m4-docs/`, and
+  `.context/workspace-marks-show-github-state/m4-external/`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

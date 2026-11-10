@@ -63,8 +63,11 @@ requirements.
   and bold, as before. `links/workspace-links.ts` reads each link with the
   URL parser and `parseRoute`. A link is a chip only when it has the
   origin of the links of the list, and the router reads a page of a
-  workspace of the org in that list. The chip shows the current name and
-  state, and it opens the page that the router read, with its tab path,
+  workspace of the org in that list. The chip shows the current name. Its
+  list mark shows the state and the GitHub state, from `chipOf` in
+  `links/LinksContext.tsx`, as
+  [The list mark](../../docs/protocol/workspace-life.md#the-list-mark)
+  says. The chip opens the page that the router read, with its tab path,
   query, and hash. Every other link stays as the text has it. The message
   field reads its text with `textParts`, which reads no code. A message line of
   a work fold shows chips too. A click on a chip there stays with the

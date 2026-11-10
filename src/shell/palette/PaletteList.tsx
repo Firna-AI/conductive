@@ -7,8 +7,11 @@ import {
 } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
-import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
-import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
+import {
+  activityPresentation,
+  listMarkLabel,
+} from '../../../docs/mockups/src/components/workspaces/status'
+import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
 import type { PaletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'
 import type { PaletteRead } from '../../app/palette/palette-source'
@@ -37,9 +40,9 @@ function opensElsewhere(event: MouseEvent): boolean {
 }
 
 /**
- * What a row shows. A workspace shows its state mark, the label of its
- * number while the query matches that label, its name, its repository, and
- * the age of its latest activity.
+ * What a row shows. A workspace shows its list mark, as the list does, the
+ * label of its number while the query matches that label, its name, its
+ * repository, and the age of its latest activity.
  */
 function RowContent(props: { row: PaletteRow; now: number }) {
   const { row } = props
@@ -60,7 +63,7 @@ function RowContent(props: { row: PaletteRow; now: number }) {
   return (
     <>
       <span className={styles.lead}>
-        <StatusGlyph status={workspace.state} />
+        <WorkspaceMark github={workspace.github} status={workspace.state} />
       </span>
       {row.numberLabel ? (
         <span className={styles.number}>{row.numberLabel}</span>
@@ -71,7 +74,7 @@ function RowContent(props: { row: PaletteRow; now: number }) {
         {formatAgo(props.now, workspace.updatedAt)}
       </span>
       <span className={ui.hidden}>
-        , {activityPresentation[workspace.state].label}
+        , {listMarkLabel(workspace.github, workspace.state)}
       </span>
     </>
   )

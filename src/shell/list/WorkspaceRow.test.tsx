@@ -18,6 +18,6 @@ describe('WorkspaceRow', () => {
         workspace={{ ...workspace, name: null, updatedAt: FAKE_TIME }}
       />,
     )
-    expect(textOf(html)).toBe('Untitled now , Ready')
+    expect(textOf(html)).toBe('Untitled now , Checks passed, Ready')
   })
 })

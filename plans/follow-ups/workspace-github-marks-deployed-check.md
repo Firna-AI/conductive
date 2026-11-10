@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-10, from branch `calummoore/workspace-status-icons`, the change that shows the GitHub state in the workspace list marks.
-- **Location:** `docs/protocol/workspace-life.md`, `docs/protocol/github-banner.md`, `src/shared/github.ts`, `worker/github/workspace-state.ts`, `worker/github/summary-data.ts`, `migrations/202611102114_workspace_github_summary.sql`, `docs/mockups/src/components/workspaces/WorkspaceMark.tsx`, `src/shell/list/WorkspaceRow.tsx`, `src/shell/palette/PaletteList.tsx`, `src/chat/links/LinksContext.tsx`, and `src/app/org-model.ts`.
+- **Location:** `docs/protocol/workspace-life.md`, `docs/protocol/github-banner.md`, `src/shared/github.ts`, `worker/github/workspace-state.ts`, `worker/github/summary-data.ts`, `migrations/202611102114_workspace_github_summary.sql`, `docs/mockups/src/components/workspaces/WorkspaceMark.tsx`, `src/shell/list/WorkspaceRow.tsx`, `src/shell/palette/PaletteList.tsx`, `src/chat/links/LinksContext.tsx`, and `src/app/org-waits.ts`.
 - **Reason:** The check needs the merged change on the deployment, the real GitHub App with its webhooks, and real checks on a pull request.
 
 - **Terms:**
@@ -20,7 +20,7 @@
   - The Worker keeps a copy of the state in the nullable D1 column `workspaces.github_summary`. `migrations/202611102114_workspace_github_summary.sql` adds the column without a backfill. So a workspace shows the dim mark until its next GitHub refresh, after a webhook or an open of the workspace.
   - After each GitHub refresh, the Durable Object of the workspace writes the copy from the bar state that it stores at that moment. It writes in the order of its refreshes, so a replay of an older webhook delivery cannot write an older state. A failed write fails the refresh, so that a retry writes the copy again. `worker/github/workspace-state.ts` and `worker/github/summary-data.ts` hold this code.
   - A change of the GitHub state does not change the activity time of the row. The row shows that time as an age, from `updatedAt` of the workspace record.
-  - The browser reads the workspace list from D1 again after a wait. `workspacesWait` in `src/app/org-model.ts` gives the wait: 5 seconds while a workspace of the org works, needs input, or starts, and 30 seconds otherwise. On 10 November 2026, the change chose that running checks also give the 5-second wait.
+  - The browser reads the workspace list from D1 again after a wait. `workspacesWait` in `src/app/org-waits.ts` gives the wait: 5 seconds while a workspace of the org works, needs input, or starts, or while its checks run, and 30 seconds otherwise.
   - The user chose on 10 November 2026 that the pull request bar keeps its neutral merge state in this change. This check looks only at the marks.
   - Each push to `main` deploys the test deployment at `conductive.build`, and the deploy applies the D1 migrations first, as `docs/automatic-deploys.md` says.
   - The tests use fake GitHub servers and a local D1. They do not prove the real webhooks, the migration on the deployed database, or the deployed browser.

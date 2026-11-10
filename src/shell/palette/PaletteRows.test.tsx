@@ -142,7 +142,7 @@ describe('the rows of the command palette', () => {
     })
   })
 
-  test('a search finds active and archived workspaces, also by number with the label before the name, the tabs keep the query, the filters choose the repository and the state, and an empty tab says why', async () => {
+  test('a search finds active and archived workspaces, also by number with the label before the name, each row says its GitHub state before its state, the tabs keep the query, the filters choose the repository and the state, and an empty tab says why', async () => {
     const server = new FakeApiServer({ workspaceState: 'archived' })
     await openPaletteTab(routes.org(org), { server })
     pressPaletteKey('other', document.body)
@@ -153,6 +153,7 @@ describe('the rows of the command palette', () => {
       groups: groupLabels(),
       opens: openedWorkspaces(),
       starts: rowStarts(),
+      names: optionNames(),
     }
     click(byRole('tab', 'Workspaces'))
     const kept = { text: searchField().value, groups: groupLabels() }
@@ -199,6 +200,14 @@ describe('the rows of the command palette', () => {
           ['Apple Pay button', 'acme/storefront'],
           ['Upgrade to Next.js 16', 'acme/storefront'],
           ['Checkout address autocomplete', 'acme/storefront'],
+        ],
+        // The GitHub state comes before the state, and an archived
+        // workspace says none, as its mark shows no colour.
+        names: [
+          'Fix flaky cart testacme/storefront3m, Checks running, Working',
+          'Apple Pay buttonacme/storefront5m, Checks failed, Ready',
+          'Upgrade to Next.js 16acme/storefront7m, Ready',
+          'Checkout address autocompleteacme/storefrontnow, Archived',
         ],
       },
       kept: { text: 'storefront', groups: ['Checkout', 'Infra'] },

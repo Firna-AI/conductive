@@ -10,8 +10,10 @@ import { WorkspaceHeader } from '../workspace/WorkspaceHeader'
 import { OrgList } from './OrgList'
 
 describe('workspace states', () => {
-  test('a workspace that needs input shows it in its row and its header, and its cloud computer is ready', async () => {
-    const app = await startedApp(new FakeApiServer({ workspaceState: 'input' }))
+  test('a workspace that needs input says it in its row after the GitHub state of its bar, and in its header without that state, and its cloud computer is ready', async () => {
+    const app = await startedApp(
+      new FakeApiServer({ workspaceState: 'input', banner: 'checks-failed' }),
+    )
     const org = app.org(FAKE_IDS.org)
     await org.reload('list')
     const row = textOf(
@@ -25,7 +27,9 @@ describe('workspace states', () => {
         />,
       ),
     )
-    expect(row).toContain('Checkout address autocomplete 6m , Needs input')
+    expect(row).toContain(
+      'Checkout address autocomplete 6m , Checks failed, Needs input',
+    )
     const open = new WorkspaceModel(org, FAKE_IDS.workspace)
     await open.open()
     open.close()
@@ -74,6 +78,7 @@ describe('workspace states', () => {
       ),
     )
     expect(header).toContain('Cal , owner of the workspace Needs input')
+    expect(header).not.toContain('Checks failed')
     expect(sandboxState(workspace)).toBe('ready')
   })
 })

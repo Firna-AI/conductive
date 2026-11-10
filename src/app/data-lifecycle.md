@@ -8,12 +8,19 @@ of the data that the screens read and write.
   reads when its first screen mounts, each time that the user comes back
   to the page, and on a timer while a screen shows it. The last screen
   that leaves stops the timer. Screens that show a part share its reads.
-- The timer is short while a row works, needs input, or starts, while the
-  last run of a routine waits, starts, works, or needs input, or while a
-  build runs. Otherwise it is slow, so that changes from other tabs and
-  other people show. Repositories and the members read at entry and at
-  focus only. The waits are choices of the app, not product
-  limits.
+- The timer is short while a row works, needs input, or starts, or while
+  the checks of its pull request run. It is short too while the last run
+  of a routine waits, starts, works, or needs input, or while a build
+  runs. Otherwise it is slow, so that changes from other tabs, other
+  people, and GitHub show. Repositories and the members read at entry and
+  at focus only. The waits are choices of the app, not product
+  limits. `org-waits.ts` holds them.
+- A row takes its GitHub state from each workspace record that the app
+  gets: the list reads, and the records that the open workspace shows. A
+  `github.updated` event of an open workspace changes its pull request
+  bar, not its row.
+  [The list mark](../../docs/protocol/workspace-life.md#the-list-mark)
+  says what the row shows.
 - Each part is a `Resource`. A screen sees the answer of the newest read,
   then the changes that the server confirmed after that read started, such
   as events, then the waiting writes in the order that they went out. A

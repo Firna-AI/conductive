@@ -32,8 +32,9 @@ const linkStates = [
 
 /**
  * The chip in the field: the pure chip of the mockups, with the current
- * name and state of its workspace. It opens nothing. The × of its state
- * mark removes it as one step of undo, while the field takes changes.
+ * name, state, and GitHub state of its workspace. It opens nothing. The ×
+ * of its list mark removes it as one step of undo, while the field takes
+ * changes.
  * Until the field turns a chip whose workspace left the list into text, it
  * shows the link.
  */
