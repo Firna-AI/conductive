@@ -2,6 +2,7 @@ import { mkdir, stat, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import { routes } from '../../../src/app/router'
+import { saveGitHubTokens } from '../../security/github-tokens'
 import { browserControls } from './browser-controls.test-support'
 import { browserRunners } from './browser-runners.test-support'
 import {
@@ -45,6 +46,17 @@ export async function startBrowserHarness(
       }),
     },
   })
+  await saveGitHubTokens(
+    fixture.env,
+    'owner',
+    {
+      accessToken: 'browser-github-access',
+      expiresAt: null,
+      refreshToken: null,
+      refreshExpiresAt: null,
+    },
+    Date.now(),
+  )
   await fixture.env.DB.prepare(
     `INSERT OR IGNORE INTO github_installations (id, account_login, account_type, created_at, suspended_at)
      VALUES (91, 'owner', 'User', 1, NULL)`,

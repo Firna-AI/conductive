@@ -1,5 +1,6 @@
-import type { ComponentProps, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { GitHubSummary } from '../../fixtures/pullRequests'
+import type { ActivityStatus } from '../../fixtures/workspaces'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { activityPresentation, listMarkLabel } from '../workspaces/status'
@@ -21,7 +22,7 @@ export type ChipWorkspace = {
   /** The current name. */
   name: string
   /** The current state of its agent and its cloud computer. */
-  status: ComponentProps<typeof StatusGlyph>['status']
+  status: ActivityStatus
   /**
    * The GitHub state of its pull request, which the list mark shows in
    * colour, or `null` without one. A chip whose workspace gives no GitHub

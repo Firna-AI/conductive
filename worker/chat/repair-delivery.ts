@@ -21,20 +21,16 @@ export class RepairDelivery {
       view.repairs.all(),
     )
     for (const repair of repairs) {
-      if (
-        repair.state === 'failed' ||
-        active.delivered.has(repair.command.commandId)
-      )
+      if (repair.state === 'failed' || repair.deliveredTo === active.id)
         continue
       await active.peer.send(repair.command)
-      active.delivered.add(repair.command.commandId)
-      if (repair.sent) continue
       await this.store.change(
         active.workspace.id,
         async (transaction) => {
           const current = await transaction.repairs.get(repair.command.kind)
           if (current?.command.commandId === repair.command.commandId) {
             current.sent = true
+            current.deliveredTo = active.id
             await transaction.repairs.save(current)
           }
         },

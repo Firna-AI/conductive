@@ -119,6 +119,14 @@
   text-overflow: ellipsis;
 }
 
+/* A short base branch keeps its width. A long one ends in an ellipsis at half of the line. */
+.base {
+  flex-shrink: 0;
+  overflow: hidden;
+  max-width: 50%;
+  text-overflow: ellipsis;
+}
+
 .muted {
   flex-shrink: 0;
   color: var(--ui-muted);

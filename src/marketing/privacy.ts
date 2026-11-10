@@ -78,13 +78,16 @@ export const privacyDocument: LegalDocument = {
             computer, the agents send them directly, with the agent login. In
             both kinds of cloud computer, agent settings in the repository can
             send them to another address instead. Each session uses the
-            login of the member who started it. Your messages in another
+            login of the member who started it. Each run of a routine sends
+            its prompt on the login of the member who owns the routine.
+            Your messages in another
             member's session use that member's login only when that member
             lets other members use it. When that member does not share the
             login, your message starts a new session on your own login. The
             terms of that provider apply.`,
           text`The members of your orgs see the workspaces of the org,
-            their chats, and each Mac command request and result.
+            their chats, and each Mac command request and result. They also see
+            the routines of the org, with their prompts and their runs.
             A member with a terminal in a cloud computer can read
             the GitHub token of a turn that runs there. Outside an agent turn,
             the GitHub CLI uses the workspace owner's account. Each member with
@@ -114,6 +117,10 @@ export const privacyDocument: LegalDocument = {
             send that login to another address. A commit, the agent, or other
             code can change those settings. The setting that lets other members
             use a login does not change this.`,
+          text`The run of your routine for a pull request reads the comments,
+            reviews, and descriptions of other GitHub accounts. Such text can
+            steer the agent while the run uses your agent login and GitHub
+            token, and the env vars of the org.`,
           text`The members of your orgs also see who started each session,
             whose login it uses, and whether it can use that login. They also
             see whether its starter lets other members use that login.`,
@@ -207,7 +214,8 @@ export const privacyDocument: LegalDocument = {
             the next start of a cloud computer.`,
           text`${productName} keeps the real path of each file, because it
             needs that path to open the file. It also keeps the real name of
-            the default branch of each repository. Screens hide each exact copy
+            the default branch of each repository, and of the base branch of
+            each workspace. Screens hide each exact copy
             of a secret value in these paths and names. Your browser still gets
             the real values, so a secret value can show in the data that your
             browser gets and sends (decision 145).`,

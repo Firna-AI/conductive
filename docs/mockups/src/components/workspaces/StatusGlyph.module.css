@@ -31,11 +31,14 @@
 
 .starting,
 .stopped,
-.archived {
+.archived,
+.queued,
+.skipped {
   color: var(--ui-muted);
 }
 
-.error {
+.error,
+.failed {
   color: var(--ui-rose);
 }
 

@@ -5,6 +5,7 @@ import type {
   RunnerEvent,
   RunnerEventEnvelope,
   RunnerToWorkspace,
+  RunnerProtocolVersion,
 } from '../../../src/shared/runner'
 import { SocketInbox } from '../adapter-sockets.test-support'
 import {
@@ -39,7 +40,11 @@ export class OuterFakeRunner {
   constructor(
     socket: WebSocket,
     workspaceId = OUTER_WORKSPACE,
-    options: { streamId?: string; eventNumber?: number } = {},
+    options: {
+      streamId?: string
+      eventNumber?: number
+      protocolVersion?: RunnerProtocolVersion
+    } = {},
   ) {
     this.streamId = options.streamId ?? 'outer-runner-stream'
     this.eventNumber = options.eventNumber ?? 0
@@ -65,7 +70,7 @@ export class OuterFakeRunner {
     socket.accept()
     this.send({
       type: 'hello',
-      protocolVersion: 1,
+      protocolVersion: options.protocolVersion ?? 1,
       workspaceId,
       streamId: this.streamId,
     })

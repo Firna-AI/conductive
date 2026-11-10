@@ -12,7 +12,7 @@ and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, and
+The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 mark in the colour of its GitHub state, the name, and the time, and it
 moves to another section by drag and drop. Archive covers the time on
@@ -29,7 +29,8 @@ session and each open file or diff, in the order that the user gives them
 by drag, + for a new session, and a clock that opens the session history.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list, and the
+It shows no file content. A phone shows an org switcher at the top of the list,
+then New workspace, Routines, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
 
@@ -215,6 +216,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and ready is one bright cell on a faint green grid. A workspace whose
   agent waits for the user shows Needs input: a middle column in the accent
   colour that pulses.
+  A routine run takes the mark of the header of its workspace, not the
+  list mark. A run without a workspace shows an hourglass while it waits
+  for one, and a chevron when a rule skipped it. A failed run shows the
+  mark of its failure. It keeps that mark after Try again, because the run
+  keeps its failed outcome.
+  - A run whose first start failed shows the cross, as its workspace in
+    the error state does.
+  - A run that a check failed before it had a workspace, and a run whose
+    first turn failed, show a slash in rose. After a failed turn, the mark
+    of the header shows a finished turn, which would hide the failure.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
@@ -235,11 +246,37 @@ sessions as tabs above the chat, and four tabs at the bottom.
     place of the line on the chat history, as the `files` variants of
     `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
     keeps its short panels beside the bar.
+- The parts of routines live in `src/components/routines/`. The routine
+  page puts its form beside the Runs column on desktop. A phone shows a
+  saved routine in two tabs, Routine and Runs. The Runs list holds the
+  newest 50 runs, and Show older runs ends it when older runs exist. A
+  phone opens the Add trigger menu and the author filter of a pull request
+  trigger in a sheet. A suspended org keeps its Routines link, and shows
+  its routines read-only under its notice. `RunLinks` in
+  `src/components/workspace/` draws the line under the header of a run
+  workspace, which links to its routine and to its pull request. The pull
+  request bar names the base branch of a workspace: the default branch, or
+  for a pull request run the head branch of its pull request. A long base
+  branch ends in an ellipsis at half of the line. The
+  bubble of a message keeps its line breaks, as in the app, so the first
+  message of a run shows the facts of its trigger on their own lines.
+  - `runCopy.ts` gives the words of a failed run from its stored cause, and
+    from the agent and the owner of the run itself, not of its routine. So
+    a later change of the agent, or a move of the routine to another owner,
+    changes no past row. A failed start and a failed first turn keep their
+    workspace, and their rows open it, as `app/routines/runs/failed` shows.
+  - When the routine page cannot show its routine, the page keeps Routine
+    as its name and shows no tabs, no Runs list, and no actions. A routine
+    that the org no longer has shows the empty state "This routine is not
+    available" with Open Routines. A read that failed shows `LoadFailure`.
+    `app/routines/routine/unavailable` and `not-loaded` show them.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of
-  the list and of each settings tab, and above the bar of an archived
-  workspace. `SuspendedOrgPanel` shows the same words in the main area of
+  the list, of each settings tab, and of each view of a routine page, and
+  above the bar of an archived workspace. A phone shows it above either
+  tab of a routine page, as the `runs` variant of
+  `app/orgs/suspended/routines/routine` shows. `SuspendedOrgPanel` shows the same words in the main area of
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
   a deleted org, at the width of a settings page. A suspended org shows no
   action that it refuses.
