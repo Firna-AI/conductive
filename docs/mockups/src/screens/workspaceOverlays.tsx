@@ -8,14 +8,10 @@ import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
 import { ImportedArchiveDialog } from '../components/conductor-import/ImportedArchiveDialog'
-import {
-  ArchiveDialog,
-  headerArchiveLinks,
-} from '../components/workspace/ArchiveDialog'
+import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
-import { unpushedWork } from '../fixtures/archive'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -55,7 +51,7 @@ function CloseSessionDialog(props: { viewport: Viewport }) {
 
 /**
  * What lies open over a workspace. Desktop draws the menus beside their
- * buttons, and the tab menu below its tab, so only the dialog lies over the
+ * buttons, and the tab menu below its tab, so only the dialogs lie over the
  * app. A phone draws each one as a sheet. `row` holds the tabs that the
  * viewport shows, and the tab whose menu is open, if any.
  */
@@ -71,33 +67,21 @@ export function workspaceOverlay(
       return null
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
-    case 'archive-unpushed':
-    case 'archive-pushed':
-      // A workspace from Conductor that was never activated has no cloud
-      // computer, so its check finds no work and its question is its own.
-      if (neverActivated(state)) {
-        const screens = importedScreensOf(state)
-        return (
-          <ImportedArchiveDialog
-            archiveTo={screens.afterArchive}
-            cancelTo={screens.chat}
-            viewport={viewport}
-            workspace={workspace}
-          />
-        )
-      }
+    case 'imported-archive': {
+      // Archive asks no question, except for a workspace from Conductor that
+      // was never activated. It has no cloud computer, so its question checks
+      // nothing and says what Archive changes.
+      if (!neverActivated(state)) return null
+      const screens = importedScreensOf(state)
       return (
-        <ArchiveDialog
-          links={headerArchiveLinks}
-          question={
-            state.overlay === 'archive-unpushed'
-              ? { kind: 'unpushed', work: unpushedWork }
-              : { kind: 'pushed' }
-          }
+        <ImportedArchiveDialog
+          archiveTo={screens.afterArchive}
+          cancelTo={screens.chat}
           viewport={viewport}
           workspace={workspace}
         />
       )
+    }
     case 'history':
       return mobile ? (
         <Sheet title="Session history">
@@ -122,5 +106,25 @@ export function workspaceOverlay(
       return mobile && row.menuTab ? (
         <TabMenuSheet tab={row.menuTab} tabs={row.tabs} />
       ) : null
+  }
+}
+
+/**
+ * The toast of the state, over the whole screen. Just after Archive, the
+ * toast names the workspace and offers Restore, which does what Restore on
+ * the archived bar does.
+ */
+export function workspaceToast(
+  state: WorkspaceState,
+  workspace: Workspace,
+  viewport: Viewport,
+): ReactNode {
+  switch (state.toast) {
+    case 'none':
+      return null
+    case 'archived':
+      return (
+        <ArchivedToast name={workspace.name} phone={viewport === 'mobile'} />
+      )
   }
 }

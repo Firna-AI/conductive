@@ -1,6 +1,6 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert, CircleStop, Clock } from 'lucide-react'
+import { CircleAlert, CircleStop } from 'lucide-react'
 import type { ChatItem } from '../../fixtures/conversations'
 import { people, type PersonKey } from '../../fixtures/members'
 import { paths } from '../../paths'
@@ -47,18 +47,12 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
           {item.attachments ? (
             <AttachmentChips attachments={item.attachments} sent />
           ) : null}
-          {item.queued ? (
-            <span className={styles.queued}>
-              <Clock size={12} />
-              Sends when the sandbox is ready
-            </span>
-          ) : null}
         </div>
       )
     case 'agent':
       return (
         <div className={styles.agent}>
-          <AgentBlocks blocks={item.blocks} bullets={item.bullets} />
+          <AgentBlocks blocks={item.blocks} />
         </div>
       )
     case 'tool':

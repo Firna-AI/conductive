@@ -4,21 +4,10 @@ import { FilePage } from '../components/files/FilePage'
 import { FilesPanel, type FileTabView } from '../components/files/FilesPanel'
 import type { BackLink } from '../components/layout/Page'
 import { DesktopView } from '../components/tools/DesktopView'
-import { PortPreview, PreviewEmpty } from '../components/tools/PortPreview'
+import { PreviewTool } from '../components/tools/PortPreview'
 import { TerminalView } from '../components/tools/TerminalView'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import { replacesLists } from '../components/workspace/sandboxNoticeState'
-import {
-  archivedSections,
-  archivedWithImport,
-  sectionsWithImport,
-  suspendedSections,
-  workspaceSections,
-  type OpenWorkspace,
-  type SidebarSection,
-} from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
-import { importedWorkspaces } from '../fixtures/importedWorkspaces'
 import {
   activationLog,
   branchStartLog,
@@ -27,11 +16,8 @@ import {
   resumingLog,
   type StartingLog,
 } from '../fixtures/starting'
-import { orgs } from '../fixtures/orgs'
-import type { Membership } from '../fixtures/members'
 import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
 import { idlePrompt, terminalProcesses } from '../fixtures/terminal'
-import type { Workspace, WorkspaceStatus } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { importedScreensOf } from './importedScreens'
 import { hasFileLists, importedPanel, isImported } from './importedWorkspace'
@@ -87,12 +73,21 @@ function backFrom(
   }
 }
 
-/** A file as a page of a phone, with its way back. */
+/**
+ * A file as a page of a phone, with its way back, and with the sandbox state
+ * in place of its content while the sandbox does not run.
+ */
 export function PhoneFilePage(props: {
   state: WorkspaceState
   view: FileTabView
 }) {
-  return <FilePage back={backFrom(props.view, props.state)} view={props.view} />
+  return (
+    <FilePage
+      back={backFrom(props.view, props.state)}
+      placeholder={filePagePlaceholder(props.state, props.view)}
+      view={props.view}
+    />
+  )
 }
 
 /**
@@ -110,40 +105,47 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 }
 
 /**
- * The links of the selected row of the open workspace: the screen of its
- * state, and for a workspace from Conductor the question of its Archive.
- * Null keeps a control static, and undefined keeps the native one.
+ * The sandbox state in place of All files, Changes, and the content of an
+ * open file: while the sandbox starts, while its start is refused, and
+ * after a failed first start. A stopped sandbox, and one whose later start
+ * failed, keep them. `withAction` adds the action and the words of a
+ * refusal, as a phone shows them, and as a file page shows them on desktop,
+ * where the page hides the bar of the chat. A workspace from Conductor
+ * shows its own panel while it has no cloud computer.
  */
-type OpenRowLinks = Readonly<{
-  to: string | null | undefined
-  archiveTo?: string | null
-}>
+export function filesPlaceholder(
+  state: WorkspaceState,
+  withAction: boolean,
+): ReactNode {
+  const imported = importedPanel(state, withAction)
+  if (imported) return imported
+  const panel = panelState(state)
+  return panel && replacesLists(panel) ? (
+    <SandboxPanel phone={withAction} state={panel} />
+  ) : undefined
+}
 
 /**
- * The links of the selected row, where the mockups draw one screen for
- * each state: a workspace from Conductor, and the new workspace on a
- * chosen branch. Null keeps a control static for an imported state that
- * no entry draws. Undefined keeps the row of every other workspace.
+ * What a file page shows in place of its content: the sandbox state, with
+ * its action. The Markdown of an old session has none, because the app
+ * keeps that file, so it opens with no cloud computer too.
  */
-export function openRowLinks(state: WorkspaceState): OpenRowLinks {
-  if (isImported(state)) {
-    const screens = importedScreensOf(state)
-    return { to: screens.chat, archiveTo: screens.archive }
-  }
-  if (state.workspace !== 'saved-carts-branch') return { to: undefined }
-  if (state.sandbox === 'starting') return { to: paths.newWorkspaceBranchStart }
-  if (state.sandbox === 'error') return { to: paths.newWorkspaceBranchGone }
-  return { to: undefined }
+export function filePagePlaceholder(
+  state: WorkspaceState,
+  view: FileTabView,
+): ReactNode {
+  return view === 'old-session' ? undefined : filesPlaceholder(state, true)
 }
 
 /**
  * The files panel. After a stop or a failed resume, All files and Changes
  * keep the lists that the workspace saved. Otherwise, while the sandbox is
  * not running, the sandbox state takes the place of the lists. On a phone,
- * an open file shows as a page of the Files tab. An archived workspace has
- * no file lists: its files went with the cloud computer. A workspace from
- * Conductor keeps its list tabs in its own screens, and an archived one
- * that never had a cloud computer has no lists either.
+ * an open file shows as a page of the Files tab, with the same sandbox
+ * state in place of its content. An archived workspace has no file lists:
+ * its files went with the cloud computer. A workspace from Conductor keeps
+ * its list tabs in its own screens, and an archived one that never had a
+ * cloud computer has no lists either.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -161,11 +163,7 @@ export function FilesContent(props: {
   if (phone && open && open !== 'old-session') {
     return <PhoneFilePage state={state} view={open} />
   }
-  const placeholder =
-    importedPanel(state, phone) ??
-    (panel && replacesLists(panel) ? (
-      <SandboxPanel phone={phone} state={panel} />
-    ) : undefined)
+  const placeholder = filesPlaceholder(state, phone)
   return (
     <FilesPanel
       banner={state.banner}
@@ -210,68 +208,8 @@ export function ToolContent(props: {
       )
     }
     case 'preview':
-      return state.ports === 'open' ? <PortPreview /> : <PreviewEmpty />
+      return <PreviewTool state={state.ports} />
     case 'desktop':
       return <DesktopView />
   }
-}
-
-/** The sections of the sidebar beside an open workspace that is not archived. */
-function sectionsOf(
-  open: OpenWorkspace,
-  suspended: boolean,
-  created: readonly OpenWorkspace[],
-  row?: OpenRowLinks,
-): SidebarSection[] {
-  if (suspended) return suspendedSections(open.workspace)
-  if (open.workspace.from === 'conductor') {
-    return sectionsWithImport(importedWorkspaces, open, row?.to, {
-      archiveTo: row?.archiveTo,
-    })
-  }
-  return workspaceSections(open, undefined, created, row?.to ?? undefined)
-}
-
-/**
- * The sidebar beside an open workspace, which shows its current status. An
- * archived workspace sits in the open Archived group. In a suspended org
- * every row shows stopped, and nothing in the sidebar changes the org.
- * `created` adds the workspaces that the create flow made by then. A
- * workspace from Conductor sits in Import from Conductor, with the other
- * workspaces of its import. `row` keeps the screen of the state of the
- * open workspace on its selected row, and its Archive, where the mockups
- * draw them.
- */
-export function workspaceSidebar(
-  workspace: Workspace,
-  status: WorkspaceStatus,
-  suspended: boolean,
-  viewer: Membership,
-  created: readonly OpenWorkspace[] = [],
-  row?: OpenRowLinks,
-): ReactNode {
-  if (status !== 'archived') {
-    const open = { workspace, status }
-    return (
-      <Sidebar
-        org={orgs.acme}
-        sections={sectionsOf(open, suspended, created, row)}
-        suspended={suspended}
-        viewer={viewer}
-      />
-    )
-  }
-  const list =
-    workspace.from === 'conductor'
-      ? archivedWithImport(workspace, importedWorkspaces, row?.to)
-      : archivedSections(workspace, suspended)
-  return (
-    <Sidebar
-      archived={list.archived}
-      org={orgs.acme}
-      sections={list.sections}
-      suspended={suspended}
-      viewer={viewer}
-    />
-  )
 }

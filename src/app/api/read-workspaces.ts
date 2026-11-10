@@ -1,7 +1,6 @@
 import type { Attachment, UserMessage } from '../../shared/messages'
 import { readWorkspaceImport } from '../../shared/conductor-import'
 import type {
-  ArchiveCheckResponse,
   CreateWorkspaceResponse,
   OrderedWorkspaceResponse,
   StartStep,
@@ -20,7 +19,6 @@ import {
   nested,
   record,
   text,
-  texts,
 } from './parse'
 import { readChoice, readSender } from './read-core'
 
@@ -53,6 +51,7 @@ export function readWorkspace(value: unknown): Workspace {
     createdAt: count(workspace, 'createdAt'),
     updatedAt: count(workspace, 'updatedAt'),
     archivedAt: maybeCount(workspace, 'archivedAt'),
+    restoreUntil: maybeCount(workspace, 'restoreUntil'),
     ...readWorkspaceImport(workspace.conductorImport),
   }
 }
@@ -139,14 +138,6 @@ export function readCreated(value: unknown): CreateWorkspaceResponse {
     ...readWorkspaceResponse(value),
     sessionId: text(body, 'sessionId'),
     firstMessage: nested(body, 'firstMessage', readUserMessage),
-  }
-}
-
-export function readArchiveCheck(value: unknown): ArchiveCheckResponse {
-  const body = record(value, 'archive check')
-  return {
-    uncommittedFiles: texts(body, 'uncommittedFiles'),
-    unpushedCommits: count(body, 'unpushedCommits'),
   }
 }
 

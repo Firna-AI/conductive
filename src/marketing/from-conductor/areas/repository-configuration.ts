@@ -30,6 +30,13 @@ export const repositoryConfigurationFeatures: readonly ParityFeature[] = [
     note: 'New workspaces use the default branch set on GitHub. A separate branch setting in Conductive is under consideration.',
   },
   {
+    id: 'files-to-copy',
+    area: 'repository-configuration',
+    name: 'Files to copy',
+    status: 'different',
+    note: 'Admins save .env values as org environment variables. Every workspace gets them at each start.',
+  },
+  {
     id: 'repository-environment-variables',
     area: 'repository-configuration',
     name: 'Repository environment variables',
@@ -56,5 +63,19 @@ export const repositoryConfigurationFeatures: readonly ParityFeature[] = [
     name: 'Instruction files and skills',
     status: 'available',
     note: 'Keep instruction files and skills in the repository. Personal Mac configuration files are not copied.',
+  },
+  {
+    id: 'git-behaviour-settings',
+    area: 'repository-configuration',
+    name: 'Git behaviour settings',
+    status: 'considering',
+    note: 'Branch names start with the owner’s GitHub login and a city. Custom prefixes and branch deletion on archive are under consideration.',
+  },
+  {
+    id: 'shell-environment',
+    area: 'repository-configuration',
+    name: 'Shell environment',
+    status: 'different',
+    note: 'Agents use the environment of the cloud computer. Admins add tools with the install script and variables in org settings.',
   },
 ]

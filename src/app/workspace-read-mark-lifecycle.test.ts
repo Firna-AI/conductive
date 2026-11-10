@@ -162,8 +162,7 @@ test('archive cancels a failed mark retry and older state records cannot restart
   history(4)
   await flushMicrotasks()
   expect(delay.pending).toBe(1)
-  await workspace.archive.start()
-  await workspace.archive.confirm()
+  await workspace.archive.archive()
   expect(delay.pending).toBe(0)
   events.send({ type: 'event', envelope: update(5, 'ready') })
   visible.set(false)
@@ -182,5 +181,21 @@ test('an archive event blocks a mark before the last event number can send it', 
   await flushMicrotasks()
   expect(await marks()).toEqual([])
   expect(delay.pending).toBe(0)
+  workspace.close()
+})
+
+test('a Restore marks the events that came while the workspace was archived', async () => {
+  const { workspace, marks, history } = setup('ready')
+  await workspace.open()
+  await workspace.archive.archive()
+  history(3)
+  await flushMicrotasks()
+  const archived = await marks()
+  await workspace.archive.restore()
+  await flushMicrotasks()
+  expect({ archived, restored: await marks() }).toEqual({
+    archived: [],
+    restored: [{ throughEventNumber: 3 }],
+  })
   workspace.close()
 })

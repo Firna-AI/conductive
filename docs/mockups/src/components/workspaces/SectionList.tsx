@@ -197,6 +197,7 @@ export function SectionList(props: {
         <ArchivedGroup
           controlsOf={controlsOf}
           open={!props.archivedCollapsed}
+          readOnly={props.readOnly ?? false}
           rows={props.archived}
           variant={props.variant}
         />

@@ -77,6 +77,7 @@ function readWorkspace(value: unknown): Workspace {
     createdAt: count(source.createdAt),
     updatedAt: count(source.updatedAt),
     archivedAt: nullable(count)(source.archivedAt),
+    restoreUntil: nullable(count)(source.restoreUntil),
     ...readWorkspaceImport(source.conductorImport),
   }
 }

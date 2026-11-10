@@ -3,9 +3,10 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { paletteViews } from '../components/palette/paletteViews'
 import type { RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
+import { sectionsWithImport } from '../components/workspaces/importSections'
 import {
+  archivedGroup,
   newOrgSections,
-  sectionsWithImport,
   suspendedSections,
   workspaceSections,
   type SidebarSection,
@@ -14,6 +15,7 @@ import { Sidebar } from '../components/workspaces/Sidebar'
 import { importedWorkspaces } from '../fixtures/importedWorkspaces'
 import { viewerMembership } from '../fixtures/members'
 import { deletedOrg, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
+import { checkoutAutocomplete } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import {
   ChooseWorkspace,
@@ -51,9 +53,9 @@ export const workspaceListSchema = {
      * The workspaces of Acme, Acme with only the General section, the
      * first org of a new user or another new org, both without workspaces,
      * a deleted org, Acme after the operator suspended it, a deleted org
-     * that the operator suspended, Acme after its list did not load, or
-     * Acme after an import from Conductor, which adds the section Import
-     * from Conductor.
+     * that the operator suspended, Acme after its list did not load, Acme
+     * with its Archived group open, or Acme after an import from Conductor,
+     * which adds the section Import from Conductor.
      */
     list: {
       enum: [
@@ -65,6 +67,7 @@ export const workspaceListSchema = {
         'suspended',
         'deleted-suspended',
         'failed',
+        'archived',
         'imported',
       ],
     },
@@ -100,8 +103,21 @@ const viewer = viewerMembership('admin')
 function sectionsOf(list: WorkspaceListState['list']): SidebarSection[] {
   if (list === 'general-only') return generalOnlySections()
   if (list === 'suspended') return suspendedSections()
+  if (list === 'archived') return archivedGroup().sections
   if (list === 'imported') return sectionsWithImport(importedWorkspaces)
   return newOrgs[list] ? newOrgSections() : workspaceSections()
+}
+
+/**
+ * The open Archived group of the `archived` list, with the pointer over
+ * the row of the last archived workspace, whose Restore covers its time.
+ * A phone draws no hover, because it has no pointer.
+ */
+function archivedGroupView(): Pick<MenuListView, 'archived' | 'focus'> {
+  return {
+    archived: archivedGroup().archived,
+    focus: { workspace: checkoutAutocomplete.key, drawing: { kind: 'hover' } },
+  }
 }
 
 /** The list and what lies over it, in a state of the menu of a row. */
@@ -149,15 +165,16 @@ function MobileList(props: { state: WorkspaceListState }) {
     )
   }
   const fresh = newOrgs[list]
+  const group = list === 'archived' ? archivedGroupView() : undefined
   // No entry draws the org switcher over the list after an import.
   return (
     <MobileFrame>
       <HomeList
-        archived={view?.archived}
+        archived={view?.archived ?? group?.archived}
         archivedCollapsed={view?.archivedCollapsed}
         drag={listDrag(menu)}
         failed={list === 'failed'}
-        focus={view?.focus}
+        focus={view?.focus ?? group?.focus}
         menu={listMenu(menu)}
         menuStyle="sheet"
         newWorkspaceTo={fresh?.newWorkspaceTo}
@@ -224,13 +241,14 @@ export function WorkspaceListScreen(props: {
       </AppFrame>
     )
   }
+  const group = list === 'archived' ? archivedGroupView() : undefined
   const listed = {
-    archived: view?.archived,
+    archived: view?.archived ?? group?.archived,
     archivedCollapsed: view?.archivedCollapsed,
     drag: listDrag(menu),
     failed: list === 'failed',
     menu: listMenu(menu),
-    focus: view?.focus,
+    focus: view?.focus ?? group?.focus,
     org: orgs.acme,
     sections: view?.sections ?? sectionsOf(list),
     viewer: view?.viewer ?? viewer,

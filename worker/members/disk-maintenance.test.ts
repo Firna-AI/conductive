@@ -69,7 +69,7 @@ it('preserves existing stop dates and schedules genuine stops without an early r
     lifecycle.maintenance.map((input) =>
       input.workspaces.map((disk) => disk.workspaceId),
     ),
-  ).toEqual([['eight-day-disk', 'new-stop', 'workspace-one']])
+  ).toEqual([['archived-disk', 'eight-day-disk', 'new-stop', 'workspace-one']])
   expect(
     providerRequests(harness).filter((call) => call.endsWith('/resume')),
   ).toEqual([])

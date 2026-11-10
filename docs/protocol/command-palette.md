@@ -27,7 +27,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   the other dialogs of the app.
 - A change of the address closes the palette, such as after Back.
 - A row closes the palette first, then runs its action. So the result of
-  the action, such as the Archive question, shows alone.
+  the action, such as the dialog of New workspace, shows alone.
 - When the palette key, Escape, Cancel, or a press outside closes the
   palette, the focus goes back to where it was before the palette opened.
 - The palette has no address of its own. Unlike the other tabs of the app,
@@ -201,11 +201,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 
 - [Command palette: empty and unavailable states](command-palette-states.md)
   gives what the palette shows while its workspace data loads or did not
-  load, and when a tab or a search has no row.
-
-## Empty states
-
-- [Empty states](command-palette-states.md#empty-states) gives the messages
+  load, and when a tab or a search has no row. Its
+  [Empty states](command-palette-states.md#empty-states) give the messages
   of an empty tab or a search without a match.
 
 ## Access

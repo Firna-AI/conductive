@@ -77,8 +77,11 @@ says.
 - The workspace keeps such a message, and gives it to the agent when the
   sandbox is ready. The agent of each session gets these messages in the
   order that the workspace accepted them (decision 130).
-- A message that waits for the sandbox shows that it waits. A queue in the
-  browser was rejected, because a closed tab would lose the message.
+- A message that waits for the sandbox shows no label of its own. A label
+  under each such message was rejected, because the start steps, or the
+  bar of a failed first start, already show that the sandbox is not ready.
+- A queue in the browser was rejected, because a closed tab would lose the
+  message.
 - Reason: a failed first start keeps its workspace and its queued messages,
   as [Create a workspace](create-a-workspace.md#a-failed-first-start)
   says. So members can add work at once, and an accepted message survives

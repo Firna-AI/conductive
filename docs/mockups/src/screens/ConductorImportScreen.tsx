@@ -6,10 +6,8 @@ import { AppFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
 import { MacScreen } from '../components/mac/MacScreen'
-import {
-  sectionsWithImport,
-  workspaceSections,
-} from '../components/workspaces/sections'
+import { sectionsWithImport } from '../components/workspaces/importSections'
+import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { ActionButton } from '../components/common/actions'
 import { LinkedControl } from '../components/common/LinkedControl'

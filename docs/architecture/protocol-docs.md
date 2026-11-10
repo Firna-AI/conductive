@@ -20,6 +20,8 @@ them, and this page lists each protocol doc and what it covers.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
+    - [Port previews](../protocol/port-previews.md): detected servers, manual
+      opening, preview tabs, and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, the sessions from Conductor, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
@@ -27,8 +29,10 @@ them, and this page lists each protocol doc and what it covers.
     composer, the chips of files and folders, and the removal of each chip
     of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, the work of an imported
-    workspace, and the repair of lost workspace updates.
+    its events and their limits, its turns, its port reports, the work of an
+    imported workspace, and the repair of lost workspace updates.
+    - [Listening ports](../protocol/listening-ports.md): the scanner's
+      eligibility, labels, limits, and full reports.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, the isolation of sandboxes and previews, and the
   uploads and the storage of an import.
@@ -43,6 +47,9 @@ them, and this page lists each protocol doc and what it covers.
   sandbox.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
+- [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
+  extra hours, the seller and the tax, the pricing page, and the planned
+  billing changes. Use is free until billing starts.
 - [Mac app](../protocol/desktop-app.md): the shell for macOS, its sign-in, and
   Mac commands.
   - [Mac packages and updates](../protocol/desktop-packages-and-updates.md)
@@ -75,7 +82,8 @@ them, and this page lists each protocol doc and what it covers.
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
   messages in the chat, with their tables.
-- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope.
+- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope,
+  and the author of each commit in a sandbox.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, the sender line of each message, and the base
   prompt of Claude agents.
@@ -86,6 +94,6 @@ them, and this page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md): the
-  public page for people who move from Conductor Cloud, with the status of
-  each Conductor Cloud feature.
+- [Conductor comparison](../protocol/conductor-comparison.md): the public
+  page for people who move from Conductor, with the status of each
+  Conductor feature.

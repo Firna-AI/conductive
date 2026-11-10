@@ -2,8 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
-runner, its events and their limits, its turns, the work of an imported
-workspace, and the repair of lost workspace updates. It belongs to
+runner, its events and their limits, its turns, its report of the
+listening ports, the work of an imported workspace, and the repair of
+lost workspace updates. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -141,6 +142,11 @@ the [model gateway](model-gateway.md), as that doc says.
   [Files and changes](workspace-tools.md#files-and-changes) says.
   File results are not part of the chat history.
 
+## Listening ports
+
+The [listening-port requirements](listening-ports.md) give the scanner,
+its labels, its limits, and its full reports.
+
 ## The work of an imported workspace
 
 - At the [activation](imported-workspaces.md#the-activation) of an
@@ -163,9 +169,9 @@ the [model gateway](model-gateway.md), as that doc says.
 
 ## Lost workspace updates
 
-- The file tree, the changes list, the start steps, and the workspace name
-  belong to no session. A later full report of the same kind replaces each
-  of them. But a report of the workspace name sets that name only while
+- The file tree, the changes list, the start steps, the workspace name,
+  and the list of listening ports belong to no session. A later full
+  report of the same kind replaces each of them. But a report of the workspace name sets that name only while
   the workspace has no name, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
 - When the workspace refuses an update of one of these kinds, the update is
@@ -177,8 +183,8 @@ the [model gateway](model-gateway.md), as that doc says.
 - Reason: only the latest full report matters. A notice for each lost update
   was rejected.
 - The request is a `report.refresh` command with a `commandId` and a `kind`.
-  The kind is `files.snapshot`, `changes.updated`, `start.updated`, or
-  `workspace.title`.
+  The kind is `files.snapshot`, `changes.updated`, `start.updated`,
+  `workspace.title`, or `ports.updated`.
 - The workspace asks for a full file tree after a refused tree delta. It asks
   for no report after a refused event of any other type.
 - Each kind has at most one open request. After a further refusal of that

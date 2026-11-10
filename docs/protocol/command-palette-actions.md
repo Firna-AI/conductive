@@ -30,7 +30,8 @@ number names a dated record, as
      a Go to row for each tab of the right column, and Archive workspace.
      The Go to rows lead to All files, Changes, Checks, Terminal, and
      Preview. Desktop has no Go to row while the app hides it, as
-     [Desktop](workspace-tools.md#desktop) says.
+     [Desktop](workspace-tools.md#desktop) says. An archived workspace
+     offers only Session history and Restore workspace.
   2. The actions of the org: New workspace and New section. In the Mac
      app, Import from Conductor follows them, as
      [Entry points](desktop-import.md#entry-points) says.
@@ -43,6 +44,8 @@ number names a dated record, as
   of the open workspace, the name of the org, "Orgs", and "Window".
 - Archive workspace shows only to the workspace owner and the admins, as
   [Members and roles](orgs-and-members.md#members-and-roles) says.
+- Restore workspace shows to every member until Restore of the archived
+  workspace ends, as [Restore](workspace-life.md#restore) says.
 - In a suspended org, the palette offers no action that changes the org.
   [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
   states what they can still do.

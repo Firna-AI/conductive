@@ -12,8 +12,10 @@ Each input names the routes that read it. A route that does not read an
 input works without it. Keep secrets out of the repository and out of
 examples.
 
-[The attachment bucket](deployment/attachment-bucket.md) and
-[Models](deployment/models.md) give two groups of these inputs in full.
+[The attachment bucket](deployment/attachment-bucket.md),
+[Models](deployment/models.md), and
+[The runner archive](deployment/runner-archive.md) give three groups of these
+inputs in full.
 
 ## How to set the inputs
 
@@ -34,6 +36,20 @@ examples.
   Worker and of its Durable Objects. It removes the query string of each
   request URL from the logs, because a query string can hold a sign-in
   code, a preview credential, or the name of an attached file.
+- `wrangler.jsonc` also turns on Issues, the error tracking of Workers,
+  which is in open beta. Issues groups each uncaught exception, each
+  `5xx` reply, and each error log line of the Worker into issues. The
+  Worker page of the Cloudflare dashboard lists them under Issues.
+  - Each deploy sets Issues from `wrangler.jsonc`. A switch in the
+    dashboard alone ends at the next deploy.
+  - Cloudflare keeps the details of each occurrence for 7 days.
+  - The preview proxy passes each `5xx` reply of a preview through, so
+    the failures of the programs in the sandboxes become issues too.
+  - Issues sends no alert by itself. An automation in the dashboard sends
+    an issue to a chat, an incident tool, a webhook, or a coding agent.
+  - Issues shows no cause for an unexpected error that the Worker
+    catches. The reply is then `500 internal_error`, and the Worker logs
+    no error line.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
@@ -51,6 +67,7 @@ examples.
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
 | `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion. The import from Conductor uses it too, as [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says. | The bucket `conductive-chat-attachments`, as [The attachment bucket](deployment/attachment-bucket.md#the-attachment-bucket) says. |
 | `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](deployment/models.md#the-title-model) says. |
+| `CF_VERSION_METADATA` | Version metadata | The software image route of the deploy run | The ID, the tag, and the creation time of the running Worker version. `wrangler.jsonc` sets it. Without it, the route answers 404, as [The software image](deployment/runner-archive.md#the-software-image) says. |
 
 ## Public variables
 
@@ -68,6 +85,7 @@ examples.
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
+| `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](deployment/runner-archive.md#the-software-image) says. It is not a secret. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
 | `CHAT_ATTACHMENTS_S3_BUCKET_URL` | The upload links of an import from Conductor | The S3 API address of the bucket of `CHAT_ATTACHMENTS`, in path style: `https://<account ID>.r2.cloudflarestorage.com/conductive-chat-attachments`. It is not a secret. [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says more. |
 | `OPERATOR_GITHUB_IDS` | The operator section and the suspension of users and orgs | Optional. The numeric GitHub user IDs of the operators, separated by commas. It is not a secret. Without it, each operator request gets `403 operator_required`, as the [operator area](../worker/operator/README.md#overview) says. |
@@ -77,7 +95,7 @@ examples.
   credential routes refuse every request without it, and a build cannot
   copy a repository.
 - The two runner archive variables are public metadata of the archive. They
-  hold no secret. [The runner archive](#the-runner-archive) below says how
+  hold no secret. [The runner archive](deployment/runner-archive.md#the-runner-archive) says how
   to supply them.
 
 ## Secrets
@@ -140,74 +158,19 @@ above.
 
 ## The runner archive
 
-Each new image build installs the runner archive into the org image. A
-refresh keeps the installed runner and updates the repositories.
-Publish the runner archive from the same commit as the Worker before any image build.
-[The runner archive](../image/README.md#the-runner-archive) says how to make
-and publish it.
-
-Each deploy from `main` publishes the archive of its commit when the
-archive is new. It sets both variables to that archive, as
-[The archive in each deploy](#the-archive-in-each-deploy) says. To supply
-an archive by hand:
-
-1. Package the archive, as
-   [Developer scripts](../image/developer-scripts.md#package-the-archive)
-   says.
-2. Publish the exact archive at its public HTTPS URL. For R2, upload it
-   through the S3 API, because `wrangler r2 object put` refuses files over
-   300 MiB.
-3. Set `CONDUCTIVE_RUNNER_ARCHIVE_URL` to that URL. It can hold no user
-   name, password, query, or fragment.
-4. Set `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` to the digest of the same file.
-   The Worker accepts upper or lower case.
-
-More facts:
-
-- `runnerSoftware` in `worker/configuration.ts` reads and checks both
-  values, as the `software` option of a build or a refresh. For a missing
-  or invalid value, it gives `503 runner_software_unavailable`.
-- Only a build or a refresh needs the two values. A workspace read, a
-  history read, and the start of the app need no archive setting.
-- Image builds and refreshes run through the Worker routes that the
-  [Worker README](../worker/README.md#routes) lists.
-- The archive holds no Node. Each build downloads one pinned Node release
-  from `nodejs.org` into the image, as
-  [The private Node runtime](../image/runtime.md) says. That download needs
-  no deployment input.
+[The runner archive](deployment/runner-archive.md#the-runner-archive)
+gives the archive that each image build installs, and how to supply it.
 
 ### The archive in each deploy
 
-The archives live in the R2 bucket `conductive-runner`. R2 is the file
-storage of Cloudflare. The bucket serves each archive under
-`https://runner.conductive.build/`. Each deploy from `main` takes these
-steps for the archive:
+[The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
+gives how each deploy from `main` publishes its archive.
 
-1. It packages the archive with
-   `--base-url https://runner.conductive.build/`. The archive URL is then
-   `https://runner.conductive.build/runner-<sha256>.tar.gz`, where
-   `<sha256>` is the SHA-256 digest of the archive.
-2. It asks R2's S3 API whether the bucket holds an archive of that name. It
-   uploads the archive only when the name is new.
-3. It checks the size of the file at the public URL, also when the
-   archive already existed. A missing file or a wrong size stops the run
-   before the migrations.
-4. It deploys the Worker with both variables set to that archive.
+### The software image
 
-- The same source and packages give the same digest. So an unchanged
-  runner makes no new upload.
-- Old archives stay in the bucket.
-- The upload uses R2's S3 API with the AWS CLI, because
-  `wrangler r2 object put` refuses files over 300 MiB. The archive is about
-  320 MiB.
-- The S3 key pair comes from the deploy token, as
-  [Cloudflare documents](https://developers.cloudflare.com/r2/api/tokens/).
-  The key ID is the ID of the token. The secret key is the SHA-256 digest
-  of the token value.
-- The run masks that secret key in its log.
-- A new archive reaches the next build of each org image. A refresh keeps
-  the installed runner. So an existing image keeps its runner until its
-  next build.
+[The software image](deployment/runner-archive.md#the-software-image)
+gives how each deploy from `main` asks for the software image of its
+version.
 
 ## Frame sources
 

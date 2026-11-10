@@ -1,18 +1,12 @@
-import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, CircleAlert, CirclePause, Power } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import {
-  orgSuspendedReason,
-  refusedIcon,
-} from '../../../docs/mockups/src/components/orgs/suspension'
+import { orgSuspendedReason } from '../../../docs/mockups/src/components/orgs/suspension'
 import styles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
 import type {
   SandboxNoticeState,
   SandboxPanelState,
-  SandboxProblem,
 } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
 import { useServices } from '../../app/services'
@@ -20,6 +14,7 @@ import { formatDay } from '../../app/time'
 import type { Workspace } from '../../shared/workspaces'
 import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
+import { barBody, keptBody, problemOf } from './notice-copy'
 
 /**
  * The notice of a start in a suspended org. The org's metadata and the
@@ -54,107 +49,15 @@ export function refusedStart(
   return { problem: 'refused', reason: error.message }
 }
 
-interface Problem {
-  icon: LucideIcon
-  title: string
-  /** The text of the bar under the chat. */
-  body: string
-  /** The title of the files and tools panels, when it is not the title. */
-  panelTitle?: string
-  /** The text of the files and tools panels. */
-  panelBody: string
-  /** The one way forward, when the sandbox can come back. */
-  action?: string
-  tone: 'neutral' | 'danger'
-}
-
-const saved = 'Your files and chat are saved.'
-
-/**
- * A refused start can last until the disk of the sandbox is gone, so its
- * notice promises only the chat history.
- */
-const history = 'Your chat history is available.'
-
-/**
- * A failed first start leaves a new workspace with no files yet, so its
- * notice promises only the chat, with its queued messages.
- */
-const chatSaved = 'Your chat is saved.'
-
-/** What stays of the workspace: a failed first start keeps only its chat. */
-function keptBody(notice: SandboxNoticeState, body: string): string {
-  return notice.problem === 'error' && notice.firstStart ? chatSaved : body
-}
-
-function problemOf(problem: SandboxProblem, archivedOn: string): Problem {
-  switch (problem) {
-    case 'stopped':
-      return {
-        icon: CirclePause,
-        title: 'Sandbox stopped',
-        body: saved,
-        panelBody: saved,
-        action: 'Resume',
-        tone: 'neutral',
-      }
-    case 'error':
-      return {
-        icon: CircleAlert,
-        title: "The sandbox couldn't start",
-        body: saved,
-        panelBody: saved,
-        action: 'Try again',
-        tone: 'danger',
-      }
-    case 'refused':
-      return {
-        icon: refusedIcon,
-        title: "The sandbox can't start",
-        body: history,
-        panelBody: history,
-        tone: 'neutral',
-      }
-    case 'archived':
-      return {
-        icon: Archive,
-        title: `Archived on ${archivedOn}`,
-        body: 'Its cloud computer is deleted, and the chat is read-only.',
-        panelTitle: 'Archived',
-        panelBody: 'The files and the tools went with the cloud computer.',
-        tone: 'neutral',
-      }
-    case 'inactive':
-      return {
-        icon: Power,
-        title: 'Activate this workspace',
-        body: 'A cloud computer starts with your work from Conductor.',
-        panelTitle: 'Not active',
-        panelBody: 'Activate the workspace to open its files and tools.',
-        action: 'Activate',
-        tone: 'neutral',
-      }
-  }
-}
-
-function useProblem(problem: SandboxProblem, workspace: Workspace): Problem {
+function useProblem(notice: SandboxNoticeState, workspace: Workspace) {
   const { timeZone } = useServices()
   const archivedAt = workspace.archivedAt ?? workspace.updatedAt
-  return problemOf(problem, formatDay(archivedAt, timeZone))
-}
-
-/** The text of the bar: the refusal, or the saved message before the body. */
-function barBody(notice: SandboxNoticeState, body: string): string {
-  switch (notice.problem) {
-    case 'refused':
-      return notice.reason
-    case 'error':
-      return notice.message ? `${notice.message} ${body}` : body
-    case 'stopped':
-    case 'archived':
-    case 'inactive':
-      return body
-  }
+  const { restoreUntil } = workspace
+  return problemOf(notice, {
+    archivedOn: formatDay(archivedAt, timeZone),
+    restoreUntil:
+      restoreUntil === null ? '' : formatDay(restoreUntil, timeZone),
+  })
 }
 
 /**
@@ -162,7 +65,10 @@ function barBody(notice: SandboxNoticeState, body: string): string {
  * New workspace shows it too, before a workspace exists.
  */
 export function RefusedBar(props: { reason: string }) {
-  const problem = problemOf('refused', '')
+  const problem = problemOf(
+    { problem: 'refused', reason: props.reason },
+    { archivedOn: '', restoreUntil: '' },
+  )
   return (
     <Notice
       body={props.reason}
@@ -173,29 +79,42 @@ export function RefusedBar(props: { reason: string }) {
   )
 }
 
+/** The one way forward of a bar: Resume, Try again, or Restore. */
+export interface BarAction {
+  run: () => void
+  pending: boolean
+}
+
 /**
  * The bar under the chat while the sandbox is down. It takes the place of
  * the composer, except after a failed first start, whose composer stays
  * under it. A refused start shows the words of the refusal, and no action,
  * because the start stays refused until its cause changes. A start that
  * failed shows the message that the workspace saved for it, such as its
- * time limit, before the body. A workspace from Conductor asks to activate
- * it before its first activation, and its Activate runs `resume`.
+ * time limit, before the body. An archived workspace offers Restore until
+ * its last day, which the bar gives. A workspace from Conductor asks to
+ * activate it before its first activation, and its Activate runs `resume`.
  */
 export function SandboxBar(props: {
   notice: SandboxNoticeState
   workspace: Workspace
   resume: Action<[]>
+  /** Restore of an archived workspace, while it offers one. */
+  restore: BarAction | null
 }) {
   const { notice } = props
-  const problem = useProblem(notice.problem, props.workspace)
+  const problem = useProblem(notice, props.workspace)
+  const forward: BarAction | null =
+    notice.problem === 'archived'
+      ? props.restore
+      : { run: () => props.resume.run(), pending: props.resume.pending }
   return (
     <Notice
       action={
-        problem.action ? (
+        problem.action && forward ? (
           <ActionButton
-            busy={props.resume.pending}
-            onPress={() => props.resume.run()}
+            busy={forward.pending}
+            onPress={forward.run}
             tone="primary"
           >
             {problem.action}
@@ -228,7 +147,7 @@ export function SandboxPanel(props: {
   const theme = useSharedUiTheme()
   const { state, resume, phone } = props
   const problem = useProblem(
-    state.problem === 'starting' ? 'stopped' : state.problem,
+    state.problem === 'starting' ? { problem: 'stopped' } : state,
     props.workspace,
   )
   if (state.problem === 'starting') {
@@ -242,7 +161,7 @@ export function SandboxPanel(props: {
   return (
     <EmptyState
       action={
-        phone && problem.action && resume ? (
+        phone && problem.action && resume && state.problem !== 'archived' ? (
           <ActionButton
             busy={resume.pending}
             onPress={() => resume.run()}

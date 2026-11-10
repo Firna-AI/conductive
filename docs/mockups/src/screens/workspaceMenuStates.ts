@@ -6,14 +6,16 @@ import {
   memberTarget,
   menuTarget,
   renameDraft,
+  stoppedTarget,
 } from '../fixtures/workspaceMenu'
 
 /**
  * The states of the menu of a workspace row, as values of the `menu` prop
  * of the list: the menu at the pointer of a right click, its section and
  * owner choices, the field of Rename and its failed save, Archive from the
- * list, the menus of a member and of an admin on an archived row, and the
- * hover of a row without a menu.
+ * list, also of a stopped workspace, and Restore from its toast, the menus
+ * of a member and of an admin on an archived row, and the hover of a row
+ * without a menu.
  */
 export const workspaceMenuStates = [
   'workspace',
@@ -22,8 +24,8 @@ export const workspaceMenuStates = [
   'workspace-rename',
   'workspace-rename-failed',
   'workspace-archive',
-  'workspace-check-failed',
-  'workspace-archived',
+  'workspace-archive-stopped',
+  'workspace-restored',
   'workspace-member',
   'workspace-own',
   'workspace-archived-row',
@@ -41,14 +43,17 @@ type Focus = { workspace: string; drawing: RowDrawing }
 
 /**
  * One state: Priya, a member who is not an admin, or else Cal, an admin.
- * The row that the view draws, the Archived group, and what lies over the
- * list: a question of Archive, or the toast of a failed rename.
+ * The row that the view draws, and the Archived group: open, just after
+ * the Archive of `target`, or after its Restore. `target` is Apple Pay
+ * button unless the state names another workspace. And what lies over the
+ * list: the toast after Archive, or the toast of a failed rename.
  */
 export type Scenario = {
   member?: boolean
   focus?: Focus
-  archived?: 'open' | 'after-archive'
-  over?: 'archive' | 'check-failed' | 'rename-failed'
+  archived?: 'open' | 'after-archive' | 'restored'
+  target?: string
+  over?: 'archived' | 'rename-failed'
 }
 
 function atPointer(workspace: string, submenu?: Submenu): Focus {
@@ -79,9 +84,13 @@ export const scenarios: Readonly<Record<WorkspaceMenuState, Scenario>> = {
     },
     over: 'rename-failed',
   },
-  'workspace-archive': { over: 'archive' },
-  'workspace-check-failed': { over: 'check-failed' },
-  'workspace-archived': { archived: 'after-archive' },
+  'workspace-archive': { archived: 'after-archive', over: 'archived' },
+  'workspace-archive-stopped': {
+    archived: 'after-archive',
+    target: stoppedTarget,
+    over: 'archived',
+  },
+  'workspace-restored': { archived: 'restored' },
   'workspace-member': { member: true, focus: atPointer(menuTarget) },
   'workspace-own': { member: true, focus: atPointer(memberTarget) },
   'workspace-archived-row': {

@@ -22,7 +22,8 @@ gives the create, read, resume, and activity routes of a workspace to
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
   starts a stopped sandbox briefly, so that Boat keeps its disk.
-- Repair overdue disk alarms and image refreshes from the 15-minute Cron Trigger.
+- Stop and retain archived sandboxes, and delete them after the Restore window.
+- Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
@@ -46,16 +47,15 @@ browser and of previews. Terminal frames report no activity.
 ### Machine route
 
 [Machine route](routes.md#machine-route) gives `handleGitCredential`, the
-git credential route on the machine hostname, and how `createApp` routes
-it.
+git credential route on the machine hostname, the git credential sender,
+and how `createApp` routes it.
 
 ### Workspace Durable Object
 
 [Workspace Durable Object](workspace-object.md) describes the Durable
 Object of each workspace and of each image coordinator. It gives their
 names, the lifecycle steps, the alarm, the start logs, the event socket,
-and the publication of the events. It also gives the creates and resumes
-and the git credential sender.
+and the publication of the events. It also gives the creates and resumes.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
@@ -63,6 +63,8 @@ turn repair from the committed chat and the one writer of the shown state.
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
+The [software image area](../software-image/README.md) builds the shared
+image that a build of an org without an org image starts from.
 
 ## Settings
 
@@ -91,6 +93,10 @@ Definite first create refusals stay as rejected allocation records.
 A refused replay keeps an earlier uncertain request live.
 Each failed computer has its own cleanup flag.
 The native cleanup pointer can therefore change without losing an older failed computer.
+Archive and Restore keep the ledger entry of a retained computer live.
+At the end of Restore, the delete goes through the ledger-aware cleanup of [`cleanup.ts`](cleanup.ts).
+`detachArchiveDisk` then marks the exact account and ID deleted in the same D1 batch that detaches the disk.
+A confirmed missing archived disk uses that batch too.
 
 ### Key Code
 
@@ -117,7 +123,8 @@ including its empty-repository initialization.
 ### Related Docs
 
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):
-  the org image, the start steps, and stop and resume.
+  the org image. [Life of a workspace](../../docs/protocol/workspace-life.md)
+  gives the start steps, stop and resume, Archive, and Restore.
 - [Access and security](../../docs/protocol/access-and-security.md): what a
   sandbox holds, the workspace token, and GitHub tokens.
 - [Architecture](../../docs/architecture/components.md): the Worker, the workspace

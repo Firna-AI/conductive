@@ -15,9 +15,10 @@ The sidebar shows the org name with its Settings link, New workspace, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. Archive covers the time on hover only, without moving the
-row content. Selection and keyboard focus alone keep the time visible.
-A right click on a row opens the menu of the workspace. The centre column
-has a slim header that names the
+row content, and Restore does so in the Archived group. Selection and
+keyboard focus alone keep the time visible. A right click on a row opens
+the menu of the workspace. The centre column has a slim header that names
+the
 workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
@@ -58,11 +59,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   +, the heading of the empty chat that + opens, and each model of the
   other agent say it.
 - While a sandbox starts, also for the first time, Send queues each
-  message in the workspace. Each queued message shows "Sends when the
-  sandbox is ready", as `app/new-workspace/waiting` shows. After a failed
-  first start, the bar of the error sits above the composer, so members
-  can still queue messages, as `app/new-workspace/error` shows. Every
-  other bar of the sandbox takes the place of the composer.
+  message in the workspace, as `app/new-workspace/waiting` shows. A queued
+  message has no label of its own, because the start steps under the chat
+  already show the wait. After a failed first start, the bar of the error
+  sits above the composer, so members can still queue messages, as
+  `app/new-workspace/error` shows. Every other bar of the sandbox takes
+  the place of the composer.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button or its tab, at the pointer of
   a right click, or in a `Sheet` on a phone. Firna's own menu rows are
@@ -86,15 +88,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Shift+F10 and the Menu key on a focused row open it below the row. No
   row has a button for the menu. The row under the pointer keeps its
   hover, with Archive over the time when the person can archive the
-  workspace. A phone layout opens the menu and its choices in a sheet. A
+  workspace, and with Restore over the time of an archived row until its
+  last day of Restore. The menu has no Restore. A phone layout opens the
+  menu and its choices in a sheet. A
   long press on a phone still lifts the row for a drag, and opens no menu.
   Rename puts a field in place of the name and the time, with the name
   selected. `RowMenu.module.css` styles the field and the menu at the
   pointer.
 - `FailureToast` in `src/components/common/` draws the toast that names a
-  change of the list that failed, with the message of the server, at the
-  bottom right of a desktop and at the bottom of a phone, as
-  `app/workspace-menu/rename/failed` shows.
+  change of the list that failed, with the message of the server, in the
+  `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -141,6 +144,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+- `ToastLayer` in `src/components/common/` draws a toast of Firna open
+  where the app shows its toasts: at the bottom right of a desktop, and
+  across the bottom of a phone. An action that a user can undo, such as
+  Archive, asks no question and offers the undo in its toast.
+  `ArchivedToast` in `src/components/workspace/` gives the toast after
+  Archive, over the workspace and over the list.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
@@ -163,74 +172,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   under the control.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
-- Each workspace has a number in its org, and `workspaceLabel` in
-  `src/components/workspaces/label.ts` shows it as `W-395`. The number
-  shows in the header, in chips, and in a row of the command palette
-  whose search matches it. The rows of the list keep their layout.
-  - `CopyLinkButton` in `src/components/workspace/` is the label in the
-    header, after the name. The label shows alone, without an icon, as a
-    plain Firna button: a pointer over it shows the hover fill, and the
-    keyboard focus shows the focus ring. A press copies the link of the
-    workspace, and a note under it says "Link copied" for a moment, over
-    the content, so nothing moves. When the copy fails, the note says
-    "The link didn't copy. Try again." in the danger colour. The note is
-    a status, so screen readers hear it. The name of the button is "Copy
-    link to W-395".
-  - On desktop, the repository takes only the room that the other parts
-    leave. The name is cut short only when the repository has no room left.
-  - On a phone the label leads the line under the name, before the
-    repository, so the name keeps its room. The button
-    keeps the height of that line, and its touch area of 44 px reaches up
-    over the name and down to the bottom edge of the header.
-- `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
-  the org as a chip in a line of text: a small rounded pill with the
-  `StatusGlyph` of the workspace, its label in a muted colour, and its
-  current name. Its height is the height of the line less 2 px, so a line
-  with a chip keeps its height. A chip is never wider than its line or
-  than 22 times the size of its font, and a long name is cut short. It
-  takes no fixtures, so the app can use it too.
-  - `MessageText` shows the chips in sent messages and in answers, as
-    links to the screens of the workspaces. A Markdown link to a
-    workspace shows as the chip alone, and a link in code stays code. A
-    link to another org, or to a workspace that the list does not hold,
-    stays plain text, and a long link breaks to fit the line.
-  - The chat finds each workspace in the list of the org, with the
-    archived ones and with the states of the list, through
-    `ChatWorkspaces`. A phone finds the same workspaces with no list on
-    the screen. An archived workspace keeps its chip, with the archived
-    mark.
-  - A pasted link becomes a chip in the message box at once: in the chat,
-    and in New workspace as a page or a dialog. `MessageField` gives each
-    box its field. A draft with a workspace link or a file mention shows
-    in `ChipTextField`: plain text with each chip as one unit, with the
-    sizes and the line limits of the plain text field. The draft keeps the
-    plain link.
-  - `InlineChip.module.css` beside it holds the pill of every chip in a
-    line of text, so a workspace chip and a file chip have the same size.
-  - In a message box each chip starts with the cell of its icon, from
-    `ChipIconCell` in `ChipRemove.tsx`. While a pointer is over the cell, a
-    × takes the place of the icon, and a press removes the chip. Where no
-    pointer hovers, as on a phone, the icon stays, and `ChipEndRemove`
-    puts a × at the end of the chip. Attached files follow the same rule,
-    and on a phone they keep their × button of touch size.
-- `FileChip` in `src/components/chat/` draws a file or a folder of the
-  workspace as a chip of the same size: the icon that All files gives it,
-  and its name. Its title is the whole path. `EntryIcon` in
-  `src/components/files/` gives the icon to All files, the chips, and the
-  list. It is the one icon map of the mockups and the app: a folder, a
-  Markdown file, a code file, or another file. A file is code when the
-  code view of the app gives it syntax colours, as `fileKind` in
-  `src/files/code/file-kind.ts` of the app says, so one list of languages
-  sets both. The user chose this on 10 November 2026. A sent message shows
-  each file chip as a link to the tab of the
-  file, and an answer shows none. It takes no fixtures, so the app can use
-  it too.
-- `FileMentionList` in `src/components/chat/` draws the list of `@` above
-  the message box: the icon, the name, and the folder of each entry that
-  matches the query, with the first row highlighted. One line takes the
-  place of the rows while the tree loads, when no tree is available, and
-  when nothing matches. `fileMentions.ts` beside it reads the mentions of
-  a text and orders the rows.
+- [Workspace links and file mentions](design-workspace-links.md) gives the
+  number of each workspace and its copy button, the chips of workspace
+  links and of files, and the list of `@`.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
@@ -245,10 +189,14 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, refused, and inactive. A refused
   start shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason. Inactive is a workspace from
-  Conductor before its first activation, with the words of the Activate
-  question and the Not active panels. `sandboxNoticeState.ts` beside it
-  owns the types of the bar and the panels, which the app imports too.
+  action. The notice takes any refusal reason. An archived workspace
+  offers Restore until its last day, and the bar gives that day. After
+  it, the bar gives the day when Restore ended while a failed delete of
+  the cloud computer tries again, and it says that the cloud computer is
+  deleted only after the delete. Inactive is a workspace from Conductor
+  before its first activation, with the words of the Activate question and
+  the Not active panels. `sandboxNoticeState.ts` beside it owns the types
+  of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.

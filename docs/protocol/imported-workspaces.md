@@ -121,8 +121,7 @@ says.
 
 ## Archive before the activation
 
-- A workspace that has no successful activation has no cloud computer to
-  check. So its Archive question asks with no check.
+- Before a successful activation, its Archive question asks with no check.
 - The question says that the workspace can no longer be activated, and
   that its old documents stay readable.
 - The question says neither that the work is pushed, nor that a cloud
@@ -135,4 +134,4 @@ says.
   storage settle this case. They keep the old documents readable, as they
   keep the chat of each archived workspace.
 - After a successful activation, Archive follows the rules of
-  [Archive](workspace-life.md#archive), with its check.
+  [Archive](workspace-life.md#archive).

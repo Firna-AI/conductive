@@ -1,0 +1,31 @@
+/*
+ * One column centred on the page, at the width of the site header, so the
+ * four plans fit side by side. How hours count and the last call to action
+ * stand apart from the plans.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 96px;
+  width: 100%;
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 72px 32px 112px;
+  box-sizing: border-box;
+}
+
+/* The top of the page and the plans under it. */
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.mobile {
+  gap: 64px;
+  padding: 40px 20px 72px;
+}
+
+.mobile .top {
+  gap: 32px;
+}

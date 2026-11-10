@@ -83,7 +83,7 @@ decision number names a decision of the change that adds the
   value still shows. File content, diff content, the old documents of an
   import from Conductor, and the terminal hide no value.
   The mark does not keep a value from the agent or from a member with a
-  terminal, because each sandbox gets every env var.
+  terminal, because each sandbox gets the env vars of its org.
 - Risk: the runner does not hide secret values. So its saved events on the
   disk of the sandbox can hold them, as the agent sessions there do.
 

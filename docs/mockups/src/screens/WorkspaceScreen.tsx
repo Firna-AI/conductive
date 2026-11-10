@@ -1,14 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { MessageSquarePlus } from 'lucide-react'
-import { ChatPane } from '../components/chat/ChatPane'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
-import { EmptyState } from '../components/common/EmptyState'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { CommandPalette } from '../components/palette/CommandPalette'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
   PullRequestBar,
@@ -19,37 +15,32 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { mayArchiveWorkspace } from '../components/workspaces/permissions'
-import { conversations } from '../fixtures/conversations'
-import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
-import { orgs, suspendedOrg } from '../fixtures/orgs'
+import { suspendedOrg } from '../fixtures/orgs'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
 import { paths } from '../paths'
-import { composerFor } from './composerFor'
-import { composerNotice } from './composerNotice'
 import { importedScreensOf } from './importedScreens'
-import { importedItems } from './importedSessions'
-import { importedChat, isImported } from './importedWorkspace'
+import { isImported } from './importedWorkspace'
 import { placeLostUpdate } from './lostUpdates'
 import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
+import { WorkspaceChat } from './WorkspaceChat'
 import {
   FilesContent,
+  filePagePlaceholder,
   openFile,
-  openRowLinks,
   PhoneFilePage,
-  startingLogFor,
   ToolContent,
-  workspaceSidebar,
 } from './workspaceParts'
-import { workspaceOverlay } from './workspaceOverlays'
+import { workspaceOverlay, workspaceToast } from './workspaceOverlays'
 import {
   activityOf,
+  archiveRestore,
   drawnState,
   isArchived,
-  sandboxNotice,
 } from './workspaceSandbox'
+import { openRowLinks, workspaceSidebar } from './workspaceSidebar'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
 import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
@@ -63,12 +54,13 @@ const widenedRight = 560
  * request, the file lists, and the tools. Desktop shows them side by side; a
  * phone shows one at a time, with tabs to switch. In a suspended org the
  * chat history stays, and nothing in the workspace can change: no message,
- * no new session, no rename, no owner change, and no Archive. `overlay`
- * lies over the workspace in place of the overlay of its state, such as a
- * dialog that another screen opens over it. The chat and the overlay find
- * the workspaces of their chips in the list of the screen. A workspace from
- * Conductor lists its old sessions in place of an empty chat, and asks to
- * activate it while it has no cloud computer.
+ * no new session, no rename, no owner change, no Archive, and no Restore.
+ * `overlay` lies over the workspace in place of the overlay of its state,
+ * such as a dialog that another screen opens over it. The chat and the
+ * overlay find the workspaces of their chips in the list of the screen.
+ * The toast of the state lies over everything. A workspace from Conductor
+ * lists its old sessions in place of an empty chat, and asks to activate
+ * it while it has no cloud computer.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
@@ -93,53 +85,21 @@ export function WorkspaceScreen(props: {
   // Decision 42: the workspace's owner and the org's admins archive it.
   const archivable =
     !readOnly && mayArchiveWorkspace(membership, workspace.owner)
-  const problem = sandboxNotice(state)
-  const fresh = state.tab === 'new-session'
+  // Every member restores it while the app keeps its cloud computer.
+  const restorable = archiveRestore(state) === 'available'
   // A workspace from Conductor has no session of its own until a message,
   // and its controls, also Back, the owner, and the org, stay in its own
   // screens.
-  const imported = isImported(state) ? importedChat(state) : undefined
   const links = isImported(state) ? importedScreensOf(state) : undefined
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
-    <ChatWorkspaces rows={rows}>
-      <ChatPane
-        composer={composerFor(state, workspace)}
-        empty={
-          imported?.empty ?? (
-            <EmptyState
-              body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-              icon={MessageSquarePlus}
-              title="New session"
-            />
-          )
-        }
-        fold={state.fold}
-        items={
-          imported
-            ? importedItems(state)
-            : fresh
-              ? []
-              : chatItemsFor(conversations[state.conversation], state.paths)
-        }
-        notice={
-          imported?.notice ??
-          // An archived workspace keeps its archived bar, so the notice of a
-          // suspended org shows above it.
-          (archived && suspended ? (
-            <SuspendedOrgNotice org={orgs[suspendedOrg]} />
-          ) : (
-            composerNotice(state, workspace)
-          ))
-        }
-        problem={problem}
-        replaceComposer={imported?.replaceComposer}
-        starting={startingLogFor(state)}
-        viewer={viewer}
-        viewport={viewport}
-      />
-    </ChatWorkspaces>
+    <WorkspaceChat
+      rows={rows}
+      state={state}
+      viewport={viewport}
+      workspace={workspace}
+    />
   )
   const workspaceHeader = (
     <WorkspaceHeader
@@ -191,6 +151,7 @@ export function WorkspaceScreen(props: {
     files: <FilesContent state={state} viewport={viewport} />,
   })
   const tool = <ToolContent state={state} viewport={viewport} />
+  const toast = workspaceToast(state, workspace, viewport)
   if (viewport === 'mobile') {
     if (state.palette !== 'closed') {
       // A phone opens the palette from the list, so it offers no actions
@@ -234,6 +195,7 @@ export function WorkspaceScreen(props: {
           />
         )}
         {overlay}
+        {toast}
       </MobileFrame>
     )
   }
@@ -244,6 +206,7 @@ export function WorkspaceScreen(props: {
         context={{
           open: { workspace, status },
           archivable,
+          restorable,
           rightColumn: !rightHidden,
         }}
         view={state.palette}
@@ -252,24 +215,43 @@ export function WorkspaceScreen(props: {
     )
   return (
     <AppFrame
-      overlay={palette ?? overlay}
+      overlay={
+        <>
+          {palette ?? overlay}
+          {toast}
+        </>
+      }
       rail={{
         ...acmeRail,
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
         currentTo: links ? links.list : undefined,
       }}
-      sidebar={workspaceSidebar(
-        workspace,
+      sidebar={workspaceSidebar({
+        // The toast of an Archive shows at once, so the row shows that Archive.
+        workspace:
+          state.toast === 'archived'
+            ? { ...workspace, updated: 'now' }
+            : workspace,
         status,
         suspended,
-        membership,
-        createdWorkspaces(state),
-        openRowLinks(state),
-      )}
+        viewer: membership,
+        created: createdWorkspaces(state),
+        restoreOpen: state.archive === 'kept',
+        row: openRowLinks(state),
+      })}
     >
       <WorkspaceBody
-        center={file ? <FilePage view={file} /> : chat}
+        center={
+          file ? (
+            <FilePage
+              placeholder={filePagePlaceholder(state, file)}
+              view={file}
+            />
+          ) : (
+            chat
+          )
+        }
         files={files}
         header={header}
         pullRequest={

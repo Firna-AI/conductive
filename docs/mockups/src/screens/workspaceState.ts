@@ -2,6 +2,7 @@ import type { SchemaProps } from '@mokly/mokly'
 import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
+import { previewStates } from '../components/tools/PortPreview'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
@@ -9,6 +10,8 @@ import { bannerStates } from '../fixtures/pullRequests'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/openableWorkspaces'
 import { composerKeys } from './composerKeys'
+import { overlayKeys } from './overlayKeys'
+import { sandboxKeys } from './sandboxKeys'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -35,6 +38,8 @@ export const workspaceStateSchema = {
     'resize',
     'rightColumn',
     'overlay',
+    'archive',
+    'toast',
     'viewer',
     'lostUpdate',
     'tree',
@@ -54,26 +59,17 @@ export const workspaceStateSchema = {
      */
     name: { enum: ['title', 'untitled'] },
     /**
-     * The cloud computer. An archived workspace has none. `refused` is a
-     * stopped cloud computer whose start the app refuses, such as while the
-     * owner of the workspace is suspended. `inactive` is a workspace from
-     * Conductor before its activation, which has none yet. Its activation
-     * is its first start, and a failed one is its `error`. Such a workspace
-     * archived before its activation is `archived-inactive`: it never had
-     * a cloud computer, so its archive deleted none.
+     * The cloud computer. `archived` is a cloud computer that Archive
+     * stopped, as `archive` says, and the workspace shows none of it.
+     * `refused` is a stopped cloud computer whose start the app refuses,
+     * such as while the owner of the workspace is suspended. `inactive` is
+     * a workspace from Conductor before its activation, which has none yet.
+     * Its activation is its first start, and a failed one is its `error`.
+     * Such a workspace archived before its activation is
+     * `archived-inactive`: it never had a cloud computer, so its archive
+     * kept none.
      */
-    sandbox: {
-      enum: [
-        'ready',
-        'starting',
-        'stopped',
-        'error',
-        'refused',
-        'archived',
-        'inactive',
-        'archived-inactive',
-      ],
-    },
+    sandbox: { enum: sandboxKeys },
     /**
      * The message that the app saved for a start that failed, which the
      * error state shows: a failure, the 20-minute limit of a start, a
@@ -93,7 +89,15 @@ export const workspaceStateSchema = {
     files: { enum: fileLists },
     /** The tool of the tools panel. */
     tool: { enum: toolKeys },
-    ports: { enum: ['open', 'none'] },
+    /**
+     * The Preview tool: a preview in its frame, or "+" beside the tabs of
+     * the open previews. With no preview open, the port form lists the
+     * detected servers, says that the runner reports none, or reads as
+     * before when the app has no report, as for an older image. After a
+     * failed repair of the list (decision 96), it keeps its last list under
+     * a notice.
+     */
+    ports: { enum: previewStates },
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
     /**
@@ -153,21 +157,24 @@ export const workspaceStateSchema = {
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, the
-     * question of Archive, with work that is not pushed or with none, or
-     * the tab menu of the first session.
+     * before a running session closes, the owner of the workspace, the tab
+     * menu of the first session, or the question of Archive of a workspace
+     * from Conductor that was never activated.
      */
-    overlay: {
-      enum: [
-        'none',
-        'history',
-        'close-session',
-        'reassign',
-        'archive-unpushed',
-        'archive-pushed',
-        'tab-menu',
-      ],
-    },
+    overlay: { enum: overlayKeys },
+    /**
+     * The cloud computer of an archived workspace: kept, until the app
+     * deletes it 14 days after the Archive, kept past the last day of
+     * Restore while its delete tries again, or deleted. Until that last day,
+     * every member of an org that is not suspended may restore the
+     * workspace.
+     */
+    archive: { enum: ['kept', 'ended', 'deleted'] },
+    /**
+     * A toast at the bottom of the screen: none, or the toast just after
+     * Archive, which names the workspace and offers Restore.
+     */
+    toast: { enum: ['none', 'archived'] },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -243,6 +250,8 @@ export const readyWorkspace: WorkspaceState = {
   resize: 'none',
   rightColumn: 'shown',
   overlay: 'none',
+  archive: 'kept',
+  toast: 'none',
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
@@ -276,5 +285,5 @@ export const importedWorkspace: WorkspaceState = {
   sandbox: 'inactive',
   banner: 'none',
   files: 'all',
-  ports: 'none',
+  ports: 'no-servers',
 }

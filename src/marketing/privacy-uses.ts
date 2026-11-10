@@ -16,6 +16,15 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         operator sees the age of the account when you wait for app
         access. Your login and display name also tell the agents who sent
         each message.`,
+      text`Commit authors: each commit in a cloud computer names the person
+        whose GitHub token Git uses as author and committer. In a workspace
+        with older cloud computer software, agent commits name the workspace
+        owner. The name is
+        their GitHub display name, or their login when the display name is
+        missing or unusable. ${productName} uses their GitHub user ID and
+        login to make their GitHub no-reply address,
+        <id>+<login>@users.noreply.github.com. The address lets GitHub link
+        the commit to their account without showing their private email.`,
       text`Your GitHub emails: at each sign-in, ${productName} keeps the
         verified email addresses of your GitHub account, and which one is
         primary. An org invitation reaches you through one of them. The
@@ -51,7 +60,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         suspension keeps your cloud computers stopped until an operator
         lifts it.`,
       text`Your session: a cookie of the app keeps you signed in. A
-        second cookie protects the GitHub sign-in while it runs.`,
+        second cookie protects the GitHub sign-in while it runs. A third
+        cookie keeps the screen that you left for GitHub, for up to 1 hour.`,
       text`Your orgs: the orgs, members, roles, invites, sections,
         repositories, workspaces, scripts, and settings that you and your
         team make. They run the service.`,
@@ -72,7 +82,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
       text`Your work: ${productName} keeps your messages and the answers
         of the agents as the chat history of each workspace. It also
         keeps the last file list and the last summary of changes of each
-        workspace. The files that you attach to a message stay in the
+        workspace. With the chat history, it keeps each list of the
+        servers that run in the cloud computer of a workspace: the port,
+        a short program name, and the folder of each server. The files
+        that you attach to a message stay in the
         storage of ${productName} at Cloudflare. When the agent starts
         work on the message, ${productName} copies them to the cloud
         computer of the workspace.`,

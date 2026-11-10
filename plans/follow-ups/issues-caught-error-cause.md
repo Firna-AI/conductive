@@ -1,0 +1,35 @@
+# Issues shows no cause for caught errors
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, from branch `calummoore/cloudflare-worker-error-tracking`, item 1 of the change that turns on Issues.
+- **Location:** `errorResponse` in `worker/http.ts:14`, the catch-all in `worker/application.ts:191`, and `warnWorker` in `worker/warnings.ts:21`.
+- **Reason:** B and C trade detail against the risk of a secret in a log, so the user chooses.
+
+- **Terms:**
+  - **Issues:** the error tracking of Cloudflare Workers, in open beta. `observability.issues` in `wrangler.jsonc` turns it on.
+  - **Catch-all:** a `catch` that turns any error into an API error reply through `errorResponse` in `worker/http.ts`. Nine Worker files have one.
+  - **Stack lines:** the lines of an error stack after its first line. Each names a function, a file, a line, and a column.
+- **Background:**
+  - Issues records each uncaught exception, each `5xx` reply, and each error log line of the Worker. It groups them into issues on the Worker page of the Cloudflare dashboard.
+  - When the Worker meets an error that it did not expect, a catch-all replies `500 internal_error` and writes no log line.
+  - `warnWorker` is the only log call of the deployed Worker. It writes fixed text and allowlisted fields. It never copies an error message, because a message can hold a secret or a user's text, as `worker/README.md` says.
+  - `docs/protocol/isolation.md` says that the Boat key never goes into a log. `docs/protocol/terminal-previews-and-desktop.md` says the same of a preview grant.
+  - The Issues guide of Cloudflare says to pass each caught error to `console.error()`. Its investigate page also says: "Do not add secrets, access tokens, or sensitive request content to span attributes, logs, or error messages."
+  - The built Worker is not minified. Cloudflare documents source mapping only for uncaught exceptions. So logged stack lines can name the built bundle, not the TypeScript files.
+- **Problem:** Issues counts each `500 internal_error` reply, but it gets no error type, no stack, and no message. The team sees that a route fails, but not where or why.
+- **Impact if no action:** Each new issue needs a manual search with Wrangler and test runs. On 9 November 2026, an invitation failed in production with a runtime `TypeError`, and the logs held no reason.
+- **Root question:** How does the team learn the cause of an error that the Worker catches?
+- **Options:**
+  - **A.** Change no code. Issues shows the failed route and the time only. Effort: Small.
+  - **B.** Log a safe error record from `errorResponse` for each error that is not an `HttpError`. The record gives fixed text, the error type, and the stack lines. It gives no message, so the rule of `worker/README.md` stays. Update that README. Effort: Small.
+  - **C.** Log each such error in full with `console.error(error)`, as the Issues guide says. It adds the message. A message can hold a secret or a user's text: a JSON parse error quotes part of its input, and a URL error quotes the whole address. This drops the rule of `worker/README.md`, and it puts the two protocol rules about logs at risk. Update that README. Effort: Small.
+- **Left out:**
+  - Let unexpected errors escape the handlers, so that the runtime records them. Each client then gets the error page of Cloudflare, not the API error reply, and the runtime logs the full message, as C does.
+  - A third-party error tracker, such as Sentry. The user asked for the tool of Cloudflare, and a new provider would get user data.
+  - More typed warnings at single failure sites, as `plans/follow-ups/mail-failure-reason-not-logged.md` proposes for emails. They cover only the errors that someone expected.
+  - Workers traces. They show the failed outbound call, but no code line. They are in beta, and Cloudflare bills stored traces from 1 December 2026.
+- **Wider fix:** B. All catch-alls share `errorResponse`, so a new catch-all logs the record too.
+- **Previous examples:** The failed invitation of 9 November 2026, in `plans/follow-ups/mail-failure-reason-not-logged.md`.
+- **Recommendation:** B. The error type and the stack lines find most causes, and no error message goes into a log.
+- **Action:** ask the user, because B and C trade detail against the risk of a secret in a log, and B adds log content that no requirement covers.

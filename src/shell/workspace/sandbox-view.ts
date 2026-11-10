@@ -1,8 +1,10 @@
 import type {
+  ArchiveRestore,
   SandboxNoticeState,
   SandboxPanelState,
 } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
+import type { Workspace } from '../../shared/workspaces'
 import type { SandboxState } from './features'
 import { orgRefusal, refusedStart } from './SandboxNotice'
 
@@ -20,6 +22,26 @@ export interface SandboxView {
   panel: SandboxPanelState | null
   /** The notice of a suspended org shows above the bar of an archived workspace. */
   orgNotice: boolean
+}
+
+/**
+ * What the bar of an archived workspace offers: Restore until its last day,
+ * to every member of an org that is not suspended, or no Restore in a
+ * suspended org. After its last day, the bar gives the day when Restore
+ * ended while a failed delete of the cloud computer can still try again,
+ * and claims no delete. Without a kept cloud computer, nothing comes back.
+ * `ended` says that the clock of the page reached `restoreUntil`.
+ */
+export function archivedRestore(
+  workspace: Workspace,
+  suspended: boolean,
+  ended: boolean,
+): ArchiveRestore | undefined {
+  if (workspace.state !== 'archived' || workspace.restoreUntil === null) {
+    return undefined
+  }
+  if (ended) return 'ended'
+  return suspended ? 'refused' : 'available'
 }
 
 /**
@@ -50,6 +72,8 @@ export function sandboxView(input: {
   savedError: string | null
   /** The first start of the new workspace failed, as `failedFirstStart` says. */
   firstStart: boolean
+  /** What an archived workspace offers, as `archivedRestore` says. */
+  restore?: ArchiveRestore
 }): SandboxView {
   const { sandbox, suspended } = input
   const refusal =
@@ -68,7 +92,9 @@ export function sandboxView(input: {
         }
       : sandbox === 'ready' || sandbox === 'starting'
         ? null
-        : { problem: sandbox })
+        : sandbox === 'archived'
+          ? { problem: 'archived', restore: input.restore }
+          : { problem: sandbox })
   return {
     refusal,
     bar,
