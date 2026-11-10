@@ -131,7 +131,7 @@ Replies, timers, and `waitFor` go on.
 - `fake-api.ts` handles requests and records them.
 - `mount.ts` mounts React components in DOM tests, acts as a person does, and waits for a state.
 - `dom-queries.ts` finds shown elements in DOM tests, and says whether a person can use them.
-- `fake-core-routes.ts` records account, org, settings, section, member, and routine list replies.
+- `fake-core-routes.ts` records account, org, settings, section, member, and routine replies: the list, and the read, update, and delete of each routine, and a create.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies.
 - `fake-api-routes.ts` defines the reply registration interface.
@@ -143,7 +143,8 @@ Replies, timers, and `waitFor` go on.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `suspended-org.ts` serves Acme as a suspended org, and gives the body of an `org_suspended` refusal.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
-- `fixtures/routines.ts` maps the routines of the mockups, newest first, with the last run of each, to the shared contracts.
+- `fixtures/routines.ts` maps the routines of the mockups, newest first, with the last run of each, to the shared contracts. Its `created` is the reply of a create: the routine that the flow "Create a routine" saves.
+- `fixtures/routine-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples.
 - `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.

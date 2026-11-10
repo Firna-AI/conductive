@@ -1,6 +1,15 @@
-import { triggersSummary } from '../../../docs/mockups/src/components/routines/triggerCopy'
+import {
+  eventLabels,
+  scheduleLabels,
+  triggersSummary,
+} from '../../../docs/mockups/src/components/routines/triggerCopy'
 import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
-import type { RoutineRun, RoutineTrigger } from '../../shared/routines'
+import type { CronProblem } from '../../app/routine-cron'
+import type {
+  RoutineRun,
+  RoutineTrigger,
+  RoutineTriggerInput,
+} from '../../shared/routines'
 
 /** What a routine does, in the words of the Routines page. */
 export const routineWords =
@@ -38,4 +47,18 @@ export function triggersText(triggers: readonly RoutineTrigger[]): string {
         : trigger,
     ),
   )
+}
+
+/** The name of a trigger, as the Add trigger menu names it, such as "Daily". */
+export function triggerName(trigger: RoutineTriggerInput): string {
+  return trigger.kind === 'pull-request'
+    ? eventLabels[trigger.event]
+    : scheduleLabels[trigger.kind]
+}
+
+/** What the cron field says when the form refuses a cron, and how to fix it. */
+export const cronRefusals: Readonly<Record<CronProblem, string>> = {
+  frequent:
+    'This runs more than once an hour. Set the first field to one minute, such as 0.',
+  invalid: 'Use five valid fields, such as 0 9 * * 1-5.',
 }

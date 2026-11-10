@@ -12,7 +12,8 @@ import type {
 } from '../../shared/agents'
 import { MenuButton, type MenuEntry } from './Menu'
 
-const effortLabels: Readonly<Record<Effort, string>> = {
+/** The words of each effort, as the picker shows them. */
+export const effortLabels: Readonly<Record<Effort, string>> = {
   none: 'None',
   low: 'Low',
   medium: 'Medium',

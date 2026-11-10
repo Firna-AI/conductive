@@ -19,6 +19,12 @@ of the data that the screens read and write.
   as events, then the waiting writes in the order that they went out. A
   read that started before a change keeps the change. A failed read keeps
   the value that shows.
+- The routine page reads its routine when it mounts and at each return to
+  the page. A save sends only the fields that the owner changed, so it
+  keeps a turn-off that the app made after the read. Its answer is the
+  whole routine, and the Routines list takes it at once, with the last run
+  that the list has. A delete takes the routine out of the list, and a
+  later visit of its address reads it again.
 - A list write shows its change at once, and a failure takes back that
   change only. An answer confirms only the fields of its write: a move
   answer sets the section of the workspace, not its state. A workspace

@@ -191,6 +191,11 @@ function readRoutine(value: unknown): Routine {
   }
 }
 
+/** The routine of a read, a create, or an update. */
+export function readRoutineResponse(value: unknown): Routine {
+  return nested(record(value, 'routine response'), 'routine', readRoutine)
+}
+
 /** The routines of an org, each with its newest run, in the order of the reply. */
 export function readRoutines(value: unknown): ListedRoutine[] {
   return items(record(value, 'routines'), 'routines', (item) => ({

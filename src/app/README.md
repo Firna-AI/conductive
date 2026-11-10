@@ -23,7 +23,11 @@ pull request bar, and the owner picker. A host can give its own parts, as
   of the dev fake gets every repository of the account's list, and keeps
   its custom initials through rename, delete, and restore. Acme has the
   routines of the mockups, each with its last run. The other orgs have no
-  routines, so their Routines page shows its empty state.
+  routines, so their Routines page shows its empty state. A save of a
+  routine checks the prompt, each custom cron, and the time zone, as the
+  Worker does. Its author filter knows the members of the org and a few
+  bots, such as `dependabot[bot]`. Any other login gets the refusal of a
+  login that names no GitHub account.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -171,8 +175,17 @@ clicks, types, and lets the answers of the fake API settle.
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   routines, and computer settings of one org, with `watch` and the wait of
-  each part. `api/read-routines.ts`: the reader of the routines, each with
-  its newest run.
+  each part. `api/read-routines.ts`: the readers of the routines, each with
+  its newest run, and of one routine.
+- `routine-model.ts`: `RoutineModel`, one routine with its reads and its
+  saves, and `routineModel`, the model that the org keeps for each routine.
+  `routine-actions.ts`: create, update, Turn off, and Delete, which also
+  update the Routines list.
+- `routine-draft.ts`: the draft of the routine page, its create and update
+  requests, and whether Save can send it. `routine-triggers.ts`: the
+  defaults of a new trigger and the edits of an author filter.
+  `routine-cron.ts`: the rule of a custom cron, which the Worker applies
+  too.
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the GitHub App installations, and the repositories that
   Create org offers.
@@ -211,8 +224,11 @@ clicks, types, and lets the answers of the fake API settle.
 - `../shell/routines/RoutinesScreen.tsx`: the Routines page, which the
   Routines link of the sidebar and of the phone list opens.
   [Routines](../../docs/protocol/routines.md#the-routine-pages) states what
-  it shows. The addresses of a routine and of a new routine have no page of
-  their own, so they show that the page is not available.
+  it shows.
+- `../shell/routines/RoutineScreen.tsx`: the routine page and the page of
+  a new routine. `RoutineEditor.tsx` is the form of the owner, and
+  `RoutineReader.tsx` the read-only view of every other member, with Turn
+  off and Delete for an admin.
 - `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
   `useDismiss`, the layer of sheets and dialogs.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.

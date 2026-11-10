@@ -2,22 +2,19 @@ import { routineRows } from '../../../docs/mockups/src/fixtures/routineRows'
 import type { RunState } from '../../../docs/mockups/src/fixtures/routineRuns'
 import {
   offAfterFailedRuns,
-  type AuthorFilter,
+  routines as mockupRoutines,
   type Routine as MockupRoutine,
-  type Trigger as MockupTrigger,
 } from '../../../docs/mockups/src/fixtures/routines'
 import type { MessageSender } from '../../shared/messages'
 import type {
   Routine,
-  RoutineAuthorFilter,
   RoutineInactiveReason,
   RoutineRun,
   RoutineRunTrigger,
   RoutinesResponse,
-  RoutineTrigger,
-  RoutineWeekday,
 } from '../../shared/routines'
 import { FAKE_IDS, FAKE_TIME, fakeUsers } from './core'
+import { fakeAccount, storedTrigger } from './routine-triggers'
 
 const day = 86_400_000
 
@@ -38,17 +35,6 @@ function timeOf(when: string): number {
   return FAKE_TIME - Number(match[1]) * unit
 }
 
-/** The day numbers of a cron expression, from Sunday. */
-const weekdays: readonly RoutineWeekday[] = [
-  'sunday',
-  'monday',
-  'tuesday',
-  'wednesday',
-  'thursday',
-  'friday',
-  'saturday',
-]
-
 function sender(routine: MockupRoutine): MessageSender {
   const user = fakeUsers.find((item) => item.id === routine.owner.key)
   if (!user) throw new Error(`Unknown owner: ${routine.owner.key}`)
@@ -57,56 +43,6 @@ function sender(routine: MockupRoutine): MessageSender {
     githubLogin: user.githubLogin,
     displayName: user.displayName,
     avatarUrl: user.avatarUrl,
-  }
-}
-
-/**
- * An author filter as a reply holds it: accounts with GitHub IDs. A login
- * outside the fake users gets an ID from its place in both lists.
- */
-function accounts(filter: AuthorFilter): RoutineAuthorFilter {
-  const logins = [...filter.is, ...filter.isNot]
-  const account = (login: string) => ({
-    githubId:
-      fakeUsers.find((user) => user.githubLogin === login)?.githubId ??
-      9_000 + logins.indexOf(login),
-    login,
-  })
-  return {
-    members: filter.members,
-    is: filter.is.map(account),
-    isNot: filter.isNot.map(account),
-  }
-}
-
-/** A trigger as a reply holds it: each schedule with its cron expression. */
-function trigger(source: MockupTrigger): RoutineTrigger {
-  switch (source.kind) {
-    case 'hourly':
-      return { ...source, cron: `${source.minute} * * * *` }
-    case 'daily':
-      return {
-        ...source,
-        cron: `${source.time.minute} ${source.time.hour} * * *`,
-      }
-    case 'weekdays':
-      return {
-        ...source,
-        cron: `${source.time.minute} ${source.time.hour} * * 1-5`,
-      }
-    case 'weekly':
-      return {
-        ...source,
-        cron: `${source.time.minute} ${source.time.hour} * * ${weekdays.indexOf(source.day)}`,
-      }
-    case 'custom':
-      return source
-    case 'pull-request':
-      return {
-        kind: 'pull-request',
-        event: source.event,
-        ...(source.authors ? { authors: accounts(source.authors) } : {}),
-      }
   }
 }
 
@@ -169,7 +105,9 @@ function lastRun(
 
 function record(routine: MockupRoutine, index: number, orgId: string): Routine {
   const createdAt = FAKE_TIME - (30 + index) * day
-  const triggers = routine.triggers.map(trigger)
+  const triggers = routine.triggers.map((item) =>
+    storedTrigger(item, fakeAccount),
+  )
   const scheduled = triggers.some((item) => item.kind !== 'pull-request')
   return {
     id: routine.key,
@@ -196,7 +134,7 @@ function record(routine: MockupRoutine, index: number, orgId: string): Routine {
  * The routines of Acme as the mockups list them, newest first, as the
  * Worker sorts them, with the last run of each. `list` is the reply of the
  * list route. `routines` and `runs` are the records that the dev fake
- * keeps.
+ * keeps. `created` is the reply of a create.
  */
 export function routineFixtures(orgId: string = FAKE_IDS.org) {
   const routines: Routine[] = routineRows.map((row, index) =>
@@ -211,5 +149,11 @@ export function routineFixtures(orgId: string = FAKE_IDS.org) {
       lastRun: runs.find((run) => run.routineId === routine.id) ?? null,
     })),
   }
-  return { list, routines, runs }
+  // The routine that the flow "Create a routine" saves, as a create answers.
+  const created: Routine = {
+    ...record(mockupRoutines['morning-summary'], 0, orgId),
+    createdAt: FAKE_TIME,
+    updatedAt: FAKE_TIME,
+  }
+  return { list, routines, runs, created }
 }

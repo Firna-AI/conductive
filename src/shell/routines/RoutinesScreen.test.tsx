@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
 import { routinesPath, type RoutinesResponse } from '../../shared/routines'
@@ -13,38 +12,13 @@ import {
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
-import {
-  holdAnimationFrames,
-  MOUNTED_TEST_TIMEOUT,
-  press,
-  waitFor,
-} from '../../test-support/mount'
+import { MOUNTED_TEST_TIMEOUT, press, waitFor } from '../../test-support/mount'
 import { serveSuspendedAcme } from '../../test-support/suspended-org'
-import { Shell } from '../Shell'
-import { mountScreen } from '../test-mount'
-import { startedApp } from '../test-render'
-import type { Viewport } from '../ui/viewport'
+import { openApp, wordsOf } from './routine-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org } = FAKE_IDS
-
-/** The words of the element as a screen reader reads them, one space apart. */
-function wordsOf(element: Element): string {
-  const words: string[] = []
-  const walk = (node: Node) => {
-    if (node instanceof Element && node.getAttribute('aria-hidden') === 'true')
-      return
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent?.trim()
-      if (text) words.push(text)
-      return
-    }
-    node.childNodes.forEach(walk)
-  }
-  walk(element)
-  return words.join(' ')
-}
 
 /** Each row of the Routines list: its words, and the address of its link. */
 function rowsOf(list: HTMLElement) {
@@ -52,25 +26,6 @@ function rowsOf(list: HTMLElement) {
     words: wordsOf(row),
     to: row.querySelector('a')?.getAttribute('href') ?? null,
   }))
-}
-
-/** The app at an address of Acme, with the address bar that the test reads. */
-async function openApp(
-  server: FakeApiServer,
-  address: string,
-  viewport: Viewport = 'desktop',
-) {
-  holdAnimationFrames()
-  const app = await startedApp(server)
-  const navigation = memoryNavigation(address)
-  const view = mountScreen(
-    app,
-    <NavigationContext.Provider value={navigation}>
-      <Shell />
-    </NavigationContext.Provider>,
-    { viewport },
-  )
-  return { navigation, view }
 }
 
 /** The sidebar of the org, with New workspace, Routines, and the sections. */

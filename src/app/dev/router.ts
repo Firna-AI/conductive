@@ -12,6 +12,7 @@ export const ID = {
   section: ':section',
   repository: ':repository',
   build: ':build',
+  routine: ':routine',
 } as const
 
 /** The IDs in a path, by name, such as `params.org` for `:org`. */

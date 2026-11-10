@@ -1672,23 +1672,60 @@ Depends on: 7
 
 Let the owner create and change a routine.
 
-- [ ] Build the routine page from the mockup: the name, the Active
+- [x] Build the routine page from the mockup: the name, the Active
       switch, the repository, the section, the owner, the prompt with the
       model picker, Save, and Delete.
-- [ ] Build the Triggers list with the Add trigger menu, the schedule
+- [x] Build the Triggers list with the Add trigger menu, the schedule
       editors, the time zone, the refusal of a cron, and the author filter
       of each pull request trigger with the refusal of an unknown login.
-- [ ] Show the read-only view to a member, and Turn off and Delete to an
+- [x] Show the read-only view to a member, and Turn off and Delete to an
       admin.
-  - [ ] Test a save of each trigger kind, the refusal of a cron, and the
+  - [x] Test a save of each trigger kind, the refusal of a cron, and the
         views of the owner, a member, and an admin.
-- [ ] Update the web app README.
+- [x] Update the web app README.
+
+Milestone completed on 10 November 2026. A UI implementor subagent built
+it. The orchestrator re-ran the 575 tests of `src` and the typecheck,
+lint, format, file-length, and export checks. The handoff is in
+`.context/routines/reports/m8-ui.md`. Its two items became Milestones 8a
+and 8b.
+
+## Milestone 8a: Mockup gaps of the routine page
+
+Tags: mockup
+
+Depends on: 8
+
+The app found a state that the mockups do not draw. Agent call of
+10 November 2026: Delete asks first, as Delete org and Remove member do,
+because a deleted routine cannot come back. The mockups drew Delete but
+not what it does, so this fills a gap and contradicts no screen.
+
+- [ ] Draw the Delete question of the routine page: "Delete <name>? Its
+      triggers and prompt are deleted. Its run workspaces stay.", with
+      Cancel and Delete routine, at both sizes.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+
+## Milestone 8b: The refused login in the refusal
+
+Depends on: 8
+
+Agent call of 10 November 2026: the refusal of an unknown login names
+that login in its own field, so that the page can mark its chip and open
+its filter, as the mockups draw it. The mockups are the spec, and the
+message text alone cannot tell the page which chip to mark.
+
+- [ ] Add an optional field to the shared error body, and let the routine
+      save put the refused login and its trigger in it.
+  - [ ] Test that a save with an unknown login returns that login and
+        its trigger in the field.
+- [ ] Update the READMEs of the areas that change.
 
 ## Milestone 9: Runs list and run workspaces
 
 Tags: ui
 
-Depends on: 4, 6, 8
+Depends on: 4, 6, 8, 8a, 8b
 
 Show the runs, and let the owner start one.
 
@@ -1702,6 +1739,8 @@ Show the runs, and let the owner start one.
       Runs list.
 - [ ] Let the pull request bar name the base branch of the workspace, and
       open "Create pull request" into it.
+- [ ] Mark the chip of a refused login and open its filter, from the field
+      of Milestone 8b.
 
   - [ ] Test Run now, the states of the runs, and the header links.
 - [ ] Update the web app README.

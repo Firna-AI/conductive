@@ -16,7 +16,7 @@ import {
   repositoryPath,
 } from '../shared/org-settings'
 import { deleteOrgPath, leaveOrgPath, restoreOrgPath } from '../shared/orgs'
-import { routinesPath } from '../shared/routines'
+import { routinePath, routinesPath } from '../shared/routines'
 import { sectionPath, sectionsPath } from '../shared/sections'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { coreFixtures, FAKE_IDS, FAKE_TIME } from './fixtures/core'
@@ -98,5 +98,12 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   for (const invite of data.members.invites) {
     routes.empty('DELETE', invitePath(id, invite.id))
   }
-  routes.json('GET', routinesPath(id), routineFixtures(id).list)
+  const routines = routineFixtures(id)
+  routes.json('GET', routinesPath(id), routines.list)
+  routes.json('POST', routinesPath(id), { routine: routines.created }, 201)
+  for (const routine of routines.routines) {
+    routes.json('GET', routinePath(id, routine.id), { routine })
+    routes.json('PATCH', routinePath(id, routine.id), { routine })
+    routes.empty('DELETE', routinePath(id, routine.id))
+  }
 }
