@@ -194,10 +194,10 @@ create and resume. The workspace object runs that start:
   state read of that alarm.
   - A reply with `hydrated: false` keeps the watch.
   - A reply with `hydrated: true`, or without `hydrated`, ends the watch.
-    The watch then writes the restore marker of the terminal with
-    `markTerminalRestoreEnded`. Boat's schema makes the field optional,
-    and Boat says that a sandbox that restored nothing is hydrated from
-    the start.
+    The watch then writes the restore marker with
+    `markTerminalRestoreEnded`. The terminal and the agent runner read it.
+    Boat's schema makes the field optional, and Boat says that a sandbox
+    that restored nothing is hydrated from the start.
   - A stopped or error state ends the watch, and the alarm applies that
     state as the Boat state read does. A stopping state, such as
     `archiving`, also ends the watch. Neither writes the marker.

@@ -97,7 +97,10 @@ the privileged-command helper and the provider's `runCommand`. It throws a
 provider error when the command fails or times out. The
 [restore watch](../lifecycle/workspace-object.md#creates-and-resumes) of
 the workspace object calls it. `/run` is memory, so each start begins
-without the marker.
+without the marker. The agent runner reads the same marker to watch the
+live repository folder again, as the [runner guide](../../runner/README.md)
+says. The path lives in
+[`src/shared/restore-marker.ts`](../../src/shared/restore-marker.ts).
 
 Bash runs the prompt hook before each prompt. Its folder check waits until
 the restore marker exists. At the first prompt after that, it checks the

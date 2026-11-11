@@ -25,6 +25,8 @@ part.
   omission within the report budget, after runner credential filtering.
 - [File reports](file-reports.md#key-code): the scans, the file tree, the
   branch changes and their base, the report parts, and Git comparisons.
+- `src/restore-end.ts`: `onRestoreEnd` waits for the restore marker, so the
+  runner can move its repository watch to the live folder.
 - `src/link.ts`, `src/state.ts`, `src/socket.ts`, `src/commands.ts`, and
   `src/stored-events.ts`: the hello, welcome, confirm, and resend rules, the
   state file, the WebSocket, and checks of messages and saved events.
