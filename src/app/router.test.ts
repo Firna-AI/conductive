@@ -75,6 +75,35 @@ describe('routes', () => {
     })
   })
 
+  test('a session address names its workspace and session, and a longer path stays a page of the workspace', () => {
+    const session = routes.session('acme', 'saved carts', 'debounce/2')
+    expect({
+      session: parse(session),
+      deeper: parse(`${session}/more`),
+      bare: parse(`${routes.workspace('acme', 'saved carts')}/sessions`),
+    }).toEqual({
+      session: {
+        screen: 'workspace',
+        orgId: 'acme',
+        workspaceId: 'saved carts',
+        view: [],
+        session: 'debounce/2',
+      },
+      deeper: {
+        screen: 'workspace',
+        orgId: 'acme',
+        workspaceId: 'saved carts',
+        view: ['sessions', 'debounce/2', 'more'],
+      },
+      bare: {
+        screen: 'workspace',
+        orgId: 'acme',
+        workspaceId: 'saved carts',
+        view: ['sessions'],
+      },
+    })
+  })
+
   test('a join link names its code, and the reason that the sign-in put in it', () => {
     const failed = new URLSearchParams({
       [INVITE_CODE_ERROR_PARAMETER]: 'invite_code_used_up',

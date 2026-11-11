@@ -564,6 +564,37 @@ These are agent calls of 11 November 2026 within the approved tool contract.
   calls and footer-link smoke. Reason: a refresh keeps old tool sources,
   and deployment checks must stay outside the branch completion boundary.
 
+### Session links in the app
+
+These are agent calls of 11 November 2026 within the approved session link
+design.
+
+- Only `/sessions/{id}` with nothing after it is a session address. The
+  workspace route then names the session and has no view. Reason: a deeper
+  path is no address that the app gives, and the address shows the chat.
+- The workspace screen shows the session after the chat loads, and only an
+  open session. Then it replaces the address with the workspace address,
+  also after a failed load or a failed read. Reason: a closed or unknown
+  session must reopen nothing, and the address does not follow the tab.
+- A chat that does not hold the session reads the session list once and
+  takes only that session's record, in event-number order. Reason: a
+  session can start while a kept chat is hidden, and a whole-list confirm
+  would drop a newer record of the stream.
+- A later choice of a session or a newer address stops an older lookup.
+  The chat counts the choices of each load, and the address effect passes
+  an abort signal. Reason: the newest choice of the member wins.
+- Each chat load, and each load of a New workspace form, makes new reads of
+  linked sessions, one for each workspace. A reply of an earlier load
+  changes nothing. While a read runs, after it fails, and for an unknown
+  session, the link shows the workspace chip. Reason: one read serves every
+  link, and a chip shows only real data.
+- New workspace reads linked sessions in `OrgLinks`, by the orchestrator's
+  scope correction of 10 November 2026. Reason: each composer shows a known
+  session link as a session chip.
+- The dev fake offers `?conversation=sent-by`, a stored message with a
+  `Sent by:` line. Reason: the fake answers a send with its recorded
+  message, so a smoke test of a sent footer needs a stored one.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -777,27 +808,29 @@ Depends on: 1, 2, 3
 Open a session from its address, and show each session link as the
 session chip of decision 261 C.
 
-- [ ] Read the `product-ui` and `typescript` skills.
-- [ ] Parse the session address in `src/app/router.ts`. Show that session
+- [x] Read the `product-ui` and `typescript` skills.
+- [x] Parse the session address in `src/app/router.ts`. Show that session
       in the workspace, then replace the address with the workspace
       address. A closed or unknown session opens the workspace page.
-- [ ] Show each session link as a session chip in messages, answers, and
+- [x] Show each session link as a session chip in messages, answers, and
       the message field, as the mockups draw. Read the sessions of each
       linked workspace once for each load of the chat. A link to an unknown
       session shows the chip of its workspace.
-- [ ] Add tests beside the code for the address and the session chip.
-- [ ] Update `src/app/README.md`, `src/chat/README.md`, and
+- [x] Add tests beside the code for the address and the session chip.
+- [x] Update `src/app/README.md`, `src/chat/README.md`, and
       `src/shell/workspace/README.md` where they describe the changed code.
+
+Evidence: `.context/agent-session-tools/reports/m6-session-links.md`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and `npm run check`.
-- [ ] Smoke-test a session link and its `Sent by:` line in the app of
+- [x] Smoke-test a session link and its `Sent by:` line in the app of
       `npm run dev`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

@@ -111,7 +111,10 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   that moves to another session keeps its identity, so its undo moves with
   it. The field stays mounted, so it keeps the focus. The field stays a
   focusable textbox while it takes no change, such as during a create. Its
-  chips find their workspaces through `LinksProvider`.
+  chips find their workspaces through `LinksProvider`. A known session link
+  shows as a session chip, which works as a workspace chip there. New
+  workspace, which loads no chat, reads the sessions of each linked
+  workspace once for each load of the form, in `OrgLinks`.
 - `components/chip-field/`: `ChipTextField`, the message field of every
   composer, over Lexical. `chip-nodes.tsx` holds the chip node and the
   node of a link that waits for its workspace. `file-mention-nodes.tsx`
