@@ -47,8 +47,9 @@ Use the expand control of the frame to see the full desktop layout.
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
-share. Its linked pages give the parts of [the chat](design-chat.md), of
-[the operator section](design-operator.md), and of
+share. Its linked pages give the parts of
+[the workspace](design-workspace.md), of [the chat](design-chat.md),
+of [the operator section](design-operator.md), and of
 [the pull request bar](design-bar.md).
 
 ## The catalogue

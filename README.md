@@ -50,12 +50,13 @@ feature that is not complete yet says so.
   hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
   says.
 - A pull request bar with the GitHub state of the branch and its checks.
-  It sends the agent fixed requests, such as Create pull request and Fix
+  It sends the agent fixed requests, such as Create PR and Fix
   checks, and merges as the member. After the merge, Continue moves the
   workspace to a new branch, with the same cloud computer and sessions.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
-- Agents can create and list workspaces.
+- Agents can create workspaces and sessions. They can read chats and
+  message sessions across the org.
 - Routines run a saved prompt on a schedule or on a pull request event,
   each time in a new workspace.
 - Each workspace has a number, such as `W-395`. A press on the number in

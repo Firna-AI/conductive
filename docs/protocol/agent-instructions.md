@@ -56,7 +56,11 @@ says.
     computer, when the agent has them.
   - A member opens a port preview in the app by its port number.
   - The workspace tools create and list the workspaces of the org. They
+    also start a session, list the sessions, send a message, and read a
+    chat, in each workspace of the org. They
     also ask to run a command on the Mac of the sender of the turn.
+  - A message that ends with a `Sent by:` line comes from an agent of the
+    session that the line links to, through the workspace tools.
   - Several members can write in one session. The sender line of each
     message names its sender.
 - The instructions never tell the agent to send a member to a tool that
@@ -107,15 +111,19 @@ says.
 - Reason: several members can write in one session while the starter
   shares the login (decision 116). So the agent needs to know who sent
   each message.
+- The sender line of a message from the workspace tools names the sender
+  of the turn that made the call, as
+  [The sender](session-calls.md#the-sender) says.
 - The sender line exists only in the text that reaches the agent. The
-  stored message, the chat, and the titles from messages use only the
-  text that the member wrote.
+  stored message, the chat, and the titles from messages never hold it.
 - The chat never shows the sender line or the agent instructions. Reason:
   they are for the agent.
 
 ### Access
 
-- The sender line informs the agent only. No access depends on it.
+- The sender line informs the agent only. No access depends on it. The
+  same holds for a `Sent by:` line, as
+  [The `Sent by:` line](session-calls.md#the-sent-by-line) says.
 - A Mac command of a turn goes to the Mac of the sender of the turn, the
   member whose message started the turn. The GitHub token of the turn also
   belongs to that member, as

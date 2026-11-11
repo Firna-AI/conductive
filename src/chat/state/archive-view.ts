@@ -66,12 +66,14 @@ export function endedAt(
 
 /**
  * Shows a session of a read-only workspace as a tab and as the shown
- * session, and loads its stored history. It writes nothing.
+ * session, and loads its stored history. It writes nothing. Each call is a
+ * choice of a shown session, which an older address lookup yields to.
  */
 export async function showLocally(
   context: ChatContext,
   sessionId: string,
 ): Promise<void> {
+  context.tabChoices.count += 1
   const snapshot = context.store.get()
   const known = [...snapshot.sessions, ...snapshot.history]
   if (!known.some((item) => item.id === sessionId)) return

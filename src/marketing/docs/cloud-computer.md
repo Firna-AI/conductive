@@ -139,6 +139,8 @@ Installing updated agent software in an older computer does not change its prote
 Ask an admin to run **Build computer**.
 After it succeeds, create a new workspace for newer software and the new protection.
 This also gives the new workspace the server list in **Preview**.
+The same steps give it the tools that create sessions, send messages, and read chats across the org.
+Resuming an existing workspace does not update its installed tools.
 
 - [Understand agent login protection](/docs/security#protect-agent-and-github-logins)
 

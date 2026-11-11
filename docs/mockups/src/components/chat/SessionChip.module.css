@@ -1,0 +1,10 @@
+/*
+ * The icon of a session tab, between the label of the workspace and the
+ * title of the session. It sits on the text of the line, in the muted colour
+ * of the label, so the title stays the strongest part of the chip.
+ */
+.icon {
+  margin-right: 3px;
+  color: var(--ui-muted);
+  vertical-align: -1px;
+}

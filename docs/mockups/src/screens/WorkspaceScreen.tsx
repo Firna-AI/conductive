@@ -28,7 +28,7 @@ import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
-import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
+import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import { barOf, branchOf } from './workspaceBar'
 import {
@@ -268,7 +268,7 @@ export function WorkspaceScreen(props: {
         status,
         suspended,
         viewer: membership,
-        created: createdWorkspaces(state),
+        changed: changedWorkspaces(state),
         restoreOpen: state.archive === 'kept',
       })}
     >

@@ -154,6 +154,11 @@ fake API, with its address options, its controls, and the test command.
 - `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
   sandbox at each visit that opens a file or diff tab, also a second click
   on the tab that shows. The screen draws it in each layout.
+- `session-address.tsx`: `OpenSessionAddress`, which shows the session of a
+  session address once the chat loads, then replaces the address with the
+  workspace address. A move to another address stops its lookup. The
+  screen draws it beside `ResumeOnTabOpen`. `SessionAddress.test.tsx` and
+  `SessionChips.test.tsx` mount the whole app for the address and the chips.
 - `files/chat-files.tsx`: the file tabs of the kept chat, named by the
   labels of the kept files, at their places in the tab row with the props
   that the row gives each tab, the diff links, and the way back to the chat

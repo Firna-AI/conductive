@@ -153,14 +153,22 @@ check in the Mac app.
   composer. [The message field](loads-and-sends.md#the-message-field)
   gives its rules and its files.
 - `state/load.ts`: the order of the first reads and the stream start.
+- `state/address-session.ts`: `showAddressSession`, the open of the
+  session of a session address, behind `ChatController.showAddress`. A
+  missing session gets one read of the list, of which only that record
+  counts, and a later choice of a tab or an abort stops the lookup.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
-  links of a message field, and `linkTarget`, `chat-parts.ts`, the one
-  tokenizer of sent messages and answers, `LinksContext.tsx`, the
-  workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
-  which draws the parts of a message or an answer, with its file chips,
-  and `mention-copy.ts`, the copy of chat text that gives the mention of
-  each file chip in it, and leaves out text that the browser leaves out of
-  a copy.
+  links of a message field, and `linkTarget`, with the session of a
+  session link, `chat-parts.ts`, the one tokenizer of sent messages and
+  answers, `LinksContext.tsx`, the workspaces that chips find and the open
+  of a chip, and `LinkedText.tsx`, which draws the parts of a message or an
+  answer, with its file chips and session chips, and `mention-copy.ts`,
+  the copy of chat text that gives the mention of each file chip in it,
+  and leaves out text that the browser leaves out of a copy.
+- `links/session-links.ts`: `useLinkedSession`, the session that a chip
+  finds: a live session of the chat's workspace, or one of the one read of
+  another workspace in `session-reads.ts`, made again for each load of a
+  chat or of New workspace. `chat-links.ts` gives a chat its links.
 - `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
   the entries that the list offers and their order, and
   `MentionsContext.tsx`, the files that the chat gets and the tree that

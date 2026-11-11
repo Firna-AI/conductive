@@ -26,6 +26,9 @@ The `omitted-data` conversation has a Unicode tool excerpt and a capped turn fil
 Both records include positive omission counts.
 The `refused-events` conversation has one marker for each permanent refusal reason.
 The marker can have no turn context when the event is invalid.
+The `sent-by` conversation ends with a message from an agent tool.
+It links a closed session with a long title, and its `Sent by:` line links a session of another workspace.
+The dev app shows it with `?conversation=sent-by`, because the fake answers a send with its recorded message.
 Each fake session record sets `retryMessageId`.
 In the `failed` conversation, each open session names the failed request `ask`, which the recorded failure names too.
 All other session records hold null.

@@ -103,8 +103,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         protection to each cloud computer that starts from it.`,
       text`Your work: ${productName} keeps your messages, including those
         sent by pull request bar actions, and the answers of the agents as
-        the chat history of each workspace. It also records who used
-        Continue, the new branch, and the branch it starts from. It keeps
+        the chat history of each workspace.
+        Messages from agent tools end with Sent by: and a link to the
+        sending session. The chat history keeps that link. It also records
+        who used Continue, the new branch, and the branch it starts from. It keeps
         the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,
