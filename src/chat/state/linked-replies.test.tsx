@@ -141,10 +141,14 @@ describe('a reply that names a linked session', () => {
       conversation: 'history',
       stream: sender.server.events,
     })
-    other.server.json('GET', chatHistoryPath(org, ws, LINKED), {
-      events: [],
-      throughEventNumber: 0,
-    })
+    other.server.json(
+      'GET',
+      chatHistoryPath(org, ws, LINKED, { order: 'newest' }),
+      {
+        events: [],
+        throughEventNumber: 0,
+      },
+    )
     await sender.controller.start()
     await other.controller.start()
     other.controller.setDraft(first, 'Cal types here.')

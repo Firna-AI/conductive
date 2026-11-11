@@ -27,6 +27,7 @@
   - 4,200 items in 20 pages folded for 15.6 s in order, and for 14.2 s newest first. One merge of the earlier pages took 2.4 s.
   - A reply before its stream event started a whole fold of 2.8 s at 4,200 items.
   - The Durable Object folded 8,400 items for 18 s for one copy, and every other request of the workspace waited.
+  - In headless Chrome on the fake API, one whole fold of 4,200 items over 1,050 turns took 6.7 s. The newest-first load showed the newest page after 0.5 s, and the whole history after 7.3 s.
 - **Impact if no action:** A long session freezes the tab for seconds while it loads, and again after some replies. A transcript copy or an agent read of a long session stops every request of its workspace for seconds.
 - **Root question:** How does the product build the transcript of a long session, in the tab and in the workspace's Durable Object, without blocking either for seconds?
 - **Options:**

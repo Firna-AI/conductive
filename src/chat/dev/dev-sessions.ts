@@ -118,10 +118,14 @@ export function newSession(
     loginAvailable: login?.connected ?? false,
     loginShared: login?.connected === true && !login.noReuse,
   }
-  backend.server.json('GET', chatHistoryPath(orgId, workspaceId, session.id), {
-    events: [],
-    throughEventNumber: backend.stream.last,
-  })
+  backend.server.json(
+    'GET',
+    chatHistoryPath(orgId, workspaceId, session.id, { order: 'newest' }),
+    {
+      events: [],
+      throughEventNumber: backend.stream.last,
+    },
+  )
   place(backend, session)
   return session
 }

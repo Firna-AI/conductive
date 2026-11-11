@@ -44,7 +44,7 @@ import {
   readView,
   readViewReply,
 } from './read-responses'
-import { readStoredEvents, readWorkspaceResponse } from './read-workspace'
+import { readNewestStoredEvents, readWorkspaceResponse } from './read-workspace'
 
 export interface WorkspaceTarget {
   orgId: string
@@ -88,13 +88,22 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
       ),
     sessions: () => client.get(sessionsPath(orgId, workspaceId), readSessions),
     /**
-     * One page of the stored history of one session. A later page names the
+     * One newest-first page of a session's history. A later page names the
      * cutoff of the first page, so all pages hold the state through it.
      */
-    history: (sessionId: string, after = 0, through?: number) =>
+    history: (sessionId: string, before?: number, through?: number) =>
       client.get(
-        chatHistoryPath(orgId, workspaceId, sessionId, after, through),
-        readStoredEvents,
+        chatHistoryPath(
+          orgId,
+          workspaceId,
+          sessionId,
+          {
+            order: 'newest',
+            beforeEventNumber: before,
+          },
+          through,
+        ),
+        readNewestStoredEvents,
       ),
     /** The saved view, with the routine of a run workspace. */
     view: () =>

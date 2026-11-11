@@ -9,6 +9,12 @@ import type { PendingMove } from './model-moves'
 import type { PendingEdit } from './session-records'
 import type { Transcript } from '../../shared/transcript/transcript'
 
+/** The newest page and the complete history of one shared session load. */
+export interface HistoryLoad {
+  readonly newest: Promise<number | null>
+  readonly complete: Promise<number | null>
+}
+
 /** What the chat's actions share: the API, the store, the logs, and the stream. */
 export interface ChatContext {
   readonly target: WorkspaceTarget
@@ -16,7 +22,7 @@ export interface ChatContext {
   readonly store: ChatStore
   readonly stream: WorkspaceStream
   /** The running history load of each session, so that loads are shared. */
-  readonly loading: Map<string, Promise<number | null>>
+  readonly loading: Map<string, HistoryLoad>
   /** The rename and model edits that wait for their replies, by session. */
   readonly edits: Map<string, readonly PendingEdit[]>
   /**

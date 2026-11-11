@@ -97,10 +97,14 @@ export function seedFirstStart(
       },
     },
   }))
-  server.json('GET', chatHistoryPath(org, id, created.sessionId), {
-    events,
-    throughEventNumber: events.length,
-  })
+  server.json(
+    'GET',
+    chatHistoryPath(org, id, created.sessionId, { order: 'newest' }),
+    {
+      events,
+      throughEventNumber: events.length,
+    },
+  )
   fakeGitHub(server, id, 'no-commits', created.workspace.branch)
   if (member) server.signIn(fakeUsers[1])
   return id

@@ -71,17 +71,21 @@ function linkedServer() {
   for (const session of linked) {
     const words = `Continue the work of ${session.sourceSessionId}.`
     const message = acceptedIn(session.id, `ask-${session.id}`, words)
-    server.json('GET', chatHistoryPath(org, ws, session.id), {
-      events: [
-        {
-          workspaceId: ws,
-          eventNumber: 1_000,
-          occurredAt: FAKE_TIME,
-          event: { type: 'message.accepted', message },
-        },
-      ],
-      throughEventNumber: 1_000,
-    })
+    server.json(
+      'GET',
+      chatHistoryPath(org, ws, session.id, { order: 'newest' }),
+      {
+        events: [
+          {
+            workspaceId: ws,
+            eventNumber: 1_000,
+            occurredAt: FAKE_TIME,
+            event: { type: 'message.accepted', message },
+          },
+        ],
+        throughEventNumber: 1_000,
+      },
+    )
   }
   // The Worker reopens the closed source as an open session, after the
   // events that the fake holds.
@@ -156,17 +160,21 @@ describe('the link of a linked session to its source', () => {
     })
     const words = 'Continue the loading state.'
     const message = acceptedIn(closedLinked.id, 'ask-closed', words)
-    server.json('GET', chatHistoryPath(org, ws, closedLinked.id), {
-      events: [
-        {
-          workspaceId: ws,
-          eventNumber: 1_000,
-          occurredAt: FAKE_TIME,
-          event: { type: 'message.accepted', message },
-        },
-      ],
-      throughEventNumber: 1_000,
-    })
+    server.json(
+      'GET',
+      chatHistoryPath(org, ws, closedLinked.id, { order: 'newest' }),
+      {
+        events: [
+          {
+            workspaceId: ws,
+            eventNumber: 1_000,
+            occurredAt: FAKE_TIME,
+            event: { type: 'message.accepted', message },
+          },
+        ],
+        throughEventNumber: 1_000,
+      },
+    )
     const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
       server.events.subscribe(after, (item) => listener.message(item))
     await mount(

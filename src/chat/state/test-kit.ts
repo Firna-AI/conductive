@@ -195,6 +195,7 @@ export function chatFor(
       FAKE_IDS.org,
       options.workspaceId ?? FAKE_IDS.workspace,
       '',
+      { order: 'newest' },
     ),
     'https://held.test',
   ).pathname

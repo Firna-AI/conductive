@@ -379,31 +379,31 @@ The chat shows the newest page and starts the live events. Then it loads
 the earlier pages above them. Every consumer moves to the newest-first
 pages.
 
-- [ ] Write the tests first, and see each fail before the change:
-  - [ ] The first load shows the newest page and starts the live events
+- [x] Write the tests first, and see each fail before the change:
+  - [x] The first load shows the newest page and starts the live events
         before an earlier page arrives.
-  - [ ] An earlier page and a live event that arrives during the load show
+  - [x] An earlier page and a live event that arrives during the load show
         once each, in event order.
-  - [ ] The chat shows "Loading earlier messages" above the newest page
+  - [x] The chat shows "Loading earlier messages" above the newest page
         until the oldest page arrives.
-  - [ ] A failed earlier page keeps the messages and offers Try again. Try
+  - [x] A failed earlier page keeps the messages and offers Try again. Try
         again completes the history.
-  - [ ] A session that becomes the shown session later loads newest first.
-  - [ ] An earlier page that closes and reopens the shown session does not
+  - [x] A session that becomes the shown session later loads newest first.
+  - [x] An earlier page that closes and reopens the shown session does not
         move the tabs.
-  - [ ] A page that does not move the read back fails the load.
-- [ ] Read newest first in `history` of `src/chat/api/client.ts`.
-- [ ] In `src/chat/state/history.ts`, read the newest page first, merge it,
+  - [x] A page that does not move the read back fails the load.
+- [x] Read newest first in `history` of `src/chat/api/client.ts`.
+- [x] In `src/chat/state/history.ts`, read the newest page first, merge it,
       and give its cutoff. Then read the earlier pages. Mark the history
       ready after the oldest page, or failed when an earlier page fails.
-- [ ] Hold the earlier pages, and merge them into the session log once,
+- [x] Hold the earlier pages, and merge them into the session log once,
       after the oldest page, or after the page that failed.
-- [ ] In `src/chat/state/load.ts`, start the live events after the cutoff of
+- [x] In `src/chat/state/load.ts`, start the live events after the cutoff of
       the newest page. Keep the second read of the workspace and the session
       list before them.
-- [ ] Keep one history load at a time for each session. Stop the earlier
+- [x] Keep one history load at a time for each session. Stop the earlier
       reads when the chat stops.
-- [ ] Move each consumer of the oldest-first load that "Replaced ways"
+- [x] Move each consumer of the oldest-first load that "Replaced ways"
       lists to the newest-first pages. Search `src/` for `chatHistoryPath`
       again first, and move each new consumer too.
 - [ ] Remove the forward session read of the browser route, as decision 281
@@ -412,18 +412,19 @@ pages.
       first, and move each new consumer too.
 - [ ] Update the route table in `worker/chat/README.md`, and the notes in
       `worker/chat/key-code.md` and `worker/chat/history.md`.
-- [ ] Update `src/chat/loads-and-sends.md` and the doc comment of
+- [x] Update `src/chat/loads-and-sends.md` and the doc comment of
       `loadChat`.
-- [ ] Update `plans/follow-ups/history-pages-change-saved-tabs.md`: the
+- [x] Update `plans/follow-ups/history-pages-change-saved-tabs.md`: the
       history load is fixed, and the paged replay of the events socket
       stays open.
-- [ ] Measure once the time to the first messages and the main-thread time
+- [x] Measure once the time to the first messages and the main-thread time
       of a long session on the fake API. Give the fold time and the render
       time apart. Save the result under
       `.context/chat-history-newest-first/`.
 - [ ] Smoke test a long session with `npm run dev`: the order of the pages,
       the "Loading earlier messages" line, and the live events during the
       load.
+- Evidence: `.context/chat-history-newest-first/milestone-3/report.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

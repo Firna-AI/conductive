@@ -15,14 +15,29 @@ the message field of each composer, and Stop.
   start steps, keeps it and shows a failed load as a notice by the composer,
   with Try again. An empty chat shows the failure in place of the chat.
 - The chat loads the session list, the view, and the workspace first. It
-  then shows its records, its start steps, and its composer while the full
-  history of the shown session loads. That session shows "Loading the
-  session" until its first page arrives. Then the workspace and the session
-  list load again. The stream starts after the history's
-  `throughEventNumber`, so no change between the reads and the stream gets
-  lost. The view also gives the routine of a run
+  then shows its records, its start steps, and its composer while the
+  newest history page of the shown session loads. That session shows
+  "Loading the session" until its first page arrives. The newest page
+  merges into the session log at once. Then the workspace and the session
+  list load again. The stream starts after that page's
+  `throughEventNumber`, while earlier pages still load. No change between
+  the reads and the stream gets lost. The view also gives the routine of a run
   workspace, with the pull request of a pull request run. The snapshot keeps
   it as `routine` for the workspace header.
+- The history API reads newest first with `order=newest`. Each earlier
+  request uses the preceding page's `nextBeforeEventNumber` as an exclusive
+  `before` cursor. Every request keeps the first page's cutoff. A cursor
+  that does not move back fails the history load.
+- Earlier pages load one after another. The load holds their events and
+  merges them once, after the oldest page or an earlier-page failure.
+  The session log orders them with newer history and live events, and
+  drops repeats. The chat shows "Loading earlier messages" above the
+  messages until that merge. A failed earlier page keeps the messages and
+  offers Try again beside the composer.
+- Try again starts with the newest page. Each session shares one running
+  load. Session actions wait for the complete history. Only the initial
+  workspace load takes the newest page's cutoff before that load ends.
+  A stopped controller ignores a late reply and requests no further page.
 - The chat writes no browser storage. The drafts stay in memory, and the
   server keeps the open tabs through the view route. A kept controller
   lives only in the memory of its tab, so a reload or a new tab starts

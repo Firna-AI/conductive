@@ -2,7 +2,7 @@ import { chatHistoryPath } from '../../shared/events'
 import { sessionsPath } from '../../shared/sessions'
 import { SessionMarkdown } from '../../shared/transcript/session-markdown'
 import { createChatApi } from '../api/client'
-import { readStoredEvents } from '../api/read-workspace'
+import { readNewestStoredEvents } from '../api/read-workspace'
 import type { DevBackend } from './dev-backend'
 import { recordOf } from './dev-sessions'
 
@@ -51,8 +51,10 @@ export async function handleTranscript(
   const api = createChatApi(backend.client, backend.target)
   const [stored, models, members] = await Promise.all([
     backend.server
-      .fetch(chatHistoryPath(orgId, workspaceId, session.id))
-      .then(async (response) => readStoredEvents(await response.json())),
+      .fetch(
+        chatHistoryPath(orgId, workspaceId, session.id, { order: 'newest' }),
+      )
+      .then(async (response) => readNewestStoredEvents(await response.json())),
     api.models(),
     api.members(),
   ])

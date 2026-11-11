@@ -94,10 +94,14 @@ describe('Try again on a failed turn', () => {
           ...fixtures.sessions,
           eventNumber: through + 1,
         })
-        server.json('GET', chatHistoryPath(org, ws, shown.id), {
-          events,
-          throughEventNumber: through,
-        })
+        server.json(
+          'GET',
+          chatHistoryPath(org, ws, shown.id, { order: 'newest' }),
+          {
+            events,
+            throughEventNumber: through,
+          },
+        )
       },
     })
     // The recorded error says "Try again." itself, and no button follows it.
@@ -113,13 +117,17 @@ describe('Try again on a failed turn', () => {
     })
     // The history was read before the newer events of the session.
     const first = fixtures.message
-    chat.server.json('GET', chatHistoryPath(org, ws, debounce), {
-      events: [
-        stored(1, accepted(first.id, debounce, first.text)),
-        stored(2, recordNaming(chat.controller, null, debounce)),
-      ],
-      throughEventNumber: chat.server.events.history().throughEventNumber,
-    })
+    chat.server.json(
+      'GET',
+      chatHistoryPath(org, ws, debounce, { order: 'newest' }),
+      {
+        events: [
+          stored(1, accepted(first.id, debounce, first.text)),
+          stored(2, recordNaming(chat.controller, null, debounce)),
+        ],
+        throughEventNumber: chat.server.events.history().throughEventNumber,
+      },
+    )
     const selecting = chat.controller.select(debounce)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
 
@@ -157,14 +165,21 @@ describe('Try again on a failed turn', () => {
     // Another member sent a message. The history has it, the stream not yet.
     const live = chat.server.events.history(reached).events
     const newer = reached + live.length
-    chat.server.json('GET', chatHistoryPath(org, ws, debounce), {
-      events: [
-        ...live,
-        stored(newer + 1, accepted('ask-d2', debounce, 'Use 300 ms instead.')),
-        stored(newer + 2, recordNaming(chat.controller, null, debounce)),
-      ],
-      throughEventNumber: newer + 2,
-    })
+    chat.server.json(
+      'GET',
+      chatHistoryPath(org, ws, debounce, { order: 'newest' }),
+      {
+        events: [
+          ...live,
+          stored(
+            newer + 1,
+            accepted('ask-d2', debounce, 'Use 300 ms instead.'),
+          ),
+          stored(newer + 2, recordNaming(chat.controller, null, debounce)),
+        ],
+        throughEventNumber: newer + 2,
+      },
+    )
     await chat.controller.select(debounce)
 
     const shown = text()
