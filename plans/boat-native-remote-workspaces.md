@@ -2793,6 +2793,11 @@ workspace asking for help/approval/prompt".
   - The contract value is `input` in `WorkspaceState`. Milestone 15f sets
     it while a Mac command request waits. Each later feature that waits
     for the user sets it too.
+- **Changed on 10 November 2026:** the user removed the state from the
+  desktop workspace header, in the web app and in the Mac app, because
+  the list and the chat already show it. The row in the list keeps needs
+  input. Agent call on the same day: a phone header keeps the state,
+  because a phone shows no list beside the workspace.
 
 ### 69. Pin the Node of the product's programs in each org image
 

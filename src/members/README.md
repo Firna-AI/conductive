@@ -68,7 +68,7 @@ with the message of the API.
 | Component               | Where it goes                                              | Props and callbacks                                                                                                    |
 | ----------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `MembersTab`            | The Members tab, in the page column of the org settings    | `api`, `org` (with the viewer's `role`), `viewerId`, `viewport`, `now`, optional `onMemberRemoved(member)` and `suspended` |
-| `OwnerPicker`           | The workspace header, beside the state                     | `api`, `workspace`, `canReassign` (the viewer is an admin of an org that is not suspended), `viewport`, `onReassigned(workspace)` |
+| `OwnerPicker`           | The workspace header, after the name and the repository    | `api`, `workspace`, `canReassign` (the viewer is an admin of an org that is not suspended), `viewport`, `onReassigned(workspace)` |
 | `OwnerChoices`          | Reassign to in the menu of a workspace row, beside the menu or in its sheet | `choices` from `useOwnerChoices({ api, workspace, onReassigned, close })`, `layout: 'menu' \| 'sheet'`. The menu moves the focus. |
 | `DeleteOrgSection`      | The General tab of an admin, under the org name            | `api`, `org`, `viewport`, `now`, optional `timeZone`, `onDeleted(org)`. It renders nothing for a member.               |
 | `DeletedOrgPage`        | The main area of a deleted org, which it fills             | `api`, `org` (with `deletion`), `viewport`, optional `timeZone` and `suspended`, `onRestored(org)`. Only an admin gets Restore. |

@@ -67,8 +67,13 @@ says.
 - The workspace list shows one state for each workspace: working, needs
   input, finished with unread output, ready, starting, stopped, or error.
 - Needs input shows while the agent waits for the user, such as for help,
-  an approval, or an answer (decision 68). The workspace header and its
-  row in the list show it, in the web app and in the Mac app.
+  an approval, or an answer (decision 68). Its row in the list shows it,
+  in the web app and in the Mac app.
+- On a phone, the workspace header also shows the state of its workspace.
+  Reason: a phone shows no list beside the workspace, and its Files,
+  Terminal, and Preview tabs hide the chat.
+- A state in the desktop header was rejected, because the list and the
+  chat already show it there.
 - Each state has its own mark shape, so no state depends on colour alone.
   Bold text marks unread output.
 - Archived workspaces sit in the Archived group at the end of the list.

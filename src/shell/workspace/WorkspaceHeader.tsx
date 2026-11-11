@@ -46,14 +46,15 @@ function State(props: { workspace: Workspace }) {
 }
 
 /**
- * The name, number, repository, owner, and state of the open
- * workspace. A workspace
+ * The name, number, repository, and owner of the open workspace. A workspace
  * with no name yet shows Untitled. The label of the number copies the link
  * of the workspace. On desktop it follows the name, and the repository
  * takes the room that the other parts leave. On a phone it leads
  * the line under the name. The list groups workspaces by section, so the
  * header names the repository. On desktop the header ends with the toggle
- * of the right column. A run workspace links to its routine below it.
+ * of the right column. Only a phone header shows the state, because a
+ * phone shows no list beside the workspace. A run workspace links to its
+ * routine below it.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -106,7 +107,6 @@ export function WorkspaceHeader(props: {
         </span>
       </span>
       {ownerView}
-      <State workspace={workspace} />
       <RightColumnToggle />
     </header>
   )

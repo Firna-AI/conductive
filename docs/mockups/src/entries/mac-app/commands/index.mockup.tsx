@@ -6,7 +6,7 @@ const flow = ['user-flows/mac-command']
 export const macCommands = defineScreen({
   title: 'Device commands',
   description:
-    'An agent in the cloud asks to run a command on this Mac. The request waits in the chat as a compact message, just above the composer: the exact command, the time limit, Deny, and Allow. Details opens the folder, the reason, the workspace, and the sender. The arrow beside Allow opens Always allow and Allow all commands for 15 minutes. The header and the workspace list show Needs input.',
+    'An agent in the cloud asks to run a command on this Mac. The request waits in the chat as a compact message, just above the composer: the exact command, the time limit, Deny, and Allow. Details opens the folder, the reason, the workspace, and the sender. The arrow beside Allow opens Always allow and Allow all commands for 15 minutes. The workspace list shows Needs input.',
   rationale:
     'The user asked that the Mac app registers the Mac as a device, and that each command needs permission, with these choices (decision 62). The user then asked for a compact message in the chat instead of a dialog, with the command and its actions (decision 62). The request goes to the Mac of the person who sent the turn. The agent login belongs to the starter of the session (decision 105), but Mac requests stay with the sender of the turn. The command runs with the permissions of the user, with an output limit.',
   relatedDocs: [],

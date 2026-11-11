@@ -37,8 +37,8 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   arrow beside Allow opens Always allow and Allow all commands for 15
   minutes. A view runs no script, so Details is a native disclosure, the
   arrow opens a native popover in the top layer, and each choice is a
-  link. The header and the workspace list mark the workspace with Needs
-  input, so the request shows from every page. A notification of macOS
+  link. The workspace list marks the workspace with Needs input, so the
+  request shows from every page. A notification of macOS
   opens the workspace when the app is in the background. The 15 minutes
   show as an amber bar with the time left and Stop.
 - The requests that wait share one region above the composer, from

@@ -24,19 +24,21 @@ function State(props: { status: ActivityStatus }) {
 }
 
 /**
- * The name, number, repository, owner, and state of the open
- * workspace. The list groups workspaces by section, so the
- * header names the repository. The label of the number follows the name,
- * and copies the link of the workspace. On a phone it leads the line under
- * the name, before the repository. For an admin of the org,
- * the owner opens the menu that reassigns the workspace. On desktop the
- * header ends with the toggle that hides the right column and shows it
- * again. A run workspace also links to its routine and its pull request.
+ * The name, number, repository, and owner of the open workspace. The list
+ * groups workspaces by section, so the header names the repository. The
+ * label of the number follows the name, and copies the link of the
+ * workspace. On a phone it leads the line under the name, before the
+ * repository. For an admin of the org, the owner opens the menu that
+ * reassigns the workspace. On desktop the header ends with the toggle that
+ * hides the right column and shows it again. Only a phone header shows the
+ * state, because a phone shows no list beside the workspace. A run
+ * workspace also links to its routine and its pull request.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
   /** The name to show, such as Untitled before the title comes. */
   name: string
+  /** The state of the workspace, which only a phone header shows. */
   status: ActivityStatus
   viewport: Viewport
   /** The menu of the owner is open. A phone shows it as a sheet. */
@@ -96,7 +98,6 @@ export function WorkspaceHeader(props: {
           </span>
         </span>
         {owner}
-        <State status={props.status} />
         <IconButton
           icon={PanelRight}
           label={

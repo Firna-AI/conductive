@@ -24,7 +24,8 @@ mount the chat.
   it names nobody but the reader.
 - `onWorkspaceChange` gets the workspace record after each change: its state,
   and the title that the backend gives it through `workspace.title` and
-  `workspace.updated` events. The header and the list of the app show it.
+  `workspace.updated` events. The list of the app shows both, and the header
+  shows the title. A phone header also shows the state.
 - A new workspace and each new session have no name: the `name` of the
   workspace record and the `title` of the session record are null. The
   tabs, the session history, the line of a linked session, and the header

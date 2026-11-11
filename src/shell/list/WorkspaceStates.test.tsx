@@ -4,13 +4,14 @@ import { ChatController } from '../../chat/state/controller'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
 import { renderScreen, startedApp, textOf } from '../test-render'
+import type { Viewport } from '../ui/viewport'
 import { sandboxState } from '../workspace/features'
 import { ToolEvents } from '../workspace/tools/tool-events'
 import { WorkspaceHeader } from '../workspace/WorkspaceHeader'
 import { OrgList } from './OrgList'
 
 describe('workspace states', () => {
-  test('a workspace that needs input shows it in its row and its header, and its cloud computer is ready', async () => {
+  test('a workspace that needs input shows it in its row and its phone header, not in its desktop header, and its cloud computer is ready', async () => {
     const app = await startedApp(new FakeApiServer({ workspaceState: 'input' }))
     const org = app.org(FAKE_IDS.org)
     await org.reload('list')
@@ -36,44 +37,52 @@ describe('workspace states', () => {
     })
     if (detail.state !== 'ready') throw new Error('The workspace did not open.')
     const { workspace } = detail.value
-    const header = textOf(
-      renderScreen(
-        app,
-        <WorkspaceHeader
-          context={{
-            org: { id: FAKE_IDS.org, name: 'Acme', role: 'admin' },
-            workspace,
-            viewer: fakeUser,
-            sandbox: sandboxState(workspace),
-            readOnly: false,
-            panel: null,
-            // The header offers no Resume, so it never runs.
-            resume: {
-              run: () => undefined,
-              pending: false,
-              error: null,
-              reset: () => undefined,
-            },
-            viewport: 'desktop',
-            view: [],
-            stream: open.stream,
-            // The header reads no saved view and no tool events, so the chat
-            // never starts and the tool events follow no stream.
-            savedView: new ChatController({
-              target: { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace },
-              client: app.services.api,
-              subscribe: () => () => undefined,
-            }),
-            toolEvents: new ToolEvents().subscribe,
-            archive: null,
-            restore: null,
-            running: null,
-            onReassigned: () => undefined,
-          }}
-        />,
-      ),
-    )
-    expect(header).toContain('Cal , owner of the workspace Needs input')
+    const header = (viewport: Viewport) =>
+      textOf(
+        renderScreen(
+          app,
+          <WorkspaceHeader
+            context={{
+              org: { id: FAKE_IDS.org, name: 'Acme', role: 'admin' },
+              workspace,
+              viewer: fakeUser,
+              sandbox: sandboxState(workspace),
+              readOnly: false,
+              panel: null,
+              // The header offers no Resume, so it never runs.
+              resume: {
+                run: () => undefined,
+                pending: false,
+                error: null,
+                reset: () => undefined,
+              },
+              viewport,
+              view: [],
+              stream: open.stream,
+              // The header reads no saved view and no tool events, so the chat
+              // never starts and the tool events follow no stream.
+              savedView: new ChatController({
+                target: {
+                  orgId: FAKE_IDS.org,
+                  workspaceId: FAKE_IDS.workspace,
+                },
+                client: app.services.api,
+                subscribe: () => () => undefined,
+              }),
+              toolEvents: new ToolEvents().subscribe,
+              archive: null,
+              restore: null,
+              running: null,
+              onReassigned: () => undefined,
+            }}
+          />,
+          { viewport },
+        ),
+      )
+    expect(header('phone')).toContain(', owner of the workspace Needs input')
+    const desktop = header('desktop')
+    expect(desktop).toContain('Cal , owner of the workspace')
+    expect(desktop).not.toContain('Needs input')
     expect(sandboxState(workspace)).toBe('ready')
   })
 })

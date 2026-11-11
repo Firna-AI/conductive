@@ -10,7 +10,7 @@ const flow = ['user-flows/mac-command']
 export const macCommandsInChat = defineScreen({
   title: 'Commands on a Mac',
   description:
-    'In the chat of the web app, the agent asked to run a command on the Mac of Cal, who sent the message. The request waits as a compact message just above the composer: the command, the Mac, the time limit, and Details. It shows the state only, because Cal answers in the Mac app. The header and the workspace list show Needs input.',
+    'In the chat of the web app, the agent asked to run a command on the Mac of Cal, who sent the message. The request waits as a compact message just above the composer: the command, the Mac, the time limit, and Details. It shows the state only, because Cal answers in the Mac app. The workspace list shows Needs input. A phone shows no list, so its header shows Needs input.',
   rationale:
     'The request goes to the Mac of the person who sent the turn, as decision 62 says, so the message names that Mac. Every member who opens the workspace sees the state of the command. Only the Mac app can allow a command on the Mac, so a browser shows no choices.',
   relatedDocs: [],
