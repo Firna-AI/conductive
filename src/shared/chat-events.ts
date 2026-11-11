@@ -1,7 +1,7 @@
 import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
 import type { ChangedFile } from './files'
-import type { UserMessage } from './messages'
+import type { MessageSender, UserMessage } from './messages'
 import type { RunnerEvent } from './runner'
 import type { Session } from './sessions'
 
@@ -114,6 +114,13 @@ export interface RunnerEventRefused {
 
 export type ChatEvent =
   | AgentChatEvent
+  | {
+      type: 'workspace.continued'
+      sessionId: string
+      member: MessageSender
+      branch: string
+      baseBranch: string
+    }
   | RunnerEventRefused
   | { type: 'message.accepted'; message: UserMessage }
   | {

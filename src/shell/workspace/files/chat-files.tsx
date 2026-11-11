@@ -4,6 +4,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
+import { awaitsActivation } from '../../../app/first-start'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import type { RenderTab, TabDraw } from '../../../chat/components/tab-row'
@@ -31,7 +32,7 @@ import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
 import { useFilesNavigation, useLeaveForSession } from './files-navigation'
 import { filesTabsOf, sameFilesTab, withoutTab } from './view-tabs'
-import { useConnectedFilesWhile, useKeptFilesWhile } from './workspace-files'
+import { useKeptFilesWhile } from './workspace-files'
 
 /** The subscription while the row shows no file tabs: to nothing. */
 function followNothing(): () => void {
@@ -162,9 +163,12 @@ function useMentions(
  * of the tab hides each secret value. The tabs of the old sessions from
  * Conductor take the titles of their list. When the chat makes a session
  * active while `content` shows a file or an old session, the address goes
- * back to the chat. The chat keeps the files connected, for the list of
- * `@` and the file chips. An archived workspace has no files, and it keeps
- * the tabs of its old sessions.
+ * back to the chat. The chat reads the kept files for the list of `@` and
+ * the file chips, also on a phone before a visit to Files:
+ * `KeptFilesConnection` of the screen keeps them connected. A workspace
+ * from Conductor that waits for its activation gets no files, because it
+ * has no project files yet. An archived workspace has no files, and it
+ * keeps the tabs of its old sessions.
  */
 export function useChatFiles(
   context: WorkspaceContext,
@@ -178,7 +182,10 @@ export function useChatFiles(
   const archived = context.sandbox === 'archived'
   const desktop = context.viewport !== 'phone'
   const labelOf = useTabLabels(context, !archived && desktop)
-  const files = useConnectedFilesWhile(context, !archived)
+  const files = useKeptFilesWhile(
+    context,
+    !archived && !awaitsActivation(context.workspace),
+  )
   const mentions = useMentions(context, files, navigation)
   const documents = useOldDocuments(context)
   const documentTab = useDocumentTabs(context, documents, shownDocument)

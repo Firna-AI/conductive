@@ -19,7 +19,8 @@ import { AgentEngine } from './engine'
 import { boundChatEvent } from '../../src/shared/event-limits'
 import { filterRunnerFileResponse } from './file-response'
 import { FileReporter } from './files'
-import { agentInstructions, type WorkspaceContext } from './instructions'
+import type { WorkspaceContext } from './instructions'
+import { runnerInstructions } from './runner-instructions'
 import { RunnerLink } from './link'
 import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 import { Repository } from './repository'
@@ -95,7 +96,7 @@ export class Runner {
     )
     this.engine = new AgentEngine({
       ...options,
-      instructions: agentInstructions(options),
+      instructions: (branches) => runnerInstructions(options, branches),
       tools: workspaceToolRuntime(options.request),
       checkpoint: (signal) =>
         checkpoint(new Repository(options.cwd, options.warn, signal)),

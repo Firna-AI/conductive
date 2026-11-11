@@ -18,6 +18,8 @@ import { ProviderLifetime } from './providers/lifetime'
 import type { RunnerImportPreparation } from '../../src/shared/runner-import'
 import { importDocumentFile } from '../../src/shared/conductor-import-manifest'
 import type { WorkspaceToolRuntime } from './providers/workspace-tools'
+import type { RunnerBranches } from '../../src/shared/runner'
+import type { BuiltInstructions } from './instruction-state'
 
 export interface ActiveTurn {
   first: RunnerTurnV2
@@ -44,6 +46,7 @@ export interface SessionRuntime {
   choice: AgentChoice
   conversationId: string | null
   instructions: string
+  instructionBranches: RunnerBranches | null
   generation: number
   active: ActiveTurn | null
 }
@@ -51,7 +54,7 @@ export interface SessionRuntime {
 export interface EngineOptions {
   cwd: string
   home: string
-  instructions: Record<Agent, string>
+  instructions: (branches?: RunnerBranches) => BuiltInstructions
   tools: WorkspaceToolRuntime
   providers: Record<Agent, ProviderFactory>
   store: EventStore
@@ -76,6 +79,7 @@ export function rememberSession(
     agent: session.agent,
     providerSessionId: session.conversationId,
     instructions: session.instructions,
+    instructionBranches: session.instructionBranches,
   })
 }
 
@@ -140,6 +144,7 @@ export async function startProvider(
             }
           : {}),
         instructions: session.instructions,
+        instructionBranches: session.instructionBranches,
         tools: { ...options.tools, turnId: turn.first.turnId },
         event,
         warn: options.warn,

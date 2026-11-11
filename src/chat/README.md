@@ -60,7 +60,8 @@ chips.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the lost lines, the turns,
-  the work fold of each ended turn, and Try again.
+  the open run of tool calls of a running turn, the work fold of each
+  ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
   stays in place when the user opens or closes it, also for a run of calls.
@@ -72,7 +73,8 @@ chips.
   the chat shares with the file preview and the mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, the message field of each composer, and Stop.
+  sends, the fixed prompts of the pull request bar, the message field of
+  each composer, and Stop.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,
@@ -191,6 +193,11 @@ check in the Mac app.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+- `state/message-send.ts`: `postMessage`, the post of one message and the
+  route of its reply, which a draft and a fixed prompt share.
+- `state/prompt-actions.ts`: `sendPrompt`, a fixed prompt to the session of
+  the chat, which changes no draft, as
+  [Fixed prompts](loads-and-sends.md#fixed-prompts) says.
 - `state/attachment-actions.ts`: attach, Try again, and Remove for the files
   of a draft. Each upload goes through the app's `uploadAttachment`, ends
   on its draft after a move, and stops with Remove and with the chat.
@@ -224,6 +231,8 @@ check in the Mac app.
   `foldedWork` finds the work of each ended turn that folds, as the
   [transcript rules](transcript.md) say. `groupEntries` makes the entries
   that the chat draws, and puts each insert at its place, also in a fold.
+  It gives each run of tool calls its open state: while a turn runs, only
+  the run with its newest call is open.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.

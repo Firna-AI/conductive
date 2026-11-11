@@ -1,11 +1,20 @@
 import type { UserMessage } from '../../../src/shared/messages'
+import type { RunnerBranches } from '../../../src/shared/runner'
 
 export function providerMessage(
   message: UserMessage,
+  current?: RunnerBranches,
+  fixed?: RunnerBranches | null,
   importDocument?: string,
 ): string {
   const login = message.sender.githubLogin.replace(/\s+/gu, ' ').trim()
   const name = message.sender.displayName?.replace(/\s+/gu, ' ').trim()
   const sender = name ? `${name} (@${login})` : `@${login}`
-  return `Sender: ${sender}\n\n${message.text}${importDocument ? `\n\nContinue the earlier work from ${JSON.stringify(importDocument)}. Read that document before you answer.` : ''}`
+  const branchLine =
+    current &&
+    (current.workspaceBranch !== fixed?.workspaceBranch ||
+      current.targetBranch !== fixed?.targetBranch)
+      ? `\nCurrent branches: workspace ${JSON.stringify(current.workspaceBranch)}; target ${JSON.stringify(current.targetBranch)}.`
+      : ''
+  return `Sender: ${sender}${branchLine}\n\n${message.text}${importDocument ? `\n\nContinue the earlier work from ${JSON.stringify(importDocument)}. Read that document before you answer.` : ''}`
 }

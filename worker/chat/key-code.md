@@ -21,7 +21,9 @@ first.
   hooks that `createWorkspaceIntegration` sets: the turn ends, the runner
   events, the file results, the import results, and the import
   preparation check. These hooks hold the turns of an unfinished import, as
-  [Workspace lifecycle](integration/workspace-lifecycle.md) says.
+  [Workspace lifecycle](integration/workspace-lifecycle.md) says, and each
+  turn while a Continue runs, as
+  [Continue](../lifecycle/continue.md#the-reservation) says.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
   lifecycle events. Its stop transaction clears the port report with
@@ -108,10 +110,11 @@ first.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
-  check. Each command takes the shape of the connection's protocol
-  version. Version 1 gets the real login in each `turn` and `message`
-  command. Version 2 gets a turn token in each `turn` command, after the
-  running state commits, and no credential in a `message` command.
+  check and the current branches that `branch-data.ts` reads. Each command
+  takes the shape of the connection's protocol version. Version 1 gets the
+  real login in each `turn` and `message` command. Version 2 gets a turn
+  token in each `turn` command, after the running state commits, and no
+  credential in a `message` command.
   `gatewayRunnerCommand` in `runner-gateway-command.ts` builds that
   version 2 command. Delivery skips a command whose `deliveredTo` names
   the current connection.

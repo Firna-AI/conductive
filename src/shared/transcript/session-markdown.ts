@@ -19,7 +19,6 @@ import {
 import { plainText } from './markdown-code'
 import { chatEventsOf, type SessionEnvelopeInput } from './session-events'
 import { SessionLog } from './session-log'
-import { toolRunOpen } from './tool-words'
 import { groupEntries, workSummary } from './transcript-entries'
 import { turnCopy, type ChatReaders } from './turn-words'
 
@@ -134,7 +133,10 @@ export class SessionMarkdown {
         continue
       }
       if (entry.kind === 'item') {
-        heading(turnOf(transcript, entry.item))
+        // The note of a Continue belongs to no turn, so it has no heading.
+        if (entry.item.kind !== 'continued') {
+          heading(turnOf(transcript, entry.item))
+        }
         blocks.push(itemMarkdown(entry.item, transcript, readers))
       } else if (entry.kind === 'insert') {
         heading(entry.insert.content.turnId)
@@ -143,7 +145,7 @@ export class SessionMarkdown {
         const first = transcript.items.find((item) => item.id === entry.id)
         heading(first ? turnOf(transcript, first) : null)
         blocks.push(
-          detail === 'concise' && !toolRunOpen(entry.calls)
+          detail === 'concise' && !entry.open
             ? foldMarkdown(entry.calls)
             : entry.calls.map(toolMarkdown).join('\n'),
         )

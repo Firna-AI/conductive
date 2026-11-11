@@ -59,6 +59,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
+- It writes to GitHub only as a member. A merge from the pull request bar
+  uses the GitHub token of the member who clicks, as
+  [Merge as the member](../protocol/github-tokens.md#merge-as-the-member)
+  says.
 
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
@@ -85,6 +89,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   uses.
 - It also holds the start steps, the stop timer, the delete timer of an
   archived workspace, and the banner state.
+- It runs the trusted jobs of its sandbox: the fetch of a create, and the
+  branch change of Continue.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace

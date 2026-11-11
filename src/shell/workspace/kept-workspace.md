@@ -41,14 +41,34 @@ the `AppModel` of the tab, for the signed-in user.
   them follow the stream of the model before it opens, as the notices do.
   They keep the revokes of previews, and give each tool the kept revokes
   first, then the live events.
-- The tab also keeps the `WorkspaceFiles` of each workspace whose Files
-  part or chat showed. The Files part and the chat connect it while they
-  show, with one shared connection, so a return shows the lists at once,
-  and its socket asks only for the events after its last event number.
-  The chat needs it for the list of `@` and the file chips, also on a
-  phone before a visit to Files. A sign-out stops and forgets it with the
-  other kept parts.
+- The tab also keeps the `WorkspaceFiles` of each workspace that it
+  showed. The workspace screen connects it while it shows a workspace that
+  is not archived, so a return shows the lists at once, and its socket asks
+  only for the events after its last event number. For a workspace from
+  Conductor, it connects only after a successful activation.
+  `KeptFilesConnection` owns the one connection, on desktop and on each tab
+  of a phone. The
+  Files part, the file pages, the chat, and the pull request bar only read
+  the store. The chat reads it for the list of `@` and the file chips, also
+  on a phone before a visit to Files. A sign-out stops and forgets it with
+  the other kept parts.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
   and reads the stored history again.
 - The memory has no size limit. It keeps each workspace that the tab
   showed until a reload or a sign-out.
+
+## Key code
+
+- `shown-workspaces.ts`: `ShownWorkspaces`, the kept workspaces of one tab
+  and one user. It keeps a workspace whose first start failed, as it keeps
+  any other. `ShownWorkspaces.view` gives a view of a workspace, and makes
+  its parts at the first view.
+- `tab-memory.ts`: `shownWorkspaces`, which clears them at a sign-out or a
+  sign-in of another user.
+- `workspace-view.ts`: `WorkspaceView`, the store of one mounted view over
+  the kept parts. Its snapshot is the detail of the model. `connect` shows
+  the parts, and its result hides them.
+- `KeptWorkspace.test.tsx`: mounts the whole app over the fake API. It
+  checks a return, the event number of each socket, a new tab, the clear at
+  a sign-out, and the app values that change while the tab is away.
+  `kept-test-kit.tsx` holds its helpers.

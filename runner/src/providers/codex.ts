@@ -16,12 +16,22 @@ import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
 import { codexHistoryFailure, NativeHistoryError } from './native-history'
 import type { ProviderFactory, ProviderInput } from './types'
+import type { RunnerBranches } from '../../../src/shared/runner'
 
-function input(command: ProviderInput, importDocument?: string) {
+function input(
+  command: ProviderInput,
+  branches?: RunnerBranches | null,
+  importDocument?: string,
+) {
   return [
     {
       type: 'text',
-      text: providerMessage(command.message, importDocument),
+      text: providerMessage(
+        command.message,
+        command.branches,
+        branches,
+        importDocument,
+      ),
       text_elements: [],
     },
     ...(command.attachments.length
@@ -186,7 +196,11 @@ export function createCodexFactory(
                 threadId,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: input(command, importDocument),
+                input: input(
+                  command,
+                  options.instructionBranches,
+                  importDocument,
+                ),
               })
             } catch (error) {
               userIds = before
@@ -198,7 +212,11 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId,
-                input: input(command, importDocument),
+                input: input(
+                  command,
+                  options.instructionBranches,
+                  importDocument,
+                ),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,

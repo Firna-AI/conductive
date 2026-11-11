@@ -1,5 +1,6 @@
 import type { AppEnv } from '../env'
 import type { LifecyclePublisher } from '../lifecycle/durable-types'
+import { pendingContinue } from '../lifecycle/continue-types'
 import {
   importPreparedForDispatch,
   unfinishedImport,
@@ -78,6 +79,7 @@ export function workspaceLifecycleHooks(
         runnerDisconnected: async (_id, publish) =>
           controller().runnerLifecycleDisconnected(callbackPublisher(publish)),
         turnDispatching: async (id, turn, publish) => {
+          if (await pendingContinue(storage)) return false
           const state = await controller().readLifecycle()
           if (!state) return !(await unfinishedImport(env.DB, id))
           if (!['ready', 'working', 'unread', 'input'].includes(state.state))

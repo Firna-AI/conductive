@@ -7,6 +7,7 @@ import {
   uploadingAttachments,
   type Attachment,
 } from '../fixtures/attachments'
+import { barRunningConversations } from '../fixtures/barConversations'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { mentionChipsDraft, mentionDrafts } from '../fixtures/fileMentions'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
@@ -27,6 +28,7 @@ const runningConversations = new Set([
   'linked',
   'sent-files',
   'link-sent',
+  ...barRunningConversations,
   'sent-by',
   'sent-by-other',
 ])

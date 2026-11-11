@@ -1,6 +1,9 @@
 /**
  * The turn of Checkout address autocomplete, which most conversations
  * start from: its parts, the whole turn, and the turn that a stop cut off.
+ * The turn that most chat states build on. The member asks for address
+ * autocomplete in the checkout form. The agent builds it, tests it, and
+ * opens pull request #482.
  */
 
 import type { ChatItem, ToolKind } from './conversations'

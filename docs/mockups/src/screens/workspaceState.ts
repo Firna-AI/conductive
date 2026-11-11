@@ -10,9 +10,15 @@ import { bannerStates } from '../fixtures/pullRequests'
 import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/openableWorkspaces'
+import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
 import { composerStates, tabStates } from './chatStates'
+import {
+  feedbackStateDefaults,
+  feedbackStateKeys,
+  feedbackStateProperties,
+} from './feedbackState'
 import { overlayKeys } from './overlayKeys'
-import { copyResults, resumeKeys } from './resultKeys'
+import { resumeKeys } from './resultKeys'
 import { sandboxKeys } from './sandboxKeys'
 
 /**
@@ -41,16 +47,15 @@ export const workspaceStateSchema = {
     'rightColumn',
     'overlay',
     'archive',
-    'toast',
     'viewer',
     'lostUpdate',
     'tree',
     'paths',
     'org',
     'palette',
-    'copyLink',
     'resume',
-    'copyTranscript',
+    ...feedbackStateKeys,
+    ...barStateKeys,
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -127,8 +132,9 @@ export const workspaceStateSchema = {
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session, or the question of Archive of a workspace
-     * from Conductor that was never activated.
+     * menu of the first session, the question of Archive of a workspace from
+     * Conductor that was never activated, or the question of Continue with
+     * work that is not pushed.
      */
     overlay: { enum: overlayKeys },
     /**
@@ -139,11 +145,6 @@ export const workspaceStateSchema = {
      * workspace.
      */
     archive: { enum: ['kept', 'ended', 'deleted'] },
-    /**
-     * A toast at the bottom of the screen: none, or the toast just after
-     * Archive, which names the workspace and offers Restore.
-     */
-    toast: { enum: ['none', 'archived'] },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -191,15 +192,10 @@ export const workspaceStateSchema = {
      * opens it from the list, so a phone shows the palette of the list.
      */
     palette: { enum: paletteViews },
-    /** The label of the workspace number, just after a press or not. */
-    copyLink: { enum: copyResults },
     /** A session from Conductor, as `resumeKeys` says. */
     resume: { enum: resumeKeys },
-    /**
-     * The toast after Copy transcript of the tab menu. The menu closed on
-     * the press, and the shown tab stays.
-     */
-    copyTranscript: { enum: copyResults },
+    ...feedbackStateProperties,
+    ...barStateProperties,
   },
 } as const
 
@@ -225,16 +221,15 @@ export const readyWorkspace: WorkspaceState = {
   rightColumn: 'shown',
   overlay: 'none',
   archive: 'kept',
-  toast: 'none',
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
   paths: 'plain',
   org: 'active',
   palette: 'closed',
-  copyLink: 'none',
   resume: 'none',
-  copyTranscript: 'none',
+  ...feedbackStateDefaults,
+  ...barStateDefaults,
 }
 
 /**

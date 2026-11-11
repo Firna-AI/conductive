@@ -1,9 +1,11 @@
 # The design of the chat
 
 This page belongs to [the design](design.md), which gives the style, the
-layouts, the design tokens, and the shared parts. This page gives workspace, session, and file chips,
-attached files, Markdown tables, and the work fold of a turn. It also gives the data that the chat does
-not have, and the files that the cloud computer could not read.
+layouts, the design tokens, and the shared parts. This page gives workspace,
+session, and file chips with the list of `@`, attached files, the Markdown
+tables of a reply and of a file preview, and the work fold of a turn. It
+also gives the data that the chat does not have, and the files that the
+cloud computer could not read.
 
 - `AttachmentChips` in `src/components/chat/` draws each attached file as a
   chip: a glyph, the name, a label, and its actions. While a file uploads,
@@ -59,6 +61,10 @@ not have, and the files that the cloud computer could not read.
     cut off. A part without an agent message does not fold, and a run
     folds only when it holds a tool call or a message. While a turn runs,
     each message shows, and each run of tool calls folds on its own.
+    Only the newest run of the running turn shows each call, also between
+    two calls and after a message that follows it, as
+    `app/chat/tables/rows` shows. Each earlier run of the turn stays
+    folded, as `app/chat/turns` shows.
   - `WorkFold` draws the fold. Its line reads "11 tool calls, 2 messages",
     with the icons of the tool kinds and the left-out output. `FoldLine` in
     `ToolGroup.tsx` draws the line of both kinds of fold. A Mac command

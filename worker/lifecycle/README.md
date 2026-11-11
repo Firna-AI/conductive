@@ -2,8 +2,9 @@
 
 This folder holds the Worker code that prepares the org image and runs the
 life of each workspace. The org image is the saved snapshot that every new
-sandbox of an org starts from. A workspace is one task with its own branch
-and its own Boat sandbox. The code reaches Boat only through the
+sandbox of an org starts from. A workspace has its own Boat sandbox and one
+branch at a time. [Continue](continue.md) moves it to a new branch after
+its merge. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
 with the client of the provider account that each record stores.
 [Provider accounts](provider-accounts.md) and the
@@ -31,8 +32,10 @@ refreshes, and build log streams.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
-  the current turn. During the restore of an activation, give it the token
-  of the activator.
+  the current turn, or of the member who pressed Continue during its fetch.
+  During the restore of an activation, give it the token of the activator.
+- Continue a workspace on a new branch after its merge, with the same
+  sandbox and sessions.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
@@ -80,6 +83,14 @@ separate image lease, the attempt fence, the phases and their runner
 commands, the held messages, the work cleanup after success, and the
 interrupted attempts.
 
+### Continue
+
+[Continue](continue.md) gives the admission and reservation of Continue,
+its phases, the staged fetch and the branch move, the publication, and the
+recovery. [Continue routes](continue-routes.md) gives its routes and errors.
+[The git credential sender](git-credentials.md#continue) gives the grant
+of its fetch.
+
 ### Builds and refreshes
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
@@ -121,8 +132,8 @@ A confirmed missing archived disk uses that batch too.
 
 ### Key Code
 
-[Lifecycle key code](key-code.md) names the files, the types, and the
-functions of the lifecycle that a reader opens first.
+[Key code](key-code.md) lists the entry points of the lifecycle code, and
+the guides that give the entry points of each part.
 
 The trusted [import record writer](../conductor-import/workspace-data.ts)
 publishes a verified imported workspace without a cloud computer or first chat identity.

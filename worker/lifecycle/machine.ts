@@ -9,12 +9,22 @@ import {
   authenticateWorkspaceToken,
   workspaceTokenRefusedError,
 } from './tokens'
-import type { WorkspaceRuntime } from './workspace-runtime'
+import type {
+  WorkspaceRuntime,
+  WorkspaceLifecycleEndpoint,
+} from './workspace-runtime'
+
+type CredentialRuntime = Omit<WorkspaceRuntime, 'workspace'> & {
+  workspace(
+    id: string,
+  ): Pick<WorkspaceLifecycleEndpoint, 'credentialSender'> &
+    Partial<Pick<WorkspaceLifecycleEndpoint, 'activationCredentialSender'>>
+}
 
 /** The machine-host dispatcher calls this handler before browser routing. */
 export async function handleGitCredential(
   request: Request,
-  runtime: WorkspaceRuntime,
+  runtime: CredentialRuntime,
 ): Promise<Response> {
   if (
     !runtime.env.MACHINE_ORIGIN ||
@@ -41,7 +51,7 @@ export async function handleGitCredential(
 }
 
 async function authenticatedCredentialResponse(
-  runtime: WorkspaceRuntime,
+  runtime: CredentialRuntime,
   bearer: string,
   turnId: string | null,
   activationId: string | null,
@@ -71,7 +81,7 @@ async function authenticatedCredentialResponse(
 }
 
 async function authorizeCredential(
-  runtime: WorkspaceRuntime,
+  runtime: CredentialRuntime,
   bearer: string,
   tokenHash: string,
   turnId: string | null,
@@ -81,9 +91,9 @@ async function authorizeCredential(
   if (turnId !== null && activationId !== null) throw currentTurnRequired()
   const senderId =
     activationId !== null
-      ? await runtime
+      ? ((await runtime
           .workspace(identity.workspaceId)
-          .activationCredentialSender(activationId)
+          .activationCredentialSender?.(activationId)) ?? null)
       : turnId === null
         ? null
         : await runtime.workspace(identity.workspaceId).credentialSender(turnId)

@@ -6,6 +6,11 @@ import { Repository } from './repository'
 it('keeps newer base commits out of Changes, file marks, and diffs', async () => {
   const h = await repositoryFixture()
   const repository = new Repository(h.root)
+  await h.git(
+    'symbolic-ref',
+    'refs/remotes/origin/HEAD',
+    'refs/remotes/origin/main',
+  )
   await h.git('branch', 'review-source')
   await h.write('README.md', 'first\nrun work\n')
   await h.git('add', 'README.md')
@@ -19,6 +24,8 @@ it('keeps newer base commits out of Changes, file marks, and diffs', async () =>
   await h.git('checkout', 'task')
   const expected = {
     baseBranch: 'review-source',
+    unpushedCommits: 1,
+    uncommittedFileCount: 0,
     files: [
       {
         path: 'README.md',
@@ -69,6 +76,8 @@ it('compares from the fetched remote base when the local base branch is behind',
   await h.git('commit', '-m', 'run work')
   const expected = {
     baseBranch: 'review-source',
+    unpushedCommits: 1,
+    uncommittedFileCount: 0,
     files: [
       {
         path: 'README.md',
@@ -91,5 +100,17 @@ it('compares from the fetched remote base when the local base branch is behind',
     oldContent: 'first\nremote base work\n',
     newContent: 'first\nremote base work\nrun work\n',
     patch: expect.stringContaining('+run work\n'),
+  })
+  await h.git(
+    'symbolic-ref',
+    'refs/remotes/origin/HEAD',
+    'refs/remotes/origin/main',
+  )
+  await h.git('config', 'branch.task.gh-merge-base', 'review-source')
+  expect(await repository.changes('main')).toEqual(expected)
+  expect((await repository.snapshot('main')).changes).toEqual(expected)
+  expect(await repository.diff('README.md', 'main')).toMatchObject({
+    baseBranch: 'review-source',
+    oldContent: 'first\nremote base work\n',
   })
 })

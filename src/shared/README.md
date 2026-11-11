@@ -13,18 +13,8 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `AgentSessionWriteResponse` keeps the accepted session, message, and turn while reporting current workspace and resume state.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
-`conductor-import.ts` owns the optional `Workspace.conductorImport` origin.
-It keeps the local Conductor ID, importer user ID, and nullable activation completion time.
-Native workspaces omit it. `readWorkspaceImport` validates that field for each workspace reader.
-An imported workspace starts in `inactive`, with no first message or session.
-The same module owns the old-document metadata and the paths of the import routes.
-The other `conductor-import-*.ts` modules own the device operations, the manifest, their parsers, and the page helpers.
-[Shared import contracts](conductor-import.md) lists them and their public and private values.
-
-`workspacePaths.activate` in `workspaces.ts` names the Activate route of an imported workspace.
-Its reply is `ActivateWorkspaceResponse`: a `WorkspaceResponse` with `sessionId`, the real early session of the activator.
-An activation shows its start with `WorkspaceStart.kind` `create`. A Resume of an activated import keeps `resume`.
-[Import activation](../../worker/lifecycle/import-activation.md) gives its steps and failures.
+[Shared import contracts](conductor-import.md) gives the import origin of a workspace and the Activate route of an imported workspace.
+It lists the other import modules and their public and private values.
 
 Each area owns its paths and payloads. Import from that area directly.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
@@ -95,6 +85,8 @@ that report, its limits, and its refresh kind.
 `RunnerConnection` and `RunnerConnector` take the type of the Worker's
 messages.
 Browser response types carry no login and no turn token.
+`RunnerTurn` and `RunnerMessageDuringTurn` carry the current `branches`: the workspace branch and the target branch.
+The current Worker always sends them. A command of an older producer can omit them.
 Turn commands also carry the commit author of the member whose message started the turn.
 Message commands carry no commit author.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
@@ -139,6 +131,14 @@ Tree and changes revisions have independent sequences within each runner stream.
 A new stream starts with full reports. A reconnect keeps its revisions and parts.
 The workspace joins all parts before it publishes a full browser report.
 Branch changes include committed, staged, unstaged, and untracked work.
+`ChangesResponse.unpushedCommits` counts the current branch's commits that
+no remote branch holds. `ChangesResponse.uncommittedFileCount` counts the
+raw Git status records of uncommitted work, also untracked files, and
+counts a rename once. It also counts a file whose edit brings back its base
+content, which Changes lists in no row. So it can differ from the number
+of rows. Each changes part repeats both complete counts.
+The current runner always sends both. Reports from older workspace images
+can omit either, and readers preserve that absence instead of assuming zero.
 `runner-files.ts` defines file read and diff commands and their matching results.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.
@@ -172,6 +172,11 @@ Its `repairFailed: true` flag marks a refused replacement of a lost workspace up
 Only the workspace sets that flag.
 [Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the rules of the request and of a failed repair.
+`workspace.continued` is the note of Continue in one session. It belongs to
+`ChatEvent`, so it reaches the browser stream, but not to `AgentChatEvent`
+or to the runner events. Only the Worker writes it. It names its
+`sessionId`, the `member` who pressed Continue, the new `branch`, and its
+`baseBranch`.
 
 `events.ts` defines the browser stream. Its event numbers span all sessions
 and runner connections of one workspace. A reconnect uses the last stored number.
@@ -271,6 +276,8 @@ The git credential payload is not defined yet.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the required `waitlistOn` flag of the waitlist switch, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause and switch changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
+- [Workspace contracts](workspaces.ts) give `workspacePaths.continue` and `workspacePaths.continueResult`. `ContinueWorkspaceRequest` sends the `expectedBranch` that the caller shows, and an optional `allowLocalWork`. `ContinueWorkspaceResponse` is a pending job with its `continueId`, a `confirmation-required` reply with the `branch`, the `baseBranch`, and the `LocalWork` that the check of Continue found, or a `continued` reply with the `workspace` and its `eventNumber`. [Continue routes](../../worker/lifecycle/continue-routes.md) gives the routes and the errors.
+- [GitHub contracts](github.ts) give the five `githubPaths` routes of a workspace: the banner and checks reads, the member capability, the merge start, and the merge result. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
 - [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.

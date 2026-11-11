@@ -9,4 +9,5 @@ export const overlayKeys = [
   'reassign',
   'tab-menu',
   'imported-archive',
+  'continue-unpushed',
 ] as const

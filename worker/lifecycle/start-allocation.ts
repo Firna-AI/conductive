@@ -89,11 +89,12 @@ export async function allocateWorkspace(
   const pinned = await env.DB.prepare(
     `UPDATE workspaces SET runner_protocol_version = COALESCE(
       (SELECT runner_protocol_version FROM image_builds
-       WHERE org_id = ? AND snapshot_name = ? AND state = 'succeeded' LIMIT 1), 1)
+       WHERE org_id = ? AND provider_account = ? AND snapshot_name = ? AND state = 'succeeded' LIMIT 1), 1)
      WHERE org_id = ? AND id = ? ${job.kind === 'activate' ? `AND ${activationResourceFence}` : ''}`,
   )
     .bind(
       job.orgId,
+      job.providerAccount,
       payload.snapshotName ?? null,
       job.orgId,
       job.workspaceId,

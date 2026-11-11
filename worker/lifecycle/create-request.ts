@@ -1,7 +1,7 @@
 import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
-import { hash } from '../security/crypto'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { workspaceBranch } from './workspace-branch'
 import { requireOrgMember } from './access'
 import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
@@ -15,21 +15,6 @@ export interface WorkspaceCreationBase {
 export interface WorkspaceCreationInput extends CreateWorkspaceRequest {
   name?: string
 }
-
-const CITIES = [
-  'lisbon',
-  'oslo',
-  'kyoto',
-  'perth',
-  'lima',
-  'riga',
-  'bern',
-  'seoul',
-  'milan',
-  'porto',
-  'quito',
-  'delft',
-] as const
 
 export async function prepareCreationRequest(
   runtime: WorkspaceRuntime,
@@ -53,18 +38,12 @@ export async function prepareCreationRequest(
   const id = reservedId ?? dependencies.randomToken()
   const sessionId = dependencies.randomToken()
   const turnId = dependencies.randomToken()
-  const random = await hash(dependencies.randomToken())
-  const city = CITIES[random.charCodeAt(0) % CITIES.length]
-  const suffix = [...random.slice(1, 5)]
-    .map(
-      (character) =>
-        'abcdefghijklmnopqrstuvwxyz0123456789'[character.charCodeAt(0) % 36],
-    )
-    .join('')
+  const { city, branch: newBranch } = await workspaceBranch(
+    user.githubLogin,
+    dependencies.randomToken,
+  )
   const branch =
-    input.branch?.type === 'existing'
-      ? input.branch.name
-      : `${user.githubLogin}/${city}-${suffix}`
+    input.branch?.type === 'existing' ? input.branch.name : newBranch
   return {
     workspaceId: id,
     orgId,

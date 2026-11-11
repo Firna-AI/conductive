@@ -8,6 +8,7 @@ import {
   repositoryPull,
   type RepositoryPull,
 } from './fake-pull'
+import { RepositoryMerges } from './fake-merges'
 
 export class RepositoryGitHub {
   requests: Request[] = []
@@ -22,6 +23,7 @@ export class RepositoryGitHub {
   pulls: Record<number, RepositoryPull> = { 2: repositoryPull() }
   checks = new Map<string, unknown[]>([[HEAD_SHA, [passedRun]]])
   pageSize = 100
+  readonly merges = new RepositoryMerges()
   failure: Response | null = null
   onRequest: ((operation: string) => Promise<void>) | null = null
   private readonly signIn: FakeGitHub
@@ -53,6 +55,18 @@ export class RepositoryGitHub {
       return this.signIn.fetch(request)
     this.requests.push(request.clone())
     if (this.failure) return this.failure.clone()
+    const merge = url.pathname.match(
+      /^\/repos\/([^/]+)\/([^/]+)\/pulls\/(\d+)\/merge-async(?:\/([^/]+))?$/,
+    )
+    if (merge) {
+      if (
+        `${decodeURIComponent(merge[1])}/${decodeURIComponent(merge[2])}` !==
+        this.fullName
+      )
+        return Response.json({}, { status: 404 })
+      await this.onRequest?.(merge[4] ? 'MergeResult' : 'MergeStart')
+      return this.merges.fetch(request, this.pulls[Number(merge[3])], merge[4])
+    }
     const body: unknown = await request.json()
     if (
       !isRecord(body) ||
@@ -71,7 +85,14 @@ export class RepositoryGitHub {
     const repository: Record<string, unknown> = {
       databaseId: this.repositoryId,
     }
-    if (operation === 'BannerLookup') {
+    if (operation === 'MergeCapabilities') {
+      Object.assign(
+        repository,
+        this.merges.capabilities(
+          (request.headers.get('Authorization') ?? '').replace(/^Bearer /, ''),
+        ),
+      )
+    } else if (operation === 'BannerLookup') {
       const tip = this.branches.get(String(variables.ref))
       const states = Array.isArray(variables.states) ? variables.states : []
       const pulls = Object.values(this.pulls)

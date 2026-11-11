@@ -1,14 +1,13 @@
 import { useCallback, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert, SearchX } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
 import { usePassedDeadlines } from '../../app/deadlines'
 import { mayArchive, mayRestore } from '../../app/permissions'
-import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import {
   useWorkspaceStore,
@@ -19,10 +18,11 @@ import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
 import { ActionButton } from '../ui/actions'
-import { useGo } from '../ui/AppLink'
 import { useViewport } from '../ui/viewport'
 import { ChatArea } from './ChatArea'
+import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
+import { KeptFilesConnection } from './files/kept-files'
 import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
@@ -32,6 +32,7 @@ import { OpenSessionAddress } from './session-address'
 import { useStartAction } from './start-action'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
+import { Unavailable } from './Unavailable'
 import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
@@ -39,29 +40,6 @@ import { WorkspaceMacBar } from './WorkspaceMacBar'
 import { WorkspacePaletteActions } from './WorkspacePaletteActions'
 import type { WorkspaceView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
-
-/**
- * A workspace that the app cannot show, such as after a 404. The way out is
- * the list of the org.
- */
-function Unavailable(props: { orgId: string; body: string }) {
-  const go = useGo()
-  return (
-    <EmptyState
-      action={
-        <ActionButton
-          onPress={() => go(routes.org(props.orgId))}
-          tone="primary"
-        >
-          All workspaces
-        </ActionButton>
-      }
-      body={props.body}
-      icon={SearchX}
-      title="This workspace is not available"
-    />
-  )
-}
 
 /** Shows the kept parts of the workspace while the screen shows it. */
 function connectView(view: WorkspaceView): () => void {
@@ -176,6 +154,7 @@ export function WorkspaceScreen(props: {
     view: props.view,
     stream: model.stream,
     savedView: chat,
+    chat,
     toolEvents: toolEvents.subscribe,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => lifecycle.archive(workspace)
@@ -229,18 +208,17 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  // The actions of the screen for the palette.
-  const paletteOffer = <WorkspacePaletteActions chat={chat} context={context} />
-  // The resume at the open of a tab, the session of a session address, and
-  // the question of Archive.
-  const tabOpen = (
+  // Continue, palette actions, file tab resume, the session address, and the
+  // question of Archive.
+  const dialog = (
     <>
+      <ContinueDialog />
+      <WorkspacePaletteActions chat={chat} context={context} />
       <ResumeOnTabOpen context={context} />
       <OpenSessionAddress
         chat={chat}
-        orgId={props.org.id}
+        context={context}
         session={props.session}
-        workspaceId={workspace.id}
       />
       {lifecycle.question}
     </>
@@ -266,33 +244,37 @@ export function WorkspaceScreen(props: {
               : content.tool}
         </div>
         {archived ? null : <PhoneTabBar context={context} />}
-        {paletteOffer}
-        {tabOpen}
+        {dialog}
       </div>
     )
     // An archived workspace on a phone shows only its chat: no pull request
-    // row and no Checks, so it reads no GitHub state.
+    // row and no Checks, so it reads no GitHub state and no files.
     if (archived) return screen
-    return <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
+    return (
+      <KeptFilesConnection context={context}>
+        <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
+      </KeptFilesConnection>
+    )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <WorkspaceGitHub context={context}>
-      <WorkspaceMacBar context={context} />
-      <div className={body.body}>
-        <div className={body.chat}>
-          {header}
-          <HeaderNoticeBars notices={notices} />
-          {chatArea}
+    <KeptFilesConnection context={context}>
+      <WorkspaceGitHub context={context}>
+        <WorkspaceMacBar context={context} />
+        <div className={body.body}>
+          <div className={body.chat}>
+            {header}
+            <HeaderNoticeBars notices={notices} />
+            {chatArea}
+          </div>
+          <RightColumn
+            files={files}
+            pullRequest={features.pullRequest?.(context)}
+            tools={sandbox === 'archived' ? undefined : tools}
+          />
+          {dialog}
         </div>
-        <RightColumn
-          files={files}
-          pullRequest={features.pullRequest?.(context)}
-          tools={sandbox === 'archived' ? undefined : tools}
-        />
-        {paletteOffer}
-        {tabOpen}
-      </div>
-    </WorkspaceGitHub>
+      </WorkspaceGitHub>
+    </KeptFilesConnection>
   )
 }

@@ -4,6 +4,7 @@ import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
 import type { DeviceOperationResult } from './devices/internal'
+import { activeStoredTurn } from './devices/access'
 import {
   checkWorkspaceTurnToken,
   credentialSender,
@@ -61,6 +62,15 @@ export class WorkspaceLifecycle
     input: Parameters<WorkspaceLifecycleEndpoint['seedImportSession']>[1],
   ) {
     return this.run(() => this.controller.seedImportSession(id, input))
+  }
+
+  async callingToolTurn(workspaceId: string, turnId: string) {
+    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
+      return null
+    return this.chat.runLifecycle(async () => {
+      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
+      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
+    })
   }
 
   queueComputerStops(

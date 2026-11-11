@@ -202,7 +202,12 @@ export function createClaudeFactory(
           message: {
             role: 'user',
             content:
-              providerMessage(command.message, importDocument) + attached,
+              providerMessage(
+                command.message,
+                command.branches,
+                options.instructionBranches,
+                importDocument,
+              ) + attached,
           },
           priority: 'next',
         })

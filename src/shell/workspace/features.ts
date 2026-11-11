@@ -30,6 +30,15 @@ export type SavedView = Pick<
   'subscribe' | 'getSnapshot' | 'updateView'
 >
 
+/**
+ * The kept chat as the pull request bar uses it: its snapshot, the select of
+ * a session, and the send of a fixed prompt to the session of the chat.
+ */
+type ChatActions = Pick<
+  ChatController,
+  'subscribe' | 'getSnapshot' | 'select' | 'sendPrompt'
+>
+
 /** What a feature of the workspace gets from the shell. */
 export interface WorkspaceContext {
   org: OrgSummary
@@ -62,6 +71,8 @@ export interface WorkspaceContext {
   stream: WorkspaceStream
   /** The saved view of the workspace, which a feature reads and changes. */
   savedView: SavedView
+  /** The kept chat, through which the bar sends its fixed prompts. */
+  chat: ChatActions
   /**
    * The events that the tools read: the updates of the workspace and the
    * revokes of its previews, the stored revokes first.

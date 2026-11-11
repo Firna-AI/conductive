@@ -15,6 +15,7 @@ import {
   UnreadableResponse,
 } from './json'
 import { readChoice, readSession, readUserMessage } from './read-chat'
+import { readContinued } from './read-continued'
 
 const readChange = oneOf<ChangeKind>({
   added: true,
@@ -112,6 +113,8 @@ function readError(value: unknown): { code: string; message: string } {
 /** Reads one chat event. A type that this app does not know yet throws. */
 export function readChatEvent(source: Record<string, unknown>): ChatEvent {
   switch (source.type) {
+    case 'workspace.continued':
+      return readContinued(source)
     case 'message.accepted':
       return { type: source.type, message: readUserMessage(source.message) }
     case 'message.sent':

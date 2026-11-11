@@ -31,7 +31,8 @@ the palette offer Restore to each member until the last day, as
 ## The kept workspace
 
 [The kept workspace](kept-workspace.md) gives the parts that the tab keeps
-for each workspace that it showed, and what a return reads again.
+for each workspace that it showed, and what a return reads again, with its
+key code.
 
 ## The chat of the workspace
 
@@ -111,10 +112,11 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
   calls `chat.hide()`. A connect starts nothing for a workspace that the
   tab no longer keeps.
 
-The context of the features gives the kept chat as `savedView`, and the
-tool events as `toolEvents`. The Files part takes the kept files of the tab
-through `useWorkspaceStore`, as
-[the Files screens](../../files/README.md#integration) show.
+The context of the features gives the kept chat as `savedView` and as
+`chat`, and the tool events as `toolEvents`. `KeptFilesConnection`
+connects the kept files of the tab through `useWorkspaceStore`, as
+[the Files screens](../../files/README.md#integration) show, and the parts
+that show files read the same store.
 
 ## A refused start
 
@@ -130,18 +132,9 @@ fake API, with its address options, its controls, and the test command.
 
 - `WorkspaceScreen.tsx`: the screen of one open workspace. It takes a view
   of the kept workspace through `useWorkspaceStore`, and places the header,
-  the notices, the columns, and the features. Its `Unavailable` view shows
-  a 404. A failed first start keeps the screen, and `failedFirstStart`
-  marks its sandbox view.
-- `shown-workspaces.ts`: `ShownWorkspaces`, the kept workspaces of one tab
-  and one user. It keeps a workspace whose first start failed, as it keeps
-  any other. `ShownWorkspaces.view` gives a view of a workspace, and makes
-  its parts at the first view.
-- `tab-memory.ts`: `shownWorkspaces`, which clears them at a sign-out or a
-  sign-in of another user.
-- `workspace-view.ts`: `WorkspaceView`, the store of one mounted view over
-  the kept parts. Its snapshot is the detail of the model. `connect` shows
-  the parts, and its result hides them.
+  the notices, the columns, and the features. Its `Unavailable` view, in
+  `Unavailable.tsx`, shows a 404. A failed first start keeps the screen, and
+  `failedFirstStart` marks its sandbox view.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, the open file tabs, and the file page in place
   of the chat of the session, or the shell's own column for the chat slots.
@@ -153,8 +146,8 @@ fake API, with its address options, its controls, and the test command.
   line of a continued session. They read the routes of the app in each
   state, and start nothing. `imported/`: the flag in the header, and the
   question of Archive before a successful activation.
-- `files/files-features.tsx`: the Files part, which connects the kept
-  files, and the file or diff page of the centre.
+- `files/files-features.tsx`: the Files part, which reads the kept files
+  that the screen connects, and the file or diff page of the centre.
 - `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
   sandbox at each visit that opens a file or diff tab, also a second click
   on the tab that shows. The screen draws it in each layout. A workspace
@@ -214,7 +207,19 @@ fake API, with its address options, its controls, and the test command.
   tool that shows later gets them first, in event order.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
-  the ordered stream.
+  the ordered stream. `github/bar-controls.ts` gives the one action state of
+  the bar and its controls, and `github/bar-feed.ts` shows a GitHub state of
+  another branch as loading.
+- `files/kept-files.tsx`: `KeptFilesConnection`, the one connection of the
+  kept files for the whole screen.
+- `ContinueDialog.tsx`: the question of Continue with the local work, which
+  `LocalWorkList` of the mockups lists.
+- `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,
+  `github/BarContinue.test.tsx`, and `files/KeptFiles.test.tsx`: mount the
+  whole app over the fake API. They check Merge and its refusals, the
+  phone Checks top, the prompts from a file and a phone, a prompt that did
+  not send, Continue with its question, a stop, the wait for a turn, the
+  new branch and its note, and the local work of a phone on the chat tab.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped
@@ -229,10 +234,6 @@ fake API, with its address options, its controls, and the test command.
 - `HeaderNoticeBars.tsx`: the bars below the header, with Dismiss.
 - `HeaderNotices.test.tsx`: mounts the screen in happy-dom over the fake
   API and its event stream, and checks the notices.
-- `KeptWorkspace.test.tsx`: mounts the whole app over the fake API. It
-  checks a return, the event number of each socket, a new tab, the clear at
-  a sign-out, and the app values that change while the tab is away.
-  `kept-test-kit.tsx` holds its helpers.
 - `features.ts`: `WorkspaceFeatures`, the parts that plug in,
   `WorkspaceContext`, what each part gets, and `useFeatures`, the parts of
   the host over the app's own parts.

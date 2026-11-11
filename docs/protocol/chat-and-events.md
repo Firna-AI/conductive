@@ -43,6 +43,11 @@ says.
 
 [Messages and attachments](messages-and-attachments.md) holds the composer, turns, retries, titles, and attached files.
 
+### Messages from the bar
+
+[Messages from the bar](messages-and-attachments.md#messages-from-the-bar)
+holds how an agent action of the pull request bar sends its fixed prompt.
+
 ## Workspace links
 
 - [Workspace links](workspace-links.md) says how chat text and the message
@@ -79,6 +84,9 @@ says.
 - A refused runner event shows one chat line that names the lost data, unless
   it is a [lost workspace update](agent-runner.md#lost-workspace-updates).
   Such a line among the work of a turn folds with that work (decision 151).
+- After [Continue](continue.md), each session shows one note at its place,
+  with the member who pressed Continue, the new branch, and its base. To
+  that member it says "You". The note reaches no agent.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
@@ -88,6 +96,16 @@ says.
 
 - While a turn runs, each agent message shows in full. Each run of tool
   calls gets its own line that folds it, such as "3 tool calls".
+- While a turn runs, only its newest run of tool calls shows its calls. That
+  run stays open between two calls and after a message that follows it,
+  until a newer run starts or the turn ends. Each earlier run of the turn is
+  folded.
+- Reason: the user watches the newest work, and the earlier work stays
+  short. A run that folds when its calls are done was rejected, because it
+  closed and opened again at each call. A run that folds when a message
+  follows it, and every run open until the turn ends, were rejected too.
+- A click opens or closes a run of tool calls, and the run keeps that
+  choice while the chat shows it.
 - When a turn ends, also when it stops or fails, the work before its answer
   folds into one line (decision 150).
 - Reason: the answer of a long turn stays easy to find. A fold while the

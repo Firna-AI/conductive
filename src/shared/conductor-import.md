@@ -10,6 +10,20 @@ The [import area](../../worker/conductor-import/README.md) gives the Worker side
 - New relative imports end in `.ts`, so that the NodeNext build of the Mac app can rewrite them.
 - Each `read*` function narrows an unknown value, and it throws `ImportContractError` for a value that does not fit. The Worker answers such a value with 400 `invalid_input`.
 
+## The import origin and the Activate route
+
+`conductor-import.ts` owns the optional `Workspace.conductorImport` origin.
+It keeps the local Conductor ID, importer user ID, and nullable activation completion time.
+Native workspaces omit it. `readWorkspaceImport` validates that field for each workspace reader.
+An imported workspace starts in `inactive`, with no first message or session.
+The same module owns the old-document metadata and the paths of the import routes.
+The other `conductor-import-*.ts` modules own the device operations, the manifest, their parsers, and the page helpers.
+
+`workspacePaths.activate` in `workspaces.ts` names the Activate route of an imported workspace.
+Its reply is `ActivateWorkspaceResponse`: a `WorkspaceResponse` with `sessionId`, the real early session of the activator.
+An activation shows its start with `WorkspaceStart.kind` `create`. A Resume of an activated import keeps `resume`.
+[Import activation](../../worker/lifecycle/import-activation.md) gives its steps and failures.
+
 ## Modules
 
 | Module | What it owns |

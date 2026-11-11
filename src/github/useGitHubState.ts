@@ -1,10 +1,22 @@
 import { useCallback, useMemo } from 'react'
+import type { Readable } from '../app/store'
 import { useWorkspaceStore } from '../app/workspace-store'
 import type { WorkspaceTarget } from './githubClient'
-import { GitHubStore, type GitHubFeed, type GitHubSource } from './githubStore'
+import {
+  GitHubStore,
+  type GitHubFeed,
+  type GitHubSource,
+  type GitHubState,
+} from './githubStore'
 
 function createStore(target: WorkspaceTarget): GitHubStore {
   return new GitHubStore(target)
+}
+
+/** The feed of the views, with the state as a store for a part that follows it. */
+export interface GitHubSubscription extends GitHubFeed {
+  /** Each new state of the store, from a read or an event. */
+  states: Readable<GitHubState>
 }
 
 /**
@@ -17,7 +29,7 @@ function createStore(target: WorkspaceTarget): GitHubStore {
 export function useGitHubState(
   target: WorkspaceTarget,
   source: GitHubSource,
-): GitHubFeed {
+): GitHubSubscription {
   const { fetch, subscribe, delay } = source
   const connect = useCallback(
     (store: GitHubStore) => store.connect({ fetch, subscribe, delay }),
@@ -27,8 +39,12 @@ export function useGitHubState(
     create: createStore,
     connect,
   })
+  const states = useMemo<Readable<GitHubState>>(
+    () => ({ get: store.getSnapshot, subscribe: store.subscribe }),
+    [store],
+  )
   return useMemo(
-    () => ({ state: snapshot, retry: store.retry }),
-    [snapshot, store],
+    () => ({ state: snapshot, retry: store.retry, states }),
+    [snapshot, store, states],
   )
 }

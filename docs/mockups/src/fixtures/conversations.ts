@@ -13,6 +13,7 @@ import {
   e2eRunning,
   history,
 } from './autocompleteTurn'
+import { barConversations, type ContinuedItem } from './barConversations'
 import type { ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
 import { listConversations, type MessageList } from './listConversations'
@@ -124,6 +125,7 @@ export type ChatItem =
       from: string
     }
   | ResumedLineItem
+  | ContinuedItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -183,5 +185,6 @@ export const conversations: Readonly<
     steer: steerDraft,
   }),
   ...tableConversations,
+  ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
 }

@@ -34,7 +34,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         token for your account. ${productName} stores it encrypted, for
         every account, also while you wait for app access. It uses the
         token to read GitHub for you, and for the git calls of your
-        turns.`,
+        turns. It reads your repository rights and merge method. A merge
+        uses the token of the member who clicks. Continue fetches the
+        latest default branch with the token of the member who clicks
+        Continue.`,
       text`The waitlist: a new account without app access waits while the
         waitlist is on or sign-ups are paused. It sees only the waitlist.
         When the waitlist is off and sign-ups are not paused, open sign-up
@@ -98,11 +101,13 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         receives your login itself. Installing newer software in that cloud
         computer does not remove this risk. A new image build gives the
         protection to each cloud computer that starts from it.`,
-      text`Your work: ${productName} keeps your messages and the answers
-        of the agents as the chat history of each workspace.
+      text`Your work: ${productName} keeps your messages, including those
+        sent by pull request bar actions, and the answers of the agents as
+        the chat history of each workspace.
         Messages from agent tools end with Sent by: and a link to the
-        sending session. The chat history keeps that link. It also
-        keeps the last file list and the last summary of changes of each
+        sending session. The chat history keeps that link. It also records
+        who used Continue, the new branch, and the branch it starts from. It keeps
+        the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,
         a short program name, and the folder of each server. The files

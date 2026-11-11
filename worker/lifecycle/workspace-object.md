@@ -4,8 +4,8 @@ This page belongs to the [workspace lifecycle README](README.md). It
 describes the Durable Object of each workspace and of each image
 coordinator. It gives their names, the lifecycle steps, the alarm, the
 start logs, the event socket, and the event publication. It also gives the
-creates and resumes. [Routes](routes.md#the-git-credential-sender) gives
-the git credential sender.
+creates and resumes. [The git credential sender](git-credentials.md)
+gives the sender of a git credential request.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
@@ -34,7 +34,7 @@ makes those hooks, and `createWorkspaceIntegration` in
   through the `turnEnded` hook. `turnDispatchFailed` also calls it for a
   turn that did not go out. These records keep the running sessions. They
   give no GitHub access, as
-  [The git credential sender](routes.md#the-git-credential-sender) says.
+  [The git credential sender](git-credentials.md) says.
 - `reportRunnerLifecycle` takes only the runner events `runner.ready`,
   `turn.started`, and `start.updated`. `runnerLifecycleDisconnected` takes
   a disconnect.
@@ -78,10 +78,14 @@ command start. For a workspace object, it:
   [The shown state](recovery-and-shown-state.md#the-shown-state) says
 - recovers and deletes an unresolved allocation after a start reaches its limit
 - keeps failed or cancelled resume stop cleanup after the start result ends
+- advances a running Continue by one phase. While it runs, the lifecycle
+  steps run only to advance a queued start, as
+  [Continue](continue.md#the-reservation) says
 
-[The object alarm scheduler](alarm-scheduler.md) gives the shared rules of
-the object alarm: the owners and their due times, the security sources,
-the run lease, and the steps at the end of each run.
+[The object alarm scheduler](alarm-scheduler.md) gives `WorkspaceAlarms`,
+the one scheduler of the object alarm: the owners and their due times, the
+security sources, Continue, the run lease, and the steps at the end of each
+run.
 
 The deadline and stop actions use the sandbox state in each Boat reply.
 When Boat refuses an action, they read the sandbox state once. The
@@ -225,9 +229,11 @@ The workspace object runs that start:
 
 ## The git credential sender
 
-[The git credential sender](routes.md#the-git-credential-sender) gives how
-`Workspace.credentialSender` maps the turn of a git credential request to
-its sender, beside the machine route.
+[The git credential sender](git-credentials.md) gives how
+`Workspace.credentialSender` maps the turn ID of a git credential request
+to a sender: the grant of a create, the grant of a Continue fetch, and the
+running chat turn. It also gives the grant of an import activation and
+names the tests of the route.
 
 ## Turn recovery
 

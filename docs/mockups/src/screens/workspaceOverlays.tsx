@@ -10,6 +10,7 @@ import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
 import { ImportedArchiveDialog } from '../components/conductor-import/ImportedArchiveDialog'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
+import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
@@ -114,6 +115,8 @@ export function workspaceOverlay(
         />
       )
     }
+    case 'continue-unpushed':
+      return <ContinueDialog viewport={viewport} workspace={workspace} />
     case 'history':
       return mobile ? (
         <Sheet title="Session history">

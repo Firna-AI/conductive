@@ -8,6 +8,7 @@ import type {
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { array, integer, nullable, object, oneOf, string } from './parse'
 import { readRunnerImportCommand } from '../../src/shared/runner-import-read'
+import { parseBranches } from './instruction-state'
 
 export function parseChoice(value: unknown): AgentChoice {
   const input = object(value)
@@ -165,7 +166,16 @@ export function parseWorkspaceMessage(
         path: string(attachment.path),
       }
     })
-    const command = { commandId, sessionId, turnId, message, attachments }
+    const command = {
+      commandId,
+      sessionId,
+      turnId,
+      message,
+      attachments,
+      ...(input.branches === undefined
+        ? {}
+        : { branches: parseBranches(input.branches) }),
+    }
     if (type === 'message') return { ...command, type }
     const credential = parseCredential(input.credential)
     if (message.choice.agent !== credential.agent)
