@@ -721,7 +721,7 @@ Depends on: every other milestone
       targeted tests and `npm run check`.
 - [x] Smoke-test the stop line in the app of `npm run dev`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -747,6 +747,15 @@ the fix rule. `plans/follow-ups/chat-text-word-break-default.md` holds its
 shared wrapping fix and related open-message case. The reports are
 `.context/reviews/calummoore/untitled-v3/round-1-review.md` and
 `.context/reviews/calummoore/untitled-v3/round-1-checks.md`.
+
+Review round 2 found no in-scope or outside review finding. Root's
+implementation finding 2 corrected the call guide: the GitHub summary is
+in the complete create record. The fix also restored that record's number
+and link facts. Its fresh check kept option A, and the correction changes
+no reply shape. Reports:
+`.context/reviews/calummoore/untitled-v3/round-2-review.md`,
+`.context/reviews/calummoore/untitled-v3/round-2-checks.md`, and
+`.context/agent-tools-conductor-parity/reports/m8-finding-2-fix.md`.
 
 ## Post-merge follow-up (non-blocking)
 

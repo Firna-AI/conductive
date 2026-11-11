@@ -91,13 +91,14 @@ It keeps each underscore, as [Names from the workspace tools](../docs/protocol/t
 A blank result counts as no name, and the app shows "Untitled".
 The name does not change the branch.
 The create answer holds the stored name, the first session ID, and its absolute `sessionLink`.
+Create gives the complete workspace record, with its number and canonical web link.
+That record also gives `github`, the GitHub summary of the workspace, or null.
 A repeat with the same `--request-id` returns the first workspace, session, and message.
 An omitted ID makes a new ID for that call only.
 So keep and pass the same ID to retry without a second workspace.
 
 `workspaces list` without options returns every workspace in the org, including archived workspaces.
 Each list item gives its number, canonical web link, name, branch, and state.
-It also gives `github`, the GitHub summary of the workspace, or null.
 Its owner gives the member ID, GitHub login, and display name, with no avatar.
 The filters combine, and each filter is optional:
 
