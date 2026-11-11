@@ -19,7 +19,6 @@ import {
 import { plainText } from './markdown-code'
 import { chatEventsOf, type SessionEnvelopeInput } from './session-events'
 import { SessionLog } from './session-log'
-import { toolRunOpen } from './tool-words'
 import { groupEntries, workSummary } from './transcript-entries'
 import { turnCopy, type ChatReaders } from './turn-words'
 
@@ -146,7 +145,7 @@ export class SessionMarkdown {
         const first = transcript.items.find((item) => item.id === entry.id)
         heading(first ? turnOf(transcript, first) : null)
         blocks.push(
-          detail === 'concise' && !toolRunOpen(entry.calls)
+          detail === 'concise' && !entry.open
             ? foldMarkdown(entry.calls)
             : entry.calls.map(toolMarkdown).join('\n'),
         )

@@ -68,6 +68,14 @@ function warningFields(warning: WorkerWarning) {
         workspaceId: warning.workspaceId.text,
         error: errorFields(warning.error),
       }
+    case 'git_credential_failed':
+      return {
+        kind: warning.kind,
+        message: 'A Git credential request failed.',
+        workspaceId: warning.workspaceId?.text ?? null,
+        turn: warning.turn,
+        error: errorFields(warning.error),
+      }
     case 'terminal_start_failed':
       return {
         kind: warning.kind,

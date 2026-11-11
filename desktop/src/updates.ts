@@ -1,9 +1,9 @@
-import { productName } from '../../docs/mockups/src/brand.js'
+import { productName, sourceRepository } from '../../docs/mockups/src/brand.js'
 
 const UPDATE_FEED = {
   provider: 'github',
-  owner: 'Firna-AI',
-  repo: 'remote-code',
+  owner: sourceRepository.owner,
+  repo: sourceRepository.name,
 } as const
 
 export interface Updater {
