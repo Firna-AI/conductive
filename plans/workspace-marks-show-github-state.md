@@ -447,8 +447,11 @@ Depends on: 6, 7, 8
 - [x] Run the combined targeted checks and complete gate on the fixed tree.
 - Evidence: `.context/workspace-marks-show-github-state/fix-round-1/gate.log`
   and `.context/workspace-marks-show-github-state/fix-round-1/new-test-costs.md`.
-- [ ] Commit and push the fixes. Re-review once with fresh context. Run
+- [x] Commit and push the fixes. Re-review once with fresh context. Run
       finding checks for any new item, then apply the fix rule and report.
+- Re-review summary: the fresh complete-diff review of `eeddb8ad` found no
+  new findings or outside-scope problems. All direct findings are fixed.
+- Evidence: `.context/reviews/calummoore/workspace-status-icons/round-2-review.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives each dated decision
