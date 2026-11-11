@@ -1,22 +1,21 @@
 import type { AppEnv, HttpFetch } from '../env'
+import {
+  attachmentPath,
+  ATTACHMENTS_DIRECTORY,
+} from '../../src/shared/attachment-paths'
 import { HttpError } from '../http'
 import { providerForAccount } from '../sandbox/client'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { readAttachment } from './attachment-data'
 import { attachmentRepositoryDirectory } from './attachment-paths'
-import {
-  attachmentBucket,
-  attachmentNotFound,
-  attachmentPath,
-  ATTACHMENTS_DIRECTORY,
-} from './attachment-record'
+import { attachmentBucket, attachmentNotFound } from './attachment-record'
 import type { StoredAttachment } from './types'
 
 export async function prepareMessageAttachments(
   env: AppEnv,
   workspaceId: string,
   userId: string,
-  messageId: string,
+  _messageId: string,
   attachments: readonly StoredAttachment[],
   sandboxId: string | null,
   httpFetch: HttpFetch = (request) => fetch(request),
@@ -53,7 +52,7 @@ export async function prepareMessageAttachments(
       record.uploaderUserId !== userId ||
       record.state !== 'claimed' ||
       record.claimedWorkspaceId !== workspaceId ||
-      attachment.relativePath !== (await attachmentPath(record, messageId))
+      attachment.relativePath !== (await attachmentPath(record))
     )
       throw attachmentNotFound()
     const object = await bucket.get(record.objectKey)

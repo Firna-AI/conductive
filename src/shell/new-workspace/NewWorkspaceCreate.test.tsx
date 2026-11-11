@@ -5,6 +5,8 @@ import { describe, expect, test, vi } from 'vitest'
 import type { FetchLike } from '../../app/api/client'
 import { routes } from '../../app/router'
 import { HeldRequests } from '../../app/test-kit'
+import { attachmentPath } from '../../shared/attachment-paths'
+import { mentionText } from '../../shared/mention-text'
 import { attachmentUploadPath } from '../../shared/messages'
 import { workspacesPath } from '../../shared/workspaces'
 import {
@@ -13,6 +15,7 @@ import {
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
+import { pickFiles } from '../../test-support/file-picker'
 import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { messageText } from '../../test-support/message-field'
@@ -31,6 +34,7 @@ import {
   focusIn,
   keyDown,
   mainOf,
+  markOf,
   messageIn,
   newWorkspaceRow,
   openDialog,
@@ -210,32 +214,33 @@ describe('the send key of New workspace', () => {
         502,
       )
       held.holdAnswer('POST', uploadPath)
-      act(() => {
-        void draft.attach([
-          new File(['png'], 'postcode-overlap.png', { type: 'image/png' }),
-        ])
-      })
+      await pickFiles(root, [
+        new File(['png'], 'postcode-overlap.png', { type: 'image/png' }),
+      ])
       await settle()
+      // The chip goes to the caret, on the line that Shift+Enter added.
+      const withChip = `${task}\n${markOf(draft, 'postcode-overlap.png')} `
       const uploading = await keys({})
-      expect(uploading).toEqual({
-        kept: true,
-        creates: 0,
-        text: `${task}\n`,
-      })
+      expect(uploading).toEqual({ kept: true, creates: 0, text: withChip })
       const sendOff = isOff(
         byRole('button', form === 'page' ? 'Send' : 'Create', root),
       )
       held.release('POST', uploadPath)
       await settle()
       const failed = await keys({})
-      expect(failed).toEqual({ kept: true, creates: 0, text: `${task}\n` })
+      expect(failed).toEqual({ kept: true, creates: 0, text: withChip })
+      const uploaded = {
+        id: 'draft-attachment-1',
+        name: 'postcode-overlap.png',
+      }
+      const path = await attachmentPath(uploaded)
       server.json(
         'POST',
         uploadPath,
         {
           attachment: {
-            id: 'draft-attachment-1',
-            name: 'postcode-overlap.png',
+            ...uploaded,
+            path,
             kind: 'image',
             mediaType: 'image/png',
             sizeBytes: 3,
@@ -263,7 +268,7 @@ describe('the send key of New workspace', () => {
         enter: { kept: true, creates: 1, text: null },
         sent: expect.objectContaining({
           firstMessage: expect.objectContaining({
-            text: `${task}\n`,
+            text: `${task}\n${mentionText(path, false)} `,
             attachmentIds: ['draft-attachment-1'],
           }),
         }),

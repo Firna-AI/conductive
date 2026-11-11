@@ -26,6 +26,7 @@ function attachedTurn(agent: Agent) {
     {
       id: 'image',
       name: 'Screenshot.PNG',
+      path: null,
       kind: 'image',
       mediaType: 'image/png',
       sizeBytes: 12,
@@ -33,6 +34,7 @@ function attachedTurn(agent: Agent) {
     {
       id: 'pdf',
       name: 'Plan "A".PDF',
+      path: null,
       kind: 'file',
       mediaType: 'application/pdf',
       sizeBytes: 23,

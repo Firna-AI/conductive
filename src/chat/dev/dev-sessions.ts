@@ -1,5 +1,7 @@
 import { chatHistoryPath } from '../../shared/events'
 import { sessionTitleFrom } from '../../shared/session-title'
+import { hasOwnWords } from '../../shared/attachment-mentions'
+import type { UserMessage } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
 import type { DevBackend } from './dev-backend'
 
@@ -75,16 +77,17 @@ export function clearRetry(backend: DevBackend, sessionId: string): void {
  * A later session, each session but the first session of a new workspace,
  * takes the first line of an accepted message as its title while it has no
  * title, as the Worker does. So a name that a member gave the session stays,
- * and a message with no text leaves the session with no title.
+ * and a message with only its attached files leaves the session untitled.
  */
 export function titleFromMessage(
   backend: DevBackend,
-  sessionId: string,
-  text: string,
+  message: UserMessage,
 ): void {
-  const session = recordOf(backend, sessionId)
+  const session = recordOf(backend, message.sessionId)
   if (!session || session.id === backend.titled) return
-  const title = canFill(backend, session.title) ? sessionTitleFrom(text) : null
+  const title = canFill(backend, session.title)
+    ? sessionTitleFrom(message.text, message.attachments)
+    : null
   if (title !== null) place(backend, { ...session, title })
 }
 
@@ -166,15 +169,16 @@ export function writeTitle(backend: DevBackend, name: string): void {
  * A message with text that the page accepts asks for the title of a
  * workspace with no name, as the Worker asks its title model. The title
  * comes about a second later, whether or not the sandbox is ready. A message
- * with no text asks nothing, so the next message with text asks. The page
+ * with only its attached-file mentions asks nothing. The next message with
+ * its own words asks. The page
  * asks once, because its title never fails. A name that the workspace has
  * by then, such as from a button of the page, stays.
  */
-export function askTitle(backend: DevBackend, text: string): void {
+export function askTitle(backend: DevBackend, message: UserMessage): void {
   if (
     !canFill(backend, backend.workspace.name) ||
     backend.titleAsked ||
-    text.trim() === ''
+    !hasOwnWords(message.text, message.attachments)
   )
     return
   backend.titleAsked = true
@@ -198,6 +202,6 @@ export function followTitle(backend: DevBackend): void {
   if (!first) return
   backend.titled = first.id
   for (const message of backend.messages.values()) {
-    askTitle(backend, message.text)
+    askTitle(backend, message)
   }
 }

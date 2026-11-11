@@ -1,30 +1,8 @@
 /*
- * The states of the file chips of AttachmentChips.module.css. The chip keeps
- * its shape in each state: a glyph, the name, a short label, and its
- * actions. A state tints the whole chip, and its edges stay neutral.
+ * The sent state of the file chips of AttachmentChips.module.css: the files
+ * of a sent message that its text does not show, under its bubble. A sent
+ * chip keeps the shape of a file chip, with no remove button.
  */
-
-/* The spinner of an upload that runs takes the place of the file icon. */
-.spinner {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-}
-
-/* A failed upload: a full rose border and a rose fill. */
-.failed {
-  border-color: var(--ui-danger-border);
-  background: var(--ui-rose-soft);
-}
-
-.failedIcon {
-  flex-shrink: 0;
-  color: var(--ui-rose);
-}
-
-.failedLabel {
-  color: var(--ui-rose);
-}
 
 /* The files of a sent message, under its bubble, end at the right edge. */
 .sent {

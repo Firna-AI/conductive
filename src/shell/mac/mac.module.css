@@ -33,6 +33,15 @@
   -webkit-app-region: no-drag;
 }
 
+/*
+ * macOS takes a press on a drag region and the page never hears it. While a
+ * menu is open, the regions stop, so a press on a bar closes the menu.
+ * `useMenuDragStop` sets the attribute.
+ */
+:global(html[data-menu-open]) :is(.drag, .bar) {
+  -webkit-app-region: no-drag;
+}
+
 /* A top bar of the main area starts after the window controls in the corner. */
 .bar {
   margin-left: var(--mac-bar-inset, 0px);

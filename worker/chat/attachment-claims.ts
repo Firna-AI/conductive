@@ -5,11 +5,7 @@ import {
   claimAttachment,
   failedAttachmentWorkspace,
 } from './attachment-claim-data'
-import {
-  attachmentNotFound,
-  attachmentPath,
-  publicAttachment,
-} from './attachment-record'
+import { attachmentNotFound, publicAttachment } from './attachment-record'
 import type { ResolvedAttachments } from './types'
 
 export async function resolveMessageAttachments(
@@ -57,10 +53,11 @@ export async function resolveMessageAttachments(
       if (!(await claimAttachment(env.DB, record, workspaceId, messageId)))
         throw attachmentNotFound()
     }
-    attachments.push(publicAttachment(record))
+    const attachment = await publicAttachment(record)
+    attachments.push(attachment)
     paths.push({
       attachmentId: id,
-      relativePath: await attachmentPath(record, messageId),
+      relativePath: attachment.path,
     })
   }
   return { attachments, paths }

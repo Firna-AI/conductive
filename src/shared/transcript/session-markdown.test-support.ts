@@ -93,6 +93,7 @@ export function markdownFixture() {
           {
             id: 'file',
             name: 'trace.txt',
+            path: null,
             kind: 'file',
             mediaType: 'text/plain',
             sizeBytes: 8,

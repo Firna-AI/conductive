@@ -38,18 +38,46 @@ On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
 
-Attached files arrive in `.context/attachments/` in the workspace's repository folder.
-New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
-Git ignores the folder's files unless your repository already tracks them.
-Use **Terminal** to find the ignored files.
-**All files** and **Changes** do not list them.
-
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.
 The workspace keeps accepted messages for the agent.
 
 The org must have a successful build before you create a new workspace.
 That first build is separate from the start of an existing workspace's computer.
+
+## Attach files
+
+Use **Attach files** to pick files, or drop files into the message box.
+The chat, **New workspace** page, and **New workspace** dialog all accept files.
+Each file appears as a file chip, a small box in the text.
+The chip shows the file's name and upload state.
+
+A picked file goes at the text cursor, or at the end if the field has no cursor.
+A file dropped on the text goes where you drop it.
+A drop on the rest of the box uses the text cursor or the end.
+The text cursor then moves after the new chips.
+
+Each file can be up to 25 MB.
+Wait for uploads to finish before you send.
+If an upload fails, use **Try again** or remove its chip.
+Removing a chip takes its file off the draft.
+Undo brings back the chip and its file.
+To attach a folder's contents, select its files.
+
+Each chip keeps its place in the sent message.
+When the message reaches the agent, select its file chip to open the copy.
+The copy opens in the workspace's file view.
+This can start a stopped cloud computer.
+Restore an archived workspace before opening its attached files.
+
+Attached files arrive in `.context/attachments/` in the workspace's repository folder.
+Each file keeps the same path when you retry its message.
+New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
+Git ignores the folder's files unless your repository already tracks them.
+Use **Terminal** to find the ignored files.
+**All files** and **Changes** do not list them.
+
+- [Read files and pictures](/docs/files-and-changes#read-a-file)
 
 ## Use pull request actions in chat
 
@@ -182,6 +210,7 @@ Copy a session's whole conversation as Markdown for another agent or a document.
 While the agent works, its newest run of tool calls stays open.
 After a turn ends, a run outside its folded work stays open if one of its calls stopped or failed.
 **Copy full transcript** includes the messages and work inside every fold.
+The copy uses each attached file's name where its chip appears.
 
 Agents can read the same transcript text through their workspace tools.
 The read uses the concise text by default and can request the full text.

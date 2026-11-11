@@ -76,8 +76,7 @@ draws the dialog at `app/feedback`, on desktop and on a phone.
   message box adds a screenshot too, and so does a drop on the dialog.
 - Each screenshot shows as a chip with its name, its size, and Remove.
 - The chips sit above the text inside the message box, and Add screenshots
-  sits under the text. Reason: every composer puts its files there, so a
-  paste adds the chip where the person looks.
+  sits under the text. Reason: a paste adds the chip where the person looks.
 - The dialog takes only PNG, JPEG, GIF, and WebP images (decision 274).
   It finds the type from the first bytes of each file, with the same check
   as the Worker. So a renamed file of another type fails at once.

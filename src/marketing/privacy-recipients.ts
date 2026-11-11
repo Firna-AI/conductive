@@ -11,7 +11,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
     list(
       text`Cloudflare runs ${productName} and stores its data.
         If a workspace has no name, Cloudflare's AI model service can
-        write a short name from the text of its first message. The model
+        write a short name from the text of its first message.
+        For that request, ${productName} replaces each path mention of a file
+        attached to that message with the file's original name. The model
         requests of the agents in a newer cloud computer, and their
         answers, pass through ${productName} on Cloudflare. Agent settings
         in the repository can send these requests to another address

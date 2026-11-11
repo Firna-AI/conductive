@@ -1,9 +1,8 @@
 import type { ReactElement } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { CircleAlert, CornerDownLeft, ImagePlus, Info } from 'lucide-react'
-import type { Attachment } from '../../fixtures/attachments'
+import type { FeedbackScreenshot } from '../../fixtures/feedback'
 import { paths } from '../../paths'
-import { AttachmentChips } from '../chat/AttachmentChips'
 import { MessageField } from '../chat/MessageField'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
@@ -18,12 +17,12 @@ import {
   notAddedTitle,
   notSentTitle,
   screenshotLimitBody,
-  screenshotsLabel,
   sendFeedbackLabel,
   sendingLabel,
   sendLabel,
 } from './feedbackCopy'
 import { ReplyFailure, ReplyLine, type FeedbackReply } from './FeedbackReply'
+import { ScreenshotRow } from './ScreenshotRow'
 import styles from './FeedbackDialog.module.css'
 
 /**
@@ -38,7 +37,7 @@ export type FeedbackProblem =
 
 export type FeedbackDialogProps = {
   text: string
-  screenshots: readonly Attachment[]
+  screenshots: readonly FeedbackScreenshot[]
   /** The read of the reply address, which Send waits for. */
   reply: FeedbackReply
   problem?: FeedbackProblem
@@ -124,10 +123,10 @@ function SendButton(props: {
 /**
  * The Feedback dialog, drawn open over the page where the palette was: a
  * wide dialog on desktop, and a sheet on a phone. The message box has the
- * focus. Its screenshots show above the text as chips with their names,
- * their sizes, and Remove, as in every composer. Add screenshots opens the
- * file picker, and a paste of an image into the text or a drop on the
- * dialog adds one too. Two lines say what the message also carries and
+ * focus. Its screenshots show above the text as a row of chips with their
+ * names, their sizes, and Remove. Add screenshots opens the file picker,
+ * and a paste of an image into the text or a drop on the dialog adds one
+ * too. Two lines say what the message also carries and
  * where the team replies. While the read of the reply address runs or
  * after it failed, the draft and Cancel stay available, and Send waits.
  * Cancel closes the dialog and keeps the draft.
@@ -156,10 +155,7 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
     >
       <div className={styles.box}>
         {props.screenshots.length > 0 ? (
-          <AttachmentChips
-            attachments={props.screenshots}
-            label={screenshotsLabel}
-          />
+          <ScreenshotRow screenshots={props.screenshots} />
         ) : null}
         <MessageField
           lines={shownLines(props.text, phone ? 5 : 6)}

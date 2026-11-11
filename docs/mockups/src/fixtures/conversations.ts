@@ -29,10 +29,7 @@ import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
-import {
-  newWorkspaceConversations,
-  savedCartsMessage,
-} from './newWorkspaceConversations'
+import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
@@ -59,7 +56,7 @@ export type ChatItem =
       kind: 'user'
       id: string
       text: string
-      /** The files of the message, which show under it. */
+      /** The files of the message, shown in its text or under it. */
       attachments?: readonly Attachment[]
       /** Waits in the queue of the workspace until the sandbox is ready. */
       queued?: boolean
@@ -193,7 +190,7 @@ export const conversations: Readonly<
   ...agentStopConversations(cutOffTurn),
   ...backgroundConversations,
   ...linkedConversations,
-  ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
+  ...attachmentConversations(history),
   ...workspaceLinkConversations(history),
   ...sessionLinkConversations(history),
   ...fileMentionConversations(history),

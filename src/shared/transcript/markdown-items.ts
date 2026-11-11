@@ -4,6 +4,12 @@ import type { DeviceCommandRecord } from '../device'
 import type { ChangedFile } from '../files'
 import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
 import {
+  attachmentForMention,
+  textWithAttachmentNames,
+} from '../attachment-mentions'
+import { mentionParts } from '../mention-text'
+import type { UserMessage } from '../messages'
+import {
   leftOutOfCall,
   leftOutOfRun,
   lostText,
@@ -67,6 +73,27 @@ function changedFile(file: ChangedFile): string {
     : `${inlineCode(file.previousDisplayPath ?? file.previousPath)} → ${current}`
 }
 
+function userMarkdown(message: UserMessage): string {
+  const mentioned = new Set(
+    mentionParts(message.text).flatMap((part) =>
+      part.kind === 'mention'
+        ? (attachmentForMention(part, message.attachments)?.id ?? [])
+        : [],
+    ),
+  )
+  const files = message.attachments.filter((file) => !mentioned.has(file.id))
+  return [
+    textWithAttachmentNames(message.text, message.attachments, plainText),
+    ...(files.length > 0
+      ? [
+          `${turnCopy.attachments}: ${files.map((file) => plainText(file.name)).join(', ')}`,
+        ]
+      : []),
+  ]
+    .filter((part) => part.length > 0)
+    .join('\n\n')
+}
+
 export function itemMarkdown(
   item: TranscriptItem,
   transcript: Transcript,
@@ -75,16 +102,7 @@ export function itemMarkdown(
 ): string {
   switch (item.kind) {
     case 'user':
-      return [
-        item.message.text,
-        ...(item.message.attachments.length > 0
-          ? [
-              `${turnCopy.attachments}: ${item.message.attachments.map((file) => plainText(file.name)).join(', ')}`,
-            ]
-          : []),
-      ]
-        .filter((part) => part.length > 0)
-        .join('\n\n')
+      return userMarkdown(item.message)
     case 'agent':
       return item.text
     case 'tool':

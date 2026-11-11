@@ -115,7 +115,7 @@ export function seedLinked(
   const turnId = 'dev-linked-turn'
   backend.messages.set(message.id, message)
   backend.stream.emit({ type: 'message.accepted', message })
-  titleFromMessage(backend, linked.id, message.text)
+  titleFromMessage(backend, message)
   backend.stream.emit({
     type: 'turn.started',
     sessionId: linked.id,

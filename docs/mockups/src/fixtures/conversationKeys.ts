@@ -34,6 +34,7 @@ export const conversationKeys = [
   'background-limit',
   'linked',
   'sent-files',
+  'sent-files-listed',
   'queued-files',
   'link-sent',
   'link-answer',

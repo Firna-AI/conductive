@@ -53,9 +53,9 @@ export const fileMentionChips = defineScreen({
       slug: 'attached-file',
       title: 'Remove an attached file',
       description:
-        'An attached file follows the same rule. Under the pointer or the keyboard focus, a × takes the place of its icon, and a press removes the file. The × at the end of each attached file is gone on desktop. On a phone each attached file keeps its icon and its × at the end.',
+        'An attached file is a chip in the text too, and it follows the same rule. Under the pointer, a × takes the place of the icon of the screenshot, and a press removes the chip as one step of undo. Backspace and Delete remove the chip whole, as for a file chip. The removal takes the file off the message and stops its upload, and undo brings back the chip with its file. On a phone each attached file keeps its icon and shows the × at the end.',
       rationale:
-        'Decision 215 covers the attached files too. Backspace cannot reach an attached file, so the cell of its icon takes the keyboard focus.',
+        'Decision 215 covers the attached files too. The user chose option A of decision 263 on 10 November 2026, so each attached file is a chip in the text and the row above the text is gone. Backspace now reaches each attached file, so the × takes no keyboard focus, as for the other chips of the text. The draft never sends a file that its text does not show.',
       props: { composer: 'attachment-pointer' },
     },
   ],

@@ -9,14 +9,14 @@ import headingStyles from '../common/MarkdownHeadings.module.css'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
-import { AttachmentChips } from './AttachmentChips'
 import { ContinuedLine } from './ContinuedLine'
 import type { SingleItem } from './groupItems'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
-import { LinkText, MessageText } from './MessageText'
+import { filesWithoutPlace, LinkText, MessageText } from './MessageText'
+import { SentFiles } from './SentFiles'
 import { StopLine, type StopSource } from './StopLine'
 import { memberStopped, stoppedUnnamed } from './stopCopy'
 import { TurnEnd } from './TurnEnd'
@@ -55,17 +55,23 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
   const { item, viewer } = props
   const theme = useSharedUiTheme()
   switch (item.kind) {
-    case 'user':
+    case 'user': {
+      const files = item.attachments ?? []
+      const listed = filesWithoutPlace(item.text, files)
       return (
         <div className={styles.user}>
           <div className={styles.bubble}>
-            <MessageText mentions text={item.text} />
+            <MessageText
+              files={files}
+              mentions
+              text={item.text}
+              waits={item.queued}
+            />
           </div>
-          {item.attachments ? (
-            <AttachmentChips attachments={item.attachments} sent />
-          ) : null}
+          {listed.length > 0 ? <SentFiles files={listed} /> : null}
         </div>
       )
+    }
     case 'agent':
       return (
         <div className={classes(styles.agent, headingStyles.headings)}>

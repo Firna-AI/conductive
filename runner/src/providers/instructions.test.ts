@@ -68,6 +68,7 @@ it.each(['claude', 'codex'] as const)(
       {
         id: 'image',
         name: 'image.png',
+        path: null,
         kind: 'image',
         mediaType: 'image/png',
         sizeBytes: 10,
@@ -75,6 +76,7 @@ it.each(['claude', 'codex'] as const)(
       {
         id: 'file',
         name: 'notes.txt',
+        path: null,
         kind: 'file',
         mediaType: 'text/plain',
         sizeBytes: 20,

@@ -19,9 +19,9 @@ The address holds the state of the page:
 | `controls` | `off` hides the development controls                         |
 
 For example, `?list=changes&tab=diff:src/app/checkout/AddressForm.tsx`
-draws the diff of the mockups. `public/hero.png` is binary, with a binary
-diff at `?tab=diff:public/hero.png`. `public/catalog.json` is over the
-sample read limit, and
+draws the diff of the mockups. `public/hero.png` shows a picture of 1 × 1
+pixel in its file tab, with a binary diff at `?tab=diff:public/hero.png`.
+`public/catalog.json` is over the sample read limit, and
 `src/app/checkout/page.tsx` fails to read. `?tab=file:preview:README.md`
 parses its Markdown in the module worker, as the app does. The fixtures
 serve each file on its content and download routes with one sample limit,
