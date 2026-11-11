@@ -249,6 +249,25 @@ Design calls:
   first wait and the member-message reset. Reason: the short guidance
   must state the approved count and its exception accurately.
 
+- 11 November 2026, the docs implementor's call: the runner details live
+  in a linked background-work guide. Reason: it keeps the README short
+  and follows the existing runner guide structure.
+- 11 November 2026, the docs implementor's call: shared transcript code
+  references move from the chat README to its transcript guide. Reason:
+  both files stay short, with every code reference preserved.
+- 11 November 2026, the docs implementor's call: the login guide states
+  that an idle Claude process keeps its token during a running wait.
+  Reason: the old no-idle-token wording contradicted the approved wait.
+- 11 November 2026, the docs implementor's call: the runner guide asks for
+  a real-program order check after an SDK pin change. Reason: fake SDK
+  tests cannot prove the event order of a different program version.
+- 11 November 2026, the external docs implementor's call: the existing
+  guide section holds the detailed count and Stop instructions. Reason:
+  its address stays stable and the comparison note stays short.
+- 11 November 2026, the external docs implementor's call: the comparison
+  row stays Available and removes its planned claim. Reason: Stop and
+  retry already meet the main-part rule, and background work is complete.
+
 Risks:
 
 - While a turn waits, each process in the sandbox can still read its turn
@@ -374,15 +393,19 @@ The rendered chat tests reuse the shared parts visually checked in Milestone 1.
 
 Depends on: 4, 5, 6
 
-- [ ] Update `runner/README.md` and `runner/key-code.md` for the wait,
+- [x] Update `runner/README.md`, `runner/background-work.md`,
+      `runner/agent-logins.md`, and `runner/key-code.md` for the wait,
       the note, the limit, the end reason, and the new entry points.
-- [ ] Update `src/chat/README.md` and `src/chat/transcript.md` for the
+- [x] Update `src/chat/README.md` and `src/chat/transcript.md` for the
       shared end-reason line and its completion data.
-- [ ] Update the `stop-retry-and-background-tasks` row in
+- [x] Update the `stop-retry-and-background-tasks` row in
       `src/marketing/from-conductor/areas/agents-and-chat.ts`, as
       [Statuses](../docs/protocol/conductor-comparison.md#statuses) says.
-- [ ] Update `src/marketing/docs/sessions-and-chat.md` for the wait and
+- [x] Update `src/marketing/docs/sessions-and-chat.md` for the wait and
       the line at the limit.
+
+Evidence: `.context/background-work-keeps-turn-open/milestone-7-docs-report.md`
+and `.context/background-work-keeps-turn-open/milestone-7-external-report.md`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

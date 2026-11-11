@@ -42,9 +42,12 @@ cause. Reconnect cannot send that turn again.
   token stays for the whole turn, also when a model change starts a new
   agent process in the turn. Each `message` command of the turn goes to
   the running agent process at once, whoever sent it.
-- Each end of a turn closes its agent process, so no idle agent process
-  keeps a token. The next turn starts a new agent process on the saved
-  conversation, when one exists, with the token of that turn.
+- Each end of a turn closes its agent process, so no agent process keeps a
+  token after its turn. A Claude process that waits for background work
+  keeps its token, because its turn still runs, as
+  [Background work](background-work.md#the-wait) says. The next turn starts
+  a new agent process on the saved conversation, when one exists, with the
+  token of that turn.
 - The engine gives each agent adapter two values: the gateway address of
   its agent, and the turn token. The address is the machine origin with
   `/v1/model/claude` for Claude, or `/v1/model/codex` for Codex.
