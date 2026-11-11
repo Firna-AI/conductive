@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest'
 import {
   accessibleName,
   byRole,
+  byText,
   queryByRole,
   queryByText,
 } from '../../../test-support/dom-queries'
@@ -16,9 +17,19 @@ import {
   replyWith,
   rowOf,
   savesOf,
+  type TabPlace,
 } from './shortcuts-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
+
+/** The lines above the groups, as a screen reader reads them. */
+function introLines(): string[] {
+  const intro = byText('Select a shortcut to change it.').parentElement
+  return Array.from(intro?.querySelectorAll('p') ?? [], accessibleName)
+}
+
+/** The places in the org rail that Switch to org 1 to 9 open. */
+const orgPlaces = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 /** The groups of the tab that show, each with the labels of its rows. */
 function shownGroups(): [string, (string | null)[]][] {
@@ -132,20 +143,11 @@ describe('the Keyboard shortcuts tab', () => {
     })
   })
 
-  test('the search shows only the rows that match, in their groups, with the keys that a Chrome tab keeps dimmed, and says when nothing matches', async () => {
-    await openShortcutsTab()
-    const field = byRole('textbox', 'Search shortcuts')
-    typeText(field, 'tab')
-    const found = shownGroups()
-    const closeTab = controlsOf(rowOf('Navigation', 'Close tab'))
-    typeText(field, 'merge')
-    const empty = queryByText('Nothing matches “merge”')?.parentElement
-    expect({
-      found,
-      closeTab,
-      none: shownGroups(),
-      empty: Array.from(empty?.querySelectorAll('p') ?? [], accessibleName),
-    }).toEqual({
+  test.each([
+    {
+      host: 'a Mac',
+      place: { keyboard: 'mac', system: 'mac' },
+      query: 'tab',
       found: [
         [
           'Navigation',
@@ -160,16 +162,76 @@ describe('the Keyboard shortcuts tab', () => {
         ['Chat', ['New session']],
         ['Menus and palette', ['Switch the palette tab']],
       ],
-      closeTab: [
-        'Change Command W for Close tab, a key that Chrome keeps in this tab',
-        'Change Option Command W for Close tab',
-        'Add shortcut for Close tab',
+      rows: ['Close tab'],
+      controls: [
+        [
+          'Change Command W for Close tab, a key that Chrome keeps in this tab',
+          'Change Option Command W for Close tab',
+          'Add shortcut for Close tab',
+        ],
       ],
-      none: [],
-      empty: [
-        'Nothing matches “merge”',
-        'Try a command name, such as Close tab.',
+      lines: [
+        'Select a shortcut to change it.',
+        'Keys without Command go to the terminal while it has the focus.',
+        'Dimmed keys work in the Mac app or in Conductive installed from Chrome.',
       ],
-    })
-  })
+    },
+    {
+      // Chrome selects a tab on Alt+1 to Alt+9 on Linux, so the app leaves
+      // these keys of the orgs to it.
+      host: 'Linux',
+      place: { keyboard: 'other', system: 'linux' },
+      query: 'switch org',
+      found: [
+        ['Navigation', orgPlaces.map((digit) => `Switch to org ${digit}`)],
+      ],
+      rows: orgPlaces.map((digit) => `Switch to org ${digit}`),
+      controls: orgPlaces.map((digit) => [
+        `Change Alt ${digit} for Switch to org ${digit}, a key that Chrome keeps in this tab`,
+        `Add shortcut for Switch to org ${digit}`,
+      ]),
+      lines: [
+        'Select a shortcut to change it.',
+        'Every key goes to the terminal while it has the focus.',
+        'Dimmed keys work in Conductive installed from Chrome.',
+      ],
+    },
+  ] satisfies {
+    host: string
+    place: TabPlace
+    query: string
+    found: [string, string[]][]
+    rows: string[]
+    controls: string[][]
+    lines: string[]
+  }[])(
+    'in a Chrome tab on $host, the search shows only the rows that match, in their groups, with the keys that do not work in the tab dimmed and a line that says where they work, and says when nothing matches',
+    async ({ place, query, found, rows, controls, lines }) => {
+      await openShortcutsTab([], place)
+      const field = byRole('textbox', 'Search shortcuts')
+      typeText(field, query)
+      const shown = shownGroups()
+      const rowControls = rows.map((label) =>
+        controlsOf(rowOf('Navigation', label)),
+      )
+      typeText(field, 'merge')
+      const empty = queryByText('Nothing matches “merge”')?.parentElement
+      expect({
+        lines: introLines(),
+        found: shown,
+        controls: rowControls,
+        none: shownGroups(),
+        empty: Array.from(empty?.querySelectorAll('p') ?? [], accessibleName),
+      }).toEqual({
+        lines,
+        found,
+        controls,
+        none: [],
+        empty: [
+          'Nothing matches “merge”',
+          'Try a command name, such as Close tab.',
+        ],
+      })
+    },
+  )
 })

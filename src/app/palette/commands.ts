@@ -112,19 +112,23 @@ export const orgSettings: readonly (CommandText & { tab: SettingsTab })[] = [
   { tab: 'members', label: 'Members', words: ['invite', 'admin', 'role'] },
 ]
 
+/**
+ * The rows of the Account group of the Settings tab, in the order of the
+ * Account page: tab by tab, and in each tab in the order of its sections.
+ * So This Mac, which only the Mac app shows, follows Sign-in on the General
+ * tab, and the Keyboard shortcuts tab ends the list. A section that the
+ * page adds or moves takes the same place here.
+ */
 export const accountSettingIds = [
   'sign-in',
+  'this-mac',
   'github',
   'agents',
   'new-workspaces',
-  'this-mac',
   'keyboard-shortcuts',
 ] as const
 
-/**
- * A section of the Account page, or its Keyboard shortcuts tab, which ends
- * the list. `this-mac` shows in the Mac app only.
- */
+/** A section of the Account page, or its Keyboard shortcuts tab. */
 export type AccountSettingId = (typeof accountSettingIds)[number]
 
 export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =
@@ -136,7 +140,10 @@ export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =
       label: 'New workspaces',
       words: ['model', 'effort', 'default'],
     },
-    'this-mac': { label: 'This Mac', words: ['device', 'commands'] },
+    'this-mac': {
+      label: 'This Mac',
+      words: ['device', 'always allow', 'commands'],
+    },
     'keyboard-shortcuts': {
       label: 'Keyboard shortcuts',
       words: ['keys', 'hotkeys', 'keybindings'],

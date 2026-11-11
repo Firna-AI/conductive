@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import { ACCOUNT_PATHS } from '../../../shared/account'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
 import { MOUNTED_TEST_TIMEOUT } from '../../../test-support/mount'
@@ -14,42 +14,113 @@ import {
   replyWith,
   rowOf,
   savesOf,
+  type TabPlace,
 } from './shortcuts-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
+/**
+ * A press of a test: its key text, with the key and the code that take the
+ * place of those of a US keyboard.
+ */
+interface Press {
+  readonly text: string
+  readonly key?: string
+  readonly code?: string
+}
+
+/** Presses the keys in their order, on the focused element unless `target` is given. */
+function pressAll(presses: readonly Press[], target?: EventTarget): void {
+  for (const { text, ...options } of presses) {
+    pressShortcut(text, target, options)
+  }
+}
+
+const linux: TabPlace = { keyboard: 'other', system: 'linux' }
+
 describe('the recorder of the Keyboard shortcuts tab', () => {
-  test('a recorded key saves to the account, takes the focus, and runs its command', async () => {
-    const { server } = await openShortcutsTab()
-    click(byRole('button', 'Change Command K for Command palette'))
-    replyWith(server, [{ command: 'command-palette', keys: ['Shift+Meta+P'] }])
-    // The recorder has the focus, so the press goes to it.
-    pressShortcut('Shift+Meta+P')
-    await settle()
-    const row = rowOf('General', 'Command palette')
-    const focused = accessibleName(document.activeElement ?? document.body)
-    pressShortcut('Shift+Meta+P', document.body)
-    expect({
-      saves: await savesOf(server),
-      row: controlsOf(row),
-      focused,
-      palette: palette() !== null,
-    }).toEqual({
-      saves: [
-        {
-          keyboard: 'mac',
-          changes: [{ command: 'command-palette', keys: ['Shift+Meta+P'] }],
-        },
-      ],
-      row: [
-        'Reset Command palette',
-        'Change Shift Command P for Command palette',
-        'Add shortcut for Command palette',
-      ],
-      focused: 'Change Shift Command P for Command palette',
-      palette: true,
-    })
-  })
+  // On Linux, the Alt+Shift layout switch takes the modifier that goes down
+  // second: its press arrives as GroupNext, on the physical key of that
+  // modifier, and the page hears no such modifier. The keys then type the
+  // characters of the other layout, such as the л of K on a Russian layout.
+  test.each([
+    {
+      host: 'a Mac',
+      held: 'with no layout switch',
+      place: { keyboard: 'mac', system: 'mac' },
+      replaces: 'Command K',
+      layoutSwitch: [],
+      press: { text: 'Shift+Meta+P' },
+      recorded: 'Shift+Meta+P',
+      spoken: 'Shift Command P',
+    },
+    {
+      // Alt goes down first, so the switch takes Shift.
+      host: 'Linux',
+      held: 'while the layout switch takes Shift',
+      place: linux,
+      replaces: 'Control K',
+      layoutSwitch: [{ text: 'Alt+K', key: 'GroupNext', code: 'ShiftLeft' }],
+      press: { text: 'Alt+K', key: 'л' },
+      recorded: 'Alt+Shift+K',
+      spoken: 'Alt Shift K',
+    },
+    {
+      // Shift goes down first, so the switch takes Alt. A Tab with a
+      // modifier records, also when the switch takes that modifier.
+      host: 'Linux',
+      held: 'while the layout switch takes Alt',
+      place: linux,
+      replaces: 'Control K',
+      layoutSwitch: [{ text: 'Shift+Tab', key: 'GroupNext', code: 'AltLeft' }],
+      press: { text: 'Shift+Tab' },
+      recorded: 'Alt+Shift+Tab',
+      spoken: 'Alt Shift Tab',
+    },
+  ] satisfies {
+    host: string
+    held: string
+    place: TabPlace
+    replaces: string
+    layoutSwitch: Press[]
+    press: Press
+    recorded: string
+    spoken: string
+  }[])(
+    'in a Chrome tab on $host, $held, a recorded key saves to the account, takes the focus, and runs its command',
+    async ({ place, replaces, layoutSwitch, press, recorded, spoken }) => {
+      const { server } = await openShortcutsTab([], place)
+      // The window loses the focus at the end, which lets go of the switch.
+      onTestFinished(() => {
+        window.dispatchEvent(new Event('blur'))
+      })
+      click(byRole('button', `Change ${replaces} for Command palette`))
+      const change = { command: 'command-palette', keys: [recorded] } as const
+      replyWith(server, [change], place.keyboard)
+      // The recorder has the focus, so the presses go to it.
+      pressAll([...layoutSwitch, press])
+      await settle()
+      const row = rowOf('General', 'Command palette')
+      const focused = accessibleName(document.activeElement ?? document.body)
+      // The same press runs the command, while the switch stays down.
+      pressAll([press], document.body)
+      expect({
+        saves: await savesOf(server),
+        row: controlsOf(row),
+        focused,
+        palette: palette() !== null,
+      }).toEqual({
+        saves: [{ keyboard: place.keyboard, changes: [change] }],
+        row: [
+          'Reset Command palette',
+          `Change ${spoken} for Command palette`,
+          'Add shortcut for Command palette',
+        ],
+        focused: `Change ${spoken} for Command palette`,
+        palette: true,
+      })
+    },
+  )
 
   test('Replace moves a key that another command holds to the row in one save', async () => {
     const { server } = await openShortcutsTab()

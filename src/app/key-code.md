@@ -237,7 +237,11 @@ Each path is relative to `src/app/`, the folder of this page.
   before the name. `commands.ts` holds the labels, the search words, and
   `actionCommands`, the command of the keys of each action. Each command
   row names its command in `CommandRow.command`. The Account group of the
-  Settings tab ends with Keyboard shortcuts, which opens that tab.
+  Settings tab lists `accountSettingIds` in the order of the Account page
+  of `../shell/account/AccountScreen.tsx`, tab by tab, so This Mac follows
+  Sign-in in the Mac app. A section that the page adds or moves takes the
+  same place in that list. The group ends with Keyboard shortcuts, which
+  opens that tab.
   `listed-commands.ts` gives `listedCommands`, the commands that the
   palette lists now with their rows, which the keys of the palette run.
   It leaves out Switch to org 1 to 9, which the org rail runs.

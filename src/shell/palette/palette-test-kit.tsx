@@ -3,6 +3,7 @@ import type { FetchLike } from '../../app/api/client'
 import { memoryNavigation } from '../../app/navigation'
 import { windowKeys, type AppServices, type Platform } from '../../app/services'
 import { Store } from '../../app/store'
+import type { ShortcutSystem } from '../../shared/shortcut-key'
 import {
   accessibleName,
   byRole,
@@ -30,15 +31,18 @@ const macWindow = {
 }
 
 /**
- * The whole app in a tab at `href`, over the fake API, or in the Mac app
- * with `mac`, in the window `macWindow` of the test. The app hears the keys
- * of the window, as the browser gives them. `beside` mounts a part of a
- * test beside the app, inside its providers.
+ * The whole app in a Chrome tab at `href`, over the fake API, or in the Mac
+ * app with `mac`, in the window `macWindow` of the test. The tab runs on a
+ * Mac with the Mac keyboard, and on Windows with the other keyboard, unless
+ * `system` names another system, such as Linux. The app hears the keys of
+ * the window, as the browser gives them. `beside` mounts a part of a test
+ * beside the app, inside its providers.
  */
 export async function openPaletteTab(
   href: string,
   options: {
     platform?: Platform
+    system?: ShortcutSystem
     viewport?: Viewport
     server?: FakeApiServer
     events?: AppServices['events']
@@ -60,7 +64,8 @@ export async function openPaletteTab(
       : {
           kind: 'browser-tab',
           browser: 'chrome',
-          system: options.platform === 'mac' ? 'mac' : 'windows',
+          system:
+            options.system ?? (options.platform === 'mac' ? 'mac' : 'windows'),
         },
     events: options.events ?? recordingSocket(server).source,
     fetch: options.fetch,

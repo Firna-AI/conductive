@@ -30,6 +30,14 @@ gives the rules. The mockups `app/account/shortcuts` and
   it. While it shows, the shortcut layer runs no command. Escape and
   Cancel end it. Tab and Shift+Tab move the focus, such as to Remove and
   Cancel, so the recorder takes no plain Tab.
+- While a layout switch key is down, the recorder adds to each press the
+  modifiers that the switch key took, from `onKey.layoutModifiers()` of
+  the services, the state that the key listener of the app keeps. The
+  model then restores the key when it has Ctrl, Alt, or Meta, so the
+  recorder records the key that the person pressed, such as Alt+Shift+K,
+  as the listener matches it. A Tab with such a modifier records too.
+  [The layout switch](../../../../docs/protocol/keyboard-shortcuts-matching.md#the-layout-switch)
+  gives the rule.
 - A recorded key that another command holds waits in the recorder, with
   Replace and Cancel. Reset asks the same question when another command
   holds a default key of the command.
@@ -51,10 +59,13 @@ npm run test -- src/shell/account/shortcuts
 ```
 
 `ShortcutRecorder.test.tsx` and `ShortcutsTab.test.tsx` mount the whole
-app in a Chrome tab on a Mac, over the fake API, with
-`shortcuts-test-kit.ts`. The fake answers each save with the reply that
-the test sets, so each test also checks the request that the tab sent.
-`tab-rows.test.ts` checks the rows of each host in Node.
+app in a Chrome tab, on a Mac unless a case names Linux, over the fake
+API, with `shortcuts-test-kit.ts`. The fake answers each save with the
+reply that the test sets, so each test also checks the request that the
+tab sent. A case that holds a layout switch key presses GroupNext on the
+physical key of a modifier, and the window loses the focus at the end of
+the test, which lets go of the switch. `tab-rows.test.ts` checks the rows
+of each host in Node.
 
 ### Key Code
 
@@ -79,3 +90,4 @@ the test sets, so each test also checks the request that the tab sent.
 - [Keyboard shortcuts: the settings tab](../../../../docs/protocol/keyboard-shortcuts-tab.md)
 - [Keyboard shortcuts](../../../../docs/protocol/keyboard-shortcuts.md)
 - [Keyboard shortcuts: the keys](../../../../docs/protocol/keyboard-shortcuts-keys.md)
+- [Keyboard shortcuts: matching a press](../../../../docs/protocol/keyboard-shortcuts-matching.md)

@@ -1360,17 +1360,25 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Decision 198 C: list This Mac after Sign-in in the palette's Account
+- [x] Decision 198 C: list This Mac after Sign-in in the palette's Account
       group, with the search word "always allow", and update its test.
-- [ ] Happy-dom tests where the page shows the answers to decisions 196
+- [x] Happy-dom tests where the page shows the answers to decisions 196
       and 197: in a normal Chrome tab on Linux, Alt+1 switches no org and
       the tab dims Alt+1 to Alt+9; while the layout switch takes Shift, the
       recorder records Alt+Shift+K. Add each case to the existing test of
-      its requirement.
-- [ ] Smoke-test the tab in Chrome on Linux, desktop and phone, in light
+      its requirement. The model tests of Milestone 3 cover "Alt+1
+      switches no org", the lowest level that fails. Report:
+      `.context/keyboard-shortcuts/reports/m9-ui.md`. Agent call,
+      2026-11-10: a Tab whose restored key has Ctrl, Alt, or ⌘ records, as
+      a Tab with a modifier does.
+- [x] Smoke-test the tab in Chrome on Linux, desktop and phone, in light
       and dark. Where the machine allows it, also press Alt+Shift+1 with
       the Alt+Shift layout switch on, in Chrome under a real X server.
-- [ ] Update the README of each changed area.
+      Evidence: `.context/keyboard-shortcuts/m9/shots/` and
+      `.context/keyboard-shortcuts/m9/live/`. Xvfb could not load the
+      us,ru keymap, so the live check ran on Xvnc: Alt+Shift+1 opened
+      workspace 1 in both orders, and the recorder saved Alt+Shift+K.
+- [x] Update the README of each changed area.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
@@ -1410,6 +1418,7 @@ Depends on: every other milestone
       and that ⌘R still reloads.
 - [ ] Check an installed app window in Chrome, and a browser tab in
       Chrome, Firefox, and Safari, on the deployed app.
-- [ ] On Linux with the Alt+Shift layout switch, check in Chrome and in
-      Firefox that Alt+Shift+1 opens workspace 1, in either order of the
-      modifiers, and that Firefox reports the switch key as GroupNext.
+- [ ] On Linux with the Alt+Shift layout switch, check in Firefox that
+      Alt+Shift+1 opens workspace 1, in either order of the modifiers, and
+      that Firefox reports the switch key as GroupNext. Chrome passed this
+      check before the merge.

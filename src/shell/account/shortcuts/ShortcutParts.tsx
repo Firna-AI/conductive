@@ -13,7 +13,13 @@ import {
   spokenShortcut,
 } from '../../../../docs/mockups/src/components/common/KeyChips'
 import styles from '../../../../docs/mockups/src/components/settings/ShortcutsSections.module.css'
-import { formatShortcut, type ShortcutPress } from '../../../app/shortcuts/keys'
+import { useServices } from '../../../app/services'
+import {
+  formatShortcut,
+  restoreLayoutModifiers,
+  type ShortcutPress,
+} from '../../../app/shortcuts/keys'
+import type { LayoutModifiers } from '../../../app/shortcuts/layout-switch'
 import type {
   ShortcutKeyboard,
   ShortcutKeyText,
@@ -108,8 +114,14 @@ export function KeyButton({
   )
 }
 
-/** A press of the keyboard as the shortcut model reads it. */
-function pressOf(event: KeyboardEvent): ShortcutPress {
+/**
+ * A press of the keyboard as the shortcut model reads it, with the
+ * modifiers that the held layout switch keys took.
+ */
+function pressOf(
+  event: KeyboardEvent,
+  layoutModifiers: LayoutModifiers,
+): ShortcutPress {
   return {
     key: event.key,
     code: event.code,
@@ -119,6 +131,7 @@ function pressOf(event: KeyboardEvent): ShortcutPress {
     shiftKey: event.shiftKey,
     repeat: event.repeat,
     isComposing: event.nativeEvent.isComposing,
+    layoutModifiers,
   }
 }
 
@@ -126,7 +139,11 @@ function pressOf(event: KeyboardEvent): ShortcutPress {
  * The field that waits for the keys, with the focus. It takes each key
  * that reaches it, and no key runs a command while it shows. Escape
  * cancels. Tab and Shift+Tab move the focus, such as to Remove and Cancel.
- * `recorded` is a recorded key that waits for its save, or for Replace.
+ * While a layout switch key is down, each press gets the modifiers that
+ * the switch took, from the state that the key listener of the app keeps,
+ * so the field records the key that the person pressed, as the listener
+ * matches it. `recorded` is a recorded key that waits for its save, or for
+ * Replace.
  */
 export function Recorder(props: {
   label: string
@@ -137,6 +154,7 @@ export function Recorder(props: {
   take: (press: ShortcutPress) => void
   cancel: () => void
 }) {
+  const { onKey } = useServices()
   const mark = useShortcutRecorder()
   const field = useRef<HTMLSpanElement | null>(null)
   const ref = useCallback(
@@ -149,12 +167,15 @@ export function Recorder(props: {
   useEffect(() => field.current?.focus(), [])
   const onKeyDown = (event: KeyboardEvent<HTMLSpanElement>) => {
     if (event.nativeEvent.isComposing) return
-    const moves = !event.metaKey && !event.ctrlKey && !event.altKey
-    if (event.key === 'Tab' && moves) return
+    const press = pressOf(event, onKey.layoutModifiers())
+    // A Tab moves the focus, unless it has Ctrl, Alt, or Meta, also one
+    // that a held layout switch key took.
+    const { metaKey, ctrlKey, altKey } = restoreLayoutModifiers(press)
+    if (event.key === 'Tab' && !metaKey && !ctrlKey && !altKey) return
     event.preventDefault()
     event.stopPropagation()
     if (event.key === 'Escape') props.cancel()
-    else if (!event.repeat) props.take(pressOf(event))
+    else if (!event.repeat) props.take(press)
   }
   return (
     <span

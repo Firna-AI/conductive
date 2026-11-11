@@ -1,6 +1,10 @@
 import { routes } from '../../../app/router'
 import { ACCOUNT_PATHS } from '../../../shared/account'
 import type { ShortcutCommandId } from '../../../shared/shortcut-commands'
+import type {
+  ShortcutKeyboard,
+  ShortcutSystem,
+} from '../../../shared/shortcut-key'
 import {
   accessibleName,
   byRole,
@@ -18,29 +22,47 @@ interface SentChange {
   readonly keys: readonly string[]
 }
 
+/** The keyboard of the Chrome tab of a test, and the system that it runs on. */
+export interface TabPlace {
+  readonly keyboard: ShortcutKeyboard
+  readonly system: ShortcutSystem
+}
+
 /**
- * The whole app at the Keyboard shortcuts tab, in a Chrome tab on a Mac,
- * over the fake API. `changes` are the saved changes of the Mac keyboard.
+ * The whole app at the Keyboard shortcuts tab, in a Chrome tab, on a Mac
+ * unless `place` names another keyboard and system, over the fake API.
+ * `changes` are the saved changes of the keyboard of the tab.
  */
-export async function openShortcutsTab(changes: readonly SentChange[] = []) {
+export async function openShortcutsTab(
+  changes: readonly SentChange[] = [],
+  place: TabPlace = { keyboard: 'mac', system: 'mac' },
+) {
   const server = new FakeApiServer()
   server.json('GET', ACCOUNT_PATHS.account, {
     ...coreFixtures().account,
-    shortcuts: { mac: changes, other: [] },
+    shortcuts: {
+      mac: place.keyboard === 'mac' ? changes : [],
+      other: place.keyboard === 'other' ? changes : [],
+    },
   })
   const tab = await openPaletteTab(routes.accountTab('shortcuts'), {
-    platform: 'mac',
+    platform: place.keyboard,
+    system: place.system,
     server,
   })
   return { ...tab, server }
 }
 
-/** The next reply of a save: the confirmed changes of the Mac keyboard. */
+/**
+ * The next reply of a save: the confirmed changes of the keyboard, the Mac
+ * one unless the test names another.
+ */
 export function replyWith(
   server: FakeApiServer,
   changes: readonly SentChange[],
+  keyboard: ShortcutKeyboard = 'mac',
 ): void {
-  server.json('PUT', ACCOUNT_PATHS.shortcuts, { keyboard: 'mac', changes })
+  server.json('PUT', ACCOUNT_PATHS.shortcuts, { keyboard, changes })
 }
 
 /** The bodies of the saves that the tab sent, in their order. */

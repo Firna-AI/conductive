@@ -47,9 +47,9 @@ gives the rules.
   shows, it waits for a key, so the listener tells the model that a
   recorder records, and no key runs a command. The recorder marks itself
   with `useShortcutRecorder`, and takes the keys that reach it.
-  Its own event can include `layoutModifiers: services.onKey.layoutModifiers()`
-  before the editor calls `shortcutFromPress`. This reads the same window
-  state that the listener uses.
+  Its own event gets `layoutModifiers: services.onKey.layoutModifiers()`
+  before the editor calls `shortcutFromPress`, so it records the restored
+  key. This reads the same window state that the listener uses.
 
 ## The keymap
 
@@ -155,7 +155,9 @@ npm run test -- src/shell/shortcuts src/shell/palette src/shell/list src/shell/l
 ```
 
 The tests mount the whole app in happy-dom with `openPaletteTab`, which
-hears the keys of the window as a browser gives them.
+hears the keys of the window as a browser gives them. The Chrome tab runs
+on a Mac with the Mac keyboard and on Windows with the other keyboard,
+unless its `system` option names another system, such as Linux.
 `shortcut-test-kit.tsx` presses keys by their key text, by their command,
 or as the hints show them in the host of the app, with `pressHintKey`. A
 press can also come from another physical key, such as the / of the
