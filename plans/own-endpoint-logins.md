@@ -1442,7 +1442,7 @@ description copies them.
 
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -1454,6 +1454,16 @@ description copies them.
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this
       plan, and the follow-up items that the change adds.
+
+The review ran on 11 November 2026, in two rounds. Round 1 found
+findings 14, 15, 44, 74, and 75. Its checks removed 74, and the fix
+round fixed the others in `d0a9055e`. Round 2 found findings 76, 106,
+107, and 136. The last fix round fixed 107 and 136 in `e99cefaf`, and
+76 and 106 wait in follow-up items. The findings file is
+`.context/reviews/calummoore/cli-proxy-setup/findings.md`. The later
+merges of main on 11 November 2026 are recorded in
+`.context/own-endpoint-logins/merge5-decisions.md` and
+`merge6-decisions.md`.
 
 ## Post-merge follow-up (non-blocking)
 
