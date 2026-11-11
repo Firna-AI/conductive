@@ -592,6 +592,10 @@ test, unless it names a decision or another date.
 - A command stored before the change holds an old path. Its copy fails
   once, and Try again works. No converter stays, because the project is
   not in production.
+- A stored copy proof is reused only when the command holds the current
+  path of each file. Reason: an old proof must not bypass the planned
+  failure of a command with an old path. This is my call on 11 November
+  2026, from the implementation check.
 
 ### The sent message
 
@@ -618,6 +622,9 @@ test, unless it names a decision or another date.
   options check found this case.
 - A file of the message with no chip in its text shows under the message,
   as now.
+- The bubble uses one reading of its text for both the chips and the
+  remaining file list. Reason: a mention in code is not a chip, so its
+  file must stay in that list. This is my call on 11 November 2026.
 - A copy of a sent chip gives its mention, as for a file chip.
 - The agent gets the text unchanged, with each mention, then the read
   lines (decision 244).
@@ -643,9 +650,11 @@ test, unless it names a decision or another date.
 These calls follow decision 265 B.
 
 - The file tab shows a PNG, JPEG, GIF, or WebP file as a picture, by the
-  name of the file. Reason: the runner gives `text/plain` for a GIF and a
-  WebP file, and the Boat file read gives `application/octet-stream` for
-  each binary file. The options check found this.
+  name of the file. Reason: the runner starts a GIF or a WebP read with
+  `text/plain`, then uses `application/octet-stream` for non-text bytes.
+  The Boat file read gives `application/octet-stream` for each binary
+  file. The options check found the generic types. The implementation
+  check corrected this reason on 11 November 2026.
 - The picture comes from a `data:` address of the bytes that the file
   response holds. Reason: the content security policy of both apps lets
   an image load from `data:`, but not from `blob:`. The options check
@@ -662,6 +671,25 @@ These calls follow decision 265 B.
 - The mockup pictures use fixed SVG drawings, while the app reads the real
   bytes from a `data:` address. Reason: Mokly's static document rules do
   not accept `data:` image addresses. This is my call on 10 November 2026.
+
+The UI implementor made these calls on 11 November 2026 under the approved
+image behavior:
+
+- The page learns each picture's size with a detached `Image` before it
+  draws the mockup part. It shows "Opening the file" during the first
+  decode. Reason: the layout needs the picture's size.
+- A changed picture stays visible until the browser draws the new bytes.
+  Reason: the file tab keeps its content during a refresh, as its Markdown
+  preview does.
+- A decode with no picture size uses the Download state. An image file
+  with no bytes keeps "This file is empty". Reason: neither can draw a
+  picture, and an empty file already has its own state.
+- A read sent as UTF-8 becomes UTF-8 bytes, then base64, for the data
+  address. Reason: the address must preserve the read's bytes.
+- The picture's `alt` uses the masked path label, with no `title`.
+  Reason: the same label names the header and hides private path values.
+- The app sizes its `img` through the page CSS beside the mockup layout.
+  Reason: the mockups size an SVG child, while the app draws an image.
 
 ### Details from the mockup check
 
@@ -852,15 +880,20 @@ Depends on: 1, 2
 The file tab shows each image up to the read limit as a picture
 (decision 265 B). This holds for every image of the workspace.
 
-- [ ] Show a PNG, JPEG, GIF, or WebP file as a picture in
+- [x] Show a PNG, JPEG, GIF, or WebP file as a picture in
       `src/files/page/FileBody.tsx`, by the name of the file, from a
       `data:` address of the bytes of the file response.
-- [ ] Show "Download this file to open it" when the browser cannot draw
+- [x] Show "Download this file to open it" when the browser cannot draw
       the bytes.
-- [ ] Update `src/files/README.md`.
-- [ ] Add the tests of a picture, a GIF from the runner, a picture from
+- [x] Update `src/files/README.md`.
+- [x] Correct the development guide and fixture comment for the sample
+      PNG: its file tab shows a picture, and its diff stays binary.
+- [x] Add the tests of a picture, a GIF from the runner, a picture from
       the Boat file read, bytes that the browser cannot draw, an SVG
       file, and an image over the read limit.
+
+Implementation and verification evidence: `.context/composer-file-drops/m5-report.md`
+and `.context/composer-file-drops/m5-docs-report.md`.
 
 ## Milestone 6: The file chip of the message field
 
