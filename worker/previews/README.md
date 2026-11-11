@@ -225,8 +225,11 @@ only when `stripHeaders` does not name `Sec-WebSocket-Protocol`.
 The upstream URL and each rewritten redirect lose each name in
 `stripQueryParameters`.
 The proxy follows no upstream redirect.
-`portResponseHeaders` keeps the server's `Cache-Control` with `private` in place of `public`.
-A reply without `max-age`, `no-cache`, or `no-store` gets `no-cache`.
+`portResponseHeaders` sends `private` first, then the server's `Cache-Control` unchanged.
+It also sends `no-cache` first, unless the server gives a browser lifetime.
+A lifetime is an `Expires` header, or a `Cache-Control` without quotes that holds `no-store`, a bare `no-cache`, or `max-age` with digits.
+A quote can hide the directives after it from the browser, so the proxy's directives never follow the server's value.
+The reply keeps the server's `Expires`, `Date`, and `Age`.
 A 304 without `Cache-Control` gets none, so the browser keeps the rules of its stored reply.
 [Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states the requirement.
 
