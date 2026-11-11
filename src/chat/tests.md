@@ -26,7 +26,14 @@ refuses. `components/FirstStart.dom.test.tsx` mounts the chat without a
 host, sends with Enter and Send during the first start and after it failed,
 and checks the saved message on the bar of a failed first start and of a
 failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
-turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
+turns from the rendered chat. `components/SkillLines.dom.test.tsx` reads
+the skill lines and the fold lines that name skills from the rendered chat:
+a skill line while its call runs, the line of an open and of a folded run,
+and the line and the steps of the work fold of an ended turn, with a failed
+skill line. It checks the icons, the no-break space before the dot, each
+name with its comma in its box, and the icons in the box of the last name.
+`components/fold-markup-kit.ts` holds the readers of the folds that both
+files use. `components/OpenFold.dom.test.tsx` opens a
 fold and a message line, and checks that each line keeps its place. It
 also presses a workspace chip in a message line, with and without a
 modifier key. It also opens a message line with a table: the closed line

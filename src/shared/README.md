@@ -253,6 +253,8 @@ The git credential payload is not defined yet.
   "Using skill" or "Used skill", with a plural for more than one name.
   `foldSkills` gives each skill once in first-use order, without failed or stopped calls.
   `foldSkillLabel` gives the skill names after the counts of a fold.
+  `foldSkillHeading` gives its "Skill:" or "Skills:", which the fold line
+  of the chat also uses before its own box for each name.
   The concise transcript puts these names before the left-out output size.
   The full transcript uses the skill verb, the target as code, and the detail.
 - [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
