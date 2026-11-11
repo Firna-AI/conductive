@@ -68,7 +68,9 @@ that the cloud computer could not read.
     two paragraphs stand from each other: 12 px more for levels 1 and 2,
     and 8 px more for levels 3 to 6. A heading that starts the reply has
     no space above it, and the gap of the reply sets the space under each
-    heading.
+    heading. A heading inside a list item stands as far from the block
+    above it as a heading in a reply does. The mockups do not draw this
+    case.
   - In the file preview, a heading of level 1 or 2 has 24 px above it, and
     a smaller heading has 20 px. Level 1 has 10 px under its line, level 2
     has 8 px under it, and the smaller levels have 6 px. The first block of

@@ -66,7 +66,8 @@ chips.
   says what folds when a turn ends. It also says that the line of each fold
   stays in place when the user opens or closes it, also for a run of calls.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
-  formatting and the tables of agent messages.
+  formatting of agent messages, with their headings and lists.
+  [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
   [Workspace links](../../docs/protocol/workspace-links.md) states the
   chips of sent messages and answers. [Agent text](agent-text.md) gives the
   rules of the code that formats them: the chips, and the table parts that
@@ -288,7 +289,9 @@ check in the Mac app.
 
 - [Chat and events](../../docs/protocol/chat-and-events.md)
 - [Chat Markdown](../../docs/protocol/chat-markdown.md): the formatting of
-  agent messages, with their tables.
+  agent messages, with their headings and lists.
+- [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent
+  messages.
 - [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
   runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):

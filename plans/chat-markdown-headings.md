@@ -136,8 +136,10 @@ Agent calls, 11 November 2026:
   in the look of the open line's headings. Reason: it is outside the
   `<summary>`, and the work stays quieter than the answer.
 - A heading inside a list item stands as far from the block above it as a
-  heading at the top of an answer. Reason: agents rarely write one, and one
-  rule keeps the spacing simple. The mockups do not draw this case.
+  heading after another block of an answer: 20 px for levels 1 and 2, and
+  16 px for levels 3 to 6. A heading that starts an item has no space
+  above it. Reason: agents rarely write one, and one rule keeps the
+  spacing simple. The mockups do not draw this case.
 - Decision 2 scale. In the user's two screenshots of Conductor's chat,
   taken at twice the pixel size, the text has a cap height of 20 px, a
   level-2 heading 28 px, and a level-3 heading 26 px. That fits 14 px text
@@ -165,6 +167,11 @@ Agent calls, 11 November 2026:
   look of a heading must be judged beside them.
 - The text of a heading shows inline code, strong text, and workspace
   chips, as a paragraph does. Reason: it uses the same `LinkedText`.
+- The table rules move from `docs/protocol/chat-markdown.md` to a linked
+  page, `docs/protocol/chat-tables.md`. Reason: the heading rules took the
+  doc to 259 lines, and the documentation skill splits a doc that passes
+  about 250 lines in the same change. The tables are the largest part that
+  stands alone.
 - The public guide and the comparison note name headings in the same
   change. Reason: the repository rules for guides and the comparison page.
 
@@ -212,10 +219,14 @@ Depends on: 1a
 The protocol doc states the heading requirements. The public guide and
 the comparison page name headings.
 
-- [ ] Update `docs/protocol/chat-markdown.md`: headings in the formatting list, a section with the heading rules, the reason line of the rejected full Markdown, and the mockup state.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full. Update each sentence that restates a changed fact.
-- [ ] Read each guide in `src/marketing/docs/` in full. Update each sentence that restates a changed fact, such as "Read replies and tables" in `sessions-and-chat.md`.
-- [ ] Name headings in the note of the `rich-chat-rendering` row in `src/marketing/from-conductor/areas/agents-and-chat.ts`. Its status stays Available.
+- [x] Update `docs/protocol/chat-markdown.md`: headings in the formatting list, a section with the heading rules, the reason line of the rejected full Markdown, and the mockup state.
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full. Update each sentence that restates a changed fact.
+- [x] Read each guide in `src/marketing/docs/` in full. Update each sentence that restates a changed fact, such as "Read replies and tables" in `sessions-and-chat.md`.
+- [x] Name headings in the note of the `rich-chat-rendering` row in `src/marketing/from-conductor/areas/agents-and-chat.ts`. Its status stays Available.
+- [x] Move the table rules to `docs/protocol/chat-tables.md`, and update the links to them and `docs/architecture/protocol-docs.md`.
+
+Evidence: `.context/chat-markdown-headings/m2-protocol-report.md` and
+`.context/chat-markdown-headings/m2-external-report.md`.
 
 ## Milestone 3: Shared heading reader
 

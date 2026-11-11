@@ -3,7 +3,8 @@
 This guide belongs to [the chat](README.md). It gives the rules of the code
 that formats the text of agent messages: in the chat, and in a message line
 of an open work fold. It also gives the workspace chips of sent messages
-and answers. [Chat Markdown](../../docs/protocol/chat-markdown.md) and
+and answers. [Chat Markdown](../../docs/protocol/chat-markdown.md),
+[Chat tables](../../docs/protocol/chat-tables.md), and
 [Workspace links](../../docs/protocol/workspace-links.md) state the
 requirements.
 
@@ -110,7 +111,7 @@ CommonMark. These parts read the lists of both:
 
 ## Table parts
 
-[Chat Markdown](../../docs/protocol/chat-markdown.md#tables-and-the-file-preview)
+[Chat tables](../../docs/protocol/chat-tables.md#tables-and-the-file-preview)
 says that agent messages and the file preview share their table rules.
 These parts read and draw the tables of the chat, the file preview, and the
 mockups:
