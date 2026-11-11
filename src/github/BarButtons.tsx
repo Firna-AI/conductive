@@ -11,10 +11,7 @@ import {
   barLabels,
   mergeLabels,
 } from '../../docs/mockups/src/components/workspace/barCopy'
-import {
-  agentIcons,
-  agentTones,
-} from '../../docs/mockups/src/components/workspace/barIcons'
+import { agentIcons } from '../../docs/mockups/src/components/workspace/barIcons'
 import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
 import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import { ActionButton } from './ActionButton'
@@ -24,8 +21,9 @@ import type { BarControls, BarMessage } from './barView'
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
  * merges as the member, Continue moves the workspace to a new branch, and
- * Archive opens its question. The main action takes the primary tone, in
- * the tint of a tinted bar. Create PR takes the outline tone.
+ * Archive opens its question. The main action takes the tint of a tinted
+ * bar. On a bar without a tint, it takes the outline tone, as Archive does,
+ * so the bar shows no primary fill.
  */
 function BarButton(props: {
   action: BarAction
@@ -42,7 +40,6 @@ function BarButton(props: {
           icon={agentIcons[action.action]}
           onPress={press}
           tint={tint}
-          tone={agentTones[action.action]}
           touch={touch}
         >
           {agentActionLabels[action.action]}
@@ -55,7 +52,6 @@ function BarButton(props: {
           icon={GitMerge}
           onPress={press}
           tint={tint}
-          tone="primary"
           touch={touch}
         >
           {action.busy ? barLabels.merging : mergeLabels[action.method]}
@@ -70,7 +66,6 @@ function BarButton(props: {
           icon={GitBranchPlus}
           onPress={press}
           tint={tint}
-          tone="primary"
           touch={touch}
         >
           {action.busy ? barLabels.continuing : barLabels.continue}

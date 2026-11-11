@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-11, from review round 4 of pull request #176, branch `calummoore/github-status-bar-actions`, finding 7.
-- **Location:** `src/github/PullRequestBar.test.tsx`, `src/github/ActionButton.tsx:28`, `src/github/BarButtons.tsx`, and `docs/mockups/src/components/workspace/barIcons.ts:31`.
+- **Location:** `src/github/PullRequestBar.test.tsx`, `src/github/ActionButton.tsx`, and `src/github/BarButtons.tsx`.
 - **Reason:** both review fix rounds of pull request #176 were used, so this Low test gap waits for a later branch.
 
 - **Terms:**
@@ -11,21 +11,21 @@
   - **Tint:** the green, amber, or red fill of the main action, which matches the state of the bar. `TintedTheme` in `docs/mockups/src/components/common/tint.tsx` applies it, from the `successFill`, `warningFill`, `dangerFill`, and `onFill` tokens of `docs/mockups/src/design/palette.ts`.
   - **Outline tone:** the `secondary` tone of the Firna button, with a border and no fill. Archive uses it.
 - **Background:**
-  - On 10 November 2026 the user asked for two fills in the bar. The main action of a tinted bar takes the tint of the bar. Create PR, on a bar without a pull request, takes the outline tone. `docs/mockups/design-bar.md` states both.
-  - `ActionButton` in `src/github/ActionButton.tsx` wraps the Firna `Button` in `TintedTheme` with its `tint` prop. `BarButton` in `src/github/BarButtons.tsx` passes the tint of the view and the tone of `agentTones` in `barIcons.ts`.
+  - On 10 and 11 November 2026 the user asked for two fills in the bar. The main action of a tinted bar takes the tint of the bar. On a bar without a tint, the main action takes the outline tone: Create PR, Continue after a merge, and Commit and push on a neutral bar. `docs/mockups/design-bar.md` states both.
+  - `ActionButton` in `src/github/ActionButton.tsx` wraps the Firna `Button` in `TintedTheme` with its `tint` prop. It gives a tinted button the `primary` tone, and every other button the `secondary` tone. `BarButton` in `src/github/BarButtons.tsx` passes the tint of the view.
   - `barViewOf` in `src/github/barView.ts` chooses the tint. Its test in `src/github/barView.test.ts` checks the tint of eight states at the level of the model.
-- **Problem:** No test reads the fill of a rendered bar button. A change of `tint={props.tint}` to `tint={null}` in `ActionButton.tsx` removes every tint fill. A change of the Create PR tone to `'primary'` in `barIcons.ts` gives it a filled button. With either change, all 62 tests in `src/github`, `src/shell/workspace/github`, and `src/shell/workspace/files/KeptFiles.test.tsx` still pass.
+- **Problem:** No test reads the fill of a rendered bar button. A change of `tint={props.tint}` to `tint={null}` in `ActionButton.tsx` removes every tint fill. A change of `'secondary'` to `'primary'` in `ActionButton.tsx` fills each main action of a bar without a tint. With such a change, all 62 tests in `src/github`, `src/shell/workspace/github`, and `src/shell/workspace/files/KeptFiles.test.tsx` still pass.
 - **Impact if no action:** a later change can lose either fill that the user asked for, and no test fails.
-- **Root question:** Which rendered test fails when a bar button loses the fill that the user asked for: the state tint of the main action, or the outline tone of Create PR?
+- **Root question:** Which rendered test fails when a bar button loses the fill that the user asked for: the state tint of the main action, or the outline tone of a bar without a tint?
 - **Options:**
-  - **A.** Extend the rendered bar test in `src/github/PullRequestBar.test.tsx` with a check of the tint of the main action through the real theme provider. It misses the outline tone of Create PR. Effort: Small.
+  - **A.** Extend the rendered bar test in `src/github/PullRequestBar.test.tsx` with a check of the tint of the main action through the real theme provider. It misses the outline tone of a bar without a tint. Effort: Small.
   - **B.** Add a rendered `ActionButton` test for the tint alone. It misses the tint wiring in `BarButtons` and the outline tone. Effort: Small.
   - **C.** Check the rendered colour in a workspace screen test. It needs more setup, and it adds no protection, because the app builds the tint only through `barViewOf`. Effort: Small.
   - **D.** Add one table of button fills to `src/github/PullRequestBar.test.tsx`. Effort: Small.
-    - Cover ready-to-merge, conflict, and checks-failed for the three tints, merged for a main action without a tint, and the bar without a pull request for Create PR.
+    - Cover ready-to-merge, conflict, and checks-failed for the three tints, and merged for Continue and the bar without a pull request for Create PR, which take the outline tone.
     - Render each case in the dark and the light colour scheme inside `SharedUiThemeProvider`, with the theme from `themeFor`. Do not use `ThemeRoot`, because its style text goes into the text of the rendered bar that the other tests read.
     - Read the inline `background-color` of each rendered button, as `src/shell/onboarding/GetStartedScreen.test.tsx:117` does for a primary fill. Name each expected value by its palette token, not by its hex value.
-    - Confirm that the test fails with `tint={null}` in `ActionButton.tsx`, and with `'primary'` for Create PR in `barIcons.ts`. Then restore both.
+    - Confirm that the test fails with `tint={null}` in `ActionButton.tsx`, and with `'primary'` in place of `'secondary'` there. Then restore both.
 - **Left out:**
   - Change nothing: it fails the goal, because both fills stay without a test.
   - A browser screenshot suite: the testing rules keep browser specs for layout, frames, focus, navigation, or a real host. A new browser step in the complete gate also needs the user.

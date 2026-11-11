@@ -20,7 +20,7 @@ import {
   mergeLabels,
   type BarMessageKind,
 } from './barCopy'
-import { agentIcons, agentTones } from './barIcons'
+import { agentIcons } from './barIcons'
 import type { BarAction, BarModel } from './barModel'
 import { BarGitHubLink, GitHubLink } from './barParts'
 import { barTint } from './prStatus'
@@ -39,15 +39,14 @@ function BarButton(props: {
   tint: ButtonTint | undefined
 }) {
   const { action, tint } = props
+  // Only a tint fills the main action. A bar without one shows the outline.
+  const tone = tint ? 'primary' : 'secondary'
   switch (action.kind) {
     case 'agent':
       return (
         <TintedTheme tint={tint}>
           <ScreenLink asChild to={barPaths.sent[action.action]}>
-            <ActionButton
-              icon={agentIcons[action.action]}
-              tone={agentTones[action.action]}
-            >
+            <ActionButton icon={agentIcons[action.action]} tone={tone}>
               {agentActionLabels[action.action]}
             </ActionButton>
           </ScreenLink>
@@ -57,7 +56,7 @@ function BarButton(props: {
       return (
         <TintedTheme tint={tint}>
           <ScreenLink asChild to={barPaths.merging}>
-            <ActionButton busy={action.busy} icon={GitMerge} tone="primary">
+            <ActionButton busy={action.busy} icon={GitMerge} tone={tone}>
               {action.busy ? barLabels.merging : mergeLabels[action.method]}
             </ActionButton>
           </ScreenLink>
@@ -68,7 +67,7 @@ function BarButton(props: {
       return (
         <TintedTheme tint={tint}>
           {action.waiting ? (
-            <ActionButton disabled icon={GitBranchPlus} tone="primary">
+            <ActionButton disabled icon={GitBranchPlus} tone={tone}>
               {barLabels.continue}
             </ActionButton>
           ) : (
@@ -80,11 +79,7 @@ function BarButton(props: {
                   : barPaths.continuing
               }
             >
-              <ActionButton
-                busy={action.busy}
-                icon={GitBranchPlus}
-                tone="primary"
-              >
+              <ActionButton busy={action.busy} icon={GitBranchPlus} tone={tone}>
                 {action.busy ? barLabels.continuing : barLabels.continue}
               </ActionButton>
             </ScreenLink>

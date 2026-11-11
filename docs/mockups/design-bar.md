@@ -12,15 +12,14 @@ the actions on top of the Checks tab of a phone, and Continue.
   that runs, and Merge needs a merge method. `barCopy.ts` beside it holds
   the labels, the messages under the bar, and the fixed prompts of the agent
   actions. Address review names "A reviewer" when GitHub names no login of
-  a reviewer. `barIcons.ts` holds the icon and the tone of each agent
-  action. They import
+  a reviewer. `barIcons.ts` holds the icon of each agent action. They import
   no fixture, so the app uses them too.
-  - The main action takes the primary tone. On a tinted bar it takes the
-    tint of the bar, so the button matches it: green, amber, or red. The
-    same button keeps that tint at the top of the Checks tab of a phone. A
-    bar without a tint keeps the primary fill. Create PR, on a bar without
-    a pull request, takes the outline tone of Archive instead, as
-    `agentTones` in `barIcons.ts` gives it. `TintedTheme` in
+  - On a tinted bar the main action takes the tint of the bar, so the
+    button matches it: green, amber, or red. The same button keeps that
+    tint at the top of the Checks tab of a phone. On a bar without a tint,
+    such as the bar without a pull request or the merged bar, the main
+    action takes the outline tone of Archive, so the bar shows no primary
+    fill. The user chose this on 10 and 11 November 2026. `TintedTheme` in
     `src/components/common/tint.tsx` gives the primary tone of Firna the
     fill of the tint, a deeper fill on hover, and a white label, from the
     `successFill`, `warningFill`, `dangerFill`, and `onFill` tokens.
