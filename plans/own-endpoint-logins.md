@@ -1091,7 +1091,7 @@ the tasks of `plans/follow-ups/own-endpoints-through-model-gateway.md`.
 - [ ] Forward each allowed model route to the stored endpoint. Keep the
       gateway's body limit, allowed headers, error redaction, turn and
       access checks, login change checks, cancellation, and request lease.
-      Read the endpoint's model list only as decision 10 says.
+      Milestone 5c reads the endpoint's model list.
 - [ ] Send the key in `x-api-key` for Claude and in `Authorization:
       Bearer` for Codex.
 - [ ] Use the address rule of decision 9 at the save and before every
@@ -1121,11 +1121,37 @@ the tasks of `plans/follow-ups/own-endpoints-through-model-gateway.md`.
       of decision 9 E, and its refusal text with the mockup's: "Use a
       public https:// address, without a user name or a password."
 
+## Milestone 5c: Read the endpoint's model list
+
+Depends on: 5b
+
+The Worker reads the model list of each own endpoint, as decision 10 G
+says, and the account API gives the browser what the pickers hide.
+
+- [ ] Read `GET /v1/models` of the endpoint through the address builder of
+      decision 9 E, with the key in the header of its agent, under the
+      fetch rules of the gateway.
+- [ ] Read it at the save, on a Refresh route of the account, and in the
+      background when a turn on the login starts, at most once in 10
+      minutes. A failed read keeps the last list and its time.
+- [ ] Store the last list that worked and its time for each own endpoint
+      login, with a migration that keeps every row.
+- [ ] Give the browser, for each own endpoint login of the account, the
+      app models that the last list does not name and the time of the
+      last read. Give nothing to other members.
+- [ ] Make a turn that fails because the endpoint does not serve its model
+      end with "The endpoint of this login does not serve <model ID>.
+      Choose another model.", with no host.
+- [ ] Add tests: each read time, a failed read, a list that names no app
+      model, the account response, the background limit, and the failure
+      text for both agents.
+- [ ] Update the READMEs of the changed areas.
+
 ## Milestone 6: Account and Get started
 
 Tags: ui
 
-Depends on: 1, 1b, 2b, 4
+Depends on: 1, 1b, 2b, 4, 5c
 
 The account page and Get started connect an own endpoint, as the mockups
 show.
