@@ -25,6 +25,12 @@ These facts belong to this implementation, not to the protocol docs.
   that program. The runner turns off its automatic updates. It starts the
   program through the SDK option `spawnClaudeCodeProcess`, so the runner
   owns the child process.
+- A Claude `Skill` call keeps kind `other` and carries its skill name in
+  `skills` and the target. Its detail holds non-empty string arguments,
+  or `null`. The runner sends no running event until the input names the
+  skill. Its tool result ends the call with its done or failed state.
+  A call with no usable name ends as a plain tool call. The runner ignores
+  SDK frames from subagents.
 - Codex runs through the Codex App Server. The runner starts
   `codex app-server` from the `@openai/codex` package, which
   `@openai/codex-sdk` installs.

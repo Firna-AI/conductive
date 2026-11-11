@@ -164,6 +164,7 @@ export class ClaudeEvents {
     const id = string(block.id)
     const tool = mapTool(id, string(block.name), block.input, 'running')
     this.tools.set(id, tool)
+    if (block.name === 'Skill' && !tool.skills?.length) return
     this.emit({ type: 'tool', tool })
   }
 }

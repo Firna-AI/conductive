@@ -485,13 +485,17 @@ Depends on: 3
 The runner gives each Claude `Skill` call its skill name, as design calls
 2 and 11 say.
 
-- [ ] Map a `Skill` tool call with a string `skill` input to a skill call.
+- [x] Map a `Skill` tool call with a string `skill` input to a skill call.
       Its `skills` and its target hold that name. Its detail holds the
       string `args`. Keep the kind. Start in
       `runner/src/providers/tool.ts`.
-- [ ] Send no running event for a `Skill` call until its input names the
+- [x] Send no running event for a `Skill` call until its input names the
       skill, in `runner/src/providers/claude-events.ts`.
-- [ ] Test in `runner/src/providers/claude.test.ts` with the SDK frames of
+- [x] Keep `skills` in `tool()` of `runner/src/stored-events.ts`, with the
+      malformed-value rule of design call 3. The runner saves each event
+      through this parser before it sends the event, so without it the
+      names never leave the cloud computer. Milestone 4 found this gap.
+- [x] Test in `runner/src/providers/claude.test.ts` with the SDK frames of
       a streamed call. No event shows the generic line. The running and
       the done events carry the name, the target, and the detail. The
       frames are:
@@ -500,7 +504,10 @@ The runner gives each Claude `Skill` call its skill name, as design calls
   - the `assistant` frame with the input
     `{ skill: 'brainstorming', args: 'high' }`
   - its `tool_result`
-- [ ] Update "What it does" in `runner/README.md`.
+- [x] Update "What it does" in `runner/README.md`.
+
+Evidence: `.context/skill-use-in-chat/claude-m4/` and
+`.context/skill-use-in-chat/m4/`.
 
 ## Milestone 5: Codex skill uses in the runner
 
