@@ -30,6 +30,7 @@
   - Report only at the upstream fetch dependency. It cannot see failed or hung turn checks.
 - **Wider fix:** D. The reporting entry can honor a late outcome that a streaming route attaches, as it already honors a remembered response error.
 - **Previous examples:** `worker/lifecycle/build-stream.ts` captures a late response failure. `worker/terminal/connections.ts` captures a failed periodic access check. `plans/follow-ups/software-image-failure-reports.md` records another failure hidden behind HTTP 200. Its guarded database write cannot own a response stream after headers return.
+- **Related:** `plans/follow-ups/workspace-remote-failure-reports.md` establishes the workspace scope of `checkTurnToken`. It must not add a capture that rethrows, because this item reports a rejected turn check in the Worker. The scope-only change and the late-outcome change do not conflict, and neither item waits for the other.
 - **Recommendation:** D. It keeps B's single outcome owner and uses the entry's reporting scope, background work, and one-report guard. The first review recommended B. The independent check recommended D because a late callback's current reporting scope is unproved.
 - **Action:** fix after merge, apply D, because the likelihood is Rare, severity is Medium, and the fix does not get harder after merge.
 
