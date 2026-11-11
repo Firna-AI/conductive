@@ -190,8 +190,17 @@ export function workspaceSidebar(props: {
   changed: readonly ChangedWorkspace[]
   /** The last day of Restore of the archived workspace has not passed. */
   restoreOpen: boolean
+  /**
+   * The user archived the open workspace just now, as its toast shows. Its
+   * row shows that Archive. An Archive keeps the Archived group as it was,
+   * here collapsed.
+   */
+  justArchived?: boolean
 }): ReactNode {
-  const { workspace, status, suspended, viewer, changed } = props
+  const { status, suspended, viewer, changed, justArchived } = props
+  const workspace = justArchived
+    ? { ...props.workspace, updated: 'now' }
+    : props.workspace
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
@@ -209,6 +218,7 @@ export function workspaceSidebar(props: {
   return (
     <Sidebar
       archived={list.archived}
+      archivedCollapsed={justArchived}
       org={orgs.acme}
       sections={list.sections}
       suspended={suspended}

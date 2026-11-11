@@ -263,16 +263,13 @@ export function WorkspaceScreen(props: {
         person: admin ? undefined : people[memberViewer],
       }}
       sidebar={workspaceSidebar({
-        // The toast of an Archive shows at once, so the row shows that Archive.
-        workspace:
-          state.toast === 'archived'
-            ? { ...workspace, updated: 'now' }
-            : workspace,
+        workspace,
         status,
         suspended,
         viewer: membership,
         changed: changedWorkspaces(state),
         restoreOpen: state.archive === 'kept',
+        justArchived: state.toast === 'archived',
       })}
     >
       <WorkspaceBody
