@@ -7,7 +7,7 @@ export const EGRESS_ORIGIN_HEADER = 'x-conductive-egress-origin'
 
 type EgressEnv = Pick<AppEnv, 'CHATGPT_EGRESS_URL' | 'CHATGPT_EGRESS_SECRET'>
 
-export function chatGptHost(hostname: string): boolean {
+function chatGptHost(hostname: string): boolean {
   return hostname === 'chatgpt.com' || hostname.endsWith('.chatgpt.com')
 }
 
