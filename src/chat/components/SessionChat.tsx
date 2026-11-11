@@ -5,7 +5,11 @@ import { PendingCommands } from '../device/PendingCommands'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
 import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
-import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
+import {
+  sessionState,
+  type ChatSnapshot,
+  type SessionState,
+} from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { failedFirstStart } from '../../app/first-start'
 import { loginLabelOf, sessionLoginOf } from '../state/session-login'
@@ -27,6 +31,22 @@ function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
   return state === 'stopped' || state === 'error' || state === 'archived'
     ? state
     : null
+}
+
+/**
+ * The ID of the newest user message of a session: the last sent message
+ * that the stream has not shown yet, or else the last message of the
+ * transcript. A sent message keeps its ID when the stream shows it.
+ */
+function newestMessageId(state: SessionState): string | null {
+  const pending = state.pending.at(-1)
+  if (pending) return pending.id
+  const items = state.transcript.items
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    const item = items[index]
+    if (item.kind === 'user') return item.message.id
+  }
+  return null
 }
 
 /**
@@ -225,6 +245,7 @@ export function SessionChat(props: SessionChatProps) {
       })}
       footer={footer}
       mobile={props.mobile}
+      newest={newestMessageId(state)}
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView

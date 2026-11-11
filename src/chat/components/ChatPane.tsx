@@ -9,16 +9,24 @@ import { ChatKeeper, useReadingPlace } from './reading-place'
  * takes the place of the transcript, such as for a new session. While the
  * reader is scrolled up, the row that they read keeps its place for every
  * change of size of the transcript, and the folds use the same keeper.
+ * When `newest`, the ID of the newest user message, changes to another
+ * message, the chat moves to its bottom, so that the new message shows.
  */
 export function ChatPane(props: {
   mobile: boolean
   empty?: ReactNode
+  newest?: string | null
   children?: ReactNode
   footer: ReactNode
 }) {
   const scroller = useRef<HTMLDivElement>(null)
   const transcript = useRef<HTMLDivElement>(null)
-  const keeper = useReadingPlace(scroller, transcript, !props.empty)
+  const keeper = useReadingPlace(
+    scroller,
+    transcript,
+    !props.empty,
+    props.newest ?? null,
+  )
   return (
     <section
       aria-label="Chat"

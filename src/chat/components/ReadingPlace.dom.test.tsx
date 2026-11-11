@@ -208,6 +208,23 @@ describe('the place of the reader in the chat', () => {
     ])
   })
 
+  it('moves to the bottom for a new member message while the reader reads higher up', async () => {
+    const { scroller, transcript, emit, resize } = await mountLongTurn()
+    const chat = layOut(scroller, transcript)
+    await resize()
+    chat.read(chat.rowOf(older), 100)
+
+    const next = { ...message, id: 'ask-4', text: 'Open a pull request.' }
+    await act(async () => emit({ type: 'message.accepted', message: next }))
+    await waitFor(() => queryByText(next.text), 'the new message')
+    chat.layoutAgain()
+    await resize()
+    // The row of the running turn shows under the message.
+    expect([scroller.scrollTop, chat.topOf(chat.rowOf(next.text))]).toEqual([
+      0, 140,
+    ])
+  })
+
   it('keeps the line of the fold in place when the row that the reader reads folds away', async () => {
     const { scroller, transcript, emit, resize } = await mountLongTurn()
     const chat = layOut(scroller, transcript)
