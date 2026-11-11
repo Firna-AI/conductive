@@ -1,6 +1,8 @@
 import { act } from 'react'
 import type { FetchLike } from '../../app/api/client'
+import { fileMark } from '../../app/draft-marks'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
+import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { routes } from '../../app/router'
 import {
   ACCOUNT_PATHS,
@@ -164,3 +166,13 @@ export const createCount = (server: FakeApiServer) =>
       request.method === 'POST' &&
       new URL(request.url).pathname === workspacesPath(org),
   ).length
+
+/**
+ * The mark of the file of the draft with this name, as the draft text holds
+ * it at the chip of the file, or a stand-in that names a missing file.
+ */
+export function markOf(model: NewWorkspaceModel, name: string): string {
+  const { files, detached } = model.draft.get()
+  const item = [...files, ...detached].find(({ file }) => file.name === name)
+  return item ? fileMark(item.id) : `<no file ${name}>`
+}

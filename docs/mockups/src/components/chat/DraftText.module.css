@@ -1,0 +1,15 @@
+/*
+ * The caret of the field, which a view draws because it runs no script:
+ * where a drop puts its files while they hover over the box, or where the
+ * caret stands after a drop or a pick. It is as high as the line, in the
+ * accent colour, and it takes no room in the text.
+ */
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1lh;
+  margin-inline: -1px;
+  border-radius: 1px;
+  background: var(--ui-primary);
+  vertical-align: top;
+}

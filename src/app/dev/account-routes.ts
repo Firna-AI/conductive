@@ -25,6 +25,7 @@ import { choice, flag, nested, record } from '../api/parse'
 import { AGENTS, readChoice, readNewWorkspaceView } from '../api/read-core'
 import type { DevBackend } from './backend'
 import { json, noContent, requiredText, RouteError, type Route } from './router'
+import { shortcutRoutes } from './shortcut-routes'
 import { completeStep } from './state'
 
 /** The saved status of one agent login of the account. */
@@ -262,5 +263,6 @@ export function accountRoutes(backend: DevBackend): Route[] {
             } satisfies GitHubInstallationsResponse),
     },
     ...AGENTS.flatMap((agent) => loginRoutes(backend, agent)),
+    ...shortcutRoutes(backend),
   ]
 }

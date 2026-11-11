@@ -1,6 +1,7 @@
 import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
-import { repositories, type RepositoryKey } from '../../fixtures/repositories'
+import type { RepositoryKey } from '../../fixtures/repositories'
+import type { ShortcutChanges } from '../../fixtures/shortcutChanges'
 import { helpGroupLabel } from '../feedback/feedbackCopy'
 import {
   workspaceSections,
@@ -8,16 +9,24 @@ import {
   type WorkspaceRow,
 } from '../workspaces/sections'
 import {
-  accountSettings,
   appActions,
   helpActions,
   orgActions,
-  orgSettings,
-  orgSettingsLabel,
   workspaceActions,
   type Command,
 } from './paletteCommands'
+import {
+  emptyLine,
+  emptyRepository,
+  filters,
+  type PaletteFilters,
+} from './paletteFilters'
 import { matchingRows } from './paletteSearch'
+import {
+  accountSettings,
+  orgSettings,
+  orgSettingsLabel,
+} from './paletteSettings'
 import {
   palettePlaceholders,
   paletteQueries,
@@ -36,14 +45,6 @@ export type PaletteRow =
   | { kind: 'command'; command: Command; detail?: string }
 
 type PaletteGroup = { label: string; rows: readonly PaletteRow[] }
-
-/** The two filters of the Workspaces tab. */
-export type PaletteFilters = {
-  repository: string
-  state: 'Active' | 'Archived'
-  /** The menu of the repository filter lies open. */
-  repositoryMenu: boolean
-}
 
 export type PaletteContent = {
   tab: PaletteTab
@@ -66,13 +67,20 @@ export type PaletteContent = {
  * first, or over a page without one. Only the owner of the workspace and
  * the admins of the org can archive it. Every member of an org that is
  * not suspended can restore an archived workspace while the app keeps its
- * cloud computer.
+ * cloud computer. The Mac app adds This Mac to the settings.
  */
 export type PaletteContext = {
   open?: OpenWorkspace
   archivable: boolean
   restorable?: boolean
   rightColumn?: boolean
+  mac?: boolean
+  /**
+   * The person's changes to the shortcuts (decision 190). On desktop, each
+   * command row ends with the first key of its command that works where
+   * the palette opens.
+   */
+  shortcuts?: ShortcutChanges
 }
 
 /**
@@ -130,10 +138,10 @@ function actionsOf(context: PaletteContext): Command[] {
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
-function settingRows(): PaletteRow[] {
+function settingRows(context: PaletteContext): PaletteRow[] {
   return [
     ...commandRows(orgSettings, orgSettingsLabel),
-    ...commandRows(accountSettings, 'Account'),
+    ...commandRows(accountSettings(context), 'Account'),
   ]
 }
 
@@ -151,7 +159,7 @@ function searchGroups(
   const groups: PaletteGroup[] = [
     { label: 'Workspaces', rows: loaded ? workspaceRows(active) : [] },
     { label: 'Actions', rows: commandRows(actionsOf(context)) },
-    { label: 'Settings', rows: settingRows() },
+    { label: 'Settings', rows: settingRows(context) },
     { label: 'Archived', rows: loaded ? workspaceRows(archivedRows) : [] },
   ]
   return groups
@@ -162,20 +170,6 @@ function searchGroups(
     .filter((group) => group.rows.length > 0)
 }
 
-const allRepositories = 'All repositories'
-
-/** The repository that the empty Workspaces tab chooses. */
-const emptyRepository: RepositoryKey = 'marketing-site'
-
-function filters(view: OpenPaletteView): PaletteFilters {
-  const empty = view === 'workspaces-empty'
-  return {
-    repository: empty ? repositories[emptyRepository].name : allRepositories,
-    state: view === 'workspaces-archived' || empty ? 'Archived' : 'Active',
-    repositoryMenu: view === 'workspaces-repository',
-  }
-}
-
 /** The archived workspaces of one repository, or of all, in one group. */
 function archivedGroups(repository?: RepositoryKey): PaletteGroup[] {
   const rows = archivedRows.filter(
@@ -184,19 +178,6 @@ function archivedGroups(repository?: RepositoryKey): PaletteGroup[] {
   )
   if (rows.length === 0) return []
   return [{ label: 'Archived', rows: workspaceRows(rows) }]
-}
-
-/**
- * The line of the Workspaces tab when it has no workspace to show and the
- * field is empty. It says where the workspaces of the filters show: in the
- * chosen repository, or in the org.
- */
-function emptyLine(filters: PaletteFilters): string {
-  const place =
-    filters.repository === allRepositories ? orgs.acme.name : filters.repository
-  return filters.state === 'Archived'
-    ? `Archived workspaces of ${place} show here`
-    : `Workspaces of ${place} show here`
 }
 
 function groupsOf(
@@ -214,7 +195,7 @@ function groupsOf(
       return [
         { label: 'Recent workspaces', rows: workspaceRows(recent) },
         { label: 'Actions', rows: commandRows(actionsOf(context)) },
-        { label: 'Settings', rows: settingRows() },
+        { label: 'Settings', rows: settingRows(context) },
       ]
     }
     case 'workspaces':
@@ -249,7 +230,7 @@ function groupsOf(
     case 'settings':
       return [
         { label: orgSettingsLabel, rows: commandRows(orgSettings) },
-        { label: 'Account', rows: commandRows(accountSettings) },
+        { label: 'Account', rows: commandRows(accountSettings(context)) },
       ]
     case 'search':
     case 'number':

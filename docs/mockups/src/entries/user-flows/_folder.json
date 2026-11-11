@@ -17,6 +17,7 @@
     "link-a-workspace",
     "merge-and-continue",
     "open-a-session-link",
-    "mention-a-file"
+    "mention-a-file",
+    "drop-a-file"
   ]
 }

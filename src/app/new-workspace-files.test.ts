@@ -1,4 +1,8 @@
 import { describe, expect, test, vi } from 'vitest'
+import { attachmentPath } from '../shared/attachment-paths'
+import { pickWorkspaceFiles } from './draft-files.test-support'
+import { mentionText } from '../shared/mention-text'
+import { fileMark } from './draft-marks'
 import { attachmentUploadPath } from '../shared/messages'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
@@ -52,23 +56,32 @@ describe('the files of a New workspace draft', () => {
     const server = new FakeApiServer()
     const { form } = await newForm(server)
     form.setText('Let shoppers save their cart.')
-    await form.attach([
-      sized('recording.mov', 25_000_001),
-      sized('limit.bin', 25_000_000),
-      notes(),
-    ])
+    await pickWorkspaceFiles(
+      form,
+      [
+        sized('recording.mov', 25_000_001),
+        sized('limit.bin', 25_000_000),
+        notes(),
+        sized('archive.zip', 25_000_001),
+      ],
+      ['Pictures', 'Design notes'],
+    )
     const picked = form.draft.get()
     const uploaded = await sentFiles(server.requests)
     await form.send(defaults)
     expect({
       refused: picked.refused,
+      folders: picked.refusedFolders,
       uploaded: uploaded.map((file) => file.query.name),
       ready: picked.files.map((item) => item.state),
       sent: await lastCreate(server),
+      foldersAfterSend: form.draft.get().refusedFolders,
     }).toMatchObject({
-      refused: ['recording.mov'],
+      refused: ['recording.mov', 'archive.zip'],
+      folders: ['Pictures', 'Design notes'],
       uploaded: ['limit.bin', 'notes.txt'],
       ready: ['ready', 'ready'],
+      foldersAfterSend: [],
       sent: {
         firstMessage: {
           attachmentIds: ['draft-attachment-1', 'draft-attachment-1'],
@@ -88,7 +101,7 @@ describe('the files of a New workspace draft', () => {
       { error: { code: 'internal_error', message: 'The request failed.' } },
       502,
     )
-    await form.attach([notes()])
+    await pickWorkspaceFiles(form, [notes()])
     const [failed] = form.draft.get().files
     server.json(
       'POST',
@@ -96,6 +109,10 @@ describe('the files of a New workspace draft', () => {
       {
         attachment: {
           id: 'draft-attachment-2',
+          path: await attachmentPath({
+            id: 'draft-attachment-2',
+            name: 'notes.txt',
+          }),
           name: 'notes.txt',
           kind: 'file',
           mediaType: 'text/plain',
@@ -117,7 +134,7 @@ describe('the files of a New workspace draft', () => {
         repositoryId: 'storefront',
         firstMessage: {
           id: messageId,
-          text: 'Fix the flaky cart test.',
+          text: `Fix the flaky cart test. ${mentionText(await attachmentPath({ id: 'draft-attachment-2', name: 'notes.txt' }), false)} `,
           attachmentIds: ['draft-attachment-2'],
           choice: defaults.choice,
         },
@@ -130,7 +147,7 @@ describe('the files of a New workspace draft', () => {
     const held = new HeldRequests(server)
     const { model, form } = await newForm(server, held)
     held.holdAnswer('POST', uploadPath)
-    const attaching = form.attach([notes(), notes('later.txt')])
+    const attaching = pickWorkspaceFiles(form, [notes(), notes('later.txt')])
     await vi.waitFor(async () => {
       expect(await sentFiles(server.requests)).toHaveLength(1)
     }, shortly)
@@ -156,12 +173,11 @@ describe('the files of a New workspace draft', () => {
     const held = new HeldRequests(server)
     const { form } = await newForm(server, held)
     held.holdAnswer('POST', uploadPath)
-    const attaching = form.attach([notes()])
+    const attaching = pickWorkspaceFiles(form, [notes()])
     await vi.waitFor(async () => {
       expect(await sentFiles(server.requests)).toHaveLength(1)
     }, shortly)
-    const [item] = form.draft.get().files
-    form.removeFile(item?.id ?? 'missing')
+    form.setText('')
     held.release('POST', uploadPath)
     await attaching
     expect({
@@ -174,7 +190,7 @@ describe('the files of a New workspace draft', () => {
     const server = new FakeApiServer()
     const { form } = await newForm(server)
     form.setText('Let shoppers save their cart.')
-    await form.attach([notes()])
+    await pickWorkspaceFiles(form, [notes()])
     server.json(
       'POST',
       createPath,
@@ -197,7 +213,7 @@ describe('the files of a New workspace draft', () => {
       again: readyIds(form.draft.get().files),
     }).toEqual({
       expired: ['failed'],
-      text: 'Let shoppers save their cart.',
+      text: `Let shoppers save their cart. ${fileMark('client-2')} `,
       again: ['draft-attachment-1'],
     })
   })

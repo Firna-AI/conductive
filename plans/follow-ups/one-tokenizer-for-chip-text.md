@@ -21,7 +21,7 @@
   - **C.** Build one tokenizer for the three users: the field reader, the separator rule, and the sent reader. At each place it reads code where code counts, then a complete link, then a mention, so a link ends a mention that runs into it. A Markdown link to a workspace stays one unit. In the label of every other Markdown link, a mention stays a mention. Add regressions for each case above. Effort: Medium.
 - **Left out:** Structured drafts, because the clipboard gives plain text. A field without Markdown workspace chips, because it removes behaviour of `main`. A new end for an unquoted mention alone, because a quoted mention still splits the link.
 - **Wider fix:** C. It also covers the separator rule, which writes the draft.
-- **Related:** `plans/follow-ups/chat-code-not-read-as-markdown.md` rewrites the code reader of `tokens`. One branch can do both.
+- **Related:** `plans/follow-ups/chat-code-not-read-as-markdown.md` rewrites the code reader of `tokens`. One branch can do both. [chip-separator-before-link-period.md](chip-separator-before-link-period.md) records another defect of `joinFieldParts`: a space before a full stop after a link chip, when another chip follows. Its wider fix checks each chip in the text that the rule writes. Option C here rewrites the same rule, so both items may share one future wider fix.
 - **Previous examples:** None found.
 - **Recommendation:** C.
 - **Action:** fix after merge, apply C, because only unusual text meets it.

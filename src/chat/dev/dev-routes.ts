@@ -1,5 +1,7 @@
 import { filePaths } from '../../shared/files'
+import { attachmentFiles, readCopiedFile } from '../../app/dev/attachment-files'
 import type { Attachment, UserMessage } from '../../shared/messages'
+import { attachmentPath } from '../../shared/attachment-paths'
 import { sessionsPath, type Session } from '../../shared/sessions'
 import { workspaceViewPath } from '../../shared/workspace-view'
 import { workspacePaths } from '../../shared/workspaces'
@@ -72,12 +74,18 @@ function accept(backend: DevBackend, session: Session, outgoing: Outgoing) {
     createdAt: backend.clock.now(),
     state: ready ? 'sent' : 'queued',
   }
+  if (ready)
+    attachmentFiles(backend).copy(
+      backend.target.orgId,
+      backend.target.workspaceId,
+      message.attachments,
+    )
   backend.messages.set(message.id, message)
   const steered = backend.agent.steer(message)
   if (!steered) backend.stream.emit({ type: 'message.accepted', message })
   clearRetry(backend, session.id)
-  titleFromMessage(backend, session.id, message.text)
-  askTitle(backend, message.text)
+  titleFromMessage(backend, message)
+  askTitle(backend, message)
   const answer = (turnId: string | null) =>
     recordReply(
       backend,
@@ -189,6 +197,7 @@ export async function handleWrite(
   const { orgId, workspaceId } = backend.target
   const path = new URL(request.url).pathname
   const { method } = request
+  if (method === 'GET') return readCopiedFile(backend, backend.target, request)
   if (method === 'POST' && path === sessionsPath(orgId, workspaceId)) {
     const choice = readChoice((await bodyOf(request)).choice)
     return recordReply(backend, { session: newSession(backend, choice) }, 201)
@@ -204,14 +213,21 @@ export async function handleWrite(
   if (method === 'POST' && path === filePaths.attachments(orgId, workspaceId)) {
     const query = new URL(request.url).searchParams
     const mediaType = text(query.get('mediaType'))
-    const attachment = readAttachment({
+    const file = {
       id: `dev-file-${attachments.size + 1}`,
       name: text(query.get('name')),
+    }
+    const path = await attachmentPath(file)
+    const bytes = await request.arrayBuffer()
+    const attachment = readAttachment({
+      ...file,
+      path,
       kind: mediaType.startsWith('image/') ? 'image' : 'file',
       mediaType,
-      sizeBytes: (await request.arrayBuffer()).byteLength,
+      sizeBytes: bytes.byteLength,
     })
     attachments.set(attachment.id, attachment)
+    attachmentFiles(backend).retain(attachment, bytes)
     return reply({ attachment }, 201)
   }
   const prefix = `${sessionsPath(orgId, workspaceId)}/`

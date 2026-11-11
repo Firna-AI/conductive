@@ -1,0 +1,35 @@
+# Other lifecycle calls hold the chat queue
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from the branch `calummoore/conductor-internal-tools-2d` and its plan "Start calls outside the chat queue".
+- **Location:** `worker/lifecycle/durable.ts:242`, `worker/lifecycle/workspace-actions.ts:110`, `worker/lifecycle/workspace-actions.ts:129`, `worker/lifecycle/workspace-state-projection.ts:38`, `worker/lifecycle/start-failure.ts:63`, `worker/lifecycle/start-admission.ts:14`, `worker/lifecycle/start-runner.ts:12`, `worker/lifecycle/workspace-alarm.ts:62`, `worker/lifecycle/continue-progress.ts:39`
+- **Reason:** That branch moves only the calls of the start progress phases out of the queue, and the rest needs a change of the lifecycle lane, the shown-state writer, and the order of Archive and cleanup.
+
+- **Terms:**
+  - **Chat queue:** `ChatStore.run` in `worker/chat/store.ts`, the one serial queue of a workspace Durable Object. Chat requests, runner messages, and lifecycle changes run in it, one at a time.
+  - **Outside call:** a D1 or Boat call that a queue turn makes after it gives the queue up, with `outside` of its turn handle. Then the turn waits at the back of the queue, and a guard checks its records again.
+  - **Lifecycle alarm:** `advanceLifecycleAlarm` in `worker/lifecycle/durable-alarm.ts`, the lifecycle step of each alarm while no start runs.
+  - **Lifecycle lane:** the `serial` chain of `DurableLifecycle` in `worker/lifecycle/durable.ts`. It runs each change of the lifecycle state one at a time.
+  - **Shown state:** the state of a workspace in its D1 row and in its `workspace.updated` events. `WorkspaceStateProjection` writes it after each lifecycle state write.
+- **Background:**
+  - The user chose on 11 November 2026 that the start of a sandbox makes its provider and database calls outside the chat queue.
+  - After the branch above, each progress phase of a start makes its D1 and Boat calls as outside calls, with a guard on the start record, the stop epoch, and the receiver fence.
+  - The lifecycle alarm still makes its calls in the queue. It reads the sandbox state, extends the Boat deadline while a turn runs, stops an idle sandbox, and runs the restore watch.
+  - The restore watch reads the sandbox 5 seconds after each create and resume, then every 5 seconds until Boat reports the end of the restore. Then it runs one command that writes the restore marker.
+  - Each lifecycle state write, also each start step, runs the shown-state projection in the queue. It makes about three D1 queries.
+  - The failure path of a start, `finishFailedStart` in `worker/lifecycle/start-failure.ts`, detaches and deletes the sandbox of a failed create in the queue.
+  - The start phases also write the workspace token with `ensureWorkspaceToken` of `worker/lifecycle/tokens.ts` in the queue. Archive revokes that token in a turn of the same object, so a late token write from an outside call could make it active again.
+  - These also make calls in the queue: the admission of a start, the runner readiness check, disk retention, Archive, cleanup, and the authorization reads of Continue.
+- **Problem:** Each of these calls holds the chat queue for the time of the call. A Boat request can take up to 30 seconds, and a command up to 610 seconds. During that time, the chat reads, the messages, and the runner receipts of the workspace wait.
+- **Impact if no action:** After each start, the restore watch delays the chat reads of the workspace every 5 seconds. A slow Boat reply or D1 query delays them for its whole time.
+- **Root question:** How does the other lifecycle work of a workspace make its slow calls without holding the chat queue?
+- **Options:**
+  - **A.** Change nothing. The start progress phases, the most frequent callers, already step outside. Effort: Small.
+  - **B.** Make the lifecycle alarm step outside for its D1 and Boat calls. First, stop holding the lifecycle lane during a call: read the state, release the lane, make the call, then take the lane and read the state again. Add a guard on the lifecycle state, like the start guard. Effort: Large.
+  - **C.** Do B. Also move the slow work of the shown-state projection, the admission of a start, the runner readiness check, the start failure path, disk retention, Archive, cleanup, and the authorization reads of Continue outside the queue. Each gets a guard on its own record. The projection keeps the order of its D1 writes and events with a sequence check. The failure path and Archive first agree which of them owns the sandbox, because a guard after a delete cannot undo it. The token write gets a D1 condition that refuses an archived workspace. Effort: Large.
+- **Left out:** A separate Durable Object for the lifecycle. It adds a class, a migration, and RPC hops, and it still needs the same guards.
+- **Wider fix:** C. After it, no lifecycle work holds the chat queue during a D1 or Boat call.
+- **Previous examples:** The start progress phases in the branch `calummoore/conductor-internal-tools-2d`. Continue runs its Boat commands outside the queue in `worker/lifecycle/continue.ts` and `worker/lifecycle/continue-progress.ts`.
+- **Recommendation:** C. It removes the whole class, with the outside call and the guard pattern that the start already uses.
+- **Action:** fix after merge, apply C, because it needs changes of the lifecycle lane, the shown-state writer, and the Archive order that the start branch does not touch.

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppModel } from './app/app-model'
+import { useFileDropGuard } from './app/file-drags'
 import { NavigationContext, type Navigation } from './app/navigation'
 import { PanelLayout } from './app/panels'
 import { ServicesContext, type AppServices } from './app/services'
@@ -7,6 +8,7 @@ import { AppModelContext } from './shell/context'
 import { PanelContext } from './shell/layout/panels'
 import { PaletteProvider } from './shell/palette/PaletteProvider'
 import { Shell } from './shell/Shell'
+import { ShortcutProvider } from './shell/shortcuts/ShortcutProvider'
 import { ThemeRoot } from './shell/ui/ThemeRoot'
 import { useViewport, ViewportProvider } from './shell/ui/viewport'
 import {
@@ -18,7 +20,9 @@ import {
  * The web app. `services` gives the API, the events, the clock, and the
  * storage: the live Worker in production, the fake API in development.
  * `features` gives the parts of a workspace that later milestones build,
- * such as the chat, the files, and the tools.
+ * such as the chat, the files, and the tools. A drop of files outside each
+ * message box does nothing, as `useFileDropGuard` says, so the browser
+ * never opens a file in place of the app.
  */
 export function App(props: {
   services: AppServices
@@ -28,6 +32,7 @@ export function App(props: {
   const [app] = useState(() => new AppModel(props.services))
   const [panels] = useState(() => new PanelLayout(props.services.storage))
   const viewport = useViewport()
+  useFileDropGuard()
   return (
     <ServicesContext.Provider value={props.services}>
       <AppModelContext.Provider value={app}>
@@ -36,9 +41,11 @@ export function App(props: {
             <FeaturesContext.Provider value={props.features ?? {}}>
               <ViewportProvider viewport={viewport}>
                 <ThemeRoot>
-                  <PaletteProvider>
-                    <Shell />
-                  </PaletteProvider>
+                  <ShortcutProvider>
+                    <PaletteProvider>
+                      <Shell />
+                    </PaletteProvider>
+                  </ShortcutProvider>
                 </ThemeRoot>
               </ViewportProvider>
             </FeaturesContext.Provider>

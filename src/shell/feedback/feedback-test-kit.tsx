@@ -5,7 +5,8 @@ import { FEEDBACK_PATH, type SendFeedbackRequest } from '../../shared/feedback'
 import { byRole, queryByRole } from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { asMessageField } from '../../test-support/message-field'
-import { searchField, pressPaletteKey } from '../palette/palette-test-kit'
+import { searchField } from '../palette/palette-test-kit'
+import { pressCommand } from '../shortcuts/shortcut-test-kit'
 import { press, settle, typeText } from '../test-mount'
 
 // The helpers of the tests of the Feedback dialog in the whole app.
@@ -30,7 +31,7 @@ export function feedbackDialog(): HTMLElement | null {
  */
 export async function openFeedback(search?: () => void): Promise<HTMLElement> {
   if (search) search()
-  else pressPaletteKey('other', document.body)
+  else pressCommand('command-palette', 'other', document.body)
   typeText(searchField(), 'feedback')
   press(searchField(), 'Enter')
   await settle()

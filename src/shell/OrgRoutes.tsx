@@ -16,8 +16,9 @@ import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
 import { RoutineScreen } from './routines/RoutineScreen'
 import { RoutinesScreen } from './routines/RoutinesScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
+import { useShortcutOffer } from './shortcuts/shortcut-context'
 import { ActionButton } from './ui/actions'
-import { useGo } from './ui/AppLink'
+import { useGo, useOpenPage } from './ui/AppLink'
 import { useViewport } from './ui/viewport'
 import { WorkspaceScreen } from './workspace/WorkspaceScreen'
 import { inFirstRun } from '../app/get-started'
@@ -139,12 +140,22 @@ function listCurrent(route: OrgRoute): ListCurrent {
   }
 }
 
-/** The screens of one org, in the desktop frame or the phone frame. */
+/**
+ * The screens of one org, in the desktop frame or the phone frame. Each
+ * page of an org that is not deleted takes the key of Workspace list,
+ * which opens the list page of the org, as its tile in the rail does.
+ */
 export function OrgRoutes(props: { route: OrgRoute; user: User }) {
   const app = useApp()
   const phone = useViewport() === 'phone'
+  const open = useOpenPage()
   const org = useStore(app.orgs).find((item) => item.id === props.route.orgId)
   const current: RailCurrent = { org: props.route.orgId }
+  const listOrg = org && !org.deletion ? org.id : null
+  useShortcutOffer(
+    'workspace-list',
+    listOrg === null ? null : () => open(routes.org(listOrg)),
+  )
   // A page without an org, such as the Account page, works on the last org.
   useEffect(() => {
     app.openOrg(props.route.orgId)

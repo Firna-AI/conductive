@@ -13,11 +13,33 @@ import {
   type PanelDrag,
   type PanelMove,
 } from '../../app/panels'
+import { dividerKey, type DividerKey } from '../../app/shortcuts/navigation'
 import { useStore } from '../../app/store'
 import { usePanelLayout } from './panels'
 
 const step = 8
 const bigStep = 32
+
+/**
+ * The move of each key of a divider. `sign` is 1 when the handle widens
+ * its panel as it moves right.
+ */
+function keyMove(key: DividerKey, sign: 1 | -1): PanelMove {
+  switch (key) {
+    case 'left':
+      return { by: -sign * step }
+    case 'right':
+      return { by: sign * step }
+    case 'large-left':
+      return { by: -sign * bigStep }
+    case 'large-right':
+      return { by: sign * bigStep }
+    case 'first':
+      return { to: 'min' }
+    case 'last':
+      return { to: 'max' }
+  }
+}
 
 /** The width that a panel shows, without its border, as the layout draws it. */
 function useShownWidth(panel: RefObject<HTMLElement | null>): number | null {
@@ -34,10 +56,11 @@ function useShownWidth(panel: RefObject<HTMLElement | null>): number | null {
 
 /**
  * The handle on the inner edge of a resizable panel. It drags with the
- * pointer, and the arrow keys, Home, and End move it from the keyboard.
- * Each move starts from the width that the panel shows, which the layout
- * can make narrower than the range of the panel. The app remembers each
- * width in the browser.
+ * pointer. From the keyboard, Left and Right move it, alone or with Shift
+ * for a larger step, and Home and End move it to an end. A key with other
+ * modifiers, such as ⌥⌘←, stays free for its shortcut. Each move starts
+ * from the width that the panel shows, which the layout can make narrower
+ * than the range of the panel. The app remembers each width in the browser.
  */
 export function ResizeHandle(props: {
   label: string
@@ -53,7 +76,7 @@ export function ResizeHandle(props: {
   const shown = useShownWidth(props.panelRef)
   const [drag, setDrag] = useState<{ x: number; drag: PanelDrag } | null>(null)
   /** The handle on the left edge widens its panel as it moves left. */
-  const sign = props.edge === 'right' ? 1 : -1
+  const sign: 1 | -1 = props.edge === 'right' ? 1 : -1
   const current = (): number =>
     props.panelRef.current?.clientWidth || widths.width(props.panel)
   const value = Math.round(shown ?? state[props.panel] ?? range.value)
@@ -73,17 +96,10 @@ export function ResizeHandle(props: {
     drag.drag.end()
   }
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const amount = event.shiftKey ? bigStep : step
-    const moves: Partial<Record<string, PanelMove>> = {
-      ArrowRight: { by: sign * amount },
-      ArrowLeft: { by: -sign * amount },
-      Home: { to: 'min' },
-      End: { to: 'max' },
-    }
-    const move = moves[event.key]
-    if (!move) return
+    const key = dividerKey(event.nativeEvent)
+    if (key === null) return
     event.preventDefault()
-    widths.step(props.panel, current(), move)
+    widths.step(props.panel, current(), keyMove(key, sign))
   }
   return (
     <div

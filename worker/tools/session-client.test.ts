@@ -1,8 +1,58 @@
 import { expect, it } from 'vitest'
 
+import { attachmentPath } from '../../src/shared/attachment-paths'
 import { workspaceFixtures } from '../../src/test-support/fixtures/workspaces'
 import { createWorkspaceToolClient } from '../../tools/client'
 import { TOOL_TEST_ORIGIN, TOOL_TEST_TOKEN } from './test-support'
+
+it('preserves attachment paths and normalizes legacy paths in accepted session replies', async () => {
+  const fixture = workspaceFixtures()
+  const path = await attachmentPath({
+    id: 'attachment-with-path',
+    name: 'notes.md',
+  })
+  const attachment = {
+    name: 'notes.md',
+    kind: 'file',
+    mediaType: 'text/plain',
+    sizeBytes: 4,
+  }
+  const session = {
+    ...fixture.sessions.sessions[0],
+    link: 'https://app.conductive.test/session',
+  }
+  const client = createWorkspaceToolClient(
+    { machineOrigin: TOOL_TEST_ORIGIN, workspaceToken: TOOL_TEST_TOKEN },
+    async () =>
+      Response.json({
+        workspace: fixture.detail.workspace,
+        session,
+        eventNumber: 7,
+        resume: { state: 'not_needed', error: null },
+        turnId: 'accepted-turn',
+        message: {
+          ...fixture.message,
+          attachments: [
+            { ...attachment, id: 'attachment-with-path', path },
+            { ...attachment, id: 'legacy' },
+            { ...attachment, id: 'null-path', path: null },
+            { ...attachment, id: 'unusable-path', path: 42 },
+          ],
+        },
+      }),
+  )
+
+  const created = await client.createSession({ firstMessage: 'Work' })
+  const sent = await client.sendMessage(session.id, { text: 'Work' })
+
+  expect({
+    created: created.message?.attachments.map((attachment) => attachment.path),
+    sent: sent.message.attachments.map((attachment) => attachment.path),
+  }).toEqual({
+    created: [path, null, null, null],
+    sent: [path, null, null, null],
+  })
+})
 
 it('keeps transcript continuation and rejects unpaired or empty send acceptance', async () => {
   const fixture = workspaceFixtures()

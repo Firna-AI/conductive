@@ -1,14 +1,22 @@
 import {
-  failSent,
   filesWait,
   isMissingFile,
   readyIds,
+  stopFile,
 } from '../../app/draft-files'
+import {
+  failSentDraft,
+  markedFiles,
+  messageText,
+  reconcileFiles,
+} from '../../app/draft-file-state'
+import { withoutMarks } from '../../app/draft-marks'
 import type { SendMessageRequest } from '../../shared/messages'
 import { sendBlock } from './blockers'
 import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
+import { resumeFiles } from './attachment-actions'
 import { showTarget, takeReply } from './linked-replies'
 import { postMessage, sendFailedTitle } from './message-send'
 import { confirmWorkspace } from './workspace-records'
@@ -27,10 +35,29 @@ export function setDraftText(
   sessionId: string,
   text: string,
 ): void {
-  change(context, sessionId, (state) => ({
-    ...state,
-    draft: { ...state.draft, text, sendId: null },
+  if (!context.live()) return
+  const draftId = draftIdOf(context, sessionId)
+  const { draft } = sessionState(context.store.get(), sessionId)
+  const next = reconcileFiles(draft, text)
+  for (const item of draft.files) {
+    if (!next.files.some(({ id }) => id === item.id))
+      stopFile(context.uploads, item.id)
+  }
+  changeDraft(context, draftId, (current) => ({
+    ...current,
+    ...next,
+    text,
+    sendId: null,
   }))
+  resumeFiles(
+    context,
+    draftId,
+    next.files.filter(
+      (item) =>
+        item.state === 'uploading' &&
+        draft.detached.some(({ id }) => id === item.id),
+    ),
+  )
 }
 
 /**
@@ -53,19 +80,21 @@ export async function sendDraft(
   const snapshot = context.store.get()
   const session = snapshot.sessions.find((item) => item.id === sessionId)
   const { draft } = sessionState(snapshot, sessionId)
-  const empty = draft.text.trim() === '' && draft.files.length === 0
-  const busy = draft.sending || filesWait(draft.files)
+  const files = markedFiles(draft.text, draft.files)
+  const empty = withoutMarks(draft.text).trim() === '' && files.length === 0
+  const busy = draft.sending || filesWait(files)
   if (!session || busy || empty || sendBlock(snapshot, sessionId)) return
   const request: SendMessageRequest = {
     id: draft.sendId ?? context.newId(),
-    text: draft.text,
-    attachmentIds: readyIds(draft.files),
+    text: messageText(draft.text, files),
+    attachmentIds: readyIds(files),
     choice: session.choice,
   }
   const draftId = draftIdOf(context, sessionId)
   changeDraft(context, draftId, (current) => ({
     ...current,
     refused: [],
+    refusedFolders: [],
     sendId: request.id,
     sending: true,
   }))
@@ -74,16 +103,18 @@ export async function sendDraft(
     const { error } = posted
     changeDraft(context, draftId, (current) => ({
       ...current,
-      files: isMissingFile(error)
-        ? failSent(current.files, request.attachmentIds, error)
-        : current.files,
+      ...(isMissingFile(error)
+        ? failSentDraft(current, request.attachmentIds, error)
+        : {}),
       sending: false,
     }))
     const holder = holderOf(context.store.get(), draftId) ?? sessionId
     showNotice(context, holder, sendFailedTitle, error)
     return
   }
-  changeDraft(context, draftId, (current) => afterSend(current, request))
+  changeDraft(context, draftId, (current) =>
+    afterSend(current, request, draft.text),
+  )
   const holder = holderOf(context.store.get(), draftId)
   const owner = context.store.get().notice?.sessionId
   if (context.live() && owner && (owner === sessionId || owner === holder)) {
