@@ -6,6 +6,7 @@ import { isPaletteKey, paletteKeyOutcome } from '../../app/palette/palette-keys'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import { useApp } from '../context'
+import { useMenuDragStop } from '../mac/menu-drag'
 import { LayersContext, OpenLayers } from '../ui/layers'
 import { PaletteContext, type PaletteHandle } from './palette-context'
 
@@ -79,7 +80,8 @@ function useCloseOnLeave(app: AppModel, controller: PaletteController) {
 /**
  * The command palette of the tab, its key, and the open layers that every
  * UI kit of the app notes, because the key reads them. The layer of each
- * frame draws the palette, as `PaletteLayer` says.
+ * frame draws the palette, as `PaletteLayer` says. In the Mac app, an open
+ * menu also stops the drag regions, as `useMenuDragStop` says.
  */
 export function PaletteProvider(props: { children: ReactNode }) {
   const app = useApp()
@@ -91,6 +93,7 @@ export function PaletteProvider(props: { children: ReactNode }) {
   const { controller } = palette
   const open = useStore(controller.open)
   usePaletteKey(app, palette, layers)
+  useMenuDragStop(layers)
   useCloseOnLeave(app, controller)
   // The action of a row runs once the palette left the page: its focus
   // went back and the frame takes input again.

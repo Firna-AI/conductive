@@ -22,6 +22,22 @@ describe('the open layers of the page', () => {
     })
   })
 
+  test('notes whether a menu is open until the last open menu closes', () => {
+    const layers = new OpenLayers()
+    const seen: boolean[] = []
+    layers.menuOpen.subscribe(() => seen.push(layers.menuOpen.get()))
+    const removeFirst = layers.addMenu(() => true)
+    const removeSecond = layers.addMenu(() => true)
+    removeFirst()
+    const withOne = layers.menuOpen.get()
+    removeSecond()
+    expect({ seen, withOne, after: layers.menuOpen.get() }).toEqual({
+      seen: [true, false],
+      withOne: true,
+      after: false,
+    })
+  })
+
   test('a dialog or a sheet of another owner holds the input, and the layer of an owner does not hold it for that owner', () => {
     const layers = new OpenLayers()
     const palette = {}
