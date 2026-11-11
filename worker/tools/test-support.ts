@@ -2,6 +2,7 @@ import { vi } from 'vitest'
 import { routes } from '../../src/app/router'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { sessionLink } from '../../src/shared/session-link'
 import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import { createWorkspaceToolClient } from '../../tools/client'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
@@ -144,6 +145,7 @@ export async function toolFixture(harness: TestHarness) {
     workspaceId: 'calling-workspace',
     turnId: TOOL_TEST_TURN,
     senderUserId: 'teammate',
+    sessionId: 'calling-session',
   }))
   const ownerDefaultChoice = vi.fn(
     async (): Promise<AgentChoice | null> => null,
@@ -168,6 +170,12 @@ export async function toolFixture(harness: TestHarness) {
       restoreUntil: null,
     },
     sessionId: 'created-session',
+    sessionLink: sessionLink(
+      harness.env.APP_ORIGIN,
+      input.orgId,
+      'created-workspace',
+      'created-session',
+    ),
   }))
   const services = {
     callingTurn,
@@ -176,6 +184,7 @@ export async function toolFixture(harness: TestHarness) {
     models,
     listSessions: vi.fn<AgentToolServices['listSessions']>(),
     readSession: vi.fn<AgentToolServices['readSession']>(),
+    writeSession: vi.fn<AgentToolServices['writeSession']>(),
   }
   const env = { ...harness.env, MACHINE_ORIGIN: TOOL_TEST_ORIGIN }
   const entry = requestBodyEntry(createAgentToolsHandler(env, services))

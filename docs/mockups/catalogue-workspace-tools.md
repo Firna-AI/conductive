@@ -4,7 +4,7 @@ These pages are part of [the mockup catalogue](catalogue.md).
 
 `app/workspace-links` draws the workspace numbers and the chips of
 decisions 211 and 212, and the session chips and the messages from agent
-tools of decisions 257 and 259. Its canonical screen has a message and an
+tools of decisions 259 and 261. Its canonical screen has a message and an
 answer with chips in Checkout address autocomplete, `W-395`. Its child
 pages:
 

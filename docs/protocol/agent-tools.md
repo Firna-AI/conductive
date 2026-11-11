@@ -58,7 +58,7 @@ says.
   token of the first turn belongs to that member.
 - The first message ends with a `Sent by:` line, as
   [The `Sent by:` line](session-calls.md#the-sent-by-line) says
-  (decision 257).
+  (decision 259).
 - A create call can also give the new workspace a name. The Worker cleans
   the name with this rule:
   1. It keeps only the first line that has text.

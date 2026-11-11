@@ -55,6 +55,8 @@ gives their rules.
 - `readChatWorkspaceResponse(orgId, workspaceId, appOrigin)` returns the reply of a
   workspace read or Resume and that summary, as
   [Browser routes](../lifecycle/README.md#browser-routes) says.
+- `writeAgentSession(input)` accepts trusted tool requests after exact-object, org, archive, and current-sender checks inside the queue.
+  The [tools README](../tools/README.md#session-writes) gives its machine routes and resume behavior.
 
 [The workspace lifecycle](integration/README.md#the-workspace-lifecycle)
 says how the lifecycle and chat work together.
@@ -102,6 +104,12 @@ Repeats return the stored acceptance and add no message or history.
 The same queue also serves later resumes.
 Lifecycle readiness controls delivery to the runner.
 Try again replaces the failed first computer without accepting the stored messages again.
+
+`send` takes a parsed message and its actual sender, so browser and trusted tool callers share one admission path.
+Its optional acceptance callback saves a tool request in the message transaction.
+`tool-session-write.ts` owns tool request replay and atomic creation with an optional first message.
+`ChatRecords` stores each `ToolSessionRequest` beside its accepted session and message.
+The workspace title request removes only the canonical final tool footer from its stored first-message input.
 
 ## Access
 

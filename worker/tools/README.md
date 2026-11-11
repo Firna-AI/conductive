@@ -1,6 +1,6 @@
 # Agent workspace tools
 
-This area handles workspace create and list calls, and session list and transcript reads, from agents inside a Conductive workspace.
+This area handles workspace and session calls from agents inside a Conductive workspace.
 It implements the [agent-tool requirements](../../docs/protocol/agent-tools.md).
 It uses the existing [shared contracts](../../src/shared/README.md) and D1 tables.
 The [workspace name migration](../../migrations/202611081300_workspace_creation_name.sql) keeps an agent's chosen name through creation retries.
@@ -21,7 +21,7 @@ Direct handler tests also use the shared entry policy before dispatch.
 `createAgentToolsHandler` takes the database, the machine origin, the app origin, and `AgentToolServices`.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
-It accepts the two session GET routes under `/v1/tools/workspaces/<workspaceId>/sessions`.
+It accepts session list, transcript read, create, and send routes under `/v1/tools/workspaces/<workspaceId>/sessions`.
 It uses workspace bearer authentication instead of browser sessions.
 It returns private responses with caching disabled.
 
@@ -75,6 +75,38 @@ Line offsets include a line's newline character. A final newline adds no empty l
 A line larger than the budget returns a bounded fragment. Its continuation recovers the rest.
 An out-of-range line or offset clamps to the last available content, so the reply remains useful.
 
+## Session writes
+
+Session create and send require an active stored calling turn and its current org member.
+The stored turn gives the sender and the sending session. Input supplies neither identity.
+The real object repeats the target org, active org, archived-workspace, member, and exact-object checks inside the chat queue.
+`create_session` uses the sender's saved model choice, then the configured app choice.
+Workspace creation keeps its owner's default choice.
+
+`ToolSessionWrite` carries the trusted caller and typed request to the object's `writeAgentSession` RPC.
+Chat commits a request fingerprint and its acceptance in the same transaction as the session and message.
+The key hashes the operation, calling workspace, calling session, sender, and request ID.
+Retries reuse accepted IDs and choices before resolving defaults or checking logins again.
+A repeated send can name its original or linked receiving session.
+A changed request with an occupied ID gets the existing session or message conflict error.
+
+Send uses the normal chat login, linked-session, model, and turn-selection rules.
+A message that joins a turn keeps that turn's original sender.
+An empty create starts no turn or computer. A create with a first message commits both together.
+The shared footer builder preserves the task text and adds the sending-session link to both calls and workspace creation.
+The title request excludes only an exact canonical final footer. Other task text stays intact.
+
+`AgentSessionWriteResponse` gives the accepted session with its link, message, turn, and event number.
+Its workspace summary and `resume` describe the current request.
+`resume.state` is `not_needed`, `queued`, `waiting`, or `failed`.
+`waiting` means no new start was queued, including a failed first start that still needs Try again.
+A failed resume check keeps the acceptance and returns its existing code and message in `resume.error`.
+A retry can attempt the normal resume again without another message.
+The production composition queues a permitted resume after durable admission and waits only for that enqueue.
+Provider startup remains with the lifecycle alarm.
+
+## Workspace creation
+
 POST binds the repository and section to the calling org.
 It inherits the calling workspace's current owner.
 It preserves the first message text.
@@ -84,7 +116,7 @@ It cuts at 60 Unicode code points, at a whole word when possible.
 It keeps each underscore, and it does not use `modelTitleFrom`, the title model rule that changes underscores to spaces.
 The tool description and the CLI help ask the agent to avoid underscores unless the user asks for them, as [Create and list calls](../../docs/protocol/agent-tools.md#create-and-list-calls) says.
 A blank result counts as no name, and the app shows "Untitled".
-The create answer gives the stored name. The branch and stored city keep the city.
+The create answer gives the stored name and the first session's absolute `sessionLink`. The branch and stored city keep the city.
 The tools preserve string names, including blank names, and ignore names of other types.
 It reads saved owner preferences when the request omits model or effort.
 The injected account policy supplies defaults when no preference exists.
@@ -95,7 +127,7 @@ A fully specified model and effort need no default lookup.
 
 POST also requires `X-Conductive-Turn-Id`.
 The `callingTurn` service must read the active turn from the calling workspace's turn store.
-It must return the matching workspace ID, turn ID, and sender user ID.
+It must return the matching workspace ID, turn ID, session ID, and sender user ID.
 The handler checks these IDs and the sender's current org membership.
 It never uses the workspace owner as a substitute sender.
 
@@ -178,7 +210,10 @@ The real-object route tests live in [worker/features](../features/).
 - [lists.ts](lists.ts) reads the four lists and resolves the listed default choice.
 - [store.ts](store.ts) queries scoped D1 records and builds list links from the app origin.
 - [services.ts](services.ts) defines the lifecycle and active-turn integration boundary.
-- [session-routes.ts](session-routes.ts) parses the two machine read routes and their query options.
+- [session-routes.ts](session-routes.ts) parses the machine session routes and read query options.
+- [session-input.ts](session-input.ts) narrows session create and send inputs while preserving message text.
+- [session-write-composition.ts](session-write-composition.ts) preserves admission while applying the normal open/resume policy.
+- [message-text.ts](message-text.ts) builds the canonical sending-session footer and selects title input.
 - [workspace.ts](workspace.ts) exposes the trusted session read RPCs through the real workspace object.
 - [session-access.ts](session-access.ts) reads a target workspace inside the calling org, including archives.
 - [image.ts](image.ts) installs the CLI and MCP source into the image.

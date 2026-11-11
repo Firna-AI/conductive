@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { routes } from '../../src/app/router'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { sessionLink } from '../../src/shared/session-link'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
 import { runToolProcess } from '../../tools/main'
 import {
@@ -169,7 +170,7 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
   }
   expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
     expect.objectContaining({
-      firstMessage: '  Build this.\nKeep spacing.  ',
+      firstMessage: `  Build this.\nKeep spacing.  \n\n---\nSent by: ${sessionLink(harness.env.APP_ORIGIN, 'org-a', 'calling-workspace', 'calling-session')}`,
       name: 'CLI workspace',
       sender: expect.objectContaining({ id: 'teammate' }),
     }),

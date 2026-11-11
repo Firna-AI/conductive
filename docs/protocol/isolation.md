@@ -112,7 +112,7 @@ decision number names a decision of the change that adds the
 ## What the session calls reach
 
 - The [session calls](session-calls.md) of a sandbox reach each workspace
-  of its org, and no workspace of another org (decision 255).
+  of its org, and no workspace of another org (decision 257).
   [Reach](session-calls.md#reach) gives the reasons and the smaller reaches
   that were rejected.
 - Risk: every process in a sandbox can read its workspace token, and so can

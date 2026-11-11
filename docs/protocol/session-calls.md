@@ -47,13 +47,17 @@ these calls at `app/workspace-links/sent-by`.
 - Each write takes an optional request ID. A repeat of a write with the
   same request ID gives the result of the first write, as a repeated
   message of the app does.
+- The accepted session, message, choice, and turn stay the same on a
+  repeat. The workspace state and the start information describe the
+  current request. Reason: a retry can then follow a start without adding
+  another message.
 - Without a request ID, the tool makes one. Reason: a retry after a lost
   reply then adds no second session and no second message.
 
 ## Reach
 
 - Each call reaches each workspace of the org of the calling workspace
-  (decision 255). It reaches no workspace of another org.
+  (decision 257). It reaches no workspace of another org.
 - The Worker takes the target workspace from its own records, and only
   from that org. An unknown workspace, or a workspace of another org, gets
   HTTP 404 with the error code `workspace_not_found`.
@@ -74,7 +78,7 @@ these calls at `app/workspace-links/sent-by`.
 ## Tokens and turns
 
 - `list_sessions` and `read_session` need only the workspace token, as the
-  other list calls do (decision 255). They need no active turn.
+  other list calls do (decision 257). They need no active turn.
 - Reason: these calls read data that every member of the org already
   sees, and they start no work.
 - Reads that also need an active turn were rejected, so that the reads
@@ -132,13 +136,13 @@ these calls at `app/workspace-links/sent-by`.
 - Reason: every member already sees these facts, and the state of the
   workspace shows a stop.
 - A list whose entries also give the newest answer of each session was
-  rejected (decision 256). Each list would read the history of each
+  rejected (decision 258). Each list would read the history of each
   session, and the entries would get long.
 
 ## Read a session
 
 - `read_session` gives the text of one session that a copy from its tab
-  menu gives (decision 256).
+  menu gives (decision 258).
   [Reads by agents](session-transcripts.md#reads-by-agents) states the
   text, its two kinds, and the part of a long text that a read gives.
 - Reason: an agent that hands out work needs the answer to go on, and a
@@ -194,16 +198,20 @@ these calls at `app/workspace-links/sent-by`.
   waits there for its cloud computer, as each message does. It also starts
   that cloud computer, as
   [Stop and resume](workspace-life.md#stop-and-resume) says (decision
-  258).
+  260).
 - Reason: a start can take minutes, and the workspace already keeps the
   message.
+- When a start check fails after acceptance, the reply keeps the accepted
+  message. It also gives the workspace state and the existing error code
+  and message of that check. A repeat keeps that acceptance and can try
+  the start again under the same rules as an open.
 
 ## The `Sent by:` line
 
 - The Worker adds a blank line, a `---` line, and a `Sent by:` line at the
-  end of the text of each tool message (decision 257).
+  end of the text of each tool message (decision 259).
 - The `Sent by:` line holds `Sent by:`, a space, and the session link of
-  the calling turn (decision 259).
+  the calling turn (decision 261).
 - The text before these lines stays exactly the text of the call.
 - The stored message holds these lines. So the agent, the chat, a copy,
   and a read all show them.
@@ -228,7 +236,7 @@ these calls at `app/workspace-links/sent-by`.
 ## No limit
 
 - The app sets no limit of its own on the sessions and the tool messages
-  that agents make (decision 260). A member stops a loop with Stop.
+  that agents make (decision 262). A member stops a loop with Stop.
 - Reason: an agent does not answer without end unless an instruction tells
   it to. The app sets no limit on the workspaces that agents create either
   (decision 8).
@@ -249,4 +257,4 @@ these calls at `app/workspace-links/sent-by`.
   - A session link in an answer shows as a session chip.
   - A `Sent by:` line names the session that sent its message.
   - An agent does not answer a tool message only to confirm it (decision
-    260).
+    262).

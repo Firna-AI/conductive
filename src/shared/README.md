@@ -9,6 +9,8 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.number` is the immutable number in its org.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
+`AgentCreateWorkspaceResponse.sessionLink` gives the first session's absolute app link.
+`AgentSessionWriteResponse` keeps the accepted session, message, and turn while reporting current workspace and resume state.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.

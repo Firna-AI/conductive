@@ -197,7 +197,7 @@ decision number names a dated record, as
   workspaces spend starts, and the Runs list does not show them.
 - Risk: the agent of a run can also use the session calls on each
   workspace of the org, as [Reach](session-calls.md#reach) says (decision
-  255). So text that steers a pull request run can read every chat of the
+  257). So text that steers a pull request run can read every chat of the
   org.
 - While a turn of the run runs, such text can also start sessions and
   turns in each workspace of the org that is not archived. Their messages

@@ -21,7 +21,7 @@ decision number names a decision of the change that adds the
   - list the repositories of its org image, the sections of its org, and
     the models of the app, through the agent tools
   - list the sessions of each workspace of its org, and read the chat of
-    each session, through the agent tools (decision 255)
+    each session, through the agent tools (decision 257)
   - start sessions and send messages in the workspaces of its org that are
     not archived, while a turn runs, through the agent tools
   - ask for a command on the Mac of the sender of a turn that runs now,

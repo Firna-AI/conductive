@@ -6,6 +6,7 @@ import process from 'node:process'
 import { fakeMacRequest } from '../../src/test-support/fixtures/devices'
 import { workspaceFixtures } from '../../src/test-support/fixtures/workspaces'
 import { DEVICE_COMMAND_PATH } from '../../src/shared/device'
+import { sessionLink } from '../../src/shared/session-link'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
 import { imageNodeExecutable } from '../lifecycle/image-runtime'
 import {
@@ -25,6 +26,7 @@ export async function installedToolContext() {
     authorization: string | undefined
     turn: string | undefined
   }[] = []
+  const workspace = workspaceFixtures().detail.workspace
   const server = createServer((request, response) => {
     const turn = request.headers[TOOL_TURN_HEADER.toLowerCase()]
     requests.push({
@@ -47,8 +49,14 @@ export async function installedToolContext() {
             }),
           }
         : {
-            workspace: workspaceFixtures().detail.workspace,
+            workspace,
             sessionId: 'created-session',
+            sessionLink: sessionLink(
+              new URL(workspace.link).origin,
+              workspace.orgId,
+              workspace.id,
+              'created-session',
+            ),
           }
     request.resume()
     response.writeHead(200, { 'Content-Type': 'application/json' })

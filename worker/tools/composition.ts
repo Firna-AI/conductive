@@ -8,6 +8,8 @@ import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
 import { createAgentToolsHandler } from './handler'
 import { saveWorkspaceToolParent, toolUser } from './composition-data'
 import { requireFeatureResult } from '../features/result'
+import { sessionLink } from '../../src/shared/session-link'
+import { writeSessionFromTool } from './session-write-composition'
 
 export function productionAgentTools(
   request: Request,
@@ -22,6 +24,7 @@ export function productionAgentTools(
     },
     {
       models: async () => configuredModels(env),
+      writeSession: (input) => writeSessionFromTool(env, dependencies, input),
       listSessions: async (orgId, workspaceId) =>
         requireFeatureResult(
           await workspaceBinding(env)
@@ -81,7 +84,16 @@ export function productionAgentTools(
           await readWorkspace(env.DB, input.orgId, created.workspace.id),
           env.APP_ORIGIN,
         )
-        return { workspace, sessionId: created.first.sessionId }
+        return {
+          workspace,
+          sessionId: created.first.sessionId,
+          sessionLink: sessionLink(
+            env.APP_ORIGIN,
+            input.orgId,
+            created.workspace.id,
+            created.first.sessionId,
+          ),
+        }
       },
     },
   )(request)

@@ -1,7 +1,13 @@
 import type { SessionsResponse } from '../../src/shared/sessions'
 import { HttpError, requiredString } from '../http'
 import type { RequestContext } from '../security/gate'
-import { choice, counter, identifier, invalidInput } from './inputs'
+import {
+  choice,
+  counter,
+  identifier,
+  invalidInput,
+  sendMessage,
+} from './inputs'
 import { send, retryMessage } from './send-message'
 import { changeModel } from './model-changes'
 import type { ChatOperation } from './operation'
@@ -100,7 +106,13 @@ export async function chatRoute(
             context,
             dependencies,
           )
-        : await send(operation, sessionId, context, dependencies)
+        : await send(
+            operation,
+            sessionId,
+            sendMessage(context.body),
+            context.user,
+            dependencies,
+          )
     return Response.json(reply, { status: 202 })
   }
   const session = await operation.logins.metadata(sessionId)

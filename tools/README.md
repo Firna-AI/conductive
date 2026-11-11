@@ -35,7 +35,7 @@ It keeps whole words when possible and keeps an ellipsis.
 It keeps each underscore, as [Create and list calls](../docs/protocol/agent-tools.md#create-and-list-calls) says.
 A blank result counts as no name, and the app shows "Untitled".
 The name does not change the branch.
-The create answer holds the stored name.
+The create answer holds the stored name, the first session ID, and its absolute `sessionLink`.
 `workspaces list` returns every workspace in the org, including archived workspaces.
 Each list item gives its number and canonical web link.
 Create gives both fields in the complete workspace record.

@@ -227,7 +227,7 @@ at `app/tabs` and `app/transcripts`.
 
 - `GET /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/transcript`
   on `api.conductive.build` gives the text of one session to the workspace
-  token of a sandbox (decision 256). The `read_session` call of the
+  token of a sandbox (decision 258). The `read_session` call of the
   [session calls](session-calls.md) uses it.
 - The route reaches each session of each workspace of the org of the
   sandbox, as [Reach](session-calls.md#reach) says. It needs no active

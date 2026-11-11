@@ -12,6 +12,10 @@ import { featureResult } from '../features/result'
 import type { ChatTransaction } from '../chat/store'
 import type { Session } from '../../src/shared/sessions'
 import { toolSessionWorkspace } from './session-access'
+import { toolUser } from './composition-data'
+import { findChatWorkspace } from '../chat/queries'
+import { HttpError } from '../http'
+import type { ToolSessionWrite } from './services'
 
 async function sessionState(
   view: ChatTransaction,
@@ -30,6 +34,39 @@ async function sessionState(
 
 /** Trusted calls still bind the exact object and scope each target to its org. */
 export class AgentSessionWorkspace extends AttachmentWorkspace {
+  writeAgentSession(input: ToolSessionWrite) {
+    return featureResult(() =>
+      this.chat.acceptToolWrite(input, async () => {
+        const target = await toolSessionWorkspace(
+          this.env.DB,
+          input.orgId,
+          input.workspaceId,
+          this.env.APP_ORIGIN,
+        )
+        const workspace = await findChatWorkspace(
+          this.env.DB,
+          input.orgId,
+          input.workspaceId,
+        )
+        if (!workspace)
+          throw new HttpError(
+            404,
+            'workspace_not_found',
+            'The workspace is not available.',
+          )
+        if (workspace.archivedAt !== null)
+          throw new HttpError(
+            409,
+            'workspace_archived',
+            'The archived chat is read-only.',
+          )
+        return {
+          workspace: target,
+          user: await toolUser(this.env.DB, input.orgId, input.senderUserId),
+        }
+      }),
+    )
+  }
   listAgentSessions(orgId: string, workspaceId: string, origin: string) {
     return featureResult(() =>
       this.chat.readWorkspace(workspaceId, async (view) => {

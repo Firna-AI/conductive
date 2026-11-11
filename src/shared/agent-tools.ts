@@ -1,7 +1,7 @@
 import type { Agent, AgentChoice, AgentModel, Effort } from './agents'
 import type { Workspace, WorkspaceState } from './workspaces'
-import type { MessageSender } from './messages'
-import type { TranscriptDetail } from './sessions'
+import type { MessageSender, UserMessage } from './messages'
+import type { Session, TranscriptDetail } from './sessions'
 
 /** Machine routes use workspace or turn tokens, or a GitHub webhook signature. */
 export const MACHINE_PATHS = {
@@ -33,6 +33,7 @@ export interface AgentCreateWorkspaceRequest {
 export interface AgentCreateWorkspaceResponse {
   workspace: Workspace
   sessionId: string
+  sessionLink: string
 }
 export interface AgentWorkspaceSummary {
   id: string
@@ -72,6 +73,52 @@ export function agentSessionTranscriptPath(
 ): string {
   return `${agentSessionsPath(workspaceId)}/${encodeURIComponent(sessionId)}/transcript`
 }
+
+export function agentSessionMessagesPath(
+  workspaceId: string | undefined,
+  sessionId: string,
+): string {
+  return `${agentSessionsPath(workspaceId)}/${encodeURIComponent(sessionId)}/messages`
+}
+
+interface AgentSessionChoiceRequest {
+  model?: { agent: Agent; model: string }
+  effort?: Effort
+  requestId?: string
+}
+
+export interface AgentCreateSessionRequest extends AgentSessionChoiceRequest {
+  title?: string
+  firstMessage?: string
+}
+
+export interface AgentSendMessageRequest extends AgentSessionChoiceRequest {
+  text: string
+}
+
+interface AgentSessionAcceptance {
+  session: Session
+  eventNumber: number
+}
+
+export type AgentSessionAccepted = AgentSessionAcceptance &
+  ({ message: null; turnId: null } | { message: UserMessage; turnId: string })
+
+export type AgentSessionResume =
+  | { state: 'not_needed' | 'queued' | 'waiting'; error: null }
+  | { state: 'failed'; error: { code: string; message: string } }
+
+export type AgentSessionWriteResponse = AgentSessionAccepted & {
+  workspace: AgentWorkspaceSummary
+  session: Session & { link: string }
+  resume: AgentSessionResume
+}
+
+export type AgentCreateSessionResponse = AgentSessionWriteResponse
+export type AgentSendMessageResponse = Extract<
+  AgentSessionWriteResponse,
+  { message: UserMessage }
+>
 
 export interface AgentSessionSummary {
   id: string

@@ -102,7 +102,7 @@ says.
   with Try again, until a member pressed Resume was rejected, because the
   open of the tab already asks for the file.
 - A message from `send_message` or `create_session` of the agent tools
-  also starts the sandbox (decision 258). It does so in the same cases as
+  also starts the sandbox (decision 260). It does so in the same cases as
   an open, and with the same checks. These cases are a stopped workspace
   and a workspace whose later start failed, such as a failed resume.
 - A failed first start keeps waiting for Try again, as

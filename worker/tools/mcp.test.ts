@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import { sessionLink } from '../../src/shared/session-link'
 
 import { TOOL_TURN_HEADER } from '../../tools/context'
 import { runToolProcess } from '../../tools/main'
@@ -134,7 +135,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
   expect(fixture.services.createWorkspace).toHaveBeenCalledTimes(1)
   expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
     expect.objectContaining({
-      firstMessage: 'Delegate this task.',
+      firstMessage: `Delegate this task.\n\n---\nSent by: ${sessionLink(harness.env.APP_ORIGIN, 'org-a', 'calling-workspace', 'calling-session')}`,
       name: 'MCP workspace',
       sender: expect.objectContaining({ id: 'teammate' }),
     }),

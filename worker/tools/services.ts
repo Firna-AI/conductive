@@ -3,9 +3,14 @@ import type {
   AgentListSessionsResponse,
   AgentReadSessionRequest,
   AgentReadSessionResponse,
+  AgentCreateSessionRequest,
+  AgentSendMessageRequest,
+  AgentSessionWriteResponse,
+  AgentWorkspaceSummary,
 } from '../../src/shared/agent-tools'
 import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
+import type { User } from '../../src/shared/api'
 
 export interface ToolWorkspaceCreation {
   orgId: string
@@ -23,11 +28,30 @@ export interface CallingTurn {
   workspaceId: string
   turnId: string
   senderUserId: string
+  sessionId: string
+}
+
+export type ToolSessionWrite = {
+  orgId: string
+  workspaceId: string
+  callerWorkspaceId: string
+  callerSessionId: string
+  senderUserId: string
+  requestId: string
+} & (
+  | { kind: 'create'; input: AgentCreateSessionRequest }
+  | { kind: 'send'; sessionId: string; input: AgentSendMessageRequest }
+)
+
+export interface ToolSessionAccess {
+  user: User
+  workspace: AgentWorkspaceSummary
 }
 
 /** The composition root supplies the lifecycle and the workspace's turn store. */
 export interface AgentToolServices {
   models(): Promise<readonly AgentModel[]>
+  writeSession(input: ToolSessionWrite): Promise<AgentSessionWriteResponse>
   listSessions(
     orgId: string,
     workspaceId: string,

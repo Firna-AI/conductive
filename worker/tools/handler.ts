@@ -11,7 +11,11 @@ import { createFromTool } from './create'
 import { isAgentToolPath, listFromTool } from './lists'
 import type { AgentToolServices } from './services'
 import { callingWorkspace } from './store'
-import { readSessionsFromTool } from './session-routes'
+import {
+  readSessionsFromTool,
+  sessionToolMethods,
+  writeSessionsFromTool,
+} from './session-routes'
 
 export interface AgentToolsEnvironment {
   DB: D1Database
@@ -31,7 +35,8 @@ export function createAgentToolsHandler(
         throw new HttpError(404, 'not_found', 'The page is not available.')
       }
       const methods =
-        url.pathname === MACHINE_PATHS.workspaces ? ['GET', 'POST'] : ['GET']
+        sessionToolMethods(url.pathname) ??
+        (url.pathname === MACHINE_PATHS.workspaces ? ['GET', 'POST'] : ['GET'])
       const allow = methods.join(', ')
       if (!methods.includes(request.method) || request.headers.has('Upgrade')) {
         return privateResponse(
@@ -39,7 +44,7 @@ export function createAgentToolsHandler(
             {
               error: {
                 code: 'method_not_allowed',
-                message: methods.length === 1 ? 'Use GET.' : 'Use GET or POST.',
+                message: `Use ${methods.join(' or ')}.`,
               },
             },
             { status: 405, headers: { Allow: allow } },
@@ -77,6 +82,14 @@ export function createAgentToolsHandler(
           ),
         )
       }
+      const written = await writeSessionsFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+      )
+      if (written) return privateResponse(written)
       let input: AgentCreateWorkspaceRequest
       try {
         input = createWorkspaceInput(await readJsonObject(request))
@@ -97,6 +110,7 @@ export function createAgentToolsHandler(
         request.headers.get(TOOL_TURN_HEADER),
         input,
         services,
+        env.APP_ORIGIN,
       )
       return privateResponse(
         Response.json(createdWorkspace(result), { status: 201 }),
