@@ -1,15 +1,11 @@
+import { softwareInstallCommand } from '../software-image/install-command'
 import { privilegedCommand } from '../terminal/privileged'
 import {
   WORKSPACE_TOOLS_COMMAND,
   WORKSPACE_TOOLS_DIRECTORY,
-  workspaceToolsCommand,
 } from '../tools/image'
-import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { shellQuote } from './commands'
-import {
-  installImageSoftware,
-  type ImageSoftwareArtifact,
-} from './image-software'
+import type { ImageSoftwareArtifact } from './image-software'
 
 const APP_PATHS = [
   '/opt/conductive/software',
@@ -40,7 +36,7 @@ const APP_PATHS = [
 export function workspaceSoftwareUpdateCommand(
   artifact: ImageSoftwareArtifact,
 ): string {
-  const command = `${privilegedCommand(workspaceToolsCommand(WORKSPACE_TOOL_SOURCES))}\n${installImageSoftware(artifact)}`
+  const command = softwareInstallCommand(artifact)
   return privilegedCommand(`set -eu
 umask 077
 backup_complete=false

@@ -162,8 +162,10 @@ functions of the lifecycle that a reader opens first.
   - `recordSoftwareUpdateOutcome` records the version or sets the failed
     update mark.
 - [start-software-command.ts](start-software-command.ts):
-  `workspaceSoftwareUpdateCommand` builds the update from the same software
-  command builders as the software image and `softwareVersion`. After a
+  `workspaceSoftwareUpdateCommand` runs the shared `softwareInstallCommand`
+  from [install-command.ts](../software-image/install-command.ts).
+  `softwareVersion` hashes that exact command, including its initial
+  `set -eu` before the tools install. After a
   good install, it starts the relay socket and restarts the relay service,
   so the current relay runs at once. The image installers still start no
   unit. The command saves the earlier app files first. A failed backup

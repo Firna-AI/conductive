@@ -2,13 +2,13 @@ import { expect, it } from 'vitest'
 
 import { SOFTWARE } from '../lifecycle/backend-test-support'
 import { installImageSoftware } from '../lifecycle/image-software'
-import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
-import { workspaceToolsCommand } from '../tools/image'
 import { privilegedCommand } from '../terminal/privileged'
+import { workspaceToolsCommand } from '../tools/image'
+import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { softwareVersion } from './version'
 
 it('versions the exact install commands and changes with archives and tool sources', async () => {
-  const commands = `${privilegedCommand(workspaceToolsCommand(WORKSPACE_TOOL_SOURCES))}\n${installImageSoftware(SOFTWARE)}`
+  const commands = `set -eu\n${privilegedCommand(workspaceToolsCommand(WORKSPACE_TOOL_SOURCES))}\n${installImageSoftware(SOFTWARE)}`
   const digest = await crypto.subtle.digest(
     'SHA-256',
     new TextEncoder().encode(commands),
