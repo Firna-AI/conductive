@@ -62,8 +62,9 @@ The splitter keeps each trigger body in one statement.
 Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
 Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
 The reset also restores the clock, token sequence, and fake services.
-It deletes code uses, approval emails, app access, and codes before users. It resets the
-sign-up pause and its change record. Tests can make waiting users through
+It deletes code uses, approval emails, app access, and codes before users.
+It resets the sign-up pause and the waitlist switch, each with its change
+record, so the waitlist is on again. Tests can make waiting users through
 sign-in or directly in D1.
 The [operator waitlist fixture](../operator/waitlist.test-support.ts) adds
 fake Resend replies and a scheduled-entry client. Its clock controls

@@ -65,6 +65,11 @@ Your **Account** page has an **Invite code** section.
 Use **Copy** to share its invite link while it has uses left.
 The section shows how many invites remain.
 
+An active code with invites left shows **Anyone can sign up now** during open sign-up.
+Its invites stay for later.
+An invite link uses no invite during this time.
+The pause notice shows instead while sign-ups are paused.
+
 An invite code gives access to Conductive.
 An org invitation also gives membership of the org that sent it.
 Use an org invitation when you want someone to join your team.

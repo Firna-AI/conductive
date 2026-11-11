@@ -24,10 +24,15 @@ each feature.
   user owns, or of every workspace of the org, and blocks new starts. A
   user suspension also ends the sign-in sessions of the user.
 - **App access:** the right of a user to use the app: to create or join an
-  org, and to start cloud computers. A new account starts without it.
+  org, and to start cloud computers. A new account starts without it,
+  except during open sign-up.
 - **Waitlist:** the users without app access. Each of them sees only the
-  waitlist screen until an approval, a code, or an org invitation gives
-  app access.
+  waitlist screen until an approval, a code, an org invitation, or open
+  sign-up gives app access. The waitlist switch of the operator section
+  turns the waitlist off and on.
+- **Open sign-up:** the state while the waitlist is off and sign-ups are
+  not paused. Each user without app access then gets it at their next
+  sign-in or request.
 - **Invite code:** a code that an operator makes, with a use limit. Each
   use gives app access to one person who waits.
 - **Referral code:** the personal code of each user with app access. It

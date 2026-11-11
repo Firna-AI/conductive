@@ -39,6 +39,19 @@ export async function setPaused(harness: TestHarness, paused = true) {
     .run()
 }
 
+export async function setWaitlist(
+  harness: TestHarness,
+  waitlistOn: boolean,
+  operatorId: string,
+) {
+  await harness.env.DB.prepare(
+    `UPDATE signup_settings SET waitlist_on = ?, waitlist_updated_at = ?,
+     waitlist_updated_by_user_id = ? WHERE id = 1`,
+  )
+    .bind(waitlistOn ? 1 : 0, TEST_TIME, operatorId)
+    .run()
+}
+
 export function useCode(harness: TestHarness, session: string, code: string) {
   return harness.request(WAITLIST_PATHS.useCode, session, write({ code }))
 }

@@ -14,6 +14,7 @@ Their terminal access can reach credentials available on a workspace's cloud com
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 The agent login's share setting controls whose messages spend that login.
 It does not hide credentials available to code or terminal users on the same computer.
+It does not stop them from using those credentials.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -80,6 +81,7 @@ Conductive adds the session starter's login before sending each request to Anthr
 Each turn there gets a temporary credential called a turn token.
 It gives no copy of the stored login.
 A program or member with terminal access can read or copy it.
+
 That token can use the session starter's login through Conductive while the turn runs.
 It also works from outside the cloud computer during that turn.
 
@@ -87,7 +89,7 @@ After **Stop**, the token can start no new request.
 Any request that still runs ends within 30 seconds after the turn ends.
 Changing or removing the session starter's login ends the turn at its next model request.
 The same happens if that member loses org access.
-A program that keeps running can read the tokens of later turns, including turns in other members' sessions.
+A program that keeps running can read or copy the tokens of later turns, including turns in other members' sessions.
 Agent settings in the repository can send model requests, with their content and their turn token, to another address.
 
 Review those settings in repositories you use.
@@ -95,7 +97,7 @@ Conductive keeps no copy of a model request or answer as it passes them on.
 It writes no body or header value from those requests or answers to its logs.
 The normal chat history and Mac command records still stay on the service.
 
-An older cloud computer starts from an earlier setup that still permits software to receive the agent login itself.
+An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.
 A program or member with terminal access can read or copy that login during a turn.
 A copied login can remain usable after the turn ends.
 Agent settings in the repository can also send that login to another address.
@@ -106,7 +108,7 @@ A new build gives the protection to new cloud computers created from its setup.
 Ask an admin to run **Build computer**.
 Then create a new workspace from that build for the new protection.
 
-Agent settings in the repository can send model requests and their credentials to another address.
+Agent settings in the repository can send an older computer's model requests and agent login to another address.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.

@@ -35,6 +35,8 @@ feature that is not complete yet says so.
   pricing page of the marketing site shows. Billing is not built yet.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
+  An operator can turn the waitlist off. Each new person then gets in at
+  once, unless sign-ups are paused.
 - Every cloud computer runs in the app's own Boat account, so users need no
   Boat account.
 - A new workspace starts as an empty chat. The first message creates it,
