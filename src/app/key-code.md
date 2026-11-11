@@ -87,7 +87,10 @@ Each path is relative to `src/app/`, the folder of this page.
   admin, and `../members/RepositoryNotice.tsx` the notice of a member.
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the New workspace view, the GitHub App installations,
-  and the repositories that Create org offers. A screen watches the
+  and the repositories that Create org offers. The save of an own endpoint
+  login and `refreshModels` read the account again for the model list of
+  the endpoint, which only the account holds. A later change of the same
+  login makes that read old, so it does not show. A screen watches the
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
   waitlist state for the invite code of the account.

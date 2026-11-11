@@ -20,7 +20,10 @@ pull request bar, and the owner picker. A host can give its own parts, as
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?login=endpoint`, `?deleted=1`, `?suspended=1`, `?operator=1`,
   `?waiting=1`, `?paused=1`, `?waitlist=off`, or
-  `?paths=masked`. `dev/options.ts` lists them. `dev/attachment-routes.ts`
+  `?paths=masked`. `dev/options.ts` lists them. With `?login=endpoint`,
+  `?modelList=unlisted` gives the Claude own endpoint a last model list that
+  does not name the last Claude model, and `?modelList=none` a list that
+  names no Claude model. `dev/attachment-routes.ts`
   keeps the uploaded files of both composers. With `?upload=wait` each
   upload keeps running, and with `?upload=fail` the first upload of the
   page fails once, so Try again works. `?sent=<percent>` makes the dev
@@ -310,4 +313,10 @@ dialog, and feedback with its screenshots.
   The builder reads the product domain from the shared brand source.
   The fake needs no preview domain configuration.
   `?login=endpoint` seeds shared
-  own endpoint logins for both agents.
+  own endpoint logins for both agents. `dev/endpoint-logins.ts` seeds them,
+  with the model lists of `?modelList`.
+- `endpoint-models.ts`: the one rule of the model lists of own endpoints.
+  `unlistedModels` gives the app models that the last list of a login does
+  not name, for the account page. `offeredModels` gives the models that a
+  picker of the owner offers. Every picker of the owner calls it, as
+  [Screens](screens.md) says.

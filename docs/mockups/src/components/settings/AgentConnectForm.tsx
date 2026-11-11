@@ -21,8 +21,9 @@ import styles from './AgentConnectForm.module.css'
 const testHint = `${productName} tests it once, and never shows it again.`
 
 /**
- * The hint of the key of an own endpoint. The app calls no endpoint at the
- * save, so this hint promises no test.
+ * The hint of the key of an own endpoint. The save reads the model list of
+ * the endpoint, but a failed read does not fail the save. So this hint
+ * promises no test.
  */
 const keepHint = `${productName} keeps it encrypted, and never shows it again.`
 

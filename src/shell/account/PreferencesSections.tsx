@@ -5,7 +5,7 @@ import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import { useStore } from '../../app/store'
 import type { NewWorkspaceView } from '../../shared/account'
 import type { AgentChoice } from '../../shared/agents'
-import { useApp } from '../context'
+import { useApp, useOfferedModels } from '../context'
 import { ModelPicker } from '../ui/ModelPicker'
 import { useAction } from '../ui/useAction'
 
@@ -47,14 +47,16 @@ function NewWorkspaceViewChoice(props: { view: NewWorkspaceView }) {
 
 /**
  * The New workspaces section of Preferences: the model and the effort that
- * new workspaces start with, and how New workspace opens. Each change saves
- * at once. A failed save of the model shows a toast, and a failed save of
- * the choice shows its error under the choice.
+ * new workspaces start with, and how New workspace opens. The picker hides
+ * the models that the person's own endpoint does not list, and keeps the
+ * saved model. Each change saves at once. A failed save of the model shows
+ * a toast, and a failed save of the choice shows its error under the
+ * choice.
  */
 export function DefaultsSection() {
   const app = useApp()
   const account = useStore(app.account.account)
-  const models = useStore(app.models)
+  const models = useOfferedModels(account?.defaultChoice)
   const save = useAction(
     (choice: AgentChoice) => app.account.setDefaultChoice(choice),
     "The model wasn't saved.",

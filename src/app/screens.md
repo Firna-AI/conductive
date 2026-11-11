@@ -55,6 +55,31 @@ the command palette and of the Feedback dialog.
   the switch until the next change, and the switch shows the saved value.
   A share reply that a later save or remove of the same login overtook does
   not show, so a removed login stays removed.
+- The Connect form of an agent offers each kind of its login: Claude a
+  subscription token, an API key, or an own endpoint, and Codex an API key
+  or an own endpoint. On a phone the kinds wrap onto two lines. Get
+  started shows the same form.
+- The own endpoint form names the API that the endpoint must serve, with
+  the models of the app for the agent from `GET /api/models`. The form
+  checks the address with the rule of the save, as
+  [Own endpoint logins](../../docs/protocol/tokens-and-secrets.md#own-endpoint-logins)
+  says. The hint under the address names the address of the requests, and
+  first the address that the form saves when the rule changes the typed
+  one. Connect with an address that the rule refuses shows the refusal at
+  the address and sends nothing. A refusal of the save shows there too.
+  The key stays in its field.
+- A connected own endpoint login shows "Own endpoint at" its host under
+  its row. Under that, the account names each app model that the last model
+  list of the endpoint does not name, with its model ID, the time of the
+  last read, and Refresh. A list that names every app model of the agent
+  shows no line. A list that names none of them says that the pickers show
+  all of them. The save of the login and Refresh read the account again,
+  because only the account holds the list.
+- The model pickers of the person follow these lists: the default model of
+  Preferences, New workspace, the routine editor, and the composer of a
+  message on the person's own login. Each picker keeps the model that it
+  shows. `offeredModels` in `endpoint-models.ts` holds the rule, and
+  `useOfferedModels` in `../shell/context.ts` gives it to the shell.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the

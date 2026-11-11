@@ -22,10 +22,10 @@ import {
 } from '../../test-support/fixtures/operator-samples'
 import { waitingUser } from '../../test-support/fixtures/waitlist'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { endpointLoginFixtures } from '../../test-support/fixtures/agent-logins'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
 import { addReferralCode, referralCodeOf } from './access-codes'
+import { devEndpointLogins } from './endpoint-logins'
 import type { DevOptions } from './options'
 import {
   freshOrg,
@@ -264,7 +264,7 @@ export function seedState(options: DevOptions): DevState {
       agentLogins: noLogin
         ? AGENTS.map((agent): AgentLoginStatus => ({ agent, connected: false }))
         : options.endpointLogins
-          ? endpointLoginFixtures(FAKE_TIME)
+          ? devEndpointLogins(options.modelList)
           : core.account.agentLogins,
     },
     getStarted: {

@@ -43,6 +43,9 @@ const BANNERS = [
 
 const PATHS = ['plain', 'masked'] as const
 
+/** The last model lists of the Claude own endpoint login that leave models out. */
+const MODEL_LISTS = ['unlisted', 'none'] as const
+
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
 
@@ -64,6 +67,10 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   Create org runs. In each first run, no agent login is connected.
  * - `login=none`: no agent login is connected.
  * - `login=endpoint`: both agents have a shared own endpoint login.
+ * - `modelList=unlisted|none`: with `login=endpoint`, the last model list of
+ *   the Claude login does not name the last Claude model of the app, or
+ *   names no Claude model of the app. The list was read 4 minutes before
+ *   the fake starts. Refresh and a save read a list that names every model.
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.
@@ -109,6 +116,8 @@ export interface DevOptions {
   firstRun: GetStartedStep | null
   noAgentLogin: boolean
   endpointLogins: boolean
+  /** What the last model list of the Claude own endpoint login leaves out. */
+  modelList: (typeof MODEL_LISTS)[number] | null
   deleted: boolean
   suspended: boolean
   operator: boolean
@@ -164,6 +173,7 @@ export function readDevOptions(search: string): DevOptions {
     firstRun: firstRun ?? (waiting === null ? null : 'github-app'),
     noAgentLogin: params.get('login') === 'none',
     endpointLogins: params.get('login') === 'endpoint',
+    modelList: pick(params, 'modelList', MODEL_LISTS) ?? null,
     deleted: params.get('deleted') === '1',
     suspended: params.get('suspended') === '1',
     operator,

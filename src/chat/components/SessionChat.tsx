@@ -8,7 +8,11 @@ import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { failedFirstStart } from '../../app/first-start'
-import { loginLabelOf, sessionLoginOf } from '../state/session-login'
+import {
+  composerModels,
+  loginLabelOf,
+  sessionLoginOf,
+} from '../state/session-login'
 import { ChatPane } from './ChatPane'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
@@ -184,7 +188,12 @@ export function SessionChat(props: SessionChatProps) {
           choice={session.choice}
           draft={state.draft}
           login={loginLabelOf(login)}
-          models={snapshot.models}
+          models={composerModels(
+            login,
+            snapshot.models,
+            snapshot.account?.agentLogins ?? [],
+            session.choice,
+          )}
           onAttach={(files) => void controller.attachFiles(session.id, files)}
           onChangeText={(text) => controller.setDraft(session.id, text)}
           onChooseModel={(choice) =>

@@ -932,6 +932,19 @@ them.
   counts as a failed read. Reason: Anthropic's list returns 20 models by
   default, and a list that is not whole must not hide a model. Agent call
   of 11 November 2026, from the check of Milestone 5c.
+- The composer of a session on the reader's own login follows the
+  reader's model lists, also before a message that starts a linked
+  session, because that message runs on the reader's own login. The
+  composer of a session on another member's login offers every model.
+  Agent call of 11 November 2026, from Milestone 6.
+- The account page shows no model list line before the first read that
+  worked, or when the list names every app model. The line also shows in
+  Get started, which shares the agent list. Agent call of 11 November
+  2026, from Milestone 6.
+- After a save or Refresh, the browser reads the account again, because
+  only the account data holds the list. If that read fails, the save still
+  succeeds, and the pickers hide nothing until the next read. Agent call of
+  11 November 2026, from Milestone 6.
 
 ## Milestone 1: Mockups
 
@@ -1320,14 +1333,14 @@ Depends on: 1, 1b, 2b, 4, 5c
 The account page and Get started connect an own endpoint, as the mockups
 show.
 
-- [ ] Add the kind to `AgentConnectForm`, `labels.ts`, and `AgentList` in
+- [x] Add the kind to `AgentConnectForm`, `labels.ts`, and `AgentList` in
       `src/shell/account/`. Show its share setting with
       `LoginShareSetting`. Let the kind choice wrap on a phone.
-- [ ] Call the shared address rule in the form, and show its refusal at
+- [x] Call the shared address rule in the form, and show its refusal at
       the endpoint field.
-- [ ] Show the model list and its marks, as decision 10 says. Take the
+- [x] Show the model list and its marks, as decision 10 says. Take the
       models from `GET /api/models`, not from the mockup fixtures.
-- [ ] Check the agent step of Get started, which reuses `AgentList` in
+- [x] Check the agent step of Get started, which reuses `AgentList` in
       `src/shell/onboarding/AgentStep.tsx`.
 - [ ] Say on the Privacy page in `src/marketing/privacy.ts` and
       `src/marketing/privacy-uses.ts` that a chosen
@@ -1340,7 +1353,7 @@ show.
 - [x] Dropped on 10 November 2026, because decision 5 changed: show the own
       endpoint in the login label of the composer bar, as decision 5 says and
       the mockups show.
-- [ ] Extend `src/shell/account/AccountScreen.test.tsx` and
+- [x] Extend `src/shell/account/AccountScreen.test.tsx` and
       `src/shell/onboarding/GetStartedSteps.test.tsx`.
 - [ ] Update the public guides of the website for the own endpoint:
       `agent-logins.md`, `get-started.md`, `overview.md`, `security.md`, and

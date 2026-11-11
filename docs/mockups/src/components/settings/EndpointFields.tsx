@@ -57,9 +57,10 @@ function addressHint(agent: AgentKey, entry: EndpointEntry): string {
 
 /**
  * The fields of an own endpoint login: what the endpoint must serve, its
- * address, and its key. The endpoint must serve the models that the picker
- * offers, because the app keeps its own model list and does not read the
- * models of the endpoint. The hint of the address names the exact address
+ * address, and its key. The text names the models that the picker offers,
+ * because the app keeps its own model list. The app reads the model list of
+ * the endpoint only to hide, from the pickers of the owner, each model that
+ * the endpoint does not list. The hint of the address names the exact address
  * of the requests, which the gateway of the app sends to the endpoint. A
  * refusal of the address takes the place of that hint.
  */

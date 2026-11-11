@@ -1,6 +1,7 @@
 import {
   ACCOUNT_PATHS,
   agentLoginPath,
+  refreshAgentLoginModelsPath,
   type AccountResponse,
   type AgentLoginStatus,
   type GitHubInstallationsResponse,
@@ -15,6 +16,7 @@ import { API_PATHS } from '../shared/api'
 import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
 import { ignore, nested, record } from './api/parse'
 import {
+  readAccount,
   readChoice,
   readGitHubRepositories,
   readInstallations,
@@ -33,7 +35,9 @@ import { load, loading, Store, type Loadable, type Readable } from './store'
  * and the GitHub App installations. A secret goes to the Worker in a write
  * and never comes back: the account shows only the kind of each login and
  * its share setting, which says whether other members' messages in the
- * sessions of the person run on it.
+ * sessions of the person run on it. An own endpoint login also shows the
+ * host of its endpoint, and its last model list, which the pickers of the
+ * person follow.
  */
 export class AccountModel {
   readonly account = new Store<AccountResponse | null>(null)
@@ -160,6 +164,12 @@ export class AccountModel {
     )
   }
 
+  /**
+   * Saves a login. The save of an own endpoint also reads the model list of
+   * the endpoint, which its answer does not hold, so the account is read
+   * again for it. A failed read of the account leaves the saved login
+   * without its list, so the pickers hide nothing until the next read.
+   */
   async saveLogin(request: SaveAgentLoginRequest): Promise<void> {
     const saved = await this.services.api.send(
       'PUT',
@@ -167,8 +177,45 @@ export class AccountModel {
       request,
       readLogin,
     )
-    this.changeLogin(request.agent)
+    const change = this.changeLogin(request.agent)
     this.putLogin(saved)
+    if (saved.connected && saved.kind === 'endpoint') {
+      await this.readLoginAgain(request.agent, change).catch(() => undefined)
+    }
+  }
+
+  /**
+   * Reads the model list of an own endpoint login again, then the account,
+   * which holds the list. A save, a remove, or a share change of the login
+   * that comes first makes the answer old, so it does not show.
+   */
+  async refreshModels(agent: Agent): Promise<void> {
+    const change = this.loginChanges.get(agent) ?? 0
+    await this.services.api.send(
+      'POST',
+      refreshAgentLoginModelsPath(agent),
+      {},
+      ignore,
+    )
+    await this.readLoginAgain(agent, change)
+  }
+
+  /**
+   * Reads the account again for the login of `agent`, and shows it while
+   * `change` is still the last change of that login.
+   */
+  private async readLoginAgain(agent: Agent, change: number): Promise<void> {
+    const account = await this.services.api.get(
+      ACCOUNT_PATHS.account,
+      readAccount,
+    )
+    if ((this.loginChanges.get(agent) ?? 0) !== change) return
+    this.putLogin(
+      account.agentLogins.find((item) => item.agent === agent) ?? {
+        agent,
+        connected: false,
+      },
+    )
   }
 
   /**

@@ -18,6 +18,13 @@ draft moves, the login of each session, and the linked sessions.
   comes from the session record, so a starter who left the org keeps a
   name. A message on the reader's own login, also one that starts a linked
   session, shows no label.
+- The model picker of the composer follows the model lists of the reader's
+  own endpoint logins when a message runs on the reader's own login: in
+  the reader's own session, and when a message starts a linked session.
+  In a session on the login of another member, it offers every model,
+  because the reader does not see the list of that member. It keeps the
+  current model of the session. `composerModels` in
+  `state/session-login.ts` decides, with `offeredModels` of the app.
 - A message in the reader's own session needs that session's login. The
   record's `loginAvailable` decides, because the account that the chat read
   can be older. A login that its starter keeps private still works for that

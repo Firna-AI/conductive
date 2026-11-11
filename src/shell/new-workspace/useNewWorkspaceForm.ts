@@ -16,7 +16,7 @@ import { useStore, valueOf } from '../../app/store'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp, useOrgAccess, useOrgModel } from '../context'
+import { useApp, useOfferedModels, useOrgAccess, useOrgModel } from '../context'
 import { useGo } from '../ui/AppLink'
 import {
   createFailure,
@@ -39,6 +39,11 @@ export interface NewWorkspaceForm {
   /** The chosen repositories that wait for a build, which the menu shows off. */
   waiting: WaitingRepositories
   choice: AgentChoice | undefined
+  /**
+   * The models that the picker offers: the models of the app without those
+   * that the person's own endpoint does not list, with the model of the
+   * form kept.
+   */
   models: readonly AgentModel[]
   /** The notice of a failed create, with Try again, or `null`. */
   failure: ReactNode
@@ -90,6 +95,7 @@ export function useNewWorkspaceForm(
     draft.repository?.id ?? firstReadyRepository(repositories ?? [], builds)?.id
   const repository = repositories?.find((item) => item.id === repositoryId)
   const choice = draft.choice ?? account?.defaultChoice
+  const offered = useOfferedModels(choice)
   const notice = useBlockingNotice(choice, models, open)
   // The first build and a waiting repository never show together: the
   // Worker lists no waiting repository before the first good build.
@@ -125,7 +131,7 @@ export function useNewWorkspaceForm(
     repository,
     waiting,
     choice,
-    models,
+    models: offered,
     failure: createFailure(create, defaults !== null, send),
     buildNotice,
     notice,

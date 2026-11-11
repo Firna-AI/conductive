@@ -6,7 +6,7 @@ import { AppModel } from '../../app/app-model'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { requestLines, testServices } from '../../app/test-kit'
-import { ACCOUNT_PATHS } from '../../shared/account'
+import { ACCOUNT_PATHS, agentLoginPath } from '../../shared/account'
 import { API_PATHS } from '../../shared/api'
 import { GET_STARTED_PATH } from '../../shared/onboarding'
 import { orgSettingsPaths, type ImageBuild } from '../../shared/org-settings'
@@ -21,8 +21,11 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
+import { listItems } from '../account/test-markup'
+import { bodiesOf } from '../routines/routine-test-kit'
 import { Shell } from '../Shell'
 import { click, mountScreen, settle, typeText } from '../test-mount'
+import { textOf } from '../test-render'
 import type { Viewport } from '../ui/viewport'
 import { fieldNamed } from '../workspace/kept-test-kit'
 
@@ -203,5 +206,61 @@ describe('the steps of Get started', () => {
         (line) => line === `GET ${GET_STARTED_PATH}`,
       ).length,
     }).toEqual({ finish: true, reads: 1 })
+  })
+
+  test('the agent step connects Claude on an own endpoint on a phone, then shows its host and no share switch', async () => {
+    const server = new FakeApiServer()
+    server.json('GET', GET_STARTED_PATH, {
+      orgId: FAKE_IDS.org,
+      steps: [
+        { step: 'github-app', complete: true },
+        { step: 'org', complete: true },
+        { step: 'agent-login', complete: false },
+      ],
+    })
+    const codex = { agent: 'codex', connected: false } as const
+    const account = {
+      ...coreFixtures().account,
+      agentLogins: [{ agent: 'claude', connected: false }, codex],
+    }
+    server.json('GET', ACCOUNT_PATHS.account, account)
+    const { view } = await mountApp(server, routes.getStarted(), 'phone')
+    const kinds = byRole('radiogroup', 'Connect with', view)
+    click(byRole('radio', 'Own endpoint', kinds))
+    typeText(fieldNamed(view, 'Endpoint'), 'https://proxy.example.com')
+    typeText(fieldNamed(view, 'API key'), 'key-of-the-proxy')
+    const login = {
+      agent: 'claude',
+      connected: true,
+      kind: 'endpoint',
+      host: 'proxy.example.com',
+      noReuse: false,
+      updatedAt: FAKE_TIME,
+    } as const
+    server.json('PUT', agentLoginPath('claude'), login)
+    server.json('GET', ACCOUNT_PATHS.account, {
+      ...account,
+      agentLogins: [login, codex],
+    })
+    click(byRole('button', 'Connect', view))
+    await settle()
+    expect({
+      sent: await bodiesOf(server, 'PUT', agentLoginPath('claude')),
+      claude: textOf(listItems(view.innerHTML, 'Agents')[0]),
+      share: (view.textContent ?? '').includes(
+        'Let other members use this login',
+      ),
+    }).toEqual({
+      sent: [
+        {
+          agent: 'claude',
+          kind: 'endpoint',
+          endpoint: 'https://proxy.example.com',
+          secret: 'key-of-the-proxy',
+        },
+      ],
+      claude: 'Claude Connected Own endpoint at proxy.example.com',
+      share: false,
+    })
   })
 })

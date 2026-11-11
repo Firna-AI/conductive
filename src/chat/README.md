@@ -210,7 +210,8 @@ check in the Mac app.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, and the login label in the composer.
+  record and the reader, the login label in the composer, and the models
+  that the picker of the composer offers.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its

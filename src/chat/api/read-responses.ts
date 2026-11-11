@@ -1,4 +1,4 @@
-import type { AgentLoginStatus } from '../../shared/account'
+import type { AgentLoginStatus, EndpointModelList } from '../../shared/account'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import type { Org, User } from '../../shared/api'
 import type { SendMessageResponse } from '../../shared/messages'
@@ -33,8 +33,14 @@ import {
   readUserMessage,
 } from './read-chat'
 
-/** What the composer needs to know about the agent logins of the user. */
-type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'>
+/**
+ * What the composer needs to know about the agent logins of the user:
+ * whether each agent is connected, and the last model list of an own
+ * endpoint login, which the picker of the user's own messages follows.
+ */
+type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'> & {
+  modelList?: EndpointModelList
+}
 
 export interface AccountSummary {
   /** The signed-in user, who reads the chat. */
@@ -108,6 +114,14 @@ export function readModels(value: unknown): readonly AgentModel[] {
   })(record(value, 'models').models)
 }
 
+function readModelList(value: unknown): EndpointModelList {
+  const source = record(value, 'model list')
+  return {
+    missing: list(text)(source.missing),
+    checkedAt: count(source.checkedAt),
+  }
+}
+
 export function readAccount(value: unknown): AccountSummary {
   const source = record(value, 'account')
   return {
@@ -115,7 +129,12 @@ export function readAccount(value: unknown): AccountSummary {
     defaultChoice: readChoice(source.defaultChoice),
     agentLogins: list((item): AgentLogin => {
       const login = record(item, 'agent login')
-      return { agent: readAgent(login.agent), connected: flag(login.connected) }
+      const modelList = optional(readModelList)(login.modelList)
+      return {
+        agent: readAgent(login.agent),
+        connected: flag(login.connected),
+        ...(modelList ? { modelList } : {}),
+      }
     })(source.agentLogins),
   }
 }
