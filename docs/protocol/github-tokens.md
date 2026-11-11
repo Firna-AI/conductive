@@ -101,11 +101,12 @@ commits name as their author.
 - Outside an agent turn, Git gets the workspace owner's author from the Git
   system settings of the sandbox. The app writes them at each start and
   each resume.
-- Outside an agent turn, the owner's author also wins over a `user.name`
-  and a `user.email` that a script or an agent writes into the Git
-  settings. Only an `author` or a `committer` setting of a repository or of
-  the sandbox user wins over it, because Git reads those settings after its
-  system settings.
+- Where Git uses the owner's author, it also wins over a `user.name` and a
+  `user.email` that a script or an agent writes into the Git settings. Only
+  an `author` or a `committer` setting of a repository or of the sandbox
+  user wins over it, because Git reads those settings after its system
+  settings. This holds also in an agent turn whose runner gives no turn
+  author.
 - The sandbox's own variables hold none of the four variables. The owner's
   author in them was rejected. A shell that loads them again, such as a
   login shell, then replaces the turn sender's author with the owner's.

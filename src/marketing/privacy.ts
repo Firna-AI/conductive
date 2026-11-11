@@ -23,7 +23,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 10 November 2026.`,
+  it uses it, and who gets it. Effective date: 11 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -52,9 +52,9 @@ export const privacyDocument: LegalDocument = {
             in the repository can send these requests to another address
             instead.`,
           text`GitHub signs you in, and gives ${productName} access to your
-            repositories through its GitHub App. Each commit made in a cloud
-            computer carries its author's GitHub display name or login and
-            GitHub no-reply address. That address contains the author's GitHub
+            repositories through its GitHub App. By default, each commit made in
+            a cloud computer carries its author's GitHub display name or login
+            and GitHub no-reply address. That address contains the author's GitHub
             user ID and login. GitHub and each reader of the repository see
             that name and address. The Mac app also checks
             GitHub for updates and downloads new versions. These requests
