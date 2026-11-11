@@ -600,10 +600,10 @@ Evidence: `.context/skill-use-in-chat/m7/`.
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests of the changed areas, then the complete
+- [x] Run the targeted tests of the changed areas, then the complete
       gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -614,7 +614,17 @@ Depends on: every other milestone
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 
+Review summary: round 1 found one High finding: a skill list that never
+answered closed the Codex agent. Commit `fd5d0a11` fixed it with a
+required timeout mode for each request. Its blocked wider fix waits in
+`plans/follow-ups/agent-request-timeout-closes-agent.md`. Round 2 found
+nothing. Evidence: `.context/reviews/calummoore/skill-usage-indicator/`
+and `.context/skill-use-in-chat/gate/`.
+
 ## Post-merge follow-up (non-blocking)
+
+These tasks moved to `plans/follow-ups/skill-lines-deployed-smoke-test.md`
+when the pull request deleted this plan.
 
 - [ ] After an org image build installs the new runner, ask a Claude agent
       on the deployment to use a skill in `.claude/skills/`. Check the
