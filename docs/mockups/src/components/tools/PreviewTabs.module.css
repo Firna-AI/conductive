@@ -1,0 +1,84 @@
+/*
+ * The tabs of the open previews. A row whose tabs do not fit scrolls
+ * sideways with no scrollbar, and `TabScroll.module.css` fades each end
+ * that clips tabs.
+ */
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/*
+ * A tab is a pill that holds its link and its Close button, as a tab of the
+ * centre tab row does. It keeps its width, so the row scrolls.
+ */
+.tab {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+}
+
+.tab:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.selected,
+.selected:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+/* The link of a tab: the port and the cut name, in the font of a tool tab. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--ui-control-height) - 2px);
+  min-height: var(--ui-touch-min);
+  padding: 0 2px 0 10px;
+  border-radius: var(--ui-radius-md);
+  color: inherit;
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-decoration: none;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+/*
+ * Close follows the rule of the centre tab row: the button shows on the
+ * current tab, on hover, and while the keyboard focus is in the tab. A
+ * hidden button keeps its place, so that a tab keeps its size on hover.
+ */
+.close {
+  display: flex;
+  visibility: hidden;
+}
+
+.tab:hover .close,
+.tab:focus-within .close,
+.selected .close {
+  visibility: visible;
+}
+
+/*
+ * A phone keeps no place for a hidden button: a finger has no hover. The
+ * button takes its place only while it shows.
+ */
+.touch .close {
+  display: none;
+}
+
+.touch .tab:hover .close,
+.touch .tab:focus-within .close,
+.touch .selected .close {
+  display: flex;
+}

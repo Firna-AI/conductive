@@ -42,8 +42,9 @@ export function ToolButton(props: {
 }
 
 /**
- * A compact icon-only button with a muted icon, for tool bars. On a phone its
- * box is 44px.
+ * A compact icon-only button with a muted icon, for tool bars. A quiet
+ * button has a fainter, smaller icon, for actions on every tab. On a phone
+ * its box is 44px.
  */
 export function ToolIconButton(props: {
   label: string
@@ -52,6 +53,7 @@ export function ToolIconButton(props: {
   disabled?: boolean
   busy?: boolean
   pressed?: boolean
+  quiet?: boolean
 }) {
   const Icon = props.icon
   const control = useControlSizes()
@@ -61,7 +63,12 @@ export function ToolIconButton(props: {
       boxSize={control.height}
       busy={props.busy}
       disabled={props.disabled}
-      iconNode={<Icon className={styles.icon} size={15} />}
+      iconNode={
+        <Icon
+          className={props.quiet ? styles.quiet : styles.icon}
+          size={props.quiet ? 14 : 15}
+        />
+      }
       onPress={props.onPress}
       pressed={props.pressed}
       shape="square"
