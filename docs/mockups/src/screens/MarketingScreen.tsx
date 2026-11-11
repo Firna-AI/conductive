@@ -39,7 +39,7 @@ export function MarketingScreen(props: { viewport: Viewport }) {
         picture={hero.picture}
         signIn={paths.signIn}
         text={productSummary.heroText}
-        title="Give every coding task its own cloud computer."
+        title={productSummary.heroTitle}
         viewport={viewport}
       />
       <div
