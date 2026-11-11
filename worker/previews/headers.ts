@@ -30,6 +30,9 @@ const responseHeaders = [
   'accept-ranges',
   'etag',
   'last-modified',
+  'expires',
+  'date',
+  'age',
   'vary',
   'access-control-allow-origin',
   'access-control-allow-credentials',
@@ -120,6 +123,40 @@ export function portRequest(
   return new Request(url, init)
 }
 
+/**
+ * A quote in the server's value can hide the directives after it from the
+ * browser, so only a value without quotes can give a browser lifetime.
+ */
+function givesBrowserLifetime(upstream: Response): boolean {
+  const value = upstream.headers.get('Cache-Control')
+  if (value === null) return upstream.headers.has('Expires')
+  if (value.includes('"')) return false
+  const directives = value.split(',').map((part) => part.trim().toLowerCase())
+  return (
+    directives.some(
+      (directive) =>
+        directive === 'no-store' ||
+        directive === 'no-cache' ||
+        /^max-age=\d+$/.test(directive),
+    ) || upstream.headers.has('Expires')
+  )
+}
+
+/**
+ * Keeps the server's cache rules for the viewer's browser only.
+ * The proxy's own directives come first, and the server's value follows unchanged.
+ * Without a browser lifetime, the browser must check access again before each reuse.
+ * A bare 304 keeps the rules of the reply that the browser stored.
+ */
+function previewCacheControl(upstream: Response): string | null {
+  const value = upstream.headers.get('Cache-Control')
+  if (value === null && upstream.status === 304) return null
+  const own = givesBrowserLifetime(upstream)
+    ? ['private']
+    : ['private', 'no-cache']
+  return [...own, ...(value?.trim() ? [value] : [])].join(', ')
+}
+
 export function portResponseHeaders(
   upstream: Response,
   request: Request,
@@ -142,7 +179,8 @@ export function portResponseHeaders(
     if (rewritten !== null) headers.set('Location', rewritten)
   }
   for (const name of port.credential.stripHeaders) headers.delete(name)
-  headers.set('Cache-Control', 'no-store')
+  const cacheControl = previewCacheControl(upstream)
+  if (cacheControl !== null) headers.set('Cache-Control', cacheControl)
   headers.set('Referrer-Policy', 'no-referrer')
   headers.set('X-Content-Type-Options', 'nosniff')
   return headers
