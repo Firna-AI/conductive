@@ -641,6 +641,11 @@ palette offers it. Reason: the call above gives each palette action
 without a Conductor key a command with no key, so that a key and its
 palette row do the same thing.
 
+Agent call, 2026-11-11, from the sixth merge of `main`: Send feedback,
+which `main` added to the palette, becomes a command without a default
+key, in the General group after Create org. It runs where the palette
+offers it, which is each page. Reason: the same rule as Restore workspace.
+
 "Kept" names the browsers that keep a key in a normal tab. "Second key"
 is the key of decision 191 that a browser tab lets through.
 
@@ -1380,6 +1385,28 @@ Depends on: 1, 3
       workspace 1 in both orders, and the recorder saved Alt+Shift+K.
 - [x] Update the README of each changed area.
 
+## Milestone 10: The Send feedback command in the mockups
+
+Tags: mockup
+
+Depends on: none. It comes from the agent call of the sixth merge of
+`main`.
+
+- [ ] Add the command Send feedback, without a default key, to the rows of
+      the tab after Create org, and its key to the Send feedback row of
+      the palette. Run `npm run mockups:check`.
+
+## Milestone 11: The Send feedback command in the protocol and the model
+
+Depends on: none. Agent call, 2026-11-11: it runs beside Milestone 10,
+because a command row without a key raises no design question that the
+mockup could find.
+
+- [ ] Add Send feedback, without a default key, to the default keys of
+      `docs/protocol/keyboard-shortcuts-keys.md`.
+- [ ] Add the command Send feedback without a default key, and run it from
+      the palette's Send feedback row, with tests.
+
 ## Milestone 7: Verification, commit, review, and pull request
 
 Depends on: every other milestone
@@ -1399,7 +1426,7 @@ Depends on: every other milestone
       to 198, and again before the pull request. Merge justifications:
       `.context/keyboard-shortcuts/merge/justifications.md`.
   - [x] Before the work: the fifth merge, commit `cd88a525`.
-  - [ ] Before the pull request.
+  - [x] Before the pull request: the sixth merge, commit `bc88c36c`.
 - [ ] Run the targeted tests and `npm run check` on the tree with
       Milestones 1, 2, 3, and 9 and the last merge of `main`.
 - [x] Review the complete local diff against `origin/main` again with the
