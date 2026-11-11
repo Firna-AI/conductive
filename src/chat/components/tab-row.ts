@@ -54,11 +54,13 @@ export type TabDraw =
  * as a screen reader reads it from the tab, with each secret value hidden:
  * the tab menu and the status of the row name the tab by it, and the row
  * takes no name from a path. `draw` draws the tab by the same name, as
- * `TabDraw` asks.
+ * `TabDraw` asks. `show` shows the tab, as a plain click on its link does,
+ * for the keys of Previous tab and Next tab.
  */
 interface RenderedTab {
   title: string
   draw: (draw: TabDraw) => ReactNode
+  show: () => void
 }
 
 /** Renders a file or diff tab of the host, as `RenderedTab` says. */

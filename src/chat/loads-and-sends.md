@@ -88,6 +88,12 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   says. In the phone layout, Enter adds a line. The message field asks the
   send key through `onEnter` before it adds a line, so Enter never adds a
   line to a message that it sends.
+- While the composer shows, the keys of the app run its controls: Focus
+  the message field, Attach files as the paperclip does, and Stop the
+  agent as Stop does while a turn runs and does not stop yet. The key of
+  Model picker opens the menu of the model picker. The key of Next effort
+  level chooses the next effort of the menu, with a wrap from the last
+  effort to the first.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as

@@ -64,38 +64,7 @@ export async function createResource(
 ): Promise<Sandbox | SavedSnapshot> {
   if (intent.kind === 'sandbox') {
     await intent.persist(intent.input)
-    const ownership = intent.ownership
-    if (!ownership) return provider.create(intent.input)
-    const firstDispatch = await recordComputerIntent(
-      db,
-      intent.input.idempotencyKey,
-      ownership,
-      intent.mayHaveAllocated,
-    )
-    let sandbox: Sandbox
-    try {
-      sandbox = await provider.create(intent.input)
-    } catch (error) {
-      if (
-        firstDispatch &&
-        error instanceof ProviderError &&
-        [
-          'unauthorized',
-          'forbidden',
-          'payment_required',
-          'not_found',
-          'invalid_request',
-        ].includes(error.kind)
-      )
-        await rejectComputerIntent(
-          db,
-          intent.input.idempotencyKey,
-          ownership.providerAccount,
-        )
-      throw error
-    }
-    await attachComputer(db, intent.input.idempotencyKey, sandbox.id, ownership)
-    return sandbox
+    return createSandboxResource(db, provider, intent)
   }
   if (intent.recorded) {
     try {
@@ -125,6 +94,45 @@ export async function createResource(
       }
     throw error
   }
+}
+
+export async function createSandboxResource(
+  db: D1Database,
+  provider: SandboxProvider,
+  intent: Omit<SandboxResourceIntent, 'persist'>,
+): Promise<Sandbox> {
+  const ownership = intent.ownership
+  if (!ownership) return provider.create(intent.input)
+  const firstDispatch = await recordComputerIntent(
+    db,
+    intent.input.idempotencyKey,
+    ownership,
+    intent.mayHaveAllocated,
+  )
+  let sandbox: Sandbox
+  try {
+    sandbox = await provider.create(intent.input)
+  } catch (error) {
+    if (
+      firstDispatch &&
+      error instanceof ProviderError &&
+      [
+        'unauthorized',
+        'forbidden',
+        'payment_required',
+        'not_found',
+        'invalid_request',
+      ].includes(error.kind)
+    )
+      await rejectComputerIntent(
+        db,
+        intent.input.idempotencyKey,
+        ownership.providerAccount,
+      )
+    throw error
+  }
+  await attachComputer(db, intent.input.idempotencyKey, sandbox.id, ownership)
+  return sandbox
 }
 
 export function buildSandboxIntent(

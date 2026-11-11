@@ -58,6 +58,9 @@ mount the chat.
   the row. The ref of the link gives the tab the focus back after a move
   from the tab menu. For `lifted`, it draws the copy that a drag lifts
   above the page: the icon and the whole title, with no link and no Close.
+  Its `show()` shows the tab, as a plain click on its link does, for the
+  keys of Previous tab and Next tab. The host gives the key of Close tab
+  to its shown tab itself, as the shell does in `FileTab`.
   Without `renderTab`, the row shows only the session tabs, as on a phone.
   `components/tab-row.ts` holds these types.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The
@@ -119,6 +122,10 @@ mount the chat.
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while
   a dialog or a sheet is open. Outside the app, nothing notes them.
+- The tab row and the composer offer their commands to the keys of the
+  app through the [shortcut layer](../shell/shortcuts/README.md) of the
+  shell, and their controls show the keys in their tooltips. Outside the
+  app, nothing offers them, and the controls show no key.
 - The Mac app shows two more parts of Mac commands outside the chat:
   `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)
   say how to mount them.

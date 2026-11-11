@@ -36,6 +36,8 @@ export class LifecycleBoat {
   hydrated: boolean | undefined
   lostCreateReplies = 0
   afterLostCreate?: () => Promise<void>
+  afterCreate?: (sandboxId: string) => Promise<void>
+  beforeResume?: (sandboxId: string) => Promise<void>
   beforeSandboxRead?: (sandboxId: string) => Promise<void>
   beforeCommand?: (command: string, detached: boolean) => Promise<void>
   readonly deletedSnapshots: string[] = []
@@ -57,6 +59,7 @@ export class LifecycleBoat {
     const operation = match?.[2]
     let response: Response | null = null
     let loseReply = false
+    let createdId: string | undefined
     if (path.startsWith('/saved-snapshots/') && request.method === 'DELETE')
       this.deletedSnapshots.push(
         decodeURIComponent(path.slice('/saved-snapshots/'.length)),
@@ -69,6 +72,7 @@ export class LifecycleBoat {
       const id = this.allocations.get(key) ?? `bx_${++this.sandboxes}`
       this.allocations.set(key, id)
       this.states.set(id, 'ready')
+      createdId = id
       response = this.sandbox(id)
       if (this.lostCreateReplies-- > 0) loseReply = true
     } else if (path === '/saved-snapshots' && request.method === 'POST') {
@@ -125,6 +129,7 @@ export class LifecycleBoat {
           response = this.sandbox(sandboxId)
         }
       } else if (operation === 'resume') {
+        await this.beforeResume?.(sandboxId)
         this.resumeIds.push(sandboxId)
         this.states.set(sandboxId, 'ready')
         response = this.sandbox(sandboxId)
@@ -246,6 +251,7 @@ export class LifecycleBoat {
       await this.afterLostCreate?.()
       throw new Error('Lost create response')
     }
+    if (createdId && reply.ok) await this.afterCreate?.(createdId)
     return reply
   }
 

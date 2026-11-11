@@ -68,6 +68,9 @@ mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
 Writes return recorded replies. They do not change backend state.
+The account fixture includes empty shortcut changes for both keyboards.
+The recorded shortcut save answers for the Mac keyboard.
+Override that reply to test another keyboard or saved changes.
 The GitHub action routes answer as a member with write access and the
 `squash` method. A merge returns HTTP 202 with a pending job named
 `merge-<workspace ID>`, and the poll of that job returns a completed merge.

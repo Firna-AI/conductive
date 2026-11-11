@@ -47,11 +47,13 @@ the `browser`, `runner`, and `devices` security sources, on raw storage, as
   read still shows the lease of an earlier run. The outer run and `take`,
   the read-only query of the due times, store no lease.
 - Each lifecycle run deletes its lease at its end, as the steps below say.
-  Lifecycle runs go through the chat queue one at a time. So a lease that
-  the read finds comes from an earlier run that did not reach its end. A
-  reset of the object or a lost process can cause this. The new run then
-  treats every lifecycle owner as due, also before the time of the old
-  lease.
+  Only the outer run of the regular task starts a lifecycle run, and the
+  alarm runner keeps at most one regular task. Two lifecycle runs never
+  overlap, also while a start of the run makes a call outside the
+  [chat queue](../chat/history.md). So a lease that the read finds comes
+  from an earlier run that did not reach its end. A reset of the object or
+  a lost process can cause this. The new run then treats every lifecycle
+  owner as due, also before the time of the old lease.
 - The recovery comes with the next lifecycle run. Another lifecycle due
   time can start that run before the lease time. Otherwise the old lease
   wakes the object at its time, because it counts as a due time from

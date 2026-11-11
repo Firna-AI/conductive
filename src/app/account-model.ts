@@ -15,6 +15,7 @@ import {
 } from '../shared/account'
 import type { Agent, AgentChoice } from '../shared/agents'
 import { API_PATHS } from '../shared/api'
+import type { SaveShortcutsRequest } from '../shared/shortcuts'
 import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
 import { AgentLogins } from './agent-logins'
 import { ignore, nested, record } from './api/parse'
@@ -27,6 +28,7 @@ import {
   readInstallations,
   readLogin,
   readNewWorkspaceView,
+  readSavedShortcuts,
 } from './api/read-core'
 import { readWaitlistState } from './api/read-waitlist'
 import type { AppModel } from './app-model'
@@ -37,7 +39,8 @@ import { load, loading, Store, type Loadable, type Readable } from './store'
 
 /**
  * The account of the person signed in: the agent logins, the preferences,
- * and the GitHub App installations. A secret goes to the Worker in a write
+ * the shortcut changes, and the GitHub App installations. A secret goes to
+ * the Worker in a write
  * and never comes back, and the Worker keeps the tokens of a ChatGPT
  * sign-in: the account shows only the kind of each login and its share
  * setting, which says whether other members' messages in the sessions of
@@ -253,6 +256,27 @@ export class AccountModel {
     )
     const account = this.account.get()
     if (account) this.account.set({ ...account, newWorkspaceView: saved.view })
+  }
+
+  /**
+   * Saves the shortcut changes of one keyboard in one batch: all of them or
+   * none. The reply holds every change of that keyboard, which the keymap
+   * of the keys and of each hint read from the account. A failed save
+   * changes nothing, so the account keeps the saved keys.
+   */
+  async saveShortcuts(request: SaveShortcutsRequest): Promise<void> {
+    const saved = await this.services.api.send(
+      'PUT',
+      ACCOUNT_PATHS.shortcuts,
+      request,
+      readSavedShortcuts,
+    )
+    const account = this.account.get()
+    if (!account) return
+    this.account.set({
+      ...account,
+      shortcuts: { ...account.shortcuts, [saved.keyboard]: saved.changes },
+    })
   }
 
   async signOut(): Promise<void> {

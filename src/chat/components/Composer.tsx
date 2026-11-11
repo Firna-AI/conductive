@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import { filesWait } from '../../app/draft-files'
@@ -10,10 +10,12 @@ import {
   SessionLoginLabel,
   type SessionLogin,
 } from '../../../docs/mockups/src/components/chat/SessionLogin'
+import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import type { Draft } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
 import { DraftFiles, OversizeNotice } from './AttachmentChips'
 import { ChipTextField } from './chip-field/ChipTextField'
+import type { FieldHandle } from './chip-field/focus-plugins'
 import local from './chat.module.css'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
@@ -52,6 +54,22 @@ export interface ComposerProps {
 }
 
 /**
+ * The keys of the composer while it shows: Focus the message field, Attach
+ * files as the paperclip does, and Stop the agent as Stop does while a turn
+ * runs. The model picker offers its own keys.
+ */
+function useComposerKeys(props: {
+  field: RefObject<FieldHandle | null>
+  files: RefObject<HTMLInputElement | null>
+  stop: (() => void) | null
+}) {
+  const { field, files } = props
+  useShortcutOffer('focus-message', () => field.current?.focus())
+  useShortcutOffer('attach-files', () => files.current?.click())
+  useShortcutOffer('stop-agent', props.stop)
+}
+
+/**
  * The message box: attached files above the text, then a bar with the
  * attach button, the model picker, and Send. Send waits while a file
  * uploads or failed. Files over the size limit get a notice over the box,
@@ -70,8 +88,14 @@ export interface ComposerProps {
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
   const files = useRef<HTMLInputElement>(null)
+  const field = useRef<FieldHandle>(null)
   const [mentionHost, setMentionHost] = useState<HTMLDivElement | null>(null)
   const { draft } = props
+  useComposerKeys({
+    field,
+    files,
+    stop: props.running && !props.stopping ? props.onStop : null,
+  })
   const empty = draft.text.trim() === '' && draft.files.length === 0
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
   const steers = props.running && props.startsSession !== true
@@ -93,6 +117,7 @@ export function Composer(props: ComposerProps) {
               />
             ) : null}
             <ChipTextField
+              handle={field}
               label="Message"
               lines={2}
               maxLines={8}
@@ -110,6 +135,7 @@ export function Composer(props: ComposerProps) {
                 icon={Paperclip}
                 label="Attach files"
                 onPress={() => files.current?.click()}
+                shortcut="attach-files"
               />
               <input
                 aria-hidden
@@ -136,6 +162,7 @@ export function Composer(props: ComposerProps) {
                   busy={props.stopping}
                   icon={Square}
                   onPress={props.onStop}
+                  shortcut="stop-agent"
                 >
                   Stop
                 </ActionButton>

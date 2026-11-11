@@ -1,5 +1,6 @@
 import type { Agent, AgentChoice } from './agents'
 import type { Timestamp, User } from './api'
+import type { ShortcutPreferences } from './shortcuts'
 
 export interface SessionResponse {
   user: User
@@ -10,6 +11,7 @@ export const ACCOUNT_PATHS = {
   account: '/api/account',
   defaultModel: '/api/account/default-model',
   newWorkspaceView: '/api/account/new-workspace-view',
+  shortcuts: '/api/account/shortcuts',
   agentLogins: '/api/account/agent-logins',
   codexDevice: '/api/account/agent-logins/codex/device',
   githubInstallations: '/api/account/github-installations',
@@ -105,6 +107,7 @@ export interface AccountResponse {
   operator: boolean
   defaultChoice: AgentChoice
   newWorkspaceView: NewWorkspaceView
+  shortcuts: ShortcutPreferences
   agentLogins: readonly AgentLoginStatus[]
   /**
    * The page of the shared GitHub App on GitHub. It lists the GitHub

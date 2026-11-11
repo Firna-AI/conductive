@@ -12,6 +12,7 @@ import { barPaths, paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
+import { ShortcutTip } from '../common/ShortcutTip'
 import { TintedTheme, type ButtonTint } from '../common/tint'
 import {
   agentActionLabels,
@@ -31,7 +32,9 @@ import styles from './BarActions.module.css'
  * merges as the viewer, Continue moves the workspace to a new branch, and
  * Archive archives the workspace at once. Each one leads to the screen that
  * follows. The main action takes the tint of the bar, outside its link,
- * because the link of the mockups needs the button as its own child.
+ * because the link of the mockups needs the button as its own child. On
+ * desktop, the tooltip of a button that takes a click names the key of its
+ * command, such as "Create PR (⇧⌘P)".
  */
 function BarButton(props: {
   action: BarAction
@@ -44,59 +47,88 @@ function BarButton(props: {
   switch (action.kind) {
     case 'agent':
       return (
-        <TintedTheme tint={tint}>
-          <ScreenLink asChild to={barPaths.sent[action.action]}>
-            <ActionButton icon={agentIcons[action.action]} tone={tone}>
-              {agentActionLabels[action.action]}
-            </ActionButton>
-          </ScreenLink>
-        </TintedTheme>
+        <ShortcutTip
+          command={action.action}
+          label={agentActionLabels[action.action]}
+        >
+          <TintedTheme tint={tint}>
+            <ScreenLink asChild to={barPaths.sent[action.action]}>
+              <ActionButton icon={agentIcons[action.action]} tone={tone}>
+                {agentActionLabels[action.action]}
+              </ActionButton>
+            </ScreenLink>
+          </TintedTheme>
+        </ShortcutTip>
       )
     case 'merge':
       return (
-        <TintedTheme tint={tint}>
-          <ScreenLink asChild to={barPaths.merging}>
-            <ActionButton busy={action.busy} icon={GitMerge} tone={tone}>
-              {action.busy ? barLabels.merging : mergeLabels[action.method]}
-            </ActionButton>
-          </ScreenLink>
-        </TintedTheme>
+        <ShortcutTip
+          command="merge-pull-request"
+          label={mergeLabels[action.method]}
+          off={action.busy}
+        >
+          <TintedTheme tint={tint}>
+            <ScreenLink asChild to={barPaths.merging}>
+              <ActionButton busy={action.busy} icon={GitMerge} tone={tone}>
+                {action.busy ? barLabels.merging : mergeLabels[action.method]}
+              </ActionButton>
+            </ScreenLink>
+          </TintedTheme>
+        </ShortcutTip>
       )
     case 'continue':
       // While a turn runs, Continue is not available.
       return (
-        <TintedTheme tint={tint}>
-          {action.waiting ? (
-            <ActionButton disabled icon={GitBranchPlus} tone={tone}>
-              {barLabels.continue}
+        <ShortcutTip
+          command="continue-after-merge"
+          label={barLabels.continue}
+          off={action.waiting || action.busy}
+        >
+          <TintedTheme tint={tint}>
+            {action.waiting ? (
+              <ActionButton disabled icon={GitBranchPlus} tone={tone}>
+                {barLabels.continue}
+              </ActionButton>
+            ) : (
+              <ScreenLink
+                asChild
+                to={
+                  props.localWork
+                    ? barPaths.continueQuestion
+                    : barPaths.continuing
+                }
+              >
+                <ActionButton
+                  busy={action.busy}
+                  icon={GitBranchPlus}
+                  tone={tone}
+                >
+                  {action.busy ? barLabels.continuing : barLabels.continue}
+                </ActionButton>
+              </ScreenLink>
+            )}
+          </TintedTheme>
+        </ShortcutTip>
+      )
+    case 'archive':
+      return (
+        <ShortcutTip
+          command="archive-workspace"
+          label={barLabels.archive}
+          off={action.busy || action.disabled}
+        >
+          {action.disabled ? (
+            <ActionButton disabled icon={Archive}>
+              {barLabels.archive}
             </ActionButton>
           ) : (
-            <ScreenLink
-              asChild
-              to={
-                props.localWork
-                  ? barPaths.continueQuestion
-                  : barPaths.continuing
-              }
-            >
-              <ActionButton busy={action.busy} icon={GitBranchPlus} tone={tone}>
-                {action.busy ? barLabels.continuing : barLabels.continue}
+            <ScreenLink asChild to={paths.justArchived}>
+              <ActionButton busy={action.busy} icon={Archive}>
+                {barLabels.archive}
               </ActionButton>
             </ScreenLink>
           )}
-        </TintedTheme>
-      )
-    case 'archive':
-      return action.disabled ? (
-        <ActionButton disabled icon={Archive}>
-          {barLabels.archive}
-        </ActionButton>
-      ) : (
-        <ScreenLink asChild to={paths.justArchived}>
-          <ActionButton busy={action.busy} icon={Archive}>
-            {barLabels.archive}
-          </ActionButton>
-        </ScreenLink>
+        </ShortcutTip>
       )
   }
 }

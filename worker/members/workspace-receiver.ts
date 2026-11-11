@@ -67,6 +67,7 @@ export class WorkspaceMembersReceiver {
         await this.chat.stopWorkspace(workspaceId)
       }
     })
+    await this.chat.store.idle()
     await mutateReceiver(
       this.storage,
       ownership,
@@ -125,6 +126,7 @@ export class WorkspaceMembersReceiver {
       async () => undefined,
     )
     await this.chat.runLifecycle(async () => undefined)
+    await this.chat.store.idle()
     await mutateReceiver(
       this.storage,
       ownership,
@@ -171,6 +173,7 @@ export class WorkspaceMembersReceiver {
       async () => undefined,
     )
     this.chat.closeConnections()
+    await this.chat.store.idle()
     await this.chat.runLifecycle(async () => {
       await purgeReceiverPayload(this.storage, ownership)
     })

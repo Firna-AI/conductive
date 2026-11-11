@@ -17,17 +17,18 @@ import {
   lifecycleDependencies,
   type LifecycleEnvironment,
 } from '../lifecycle/runtime'
-import type { LifecyclePublisher } from '../lifecycle/durable-types'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
 import { WorkspaceChat } from './backend'
 import { firstMessageIdentity } from './first-message'
 import { projectWorkspaceTitle } from './workspace-title'
-import type { ChatCallbackPublisher, ChatDependencies } from './types'
+import type { ChatDependencies } from './types'
 import { WorkspaceSockets } from '../native-sockets'
 import {
+  callbackPublisher,
   observeWorkspaceCallbacks,
   type WorkspaceCallbackObservers,
 } from './workspace-callbacks'
+import { QueueGenerations } from './queue-generation'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
@@ -49,10 +50,6 @@ export type WorkspaceChatResolvers = Partial<
   socketAutoResponseAt?: (socket: WebSocket) => number | null
 }
 
-function callbackPublisher(publish: ChatCallbackPublisher): LifecyclePublisher {
-  return ({ event, occurredAt }) => publish(event, occurredAt)
-}
-
 export function createWorkspaceIntegration(
   context: DurableObjectState,
   env: WorkspaceCompositionEnv,
@@ -60,20 +57,24 @@ export function createWorkspaceIntegration(
   resolvers: WorkspaceChatResolvers = {},
 ) {
   const storage = receiverStorage(context.storage)
-  let generation: number | undefined
+  const generations = new QueueGenerations(
+    () => chat.store.currentTurn,
+    async () =>
+      (await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY))?.generation ?? 0,
+  )
   const original = lifecycleDependencies()
   const dependencies = {
     ...original,
     now,
     fetch: async (request: Request) => {
-      await assertReceiverActive(storage, generation)
+      await assertReceiverActive(storage, generations.current())
       const response = await original.fetch(request)
       // An allocated resource must retain its returned ID before a suspension drains the phase.
       if (!(
         request.method === 'POST' &&
         new URL(request.url).pathname === '/api/v1/sandboxes'
       ))
-        await assertReceiverActive(storage, generation)
+        await assertReceiverActive(storage, generations.current())
       return response
     },
   }
@@ -213,7 +214,7 @@ export function createWorkspaceIntegration(
       chat.commitWorkspaceEvent(workspaceId, event, occurredAt),
     nativeWorkspaceStorage(storage, {
       guarded: true,
-      generation: () => generation,
+      generation: generations.current,
     }),
   )
   const controller: WorkspaceController = createWorkspaceController(
@@ -221,6 +222,9 @@ export function createWorkspaceIntegration(
     dependencies,
     {
       ...platform,
+      assertStartActive: (turn) =>
+        assertReceiverActive(storage, generations.forTurn(turn)),
+      hasOutsideTurns: () => chat.store.hasOutsideTurns,
       deviceWaiting: (id) => devices.waiting(id),
       stopping: async (id) => {
         for (const hook of stoppedHooks) await hook(id)
@@ -274,16 +278,7 @@ export function createWorkspaceIntegration(
     files,
     alarms,
     sockets,
-    withGeneration: async <T>(operation: () => Promise<T>): Promise<T> => {
-      const prior = generation
-      generation =
-        (await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY))?.generation ?? 0
-      try {
-        return await operation()
-      } finally {
-        generation = prior
-      }
-    },
+    withGeneration: generations.withGeneration,
     reconcileStopped: () => devices.reconcile(),
     onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
   }
