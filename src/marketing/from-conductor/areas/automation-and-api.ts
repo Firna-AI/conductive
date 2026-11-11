@@ -41,7 +41,7 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     area: 'automation-and-api',
     name: 'Routines',
     status: 'available',
-    note: 'Routines run on a schedule or on pull request events. Each run gets a new workspace in a sidebar section that the routine chooses, with run history and manual runs. Pull request triggers filter by author.',
+    note: 'Routines support schedules, pull request triggers with author filters, manual runs, and history. Each run creates a workspace in the chosen sidebar section.',
   },
   {
     id: 'hosted-mcp-server',
@@ -55,7 +55,7 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     area: 'automation-and-api',
     name: 'Conductor CLI',
     status: 'considering',
-    note: 'A CLI for your own computer is under consideration. The workspace CLI already creates workspaces and lists available choices.',
+    note: 'A CLI for your own computer is under consideration. Workspace agents can already create sessions, send messages, and read chats.',
   },
   {
     id: 'agents-that-delegate',
@@ -63,6 +63,14 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     name: 'Agents that delegate',
     status: 'available',
     note: 'Agents can create workspaces and sessions, list sessions, send messages, and read results across the org.',
+  },
+  {
+    id: 'agent-workspace-controls',
+    area: 'automation-and-api',
+    name: 'Agent workspace controls',
+    status: 'planned',
+    note: 'Agent tools to rename, move, and archive workspaces, manage sessions and sections, and control private previews are planned.',
+    due: null,
   },
   {
     id: 'read-session-transcripts',

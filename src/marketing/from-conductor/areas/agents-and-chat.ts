@@ -148,9 +148,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'session-links',
     area: 'agents-and-chat',
     name: 'Session links',
-    status: 'in-progress',
-    note: 'Links that open individual chat sessions, shown as chips in chat, are in progress.',
-    due: null,
+    status: 'available',
+    note: 'Open a chat session from its link. Session links show as chips in chat.',
   },
   {
     id: 'copy-session-transcripts',
