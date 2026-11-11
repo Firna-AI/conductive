@@ -161,6 +161,8 @@ it('forwards Claude token counting and strips only the OAuth beta for an endpoin
 
 it.each([
   'https://127.0.0.1/private',
+  'https://8.8.8.8/private',
+  'https://[2606:4700:4700::1111]/private',
   'https://port.custom-previews.example.test/private',
 ])('checks the endpoint again at fetch and refuses %s', async (address) => {
   const client = await gatewayHttp(harness, CODEX, 'endpoint', 2)

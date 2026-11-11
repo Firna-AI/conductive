@@ -99,20 +99,26 @@ it.each(['claude', 'codex'] as const)(
   },
 )
 
-it('preserves the saved login when a non-public or malformed replacement is refused', async () => {
+it('preserves the saved host name login when an IP, non-public, or malformed replacement is refused', async () => {
   const cookie = await harness.login()
-  const accepted = await save(cookie, 'codex')
+  const accepted = await save(
+    cookie,
+    'codex',
+    'https://136.115.241.64.sslip.io/v1',
+  )
   expect(accepted.status).toBe(200)
   const metadata = {
     agent: 'codex',
     connected: true,
     kind: 'endpoint',
-    host: 'proxy.example.test:8443',
+    host: '136.115.241.64.sslip.io',
     noReuse: false,
     updatedAt: TEST_TIME,
   }
   expect(await accepted.json()).toEqual(metadata)
   for (const address of [
+    'https://8.8.8.8',
+    'https://[2606:4700:4700::1111]',
     'http://proxy.example.test/v1',
     'http://localhost:8787/v1',
     'https://192.168.1.1',
@@ -128,7 +134,7 @@ it('preserves the saved login when a non-public or malformed replacement is refu
       error: {
         code: 'invalid_endpoint',
         message:
-          'Use a public https:// address, without a user name or a password.',
+          'Use a public https:// address with a host name, without a user name or a password.',
       },
     })
   }
@@ -200,7 +206,7 @@ it('refuses the configured preview domain and its subdomains at save', async () 
         error: {
           code: 'invalid_endpoint',
           message:
-            'Use a public https:// address, without a user name or a password.',
+            'Use a public https:// address with a host name, without a user name or a password.',
         },
       })
     }

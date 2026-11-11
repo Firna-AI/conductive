@@ -3,7 +3,8 @@ import { isPublicEndpointHost } from './endpoint-host'
 
 export const ENDPOINT_ADDRESS_ERROR = {
   code: 'invalid_endpoint',
-  message: 'Use a public https:// address, without a user name or a password.',
+  message:
+    'Use a public https:// address with a host name, without a user name or a password.',
 } as const
 
 export interface EndpointAddress {

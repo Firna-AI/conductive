@@ -25,7 +25,9 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 
 An own endpoint login replaces the native upstream base in this table.
 [`readEndpointAddress`](../../src/shared/endpoint-address.ts) validates and builds that address at save, dispatch, and fetch time.
-It accepts public HTTPS hosts, refuses credentials, private addresses, internal names, and the app and preview domains, and normalizes the base path.
+It accepts only public HTTPS addresses with host names.
+It refuses every IPv4 and IPv6 address, credentials, internal names, and the app and preview domains.
+It normalizes the base path.
 The host check reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
 The gateway runtime supplies `env.PREVIEW_DOMAIN` as an extra refused domain before each fetch.
 It preserves the endpoint query and appends the model request query.

@@ -94,6 +94,7 @@ address builder for forms, saves, dispatch, and the model gateway.
 It takes the agent and an options object with an optional model route, request query, and extra refused domains.
 It returns the normalized endpoint, origin, host, and exact upstream address, or null for a refused address.
 `endpoint-host.ts` owns its public host check.
+It accepts only public host names and refuses every IPv4 and IPv6 address.
 It reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
 Worker callers also pass `env.PREVIEW_DOMAIN` as an extra refused domain.
 The form and fake API use the same builder without preview configuration.

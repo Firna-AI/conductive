@@ -70,7 +70,8 @@ View writes cannot change this branch.
   Refresh reads only the signed-in user's login and answers 204, also after a failed read.
   A removed or native login makes Refresh do nothing.
   Read the account again after Refresh to obtain the last successful result.
-  The builder accepts public HTTPS addresses and refuses credentials and non-public hosts.
+  The builder accepts public HTTPS addresses with host names.
+  It refuses every IPv4 and IPv6 address, credentials, and non-public names.
   It reads the product domain from the shared brand source.
   The save also passes `env.PREVIEW_DOMAIN` to refuse that deployment's preview domain and its subdomains.
   It preserves the query and drops the fragment and trailing slash.

@@ -150,15 +150,19 @@ plan limits.
     When the rule changes the typed address, the hint first names the
     address that the form saves, such as "Saves as
     https://proxy.example.com", as `app/account/own-endpoint/typed` shows.
-  - The rule accepts only an `https://` address with a public host, because
-    the gateway calls the endpoint over the internet. It refuses
-    `localhost` and each IP address that is not public, names of one label,
-    internal names, the names of the app and of its previews, and a user
-    name or a password in the address. The form and the save use the same
-    rule. Its refusal names the rule in plain words: "Use a public https://
-    address, without a user name or a password." The refusal takes the
-    place of the hint under the address, and the key stays in its field,
-    as `app/account/own-endpoint/refused` shows.
+  - The rule accepts only an `https://` address with a public host name,
+    because the gateway calls the endpoint over the internet. It refuses
+    `localhost`, names of one label, internal names, the names of the app
+    and of its previews, and a user name or a password in the address. It
+    also refuses each IP address, IPv4 or IPv6, as the host, because a
+    fetch from the Worker to an IP address can fail (decision 13 A of that
+    plan). A host name that points to the IP address, such as
+    `136.115.241.64.sslip.io`, works when the server has a certificate for
+    that name. The form and the save use the same rule. Its refusal names
+    the rule in plain words: "Use a public https:// address with a host
+    name, without a user name or a password." The refusal takes the place
+    of the hint under the address, and the key stays in its field, as
+    `app/account/own-endpoint/refused` shows.
   - A connected own endpoint login shows its kind with the host of its
     endpoint under its row, such as "Own endpoint at proxy.example.com", so
     that a phone shows both in full. It never shows the key or the full

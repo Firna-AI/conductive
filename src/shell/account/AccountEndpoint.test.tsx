@@ -101,42 +101,50 @@ function chooseEndpoint(view: HTMLElement): void {
 }
 
 describe('an own endpoint login on the account', () => {
-  test('the form names the API and the models of the app, and refuses an address at its field with the rule of the save, before any request, and keeps the key', async () => {
-    const server = new FakeApiServer()
-    server.json(
-      'GET',
-      ACCOUNT_PATHS.account,
-      accountWith({ agent: 'claude', connected: false }),
-    )
-    const { view } = await mountGeneral(server, 'claude')
-    chooseEndpoint(view)
-    const text = Array.from(view.querySelectorAll('p'), (line) =>
-      String(line.textContent),
-    ).find((line) => line.startsWith('Use a gateway'))
-    const empty = linesOf(fieldNamed(view, 'Endpoint'))
-    typeText(fieldNamed(view, 'Endpoint'), 'http://localhost:8317')
-    typeText(fieldNamed(view, 'API key'), 'key-of-the-proxy')
-    const sent = server.requests.length
-    click(byRole('button', 'Connect', view))
-    await settle()
-    expect({
-      text,
-      empty,
-      refused: linesOf(fieldNamed(view, 'Endpoint')),
-      requests: server.requests.length - sent,
-      key: fieldNamed(view, 'API key').value,
-    }).toEqual({
-      text: `Use a gateway or a proxy that serves the Anthropic Messages API, with the models that ${productName} offers: Opus 5.5, Sonnet 5.5, and Fable 5.1.`,
-      empty: [
-        `Requests go through ${productName} to https://gateway.example.com/v1/messages.`,
-      ],
-      refused: [
-        'Use a public https:// address, without a user name or a password.',
-      ],
-      requests: 0,
-      key: 'key-of-the-proxy',
-    })
-  })
+  test.each([
+    'http://localhost:8317',
+    'https://8.8.8.8',
+    'https://[2606:4700:4700::1111]',
+  ])(
+    'the form names the API and the models of the app, and refuses %s at its field with the rule of the save, before any request, and keeps the key',
+    async (endpoint) => {
+      const server = new FakeApiServer()
+      server.json(
+        'GET',
+        ACCOUNT_PATHS.account,
+        accountWith({ agent: 'claude', connected: false }),
+      )
+      const { view } = await mountGeneral(server, 'claude')
+      chooseEndpoint(view)
+      const text = Array.from(view.querySelectorAll('p'), (line) =>
+        String(line.textContent),
+      ).find((line) => line.startsWith('Use a gateway'))
+      const empty = linesOf(fieldNamed(view, 'Endpoint'))
+      typeText(fieldNamed(view, 'Endpoint'), endpoint)
+      typeText(fieldNamed(view, 'API key'), 'key-of-the-proxy')
+      const sent = server.requests.length
+      click(byRole('button', 'Connect', view))
+      await settle()
+      expect(server.requests.length - sent).toBe(0)
+      expect({
+        text,
+        empty,
+        refused: linesOf(fieldNamed(view, 'Endpoint')),
+        requests: server.requests.length - sent,
+        key: fieldNamed(view, 'API key').value,
+      }).toEqual({
+        text: `Use a gateway or a proxy that serves the Anthropic Messages API, with the models that ${productName} offers: Opus 5.5, Sonnet 5.5, and Fable 5.1.`,
+        empty: [
+          `Requests go through ${productName} to https://gateway.example.com/v1/messages.`,
+        ],
+        refused: [
+          'Use a public https:// address with a host name, without a user name or a password.',
+        ],
+        requests: 0,
+        key: 'key-of-the-proxy',
+      })
+    },
+  )
 
   test('a refusal of the address by the save shows at the address and not as a failed connect, and the next edit of the address clears it', async () => {
     const server = new FakeApiServer()
@@ -164,7 +172,7 @@ describe('an own endpoint login on the account', () => {
     expect({ refused, edited: linesOf(fieldNamed(view, 'Endpoint')) }).toEqual({
       refused: {
         address: [
-          'Use a public https:// address, without a user name or a password.',
+          'Use a public https:// address with a host name, without a user name or a password.',
         ],
         keyInvalid: false,
         key: 'key-of-the-proxy',

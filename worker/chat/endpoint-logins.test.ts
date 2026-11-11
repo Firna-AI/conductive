@@ -28,13 +28,31 @@ const cases = ([1, 2] as const).flatMap((protocolVersion) =>
       agent: choice.agent,
       protocolVersion,
       noReuse,
+      refusedEndpoint: 'https://192.168.1.1/private',
     })),
   ),
 )
 
+cases.push(
+  {
+    choice: CLAUDE,
+    agent: 'claude',
+    protocolVersion: 2,
+    noReuse: false,
+    refusedEndpoint: 'https://8.8.8.8/private',
+  },
+  {
+    choice: CODEX,
+    agent: 'codex',
+    protocolVersion: 2,
+    noReuse: false,
+    refusedEndpoint: 'https://[2606:4700:4700::1111]/private',
+  },
+)
+
 it.each(cases)(
-  'blocks $agent endpoints on protocol $protocolVersion when private or unsupported, with noReuse=$noReuse',
-  async ({ choice, protocolVersion, noReuse }) => {
+  'blocks $agent endpoint $refusedEndpoint on protocol $protocolVersion when refused or unsupported, with noReuse=$noReuse',
+  async ({ choice, protocolVersion, noReuse, refusedEndpoint }) => {
     const fixture = await createChatFixture(harness)
     try {
       const session = await fixture.createSession(choice)
@@ -59,17 +77,18 @@ it.each(cases)(
       expect(saved.status).toBe(200)
       if (protocolVersion === 2) {
         await fixture.env.DB.prepare(
-          "UPDATE agent_logins SET ciphertext = ?, endpoint_origin = 'https://192.168.1.1' WHERE user_id = ? AND agent = ?",
+          'UPDATE agent_logins SET ciphertext = ?, endpoint_origin = ? WHERE user_id = ? AND agent = ?',
         )
           .bind(
             await encrypt(
               JSON.stringify({
-                endpoint: 'https://192.168.1.1/private',
+                endpoint: refusedEndpoint,
                 secret: 'endpoint-key',
               }),
               agentLoginContext(fixture.owner.id, choice.agent),
               fixture.env.BOAT_KEY_ENCRYPTION_KEY,
             ),
+            new URL(refusedEndpoint).origin,
             fixture.owner.id,
             choice.agent,
           )
@@ -97,7 +116,7 @@ it.each(cases)(
           message:
             protocolVersion === 1
               ? `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login is not available. Try again or send a new message.`
-              : `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login needs a public https:// endpoint. Update the login on the account page.`,
+              : `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login needs a public https:// endpoint with a host name. Update the login on the account page.`,
         },
         retryMessageId: 'first',
         durationMs: 0,

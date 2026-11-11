@@ -173,13 +173,25 @@ while the change is open. Its pull request keeps them after the merge.
 - One rule decides which addresses the app accepts (own endpoint decision
   9). The connect form, the save, the dispatch of a turn, and the gateway
   use the same rule.
-- The rule accepts only an `https://` address with a public host. It
+- The rule accepts only an `https://` address with a public host name. It
   refuses these hosts:
-  - `localhost`, and each IP address that is not public, such as a
-    loopback, private, or link-local address
+  - `localhost`, and each IP address, IPv4 or IPv6, also a public one (own
+    endpoint decision 13)
   - a single-label name, such as `proxy`, and an internal name
   - a name in the domains of the app and of the previews, which
     [Hostnames](../architecture.md#hostnames) gives
+- Reason to refuse a public IP address: users on Cloudflare's forum report
+  that a fetch from a Worker to an IP address fails with error 1003. The
+  error says "Direct IP access not allowed". So a login with an IP address
+  would fail each turn. Cloudflare's docs do not state this limit, and no
+  check of it ran on Cloudflare.
+- A public host name that points to a public IP address works when the
+  server has a certificate for that name. For example, the free name
+  `<IP address>.sslip.io` points to that IP address.
+- An automatic change of an IP address into such a name was rejected.
+  Reason: the certificate check fails when the certificate of the server
+  does not name the new host. Also, the app would trust a DNS service that
+  the user did not choose.
 - The rule refuses an address with a user name or a password, because a
   request address cannot carry them.
 - The rule keeps the path and the query of the address. It drops a

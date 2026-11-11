@@ -310,6 +310,7 @@ dialog, and feedback with its screenshots.
   `dev/account-routes.ts` uses the shared address rule and keeps no secret
   or full endpoint in development state. Its save uses the same public HTTPS
   address builder and agent-specific normalization as the Worker.
+  The builder requires a public host name and refuses every IPv4 and IPv6 address.
   The builder reads the product domain from the shared brand source.
   The fake needs no preview domain configuration.
   `?login=endpoint` seeds shared

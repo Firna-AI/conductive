@@ -54,7 +54,7 @@ it('refuses a configured preview endpoint before runner dispatch with the accoun
       error: {
         code: 'agent_login_required',
         message:
-          "Octocat's Claude login needs a public https:// endpoint. Update the login on the account page.",
+          "Octocat's Claude login needs a public https:// endpoint with a host name. Update the login on the account page.",
       },
       retryMessageId: 'preview-message',
       durationMs: 0,
@@ -98,6 +98,9 @@ it('checks endpoint origins in one metadata query without reading or decrypting 
       ['https://public.example.test', true],
       [`https://port.${previewDomain}`, false],
       ['https://127.0.0.1', false],
+      ['https://8.8.8.8', false],
+      ['https://[2606:4700:4700::1111]', false],
+      ['https://136.115.241.64.sslip.io', true],
     ] as const) {
       await fixture.env.DB.prepare(
         'UPDATE agent_logins SET endpoint_origin = ? WHERE user_id = ? AND agent = ?',

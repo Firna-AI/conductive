@@ -61,7 +61,7 @@ it('normalizes public addresses and builds only the model routes of each agent',
   ).toBeNull()
 })
 
-it('refuses credentials, non-public destinations, internal names, and app domains', () => {
+it('refuses IP addresses, credentials, non-public destinations, internal names, and app domains', () => {
   for (const endpoint of [
     'not a URL',
     '/relative/path',
@@ -79,6 +79,15 @@ it('refuses credentials, non-public destinations, internal names, and app domain
     'https://proxy.lan',
     'https://metadata.google.internal',
     'https://proxy.home.arpa',
+    'https://8.8.8.8',
+    'https://136.115.241.64',
+    'https://134744072',
+    'https://0x08080808',
+    'https://010.010.010.010',
+    'https://8.8.8.8.',
+    'https://192.0.0.9',
+    'https://192.0.0.10',
+    'https://[2606:4700:4700::1111]',
     'https://0.0.0.0',
     'https://10.0.0.1',
     'https://100.64.0.1',
@@ -133,12 +142,9 @@ it('keeps query bytes when they end with a slash and joins a request query', () 
   })
 })
 
-it('accepts public IP addresses, unrelated domain names, and custom HTTPS ports', () => {
+it('accepts public host names, names that contain an IP address, and custom HTTPS ports', () => {
   for (const endpoint of [
-    'https://8.8.8.8',
-    'https://192.0.0.9',
-    'https://192.0.0.10',
-    'https://[2606:4700:4700::1111]',
+    'https://136.115.241.64.sslip.io',
     'https://proxy.example.test:8000',
     'https://proxy.example.test:65535',
     `https://${productDomain}.example.test`,

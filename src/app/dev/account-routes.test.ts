@@ -106,23 +106,29 @@ it('refuses unsafe dev endpoint saves and seeds connected own endpoint statuses'
       updatedAt: FAKE_TIME,
     },
   ])
-  const refused = await fetch(agentLoginPath('claude'), {
-    method: 'PUT',
-    body: JSON.stringify({
-      agent: 'claude',
-      kind: 'endpoint',
-      endpoint: 'http://proxy.example.test',
-      secret: 'private-key',
-    }),
-  })
-  expect(refused.status).toBe(400)
-  expect(await refused.json()).toEqual({
-    error: {
-      code: 'invalid_endpoint',
-      message:
-        'Use a public https:// address, without a user name or a password.',
-    },
-  })
+  for (const endpoint of [
+    'https://8.8.8.8',
+    'https://[2606:4700:4700::1111]',
+    'http://proxy.example.test',
+  ]) {
+    const refused = await fetch(agentLoginPath('claude'), {
+      method: 'PUT',
+      body: JSON.stringify({
+        agent: 'claude',
+        kind: 'endpoint',
+        endpoint,
+        secret: 'private-key',
+      }),
+    })
+    expect(refused.status, endpoint).toBe(400)
+    expect(await refused.json()).toEqual({
+      error: {
+        code: 'invalid_endpoint',
+        message:
+          'Use a public https:// address with a host name, without a user name or a password.',
+      },
+    })
+  }
 })
 
 it('refreshes the dev endpoint list without changing other logins or the secret-save time', async () => {

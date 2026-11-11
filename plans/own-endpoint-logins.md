@@ -957,6 +957,10 @@ them.
   "an older runner", because "older runner" means a runner of protocol 1
   in `docs/protocol/isolation.md`. Agent call of 11 November 2026, from
   the Milestone 5d docs.
+- The rule checks the host after the URL parser normalizes it, so that
+  other spellings of an IPv4 address are refused too. The cause of a turn
+  on a saved login with an IP address also asks for a host name. Agent
+  call of 11 November 2026, from Milestone 5e.
 
 ## Milestone 1: Mockups
 
@@ -1350,22 +1354,28 @@ Depends on: 5b
 The address rule refuses an IP address as the host, as decision 13 A
 says, so that the app saves no address that fails each turn.
 
-- [ ] Refuse an IP address, IPv4 or IPv6, as the host in the shared rule
+- [x] Refuse an IP address, IPv4 or IPv6, as the host in the shared rule
       of `src/shared/endpoint-address.ts`, so that the form, the save, the
       dispatch, and the gateway refuse it. The refusal says "Use a public
       https:// address with a host name, without a user name or a
       password." A saved login with an IP address then counts as a login
       that cannot be used, with the cause of Milestone 5b.
-- [ ] State the rule and its reason in "Own endpoint logins" of
+- [x] State the rule and its reason in "Own endpoint logins" of
       `docs/protocol/tokens-and-secrets.md`.
-- [ ] Change the refusal text and the rule in the mockups.
+- [x] Change the refusal text and the rule in the mockups.
 - [ ] Say in the agent logins guide that a free name such as
       `<IP address>.sslip.io` works when the server has a certificate for
       that name. The legal and guide step of Milestone 6 does it.
-- [ ] Add tests: an IPv4 and an IPv6 host refused at the save, the
+- [x] Add tests: an IPv4 and an IPv6 host refused at the save, the
       dispatch, and the fetch, and a name such as
       `136.115.241.64.sslip.io` accepted.
-- [ ] Update the READMEs of the changed areas.
+- [x] Update the READMEs of the changed areas.
+
+The rule refuses each IP address host since 11 November 2026. The same
+change moved the browser setup of `worker/chat/backend.ts` into
+`worker/chat/sockets.ts` without a change of behaviour, because the merge
+of main brought that file to 301 lines. Evidence:
+`.context/own-endpoint-logins/m5e/`.
 
 ## Milestone 6: Account and Get started
 

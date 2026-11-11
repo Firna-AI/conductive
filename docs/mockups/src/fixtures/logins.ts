@@ -130,14 +130,18 @@ export const typedEndpoints: Readonly<
 /**
  * The origin of an address that the rule refuses: a proxy on Cal's own
  * computer, on `http://`. The gateway calls each endpoint over the internet,
- * so the rule accepts only an `https://` address with a public host and no
- * user name or password. It refuses `localhost` and each IP address that is
- * not public, names of one label, internal names, and the names of the app
- * and of its previews. The refusal names the rule in plain words.
+ * so the rule accepts only an `https://` address with a public host name and
+ * no user name or password. It refuses `localhost`, names of one label,
+ * internal names, and the names of the app and of its previews. It also
+ * refuses each IP address, IPv4 or IPv6, as the host, because a fetch from
+ * the Worker to an IP address can fail. A host name that points to the IP
+ * address, such as `136.115.241.64.sslip.io`, works when the server has a
+ * certificate for that name. The refusal names the rule in plain words.
  */
 export const refusedEndpoint = {
   origin: 'http://localhost:8317',
-  cause: 'Use a public https:// address, without a user name or a password.',
+  cause:
+    'Use a public https:// address with a host name, without a user name or a password.',
 } as const
 
 /** A key in its field, which shows only as dots. */
