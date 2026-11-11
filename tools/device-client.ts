@@ -9,7 +9,10 @@ import {
   readDeviceCommandInput,
   readDeviceRecord,
 } from '../src/shared/device-read.ts'
-import type { ToolReplyReader, WorkspaceToolConfiguration } from './client.ts'
+import type {
+  ToolReplyReader,
+  WorkspaceToolConfiguration,
+} from './transport.ts'
 import { ToolInputError } from './input.ts'
 
 export type MacCommandOptions = Omit<DeviceCommandInput, 'requestId'> & {

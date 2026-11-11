@@ -441,6 +441,10 @@ decision.
 
 ### Images
 
+- Agent call of 11 November 2026: write the installed sources with safely
+  quoted `printf %s`, without base64 expansion. Reason: the larger tool
+  set exceeded Linux's argument size limit. The installed files keep the
+  same bytes and need no new program.
 - Agent call: a cloud computer gets the new tools and instructions only
   from an org image that a full build made after the deploy. The follow-up
   item `plans/follow-ups/full-image-build-for-agent-tools.md` gets the new
@@ -642,20 +646,23 @@ README evidence: `.context/agent-tools-conductor-parity/reports/m5-readmes.md`.
 
 Depends on: 3, 4, 5
 
-- [ ] Add each new call to the CLI and the MCP server under `tools/`, in
+- [x] Add each new call to the CLI and the MCP server under `tools/`, in
       new files where a file would pass 200 lines.
-- [ ] Add the options of the existing calls, and the message file and
+- [x] Add the options of the existing calls, and the message file and
       stdin of the CLI.
-- [ ] Write the tool descriptions and the CLI help: the reach, the token
+- [x] Write the tool descriptions and the CLI help: the reach, the token
       and turn rules, the rights of the sender, and the links.
-- [ ] Update the workspace tools line of `runner/src/instructions.ts` and
+- [x] Update the workspace tools line of `runner/src/instructions.ts` and
       its tests.
-- [ ] Apply decision 283 to owner-selection instructions and, when the
+- [x] Apply decision 283 to owner-selection instructions and, when the
       chosen option needs it, the sender line and its provider tests.
-- [ ] Add CLI and MCP tests in `worker/tools/` against the handler.
+- [x] Add CLI and MCP tests in `worker/tools/` against the handler.
 - [ ] Update `tools/README.md` and `runner/agent-tools.md`.
 - [ ] Add the new commands to
       `plans/follow-ups/full-image-build-for-agent-tools.md`.
+
+Evidence: `.context/agent-tools-conductor-parity/reports/m6-tools.md`
+and `.context/agent-tools-conductor-parity/checks/m6-final-orchestrator-tests.log`.
 
 ## Milestone 7: The stop line in the app
 
@@ -673,8 +680,8 @@ Depends on: 1, 2, 4
 
 Depends on: every other milestone
 
-- [ ] Update the `agent-workspace-controls` comparison row from Planned to
-      Available after Milestones 3 to 7 implement the calls. Follow the claim
+- [ ] Update the `agent-workspace-controls` comparison row to Available
+      after Milestones 3 to 7 implement the calls. Follow the claim
       rules and keep features outside this plan under consideration.
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and `npm run check`.
