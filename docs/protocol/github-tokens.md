@@ -115,11 +115,13 @@ clean, as [Org image](org-image.md) says.
   once, were rejected for that reason. One sandbox command for all copies
   was rejected, because each token then lives from the start of that
   command.
-- To read the size of each repository, the Worker uses one more
-  installation token, which can only read the metadata of the repositories
-  of the job. That token
-  never reaches the build sandbox. The Worker revokes it before the first
-  copy starts.
+- To read the size of each repository, the Worker uses installation tokens
+  that can only read metadata. Each token covers the repositories of the
+  job in one installation, at most 500 of them. When an installation has
+  more than 500 repositories of the job, each further batch of at most 500
+  gets its own token. Each metadata token stays in the Worker and never
+  reaches the build sandbox. The Worker revokes every metadata token before
+  the first copy starts.
 - The Worker gives each copy token only to the Git command of that copy.
   The Worker and Git do not write it to command text, command history, a
   remote URL, a Git config, a file, or a saved snapshot.

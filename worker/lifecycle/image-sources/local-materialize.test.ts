@@ -118,6 +118,12 @@ it('clones default history and tags natively and refreshes captured clean folder
     expect(fixture.provider.commands).toHaveLength(6)
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
+      'GET',
+      'DELETE',
+      'POST',
+      'DELETE',
+      'POST',
+      'GET',
       'DELETE',
       'POST',
       'DELETE',
@@ -129,9 +135,13 @@ it('clones default history and tags natively and refreshes captured clean folder
       ),
     ).toEqual([
       'mint',
+      'revoke',
+      'mint',
       'claim',
       'revoke',
       'finalize',
+      'mint',
+      'revoke',
       'mint',
       'claim',
       'revoke',
@@ -163,9 +173,12 @@ it('clones default history and tags natively and refreshes captured clean folder
         stderr,
       })),
     ).toEqual(
-      Array.from({ length: 6 }, () => ({
+      Array.from({ length: 6 }, (_, index) => ({
         exitCode: 0,
-        stdout: '',
+        stdout:
+          index % 3 === 0
+            ? expect.stringMatching(/^MemAvailable:\s+\d+ kB\n$/u)
+            : '',
         stderr: '',
       })),
     )
@@ -190,6 +203,9 @@ it('clones an empty repository as a clean unborn default branch and revokes its 
       '/home/user',
     )
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
+      'POST',
+      'GET',
+      'DELETE',
       'POST',
       'DELETE',
     ])

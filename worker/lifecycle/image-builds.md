@@ -137,8 +137,9 @@ transient. Other errors keep their existing handling.
 - The whole-job deadline takes precedence over a retry wait. The limits
   are in [Time limits of builds and starts](../../docs/protocol/workspace-life.md#time-limits-of-builds-and-starts).
 - Cancellation and terminal cleanup do not wait for a pending retry.
-- A source command start never retries. It fails closed, as the source
-  loader says.
+- A definite refusal of a source command start, such as HTTP 429, waits
+  and retries within the provider retry window. A start with no confirmed
+  reply still fails closed, as the source loader says.
 - Workspace allocation uses the retry handling in [`start-allocation.ts`](start-allocation.ts).
 
 An image job keeps this state in the nullable

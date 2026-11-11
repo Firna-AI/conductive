@@ -935,23 +935,30 @@ Depends on: 4
 
 Depends on: 2
 
-- [ ] Keep one source record for each repository in `image_source_jobs`,
-      with a migration.
-- [ ] Read the sizes and `MemAvailable`, and start the Git commands within
-      the budget of design item 8.
-- [ ] Revoke each token when its copy ends. Start the finalize commands
-      only after every revocation is confirmed.
-- [ ] Revoke each live token when a copy fails, also in
+Implementor calls of 11 November 2026: keep the shared phase and memory
+budget in `image_source_runs`. Keep the metadata token in source row 0,
+with the original source-token context and no grant, so older cleanup
+readers can revoke it. Continue confirmed legacy commands before moving
+their job to the parallel records. Read metadata in installation-scoped
+batches of at most 500 job repositories, with saved read progress.
+
+- [x] Keep one source record for each repository in `image_source_jobs`,
+      with a migration. Branch: `conductor/software-image-m6-parallel-copies`.
+- [x] Read the sizes and `MemAvailable`, and start the Git commands within
+      the budget of design item 8. Branch: `conductor/software-image-m6-parallel-copies`.
+- [x] Revoke each token when its copy ends. Start the finalize commands
+      only after every revocation is confirmed. Branch: `conductor/software-image-m6-parallel-copies`.
+- [x] Revoke each live token when a copy fails, also in
       `cleanupBuildImageSources`. Retry a definite refusal of a source
-      command start within the provider retry window.
-- [ ] Write one line to the build log for each repository when its copy
-      ends.
-- [ ] Tests: two small copies run at the same time. A repository whose
+      command start within the provider retry window. Branch: `conductor/software-image-m6-parallel-copies`.
+- [x] Write one line to the build log for each repository when its copy
+      ends. Branch: `conductor/software-image-m6-parallel-copies`.
+- [x] Tests: two small copies run at the same time. A repository whose
       estimate passes the budget runs alone. No finalize command starts
       before every revocation. A failed copy revokes the other token. A
       refused start retries. The metadata token is revoked before the
-      first copy.
-- [ ] Update `worker/lifecycle/repository-layout.md`.
+      first copy. Branch: `conductor/software-image-m6-parallel-copies`.
+- [x] Update `worker/lifecycle/repository-layout.md`. Branch: `conductor/software-image-m6-parallel-copies`.
 
 ## Milestone 7: Update an old workspace
 

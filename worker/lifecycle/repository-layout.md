@@ -72,90 +72,93 @@ the folder map:
 
 `createGitHubImageSourceMaterializer` in [`image-sources/materialize.ts`](image-sources/materialize.ts)
 loads the repositories into the folders of the job's map, as the required
-`prepareSources` of `ImageRuntime`. Each call starts or polls one detached
-command in the build sandbox through `input.commands`, a [`SourceCommandPort`](image-sources/source-commands.ts)
-that has only `start` and `status`. It returns `false` while native work or a
-revocation is pending, and `true` when every repository is done. So the
-work continues across alarms, and each call reads its state from D1.
+`prepareSources` of `ImageRuntime`. Each call reads its state from D1, and
+polls and starts commands through `input.commands`, a [`SourceCommandPort`](image-sources/source-commands.ts)
+with only `start` and `status`. One `image_source_jobs` row for each repository
+and one `image_source_runs` row for each job hold the state. Neither table
+has a cascading key, so each encrypted token stays owned until its revocation.
 
-[`image-sources/source-data.ts`](image-sources/source-data.ts) keeps that
-state in the `image_source_jobs` table of migration
-`202611070005_native_image_sources.sql`: the phase, the repository index,
-the process, the output offsets, the grant hash, and the encrypted token.
-The phases are `layout`, `ready`, `fetch`, `revoke`, `finalize`, and
-`done`. The table has no cascading key to the build or the org, so the
-encrypted token stays owned until its revocation.
+1. The first command makes the folder moves below, and prints only the
+   `MemAvailable` line of `/proc/meminfo`. Half of it is the memory budget.
+2. The Worker reads the repository sizes with metadata-only installation
+   tokens, as [GitHub tokens](../../docs/protocol/github-tokens.md#image-builds-and-refreshes)
+   says. Each batch gets its own token for one installation and at most 500
+   repositories of the job. The run row saves the batch plan and the read
+   progress. One token lives at a time, on source row 0 with no grant, and
+   never in the build sandbox. GitHub must confirm its revocation before the
+   next token or any copy. Each copy or finalization command of a repository
+   reserves twice its size, which GitHub reports in KiB, and at least
+   256 MiB. A missing size uses 256 MiB. Up to 8 commands run while their
+   reservations fit the budget. A command over the budget runs alone.
+3. For each copy, the [shared App credential flow](../github/README.md#public-boundaries)
+   gets an installation token that can only read the contents of that
+   repository. The Worker stores it encrypted, bound to the org, the build,
+   the sandbox, the repository, and the source index, with the hash of a new
+   one-use build grant. When that store fails, it revokes the token at once.
+4. The fetch command from [`native-command.ts`](image-sources/native-command.ts)
+   starts with an empty environment, uses absolute paths for `curl` and Git,
+   and discards its output. The build log gets only fixed text. Its `curl`
+   skips any `.curlrc`, accepts only HTTPS, follows no redirect, and has time
+   limits. It sends the grant to `handleImageSourceCredential`, as the
+   [machine route](README.md#machine-route) says. An inline credential helper
+   gives Git the token from the process environment only. Git makes a bare
+   clone in a staging folder, with no checkout, hook, filter, or submodule.
+   No helper or token stays in a Git config.
+5. When a copy ends, the build log gets the fixed line `Repository copy complete.`
+   The Worker then revokes the token through [`revokeInstallationToken`](image-sources/github-app.ts).
+   Only a 204 or a 401 reply from GitHub confirms that the token is inactive.
+   Any other reply keeps the encrypted token for a later alarm, and no local
+   clock releases it. A failed copy fails the job.
+6. The finalization commands start only after every copy has ended and
+   GitHub has confirmed every revocation of the job. Each one copies the
+   branches and the tags from the token-free bare clone into the repository
+   folder. A new folder takes the object format of that clone. An existing
+   folder keeps its local Git settings and untracked files, such as installed
+   dependencies. The command sets only the URL and the fetch rule of `origin`
+   and the upstream of the default branch. It resets the tracked files to the
+   captured default branch. An empty repository gets an unborn default branch,
+   and one with refs but not that branch fails. Then the command deletes the
+   staging folder.
 
-1. The first command makes the folder moves below.
-2. For each repository, the [shared App credential flow](../github/README.md#public-boundaries)
-   signs a JWT with `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CLIENT_ID`, and the injected clock.
-   It gets an installation
-   token that can only read the contents of that repository. It stores the
-   token encrypted, bound to the org, the build, the sandbox, the
-   repository, and the source index, with the hash of a new one-use build
-   grant. When that store fails, it revokes the token at once.
-3. The fetch command from
-   [`image-sources/native-command.ts`](image-sources/native-command.ts)
-   starts with an empty environment, uses absolute paths for `curl` and
-   Git, and discards its output. The build log gets only fixed progress
-   text. Its `curl` skips any `.curlrc`, accepts only HTTPS, follows no
-   redirect, and has time limits. It sends the grant to
-   `handleImageSourceCredential`, as the
-   [machine route](README.md#machine-route) says. An inline credential
-   helper gives Git the token from the process environment only. Git makes
-   a bare clone in a staging folder, with no checkout, hook, filter, or
-   submodule. No helper or token stays in a Git config.
-4. When the command ends, the Worker uses the shared revocation through
-   [`revokeInstallationToken`](image-sources/github-app.ts). A 204 or a
-   401 reply from GitHub confirms that the token is inactive. Any other
-   reply keeps the encrypted token, and a later alarm tries again. No local
-   clock releases the token. The loader goes on only after that proof.
-5. The finalization command then copies the branches and the tags from the
-   token-free bare clone into the repository folder. A new folder starts
-   with the object format of that clone. An existing folder keeps its local
-   Git settings, and the command sets only the URL and the fetch rule of
-   `origin` and the upstream of the default branch. It keeps untracked
-   files, such as installed dependencies, and resets the tracked files to
-   the captured default branch. An empty repository gets an unborn default
-   branch. A repository that has refs but not that branch fails. The command
-   then deletes the staging folder.
+A command succeeds only with exit code 0 and no reported timeout. A missing
+timeout flag is not a timeout. Each start first saves a `-starting` phase.
+A saved `-starting` phase, a missing process, or a start with no confirmed
+reply fails closed, and the cleanup below revokes every token. A definite
+refusal, HTTP 429 or 409, returns the step to its earlier phase, and a
+refused copy also clears its grant and revokes its token. A refused start
+and a transient Boat error of a poll keep every row, and retry as
+[Provider retries](image-builds.md#provider-retries) says. A job of an older
+Worker moves to this layout as the [migration catalogue](../../migrations/README.md) says.
 
-A command succeeds only with exit code 0 and no reported timeout. A
-missing timeout flag is not a timeout. A missing process, or a start with
-no confirmed reply, fails closed, and the next alarm revokes the token. A
-transient Boat error of a poll keeps the source record for the next alarm, within the [retry window](image-builds.md#provider-retries).
-
-`handleImageSourceCredential` in
-[`image-sources/credential.ts`](image-sources/credential.ts) accepts only a
+`handleImageSourceCredential` in [`credential.ts`](image-sources/credential.ts) accepts only a
 `POST` to `IMAGE_SOURCE_CREDENTIAL_PATH`, `/v1/internal/image-source/credential`,
 on the HTTPS machine origin, with no cookie and no `Origin` header. One D1
 statement consumes the grant and checks that the build still runs, that the
-org exists, and that the repository is the captured one. The handler then
-returns the decrypted token as text, in a private response with no CORS
-header. A used, unknown, or invalidated grant gets HTTP 401. The handler
-throws an `HttpError` for each refusal, so its caller must use the private
-error response wrapper.
+org exists, and that the repository is the captured one. It returns the
+decrypted token as text, in a private response with no CORS header. A used,
+unknown, or invalidated grant gets HTTP 401. Each refusal throws an
+`HttpError`, so the caller must use the private error response wrapper.
 
-After a terminal failure, `cleanupBuildImageSources` in [`image-sources/cleanup.ts`](image-sources/cleanup.ts)
-invalidates the grant and revokes the token before it deletes the source
-record. [`image-sources/cleanup-data.ts`](image-sources/cleanup-data.ts) holds those
-writes. The build cleanup runs it before it deletes the build sandbox, also
-when Boat refuses the app's Boat key. `cleanupOrgImageSources` does the
-same for each build of an org. The image coordinator calls it before it
-stops for an org that is gone. Each terminal failure of the loader gives
-one fixed error, because Boat output and Git errors can hold a credential.
+After a terminal failure, `cleanupBuildImageSources` in [`cleanup.ts`](image-sources/cleanup.ts)
+invalidates every grant, marks the rows and the run as failed, and revokes
+the live metadata token and every copy token. A failed revocation does not stop
+the others, and the records stay until GitHub confirms every revocation.
+The build cleanup runs it before it deletes the build sandbox, also when
+Boat refuses the app's Boat key. `cleanupOrgImageSources` does the same for
+each build of an org, and the image coordinator calls it before it stops
+for an org that is gone. Each terminal failure of the loader gives one
+fixed error, because Boat output and Git errors can hold a credential.
 
 The composition root passes the Members lifecycle hooks through
-`withImageSourceCleanup(env, fetch, hooks)` from
-[`image-sources/members.ts`](image-sources/members.ts). The wrapper changes
-only `suspendOrg`. Before the existing suspension, it runs
-`cleanupOrgImageSources` with the lifecycle ownership of the Members call.
-The suspension goes on only after that cleanup is complete. That ownership
-fences each cleanup statement with the current org generation, and the
-cleanup renews its lease. A failed revocation keeps the encrypted token, so
-the org purge waits until a retry revokes it. The existing suspension still
-drains the jobs, fences the lifecycle writes, stops the timers, and keeps
-the sandbox IDs and snapshot names for Members.
+`withImageSourceCleanup(env, fetch, hooks)` from [`members.ts`](image-sources/members.ts).
+The wrapper changes only `suspendOrg`. Before the existing suspension, it
+runs `cleanupOrgImageSources` with the lifecycle ownership of the Members
+call. The suspension goes on only after that cleanup is complete. That
+ownership fences each cleanup statement with the current org generation,
+and the cleanup renews its lease. A failed revocation keeps the encrypted
+token, so the org purge waits until a retry revokes it. The existing
+suspension still drains the jobs, fences the lifecycle writes, stops the
+timers, and keeps the sandbox IDs and snapshot names for Members.
 
 ## Folder moves
 
@@ -229,29 +232,29 @@ The fetch then fails, and the start fails.
 
 ## Development
 
-The source tests run the production source loader with native Git and
+Most source tests run the production source loader with native Git and
 `/bin/sh`. `native-process-test-support.ts` maps the sandbox home to a
-temporary folder under `.context/`. It refuses each command that still
-holds `/home/user`, `/run`, or `/opt`. It reads each status with the
-production `readCommandStatus`, and its replies omit `timedOut`, as Boat's
-can. `NativeGitHubAccess` in `native-github-test-support.ts` stands in for
-the GitHub token mint and revoke, and it tracks the scope and the life of
-each token.
+temporary folder under `.context/`, and refuses each command that still holds
+`/home/user`, `/run`, or `/opt`. It reads each status with the production
+`readCommandStatus`, and its replies omit `timedOut`, as Boat's can.
+`NativeGitHubAccess` in `native-github-test-support.ts` stands in for GitHub
+token mints, size reads, and revokes, and tracks each token's scope and life.
 
-- `image-sources/local-materialize.test.ts` clones default history and tags,
-  refreshes captured folders, and clones an empty repository. A refresh
-  keeps installed dependencies and local Git settings. The test fails when
-  a checkout starts while a token is active.
+- `image-sources/local-materialize.test.ts` clones default history, tags, and
+  an empty repository. Refreshes keep installed dependencies and local Git
+  settings. The test fails when a checkout starts while a token is active.
 - `image-sources/credential.test.ts` checks the one-repository read token,
   a replayed or concurrent grant claim, the current owner, and the private
   response with no cookie, `Origin`, or CORS.
-- `image-sources/materialize.test.ts` covers denied access, wrong owners,
-  a failed clone, a lost process, an uncertain start, and kept revocation
-  ownership across actor restarts. It also refuses a remote that has refs
-  but no captured default branch.
+- `image-sources/materialize.test.ts` covers denied access, wrong owners, a
+  failed clone, a lost process, an uncertain start, kept revocation ownership
+  across restarts, and a remote with refs but no captured default branch.
 - `image-sources/deadline.test.ts` returns each alarm while Git runs, and
   allows the install only after revocation. It keeps the last good image
   after a failure, and revokes when Boat refuses the app's Boat key.
+- `image-sources/parallel.test.ts`, `metadata-batches.test.ts`, and
+  `legacy-resume.test.ts` script the processes for the budget, the limits,
+  each revocation, a refused start, the metadata batches, and older jobs.
 - `image-sources/members.test.ts` runs the real org delete and cleanup with
   the wrapper. The purge waits until a failed revocation succeeds.
 - `repository-names.test.ts` checks the folder names, the variable names,
@@ -277,23 +280,20 @@ each token.
 - [`repository-location-data.ts`](repository-location-data.ts):
   `workspaceRepositoryLocations`, the map of one workspace.
 - [`image-sources/materialize.ts`](image-sources/materialize.ts): `createGitHubImageSourceMaterializer`,
-  one source phase for each call, through [`SourceCommandPort`](image-sources/source-commands.ts).
-- [`image-sources/source-data.ts`](image-sources/source-data.ts): the
-  durable source record and the one-use grant claim.
-- [`image-sources/native-command.ts`](image-sources/native-command.ts): the
-  isolated bare clone and the finalization commands.
+  the source work of one call, through [`SourceCommandPort`](image-sources/source-commands.ts).
+- [`image-sources/source-data.ts`](image-sources/source-data.ts), [`run-data.ts`](image-sources/run-data.ts), and
+  [`data.ts`](image-sources/data.ts): the rows of a job, the one-use grant claim, and the builder and
+  repository checks `authorizeImageBuilder`, `readSourceRepository`, and `readSourceRepositories`.
+- [`image-sources/native-command.ts`](image-sources/native-command.ts) and [`layout-command.ts`](image-sources/layout-command.ts):
+  the isolated bare clone and finalization commands, and `sourceLayoutCommand`, the folder moves.
 - [`image-sources/credential.ts`](image-sources/credential.ts):
   `handleImageSourceCredential` and `IMAGE_SOURCE_CREDENTIAL_PATH`.
-- [Image App adapter](image-sources/github-app.ts): `installationToken` and
-  `revokeInstallationToken`, through [shared credentials](../github/app-credentials.ts).
-- [`image-sources/cleanup.ts`](image-sources/cleanup.ts):
-  `cleanupBuildImageSources` and `cleanupOrgImageSources`.
+- [Image App adapter](image-sources/github-app.ts): `installationToken`, `metadataInstallationToken`,
+  and `revokeInstallationToken`, through [shared credentials](../github/app-credentials.ts).
+- [`image-sources/cleanup.ts`](image-sources/cleanup.ts): `cleanupBuildImageSources` and
+  `cleanupOrgImageSources`, with their writes in `cleanup-data.ts` and `run-cleanup-data.ts`.
 - [`image-sources/members.ts`](image-sources/members.ts):
   `withImageSourceCleanup`, the required Members suspension wrapper.
-- [`image-sources/data.ts`](image-sources/data.ts): `authorizeImageBuilder`
-  and `readSourceRepository`, the builder and repository checks.
-- [`image-sources/layout-command.ts`](image-sources/layout-command.ts):
-  `sourceLayoutCommand`, the folder moves of an image job.
 - [`default-branch-command.ts`](default-branch-command.ts):
   `defaultBranchCommand`, the fetch step with the empty first commit.
 - [`start-command.ts`](start-command.ts): `workspacePhaseCommand`, the
