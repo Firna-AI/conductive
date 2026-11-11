@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-10, from branch `calummoore/markdown-formatting-issue`, review round 2, the blocked wider fix of findings 1 and 2.
 - **Location:** `src/chat/components/agent-text.ts`, `src/files/markdown/markdown-blocks.ts`, `src/markdown/list-items.ts`, and the sections "Formatting" and "Lists" of `docs/protocol/chat-markdown.md`.
-- **Reason:** each option reverses a recorded decision of the user: the choice of 10 November 2026 of a shared list reader over one shared parser, or the rejection of a Markdown library.
+- **Reason:** each option reverses a recorded decision of the user: the choice of 10 November 2026 of a shared list reader over one shared parser, the choice of 9 November 2026, which did not take one parser with a setting for each view, or the rejection of a Markdown library.
 
 - **Source:** Review. **Category:** Product bug.
 - **Terms:**
@@ -15,14 +15,15 @@
   - On 10 November 2026, the user chose that the chat shares the list reader of the file preview. The rejected options were list rules for the chat alone, and the full parser of the file preview for the chat. `docs/protocol/chat-markdown.md` also records the rejection of a Markdown library, because it needs a safety review.
   - Each view still parses the lines of a list item with its own block rules and tracks its own paragraph state.
   - Review round 2 of the nested-list branch found two places where the views split or left CommonMark. An unindented line after a code block stayed inside the list item above it. The chat started a list at a marker such as `24.` under a line of text, and it read `- a | b` with a separator row under it as a table. The branch fixed both, with one paragraph-state rule in each view and a shared start rule, `interruptsParagraph`.
-  - Some differences stay on purpose, because each view keeps its block rules: the chat lets a table start directly under a line of text, and it shows headings, quotes, and rules as text.
+  - Some differences stay on purpose, because each view keeps its block rules: the chat lets a table start directly under a line of text, and it shows quotes and rules as text.
+  - On 11 November 2026, the user chose that the chat draws headings at all six levels. Both views read headings with the shared heading reader `src/markdown/headings.ts`, by the heading rules of CommonMark. One heading rule differs: in the chat, an underline counts only when a line break follows it.
 - **Problem:** A new block rule in one view can split the lists of the two views again, because each view keeps its own block order and paragraph state.
 - **Impact if no action:** A future change can make the chat and the file preview show the same Markdown in two structures, as before the fix of the nested-list branch.
 - **Root question:** How do the chat and the file preview keep reading Markdown blocks the same way, by CommonMark?
 - **Options:**
   - **A.** Keep the shared list reader and the shared start rule, and fix each split when a review finds it. Effort: Small for each split.
   - **B.** Add a test that compares the list outline of each view with commonmark.js, the reference parser, as a new dev dependency, for a table of list inputs. It leaves out the chat's own block rules. It is a test for the class. Effort: Medium.
-  - **C.** Share the full block parser of the file preview with the chat, with a setting for the display rules of each view. It reverses the choice of 10 November 2026, and it needs compatibility work for chips, the short rows of tables, and live updates. Effort: Large.
+  - **C.** Share the full block parser of the file preview with the chat, with a setting for the display rules of each view. It reverses the choice of 10 November 2026. It also reverses the choice of 9 November 2026, which did not take one parser with a setting for each view. It needs compatibility work for chips, the short rows of tables, and live updates. Effort: Large.
   - **D.** Read the blocks of both views with a CommonMark library that reads GitHub tables, such as `markdown-it`, and map its blocks to the display rules of each view. It reverses the rejection of a library, needs a safety review, and needs a speed check, because the chat parses each live update on the main thread. Effort: Large.
 - **Left out:** Agent instructions that ask for blank lines around lists, because old messages and other agents still meet the problem.
 - **Wider fix:** D. Only a CommonMark library removes both parts of the class. C removes the split between the views, but it keeps the CommonMark defects of the file preview's parser, such as those of `plans/follow-ups/list-lazy-line-read-as-block.md` and `plans/follow-ups/empty-list-item-takes-later-blocks.md`. B detects the class.

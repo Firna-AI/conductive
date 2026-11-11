@@ -1,3 +1,8 @@
+import {
+  atxHeading,
+  setextLevel,
+  type HeadingLevel,
+} from '../../markdown/headings'
 import { expandTabs, indentOf, isBlank, isRule } from '../../markdown/lines'
 import {
   interruptsParagraph,
@@ -11,8 +16,6 @@ import { tableStarts, type TableCells } from '../../markdown/table-rows'
 import { closesFence, openingFence } from './markdown-lines'
 import { parseTable, TableBudget } from './markdown-tables'
 import { takeDefinitions } from './markdown-text'
-
-type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 
 /**
  * One block of a Markdown file. `Inline` is the inline text of a block:
@@ -45,31 +48,11 @@ export interface MarkdownBlocks {
   definitions: ReadonlyMap<string, string>
 }
 
-const headingLevels: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6]
 const quoteLine = /^ {0,3}> ?/
-const atxHeading = /^ {0,3}(#{1,6})(?:[ ]+|$)(.*)$/
-
-/**
- * The text of an ATX heading without its closing `#` run: the trailing
- * spaces, the run, and the spaces before it. The run closes only after a
- * space or at the start. It gives the result of
- * `replace(/(?:^|[ ]+)#+[ ]*$/, '')` in one backward pass.
- */
-function withoutClosingHashes(text: string): string {
-  let end = text.length
-  while (end > 0 && text[end - 1] === ' ') end -= 1
-  let start = end
-  while (start > 0 && text[start - 1] === '#') start -= 1
-  if (start === end) return text
-  if (start === 0) return ''
-  if (text[start - 1] !== ' ') return text
-  while (start > 0 && text[start - 1] === ' ') start -= 1
-  return text.slice(0, start)
-}
 
 /** A line that ends a paragraph, because it starts another block. */
 function startsBlock(line: string): boolean {
-  if (openingFence(line) || atxHeading.test(line)) return true
+  if (openingFence(line) || atxHeading(line)) return true
   if (isRule(line) || quoteLine.test(line)) return true
   const marker = listMarker(line)
   return marker !== null && interruptsParagraph(marker)
@@ -166,11 +149,9 @@ class BlockParser {
       blocks.push({ kind: 'code', text: code.join('\n') })
       return this.lazy.has(next) ? next : next + 1
     }
-    const heading = atxHeading.exec(line)
+    const heading = atxHeading(line)
     if (heading) {
-      const level = headingLevels[heading[1].length - 1]
-      const text = withoutClosingHashes(heading[2]).trim()
-      blocks.push({ kind: 'heading', level, text })
+      blocks.push({ kind: 'heading', ...heading })
       return index + 1
     }
     if (isRule(line)) {
@@ -245,11 +226,10 @@ class BlockParser {
     let next = index + 1
     for (; next < lines.length && !isBlank(lines[next]); next += 1) {
       const line = lines[next]
-      const underline = /^ {0,3}(=+|-+)[ ]*$/.exec(line)
-      if (underline) {
+      const level = this.lazy.has(next) ? null : setextLevel(line)
+      if (level !== null) {
         const rest = takeDefinitions(text, this.definitions)
         if (rest.length === 0) break
-        const level = underline[1][0] === '=' ? 1 : 2
         blocks.push({ kind: 'heading', level, text: rest.join('\n').trim() })
         return next + 1
       }

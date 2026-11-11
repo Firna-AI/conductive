@@ -131,11 +131,11 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain paragraphs, lists, code, and tables.
+Agent replies can contain headings, paragraphs, lists, code, and tables.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
 
-While a reply arrives, the chat shows its text and table rows as they arrive.
+While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
 In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import type { MentionEntry } from '../../fixtures/fileMentions'
 import inline from '../common/InlineText.module.css'
@@ -12,7 +12,13 @@ import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
 import { FileChip } from './FileChip'
 import { entryName } from './entryPaths'
 import { SessionChip, type ChipSession } from './SessionChip'
-import { linkTarget, textParts, type LinkTarget } from './workspaceLinks'
+import { strongRuns } from './strongText'
+import {
+  linkTarget,
+  textParts,
+  type LinkTarget,
+  type TextPart,
+} from './workspaceLinks'
 import {
   WorkspaceChip,
   type ChipOpener,
@@ -92,56 +98,63 @@ function LinkChip(props: {
   )
 }
 
+/** One part of the text of a message: text, code, or a chip. */
+function Part(props: { part: TextPart; rows: readonly ChatRow[] }) {
+  const { part } = props
+  if (part.kind === 'text') return part.text
+  if (part.kind === 'code') {
+    return <code className={inline.code}>{part.text}</code>
+  }
+  if (part.kind === 'mention') {
+    const to = filePage(part.entry)
+    return (
+      <FileChip
+        entry={part.entry}
+        icon={iconOf(part.entry)}
+        mention={part.source}
+        opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
+      />
+    )
+  }
+  const target = linkTarget(part.href, props.rows)
+  if (!target) return part.source
+  const to = linkPage(target)
+  return (
+    <LinkChip
+      opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
+      target={target}
+    />
+  )
+}
+
 /**
  * The text of a sent message or an answer. Each part in backticks is code,
  * and each link to a workspace of the org is a chip that opens the
  * workspace, when the mockups draw its screen. A link to a session that the
  * chat read is a session chip that opens the session. A Markdown link to a
  * workspace or a session shows as the chip alone. Other links stay plain
- * text, and so does a link in code. In the text of a member, `mentions`
- * makes each mention of a file or a folder of the tree a chip that opens
- * the file.
+ * text, and so does a link in code. With `strong`, as in an answer, `**`
+ * marks bold. In the text of a member, `mentions` makes each mention of a
+ * file or a folder of the tree a chip that opens the file.
  */
-export function MessageText(props: { text: string; mentions?: boolean }) {
+export function MessageText(props: {
+  text: string
+  mentions?: boolean
+  strong?: boolean
+}) {
   const rows = useChatWorkspaces()
-  return (
-    <>
-      {textParts(props.text, true, props.mentions).map((part, index) => {
-        if (part.kind === 'text') return part.text
-        if (part.kind === 'code') {
-          return (
-            <code className={inline.code} key={index}>
-              {part.text}
-            </code>
-          )
-        }
-        if (part.kind === 'mention') {
-          const to = filePage(part.entry)
-          return (
-            <FileChip
-              entry={part.entry}
-              icon={iconOf(part.entry)}
-              key={index}
-              mention={part.source}
-              opener={
-                to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined
-              }
-            />
-          )
-        }
-        const target = linkTarget(part.href, rows)
-        if (!target) return part.source
-        const to = linkPage(target)
-        return (
-          <LinkChip
-            key={index}
-            opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
-            target={target}
-          />
-        )
-      })}
-    </>
-  )
+  const parts = textParts(props.text, true, props.mentions)
+  const runs = props.strong ? strongRuns(parts) : [{ strong: false, parts }]
+  return runs.map((run, index) => {
+    const content = run.parts.map((part, inner) => (
+      <Part key={inner} part={part} rows={rows} />
+    ))
+    return run.strong ? (
+      <strong key={index}>{content}</strong>
+    ) : (
+      <Fragment key={index}>{content}</Fragment>
+    )
+  })
 }
 
 /**

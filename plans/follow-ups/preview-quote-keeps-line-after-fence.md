@@ -1,6 +1,6 @@
 # A preview quote keeps a line after its fence
 
-- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, from branch `calummoore/markdown-formatting-issue`, the finding check of review round 2, finding 1.
 - **Location:** `src/files/markdown/markdown-blocks.ts`, the method `quote` of `BlockParser`.
@@ -14,11 +14,15 @@
   - The quote reader collects each line that starts with `>`, and each following line that is not blank and starts no block. Then it parses the collected lines as the content of the quote.
   - CommonMark adds such a line to the quote only while a paragraph of the quote is open.
   - The nested-list branch fixed the same rule for list items: `readList` now passes the lazy lines of an item to its parser, which stops at the first one that continues no paragraph.
-- **Problem:** In a quote that holds a closed code fence, the next line without `>` stays in the quote. CommonMark ends the quote before that line. A comparison by a later review check also found the quote reader failing CommonMark examples 93, 236, 237, and 249, which are lazy quote lines of the same kind.
-- **Impact if no action:** The file preview shows such a line inside the quote, unlike GitHub.
-- **Root question:** How does a quote of the file preview end at a line that continues no paragraph of the quote?
+  - The quote reader does not mark its lazy lines. The paragraph reader can take such a line as a heading underline.
+- **Problem:**
+  - In a quote that holds a closed code fence, the next line without `>` stays in the quote. CommonMark ends the quote before that line. A comparison by a later review check also found the quote reader failing CommonMark examples 93, 236, 237, and 249, which are lazy quote lines of the same kind.
+  - After an empty quote line, such as `> Note` then `>` then `Next section`, the file preview keeps `Next section` inside the quote. CommonMark ends the quote at the empty quote line.
+  - For `> foo`, then `bar`, then `===`, the file preview shows the level-1 heading `foo bar` in the quote. CommonMark keeps `foo bar ===` as paragraph text in the quote. A lazy line cannot be a heading underline.
+- **Impact if no action:** The file preview keeps a line inside a quote or turns paragraph text into a heading, unlike GitHub.
+- **Root question:** How does a quote of the file preview keep a lazy line only as text of its open paragraph?
 - **Options:**
-  - **A.** Pass the lazy lines of a quote to `nested`, as list items do, and stop the parse at the first one that continues no paragraph. Effort: Small.
+  - **A.** Pass the lazy lines of a quote to `nested`, as list items do, and stop the parse at the first one that continues no paragraph. Keep each lazy line as paragraph text, so it cannot become a heading underline. Effort: Small.
   - **B.** Change nothing, and keep the quote reader as it is. Effort: Small.
 - **Left out:** A rule that drops all lazy lines of a quote, because CommonMark keeps lazy paragraph lines in a quote.
 - **Wider fix:** The item `plans/follow-ups/one-markdown-reader-for-chat-and-preview.md` covers one block reader by CommonMark.
