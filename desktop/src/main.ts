@@ -127,6 +127,22 @@ startDesktop({
       appOrigin: configuration.appOrigin,
       rendererSession,
       userData: app.getPath('userData'),
+      requestImportConsent: async () => {
+        const options = {
+          type: 'question' as const,
+          message: `Allow ${productName} to read your Conductor data?`,
+          detail: `${productName} reads your local Conductor workspaces, with their chats and changed files, to list them. It sends the workspace list to ${productName} to show it in the app. It imports only the workspaces that you choose.`,
+          buttons: ["Don't Allow", 'Allow'],
+          defaultId: 1,
+          cancelId: 0,
+          noLink: true,
+        }
+        const result =
+          active && !active.isDestroyed()
+            ? await dialog.showMessageBox(active, options)
+            : await dialog.showMessageBox(options)
+        return result.response === 1
+      },
       foreground: () =>
         Boolean(
           active &&

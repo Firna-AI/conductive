@@ -8,6 +8,9 @@ files:
   - dist/bundle/**
   - package.json
 asar: true
+asarUnpack:
+  - dist/app/desktop/src/import/**
+  - dist/app/src/shared/**
 protocols:
   - name: Conductive sign-in
     schemes: [conductive]

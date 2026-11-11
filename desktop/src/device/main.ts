@@ -1,4 +1,4 @@
-import { hostname } from 'node:os'
+import { homedir, hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { app, Notification, powerMonitor } from 'electron'
 import type { Cookie, Session } from 'electron'
@@ -13,6 +13,8 @@ import { notifyCommand } from './notification.js'
 import { localCommandLauncher } from './process.js'
 import { createDeviceSessionFactory } from './session-factory.js'
 import { connectDevice } from './transport.js'
+import { createImportPreferences } from '../import/preferences.ts'
+import { runImportJob, stopImportJobs } from '../import/worker-client.ts'
 
 interface MainDeviceDependencies {
   appOrigin: string
@@ -21,6 +23,7 @@ interface MainDeviceDependencies {
   foreground(): boolean
   openWorkspace(request: DeviceCommandRecord): void
   warn(): void
+  requestImportConsent(): Promise<boolean>
 }
 
 /** All OS access stays in main. Approval and settings use the Worker relay. */
@@ -29,12 +32,22 @@ export function startMacDevice(dependencies: MainDeviceDependencies): void {
     const { appOrigin, rendererSession, warn } = dependencies
     const files = privateDeviceFiles(resolve(dependencies.userData, 'device'))
     const deviceId = stableDeviceId(files)
+    const locations = { home: homedir(), userData: dependencies.userData }
+    const preferences = createImportPreferences({
+      files,
+      prompt: dependencies.requestImportConsent,
+      warn,
+    })
     const sessions = createDeviceSessionFactory({
       files,
       deviceName: hostname(),
       clock: deviceClock,
       launch: localCommandLauncher(),
       warn,
+      imports: {
+        preferences,
+        jobs: (job, signal) => runImportJob(locations, job, signal),
+      },
       notify: (request) =>
         notifyCommand(request, {
           foreground: dependencies.foreground,
@@ -82,12 +95,17 @@ export function startMacDevice(dependencies: MainDeviceDependencies): void {
     rendererSession.cookies.on('changed', changed)
     powerMonitor.on('suspend', connection.sleep)
     powerMonitor.on('resume', wake)
-    app.once('before-quit', () => {
+    app.once('before-quit', (event) => {
       rendererSession.cookies.removeListener('changed', changed)
       powerMonitor.removeListener('suspend', connection.sleep)
       powerMonitor.removeListener('resume', wake)
       connection.stop()
       sessions.dispose()
+      const stopping = stopImportJobs()
+      if (stopping) {
+        event.preventDefault()
+        void stopping.finally(() => app.quit())
+      }
     })
     void connection.start()
   } catch {

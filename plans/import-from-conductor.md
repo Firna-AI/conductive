@@ -758,6 +758,49 @@ They do not reopen a user decision. The earlier dated facts stay as history.
   replaces the revision of the earlier call above. It adds no gate for an
   existing session.
 
+- Desktop agent calls, 10 November 2026: keep consent and dismissal in
+  one Mac-wide preference store. Give each authenticated device connection
+  its own import controller. Run source work in worker threads, and wait
+  for worker and Git cleanup at app exit. Reason: cancellation must stop
+  the old connection's work without a restart on the next connection.
+- Use a checked source-index copy for scan estimates, and a fresh private
+  HEAD index for selected raw-byte capture. Reason: a source index can
+  hide a clean materialized LFS payload through its cached file metadata.
+  Keep source hooks, filters, file monitors, lazy fetch and auth out of
+  both paths.
+- Keep local common-ancestor hints outside the selected source digest.
+  Resolve and verify actual omissions from private staged objects and
+  current source-bound Worker receipts. Page proofs and retain each OID's
+  receipt. Reason: a default branch can advance beyond the unpublished
+  source branch, and unrelated local refs must not invalidate a retry.
+- Normalize only a generated bundle's prerequisite header, after proving
+  that declared excluded roots cover every original boundary. Preserve
+  its pack, capabilities and ref bytes. Check a cold receiver with only
+  declared root closures. Reason: Git can declare more boundaries than
+  the chosen roots, and a source repository can hide missing objects.
+- Share import control turns across the connection and wait for earlier
+  socket writes. Keep the native pending allowance and at most one
+  import frame in flight. An intentional operation cancellation keeps
+  the live connection. Reason: per-operation acknowledgements alone do
+  not bound shared transport traffic.
+- Classify an unchanged LFS working file only from its staged HEAD
+  pointer, matching payload hash, size and mode, and positive private
+  availability in the chosen GitHub repository. A Git commit receipt
+  proves no LFS payload availability. Pointer commit reachability is not
+  also required when GitHub advertises the payload. Finish the complete
+  inventory and fingerprint before obtaining the separate Git commit
+  prerequisite receipt. Reason: an unpushed pointer can name an available
+  payload, while a pushed pointer can name a missing one.
+- Keep detailed desktop import rules and entry points in
+  `desktop/src/import/README.md`, with a short link in the desktop README.
+  Reason: the area README keeps the desktop README below 300 lines.
+- Unpack the compiled import worker and its portable shared modules from
+  the ASAR archive. Check the real device-session, worker, package and
+  explicit-retry flow in the existing Electron test layout. Reason: the
+  worker needs physical compiled files in a packaged app. These fixture
+  checks do not certify the user's Mac source, native consent, or scan
+  timing.
+
 ### Mockup design calls, 10 November 2026
 
 These are agent calls from Milestone 1, within the decisions in force.
@@ -1237,30 +1280,65 @@ Verification evidence: `.context/import-from-conductor/current/m5-activation-rep
 
 Depends on: 4, 7c
 
-- [ ] Detect `conductor.db`, and offer the import once.
-- [ ] Ask the user before the first read of Conductor data.
-- [ ] Read `conductor.db` in read-only mode, and tolerate a missing column.
-- [ ] Obtain row sizes without building a bundle for every unselected
-      workspace. Measure the scan cost with the user's 36-workspace case.
-- [ ] Find each session file, also a compressed one, and turn each session
-      into one Markdown file, as decision 7 says.
-- [ ] Build the bucket data of decision 8 with Git, and upload it with the
-      short-lived links.
-- [ ] Let the classification in the Mac app use the `repository.lfs`
+- [x] Detect `conductor.db`, and offer the import once. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Ask the user before the first read of Conductor data. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Read `conductor.db` in read-only mode, and tolerate a missing column. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Obtain row sizes without building a bundle for every unselected
+      workspace. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [ ] Measure the scan cost with the user's recorded 36-workspace case.
+      Compare the current workspace, session and missing-file aggregates.
+      Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Find each session file, also a compressed one, and turn each session
+      into one Markdown file, as decision 7 says. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Build the bucket data of decision 8 with Git, and upload it with the
+      short-lived links. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Let the classification in the Mac app use the `repository.lfs`
       result of Milestone 7c before the final fingerprint and the
       prerequisite receipt. Leave out an unchanged Git LFS file only when
       its pointer matches the source and its pair is available. Upload
       each other local LFS payload as a changed file, under the 100 MiB
       rule. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
-- [ ] Leave each changed or untracked file over 100 MiB on the Mac, and list
-      it (decision 11).
-- [ ] Count the sessions whose memory file is gone, and list them in the
-      result.
-- [ ] Keep the reservation of a stopped upload, and upload only its missing
-      parts on Try again (decision 14).
-- [ ] Add the device operations of the scan and the upload.
-- [ ] Add the tests of the Mac app, as the `testing` skill says.
-- [ ] Update `desktop/README.md`.
+- [x] Leave each changed or untracked file over 100 MiB on the Mac, and list
+      it (decision 11). Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Count the sessions whose memory file is gone, and list them in the
+      result. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Keep the reservation of a stopped upload, and upload only its missing
+      parts on Try again (decision 14). Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Add the device operations of the scan and the upload. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Add the tests of the Mac app, as the `testing` skill says. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Update `desktop/README.md`. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Keep the working files of a nested repository, untracked or
+      staged, under the outer and nested local ignore rules. This applies
+      review finding 3, option C. Branch:
+      `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Resolve only the trusted home and user-data prefixes, once at the
+      worker entry, through one typed constructor. This applies review
+      finding 4, option B in typed form. Branch:
+      `conductor/import-from-conductor-mac-scan-and-upload`.
+- [ ] Check the real native consent alert on the user's Mac. Branch:
+      `conductor/import-from-conductor-mac-scan-and-upload`.
+- [ ] Run the controlled source pack, restore and unchanged/changed retry
+      proof on a real Mac, with private temporary staging. Branch:
+      `conductor/import-from-conductor-mac-scan-and-upload`.
+- [ ] Check the production source-worker import flow in source and
+      packaged Electron on both supported Mac architectures. Branch:
+      `conductor/import-from-conductor-mac-scan-and-upload`.
+
+Root design call, 11 November 2026:
+
+- Resolve only the trusted home and app user-data prefixes, once at the
+  worker entry, through one typed constructor. Keep the `exists` job on
+  its single pre-consent check of the database file. Keep the no-follow
+  policy of every descendant: source children, `.claude`, `.codex`, their
+  collection roots, stage folders, and staged parts. Reason: an alias in
+  a trusted prefix must not hide present memory files or block staged
+  parts. The existing discovery and upload requirements settle this
+  detail. This records the root outcome of review finding 4, option B in
+  typed form. It changes no protocol, legal page, public guide, Electron
+  profile path, or descendant link policy.
+
+Implementation and verification evidence:
+`.context/import-from-conductor/current/m6-final-report.md`.
 
 ## Milestone 7: Branch control in New workspace
 
@@ -1458,6 +1536,7 @@ and, for the comparison note, `.context/import-from-conductor/current/m8/package
 Depends on: every other milestone
 
 Captured-main integration record: `.context/import-from-conductor/current/next-main-integration/root-integration-audit.md`.
+Desktop integration record: `.context/import-from-conductor/current/next-m6-integration/root-integration-audit.md`.
 
 - [ ] Run the targeted tests and the complete gate, `npm run check`.
 - [ ] Smoke-test the import in the Mac app with one transferred Claude
