@@ -46,12 +46,19 @@ on the disk of the device. The protocol rejects that copy.
 - The diagnosis first ranked C lower partly because C changes a protocol
   rule. That reason does not count under the repository rules, so the
   record keeps only the reasons above.
+- Decision 281, 11 November 2026: for a tab or a Mac app that loaded before
+  the deploy, the user chose option A of the item below. Milestone 3
+  removes the forward session read of the browser route, and old clients
+  must upgrade. The user's reason: the product has no users yet, so
+  everyone can be made to upgrade.
+- On 11 November 2026 the user answered the last open decision of this
+  plan, after its first report. I took that answer as the approval of the
+  plan.
 
-### Open decisions
+### Answered decisions
 
-- What the history route gives a tab or a Mac app that loaded before the
-  deploy. The section below holds the item. Its answer sets one TODO of
-  Milestone 3.
+The user answered this item with option A on 11 November 2026, as decision
+281 above. The item stays here as the record of its options.
 
 #### Clients that loaded before the deploy
 
@@ -217,14 +224,14 @@ These are my calls, made on 11 November 2026.
 
 ### Work outside this plan
 
-- Option A of item 1, larger history pages for the browser route, is
-  commit `9f90e551` on branch `calummoore/chat-loading-issue`. On 11
-  November 2026 it had no pull request yet. It adds `PageLimits`,
+- Option A of item 1, larger history pages for the browser route, merged
+  into `main` on 11 November 2026 as PR #242. It adds `PageLimits`,
   `BROWSER_PAGE_LIMITS`, and `SessionPage` to
   `worker/chat/history-pages.ts`, and it passes the limits from
   `worker/chat/http-routes.ts`. Milestone 2 changes the same code.
 - Option B of item 3 merged into `main` on 11 November 2026 as commit
-  `2b3a3e03`, PR #239. This branch starts after it.
+  `2b3a3e03`, PR #239.
+- This branch merged `main` with both changes in commit `3b7635ed`.
 
 Contract owners:
 
@@ -258,10 +265,41 @@ Replaced ways:
     `src/chat/components/TryAgain.test.tsx`, and
     `src/shell/workspace/SessionAddress.test.tsx`.
   - The guide `src/chat/loads-and-sends.md`.
-- The forward session read of the browser route stays or goes as the open
-  decision on old clients says. Its consumers are the 27 Worker test files
-  that call `chatHistoryPath`, the route tests, and
-  `worker/chat/history.md`.
+- The forward session read of the browser route → the newest-first
+  session read, as decision 281 says. Moved and deleted in Milestone 3.
+  The forward read keeps only what the readers inside the Durable Object
+  use. Consumers on 11 November 2026:
+  - Each file under `worker/` that calls `chatHistoryPath`:
+    `worker/chat/adapter-restart.test-support.ts`,
+    `worker/chat/adapter.test.ts`, `worker/chat/device-cleanup.test.ts`,
+    `worker/chat/events.test.ts`, `worker/chat/harness.test-support.ts`,
+    `worker/chat/integration/attachment-cleanup.test.ts`,
+    `worker/chat/integration/forwarding.test.ts`,
+    `worker/chat/integration/history-pages.test-support.ts`,
+    `worker/chat/integration/machine-credentials.test.ts`,
+    `worker/chat/integration/runner-access.test.ts`,
+    `worker/chat/integration/runner-forwarding.test.ts`,
+    `worker/chat/integration/workspace-admission.test.ts`,
+    `worker/chat/integration/workspace-lifecycle.test.ts`,
+    `worker/chat/integration/workspace-recovery.test-support.ts`,
+    `worker/chat/integration/workspace-resume-response.test.ts`,
+    `worker/chat/runner-native-delivery.test.ts`,
+    `worker/chat/runner-native-logins.test.ts`,
+    `worker/devices/alarm.test-support.ts`,
+    `worker/features/agent-session-resume.test.ts`,
+    `worker/features/agent-tools-routes.test.ts`,
+    `worker/features/allocated-creation-restore.test.ts`,
+    `worker/features/archive-routes.test.ts`,
+    `worker/features/continue-routes.test.ts`,
+    `worker/features/creation-restore.test.ts`,
+    `worker/model-gateway/runtime.test.ts`,
+    `worker/operator/org-chat.test.ts`, `worker/operator/org-live.test.ts`,
+    and `worker/tools/session-end-reason.test.ts`.
+  - The limits of the forward session read and their tests in
+    `worker/chat/history-session-pages.test.ts`. The limits move to the
+    newest-first read.
+  - The route table in `worker/chat/README.md`, and the notes in
+    `worker/chat/key-code.md` and `worker/chat/history.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -296,12 +334,13 @@ The protocol states the new order of the history and the live events.
 
 ## Milestone 2: Newest-first session pages in the Worker
 
-Depends on: 1, and option A of item 1 merged into `main`.
+Depends on: 1. Option A of item 1 merged as PR #242.
 
 The history route also gives the pages of a session newest first. The
 forward session pages stay until Milestone 3 moves the browser.
 
-- [ ] Merge `main` into this branch after option A of item 1 merges.
+- [x] Merge `main` into this branch after option A of item 1 merges.
+      Commit `3b7635ed`.
 - [ ] Write the tests first, and see each fail before the change:
   - [ ] The first page holds the newest events of the session through the
         cutoff, in event order.
@@ -332,7 +371,7 @@ forward session pages stay until Milestone 3 moves the browser.
 
 ## Milestone 3: Newest-first history load in the browser
 
-Depends on: 2, and the user's answer on old clients.
+Depends on: 2.
 
 The chat shows the newest page and starts the live events. Then it loads
 the earlier pages above them. Every consumer moves to the newest-first
@@ -365,13 +404,12 @@ pages.
 - [ ] Move each consumer of the oldest-first load that "Replaced ways"
       lists to the newest-first pages. Search `src/` for `chatHistoryPath`
       again first, and move each new consumer too.
-- [ ] Apply the answer on old clients to the forward session read of the
-      browser route:
-  - A: remove it, and move the Worker tests that read it.
-  - B, D, or F: keep it, and add a follow-up item that removes it at the
-    end that the answer names.
-  - E: keep it until the version floor ships, in its own change.
-  - H: keep it, and state both directions in `worker/chat/history.md`.
+- [ ] Remove the forward session read of the browser route, as decision 281
+      says. Move each Worker consumer that "Replaced ways" lists to the
+      newest-first read. Search `worker/` for `chatHistoryPath` again
+      first, and move each new consumer too.
+- [ ] Update the route table in `worker/chat/README.md`, and the notes in
+      `worker/chat/key-code.md` and `worker/chat/history.md`.
 - [ ] Update `src/chat/loads-and-sends.md` and the doc comment of
       `loadChat`.
 - [ ] Update `plans/follow-ups/history-pages-change-saved-tabs.md`: the
