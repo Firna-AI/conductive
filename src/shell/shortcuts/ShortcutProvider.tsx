@@ -6,6 +6,7 @@ import {
 import { useServices, type Platform } from '../../app/services'
 import { useStore } from '../../app/store'
 import { useApp } from '../context'
+import { useMenuDragStop } from '../mac/menu-drag'
 import { LayersContext, OpenLayers } from '../ui/layers'
 import { ShortcutContext, type ShortcutLayer } from './shortcut-context'
 import { handleShortcutPress } from './shortcut-listener'
@@ -32,7 +33,8 @@ function useKeymap(keyboard: Platform): ShortcutKeymap {
  * `AppServices.onKey`, with the commands that the parts of the page offer,
  * the terminals that their owners mark, the recorder of the Keyboard
  * shortcuts tab, and the open menus and modal layers that every UI kit of
- * the app notes.
+ * the app notes. In the Mac app, an open menu also stops the drag regions,
+ * as `useMenuDragStop` says.
  */
 export function ShortcutProvider(props: { children: ReactNode }) {
   const { onKey, platform, host } = useServices()
@@ -41,6 +43,7 @@ export function ShortcutProvider(props: { children: ReactNode }) {
   const [terminals] = useState(() => new Set<HTMLElement>())
   const [recorders] = useState(() => new Set<HTMLElement>())
   const keymap = useKeymap(platform)
+  useMenuDragStop(layers)
   useEffect(
     () =>
       onKey((press) =>
