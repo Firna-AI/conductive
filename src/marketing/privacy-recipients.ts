@@ -37,6 +37,18 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         for ${productName}, in the account of ${productName}. Your code,
         your files, and your agent sessions are in them. ${productName}
         sends the provider the requests that start, stop, and use them.`,
+      text`For a ChatGPT sign-in, OpenAI sends the account owner's email,
+          account ID, and ChatGPT workspace name through ${productName} to
+          the cloud computer. Codex uses them to run on that workspace.
+          Programs and members with terminal access there can read them.
+          ${productName} stores the sign-in encrypted and renews it alone.
+          The real ChatGPT sign-in tokens stay outside every cloud computer.
+          Codex reads a temporary turn credential from a file for its
+          session. The file also holds public account claims and a
+          placeholder refresh token. It is removed when the turn ends.
+          ChatGPT workspace
+          rules can run hooks and MCP commands in the org's cloud computer.
+          Those commands can reach its files and available credentials.`,
       text`Anthropic and OpenAI get your messages, your files, and your
         code when an agent works on them. Each Mac command request and its
         result also go to the agent and to Anthropic or OpenAI.

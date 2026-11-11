@@ -1,0 +1,54 @@
+# Model gateway doc still passes the length target
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, a new problem of the check of finding 10 of PR #45, branch `conductor/boat-native-remote-workspaces-milestone-15m`, round 1.
+- **Location:** `docs/protocol/model-gateway.md`.
+- **Reason:** The ChatGPT sign-in branch grows the gateway doc past the target. Its split stays outside this branch's approved work.
+
+- **Terms:**
+  - **Length target:** the `documentation` skill keeps each doc near 250 lines, and splits a longer doc into linked pages in the change that touches it. The always-on rules also split any file that passes 300 lines.
+  - **Landing page:** the original page of a split doc. It keeps its introduction and some topics, and it links to the new pages.
+  - **Stub section:** a short section of a landing page. It keeps the heading of a moved section and links to its new home.
+- **Background:**
+  - The protocol docs grew with each milestone, and many branches touched them without a split. On 9 November 2026, the Desktop pause split the workspace tools into `docs/protocol/workspace-tools.md`. `docs/protocol/workspaces-and-sandboxes.md` keeps a stub section for each tool.
+  - On 9 November 2026, main split `docs/protocol/access-and-security.md`, `docs/protocol/chat-and-events.md`, `docs/protocol/desktop-app.md`, `docs/protocol/workspaces-and-sandboxes.md`, and `docs/architecture.md` into linked pages, in commit `00a50295`. In the split, each moved section kept its words. On the same day, the model gateway change split three of these docs in other ways. The merge of main into the model gateway branch on 10 November 2026 kept the pages of main, and moved the gateway requirements into them.
+  - Main moved the agents and the sessions from `docs/protocol/chat-and-events.md` to `docs/protocol/agents-and-sessions.md`. It moved the org image from `docs/protocol/workspaces-and-sandboxes.md` to `docs/protocol/org-image.md`. Both landing pages keep a stub section for each moved section.
+  - The waitlist added requirements to the access, workspace, and architecture pages, and to the operator actions page.
+  - The counts below are from 10 November 2026, after that merge and before the feedback change.
+  - These pages meet the target:
+    - `docs/protocol/access-and-security.md`: 205 lines.
+    - `docs/protocol/tokens-and-secrets.md`: 113 lines.
+    - `docs/protocol/terminal-previews-and-desktop.md`: 130 lines.
+    - `docs/protocol/chat-and-events.md`: 131 lines.
+    - `docs/protocol/messages-and-attachments.md`: 211 lines.
+    - `docs/protocol/agents-and-sessions.md`: 186 lines.
+    - `docs/protocol/workspaces-and-sandboxes.md`: 159 lines.
+    - `docs/protocol/workspace-life.md`: 119 lines.
+    - `docs/protocol/org-image.md`: 98 lines.
+    - `docs/protocol/desktop-app.md`: 164 lines.
+    - `docs/architecture.md`: 181 lines.
+    - `docs/architecture/components.md`: 150 lines.
+  - These three pages are at the target, within a few lines of 250:
+    - `docs/protocol/model-gateway.md`: 250 lines.
+    - `docs/protocol/operator-section.md`: 254 lines.
+    - `docs/protocol/command-palette.md`: 259 lines.
+  - `docs/protocol/isolation.md` has 265 lines. The merge added the rules and the risks of each version pin to its section "Agent logins in a sandbox". That section, with "A sandbox with a version pin of 2 or later" and "A sandbox with a version pin of 1", fills lines 100 to 265. The merge kept the page structure of main, so it did not split the page.
+  - `docs/deployment.md` has 361 lines. It is a deployment guide, not a protocol doc. "The runner archive", with "The archive in each deploy", fills lines 219 to 289. "Models" and "The title model" fill lines 146 to 218.
+  - `docs/protocol/operator-actions.md` has 295 lines. "Suspend an org", "What members of a suspended org keep", and "Lift a suspension" fill lines 187 to 287. The other sections hold the operator, the suspension of a user and the access that it ends, and the abuse reports.
+  - Two mockup docs pass 300 lines: `docs/mockups/design.md` has 376 lines, and `docs/mockups/catalogue.md` has 335. The `mockups` skill gives their rules. Each has only its title heading, so a split needs topic headings first.
+  - On 10 November 2026, the ChatGPT sign-in of Codex (pull request #177) grew `docs/protocol/model-gateway.md` to 322 lines, past 300. "How the agents reach the gateway" fills lines 57 to 150, and "Requests and answers" fills lines 203 to 280. That change kept the page whole, because other open branches also change the gateway rules.
+  - Other docs, READMEs, code comments, and follow-up items cite sections of these pages. A split must update each of these citations.
+  - On 10 November 2026, the feedback change split `docs/protocol/command-palette.md`, `docs/deployment.md`, and `docs/mockups/catalogue.md` into linked pages. They now have 217, 264, and 237 lines. Their old section links still work. These three pages need no further split for this item.
+  - On 11 November 2026, main moved the version-specific isolation rules into `docs/protocol/version-pins.md`. It also moved the workspace mockup rules into `docs/mockups/design-workspace.md`. The operator actions doc has 223 lines. Main deleted this follow-up. Its gateway doc has 260 lines. The merge into the ChatGPT sign-in branch keeps the follow-up only for that branch's 322-line gateway doc.
+- **Problem:** The model gateway doc still passes the target. A reader must scan a long page to find one rule.
+- **Impact if no action:** The next change that touches this doc must also split it. The doc grows harder to read and to keep in line.
+- **Root question:** How does the model gateway doc get to about 250 lines, with each topic easy to find?
+- **Options:**
+  - **A.** Split the model gateway doc into linked pages by topic. Move each section without a change to its words. Update each link and citation inside and outside `docs/`. Effort: Small.
+  - **B.** Change nothing now. Split the doc in the next change that touches it, as the `documentation` skill requires. Cost: that change carries the link migration of the split. Effort: Small.
+- **Left out:** A lint for doc length, because it adds a gate. Removing requirements fails the goal of preserving the gateway rules. Only a split now or later meets that goal.
+- **Wider fix:** None. The `documentation` skill already holds the rule.
+- **Previous examples:** `docs/protocol/workspace-tools.md` holds the moved tools requirements, and `docs/protocol/workspaces-and-sandboxes.md` keeps their section anchors as stub sections. The split of main, its merge with the model gateway split, and main's two extractions, which the background describes, are later examples.
+- **Recommendation:** A. A separate change moves the gateway rules and their links together.
+- **Action:** fix after merge, apply A, because the split is outside the approved ChatGPT sign-in work.

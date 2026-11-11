@@ -20,7 +20,7 @@ export const modelsAndProvidersFeatures: readonly ParityFeature[] = [
     area: 'models-and-providers',
     name: 'Codex',
     status: 'available',
-    note: 'Codex works with an OpenAI API key. Signing in with a ChatGPT plan, also Plus or Pro, is in progress.',
+    note: 'Connect Codex with an OpenAI API key or a device code sign-in to your ChatGPT plan, including Plus and Pro.',
   },
   {
     id: 'cursor',
