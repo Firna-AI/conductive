@@ -63,7 +63,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Stop, retry, and background tasks',
     status: 'available',
-    note: 'Stop ends a turn. Try again retries the latest failed turn. Background task controls are under consideration.',
+    note: 'Stop ends a turn, and Try again retries the latest failed turn. Keeping turns open for background work with agents powered by Claude is planned.',
   },
   {
     id: 'plan-mode',

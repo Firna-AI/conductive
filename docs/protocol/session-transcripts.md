@@ -108,8 +108,11 @@ at `app/tabs` and `app/transcripts`.
 - Each fold line of the concise copy names its skills, as
   [Skill lines](chat-and-events.md#skill-lines) says for the chat
   (decision 277).
-- As in the chat, a run of tool calls with a call that is not done shows
-  open in the concise copy too.
+- As in the chat, a run of tool calls shows open in the concise copy when
+  the chat shows it open at first. That is the newest run of a running
+  turn, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
+  says, and a run that stays in view after its turn ends, with a call that
+  is not done.
 - A copy holds no thinking text of the agent, because the chat shows none.
 - A menu with only Copy full transcript was rejected. A member who wants
   only the conversation would then trim each long copy by hand.

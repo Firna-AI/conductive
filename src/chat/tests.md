@@ -26,7 +26,10 @@ refuses. `components/FirstStart.dom.test.tsx` mounts the chat without a
 host, sends with Enter and Send during the first start and after it failed,
 and checks the saved message on the bar of a failed first start and of a
 failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
-turns from the rendered chat. `components/SkillLines.dom.test.tsx` reads
+turns from the rendered chat. It also checks that only the newest run of
+tool calls of a running turn stays open: between two calls, after a
+message, and while a message waits. A newer run folds it, and so does the
+end of the turn. `components/SkillLines.dom.test.tsx` reads
 the skill lines and the fold lines that name skills from the rendered chat:
 a skill line while its call runs, the line of an open and of a folded run,
 and the line and the steps of the work fold of an ended turn, with a failed

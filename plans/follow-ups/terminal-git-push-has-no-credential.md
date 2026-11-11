@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, from review round 1 of the branch `calummoore/git-identity-error` (pull request #181).
-- **Location:** `image/git-credential-helper.mjs:25`, `image/github.md:31`, `src/marketing/docs/terminal-and-previews.md:49`, `src/marketing/docs/pull-requests.md:34`, and `src/marketing/docs/security.md:35`.
+- **Location:** `image/git-credential-helper.mjs:45`, `image/github.md`, section "Git credential helper", `src/marketing/docs/terminal-and-previews.md:47` and `:53`, `src/marketing/docs/pull-requests.md:34`, `src/marketing/docs/security.md:36` and `:49`, and the comparison notes in `src/marketing/from-conductor/areas/cloud.ts:72` and `src/marketing/from-conductor/areas/review-and-merge.ts:103` and `:141`.
 - **Reason:** the commit author change did not touch the credential helper, and the fix changes who can push from the shared terminal.
 
 - **Terms:**
@@ -13,11 +13,12 @@
     image installs as Git's credential helper and as the token source of
     the `gh` wrapper.
   - **Turn ID:** `CONDUCTIVE_TURN_ID`, which the runner sets for each agent
-    process. It is empty in the terminal and in scripts.
+    process. The terminal and scripts do not have it.
 - **Background:**
-  - In Git credential mode (`get`), the helper throws "Missing credential
-    context" when `CONDUCTIVE_TURN_ID` is empty. Git then gets no
-    credential. `image/github.md` states this.
+  - In Git credential mode (`get`), the helper writes "Git gets GitHub
+    access in an agent turn. Ask an agent to run this command." when
+    `CONDUCTIVE_TURN_ID` is missing or empty. It sends no request, and Git
+    gets no credential. `image/github.md` states this.
   - In token mode, which the `gh` wrapper uses, an empty turn ID is
     allowed. The Worker then returns the workspace owner's token, as
     `docs/protocol/github-tokens.md` says for `gh`.
@@ -26,6 +27,9 @@
   - The public guides say that commands in the shared Terminal use the
     workspace owner's GitHub account, and the terminal guide says that Git
     and the GitHub CLI get GitHub access through Conductive.
+  - Three notes of the comparison page at `conductive.build/from-conductor`
+    say the same: the terminal uses the owner's account, and Git can push
+    from the terminal.
 - **Problem:** A member cannot push from the shared terminal with Git,
   while the guides say that terminal commands use the owner's account.
 - **Impact if no action:** Members who commit in the terminal cannot push

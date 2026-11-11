@@ -165,7 +165,8 @@ Copy a session's whole conversation as Markdown for another agent or a document.
 3. Paste the text where you need it.
 
 **Copy concise transcript** keeps the default folds closed.
-A run of tool calls stays open if any call is not done.
+While the agent works, its newest run of tool calls stays open.
+After a turn ends, a run outside its folded work stays open if one of its calls stopped or failed.
 **Copy full transcript** includes the messages and work inside every fold.
 Both copies keep the skill names and words of the chat.
 

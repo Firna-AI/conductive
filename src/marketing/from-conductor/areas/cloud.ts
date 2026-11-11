@@ -83,7 +83,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Cloud agent credentials',
     status: 'available',
-    note: 'Members connect and share agent logins. Using keys from cloud computer environment variables is under consideration.',
+    note: 'Members connect and share agent logins. Using a shared agent setup on the cloud computer, including environment variables, is planned.',
   },
   {
     id: 'workspace-details',

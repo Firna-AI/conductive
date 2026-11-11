@@ -37,8 +37,9 @@ describe('the work of a turn', () => {
     const { chat, markup } = await renderChat({ conversation: 'running' })
     chat.emit(update('lint', 'npm run lint', 0))
     chat.emit(said('answer-2', 'The form now suggests addresses.'))
+    // The newest run stays open after the message, until a newer run starts.
     expect(seen(markup())).toContain(
-      `${asked} I will check the checkout form. 2 tool calls The form now suggests addresses. Working 2m 41s`,
+      `${asked} I will check the checkout form. 2 tool calls Read src/app/checkout/AddressForm.tsx Ran npm run lint The form now suggests addresses. Working 2m 41s`,
     )
 
     chat.emit(ended('finished'))
@@ -55,6 +56,36 @@ describe('the work of a turn', () => {
         ],
       },
     ])
+  })
+
+  it('keeps only the newest run of a running turn open, also between its calls and while a message waits, and folds it when the turn ends', async () => {
+    const { chat, markup } = await renderChat({ conversation: 'running' })
+    const read = 'Read src/app/checkout/AddressForm.tsx'
+    // The recorded read is done, and the agent has not started a new call.
+    expect(seen(markup())).toContain(
+      `I will check the checkout form. 1 tool call ${read} Working 2m 41s`,
+    )
+
+    chat.emit(update('lint', 'npm run lint', 0, 'running'))
+    chat.emit(update('lint', 'npm run lint', 0, 'failed'))
+    // The agent reads a message that waits at its next call.
+    const steer = { ...message, id: 'steer-1', text: 'Also debounce it.' }
+    chat.emit({ type: 'message.accepted', message: steer })
+    expect(seen(markup())).toContain(
+      `2 tool calls ${read} Ran npm run lint Failed ${steer.text} Working 2m 41s`,
+    )
+
+    // A newer run folds the earlier one, also with its failed call.
+    chat.emit(said('plan-2', 'I will fix the lint.'))
+    chat.emit(update('fix', 'npm run lint -- --fix', 0))
+    expect(seen(markup())).toContain(
+      `2 tool calls I will fix the lint. 1 tool call Ran npm run lint -- --fix ${steer.text} Working 2m 41s`,
+    )
+
+    chat.emit(ended('finished'))
+    expect(seen(markup())).toContain(
+      `${asked} 2 tool calls, 1 message I will fix the lint. 1 tool call 4m 12s`,
+    )
   })
 
   it('keeps the last message of a stopped turn and the calls that the stop cut off in view', async () => {

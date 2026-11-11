@@ -58,6 +58,14 @@ describe('skill lines', () => {
     chat.emit(skillUse('brainstorming', 'high'))
     chat.emit(update('lint', 'npm run lint', 0))
     chat.emit(said('plan-3', 'The plan is ready.'))
+    expect(lineOf(topFolds(markup())[1])).toEqual({
+      open: true,
+      words: '2 tool calls\u00a0· Skill: brainstorming',
+      icons: ['book-open', 'square-terminal'],
+      named: true,
+    })
+
+    chat.emit(update('test', 'npm test', 0))
     expect(topFolds(markup()).map(lineOf)).toEqual([
       { open: false, words: '1 tool call', icons: ['file-text'], named: false },
       {
@@ -65,6 +73,12 @@ describe('skill lines', () => {
         words: '2 tool calls\u00a0· Skill: brainstorming',
         icons: ['book-open', 'square-terminal'],
         named: true,
+      },
+      {
+        open: true,
+        words: '1 tool call',
+        icons: ['square-terminal'],
+        named: false,
       },
     ])
   })

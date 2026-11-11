@@ -1,8 +1,11 @@
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 
+import { sourceRepository } from '../../docs/mockups/src/brand.ts'
 import { publishRelease } from './publish-release.ts'
 import { publishHarness, releaseNames } from './publish.test-support.ts'
+
+const repository = `${sourceRepository.owner}/${sourceRepository.name}`
 
 it('uploads every signed file and publishes only after GitHub confirms the assets', async () => {
   const { release, dependencies, names } = publishHarness()
@@ -14,7 +17,7 @@ it('uploads every signed file and publishes only after GitHub confirms the asset
         'api',
         '--paginate',
         '--slurp',
-        'repos/Firna-AI/remote-code/releases?per_page=100',
+        `repos/${repository}/releases?per_page=100`,
       ],
     ],
     [
@@ -24,7 +27,7 @@ it('uploads every signed file and publishes only after GitHub confirms the asset
         'upload',
         'v0.1.0',
         '--repo',
-        'Firna-AI/remote-code',
+        repository,
         '--clobber',
         ...names.map((name) => join('/signed', name)),
       ],
@@ -35,7 +38,7 @@ it('uploads every signed file and publishes only after GitHub confirms the asset
         'api',
         '--paginate',
         '--slurp',
-        'repos/Firna-AI/remote-code/releases/42/assets?per_page=100',
+        `repos/${repository}/releases/42/assets?per_page=100`,
       ],
     ],
     [
@@ -44,7 +47,7 @@ it('uploads every signed file and publishes only after GitHub confirms the asset
         'api',
         '--method',
         'PATCH',
-        'repos/Firna-AI/remote-code/releases/42',
+        `repos/${repository}/releases/42`,
         '--field',
         'draft=false',
         '--raw-field',
@@ -74,7 +77,7 @@ it('replaces partial files in a leftover draft before publishing it', async () =
     'upload',
     'v0.1.0',
     '--repo',
-    'Firna-AI/remote-code',
+    repository,
     '--clobber',
     ...names.map((name) => join('/signed', name)),
   ])
@@ -130,7 +133,7 @@ it('publishes the files that packaging names, whatever their prefix', async () =
     'upload',
     'v0.1.0',
     '--repo',
-    'Firna-AI/remote-code',
+    repository,
     '--clobber',
     ...renamed.map((name) => join('/signed', name)),
   ])
