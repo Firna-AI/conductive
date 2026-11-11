@@ -907,6 +907,21 @@ them.
   column, and decrypts nothing. The dispatch and the gateway check the
   whole address. Agent call of 11 November 2026, from the check of
   Milestone 5b.
+- A read of the model list waits at most 10 seconds and reads at most 1
+  MiB. The save and Refresh wait for it, so that the account page shows
+  the new list at once. A failed read never fails the save. Agent call of
+  11 November 2026, from Milestone 5c.
+- Each read attempt counts toward the 10-minute limit of the background
+  read, also a failed one. A late answer for a replaced login never
+  replaces newer data. Agent call of 11 November 2026, from Milestone 5c.
+- The account data names the missing app models, also when the list names
+  none of them. The browser then hides nothing of that agent, as the
+  design call about decision 10 G says. Agent call of 11 November 2026,
+  from Milestone 5c.
+- A Claude read asks for `limit=1000`, and an answer with `has_more: true`
+  counts as a failed read. Reason: Anthropic's list returns 20 models by
+  default, and a list that is not whole must not hide a model. Agent call
+  of 11 November 2026, from the check of Milestone 5c.
 
 ## Milestone 1: Mockups
 
@@ -1239,24 +1254,30 @@ Depends on: 5b
 The Worker reads the model list of each own endpoint, as decision 10 G
 says, and the account API gives the browser what the pickers hide.
 
-- [ ] Read `GET /v1/models` of the endpoint through the address builder of
+- [x] Read `GET /v1/models` of the endpoint through the address builder of
       decision 9 E, with the key in the header of its agent, under the
       fetch rules of the gateway.
-- [ ] Read it at the save, on a Refresh route of the account, and in the
+- [x] Read it at the save, on a Refresh route of the account, and in the
       background when a turn on the login starts, at most once in 10
       minutes. A failed read keeps the last list and its time.
-- [ ] Store the last list that worked and its time for each own endpoint
+- [x] Store the last list that worked and its time for each own endpoint
       login, with a migration that keeps every row.
-- [ ] Give the browser, for each own endpoint login of the account, the
+- [x] Give the browser, for each own endpoint login of the account, the
       app models that the last list does not name and the time of the
       last read. Give nothing to other members.
-- [ ] Make a turn that fails because the endpoint does not serve its model
+- [x] Make a turn that fails because the endpoint does not serve its model
       end with "The endpoint of this login does not serve <model ID>.
       Choose another model.", with no host.
-- [ ] Add tests: each read time, a failed read, a list that names no app
+- [x] Add tests: each read time, a failed read, a list that names no app
       model, the account response, the background limit, and the failure
       text for both agents.
-- [ ] Update the READMEs of the changed areas.
+- [x] Update the READMEs of the changed areas.
+
+The Worker reads the model list of each own endpoint since 11 November
+2026. The account data gives the owner `modelList`, with the missing app
+model IDs and the time of the last read that worked. Evidence:
+`.context/own-endpoint-logins/m5c/` and
+`.context/own-endpoint-logins/m5c-pagination/`.
 
 ## Milestone 6: Account and Get started
 
