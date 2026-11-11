@@ -8,9 +8,8 @@ agents about thirty commands. So Conductive agents can hand out work, but
 they cannot manage it: they cannot stop a turn, close or rename a session,
 archive or move a workspace, manage sections, or open a preview. This
 change adds a call for each Conductor command whose feature Conductive
-already has. It also lets `create_workspace` choose a base branch
-(decision 277). The new calls keep the names of our pattern (decision
-278). A stop by an agent names the sending session with a session chip
+already has (decision 277). The new calls keep the names of our pattern
+(decision 278). A stop by an agent names the sending session with a session chip
 (decision 279).
 
 The change does not cover these things:
@@ -25,13 +24,15 @@ The change does not cover these things:
 - Personal sections, a restore call, and a reassign call. Conductive's
   sections belong to the org, and Conductor's CLI has no restore or
   reassign command.
-- A base branch choice in the New workspace page and dialog of the app.
+- A base branch for `create_workspace`. The paused plan that adds "Start
+  from" to New workspace owns branch starts (decision 281 C). Decision
+  280 B, a check of the branch before the create, waits for it in
+  `plans/follow-ups/agent-branch-choice-check.md`.
 
 Contract owners:
 
 - [Agent tools](../docs/protocol/agent-tools.md) and
   [Session calls](../docs/protocol/session-calls.md).
-- [Base branches](../docs/protocol/base-branches.md).
 - [Messages and attachments](../docs/protocol/messages-and-attachments.md)
   and [Session transcripts](../docs/protocol/session-transcripts.md), for
   the stop line.
@@ -46,8 +47,7 @@ by then, as `plans/follow-ups/decision-numbers-across-plans.md` says.
 The brainstorm notes are in `.context/conductor-cli-parity/brainstorm.md`.
 The options check of 11 November 2026 ran over decisions 277 to 280. Its
 report is in `.context/agent-tools-conductor-parity/options-check.md`.
-Decision 277 E and decisions 280 and 281 wait for the user. Each milestone
-names the decisions that it waits for.
+Cal answered every decision of this plan on 11 November 2026.
 
 ## Decisions
 
@@ -85,7 +85,7 @@ Added on 11 November 2026 from the brainstorm of this change.
 - **Related:** Decision 279 applies to the stop call, which each option holds. Decisions 280 and 281 follow from the base branch of B.
 - **Recommendation:** E, from the options check. Decision 42 limits Archive because the app deletes the cloud computer 14 days after it. With the reach of the org, text that steers a pull request run of an admin could archive every workspace of the org. E still lets an agent tidy the work that it handed out. The first recommendation was B.
 - **Action:** ask the user, because E changes the choice of B, and the reach of the new writes was an agent call that no decision covers.
-- **Chosen:** B, by Cal on 11 November 2026: "1 = B". The answer on E is open.
+- **Chosen:** B, by Cal on 11 November 2026: "1 = B". After the options check, Cal chose A on the same day, in the words "227 = A". No decision 227 exists, so the working agent read it as 277, and 281 C agrees. So this plan adds no base branch, and `archive_workspace` and `delete_section` keep the reach of the org.
 
 ### 278. Whether the new calls use Conductor's command names
 
@@ -173,6 +173,7 @@ added D and E.
 - **Related:** Decisions 277 B and 281.
 - **Recommendation:** B. A refusal before the create leaves no failed workspace, and the agent learns the cause at once.
 - **Action:** ask the user, because B adds a GitHub call and a rejection, and C changes a rule in force.
+- **Chosen:** B, by Cal on 11 November 2026: "280 = B". With decision 281 C, this plan adds no base branch. So B applies to the change that lets agents choose a branch. `plans/follow-ups/agent-branch-choice-check.md` records it with the shared part of each option.
 
 ### 281. How the base branch fits the plan to start from GitHub
 
@@ -198,6 +199,7 @@ Added on 11 November 2026 from the options check of decisions 277 to 280.
 - **Related:** Decisions 277 B and 280.
 - **Recommendation:** A. It extends the rule that `main` already has, and the start-from plan must handle stored bases for pull request runs in any case.
 - **Action:** ask the user, because decision 277 B and decision 216 D conflict, and no rule settles which one wins.
+- **Chosen:** C, by Cal on 11 November 2026: "281 = C". The base branch of an agent's create goes to the start-from plan.
 
 ## Design
 
@@ -231,8 +233,8 @@ decision.
   only the workspace token. Reason: the existing calls split in the same
   way.
 - Agent call: each call reaches every workspace of the org, as decision
-  257 D gives the session calls, except the calls of decision 277 E.
-  Reason: one reach for all calls. Decision 277 E is open.
+  257 D gives the session calls. Reason: one reach for all calls. Cal
+  kept it for the archive and the section delete with decision 277 A.
 - Agent call: each call acts for the sender and follows the app's rule for
   its action. Every member can rename and move a workspace, rename, close,
   and stop a session, manage the sections, and open and close previews.
@@ -261,14 +263,10 @@ decision.
 
 ### Workspaces
 
-- Decision 277 B: `create_workspace` takes an optional base branch. The
-  branch of the new workspace starts from that branch and targets it, as
-  the base branch of a pull request run does.
-- Decision 280: what an unknown base branch does. Open.
-- Decision 281: which rule gives the target branch. Open.
+- Decision 281 C: `create_workspace` gets no base branch in this plan.
 - Agent call: `create_workspace` takes an optional request ID, as the
   session writes do. A repeat with the same ID returns the first result.
-  Reason: today each retry of a failed create makes another workspace.
+  Reason: today each retry after a lost reply makes another workspace.
 - Agent call: the new title option of the first session does not settle
   `plans/follow-ups/agent-named-workspace-first-session.md`. That item
   stays open for a create without the option.
@@ -357,20 +355,17 @@ Draw the stop line of a stop by an agent (decision 279 B).
 
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1. Waits for decisions 277, 280, and 281.
+Depends on: 1
 
 State the requirements and the decisions of the new calls. Read the
 `documentation` skill first.
 
 - [ ] Update `docs/protocol/agent-tools.md`: the list and the count of the
       calls, the reach, the token and turn rules, the list filters and
-      paging, the first session title, the base branch (decisions 277 B
-      and 280), and the workspace, section, and preview calls.
+      paging, the first session title, the request ID of a create, and
+      the workspace, section, and preview calls.
 - [ ] Update `docs/protocol/session-calls.md`: the get, rename, close, and
       stop calls, and the get of a message.
-- [ ] Update `docs/protocol/base-branches.md`: a workspace that an agent
-      creates has the base branch that its create call names, else the
-      default branch (decision 277 B).
 - [ ] Update `docs/protocol/messages-and-attachments.md` and
       `docs/protocol/session-transcripts.md`: the stop line of a stop by an
       agent (decision 279 B).
@@ -409,19 +404,15 @@ skills first.
 - [ ] Add `get_workspace`, `rename_workspace`, `move_workspace`, and
       `archive_workspace` to `worker/tools/`. Reuse the app's rename,
       move, and archive code with the sender as the user. Give
-      `archive_workspace` the reach that decision 277 chooses.
+      `archive_workspace` the reach of the org (decision 277 A).
 - [ ] Add the filters and the paging of `list_workspaces`, with no change
       to a call without options.
-- [ ] Add the base branch and the first session title to
-      `create_workspace`. Pass the branch to `createWorkspace` as the base
-      of a pull request run does, as decisions 280 and 281 choose. Refuse
-      a name that is not a valid Git branch name. Add the optional request
-      ID.
+- [ ] Add the first session title and the optional request ID to
+      `create_workspace`.
 - [ ] Add tests beside the code: the archive rights of the sender, an
       archive of the calling workspace, a rename that no automatic name
       replaces, a move to the top of a section, each filter, the paging
-      edges, a create with a base branch, a refused branch name, a repeat
-      with a request ID, and the rules of decisions 280 and 281.
+      edges, a first session title, and a repeat with a request ID.
 - [ ] Update `worker/tools/README.md`.
 
 ## Milestone 4: Session and message calls
@@ -451,8 +442,7 @@ agent.
 
 Depends on: 4
 
-- [ ] Add `create_section`, and `delete_section` unless decision 277 E
-      holds. Reuse the section writes
+- [ ] Add `create_section` and `delete_section`. Reuse the section writes
       of `worker/app-api/feature-sections.ts` with the sender as the user.
 - [ ] Add `list_previews`, `open_preview`, and `close_preview`. Reuse the
       preview handler of `worker/previews/` with the sender as the user,
@@ -515,5 +505,5 @@ Depends on: every other milestone
 - [ ] In a deployed workspace with a fresh org image, let an agent use
       each new call once: get, rename, move, and archive a workspace, get,
       rename, stop, and close a session, get a message, create and delete
-      a section, open, list, and close a preview, and create a workspace
-      on a base branch. Check the stop line in the app.
+      a section, and open, list, and close a preview. Check the stop line
+      in the app.
