@@ -65,12 +65,12 @@ it('keeps a published old document active beside native tabs in its member view 
   const saved = await fixture.request(path, 'PUT', submitted)
   expect(saved.status).toBe(200)
   const savedBody: unknown = await saved.json()
-  expect(savedBody).toEqual({ view })
+  expect(savedBody).toEqual({ view, routine: null, baseBranch: 'main' })
   expect(readView(savedBody)).toEqual(view)
   const reopened = await fixture.request(path)
   expect(reopened.status).toBe(200)
   const reopenedBody: unknown = await reopened.json()
-  expect(reopenedBody).toEqual({ view })
+  expect(reopenedBody).toEqual({ view, routine: null, baseBranch: 'main' })
   expect(readView(reopenedBody)).toEqual(view)
   expect(readView(reopenedBody).tabs.map(tabKey)).toEqual([
     'session:native-session',
