@@ -1,8 +1,10 @@
-import { beforeAll, expect, it } from 'vitest'
+import { beforeAll, expect, it, vi } from 'vitest'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { TOOL_TURN_HEADER } from '../../tools/context'
+import { isRecord } from '../http'
 import { saveGitHubTokens } from '../security/github-tokens'
+import { WarningId } from '../warning-values'
 import { TEST_TIME } from '../test-support/harness'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
 import { handleGitCredential } from './machine'
@@ -59,8 +61,9 @@ it('returns the trusted sender token without reading a large request body', asyn
   }
 })
 
-it('gets the trusted turn sender token afresh for concurrent sessions and rejects arbitrary identities', async () => {
+it('gets the trusted turn sender token afresh for concurrent sessions, and refuses and logs arbitrary identities', async () => {
   const fixture = await machineCredentialFixture(bundle)
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   try {
     const { runtime, org, user } = fixture
     await runtime.env.DB.batch([
@@ -157,7 +160,23 @@ it('gets the trusted turn sender token afresh for concurrent sessions and reject
     const idle = await handleGitCredential(terminalRequest(), runtime)
     expect(idle.headers.get('Cache-Control')).toBe('no-store')
     expect(await idle.json()).toEqual({ token: 'new-sender-token' })
+    expect(
+      warn.mock.calls
+        .flat()
+        .filter(
+          (entry) => isRecord(entry) && entry.kind === 'git_credential_failed',
+        ),
+    ).toEqual(
+      Array.from({ length: 3 }, () => ({
+        kind: 'git_credential_failed',
+        message: 'A Git credential request failed.',
+        workspaceId: WarningId.checked(created.workspace.id).text,
+        turn: true,
+        error: { kind: 'http', status: 409, code: 'current_turn_required' },
+      })),
+    )
   } finally {
+    warn.mockRestore()
     await fixture.dispose()
   }
 })
