@@ -1,0 +1,38 @@
+# GitHub reads use up the App's hourly limit
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from branch `calummoore/github-unavailable-error`, item 1 of the fix for "GitHub is not available" after a merge.
+- **Location:** `worker/github/data.ts:29` and `worker/github/webhook.ts:130-162`.
+- **Reason:** The user decides, because option A stops the live updates of archived workspaces, and that is live behaviour on `main`.
+
+- **Terms:**
+  - **Webhook delivery:** one event that GitHub sends to `POST /v1/github/webhooks`, such as a push or a finished check. The D1 table `github_webhook_deliveries` records each one, and `processed_at` stays null when its work fails.
+  - **Installation token:** the GitHub App's own token for one repository. The Worker gets a new one for each read of the pull request bar, in `installationTokenProvider` in `worker/github/credentials.ts`.
+  - **Rate limit:** GitHub gives each App installation of a small org about 5,000 GraphQL points each hour. A simple query costs one point.
+- **Background:**
+  - `handleGitHubWebhook` in `worker/github/webhook.ts` reads the candidates from `repositoryWorkspaces` in `worker/github/data.ts`. Then it refreshes them one after another.
+  - A push, `check_run`, `check_suite`, or `status` event matches every candidate. A pull request or review event matches only the workspaces of its branch.
+  - Each refresh gets a new installation token and sends four or five GraphQL queries: `BannerLookup`, `BannerPull`, `BannerChecks`, and `BannerReviews`.
+  - The query of `repositoryWorkspaces` has no archive filter. `worker/github/README.md` says that push routing sends the active workspaces.
+  - On 2026-11-11, the repository `Firna-AI/remote-code`, now `Firna-AI/conductive`, had 24 workspaces, and 20 were archived. `Firna-AI/home` had 10, and all were archived. Both use installation 180271773.
+- **Problem:**
+  - These reads use up the hourly limit of the installation in 10 to 20 minutes. Then each read with the installation token fails with `github_unavailable`.
+  - Production deliveries per UTC hour on 2026-11-11, as total and failed: 00:00 112 and 0, 05:00 99 and 1, 07:00 171 and 28, 09:00 277 and 180, 11:00 248 and 157, 12:00 149 and 101.
+  - In 5-minute steps, all deliveries succeeded from about :35 of each hour, for example 09:35 to 09:50 and 10:35 to 10:40. Then nearly all failed until the next :35. The 13:10 step had 0 of 30.
+  - GitHub does not send a failed delivery again.
+- **Impact if no action:** For most of each hour, the bar and the Checks tab miss updates. A tab that opens shows "GitHub is not available. Try again." The read after a merge fails too, so the bar keeps its old state until a later read succeeds.
+- **Root question:** How does the Worker keep its GitHub reads within the App's hourly rate limit?
+- **Options:**
+  - **A.** Skip archived workspaces when a webhook arrives. Add `AND w.archived_at IS NULL AND w.state != 'archived'` to the query of `repositoryWorkspaces`, and an archived workspace on the event's branch to the routing test in `worker/github/webhook.test.ts`. State in `docs/protocol/github-banner.md` that events do not reach an archived workspace. For this repository, each event then reads 4 workspaces, not 24. An open tab of an archived workspace still reads when it opens and every 5 minutes. Effort: Small.
+  - **B.** Send each `check_run`, `check_suite`, and `status` event only to the workspaces of the branch that the event names: the `head_branch` of its check suite, or a branch of `status.branches`. Send an event that names no branch to every workspace, as now. Then the reads of an event no longer grow with the number of workspaces. It needs a check for GitHub's test merge commits, and an update of the sentence about SHA-only events in `worker/github/README.md`. Effort: Medium.
+  - **C.** Join the queued reads of one workspace into one read, so that a burst of events costs one read for each workspace. Each joined delivery still needs its receipt in `WorkspaceGitHubState` in `worker/github/workspace-state.ts`. Effort: Medium.
+- **Left out:**
+  - Reuse of the installation token. A token request is not a GraphQL query, so it does not use the GraphQL limit. It still saves time, as a later change.
+  - A higher limit. GitHub raises it only with more org users or repositories, to at most 12,500 points, or with Enterprise Cloud.
+  - Reads only when a tab opens. That drops the push of new state to open tabs, which "State of a branch" in `docs/protocol/github-banner.md` requires.
+- **Wider fix:** B. It ties the cost of an event to its branch, so that more workspaces do not use up the limit again.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/webhooks-answer-after-github-timeout.md` has the same cause: the loop that refreshes every candidate one after another.
+- **Recommendation:** A. It is Small, and it brings this installation under the limit at once. B best protects the codebase, as a later change.
+- **Action:** ask the user, because option A stops live updates of archived workspaces, and that behaviour is on `main` with no user decision to drop it.

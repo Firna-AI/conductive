@@ -72,6 +72,50 @@ export class WorkspaceGitHubState {
     return result
   }
 
+  /**
+   * Stores and publishes the merge that GitHub reported for the stored pull
+   * request with `headSha`, with no read of GitHub. A later read replaces
+   * it. It changes nothing when the stored state shows another head or an
+   * ended pull request.
+   */
+  merged(
+    authorize: () => Promise<void>,
+    headSha: string,
+    now: number,
+  ): Promise<void> {
+    const result = this.pending.then(() =>
+      this.port.run(authorize, (operation) =>
+        operation.transaction(async (transaction) => {
+          const stored = await transaction.get<GitHubSnapshot>('github:state')
+          const banner = stored?.banner
+          if (
+            !stored ||
+            !banner ||
+            banner.pullRequest === null ||
+            banner.pullRequest.headSha !== headSha ||
+            banner.state === 'merged' ||
+            banner.state === 'closed'
+          )
+            return
+          const snapshot: GitHubSnapshot = {
+            ...stored,
+            banner: {
+              ...banner,
+              state: 'merged',
+              updatedAt: now,
+              mergedAt: now,
+              closedAt: now,
+            },
+          }
+          await transaction.put('github:state', snapshot)
+          await transaction.emit(githubUpdated(snapshot))
+        }),
+      ),
+    )
+    this.pending = result.catch(() => undefined)
+    return result
+  }
+
   scheduleRefresh(
     request: GitHubRefreshRequest,
     delayMs: number,

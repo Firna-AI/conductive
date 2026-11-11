@@ -105,6 +105,25 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
 - The new shared state reaches every open tab as a `github.updated` event,
   through the existing queue and publisher. The member capability never
   enters an event.
+- The refresh reads GitHub with the App's installation token, not with
+  the member's token. So it can fail when the merge did not, for example
+  at the App's rate limit.
+- When the refresh fails with `github_unavailable` or `github_pending`,
+  the route still returns `{ "state": "merged" }`, because GitHub merged
+  the pull request. It writes the `github_merge_refresh_failed` warning.
+- The route then stores and publishes the merge that GitHub reported,
+  through the same queue and publisher, with no read of GitHub. It does
+  this only when the stored state shows the merged head of an open pull
+  request. So every open tab shows the merge at once, with Continue and
+  Archive. Its `mergedAt` and `closedAt` are the Worker's time until a
+  later read replaces them.
+- After `github_unavailable`, the route stores a fresh read for the alarm
+  of the workspace object. The alarm repeats a read that fails with
+  `github_unavailable` every 30 seconds, until it succeeds or the
+  workspace is no longer available. A `github_pending` read keeps its own
+  bounded retries.
+- An access error of the refresh, and every other error, still fails the
+  route.
 
 ## Errors
 
@@ -134,8 +153,9 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
 ## Mounting
 
 - `WorkspaceGitHub.fetch` in [the production composition](../features/github.ts)
-  calls `handleGitHubMerge` with the storage of the workspace object and
-  its refresh operation.
+  calls `handleGitHubMerge` with the storage of the workspace object, its
+  refresh operation, and `scheduleFresh` for the fresh read after a failed
+  refresh.
 - `Workspace.fetch` in [the workspace object](../workspace.ts) sends each
   `/github/` subpath to it.
 - `isFeatureWorkspacePath` in [feature paths](../features/paths.ts)
@@ -154,13 +174,16 @@ npm run test -- worker/github/merge-actions.test.ts worker/github/merge-access.t
   shared publication.
 - [merge-refusals.test.ts](merge-refusals.test.ts) covers missing rights,
   disallowed methods, refusals with HTTP 409, merge queue and bypass
-  replies, failures, expired jobs, and merges that GitHub already finished.
+  replies, failures, expired jobs, merges that GitHub already finished,
+  and a merge whose refresh fails at GitHub.
 - [merge-access.test.ts](merge-access.test.ts) covers the gates, the fresh
   member tokens, the isolation of jobs, and access races.
 - [github-merge-routes.test.ts](../features/github-merge-routes.test.ts)
   runs the production Worker with SQLite object storage and a real browser
   socket. A pending job survives an eviction of the object, and a poll
-  sends no second merge to GitHub.
+  sends no second merge to GitHub. While GitHub refuses the App's reads,
+  a merge still publishes the merged state, and the alarm reads again
+  after GitHub recovers.
 - [RepositoryMerges](fake-merges.ts) adds the merge model to
   [RepositoryGitHub](fake-repository.ts).
 - The browser client has its own test,

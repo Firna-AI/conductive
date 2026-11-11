@@ -46,7 +46,8 @@ export class WorkspaceGitHub {
     this.alarms = alarms
   }
 
-  async refresh(workspace: GitHubWorkspace, signal: GitHubRefresh) {
+  /** The one GitHub state of this workspace object, for its workspace only. */
+  private githubState(workspace: GitHubWorkspace): WorkspaceGitHubState {
     if (!this.matches(workspace.id))
       throw new HttpError(
         404,
@@ -69,7 +70,12 @@ export class WorkspaceGitHub {
         },
       ),
     )
-    return refreshWorkspace(this.env.DB, workspace, signal, this.state, {
+    return this.state
+  }
+
+  async refresh(workspace: GitHubWorkspace, signal: GitHubRefresh) {
+    const state = this.githubState(workspace)
+    return refreshWorkspace(this.env.DB, workspace, signal, state, {
       ...this.dependencies,
       token: installationTokenProvider(
         {
@@ -87,6 +93,13 @@ export class WorkspaceGitHub {
       ...this.dependencies,
       storage: this.storage,
       refresh: (workspace, signal) => this.refresh(workspace, signal),
+      publishMerged: (workspace, headSha, authorize) =>
+        this.githubState(workspace).merged(
+          authorize,
+          headSha,
+          this.dependencies.now(),
+        ),
+      scheduleRefresh: (workspace) => this.scheduleFresh(workspace),
     })
   }
 

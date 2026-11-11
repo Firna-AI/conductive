@@ -42,6 +42,8 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   It republishes the event of a changed delivery with the same event number.
   A fresh read with unchanged banner and checks stores no snapshot and publishes no event.
   The comparison ignores `banner.updatedAt` and object-key order.
+  Its `merged` method stores and publishes a merge that GitHub reported, with no read of GitHub.
+  It changes the stored state only when that state shows the merged head of an open pull request.
 - [createGitHubStatePort](chat-store.ts) builds that port on the `WorkspaceChat` of the workspace Durable Object.
   Its `read` uses `readWorkspace`, and the receipt read writes nothing.
   Its `run` uses `authorizedWorkspaceOperation`.
@@ -95,7 +97,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
    Read the stored workspace stream before subscribing after its common event number.
    Reconnect with that number, so a repeated publication shows only once.
 8. Forward the member merge routes to the workspace Durable Object.
-   Call `handleGitHubMerge` there with the object's storage and its internal refresh operation.
+   Call `handleGitHubMerge` there with the object's storage, its internal refresh operation, and its scheduled fresh read.
    [Mounting](merges.md#mounting) names the production entry points.
 
 Example refresh operation inside the workspace Durable Object:
