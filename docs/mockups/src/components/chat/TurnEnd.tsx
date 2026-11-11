@@ -3,6 +3,8 @@ import { splitPath, type ChangedFile } from '../../fixtures/files'
 import { ScreenLink } from '../common/ScreenLink'
 import { DiffStat } from '../files/DiffStat'
 import { paths } from '../../paths'
+import type { TurnEndReason } from './endReasonCopy'
+import { EndReasonLine } from './EndReasonLine'
 import { moreFiles, turnFilesUnavailable } from './lostCopy'
 import styles from './TurnEnd.module.css'
 
@@ -29,15 +31,18 @@ function FileChip(props: { file: ChangedFile }) {
  * rest, as plain text after the last chip. `filesUnavailable` marks a turn
  * whose changed files the cloud computer could not read: the turn still
  * ends with its duration, and plain text takes the place of the chips.
+ * `endReason` names a cause other than the end of the reply, such as the
+ * time limit of background work: its line sits above the row.
  */
 export function TurnEnd(props: {
   duration: string
   files: readonly ChangedFile[]
   omittedFiles?: number
   filesUnavailable?: boolean
+  endReason?: TurnEndReason
 }) {
   const more = props.omittedFiles ?? 0
-  return (
+  const row = (
     <div className={styles.end}>
       <span className={styles.duration}>{props.duration}</span>
       {props.filesUnavailable ? (
@@ -56,6 +61,13 @@ export function TurnEnd(props: {
           {more > 0 ? <li className={styles.more}>{moreFiles(more)}</li> : null}
         </ul>
       ) : null}
+    </div>
+  )
+  if (props.endReason === undefined) return row
+  return (
+    <div className={styles.ended}>
+      <EndReasonLine reason={props.endReason} />
+      {row}
     </div>
   )
 }

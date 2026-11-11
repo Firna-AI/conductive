@@ -121,9 +121,10 @@ decisions 2 and 3. Its report is in
   value now names the limit. Later causes can add values. The Worker
   accepts the field, stores it with the turn end, and keeps it in session
   transcripts and `read_chat` output, as it does for `filesUnavailable`.
-- The chat shows a line such as "Background work stopped at the time
-  limit" at the end of such a turn. The mockup of Milestone 1 sets the
-  words and the place.
+- The chat shows "Background work stopped at the time limit" above the
+  row of the duration and the files. The line is centred and muted, as
+  the other event lines of the chat. The wait uses the existing running
+  turn display, as the mockup of Milestone 1 shows.
 - Stop, a shutdown, a model change, and a message during the wait work as
   they do for any running turn.
 
@@ -162,6 +163,19 @@ Design calls:
   a running turn already keeps its sandbox, its Boat deadline, and its
   turn token, and no Worker rule ends a silent turn.
 
+- 11 November 2026, my call: the end reason field is `endReason`, with
+  the first value `background_work_limit`. Reason: the optional field
+  names the cause and can add causes later without changing old events.
+- 11 November 2026, the UI implementor's call: the limit line sits above
+  the duration and files, centred and muted, with an 8 px gap. Reason:
+  the line and the row read as one end without squeezing the file chips.
+- 11 November 2026, the UI implementor's call: the words are "Background
+  work stopped at the time limit", without a number, with `TimerOff`.
+  Reason: the member cannot change the limit, and the icon names its end.
+- 11 November 2026, the UI implementor's call: shared copy and a line
+  component serve the mockups and app. Reason: both use the same words
+  and layout. A waiting variant shows the existing running-turn display.
+
 Risks:
 
 - While a turn waits, each process in the sandbox can still read its turn
@@ -180,14 +194,17 @@ Tags: mockup
 
 Depends on: none
 
-- [ ] Add a chat mockup of a turn that ended at the limit, at phone and
+- [x] Add a chat mockup of a turn that ended at the limit, at phone and
       desktop sizes. It shows the line of the end reason, the duration,
       and the files. Follow the entry of the unavailable files in
       `docs/mockups/src/entries/app/chat/unavailable-files/`.
-- [ ] Run `npm run mockups:check`. Smoke-test the new page with
+- [x] Run `npm run mockups:check`. Smoke-test the new page with
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/background-work-keeps-turn-open/milestone-1-report.md`.
+The mockups found no problem that changes an approved decision.
 
 ## Milestone 2: Documentation and protocol
 
@@ -213,7 +230,7 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the optional end reason to `turn.completed` in
+- [ ] Add optional `endReason: background_work_limit` to `turn.completed` in
       `src/shared/chat-events.ts` and in the runner contract.
 - [ ] Accept and store it in the Worker, in `worker/chat/agent-events.ts`
       and its neighbours. Keep it in session transcripts and in
