@@ -133,16 +133,20 @@ export async function handleGitHubWebhook(
       route.installationId,
     )
     let failure: { error: unknown } | undefined
+    // A check event that names no branch, such as a status of a test merge
+    // commit, reaches each workspace. Each one reads only an open pull request.
+    const unnamed = route.branches?.length === 0
     for (const workspace of workspaces) {
       const matches =
         route.push ||
-        route.branch === undefined ||
-        route.branch === workspace.branch
+        unnamed ||
+        (route.branches ?? [route.branch]).includes(workspace.branch)
       if (!matches) continue
       try {
         await dependencies.refresh(workspace, {
           deliveryId,
           ...(route.push ? { pushBranch: route.branch } : {}),
+          ...(unnamed ? { openPullRequestOnly: true } : {}),
         })
       } catch (error) {
         if (!route.push) throw error

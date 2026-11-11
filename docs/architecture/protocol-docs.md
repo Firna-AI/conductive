@@ -32,13 +32,19 @@ This page lists each protocol doc and what it covers.
     composer, the chips of files and folders, and the removal of each chip
     of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, its port reports, and the repair
+    its events and their limits, its turns, the background work of Claude
+    turns with its note and its time limit, its port reports, and the repair
     of lost workspace updates.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
+    - [Lost workspace updates](../protocol/lost-workspace-updates.md): the
+      reports that belong to no session, the repair request after a refused
+      update, and the notice of a failed repair.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, its route, and the reads of
     agents.
+    - [Transcript reads by agents](../protocol/transcript-reads.md): the
+      route of `read_session`, and the parts of a long text.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
@@ -99,8 +105,10 @@ This page lists each protocol doc and what it covers.
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets, the sender line and the branch line of each message,
-  and the base prompt of Claude agents.
+  agent session gets, and the sender line and the branch line of each
+  message.
+  - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
+    agents and the base instructions of Codex agents.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
   ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of

@@ -59,9 +59,9 @@ chips.
   tabs, the drag, the tab menu, and the scroll of the row.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
-  files that the cloud computer could not read, the lost lines, the turns,
-  the open run of tool calls of a running turn, the work fold of each
-  ended turn, and Try again.
+  files that the cloud computer could not read, the end reason of a
+  finished turn, the lost lines, the turns, the open run of tool calls of
+  a running turn, the work fold of each ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
   stays in place when the user opens or closes it, also for a run of calls.
@@ -180,24 +180,11 @@ check in the Mac app.
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
-- [`transcript.ts`](../shared/transcript/transcript.ts): how chat events become the parts of a transcript.
+- [Transcript key code](transcript.md#key-code): the shared transcript
+  modules, the turn words with the end reason of a turn, the work folds,
+  and the workspace stream.
 - [`agents.ts`](../shared/agents.ts): the shared effort words and model
   labels of the pickers.
-- [`duration.ts`](../shared/transcript/duration.ts),
-  [`tool-words.ts`](../shared/transcript/tool-words.ts), and
-  [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
-  tool words, fold counts, and turn lines that the browser and Worker share.
-- [`session-events.ts`](../shared/transcript/session-events.ts): the session
-  events from stored Worker envelopes or parsed browser envelopes.
-- [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
-  in event order and its newest record. The record owner keeps the logs private.
-- [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
-  `retryItemId`, the one failed item that offers Try again.
-- [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
-- [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
-- [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.
-- [`refused-events.ts`](../shared/transcript/refused-events.ts): how a refusal marker becomes a line, and how a
-  refused end ends its turn.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
@@ -233,14 +220,9 @@ check in the Mac app.
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
-  event from the mockups' `lostCopy.ts`.
-- [`turn-work.ts`](../shared/transcript/turn-work.ts) and
-  [`transcript-entries.ts`](../shared/transcript/transcript-entries.ts):
-  `foldedWork` finds the work of each ended turn that folds, as the
-  [transcript rules](transcript.md) say. `groupEntries` makes the entries
-  that the chat draws, and puts each insert at its place, also in a fold.
-  It gives each run of tool calls its open state: while a turn runs, only
-  the run with its newest call is open.
+  event from the mockups' `lostCopy.ts`. `components/TurnEnd.tsx` draws the
+  end of a finished turn: the line of its end reason, from the mockups'
+  `EndReasonLine.tsx`, above its duration and its files.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.
@@ -261,8 +243,6 @@ check in the Mac app.
   chat, so the line keeps its place.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
-- `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
-  the reconnect, and the `hold` and `release` of the workspace stream.
 - `transcript-copy.ts`: `copyTranscript`, the pending copy for a workspace,
   session, and detail. It retains resolved text for one minute after a
   clipboard failure. The next press consumes it at once. The cache uses the
@@ -272,7 +252,9 @@ check in the Mac app.
   it with the chat API of the controller.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
-  responses.
+  responses. `api/read-chat.ts` copies a known `endReason` of a turn end,
+  and drops an unknown value. `api/read-changed-file.ts` reads the changed
+  files of a turn end, with their real paths and display labels.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer

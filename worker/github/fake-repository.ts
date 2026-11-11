@@ -31,9 +31,9 @@ export class RepositoryGitHub {
     this.signIn = signIn
   }
 
-  private page(items: readonly unknown[], after: unknown) {
+  private page(items: readonly unknown[], after: unknown, first = 100) {
     const start = typeof after === 'string' ? Number(after) : 0
-    const end = start + this.pageSize
+    const end = start + Math.min(this.pageSize, first)
     return {
       nodes: items.slice(start, end),
       pageInfo: {
@@ -46,6 +46,32 @@ export class RepositoryGitHub {
   private rollup(sha: string, after: unknown) {
     const checks = this.checks.get(sha)
     return checks === undefined ? null : { contexts: this.page(checks, after) }
+  }
+
+  private pullChecks(
+    pull: RepositoryPull,
+    after: unknown,
+    mergeAfter: unknown,
+  ) {
+    return {
+      headRefOid: pull.headRefOid,
+      statusCheckRollup: this.rollup(pull.headRefOid, after),
+      potentialMergeCommit: pull.potentialMergeCommit && {
+        oid: pull.potentialMergeCommit.oid,
+        statusCheckRollup: this.rollup(
+          pull.potentialMergeCommit.oid,
+          mergeAfter,
+        ),
+      },
+    }
+  }
+
+  private pullPage(pull: RepositoryPull) {
+    return {
+      ...pull,
+      ...this.pullChecks(pull, null, null),
+      latestOpinionatedReviews: this.page(pull.reviews, null),
+    }
   }
 
   fetch: HttpFetch = async (request) => {
@@ -98,19 +124,14 @@ export class RepositoryGitHub {
             pull.headRefName === variables.head && states.includes(pull.state),
         )
         .sort((a, b) => b.createdAt - a.createdAt)
-        .map((pull) => ({
-          number: pull.number,
-          headRefName: pull.headRefName,
-          headRepository: pull.headRepository,
-          baseRefName: pull.baseRefName,
-        }))
+        .map((pull) => this.pullPage(pull))
       Object.assign(repository, {
         nameWithOwner: this.fullName,
         defaultBranchRef: this.branches.has(`refs/heads/${this.defaultBranch}`)
           ? { name: this.defaultBranch }
           : null,
         ref: tip === undefined ? null : { target: { oid: tip } },
-        pullRequests: this.page(pulls, variables.after),
+        pullRequests: this.page(pulls, variables.after, 5),
       })
     } else if (operation === 'BannerCompare') {
       const base = String(variables.baseRef)
@@ -138,20 +159,14 @@ export class RepositoryGitHub {
         })
       switch (operation) {
         case 'BannerPull':
-          repository.pullRequest = pull
+          repository.pullRequest = this.pullPage(pull)
           break
         case 'BannerChecks':
-          repository.pullRequest = {
-            headRefOid: pull.headRefOid,
-            statusCheckRollup: this.rollup(pull.headRefOid, variables.after),
-            potentialMergeCommit: pull.potentialMergeCommit && {
-              oid: pull.potentialMergeCommit.oid,
-              statusCheckRollup: this.rollup(
-                pull.potentialMergeCommit.oid,
-                variables.mergeAfter,
-              ),
-            },
-          }
+          repository.pullRequest = this.pullChecks(
+            pull,
+            variables.after,
+            variables.mergeAfter,
+          )
           break
         case 'BannerReviews':
           repository.pullRequest = {

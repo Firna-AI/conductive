@@ -14,10 +14,13 @@ the message field of each composer, and Stop.
   content, such as live messages, a sent message, a running turn, or the
   start steps, keeps it and shows a failed load as a notice by the composer,
   with Try again. An empty chat shows the failure in place of the chat.
-- The chat loads the session list and the view, then the full history of the
-  shown session, then the workspace and the session list again. The stream
-  starts after the history's `throughEventNumber`, so no change between the
-  reads and the stream gets lost. The view also gives the routine of a run
+- The chat loads the session list, the view, and the workspace first. It
+  then shows its records, its start steps, and its composer while the full
+  history of the shown session loads. That session shows "Loading the
+  session" until its first page arrives. Then the workspace and the session
+  list load again. The stream starts after the history's
+  `throughEventNumber`, so no change between the reads and the stream gets
+  lost. The view also gives the routine of a run
   workspace, with the pull request of a pull request run. The snapshot keeps
   it as `routine` for the workspace header.
 - The chat writes no browser storage. The drafts stay in memory, and the

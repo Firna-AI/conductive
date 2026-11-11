@@ -75,7 +75,12 @@ each feature.
   ports of its workspace.
 - **Session:** one agent conversation in a workspace. It shows as a tab.
 - **Turn:** the work of the agent on a message, from the message to the
-  result of the agent.
+  end of the agent's reply. A Claude turn stays open after that reply
+  while its background work runs, up to a time limit, as
+  [Background work](protocol/agent-runner.md#background-work) says.
+- **Background work:** the tasks that a Claude agent runs in the
+  background, such as a command or a subagent, and the wake-ups that it
+  schedules. A wake-up is a prompt for the agent at a later time.
 - **Workspace token:** a secret of one workspace. Its sandbox uses the
   token to call the Worker.
 - **Preview hostname:** a random hostname on the preview domain. It shows

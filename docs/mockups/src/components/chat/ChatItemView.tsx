@@ -60,6 +60,7 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       return (
         <TurnEnd
           duration={item.duration}
+          endReason={item.endReason}
           files={item.files}
           filesUnavailable={item.filesUnavailable}
           omittedFiles={item.omittedFiles}

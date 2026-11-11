@@ -72,6 +72,11 @@ export class WorkspaceGitHubState {
     return result
   }
 
+  /** The last committed snapshot. Read it inside a refresh read. */
+  stored(): Promise<GitHubSnapshot | undefined> {
+    return this.port.read<GitHubSnapshot>('github:state')
+  }
+
   scheduleRefresh(
     request: GitHubRefreshRequest,
     delayMs: number,
