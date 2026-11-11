@@ -2,6 +2,7 @@ import { array, object, string } from '../parse'
 import { mapTool } from './tool'
 import { assistantError, claudeOutcome } from './claude-outcome'
 import { ClaudeMessages } from './claude-message'
+import { ClaudeBackground } from './claude-background'
 import type { ProviderEvent } from './types'
 
 export function synthetic(text: string): boolean {
@@ -18,25 +19,39 @@ export class ClaudeEvents {
   private readonly hasOutstanding: (uuid: string) => boolean
   private readonly emit: (event: ProviderEvent) => void
   private readonly messages: ClaudeMessages
+  private readonly background: ClaudeBackground
   stopped = false
 
   constructor(
     ids: Map<string, string>,
     emit: (event: ProviderEvent) => void,
     hasOutstanding: (uuid: string) => boolean,
+    background = new ClaudeBackground(emit),
   ) {
     this.ids = ids
     this.hasOutstanding = hasOutstanding
     this.emit = emit
+    this.background = background
     this.messages = new ClaudeMessages(emit)
   }
 
   accept(value: unknown): void {
     const input = object(value)
-    if (input.type === 'result' && !this.answersOutstandingInput(input)) return
+    const wake = input.type === 'result' && !this.answersOutstandingInput(input)
+    if (wake && !this.background.waited) return
+    if (
+      this.background.waited &&
+      input.type === 'system' &&
+      input.subtype === 'session_state_changed' &&
+      input.state === 'running' &&
+      ![...this.ids.keys()].some(this.hasOutstanding)
+    )
+      this.userIds = []
+    if (this.background.accept(input)) return
     if (typeof input.session_id === 'string')
       this.emit({ type: 'conversation', id: input.session_id })
-    if (Array.isArray(input.user_message_uuids)) {
+    if (wake) this.userIds = []
+    else if (Array.isArray(input.user_message_uuids)) {
       this.userIds = array(input.user_message_uuids, string).flatMap((id) =>
         this.ids.has(id) ? [this.ids.get(id) ?? ''] : [],
       )
@@ -92,6 +107,7 @@ export class ClaudeEvents {
       this.messages.finish()
       const outcome = claudeOutcome(input, this.errorKind, this.stopped)
       if (outcome.state === 'failed') this.emit(outcome.failure)
+      else if (wake) this.emit({ type: 'wake-up', state: outcome.state })
       else
         this.emit({
           type: 'result',

@@ -207,6 +207,29 @@ Design calls:
   to `TurnEnd`. Reason: the chat and copied transcript use one value,
   while a normal turn keeps its existing markup.
 
+- 11 November 2026, the non-UI implementor's call: the Claude adapter
+  sets the fixed internal `CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS` flag.
+  Reason: the pinned program emits its authoritative idle state only
+  with that flag. It adds no user setting.
+- 11 November 2026, the non-UI implementor's call: task removal and
+  Stop-hook entry invalidate an earlier idle signal. Reason: the real
+  program can remove a task before its notification reply starts.
+- 11 November 2026, the non-UI implementor's call: repeated task levels
+  and ambient transitions preserve the known state. Reason: they can
+  have no later notification and must not create another wait.
+- 11 November 2026, the non-UI implementor's call: a distinct wake-up
+  event carries no member acknowledgements. Member input clears its
+  eligibility. Reason: a task result must not finish partial member text.
+- 11 November 2026, the non-UI implementor's call: final idle uses the
+  common completion path. Reason: it must keep the limit reason and
+  process deferred input as a result does.
+- 11 November 2026, the non-UI implementor's call: the turn owns the
+  deadline, and the process owns live task and cron snapshots. Reason:
+  the count survives provider handoffs without keeping dead work.
+- 11 November 2026, the non-UI implementor's call: an early timer callback
+  re-arms only the remaining delay. Reason: a backwards clock adjustment
+  must not remove the only deadline timer.
+
 Risks:
 
 - While a turn waits, each process in the sandbox can still read its turn
@@ -281,20 +304,23 @@ README check: `.context/background-work-keeps-turn-open/m3-readmes-report.md`.
 
 Depends on: 3
 
-- [ ] Keep the live task set and the idle state in the Claude adapter.
-- [ ] Report a wake-up result as a provider event during a wait. Keep the
+- [x] Keep the live task set and the idle state in the Claude adapter.
+- [x] Report a wake-up result as a provider event during a wait. Keep the
       rule of PR #83 outside a wait.
-- [ ] Keep the turn at a result while live work runs. End it when the
+- [x] Keep the turn at a result while live work runs. End it when the
       agent is idle and no work runs.
-- [ ] Add the limit of 120 minutes and its count. At the limit, close the
+- [x] Add the limit of 120 minutes and its count. At the limit, close the
       agent and send the end reason.
-- [ ] Keep Stop, a shutdown, a model change, and a message during the
+- [x] Keep Stop, a shutdown, a model change, and a message during the
       wait working.
-- [ ] Add runner tests with the fake SDK for each rule of the new section.
-- [ ] Run the real Claude program once with a background command, a reply
+- [x] Add runner tests with the fake SDK for each rule of the new section.
+- [x] Run the real Claude program once with a background command, a reply
       end, a wake-up, a task timeout, and the limit. Use a shorter limit
       for this run only. Save the evidence under
       `.context/background-work-keeps-turn-open/`.
+
+Evidence: `.context/background-work-keeps-turn-open/milestone-4-report.md`.
+The pinned program proof uses scripted replies from a local model endpoint.
 
 ## Milestone 5: The note at the end of the reply
 
@@ -325,8 +351,8 @@ The rendered chat tests reuse the shared parts visually checked in Milestone 1.
 
 Depends on: 4, 5, 6
 
-- [ ] Update `runner/README.md` for the wait, the note, the limit, and the
-      end reason.
+- [ ] Update `runner/README.md` and `runner/key-code.md` for the wait,
+      the note, the limit, the end reason, and the new entry points.
 - [ ] Update `src/chat/README.md` and `src/chat/transcript.md` for the
       shared end-reason line and its completion data.
 - [ ] Update the `stop-retry-and-background-tasks` row in

@@ -18,6 +18,7 @@ import { ProviderLifetime } from './providers/lifetime'
 import type { WorkspaceToolRuntime } from './providers/workspace-tools'
 import type { RunnerBranches } from '../../src/shared/runner'
 import type { BuiltInstructions } from './instruction-state'
+import type { BackgroundWait } from './engine-background'
 
 export interface ActiveTurn {
   first: RunnerTurnV2
@@ -35,6 +36,7 @@ export interface ActiveTurn {
   baseline: Checkpoint | null
   controller: AbortController
   files: readonly ChangedFile[] | null
+  background: BackgroundWait | null
 }
 
 export interface SessionRuntime {
@@ -56,6 +58,8 @@ export interface EngineOptions {
   providers: Record<Agent, ProviderFactory>
   store: EventStore
   now: () => number
+  /** Internal dependency injection. The service uses the fixed two-hour limit. */
+  backgroundWorkLimitMs?: number
   emit: (event: AgentChatEvent) => Promise<void>
   checkpoint: (signal: AbortSignal) => Promise<Checkpoint>
   changedSince: (
