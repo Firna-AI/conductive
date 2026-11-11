@@ -27,7 +27,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'New-workspace composer',
     status: 'available',
-    note: 'Choose a repository and model on a page or dialog. Chat access before cloud computer builds finish is under consideration.',
+    note: 'Choose a repository and model on a page or dialog. Opening chat while the cloud computer builds or resumes is planned.',
   },
   {
     id: 'start-from-a-branch-pr-or-issue',
@@ -121,7 +121,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: '.context folder',
     status: 'available',
-    note: 'Attached files arrive in .context/attachments, and Git ignores them. In workspaces from a new computer build, Git also ignores agent notes in .context.',
+    note: 'Attached files arrive in .context/attachments, and Git ignores them. In workspaces from a new computer build, Git also ignores agent notes in .context. Updating older workspaces when they start is in progress.',
   },
   {
     id: 'monorepo-working-directories',

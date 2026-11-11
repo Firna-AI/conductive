@@ -4,6 +4,7 @@ import { attachmentCopyKey } from './attachment-record'
 import { normalizeSession, type StoredSession } from './session-storage'
 import { CHAT_ROOT, chatKey } from './storage-keys'
 import type { ChatData, ModelSessionCreation, StoredTurn } from './types'
+import type { ToolSessionRequest } from './tool-session-requests'
 
 const FIRST_SESSION_KEY = `${CHAT_ROOT}first-session`
 
@@ -21,6 +22,15 @@ export class ChatRecords {
 
   firstSession(): Promise<FirstSession | undefined> {
     return this.data.get(FIRST_SESSION_KEY)
+  }
+  toolSessionRequest(id: string): Promise<ToolSessionRequest | undefined> {
+    return this.data.get(chatKey('tool-session-request', id))
+  }
+  saveToolSessionRequest(
+    id: string,
+    request: ToolSessionRequest,
+  ): Promise<void> {
+    return this.data.put(chatKey('tool-session-request', id), request)
   }
   saveFirstSession(session: FirstSession): Promise<void> {
     return this.data.put(FIRST_SESSION_KEY, session)

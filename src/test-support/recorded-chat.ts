@@ -1,6 +1,7 @@
 import type { ChatEvent, ToolCall } from '../shared/chat-events'
 import type { WorkspaceEventEnvelope } from '../shared/events'
-import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
+import { sessionLink } from '../shared/session-link'
+import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './fixtures/core'
 import { workspaceFixtures } from './fixtures/workspaces'
 
 export type RecordedChatScenario =
@@ -13,6 +14,7 @@ export type RecordedChatScenario =
   | 'first-turn'
   | 'omitted-data'
   | 'refused-events'
+  | 'sent-by'
 
 const { message } = workspaceFixtures()
 const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
@@ -71,8 +73,28 @@ const completed: readonly ChatEvent[] = [
   },
 ]
 
+/**
+ * A message from an agent tool after the finished turn. It names a closed
+ * session with a long title, and its `Sent by:` line names a session of
+ * another workspace, so the dev app shows both kinds of session chip.
+ */
+const sentBy: ChatEvent = {
+  type: 'message.accepted',
+  message: {
+    ...message,
+    id: 'sent-by',
+    text: [
+      `Keep the postcode rule of ${sessionLink(FAKE_ORIGIN, FAKE_IDS.org, FAKE_IDS.workspace, 'postcode')}, and set \`delay: 0\` in the tests of the address form.`,
+      '',
+      '---',
+      `Sent by: ${sessionLink(FAKE_ORIGIN, FAKE_IDS.org, 'fix-cart-flake', 'debounce')}`,
+    ].join('\n'),
+  },
+}
+
 const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
   history: [...beginning, ...completed],
+  'sent-by': [...beginning, ...completed, sentBy],
   running: beginning,
   steer: [
     ...beginning,

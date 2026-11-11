@@ -1,1 +1,1 @@
-{ "order": ["copy-link", "messages"] }
+{ "order": ["copy-link", "messages", "session-chips", "sent-by"] }

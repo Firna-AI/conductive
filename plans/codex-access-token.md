@@ -331,6 +331,9 @@ conversation. Each line gives the question, the choice, and the date.
 - A sign-in that finishes after a removal or a replacement of the login,
   finding 7 of review round 2: D, the sign-in saves only while the Codex
   login of its start is still current. 11 November 2026.
+- The focus when a Connect form opens or closes: A in this branch. The
+  user started the shared focus helper, option C, in another workspace.
+  11 November 2026.
 
 ## Design
 

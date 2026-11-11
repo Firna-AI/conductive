@@ -37,6 +37,8 @@ Its sender is the person whose message started that turn.
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
+| Session created through agent tools | The calling turn's sender, as the session starter |
+| Message sent through agent tools | The calling turn's sender, under the receiving session's login rules |
 
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
@@ -60,8 +62,29 @@ An agent can create another workspace in the org during its work.
 That action has no separate approval screen.
 Review the work and resulting workspaces as part of the task you give it.
 
-The agent's built-in workspace tools can list workspaces and usable repositories, sections, and models.
-They do not offer a call to read or message another workspace's chat.
+The workspace tools can list workspaces and usable repositories, sections, and models.
+They can also create and list sessions, send messages, and read transcripts in every workspace of the org.
+This includes workspaces that members created themselves.
+Agents can read archived workspaces and closed sessions, but cannot send messages to them.
+The tools reach only the org of the calling workspace.
+
+A workspace token is a credential that lets programs use these tools.
+Any program with that token can list sessions and read their chats without a running turn.
+A copied token can keep that access after the person who copied it leaves the org.
+This access lasts while the token remains valid and the org remains active.
+
+Creating a session or sending a message also needs a running turn in the calling workspace.
+The action uses that turn's sender, who must still belong to the org.
+Tool messages follow the receiving session's login-sharing rules.
+They need no separate approval screen.
+
+A routine can start agent work from a pull request.
+Comments and reviews on that pull request can steer the agent into other chats and workspaces.
+Conductive sets no limit on the number of sessions or messages that agents create.
+Agents that keep replying to each other can spend logins and keep computers running.
+Use **Stop** in each affected session to end its turn.
+
+- [Follow work sent by another agent](/docs/sessions-and-chat#delegate-work-to-another-session)
 
 ## Protect agent and GitHub logins
 
@@ -108,6 +131,7 @@ A copied credential for a workspace connection can still expose credentials of l
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
 Archive stops its cloud computer and ends that workspace's connection access.
+It also revokes that workspace's token, including copies used to read other chats.
 Conductive keeps its files for 14 days.
 Those files can still hold copied credentials during that window.
 

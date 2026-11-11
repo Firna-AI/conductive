@@ -1,4 +1,4 @@
-import type { WorkspaceRow } from '../workspaces/sections'
+import type { ChatRow, ChatSession } from './chatWorkspaces'
 import { mentionParts, type MentionPart } from './fileMentions'
 
 /**
@@ -67,26 +67,39 @@ export function textParts(
     )
 }
 
+/** What a link names: a workspace, and one of its sessions, if any. */
+export type LinkTarget = { row: ChatRow; session?: ChatSession }
+
 /**
- * The row of the workspace that a link names. The link must have the
- * origin of the app and lead to a page of a workspace, which can be one of
- * its tabs. The URL parser resolves odd parts such as `..` first. Only a
- * workspace in the list of the org of the reader matches. So a link to
- * another org, or to a workspace that the reader cannot see, finds none
- * and stays plain text.
+ * The workspace that a link names, and its session when the link is the
+ * address of a session: the link of the workspace, then `sessions` and the
+ * ID of the session. The link must have the origin of the app and lead to
+ * a page of a workspace, which can be one of its tabs. The URL parser
+ * resolves odd parts such as `..` first. Only a workspace in the list of
+ * the org of the reader matches. So a link to another org, or to a
+ * workspace that the reader cannot see, finds none and stays plain text.
+ * Only a session that the chat read for that workspace, open or closed,
+ * matches. A link to any other session names only its workspace.
  */
-export function linkedWorkspace(
+export function linkTarget(
   href: string,
-  rows: readonly WorkspaceRow[],
-): WorkspaceRow | undefined {
+  rows: readonly ChatRow[],
+): LinkTarget | undefined {
   let url: URL
   try {
     url = new URL(href)
   } catch {
     return undefined
   }
-  const [, orgsPart, org, workspacesPart, id] = url.pathname.split('/')
+  const [, orgsPart, org, workspacesPart, id, ...rest] = url.pathname.split('/')
   if (orgsPart !== 'orgs' || workspacesPart !== 'workspaces') return undefined
   const link = `${url.origin}/orgs/${org}/workspaces/${id}`
-  return rows.find((row) => row.workspace.link === link)
+  const row = rows.find((item) => item.workspace.link === link)
+  if (!row) return undefined
+  const [sessionsPart, sessionId, ...more] = rest
+  const named = sessionsPart === 'sessions' && more.length === 0
+  const session = named
+    ? row.sessions?.find((item) => item.id === sessionId)
+    : undefined
+  return { row, session }
 }
