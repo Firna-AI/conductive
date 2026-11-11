@@ -212,8 +212,8 @@ chose these four actions on 9 November 2026. Its child pages:
 child pages of `app/command-palette` and of `app/feedback`, and the flow
 that sends feedback.
 
-The keyboard shortcuts plan draws the Keyboard shortcuts tab in the Mac
-app and in a browser, from decisions 190 to 196. The pages of
+The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
+browser, from decisions 190 to 196. The pages of
 `app/account` and `mac-app/this-mac` show it as the third tab of the
 account.
 

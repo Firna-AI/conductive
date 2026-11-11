@@ -1436,8 +1436,9 @@ Depends on: every other milestone
       `.context/keyboard-shortcuts/merge/justifications.md`.
   - [x] Before the work: the fifth merge, commit `cd88a525`.
   - [x] Before the pull request: the sixth merge, commit `bc88c36c`.
-- [ ] Run the targeted tests and `npm run check` on the tree with
-      Milestones 1, 2, 3, and 9 and the last merge of `main`.
+- [x] Run the targeted tests and `npm run check` on the tree with
+      Milestones 1, 2, 3, and 9 and the last merge of `main`. Evidence:
+      `.context/keyboard-shortcuts/m7/gate-5.log`, on `54c5f00f`.
 - [x] Review the complete local diff against `origin/main` again with the
       `implementation-review` skill after the push, with a focus on the
       commits since review round 2: the answers to review items 4 and 10
