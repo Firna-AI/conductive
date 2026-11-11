@@ -1,7 +1,8 @@
 import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
-import { repositories, type RepositoryKey } from '../../fixtures/repositories'
+import type { RepositoryKey } from '../../fixtures/repositories'
 import type { ShortcutChanges } from '../../fixtures/shortcutChanges'
+import { helpGroupLabel } from '../feedback/feedbackCopy'
 import {
   workspaceSections,
   type OpenWorkspace,
@@ -9,10 +10,17 @@ import {
 } from '../workspaces/sections'
 import {
   appActions,
+  helpActions,
   orgActions,
   workspaceActions,
   type Command,
 } from './paletteCommands'
+import {
+  emptyLine,
+  emptyRepository,
+  filters,
+  type PaletteFilters,
+} from './paletteFilters'
 import { matchingRows } from './paletteSearch'
 import {
   accountSettings,
@@ -37,14 +45,6 @@ export type PaletteRow =
   | { kind: 'command'; command: Command; detail?: string }
 
 type PaletteGroup = { label: string; rows: readonly PaletteRow[] }
-
-/** The two filters of the Workspaces tab. */
-export type PaletteFilters = {
-  repository: string
-  state: 'Active' | 'Archived'
-  /** The menu of the repository filter lies open. */
-  repositoryMenu: boolean
-}
 
 export type PaletteContent = {
   tab: PaletteTab
@@ -124,8 +124,12 @@ function openActions(context: PaletteContext): Command[] {
   })
 }
 
+/**
+ * The actions in their order: those of the open workspace, of the org, and
+ * of the orgs, then Send feedback, which comes last.
+ */
 function actionsOf(context: PaletteContext): Command[] {
-  return [...openActions(context), ...orgActions, ...appActions]
+  return [...openActions(context), ...orgActions, ...appActions, ...helpActions]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
@@ -161,20 +165,6 @@ function searchGroups(
     .filter((group) => group.rows.length > 0)
 }
 
-const allRepositories = 'All repositories'
-
-/** The repository that the empty Workspaces tab chooses. */
-const emptyRepository: RepositoryKey = 'marketing-site'
-
-function filters(view: OpenPaletteView): PaletteFilters {
-  const empty = view === 'workspaces-empty'
-  return {
-    repository: empty ? repositories[emptyRepository].name : allRepositories,
-    state: view === 'workspaces-archived' || empty ? 'Archived' : 'Active',
-    repositoryMenu: view === 'workspaces-repository',
-  }
-}
-
 /** The archived workspaces of one repository, or of all, in one group. */
 function archivedGroups(repository?: RepositoryKey): PaletteGroup[] {
   const rows = archivedRows.filter(
@@ -183,19 +173,6 @@ function archivedGroups(repository?: RepositoryKey): PaletteGroup[] {
   )
   if (rows.length === 0) return []
   return [{ label: 'Archived', rows: workspaceRows(rows) }]
-}
-
-/**
- * The line of the Workspaces tab when it has no workspace to show and the
- * field is empty. It says where the workspaces of the filters show: in the
- * chosen repository, or in the org.
- */
-function emptyLine(filters: PaletteFilters): string {
-  const place =
-    filters.repository === allRepositories ? orgs.acme.name : filters.repository
-  return filters.state === 'Archived'
-    ? `Archived workspaces of ${place} show here`
-    : `Workspaces of ${place} show here`
 }
 
 function groupsOf(
@@ -242,6 +219,7 @@ function groupsOf(
         ...own,
         { label: orgs.acme.name, rows: commandRows(orgActions) },
         { label: 'Orgs', rows: commandRows(appActions) },
+        { label: helpGroupLabel, rows: commandRows(helpActions) },
       ]
     }
     case 'settings':
@@ -256,6 +234,7 @@ function groupsOf(
     case 'search-loading':
     case 'search-unavailable':
     case 'search-repositories-unavailable':
+    case 'search-feedback':
       return searchGroups(
         paletteQueries[view] ?? '',
         active,

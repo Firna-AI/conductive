@@ -12,7 +12,7 @@ export const operatorWaitlist = defineScreen({
     'The user asked on 8 November 2026 that the operator sees the people on the waitlist and approves specific users, in decision 160. The row shows no picture and no email address, because the operator section shows only counts, names, IDs, dates, roles, and states. The GitHub profile and the age of the account let the operator judge a person.',
   relatedDocs: [],
   propSchema: operatorWaitlistSchema,
-  props: { list: 'oldest', dialog: 'none', signUps: 'open' },
+  props: { list: 'oldest', dialog: 'none', signUps: 'open', waitlist: 'on' },
   render: (props, context) => (
     <OperatorWaitlistScreen state={props} viewport={context.viewport} />
   ),

@@ -14,8 +14,8 @@ import {
   paletteContent,
   type PaletteContent,
   type PaletteContext,
-  type PaletteFilters,
 } from './paletteContent'
+import type { PaletteFilters } from './paletteFilters'
 import { PaletteResults, type PaletteKeys } from './PaletteRows'
 import {
   macPaletteTabPaths,

@@ -40,7 +40,7 @@ export function PalettePanel(props: { controller: PaletteController }) {
   const [query, setQuery] = useState(firstQuery)
   const [highlight, setHighlight] = useState(0)
   const { source, retry } = usePaletteSource()
-  const action = useRowAction(source.org?.id)
+  const action = useRowAction(source)
   const now = useNow(30_000)
   const id = useId()
   const close = () => controller.close()

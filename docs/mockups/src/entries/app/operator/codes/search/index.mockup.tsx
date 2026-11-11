@@ -12,7 +12,7 @@ export const operatorCodesSearch = defineScreen({
     'A report of misuse often names only a code, so the search takes the text of any code. An operator also remembers a label or a person, so it takes those too. The page of a user who came in with an invite code links here.',
   relatedDocs: [],
   propSchema: operatorCodesSchema,
-  props: { list: 'invite', dialog: 'none', signUps: 'open' },
+  props: { list: 'invite', dialog: 'none', signUps: 'open', waitlist: 'on' },
   render: (props, context) => (
     <OperatorCodesScreen state={props} viewport={context.viewport} />
   ),

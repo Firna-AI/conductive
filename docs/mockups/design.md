@@ -50,15 +50,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `--ui-touch-min` variable, which is 0 on desktop.
 - One `ModelPicker` in `src/components/chat/` sets the model and the effort
   in every composer, such as "Opus 5.5 High". It names no agent brand. In a
-  session with messages, each model of the other agent says "New session",
-  because it opens a new session with the draft, from decision 51.
+  session with messages, each model of the other agent ends with the
+  external link icon, because it opens a new session with the draft, from
+  decision 51. A screen reader says "New session" for the icon.
 - A workspace or a session that has no name yet shows "Untitled", in the
   style of a name, from decisions 182 and 185. The list, the header, the
   session tabs, and the session history show it, as
   `app/new-workspace/creating/first-second` and `app/sessions` show.
   "New session" names only the action that opens a session. The label of
-  +, the heading of the empty chat that + opens, and each model of the
-  other agent say it.
+  +, the heading of the empty chat that + opens, and the spoken name of
+  the icon on each model of the other agent say it.
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
   message has no label of its own, because the start steps under the chat
@@ -376,7 +377,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   frame of a picture on the marketing site.
 - [The operator section](design-operator.md) gives its tabs, its tables,
   the Waitlist tab, the codes, and the approval email. It also gives
-  Suspend, Lift, and Approve, the daily chart, and the notice of a pause.
+  Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
+  the waitlist switch.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not

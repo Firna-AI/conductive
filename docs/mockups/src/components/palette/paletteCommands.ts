@@ -9,6 +9,7 @@ import {
   Globe,
   History,
   ListChecks,
+  MessageSquareHeart,
   MessageSquarePlus,
   Plus,
   SquareTerminal,
@@ -16,6 +17,7 @@ import {
 import { orgList, type Org } from '../../fixtures/orgs'
 import { orgCommand, type CommandId } from '../../fixtures/shortcutCommands'
 import { checksPaths, paths } from '../../paths'
+import { sendFeedbackLabel, sendFeedbackWords } from '../feedback/feedbackCopy'
 import { orgLinks } from '../orgs/orgLinks'
 
 /** What leads a command row: an icon, the tile of an org, or GitHub. */
@@ -178,4 +180,18 @@ export const appActions: readonly Command[] = [
           },
         ],
   ),
+]
+
+/**
+ * The row that opens the Feedback dialog over the page. It shows on each
+ * page where the palette opens, also without an org and in a suspended org,
+ * because feedback changes no org.
+ */
+export const helpActions: readonly Command[] = [
+  {
+    label: sendFeedbackLabel,
+    lead: icon(MessageSquareHeart),
+    words: sendFeedbackWords,
+    to: paths.feedbackEmpty,
+  },
 ]

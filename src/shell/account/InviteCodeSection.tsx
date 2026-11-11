@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { InputFrame } from '@firna/ui/input'
-import { CirclePause, Copy } from 'lucide-react'
+import { CirclePause, Copy, DoorOpen } from 'lucide-react'
 import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
@@ -80,11 +80,32 @@ function Share(props: { code: string }) {
   )
 }
 
-/** The section of one invite code, in the state of the code. */
-function CodeSection(props: { code: InviteCode; paused: boolean }) {
+/**
+ * The section of one invite code, in the state of the code. During open
+ * sign-up, a code with invites left keeps its link under a notice that
+ * anyone can sign up now. The pause wins, so its notice shows when both
+ * are on.
+ */
+function CodeSection(props: {
+  code: InviteCode
+  paused: boolean
+  openSignUp: boolean
+}) {
   const { code } = props
   switch (inviteState(code, props.paused)) {
     case 'left':
+      if (props.openSignUp) {
+        return (
+          <Section status={<Count code={code} />} title={copy.title}>
+            <Notice
+              body={copy.open.body}
+              icon={DoorOpen}
+              title={copy.open.title}
+            />
+            <Share code={code.code} />
+          </Section>
+        )
+      }
       return (
         <Section
           description={copy.description}
@@ -126,9 +147,11 @@ function CodeSection(props: { code: InviteCode; paused: boolean }) {
 /**
  * The invite code of the user, at the end of the account: the invite link
  * with Copy, the code, and how many of the invites are left. During the
- * pause the link stays, and a notice says when it works again. A code
- * that is used up or turned off shows no link. The section names nobody
- * who used an invite. It reads the code each time that the account opens.
+ * pause the link stays, and a notice says when it works again. During open
+ * sign-up, while the waitlist is off and sign-ups are not paused, the link
+ * stays under a notice that anyone can sign up now. A code that is used up
+ * or turned off shows no link. The section names nobody who used an
+ * invite. It reads the code each time that the account opens.
  */
 export function InviteCodeSection() {
   const app = useApp()
@@ -150,9 +173,15 @@ export function InviteCodeSection() {
         </Section>
       )
     case 'ready': {
-      const code = waitlist.value.referralCode
+      const { referralCode: code, signupsPaused, waitlistOn } = waitlist.value
       if (code === null) return null
-      return <CodeSection code={code} paused={waitlist.value.signupsPaused} />
+      return (
+        <CodeSection
+          code={code}
+          openSignUp={!waitlistOn}
+          paused={signupsPaused}
+        />
+      )
     }
   }
 }

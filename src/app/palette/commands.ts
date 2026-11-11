@@ -1,4 +1,8 @@
 import {
+  sendFeedbackLabel,
+  sendFeedbackWords,
+} from '../../../docs/mockups/src/components/feedback/feedbackCopy'
+import {
   shortcutDigits,
   type ShortcutCommandId,
 } from '../../shared/shortcut-commands'
@@ -33,8 +37,12 @@ export const offeredActionIds = [
 
 export type OfferedActionId = (typeof offeredActionIds)[number]
 
-/** The actions that the palette makes itself, because they open a page. */
-export type OwnActionId = 'new-workspace' | 'create-org' | 'switch-org'
+/**
+ * The actions that the palette makes itself: those that open a page, and
+ * Send feedback, which opens the Feedback dialog over each page.
+ */
+export type OwnActionId =
+  'new-workspace' | 'create-org' | 'switch-org' | 'send-feedback'
 
 export const actionTexts: Readonly<
   Record<OfferedActionId | OwnActionId, CommandText>
@@ -56,6 +64,7 @@ export const actionTexts: Readonly<
   'switch-org': { label: 'Switch to', words: ['org'] },
   'hide-sidebar': { label: 'Hide the sidebar', words: ['toggle'] },
   'show-sidebar': { label: 'Show the sidebar', words: ['toggle'] },
+  'send-feedback': { label: sendFeedbackLabel, words: sendFeedbackWords },
 }
 
 /**
@@ -85,6 +94,7 @@ export const actionCommands: Readonly<
   'show-sidebar': 'toggle-sidebar',
   'new-workspace': 'new-workspace',
   'create-org': 'create-org',
+  'send-feedback': null,
 }
 
 /**

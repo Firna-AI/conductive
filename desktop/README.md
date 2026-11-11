@@ -36,6 +36,7 @@ npm --prefix desktop start
 
 `CONDUCTIVE_APP_ORIGIN` selects the API origin at build time.
 It defaults to `https://app.conductive.build`.
+Each build also stamps the renderer with the app version, from the shared [build-version.ts](../build-version.ts), as the web build does.
 Local development can use an HTTP localhost origin.
 `CONDUCTIVE_FRAME_SOURCES` lists space-separated HTTPS frame origins.
 Set the same frame sources in the web policy.
@@ -203,6 +204,9 @@ The [window controls test](tests/window-controls.spec.ts) checks the bar, the le
 It also checks the sidebar toggle, the toggle of the right column, Back and Forward, and the layout after a sidebar resize and a window resize.
 The [browser window test](tests/browser-window.spec.ts) opens a fresh web build in a plain Electron window.
 There, the workspace shows no window controls.
+The [phone feedback test](tests/feedback-phone.spec.ts) opens the same build in a 375 × 667 page.
+A long feedback draft fails to send, and a wheel over the sheet brings Cancel and Send into view before Send tries again.
+[browser-entry.ts](tests/browser-entry.ts) builds the web entry and opens its window for both tests.
 
 The `test:logic` command uses the repository's Vitest runner with the desktop configuration.
 It runs the unit tests under `src/` and `renderer/`.

@@ -80,6 +80,21 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 `attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
 The browser posts one raw file as `application/octet-stream` with its known byte length.
 
+`feedback.ts` owns `FEEDBACK_PATH`, the request and reply types of the
+feedback routes, and their byte limits. `FEEDBACK_BODY_MAX_BYTES` is the
+JSON body limit of a send. `FEEDBACK_SCREENSHOTS_MAX_BYTES` is the limit of
+the decoded screenshots of one message. `SendFeedbackRequest` carries each
+screenshot as base64 `content` only, with no name and no media type.
+`FeedbackResponse.replyEmail` is the reply address, or null.
+`images.ts` holds the one image signature reader of the browser and the
+Worker. `readImage(bytes)` returns a `CheckedImage` of one `ImageKind`:
+PNG, JPEG, GIF, or WebP. It returns null for other bytes. A symbol that the
+module does not export brands `CheckedImage`, so other code gets one only
+from `readImage`. The [mail sender](../../worker/mail-sender.ts) takes
+attachments only as checked images. It writes each file name and media
+type from the kind. [Feedback](../../docs/protocol/feedback.md) states the
+rules.
+
 `files.ts` defines full trees, tree updates, and branch changes.
 A full tree contains real paths relative to the repository root.
 Real `path`, `previousPath`, and `baseBranch` fields stay unchanged for
@@ -163,11 +178,15 @@ It can differ from the session of the request.
 `operator.ts` defines the operator overview, directories, and user and org
 suspensions. Its user records include `OperatorUserAccess` from
 `operator-waitlist.ts`. That module also defines waitlist, approval, code,
-and pause paths and replies. The operator sees email states and verified
-email flags, never email addresses. GitHub creation times let the app show
-account age. Access sources carry the operator, code label, referral
-owner, or org and inviting admin. Referral records include recipients
-with their GitHub names, or null.
+pause, and waitlist switch paths and replies. `operatorWaitlistSwitchPath`
+names the switch. `OperatorWaitlistSwitch` gives `waitlistOn`,
+`updatedAt`, the operator of the last change, and `waiting`, the count of
+people who wait, as the Waitlist tab counts them. The operator sees email
+states and verified email flags, never email addresses. GitHub creation
+times let the app show account age. Access sources carry the operator,
+code label, referral owner, or org and inviting admin. The `open_signup`
+source carries the operator who last turned the waitlist off. Referral
+records include recipients with their GitHub names, or null.
 `OrgSummary.suspension` in `orgs.ts` exposes only the org suspension time to its members.
 [Operator actions](../../worker/operator/README.md) gives the access and the reply codes.
 
@@ -243,10 +262,12 @@ The git credential payload is not defined yet.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
-- [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
-- [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
+- [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the required `waitlistOn` flag of the waitlist switch, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
+- [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause and switch changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
+- [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
+- [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.
 - [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
   Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
   Run now takes a page request ID and returns its run after workspace admission.

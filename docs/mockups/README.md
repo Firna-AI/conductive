@@ -62,7 +62,10 @@ linked page,
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section.
 The [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
-page gives their child pages and flows.
+page gives their child pages and flows. The
+[command palette and feedback](catalogue-palette.md) page gives the child
+pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
+and the flow that sends feedback.
 The [chat and routines](catalogue-chat-and-routines.md) page gives their
 child pages and flows.
 
@@ -142,8 +145,8 @@ connected.
 ## The waitlist
 
 [The waitlist](orgs-and-logins.md#the-waitlist) gives the screen of a
-person without app access, the invite codes and invite links, and the
-invite code on the Account page.
+person without app access, the invite codes and invite links, the invite
+code on the Account page, and open sign-up.
 
 ## The Mac app
 

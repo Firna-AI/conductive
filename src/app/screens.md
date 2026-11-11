@@ -7,6 +7,8 @@ drafts, New workspace as a page or a dialog, and
 [the waitlist](#the-waitlist).
 [Command palette and keys](palette-and-keys.md) gives the rules of the
 command palette and of the keyboard shortcuts.
+[Feedback](palette-screens.md) gives the rules of the Feedback dialog that
+the Help row of the command palette opens.
 
 - The app runs every cloud computer in its own Boat account, so no org has
   a Boat key. The app has no key screen, tab, notice, or Get started step,
@@ -117,12 +119,18 @@ command palette and of the keyboard shortcuts.
 - Each sheet and dialog is a modal layer through `useModalLayer`. A press
   outside it does not move the focus, so the focus goes back to the
   trigger also after a press outside.
+- A sheet stops below the top of a phone screen, at 88% of its height, as
+  the mockup sheet does. Its handle and title stay, and its body scrolls
+  when the content is longer. So the last controls of a long sheet, such
+  as Send after a long feedback draft, stay within a swipe.
 - Escape closes only the newest open layer, such as a menu in a dialog.
   A press outside closes each layer that it misses.
 - The command palette and the keyboard shortcuts follow
   [Command palette and keys](palette-and-keys.md): the layer of the
   palette, the shortcut layer, the owners of the commands, the key hints,
   and the keys of the workspace list.
+- [Feedback](palette-screens.md) gives the rules of the Feedback dialog
+  that the Help row of the palette opens, with its screenshots.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the
@@ -164,8 +172,9 @@ command palette and of the keyboard shortcuts.
 - Every desktop frame hosts the dialog, over the whole frame
   (`NewWorkspaceHost`). The frame with the rail and a page alone, such as
   Create org, get it from `DesktopLayers`, with the layer of sheets and
-  dialogs, the command palette, and the main area. The dialog has no
-  address: it closes in the same render as a change of the address, also
+  dialogs, the command palette, the Feedback dialog, and the main area.
+  The dialog has no address: it closes in the same render as a change of
+  the address, also
   while its create runs. A phone frame has no dialog.
 - Escape and a press outside close the dialog, except while the create
   runs. An action of the dialog that opens another page, such as Connect
@@ -218,7 +227,8 @@ command palette and of the keyboard shortcuts.
   (`NewWorkspaceModel`), so a repository that turns on moves no written
   draft.
 - Every composer reads its send key through `useSendKey`: the chat, the
-  page, and the dialog. On a computer, Enter sends and Shift+Enter adds a
+  page and the dialog of New workspace, and the Feedback dialog. On a
+  computer, Enter sends and Shift+Enter adds a
   line, as [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)
   says. Enter does nothing while the message cannot go, and it belongs to
   an input method that composes a word. In the phone layout, Enter adds a
@@ -275,4 +285,6 @@ the requirements. The mockups `app/sign-in/waitlist`, `app/sign-in/join`,
 - The Account page ends with the invite code of the user, after the model
   of new workspaces: the invite link with Copy, the code, and the invites
   left. It has the states of the pause, of every invite used, and of a code
-  that an operator turned off. Its words come from `inviteCodeCopy.ts`.
+  that an operator turned off. During [open sign-up](../../docs/protocol/sign-ups.md#open-sign-up),
+  it shows the open sign-up notice while invites remain. The pause wins.
+  Its words come from `inviteCodeCopy.ts`.

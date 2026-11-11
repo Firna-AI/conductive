@@ -76,6 +76,7 @@ function GeneralTab(props: { state: AccountState }) {
       />
       <InviteCodeSection
         fresh={props.state.connections !== 'connected'}
+        openSignUp={props.state.openSignUp === 'on'}
         state={props.state.invites}
       />
     </>

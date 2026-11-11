@@ -1,3 +1,4 @@
+import { helpGroupLabel } from '../../../docs/mockups/src/components/feedback/feedbackCopy'
 import type { Workspace } from '../../shared/workspaces'
 import { routes } from '../router'
 import { groupWorkspaces } from '../sections'
@@ -8,6 +9,7 @@ import { switchCommand } from './palette-org'
 import {
   accountLabel,
   accountRows,
+  feedbackRow,
   linkRow,
   offeredRow,
   orgSettingRows,
@@ -66,11 +68,13 @@ function offeredRows(offers: readonly PaletteOffer[]): PaletteRow[] {
 }
 
 /**
- * The actions in their four parts: the open workspace, the org, the orgs,
- * and the window. New workspace shows wherever the org takes changes. Its
- * row links to the page, and it opens as the page or the dialog that the
- * user chose. A deleted org has no Switch to row. A Switch to row takes
- * the command of the place of its org in the rail, as `switchCommand` says.
+ * The actions in their five parts: the open workspace, the org, the orgs,
+ * the window, and help. New workspace shows wherever the org takes
+ * changes. Its row links to the page, and it opens as the page or the
+ * dialog that the user chose. A deleted org has no Switch to row. A Switch
+ * to row takes the command of the place of its org in the rail, as
+ * `switchCommand` says. Send feedback shows on each page, also without an
+ * org and in a suspended org, because feedback changes no org.
  */
 export function actionGroups(source: PaletteBase): PaletteGroup[] {
   const { org, offers } = source
@@ -109,6 +113,7 @@ export function actionGroups(source: PaletteBase): PaletteGroup[] {
       ],
     },
     { label: 'Window', rows: offeredRows(window) },
+    { label: helpGroupLabel, rows: [feedbackRow()] },
   ]
 }
 

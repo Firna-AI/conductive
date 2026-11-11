@@ -19,6 +19,8 @@ import { attachmentRoutes } from './attachment-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
+import { feedbackRoutes } from './feedback-routes'
+import { APP_VERSION } from '../version'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
@@ -29,7 +31,7 @@ import { runRoutes } from './run-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
-import { waitlistRoutes } from './waitlist-routes'
+import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
 /**
@@ -61,6 +63,7 @@ export function createFakeServices(search: string): AppServices {
   const routes = [
     ...signedOut,
     ...waitlistRoutes(backend),
+    ...feedbackRoutes(backend, options),
     ...accountRoutes(backend),
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
@@ -75,7 +78,10 @@ export function createFakeServices(search: string): AppServices {
   ]
   const fetch = routeFetch(
     routes,
-    (path, method) => guardScope(backend.state, path, method),
+    (path, method) => {
+      admitOpenSignup(backend)
+      guardScope(backend.state, path, method)
+    },
     server.fetch,
   )
   const events: WorkspaceEventSource = {
@@ -97,6 +103,7 @@ export function createFakeServices(search: string): AppServices {
     newId,
     leave: (url) => window.location.assign(url),
     appOrigin: window.location.origin,
+    appVersion: APP_VERSION,
     copy: (text) => copyText(window, text),
   }
 }

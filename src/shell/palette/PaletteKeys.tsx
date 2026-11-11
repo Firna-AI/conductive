@@ -12,7 +12,7 @@ import { useRowAction } from './row-action'
  */
 export function PaletteKeys() {
   const base = usePaletteBase()
-  const action = useRowAction(base.org?.id)
+  const action = useRowAction(base)
   useShortcutOffers(
     listedCommands(base).map(({ command, row }) => ({
       command,

@@ -34,6 +34,8 @@ feature that is not complete yet says so.
   pricing page of the marketing site shows. Billing is not built yet.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
+  An operator can turn the waitlist off. Each new person then gets in at
+  once, unless sign-ups are paused.
 - Every cloud computer runs in the app's own Boat account, so users need no
   Boat account.
 - A new workspace starts as an empty chat. The first message creates it,
@@ -61,6 +63,8 @@ feature that is not complete yet says so.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
 - Keyboard shortcuts, which each person can change on the Account page.
+- Send feedback from the command palette, with screenshots. The team gets
+  each message by email, and replies to the primary verified GitHub email.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
   An agent can ask to run a command on the Mac of the person who sent its

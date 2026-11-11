@@ -18,12 +18,15 @@ The chat backend refuses a runner below that pin before the welcome or any comma
 It accepts runner protocol versions 1 and 2 at or above the pin.
 The packaged runner sends version 2, and each full image build records version 2.
 The [operator area](operator/README.md) owns the operator's app-wide numbers,
-suspensions, waitlist approvals, invite codes, and sign-up pause.
-New accounts wait for app access unless an operator identity or a valid join
-code grants it at sign-in. The [app access gate](security/README.md#app-access-gate)
-admits only session, waitlist, sign-out, and personal invitation requests
-while the user waits. It refuses other API requests and upgrades with
-403 `access_required`, including operator and org requests.
+suspensions, waitlist approvals, invite codes, sign-up pause, and waitlist switch.
+New accounts wait for app access unless an operator identity, open sign-up,
+or a valid join code grants it at sign-in. Open sign-up is on while the
+waitlist switch is off and sign-ups are not paused. During open sign-up, the
+[app access gate](security/README.md#app-access-gate) also grants access to a
+waiting user at their next request. Otherwise the gate admits only session,
+waitlist, sign-out, and personal invitation requests while the user waits.
+It refuses other API requests and upgrades with 403 `access_required`,
+including operator and org requests.
 
 ## Routes
 
@@ -50,13 +53,14 @@ On the app hostname, the Worker serves these API routes:
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
 - The Mac device routes.
+- `GET /api/feedback`, the reply address of feedback, and `POST /api/feedback`, the send of feedback, as [Feedback routes](app-api/feedback.md) says.
 - `GET /api/operator/overview`, the app-wide numbers for operators.
 - `GET /api/operator/orgs`, the org search and cursor pages for operators.
 - `GET /api/operator/users`, the user search and cursor pages for operators.
 - `GET /api/operator/orgs/<orgId>`, the org page for operators.
 - `GET /api/operator/users/<githubId>`, the user page for operators.
 - The operator's waitlist list and approval, invite code list, creation and
-  disable, and sign-up pause, as the [operator area](operator/README.md#waitlist-codes-and-sign-ups) says.
+  disable, sign-up pause, and waitlist switch, as the [operator area](operator/README.md#waitlist-codes-and-sign-ups) says.
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
 - `DELETE /api/operator/users/<githubId>/suspension`, the operator's lift of a user suspension.
 - `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
@@ -71,10 +75,12 @@ That route sends a browser back to the screen of the return cookie, or to Home, 
 It answers an install from the Mac app with a page that sends the user back to the Mac app.
 [The GitHub App](../docs/protocol/github-banner.md#the-github-app) states the rules.
 
-The [app API](app-api/README.md) serves the account, shell, and workspace routes after the request gate.
+The [app API](app-api/README.md) serves the account, shell, workspace, and feedback routes after the request gate.
 `CONDUCTIVE_FRAME_SOURCES` adds trusted HTTPS desktop stream origins to the asset policy.
 Use the same configured sources in the web app and Mac app.
 The model list and the default model come from Worker variables, as [Deployment inputs](../docs/deployment.md#models) says.
+The optional Worker secret `FEEDBACK_EMAIL` names the team inbox of feedback.
+[The email](app-api/feedback.md#the-email) of the feedback routes gives the local log, the 503 without that inbox, and the 502 of a failed send.
 
 The Worker also serves org settings, repository choices, sections, member writes,
 workspace metadata, Archive, and Restore, image builds and logs, account GitHub access,
@@ -262,7 +268,9 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [routines/pull-request-dispatch.ts](routines/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
 - [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due routines and retries up to 50 old queued runs each minute.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
-- [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between approval and invitation emails.
+- [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between the approval, invitation, and feedback emails.
+  It writes the sender address, and the name and the media type of each attachment from a `CheckedImage`.
+- [app-api/feedback.ts](app-api/feedback.ts): `feedbackRoute`, the feedback routes. [Feedback routes](app-api/feedback.md) gives their checks and their email.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.
 - [http/json-body.ts](http/json-body.ts) owns the shared JSON object parsing policy.
@@ -275,6 +283,8 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [Deployment inputs](../docs/deployment.md)
 - [Access and security](../docs/protocol/access-and-security.md)
 - [Waitlist](../docs/protocol/waitlist.md)
+- [Sign-ups](../docs/protocol/sign-ups.md)
+- [Feedback](../docs/protocol/feedback.md)
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)

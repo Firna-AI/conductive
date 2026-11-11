@@ -9,8 +9,10 @@ import {
   numericGitHubId,
 } from './directory'
 
-const matches = `FROM users u WHERE u.suspended_at IS NULL
-  AND NOT EXISTS (SELECT 1 FROM user_app_access a WHERE a.user_id = u.id)
+export const waitingUserPredicate = `u.suspended_at IS NULL
+  AND NOT EXISTS (SELECT 1 FROM user_app_access a WHERE a.user_id = u.id)`
+
+const matches = `FROM users u WHERE ${waitingUserPredicate}
   AND (?1 = '' OR u.github_login LIKE ?2 ESCAPE '\\'
     OR u.display_name LIKE ?2 ESCAPE '\\' OR u.github_id = ?3)`
 

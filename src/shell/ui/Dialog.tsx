@@ -1,15 +1,17 @@
-import { useRef, type ReactNode } from 'react'
+import { useRef, type ReactNode, type RefObject } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
-import { Overlay, useModalLayer } from './Overlay'
+import { Overlay, useModalLayer, type Focusable } from './Overlay'
 import { Sheet, trapTab } from './Sheet'
 import { useViewport } from './viewport'
 
 /**
  * A question that the user confirms before an action that they cannot
- * simply undo. Desktop shows a dialog over the dimmed app, and a phone
- * shows a sheet. The actions come last, with the confirming action at the
- * end. `close` runs on Escape and on a press outside, as Cancel does.
+ * simply undo, or a short form, such as Send feedback. Desktop shows a
+ * dialog over the dimmed app, and a phone shows a sheet. The actions come
+ * last, with the confirming action at the end. `close` runs on Escape and
+ * on a press outside, as Cancel does. `initial` is the part that takes the
+ * focus as it opens, such as the field of a form.
  */
 export function Dialog(props: {
   title: string
@@ -17,11 +19,12 @@ export function Dialog(props: {
   children: ReactNode
   actions: ReactNode
   wide?: boolean
+  initial?: RefObject<Focusable | null>
 }) {
   const viewport = useViewport()
   if (viewport === 'phone') {
     return (
-      <Sheet close={props.close} title={props.title}>
+      <Sheet close={props.close} initial={props.initial} title={props.title}>
         <div className={styles.sheetBody}>
           {props.children}
           <div className={styles.sheetActions}>{props.actions}</div>
@@ -45,9 +48,10 @@ function DialogBox(props: {
   children: ReactNode
   actions: ReactNode
   wide?: boolean
+  initial?: RefObject<Focusable | null>
 }) {
   const dialog = useRef<HTMLElement>(null)
-  useModalLayer(dialog, props.close)
+  useModalLayer(dialog, props.close, { initial: props.initial })
   return (
     <section
       aria-label={props.title}

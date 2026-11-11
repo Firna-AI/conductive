@@ -29,8 +29,10 @@ An omitted model or effort uses the owner's default.
 An omitted section uses the org's default section.
 The first message runs as the sender of the calling turn.
 `--name` gives an optional workspace name.
+Its help says: "Use plain words separated by spaces. Avoid underscores unless the user tells you to add them."
 The Worker keeps its first line with text, makes white space single, removes a final full stop, and cuts at 60 Unicode code points.
 It keeps whole words when possible and keeps an ellipsis.
+It keeps each underscore, as [Create and list calls](../docs/protocol/agent-tools.md#create-and-list-calls) says.
 A blank result counts as no name, and the app shows "Untitled".
 The name does not change the branch.
 The create answer holds the stored name.
@@ -70,6 +72,7 @@ All four lists need only the workspace token.
 The stdio server exposes `create_workspace`, `list_workspaces`, `list_repositories`, `list_sections`, `list_models`, and `run_mac_command`.
 The ID fields of `create_workspace` name the list tools that supply their values.
 Its optional `name` uses the same Worker rule as CLI `--name`.
+Its description gives the same guidance as the `--name` help.
 It supports the `2025-11-25` MCP revision.
 It returns this supported revision during initialization.
 It never copies an unknown offered revision into its reply.
