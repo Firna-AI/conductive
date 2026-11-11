@@ -92,8 +92,10 @@ This page lists each protocol doc and what it covers.
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets, the sender line and the branch line of each message,
-  and the base prompt of Claude agents.
+  agent session gets, and the sender line and the branch line of each
+  message.
+  - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
+    agents and the base instructions of Codex agents.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
   ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of
