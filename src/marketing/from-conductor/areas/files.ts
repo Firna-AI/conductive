@@ -40,8 +40,8 @@ export const filesFeatures: readonly ParityFeature[] = [
     id: 'image-previews',
     area: 'files',
     name: 'Image previews',
-    status: 'planned',
-    note: 'Image previews in sent messages and file tabs are planned.',
+    status: 'in-progress',
+    note: 'Image previews in file tabs are in progress. Previews in sent messages are planned.',
     due: null,
   },
   {
