@@ -8,6 +8,18 @@ interface Pending {
   timer: ReturnType<typeof setTimeout>
 }
 
+export class JsonRpcError extends Error {
+  readonly data: unknown
+
+  constructor(error: unknown) {
+    super(errorText(error) ?? 'The agent refused the request.')
+    this.data =
+      typeof error === 'object' && error !== null && 'data' in error
+        ? error.data
+        : undefined
+  }
+}
+
 export class JsonRpc {
   private nextId = 1
   private readonly pending = new Map<number, Pending>()
@@ -93,10 +105,7 @@ export class JsonRpc {
     if (!pending) return
     this.pending.delete(input.id)
     clearTimeout(pending.timer)
-    if (input.error !== undefined)
-      pending.reject(
-        new Error(errorText(input.error) ?? 'The agent refused the request.'),
-      )
+    if (input.error !== undefined) pending.reject(new JsonRpcError(input.error))
     else pending.resolve(input.result)
   }
 

@@ -1,4 +1,5 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import styles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
 import { AGENTS } from '../../app/api/read-core'
@@ -10,6 +11,11 @@ import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { AgentConnectForm } from './AgentConnectForm'
 import { agentNames, loginLabels } from './labels'
+import {
+  LoginNotUsable,
+  SignedOutStatus,
+  unusableCause,
+} from './LoginNotUsable'
 import { LoginShareSetting } from './LoginShareSetting'
 
 type ConnectedLogin = Extract<AgentLoginStatus, { connected: true }>
@@ -27,6 +33,8 @@ function AgentRow(props: {
   /** The id of the name of the agent, which names its share setting too. */
   nameId: string
   login: ConnectedLogin | null
+  /** Why the app can no longer use the login, or `null` while it can. */
+  cause: string | null
   formOpen: boolean
   removable: boolean
   disabled: boolean
@@ -63,15 +71,21 @@ function AgentRow(props: {
     )
   }
   return (
-    <div className={styles.row}>
+    <div className={classes(styles.row, styles.agentRow)}>
       <span className={styles.name} id={props.nameId}>
         {name}
       </span>
       <span className={styles.detail}>
         {login ? (
           <>
-            <StatusText label="Connected" tone="success" />
-            <span className={styles.kind}>{loginLabels[login.kind]}</span>
+            {props.cause === null ? (
+              <StatusText label="Connected" tone="success" />
+            ) : (
+              <SignedOutStatus />
+            )}
+            <span className={styles.kind}>
+              {loginLabels[login.agent][login.kind]}
+            </span>
           </>
         ) : null}
       </span>
@@ -82,11 +96,19 @@ function AgentRow(props: {
 
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
- * login. Connect opens the form of the agent under its row, one form at a
- * time. `initial` opens a form at first. `removable` gives each connected
- * login its Remove, and `shares` its share setting, as on the account.
- * `closable` gives each form its Cancel. `disabled` turns Connect off, as
- * in a later step of Get started.
+ * login. In a narrow list, as on a phone, Connected and the kind go on a
+ * second line under the name, so that the kind shows in full. Connect opens
+ * the form of the agent under its row, one form at a time. `initial` opens
+ * a form at first. `removable` gives each connected login its Remove, and
+ * `shares` its share setting, as on the account. `closable` gives each form
+ * its Cancel. `disabled` turns Connect off, as in a later step of Get
+ * started.
+ *
+ * A login that the app can no longer use says Signed out in place of
+ * Connected, with its cause and Sign in again under its row. Sign in again,
+ * and `initial`, open the form of its agent with the kind of the login, in
+ * the place of the cause. Each open of the list reads the logins again, so
+ * that a login that stopped after the app opened shows Signed out.
  */
 export function AgentList(props: {
   initial: Agent | null
@@ -99,31 +121,37 @@ export function AgentList(props: {
 }) {
   const app = useApp()
   const account = useStore(app.account.account)
+  useEffect(() => {
+    void app.account.refreshLogins()
+  }, [app])
   const [open, setOpen] = useState<Agent | null>(props.initial)
   const ids = useId()
   const close = () => setOpen(null)
+  const disabled = props.disabled ?? false
   return (
-    <ul aria-label="Agents" className={styles.list}>
+    <ul aria-label="Agents" className={classes(styles.list, styles.agentList)}>
       {AGENTS.map((agent) => {
         const login = connectedLogin(account, agent)
-        const formOpen = open === agent && login === null
+        const cause = unusableCause(login)
+        const formOpen = open === agent && (login === null || cause !== null)
         const nameId = `${ids}-${agent}`
         return (
           <li key={agent}>
             <AgentRow
               agent={agent}
-              disabled={props.disabled ?? false}
+              cause={cause}
+              disabled={disabled}
               formOpen={formOpen}
               login={login}
               nameId={nameId}
               open={() => setOpen(agent)}
               removable={props.removable}
             />
-            {login && props.shares ? (
-              <LoginShareSetting
-                agent={agent}
-                nameId={nameId}
-                noReuse={login.noReuse}
+            {cause !== null && !formOpen ? (
+              <LoginNotUsable
+                cause={cause}
+                disabled={disabled}
+                signInAgain={() => setOpen(agent)}
               />
             ) : null}
             {formOpen ? (
@@ -134,6 +162,14 @@ export function AgentList(props: {
                   close()
                   props.connected?.()
                 }}
+                kind={login?.kind}
+              />
+            ) : null}
+            {login && props.shares ? (
+              <LoginShareSetting
+                agent={agent}
+                nameId={nameId}
+                noReuse={login.noReuse}
               />
             ) : null}
           </li>
