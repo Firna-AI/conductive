@@ -113,7 +113,12 @@ Select **Stop** to interrupt that turn.
 The chat records the stop.
 You can send another message to continue the conversation.
 
-The agent's earlier work folds into a line when a turn ends.
+A skill is a folder with a `SKILL.md` file of instructions for an agent.
+When an agent loads a skill, the chat shows **Using skill**, then **Used skill**, with its name among the tool calls.
+Each folded group of tool calls names its skills after the count, such as **4 tool calls · Skill: brainstorming**.
+
+When a turn ends, the agent's earlier work folds into a line with its skill names after the counts.
+For example, **8 tool calls, 7 messages · Skills: brainstorming, plans**.
 Select that line to inspect its messages and tool calls.
 The answer stays visible beside it.
 
@@ -162,6 +167,7 @@ Copy a session's whole conversation as Markdown for another agent or a document.
 **Copy concise transcript** keeps the default folds closed.
 A run of tool calls stays open if any call is not done.
 **Copy full transcript** includes the messages and work inside every fold.
+Both copies keep the skill names and words of the chat.
 
 Agents can read the same transcript text through their workspace tools.
 The read uses the concise text by default and can request the full text.
