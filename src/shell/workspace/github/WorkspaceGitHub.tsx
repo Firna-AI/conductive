@@ -5,6 +5,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
+import { useStore } from '../../../app/store'
 import { useNow } from '../../../app/time'
 import type { FilesTarget } from '../../../files/navigation'
 import type { BarActions } from '../../../github/barActions'
@@ -14,11 +15,13 @@ import { PullRequestBar } from '../../../github/PullRequestBar'
 import { PullRequestRow } from '../../../github/PullRequestRow'
 import { useGitHubState } from '../../../github/useGitHubState'
 import { useOrgServices } from '../../context'
-import { shortcutLabels, useShortcutHint } from '../../shortcuts/shortcut-hints'
+import { usePanelLayout } from '../../layout/panels'
+import { useShortcutLabelsOf } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
 import { useFilesNavigation } from '../files/files-navigation'
 import { useScreenActions, useScreenControls } from './bar-controls'
 import { useBranchFeed } from './bar-feed'
+import { BarKeys } from './bar-keys'
 import { githubSubscribe } from './github-events'
 
 const GitHubFeedContext = createContext<GitHubFeed | null>(null)
@@ -94,8 +97,9 @@ function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
  * The pull request bar at the top of the right column, with its actions, or
  * the row under the header of a phone, which opens the Checks tab, where
  * the actions show at the top. After a merge, Archive archives the
- * workspace at once, and its button shows busy while it runs. Its tooltip
- * shows the key of Archive workspace.
+ * workspace at once, and its button shows busy while it runs. The keys of
+ * the bar run while the right column shows it, and the tooltip of each
+ * button and of the number names the key of its command.
  */
 export function PullRequestPart(props: { context: WorkspaceContext }) {
   const { context } = props
@@ -103,10 +107,9 @@ export function PullRequestPart(props: { context: WorkspaceContext }) {
   const controls = useScreenBar()?.controls ?? null
   const navigation = useFilesNavigation(context)
   const now = useNow(60_000)
-  const archiveKey = shortcutLabels(
-    'Archive',
-    useShortcutHint('archive-workspace'),
-  )
+  const keyOf = useShortcutLabelsOf()
+  // A hidden right column stays mounted, and its bar does not show.
+  const shown = useStore(usePanelLayout().rightShown)
   if (!github) return null
   if (context.viewport === 'phone') {
     return (
@@ -123,11 +126,14 @@ export function PullRequestPart(props: { context: WorkspaceContext }) {
     )
   }
   return (
-    <PullRequestBar
-      archiveKey={archiveKey}
-      controls={controls}
-      github={github}
-      now={now}
-    />
+    <>
+      {shown ? <BarKeys controls={controls} /> : null}
+      <PullRequestBar
+        controls={controls}
+        github={github}
+        keyOf={keyOf}
+        now={now}
+      />
+    </>
   )
 }

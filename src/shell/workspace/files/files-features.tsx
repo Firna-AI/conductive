@@ -16,6 +16,7 @@ import { ChecksActions } from '../../../github/BarButtons'
 import { ChecksList } from '../../../github/ChecksList'
 import { shortcutLabels, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext, WorkspaceFeatures } from '../features'
+import { BarKeys } from '../github/bar-keys'
 import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { useSavedView } from '../saved-view'
@@ -114,7 +115,8 @@ function useListKeys(): Partial<Record<FileListKind, CommandKey>> {
  * Files tab of a phone, where a file or a diff shows as a page. This part
  * reads the kept files that the workspace screen connects. Checks shows the
  * GitHub state of the workspace screen, also while the sandbox shows in
- * place of the lists. On a phone, the actions of the bar top the Checks tab.
+ * place of the lists. On a phone, the actions of the bar top the Checks tab,
+ * and their keys run while it shows them.
  */
 function FilesPart(props: { context: WorkspaceContext }) {
   const { context } = props
@@ -140,10 +142,14 @@ function FilesPart(props: { context: WorkspaceContext }) {
       />
     )
   }
+  const controls = bar?.controls ?? null
   const checks = github ? (
     <>
       {layout === 'phone' ? (
-        <ChecksActions controls={bar?.controls ?? null} />
+        <>
+          <BarKeys controls={controls} />
+          <ChecksActions controls={controls} />
+        </>
       ) : null}
       <ChecksList github={github} />
     </>

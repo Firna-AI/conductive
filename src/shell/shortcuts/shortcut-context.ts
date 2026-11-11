@@ -131,20 +131,33 @@ export function useShortcutKeymap(): ShortcutKeymap {
 }
 
 /**
- * The first key of the command that works where the page runs, or none. A
- * part outside the app, such as the chat on its development page, has no
- * keymap, so it gets no key.
+ * Gives the first key of a command that works where the page runs, or none,
+ * for each command that a part asks for. A part outside the app, such as
+ * the chat on its development page, has no keymap, so it gets no key.
  */
+export function useShortcutKeyOf(): (
+  command: ShortcutCommandId,
+) => ShortcutKeyText | undefined {
+  const shortcuts = useContext(ShortcutContext)
+  const services = useContext(ServicesContext)
+  return useCallback(
+    (command: ShortcutCommandId) =>
+      shortcuts && services
+        ? firstShortcutKey(
+            command,
+            shortcuts.keymap,
+            services.platform,
+            services.host,
+          )
+        : undefined,
+    [shortcuts, services],
+  )
+}
+
+/** The first key of one command, as `useShortcutKeyOf` gives it. */
 export function useShortcutKey(
   command: ShortcutCommandId | undefined,
 ): ShortcutKeyText | undefined {
-  const shortcuts = useContext(ShortcutContext)
-  const services = useContext(ServicesContext)
-  if (!shortcuts || !services || command === undefined) return undefined
-  return firstShortcutKey(
-    command,
-    shortcuts.keymap,
-    services.platform,
-    services.host,
-  )
+  const keyOf = useShortcutKeyOf()
+  return command === undefined ? undefined : keyOf(command)
 }

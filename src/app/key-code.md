@@ -8,8 +8,10 @@ Each path is relative to `src/app/`, the folder of this page.
   defaults, browser keys, account keymap, conflicts, and press decision.
   The [shortcut layer](../shell/shortcuts/README.md) calls it for each key
   of the page.
-- `services.ts`: `windowHost` detects the web host. `live-services.ts`
-  and `dev/fake-services.ts` supply it with the keyboard and key events.
+- `services.ts`: `windowHost` detects the web host, and `windowNewTab`
+  opens a page of another site in a new tab, as a link with
+  `target="_blank"` and `rel="noreferrer"` does. `live-services.ts` and
+  `dev/fake-services.ts` supply them with the keyboard and key events.
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.
   `dev/settings-routes.ts` saves settings and repository choices.

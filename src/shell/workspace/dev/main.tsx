@@ -9,6 +9,7 @@ import {
   windowHost,
   windowInput,
   windowKeys,
+  windowNewTab,
   windowPlatform,
   windowVisibility,
 } from '../../../app/services'
@@ -103,6 +104,7 @@ const app = new AppModel({
   storage: null,
   newId: () => crypto.randomUUID(),
   leave: () => undefined,
+  openInNewTab: windowNewTab(window),
   appOrigin: window.location.origin,
   copy: (text) => copyText(window, text),
 })

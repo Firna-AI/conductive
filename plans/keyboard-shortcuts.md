@@ -1598,15 +1598,36 @@ Tags: ui
 
 Depends on: 13, 14
 
-- [ ] Offer each new command where its control shows and can run now: the
+- [x] Offer each new command where its control shows and can run now: the
       buttons of the pull request bar, Copy link on the workspace label,
       and the two Copy transcript items of the open session's tab menu.
       Each key does what its control does. Show each key in its control's
       tooltip, as the mockups draw it.
-- [ ] Tests: each offer runs its control's action, a key does nothing where
+- [x] Tests: each offer runs its control's action, a key does nothing where
       the control does not show or cannot run, and the hints show the keys.
-      Add each case to the existing test of its requirement.
-- [ ] Update the README of each changed area.
+      Add each case to the existing test of its requirement. Report:
+      `.context/keyboard-shortcuts/reports/d199-app.md`, smoke evidence in
+      `.context/keyboard-shortcuts/m15/`.
+- [x] Update the README of each changed area.
+
+Agent calls of 2026-11-11 in Milestone 15:
+
+- `src/github/` takes one function prop, `keyOf`, that gives the tooltip
+  and the key name for a command and a label, in place of `archiveKey`.
+  Reason: some labels depend on the state, such as the merge method and
+  the number of the pull request, and `src/github/` reads no keymap.
+- A busy or disabled bar button shows no key, also Archive. Reason: its
+  key does nothing then, and the mockups draw no key there.
+- On desktop, the bar keys stop while the right column is hidden, because
+  the bar does not show then.
+- A new service, `AppServices.openInNewTab`, opens the pull request with no
+  referrer and no opener, as the link does.
+- The workspace label names its key to a screen reader through a new
+  optional `buttonRef` of the shared `CopyLinkButton`. The mockups draw the
+  same.
+- The workspace development page mounts `ShortcutProvider` around the
+  palette, as `App.tsx` does. Without it, the page failed at start since
+  the palette began to read the keymap.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

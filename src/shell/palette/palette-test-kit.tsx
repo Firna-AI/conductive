@@ -53,6 +53,10 @@ export async function openPaletteTab(
     beside?: ReactNode
     /** The clock and the timers of the app, such as those of a test. */
     clock?: Pick<AppServices, 'now' | 'delay'>
+    /** The clipboard of the app, such as one that keeps each copied text. */
+    copy?: AppServices['copy']
+    /** Opens a page in a new tab, such as a fake that keeps each address. */
+    openInNewTab?: AppServices['openInNewTab']
   } = {},
 ) {
   const server = options.server ?? new FakeApiServer()
@@ -70,6 +74,8 @@ export async function openPaletteTab(
     events: options.events ?? recordingSocket(server).source,
     fetch: options.fetch,
     ...options.clock,
+    ...(options.copy ? { copy: options.copy } : {}),
+    ...(options.openInNewTab ? { openInNewTab: options.openInNewTab } : {}),
   })
   const navigation = memoryNavigation(href)
   const shell = options.mac ? (

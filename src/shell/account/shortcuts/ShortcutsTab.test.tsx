@@ -45,10 +45,15 @@ function shownGroups(): [string, (string | null)[]][] {
   )
 }
 
-/** The changes after Replace gave ⌘/ to Keyboard shortcuts, as in the mockups. */
+/**
+ * The changes after Replace gave ⇧⌘P to the palette and ⌘/ to Keyboard
+ * shortcuts, as in the mockups. Create PR keeps its second key ⌥⇧⌘P, and
+ * Model picker has no key.
+ */
 const edited = [
   { command: 'command-palette', keys: ['Shift+Meta+P'] },
   { command: 'keyboard-shortcuts', keys: ['Meta+/'] },
+  { command: 'create-pull-request', keys: ['Alt+Shift+Meta+P'] },
   { command: 'model-picker', keys: [] },
 ] as const
 
@@ -126,13 +131,14 @@ describe('the Keyboard shortcuts tab', () => {
       resetAll: queryByRole('button', 'Reset all shortcuts') !== null,
       focused: accessibleName(document.activeElement ?? document.body),
     }).toEqual({
-      text: '3 commands get their default shortcuts again, wherever you use Conductive on a Mac.',
+      text: '4 commands get their default shortcuts again, wherever you use Conductive on a Mac.',
       saves: [
         {
           keyboard: 'mac',
           changes: [
             { command: 'command-palette', keys: null },
             { command: 'keyboard-shortcuts', keys: null },
+            { command: 'create-pull-request', keys: null },
             { command: 'model-picker', keys: null },
           ],
         },
@@ -214,10 +220,9 @@ describe('the Keyboard shortcuts tab', () => {
       const rowControls = rows.map((label) =>
         controlsOf(rowOf('Navigation', label)),
       )
-      typeText(field, 'no-such-command')
-      const empty = queryByText(
-        'Nothing matches “no-such-command”',
-      )?.parentElement
+      // The app has no theme command, as the mockups show.
+      typeText(field, 'theme')
+      const empty = queryByText('Nothing matches “theme”')?.parentElement
       expect({
         lines: introLines(),
         found: shown,
@@ -230,7 +235,7 @@ describe('the Keyboard shortcuts tab', () => {
         controls,
         none: [],
         empty: [
-          'Nothing matches “no-such-command”',
+          'Nothing matches “theme”',
           'Try a command name, such as Close tab.',
         ],
       })

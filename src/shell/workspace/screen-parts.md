@@ -195,8 +195,12 @@ the ordered stream of the workspace.
   to it on GitHub. After a merge, its Archive archives
   the workspace at once, with one request, and stays busy while that
   request runs. It shows only when `WorkspaceContext.archive` offers
-  Archive, so a suspended org shows none. Its tooltip and
-  `aria-keyshortcuts` name the key of Archive workspace.
+  Archive, so a suspended org shows none.
+- The tooltip and `aria-keyshortcuts` of each button that takes a click,
+  and of each link to the pull request, name the key of its command. The
+  keys of the bar run while the right column shows the bar, and on a
+  phone while the top of the Checks tab shows its actions, as
+  [The actions of the bar](../../github/actions.md#keys) says.
 - An agent action sends its prompt through `WorkspaceContext.chat`. A prompt
   that did not go out shows the chat of its session, where the composer
   names the cause: the chat in place of a file on desktop, and the chat tab

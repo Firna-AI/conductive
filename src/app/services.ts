@@ -94,6 +94,12 @@ export interface AppServices {
   /** Opens a page that the Worker or another site serves, such as sign-in. */
   leave: (url: string) => void
   /**
+   * Opens a page of another site in a new tab, as a link with
+   * `target="_blank"` and `rel="noreferrer"` does, such as a pull request on
+   * GitHub. The Mac app opens it in the browser of the system.
+   */
+  openInNewTab: (url: string) => void
+  /**
    * The origin of the app host, such as `https://app.conductive.build`. An
    * address that people share, such as an invite link, starts with it.
    */
@@ -117,6 +123,18 @@ export function windowStorage(target: Window): KeyValueStorage | null {
     return target.localStorage
   } catch {
     return null
+  }
+}
+
+/**
+ * Opens an address in a new tab of a browser window, as a link with
+ * `target="_blank"` and `rel="noreferrer"` does: the new page gets no
+ * referrer and no opener. The window open handler of the Mac app sends it
+ * to the browser of the system.
+ */
+export function windowNewTab(target: Window): AppServices['openInNewTab'] {
+  return (url) => {
+    target.open(url, '_blank', 'noreferrer')
   }
 }
 

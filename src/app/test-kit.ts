@@ -244,6 +244,7 @@ export function testServices(
     storage: new MemoryStorage(),
     newId: () => `client-${++id}`,
     leave: () => undefined,
+    openInNewTab: () => undefined,
     appOrigin: FAKE_ORIGIN,
     copy: async (text) => {
       await text

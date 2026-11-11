@@ -6,12 +6,15 @@ import {
   buildShortcutKeymap,
   firstShortcutKey,
 } from '../../app/shortcuts/keymap'
+import { ACCOUNT_PATHS } from '../../shared/account'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import {
   readShortcutKeyText,
   shortcutChord,
   type ShortcutKeyboard,
 } from '../../shared/shortcut-key'
+import type { FakeApiServer } from '../../test-support/fake-api'
+import { coreFixtures } from '../../test-support/fixtures/core'
 import { useShortcutOffer } from './shortcut-context'
 
 // The helpers of the tests that press the keys of shortcuts in the app.
@@ -122,6 +125,25 @@ export function pressHintKey(
   const key = firstShortcutKey(command, keymap, platform, host)
   if (key === undefined) throw new Error(`${command} has no key here.`)
   return pressShortcut(key, target)
+}
+
+/**
+ * The account of an admin, the default user of the fake API, with the saved
+ * changes of one keyboard, such as a key that the person recorded for a
+ * command without a default key.
+ */
+export function serveShortcutChanges(
+  server: FakeApiServer,
+  keyboard: ShortcutKeyboard,
+  changes: readonly { command: ShortcutCommandId; keys: readonly string[] }[],
+): void {
+  server.json('GET', ACCOUNT_PATHS.account, {
+    ...coreFixtures().account,
+    shortcuts: {
+      mac: keyboard === 'mac' ? changes : [],
+      other: keyboard === 'other' ? changes : [],
+    },
+  })
 }
 
 /** The keys of the presses that reach the element itself, in their order. */

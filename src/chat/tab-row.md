@@ -21,8 +21,11 @@ the requirements.
   tab before or after the shown tab, with a wrap at each end, also a file
   or diff tab, through its `show`. Close tab closes the shown session tab
   as its Close does, and the host closes a shown file or diff tab. Reopen
-  closed session runs the first row of the session history. A key that
-  would do nothing, such as Next tab with one tab, goes on to the page.
+  closed session runs the first row of the session history. Copy concise
+  transcript and Copy full transcript copy the shown session tab as the
+  items of its tab menu do, with the same toast, also in a read-only
+  workspace. A key that would do nothing, such as Next tab with one tab or
+  a copy key while a file shows, goes on to the page.
 - `moveTab(tab, place)` puts a tab before or after its neighbour in the
   row. It saves through the shared view writer, then sorts the open
   sessions for Close. A new or reopened session opens at the end. A

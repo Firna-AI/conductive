@@ -95,8 +95,11 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
 | Back, Forward | The window controls of the Mac app, while the window has a page there |
 | Open workspace 1 to 9, Previous and Next workspace, Next workspace that needs input | `useListKeys` of the workspace list, while the page shows the list |
 | Previous tab, Next tab, Close tab, Reopen closed session | `useTabKeys` of the tab row of the chat. A shown file tab offers its own Close tab. |
+| Copy concise transcript, Copy full transcript | `useTabKeys` of the tab row of the chat, while a session tab shows, with the copy of its tab menu |
 | Focus the message field, Attach files, Stop the agent | The composer of the chat |
 | Model picker, Next effort level | The model picker of the composer |
+| Copy link | `CopyLink.tsx` of the workspace header, while the label of the number shows |
+| Create PR, Fix checks, Resolve conflicts, Address review, Commit and push, Merge PR, Continue after merge, Open PR on GitHub | `BarKeys` in `workspace/github/bar-keys.tsx`, beside the bar of the right column while the column shows, and beside the actions at the top of the Checks tab of a phone. Each button that takes a click offers its command, and Open PR on GitHub runs while the bar links the pull request. |
 
 `PaletteKeys` offers each command that the palette lists, with the action
 of its row, also while the palette is closed. So a key and its row do the
@@ -137,12 +140,18 @@ return <TerminalTool screenRef={terminal} {...props} />
   this. `ShortcutTip` gives the tooltip to a Firna button, which takes no
   `title`, and `useAriaShortcut` names the key on it through its ref. A
   link takes `shortcutTip(label, hint)` as its `title`.
+- The label of the number in the workspace header shows the key of Copy
+  link in its tooltip only. The shared Copy link button of the mockups
+  takes no ref, so it names no key in `aria-keyshortcuts`.
 - The drawn hint of an org tile in the rail shows the name of the org and
   the key chips of its key. The link names the key in
   `aria-keyshortcuts`.
-- A part outside the shell, such as the tabs of the Files lists and the
-  Archive of the pull request bar, takes the tooltip and the key name as
-  plain props, from `shortcutLabels(label, hint)`.
+- A part outside the shell, such as the tabs of the Files lists, takes the
+  tooltip and the key name as plain props, from
+  `shortcutLabels(label, hint)`. A part that draws the controls of several
+  commands with labels of its own, such as the buttons and the links of
+  the pull request bar, takes the function of `useShortcutLabelsOf()`,
+  which gives them for a command and the label of its control.
 
 ## Mount
 
@@ -153,7 +162,7 @@ open layers that the palette and every UI kit read.
 ## Checks
 
 ```sh
-npm run test -- src/shell/shortcuts src/shell/palette src/shell/list src/shell/layout src/shell/workspace/WorkspaceKeys.test.tsx src/shell/account/shortcuts
+npm run test -- src/shell/shortcuts src/shell/palette src/shell/list src/shell/layout src/shell/workspace/WorkspaceKeys.test.tsx src/shell/workspace/CopyLink.test.tsx src/shell/workspace/github src/shell/account/shortcuts
 ```
 
 The tests mount the whole app in happy-dom with `openPaletteTab`, which
@@ -164,11 +173,16 @@ unless its `system` option names another system, such as Linux.
 or as the hints show them in the host of the app, with `pressHintKey`. A
 press can also come from another physical key, such as the / of the
 keypad. It records the keys that reach an element, and offers a command
-from a test.
+from a test. `serveShortcutChanges` gives the account of the fake API the
+keys that a person recorded, such as for a command without a default key.
 `PageKeys.test.tsx` and `../workspace/WorkspaceKeys.test.tsx` run a
-command of each owner from its key, also the org keys of the rail.
-`KeyHints.test.tsx` checks the hints in a browser tab and in the phone
-layout. `pressHintKey` presses the key of the keymap with the changes of
+command of each owner from its key, also the org keys of the rail and the
+copy keys of the chat. The tests of the pull request bar under
+`../workspace/github/` and `../workspace/CopyLink.test.tsx` run the keys
+of the bar and of Copy link, also where their controls do not show or
+cannot take a click. `KeyHints.test.tsx` checks the hints in a browser tab
+and in the phone layout, also those of the bar and of the label of the
+number. `pressHintKey` presses the key of the keymap with the changes of
 the account.
 
 ### Key Code
@@ -182,13 +196,17 @@ the account.
   commands and the command that owns the open layer.
 - [shortcut-context.ts](shortcut-context.ts): `useShortcutOffer`,
   `useShortcutOffers`, `useShortcutTerminal`, `useShortcutRecorder`,
-  `useShortcutKeymap`, and `useShortcutKey`.
+  `useShortcutKeymap`, `useShortcutKeyOf`, and `useShortcutKey`.
 - [shortcut-hints.tsx](shortcut-hints.tsx): `useShortcutHint`,
-  `useAriaShortcut`, `shortcutTip`, `shortcutLabels`, and `ShortcutTip`.
+  `useAriaShortcut`, `shortcutTip`, `shortcutLabels`,
+  `useShortcutLabelsOf`, and `ShortcutTip`.
 - [PaletteKeys.tsx](../palette/PaletteKeys.tsx): the keys of the commands
   that the palette lists.
+- [bar-keys.tsx](../workspace/github/bar-keys.tsx): `BarKeys`, the keys of
+  the pull request bar.
 - [shortcut-test-kit.tsx](shortcut-test-kit.tsx): `pressShortcut`,
-  `pressCommand`, `pressHintKey`, `keysHeardBy`, and `OfferedCommand`.
+  `pressCommand`, `pressHintKey`, `serveShortcutChanges`, `keysHeardBy`,
+  and `OfferedCommand`.
 
 ### Related Docs
 

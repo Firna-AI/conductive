@@ -142,7 +142,7 @@ function ChatBody(
     shownTab(snapshot.view, active, content !== null),
     props.renderTab,
   )
-  useTabKeys({ tabs, controller, history })
+  useTabKeys({ tabs, controller, history, copy })
   const body = (
     <>
       <SessionTabs

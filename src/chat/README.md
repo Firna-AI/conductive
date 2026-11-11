@@ -128,7 +128,8 @@ check in the Mac app.
   `components/SessionTab.tsx` and the tabs of `renderTab`.
   `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
   the row in the saved order with their titles. `components/tab-keys.ts`:
-  `useTabKeys`, the keys of the row.
+  `useTabKeys`, the keys of the row, and the copy keys of the shown
+  session.
 - `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.

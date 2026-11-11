@@ -3,14 +3,21 @@
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
+import type { AppServices } from '../../app/services'
 import { requestLines } from '../../app/test-kit'
-import { sessionPaths, sessionsPath, type Session } from '../../shared/sessions'
+import {
+  sessionPaths,
+  sessionsPath,
+  sessionTranscriptPath,
+  type Session,
+} from '../../shared/sessions'
 import type { FilesTab } from '../../files/navigation'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import {
   accessibleName,
   byLabel,
   queryByRole,
+  shownToasts,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -21,7 +28,10 @@ import {
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
 import { openPaletteTab } from '../palette/palette-test-kit'
-import { pressHintKey } from '../shortcuts/shortcut-test-kit'
+import {
+  pressHintKey,
+  serveShortcutChanges,
+} from '../shortcuts/shortcut-test-kit'
 import { settle } from '../test-mount'
 import { filesHref } from './files/files-address'
 import { bodiesOf, lastEvent, messageField } from './kept-test-kit'
@@ -38,12 +48,19 @@ const fileTab: FilesTab = {
 }
 const fileName = 'AddressForm.tsx'
 
-/** The open workspace in a Chrome tab on Windows, over `server`. */
-async function openWorkspace(server: FakeApiServer) {
+/**
+ * The open workspace in a Chrome tab on Windows, over `server`, with the
+ * clipboard `copy` of the test, if any.
+ */
+async function openWorkspace(
+  server: FakeApiServer,
+  copy?: AppServices['copy'],
+) {
   holdAnimationFrames()
   const opened = await openPaletteTab(routes.workspace(org, id), {
     server,
     events: socketsOf(server).events,
+    copy,
   })
   await settle()
   const press = async (command: ShortcutCommandId) => {
@@ -145,6 +162,46 @@ describe('the keys of the workspace', () => {
         }),
       ],
       stops: 1,
+    })
+  })
+
+  test('the copy keys copy the transcript of the session of the shown tab with its toast, as its tab menu does, and do nothing while a file shows', async () => {
+    const server = new FakeApiServer()
+    // The person recorded a key for Copy full transcript, which has none.
+    serveShortcutChanges(server, 'other', [
+      { command: 'copy-full-transcript', keys: ['Alt+Shift+K'] },
+    ])
+    const markdown = {
+      concise: '# Address autocomplete\n\n_3 tool calls_\n',
+      full: '# Address autocomplete\n\n- Read `src/lookup.ts`\n',
+    } as const
+    for (const detail of ['concise', 'full'] as const) {
+      const path = sessionTranscriptPath(org, id, session, detail)
+      server.json('GET', path, { markdown: markdown[detail] })
+    }
+    const copied: string[] = []
+    const { app, navigation } = await openWorkspace(server, async (text) => {
+      copied.push(await text)
+    })
+    const press = async (command: ShortcutCommandId) => {
+      const key = pressHintKey(app, command, document.body)
+      await settle()
+      return key.defaultPrevented
+    }
+
+    const concise = await press('copy-concise-transcript')
+    const toasts = shownToasts().map((toast) => toast.textContent)
+    const full = await press('copy-full-transcript')
+    act(() => navigation.push(filesHref(org, id, fileTab)))
+    await settle()
+    const onFile = await press('copy-concise-transcript')
+
+    expect({ concise, full, onFile, copied, toasts }).toEqual({
+      concise: true,
+      full: true,
+      onFile: false,
+      copied: [markdown.concise, markdown.full],
+      toasts: ['Transcript copied'],
     })
   })
 })
