@@ -35,7 +35,7 @@
   - Keeping the current catalogue leaves both known 5xx codes missing.
 - **Wider fix:** D. The constructor type makes a missing code impossible in typed code. C needs the same guarantee with more caller changes. E is blocked and is not recommended.
 - **Previous examples:** The route catalogue separately missed new path names. Its direct correction is in `worker/error-reporting/routes.ts`. Main's curated warning list in `worker/warning-values.ts` maps other values to `unknown` by design.
-- **Related:** `plans/follow-ups/shared-worker-reporting-routes.md` records the same catalogue-drift cause in separate code. Its route fix makes the feedback cause identifiable from route and status. The wider fixes do not conflict and neither waits for the other.
+- **Related:** `plans/follow-ups/shared-worker-reporting-routes.md` records the same catalogue-drift cause in separate code. Its route fix makes the feedback cause identifiable from route and status. The wider fixes do not conflict and neither waits for the other. `plans/follow-ups/relayed-start-failure-reports.md` adds a trusted failure relay. When both fixes exist, it uses this code type. Neither fix waits.
 - **Recommendation:** D. It keeps existing callers and public results while providing the structural guarantee. The first review preferred C. The independent check found D smaller with the same guarantee.
 - **Action:** fix after merge, apply D, because the trigger is Rare, severity is Low, and the fix does not get harder later.
 

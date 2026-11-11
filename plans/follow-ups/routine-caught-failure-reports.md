@@ -31,6 +31,7 @@
 - **Wider fix:** B. One recovery owner combines the reporting decision with the action that keeps the run valid. D is a blocked detection alternative.
 - **Previous examples:** `worker/application-scheduled.ts` reports caught maintenance failures before continuing. The software-image and gateway-stream reporting follow-ups record other failures hidden from the outer entry. Their failure owners differ from routine recovery.
 - **Related:**
+  - `relayed-start-failure-reports.md`: the same reporting ownership concern. Its claim lets the recovery helper recognize an already handled failure. A user-script marker still does not cross the boundary, so failed-attempt silence remains separate. Neither fix waits.
   - `software-image-failure-reports.md`: the same cause class, in separate code. Its guarded data write cannot fix a queued routine or a failed claim.
   - `gateway-stream-failure-reports.md`: its private late-outcome hook could support webhook reporting if it ships first. Routine recovery can also report inside an explicit background scope. Neither item waits for the other.
 - **Recommendation:** B. The recovery owner knows whether the run stays queued, has a new unexpected cause, or already failed inside a workspace. The first review recommended C. The independent check recommended B because moving captures to three adapters gives no better scope or forced handling.
