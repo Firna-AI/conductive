@@ -1,3 +1,5 @@
+import { agentActionLabels } from '../../../docs/mockups/src/components/workspace/barCopy'
+import { transcriptItems } from '../../../docs/mockups/src/components/workspace/transcriptCopy'
 import {
   shortcutDigits,
   type ShortcutCommandId,
@@ -106,6 +108,11 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
   palette('new-section', 'Workspace'),
   palette('archive-workspace', 'Workspace'),
   palette('restore-workspace', 'Workspace'),
+  command('copy-link', 'Workspace', 'workspace', 'Copy link', [
+    'url',
+    'workspace',
+    'clipboard',
+  ]),
   ...shortcutDigits.map((digit) =>
     command(
       `workspace-${digit}`,
@@ -122,6 +129,59 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'org-page',
     'Next workspace that needs input',
   ),
+  command(
+    'create-pull-request',
+    'Workspace',
+    'workspace',
+    agentActionLabels['create-pull-request'],
+    ['pull request', 'github', 'publish'],
+  ),
+  command(
+    'fix-checks',
+    'Workspace',
+    'workspace',
+    agentActionLabels['fix-checks'],
+    ['ci', 'errors', 'pull request'],
+  ),
+  command(
+    'resolve-conflicts',
+    'Workspace',
+    'workspace',
+    agentActionLabels['resolve-conflicts'],
+    ['merge', 'rebase', 'pull request'],
+  ),
+  command(
+    'address-review',
+    'Workspace',
+    'workspace',
+    agentActionLabels['address-review'],
+    ['comments', 'feedback', 'pull request'],
+  ),
+  command(
+    'commit-and-push',
+    'Workspace',
+    'workspace',
+    agentActionLabels['commit-and-push'],
+    ['git', 'save', 'publish'],
+  ),
+  command('merge-pull-request', 'Workspace', 'workspace', 'Merge PR', [
+    'pull request',
+    'github',
+    'squash',
+    'rebase',
+  ]),
+  command(
+    'continue-after-merge',
+    'Workspace',
+    'workspace',
+    'Continue after merge',
+    ['new branch', 'merged', 'workspace'],
+  ),
+  command('open-pull-request', 'Workspace', 'workspace', 'Open PR on GitHub', [
+    'pull request',
+    'github',
+    'browser',
+  ]),
   palette('go-to-all-files', 'Workspace'),
   palette('go-to-changes', 'Workspace'),
   palette('go-to-checks', 'Workspace'),
@@ -134,4 +194,17 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
   command('model-picker', 'Chat', 'workspace', 'Model picker'),
   command('next-effort', 'Chat', 'workspace', 'Next effort level'),
   command('stop-agent', 'Chat', 'workspace', 'Stop the agent', ['cancel']),
+  command(
+    'copy-concise-transcript',
+    'Chat',
+    'workspace',
+    transcriptItems.concise,
+    ['markdown', 'clipboard', 'chat'],
+  ),
+  command('copy-full-transcript', 'Chat', 'workspace', transcriptItems.full, [
+    'markdown',
+    'clipboard',
+    'chat',
+    'expanded',
+  ]),
 ]

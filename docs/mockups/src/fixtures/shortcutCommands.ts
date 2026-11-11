@@ -4,6 +4,11 @@ import {
   sendFeedbackWords,
 } from '../components/feedback/feedbackCopy'
 import {
+  agentActionLabels,
+  type AgentAction,
+} from '../components/workspace/barCopy'
+import { transcriptItems } from '../components/workspace/transcriptCopy'
+import {
   fixed,
   fixedGroups,
   focusedButtonKeys,
@@ -39,10 +44,19 @@ export type CommandId =
   | 'new-section'
   | 'archive-workspace'
   | 'restore-workspace'
+  | 'copy-link'
   | `workspace-${Digit}`
   | 'previous-workspace'
   | 'next-workspace'
   | 'next-needs-input'
+  | 'create-pull-request'
+  | 'fix-checks'
+  | 'resolve-conflicts'
+  | 'address-review'
+  | 'commit-and-push'
+  | 'merge-pull-request'
+  | 'continue-after-merge'
+  | 'open-pull-request'
   | 'go-to-all-files'
   | 'go-to-changes'
   | 'go-to-checks'
@@ -55,6 +69,8 @@ export type CommandId =
   | 'model-picker'
   | 'next-effort'
   | 'stop-agent'
+  | 'copy-concise-transcript'
+  | 'copy-full-transcript'
 
 /**
  * A command with its default keys on a Mac. `windowsKeys` holds its keys
@@ -95,12 +111,23 @@ const commandWords: Partial<Record<CommandId, readonly string[]>> = {
   'new-workspace': ['create', 'task'],
   'new-section': ['group'],
   'restore-workspace': ['unarchive'],
+  'copy-link': ['url', 'workspace', 'clipboard'],
+  'create-pull-request': ['pull request', 'github', 'publish'],
+  'fix-checks': ['ci', 'errors', 'pull request'],
+  'resolve-conflicts': ['merge', 'rebase', 'pull request'],
+  'address-review': ['comments', 'feedback', 'pull request'],
+  'commit-and-push': ['git', 'save', 'publish'],
+  'merge-pull-request': ['pull request', 'github', 'squash', 'rebase'],
+  'continue-after-merge': ['new branch', 'merged', 'workspace'],
+  'open-pull-request': ['pull request', 'github', 'browser'],
   'go-to-checks': ['ci'],
   'go-to-preview': ['port'],
   'new-session': ['tab', 'agent', 'chat'],
   'session-history': ['closed', 'reopen'],
   'attach-files': ['upload'],
   'stop-agent': ['cancel'],
+  'copy-concise-transcript': ['markdown', 'clipboard', 'chat'],
+  'copy-full-transcript': ['markdown', 'clipboard', 'chat', 'expanded'],
 }
 
 function command(
@@ -118,6 +145,11 @@ function macAppCommand(
   ...mac: Shortcut[]
 ): CommandSpec {
   return { ...command(id, label, ...mac), only: 'mac-app' }
+}
+
+/** An agent action of the pull request bar, with the label of its button. */
+function agentCommand(id: AgentAction, ...mac: Shortcut[]): CommandSpec {
+  return command(id, agentActionLabels[id], ...mac)
 }
 
 /** The nine commands that open the org or the workspace at a place. */
@@ -141,9 +173,13 @@ export function orgCommand(index: number): CommandId | undefined {
  * The groups of the tab, with Conductor's keys as the defaults on a Mac,
  * and a second key where a browser tab keeps Conductor's key (decisions 191
  * and 192 B). The key research of 10 November 2026 moved Next effort level
- * to ⌃⌘/ and Stop the agent to ⌃⌘⌫. The commands that a person can change
- * come first. The fixed shortcuts of a group follow them, and the groups of
- * fixed shortcuts close the list.
+ * to ⌃⌘/ and Stop the agent to ⌃⌘⌫. Decision 199 C of 11 November 2026 adds
+ * Copy link, the actions of the pull request bar, Copy concise transcript,
+ * and Copy full transcript. Firefox keeps ⇧⌘P, so Create PR also has
+ * ⌥⇧⌘P, and Firefox switches the text direction of a text field on ⇧⌘X, so
+ * Fix checks has ⌥⌘X. The commands that a person can change come first.
+ * The fixed shortcuts of a group follow them, and the groups of fixed
+ * shortcuts close the list.
  */
 export const shortcutSpecs: readonly GroupSpec[] = [
   {
@@ -194,6 +230,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('new-section', 'New section'),
       command('archive-workspace', 'Archive workspace', '⇧⌘A'),
       command('restore-workspace', 'Restore workspace'),
+      command('copy-link', 'Copy link', '⇧⌘C'),
       ...numbered('workspace', 'Open workspace', (digit) => [
         `⌘${digit}`,
         `⌥⌘${digit}`,
@@ -201,6 +238,14 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('previous-workspace', 'Previous workspace', '⌥⌘↑', '⌃⌘↑'),
       command('next-workspace', 'Next workspace', '⌥⌘↓', '⌃⌘↓'),
       command('next-needs-input', 'Next workspace that needs input', '⌥⌘L'),
+      agentCommand('create-pull-request', '⇧⌘P', '⌥⇧⌘P'),
+      agentCommand('fix-checks', '⌥⌘X'),
+      agentCommand('resolve-conflicts'),
+      agentCommand('address-review'),
+      agentCommand('commit-and-push', '⇧⌘Y'),
+      command('merge-pull-request', 'Merge PR', '⇧⌘M'),
+      command('continue-after-merge', 'Continue after merge'),
+      command('open-pull-request', 'Open PR on GitHub', '⇧⌘G'),
       command('go-to-all-files', 'Go to All files'),
       command('go-to-changes', 'Go to Changes', '⌥⌘U'),
       command('go-to-checks', 'Go to Checks'),
@@ -219,6 +264,8 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('model-picker', 'Model picker', '⌘/'),
       command('next-effort', 'Next effort level', '⌃⌘/'),
       command('stop-agent', 'Stop the agent', '⌃⌘⌫'),
+      command('copy-concise-transcript', transcriptItems.concise, '⌥⌘C'),
+      command('copy-full-transcript', transcriptItems.full),
       ...messageKeys,
     ],
   },

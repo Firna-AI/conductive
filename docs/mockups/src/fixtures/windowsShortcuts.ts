@@ -10,8 +10,11 @@ import type { CommandId } from './shortcutCommands'
  * keys of the clashes and of the checks that failed: Alt+Shift+Z,
  * Ctrl+Shift+L, Alt+Shift+S, Alt+Shift+M, and Alt+Shift+PgUp and
  * Alt+Shift+PgDn. The user's answers of the same day to decisions 196 and
- * 197 add no key. Only the Mac app has the sidebar toggle, Back, and
- * Forward, so they have no key here.
+ * 197 add no key. Decision 199 C of 11 November 2026 follows the same rule,
+ * with one key chosen by hand: Fix checks has Alt+Shift+X, the twin of ⌥⌘X,
+ * because Firefox switches the text direction of a text field on
+ * Ctrl+Shift+X. Only the Mac app has the sidebar toggle, Back, and Forward,
+ * so they have no key here.
  */
 export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'command-palette': ['Ctrl+K'],
@@ -47,6 +50,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'new-section': [],
   'archive-workspace': ['Ctrl+Shift+A'],
   'restore-workspace': [],
+  'copy-link': ['Ctrl+Shift+C'],
   'workspace-1': ['Ctrl+1', 'Alt+Shift+1'],
   'workspace-2': ['Ctrl+2', 'Alt+Shift+2'],
   'workspace-3': ['Ctrl+3', 'Alt+Shift+3'],
@@ -59,6 +63,14 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'previous-workspace': ['Alt+Shift+↑', 'Alt+Shift+PgUp'],
   'next-workspace': ['Alt+Shift+↓', 'Alt+Shift+PgDn'],
   'next-needs-input': ['Alt+Shift+L'],
+  'create-pull-request': ['Ctrl+Shift+P', 'Alt+Shift+P'],
+  'fix-checks': ['Alt+Shift+X'],
+  'resolve-conflicts': [],
+  'address-review': [],
+  'commit-and-push': ['Ctrl+Shift+Y'],
+  'merge-pull-request': ['Ctrl+Shift+M'],
+  'continue-after-merge': [],
+  'open-pull-request': ['Ctrl+Shift+G'],
   'go-to-all-files': [],
   'go-to-changes': ['Alt+Shift+U'],
   'go-to-checks': [],
@@ -71,4 +83,6 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'model-picker': ['Alt+Shift+M'],
   'next-effort': ['Ctrl+Shift+/'],
   'stop-agent': ['Alt+Shift+S'],
+  'copy-concise-transcript': ['Alt+Shift+C'],
+  'copy-full-transcript': [],
 }

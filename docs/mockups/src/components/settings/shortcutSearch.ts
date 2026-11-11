@@ -21,14 +21,15 @@ export type ShortcutSearch = (typeof shortcutSearches)[number]
  * The text in the field of each search. "tab" finds commands by their
  * labels and by their words, and a fixed row of the palette. "move" finds
  * the keys of a focused workspace row and of a focused divider. "model"
- * finds only Model picker, at the end of the list. No row matches "merge".
+ * finds only Model picker, near the end of the list. No row matches
+ * "theme", because the app has no theme command.
  */
 export const shortcutQueries: Readonly<Record<ShortcutSearch, string>> = {
   none: '',
   found: 'tab',
   fixed: 'move',
   'one-command': 'model',
-  'no-match': 'merge',
+  'no-match': 'theme',
 }
 
 /** A group that a query matches, with only its matching rows. */

@@ -22,9 +22,9 @@ export const browserShortcutsSearch = defineScreen({
       slug: 'no-match',
       title: 'No match',
       description:
-        'A search for “merge” matches no row. The tab says so in place of the groups, and suggests the name of a command, such as Close tab.',
+        'A search for “theme” matches no row, because the app has no theme command. The tab says so in place of the groups, and suggests the name of a command, such as Close tab.',
       rationale:
-        'Decision 195 E of 10 November 2026 adds a line for a search without a match, as the palette has. The phone shows the same line.',
+        'Decision 195 E of 10 November 2026 adds a line for a search without a match, as the palette has. The phone shows the same line. A person who knows Conductor can look for its theme key, which the app leaves out.',
       props: { shortcutSearch: 'no-match' },
     },
   ],

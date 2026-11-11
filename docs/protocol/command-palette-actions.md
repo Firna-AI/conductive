@@ -57,7 +57,8 @@ actions at `app/command-palette/actions`, and the settings at
   - Resume shows on the stopped workspace itself.
   - The owner picker acts on a person.
   - Sign out sits on the Account page, which the Sign-in row opens.
-  - A pull request action leads to GitHub, from the pull request bar.
+  - A pull request action runs from the pull request bar, or from its key,
+    as [Keyboard shortcuts](keyboard-shortcuts.md#commands) says.
 
 ## Help
 

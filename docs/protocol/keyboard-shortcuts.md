@@ -59,7 +59,10 @@ app.
   between the tabs, the workspaces, and the orgs that it shows. Reason:
   decision 144 set this rule for the palette.
 - So the keys of Conductor for features that the app lacks stay out, such
-  as a theme, a zen mode, the pull request actions, and search in the chat.
+  as a theme, a zen mode, Pull latest, Start review, and search in the
+  chat.
+- Copy link, each action of the pull request bar, Copy concise transcript,
+  and Copy full transcript are commands too (decision 199).
 - The default keys copy the keys of Conductor, except where
   [The keys](keyboard-shortcuts-keys.md) gives another key and its reason.
 - A command without a key in Conductor starts with no key. The person can
@@ -74,6 +77,10 @@ app.
   one for each place.
 - The labels use the words of the app and of macOS, such as Stop the agent,
   Switch to org 1, Open workspace 1, and Reopen closed session.
+- The actions of the pull request bar use the labels of its buttons. Merge
+  PR, Continue after merge, and Open PR on GitHub add words. Reason: the
+  Merge button names the merge method, and the bar links the number of the
+  pull request.
 - A command holds at most four keys, in an order.
 - A person can change the keys of each command, also the keys of the
   command palette (decision 190).
@@ -88,8 +95,8 @@ app.
   palette do the same thing. For example, Archive workspace runs only for
   the workspace owner and the admins.
 - [The default keys](keyboard-shortcuts-keys.md#the-default-keys) gives
-  where each other command runs: on every page, in a workspace, on a page
-  of an org, or only in the Mac app.
+  where each other command runs, such as on every page, in a workspace, on
+  the pull request bar, or only in the Mac app.
 - The key of each of these commands does this:
   - Workspace list opens the list page of the org.
   - Previous tab and Next tab show the tab before or after the shown tab
@@ -111,6 +118,14 @@ app.
     workspace.
   - Next effort level chooses the next effort of the model in the model
     picker.
+  - Each action of the pull request bar does what a click on its button
+    does. So Merge PR merges at once, with no question.
+  - Open PR on GitHub opens the pull request on GitHub, as a link to it
+    does.
+  - Copy link copies the link of the workspace, as its label in the header
+    does.
+  - Copy concise transcript and Copy full transcript copy the transcript of
+    the session of the shown tab, as the items of its tab menu do.
 - A key that steps through a list wraps at its end: from the last item to
   the first, and from the first to the last. This holds for Previous and
   Next tab, Previous and Next workspace, Next workspace that needs input,
@@ -190,6 +205,8 @@ app.
   [Entry points](command-palette.md#entry-points) say.
 - The tooltip of a control shows the first key of its command that works
   where the page runs. A screen reader hears that key too.
+- A menu item shows no key, such as Copy concise transcript in the tab menu
+  of a session. Reason: the menus have no place for a key.
 - Each hint shows the keys of the person, with their changes.
 - In the phone layout, no hint shows outside the Keyboard shortcuts tab.
 - The keys work in every layout. Reason: the phone layout also serves a

@@ -59,6 +59,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'new-section': { mac: [], other: [] },
   'archive-workspace': { mac: ['Shift+Meta+A'], other: ['Ctrl+Shift+A'] },
   'restore-workspace': { mac: [], other: [] },
+  'copy-link': { mac: ['Shift+Meta+C'], other: ['Ctrl+Shift+C'] },
   'previous-workspace': {
     mac: ['Alt+Meta+ArrowUp', 'Ctrl+Meta+ArrowUp'],
     other: ['Alt+Shift+ArrowUp', 'Alt+Shift+PageUp'],
@@ -68,6 +69,17 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
     other: ['Alt+Shift+ArrowDown', 'Alt+Shift+PageDown'],
   },
   'next-needs-input': { mac: ['Alt+Meta+L'], other: ['Alt+Shift+L'] },
+  'create-pull-request': {
+    mac: ['Shift+Meta+P', 'Alt+Shift+Meta+P'],
+    other: ['Ctrl+Shift+P', 'Alt+Shift+P'],
+  },
+  'fix-checks': { mac: ['Alt+Meta+X'], other: ['Alt+Shift+X'] },
+  'resolve-conflicts': { mac: [], other: [] },
+  'address-review': { mac: [], other: [] },
+  'commit-and-push': { mac: ['Shift+Meta+Y'], other: ['Ctrl+Shift+Y'] },
+  'merge-pull-request': { mac: ['Shift+Meta+M'], other: ['Ctrl+Shift+M'] },
+  'continue-after-merge': { mac: [], other: [] },
+  'open-pull-request': { mac: ['Shift+Meta+G'], other: ['Ctrl+Shift+G'] },
   'go-to-all-files': { mac: [], other: [] },
   'go-to-changes': { mac: ['Alt+Meta+U'], other: ['Alt+Shift+U'] },
   'go-to-checks': { mac: [], other: [] },
@@ -86,6 +98,8 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'model-picker': { mac: ['Meta+/'], other: ['Alt+Shift+M'] },
   'next-effort': { mac: ['Ctrl+Meta+/'], other: ['Ctrl+Shift+/'] },
   'stop-agent': { mac: ['Ctrl+Meta+Backspace'], other: ['Alt+Shift+S'] },
+  'copy-concise-transcript': { mac: ['Alt+Meta+C'], other: ['Alt+Shift+C'] },
+  'copy-full-transcript': { mac: [], other: [] },
 }
 
 /** Includes kept keys, so a saved override has the same meaning in every host. */

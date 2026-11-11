@@ -34,7 +34,7 @@ export const macShortcutsSearch = defineScreen({
       slug: 'no-match',
       title: 'No match',
       description:
-        'A search for “merge” matches no row. The tab says so in place of the groups, and suggests the name of a command, such as Close tab.',
+        'A search for “theme” matches no row, because the app has no theme command. The tab says so in place of the groups, and suggests the name of a command, such as Close tab.',
       rationale:
         'The user chose option E of decision 195 on 10 November 2026, and with it a line for a search without a match. The palette answers such a search in the same way. The search takes only words, so the hint asks for a command name, not for keys.',
       props: { shortcutSearch: 'no-match' },

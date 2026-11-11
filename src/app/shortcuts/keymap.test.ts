@@ -48,6 +48,17 @@ test('applies ordered overrides and empty removals without changing other defaul
 })
 
 test('reports conflicts and moves a key from every owner in one replacement batch', () => {
+  for (const keyboard of ['mac', 'other'] as const) {
+    const defaults = buildShortcutKeymap(keyboard, [])
+    expect
+      .soft(
+        [...defaults].flatMap(([command, keys]) =>
+          shortcutConflicts(command, keys, defaults),
+        ),
+        `${keyboard} defaults share no key`,
+      )
+      .toEqual([])
+  }
   const keymap = buildShortcutKeymap('mac', [])
   const keypad = press({ key: '/', code: 'NumpadDivide' })
   const change = [key('Meta+K'), key(shortcutFromPress(keypad))]
@@ -105,7 +116,11 @@ test('finds commands through the palette words while keeping the registry in com
       command.label,
       ...command.words,
     ]).map((command) => ({ id: command.id, group: command.group }))
-  expect(find('ci')).toEqual([{ id: 'go-to-checks', group: 'Workspace' }])
+  expect(find('ci')).toEqual([
+    { id: 'fix-checks', group: 'Workspace' },
+    { id: 'go-to-checks', group: 'Workspace' },
+    { id: 'copy-concise-transcript', group: 'Chat' },
+  ])
   expect(find('new task')).toEqual([
     { id: 'new-workspace', group: 'Workspace' },
   ])

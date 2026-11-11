@@ -32,10 +32,19 @@ export const shortcutCommandIds = [
   'new-section',
   'archive-workspace',
   'restore-workspace',
+  'copy-link',
   ...shortcutDigits.map((digit) => `workspace-${digit}` as const),
   'previous-workspace',
   'next-workspace',
   'next-needs-input',
+  'create-pull-request',
+  'fix-checks',
+  'resolve-conflicts',
+  'address-review',
+  'commit-and-push',
+  'merge-pull-request',
+  'continue-after-merge',
+  'open-pull-request',
   'go-to-all-files',
   'go-to-changes',
   'go-to-checks',
@@ -48,6 +57,8 @@ export const shortcutCommandIds = [
   'model-picker',
   'next-effort',
   'stop-agent',
+  'copy-concise-transcript',
+  'copy-full-transcript',
 ] as const
 
 export type ShortcutCommandId = (typeof shortcutCommandIds)[number]

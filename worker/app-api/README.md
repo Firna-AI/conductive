@@ -180,7 +180,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   `boot-account-isolation.test-support.ts` holds its two-user scenario.
 - `shortcuts.test.ts` checks ordered saves, empty overrides, reset by row
   deletion, separate keyboards, rejected batches, fixed keys, and retired
-  commands in account and save replies. Its stored-data cases also check
+  commands in account and save replies. It saves and reads the shared
+  Create PR command ID. Its stored-data cases also check
   recovery from unreadable keys and JSON without losing valid keys.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.

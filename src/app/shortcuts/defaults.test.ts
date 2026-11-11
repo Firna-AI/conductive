@@ -1,16 +1,19 @@
 import { expect, test } from 'vitest'
+import { shortcutChord } from '../../shared/shortcut-key'
+import { workspaceCommandDefaults } from './command-defaults.test-support'
 import { shortcutCommands } from './commands'
 import { decideShortcut } from './decision'
 import { defaultShortcutKeys } from './defaults'
 import { buildShortcutKeymap } from './keymap'
 import { context, key, macApp, press, tab } from './shortcut-test-support'
 
-test('Restore workspace and Send feedback follow their groups, start with the keys of Conductor, and run their keys only when offered', () => {
+test('commands follow their groups, start with the checked keys, and run only when offered', () => {
   const cases = [
     {
       id: 'restore-workspace',
       previous: 'archive-workspace',
       group: 'Workspace',
+      scope: 'palette',
       label: 'Restore workspace',
       words: ['unarchive'],
       defaults: { mac: [], other: [] },
@@ -19,10 +22,12 @@ test('Restore workspace and Send feedback follow their groups, start with the ke
       id: 'send-feedback',
       previous: 'create-org',
       group: 'General',
+      scope: 'palette',
       label: 'Send feedback',
       words: ['bug', 'idea', 'support', 'contact', 'help', 'report'],
       defaults: { mac: ['Alt+Meta+F'], other: ['Alt+Shift+F'] },
     },
+    ...workspaceCommandDefaults,
   ] as const
   for (const item of cases) {
     const previous = shortcutCommands.findIndex(
@@ -31,7 +36,7 @@ test('Restore workspace and Send feedback follow their groups, start with the ke
     expect.soft(shortcutCommands[previous + 1], item.id).toEqual({
       id: item.id,
       group: item.group,
-      scope: 'palette',
+      scope: item.scope,
       label: item.label,
       words: item.words,
     })
@@ -39,6 +44,21 @@ test('Restore workspace and Send feedback follow their groups, start with the ke
       expect
         .soft(defaultShortcutKeys(item.id, keyboard), `${item.id} ${keyboard}`)
         .toEqual(item.defaults[keyboard])
+      for (const text of item.defaults[keyboard]) {
+        const chord = shortcutChord(key(text))
+        expect
+          .soft(
+            decideShortcut(
+              context({
+                keyboard,
+                host: tab('chrome', keyboard === 'mac' ? 'mac' : 'windows'),
+                press: press({ ...chord, code: `Key${chord.key}` }),
+              }),
+            ),
+            `${item.id} ${keyboard} default ${text}`,
+          )
+          .toEqual({ kind: 'command', command: item.id, closeMenu: false })
+      }
       const keymap = buildShortcutKeymap(keyboard, [
         { command: item.id, keys: [key('Ctrl+Alt+P')] },
       ])
@@ -63,14 +83,16 @@ test('Restore workspace and Send feedback follow their groups, start with the ke
       })
     }
   }
-  // The key of Conductor runs Send feedback also from the message field of a tab.
-  const feedback = [
+  // These defaults also run from the message field of a tab.
+  const textCommands = [
     {
+      command: 'send-feedback',
       keyboard: 'mac',
       host: tab('firefox'),
       press: press({ key: 'ƒ', code: 'KeyF', altKey: true }),
     },
     {
+      command: 'send-feedback',
       keyboard: 'other',
       host: tab('firefox', 'linux'),
       press: press({
@@ -81,11 +103,35 @@ test('Restore workspace and Send feedback follow their groups, start with the ke
         shiftKey: true,
       }),
     },
+    {
+      command: 'copy-concise-transcript',
+      keyboard: 'mac',
+      host: tab('firefox'),
+      press: press({ key: 'ç', code: 'KeyC', altKey: true }),
+    },
+    ...(['windows', 'linux'] as const).map(
+      (system) =>
+        ({
+          command: 'copy-concise-transcript',
+          keyboard: 'other',
+          host: tab('firefox', system),
+          press: press({
+            key: 'C',
+            code: 'KeyC',
+            metaKey: false,
+            altKey: true,
+            shiftKey: true,
+          }),
+        }) as const,
+    ),
   ] as const
-  for (const item of feedback) {
+  for (const { command, ...item } of textCommands) {
     expect
-      .soft(decideShortcut(context({ ...item, focus: 'text' })), item.keyboard)
-      .toEqual({ kind: 'command', command: 'send-feedback', closeMenu: false })
+      .soft(
+        decideShortcut(context({ ...item, focus: 'text' })),
+        `${command} ${item.host.system}`,
+      )
+      .toEqual({ kind: 'command', command, closeMenu: false })
   }
 })
 
@@ -138,14 +184,20 @@ test('runs the checked manual defaults without the old clashes or text editing k
       event: press({ key: 'ArrowUp', code: 'ArrowUp', ctrlKey: true }),
       command: 'previous-workspace',
     },
+    {
+      event: press({ key: '≈', code: 'KeyX', altKey: true }),
+      command: 'fix-checks',
+    },
   ]
   for (const { event, command } of mac) {
-    expect(
-      decideShortcut(
-        context({ focus: 'text', press: event, host: tab('firefox') }),
-      ),
-      command,
-    ).toEqual({ kind: 'command', command, closeMenu: false })
+    expect
+      .soft(
+        decideShortcut(
+          context({ focus: 'text', press: event, host: tab('firefox') }),
+        ),
+        command,
+      )
+      .toEqual({ kind: 'command', command, closeMenu: false })
   }
   const other = [
     { key: 'Z', code: 'KeyZ', command: 'reopen-session' },
@@ -155,25 +207,28 @@ test('runs the checked manual defaults without the old clashes or text editing k
     { key: 'L', code: 'KeyL', command: 'next-needs-input' },
     { key: 'PageUp', code: 'PageUp', command: 'previous-workspace' },
     { key: 'PageDown', code: 'PageDown', command: 'next-workspace' },
+    { key: 'X', code: 'KeyX', command: 'fix-checks' },
   ]
   for (const { key, code, command } of other) {
-    expect(
-      decideShortcut(
-        context({
-          keyboard: 'other',
-          focus: 'text',
-          host: tab('chrome', 'windows'),
-          press: press({
-            key,
-            code,
-            metaKey: false,
-            altKey: true,
-            shiftKey: true,
+    expect
+      .soft(
+        decideShortcut(
+          context({
+            keyboard: 'other',
+            focus: 'text',
+            host: tab('chrome', 'windows'),
+            press: press({
+              key,
+              code,
+              metaKey: false,
+              altKey: true,
+              shiftKey: true,
+            }),
           }),
-        }),
-      ),
-      command,
-    ).toEqual({ kind: 'command', command, closeMenu: false })
+        ),
+        command,
+      )
+      .toEqual({ kind: 'command', command, closeMenu: false })
   }
   expect(
     decideShortcut(
@@ -207,4 +262,25 @@ test('runs the checked manual defaults without the old clashes or text editing k
       }),
     ),
   ).toEqual({ kind: 'command', command: 'next-effort', closeMenu: false })
+  for (const keyboard of ['mac', 'other'] as const) {
+    expect
+      .soft(
+        decideShortcut(
+          context({
+            keyboard,
+            focus: 'text',
+            host: tab('firefox', keyboard === 'mac' ? 'mac' : 'linux'),
+            press: press({
+              key: 'X',
+              code: 'KeyX',
+              metaKey: keyboard === 'mac',
+              ctrlKey: keyboard === 'other',
+              shiftKey: true,
+            }),
+          }),
+        ),
+        `${keyboard} text direction key`,
+      )
+      .toEqual({ kind: 'pass' })
+  }
 })

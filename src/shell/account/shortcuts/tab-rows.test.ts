@@ -27,7 +27,7 @@ test('a browser tab leaves out the rows and the group of the Mac app, and each g
     tabView: rowsOf(tab, 'View'),
     appView: rowsOf(app, 'View'),
     appGroups: app.map((group) => group.label).slice(-3),
-    chat: rowsOf(tab, 'Chat').slice(-3),
+    chat: rowsOf(tab, 'Chat').slice(-5),
     tabPastes: rowsOf(tab, 'Text').filter((row) => row.startsWith('Paste')),
     appPastes: rowsOf(app, 'Text').filter((row) => row.startsWith('Paste')),
   }).toEqual({
@@ -43,7 +43,13 @@ test('a browser tab leaves out the rows and the group of the Mac app, and each g
     tabView: ['Hide or show the right column'],
     appView: ['Hide or show the sidebar', 'Hide or show the right column'],
     appGroups: ['Menus and palette', 'Text', 'Mac app'],
-    chat: ['Stop the agent', 'Send (fixed)', 'New line (fixed)'],
+    chat: [
+      'Stop the agent',
+      'Copy concise transcript',
+      'Copy full transcript',
+      'Send (fixed)',
+      'New line (fixed)',
+    ],
     tabPastes: ['Paste (fixed)'],
     appPastes: ['Paste (fixed)', 'Paste and match style (fixed)'],
   })

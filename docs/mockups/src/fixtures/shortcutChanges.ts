@@ -19,12 +19,14 @@ export type ShortcutChanges = Partial<
 
 /**
  * The changes after a few edits on a Mac keyboard: ⇧⌘P opens the palette,
- * and ⌘/ opens the Keyboard shortcuts tab. Replace took ⌘/ from Model
- * picker, which has no shortcut now.
+ * and ⌘/ opens the Keyboard shortcuts tab. Replace took ⇧⌘P from Create PR,
+ * which keeps its second key ⌥⇧⌘P, and ⌘/ from Model picker, which has no
+ * shortcut now.
  */
 export const editedShortcuts: ShortcutChanges = {
   'command-palette': ['⇧⌘P'],
   'keyboard-shortcuts': ['⌘/'],
+  'create-pull-request': ['⌥⇧⌘P'],
   'model-picker': [],
 }
 
@@ -138,7 +140,11 @@ export function heldDefault(
   return undefined
 }
 
-/** A change of the palette shortcut to ⇧⌘P that the app did not save. */
+/**
+ * A change of the palette shortcut to ⇧⌘P that the app did not save. Create
+ * PR holds ⇧⌘P by default, so the person pressed Replace, and the one save
+ * of both commands failed.
+ */
 export const unsavedChange = {
   command: 'command-palette',
   shortcut: '⇧⌘P',

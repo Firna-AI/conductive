@@ -17,6 +17,35 @@ test('leaves kept keys to each browser including keys that Firefox still receive
   expect(
     decideShortcut(context({ press: event, host: tab('firefox') })),
   ).toEqual({ kind: 'command', command: 'reopen-session', closeMenu: false })
+  for (const keyboard of ['mac', 'other'] as const) {
+    const first = press({
+      key: 'P',
+      code: 'KeyP',
+      metaKey: keyboard === 'mac',
+      ctrlKey: keyboard === 'other',
+      shiftKey: true,
+    })
+    const offered = context({
+      keyboard,
+      host: tab('firefox', keyboard === 'mac' ? 'mac' : 'linux'),
+    })
+    expect
+      .soft(decideShortcut({ ...offered, press: first }), `${keyboard} first`)
+      .toEqual({ kind: 'pass' })
+    expect
+      .soft(
+        decideShortcut({
+          ...offered,
+          press: { ...first, key: 'Dead', ctrlKey: false, altKey: true },
+        }),
+        `${keyboard} second`,
+      )
+      .toEqual({
+        kind: 'command',
+        command: 'create-pull-request',
+        closeMenu: false,
+      })
+  }
   expect(
     decideShortcut(
       context({

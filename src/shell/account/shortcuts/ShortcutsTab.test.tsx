@@ -214,8 +214,10 @@ describe('the Keyboard shortcuts tab', () => {
       const rowControls = rows.map((label) =>
         controlsOf(rowOf('Navigation', label)),
       )
-      typeText(field, 'merge')
-      const empty = queryByText('Nothing matches “merge”')?.parentElement
+      typeText(field, 'no-such-command')
+      const empty = queryByText(
+        'Nothing matches “no-such-command”',
+      )?.parentElement
       expect({
         lines: introLines(),
         found: shown,
@@ -228,7 +230,7 @@ describe('the Keyboard shortcuts tab', () => {
         controls,
         none: [],
         empty: [
-          'Nothing matches “merge”',
+          'Nothing matches “no-such-command”',
           'Try a command name, such as Close tab.',
         ],
       })

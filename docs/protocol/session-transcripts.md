@@ -57,10 +57,10 @@ at `app/tabs` and `app/transcripts`.
   the same way.
 - The tab keeps that text only in its memory. No chat stays on the disk of
   the device, as [Events](chat-and-events.md#events) says.
-- For now, no key copies a transcript, and the command palette has no row
-  for it.
-- A copy on ⌘⌥C, the key of the concise copy in Conductor, was rejected,
-  because ⌘⌥C opens the developer tools in Chrome.
+- Two commands of [Keyboard shortcuts](keyboard-shortcuts.md) copy the
+  transcript of the shown session tab, as its tab menu does (decision 199).
+  [The default keys](keyboard-shortcuts-keys.md#the-default-keys) gives
+  their keys. The command palette has no row for them.
 
 ### Read-only workspaces
 

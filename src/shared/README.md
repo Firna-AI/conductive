@@ -239,6 +239,9 @@ The git credential payload is not defined yet.
 ### Key Code
 
 - [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
+  The app and Worker share this list, including Copy link, pull request
+  actions, and both transcript copies. Account reads and saves accept
+  these commands through `isShortcutCommandId`.
 - [Shortcut keys](shortcut-key.ts) parse canonical key text from unknown
   values. Only keypad digits have keypad names.
   [Fixed keys](shortcut-fixed.ts) and [text keys](shortcut-text-keys.ts)

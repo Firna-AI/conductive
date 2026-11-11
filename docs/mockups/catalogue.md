@@ -254,7 +254,7 @@ account.
     Firefox tab on Linux, where the app leaves only Alt+1 to Alt+9 and
     Ctrl+L to Firefox, so Ctrl+1 to Ctrl+9 are not dimmed.
   - `app/account/shortcuts/firefox` has a normal Firefox tab on a Mac,
-    which keeps ⌥⌘↑ and ⌥⌘↓ and lets the page take ⇧⌘T.
+    which keeps ⌥⌘↑, ⌥⌘↓, and ⇧⌘P and lets the page take ⇧⌘T.
   - `app/account/shortcuts/installed` has the installed app of Chrome on
     a Mac, where no key is dimmed.
   - `app/account/shortcuts/search` has a search for "tab", with dimmed

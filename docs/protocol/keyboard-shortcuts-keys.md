@@ -20,6 +20,14 @@ gives the rules and the terms. A decision number names a dated record, as
   - **Org page:** a page of an org.
   - **Org rail:** each page that shows the org rail, as the tile of the
     org does.
+  - **Pull request bar:** where the pull request bar shows the button of
+    the command, and the button can take a click. On a phone, the top of
+    the Checks tab holds these buttons.
+  - **Pull request link:** where a link to the pull request on GitHub
+    shows, such as the number of the pull request in the bar.
+  - **Workspace label:** where the header of a workspace shows the label
+    of its number, which is the Copy link button.
+  - **Session tab:** where the shown tab of a workspace is a session.
   - **Mac app:** only the Mac app has the command.
 - A dash means that the command has no default key.
 - Switch to org 1 to 9 and Open workspace 1 to 9 stand for nine commands
@@ -47,10 +55,19 @@ gives the rules and the terms. A decision number names a dated record, as
 | Workspace | New section | – | – | Palette |
 | Workspace | Archive workspace | ⇧⌘A | Ctrl+Shift+A | Palette |
 | Workspace | Restore workspace | – | – | Palette |
+| Workspace | Copy link | ⇧⌘C | Ctrl+Shift+C | Workspace label |
 | Workspace | Open workspace 1 to 9 | ⌘1 to ⌘9, ⌥⌘1 to ⌥⌘9 | Ctrl+1 to Ctrl+9, Alt+Shift+1 to Alt+Shift+9 | Org page |
 | Workspace | Previous workspace | ⌥⌘↑, ⌃⌘↑ | Alt+Shift+↑, Alt+Shift+PageUp | Org page |
 | Workspace | Next workspace | ⌥⌘↓, ⌃⌘↓ | Alt+Shift+↓, Alt+Shift+PageDown | Org page |
 | Workspace | Next workspace that needs input | ⌥⌘L | Alt+Shift+L | Org page |
+| Workspace | Create PR | ⇧⌘P, ⌥⇧⌘P | Ctrl+Shift+P, Alt+Shift+P | Pull request bar |
+| Workspace | Fix checks | ⌥⌘X | Alt+Shift+X | Pull request bar |
+| Workspace | Resolve conflicts | – | – | Pull request bar |
+| Workspace | Address review | – | – | Pull request bar |
+| Workspace | Commit and push | ⇧⌘Y | Ctrl+Shift+Y | Pull request bar |
+| Workspace | Merge PR | ⇧⌘M | Ctrl+Shift+M | Pull request bar |
+| Workspace | Continue after merge | – | – | Pull request bar |
+| Workspace | Open PR on GitHub | ⇧⌘G | Ctrl+Shift+G | Pull request link |
 | Workspace | Go to All files | – | – | Palette |
 | Workspace | Go to Changes | ⌥⌘U | Alt+Shift+U | Palette |
 | Workspace | Go to Checks | – | – | Palette |
@@ -63,6 +80,8 @@ gives the rules and the terms. A decision number names a dated record, as
 | Chat | Model picker | ⌘/ | Alt+Shift+M | Workspace |
 | Chat | Next effort level | ⌃⌘/ | Ctrl+Shift+/ | Workspace |
 | Chat | Stop the agent | ⌃⌘⌫ | Alt+Shift+S | Workspace |
+| Chat | Copy concise transcript | ⌥⌘C | Alt+Shift+C | Session tab |
+| Chat | Copy full transcript | – | – | Session tab |
 
 - No two commands share a default key on the same keyboard.
 - No default key is a text key of its system, except Ctrl+U on Linux, as
@@ -75,7 +94,8 @@ gives the rules and the terms. A decision number names a dated record, as
 ## Second keys
 
 - The second keys on a Mac are ⌥⌘N, ⌥⌘W, ⌥⇧⌘T, ⌥⌘[, ⌥⌘], ⌥⌘1 to ⌥⌘9, ⌃⌘↑,
-  ⌃⌘↓, ⌥⌘T, and ⇧⌘L. The table gives each one after the keys of Conductor.
+  ⌃⌘↓, ⌥⌘T, ⇧⌘L, and ⌥⇧⌘P. The table gives each one after the keys of
+  Conductor.
 - Open workspace 1 to 9 get the second keys ⌥⌘1 to ⌥⌘9. Reason: Chrome and
   Firefox have no command on them, and a digit matches by its physical
   key, so ⌥ does no harm. ⌃⌘1 to ⌃⌘9 were the other choice. They break the
@@ -85,6 +105,10 @@ gives the rules and the terms. A decision number names a dated record, as
   Reason: Firefox keeps ⌥⌘↑ and ⌥⌘↓, and Chrome and Firefox have no
   command on ⌃⌘↑ and ⌃⌘↓.
 - Focus the message field has the second key ⇧⌘L in every browser.
+- Create PR gets the second key ⌥⇧⌘P. Reason: Firefox keeps ⇧⌘P for its
+  private window. The key adds ⌥ to the key of Conductor, as ⌥⇧⌘T does
+  for Reopen closed session. ⌥⌘P was the other choice. Chrome on a Mac
+  opens the print dialog of the system on it.
 
 ## Windows and Linux
 
@@ -127,6 +151,10 @@ On a Mac:
   when the shortcut list of the system holds it.
 - Stop the agent is ⌃⌘⌫. ⇧⌘⌫ was rejected, because it deletes to the start
   of the line in a text field, so it would not run from the message field.
+- Fix checks is ⌥⌘X. ⇧⌘X, the key of Conductor, was rejected, because
+  Firefox switches the text direction of the focused text field on it.
+  ⌃⌘X was the other choice. Chrome on a Mac uses it for its tab groups, and
+  it has no twin on Windows and Linux.
 
 On Windows and Linux:
 
@@ -144,6 +172,9 @@ On Windows and Linux:
   Linux selects all text on it.
 - Next effort level is Ctrl+Shift+/. Reason: the rules above give ⌃⌘/ no
   twin, and no browser has a command on Ctrl+Shift+/.
+- Fix checks is Alt+Shift+X, the twin of ⌥⌘X. Ctrl+Shift+X was rejected,
+  because Firefox switches the text direction of the focused text field on
+  it.
 - Previous workspace and Next workspace also get Alt+Shift+PageUp and
   Alt+Shift+PageDown. Reason: the Orca screen reader on Linux takes
   Alt+Shift with the arrows in every mode. A person who uses Orca then has
@@ -162,7 +193,7 @@ says. Every other default key reaches the page there.
 | Browser | Mac | Windows and Linux |
 | --- | --- | --- |
 | Chrome and Edge | ⌘N, ⌘T, ⇧⌘T, ⌘W, ⌃Tab, ⌃⇧Tab, ⇧⌘[, ⇧⌘], ⌥⌘←, ⌥⌘→ | Ctrl+N, Ctrl+T, Ctrl+Shift+T, Ctrl+W, Ctrl+Tab, Ctrl+Shift+Tab |
-| Firefox | ⌘N, ⌘T, ⌘W, ⌃Tab, ⌃⇧Tab, ⇧⌘[, ⇧⌘], ⌥⌘←, ⌥⌘→, ⌥⌘↑, ⌥⌘↓ | Ctrl+N, Ctrl+T, Ctrl+W, Ctrl+Tab, Ctrl+Shift+Tab |
+| Firefox | ⌘N, ⌘T, ⌘W, ⌃Tab, ⌃⇧Tab, ⇧⌘[, ⇧⌘], ⌥⌘←, ⌥⌘→, ⌥⌘↑, ⌥⌘↓, ⇧⌘P | Ctrl+N, Ctrl+T, Ctrl+W, Ctrl+Tab, Ctrl+Shift+Tab, Ctrl+Shift+P |
 | Safari | ⌘N, ⌘T, ⇧⌘T, ⌘W, ⌃Tab, ⌃⇧Tab, ⇧⌘[, ⇧⌘] | – |
 
 - Chrome and Edge act on ⇧⌘T and Ctrl+Shift+T only while a closed tab of

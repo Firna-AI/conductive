@@ -50,9 +50,9 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
       place: { keyboard: 'mac', system: 'mac' },
       replaces: 'Command K',
       layoutSwitch: [],
-      press: { text: 'Shift+Meta+P' },
-      recorded: 'Shift+Meta+P',
-      spoken: 'Shift Command P',
+      press: { text: 'Shift+Meta+K' },
+      recorded: 'Shift+Meta+K',
+      spoken: 'Shift Command K',
     },
     {
       // Alt goes down first, so the switch takes Shift.
@@ -246,7 +246,7 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
       500,
     )
     click(byRole('button', 'Change Command K for Command palette'))
-    pressShortcut('Shift+Meta+P')
+    pressShortcut('Shift+Meta+K')
     await settle()
     const row = rowOf('General', 'Command palette')
     pressShortcut('Meta+K', document.body)
@@ -259,7 +259,7 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
         'Change Command K for Command palette',
         'Add shortcut for Command palette',
       ],
-      lines: ["Shift Command P wasn't saved. Try again."],
+      lines: ["Shift Command K wasn't saved. Try again."],
       palette: true,
     })
   })

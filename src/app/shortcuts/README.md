@@ -57,8 +57,14 @@ check unknown input before the app or Worker uses it.
 
 - [commands.ts](commands.ts): `shortcutCommands` supplies command groups,
   scopes, labels, and search words. Existing palette commands share their text.
+  Commands with workspace scope include Copy link, pull request actions,
+  and transcript copies. Agent actions and transcript copies use the shared
+  control labels.
 - [defaults.ts](defaults.ts): `defaultShortcutKeys` supplies both keyboards.
   `commandInHost` keeps Mac window commands in the Mac app.
+  Create PR includes a second key for Firefox tabs. Fix checks uses Alt
+  instead of Firefox's text direction key. Commands without a default
+  start with an empty key list and accept account overrides.
 - [host.ts](host.ts): `detectShortcutHost` separates Chromium app windows
   from normal browser tabs. The desktop services supply the Mac app host.
 - [browser-keys.ts](browser-keys.ts): `shortcutKeyAvailability` separates
@@ -111,3 +117,8 @@ npm run test -- src/app/shortcuts src/shared/shortcut-read.test.ts
 
 Tests use the public model with supplied press and page state.
 They need no DOM, clock, storage, or server.
+`defaults.test.ts` checks command order, defaults on both keyboards, and
+text field dispatch. Its literal cases live in
+[command-defaults.test-support.ts](command-defaults.test-support.ts).
+`browser-keys.test.ts` checks the first and second Create PR keys in Firefox.
+`keymap.test.ts` checks that the default keys have no shared owner.

@@ -1550,32 +1550,47 @@ Tags: mockup
 
 Depends on: the key research of decision 199.
 
-- [ ] Add the new commands to the rows of the Keyboard shortcuts tab in
+- [x] Add the new commands to the rows of the Keyboard shortcuts tab in
       both keyboards: Copy link and the bar actions in the Workspace group,
       and the two Copy transcript commands in the Chat group, as Conductor
       groups them.
-- [ ] Show the key of each new command in the tooltip of its control, as
+- [x] Show the key of each new command in the tooltip of its control, as
       "Key hints" in `docs/protocol/keyboard-shortcuts.md` says: the
       buttons of the pull request bar, as Archive does today, and the
       workspace label's Copy link. Agent call, 2026-11-11: the session tab
       menu shows no keys, and the palette gets no new rows. Reason: hints
       show only in tooltips and palette rows, the menus have no place for a
       key, and the palette has none of these actions.
-- [ ] Run `npm run mockups:check`, and look at the changed screens in light
-      and dark, on desktop and phone.
+- [x] Run `npm run mockups:check`, and look at the changed screens in light
+      and dark, on desktop and phone. Report:
+      `.context/keyboard-shortcuts/reports/d199-mockups-docs.md`. Agent
+      call, 2026-11-11: the "Changes" example of the tab gave the palette
+      ⇧⌘P, which Create PR now holds, so the example now shows Replace
+      taking ⇧⌘P from Create PR.
 
 ## Milestone 14: Decision 199 in the protocol and the model
 
 Depends on: 13
 
-- [ ] Add the new rows to the default keys table and the kept keys of each
+- [x] Add the new rows to the default keys table and the kept keys of each
       browser to `docs/protocol/keyboard-shortcuts-keys.md` and
       `keyboard-shortcuts-hosts.md`, and change the sentence of
       `docs/protocol/keyboard-shortcuts.md` that leaves out "the pull
       request actions". Read both legal pages and each public guide in
-      full, and update each sentence that restates a changed fact.
-- [ ] Add the command ids, the default keys of both keyboards, the second
+      full, and update each sentence that restates a changed fact. Agent
+      calls, 2026-11-11: the table gets four words for where a command
+      runs (Pull request bar, Pull request link, Workspace label, and
+      Session tab). `docs/protocol/session-transcripts.md` said that no key
+      copies a transcript and that ⌘⌥C was rejected because it opens the
+      developer tools in Chrome. Decision 199 C replaces both sentences:
+      Chrome lets the page take ⌥⌘C, and the key runs only while a session
+      tab shows. `docs/protocol/command-palette-actions.md` said that a
+      pull request action leads to GitHub, which has been inexact since
+      decision 220; it now says that the action runs from the bar or its
+      key. No legal page, guide, or comparison row restates a changed fact.
+- [x] Add the command ids, the default keys of both keyboards, the second
       keys, and the browsers' kept keys to the key model, with tests.
+      Report: `.context/keyboard-shortcuts/reports/d199-model.md`.
 
 ## Milestone 15: Decision 199 in the app
 
@@ -1587,7 +1602,7 @@ Depends on: 13, 14
       buttons of the pull request bar, Copy link on the workspace label,
       and the two Copy transcript items of the open session's tab menu.
       Each key does what its control does. Show each key in its control's
-      tooltip or menu item, as the mockups draw it.
+      tooltip, as the mockups draw it.
 - [ ] Tests: each offer runs its control's action, a key does nothing where
       the control does not show or cannot run, and the hints show the keys.
       Add each case to the existing test of its requirement.

@@ -9,7 +9,7 @@ import {
 export const browserShortcutsChanges = defineScreen({
   title: 'Changes',
   description:
-    'After a few changes, in a normal Chrome tab on a Mac: ⇧⌘P opens the palette, Replace gave ⌘/ to Keyboard shortcuts, and Model picker has no shortcut. Each changed row shows Reset, and Reset all follows the lines at the top. On a phone, Reset stays beside the label.',
+    'After a few changes, in a normal Chrome tab on a Mac: ⇧⌘P opens the palette, Replace gave ⌘/ to Keyboard shortcuts, and Model picker has no shortcut. Replace also took ⇧⌘P from Create PR, which keeps ⌥⇧⌘P. Each changed row shows Reset, and Reset all follows the lines at the top. On a phone, Reset stays beside the label.',
   rationale:
     'The account holds the changes of each keyboard (decision 190, 9 November 2026), so the changes that the person made in the Mac app show in each browser on a Mac, and the other way round.',
   relatedDocs: [],
@@ -31,7 +31,7 @@ export const browserShortcutsChanges = defineScreen({
     {
       slug: 'reset-all',
       title: 'Reset all',
-      description: `Reset all asks first: a dialog over the account on desktop, and a sheet on a phone. The three changed commands get their default shortcuts again, wherever the person uses ${productName} on a Mac. Cancel keeps the changes.`,
+      description: `Reset all asks first: a dialog over the account on desktop, and a sheet on a phone. The four changed commands get their default shortcuts again, wherever the person uses ${productName} on a Mac. Cancel keeps the changes.`,
       rationale:
         'Nothing brings the changes back after Reset all, so the tab asks first with ConfirmDialog, which is a sheet on a phone.',
       props: { keyChange: 'reset-all' },
@@ -49,9 +49,9 @@ export const browserShortcutsChanges = defineScreen({
       slug: 'not-saved',
       title: 'Not saved',
       description:
-        'The person recorded ⇧⌘P for Command palette, and the save failed. The row keeps ⌘K, the saved shortcut, and says that ⇧⌘P was not saved.',
+        'The person recorded ⇧⌘P for Command palette, which Create PR uses, and pressed Replace. The save failed, so the row keeps ⌘K, the saved shortcut, and says that ⇧⌘P was not saved. Create PR keeps ⇧⌘P.',
       rationale:
-        'A failed save keeps the saved shortcuts, as Preferences does, so the tab never shows a shortcut that the account does not hold.',
+        'A failed save keeps the saved shortcuts, as Preferences does, so the tab never shows a shortcut that the account does not hold. Replace saves both commands in one change, so a failed save changes neither of them.',
       props: { keyChange: 'not-saved', shortcuts: 'default' },
     },
   ],
