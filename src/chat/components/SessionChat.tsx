@@ -213,6 +213,7 @@ export function SessionChat(props: SessionChatProps) {
       })}
       footer={footer}
       mobile={props.mobile}
+      session={id}
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView

@@ -207,6 +207,10 @@ There, the workspace shows no window controls.
 The [phone feedback test](tests/feedback-phone.spec.ts) opens the same build in a 375 × 667 page.
 A long feedback draft fails to send, and a wheel over the sheet brings Cancel and Send into view before Send tries again.
 [browser-entry.ts](tests/browser-entry.ts) builds the web entry and opens its window for both tests.
+The [chat scroll test](tests/chat-scroll.spec.ts) opens the chat development page in Chrome, not in Electron.
+It adds rows of 20.8 px under the transcript.
+After each wheel scroll to the end, the newest row stays in view.
+While the reader is scrolled up, the read row keeps its place.
 
 The `test:logic` command uses the repository's Vitest runner with the desktop configuration.
 It runs the unit tests under `src/` and `renderer/`.

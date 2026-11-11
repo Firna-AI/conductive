@@ -54,3 +54,12 @@
 .messageBody li > :is(p, pre, div, ol, ul) + :is(ol, ul) {
   margin-top: 2px;
 }
+
+/*
+ * The box of the chat that scrolls, beside the mockups' `.scroll`. The
+ * keeper of the reader's place does the work of the browser's scroll
+ * anchoring, so the box turns that off.
+ */
+.keptScroll {
+  overflow-anchor: none;
+}

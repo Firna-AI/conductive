@@ -47,8 +47,16 @@ a code span.
 row before its separator row, the rows and a partial row that arrive, and
 the same reply from the saved history.
 `components/ReadingPlace.dom.test.tsx` lays the chat out as a browser lays
-out its reversed scroll box. It ends a long turn while the reader reads
-higher up, and checks the read row and the newest message at the bottom.
+out its reversed scroll box, with the helpers of
+`components/reading-place-test-kit.tsx`. It ends a long turn while the
+reader reads higher up, and checks the read row and the newest message at
+the bottom. A scroll of the reader that comes before the browser reports a
+change of size stays, and a scroll to the end then follows the newest
+message. Another session opens at the end of its chat.
+The [chat scroll test](../../desktop/tests/chat-scroll.spec.ts) of the
+Mac app suite checks the same follow and read row in Chrome, with the CSS
+that turns off the browser's scroll anchoring. The happy-dom layout cannot
+check that CSS.
 `components/TabDrag.dom.test.tsx` mounts the chat with the real
 `FileTabItem` of the Files screens and drags tabs with pointer events over
 boxes that `components/tab-drag-test-kit.tsx` gives them. The file tab of
