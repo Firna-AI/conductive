@@ -907,8 +907,7 @@ changes of this milestone are not on the branch. Milestone 2b redoes them.
 
 ## Milestone 2b: Documentation on the split protocol pages
 
-Depends on: 2. Its address rule waits for decision 9, and its session
-record text waits for decision 5.
+Depends on: 2. Its port list waits for the port check of Milestone 5b.
 
 The protocol states the own endpoint login with the gateway.
 
@@ -1079,7 +1078,7 @@ this work.
 
 ## Milestone 5b: Forward own endpoint turns through the gateway
 
-Depends on: 2b, 4. Its address rule waits for decision 9.
+Depends on: 2b, 4. Its address rule is the builder of decision 9 E.
 
 The gateway sends the model requests of an own endpoint turn to the
 endpoint, with the real key that stays in the Worker. This milestone does
