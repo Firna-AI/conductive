@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import { filesWait } from '../../app/draft-files'
@@ -11,6 +11,7 @@ import {
   SessionLoginLabel,
   type SessionLogin,
 } from '../../../docs/mockups/src/components/chat/SessionLogin'
+import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import type { Draft } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
 import { FolderNotice, noticedFolder, OversizeNotice } from './AttachmentChips'
@@ -67,6 +68,22 @@ export interface ComposerProps {
 }
 
 /**
+ * The keys of the composer while it shows: Focus the message field, Attach
+ * files as the paperclip does, and Stop the agent as Stop does while a turn
+ * runs. The model picker offers its own keys.
+ */
+function useComposerKeys(props: {
+  field: RefObject<FieldHandle | null>
+  files: RefObject<HTMLInputElement | null>
+  stop: (() => void) | null
+}) {
+  const { field, files } = props
+  useShortcutOffer('focus-message', () => field.current?.focus())
+  useShortcutOffer('attach-files', () => files.current?.click())
+  useShortcutOffer('stop-agent', props.stop)
+}
+
+/**
  * The message box: the text, with a chip for each attached file at its
  * place, then a bar with the attach button, the model picker, and Send. The
  * files of a pick go into the text at the caret, or at the end when the text
@@ -92,6 +109,11 @@ export function Composer(props: ComposerProps) {
   const field = useRef<FieldHandle>(null)
   const [mentionHost, setMentionHost] = useState<HTMLDivElement | null>(null)
   const { draft } = props
+  useComposerKeys({
+    field,
+    files: picker,
+    stop: props.running && !props.stopping ? props.onStop : null,
+  })
   const empty = draft.text.trim() === '' && draft.files.length === 0
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
   const steers = props.running && props.startsSession !== true
@@ -137,6 +159,7 @@ export function Composer(props: ComposerProps) {
                 icon={Paperclip}
                 label="Attach files"
                 onPress={pick}
+                shortcut="attach-files"
               />
               <input
                 aria-hidden
@@ -164,6 +187,7 @@ export function Composer(props: ComposerProps) {
                   busy={props.stopping}
                   icon={Square}
                   onPress={props.onStop}
+                  shortcut="stop-agent"
                 >
                   Stop
                 </ActionButton>

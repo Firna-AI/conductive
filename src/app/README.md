@@ -116,8 +116,10 @@ the account and Get started, sign-in, invitations, orgs, panels and
 layers, the focus, saved drafts, New workspace as a page or a dialog,
 with its attached files and the send key that every composer shares, and
 the waitlist.
-[The command palette and Feedback](palette-screens.md) gives the rules of
-the palette and of the Feedback dialog.
+[Command palette and keys](palette-and-keys.md) gives the rules of the
+command palette and of the keyboard shortcuts.
+[Feedback](palette-screens.md) gives the rules of the Feedback dialog that
+the Help row of the palette opens.
 
 ## Rules for this code
 
@@ -179,11 +181,20 @@ the palette and of the Feedback dialog.
   page. The browser hears the input and the keys in the capture phase,
   before a field can stop them. An open workspace counts the input
   anywhere on the page as activity, at most once a minute. `onKey` is not
-  passive, so the palette key stops the browser's own action.
-  `AppServices.platform` says whether the keyboard is a Mac, which
-  chooses the palette key and its hint. It never says whether the page
-  runs in the Mac app: the caller of `FeedbackModel.open` gives that
-  `desktop` flag.
+  passive, so the shortcut listener stops the browser's own action of a
+  key that runs a command.
+  `AppServices.platform` chooses the shortcut defaults and their key text.
+  It never says whether the page runs in the Mac app: the caller of
+  `FeedbackModel.open` gives that `desktop` flag.
+  `AppServices.host` identifies the Mac app, an installed Chromium app,
+  or a browser tab with its browser and system. `KeyPress.code` identifies
+  the physical key. `KeyPress.stopPropagation` can stop delivery to a
+  field or terminal after a shortcut consumes the press.
+  `KeyPress.layoutModifiers` carries the modifiers taken by held layout
+  switch keys. `onKey.layoutModifiers()` gives a recorder the same state
+  for its own event. `windowKeys` shares this state per window and resets
+  it on key-up or blur. `windowLayoutModifiers(window)` reads the same
+  snapshot for callers with a window.
 - `AppServices.appVersion` is the version of the build: the version of the
   root `package.json` and the short commit, as `<version> (<commit>)`.
   `build-version.ts` at the repository root makes it for the web and Mac

@@ -5,9 +5,10 @@ import { routes } from '../../app/router'
 import { byLabel, byRole, queryByRole } from '../../test-support/dom-queries'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
+import { pressCommand } from '../shortcuts/shortcut-test-kit'
 import { click } from '../test-mount'
 import { useMenuLayer } from '../ui/layers'
-import { openPaletteTab, palette, pressPaletteKey } from './palette-test-kit'
+import { openPaletteTab, palette } from './palette-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -24,7 +25,7 @@ describe('a layer that holds the input', () => {
     const { view } = await openPaletteTab(routes.org(org), {
       beside: <MenuDuringChange />,
     })
-    const key = pressPaletteKey('other', document.body)
+    const key = pressCommand('command-palette', 'other', document.body)
     const byKey = { open: palette() !== null, prevented: key.defaultPrevented }
     click(byRole('button', 'Search', byLabel('Workspaces', view)))
     expect({ byKey, byRow: palette() !== null }).toEqual({
@@ -41,7 +42,7 @@ describe('a layer that holds the input', () => {
     click(byRole('tab', 'Workspaces'))
     click(byRole('button', 'All repositories', byRole('dialog', 'Search')))
     const opened = queryByRole('dialog', 'Repository') !== null
-    const key = pressPaletteKey('other')
+    const key = pressCommand('command-palette', 'other')
     expect({
       opened,
       sheet: queryByRole('dialog', 'Repository') !== null,

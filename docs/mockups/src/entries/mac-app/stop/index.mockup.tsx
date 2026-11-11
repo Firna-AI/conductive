@@ -14,6 +14,10 @@ export const macStop = defineScreen({
     page: 'workspace',
     command: 'allow-all',
     change: 'stopped',
+    palette: 'closed',
+    keyChange: 'none',
+    shortcutSearch: 'none',
+    shortcuts: 'default',
   },
   render: (props) => <MacAppScreen state={props} />,
   variants: [

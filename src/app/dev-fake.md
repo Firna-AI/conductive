@@ -127,3 +127,9 @@ the dev wiring in `dev/`, and what its fake routes do.
 The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
 Workspace readers keep the number and link that the Worker supplies.
+
+The development fake saves shortcut batches through `dev/shortcut-routes.ts`.
+It checks the whole batch with the shared reader before it changes state.
+It keeps each keyboard separate, preserves empty key lists, and removes
+an override when the request sends null keys.
+The next account read returns both keyboards.

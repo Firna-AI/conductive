@@ -12,11 +12,8 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
-import {
-  openPaletteTab,
-  palette,
-  pressPaletteKey,
-} from '../palette/palette-test-kit'
+import { openPaletteTab, palette } from '../palette/palette-test-kit'
+import { pressCommand } from '../shortcuts/shortcut-test-kit'
 import { click, press, settle } from '../test-mount'
 import {
   applePayReply,
@@ -66,7 +63,7 @@ describe('the actions of a workspace row', () => {
     await settle()
     // While the change runs, the menu and its owner choices stay: the
     // palette key, Escape, Left, and the other items of the menu do nothing.
-    pressPaletteKey('other')
+    pressCommand('command-palette', 'other')
     press(document.activeElement ?? document.body, 'Escape')
     const afterEscape = menuOf('Owner').length
     press(document.activeElement ?? document.body, 'ArrowLeft')

@@ -5,8 +5,10 @@ gives the rules of the screens of the app shell: the account and Get
 started, sign-in, invitations, orgs, panels and layers, the focus, saved
 drafts, New workspace as a page or a dialog, and
 [the waitlist](#the-waitlist).
-[The command palette and Feedback](palette-screens.md) gives the rules of
-the command palette and of the Feedback dialog.
+[Command palette and keys](palette-and-keys.md) gives the rules of the
+command palette and of the keyboard shortcuts.
+[Feedback](palette-screens.md) gives the rules of the Feedback dialog that
+the Help row of the command palette opens.
 
 - The app runs every cloud computer in its own Boat account, so no org has
   a Boat key. The app has no key screen, tab, notice, or Get started step,
@@ -40,12 +42,18 @@ the command palette and of the Feedback dialog.
   Continue to workspaces. Without invitations, or after Continue to
   workspaces, it opens Get started or the org of Get started. The
   `?invite=` link of an invitation email leads there.
-- The account has two tabs, General and Preferences, as the org settings
-  have. Each tab is a link with its own address. General holds the
-  sign-in, This Mac, GitHub, and the agents. The `?connect=` address of an
-  agent opens its Connect form on General. Preferences holds the New
-  workspaces section: Model and effort, and
+- The account has three tabs, General, Preferences, and Keyboard
+  shortcuts, as the org settings have tabs. Each tab is a link with its
+  own address. General holds the sign-in, This Mac, GitHub, and the
+  agents. The `?connect=` address of an agent opens its Connect form on
+  General. Preferences holds the New workspaces section: Model and effort,
+  and
   [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
+  On a phone, a tab that does not fit moves to a second line.
+- Keyboard shortcuts lists the keys of each command, and saves each change
+  at once through `AccountModel.saveShortcuts`, as
+  [the Keyboard shortcuts tab](../shell/account/shortcuts/README.md) says.
+  The keys and every hint of the app use the saved changes at once.
 - The account of the Mac app shows This Mac after the sign-in section. A
   browser shows none and asks no Mac.
 - Each connected login of the account shows its share switch, "Let other
@@ -105,10 +113,15 @@ the command palette and of the Feedback dialog.
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
   step that ends at its start width stores nothing.
+- A focused divider takes only its own keys, through `dividerKey` of the
+  shortcut model: Left and Right, alone or with Shift for a larger step,
+  and Home and End alone. A key with other modifiers, such as ⌥⌘←, goes to
+  its shortcut.
 - On desktop, the toggle at the end of the workspace header hides the
-  right column and shows it again. The choice holds for every workspace
-  of the tab until the page closes. A hidden column stays mounted, so its
-  file lists keep their connection and the terminal keeps its session.
+  right column and shows it again, and so does the key of Hide or show the
+  right column. The choice holds for every workspace of the tab until the
+  page closes. A hidden column stays mounted, so its file lists keep their
+  connection and the terminal keeps its session.
 - A menu item that is off keeps its place and fades each of its parts,
   except its note, so that the reader can read why it is off. The arrow
   keys and the first focus of the menu skip it.
@@ -126,9 +139,12 @@ the command palette and of the Feedback dialog.
   as Send after a long feedback draft, stay within a swipe.
 - Escape closes only the newest open layer, such as a menu in a dialog.
   A press outside closes each layer that it misses.
-- [The command palette and Feedback](palette-screens.md) gives the rules
-  of the palette layer, its key, its offers, and its reads, and of the
-  Feedback dialog that its Help row opens, with its screenshots.
+- The command palette and the keyboard shortcuts follow
+  [Command palette and keys](palette-and-keys.md): the layer of the
+  palette, the shortcut layer, the owners of the commands, the key hints,
+  and the keys of the workspace list.
+- [Feedback](palette-screens.md) gives the rules of the Feedback dialog
+  that the Help row of the palette opens, with its screenshots.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the

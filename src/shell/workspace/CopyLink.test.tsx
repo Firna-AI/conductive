@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
@@ -12,10 +13,13 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
+import { openPaletteTab } from '../palette/palette-test-kit'
 import { Shell } from '../Shell'
+import { pressHintKey } from '../shortcuts/shortcut-test-kit'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import { recordingSocket } from './kept-test-kit'
+import { socketsOf } from './wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -82,5 +86,40 @@ describe('Copy link in the workspace header', () => {
         null,
       label: byRole('button', `Copy link to ${label}`, header).textContent,
     }).toEqual({ copies: 2, note: true, label })
+  })
+
+  test('the key of Copy link copies the link with the note, as a press does, while the header shows the label', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const copies: string[] = []
+    const { app, view, navigation } = await openPaletteTab(
+      routes.workspace(org, id),
+      {
+        server,
+        events: socketsOf(server).events,
+        copy: async (text) => {
+          copies.push(await text)
+        },
+      },
+    )
+
+    const shown = pressHintKey(app, 'copy-link', document.body)
+    await settle()
+    const note = queryByRole('status', 'Link copied', headerOf(view)) !== null
+    // The list of the org shows no workspace header.
+    act(() => navigation.push(routes.org(org)))
+    await settle()
+    const away = pressHintKey(app, 'copy-link', document.body)
+    await settle()
+
+    expect({
+      prevented: [shown.defaultPrevented, away.defaultPrevented],
+      copies,
+      note,
+    }).toEqual({
+      prevented: [true, false],
+      copies: [workspaceFixtures().detail.workspace.link],
+      note: true,
+    })
   })
 })

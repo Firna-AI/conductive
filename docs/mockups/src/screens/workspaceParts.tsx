@@ -24,6 +24,7 @@ import {
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -197,8 +198,10 @@ export function workspaceSidebar(props: {
   changed: readonly ChangedWorkspace[]
   /** The last day of Restore of the archived workspace has not passed. */
   restoreOpen: boolean
+  /** The person's changes to the shortcuts, for the key of the Search row. */
+  shortcuts?: ShortcutChanges
 }): ReactNode {
-  const { workspace, status, suspended, viewer, changed } = props
+  const { workspace, status, suspended, viewer, changed, shortcuts } = props
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
@@ -207,6 +210,7 @@ export function workspaceSidebar(props: {
       <Sidebar
         org={orgs.acme}
         sections={sections}
+        shortcuts={shortcuts}
         suspended={suspended}
         viewer={viewer}
       />
@@ -218,6 +222,7 @@ export function workspaceSidebar(props: {
       archived={list.archived}
       org={orgs.acme}
       sections={list.sections}
+      shortcuts={shortcuts}
       suspended={suspended}
       viewer={viewer}
     />

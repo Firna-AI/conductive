@@ -14,6 +14,10 @@ export const macWindow = defineScreen({
     page: 'workspace',
     command: 'none',
     change: 'none',
+    palette: 'closed',
+    keyChange: 'none',
+    shortcutSearch: 'none',
+    shortcuts: 'default',
   },
   render: (props) => <MacAppScreen state={props} />,
   variants: [

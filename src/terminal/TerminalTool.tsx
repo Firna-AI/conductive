@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, type Ref } from 'react'
 import { CircleAlert, CirclePause, Unplug } from 'lucide-react'
 import { useWorkspaceStore } from '../app/workspace-store'
 import { ToolButton } from './tool-parts/ToolButtons'
@@ -16,6 +16,11 @@ export interface TerminalToolProps {
   touch: boolean
   /** The user typed in the terminal. The workspace counts it as activity. */
   onActivity?: () => void
+  /**
+   * The element of the xterm.js screen, where a shell reads the keys. The
+   * owner marks it, so the buttons of the tool keep no key.
+   */
+  screenRef?: Ref<HTMLDivElement>
 }
 
 /**
@@ -78,6 +83,7 @@ function TerminalToolBody(props: TerminalToolProps) {
             ended={view.ended}
             onClosed={() => dispatch({ type: 'ended' })}
             onInput={props.onActivity}
+            screenRef={props.screenRef}
             terminal={view.terminal}
           />
           {view.ended ? (

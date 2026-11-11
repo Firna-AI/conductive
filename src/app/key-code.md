@@ -4,6 +4,14 @@ This page is part of the [web app guide](README.md). It names the files,
 the types, and the functions of the web app that a reader opens first.
 Each path is relative to `src/app/`, the folder of this page.
 
+- [Shortcuts](shortcuts/README.md): the pure command registry, keyboard
+  defaults, browser keys, account keymap, conflicts, and press decision.
+  The [shortcut layer](../shell/shortcuts/README.md) calls it for each key
+  of the page.
+- `services.ts`: `windowHost` detects the web host, and `windowNewTab`
+  opens a page of another site in a new tab, as a link with
+  `target="_blank"` and `rel="noreferrer"` does. `live-services.ts` and
+  `dev/fake-services.ts` supply them with the keyboard and key events.
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.
   `dev/settings-routes.ts` saves settings and repository choices.
@@ -26,6 +34,10 @@ Each path is relative to `src/app/`, the folder of this page.
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
   through the file transport of the services: `api/xhr-files.ts` in the
   browser and in the Mac app. `api/read-*.ts`: the readers.
+  [api/read-core.ts](api/read-core.ts) reads both shortcut keyboards and
+  the reply of a shortcut save with the shared reply readers. A malformed
+  account structure remains an `invalid_response` error from the API
+  client.
 - `clipboard.ts`: `copyText`, the clipboard write for plain or pending text.
   It starts a pending `ClipboardItem` write during the user press when the
   browser supports it. The fallback waits for the text and calls `writeText`.
@@ -99,8 +111,10 @@ Each path is relative to `src/app/`, the folder of this page.
   `../shell/settings/RepositoryChangeNotice.tsx` draws the notice of an
   admin, and `../members/RepositoryNotice.tsx` the notice of a member.
 - `account-model.ts`: the agent logins with their share setting, the
-  default model, the New workspace view, the GitHub App installations,
-  and the repositories that Create org offers. A screen watches the
+  default model, the New workspace view, the shortcut changes of each
+  keyboard, the GitHub App installations, and the repositories that
+  Create org offers. `saveShortcuts` saves one batch of changes for one
+  keyboard and keeps the confirmed changes of the reply. A screen watches the
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
   waitlist state for the invite code of the account.

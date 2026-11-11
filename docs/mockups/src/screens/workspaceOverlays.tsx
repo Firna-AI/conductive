@@ -8,6 +8,8 @@ import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
+import { CommandPalette } from '../components/palette/CommandPalette'
+import type { PaletteContext } from '../components/palette/paletteContent'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
@@ -19,6 +21,22 @@ import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
+
+/** The open palette. A phone opens it from the list, with no workspace actions. */
+export function workspacePalette(
+  state: WorkspaceState,
+  viewport: Viewport,
+  context: PaletteContext,
+): ReactNode {
+  if (state.palette === 'closed') return null
+  return (
+    <CommandPalette
+      context={viewport === 'mobile' ? { archivable: false } : context}
+      view={state.palette}
+      viewport={viewport}
+    />
+  )
+}
 
 /**
  * The question before the tab of a running session closes. Closing stops
