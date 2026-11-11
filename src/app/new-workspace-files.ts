@@ -49,17 +49,19 @@ export class DraftUploads {
    * uploads, and its name goes to the notice, which the next pick replaces.
    * Each other file shows at once and uploads, one after another. The new
    * IDs return immediately so the field can insert the chips in this event.
+   * Folder names stay refusal data and start no upload.
    */
-  attach(files: readonly File[]): string[] {
-    if (files.length === 0) return []
+  attach(files: readonly File[], folders: readonly string[] = []): string[] {
+    if (files.length === 0 && folders.length === 0) return []
     const life = this.follow()
-    const { uploads, refused } = splitPick(files)
+    const { uploads, refused, refusedFolders } = splitPick(files, folders)
     const added = uploads.map((file) => uploadingFile(this.host.newId(), file))
     const queued = added.map((item) => this.reserve(life, item))
     this.host.draft.change((draft) => ({
       ...draft,
       files: [...draft.files, ...added],
       refused,
+      refusedFolders,
     }))
     void runFileQueue(queued)
     return added.map(({ id }) => id)
@@ -131,6 +133,7 @@ export class DraftUploads {
           files: [],
           detached: [],
           refused: [],
+          refusedFolders: [],
         }))
       })
     }

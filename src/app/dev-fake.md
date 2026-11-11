@@ -21,6 +21,23 @@ the dev wiring in `dev/`, and what its fake routes do.
   stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- The upload routes also keep the exact bytes of each upload, in a private
+  store of the page. A send that names uploaded files gets a reply with its
+  own message ID, text, model choice, and files. An archived workspace,
+  and each message without uploaded files, keep the recorded reply. In a
+  workspace that runs, such as `checkout-autocomplete` by default, the
+  message is sent, and its files become readable at the paths of their
+  uploads. Otherwise the message stays queued with no turn, and its files
+  stay unreadable, because the fake never sends a queued message. A create
+  of a workspace copies no file, and the new workspace has no recorded
+  chat.
+- The content route gives each copy as a `FileResponse` with its bytes in
+  base64, and the download route gives its raw bytes. Both keep
+  `FILE_READ_MAX_BYTES`, and refuse a larger copy with `file_too_large`.
+  A path in `.context/attachments/` with no copy gets `file_not_found`,
+  and the recorded file routes answer each other path. A copy belongs only
+  to the workspace of its message. All files and Changes stay the
+  recorded lists. A reload starts with no bytes and no copies.
 - `dev/feedback-routes.ts` serves the two feedback routes. By default, and
   with `?feedback=ready` or an unknown value, the reply address is
   `<GitHub login>@example.com`, and each send answers 204.

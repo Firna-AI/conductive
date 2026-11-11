@@ -12,6 +12,15 @@ Each path is relative to `src/app/`, the folder of this page.
   request. `dev/signup-routes.ts`: the pause and the waitlist switch of
   the operator section. `dev/seed.ts` turns the waitlist off for
   `?waitlist=off`.
+- `dev/attachment-routes.ts`: the upload routes of both composers, which
+  keep the bytes of each upload. `dev/attachment-files.ts`:
+  `attachmentFiles`, the private store of those bytes and of their copies,
+  and `attachmentFileRoutes`, the content and download routes of the
+  copies. Its `readCopiedFile` gives the same reads to the development
+  page of the chat. `dev/attachment-message-routes.ts`:
+  `attachmentMessageFetch`, the reply of a send of uploaded files.
+  `dev/attachment-files.test.ts` drives them through `createFakeServices`,
+  the chat API, and the file client.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
@@ -163,12 +172,17 @@ Each path is relative to `src/app/`, the folder of this page.
 - `new-workspace-model.ts`: the first message that creates a workspace.
   `NewWorkspaceModel.filesSource` is the `FieldFiles` of its draft.
   `attach` gives the IDs of a pick at once, `setText` takes each new text
-  of the field, and `retryFile` is Try again.
-  `new-workspace-marks.test.ts` checks the IDs at once, the words outside
+  of the field, and `retryFile` is Try again. `attach` also keeps the
+  names that it refuses, as
+  [Refused files and folders](../chat/draft-files.md#refused-files-and-folders)
+  says.
+- `new-workspace-marks.test.ts` checks the IDs at once, the words outside
   the chips, and the mentions in the order of the chips. It also checks
   undo of a ready file, stopped and queued uploads, a sign-out, and the
-  text that a create took.
-  `creations.ts`: `Creations`, the life of the create requests of an org in
+  text that a create took. `new-workspace-refusals.test.ts` checks folder
+  names with no files, an empty pick, a file with no bytes, a sign-out,
+  and a failed create.
+- `creations.ts`: `Creations`, the life of the create requests of an org in
   this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
   which tells a failed first start, and `resumesAtOpen`.
 - `computer-model.ts`: the scripts, the env vars with their Secret marks,
@@ -220,6 +234,12 @@ Each path is relative to `src/app/`, the folder of this page.
   scroll of the row. A sideways swipe and a turn with Ctrl stay with the
   browser, and so does a turn past an end of the row. The tab row of the
   chat uses it, and any row that scrolls sideways can.
+- `file-drags.ts`: `carriesFiles`, whether a drag carries files, and
+  `droppedItems`, the files and the folder names of a drop, by the entry
+  of each item. `useFileDropGuard` cancels each drag of files that no part
+  took, so the browser opens no file in place of the page. `App` and the
+  chat development page mount it. The composer drop and the
+  `useScreenshotDrop` of Feedback share `carriesFiles`.
 - `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
   the Overview and the pages of the operator section, its searches, and
   Suspend and Lift. `operator-pause.ts`, `operator-switch.ts`, and

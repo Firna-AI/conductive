@@ -34,6 +34,8 @@ export interface Draft {
   detached: readonly DraftFile[]
   /** The names of the files of the last pick that are over the size limit. */
   refused: readonly string[]
+  /** Folder names from the last intake, kept apart from oversized files. */
+  refusedFolders: readonly string[]
   /** The client ID of a send that failed, so that a resend is one message. */
   sendId: string | null
   /** A send of this draft waits for its answer. */
@@ -120,6 +122,7 @@ export function blankDraft(id: string): Draft {
     files: [],
     detached: [],
     refused: [],
+    refusedFolders: [],
     sendId: null,
     sending: false,
   }

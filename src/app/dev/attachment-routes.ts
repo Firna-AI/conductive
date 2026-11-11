@@ -7,6 +7,7 @@ import {
 import { attachmentPath } from '../../shared/attachment-paths'
 import { ParseError } from '../api/parse'
 import type { DevBackend } from './backend'
+import { attachmentFiles } from './attachment-files'
 import { ID, json, RouteError, type Route } from './router'
 
 /**
@@ -62,6 +63,7 @@ export function attachmentRoutes(
       sizeBytes: body.byteLength,
     }
     backend.state.attachments.set(attachment.id, attachment)
+    attachmentFiles(backend).retain(attachment, body)
     return json({ attachment } satisfies UploadAttachmentResponse, 201)
   }
   const targets = [

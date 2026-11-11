@@ -2,12 +2,18 @@ import { useRef } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { useStore } from '../../app/store'
-import { OversizeNotice } from '../../chat/components/AttachmentChips'
+import {
+  FolderNotice,
+  noticedFolder,
+  OversizeNotice,
+} from '../../chat/components/AttachmentChips'
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
+import { useComposerDrop } from '../../chat/components/composer-drop'
 import { useSendKey } from '../../chat/components/send-key'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import { IconButton } from '../ui/actions'
@@ -18,13 +24,14 @@ import ui from '../ui/ui.module.css'
  * The composer of a new workspace: the text, with a chip for each attached
  * file at its place, then the attach button, the model and effort picker,
  * and Send. The files of a pick go into the text at the caret, or at the end
- * when the text has no caret. They upload before the workspace exists, with
- * the chips and the notice of the workspace chat. Send is off until the
+ * when the text has no caret. The whole box takes a drop of files, as
+ * `useComposerDrop` says. They upload before the workspace exists, with
+ * the chips and the notices of the workspace chat. Send is off until the
  * message can go, as the screen decides for Send and Try again. Enter sends
  * as in every composer: on a computer, Enter sends and Shift+Enter adds a
- * line. While the create runs, the text and the attach button are off. A
- * kept message shows with the cursor at its end. A pasted workspace link
- * shows as a chip, which `OrgLinks` finds.
+ * line. While the create runs, the text, the attach button, and the drop
+ * are off. A kept message shows with the cursor at its end. A pasted
+ * workspace link shows as a chip, which `OrgLinks` finds.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
@@ -41,14 +48,21 @@ export function Composer(props: {
   const field = useRef<FieldHandle>(null)
   const sending = create.state === 'sending'
   const sendKey = useSendKey(props.ready, props.send)
+  const drop = useComposerDrop({
+    field,
+    editable: !sending,
+    attach: (files, folders) => props.model.attach(files, folders),
+  })
+  const pick = () => picker.current?.click()
   return (
     <>
-      <OversizeNotice
-        onAttach={() => picker.current?.click()}
-        refused={draft.refused}
-      />
+      <OversizeNotice onAttach={pick} refused={draft.refused} />
+      <FolderNotice folder={noticedFolder(draft)} onAttach={pick} />
       <div className={styles.wrap}>
-        <div className={styles.composer}>
+        <div
+          className={classes(styles.composer, drop.dropping && styles.dropping)}
+          {...drop.handlers}
+        >
           <ChipTextField
             caretAtEnd
             editable={!sending}
@@ -68,7 +82,7 @@ export function Composer(props: {
               disabled={sending}
               icon={Paperclip}
               label="Attach files"
-              onPress={() => picker.current?.click()}
+              onPress={pick}
             />
             <input
               className={ui.hidden}

@@ -62,21 +62,24 @@ async function upload(
  * size limit never uploads: its name goes to the notice of the draft, which
  * the next pick replaces. Each other file shows at once and uploads, one
  * after another. Returns their IDs immediately. Send waits until each is ready.
+ * Folder names are refusal data only, including an intake with no files.
  */
 export function attachFiles(
   context: ChatContext,
   sessionId: string,
   files: readonly File[],
+  folders: readonly string[] = [],
 ): string[] {
-  if (files.length === 0 || !context.live()) return []
+  if ((files.length === 0 && folders.length === 0) || !context.live()) return []
   const draftId = draftIdOf(context, sessionId)
-  const { uploads, refused } = splitPick(files)
+  const { uploads, refused, refusedFolders } = splitPick(files, folders)
   const added = uploads.map((file) => uploadingFile(context.newFileId(), file))
   const queued = added.map((item) => reserveUpload(context, draftId, item))
   changeDraft(context, draftId, (draft) => ({
     ...draft,
     files: [...draft.files, ...added],
     refused,
+    refusedFolders,
     sendId: added.length > 0 ? null : draft.sendId,
   }))
   void runFileQueue(queued)

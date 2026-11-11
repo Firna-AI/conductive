@@ -31,18 +31,23 @@ export function stopFile(
 }
 
 /**
- * One pick of the file picker: the files that upload, and the names of the
- * files over the size limit, which never upload and get no chip.
+ * One intake: the files that upload, the oversized file names, and the
+ * folder names supplied by the caller. Each refused kind stays separate.
  */
-export function splitPick(files: readonly File[]): {
+export function splitPick(
+  files: readonly File[],
+  folders: readonly string[] = [],
+): {
   uploads: File[]
   refused: string[]
+  refusedFolders: readonly string[]
 } {
   return {
     uploads: files.filter((file) => file.size <= ATTACHMENT_MAX_BYTES),
     refused: files
       .filter((file) => file.size > ATTACHMENT_MAX_BYTES)
       .map((file) => file.name),
+    refusedFolders: [...folders],
   }
 }
 

@@ -16,13 +16,16 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - The local Worker serves the page. The
   [Get started steps](../../README.md#get-started) give its local setup.
 - [The development fake](dev-fake.md) gives the query options of the dev
-  wiring in `dev/`, such as `?operator=1`, and what its fake routes do:
-  the uploads, Create org, feedback, the operator section, the waitlist,
-  the routines, and the workspace numbers.
+  wiring in `dev/`, such as `?operator=1`. It also covers its fake routes:
+  the uploads and their copies, Create org, feedback, the operator
+  section, the waitlist, the routines, and the workspace numbers.
 - The workspace screen shows the real chat over the dev fake. The fake
-  answers each chat write with a recorded reply, changes no state, and
-  sends no event. So a sent message stays pending, and a new session adds
-  no tab.
+  sends no chat event, so a sent message stays pending, and a new session
+  adds no tab. It answers each chat write with a recorded reply and
+  changes no state, except a send of uploaded files. That reply gives the
+  message its own text and files. In a workspace that runs, the sent chips
+  of those files open copies of their bytes in the file tab, as
+  [The development fake](dev-fake.md) says.
 - One counter numbers the events of all workspaces of the dev fake, and its
   event source ignores the workspace. So an event of another workspace
   leaves a gap in the event numbers of the chat. At the next event of the
@@ -45,6 +48,13 @@ pull request bar, and the owner picker. A host can give its own parts, as
 | `services`   | `AppServices` from `services.ts`: the API, the events, the clock, the storage  |
 | `navigation` | The address bar: `browserNavigation(window)`, or `memoryNavigation` in tests   |
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
+
+`App` also mounts `useFileDropGuard` of `file-drags.ts`, so a drop of files
+outside each message box does nothing, as
+[Drops](../../docs/protocol/message-attachments.md#drops) says. The guard
+hears each drag last, on the window. It leaves each drag that a part took,
+such as a message box or the Feedback dialog, and it never stops an event.
+A drag of text or of a link keeps the action of the browser.
 
 The workspace screen draws the frame, the header, the start steps, and the
 states of the sandbox, with Restore on the bar of an archived workspace
@@ -209,6 +219,21 @@ clicks, types, and lets the answers of the fake API settle.
 `../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
 for the tests of New workspace as a page or a dialog, and of its send key.
 Its `markOf` gives the mark of a file of the draft by the name of the file.
+
+`../shell/new-workspace/NewWorkspaceDrops.test.tsx` drops files on the
+page and on the dialog card. A drop on the text of the page puts the files
+at the point. While a create runs, the box shows no drop state or drop
+caret, also for files that hovered as it began, and takes no drop. Files
+over the card show its drop state, and a dropped folder gets its notice in
+the dialog. `../App.dom.test.tsx` mounts `App` and checks the guard
+outside each box, the browser's own drag of text and links, and the copy
+offer of a box. It also checks that the Feedback dialog still takes a
+dropped screenshot.
+
+Run `npm run test -- src/app/dev/attachment-files.test.ts src/chat/dev/dev-attachment-files.test.ts`
+for the API tests of the uploaded bytes and their copies in both
+development fakes. `dev/attachment-test-kit.ts` gives them a stub
+`window`, fake timers, a sample image, and a check of the exact bytes.
 
 ## Key code
 

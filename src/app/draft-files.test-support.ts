@@ -71,8 +71,9 @@ export async function uploadsSettled(
 export function pickWorkspaceFiles(
   model: NewWorkspaceModel,
   files: readonly File[],
+  folders: readonly string[] = [],
 ): Promise<void> {
-  const ids = model.attach(files)
+  const ids = model.attach(files, folders)
   if (ids.length > 0)
     model.setText(withPickedFiles(model.draft.get().text, ids))
   return uploadsSettled(() => model.draft.get().files, model.draft.subscribe)

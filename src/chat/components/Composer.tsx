@@ -3,6 +3,7 @@ import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import { filesWait } from '../../app/draft-files'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { MentionAnchor } from '../../../docs/mockups/src/components/chat/MentionList'
@@ -12,11 +13,12 @@ import {
 } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import type { Draft } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
-import { OversizeNotice } from './AttachmentChips'
+import { FolderNotice, noticedFolder, OversizeNotice } from './AttachmentChips'
 import type { FieldFiles } from './chip-field/attached-files'
 import { ChipTextField } from './chip-field/ChipTextField'
 import type { FieldHandle } from './chip-field/focus-plugins'
 import local from './chat.module.css'
+import { useComposerDrop } from './composer-drop'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
 
@@ -53,10 +55,14 @@ export interface ComposerProps {
   onSend: () => void
   onStop: () => void
   /**
-   * Attaches the files of a pick to the draft. It gives their IDs at once,
-   * while they upload, so their chips go into the text in the same event.
+   * Attaches the files of a pick or a drop to the draft. It gives their IDs
+   * at once, while they upload, so their chips go into the text in the same
+   * event. `folders` names each folder of a drop, which it does not attach.
    */
-  onAttach: (files: readonly File[]) => readonly string[]
+  onAttach: (
+    files: readonly File[],
+    folders?: readonly string[],
+  ) => readonly string[]
   onChooseModel: (choice: AgentChoice) => void
 }
 
@@ -65,8 +71,10 @@ export interface ComposerProps {
  * place, then a bar with the attach button, the model picker, and Send. The
  * files of a pick go into the text at the caret, or at the end when the text
  * has no caret, and a chip that leaves the text takes its file off the
- * draft. Send waits while a file uploads or failed. Files over the size
- * limit get a notice over the box, which can open the file picker again.
+ * draft. The whole box takes a drop of files, as `useComposerDrop` says,
+ * also while a message sends or a file uploads. Send waits while a file
+ * uploads or failed. Files over the size limit and a dropped folder get a
+ * notice over the box, which can open the file picker again.
  * While a turn runs, a message steers the turn, and Stop sits beside Send.
  * While the sandbox is not ready, Send still sends, and the workspace queues
  * the message. When a message spends the agent login of another member, a
@@ -88,15 +96,27 @@ export function Composer(props: ComposerProps) {
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
   const steers = props.running && props.startsSession !== true
   const sendKey = useSendKey(!off, props.onSend)
+  // The field takes changes while the composer shows, so the box takes a
+  // drop also while Send is off.
+  const drop = useComposerDrop({
+    field,
+    editable: true,
+    attach: props.onAttach,
+  })
+  const pick = () => picker.current?.click()
   return (
     <>
-      <OversizeNotice
-        onAttach={() => picker.current?.click()}
-        refused={draft.refused}
-      />
+      <OversizeNotice onAttach={pick} refused={draft.refused} />
+      <FolderNotice folder={noticedFolder(draft)} onAttach={pick} />
       <div className={styles.wrap}>
         <MentionAnchor onElement={setMentionHost}>
-          <div className={styles.composer}>
+          <div
+            className={classes(
+              styles.composer,
+              drop.dropping && styles.dropping,
+            )}
+            {...drop.handlers}
+          >
             <ChipTextField
               files={props.files}
               handle={field}
@@ -116,7 +136,7 @@ export function Composer(props: ComposerProps) {
               <IconButton
                 icon={Paperclip}
                 label="Attach files"
-                onPress={() => picker.current?.click()}
+                onPress={pick}
               />
               <input
                 aria-hidden

@@ -1,12 +1,15 @@
 import { onTestFinished } from 'vitest'
 import type { FileReply } from '../../app/api/client'
 import type { DraftFile } from '../../app/draft-files'
+import { controlledUploads } from '../../app/draft-files.test-support'
 import { fileMark } from '../../app/draft-marks'
 import { accessibleName, byRole } from '../../test-support/dom-queries'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { asMessageField } from '../../test-support/message-field'
 import { holdAnimationFrames, mount, press } from '../../test-support/mount'
+import composerStyles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { readyChat } from '../state/draft-files.test-support'
+import { chatFor } from '../state/test-kit'
 import { WorkspaceChatView } from '../WorkspaceChat'
 
 // Mounts the composer of a chat with the controller of the app, for the
@@ -34,12 +37,27 @@ export async function pressFirst(controls: readonly HTMLElement[]) {
   if (first) await press(first)
 }
 
-/** The chat of a workspace, with its composer on the screen. */
+/**
+ * The chat of `readyChat`, whose fetch keeps each request that `hold` picks
+ * until the test lets it go through `held`.
+ */
+async function heldChat(hold: (request: Request) => boolean) {
+  const upload = controlledUploads()
+  const chat = chatFor({ conversation: 'history', files: upload.files, hold })
+  await chat.controller.start()
+  return { ...chat, ...upload }
+}
+
+/**
+ * The chat of a workspace, with its composer on the screen. `hold` picks the
+ * requests that wait until the test lets them go, such as a send.
+ */
 export async function mountComposer(
   viewport: 'desktop' | 'mobile' = 'desktop',
+  hold?: (request: Request) => boolean,
 ) {
   holdAnimationFrames()
-  const chat = await readyChat()
+  const chat = hold ? await heldChat(hold) : await readyChat()
   onTestFinished(chat.controller.stop)
   const { container } = await mount(
     <WorkspaceChatView
@@ -49,6 +67,8 @@ export async function mountComposer(
     />,
   )
   const field = asMessageField(byRole('textbox', 'Message', container))
+  const box = field.closest<HTMLElement>(`.${composerStyles.composer}`)
+  if (!box) throw new Error('The field is not in a message box.')
   const sessionId = chat.controller.getSnapshot().activeSessionId ?? ''
   /** The draft of the session, as the store of the chat keeps it. */
   const draft = () => {
@@ -60,6 +80,10 @@ export async function mountComposer(
     ...chat,
     root: container,
     field,
+    /** The message box: the field, the bar, and the padding around them. */
+    box,
+    /** Whether the box shows the drop state of files that hover over it. */
+    dropping: () => box.classList.contains(composerStyles.dropping),
     sessionId,
     draft,
     /** The mark of the file of the draft with this name, or a stand-in. */

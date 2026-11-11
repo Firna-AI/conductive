@@ -75,11 +75,13 @@ chips.
   the history loads, the read-only chats, the order of the records, the
   sends, the fixed prompts of the pull request bar, and Stop.
 - [The message field](message-field.md) gives the rules of the message
-  field of each composer: its chips, the chips of attached files, the
-  copy, the paste, the drag, and the handle that inserts files.
+  field of each composer. They cover its chips, the chips of attached
+  files, the copy, the paste, and the drag. They also cover the drop of
+  files on the message box, and the handle that inserts files.
 - [Attached files of a draft](draft-files.md) gives the rules of the files
-  of a draft in each composer: their sources, the attach, the marks that
-  hold them, undo, their uploads, the send, and their end.
+  of a draft in each composer. They cover the sources, the attach, refused
+  files and folders, and the marks that hold the files. They also cover
+  undo, the uploads, the send, and the end of the files.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,
@@ -127,8 +129,9 @@ check in the Mac app.
 
 [Chat key code](key-code.md) names the files, the types, and the
 functions of the chat that a reader opens first. It covers the controller
-and its state, the tab row, the composer and its message field, the
-links, the mentions, the session links, and the attached files. It also
+and its state, the tab row, and the composer with its message field and
+its drop of files. Its other entries are the links, the mentions, the
+session links, and the attached files. It also
 covers the transcript and its shared parts, the stream, the transcript
 copy, the chat routes, the Mac commands, and the development page.
 

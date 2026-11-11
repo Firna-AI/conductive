@@ -197,7 +197,9 @@ export function SessionChat(props: SessionChatProps) {
           files={files}
           login={loginLabelOf(login)}
           models={snapshot.models}
-          onAttach={(picked) => controller.attachFiles(session.id, picked)}
+          onAttach={(picked, folders) =>
+            controller.attachFiles(session.id, picked, folders)
+          }
           onChangeText={(text) => controller.setDraft(session.id, text)}
           onChooseModel={(choice) =>
             void controller.chooseModel(session.id, choice)

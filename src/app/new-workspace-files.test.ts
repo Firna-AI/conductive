@@ -56,23 +56,32 @@ describe('the files of a New workspace draft', () => {
     const server = new FakeApiServer()
     const { form } = await newForm(server)
     form.setText('Let shoppers save their cart.')
-    await pickWorkspaceFiles(form, [
-      sized('recording.mov', 25_000_001),
-      sized('limit.bin', 25_000_000),
-      notes(),
-    ])
+    await pickWorkspaceFiles(
+      form,
+      [
+        sized('recording.mov', 25_000_001),
+        sized('limit.bin', 25_000_000),
+        notes(),
+        sized('archive.zip', 25_000_001),
+      ],
+      ['Pictures', 'Design notes'],
+    )
     const picked = form.draft.get()
     const uploaded = await sentFiles(server.requests)
     await form.send(defaults)
     expect({
       refused: picked.refused,
+      folders: picked.refusedFolders,
       uploaded: uploaded.map((file) => file.query.name),
       ready: picked.files.map((item) => item.state),
       sent: await lastCreate(server),
+      foldersAfterSend: form.draft.get().refusedFolders,
     }).toMatchObject({
-      refused: ['recording.mov'],
+      refused: ['recording.mov', 'archive.zip'],
+      folders: ['Pictures', 'Design notes'],
       uploaded: ['limit.bin', 'notes.txt'],
       ready: ['ready', 'ready'],
+      foldersAfterSend: [],
       sent: {
         firstMessage: {
           attachmentIds: ['draft-attachment-1', 'draft-attachment-1'],

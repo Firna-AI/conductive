@@ -230,8 +230,12 @@ export class ChatController {
     hydrate(this.context, sessionId, true)
   readonly setDraft = (sessionId: string, text: string) =>
     setDraftText(this.context, sessionId, text)
-  readonly attachFiles = (sessionId: string, files: readonly File[]) =>
-    this.readOnly() ? [] : attachFiles(this.context, sessionId, files)
+  readonly attachFiles = (
+    sessionId: string,
+    files: readonly File[],
+    folders: readonly string[] = [],
+  ) =>
+    this.readOnly() ? [] : attachFiles(this.context, sessionId, files, folders)
   /** A field follows its draft identity, also during a move before React renders. */
   readonly draftFiles = (draftId: string) =>
     draftFileSource(

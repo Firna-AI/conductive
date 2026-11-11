@@ -13,10 +13,13 @@ that shows their chips.
   file of a draft, and `runFileJob`, the upload of one file in its
   generation. `runFileQueue` starts the reserved uploads of a pick, or of
   a text that brings files back, one at a time, and `stopFile` ends a
-  generation. `new-workspace-files.ts`: `DraftUploads`, the uploads of a
-  first message before its workspace exists. Its `attach` gives the IDs of
-  a pick at once, and its `setText` makes the files follow the marks. A
-  change of person ends its uploads and its files.
+  generation. `splitPick` splits one attach: the files that upload, the
+  names of the files over the size limit, and a copy of the folder names.
+- `new-workspace-files.ts`: `DraftUploads`, the uploads of a first message
+  before its workspace exists. Its `attach` gives the IDs of a pick at
+  once, and keeps the folder names that the caller gives, also with no
+  files. Its `setText` makes the files follow the marks. A change of
+  person ends its uploads, its files, and the names that it refused.
 - `draft-file-state.ts`: the files of the marks of a draft text, which the
   chat and New workspace share. `DraftFileState` holds the attached and the
   detached files of a draft. `reconcileFiles` makes them follow the marks
@@ -45,5 +48,6 @@ that shows their chips.
   `controlledUploads` gives uploads whose replies wait for the test.
   `withPickedFiles` writes the marks of new files at the end of a draft
   text, as the field does. `uploadsSettled` waits until no file of a list
-  uploads. `pickWorkspaceFiles` attaches files to a New workspace model,
-  writes their marks, and waits for their uploads.
+  uploads. `pickWorkspaceFiles` attaches files, with optional folder
+  names, to a New workspace model, writes the marks of the files, and
+  waits for their uploads.

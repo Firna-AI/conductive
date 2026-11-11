@@ -131,21 +131,34 @@ describe('the files of a chat draft', () => {
     const chat = chatFor({ conversation: 'history' })
     await chat.controller.start()
     chat.controller.setDraft(id, 'See the recording.')
-    await pickChatFiles(chat, id, [sized('recording.mov', 25_000_001), file()])
+    await pickChatFiles(
+      chat,
+      id,
+      [
+        sized('recording.mov', 25_000_001),
+        file(),
+        sized('archive.zip', 25_000_001),
+      ],
+      ['Pictures', 'Design notes'],
+    )
     const picked = chat.draftOf(id)
     const uploaded = await sentFiles(chat.server.requests)
     await chat.controller.send(id)
     const [sent] = await chat.bodies('POST', messages)
     expect({
       refused: picked?.refused,
+      folders: picked?.refusedFolders,
       uploaded: uploaded.map((item) => item.query.name),
       sent: record(sent).attachmentIds,
       afterSend: chat.draftOf(id)?.refused,
+      foldersAfterSend: chat.draftOf(id)?.refusedFolders,
     }).toEqual({
-      refused: ['recording.mov'],
+      refused: ['recording.mov', 'archive.zip'],
+      folders: ['Pictures', 'Design notes'],
       uploaded: ['overlap.png'],
       sent: ['attachment-1'],
       afterSend: [],
+      foldersAfterSend: [],
     })
   })
 

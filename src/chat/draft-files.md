@@ -41,21 +41,64 @@ marks of a draft text.
 
 ## The attach
 
-- `ChatController.attachFiles(sessionId, files)` and
-  `NewWorkspaceModel.attach(files)` attach the files of one pick. Each
-  gives the IDs of the new files at once, while their uploads run. These
-  are the local IDs of `DraftFile.id`, not the attachment IDs of the upload
-  replies. The field writes them in its marks, through
+- `ChatController.attachFiles(sessionId, files, folders)` and
+  `NewWorkspaceModel.attach(files, folders)` attach the files of one pick
+  or drop. Each gives the IDs of the new files at once, while their uploads
+  run. These are the local IDs of `DraftFile.id`, not the attachment IDs of
+  the upload replies. The field writes them in its marks, through
   `FieldHandle.insertFiles`.
-- A file over the size limit gets no ID and no upload. Its name goes to
-  the notice of the draft, which the next pick replaces. A read-only chat,
-  and New workspace while its create runs, attach nothing and give an
-  empty list.
+- `files` holds only files. A file with no bytes is a file, and it
+  uploads. `folders` is optional. It holds the names of the folders that
+  the caller found, apart from its files. The state never takes a `File`
+  for a folder because of its size, its name, or its type. A pick gives no
+  folders, and a drop gives the folders that `droppedItems` finds, as
+  [The message field](message-field.md) says.
+- A file over the size limit and a folder get no ID, no upload, no mark,
+  and no chip. So an attach of folders alone gives an empty list. The
+  draft keeps their names, as
+  [Refused files and folders](#refused-files-and-folders) says.
+- A read-only chat, and New workspace while its create runs, attach
+  nothing, change nothing in the draft, and give an empty list.
 - The attach adds the new files to `files` at once, so the field can put
   their chips into the text in the same event. A composer must insert the
   chips of the IDs that it gets. The next text of the field makes `files`
   follow its marks, so a file without a mark then becomes detached, and
   its upload stops.
+
+## Refused files and folders
+
+[Drops](../../docs/protocol/message-attachments.md#drops) states what the
+composer shows for a folder and for a file over the size limit.
+
+- The draft keeps the names that its last attach refused, in two lists.
+  `refused` holds the names of the files over the size limit, and
+  `refusedFolders` holds the names of the folders. Each list keeps the
+  order of its names. `splitPick` of `../app/draft-files.ts` makes both
+  lists for both owners. It copies the folder names, so a later change of
+  the caller's list changes nothing.
+- Each attach with a file or a folder replaces both lists. So a pick
+  clears the folders of an earlier attach, and an attach of folders alone
+  clears the earlier files over the size limit. An attach with no file and
+  no folder, such as a cancelled pick, changes nothing.
+- An upload, Try again, a detach, and undo keep both lists. A draft that
+  moves to a new session keeps them.
+- The notice of the draft names the files of `refused`, through
+  `OversizeNotice`. When `refused` is empty and `refusedFolders` holds one
+  folder, `FolderNotice` names that folder, as `noticedFolder` of
+  `components/AttachmentChips.tsx` decides. Its Attach files opens the file
+  picker. No notice yet names the folders when `refusedFolders` holds two
+  or more, or when `refused` is not empty. Then only the notice of the
+  files over the size limit can show. The draft still keeps each name.
+- The two owners clear the lists at different times. In the chat, the
+  start of a send clears both lists. A Send that does nothing, such as
+  while a file uploads, keeps them. The names of an attach during the send
+  stay after the send. New workspace keeps both lists while its create
+  runs and after a create fails. A create that succeeds starts a new draft
+  with empty lists.
+- `ChatController.stop`, also at a sign-out, clears both lists of each
+  draft. New workspace clears them when the life of the person who is
+  signed in ends. This holds also after an attach of folders alone, which
+  starts no upload.
 
 ## Marks and files
 

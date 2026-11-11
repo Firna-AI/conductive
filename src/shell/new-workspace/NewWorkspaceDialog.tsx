@@ -6,9 +6,14 @@ import styles from '../../../docs/mockups/src/components/new-workspace/NewWorksp
 import { useNavigation } from '../../app/navigation'
 import { defaultSection } from '../../app/sections'
 import { useStore, valueOf } from '../../app/store'
-import { OversizeNotice } from '../../chat/components/AttachmentChips'
+import {
+  FolderNotice,
+  noticedFolder,
+  OversizeNotice,
+} from '../../chat/components/AttachmentChips'
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
+import { useComposerDrop } from '../../chat/components/composer-drop'
 import { useSendKey } from '../../chat/components/send-key'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
@@ -71,8 +76,10 @@ function CreateButton(props: {
  * opened it. When another screen opened, the main area of that screen
  * takes the focus. In a suspended org, the refused bar takes the place of
  * the composer. The files of a pick go into the text at the caret, and they
- * upload before the workspace exists, with the chips and the notice of the
- * workspace chat, as on the page.
+ * upload before the workspace exists, with the chips and the notices of the
+ * workspace chat, as on the page. The card is the message box of the
+ * dialog, so the whole card takes a drop of files, as `useComposerDrop`
+ * says, and its full border shows the drop state.
  */
 function DialogCard(props: {
   org: OrgSummary
@@ -107,23 +114,32 @@ function DialogCard(props: {
     { initial: message, moved: () => navigation.href() !== openedAt },
   )
   const sendKey = useSendKey(form.ready, form.send)
+  const drop = useComposerDrop({
+    field: message,
+    // A suspended org shows no composer, so its card takes no drop.
+    editable: !sending && !suspended,
+    attach: (files, folders) => model.attach(files, folders),
+  })
   const unchosen = form.repositories?.length === 0
   const oversize = form.draft.refused.length > 0
+  const folder = noticedFolder(form.draft)
   const notices =
     form.failure !== null ||
     form.buildNotice !== null ||
     form.notice !== null ||
     oversize ||
+    folder !== null ||
     unchosen
   return (
     <section
       aria-label="New workspace"
       aria-modal
-      className={styles.dialog}
+      className={classes(styles.dialog, drop.dropping && styles.dropping)}
       onKeyDownCapture={trapTab}
       ref={card}
       role="dialog"
       tabIndex={-1}
+      {...drop.handlers}
     >
       <div className={styles.header}>
         {form.repository && !suspended ? (
@@ -169,6 +185,7 @@ function DialogCard(props: {
               {form.buildNotice}
               {form.notice}
               <OversizeNotice onAttach={pick} refused={form.draft.refused} />
+              <FolderNotice folder={folder} onAttach={pick} />
               {unchosen ? (
                 <ChooseRepositoriesNotice open={leave} org={org} />
               ) : null}

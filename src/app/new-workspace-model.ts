@@ -42,6 +42,8 @@ export interface Draft {
   detached: readonly DraftFile[]
   /** The names of the files of the last pick that are over the size limit. */
   refused: readonly string[]
+  /** Folder names from the last intake, kept apart from oversized files. */
+  refusedFolders: readonly string[]
   /** The client ID of the first message. Try again sends the same one. */
   messageId: string
 }
@@ -139,6 +141,7 @@ export class NewWorkspaceModel {
       files: [],
       detached: [],
       refused: [],
+      refusedFolders: [],
       messageId: this.org.services.newId(),
     }
   }
@@ -188,9 +191,9 @@ export class NewWorkspaceModel {
    * While the create runs, it uploads nothing, because the create already
    * sent the files of the draft.
    */
-  attach(files: readonly File[]): string[] {
+  attach(files: readonly File[], folders: readonly string[] = []): string[] {
     if (this.create.get().state === 'sending') return []
-    const uploads = this.uploads.attach(files)
+    const uploads = this.uploads.attach(files, folders)
     // The files show at once, before they upload, so the draft has them now.
     this.keepShownRepository()
     return uploads

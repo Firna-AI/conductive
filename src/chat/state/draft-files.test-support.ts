@@ -9,8 +9,9 @@ export function pickChatFiles(
   chat: ReturnType<typeof chatFor>,
   sessionId: string,
   files: readonly File[],
+  folders: readonly string[] = [],
 ): Promise<void> {
-  const ids = chat.controller.attachFiles(sessionId, files)
+  const ids = chat.controller.attachFiles(sessionId, files, folders)
   if (ids.length > 0) {
     chat.controller.setDraft(
       sessionId,

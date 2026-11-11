@@ -213,7 +213,9 @@ stops its upload.
 `state/attachment-actions.test.ts` attaches files to a chat draft over
 the fake API. A failed upload keeps its file, Send waits, and Try again
 through the files source of the draft uploads the same file. It also
-checks the measured bytes of an upload and a file over the size limit. A
+checks the measured bytes of an upload. A pick with two files over the
+size limit and two folder names uploads only its other file. The draft
+keeps the names of each kind in their order, and Send clears them. A
 removed file and a stopped chat abort their uploads. An expired file that
 Send finds gone turns failed, and Try again uploads its kept `File`.
 `state/draft-file-lifecycle.test.ts` attaches files through the controller
@@ -237,8 +239,37 @@ ignores late uploads. `state/draft-file-identity.test.ts` checks that a
 fresh start clears the old draft, and that the source of the old draft
 never reads the files of the new one. `state/draft-files.test-support.ts`
 gives `readyChat`, a started chat whose uploads wait for the test. Its
-`pickChatFiles` attaches files and writes their marks as the field does.
-Both use the helpers of `../app/draft-files.test-support.ts`.
+`pickChatFiles` attaches files, with optional folder names, and writes
+the marks of the files as the field does. Both use the helpers of
+`../app/draft-files.test-support.ts`.
+
+`components/ComposerDrops.dom.test.tsx` mounts the composer of
+`components/composer-files-test-kit.tsx`, which also gives its box and
+drop state, and drops files with the helpers of
+`src/test-support/file-drop.ts`.
+Files over the box show its drop state and the drop caret, a leave hides
+both, and a drag of text shows neither. A drop on the text puts the chips
+at its place: in order, with spaces, as one step of undo, and without the
+dragged path. A dropped folder gets no chip and no upload, and its notice
+names it, also for a folder alone. An empty file attaches, and Attach
+files of the notice opens the file picker. The box takes a drop during a
+send and an upload, and a drop on the bar puts the chips at the caret.
+
+`state/refused-folders.test.ts` gives a chat draft folder names with no
+files, and checks that the draft keeps a copy of the names with no upload.
+An empty pick changes nothing, and a file with no bytes uploads and goes
+with the message. The names move with their draft to a new session, and
+another draft keeps its own. A later pick, or folders alone, replace both
+lists, and Stop clears them. The start of a send clears both lists. The
+names of an attach during the send stay after it, until a fresh start.
+
+`dev/dev-attachment-files.test.ts` uploads files to the backend of the
+development page and sends them through the chat API. The file client
+then reads the exact bytes of each upload at its returned path, and All
+files and Changes stay as they were. A queued message gets its copy only
+after Resume gives it to the agent. `../app/dev/attachment-files.test.ts`
+checks the same store in the fake of the app. `../app/dev/attachment-test-kit.ts`
+holds the helpers of both tests.
 
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
 A right click and Shift and F10 open a tab menu with only the copy items, with no line.

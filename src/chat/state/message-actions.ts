@@ -94,6 +94,7 @@ export async function sendDraft(
   changeDraft(context, draftId, (current) => ({
     ...current,
     refused: [],
+    refusedFolders: [],
     sendId: request.id,
     sending: true,
   }))

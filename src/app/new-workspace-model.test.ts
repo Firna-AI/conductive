@@ -210,12 +210,15 @@ describe('NewWorkspaceModel', () => {
     held.hold('POST', createPath)
     const creating = draft.send(defaults)
     await pickWorkspaceFiles(draft, [notes()])
+    expect(draft.attach([], ['Ignored folder'])).toEqual([])
+    expect(draft.draft.get()).toMatchObject({ refused: [], refusedFolders: [] })
     held.release('POST', createPath)
     const created = await creating
     expect({
       uploads: received(server, 'POST', uploadPath).length,
       created: created?.workspace.id,
       files: draft.draft.get().files,
-    }).toEqual({ uploads: 0, created: 'saved-carts', files: [] })
+      folders: draft.draft.get().refusedFolders,
+    }).toEqual({ uploads: 0, created: 'saved-carts', files: [], folders: [] })
   })
 })

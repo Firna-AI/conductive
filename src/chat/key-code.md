@@ -42,8 +42,12 @@ is relative to `src/chat/`, the folder of this guide.
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states. It gives its field the `files` of the draft, and it holds the
   handle of the field. So a pick puts the chips of its files at the caret.
-  `components/SessionChat.tsx` keeps one source for each `Draft.id`, in
-  `useDraftFiles`.
+  Its whole box takes a drop of files. `components/SessionChat.tsx` gives
+  the folder names of a drop to `controller.attachFiles`, and keeps one
+  source for each `Draft.id`, in `useDraftFiles`.
+- `components/composer-drop.ts`: `useComposerDrop`, the drop of files on a
+  message box, which the chat and both New workspace composers share.
+  [The message field](message-field.md) gives its rules.
 - `components/chip-field/`: `ChipTextField`, the message field of every
   composer, with its handle and the chips of attached files.
   [The message field](message-field.md) gives its rules and the files of
@@ -121,7 +125,9 @@ is relative to `src/chat/`, the folder of this guide.
   [Fixed prompts](loads-and-sends.md#fixed-prompts) says.
 - `state/attachment-actions.ts`: attach and Try again for the files of a
   draft. `attachFiles` gives the IDs of a pick at once, and queues its
-  uploads. `resumeFiles` starts again the uploads that a new text brings
+  uploads. It puts the names that it refuses in the draft, as
+  [Refused files and folders](draft-files.md#refused-files-and-folders)
+  says. `resumeFiles` starts again the uploads that a new text brings
   back, such as after undo, and `retryFile` is Try again. Each upload goes
   through the app's `uploadAttachment`, and it ends on its draft after a
   move. It stops when its chip leaves the text, and when the chat stops.
@@ -129,12 +135,13 @@ is relative to `src/chat/`, the folder of this guide.
   draft identity, behind `ChatController.draftFiles`. It reads the session
   that holds the draft at each call, and gives its attached and detached
   files. Its `retry` runs Try again, except in a read-only workspace.
-- `components/AttachmentChips.tsx`: `SentFiles` and `OversizeNotice`.
-  `SentFiles` lists under a sent message the files without a chip in its
-  text. `OversizeNotice` is the notice of the files of a pick over the size
-  limit, with the words of the mockups' `attachmentCopy.ts`. A file of a
-  draft is a chip in the message field, which
-  `components/chip-field/attached-file-chip.tsx` draws.
+- `components/AttachmentChips.tsx`: `SentFiles`, `OversizeNotice`, and
+  `FolderNotice`. `SentFiles` lists under a sent message the files without
+  a chip in its text. `OversizeNotice` is the notice of the files of a pick
+  or a drop over the size limit. `FolderNotice` is the notice of the one
+  folder that `noticedFolder` gives. Both use the words of the mockups'
+  `attachmentCopy.ts`. A file of a draft is a chip in the message field,
+  which `components/chip-field/attached-file-chip.tsx` draws.
 - `state/archive-view.ts`: the tabs and the session history of a
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
@@ -206,4 +213,9 @@ is relative to `src/chat/`, the folder of this guide.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
   in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the answers of the
-  scripted agent, which the `answer` option chooses.
+  scripted agent, which the `answer` option chooses. `dev/dev-routes.ts`
+  keeps the bytes of each upload. While the sandbox runs, it copies the
+  files of each message that it accepts. `dev/dev-sandbox.ts` copies the
+  files of each queued message when the sandbox becomes ready, before the
+  agent gets the message. Both use the private store of
+  `../app/dev/attachment-files.ts`.

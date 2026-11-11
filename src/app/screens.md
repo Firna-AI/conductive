@@ -244,8 +244,10 @@ the command palette and of the Feedback dialog.
   So each attached file of the draft is a chip in the text, as
   [The message field](../chat/message-field.md) says. A pick attaches its
   files with `NewWorkspaceModel.attach`, and puts their chips at the caret,
-  or at the end, in the same event. The files of the draft follow its
-  marks, and a create that succeeds or a sign-out ends them, as
+  or at the end, in the same event. The page box and the whole dialog card
+  take a drop of files, except during a create and in a suspended org. The
+  files of the draft follow its marks, and a create that succeeds or a
+  sign-out ends them, as
   [Attached files of a draft](../chat/draft-files.md) says.
 - A create request that fails keeps the message in the form, with "The
   workspace wasn't created". Try again sends the same message ID. A failed

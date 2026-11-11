@@ -1,5 +1,5 @@
 import { act } from 'react'
-import { byRole } from './dom-queries'
+import { queryAllByRole } from './dom-queries'
 import { press } from './mount'
 
 /**
@@ -7,12 +7,14 @@ import { press } from './mount'
  * member does. The press moves the focus to the button, as Chrome does, and
  * the button opens the file picker. The picker then gives its input the
  * files and fires its change event, as a browser does after a pick.
+ * A notice can offer the same action, so take the first matching button.
  */
 export async function pickFiles(
   root: HTMLElement,
   files: readonly File[],
 ): Promise<void> {
-  const button = byRole('button', 'Attach files', root)
+  const [button] = queryAllByRole('button', 'Attach files', root)
+  if (!button) throw new Error('The composer has no Attach files button.')
   act(() => button.focus())
   await press(button)
   const input = root.querySelector<HTMLInputElement>('input[type="file"]')

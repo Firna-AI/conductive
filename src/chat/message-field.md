@@ -2,7 +2,8 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 message field of each composer: its chips, also of attached files, its
-clipboard, its drag, and its handle.
+clipboard, its drag, and its handle. It also gives the drop of files on
+the message box.
 [Attached files of a draft](draft-files.md) gives the rules of the files
 that those chips show, from the attach to the send.
 
@@ -45,6 +46,7 @@ that those chips show, from the attach to the send.
   drag is the drag of Lexical.
 - The Attach files button of each composer opens the file picker. Attach a
   smaller file, in the notice of a file over the size limit, opens it too.
+  Attach files, in the notice of a dropped folder, opens it too.
   A pick attaches its files, which gives their IDs at once, as
   [The attach](draft-files.md#the-attach) says. In the same change event,
   the composer puts their chips into the field with
@@ -108,7 +110,34 @@ that those chips show, from the attach to the send.
   as one step of undo. A drop inside the dragged text keeps it. A drag of
   text alone and a drop of other text take the drag and the drop of
   Lexical. The field leaves a drop of files to the message box, and
-  Lexical does not cancel it. No message box takes a drop of files yet.
+  Lexical does not cancel it. The box takes that drop, as the next rules
+  say.
+- Each composer takes a drop of files on its whole message box, through
+  `useComposerDrop` of `components/composer-drop.ts`: the text, the bar,
+  and the padding. The box of the New workspace dialog is its whole card.
+  Only a drag of files takes part, so a drag of text or of a chip keeps
+  the drag of the field. While files hover over the box, it shows its drop
+  state, and the field draws the drop caret under a pointer over the text.
+  The drop state follows the elements that the drag entered and has not
+  left, so a move from the text to the bar keeps it.
+  [Drops](../../docs/protocol/message-attachments.md#drops) states the
+  requirements.
+- At the drop, `droppedItems` of [`file-drags.ts`](../app/file-drags.ts)
+  splits the items. An item whose entry is a directory is a folder. Each
+  other item of kind file is a file, also an empty one. The composer
+  attaches the files with the folder names, also for a drop of folders
+  alone. Then `insertFiles(ids, point)` puts the chips at the place under
+  the pointer, else at the caret, else at the end. The box cancels each
+  event of a drag of files, so the browser opens no file and inserts no
+  path.
+- The chat box takes a drop whenever its composer shows, also while a
+  message sends or a file uploads, because its field takes changes then.
+  The New workspace page and dialog take no drop while a create runs, and
+  the dialog of a suspended org takes none. Such a box offers no drop, so
+  the pointer shows that a drop does nothing. Its drop state and its drop
+  caret go as soon as it stops taking changes, also during a hover.
+  Outside each box, `useFileDropGuard` of the app makes a drop of files do
+  nothing, as [Composition](../app/README.md#composition) says.
 - `FieldHandle` gives `focus()`, `insertFiles(ids, point?)`,
   `showDropCaret(point)`, and `clearDropCaret()`. A `FieldPoint` is a point
   of the page, from `clientX` and `clientY` of a pointer event.
@@ -124,7 +153,10 @@ that those chips show, from the attach to the send.
   the text, and hides it elsewhere. The drop caret is a layer over the
   text, and it never moves the caret or the selection. `insertFiles` and
   `clearDropCaret` hide it. A field that takes no change draws no drop
-  caret. No composer calls `showDropCaret` or `clearDropCaret` yet.
+  caret. `useComposerDrop` calls `showDropCaret` at each `dragover` of
+  files while the composer takes changes. It calls `clearDropCaret` when
+  the drag leaves the box, at the drop, and when the composer stops taking
+  changes.
 - `components/chip-field/`: `ChipTextField`, the message field of every
   composer, over Lexical. `chip-nodes.tsx` holds the chip node and the
   node of a link that waits for its workspace. `file-mention-nodes.tsx`

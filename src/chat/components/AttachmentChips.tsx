@@ -1,6 +1,8 @@
 import { CircleAlert, FileText, ImageIcon, Paperclip } from 'lucide-react'
 import type { Attachment } from '../../shared/messages'
 import {
+  attachFilesLabel,
+  folderBody,
   notAttachedCountTitle,
   notAttachedTitle,
   smallerFileLabel,
@@ -65,6 +67,50 @@ export function OversizeNotice(props: {
           ? notAttachedTitle(first)
           : notAttachedCountTitle(props.refused.length)
       }
+      tone="danger"
+    />
+  )
+}
+
+/** The items of the last pick or drop that a draft did not attach. */
+interface Refusals {
+  /** The files over the size limit. */
+  refused: readonly string[]
+  /** The dropped folders. */
+  refusedFolders: readonly string[]
+}
+
+/**
+ * The folder that the notice of a dropped folder names, or null. That
+ * notice names the one folder of a drop with no file over the size limit.
+ * The notice of the files over the limit keeps its words.
+ */
+export function noticedFolder(draft: Refusals): string | null {
+  const [folder, ...more] = draft.refusedFolders
+  if (folder === undefined || more.length > 0) return null
+  return draft.refused.length === 0 ? folder : null
+}
+
+/**
+ * The notice over the composer for a dropped folder, which the composer
+ * does not attach, while the files of the same drop stay. It names the
+ * folder and says to attach its files. Its action opens the file picker.
+ */
+export function FolderNotice(props: {
+  folder: string | null
+  onAttach: () => void
+}) {
+  if (props.folder === null) return null
+  return (
+    <Notice
+      action={
+        <ActionButton icon={Paperclip} onPress={props.onAttach}>
+          {attachFilesLabel}
+        </ActionButton>
+      }
+      body={folderBody}
+      icon={CircleAlert}
+      title={notAttachedTitle(props.folder)}
       tone="danger"
     />
   )

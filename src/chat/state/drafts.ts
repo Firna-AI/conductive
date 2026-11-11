@@ -93,6 +93,7 @@ export function endDraftFiles(draft: Draft): Draft {
     files: [],
     detached: [],
     refused: [],
+    refusedFolders: [],
     sendId: null,
     sending: false,
   }

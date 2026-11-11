@@ -744,6 +744,35 @@ refine the approved chip and image layout.
   text gives them no place. They represent a pick with the caret at the
   end. Reason: the sample still shows the files beside the task words.
 
+### Details from the drop implementation
+
+The UI implementor made these calls on 11 November 2026 under the approved
+drop behavior. Composer drops decisions 1 and 2 remain open.
+
+- The navigation guard hears drags last, on the window in the bubble
+  phase. It acts only on uncancelled file events and never stops an event.
+  Reason: each composer and the Feedback dialog keep their drops.
+- Outside a message box, a file drag offers no drop. Reason: the pointer
+  shows that a drop there does nothing.
+- The drop state follows the elements that the drag entered and has not
+  left. Reason: a move between the text and the bar must not flicker.
+- A dropped folder is found by the entry of its item. Reason: a folder
+  can have a File with bytes, and an empty file remains a valid file.
+- The chat box takes drops while its composer shows, also during Send and
+  uploads. Reason: its field still takes changes.
+- The dialog card of a suspended org takes no drop. Reason: that card
+  shows a refused bar in place of the composer.
+- A drop caret goes when the composer stops taking changes, also during
+  a hover. Reason: a field that takes no change draws no drop caret.
+- The shared drag detector keeps the exact body of Feedback's private
+  detector. Reason: each drop handler uses the same file-drag check.
+
+The orchestrator made this test-support call on 11 November 2026:
+
+- The file picker helper takes the first Attach files control in its
+  supplied scope. Reason: the folder notice and the paperclip open the
+  same picker.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1018,37 +1047,52 @@ Depends on: 7
 
 Main integration notes: `.context/composer-file-drops/merge-justifications.md`.
 
-- [ ] Expose the folder names of a drop with the draft's existing refused
+- [x] Expose the folder names of a drop with the draft's existing refused
       file data, through the attach boundary, without notice words. Keep
       folder-only drops, draft ownership, and existing notice cleanup.
-- [ ] Add a drop hook for the message box: file drags only, the drop
+- [x] Add a drop hook for the message box: file drags only, the drop
       state, no drop while the composer takes no change, and the split of
       files and folders.
-- [ ] Make the box of each composer a drop target, which attaches the
+- [x] Make the box of each composer a drop target, which attaches the
       files and inserts them at the caret of the point.
-- [ ] Keep uploaded bytes in the development fakes, and make their file
+- [x] Keep uploaded bytes in the development fakes, and make their file
       reads show the copies at the returned paths for the required Chrome
       sent-chip smoke test. Keep those copies out of the file tree and keep
       the existing read limit.
 - [ ] Name each dropped folder in the notice over the box.
       Mixed-drop and multiple-folder notice words remain blocked by
       composer drops decision 2. Apply no interim notice option.
-- [ ] Ignore each file drop outside a message box, from the root of the
+- [x] Ignore each file drop outside a message box, from the root of the
       app.
-- [ ] Set the `drag-and-drop-attachments` row in
+- [x] Set the `drag-and-drop-attachments` row in
       `src/marketing/from-conductor/areas/agents-and-chat.ts` to Available,
       with a note of what a member can do, as
       `docs/protocol/conductor-comparison.md#statuses` says. Reason: the
-      merge of this change ships the feature, and the row stays Under
-      consideration on `main` until then.
-- [ ] Update `src/chat/README.md`, `src/chat/key-code.md`,
+      merge of this change ships the feature. The row is In progress on
+      `main` after its marketing update, and stays there until this merge.
+- [x] Update `src/chat/README.md`, `src/chat/key-code.md`,
       `src/chat/message-field.md`, `src/chat/draft-files.md`, and
       `src/app/README.md`.
-- [ ] Add the DOM tests of the drop, the drop state, a box that takes no
+- [x] Add the DOM tests of the drop, the drop state, a box that takes no
       change, a folder, and a drop outside the box.
-- [ ] Smoke-test a drop in Chrome on the development page and in the app,
+- [x] Keep `src/test-support/file-picker.ts` usable when the folder notice
+      and the paperclip both offer Attach files. Check the real UI once,
+      and keep all existing picker assertions.
+- [x] Smoke-test a drop in Chrome on the development page and in the app,
       then a press on the sent chip. Save the screenshots under
       `.context/composer-file-drops/`.
+
+Draft intake evidence: `.context/composer-file-drops/m8-refusal-state-report.md`
+and `.context/composer-file-drops/m8-root-state-check.log`.
+Development read evidence: `.context/composer-file-drops/m8-fake-file-report.md`
+and `.context/composer-file-drops/m8-root-state-and-fake-check.log`.
+UI evidence: `.context/composer-file-drops/m8-ui-report.md`,
+`.context/composer-file-drops/m8-root-ui-picker-check.log`, and
+`.context/composer-file-drops/m8-root-picker-green.log`.
+Final docs and comparison evidence: `.context/composer-file-drops/m8-docs-report.md`,
+`.context/composer-file-drops/m8-external-docs-report.md`,
+`.context/composer-file-drops/m8-final-links.log`, and
+`.context/composer-file-drops/m8-root-combined-targeted.log`.
 
 ## Milestone 9: Verification, commit, review, and pull request
 
