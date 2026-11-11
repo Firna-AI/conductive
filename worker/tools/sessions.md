@@ -13,9 +13,9 @@ holds the path builders.
 
 The CLI and the MCP server offer these routes and the paging options, as
 [Workspace tool calls](../../tools/calls.md#sessions) says. The chat shows
-a tool stop with the generic stopped words, because no session chip
-renders it yet. The copy of a transcript already names the stopping
-session.
+a tool stop with "Stopped from" and the session chip of the stopping
+session, as [Sends and Stop](../../src/chat/loads-and-sends.md#sends-and-stop)
+says. The copy of a transcript gives that session's link.
 
 ## Routes
 

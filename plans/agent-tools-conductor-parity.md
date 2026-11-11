@@ -693,14 +693,18 @@ Tags: ui
 
 Depends on: 1, 2, 4
 
+Completed: 11 November 2026.
+
 - [x] Read the `product-ui` and `typescript` skills.
 - [x] Show the stop line of a stop by an agent with the session chip, as
       the mockups draw, on desktop and on a phone.
 - [x] Add tests beside the code for the line.
-- [ ] Update `src/chat/README.md` where it describes the changed code.
+- [x] Update `src/chat/README.md` where it describes the changed code.
 
 Evidence: `.context/agent-tools-conductor-parity/reports/m7-stop-ui.md`
 and `.context/agent-tools-conductor-parity/checks/m7-orchestrator-tests.log`.
+
+README evidence: `.context/agent-tools-conductor-parity/reports/m7-readmes.md`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

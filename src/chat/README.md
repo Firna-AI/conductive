@@ -74,7 +74,7 @@ chips.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
   sends, the fixed prompts of the pull request bar, the message field of
-  each composer, and Stop.
+  each composer, and Stop with the line of each stop.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,
@@ -160,16 +160,21 @@ check in the Mac app.
   counts, and a later choice of a tab or an abort stops the lookup.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
   links of a message field, and `linkTarget`, with the session of a
-  session link, `chat-parts.ts`, the one tokenizer of sent messages and
-  answers, `LinksContext.tsx`, the workspaces that chips find and the open
-  of a chip, and `LinkedText.tsx`, which draws the parts of a message or an
-  answer, with its file chips and session chips, and `mention-copy.ts`,
-  the copy of chat text that gives the mention of each file chip in it,
-  and leaves out text that the browser leaves out of a copy.
+  session link. Its `sessionTarget` gives the same target for a session
+  that the chat names by its IDs. `chat-parts.ts` is the one tokenizer of
+  sent messages and answers. `LinksContext.tsx` holds the workspaces that
+  chips find, the open of a chip, and the origin of the link of the chat's
+  workspace. `LinkedText.tsx` draws the parts of a message or an answer,
+  with its file chips and session chips. Its `SessionLinkText` draws a
+  session that the chat names by its IDs, such as the session whose agent
+  stopped a turn, with the same chip. `mention-copy.ts` is the copy of
+  chat text that gives the mention of each file chip in it, and leaves out
+  text that the browser leaves out of a copy.
 - `links/session-links.ts`: `useLinkedSession`, the session that a chip
   finds: a live session of the chat's workspace, or one of the one read of
   another workspace in `session-reads.ts`, made again for each load of a
-  chat or of New workspace. `chat-links.ts` gives a chat its links.
+  chat or of New workspace. `chat-links.ts` gives a chat its links, with
+  the origin of the link of its workspace.
 - `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
   the entries that the list offers and their order, and
   `MentionsContext.tsx`, the files that the chat gets and the tree that
@@ -219,7 +224,10 @@ check in the Mac app.
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
-  event from the mockups' `lostCopy.ts`. `components/TurnEnd.tsx` draws the
+  event from the mockups' `lostCopy.ts`. The line of a stopped turn uses
+  the mockups' `StopLine`: the words of a member's Stop or of a stop
+  without one, or "Stopped from" and the chip of the stopping session,
+  then the notes of the turn. `components/TurnEnd.tsx` draws the
   end of a finished turn: the line of its end reason, from the mockups'
   `EndReasonLine.tsx`, above its duration and its files.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold

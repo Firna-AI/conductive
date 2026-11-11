@@ -133,8 +133,10 @@ all call `TurnLifecycle.stop` with a `TurnStopRequester` from
   `session-management.ts`.
 - `readStopRequester` in `src/chat/api/read-stop.ts` reads both event forms
   in the browser. `stoppedAttribution` in the shared turn words gives
-  "Stopped from" and the session of a tool stop. The chat line still uses
-  `stoppedSummary`, which shows the generic stopped words for a tool stop.
+  "Stopped from" and the session of a tool stop. The chat line shows that
+  session as its session chip, as
+  [Sends and Stop](../../src/chat/loads-and-sends.md#sends-and-stop) says.
+  The copy gives its link instead.
 
 ## Message admission
 
