@@ -70,8 +70,9 @@ chips.
   [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
   [Workspace links](../../docs/protocol/workspace-links.md) states the
   chips of sent messages and answers. [Agent text](agent-text.md) gives the
-  rules of the code that formats them: the chips, and the table parts that
-  the chat shares with the file preview and the mockups.
+  rules of the code that formats them: the chips, and the heading, list,
+  and table parts that the chat shares with the file preview and the
+  mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
   sends, the fixed prompts of the pull request bar, the message field of
@@ -244,11 +245,13 @@ check in the Mac app.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.
-- `components/agent-text.ts`: `textBlocks`, the paragraphs, lists, code
-  blocks, and tables of an agent message, with `TextTable`.
-  `components/AgentText.tsx`: `AgentText`, which draws them, and
-  `AgentBlocks`, which the message line shares. Their text draws through
-  `LinkedText` of `links/`.
+- `components/agent-text.ts`: `textBlocks`, the paragraphs, headings,
+  lists, code blocks, and tables of an agent message, with `TextTable`.
+  `components/agent-paragraph.ts`: `Paragraph`, the lines of a paragraph,
+  with the text that an underline turns into a heading.
+  `components/AgentText.tsx`: `AgentText`, which draws them, with the
+  heading style that the file preview shares, and `AgentBlocks`, which the
+  message line shares. Their text draws through `LinkedText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which
@@ -281,8 +284,8 @@ check in the Mac app.
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
-  in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the answers of the
-  scripted agent, which the `answer` option chooses.
+  in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the plans and the
+  answers of the scripted agent, which the `answer` option chooses.
 
 
 ### Related docs

@@ -251,13 +251,16 @@ Depends on: 1a, 2, 3
 
 The chat reads headings with the shared reader and draws them.
 
-- [ ] Add the `heading` block to `TextBlock` in `src/chat/components/agent-text.ts`, read with `src/markdown/headings.ts`, with the setext rules of the design calls.
-- [ ] Draw it in `AgentText.tsx` and as a span in `MessageLine.tsx`, as the mockups show.
-- [ ] Use the shared heading style in the app's chat answer and in the app's file preview. Remove the heading look from `src/files/markdown/MarkdownView.module.css`, and give it the heading margins of the mockup file preview.
-- [ ] Update the heading cases of `agent-text.test.ts`, and add tests for the levels, the closing run, setext, the underline at the end of the text, a lazy underline, a quote line above an underline, the lines above and under a heading, and the drawn elements.
-- [ ] Update `src/chat/agent-text.md` and the `agent-text.ts` entry of `src/chat/README.md`. Give the right reason for spans in a `<summary>` there, in `MessageLine.tsx`, and in the comments of `OpenFold.dom.test.tsx`.
-- [ ] Delete `plans/follow-ups/chat-heading-joins-next-line.md`, which this milestone fixes. In `plans/follow-ups/one-markdown-reader-for-chat-and-preview.md`, update the sentence on headings, and add the choice of 9 November 2026 to option C.
-- [ ] Smoke-test an agent message with headings in the app.
+- [x] Add the `heading` block to `TextBlock` in `src/chat/components/agent-text.ts`, read with `src/markdown/headings.ts`, with the setext rules of the design calls.
+- [x] Draw it in `AgentText.tsx` and as a span in `MessageLine.tsx`, as the mockups show.
+- [x] Use the shared heading style in the app's chat answer and in the app's file preview. Remove the heading look from `src/files/markdown/MarkdownView.module.css`, and give it the heading margins of the mockup file preview.
+- [x] Update the heading cases of `agent-text.test.ts`, and add tests for the levels, the closing run, setext, the underline at the end of the text, a lazy underline, a quote line above an underline, the lines above and under a heading, and the drawn elements.
+- [x] Update `src/chat/agent-text.md` and the `agent-text.ts` entry of `src/chat/README.md`. Give the right reason for spans in a `<summary>` there, in `MessageLine.tsx`, and in the comments of `OpenFold.dom.test.tsx`.
+- [x] Delete `plans/follow-ups/chat-heading-joins-next-line.md`, which this milestone fixes. In `plans/follow-ups/one-markdown-reader-for-chat-and-preview.md`, update the sentence on headings, and add the choice of 9 November 2026 to option C.
+- [x] Smoke-test an agent message with headings in the app.
+
+Evidence: `.context/chat-markdown-headings/m4/` and the screenshots in
+`.context/chat-markdown-headings/smoke/`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

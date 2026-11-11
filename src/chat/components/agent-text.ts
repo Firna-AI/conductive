@@ -1,3 +1,8 @@
+import {
+  atxHeading,
+  setextLevel,
+  type HeadingLevel,
+} from '../../markdown/headings'
 import { expandTabs, isBlank, isRule } from '../../markdown/lines'
 import {
   interruptsParagraph,
@@ -14,17 +19,20 @@ import {
   tableStarts,
   type TableCells,
 } from '../../markdown/table-rows'
+import { isQuote, Paragraph } from './agent-paragraph'
 
 /** A table of an answer. Each body row keeps its own cells. */
 export type TextTable = { kind: 'table' } & TableCells<string>
 
 /**
  * A block of an agent's answer, from the Markdown that the agent writes. A
- * numbered list counts up from `start`, the number of its first item, as
- * Markdown numbers it.
+ * heading keeps the level that the agent wrote, and its text can be empty
+ * while the agent writes it. A numbered list counts up from `start`, the
+ * number of its first item, as Markdown numbers it.
  */
 export type TextBlock =
   | { kind: 'p'; text: string }
+  | { kind: 'heading'; level: HeadingLevel; text: string }
   | { kind: 'ul'; items: readonly TextItem[] }
   | { kind: 'ol'; start: number; items: readonly TextItem[] }
   | { kind: 'code'; text: string }
@@ -36,20 +44,17 @@ export type TextList = Extract<TextBlock, { kind: 'ul' | 'ol' }>
 /** The blocks of one list item, from the lines indented under its marker. */
 export type TextItem = readonly TextBlock[]
 
-const heading = /^ {0,3}#{1,6}\s+(.*)$/
-const quote = /^ {0,3}>/
-
 function isFence(line: string): boolean {
   return line.trimStart().startsWith('```')
 }
 
 /**
  * Whether the line at `index` starts a block, so it ends the text of a list
- * item. A heading and a quote show as text, but they still end the item.
+ * item. A quote shows as text, but it still ends the item.
  */
 function startsBlock(lines: readonly string[], index: number): boolean {
   const line = lines[index]
-  if (isFence(line) || heading.test(line) || quote.test(line)) return true
+  if (isFence(line) || atxHeading(line) !== null || isQuote(line)) return true
   return tableStarts(lines, index)
 }
 
@@ -93,26 +98,21 @@ const noLazyLines: ReadonlySet<number> = new Set()
  * The blocks of the lines of an answer, or of one list item. `raw` holds
  * the lines with their tabs, which a code block keeps. `depth` counts the
  * lists around the lines. The parse stops at the first line in `lazy` that
- * continues no paragraph, as the list reader asks.
+ * continues no paragraph, as the list reader asks. `ends` says whether the
+ * last of the lines ends the text, so no line break follows it.
  */
 function parseLines(
   lines: readonly string[],
   raw: readonly string[],
   depth: number,
   lazy: ReadonlySet<number> = noLazyLines,
+  ends = true,
 ): ItemBlocks<TextBlock> {
   const blocks: TextBlock[] = []
-  let paragraph: string[] = []
-  // Whether the last line of `paragraph` is its text, so it is open. A
-  // heading or a rule shows as text too, but it closes the paragraph.
-  let open = false
+  const paragraph = new Paragraph()
   let code: string[] | null = null
   const flush = () => {
-    if (paragraph.length > 0) {
-      blocks.push({ kind: 'p', text: paragraph.join(' ') })
-    }
-    paragraph = []
-    open = false
+    blocks.push(...paragraph.take())
   }
   const finish = (end: number): ItemBlocks<TextBlock> => {
     flush()
@@ -121,12 +121,18 @@ function parseLines(
   }
   const rules: ListRules<TextBlock> = {
     startsBlock,
-    parseItem: (item, _start, itemLazy) => itemBlocks(item, depth, itemLazy),
+    parseItem: (item, start, itemLazy) => {
+      // The item ends the text when its last line is the last of the lines.
+      const last = ends && start + item.length === lines.length
+      return itemBlocks(item, depth, itemLazy, last)
+    },
     tasks: false,
   }
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]
-    if (lazy.has(index) && (code !== null || !open)) return finish(index)
+    if (lazy.has(index) && (code !== null || !paragraph.open)) {
+      return finish(index)
+    }
     if (code) {
       if (isFence(line)) {
         blocks.push({ kind: 'code', text: code.join('\n') })
@@ -139,8 +145,14 @@ function parseLines(
       code = []
       continue
     }
+    const heading = atxHeading(line)
+    if (heading) {
+      flush()
+      blocks.push({ kind: 'heading', ...heading })
+      continue
+    }
     const marker = isRule(line) ? null : listMarker(line)
-    if (marker && (!open || interruptsParagraph(marker))) {
+    if (marker && (!paragraph.open || interruptsParagraph(marker))) {
       flush()
       const { list, next } = readList(lines, index, marker, rules)
       blocks.push(textList(list))
@@ -158,9 +170,15 @@ function parseLines(
       flush()
       continue
     }
-    const title = heading.exec(line)
-    paragraph.push(title?.[1] ?? line.trim())
-    open = title === null && !isRule(line)
+    // An underline counts only when a line break follows it, so the text
+    // above it stays a paragraph while the agent may still write a list. A
+    // lazy line is never an underline, as in CommonMark.
+    const level = lazy.has(index) ? null : setextLevel(line)
+    const broken = index + 1 < lines.length || !ends
+    const underlined =
+      level !== null && broken ? paragraph.underline(level) : null
+    if (underlined) blocks.push(...underlined)
+    else paragraph.add(line, lazy.has(index))
   }
   return finish(lines.length)
 }
@@ -173,8 +191,11 @@ function itemBlocks(
   lines: readonly string[],
   depth: number,
   lazy: ReadonlySet<number>,
+  ends: boolean,
 ): ItemBlocks<TextBlock> {
-  if (depth + 1 < maxNesting) return parseLines(lines, lines, depth + 1, lazy)
+  if (depth + 1 < maxNesting) {
+    return parseLines(lines, lines, depth + 1, lazy, ends)
+  }
   const text = lines
     .map((line) => line.trim())
     .filter((line) => line !== '')
@@ -184,13 +205,16 @@ function itemBlocks(
 }
 
 /**
- * Splits an answer into paragraphs, lists, code blocks, and tables. A list
- * item holds the lines indented under it, by the list rules of the file
- * preview, and a list starts after a line of a paragraph only where
- * CommonMark lets it. Text that the agent still writes can end inside a code block,
- * which then runs to the end. A header row shows as text until its
- * separator row arrives. A table can start directly after a line of a
- * paragraph or a list.
+ * Splits an answer into paragraphs, headings, lists, code blocks, and
+ * tables. A heading is a line of hashes and its text, or the text of a
+ * paragraph above an underline, as in CommonMark and the file preview. An
+ * underline counts only when a line break follows it. A list item holds the
+ * lines indented under it, by the list rules of the file preview, and a
+ * list starts after a line of a paragraph only where CommonMark lets it.
+ * Text that the agent still writes can end inside a code block, which then
+ * runs to the end. A header row shows as text until its separator row
+ * arrives. A table can start directly after a line of a paragraph or a
+ * list.
  */
 export function textBlocks(text: string): TextBlock[] {
   const raw = text.split('\n')

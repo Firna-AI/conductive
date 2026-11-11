@@ -59,6 +59,25 @@
   margin-top: 8px;
 }
 
+/*
+ * A heading inside a list item. A list item has no gap, so a heading after
+ * another block of the item takes the whole space above it: 20px for level
+ * 1 or 2, and 16px for a smaller heading. The block under it stands as far
+ * as the gap of the answer. A heading that starts an item has no space
+ * above it.
+ */
+.agent li > * + :is(h1, h2) {
+  margin-top: 20px;
+}
+
+.agent li > * + :is(h3, h4, h5, h6) {
+  margin-top: 16px;
+}
+
+.agent li > :is(h1, h2, h3, h4, h5, h6) + :is(p, pre, div, ol, ul) {
+  margin-top: 8px;
+}
+
 .agent table {
   overflow-wrap: normal;
 }
