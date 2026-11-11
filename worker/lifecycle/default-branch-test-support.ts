@@ -126,7 +126,7 @@ export async function defaultBranchFixture(
       })
     const createRemoteCommit = async (
       ref = 'refs/heads/main',
-      parent?: string,
+      options: { parent?: string; message?: string } = {},
     ) => {
       const tree = (await checked(remote, ['mktree'])).trim()
       const result = await run(
@@ -134,9 +134,9 @@ export async function defaultBranchFixture(
         [
           'commit-tree',
           tree,
-          ...(parent ? ['-p', parent] : []),
+          ...(options.parent ? ['-p', options.parent] : []),
           '-m',
-          'Existing remote commit',
+          options.message ?? 'Existing remote commit',
         ],
         remote,
         {

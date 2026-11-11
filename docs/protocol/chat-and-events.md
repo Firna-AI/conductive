@@ -43,6 +43,11 @@ says.
 
 [Messages and attachments](messages-and-attachments.md) holds the composer, turns, retries, titles, and attached files.
 
+### Messages from the bar
+
+[Messages from the bar](messages-and-attachments.md#messages-from-the-bar)
+holds how an agent action of the pull request bar sends its fixed prompt.
+
 ## Workspace links
 
 - [Workspace links](workspace-links.md) says how chat text and the message
@@ -79,6 +84,9 @@ says.
 - A refused runner event shows one chat line that names the lost data, unless
   it is a [lost workspace update](agent-runner.md#lost-workspace-updates).
   Such a line among the work of a turn folds with that work (decision 151).
+- After [Continue](continue.md), each session shows one note at its place,
+  with the member who pressed Continue, the new branch, and its base. To
+  that member it says "You". The note reaches no agent.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One

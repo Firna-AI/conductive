@@ -2,10 +2,10 @@
 
 This doc holds the requirements and the decisions in force for the life of a
 workspace. It covers the create, the start steps, the time limits, the
-states, the stop and resume, the archive, and the restore of a workspace.
-It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
-which covers the provider, the org image, and the startup script. The
-terms are those of the
+states, the stop and resume, the archive, the restore, and Continue of a
+workspace. It belongs to
+[Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
+provider, the org image, and the startup script. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -185,7 +185,7 @@ says.
   The push shows as a push of the owner, and it can start the CI of the
   repository. It can also put files with secret values on GitHub.
 - The pull request bar offers Archive after the merge, as
-  [GitHub banner](github-banner.md#banner-states) says. The menu of a
+  [After the merge](github-banner.md#after-the-merge) says. The menu of a
   workspace row offers it too, as [Archive](workspace-menu.md#archive)
   says.
 - An archived workspace has no file lists and no tools. A phone shows only
@@ -223,3 +223,12 @@ says.
   history.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may
   restore a workspace.
+
+## Continue
+
+- After the merge of its pull request, Continue moves a workspace to a new
+  branch from the latest default branch. The workspace keeps its sandbox
+  and its sessions (decision 223).
+- [Continue](continue.md) holds its requirements: who may continue, when
+  Continue runs, its check for local work, the new branch, and the
+  sessions after it.

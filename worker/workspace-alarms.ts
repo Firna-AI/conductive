@@ -16,6 +16,8 @@ export async function runWorkspaceAlarms(
   alarms: WorkspaceAlarms,
   now: () => number,
   tasks: {
+    continuation?(): Promise<void>
+    lifecycleAllowed?(): Promise<boolean>
     lifecycle(): Promise<void>
     github(): Promise<void>
     previews(): Promise<void>
@@ -34,11 +36,21 @@ export async function runWorkspaceAlarms(
   )
   const { due } = run
   try {
+    if (tasks.continuation)
+      await alarms.run('continue', startedAt, tasks.continuation)
     if (
       (!due.size && options.fallbackLifecycle !== false) ||
       [...due].some((source) => source.startsWith('lifecycle'))
-    )
-      await tasks.lifecycle()
+    ) {
+      if (!tasks.lifecycleAllowed || (await tasks.lifecycleAllowed()))
+        await tasks.lifecycle()
+      else {
+        const held = await alarms.begin(startedAt, (source) =>
+          source.startsWith('lifecycle'),
+        )
+        await held.finish(now())
+      }
+    }
     if (due.has('github')) await tasks.github()
     if (due.has('previews')) await tasks.previews()
     if (!options.securityHandled)

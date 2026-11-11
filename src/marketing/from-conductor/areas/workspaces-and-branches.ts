@@ -98,9 +98,8 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'continue-after-merge',
     area: 'workspaces-and-branches',
     name: 'Continue after merge',
-    status: 'in-progress',
-    note: 'Continue on a new branch in the same workspace is in progress, with the existing files and chat sessions.',
-    due: null,
+    status: 'available',
+    note: 'After a merge, any org member can start a new branch in the same workspace. The cloud computer and agent sessions stay.',
   },
   {
     id: 'pinned-workspaces-and-manual-order',

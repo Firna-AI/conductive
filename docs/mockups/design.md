@@ -124,6 +124,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Archive, asks no question and offers the undo in its toast.
   `ArchivedToast` in `src/components/workspace/` gives the toast after
   Archive, over the workspace and over the list.
+- [The pull request bar](design-bar.md) gives its one main action in each
+  state, the line under the bar, the actions on top of the Checks tab of a
+  phone, and the question and the note of Continue.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim

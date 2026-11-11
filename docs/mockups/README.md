@@ -38,37 +38,39 @@ The catalogue shows the desktop view beside the phone, in a frame narrower
 than a laptop screen. The desktop layout narrows with its app frame, which
 fills the window: below 1280 px the sidebar and the right column get
 narrower, and below 900 px the sidebar hides. The org rail stays, and the current org opens its list as its
-own page. A narrow right column hides the detail of the pull request bar and
-the label of its GitHub link. Use the expand control of the frame to see the
-full desktop layout.
+own page. The number of a pull request in the bar opens it on GitHub, with
+an arrow. A narrow right column hides the detail of the pull request bar.
+When the bar shows an action, a column narrower than 520 px does the same.
+Use the expand control of the frame to see the full desktop layout.
 
 ## The design
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
-[the workspace](design-workspace.md), of [the chat](design-chat.md), and
-of [the operator section](design-operator.md).
+[the workspace](design-workspace.md), of [the chat](design-chat.md),
+of [the operator section](design-operator.md), and of
+[the pull request bar](design-bar.md).
 
 ## The catalogue
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
-moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/banner`, `app/chat`, `app/routines`, `app/workspace-menu`,
-`app/workspace-links`, and `app/tools`,
-the New workspace dialog, and the repositories that wait for a build. Its
-linked page,
+moved. It gives the child pages of `marketing/docs`, `app/account`, and
+`app/workspace-menu`, the New workspace dialog, and the repositories that
+wait for a build. Its linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
-operator section.
-The [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
-page gives their child pages and flows. The
-[command palette and feedback](catalogue-palette.md) page gives the child
+operator section. Its linked page
+[the pull request bar](catalogue-bar.md) gives `app/banner` and its child
+pages. The [chat and routines](catalogue-chat-and-routines.md) page gives
+the child pages and flows of `app/chat` and `app/routines`. The
+[workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+page gives the child pages and flows of `app/workspace-links`,
+`app/file-mentions`, and `app/tools`.
+The [command palette and feedback](catalogue-palette.md) page gives the child
 pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
-The [chat and routines](catalogue-chat-and-routines.md) page gives their
-child pages and flows.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared

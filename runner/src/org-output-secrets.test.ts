@@ -47,6 +47,8 @@ it('masks the workspace token before reports and preserves output metadata', asy
         partNumber: 1,
         partCount: 1,
         baseBranch: 'main',
+        unpushedCommits: 0,
+        uncommittedFileCount: 1,
         files: [
           {
             path: 'wire-token.production',

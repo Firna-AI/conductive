@@ -46,14 +46,22 @@ export class GitHubReader {
     return repository
   }
 
+  async defaultBranch(): Promise<string> {
+    const repository = await this.repository(LOOKUP, {
+      head: this.workspace.branch,
+      ref: `refs/heads/${this.workspace.branch}`,
+      states: ['OPEN'],
+      after: null,
+    })
+    return repository.defaultBranchRef === null
+      ? this.workspace.defaultBranch
+      : text(object(repository.defaultBranchRef).name)
+  }
+
   async read(branches?: GitHubBranchDependencies): Promise<GitHubSnapshot> {
     const lookup = branches ?? (await this.dependenciesForBranch())
     if (lookup.pullNumber === null) {
-      return this.withoutPull(
-        lookup.headSha,
-        lookup.fullName,
-        lookup.baseBranch,
-      )
+      return this.withoutPull(lookup.headSha, lookup.baseBranch)
     }
     const repository = await this.repository(PULL, {
       number: lookup.pullNumber,
@@ -131,7 +139,6 @@ export class GitHubReader {
 
   private async withoutPull(
     headSha: string | null,
-    fullName: string,
     baseBranch: string,
   ): Promise<GitHubSnapshot> {
     let ahead = 0
@@ -143,17 +150,12 @@ export class GitHubReader {
       const comparison = object(object(repository.ref).compare)
       ahead = integer(comparison.aheadBy)
     }
-    const repositoryUrl = `https://github.com/${fullName.split('/').map(encodeURIComponent).join('/')}`
     const banner: GitHubBanner = {
       state: ahead > 0 ? 'none' : 'no-commits',
       branch: this.workspace.branch,
       baseBranch,
       updatedAt: this.dependencies.now(),
       pullRequest: null,
-      createPullRequestUrl:
-        ahead > 0
-          ? `${repositoryUrl}/compare/${encodeURIComponent(baseBranch)}...${encodeURIComponent(this.workspace.branch)}?expand=1`
-          : null,
     }
     return {
       banner,
