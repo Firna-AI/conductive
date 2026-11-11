@@ -310,9 +310,9 @@ Depends on: 1, 2, 3, 4
 
 - [x] Run each new asynchronous test 10 times. Save the pass counts under
       `.context/start-calls-outside-chat-queue/`.
-- [ ] Run the targeted tests, `npm run test -- worker/chat worker/lifecycle
+- [x] Run the targeted tests, `npm run test -- worker/chat worker/lifecycle
       worker/members`, and the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
