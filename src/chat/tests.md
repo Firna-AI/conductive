@@ -94,7 +94,9 @@ copies, follows the list, and checks a field that takes no change. It
 also checks that a focus puts the caret at the end of a kept draft, and
 later back where the user put it. It checks that undo stays with its
 draft after a switch to another draft with equal text, with the focus as
-it was, and moves with a draft that moves.
+it was, and moves with a draft that moves. A field without attached files
+keeps the characters of a mark as typed text: in a draft that comes back,
+in typing, in a paste, and in a copy.
 `components/chip-field/chip-field-test-kit.tsx` mounts the field with an
 owner that keeps the draft of each session, as the chat does.
 `components/ComposerDrafts.dom.test.tsx` switches the sessions of the
@@ -109,14 +111,46 @@ the files, and checks that Enter then sends nothing.
 `components/chip-field/FileChips.dom.test.tsx` restores file chips from a
 draft, opens a file and a folder, removes a chip with its ×, also as the
 first change, pastes a mention, and follows the tree.
+`components/chip-field/AttachedFiles.dom.test.tsx` attaches files and puts
+their chips at the caret in the same event: in order, each with a space,
+as one step of undo, with the focus. A point over the text puts the chips
+at its place, and a point elsewhere puts them at the caret, which keeps
+the text that it selects. The drop caret shows at the point and leaves
+the caret as it was. A drop hides it, and a field that takes no change
+shows none. The test checks each upload state of a chip, and Try again
+from the keyboard with no send. A field that takes no change keeps each
+chip.
+A draft that comes back shows the chip of each file that the draft holds
+and drops the other marks. A file that leaves the draft takes its chip
+out, also after undo, with no step of undo. The × removes a chip as one
+step of undo.
+`components/chip-field/AttachedClipboard.dom.test.tsx` copies the mention
+of a ready chip and the name of another chip, and a paste of that copy in
+the same draft gives each chip back. A cut and a paste keep a chip with
+its file, each as one step of undo. A pasted copy path gives the chip of
+its file. A kept copy gives its chips back only in its own draft, while
+the draft holds their files. Typed or pasted mark characters stay text
+and make no chip, also after the draft comes back. A picked file mention
+whose path holds such characters keeps its chip and its exact path beside
+an attached file. A drag moves a chip with its file and gives its
+mention, and a drop inside the dragged text keeps it.
+`components/chip-field/attached-field-test-kit.tsx` mounts the field with
+a store of draft files and an owner that can show another draft, and with
+the files of a workspace when a test gives a tree.
+`components/chip-field/attached-field-events.ts` drives the selection, the
+clipboard, and the drags of the field, and lays out a point, which
+happy-dom cannot do.
 `components/chip-field/mention-field-test-kit.tsx` mounts the field with the
 files of a chat: a fake with two plain states, no tree and a tree of
 entries, or the real store of the Files screens over the fake API for the
-states that the cloud computer marks. `components/AttachmentChips.dom.test.tsx`
+states that the cloud computer marks. The attached kit takes its tree from
+the same fake. `components/AttachmentChips.dom.test.tsx`
 removes an attached file with the cell of its icon, also a failed upload
 that keeps its Try again, and on a phone with its × at the end. The DOM
 tests focus, type, paste, clear, and read the field through
-`src/test-support/message-field.ts`.
+`src/test-support/message-field.ts`. Its `messageText` reads each field as
+a field without attached files, so the tests of attached files read the
+draft that the owner keeps.
 `../shared/mention-text.test.ts` reads and writes mentions, and
 `mentions/mention-rows.test.ts` orders the rows of the list.
 `../shared/attachment-mentions.test.ts` finds the attached file of a file

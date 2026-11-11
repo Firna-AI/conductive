@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
-import { fileMark, withoutMarks } from '../components/chat/draftMarks'
+import { fileMark, withoutMarks } from '../../../../src/app/draft-marks'
 import { CreateFailedNotice } from '../components/new-workspace/notices'
 import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
 import {

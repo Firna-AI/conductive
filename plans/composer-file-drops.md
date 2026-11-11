@@ -575,6 +575,17 @@ test, unless it names a decision or another date.
   helper moves to `src/app/draft-marks.ts` when the live field starts.
   Reason: two parsers of the same marks can disagree. This is my call on
   10 November 2026.
+- Literal draft text uses a lossless escape for U+E000, U+E001, and
+  U+E002. U+E002 followed by `0`, `1`, or `2` represents that literal
+  character. A file mark keeps U+E000, its ID, and U+E001. Reason: a valid
+  file mention or workspace link must not collide with a file mark.
+  This is my call on 11 November 2026, after the checked implementation
+  finding.
+- The helper reads escaped literal text back as text. Send uses that text
+  and the path of each file mark. A change that rebuilds internal draft
+  text uses the helper's writer, so it keeps the escapes. The Worker still
+  compares and returns the opaque draft string. Reason: every draft
+  reader must keep the same text. This is my call on 11 November 2026.
 
 ### The copy path
 
@@ -678,7 +689,8 @@ image behavior:
 - The page learns each picture's size with a detached `Image` before it
   draws the mockup part. It shows "Opening the file" during the first
   decode. Reason: the layout needs the picture's size.
-- A changed picture stays visible until the browser draws the new bytes.
+- A changed picture stays visible until the browser draws or refuses the
+  new bytes.
   Reason: the file tab keeps its content during a refresh, as its Markdown
   preview does.
 - A decode with no picture size uses the Download state. An image file
@@ -907,33 +919,44 @@ composer puts one there yet.
 The field's phone touch areas remain blocked by composer drops decision 1.
 The other field work proceeds under the user's instruction of 11 November.
 
-- [ ] Move the pure mockup mark helper to `src/app/draft-marks.ts`: the
+- [x] Move the pure mockup mark helper to `src/app/draft-marks.ts`: the
       mark of a file, the marks of a text, and the text without its marks.
       Move each consumer to it, with no forwarding module.
-- [ ] Add the decorator node of an attached file to
+- [x] Make literal draft text lossless with the checked escape. Keep the
+      file mark format, preserve ordinary file mentions and workspace
+      links, and keep typed or pasted text from making a file mark.
+- [x] Add the decorator node of an attached file to
       `src/chat/components/chip-field/`, with the mark as its text.
-- [ ] Give the field its files through a source: the file of each mark,
+- [x] Give the field its files through a source: the file of each mark,
       the file of each path, and Try again. Drop a mark of a file that
       the draft does not hold.
-- [ ] Write each mark with the spaces of a mention in `$fieldText`.
-- [ ] Draw the chip with the mockup part and the live state of its file.
+- [x] Write each mark with the spaces of a mention in `$fieldText`.
+- [x] Draw the chip with the mockup part and the live state of its file.
+- [x] Preserve the text and clipboard behavior of fields without a files
+      source, including Feedback. Keep their private-use characters as
+      literal text.
 - [ ] Complete the phone touch areas after composer drops decision 1.
       This TODO stays open until the user answers.
-- [ ] Make a copy of a ready chip give its mention, and a copy of another
+- [x] Make a copy of a ready chip give its mention, and a copy of another
       chip give its name. Make a paste of a mention of a file of the
       draft give its chip back.
-- [ ] Add the caret at a point of the field, from the caret position of
+- [x] Add the caret at a point of the field, from the caret position of
       the browser.
-- [ ] Keep the field text of the last copy, cut, or drag, with its marks.
+- [x] Keep the field text of the last copy, cut, or drag, with its marks.
       Make a paste or a drop of that copy in the same field give back its
       chips, and make a drag carry the plain text of a copy.
-- [ ] Add `insertFiles` to `FieldHandle`: chips at a point, at the caret,
+- [x] Add `insertFiles` to `FieldHandle`: chips at a point, at the caret,
       or at the end, each with a space, in one step of undo, then the
       focus.
-- [ ] Update the message field rules of `src/chat/loads-and-sends.md`.
-- [ ] Add the DOM tests of the insert, the removal, undo, the copy, the
+- [x] Update the message field rules of `src/chat/loads-and-sends.md`.
+- [x] Add the DOM tests of the insert, the removal, undo, the copy, the
       cut and paste, the drag inside the field, and each state of the
       chip.
+
+Implementation and verification evidence: `.context/composer-file-drops/m6-field-report.md`,
+`.context/composer-file-drops/m6-codec-field-report.md`,
+`.context/composer-file-drops/m6-docs-report.md`, and
+`.context/composer-file-drops/m6-complete-gate.log`.
 
 ## Milestone 7: Each composer puts its files in the text
 
@@ -958,8 +981,8 @@ Depends on: 3, 4, 6
 - [ ] Remove the row above the text, `DraftFiles`, `DraftChip`, the
       `onRemoveFile` props, and the remove actions. Move their tests to
       the chips of the text.
-- [ ] Update `src/chat/README.md`, `src/chat/loads-and-sends.md`, and
-      `src/app/README.md`.
+- [ ] Update `src/chat/README.md`, `src/chat/key-code.md`,
+      `src/chat/loads-and-sends.md`, and `src/app/README.md`.
 - [ ] Add the tests of the detach, the return, the send text, the marks
       that leave with their files, the order of the files, and New
       workspace.
@@ -990,7 +1013,8 @@ Depends on: 7
       `docs/protocol/conductor-comparison.md#statuses` says. Reason: the
       merge of this change ships the feature, and the row stays Under
       consideration on `main` until then.
-- [ ] Update `src/chat/README.md` and `src/app/README.md`.
+- [ ] Update `src/chat/README.md`, `src/chat/key-code.md`, and
+      `src/app/README.md`.
 - [ ] Add the DOM tests of the drop, the drop state, a box that takes no
       change, a folder, and a drop outside the box.
 - [ ] Smoke-test a drop in Chrome on the development page and in the app,

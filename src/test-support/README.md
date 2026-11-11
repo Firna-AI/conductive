@@ -119,6 +119,7 @@ await view.rerender(<OwnerPicker {...props} workspace={next} />)
   It returns `container`, `rerender(element)`, and `unmount()`. Each mounted tree unmounts after its test.
 - `press(element)` clicks the element. `typeText(field, text)` types into an input or a text area, so React sees the change. A message field takes the text as `typeMessage` types it.
 - `message-field.ts` acts on the message field of a composer, the chip text field: `focusMessage(field)` moves the focus into the field as Tab does, with no press of the pointer, `typeMessage(field, text)` selects all and types the text, `pasteMessage(field, text)` pastes plain text at the caret through a paste event, `pressInField(field, key)` presses a key, `clearMessage(field)` deletes all the text as Ctrl+A and Backspace do, and `messageText(field)` gives the plain draft with the link of each chip. Each one commits the change of the field, as a browser does before the next input. `asMessageField(element)` checks that an element is such a field, also while it takes no change.
+  `messageText` reads without a files source. For a field with attached files, it gives unescaped text and file marks. Read the owner's state for the encoded draft.
   `pressKey(key)` sends a keydown and a keyup to the focused element. Each runs inside `act`.
   Each fails with a named error when a person cannot use the target. `pressKey` checks the focused element.
 - `byRole(role, name)` gives the one element with the role and exactly the accessible name.

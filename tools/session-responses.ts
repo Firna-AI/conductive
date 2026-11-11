@@ -138,6 +138,7 @@ function message(value: unknown): UserMessage {
       return {
         id: text(item.id),
         name: string(item.name),
+        path: typeof item.path === 'string' ? item.path : null,
         kind,
         mediaType: text(item.mediaType),
         sizeBytes: counter(item.sizeBytes),

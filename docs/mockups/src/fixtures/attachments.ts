@@ -1,4 +1,4 @@
-import { fileMark } from '../components/chat/draftMarks'
+import { fileMark } from '../../../../src/app/draft-marks'
 
 /**
  * Files that the user attaches to a message. The app stores each upload

@@ -40,8 +40,9 @@ is relative to `src/chat/`, the folder of this guide.
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states.
 - `components/chip-field/`: `ChipTextField`, the message field of every
-  composer. [The message field](loads-and-sends.md#the-message-field)
-  gives its rules and its files.
+  composer, with its handle and the chips of attached files.
+  [The message field](loads-and-sends.md#the-message-field) gives its
+  rules and the files of its folder.
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/address-session.ts`: `showAddressSession`, the open of the
   session of a session address, behind `ChatController.showAddress`. A

@@ -22,8 +22,9 @@ not have, and the files that the cloud computer could not read.
     text. Backspace and Delete remove it whole.
   - `AttachedFileChip.module.css` holds the styles of its parts and states,
     and `attachmentCopy.ts` holds their words. The draft text holds a mark
-    at the place of each file, which `draftMarks.ts` reads, and Send waits
-    for each upload.
+    at the place of each file, and its other text is escaped, as
+    [`draft-marks.ts`](../../src/app/draft-marks.ts) of the app says. The
+    mockups and the app share that module. Send waits for each upload.
 - A file over 25 MB never becomes a chip: a notice over the composer names
   it, gives the limit, and offers "Attach a smaller file", as
   `app/attachments/too-large` shows. A dropped folder is not attached

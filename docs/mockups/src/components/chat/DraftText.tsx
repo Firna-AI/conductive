@@ -2,7 +2,7 @@ import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
 import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
 import { DraftFileChip, type ChipUpload } from './DraftFileChip'
-import { draftParts } from './draftMarks'
+import { draftParts } from '../../../../../src/app/draft-marks'
 import { entryName } from './entryPaths'
 import { FileChip } from './FileChip'
 import { iconOf, LinkChip } from './MessageText'
@@ -66,8 +66,9 @@ function isChip(item: DraftItem): boolean {
  * tree.
  */
 export function holdsChips(draft: string, rows: readonly ChatRow[]): boolean {
-  return draftParts(draft).some(
-    (part) => part.kind === 'file' || itemsOf(part.text, [], rows).some(isChip),
+  return (
+    draftParts(draft).some((part) => part.kind === 'file') ||
+    itemsOf(draft, [], rows).some(isChip)
   )
 }
 

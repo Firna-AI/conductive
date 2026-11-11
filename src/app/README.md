@@ -292,7 +292,7 @@ for the tests of New workspace as a page or a dialog, and of its send key.
   promise of a string. Live services and development hosts use this owner.
 
 [Key code](key-code.md) names the files, the types, and the functions to
-open first. It covers the dev fake, the API client, the file uploads, the
+open first. It covers the dev fake, the API client, the attached files, the
 models, the waitlist and its codes, the routines, and the workspace list.
 It also covers the event streams, the drag, and the operator section.
 [Key code: the palette, the layers, and the dialogs](key-code-layers.md)

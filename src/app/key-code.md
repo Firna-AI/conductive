@@ -22,6 +22,18 @@ Each path is relative to `src/app/`, the folder of this page.
   file of a draft, and `runFileJob`. `new-workspace-files.ts`:
   `DraftUploads`, the uploads of a first message before its workspace
   exists, which a change of person ends.
+- `draft-marks.ts`: the draft text of a message field with attached files,
+  which the chip text field and the mockups share. `fileMark` writes the
+  mark of a file: its draft ID between U+E000 and U+E001. `literalText`
+  escapes literal text: each U+E000, U+E001, and U+E002 becomes U+E002 and
+  `0`, `1`, or `2`. So only an attached file makes a mark. `draftParts`
+  gives the parts of a draft in order: decoded literal text, and the ID of
+  each mark. `withoutMarks` gives the decoded text alone. Code that builds
+  a draft writes its text with `literalText` and its files with
+  `fileMark`. The draft of a field without attached files has no escapes,
+  so no code reads it with these functions. `draft-marks.test.ts` checks
+  the escapes, malformed escapes, a literal path beside a real mark, and
+  opaque file IDs.
 - `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
   store over the event source of the app, with the reconnect rules of
   [Data lifecycle](data-lifecycle.md).
