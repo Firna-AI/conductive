@@ -1,12 +1,13 @@
 # Agent workspace tools
 
-This area handles workspace and session calls from agents inside a Conductive workspace.
+This area handles workspace, session, section, and preview calls from agents inside a Conductive workspace.
 It implements the [agent-tool requirements](../../docs/protocol/agent-tools.md).
 It uses the existing [shared contracts](../../src/shared/README.md) and D1 tables.
 The [workspace name migration](../../migrations/202611081300_workspace_creation_name.sql) keeps an agent's chosen name through creation retries.
 The [first session title migration](../../migrations/202611111230_workspace_first_session_title.sql) keeps a requested first session title in the same way.
 [Workspace calls](workspaces.md) gives the get, rename, move, and archive routes, the list options, and the replay of a create.
 [Session management calls](sessions.md) gives the session get, rename, close, and stop routes, the message get, and the session list paging.
+[Section and preview calls](sections-and-previews.md) gives the section create and delete routes, and the preview list, open, and close routes.
 
 The [Mac command feature](../devices/README.md) also uses this area's machine entry point.
 `mac-command.ts` forwards only its fixed paths to the token's exact workspace object.
@@ -24,6 +25,7 @@ Direct handler tests also use the shared entry policy before dispatch.
 `createAgentToolsHandler` takes the database, the machine origin, the app origin, and `AgentToolServices`.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
+It accepts the section writes and the preview routes, as [Routes](sections-and-previews.md#routes) says.
 It accepts session list, transcript read, create, and send routes under `/v1/tools/workspaces/<workspaceId>/sessions`.
 It also accepts session get, message get, rename, close, and stop routes there, as [Routes](sessions.md#routes) says.
 It accepts GET at `/v1/tools/workspaces/<workspaceId>`, and POST at its `rename`, `move`, and `archive` paths, as [Routes and access](workspaces.md#routes-and-access) says.
@@ -199,6 +201,8 @@ It also replays a saved creation.
 It waits for creation to finish before it returns the workspace and session.
 [workspace-write-composition.ts](workspace-write-composition.ts) sends a rename or a move to the app's metadata write, and an archive to the workspace object.
 Session gets, message gets, and session management call the target object's RPCs with the app origin.
+[section-composition.ts](section-composition.ts) runs the app's section action as the sender.
+Preview calls reach the target object's `agentPreviewCall` with the app origin.
 
 Each org build that needs the software step calls `installWorkspaceTools` with `WORKSPACE_TOOL_SOURCES`
 before it installs the rest of the image software.
@@ -220,6 +224,7 @@ Their request bridge lives in [session-test-support.ts](session-test-support.ts)
 The production services live in [composition.ts](composition.ts).
 The real-object route tests live in [worker/features](../features/).
 [Tests](workspaces.md#tests) lists the tests of the workspace calls, and [Tests](sessions.md#tests) those of session management.
+[Tests](sections-and-previews.md#tests) lists those of the section and preview calls.
 
 ## Key code
 
@@ -244,6 +249,9 @@ The real-object route tests live in [worker/features](../features/).
 - [message-text.ts](message-text.ts) builds the canonical sending-session footer and selects title input.
 - [workspace.ts](workspace.ts) exposes the trusted calling-turn, session write, and session management RPCs, with their queued access check.
 - [session-access.ts](session-access.ts) reads a target workspace inside the calling org, including archives.
+- [section-routes.ts](section-routes.ts) and [preview-routes.ts](preview-routes.ts) match the section and preview routes and read their inputs.
+- [section-composition.ts](section-composition.ts) calls the app's `featureSectionWrite` as the sender and shapes its reply.
+- [agent-sections.ts](../../src/shared/agent-sections.ts) and [agent-previews.ts](../../src/shared/agent-previews.ts) hold the section and preview reply types and paths.
 - [image.ts](image.ts) installs the CLI and MCP source into the image.
 - [image-assets.ts](image-assets.ts) embeds the allowed sources as Worker-safe text assets.
 - [Sandbox tools](../../tools/README.md) describe the commands and runtime environment.
