@@ -12,11 +12,17 @@ the model. Send and create do not wait for the answer.
 `title-model.ts` reads `CONDUCTIVE_TITLE_MODEL` and calls the `AI` binding
 through the replaceable `runTitleModel` dependency. It sends only the first
 4,000 text characters, with no attachments. It asks for three to five
-words, limits the answer to 32 tokens, and aborts after 15 seconds.
+plain words with no underscores, limits the answer to 32 tokens, and
+aborts after 15 seconds.
 It reads either the model's `response` text or the first chat completion's
 `message.content`. The deployment configuration supplies the title model.
 `title-text.ts` cleans the first line with text. It removes title labels,
-quotes, and Markdown marks, then applies the shared session title rules.
+quotes, and Markdown marks. It then applies `modelTitleFrom` from
+`src/shared/session-title.ts`. That rule changes each underscore to a
+space, then applies `sessionTitleFrom`, the shared session title rule.
+Only the title model uses `modelTitleFrom`.
+[Messages](../../docs/protocol/messages-and-attachments.md#messages) states
+the requirements of the title request and its answer.
 
 A missing configuration logs one safe warning per workspace object and
 keeps the name empty. A failed call or an empty title also warns and keeps
@@ -67,6 +73,7 @@ A later workspace title leaves the session unchanged.
 workspace access before it sets the title. `sessionTitleFrom` in
 `src/shared/session-title.ts` makes
 a title from the first line with text and limits it to 60 Unicode code
-points. An attachment-only message leaves the title for the next text
+points. It keeps underscores, because a member wrote that text.
+An attachment-only message leaves the title for the next text
 message. A member's name stays. Repeated message IDs change nothing.
 The numbered `session.updated` event sends each changed title to open tabs.

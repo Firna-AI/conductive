@@ -31,7 +31,10 @@ export function ActionButton(
     icon?: LucideIcon
     tone?: ActionTone
     disabled?: boolean
-    /** The action runs: a spinner takes the place of the icon. */
+    /**
+     * The action runs: a spinner replaces the icon before the label.
+     * A press does nothing.
+     */
     busy?: boolean
     trailing?: ReactNode
   },

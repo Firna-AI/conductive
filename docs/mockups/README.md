@@ -67,6 +67,9 @@ the child pages and flows of `app/chat` and `app/routines`. The
 [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,
 `app/file-mentions`, and `app/tools`.
+The [command palette and feedback](catalogue-palette.md) page gives the child
+pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
+and the flow that sends feedback.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared

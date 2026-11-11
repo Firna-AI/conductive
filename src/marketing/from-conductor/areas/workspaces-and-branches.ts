@@ -27,7 +27,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'New-workspace composer',
     status: 'available',
-    note: 'Pick a repository and model before the first message. New workspace opens as a page or a dialog.',
+    note: 'Choose a repository and model on a page or dialog. Chat access before cloud computer builds finish is under consideration.',
   },
   {
     id: 'start-from-a-branch-pr-or-issue',

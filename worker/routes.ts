@@ -18,6 +18,7 @@ import { routinesRoute } from './routines/route'
 import { routineRunsRoute } from './routines/run-route'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
+import { feedbackRoute } from './app-api/feedback'
 
 export { routeDevice } from './devices/router'
 
@@ -28,6 +29,8 @@ export async function route(
   dependencies: AppDependencies,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const feedback = await feedbackRoute(request, env, context, dependencies)
+  if (feedback) return feedback
   const waitlist = await waitlistRoute(request, env, context, dependencies)
   if (waitlist) return waitlist
   const operator = await handleOperatorRequest(

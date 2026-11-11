@@ -209,6 +209,8 @@ export const termsDocument: LegalDocument = {
           permission to store, copy, process, and transmit that content as
           needed to provide the service, including through its providers.
           You must have permission to submit that content.`,
+        paragraph`If you send feedback, you give the operator permission to
+          use it to improve ${productName}, without any obligation to you.`,
         paragraph`The terms and licences of third-party code and services
           still apply. Check agent output before you use or publish it.`,
       ],

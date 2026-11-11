@@ -82,6 +82,21 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 `attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
 The browser posts one raw file as `application/octet-stream` with its known byte length.
 
+`feedback.ts` owns `FEEDBACK_PATH`, the request and reply types of the
+feedback routes, and their byte limits. `FEEDBACK_BODY_MAX_BYTES` is the
+JSON body limit of a send. `FEEDBACK_SCREENSHOTS_MAX_BYTES` is the limit of
+the decoded screenshots of one message. `SendFeedbackRequest` carries each
+screenshot as base64 `content` only, with no name and no media type.
+`FeedbackResponse.replyEmail` is the reply address, or null.
+`images.ts` holds the one image signature reader of the browser and the
+Worker. `readImage(bytes)` returns a `CheckedImage` of one `ImageKind`:
+PNG, JPEG, GIF, or WebP. It returns null for other bytes. A symbol that the
+module does not export brands `CheckedImage`, so other code gets one only
+from `readImage`. The [mail sender](../../worker/mail-sender.ts) takes
+attachments only as checked images. It writes each file name and media
+type from the kind. [Feedback](../../docs/protocol/feedback.md) states the
+rules.
+
 `files.ts` defines full trees, tree updates, and branch changes.
 A full tree contains real paths relative to the repository root.
 Real `path`, `previousPath`, and `baseBranch` fields stay unchanged for
@@ -253,6 +268,8 @@ The git credential payload is not defined yet.
 - [Workspace contracts](workspaces.ts) give `workspacePaths.continue` and `workspacePaths.continueResult`. `ContinueWorkspaceRequest` sends the `expectedBranch` that the caller shows, and an optional `allowLocalWork`. `ContinueWorkspaceResponse` is a pending job with its `continueId`, a `confirmation-required` reply with the `branch`, the `baseBranch`, and the `LocalWork` that the check of Continue found, or a `continued` reply with the `workspace` and its `eventNumber`. [Continue routes](../../worker/lifecycle/continue-routes.md) gives the routes and the errors.
 - [GitHub contracts](github.ts) give the five `githubPaths` routes of a workspace: the banner and checks reads, the member capability, the merge start, and the merge result. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
+- [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
+- [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.
 - [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
   Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
   Run now takes a page request ID and returns its run after workspace admission.

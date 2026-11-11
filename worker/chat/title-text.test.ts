@@ -17,4 +17,6 @@ it('cleans title decoration and cuts a long first line at a word boundary', () =
   expect(cleanTitle('Title: ""')).toBe('')
   expect(cleanTitle('Title: **"Fix login routes"**.')).toBe('Fix login routes')
   expect(cleanTitle('Fix login routes...')).toBe('Fix login routes...')
+  expect(cleanTitle('add_conductive_app')).toBe('add conductive app')
+  expect(cleanTitle('add_ __conductive__ _app')).toBe('add conductive app')
 })
