@@ -245,6 +245,8 @@ tests keep their static markup checks in Node.
   reader that the chat shares, and the line tests of
   `../markdown/lines.ts`. [List parts](../chat/agent-text.md#list-parts)
   gives the rules of the shared list code.
+  `src/markdown/headings.ts` holds its heading levels and the rules for
+  hash headings and underline headings.
 - `markdown/markdown-tables.ts`: `parseTable`, which reads one table of a
   file and fills its short rows, and `TableBudget`, the empty cells that
   the tables of one file may add. It reads each row with

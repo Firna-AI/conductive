@@ -105,6 +105,8 @@ CommonMark. These parts read the lists of both:
 - `src/markdown/lines.ts` holds the line tests that both readers share,
   such as `expandTabs`. Like `table-rows.ts`, these modules import no
   React.
+- `src/markdown/headings.ts` holds the heading levels and the rules for
+  hash headings and underline headings.
 
 ## Table parts
 

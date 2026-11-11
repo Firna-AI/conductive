@@ -224,11 +224,13 @@ Depends on: 1
 The file preview reads its headings with the shared reader. Its behaviour
 does not change, except that a lazy line no longer makes a setext heading.
 
-- [ ] Move the ATX heading test, the closing `#` run rule, and the setext underline test from `src/files/markdown/markdown-blocks.ts` to `src/markdown/headings.ts`.
-- [ ] Use them in `markdown-blocks.ts`. The file preview tests pass unchanged.
-- [ ] Keep a lazy line of a list item from being a setext underline in the file preview, with a test.
-- [ ] Remove the case of `- Parent` above `===` or `--` from `plans/follow-ups/list-lazy-line-read-as-block.md`. Add the setext case of a quote to `plans/follow-ups/preview-quote-keeps-line-after-fence.md`.
-- [ ] Update the parser entries of `src/files/README.md` and the shared parts of `src/chat/agent-text.md`.
+- [x] Move the ATX heading test, the closing `#` run rule, and the setext underline test from `src/files/markdown/markdown-blocks.ts` to `src/markdown/headings.ts`.
+- [x] Use them in `markdown-blocks.ts`. The file preview tests pass unchanged.
+- [x] Keep a lazy line of a list item from being a setext underline in the file preview, with a test.
+- [x] Remove the case of `- Parent` above `===` or `--` from `plans/follow-ups/list-lazy-line-read-as-block.md`. Add the setext case of a quote to `plans/follow-ups/preview-quote-keeps-line-after-fence.md`.
+- [x] Update the parser entries of `src/files/README.md` and the shared parts of `src/chat/agent-text.md`.
+
+Evidence: `.context/chat-markdown-headings/m3-report.md`.
 
 ## Milestone 4: Headings in the chat
 
