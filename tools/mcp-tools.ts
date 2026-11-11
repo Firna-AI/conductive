@@ -1,4 +1,5 @@
 import { TOOL_AGENTS, TOOL_EFFORTS } from './input.ts'
+import { SESSION_MCP_TOOLS } from './session-mcp-tools.ts'
 
 export const WORKSPACE_MCP_TOOLS = [
   {
@@ -31,7 +32,7 @@ export const WORKSPACE_MCP_TOOLS = [
   {
     name: 'create_workspace',
     description:
-      "Create a workspace in this org with this workspace's owner, and start its first message immediately. The reply includes its number and web link. A workspace link in a message names that workspace. A workspace link in an answer shows as a chip.",
+      "Create a workspace in this org with this workspace's owner, and start its first message immediately. Needs an active turn. The reply includes its number, web link, and first session link. A workspace link in a message names that workspace. Workspace and session links in an answer show as chips. A Sent by: line names the sending session. Do not reply only to confirm it.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -125,4 +126,5 @@ export const WORKSPACE_MCP_TOOLS = [
       idempotentHint: true,
     },
   },
+  ...SESSION_MCP_TOOLS,
 ] as const

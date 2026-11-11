@@ -1,10 +1,9 @@
 import type { Viewport } from '@mokly/mokly'
 import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
-import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
+import { ChatWorkspaces, type ChatRow } from '../components/chat/chatWorkspaces'
 import { EmptyState } from '../components/common/EmptyState'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
-import type { WorkspaceRow } from '../components/workspaces/sections'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import type { Workspace } from '../fixtures/workspaces'
@@ -30,7 +29,7 @@ import type { WorkspaceState } from './workspaceState'
 export function WorkspaceChat(props: {
   state: WorkspaceState
   workspace: Workspace
-  rows: readonly WorkspaceRow[]
+  rows: readonly ChatRow[]
   viewport: Viewport
 }) {
   const { state, workspace } = props

@@ -26,7 +26,7 @@
   - So when the login refresh fails, only the route catch at `worker/chat/sockets.ts:42-45` closes the accepted socket today. A fix that only removes that catch leaves the accepted socket open.
   - Requirements:
     - No protocol doc states the response to an invalid cursor. The 400 comes from the shared input parser, and the route returned it before the hibernation change. The fix restores it and adds no requirement.
-    - An open tab loses its workspace connection within 30 seconds after its user loses access, as `docs/protocol/isolation.md:28-33` says. A failed admission returns no 101, so no tab connects. The rule still supports a close of each accepted socket after a failed admission.
+    - An open tab loses its workspace connection within 30 seconds after its user loses access, as `docs/protocol/isolation.md:33-38` says. A failed admission returns no 101, so no tab connects. The rule still supports a close of each accepted socket after a failed admission.
   - Tests today:
     - No chat or integration test sends an invalid cursor. The native tests use valid cursors.
     - The failed-admission cases at `worker/chat/tab-deadlines.test.ts:58-100` and `:101-126` use test tabs with no physical socket, through `openBrowser`. They never reach `browserUpgrade` or `WorkspaceSockets.accept`.

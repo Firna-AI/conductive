@@ -7,6 +7,7 @@ import {
   archivedSections,
   suspendedSections,
   workspaceSections,
+  type ChangedWorkspace,
   type OpenWorkspace,
   type SidebarSection,
 } from '../components/workspaces/sections'
@@ -61,7 +62,7 @@ export function openRowLinks(state: WorkspaceState): OpenRowLinks {
 function sectionsOf(
   open: OpenWorkspace,
   suspended: boolean,
-  created: readonly OpenWorkspace[],
+  changed: readonly ChangedWorkspace[],
   row?: OpenRowLinks,
 ): SidebarSection[] {
   if (suspended) return suspendedSections(open.workspace)
@@ -70,7 +71,7 @@ function sectionsOf(
       archiveTo: row?.archiveTo,
     })
   }
-  return workspaceSections(open, undefined, created, row?.to ?? undefined)
+  return workspaceSections(open, undefined, changed, row?.to ?? undefined)
 }
 
 /**
@@ -85,8 +86,8 @@ export function workspaceSidebar(props: {
   status: WorkspaceStatus
   suspended: boolean
   viewer: Membership
-  /** The workspaces that the create flow made by then. */
-  created: readonly OpenWorkspace[]
+  /** The rows that differ from the list of when the app opens, by then. */
+  changed: readonly ChangedWorkspace[]
   /** The last day of Restore of the archived workspace has not passed. */
   restoreOpen: boolean
   /**
@@ -95,13 +96,13 @@ export function workspaceSidebar(props: {
    */
   row?: OpenRowLinks
 }): ReactNode {
-  const { workspace, status, suspended, viewer, created, row } = props
+  const { workspace, status, suspended, viewer, changed, row } = props
   if (status !== 'archived') {
     const open = { workspace, status }
     return (
       <Sidebar
         org={orgs.acme}
-        sections={sectionsOf(open, suspended, created, row)}
+        sections={sectionsOf(open, suspended, changed, row)}
         suspended={suspended}
         viewer={viewer}
       />

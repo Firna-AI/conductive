@@ -112,6 +112,22 @@ says.
   open asks for the start. A tab that showed the stopped state, or an error
   with Try again, until a member pressed Resume was rejected, because the
   open of the tab already asks for the file.
+- A message from `send_message` or `create_session` of the agent tools
+  also starts the sandbox (decision 260). It does so in the same cases as
+  an open, and with the same checks. These cases are a stopped workspace
+  and a workspace whose later start failed, such as a failed resume.
+- A failed first start keeps waiting for Try again, as
+  [A failed first start](create-a-workspace.md#a-failed-first-start)
+  says. An empty session from the agent tools starts nothing.
+- Reason: every member can already start each workspace of the org with an
+  open. A delegated task then runs while no member watches.
+- A message that waits until a member opens its workspace was rejected.
+  Its task could wait for hours, and the agent that sent it would not learn
+  why.
+- A refusal of such a message was rejected, because it adds a refusal, and
+  the agent must then ask a member to open the workspace.
+- Each such start counts toward the starts that all orgs share, as
+  [The provider](workspaces-and-sandboxes.md#the-provider) says.
 - While the sandbox is stopped, the chat history shows, and the stopped
   state takes the place of the composer.
 - A start that fails shows the error state with Try again. The chat history

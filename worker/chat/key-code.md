@@ -25,7 +25,9 @@ first.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
   lifecycle events. Its stop transaction clears the port report with
-  `ports: null`, including when the workspace has no previews.
+  `ports: null`, including when the workspace has no previews. Its
+  `seedImport` owns the import seed transaction, and
+  `WorkspaceChat.seedImportSession` stays its public entry point.
 - `first-message.ts`: the checks and the admission of the first message of
   a create.
 - `session-titles.ts`: the empty-name rule for the first session's workspace

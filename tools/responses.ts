@@ -77,6 +77,7 @@ export function createdWorkspace(value: unknown): AgentCreateWorkspaceResponse {
   return {
     workspace: workspace(fields.workspace),
     sessionId: text(fields.sessionId),
+    sessionLink: text(fields.sessionLink),
   }
 }
 

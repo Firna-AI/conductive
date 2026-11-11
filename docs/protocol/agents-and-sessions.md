@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the agents
 and the sessions of a workspace. It covers the agents and their logins,
-the names of the agents in the product, the sessions, and the names of
-workspaces and sessions. It belongs to
+the names of the agents in the product, the sessions and their links, and
+the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -36,6 +36,8 @@ says.
     session, and the member who activates starts the new session of the
     activation, as [The activation](imported-workspaces.md#the-activation)
     says
+  - through a call of the agent tools in a turn that the member sent, as
+    [The sender](session-calls.md#the-sender) says
 - A routine run starts the first session of its workspace in the name of
   the routine owner, as
   [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
@@ -72,6 +74,8 @@ says.
 - A new session has no title, and its tab shows "Untitled".
   [Workspace and session names](#workspace-and-session-names) says when
   the app gives it a title.
+- A `create_session` call of the agent tools can give a new session a
+  title, as [Start a session](session-calls.md#start-a-session) says.
 - When the workspace takes a title as its name, as
   [Messages](messages-and-attachments.md#messages) says, the first session takes the
   title too (decision 181).
@@ -185,6 +189,29 @@ says.
 - The usual tab menu with Rename session, Move left, and Move right off was
   rejected for a read-only workspace, because these rows never turn on
   there.
+
+### Session links
+
+- Each session has a link: the address of the session at the app origin,
+  such as
+  `https://app.conductive.build/orgs/<org ID>/workspaces/<workspace ID>/sessions/<session ID>`.
+- The link names the org, the workspace, and the session by their IDs, as
+  the link of a workspace does. Reason: the file tabs already have
+  addresses under their workspace.
+- A session link opens its workspace and shows that session. The address
+  then becomes the link of the workspace. Reason: the session tabs keep
+  their behaviour, and the address does not follow the shown tab.
+- A link to a closed or an unknown session opens the page of its
+  workspace, as a workspace link does. When that workspace already shows,
+  its shown tab stays. The link reopens no session.
+- Reason: the members share the sessions of a workspace, so a reopen would
+  show the tab again to every member.
+- A session link in chat text shows as a session chip, as
+  [Session chips](workspace-links.md#session-chips) says.
+- The agent tools give the link of each session that they name, as
+  [The calls](session-calls.md#the-calls) says.
+- For now, Copy link copies only the link of the workspace. No item copies
+  a session link.
 
 ## Workspace and session names
 

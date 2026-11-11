@@ -127,6 +127,13 @@ If it stops while the workspace is open, select **Resume**, or open a file or a 
 The history remains readable while the computer starts.
 An open file or change waits for the computer, then opens.
 
+A message from an agent tool also starts a stopped workspace's computer.
+This includes the first message of a session that an agent creates.
+The start follows the same checks as opening the workspace.
+It can also retry a failed later start.
+A failed first start still waits for **Try again**.
+Creating a session without a message starts no computer.
+
 **Stop** in chat interrupts an agent turn.
 It is separate from the computer's automatic stop.
 

@@ -3,6 +3,7 @@ import type { DeviceApprovalAction } from '../../shared/device'
 import type { TranscriptDetail } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
+import type { SessionReads } from '../links/session-reads'
 import { answerCommand, refreshDevices } from '../device/device-actions'
 import { browserTimers } from '../stream/workspace-stream'
 import { copyTranscript, type CopyServices } from '../transcript-copy'
@@ -12,12 +13,13 @@ import {
   type ChatSnapshot,
   type Overlay,
 } from './chat-snapshot'
+import { showAddressSession } from './address-session'
 import { closeLocally, isArchived, showLocally } from './archive-view'
 import { attachFiles, removeFile, retryFile } from './attachment-actions'
 import type { ChatContext } from './context'
 import {
   createChatContext,
-  type ChatContextOptions,
+  type ChatControllerOptions,
 } from './controller-context'
 import { hydrate, watchShownSession } from './history'
 import { loadChat } from './load'
@@ -30,7 +32,7 @@ import {
   setDraftText,
 } from './message-actions'
 import { chooseModel } from './model-actions'
-import { showWhenOpen } from './session-show'
+import { SessionShow } from './session-show'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
 import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
@@ -43,15 +45,6 @@ import {
   selectSession,
   updateView,
 } from './session-actions'
-
-export interface ChatControllerOptions extends ChatContextOptions {
-  /**
-   * Whether the host shows the workspace read-only, such as while its org
-   * is suspended. The controller reads it at each action, because a
-   * suspension can start during a visit.
-   */
-  readOnly?: () => boolean
-}
 
 /**
  * The chat of one workspace. It loads the sessions and the history of the
@@ -77,9 +70,8 @@ export class ChatController {
   private unwatch: (() => void) | null = null
   private unfollow: (() => void) | null = null
   private unlist: (() => void) | null = null
-  /** The choices of the person in the tabs, which end a show of a session. */
-  private choices = 0
-  private endShow: (() => void) | null = null
+  /** The show of a session that the server opened, as `showSession` says. */
+  private readonly shows = new SessionShow()
 
   constructor(options: ChatControllerOptions) {
     this.options = options
@@ -96,6 +88,11 @@ export class ChatController {
 
   readonly subscribe = (listener: () => void) => this.store.subscribe(listener)
   readonly getSnapshot = (): ChatSnapshot => this.store.get()
+
+  /** The reads of the sessions of linked workspaces for this load. */
+  get sessionReads(): SessionReads {
+    return this.context.sessionReads
+  }
 
   /**
    * Loads the chat, then opens its stream. From now on, each session that
@@ -118,7 +115,8 @@ export class ChatController {
 
   readonly stop = (): void => {
     this.run += 1
-    this.endShow?.()
+    this.shows.end()
+    this.context.sessionReads.close()
     for (const upload of this.context.uploads.values()) upload.abort()
     this.context.uploads.clear()
     this.unwatch?.()
@@ -151,7 +149,7 @@ export class ChatController {
    * run still finish.
    */
   readonly hide = (): void => {
-    this.endShow?.()
+    this.shows.end()
     this.context.stream.hold()
     this.unlist?.()
     this.unlist = null
@@ -179,13 +177,25 @@ export class ChatController {
   }
 
   readonly select = (sessionId: string) => {
-    this.choices += 1
+    this.shows.choose()
     return this.readOnly()
       ? showLocally(this.context, sessionId)
       : selectSession(this.context, sessionId)
   }
+  /**
+   * Shows the open session that an app address names, as
+   * `showAddressSession` says. An abort of `signal`, such as at a newer
+   * address, makes the lookup show nothing.
+   */
+  readonly showAddress = (sessionId: string, signal: AbortSignal) =>
+    showAddressSession(
+      this.context,
+      sessionId,
+      () => !signal.aborted,
+      (id) => void this.select(id),
+    )
   readonly newSession = () => {
-    this.choices += 1
+    this.shows.choose()
     return this.write(() => newSession(this.context))
   }
   readonly startRename = (sessionId: string) =>
@@ -193,7 +203,7 @@ export class ChatController {
   readonly rename = (sessionId: string, title: string) =>
     this.write(() => renameSession(this.context, sessionId, title))
   readonly requestClose = async (sessionId: string): Promise<void> => {
-    this.choices += 1
+    this.shows.choose()
     if (!this.readOnly()) return requestClose(this.context, sessionId)
     closeLocally(this.context, sessionId)
   }
@@ -203,7 +213,7 @@ export class ChatController {
   readonly dismissOverlay = () => this.overlay({ kind: 'none' })
   /** Reopens a closed session, or shows its history in a read-only workspace. */
   readonly reopen = (sessionId: string) => {
-    this.choices += 1
+    this.shows.choose()
     return this.readOnly()
       ? showLocally(this.context, sessionId)
       : reopenSession(this.context, sessionId)
@@ -243,7 +253,7 @@ export class ChatController {
     const before = this.store.get().view?.activeTab
     updateView(this.context, change, !this.readOnly())
     // A change of the shown tab, such as an open document, is a choice.
-    if (this.store.get().view?.activeTab !== before) this.choices += 1
+    if (this.store.get().view?.activeTab !== before) this.shows.choose()
   }
   readonly moveTab = (tab: WorkspaceTab, place: TabPlace): void => {
     if (!this.readOnly()) moveTab(this.context, tab, place)
@@ -270,7 +280,7 @@ export class ChatController {
     this.store.update((snapshot) => ({ ...snapshot, notice: null }))
 
   /** The count of the choices of the person in the tabs, for `showSession`. */
-  readonly choiceCount = (): number => this.choices
+  readonly choiceCount = (): number => this.shows.count()
 
   /**
    * Shows a session that the server opened for this person, such as the
@@ -278,13 +288,6 @@ export class ChatController {
    * no session record. A choice in the tabs since `since`, a page in place
    * of the chat, a hide, or a close of the session ends it first.
    */
-  readonly showSession = (sessionId: string, since: number): void => {
-    this.endShow?.()
-    this.endShow = showWhenOpen(
-      this.store,
-      sessionId,
-      () => this.choices === since,
-      (id) => void this.select(id),
-    )
-  }
+  readonly showSession = (sessionId: string, since: number): void =>
+    this.shows.show(this.store, sessionId, since, (id) => void this.select(id))
 }

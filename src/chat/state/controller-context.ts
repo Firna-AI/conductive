@@ -3,6 +3,7 @@ import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { DeviceReads, refreshDevices } from '../device/device-actions'
 import { createDeviceApi } from '../device/device-api'
+import { SessionReads } from '../links/session-reads'
 import {
   WorkspaceStream,
   type StreamTimers,
@@ -28,6 +29,15 @@ export interface ChatContextOptions {
    * workspace list itself.
    */
   sources?: ChatSources
+}
+
+export interface ChatControllerOptions extends ChatContextOptions {
+  /**
+   * Whether the host shows the workspace read-only, such as while its org
+   * is suspended. The controller reads it at each action, because a
+   * suspension can start during a visit.
+   */
+  readOnly?: () => boolean
 }
 
 /** The Worker records a change of the workspace with each change of a Mac command. */
@@ -70,6 +80,10 @@ export function createChatContext(
       api: createDeviceApi(options.client),
       reads: new DeviceReads(),
     },
+    sessionReads: new SessionReads((workspaceId) =>
+      createChatApi(options.client, { ...target, workspaceId }).sessions(),
+    ),
+    tabChoices: { count: 0 },
     stream: new WorkspaceStream({
       target,
       subscribe,

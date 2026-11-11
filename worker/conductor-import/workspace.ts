@@ -1,4 +1,4 @@
-import { AttachmentWorkspace } from '../chat/attachment-workspace'
+import { AgentSessionWorkspace } from '../tools/workspace'
 import type {
   WorkspaceCompositionEnv,
   WorkspaceChatResolvers,
@@ -7,7 +7,7 @@ import type { ConnectionScheduler } from '../security/connection-access'
 import type { ImportStorageScope } from '../../src/shared/conductor-import-storage.ts'
 import { ImportRuntime } from './runtime'
 
-export class ImportWorkspace extends AttachmentWorkspace {
+export class ImportWorkspace extends AgentSessionWorkspace {
   protected readonly imports: ImportRuntime
 
   constructor(

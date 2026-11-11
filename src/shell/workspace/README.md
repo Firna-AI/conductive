@@ -63,7 +63,7 @@ gives the owner picker, the Mac bar, and the services of the org.
 
 After a failed repair, a bar below the header names the workspace data
 that is out of date. [Notices of a failed repair](repair-notices.md) says
-how the bars show, clear, and hide.
+where to place the bars, and how they show, clear, and hide.
 
 ## Integration
 
@@ -116,12 +116,6 @@ tool events as `toolEvents`. The Files part takes the kept files of the tab
 through `useWorkspaceStore`, as
 [the Files screens](../../files/README.md#integration) show.
 
-Place `<HeaderNoticeBars notices={notices} />` directly after the
-header. It draws `notices.shown` with the CSS module of the
-mockups' `LostUpdateBar` and the words of `lostCopy.ts`. Its Dismiss is the
-shell's `IconButton`. The ages use the clock of `AppServices`, and they
-move on every 30 seconds.
-
 ## A refused start
 
 [A refused start](refused-start.md) gives the refused bar and panels, the
@@ -166,6 +160,11 @@ fake API, with its address options, its controls, and the test command.
   on the tab that shows. The screen draws it in each layout. A workspace
   from Conductor that waits for its activation starts nothing there, and
   its Files part connects no files.
+- `session-address.tsx`: `OpenSessionAddress`, which shows the session of a
+  session address once the chat loads, then replaces the address with the
+  workspace address. A move to another address stops its lookup. The
+  screen draws it beside `ResumeOnTabOpen`. `SessionAddress.test.tsx` and
+  `SessionChips.test.tsx` mount the whole app for the address and the chips.
 - `files/chat-files.tsx`: the file tabs of the kept chat, named by the
   labels of the kept files, at their places in the tab row with the props
   that the row gives each tab, the diff links, and the way back to the chat

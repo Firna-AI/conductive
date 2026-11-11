@@ -43,6 +43,7 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
     case 'session':
     case 'new-session':
     case 'linked-session':
+    case 'later-session':
       return undefined
   }
 }

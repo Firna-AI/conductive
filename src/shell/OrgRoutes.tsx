@@ -91,6 +91,7 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
         <WorkspaceScreen
           key={`${org.id}:${route.workspaceId}`}
           org={org}
+          session={route.session}
           view={route.view}
           viewer={user}
           workspaceId={route.workspaceId}

@@ -22,7 +22,7 @@ function stepOf(
  * person in the tabs, when a page shows in place of the chat, or when the
  * session closed. The result ends the wait.
  */
-export function showWhenOpen(
+function showWhenOpen(
   store: ChatStore,
   sessionId: string,
   unchanged: () => boolean,
@@ -44,4 +44,47 @@ export function showWhenOpen(
   stop = store.subscribe(step)
   step()
   return end
+}
+
+/**
+ * The show of a session that the server opened for this person, and the
+ * choices of the person in the tabs, which end it. The controller counts
+ * each choice with `choose`.
+ */
+export class SessionShow {
+  /** The choices of the person in the tabs, which end a show of a session. */
+  private choices = 0
+  private endShow: (() => void) | null = null
+
+  /** Counts a choice of the person in the tabs. */
+  readonly choose = (): void => {
+    this.choices += 1
+  }
+
+  /** The count of the choices of the person in the tabs, for `show`. */
+  readonly count = (): number => this.choices
+
+  /** Ends the show that waits, as a hide or a stop of the chat does. */
+  readonly end = (): void => {
+    this.endShow?.()
+  }
+
+  /**
+   * Shows the session once the chat has it open, as `showWhenOpen` says. A
+   * choice in the tabs since `since` ends it, and a newer show replaces it.
+   */
+  readonly show = (
+    store: ChatStore,
+    sessionId: string,
+    since: number,
+    select: (sessionId: string) => void,
+  ): void => {
+    this.endShow?.()
+    this.endShow = showWhenOpen(
+      store,
+      sessionId,
+      () => this.choices === since,
+      select,
+    )
+  }
 }

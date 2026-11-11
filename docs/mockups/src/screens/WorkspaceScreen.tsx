@@ -22,7 +22,7 @@ import { paths } from '../paths'
 import { importedScreensOf } from './importedScreens'
 import { isImported } from './importedWorkspace'
 import { placeLostUpdate } from './lostUpdates'
-import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
+import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import { WorkspaceChat } from './WorkspaceChat'
 import {
@@ -244,7 +244,7 @@ export function WorkspaceScreen(props: {
         status,
         suspended,
         viewer: membership,
-        created: createdWorkspaces(state),
+        changed: changedWorkspaces(state),
         // Only a kept cloud computer comes back. A workspace from Conductor
         // archived before its activation never had one.
         restoreOpen: state.sandbox === 'archived' && state.archive === 'kept',

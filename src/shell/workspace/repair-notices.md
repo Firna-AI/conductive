@@ -31,6 +31,12 @@ gives the rules. The Files panel shows the notices of the file lists, as
   desktop they sit above the session tabs. On a phone they sit above the
   pull request row, on every tab.
 
+Place `<HeaderNoticeBars notices={notices} />` directly after the
+header. It draws `notices.shown` with the CSS module of the
+mockups' `LostUpdateBar` and the words of `lostCopy.ts`. Its Dismiss is the
+shell's `IconButton`. The ages use the clock of `AppServices`, and they
+move on every 30 seconds.
+
 Dismiss hides a bar in the mounted view only:
 
 - It sends nothing to the Worker, and the failed repair stays.

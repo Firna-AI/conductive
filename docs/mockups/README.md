@@ -46,10 +46,10 @@ full desktop layout.
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
-share. Its linked pages give the parts of [the chat](design-chat.md), with
-the chips of workspace links and files, of
+share. Its linked pages give the parts of
+[the workspace](design-workspace.md), of [the chat](design-chat.md), with
+the chips of workspace links, session links, and files, of
 [the operator section](design-operator.md), of
-[workspace numbers](design-workspace-links.md), of
 [routines](design-routines.md), of
 [builds and starts](design-cloud-computer.md), and of
 [branches and the import from Conductor](design-import.md).
@@ -107,7 +107,7 @@ shows them in the New workspace dialog.
   export. Its props and saved states (`variants`) choose the state. The
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
   `mockups:serve` offers a control for each part of the state. Some key
-  lists of those states live beside it, in `composerKeys.ts`,
+  lists of those states live beside it, in `chatStates.ts`,
   `overlayKeys.ts`, `sandboxKeys.ts`, and `resultKeys.ts`. `resultKeys.ts`
   holds the resume results of a session from Conductor and the copy
   results. The routine screen declares its states in

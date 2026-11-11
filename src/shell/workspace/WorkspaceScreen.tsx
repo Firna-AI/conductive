@@ -28,6 +28,7 @@ import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { archivedRestore, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
+import { OpenSessionAddress } from './session-address'
 import { useStartAction } from './start-action'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
@@ -88,6 +89,8 @@ export function WorkspaceScreen(props: {
   org: OrgSummary
   workspaceId: string
   view: readonly string[]
+  /** The session that the address names, which the chat then shows. */
+  session?: string
   viewer: User
 }) {
   const app = useApp()
@@ -228,10 +231,17 @@ export function WorkspaceScreen(props: {
   )
   // The actions of the screen for the palette.
   const paletteOffer = <WorkspacePaletteActions chat={chat} context={context} />
-  // The resume at the open of a tab, and the question of Archive.
+  // The resume at the open of a tab, the session of a session address, and
+  // the question of Archive.
   const tabOpen = (
     <>
       <ResumeOnTabOpen context={context} />
+      <OpenSessionAddress
+        chat={chat}
+        orgId={props.org.id}
+        session={props.session}
+        workspaceId={workspace.id}
+      />
       {lifecycle.question}
     </>
   )

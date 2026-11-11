@@ -10,6 +10,7 @@ import {
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { mentionChipsDraft, mentionDrafts } from '../fixtures/fileMentions'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
+import { sessionLinkDraft } from '../fixtures/sessionLinkConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -26,6 +27,8 @@ const runningConversations = new Set([
   'linked',
   'sent-files',
   'link-sent',
+  'sent-by',
+  'sent-by-other',
 ])
 
 /**
@@ -72,11 +75,15 @@ function pointerOf(state: WorkspaceState): ComposerState['pointer'] {
   return chip ? { kind: 'chip' } : undefined
 }
 
-/** The draft of a state with chips: file chips, or a workspace link. */
+/**
+ * The draft of a state with chips: file chips, a workspace link, or two
+ * session links.
+ */
 function chipDraft(composer: WorkspaceState['composer']): string | undefined {
   if (composer === 'file-chips' || composer === 'file-chip-pointer') {
     return mentionChipsDraft
   }
+  if (composer === 'session-link') return sessionLinkDraft
   const link =
     composer === 'workspace-link' || composer === 'workspace-link-pointer'
   return link ? workspaceLinkDraft : undefined
@@ -113,7 +120,8 @@ export function isRunning(state: WorkspaceState): boolean {
  * a new workspace. The message waits for the sandbox.
  *
  * A message with a pasted link to another workspace shows the link as a
- * chip, and the draft keeps the plain link. `@` opens the list of the
+ * chip, and the draft keeps the plain link. A pasted link to a session
+ * shows as a session chip in the same way. `@` opens the list of the
  * files and folders above the box, and a picked entry shows as a chip.
  * A session from Conductor keeps the agent and the model of its old
  * session.

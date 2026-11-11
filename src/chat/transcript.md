@@ -64,3 +64,22 @@ the lost lines, the turns, the work fold of each ended turn, and Try again.
 - The Worker refuses an old Try again, such as from a second tab that missed newer events, with `409 retry_not_available`.
   The chat then shows the notice "The turn didn't restart" with the Worker's plain message.
 - Ordered history folding preserves these fields and lines across completion and failure events.
+
+## Key code
+
+- [`transcript.ts`](../shared/transcript/transcript.ts): how chat events become the parts of a transcript.
+- [`duration.ts`](../shared/transcript/duration.ts),
+  [`tool-words.ts`](../shared/transcript/tool-words.ts), and
+  [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
+  tool words, fold counts, and turn lines that the browser and Worker share.
+- [`session-events.ts`](../shared/transcript/session-events.ts): the session
+  events from stored Worker envelopes or parsed browser envelopes.
+- [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
+  in event order and its newest record. The record owner keeps the logs private.
+- [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
+  `retryItemId`, the one failed item that offers Try again.
+- [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
+- [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
+- [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.
+- [`refused-events.ts`](../shared/transcript/refused-events.ts): how a refusal marker becomes a line, and how a
+  refused end ends its turn.

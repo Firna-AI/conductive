@@ -17,10 +17,7 @@ import {
 import { clearImportedCredentials } from './import-native-location'
 import { AgentEngine } from './engine'
 import { boundChatEvent } from '../../src/shared/event-limits'
-import {
-  filterDiffResponse,
-  filterFileResponse,
-} from '../../src/shared/output-fields'
+import { filterRunnerFileResponse } from './file-response'
 import { FileReporter } from './files'
 import { agentInstructions, type WorkspaceContext } from './instructions'
 import { RunnerLink } from './link'
@@ -33,6 +30,8 @@ import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
 import { PortReporter, type PortReporterOptions } from './ports'
 import { privatePortReport } from './port-report-budget'
+import { onRestoreEnd } from './restore-end'
+import { TERMINAL_RESTORE_MARKER } from '../../src/shared/restore-marker'
 
 type RunnerConnector = TransportRunnerConnector<WorkspaceToRunner>
 
@@ -50,6 +49,8 @@ export interface RunnerOptions extends WorkspaceContext {
   ports?: PortReporterOptions
   imports?: Pick<ImportReceiverOptions, 'measureDisk' | 'lfs'>
   importHome?: string
+  /** Tests use a temporary path. The service uses the sandbox marker. */
+  restoreMarker?: string
 }
 
 export class Runner {
@@ -64,6 +65,7 @@ export class Runner {
   private readonly commands = new Set<Promise<void>>()
   private readonly refreshed: Set<string>
   private stopWatching: (() => void) | null = null
+  private stopRestoreWatch: (() => void) | null = null
   private stopped = false
   private warmed = false
   private watchFiles = true
@@ -144,31 +146,7 @@ export class Runner {
             : command.type === 'file.read' || command.type === 'file.diff'
               ? this.files.request(command).then((response) => {
                   const text = (value: string) => this.sanitizer.text(value)
-                  if (response.result.ok)
-                    this.link.reply(
-                      response.type === 'file.read.result'
-                        ? {
-                            ...response,
-                            result: {
-                              ok: true,
-                              file: filterFileResponse(
-                                response.result.file,
-                                text,
-                              ),
-                            },
-                          }
-                        : {
-                            ...response,
-                            result: {
-                              ok: true,
-                              diff: filterDiffResponse(
-                                response.result.diff,
-                                text,
-                              ),
-                            },
-                          },
-                    )
-                  else this.link.reply(response)
+                  this.link.reply(filterRunnerFileResponse(response, text))
                 })
               : command.type === 'report.refresh'
                 ? this.refresh(command)
@@ -189,8 +167,7 @@ export class Runner {
         this.importPreparing = false
         await this.files.refresh(true)
         await this.ports?.refresh(true)
-        if (this.watchFiles && !this.stopWatching)
-          this.stopWatching = this.files.watch(this.options.warn)
+        this.watchRepository()
       },
     })
   }
@@ -211,8 +188,7 @@ export class Runner {
       await this.options.warm()
       this.warmed = true
     }
-    if (!this.importPreparing && this.watchFiles && !this.stopWatching)
-      this.stopWatching = this.files.watch(this.options.warn)
+    if (!this.importPreparing) this.watchRepository()
     this.ports?.watch()
     await this.link.connect()
   }
@@ -227,12 +203,32 @@ export class Runner {
   async close(): Promise<void> {
     this.stopped = true
     this.imports.disconnect()
+    this.stopRestoreWatch?.()
     this.stopWatching?.()
     const closingPorts = this.ports?.close()
     await this.engine.close()
     await closingPorts
     await this.link.persist()
     this.link.close()
+  }
+
+  private watchRepository(): void {
+    if (!this.watchFiles || this.stopWatching) return
+    this.stopWatching = this.files.watch(this.options.warn)
+    this.stopRestoreWatch = onRestoreEnd(
+      this.options.restoreMarker ?? TERMINAL_RESTORE_MARKER,
+      () => this.watchRestoredFiles(),
+    )
+  }
+
+  /** A watch made before the disk restore ended still sees the old view. */
+  private watchRestoredFiles(): void {
+    if (this.stopped || !this.stopWatching) return
+    this.stopWatching()
+    this.stopWatching = this.files.watch(this.options.warn)
+    void this.files
+      .refresh()
+      .catch(() => this.options.warn('The file lists could not update.'))
   }
 
   private emit(

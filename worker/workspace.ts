@@ -100,7 +100,14 @@ export class Workspace extends ImportWorkspace {
       return null
     return this.chat.runLifecycle(async () => {
       const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
-      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
+      return turn
+        ? {
+            workspaceId,
+            turnId,
+            senderUserId: turn.senderId,
+            sessionId: turn.sessionId,
+          }
+        : null
     })
   }
 

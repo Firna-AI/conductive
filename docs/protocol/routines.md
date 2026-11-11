@@ -195,6 +195,14 @@ decision number names a dated record, as
 - Risk: the agent of a run can create more workspaces through the agent
   tools, and their first messages also come from the owner. Those
   workspaces spend starts, and the Runs list does not show them.
+- Risk: the agent of a run can also use the session calls on each
+  workspace of the org, as [Reach](session-calls.md#reach) says (decision
+  257). So text that steers a pull request run can read every chat of the
+  org.
+- While a turn of the run runs, such text can also start sessions and
+  turns in each workspace of the org that is not archived. Their messages
+  come from the owner. Their turns run on the logins of the starters of
+  their sessions.
 - Risk: a member with a terminal in a run workspace can read the owner's
   GitHub token and the credential of a running turn, as in each workspace.
   That credential is a turn token on a newer runner, or the agent login

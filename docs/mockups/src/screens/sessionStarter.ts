@@ -12,7 +12,8 @@ export function viewerOf(state: WorkspaceState): PersonKey {
 
 /**
  * The starter of the open session. The viewer starts a new session with +,
- * and the creator of a new workspace started its one session.
+ * and the creator of a new workspace started its one session. Cal started
+ * both sessions of Checkout address autocomplete.
  */
 function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
   switch (state.tab) {
@@ -20,6 +21,8 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
       return viewerOf(state)
     case 'linked-session':
       return linkedSession.starter
+    case 'later-session':
+      return workspaceSessions[1].starter
     case 'session':
     case 'code':
     case 'markdown':

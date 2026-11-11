@@ -9,6 +9,8 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.number` is the immutable number in its org.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
+`AgentCreateWorkspaceResponse.sessionLink` gives the first session's absolute app link.
+`AgentSessionWriteResponse` keeps the accepted session, message, and turn while reporting current workspace and resume state.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 `conductor-import.ts` owns the optional `Workspace.conductorImport` origin.
@@ -253,6 +255,7 @@ The git credential payload is not defined yet.
 
 ## Key code
 
+- [Session addresses](session-link.ts) builds app session paths and absolute session links for the Worker and the app.
 - [Shared transcript code](transcript.md) names the modules of the pure
   transcript fold that the browser and the Worker share.
 - [Agent words](agents.ts) supply the effort labels, model lookup, and model
@@ -260,6 +263,7 @@ The git credential payload is not defined yet.
 
 - [Port reports](ports.ts) carry sorted listening ports and their safe labels.
 - [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
+- [Restore marker](restore-marker.ts) names the file that the Worker writes at the end of the disk restore. The terminal and the agent runner read it.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.

@@ -159,14 +159,22 @@ check in the Mac app.
   composer. [The message field](loads-and-sends.md#the-message-field)
   gives its rules and its files.
 - `state/load.ts`: the order of the first reads and the stream start.
+- `state/address-session.ts`: `showAddressSession`, the open of the
+  session of a session address, behind `ChatController.showAddress`. A
+  missing session gets one read of the list, of which only that record
+  counts, and a later choice of a tab or an abort stops the lookup.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
-  links of a message field, and `linkTarget`, `chat-parts.ts`, the one
-  tokenizer of sent messages and answers, `LinksContext.tsx`, the
-  workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
-  which draws the parts of a message or an answer, with its file chips,
-  and `mention-copy.ts`, the copy of chat text that gives the mention of
-  each file chip in it, and leaves out text that the browser leaves out of
-  a copy.
+  links of a message field, and `linkTarget`, with the session of a
+  session link, `chat-parts.ts`, the one tokenizer of sent messages and
+  answers, `LinksContext.tsx`, the workspaces that chips find and the open
+  of a chip, and `LinkedText.tsx`, which draws the parts of a message or an
+  answer, with its file chips and session chips, and `mention-copy.ts`,
+  the copy of chat text that gives the mention of each file chip in it,
+  and leaves out text that the browser leaves out of a copy.
+- `links/session-links.ts`: `useLinkedSession`, the session that a chip
+  finds: a live session of the chat's workspace, or one of the one read of
+  another workspace in `session-reads.ts`, made again for each load of a
+  chat or of New workspace. `chat-links.ts` gives a chat its links.
 - `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
   the entries that the list offers and their order, and
   `MentionsContext.tsx`, the files that the chat gets and the tree that
@@ -176,24 +184,10 @@ check in the Mac app.
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
-- [`transcript.ts`](../shared/transcript/transcript.ts): how chat events become the parts of a transcript.
+- [Transcript rules](transcript.md#key-code) names the shared transcript
+  modules that turn chat events into a transcript.
 - [`agents.ts`](../shared/agents.ts): the shared effort words and model
   labels of the pickers.
-- [`duration.ts`](../shared/transcript/duration.ts),
-  [`tool-words.ts`](../shared/transcript/tool-words.ts), and
-  [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
-  tool words, fold counts, and turn lines that the browser and Worker share.
-- [`session-events.ts`](../shared/transcript/session-events.ts): the session
-  events from stored Worker envelopes or parsed browser envelopes.
-- [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
-  in event order and its newest record. The record owner keeps the logs private.
-- [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
-  `retryItemId`, the one failed item that offers Try again.
-- [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
-- [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
-- [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.
-- [`refused-events.ts`](../shared/transcript/refused-events.ts): how a refusal marker becomes a line, and how a
-  refused end ends its turn.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.

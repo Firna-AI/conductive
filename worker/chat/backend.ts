@@ -3,10 +3,11 @@ import {
   type WorkspaceEventEnvelope,
 } from './workspace-events'
 import type { UserMessage } from '../../src/shared/messages'
+import type { ToolSessionAccess, ToolSessionWrite } from '../tools/services'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { RunnerImportCommand } from '../../src/shared/runner-import'
-import { seedImportSession, type SeedImportSession } from './import-sessions'
+import type { SeedImportSession } from './import-sessions'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { WorkspaceTurnTokens } from '../model-gateway/workspace'
@@ -74,12 +75,14 @@ export class WorkspaceChat {
   }
 
   seedImportSession(workspaceId: string, input: SeedImportSession) {
-    this.binding.bind(workspaceId)
-    return this.store.change(
-      workspaceId,
-      (transaction) => seedImportSession(transaction, input, this.dependencies),
-      this.publish,
-    )
+    return this.operations.seedImport(workspaceId, input)
+  }
+
+  acceptToolWrite(
+    input: ToolSessionWrite,
+    authorize: () => Promise<ToolSessionAccess>,
+  ) {
+    return this.operations.writeTool(input, authorize)
   }
 
   async acceptFirstMessage(first: FirstWorkspaceMessage): Promise<UserMessage> {
@@ -155,6 +158,7 @@ export class WorkspaceChat {
       bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
       closeRunner: () => this.runner.close(),
+      flushRunner: () => this.runner.flush(),
     })
   }
 
