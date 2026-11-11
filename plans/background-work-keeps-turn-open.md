@@ -202,6 +202,11 @@ Design calls:
   changed-file reader moves into its own module. Reason: `read-chat.ts`
   stays below the 300-line limit.
 
+- 11 November 2026, the UI implementor's call: the app reads the end
+  reason with the shared completion reader and passes an optional prop
+  to `TurnEnd`. Reason: the chat and copied transcript use one value,
+  while a normal turn keeps its existing markup.
+
 Risks:
 
 - While a turn waits, each process in the sandbox can still read its turn
@@ -309,9 +314,12 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Show the line at the end of a turn with the end reason, as the
+- [x] Show the line at the end of a turn with the end reason, as the
       mockup of Milestone 1 shows.
-- [ ] Add chat tests for a turn end with and without the end reason.
+- [x] Add chat tests for a turn end with and without the end reason.
+
+Evidence: `.context/background-work-keeps-turn-open/milestone-6-report.md`.
+The rendered chat tests reuse the shared parts visually checked in Milestone 1.
 
 ## Milestone 7: READMEs, comparison row, and guide
 
@@ -319,6 +327,8 @@ Depends on: 4, 5, 6
 
 - [ ] Update `runner/README.md` for the wait, the note, the limit, and the
       end reason.
+- [ ] Update `src/chat/README.md` and `src/chat/transcript.md` for the
+      shared end-reason line and its completion data.
 - [ ] Update the `stop-retry-and-background-tasks` row in
       `src/marketing/from-conductor/areas/agents-and-chat.ts`, as
       [Statuses](../docs/protocol/conductor-comparison.md#statuses) says.
