@@ -5,12 +5,14 @@ import {
   previewTabLabel,
   serverDescription,
 } from '../../docs/mockups/src/components/tools/previewCopy'
+import tabStyles from '../../docs/mockups/src/components/tools/PreviewTabs.module.css'
 import tabScroll from '../../docs/mockups/src/components/workspace/TabScroll.module.css'
 import { useRowScroll } from '../chat/components/row-scroll'
 import { TabNodes } from '../chat/components/tab-nodes'
 import type { ListeningPort } from '../shared/ports'
 import type { Preview } from '../shared/previews'
 import { ToolIconButton } from '../terminal/tool-parts/ToolButtons'
+import { useTouch } from '../terminal/tool-parts/ToolRoot'
 import { OpenInNewTab } from './PreviewFrame'
 import styles from './PreviewToolbar.module.css'
 
@@ -30,10 +32,12 @@ function plainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
 }
 
 /**
- * The bar of the preview tool: a link tab for each preview, the button that
+ * The bar of the preview tool: a tab for each preview, the button that
  * opens another port, and the actions of the preview in the frame. A tab
- * shows its port and the name of its server, cut to 10 characters, from the
- * latest list. Its tooltip and its spoken name give the whole name and the
+ * holds a link to its preview and its Close button, with the rule of the
+ * centre tab row: Close shows on the shown tab, on hover, and while the
+ * focus is in the tab. A link shows its port and the name of its server,
+ * cut to 10 characters, from the latest list. Its tooltip and its spoken name give the whole name and the
  * folder. A row whose tabs do not fit scrolls, keeps the shown tab in view,
  * and fades each end that clips tabs, as the session tabs do.
  */
@@ -43,7 +47,8 @@ export function PreviewToolbar(props: {
   ports: readonly ListeningPort[] | null
   /** The preview in the frame, or null while the form shows. */
   selected: Preview | null
-  closing: boolean
+  /** The ids of the previews whose close request runs. */
+  closing: ReadonlySet<string>
   href: (previewId: string) => string
   onFollow: (previewId: string) => void
   onAdd: () => void
@@ -51,6 +56,7 @@ export function PreviewToolbar(props: {
   onClose: (preview: Preview) => void
 }) {
   const { selected } = props
+  const touch = useTouch()
   const row = useRef<HTMLElement>(null)
   const [nodes] = useState(() => new TabNodes())
   const fades = useRowScroll({
@@ -65,7 +71,8 @@ export function PreviewToolbar(props: {
       <nav
         aria-label="Previews"
         className={classes(
-          styles.tabs,
+          tabStyles.tabs,
+          touch && tabStyles.touch,
           tabScroll.scroll,
           fades.start && tabScroll.fadeStart,
           fades.end && tabScroll.fadeEnd,
@@ -76,25 +83,37 @@ export function PreviewToolbar(props: {
           const current = preview.id === selected?.id
           const server = props.ports?.find((each) => each.port === preview.port)
           const description = server ? serverDescription(server) : undefined
+          const label = previewTabLabel(preview.port, server)
           return (
-            <a
-              aria-current={current ? 'page' : undefined}
-              aria-label={description}
-              className={
-                current ? `${styles.tab} ${styles.current}` : styles.tab
-              }
-              href={props.href(preview.id)}
+            <span
+              className={classes(tabStyles.tab, current && tabStyles.selected)}
               key={preview.id}
-              onClick={(event) => {
-                if (!plainClick(event)) return
-                event.preventDefault()
-                props.onFollow(preview.id)
-              }}
               ref={nodes.itemRef(preview.id)}
-              title={description}
             >
-              {previewTabLabel(preview.port, server)}
-            </a>
+              <a
+                aria-current={current ? 'page' : undefined}
+                aria-label={description}
+                className={tabStyles.link}
+                href={props.href(preview.id)}
+                onClick={(event) => {
+                  if (!plainClick(event)) return
+                  event.preventDefault()
+                  props.onFollow(preview.id)
+                }}
+                title={description}
+              >
+                {label}
+              </a>
+              <span className={tabStyles.close}>
+                <ToolIconButton
+                  busy={props.closing.has(preview.id)}
+                  icon={X}
+                  label={`Close ${label}`}
+                  onPress={() => props.onClose(preview)}
+                  quiet
+                />
+              </span>
+            </span>
           )
         })}
       </nav>
@@ -113,12 +132,6 @@ export function PreviewToolbar(props: {
             onPress={props.onReload}
           />
           <OpenInNewTab preview={selected} />
-          <ToolIconButton
-            busy={props.closing}
-            icon={X}
-            label="Close preview"
-            onPress={() => props.onClose(selected)}
-          />
         </>
       ) : null}
     </div>
