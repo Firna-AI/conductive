@@ -11,7 +11,7 @@
   - **Read-only volume:** a disk that the app cannot write to, such as a mounted DMG.
   - **App Translocation:** macOS runs a downloaded app from a hidden read-only copy until the user moves it with Finder.
 - **Background:**
-  - The Mac app updates itself from the GitHub releases of `Firna-AI/remote-code`. It checks at launch and every 4 hours, and it downloads a new version in the background.
+  - The Mac app updates itself from the GitHub releases of `Firna-AI/conductive`. It checks at launch and every 4 hours, and it downloads a new version in the background.
   - The app shows "The update is ready." with Restart now and Later only after Squirrel.Mac accepts the update.
   - People install the app from a DMG. Its window shows the app next to an Applications folder to drag it to.
   - Some people open the app straight from that window. The app then runs from the mounted DMG, which is read-only. An app opened from Downloads without a move can also run read-only, through App Translocation.

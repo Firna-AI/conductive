@@ -1,6 +1,11 @@
-import { macDmgNames, type MacChip } from '../../docs/mockups/src/brand'
+import {
+  macDmgNames,
+  sourceRepository,
+  type MacChip,
+} from '../../docs/mockups/src/brand'
 
-export const sourceRepositoryHref = 'https://github.com/Firna-AI/remote-code'
+/** The GitHub page of the source repository, which holds the releases. */
+export const sourceRepositoryHref = `https://github.com/${sourceRepository.owner}/${sourceRepository.name}`
 
 /**
  * The address of the newest DMG of the Mac app for a chip: the file with its
