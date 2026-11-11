@@ -3,7 +3,8 @@
 This guide belongs to [the chat](README.md). It gives the rules of the code
 that formats the text of agent messages: in the chat, and in a message line
 of an open work fold. It also gives the workspace chips of sent messages
-and answers. [Chat Markdown](../../docs/protocol/chat-markdown.md) and
+and answers. [Chat Markdown](../../docs/protocol/chat-markdown.md),
+[Chat tables](../../docs/protocol/chat-tables.md), and
 [Workspace links](../../docs/protocol/workspace-links.md) state the
 requirements.
 
@@ -15,9 +16,9 @@ requirements.
 - `textBlocks` reads each list with the list reader that it shares with
   the file preview, as [List parts](#list-parts) says. It parses the lines
   of each item with its own block rules, so a `TextItem` holds the lists,
-  paragraphs, code blocks, and tables that the agent indents under the
-  item. Past `maxNesting` levels, the lines of an item join into one
-  paragraph.
+  paragraphs, headings, code blocks, and tables that the agent indents
+  under the item. Past `maxNesting` levels, the lines of an item join into
+  one paragraph.
 - `textBlocks` replaces tabs with spaces before it reads the structure, as
   the file preview does. A code block outside a list takes its text from
   the lines with their tabs, so it keeps them.
@@ -25,9 +26,9 @@ requirements.
   message line, as in the file preview. Another item draws its blocks.
 - `AgentBlocks` draws the blocks of a message in order. `AgentText` and the
   open body of `MessageLine` share it. A table draws through
-  `MarkdownTable`. A paragraph, a list item, and a table cell draw their
-  text through `LinkedText`, with bold, so a workspace link in a cell shows
-  as a chip.
+  `MarkdownTable`. A paragraph, a heading, a list item, and a table cell
+  draw their text through `LinkedText`, with bold, so a workspace link in a
+  cell shows as a chip.
 - A numbered list counts up from the number of its first item, as
   Markdown numbers it. So a list that starts at 2, such as the rest of a
   list after a bulleted list, shows 2. `AgentText` gives that number to
@@ -36,18 +37,25 @@ requirements.
   starts no list.
 - `AgentText`, `LinkedText`, and `MessageLine` draw React text and
   elements only. So HTML in a message shows as text.
-- A `<summary>` holds only phrasing content. So `MessageLine` draws each
-  block as a span, which CSS shows as a block while the line is open. A
-  table cannot go into the line, so a closed line shows a table as its
-  cells, with a middle dot between two cells.
+- A `<summary>` holds only phrasing content and headings, and no
+  paragraph, list, or table. So `MessageLine` draws each block as a span,
+  which CSS shows as a block while the line is open. A table cannot go into
+  the line, so a closed line shows a table as its cells, with a middle dot
+  between two cells.
+- `MessageLine` draws each heading as a span too, although HTML lets a
+  summary hold a heading. So the closed line stays one line. The button
+  role of a summary also hides a heading from the heading list of a screen
+  reader. [Heading parts](#heading-parts) gives the look of the span.
 - An open line keeps the blocks before the first table in its summary.
   When a list holds that table, at any depth, the summary keeps the blocks
   before that list. The table or its list, and the blocks after it, draw
   under the summary, only while the line is open, so a closed line lays
   out no hidden table.
 - A line that starts with a table, or with a list that holds one, keeps
-  its closed text in a visually hidden span. So the open line keeps a name for a screen reader. That
-  hidden copy shows no chips, so the keyboard cannot reach a link in it.
+  its closed text in a visually hidden span. So the open line keeps a name
+  for a screen reader. An empty heading before the table counts as no
+  text, because it draws nothing. That hidden copy shows no chips, so the
+  keyboard cannot reach a link in it.
 
 ## Workspace chips
 
@@ -99,16 +107,68 @@ CommonMark. These parts read the lists of both:
 - `interruptsParagraph` says whether a list can start directly after a
   line of a paragraph: a bullet with text, or the number 1 with text. The
   chat and the file preview both use it. The chat tracks whether its
-  paragraph is open, so a heading or a rule, which shows as text, still
-  lets a list start under it. A list marker comes before a table, so
-  `- a | b` with a separator row under it starts a list.
+  paragraph is open. A heading ends the paragraph, and a rule, which shows
+  as text, closes it, so a list of any number can start under either. A
+  list marker comes before a table, so `- a | b` with a separator row
+  under it starts a list.
 - `src/markdown/lines.ts` holds the line tests that both readers share,
   such as `expandTabs`. Like `table-rows.ts`, these modules import no
   React.
 
+## Heading parts
+
+[Chat Markdown](../../docs/protocol/chat-markdown.md#headings) says that
+agent messages and the file preview read headings with the same rules, the
+heading rules of CommonMark. It also gives the rules that only the chat
+has. These parts read and draw the headings of the chat and the file
+preview:
+
+- `src/markdown/headings.ts` holds the heading levels and the rules for
+  hash headings and underline headings. `atxHeading` reads a line of one
+  to six hashes, without its closing hashes. `setextLevel` reads an
+  underline of `=` or `-`. Both views read headings with it, and it
+  imports no React.
+- `textBlocks` checks for a hash heading after a code fence and before a
+  list or a table, as the file preview does. A heading line ends the
+  paragraph above it, and the line under it starts a new block. A heading
+  with no text, such as `## ` while the agent writes, is a `heading` block
+  with empty text.
+- `Paragraph`, in `components/agent-paragraph.ts`, holds the lines of the
+  open paragraph. The chat shows a quote, a rule, and indented code as
+  text, so one paragraph can hold them. CommonMark reads none of them as
+  the text of a paragraph. So an underline turns only the text after the
+  last of them into a heading, and the lines before that text stay a
+  paragraph. A quote line also takes the lines after it, as lazy lines of
+  the quote. A lazy line of a list item is never an underline.
+- An underline counts only when a line break follows it. `parseLines`
+  gets `ends`, which says whether the last of its lines ends the text. So
+  an underline on the last line of a list item counts when a line break
+  follows the item.
+- `AgentText` draws a heading as `h1` to `h6`, at its level, with its text
+  through `LinkedText`. A heading with no text draws nothing, so a screen
+  reader meets no empty heading.
+- `MessageLine` draws a heading as a span with the `heading` class of the
+  mockups' `ToolGroup.module.css`. That class gives the heading weight,
+  closed and open. Open, the span shows on its own line. Under an open
+  line, a heading after the first table draws through `AgentBlocks` as a
+  heading element. The `.messageBody` rules of `ToolGroup.module.css` give
+  it the look of a heading of the open line.
+- `MarkdownHeadings.module.css`, in `docs/mockups/src/components/common/`,
+  gives the headings of an answer and of the file preview one look, under
+  its `headings` class. It sets the size of each level, the weight, the
+  colour, the letter spacing, the line height, and the line under `h1`.
+  `AgentText` and the `MarkdownView` of the file preview add the class to
+  the element around their blocks.
+- Each view sets the space around its headings. The mockups'
+  `ChatItemView.module.css` sets it for an answer, also for a heading in a
+  list item. `src/files/markdown/MarkdownView.module.css` sets it for the
+  file preview. `components/chat.module.css` sets it for a heading of a
+  message line after a code block, and for a heading in a list item under
+  an open line.
+
 ## Table parts
 
-[Chat Markdown](../../docs/protocol/chat-markdown.md#tables-and-the-file-preview)
+[Chat tables](../../docs/protocol/chat-tables.md#tables-and-the-file-preview)
 says that agent messages and the file preview share their table rules.
 These parts read and draw the tables of the chat, the file preview, and the
 mockups:

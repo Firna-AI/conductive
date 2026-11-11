@@ -42,7 +42,11 @@ that the keyboard can reach. The chip stays active in its table.
 table starts and ends, the alignment, the content of a cell, HTML as text,
 code blocks, the cells of each row, and the span of at most 1,000 columns.
 It also checks workspace chips in cells and links that stay code inside
-a code span.
+a code span. It checks the heading element of each level, with code, bold,
+and a chip in a heading, and that an empty heading draws nothing.
+`components/MessageLine.dom.test.tsx` renders a message line. A heading in
+a closed line is a span in the line, and the summary holds no heading
+element. A line whose table follows only empty headings keeps a name.
 `components/TableReply.dom.test.tsx` drives chat events. It checks a header
 row before its separator row, the rows and a partial row that arrive, and
 the same reply from the saved history.

@@ -240,9 +240,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the sandbox, the tab row, and the number with Copy link. It also gives
   the bars of the cloud computer.
 - [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables of a reply and of a file preview, and the fold of the work
-  of a turn. It also gives the data that the chat does not have, and the
-  files that the cloud computer could not read.
+  Markdown tables and headings of a reply and of a file preview, and the
+  fold of the work of a turn. It also gives the data that the chat does
+  not have, and the files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the
