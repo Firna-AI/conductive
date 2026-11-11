@@ -153,6 +153,8 @@ cloud computer could not read.
   the same place. Its title is the whole title of the session, and screen
   readers hear "Session" before it. It takes no fixtures, so the app can
   use it too.
+  It renders through `WorkspaceChip`, so both chip forms share the mark,
+  state words, removal cells, and bold unread title.
   - `MessageText` shows a session chip for a link to the address of a
     session that the chat read. `ChatWorkspaces` gives each linked
     workspace the sessions that the chat read when it loaded, open and

@@ -1,16 +1,12 @@
 import type { ReactNode } from 'react'
 import { MessageSquare } from 'lucide-react'
 import a11y from '../common/a11y.module.css'
-import { listMarkLabel } from '../workspaces/status'
-import { WorkspaceMark } from '../workspaces/WorkspaceMark'
-import { ChipEndRemove, ChipIconCell, type ChipRemoval } from './ChipRemove'
-import base from './InlineChip.module.css'
+import type { ChipRemoval } from './ChipRemove'
 import {
-  useChipClass,
+  WorkspaceChip,
   type ChipOpener,
   type ChipWorkspace,
 } from './WorkspaceChip'
-import workspaceStyles from './WorkspaceChip.module.css'
 import styles from './SessionChip.module.css'
 
 /** What a session chip shows: its workspace now, and the session title. */
@@ -45,28 +41,17 @@ export function SessionChip(props: {
   removal?: ChipRemoval
 }) {
   const { workspace, title } = props.session
-  const { removal } = props
-  const mark = (
-    <WorkspaceMark github={workspace.github} status={workspace.status} />
-  )
-  const chip: ChipOpener = {
-    className: useChipClass(removal),
-    title,
-    children: (
-      <>
-        {removal ? <ChipIconCell icon={mark} removal={removal} /> : mark}
-        <span className={base.text}>
-          <span className={workspaceStyles.label}>{workspace.label}</span>{' '}
+  return (
+    <WorkspaceChip
+      beforeName={
+        <>
           <MessageSquare aria-hidden className={styles.icon} size={11} />
           <span className={a11y.hidden}>Session </span>
-          <span className={base.name}>{title}</span>
-        </span>
-        <span className={a11y.hidden}>
-          , {listMarkLabel(workspace.github, workspace.status)}
-        </span>
-        {removal ? <ChipEndRemove removal={removal} /> : null}
-      </>
-    ),
-  }
-  return props.opener ? props.opener(chip) : <span {...chip} />
+        </>
+      }
+      opener={props.opener}
+      removal={props.removal}
+      workspace={{ ...workspace, name: title }}
+    />
+  )
 }

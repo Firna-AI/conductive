@@ -90,7 +90,7 @@ number names a dated record, as
 
 ### Session chips
 
-- A session chip shows the state mark and the label of the workspace of
+- A session chip shows the list mark and the label of the workspace of
   its session (decision 261). Then it shows the icon of a session tab and
   the title of the session.
 - The mark and the label follow the rules of a chip above. The icon tells

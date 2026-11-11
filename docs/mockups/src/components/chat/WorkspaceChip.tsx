@@ -14,11 +14,11 @@ import {
 import base from './InlineChip.module.css'
 import styles from './WorkspaceChip.module.css'
 
-/** What a chip shows of its workspace, as the list of the org has it now. */
+/** The workspace state and the link name that a chip shows. */
 export type ChipWorkspace = {
   /** The label of the number of the workspace, such as `W-395`. */
   label: string
-  /** The current name. */
+  /** The current link name, or the title of a session chip. */
   name: string
   /** The current state of its agent and its cloud computer. */
   status: ActivityStatus
@@ -71,6 +71,8 @@ export function WorkspaceChip(props: {
   workspace: ChipWorkspace
   opener?: (chip: ChipOpener) => ReactNode
   removal?: ChipRemoval
+  /** A session icon and its spoken name, before the link name. */
+  beforeName?: ReactNode
 }) {
   const { label, name, github, status } = props.workspace
   const { removal } = props
@@ -84,7 +86,7 @@ export function WorkspaceChip(props: {
       <>
         {removal ? <ChipIconCell icon={mark} removal={removal} /> : mark}
         <span className={classes(base.text, styles.text)}>
-          <span className={styles.label}>{label}</span>{' '}
+          <span className={styles.label}>{label}</span> {props.beforeName}
           <span className={classes(base.name, unread && styles.strong)}>
             {name}
           </span>
