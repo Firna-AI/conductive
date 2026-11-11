@@ -1824,8 +1824,11 @@ Depends on: every other milestone
 - [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds. Pull request #216.
-- [ ] After Milestones 12 to 15: merge `origin/main` again, run the
-      targeted tests and `npm run check`, and push.
+- [x] After Milestones 12 to 15: merge `origin/main` again, run the
+      targeted tests and `npm run check`, and push. The tenth merge,
+      `eb5e4ef7`, and the gate on `5a0501f5`. Evidence:
+      `.context/keyboard-shortcuts/m7/gate-6.log`. CI fails only at
+      `exports:check`, from `main`'s `dfd2ebf1` (#259), which #262 fixes.
 - [x] Review the commits since `684c78a4` with the `implementation-review`
       skill after the push, then apply the fix rule. Round 5 found 3:
       finding 15 (AltGr) and finding 17 (lookup hooks) were removed by
@@ -1833,7 +1836,7 @@ Depends on: every other milestone
       A, because both fix rounds are used. Its wider fix is decision 200.
       Findings file:
       `.context/reviews/calummoore/keyboard-shortcuts-settings/findings.md`.
-- [ ] Update the description of pull request #216 with decision 199, the
+- [x] Update the description of pull request #216 with decision 199, the
       correction of 2026-11-11, the new keys, and the new follow-up items.
 - [ ] Delete this plan again when the `plans` skill says, under "Deleting
       the plan". It waits for decision 203, which says where the open
