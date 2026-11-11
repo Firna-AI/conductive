@@ -22,6 +22,28 @@ import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
 import type { User } from '../../src/shared/api'
 
+import type {
+  AgentCreateSectionRequest,
+  AgentCreateSectionResponse,
+  AgentDeleteSectionResponse,
+} from '../../src/shared/agent-sections'
+import type {
+  AgentListPreviewsResponse,
+  AgentOpenPreviewResponse,
+  AgentClosePreviewResponse,
+} from '../../src/shared/agent-previews'
+
+export type ToolSectionWrite = { orgId: string; senderUserId: string } & (
+  | ({ kind: 'create' } & AgentCreateSectionRequest)
+  | { kind: 'delete'; sectionId: string }
+)
+
+export type ToolPreviewCall = { orgId: string; workspaceId: string } & (
+  | { kind: 'list' }
+  | { kind: 'open'; senderUserId: string; port: unknown }
+  | { kind: 'close'; senderUserId: string; previewId: string }
+)
+
 export interface ToolWorkspaceCreation {
   orgId: string
   owner: MessageSender
@@ -92,6 +114,16 @@ export interface ToolSessionAccess {
 
 /** The composition root supplies the lifecycle and the workspace's turn store. */
 export interface AgentToolServices {
+  writeSection(
+    input: ToolSectionWrite,
+  ): Promise<AgentCreateSectionResponse | AgentDeleteSectionResponse>
+  previewCall(
+    input: ToolPreviewCall,
+  ): Promise<
+    | AgentListPreviewsResponse
+    | AgentOpenPreviewResponse
+    | AgentClosePreviewResponse
+  >
   replayWorkspaceCreation(
     input: ToolWorkspaceReplay,
   ): Promise<AgentCreateWorkspaceResponse | null>

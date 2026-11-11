@@ -10,6 +10,12 @@ import {
   readWorkspaceFromTool,
   writeWorkspaceFromTool,
 } from './workspace-routes'
+import { sectionToolMethods, writeSectionFromTool } from './section-routes'
+import {
+  previewToolMethods,
+  readPreviewsFromTool,
+  writePreviewFromTool,
+} from './preview-routes'
 import { createFromTool } from './create'
 import { isAgentToolPath, listFromTool } from './lists'
 import type { AgentToolServices } from './services'
@@ -38,6 +44,8 @@ export function createAgentToolsHandler(
         throw new HttpError(404, 'not_found', 'The page is not available.')
       }
       const methods =
+        sectionToolMethods(url.pathname) ??
+        previewToolMethods(url.pathname) ??
         workspaceToolMethods(url.pathname) ??
         sessionToolMethods(url.pathname) ??
         (url.pathname === MACHINE_PATHS.workspaces ? ['GET', 'POST'] : ['GET'])
@@ -66,6 +74,14 @@ export function createAgentToolsHandler(
         )
       }
       if (request.method === 'GET') {
+        const previews = await readPreviewsFromTool(
+          url,
+          env.DB,
+          caller,
+          services,
+          env.APP_ORIGIN,
+        )
+        if (previews !== null) return privateResponse(Response.json(previews))
         const workspace = await readWorkspaceFromTool(
           url,
           env.DB,
@@ -87,6 +103,23 @@ export function createAgentToolsHandler(
           ),
         )
       }
+      const section = await writeSectionFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+      )
+      if (section) return privateResponse(section)
+      const preview = await writePreviewFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+        env.APP_ORIGIN,
+      )
+      if (preview) return privateResponse(preview)
       const workspace = await writeWorkspaceFromTool(
         request,
         url,

@@ -114,14 +114,22 @@ export async function revokePreview(
   target: WorkspaceTarget,
   id: string,
   now: number,
-): Promise<void> {
-  await db
-    .prepare(
-      `UPDATE preview_hostnames SET revoked_at = COALESCE(revoked_at, ?)
-     WHERE org_id = ? AND workspace_id = ? AND id = ?`,
-    )
-    .bind(now, target.orgId, target.workspaceId, id)
-    .run()
+): Promise<boolean> {
+  const result = await db.batch<{ open: number }>([
+    db
+      .prepare(
+        `SELECT CASE WHEN revoked_at IS NULL AND expires_at > ? THEN 1 ELSE 0 END AS open
+      FROM preview_hostnames WHERE org_id = ? AND workspace_id = ? AND id = ?`,
+      )
+      .bind(now, target.orgId, target.workspaceId, id),
+    db
+      .prepare(
+        `UPDATE preview_hostnames SET revoked_at = COALESCE(revoked_at, ?)
+      WHERE org_id = ? AND workspace_id = ? AND id = ?`,
+      )
+      .bind(now, target.orgId, target.workspaceId, id),
+  ])
+  return result[0].results[0]?.open === 1
 }
 
 export async function revokeWorkspacePreviews(

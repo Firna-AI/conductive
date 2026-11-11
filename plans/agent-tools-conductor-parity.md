@@ -621,15 +621,18 @@ Main integration notes: `.context/agent-tools-conductor-parity/merge-m4-docs-not
 
 Depends on: 4
 
-- [ ] Add `create_section` and `delete_section`. Reuse the section writes
+- [x] Add `create_section` and `delete_section`. Reuse the section writes
       of `worker/app-api/feature-sections.ts` with the sender as the user.
-- [ ] Add `list_previews`, `open_preview`, and `close_preview`. Reuse the
+- [x] Add `list_previews`, `open_preview`, and `close_preview`. Reuse the
       preview handler of `worker/previews/` with the sender as the user,
       for previews that need a sign-in.
-- [ ] Add tests beside the code: a delete of the default section, the
+- [x] Add tests beside the code: a delete of the default section, the
       move of workspaces to General, a preview of a workspace whose owner
       is suspended, and a preview link that needs a sign-in.
 - [ ] Update `worker/tools/README.md` and `worker/previews/README.md`.
+
+Evidence: `.context/agent-tools-conductor-parity/reports/m5-sections-previews.md`
+and `.context/agent-tools-conductor-parity/checks/m5-orchestrator-tests.log`.
 
 ## Milestone 6: CLI, MCP commands, and agent instructions
 

@@ -5,6 +5,8 @@ import {
   type AgentListSectionsResponse,
 } from '../../src/shared/agent-tools'
 import type { AgentListWorkspacesResponse } from '../../src/shared/agent-workspaces'
+import { sectionToolMethods } from './section-routes'
+import { previewToolMethods } from './preview-routes'
 import { listToolWorkspaces } from './workspace-data'
 import { workspaceToolMethods } from './workspace-routes'
 import { workspaceListInput } from './workspace-input'
@@ -17,6 +19,8 @@ import { type CallingWorkspace, orgSections, ownerPreference } from './store'
 
 export function isAgentToolPath(path: string): boolean {
   return (
+    sectionToolMethods(path) !== null ||
+    previewToolMethods(path) !== null ||
     workspaceToolMethods(path) !== null ||
     isAgentSessionPath(path) ||
     [

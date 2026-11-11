@@ -178,6 +178,8 @@ export async function toolFixture(harness: TestHarness) {
     ),
   }))
   const services = {
+    writeSection: vi.fn<AgentToolServices['writeSection']>(),
+    previewCall: vi.fn<AgentToolServices['previewCall']>(),
     replayWorkspaceCreation: vi
       .fn<AgentToolServices['replayWorkspaceCreation']>()
       .mockResolvedValue(null),

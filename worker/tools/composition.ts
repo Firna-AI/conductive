@@ -8,6 +8,7 @@ import {
   replayWorkspaceFromTool,
 } from './workspace-create-composition'
 import { writeWorkspaceFromTool } from './workspace-write-composition'
+import { writeSectionFromTool } from './section-composition'
 import { writeSessionFromTool } from './session-write-composition'
 
 export function productionAgentTools(
@@ -22,6 +23,13 @@ export function productionAgentTools(
       APP_ORIGIN: env.APP_ORIGIN,
     },
     {
+      writeSection: (input) => writeSectionFromTool(env, dependencies, input),
+      previewCall: async (input) =>
+        requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(input.workspaceId)
+            .agentPreviewCall(input, env.APP_ORIGIN),
+        ),
       writeWorkspace: (input) =>
         writeWorkspaceFromTool(env, dependencies, input),
       models: async () => configuredModels(env),
