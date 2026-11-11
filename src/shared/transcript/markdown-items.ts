@@ -20,7 +20,7 @@ import {
 import { formatDuration } from './duration'
 import { lostData } from './lost-data'
 import { codeBlock, inlineCode, plainText } from './markdown-code'
-import { foldLabel, toolEnding, toolVerb } from './tool-words'
+import { foldLabel, foldSkillLabel, toolEnding, toolVerb } from './tool-words'
 import type { Transcript, TranscriptItem } from './transcript'
 import {
   filesUnread,
@@ -44,10 +44,12 @@ export function toolMarkdown(call: ToolCall): string {
 }
 
 export function foldMarkdown(calls: readonly ToolCall[], messages = 0): string {
+  const skills = foldSkillLabel(calls)
   const omitted = calls.reduce((sum, call) => sum + call.omittedDetailBytes, 0)
   return note(
     [
       foldLabel(calls.length, messages),
+      ...(skills ? [plainText(skills)] : []),
       ...(omitted > 0 ? [leftOutOfRun(omitted)] : []),
     ].join(' · '),
   )

@@ -1,8 +1,9 @@
 import type { Agent, AgentChoice, Effort } from '../../shared/agents'
-import type {
-  ChatEvent,
-  RunnerEventRefused,
-  ToolCall,
+import {
+  readToolSkills,
+  type ChatEvent,
+  type RunnerEventRefused,
+  type ToolCall,
 } from '../../shared/chat-events'
 import type { ChangedFile, ChangeKind } from '../../shared/files'
 import type {
@@ -157,9 +158,11 @@ export function readSession(value: unknown): Session {
 
 function readTool(value: unknown): ToolCall {
   const source = record(value, 'tool')
+  const skills = readToolSkills(source.skills)
   return {
     id: text(source.id),
     kind: readToolKind(source.kind),
+    ...(skills === undefined ? {} : { skills }),
     target: text(source.target),
     detail: nullable(text)(source.detail),
     omittedDetailBytes: safeCount(source.omittedDetailBytes),

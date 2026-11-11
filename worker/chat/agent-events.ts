@@ -1,4 +1,8 @@
-import type { AgentChatEvent, ToolCall } from '../../src/shared/chat-events'
+import {
+  readToolSkills,
+  type AgentChatEvent,
+  type ToolCall,
+} from '../../src/shared/chat-events'
 import type { ChangedFile, ChangeKind } from '../../src/shared/files'
 import {
   choice,
@@ -49,6 +53,7 @@ export function array<T>(value: unknown, parse: (entry: unknown) => T): T[] {
 
 function tool(value: unknown): ToolCall {
   const input = record(value)
+  const skills = readToolSkills(input.skills)
   const kind = input.kind
   const state = input.state
   if (
@@ -71,6 +76,7 @@ function tool(value: unknown): ToolCall {
   return {
     id: identifier(input.id),
     kind,
+    ...(skills === undefined ? {} : { skills }),
     target: string(input.target),
     detail: input.detail === null ? null : string(input.detail),
     omittedDetailBytes: counter(input.omittedDetailBytes),

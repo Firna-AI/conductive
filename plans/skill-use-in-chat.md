@@ -455,25 +455,28 @@ the Worker, and the browser keep them. Shared words give the skill line
 and the skill names of a fold to the chat and to the transcript copy. Read
 the `typescript` and `testing` skills first.
 
-- [ ] Add the optional `skills` field to `ToolCall` in
+- [x] Add the optional `skills` field to `ToolCall` in
       `src/shared/chat-events.ts`, with a doc comment, as design call 1
       says.
-- [ ] Mask each name in `src/shared/output-fields.ts`, as design call 4
+- [x] Mask each name in `src/shared/output-fields.ts`, as design call 4
       says. Test that a turn token in a skill name shows as `[redacted]`.
-- [ ] Keep the field in `tool()` of `worker/chat/agent-events.ts`, as
+- [x] Keep the field in `tool()` of `worker/chat/agent-events.ts`, as
       design call 3 says. Test a stored event with a valid list and with a
       malformed value.
-- [ ] Read the field in `readTool` of `src/chat/api/read-chat.ts`, as
+- [x] Read the field in `readTool` of `src/chat/api/read-chat.ts`, as
       design call 3 says. Test both cases in `read-chat.test.ts`.
-- [ ] Add the words of a skill line, as decision 279 says, and the
+- [x] Add the words of a skill line, as decision 279 says, and the
       skill names of a fold, as design call 9 says, to
       `src/shared/transcript/tool-words.ts`. Test them with literal
       expected values.
-- [ ] Use the words in the transcript copy, in `toolMarkdown` and
+- [x] Use the words in the transcript copy, in `toolMarkdown` and
       `foldMarkdown` of `src/shared/transcript/markdown-items.ts`. Test the
       concise and the full copy in
       `src/shared/transcript/session-markdown.test.ts`.
-- [ ] Update `src/shared/README.md` with the field and the words.
+- [x] Update `src/shared/README.md` with the field and the words.
+
+Evidence: `.context/skill-use-in-chat/m3-report.md` and
+`.context/skill-use-in-chat/m3/`.
 
 ## Milestone 4: Claude skill uses in the runner
 
