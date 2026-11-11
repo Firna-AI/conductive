@@ -7,6 +7,22 @@ streams, and the order of the runner commands.
 - `ChatStore.run` is one serial queue. Each request, each runner message,
   each command send, and each trusted read, change, or replay runs in it,
   one at a time.
+- `ChatStore.run` gives each queue task a `QueueTurn` handle from
+  [`queue-turn.ts`](queue-turn.ts). With `outside(call)` of the handle, a
+  task runs one call outside the queue. In production code, only the start
+  guard of a sandbox start calls `outside`, as
+  [Creates and resumes](../lifecycle/workspace-object.md#creates-and-resumes)
+  says.
+- `outside` first gives the committed turn ends to the
+  [`turnEnded`](integration/workspace-lifecycle.md#hooks-and-events) hook.
+  Then the task gives the queue up and runs the call. When the call ends,
+  the task joins the back of the queue. It gets the result or the error of
+  the call only after it holds the queue again.
+- `ChatStore.settled()` waits until no queue task remains.
+  `ChatStore.idle()` waits only for the tasks that exist at the time of the
+  call. Both also wait for a task that is in an `outside` call. The drains
+  of the [member receiver](../members/README.md#lifecycle-ownership) wait
+  for `idle()`.
 - `ChatStore.change` commits the new events, the runner cursor, and the
   changed records in one storage transaction. The tabs get the events
   only after the commit.

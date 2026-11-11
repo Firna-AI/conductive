@@ -1,4 +1,11 @@
-import type { ChatDependencies } from './types'
+import type { LifecyclePublisher } from '../lifecycle/durable-types'
+import type { ChatCallbackPublisher, ChatDependencies } from './types'
+
+export function callbackPublisher(
+  publish: ChatCallbackPublisher,
+): LifecyclePublisher {
+  return ({ event, occurredAt }) => publish(event, occurredAt)
+}
 
 type WorkspaceCallbacks = Pick<
   ChatDependencies,
