@@ -231,6 +231,7 @@ A lifetime is an `Expires` header, or a `Cache-Control` without quotes that hold
 A quote can hide the directives after it from the browser, so the proxy's directives never follow the server's value.
 The reply keeps the server's `Expires`, `Date`, and `Age`.
 A 304 without `Cache-Control` gets none, so the browser keeps the rules of its stored reply.
+The outer Worker keeps these rules, because it answers the preview host with `previewResponse` from [http.ts](../http.ts).
 [Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states the requirement.
 
 An org suspension blocks preview creation and launch with 403 `org_suspended`.

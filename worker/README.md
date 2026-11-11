@@ -238,6 +238,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
+  `previewResponse` adds the same security headers to each reply of the preview host. It keeps the cache rules that the preview code set. A reply without rules gets `no-store`, except a bare 304.
 - [software-image/README.md](software-image/README.md) owns software image builds, the deploy token gate, and Cron cleanup.
 - [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk, archive, and image alarms from the Cron Trigger.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
