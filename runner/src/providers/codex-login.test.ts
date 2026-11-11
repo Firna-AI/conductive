@@ -122,6 +122,7 @@ it('gives Codex its login through private RPC before starting or resuming a thre
       'initialize',
       'initialized',
       'account/login/start',
+      'skills/list',
       conversationId ? 'thread/resume' : 'thread/start',
     ])
     await provider.close()

@@ -34,6 +34,17 @@ These facts belong to this implementation, not to the protocol docs.
 - Codex runs through the Codex App Server. The runner starts
   `codex app-server` from the `@openai/codex` package, which
   `@openai/codex-sdk` installs.
+- The Codex adapter requests `skills/list` for the working folder beside
+  `thread/start` or `thread/resume`. It refreshes the list after
+  `skills/changed`. The request does not delay the thread or the turn.
+  A failed or unreadable list gives one local warning and keeps reads
+  as plain commands.
+- A Codex command keeps kind `run`. Its parsed `read` actions name enabled
+  skills from the list when their real paths match. The target holds the
+  names in read order, with no repeats. The detail holds the command.
+  Each item keeps the names of its first event. A successful read marks
+  its skills as loaded for the turn. Later reads are plain commands.
+  A failed read leaves its skills available for a later skill line.
 - Both agents run without approval prompts, with the rights of the service
   user.
 - Both agents get the sandbox's `computer` MCP server and the `conductive`

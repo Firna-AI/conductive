@@ -2,6 +2,7 @@ import { object, oneOf, string } from '../parse'
 import { synthetic } from './claude-events'
 import { mapTool } from './tool'
 import { failureCause } from './failure'
+import type { CodexSkills } from './codex-skills'
 import type { ProviderEvent } from './types'
 
 export function codexNotification(
@@ -9,6 +10,7 @@ export function codexNotification(
   value: unknown,
   userMessageIds: readonly string[],
   emit: (event: ProviderEvent) => void,
+  skills: CodexSkills,
 ): void {
   const input = object(value)
   if (method === 'item/agentMessage/delta') {
@@ -51,14 +53,15 @@ export function codexNotification(
         type === 'mcpToolCall'
           ? `${typeof item.server === 'string' ? item.server : ''}:${typeof item.tool === 'string' ? item.tool : ''}`
           : type
+      const tool = mapTool(
+        string(item.id),
+        name,
+        type === 'mcpToolCall' ? item.arguments : item,
+        state,
+      )
       emit({
         type: 'tool',
-        tool: mapTool(
-          string(item.id),
-          name,
-          type === 'mcpToolCall' ? item.arguments : item,
-          state,
-        ),
+        tool: type === 'commandExecution' ? skills.tool(item, tool) : tool,
       })
     }
   }

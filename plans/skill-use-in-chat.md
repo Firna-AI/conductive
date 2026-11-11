@@ -516,28 +516,33 @@ Depends on: 3
 The runner gets the Codex skill list and names the skills of each command
 that reads a listed `SKILL.md` file, as design calls 2 and 12 to 15 say.
 
-- [ ] Request `skills/list` for the working folder in
+- [x] Request `skills/list` for the working folder in
       `runner/src/providers/codex.ts`, beside `thread/start` and
       `thread/resume`. Keep a map from the real path of the `SKILL.md`
       file of each enabled skill to its name.
-- [ ] Request the list again after a `skills/changed` notification.
-- [ ] In `runner/src/providers/codex-events.ts`, give a `commandExecution`
+- [x] Request the list again after a `skills/changed` notification.
+- [x] In `runner/src/providers/codex-events.ts`, give a `commandExecution`
       item the names of its matching `read` actions, as design call 14
       says. Its target holds the names, and its detail holds the command.
-- [ ] Keep the skills that an earlier read of the turn loaded, and skip
+- [x] Keep the skills that an earlier read of the turn loaded, and skip
       them, as design call 15 says. A failed read loads no skill.
-- [ ] Warn once and continue when the list fails or cannot be read.
-- [ ] Let `FakeAppServer` in `runner/test-support/app-server.ts` answer
+- [x] Warn once and continue when the list fails or cannot be read.
+- [x] Add `skills/list` to the request order that
+      `runner/src/providers/codex-login.test.ts` checks. The orchestrator
+      found this TODO and made the change.
+- [x] Let `FakeAppServer` in `runner/test-support/app-server.ts` answer
       `skills/list` with a list from the test.
-- [ ] Test in `runner/src/providers/codex.test.ts`:
-  - [ ] A command that reads two listed skills, one through a linked
+- [x] Test in `runner/src/providers/codex.test.ts`:
+  - [x] A command that reads two listed skills, one through a linked
         folder, carries both names in order.
-  - [ ] A read of a `SKILL.md` file that the list does not hold carries no
+  - [x] A read of a `SKILL.md` file that the list does not hold carries no
         name.
-  - [ ] A second read of the same skill in the turn carries no name.
-  - [ ] A read after a failed read of the same skill carries the name.
-  - [ ] A failed list leaves the turn running, with no names.
-- [ ] Update "What it does" in `runner/README.md`.
+  - [x] A second read of the same skill in the turn carries no name.
+  - [x] A read after a failed read of the same skill carries the name.
+  - [x] A failed list leaves the turn running, with no names.
+- [x] Update "What it does" in `runner/README.md`.
+
+Evidence: `.context/skill-use-in-chat/m5/`.
 
 ## Milestone 6: Skill lines in the chat
 

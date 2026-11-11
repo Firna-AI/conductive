@@ -7,6 +7,7 @@ import {
 } from './attachment-description'
 import { codexBinary } from './binaries'
 import { codexNotification } from './codex-events'
+import { CodexSkills } from './codex-skills'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
@@ -95,6 +96,7 @@ export function createCodexFactory(
     let choice = options.choice
     let activeChoice = choice
     let closed = false
+    const skills = new CodexSkills(options.cwd, options.warn)
     const rpc = new JsonRpc(
       start({
         command: process.execPath,
@@ -111,7 +113,8 @@ export function createCodexFactory(
       (method, params) => {
         if (method === 'turn/started')
           activeTurn = string(object(object(params).turn).id)
-        codexNotification(method, params, userIds, options.event)
+        if (method === 'skills/changed') skills.reload(rpc)
+        codexNotification(method, params, userIds, options.event, skills)
         if (method === 'turn/completed') activeTurn = null
       },
       () => {
@@ -154,6 +157,7 @@ export function createCodexFactory(
             ? options.credential.token
             : options.credential.login.secret,
       })
+      skills.reload(rpc)
       const response = object(
         await rpc.request(
           options.conversationId ? 'thread/resume' : 'thread/start',
@@ -189,6 +193,7 @@ export function createCodexFactory(
               throw error
             }
           } else {
+            skills.beginTurn()
             userIds = [command.message.id]
             activeChoice = choice
             const result = object(
