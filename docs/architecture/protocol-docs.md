@@ -89,9 +89,11 @@ them, and this page lists each protocol doc and what it covers.
   agent session gets, the sender line of each message, and the base
   prompt of Claude agents.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
-  ways in, the pause, and the approval email.
+  ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of
   the waitlist, the join link, and the use of a code.
+- [Sign-ups](../protocol/sign-ups.md): the pause, the waitlist switch, open
+  sign-up, and the main action of the marketing site.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.

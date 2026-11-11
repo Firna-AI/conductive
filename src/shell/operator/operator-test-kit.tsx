@@ -5,7 +5,10 @@ import {
   operatorUserPath,
   type OperatorUserDetail,
 } from '../../shared/operator'
-import { operatorSignupPausePath } from '../../shared/operator-waitlist'
+import {
+  operatorSignupPausePath,
+  operatorWaitlistSwitchPath,
+} from '../../shared/operator-waitlist'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { holdAnimationFrames } from '../../test-support/mount'
 import { serveOperator } from '../../test-support/operator'
@@ -80,25 +83,31 @@ export function boxText(view: HTMLElement, title: string): string | null {
   return box ? textOf(box.innerHTML) : null
 }
 
-/** Whether a request is a read of the pause, which each page sends when it opens. */
-function readsPause(request: Request): boolean {
-  const path = new URL(request.url).pathname
-  return request.method === 'GET' && path === operatorSignupPausePath()
+/**
+ * Whether a request reads `path`, as each page reads the pause and the
+ * waitlist switch when it opens.
+ */
+function reads(request: Request, path: string): boolean {
+  const url = new URL(request.url)
+  return request.method === 'GET' && url.pathname === path
 }
 
 /**
  * The requests of the operator section, as `METHOD path` lines in their
- * order, with the JSON body of a write. The reads of the pause stay out,
- * unless `pause` asks for them.
+ * order, with the JSON body of a write. The reads of the pause and of the
+ * waitlist switch stay out, unless `pause` or `waitlistSwitch` asks for
+ * them.
  */
 export async function operatorRequests(
   server: FakeApiServer,
-  options: { pause?: boolean } = {},
+  options: { pause?: boolean; waitlistSwitch?: boolean } = {},
 ): Promise<string[]> {
   const operator = server.requests.filter(
     (request) =>
       new URL(request.url).pathname.startsWith('/api/operator') &&
-      (options.pause === true || !readsPause(request)),
+      (options.pause === true || !reads(request, operatorSignupPausePath())) &&
+      (options.waitlistSwitch === true ||
+        !reads(request, operatorWaitlistSwitchPath())),
   )
   return Promise.all(
     operator.map(async (request) => {

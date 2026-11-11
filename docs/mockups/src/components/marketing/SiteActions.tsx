@@ -12,8 +12,8 @@ const DownloadIcon = siteIcons.download
 
 /**
  * The main action of the site, Sign up, which starts the GitHub sign-in.
- * The first sign-in of a new person creates the account, which then waits
- * for app access.
+ * The first sign-in of a new person creates the account. The account waits
+ * for app access, or gets it at once during open sign-up.
  */
 export function StartButton(props: {
   to: string

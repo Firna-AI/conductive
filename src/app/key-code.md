@@ -7,6 +7,11 @@ Each path is relative to `src/app/`, the folder of this page.
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.
   `dev/settings-routes.ts` saves settings and repository choices.
+- `dev/waitlist-routes.ts`: the waitlist of the person signed in, and
+  `admitOpenSignup`, which gives app access during open sign-up before each
+  request. `dev/signup-routes.ts`: the pause and the waitlist switch of
+  the operator section. `dev/seed.ts` turns the waitlist off for
+  `?waitlist=off`.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
@@ -29,7 +34,7 @@ Each path is relative to `src/app/`, the folder of this page.
   Accept, and the read of the app access at each return to the page.
   `waitlist-state.ts`: what the screen shows, and the reason of each
   refused code. `api/read-waitlist.ts`: the readers of the session and the
-  waitlist state.
+  waitlist state, which requires `waitlistOn`.
 - `../shell/waitlist/`: `Waiting`, which runs a join link and the read at
   each return, `WaitlistScreen`, the code field, and the invitations.
   `../shell/auth/SignInFrame.tsx`: the frame that the sign-in, the sign-in
@@ -86,7 +91,8 @@ Each path is relative to `src/app/`, the folder of this page.
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
   waitlist state for the invite code of the account.
-  `../shell/account/InviteCodeSection.tsx`: that invite code.
+  `../shell/account/InviteCodeSection.tsx`: that invite code, in each
+  state of the code, of the pause, and of open sign-up.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
@@ -201,8 +207,9 @@ Each path is relative to `src/app/`, the folder of this page.
   chat uses it, and any row that scrolls sideways can.
 - `operator-read.ts`, `operator-directory.ts`, and `operator-target.ts`:
   the Overview and the pages of the operator section, its searches, and
-  Suspend and Lift. `operator-pause.ts` and `operator-access.ts`: the
-  pause of sign-ups, Approve, New code, and Disable. A refusal with
+  Suspend and Lift. `operator-pause.ts`, `operator-switch.ts`, and
+  `operator-access.ts`: the pause of sign-ups, the waitlist switch,
+  Approve, New code, and Disable. A refusal with
   `operator_required` marks the account as not an operator.
   `api/read-operator.ts`, `api/read-operator-pages.ts`, and
   `api/read-operator-waitlist.ts`: their readers. The

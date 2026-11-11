@@ -16,12 +16,12 @@ import type {
 } from '../../shared/operator'
 import { FAKE_TIME, fakeUser } from './core'
 import {
-  sampleAccessRecords,
   sampleCodes,
   sampleUserAccess,
   sampleWaitlist,
   type AccessRecords,
 } from './operator-access'
+import { sampleAccessRecords } from './operator-access-records'
 import {
   daysBefore,
   SAMPLE_IDS,
@@ -37,7 +37,8 @@ const DAY = 24 * HOUR
 
 /**
  * The suspensions and the deletions of the samples, and the records of the
- * waitlist: the approvals, the codes, and the pause. They can change.
+ * waitlist: the approvals, the open sign-ups, the codes, the pause, and the
+ * switch. They can change.
  */
 export interface OperatorRecords extends AccessRecords {
   orgSuspensions: Map<string, OperatorSuspension>
@@ -235,5 +236,6 @@ export function operatorFixtures(now = FAKE_TIME) {
     waitlist,
     codes: sampleCodes(records),
     pause: records.pause,
+    waitlistSwitch: { ...records.waitlistSwitch, waiting: waitlist.length },
   }
 }
