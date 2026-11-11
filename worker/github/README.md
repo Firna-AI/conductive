@@ -42,6 +42,8 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   It republishes the event of a changed delivery with the same event number.
   A fresh read with unchanged banner and checks stores no snapshot and publishes no event.
   The comparison ignores `banner.updatedAt` and object-key order.
+  Its `merged` method stores and publishes a merge that GitHub reported, with no read of GitHub.
+  It changes the stored state only when that state shows the merged head of an open pull request.
 - [createGitHubStatePort](chat-store.ts) builds that port on the `WorkspaceChat` of the workspace Durable Object.
   Its `read` uses `readWorkspace`, and the receipt read writes nothing.
   Its `run` uses `authorizedWorkspaceOperation`.

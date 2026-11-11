@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 
 import { githubPaths } from '../../src/shared/github'
 import { record, string } from '../chat/inputs'
+import { TEST_TIME } from '../test-support/harness'
 import { HEAD_SHA } from './fake-pull'
 import { createMergeHarness } from './merge.test-support'
 
@@ -123,10 +124,17 @@ it('returns an immediate merged result and refreshes shared state', async () => 
   ).toMatchObject({ type: 'github.updated', banner: { state: 'merged' } })
 })
 
-it('returns a merged result when the read after the merge fails, then reads again', async () => {
+it('publishes the merge that GitHub reported when the read after it fails, then reads again', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   const { orgId, session } = await fixture.seed()
   const { api } = fixture.harness
+  const shown = await fixture.harness.read(
+    githubPaths.banner(orgId, 'workspace-1'),
+    session,
+  )
+  expect(await shown.json()).toMatchObject({
+    banner: { state: 'ready-to-merge' },
+  })
   api.pulls[2].state = 'MERGED'
   api.pulls[2].mergedAt = '2026-11-09T22:00:00Z'
   // GitHub takes the merge, then refuses each later read, as at a rate limit.
@@ -141,7 +149,17 @@ it('returns a merged result when the read after the merge fails, then reads agai
   expect(response.status).toBe(200)
   expect(await response.json()).toEqual({ state: 'merged' })
   const memory = fixture.harness.memory('workspace-1')
-  expect(memory.published).toEqual([])
+  expect(memory.published.map((envelope) => envelope.event)).toMatchObject([
+    { banner: { state: 'ready-to-merge' } },
+    {
+      type: 'github.updated',
+      banner: {
+        state: 'merged',
+        pullRequest: { headSha: HEAD_SHA },
+        mergedAt: TEST_TIME,
+      },
+    },
+  ])
   expect(warn).toHaveBeenCalledWith(
     expect.objectContaining({ kind: 'github_merge_refresh_failed' }),
   )
@@ -149,7 +167,7 @@ it('returns a merged result when the read after the merge fails, then reads agai
   await fixture.harness.runScheduled('workspace-1')
   expect(memory.published.at(-1)?.event).toMatchObject({
     type: 'github.updated',
-    banner: { state: 'merged' },
+    banner: { state: 'merged', mergedAt: Date.parse('2026-11-09T22:00:00Z') },
   })
   warn.mockRestore()
 })

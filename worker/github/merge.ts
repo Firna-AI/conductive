@@ -100,7 +100,8 @@ export class GitHubMerge {
     )
     await context.authorize()
     const result = reply.result
-    if (result?.state === 'merged') return this.completed(workspace, userId)
+    if (result?.state === 'merged')
+      return this.completed(workspace, userId, input.headSha)
     if (result?.state !== 'pending') return context.diagnose(input.headSha)
     if (!this.matches(result, input)) throw mergeRefused()
     const mergeId = this.dependencies.randomToken()
@@ -135,7 +136,8 @@ export class GitHubMerge {
     await context.authorize()
     if (reply.status === 404) throw mergeUnavailable()
     const result = reply.result
-    if (result?.state === 'merged') return this.completed(workspace, userId)
+    if (result?.state === 'merged')
+      return this.completed(workspace, userId, job.headSha)
     if (
       result?.state === 'pending' &&
       this.matches(result, job) &&
@@ -160,8 +162,10 @@ export class GitHubMerge {
   private async completed(
     workspace: GitHubWorkspace,
     userId: string,
+    headSha: string,
   ): Promise<GitHubMergeResponse> {
-    await authorizeMerge(this.env.DB, workspace, userId)
+    const authorize = () => authorizeMerge(this.env.DB, workspace, userId)
+    await authorize()
     try {
       await this.dependencies.refresh(workspace, {
         userId,
@@ -170,12 +174,14 @@ export class GitHubMerge {
     } catch (error) {
       if (!isGitHubReadFailure(error)) throw error
       // GitHub merged the pull request, so a failed read of the new state is
-      // not a failed merge. A pending read has already scheduled its retry.
+      // not a failed merge. Every tab gets the merge that GitHub reported. A
+      // pending read has already scheduled its retry.
       warnWorker({ kind: 'github_merge_refresh_failed' })
+      await this.dependencies.publishMerged(workspace, headSha, authorize)
       if (error.code === 'github_unavailable')
         await this.dependencies.scheduleRefresh(workspace)
     }
-    await authorizeMerge(this.env.DB, workspace, userId)
+    await authorize()
     return { state: 'merged' }
   }
 }

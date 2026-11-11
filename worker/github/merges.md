@@ -111,6 +111,12 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
 - When the refresh fails with `github_unavailable` or `github_pending`,
   the route still returns `{ "state": "merged" }`, because GitHub merged
   the pull request. It writes the `github_merge_refresh_failed` warning.
+- The route then stores and publishes the merge that GitHub reported,
+  through the same queue and publisher, with no read of GitHub. It does
+  this only when the stored state shows the merged head of an open pull
+  request. So every open tab shows the merge at once, with Continue and
+  Archive. Its `mergedAt` and `closedAt` are the Worker's time until a
+  later read replaces them.
 - After `github_unavailable`, the route stores a fresh read for the alarm
   of the workspace object. The alarm repeats a read that fails with
   `github_unavailable` every 30 seconds, until it succeeds or the
@@ -175,7 +181,9 @@ npm run test -- worker/github/merge-actions.test.ts worker/github/merge-access.t
 - [github-merge-routes.test.ts](../features/github-merge-routes.test.ts)
   runs the production Worker with SQLite object storage and a real browser
   socket. A pending job survives an eviction of the object, and a poll
-  sends no second merge to GitHub.
+  sends no second merge to GitHub. While GitHub refuses the App's reads,
+  a merge still publishes the merged state, and the alarm reads again
+  after GitHub recovers.
 - [RepositoryMerges](fake-merges.ts) adds the merge model to
   [RepositoryGitHub](fake-repository.ts).
 - The browser client has its own test,
