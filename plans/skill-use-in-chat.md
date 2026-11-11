@@ -555,18 +555,21 @@ mockups show. Read the `product-ui` and `typescript` skills first. Pull
 request #167 also changes `ToolGroup.tsx`. When it has merged, merge
 `main` into this branch before this milestone starts.
 
-- [ ] Draw the skill line in `CallLine` of
+- [x] Draw the skill line in `CallLine` of
       `src/chat/components/ToolGroup.tsx`, with the icon, the words, and
       the CSS of the mockups, as design calls 16 to 18 say.
-- [ ] Show the skill icon and the skill names on `FoldLine`, for runs and
+- [x] Show the skill icon and the skill names on `FoldLine`, for runs and
       for the work fold, with the wrap rules of design call 9.
-- [ ] Add a skill call to the development page in `src/chat/dev/`, so
+- [x] Add a skill call to the development page in `src/chat/dev/`, so
       that the page shows a skill line.
-- [ ] Test the rendered skill line, the line of a folded run, and the line
+- [x] Test the rendered skill line, the line of a folded run, and the line
       of a work fold. Use the existing render tests of these parts.
-- [ ] Update `src/chat/README.md` and `src/chat/transcript.md`.
-- [ ] Smoke-test the development page at phone and desktop sizes. Save the
+- [x] Update `src/chat/README.md` and `src/chat/transcript.md`.
+- [x] Smoke-test the development page at phone and desktop sizes. Save the
       screenshots under `.context/skill-use-in-chat/`.
+
+Evidence: `.context/skill-use-in-chat/m6/` and
+`.context/skill-use-in-chat/m6-merge/`.
 
 ## Milestone 7: Public guide and comparison page
 
