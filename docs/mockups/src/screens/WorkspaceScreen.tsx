@@ -101,7 +101,7 @@ export function WorkspaceScreen(props: {
   const chat = (
     <ChatWorkspaces rows={rows}>
       <ChatPane
-        composer={composerFor(state, workspace)}
+        composer={composerFor(state, workspace, viewport)}
         empty={
           <EmptyState
             body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}

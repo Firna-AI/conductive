@@ -14,6 +14,7 @@
     "mac-command",
     "create-routine",
     "link-a-workspace",
-    "mention-a-file"
+    "mention-a-file",
+    "drop-a-file"
   ]
 }

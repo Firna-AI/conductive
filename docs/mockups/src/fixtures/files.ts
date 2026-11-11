@@ -14,7 +14,7 @@ export type TreeEntry = {
   open?: boolean
   change?: ChangeKind
   /** The tab that opening this file shows, when the mockups draw one. */
-  preview?: 'code' | 'markdown'
+  preview?: 'code' | 'markdown' | 'image' | 'image-not-drawn'
 }
 
 export const fileTree: readonly TreeEntry[] = [
@@ -51,6 +51,39 @@ export const fileTree: readonly TreeEntry[] = [
   },
   { name: 'tsconfig.json', depth: 0, folder: false },
 ]
+
+/** The image files of the branch, in its public folder. */
+export const branchPictures = {
+  /** The picture of the checkout on a phone, which the README shows. */
+  picture: 'public/checkout-mobile.png',
+  /** A file with the name of a picture whose bytes no browser can draw. */
+  damaged: 'public/social-card.png',
+} as const
+
+/**
+ * The tree with the public folder open, with its two images. The tabs of
+ * these images show the tree this way, with the row of the open image
+ * marked.
+ */
+export function withPublicOpen(tree: readonly TreeEntry[]): TreeEntry[] {
+  const at = tree.findIndex(
+    (entry) => entry.depth === 0 && entry.name === 'public',
+  )
+  if (at < 0) return [...tree]
+  const image = (path: string, preview: TreeEntry['preview']): TreeEntry => ({
+    name: splitPath(path).name,
+    depth: 1,
+    folder: false,
+    preview,
+  })
+  return [
+    ...tree.slice(0, at),
+    { ...tree[at], open: true },
+    image(branchPictures.picture, 'image'),
+    image(branchPictures.damaged, 'image-not-drawn'),
+    ...tree.slice(at + 1),
+  ]
+}
 
 export type ChangedFile = {
   path: string

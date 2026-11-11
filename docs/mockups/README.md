@@ -68,13 +68,33 @@ pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
 The [chat and routines](catalogue-chat-and-routines.md) page gives their
 child pages and flows.
+The [attachments and files](catalogue-attachments-and-files.md) page
+gives the child pages of `app/attachments` and `app/files`, and the flow
+`user-flows/drop-a-file`.
 
-`app/attachments` shows uploads, failed uploads with Try again, files over
-25 MB, sent files, and the files of a queued first message. Its shared
-words live in [attachmentCopy.ts](src/components/chat/attachmentCopy.ts).
-`app/new-workspace/files` shows the same chips on the first message of a new
-workspace, before the workspace exists, and `app/new-workspace/dialog/files`
+`app/attachments` shows each attached file as a chip at its place in the
+text of the message box. `app/attachments/drop` shows a drop of files into
+the text, and a dropped folder that the box does not attach.
+`app/attachments/open` shows the file tab that a press on a sent chip
+opens, with the picture of the screenshot. The other child pages show a
+failed upload, a file over 25 MB, the sent message, and the files of a
+queued first message. `app/files/image` shows the picture of an image file
+in its tab, and an image that the browser cannot draw. The flow
+`user-flows/drop-a-file` goes from the drop of a screenshot, through Send,
+to its file tab.
+
+`app/new-workspace/files` shows the same chips in the first message of a
+new workspace, before the workspace exists. `app/new-workspace/dialog/files`
 shows them in the New workspace dialog.
+
+`DraftFileChip` in `src/components/chat/` draws the chip of an attached
+file in the text of a message box, in each state of its upload.
+`SentFileChip` beside it draws the chip of an attached file at its place in
+a sent message. `ImageView` in `src/components/files/` draws the picture of
+an image file in its tab. These three parts take no fixtures, so the app
+can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
+holds the words of the chips, and of the notices for a file over 25 MB and
+a dropped folder. [The chat](design-chat.md) gives the design of each part.
 
 ## Folder layout
 
@@ -83,7 +103,7 @@ shows them in the New workspace dialog.
 | `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
-| `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files      |
+| `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
@@ -101,7 +121,8 @@ shows them in the New workspace dialog.
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
   `mockups:serve` offers a control for each part of the state. The routine
   screen declares its states in `src/screens/routineState.ts` in the same
-  way.
+  way. The composer states of the workspace screen live in
+  `src/screens/composerStates.ts`.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from

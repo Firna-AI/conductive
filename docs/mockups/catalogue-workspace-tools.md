@@ -67,7 +67,7 @@ pages:
   file chip, where a × takes the place of the icon. Its `sent` variant has
   the sent message with both chips. Its `workspace-chip` and
   `attached-file` variants show the same × on a pasted workspace link and
-  on an attached file.
+  on an attached file in the text.
 
 On a phone each chip of the composer keeps its icon and ends with a ×.
 The flow `user-flows/mention-a-file` goes from the query to the sent

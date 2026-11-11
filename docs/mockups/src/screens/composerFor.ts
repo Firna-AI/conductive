@@ -1,8 +1,13 @@
+import type { Viewport } from '@mokly/mokly'
 import type { ComposerState } from '../components/chat/Composer'
 import type { MentionTree } from '../components/chat/FileMentionList'
 import {
+  afterDropCaret,
   attachmentDraft,
+  beforeDrop,
+  beforeDropAttachments,
   draftAttachments,
+  droppedAttachments,
   failedAttachments,
   uploadingAttachments,
   type Attachment,
@@ -24,34 +29,56 @@ const runningConversations = new Set([
   'output-left-out-running',
   'linked',
   'sent-files',
+  'sent-files-listed',
   'link-sent',
 ])
+
+type ComposerKey = WorkspaceState['composer']
 
 /**
  * The files of each composer state with files. A file over the size limit
  * stays out of the message, so its state holds only the files that the
- * composer attached, and a notice names the file.
+ * composer attached, and a notice names the file. A dropped folder stays
+ * out in the same way.
  */
-const composerFiles: Partial<
-  Record<WorkspaceState['composer'], readonly Attachment[]>
-> = {
+const composerFiles: Partial<Record<ComposerKey, readonly Attachment[]>> = {
   attachments: draftAttachments,
   uploading: uploadingAttachments,
   'upload-failed': failedAttachments,
   'too-large': draftAttachments,
   picker: draftAttachments,
   'attachment-pointer': draftAttachments,
+  'drop-over': beforeDropAttachments,
+  dropped: droppedAttachments,
+  'dropped-folder': droppedAttachments,
+}
+
+/**
+ * The draft and the drawn caret of each state of a drop. While the
+ * screenshot hovers over the box, the drop caret stands where it goes.
+ * After the drop, the caret stands after the new chip and its space.
+ */
+const dropDrafts: Partial<
+  Record<ComposerKey, { draft: string; caret: number }>
+> = {
+  'drop-over': beforeDrop,
+  dropped: { draft: attachmentDraft, caret: afterDropCaret },
+  'dropped-folder': { draft: attachmentDraft, caret: afterDropCaret },
 }
 
 /** The composer states whose Send leads to the message with its files. */
-const sendsFiles = new Set<WorkspaceState['composer']>([
-  'attachments',
-  'too-large',
+const sendsFiles = new Set<ComposerKey>(['attachments', 'too-large'])
+
+/** The states that draw the pointer over the icon of the first chip. */
+const pointerStates = new Set<ComposerKey>([
+  'file-chip-pointer',
+  'workspace-link-pointer',
+  'attachment-pointer',
 ])
 
 /** The draft and the tree of each state that opens the list of `@`. */
 const mentionLists: Partial<
-  Record<WorkspaceState['composer'], { draft: string; tree: MentionTree }>
+  Record<ComposerKey, { draft: string; tree: MentionTree }>
 > = {
   'mention-query': { draft: mentionDrafts.query, tree: 'latest' },
   'mention-start': { draft: mentionDrafts.start, tree: 'latest' },
@@ -60,19 +87,8 @@ const mentionLists: Partial<
   'mention-unavailable': { draft: mentionDrafts.query, tree: 'unavailable' },
 }
 
-/** The pointer that a state draws over the icon of a chip of the composer. */
-function pointerOf(state: WorkspaceState): ComposerState['pointer'] {
-  if (state.composer === 'attachment-pointer') {
-    return { kind: 'attachment', name: draftAttachments[0].name }
-  }
-  const chip =
-    state.composer === 'file-chip-pointer' ||
-    state.composer === 'workspace-link-pointer'
-  return chip ? { kind: 'chip' } : undefined
-}
-
 /** The draft of a state with chips: file chips, or a workspace link. */
-function chipDraft(composer: WorkspaceState['composer']): string | undefined {
+function chipDraft(composer: ComposerKey): string | undefined {
   if (composer === 'file-chips' || composer === 'file-chip-pointer') {
     return mentionChipsDraft
   }
@@ -114,10 +130,16 @@ export function isRunning(state: WorkspaceState): boolean {
  * A message with a pasted link to another workspace shows the link as a
  * chip, and the draft keeps the plain link. `@` opens the list of the
  * files and folders above the box, and a picked entry shows as a chip.
+ *
+ * Each attached file is a chip at its place in the text. While files hover
+ * over the box, the desktop shows the drop state with the drop caret in the
+ * text. A phone shows a pick at the caret in place of the drag, so it draws
+ * only the caret, where the attach button puts the files.
  */
 export function composerFor(
   state: WorkspaceState,
   workspace: Workspace,
+  viewport: Viewport,
 ): ComposerState {
   const fresh = state.tab === 'new-session'
   const starter = otherStarter(state, workspace)
@@ -128,10 +150,12 @@ export function composerFor(
     state.composer === 'no-starter-login' || state.composer === 'not-shared'
   const opensLinked = !fresh && linkedState && starter !== undefined
   const files = fresh ? undefined : composerFiles[state.composer]
+  const drop = fresh ? undefined : dropDrafts[state.composer]
   const mention = fresh ? undefined : mentionLists[state.composer]
   const chips = fresh ? undefined : chipDraft(state.composer)
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
+  else if (drop) draft = drop.draft
   else if (files) draft = attachmentDraft
   else if (!fresh && (noLogin || linkedState)) draft = followUpDraft
   else if (mention) draft = mention.draft
@@ -158,6 +182,11 @@ export function composerFor(
     blocked: needsLogin,
     sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),
     mention: mention?.tree,
-    pointer: fresh ? undefined : pointerOf(state),
+    drop:
+      drop !== undefined &&
+      state.composer === 'drop-over' &&
+      viewport === 'desktop',
+    caret: drop?.caret,
+    pointer: !fresh && pointerStates.has(state.composer),
   }
 }

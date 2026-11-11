@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { CircleSlash } from 'lucide-react'
+import { withPublicOpen } from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
 import type { BannerState } from '../../fixtures/pullRequests'
 import { checksPaths, paths } from '../../paths'
@@ -29,10 +30,32 @@ export type TreeState = (typeof treeStates)[number]
 /**
  * The kinds of file that open as a tab in the centre column: a code file,
  * a Markdown file, a diff, the diff of a file whose label hides a secret
- * value, and a file whose name the app does not know.
+ * value, and a file whose name the app does not know. Then a picture of
+ * the branch, an image whose bytes the browser cannot draw, and the copy
+ * of an attached screenshot, which All files does not list.
  */
 export type FileTabView =
-  'code' | 'markdown' | 'diff' | 'masked-diff' | 'unnamed'
+  | 'code'
+  | 'markdown'
+  | 'diff'
+  | 'masked-diff'
+  | 'unnamed'
+  | 'image'
+  | 'image-not-drawn'
+  | 'attachment'
+
+/** The open tab whose row All files marks: a file of the tree. */
+function treeTab(open: FileTabView | undefined) {
+  switch (open) {
+    case 'code':
+    case 'markdown':
+    case 'image':
+    case 'image-not-drawn':
+      return open
+    default:
+      return undefined
+  }
+}
 
 /** The All files, Changes, and Checks tabs, as links. */
 function FileTabs(props: {
@@ -89,10 +112,13 @@ export function FilesPanel(props: {
   const masked = props.paths === 'masked'
   const files = filesFor(props.paths ?? 'plain')
   const changes = props.edited ? files.changes : []
+  const treeOpen = treeTab(open)
+  // The images of the branch lie in the public folder, which their tabs open.
+  const pictures = treeOpen === 'image' || treeOpen === 'image-not-drawn'
+  const shown = pictures ? withPublicOpen(files.tree) : files.tree
   const tree = props.edited
-    ? files.tree
-    : files.tree.map((entry) => ({ ...entry, change: undefined }))
-  const treeOpen = open === 'code' || open === 'markdown' ? open : undefined
+    ? shown
+    : shown.map((entry) => ({ ...entry, change: undefined }))
   const lists = !props.placeholder
   return (
     <div className={styles.files}>

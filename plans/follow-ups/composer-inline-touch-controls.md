@@ -1,0 +1,61 @@
+# Inline attached file controls miss touch size
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from branch `calummoore/composer-file-drag-and-drop`, as Composer drops decision 1 of its plan, after the second-pass options check of 11 November 2026.
+- **Location:** `docs/mockups/src/components/chat/ChipRemove.module.css:67-89`, `docs/mockups/src/components/chat/AttachedFileChip.module.css:41-62`, `docs/mockups/src/components/chat/InlineChip.module.css:8-16`, `docs/mockups/src/components/chat/ChipTextField.module.css:7-29`, and `docs/protocol/file-mentions.md:112-115`.
+- **Reason:** The options trade larger touch targets against taps on nearby text, and option A drops a protocol rule, so only the user can choose.
+
+- **Source:** Implementation. **Category:** Mockup.
+- **Terms:**
+  - **Chip:** a small rounded pill in a line of text that stands for one thing, such as a file. It is one unit of the text.
+  - **Message field:** the text area of each composer, `ChipTextField`. The app imports its styles from `docs/mockups/src/components/chat/ChipTextField.module.css`.
+  - **End ×:** the Remove button at the end of a chip where no pointer hovers, as on a phone. `ChipEndRemove` in `docs/mockups/src/components/chat/ChipRemove.tsx` draws it.
+  - **Touch area:** the part of the screen that takes a tap for a control. It can be larger than the control that the screen draws.
+- **Background:**
+  - The composer file drops change puts each attached file into the text of the message box as a chip. The user chose this on 10 November 2026, as decision 263 A. A file from the paperclip goes into the text at the caret, as a dropped file does. The row of files above the text goes away.
+  - A press on the × of an attached file removes its chip and takes the file off the draft. A failed upload shows Try again in its chip, which uploads the same file again.
+  - Try again is underlined text, because a standard button is taller than the line. That visual call of 10 November 2026 left the phone form open for this question.
+  - On a phone the field has 16 px text on 22 px lines, in `ChipTextField.module.css:26-29`.
+  - A chip is its line less 2 px, so 20 px high, in `InlineChip.module.css:15`.
+  - The end × is a square inside the 1 px border of the chip, so 18 × 18 px, in `ChipRemove.module.css:67-89`.
+  - Try again is 0.85 em of 16 px on a line height of 1.25, so 17 px high, in `AttachedFileChip.module.css:41-62`.
+  - The design asks for touch targets at least 44 px high on a phone, in `docs/mockups/design.md:47-50`. The desktop layout keeps dense controls, and its `--ui-touch-min` is 0.
+  - `docs/protocol/file-mentions.md:112-115` says: "An attached file keeps its × button of touch size." Before the composer file drops change, the row above the text drew the × as an `IconButton` and Try again as an `ActionButton`. Both took the 44 px touch sizes on a phone.
+  - `docs/protocol/workspace-links.md:50` says: "A chip keeps the height of its line of text."
+  - The user chose decision 217 D on 9 November 2026: "on mobile, show the x always at the end". Where no pointer hovers, each chip keeps its icon and shows a × at its end at all times.
+    - The text of that option named a cost: "each × is a 20 px target".
+    - Its record left out a taller chip with a 44 px ×, because a chip keeps the height of its line.
+    - No option of that decision offered a touch area larger than the drawn ×.
+    - The same change then decided that an attached file keeps its × button of touch size. Its reason: a × inside the chip "is too small for a finger". That call is the source of the protocol sentence above.
+  - The app draws the mockup `WorkspaceChip` and `FileChip` in its message field, in `src/chat/components/chip-field/chip-nodes.tsx:14` and `src/chat/components/chip-field/file-mention-nodes.tsx:14`. Both use `ChipEndRemove` with `ChipRemove.module.css`.
+  - The app also imports the field styles, in `src/chat/components/chip-field/ChipTextField.tsx:6`. So a touch rule for every chip also changes the live workspace and file chips.
+  - Facts about a 44 px touch area in the field:
+    - A 44 px area around a 20 px chip reaches 11 px into the line above and the line below. A tap on text there places the caret today. With the area, the same tap removes the chip. The composer has no undo button.
+    - Each chip is a positioned box, in `InlineChip.module.css:10`, so a later chip paints above an earlier chip. Two chips can stack with their × at the same place. The area of the lower chip then covers the lower 9 px of the drawn × above it.
+    - Two long file names give that case, because each chip then fills its line and ends at the same edge.
+    - In a failed chip, Try again and the × stand 5 px apart, from the gap of the chip in `InlineChip.module.css:13`.
+    - The field is a scroll box with no block padding, in `ChipTextField.module.css:7-8`. The app adds none, in `src/chat/components/chip-field/chip-field.module.css:7-10`. A touch area cannot reach past the edge of a scroll box.
+    - The chat and the New workspace fields show at least 2 lines: `lines={props.lines ?? 2}` in `docs/mockups/src/components/chat/Composer.tsx:145`, and `lines={2}` in `src/shell/new-workspace/Composer.tsx:63`.
+    - So without more room, a chip on the first or the last line gets a touch area of about 33 px, not 44 px. In a draft of one or two lines, each chip is on the first or the last line.
+    - The New workspace dialog has no phone layout, because a phone always opens the page, as `docs/mockups/design.md` says of the dialog. So this question does not reach the dialog.
+- **Problem:** The inline controls do not meet the protocol rule that an attached file keeps a × of touch size. A larger touch area can overlap the text or another chip on the next line. The field also clips such an area at its first and last lines.
+- **Impact if no action:** The mockups and the protocol disagree. The phone controls cannot be completed without a touch rule. Three parts wait for this answer. They are the phone mockups of the chip, the protocol text on its removal, and the chip in the app's message field.
+- **Root question:** How does a member use Remove and Try again on a touch screen while each chip keeps the height of its line?
+- **Options:**
+  - **A.** Keep the controls at the line height, as ordinary inline chips work today. Record an exception to the 44 px attachment rule. Targets stay small. Effort: Small.
+  - **B.** Give all inline chip controls a touch area of 44 px in height. Keep their drawn sizes. Add room inside the field's scroll box. A drawn control must take its own tap before another control's larger area. Adjacent text can still become part of a control's touch area. This also changes existing workspace and file chips. Effort: Small.
+  - **C.** Keep the end remove button. On a phone, also put the selected chip's controls in a bar above the field. The bar gives a full-sized touch path, with another tap to select the chip. Effort: Medium.
+  - **D.** As B, but only for attached-file controls. Existing workspace and file chips keep their current touch areas. Attached chips still need room and tap priority inside the field. Effort: Small.
+  - **E.** As D for Remove. On a phone, put Try again in a notice above the box, with a touch-sized button. The failed file then appears in two places, and phone and desktop layouts differ. Effort: Medium.
+- **Left out:**
+  - A row of files above the text: it fails decision 263 A of 10 November 2026, which puts each file into the text.
+  - Taller chips or taller text lines: they break the approved inline sizing. A chip keeps the height of its line. The chip field keeps the sizes and line limits of the plain text field, under "Workspace and file chips" in `docs/mockups/design-chat.md`. Lines of 30 px still give a × of only 26 px.
+  - A sheet on a long press, a × in place of each icon, or Backspace alone. Each of these breaks decision 217 D of 9 November 2026, which keeps a × at the end of each chip.
+- **Wider fix:** B. Shared controls use one touch rule. It prevents the class when its rule is one shared style that each control in a line of text uses. Today `RunningText.module.css`, `ParityIntro.module.css`, and `parityRows.module.css` each repeat such a rule.
+- **Previous examples:** The workspace header and marketing text enlarge small controls over static text. An editable field has different tap behaviour, because a tap places its caret.
+  - `docs/mockups/src/components/workspace/CopyLinkButton.tsx:18-27` draws the label of a phone header 21 px high, with a touch area of 44 px "over no other control". `docs/mockups/design.md:190-193` states it.
+  - The links of the marketing text use an `::after` area of 44 px, in `docs/mockups/src/components/marketing/RunningText.module.css:10-19`, `docs/mockups/src/components/parity/ParityIntro.module.css:60-68`, and `docs/mockups/src/components/parity/parityRows.module.css:128-136`.
+- **Related:** `plans/follow-ups/composer-mixed-refused-items.md` holds the other open question of the composer file drops work. That work waits for both answers, but neither answer depends on the other.
+- **Recommendation:** B, kept by the options check. It keeps the existing attachment touch rule and gives inline controls one shared rule.
+- **Action:** ask the user, because the options trade larger targets against taps on adjacent text, and A changes a protocol requirement.

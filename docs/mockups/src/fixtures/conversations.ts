@@ -18,10 +18,7 @@ import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
-import {
-  newWorkspaceConversations,
-  savedCartsMessage,
-} from './newWorkspaceConversations'
+import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
@@ -256,7 +253,7 @@ export const conversations: Readonly<
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations,
-  ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
+  ...attachmentConversations(history),
   ...workspaceLinkConversations(history),
   ...fileMentionConversations(history),
   ...workConversations({

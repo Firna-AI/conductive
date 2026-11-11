@@ -14,6 +14,7 @@ import { FirstBuildNotice } from './firstBuildNotice'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
+  hasWords,
   newWorkspaceDraft,
   newWorkspaceFormProperties,
   taskPlaceholder,
@@ -121,12 +122,15 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
             ? paths.newWorkspaceFiles
             : undefined,
         blocked: building || waiting || waits(state),
+        caret: text === draft.text ? draft.caret : undefined,
         choice: page.choice,
         draft: text,
+        // A phone shows a pick at the caret in place of the drag.
+        drop: state.files === 'drop-over' && props.viewport === 'desktop',
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
-          failed || linked || waiting || state.org === 'new' || text === ''
+          failed || linked || waiting || state.org === 'new' || !hasWords(text)
             ? undefined
             : created,
       }}

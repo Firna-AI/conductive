@@ -28,6 +28,7 @@ export const conversationKeys = [
   'stopped-files-unavailable',
   'linked',
   'sent-files',
+  'sent-files-listed',
   'queued-files',
   'link-sent',
   'link-answer',

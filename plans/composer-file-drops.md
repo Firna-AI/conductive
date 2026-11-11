@@ -33,6 +33,8 @@ options checks are in `.context/composer-file-drops/`.
 Contract owners:
 
 - [Messages and attachments](../docs/protocol/messages-and-attachments.md).
+- [Message attachments](../docs/protocol/message-attachments.md), which
+  holds the attachment requirements after the protocol split on `main`.
 - [File mentions](../docs/protocol/file-mentions.md).
 - [Workspace links](../docs/protocol/workspace-links.md#the-message-field).
 - [Session transcripts](../docs/protocol/session-transcripts.md).
@@ -343,10 +345,115 @@ recommendation.
   and B to E add a view that the request does not name.
 - **Chosen:** B, by the user on 10 November 2026.
 
+### 5. Touch controls of an inline attached file
+
+Composer drops decision 1. Added on 11 November 2026 from the mockup
+check. The second-pass options check ran on 11 November 2026. The short
+name follows [Decision numbers](../docs/architecture.md#decision-numbers).
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation. **Category:** Mockup.
+- **Location:** `docs/mockups/src/components/chat/ChipRemove.module.css:67`,
+  `docs/mockups/src/components/chat/AttachedFileChip.module.css:41`
+- **Terms:**
+  - **Touch area:** the part of the screen that takes a tap for a control.
+    It can be larger than the control that the screen draws.
+- **Background:** Each attached file now stands in the text as a chip.
+  Its remove button is 18 px high, and Try again is 17 px high.
+  The phone design asks for touch areas of at least 44 px.
+  The file-mentions protocol says that an attached file keeps a remove
+  button of touch size.
+- **Problem:** The inline controls do not meet that attachment rule.
+  A larger area can overlap the text or another chip on the next line.
+  The field also clips such an area at its first and last lines.
+- **Impact if no action:** The mockups and protocol disagree.
+  The phone controls cannot be completed without choosing their touch rule.
+- **Root question:** How does a member use Remove and Try again on a touch
+  screen while each chip keeps the height of its line?
+- **Options:**
+  - **A.** Keep the controls at the line height, as ordinary inline chips
+    work today. Record an exception to the 44 px attachment rule.
+    Targets stay small. Effort: Small.
+  - **B.** Give all inline chip controls a touch area of 44 px in height.
+    Keep their drawn sizes. Add room inside the field's scroll box.
+    A drawn control must take its own tap before another control's larger
+    area. Adjacent text can still become part of a control's touch area.
+    This also changes existing workspace and file chips. Effort: Small.
+  - **C.** Keep the end remove button. On a phone, also put the selected
+    chip's controls in a bar above the field. The bar gives a full-sized
+    touch path, with another tap to select the chip. Effort: Medium.
+  - **D.** As B, but only for attached-file controls. Existing workspace
+    and file chips keep their current touch areas. Attached chips still
+    need room and tap priority inside the field. Effort: Small.
+  - **E.** As D for Remove. On a phone, put Try again in a notice above
+    the box, with a touch-sized button. The failed file then appears in
+    two places, and phone and desktop layouts differ. Effort: Medium.
+- **Left out:** A file row above the text fails decision 263 A.
+  Taller chips or taller text lines break the approved inline sizing.
+  A long-press sheet, an icon replaced by a permanent remove button, or
+  Backspace alone breaks the removal choice of decision 217.
+- **Wider fix:** B. Shared controls use one touch rule.
+- **Previous examples:** The workspace header and marketing text enlarge
+  small controls over static text. An editable field has different tap
+  behavior, because a tap places its caret.
+- **Recommendation:** B, kept by the options check. It keeps the existing
+  attachment touch rule and gives inline controls one shared rule.
+- **Action:** ask the user, because the options trade larger targets
+  against taps on adjacent text, and A changes a protocol requirement.
+- **Chosen:** Waiting for the user. This blocks the phone control mockups,
+  the corresponding protocol text in Milestone 2, and the field in Milestone 6.
+
+### 6. Notice for folders and large files together
+
+Composer drops decision 2. Added on 11 November 2026 from the mockup
+check. The second-pass options check ran on 11 November 2026 and added D.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation. **Category:** UX wording.
+- **Location:** `docs/mockups/src/components/chat/attachmentCopy.ts:33`,
+  `docs/mockups/src/screens/composerNotice.tsx:63`
+- **Background:** A drop can hold folders and files over 25 MB.
+  The approved plan gives them no chip and names every folder in a notice.
+  Current words cover one folder, or a name or count of large files.
+- **Problem:** The mockup does not define the notice for several folders
+  or for folders and large files together.
+- **Impact if no action:** The combined-drop notice and its tests remain
+  undefined for Milestone 8.
+- **Root question:** How does the box name the items of one drop that it
+  did not attach when their reasons differ?
+- **Options:**
+  - **A.** Use one notice for folders and one for large files.
+    Each notice keeps its own reason and action. Two notices take more
+    room, and their actions open the same file picker. Effort: Small.
+  - **B.** Use one notice with a count such as "2 items weren't attached".
+    Its body names each folder and gives the reasons. It offers
+    "Attach files" when a folder is present. This changes the current
+    file-only count title too. Effort: Small.
+  - **C.** Use one notice with every refused name in its title.
+    Its body gives the reasons. It offers "Attach files" when a folder
+    is present. Long name lists make a long title. Effort: Small.
+  - **D.** Use one notice whose title counts each kind:
+    "2 files weren't attached", "2 folders weren't attached", or
+    "1 folder and 1 file weren't attached". Its body names every folder
+    and gives the reasons. It offers "Attach files" when a folder is
+    present. File-only notices keep their current words. Effort: Small.
+- **Left out:** A failed chip for a refused item breaks the no-chip rule.
+  Refusing the whole drop discards files that can attach.
+  A toast replaces the required notice. One notice per file changes the
+  existing grouped large-file notice.
+- **Wider fix:** None. This is a wording and notice-layout choice.
+- **Previous examples:** Large files already use one count title.
+- **Recommendation:** D, changed from B by the options check.
+  It keeps the current file-only words and gives each kind its name.
+- **Action:** ask the user, because the alternatives are correct notices
+  with different layouts and words, and no rule chooses among them.
+- **Chosen:** Waiting for the user. This blocks the mixed-drop mockup and
+  the notice words in Milestone 8.
+
 ## Design
 
 Each call below is my call, made on 10 November 2026 under the decision
-test, unless it names a decision.
+test, unless it names a decision or another date.
 
 ### Where a file goes
 
@@ -359,6 +466,15 @@ test, unless it names a decision.
   rest of the box puts them at the caret, or at the end when the field
   has no caret. Reason: this fits "the cursor" as the pointer and as the
   caret.
+- During a file drag over the text, the field draws a drop caret at the
+  point under the pointer. It is 2 px wide, as high as the text line, and
+  in the accent colour. The real caret moves only at the drop. Reason: a
+  cancelled drag then leaves the member's selection unchanged. This is my
+  call on 10 November 2026, from the mockup check.
+- In the New workspace dialog, the message box is the whole dialog card.
+  Its full border shows the drop state. Reason: the card holds the text,
+  the controls, and their padding as one message box. This is my call on
+  10 November 2026, from the mockup check.
 - A file from the paperclip goes to the caret, or to the end (decision
   263 A).
 - A space follows each new chip, as after a pick of the `@` list
@@ -378,6 +494,14 @@ test, unless it names a decision.
   chip that Try again cannot fix tells the member nothing.
 - A paste of a file or an image stays out of scope. A paste stays plain
   text, as now.
+- The Feedback dialog keeps its screenshot row. Reason: this change covers
+  only the three chat composers, and the Feedback requirements still give
+  screenshots their own row. This is my call on 10 November 2026, after
+  Feedback merged into `main` during the mockup milestone.
+- The app's file-drop guard prevents default browser navigation and keeps
+  the existing Feedback screenshot drop and paste handlers. Reason: the
+  user's preservation rule covers the Feedback feature that merged into
+  `main` during this work. This is my call on 11 November 2026.
 
 ### The chip in the message field
 
@@ -439,6 +563,10 @@ test, unless it names a decision.
   The Worker only compares and returns that text.
 - The New workspace message still needs words outside its chips, as
   now. A message in a chat can hold only files, as now.
+- The mockups and the app share one draft mark syntax. The pure mockup
+  helper moves to `src/app/draft-marks.ts` when the live field starts.
+  Reason: two parsers of the same marks can disagree. This is my call on
+  10 November 2026.
 
 ### The copy path
 
@@ -523,6 +651,40 @@ These calls follow decision 265 B.
   picture, as for every binary file now.
 - An SVG file stays text with line numbers, as now. Reason: its source is
   what a member edits.
+- The mockup pictures use fixed SVG drawings, while the app reads the real
+  bytes from a `data:` address. Reason: Mokly's static document rules do
+  not accept `data:` image addresses. This is my call on 10 November 2026.
+
+### Details from the mockup check
+
+The UI implementor made these visual calls on 10 November 2026. They
+refine the approved chip and image layout.
+
+- The muted chip label uses the label font at 0.85 em. The chip title is
+  the original file name. Reason: the label stays smaller than the name.
+- Try again is underlined text in the failed chip. Reason: a standard
+  button is taller than the text line. The phone form waits for
+  composer drops decision 1.
+- A screen reader hears "Attached file" before the file name. Reason:
+  the spoken name distinguishes an attachment from an ordinary file chip.
+- A sent chip uses the ordinary file chip colours at rest and its link
+  hover. Reason: the two chips open files in the same way.
+- The drop state uses a 1 px full border and a 1 px ring in the accent
+  colour. It keeps the box fill and adds no hint text. Reason: the border
+  shows the target without taking room from the draft.
+- The folder notice offers "Attach files" to open the picker. Reason:
+  the member can then select the folder's files.
+- The phone drop mockups show a pick at the caret before and after the
+  insertion. The folder state still shows its notice. Reason: the same
+  composer supports both a pick and a drop.
+- A picture stands in the middle of its tab with a hairline around it.
+  Its tab uses the ordinary non-code file icon. Reason: a light picture
+  needs an edge on a light tab, and All files uses that icon for images.
+- A picture that does not decode keeps the existing binary-file words
+  and Download action. Reason: the same recovery still works.
+- The New workspace mockup fixtures put files at the end when the sample
+  text gives them no place. They represent a pick with the caret at the
+  end. Reason: the sample still shows the files beside the task words.
 
 ## Milestone 1: Mockups
 
@@ -539,32 +701,41 @@ desktop and a phone variant.
       `InlineChip.module.css`, `ChipRemove`, `attachmentCopy.ts`, and
       `sizes.ts`: the icon cell with each glyph, the name, the muted
       label, Try again in a failed chip, and the × of each pointer kind.
-- [ ] Add a pure mockup part for the file chip of a sent message: the
+- [x] Add a pure mockup part for the file chip of a sent message: the
       kind icon, the name, the muted size, and its look as a link.
-- [ ] Put the file chips into the text of the message field mockup, and
+- [ ] Apply the chosen phone touch rule and draw the chosen notice for
+      several refused kinds, after composer drops decisions 1 and 2.
+- [x] Put the file chips into the text of the message field mockup, and
       remove the row of attached files above the text.
-- [ ] Update `app/composer`: two uploaded files in a sentence.
-- [ ] Update `app/attachments`: a file that uploads, a failed upload, a
+- [x] Preserve the Feedback screenshot row after the new `main` changes.
+      Give its mockup a screenshot type and a row part that do not need
+      chat file IDs or copy paths.
+- [x] Update `app/composer`: two uploaded files in a sentence.
+- [x] Update `app/attachments`: a file that uploads, a failed upload, a
       file over 25 MB, a sent message with its chips in the text, and a
       first message with files.
-- [ ] Add `app/attachments/drop`: files over the box with the drop caret
+- [x] Add `app/attachments/drop`: files over the box with the drop caret
       in the text, the files at that place after the drop, and a folder
       that was not attached. Its phone variant shows a pick at the caret.
-- [ ] Add `app/attachments/open`: the file tab that a press on a sent
+- [x] Add `app/attachments/open`: the file tab that a press on a sent
       screenshot opens, with its picture (decision 265 B).
-- [ ] Update `app/file-mentions/chips/attached-file`: remove a file chip
+- [x] Update `app/file-mentions/chips/attached-file`: remove a file chip
       of the text.
-- [ ] Update `app/new-workspace/files` and every New workspace state
+- [x] Update `app/new-workspace/files` and every New workspace state
       that shows files.
-- [ ] Add an image to `app/files`: the file tab of a picture, and of an
+- [x] Add the drop state to `app/new-workspace/dialog/files`, with the
+      whole dialog card as the target and its full border as the state.
+- [x] Add an image to `app/files`: the file tab of a picture, and of an
       image that the browser cannot draw.
-- [ ] Add the flow `user-flows/drop-a-file`: a drag of a screenshot onto
+- [x] Add the flow `user-flows/drop-a-file`: a drag of a screenshot onto
       the chat box, the drop, the upload, Send, the sent message with the
       agent's answer, and the file tab that a press on the chip opens.
-- [ ] Update the rows of `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages, and save
+- [x] Update the rows of `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages, and save
       the screenshots under `.context/composer-file-drops/`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Capture the marketing pictures that show the changed composer again,
+      with `npm run marketing:pictures`.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -574,7 +745,8 @@ Depends on: 1
 The protocol docs state the requirements of decisions 262 to 265 and of
 the design calls above that are requirements.
 
-- [ ] Update `docs/protocol/messages-and-attachments.md`: the drop, the
+- [ ] Update `docs/protocol/message-attachments.md` and its owner page
+      `docs/protocol/messages-and-attachments.md`: the drop, the
       place of each file, the chip in the text, the mention in the text,
       the copy path from the file ID, the sent chips and their press, the
       files under the message, the order of the files, Try again, the
@@ -687,8 +859,9 @@ Depends on: 1, 2
 The field can hold and draw a chip for each file of its draft. No
 composer puts one there yet.
 
-- [ ] Add `src/app/draft-marks.ts`: the mark of a file, the marks of a
-      text, and the text without its marks.
+- [ ] Move the pure mockup mark helper to `src/app/draft-marks.ts`: the
+      mark of a file, the marks of a text, and the text without its marks.
+      Move each consumer to it, with no forwarding module.
 - [ ] Add the decorator node of an attached file to
       `src/chat/components/chip-field/`, with the mark as its text.
 - [ ] Give the field its files through a source: the file of each mark,

@@ -10,6 +10,7 @@ import { bannerStates } from '../fixtures/pullRequests'
 import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { composerStates } from './composerStates'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -97,8 +98,10 @@ export const workspaceStateSchema = {
      * The tab of the centre column: the first session, a new session, the
      * linked session that a member's message opened from the first session,
      * or a file, a Markdown preview, a diff, or a file whose name the app
-     * does not know, such as a file that moved. A phone shows a file in
-     * Files.
+     * does not know, such as a file that moved. An image of the branch shows
+     * as its picture, or with the state of an image that the browser cannot
+     * draw. `attachment` is the copy of an attached screenshot, which a
+     * press on its sent chip opens. A phone shows a file in Files.
      */
     tab: {
       enum: [
@@ -109,6 +112,9 @@ export const workspaceStateSchema = {
         'markdown',
         'diff',
         'unnamed-file',
+        'image',
+        'image-not-drawn',
+        'attachment',
       ],
     },
     /**
@@ -121,47 +127,8 @@ export const workspaceStateSchema = {
      * sessions.
      */
     tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
-    /**
-     * The composer: empty, with a message that is not sent yet, with
-     * attached files, with its picker open, or with a message for an agent
-     * that is not connected. Or with a message in a session whose starter's
-     * login is not available, or whose starter keeps that login for their
-     * own messages. With files, a file can still upload, its upload can fail,
-     * or a file over the size limit can stay out of the message.
-     * `workspace-link` holds a message with a pasted link to another
-     * workspace of the org, which shows as a chip.
-     *
-     * The `mention-` states open the list of `@`: with a query, without
-     * one, with no match, while the tree loads, and with no tree.
-     * `file-chips` holds a file chip and a folder chip. The `-pointer`
-     * states draw the pointer over the icon of the first chip or the first
-     * attached file, where a × takes the place of the icon. A phone has no
-     * pointer, so it shows the × at the end of each chip instead.
-     */
-    composer: {
-      enum: [
-        'empty',
-        'draft',
-        'attachments',
-        'uploading',
-        'upload-failed',
-        'too-large',
-        'picker',
-        'no-agent',
-        'no-starter-login',
-        'not-shared',
-        'workspace-link',
-        'mention-query',
-        'mention-start',
-        'mention-none',
-        'mention-loading',
-        'mention-unavailable',
-        'file-chips',
-        'file-chip-pointer',
-        'workspace-link-pointer',
-        'attachment-pointer',
-      ],
-    },
+    /** The composer, in one of the states that `composerStates` gives. */
+    composer: { enum: composerStates },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**

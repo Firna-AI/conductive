@@ -1,0 +1,50 @@
+# No notice words for several refused items
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from branch `calummoore/composer-file-drag-and-drop`, as Composer drops decision 2 of its plan. The second-pass options check of 11 November 2026 added option D.
+- **Location:** `docs/mockups/src/components/chat/attachmentCopy.ts:32-40`, `docs/mockups/src/screens/composerNotice.tsx:63-77`, `docs/mockups/src/screens/composerNotice.tsx:92-98`, and `src/chat/components/AttachmentChips.tsx:196-200`.
+- **Reason:** The options are correct notices with different layouts and words, and no copy rule chooses among them, so only the user can choose.
+
+- **Source:** Implementation. **Category:** UX wording.
+- **Terms:**
+  - **Notice over the box:** a box above the composer that names a problem and offers one action, such as the notice for a file over 25 MB.
+  - **Refused item:** an item of a drop or a pick that the composer does not attach. It is a folder, or a file over 25 MB.
+- **Background:**
+  - The composer file drops change lets a member drop files on the message box of the chat, the New workspace page, and its dialog. Each file then shows as a chip at its place in the text.
+  - The design of that change, of 10 November 2026, gives a dropped folder and a file over 25 MB no chip. The other files of the drop attach. Reason: a folder upload fails, and a failed chip that Try again cannot fix tells the member nothing.
+  - The notice over the box names each dropped folder and says to attach its files. Its action "Attach files" opens the file picker, so the member can select the files of the folder.
+  - The notice names a file over 25 MB as before that change: its name, or a count for two or more.
+  - That change does not attach the files inside a dropped folder.
+  - `docs/protocol/message-attachments.md:15-16` says only that the composer refuses a larger file before its upload and names the limit. No protocol doc states the words of a notice or the number of notices.
+  - `docs/mockups/src/components/chat/attachmentCopy.ts:32-40` holds two titles: "<name> wasn't attached" and "<count> files weren't attached". The app uses the same two titles, in `src/chat/components/AttachmentChips.tsx:196-200`.
+  - The body of that notice is "Each file can be up to 25 MB.", and its action is "Attach a smaller file".
+  - The notice gives no size of a refused file, as `attachmentCopy.ts:42-46` says. The size formatter counts in units of 1024, and the limit counts in units of 1000.
+  - The mockup notice for a folder names one folder: "checkout-screens wasn't attached", then "Attach the files in the folder instead.", with "Attach files". It is `folderNotice` in `docs/mockups/src/screens/composerNotice.tsx:63-77`.
+  - No words exist for two folders, or for a folder and a file over 25 MB. "2 files weren't attached" is wrong for a folder.
+  - The file picker gives only files. The notice shows only the refused items of the last pick. The next pick replaces it, as `attachFiles` in `src/chat/state/attachment-actions.ts:57-61` says. So a mix of kinds comes only from one drop, which makes it rare.
+  - The mockup host `composerNotice` returns one notice, in `docs/mockups/src/screens/composerNotice.tsx:92-98`.
+  - In the app, each composer places `OversizeNotice` as its own element, in `src/chat/components/Composer.tsx:81-84` and `src/shell/new-workspace/Composer.tsx:46-49`. The New workspace dialog lists its notices, in `src/shell/new-workspace/NewWorkspaceDialog.tsx:174-184`. So a second notice needs a second element, but no new layout.
+  - The draft keeps only the names of refused files, in `src/chat/state/chat-snapshot.ts:33` and `src/app/new-workspace-model.ts:35`. Each option needs the kind of each refused item, so the code that adds drops keeps the kind whatever the answer.
+  - The shared product UI rules say: "For an error, name what failed and give one recovery action when one exists." They also say: "Keep copy to the minimum that the user needs to understand the outcome, decide, or act." These rules lean to one notice.
+  - No copy rule chooses between "2 items", "1 folder and 1 file", and the names in the title.
+- **Problem:** The mockup does not define the notice for several folders, or for folders and large files together.
+- **Impact if no action:** The notice for such a drop and its tests stay undefined, so the drops into the composers cannot get their final words.
+- **Root question:** How does the box name the items of one drop that it did not attach when their reasons differ?
+- **Options:**
+  - **A.** Use one notice for folders and one for large files. Each notice keeps its own reason and action. Two notices take more room, and their actions open the same file picker. Effort: Small.
+  - **B.** Use one notice with a count such as "2 items weren't attached". Its body names each folder and gives the reasons. It offers "Attach files" when a folder is present. This changes the current file-only count title too. Effort: Small.
+  - **C.** Use one notice with every refused name in its title. Its body gives the reasons. It offers "Attach files" when a folder is present. Long name lists make a long title. Effort: Small.
+  - **D.** Use one notice whose title counts each kind: "2 files weren't attached", "2 folders weren't attached", or "1 folder and 1 file weren't attached". Its body names every folder and gives the reasons. It offers "Attach files" when a folder is present. File-only notices keep their current words. Effort: Small.
+- **Left out:**
+  - A failed chip for a refused item: it breaks the rule that a refused item gets no chip.
+  - A refusal of the whole drop: it discards files that can attach.
+  - A toast: it replaces the required notice.
+  - One notice for each file: it changes the existing notice that groups the large files under one count title.
+  - Change nothing: "2 files weren't attached" is wrong for a folder, and the notice must name each dropped folder.
+  - Attach the files inside a dropped folder: the composer file drops change keeps that out of scope.
+- **Wider fix:** None. This is a wording and notice-layout choice. Each one-notice option builds every title in one shared function of `attachmentCopy.ts`, which the app already imports. That function is part of the option, not a separate choice.
+- **Previous examples:** Large files already use one count title.
+- **Related:** `plans/follow-ups/composer-inline-touch-controls.md` holds the other open question of the composer file drops work. That work waits for both answers, but neither answer depends on the other.
+- **Recommendation:** D, changed from B by the options check. It keeps the current file-only words and gives each kind its name.
+- **Action:** ask the user, because the alternatives are correct notices with different layouts and words, and no rule chooses among them.

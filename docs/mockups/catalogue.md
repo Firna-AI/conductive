@@ -32,17 +32,17 @@ how a screen is built, and links to the other pages.
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
-| `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
-| `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
+| `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
+| `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 25 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
-| `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
+| `app/files`         | All files, Changes with its summary, and a file, Markdown, diff, and image tab |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file, drop a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
@@ -50,7 +50,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
-`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -59,10 +59,11 @@ which links back to it. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
-`app/new-workspace/dialog`, `app/org-settings/cloud-computer`, and
-`app/archive` and `app/command-palette/search` moved into their own folders
-and kept their paths, so that each of those pages shows only its canonical
-screen. `app/sign-in/get-started` moved into its own folder and
+`app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
+`app/archive`, `app/command-palette/search`, `app/attachments`, and
+`app/files` moved into their own folders and kept their paths. Each page
+shows only its canonical screen. `app/sign-in/get-started` moved into its
+own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
 the page shows only its canonical screen. Get started is the only first
@@ -165,7 +166,8 @@ failed to save, with its saved value and the cause beside the switch.
 workspace of `app`, for a user who chose the dialog. Its states are child
 pages. `first-build` shows Firna before its first good build, with the
 notice and Create off. The other child pages show files that upload, a
-draft with uploaded files and the notice of a missing agent login, a
+drop of files on the whole dialog card, a draft with uploaded files and
+the notice of a missing agent login, a
 create request that failed, an org without chosen repositories, and a
 pasted workspace link as a chip. The dialog uses the file chips of
 `app/new-workspace/files`. A phone always opens the page, so each phone
@@ -242,3 +244,6 @@ pages, their child pages, and their related flows.
 
 [Workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 gives those catalogue pages and their related flows.
+
+[Attachments and files](catalogue-attachments-and-files.md) gives the child
+pages of `app/attachments` and `app/files`, and their related flow.

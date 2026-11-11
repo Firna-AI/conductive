@@ -1,4 +1,6 @@
+import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
+import { paths } from '../../paths'
 import inline from '../common/InlineText.module.css'
 import { ScreenLink } from '../common/ScreenLink'
 import { EntryIcon } from '../files/fileIcons'
@@ -8,10 +10,12 @@ import type { WorkspaceRow } from '../workspaces/sections'
 import { useChatWorkspaces } from './chatWorkspaces'
 import { FileChip } from './FileChip'
 import { entryName } from './entryPaths'
+import { SentFileChip } from './SentFileChip'
 import { linkedWorkspace, textParts } from './workspaceLinks'
 import { WorkspaceChip, type ChipWorkspace } from './WorkspaceChip'
 
-function chipOf(row: WorkspaceRow): ChipWorkspace {
+/** What the chip of a workspace shows of its row in the list of the org. */
+export function chipOf(row: WorkspaceRow): ChipWorkspace {
   return {
     label: workspaceLabel(row.workspace.number),
     name: row.workspace.name,
@@ -20,7 +24,7 @@ function chipOf(row: WorkspaceRow): ChipWorkspace {
 }
 
 /** The icon of an entry, as the All files of the mockups draws it. */
-function iconOf(entry: MentionEntry) {
+export function iconOf(entry: MentionEntry) {
   return <EntryIcon folder={entry.folder} name={entryName(entry)} size={12} />
 }
 
@@ -33,6 +37,9 @@ function filePage(entry: MentionEntry): string | undefined {
   return entry.preview ? previewPaths[entry.preview] : undefined
 }
 
+/** The file tab of the copy of an attached file, when the mockups draw it. */
+const attachedTabs = { picture: paths.attachmentOpen } as const
+
 /**
  * The text of a sent message or an answer. Each part in backticks is code,
  * and each link to a workspace of the org is a chip that opens the
@@ -40,18 +47,43 @@ function filePage(entry: MentionEntry): string | undefined {
  * workspace shows as the chip alone. Other links stay plain text, and so
  * does a link in code. In the text of a member, `mentions` makes each
  * mention of a file or a folder of the tree a chip that opens the file.
+ *
+ * `files` are the attached files of a sent message. A mention of the copy
+ * path of one of them shows as the chip of that file, which opens the file
+ * tab of the copy. While the message `waits` for the cloud computer, its
+ * copies do not exist yet, so the chip of a file opens nothing.
  */
-export function MessageText(props: { text: string; mentions?: boolean }) {
+export function MessageText(props: {
+  text: string
+  mentions?: boolean
+  files?: readonly Attachment[]
+  waits?: boolean
+}) {
   const rows = useChatWorkspaces()
+  const parts = textParts(props.text, true, props.mentions, props.files)
   return (
     <>
-      {textParts(props.text, true, props.mentions).map((part, index) => {
+      {parts.map((part, index) => {
         if (part.kind === 'text') return part.text
         if (part.kind === 'code') {
           return (
             <code className={inline.code} key={index}>
               {part.text}
             </code>
+          )
+        }
+        if (part.kind === 'attached') {
+          const tab = props.waits === true ? undefined : part.file.tab
+          const to = tab ? attachedTabs[tab] : undefined
+          return (
+            <SentFileChip
+              file={part.file}
+              key={index}
+              mention={part.source}
+              opener={
+                to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined
+              }
+            />
           )
         }
         if (part.kind === 'mention') {
@@ -84,66 +116,18 @@ export function MessageText(props: { text: string; mentions?: boolean }) {
 }
 
 /**
- * The draft holds a chip: a link to a workspace of the org, or a mention of
- * a file or a folder of the tree.
+ * The files of a sent message that its text does not show, such as the
+ * files of a message from before files had a place in the text. They show
+ * under the message.
  */
-export function holdsChips(
-  draft: string,
-  rows: readonly WorkspaceRow[],
-): boolean {
-  return textParts(draft, false, true).some(
-    (part) =>
-      part.kind === 'mention' ||
-      (part.kind === 'link' && linkedWorkspace(part.href, rows) !== undefined),
+export function filesWithoutPlace(
+  text: string,
+  files: readonly Attachment[],
+): Attachment[] {
+  const placed = new Set(
+    textParts(text, true, true, files).flatMap((part) =>
+      part.kind === 'attached' ? [part.file.id] : [],
+    ),
   )
-}
-
-/**
- * The draft of a message box as plain text, with each link to a workspace
- * of the org and each mention of the tree as a chip. A chip is one unit of
- * the text, which the caret steps over and Backspace removes whole, so it
- * is not editable inside the editable field. Each chip starts with the
- * cell of its icon, which a pointer turns into a × that removes it. In
- * the app a press on the name of a file chip opens the file. A view has no
- * pointer, so `pointer` draws it over the icon of the first chip.
- */
-export function DraftText(props: { text: string; pointer?: boolean }) {
-  const rows = useChatWorkspaces()
-  const parts = textParts(props.text, false, true)
-  const firstChip = parts.findIndex(
-    (part) =>
-      part.kind === 'mention' ||
-      (part.kind === 'link' && linkedWorkspace(part.href, rows) !== undefined),
-  )
-  return (
-    <>
-      {parts.map((part, index) => {
-        if (part.kind === 'text' || part.kind === 'code') return part.text
-        const pointer = props.pointer === true && index === firstChip
-        if (part.kind === 'mention') {
-          const name = entryName(part.entry)
-          return (
-            <span contentEditable={false} key={index}>
-              <FileChip
-                entry={part.entry}
-                icon={iconOf(part.entry)}
-                removal={{ name, pointer }}
-              />
-            </span>
-          )
-        }
-        const row = linkedWorkspace(part.href, rows)
-        if (!row) return part.source
-        const chip = chipOf(row)
-        return (
-          <span contentEditable={false} key={index}>
-            <WorkspaceChip
-              removal={{ name: `${chip.label} ${chip.name}`, pointer }}
-              workspace={chip}
-            />
-          </span>
-        )
-      })}
-    </>
-  )
+  return files.filter((file) => !placed.has(file.id))
 }
