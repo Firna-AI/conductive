@@ -141,22 +141,30 @@ export function createCodexFactory(
     options.signal?.addEventListener('abort', abort, { once: true })
     if (options.signal?.aborted) abort()
     try {
-      await rpc.request('initialize', {
-        clientInfo: {
-          name: 'conductive',
-          title: 'Conductive',
-          version: '0.1.0',
+      await rpc.request(
+        'initialize',
+        {
+          clientInfo: {
+            name: 'conductive',
+            title: 'Conductive',
+            version: '0.1.0',
+          },
+          capabilities: { experimentalApi: true },
         },
-        capabilities: { experimentalApi: true },
-      })
+        'close-connection',
+      )
       rpc.notify('initialized')
-      await rpc.request('account/login/start', {
-        type: 'apiKey',
-        apiKey:
-          options.credential.type === 'gateway'
-            ? options.credential.token
-            : options.credential.login.secret,
-      })
+      await rpc.request(
+        'account/login/start',
+        {
+          type: 'apiKey',
+          apiKey:
+            options.credential.type === 'gateway'
+              ? options.credential.token
+              : options.credential.login.secret,
+        },
+        'close-connection',
+      )
       skills.reload(rpc)
       const response = object(
         await rpc.request(
@@ -172,6 +180,7 @@ export function createCodexFactory(
             approvalPolicy: 'never',
             sandbox: 'danger-full-access',
           },
+          'close-connection',
         ),
       )
       const threadId = string(object(response.thread).id)
@@ -182,12 +191,16 @@ export function createCodexFactory(
             const before = [...userIds]
             userIds.push(command.message.id)
             try {
-              await rpc.request('turn/steer', {
-                threadId,
-                expectedTurnId: activeTurn,
-                clientUserMessageId: command.message.id,
-                input: input(command, options.instructionBranches),
-              })
+              await rpc.request(
+                'turn/steer',
+                {
+                  threadId,
+                  expectedTurnId: activeTurn,
+                  clientUserMessageId: command.message.id,
+                  input: input(command, options.instructionBranches),
+                },
+                'close-connection',
+              )
             } catch (error) {
               userIds = before
               throw error
@@ -197,13 +210,17 @@ export function createCodexFactory(
             userIds = [command.message.id]
             activeChoice = choice
             const result = object(
-              await rpc.request('turn/start', {
-                threadId,
-                input: input(command, options.instructionBranches),
-                clientUserMessageId: command.message.id,
-                model: choice.model,
-                effort: choice.effort === 'none' ? 'none' : choice.effort,
-              }),
+              await rpc.request(
+                'turn/start',
+                {
+                  threadId,
+                  input: input(command, options.instructionBranches),
+                  clientUserMessageId: command.message.id,
+                  model: choice.model,
+                  effort: choice.effort === 'none' ? 'none' : choice.effort,
+                },
+                'close-connection',
+              ),
             )
             activeTurn = string(object(result.turn).id)
           }
@@ -218,10 +235,14 @@ export function createCodexFactory(
         },
         interrupt: async () => {
           if (activeTurn)
-            await rpc.request('turn/interrupt', {
-              threadId,
-              turnId: activeTurn,
-            })
+            await rpc.request(
+              'turn/interrupt',
+              {
+                threadId,
+                turnId: activeTurn,
+              },
+              'close-connection',
+            )
         },
         stop: close,
         close,

@@ -50,7 +50,11 @@ export class CodexSkills {
 
   private async load(rpc: JsonRpc, revision: number): Promise<void> {
     try {
-      const value = await rpc.request('skills/list', { cwds: [this.cwd] })
+      const value = await rpc.request(
+        'skills/list',
+        { cwds: [this.cwd] },
+        'reject-request',
+      )
       const paths = new Map<string, string>()
       for (const entry of array(object(value).data, object)) {
         for (const skill of array(entry.skills, object)) {
@@ -60,7 +64,7 @@ export class CodexSkills {
       }
       if (revision === this.revision) this.paths = paths
     } catch {
-      if (revision !== this.revision || this.warned) return
+      if (rpc.isClosed || revision !== this.revision || this.warned) return
       this.warned = true
       this.warn(
         'The Codex skill list could not be read. The turn will continue.',

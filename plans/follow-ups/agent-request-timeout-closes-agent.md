@@ -1,0 +1,31 @@
+# A Codex request timeout can close the agent
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from the blocked wider fix of review finding 1 of the branch `calummoore/skill-usage-indicator`.
+- **Location:** `runner/src/providers/rpc.ts`, the timer in `JsonRpc.request`.
+- **Reason:** the wider fix deletes an error path that is on `origin/main`, the call to `fail()` in the timer of each request, and only the user approves such a deletion.
+
+- **Source:** Review. **Category:** Code structure.
+- **Terms:**
+  - **Codex App Server:** the `codex app-server` program that the agent runner starts for a Codex session. The runner sends it JSON-RPC requests, such as `thread/start` and `turn/start`.
+  - **`JsonRpc`:** the JSON-RPC client of the runner for the App Server, in `runner/src/providers/rpc.ts`.
+  - **Timeout mode:** the required argument of `JsonRpc.request` that says what a timeout does: close the agent connection, or reject only that request.
+- **Background:**
+  - `JsonRpc.request` starts a 60-second timer for each request. In the closing mode, the timer rejects the request and calls `fail()`, which closes the agent connection. The runner then ends the turn with `agent_exited`.
+  - Review finding 1 of the branch `calummoore/skill-usage-indicator` found that the `skills/list` request used this timer. So a skill list that never answered ended the Codex work, although the skill lines are only a display aid.
+  - That branch added the timeout mode. The `skills/list` request uses the mode that rejects only the request. Every other request keeps the closing mode: `initialize`, `account/login/start`, `thread/start`, `thread/resume`, `turn/start`, `turn/steer`, and `turn/interrupt`.
+  - The callers of those requests already fail the turn when the request rejects, and the engine then closes the agent. So their closing mode adds no behaviour that a reject-only timeout lacks, according to the finding check of that review.
+  - No protocol doc or decision requires a timeout to close the agent connection. Commit `91518996` added the timer.
+- **Problem:** A timeout still closes the whole agent connection in the closing mode. A later request that must not stop the agent depends on its author choosing the other mode.
+- **Impact if no action:** A future request that only helps the display, with the closing mode, can end a running turn when the App Server is slow to answer it.
+- **Root question:** When the Codex App Server does not answer a request in time, what may stop the agent?
+- **Options:**
+  - **A.** Keep the timeout mode of each request, as the branch built it. No change. Effort: Small.
+  - **B.** Let a timeout reject only its own request, for every request. Delete the call to `fail()` in the timer, and the timeout mode with it. Keep `fail()` for an unreadable line, a failed write, and a process exit. The callers of required requests keep failing the turn on a rejection. Add a test with a fake clock that a timed-out request rejects and leaves the connection open. Effort: Small.
+  - **C.** Leave each request without a fatal timer, and add one watch in the engine that closes an agent that sends no event for a set time while a turn runs. It needs a new time limit and a test of the watch. Effort: Medium.
+- **Left out:** A longer timeout only delays the failure.
+- **Wider fix:** B. It removes the case: no request can close the agent through its timer.
+- **Previous examples:** Review finding 1 of the branch `calummoore/skill-usage-indicator`, the `skills/list` request of the Codex skill lines.
+- **Recommendation:** B. A rejected required request already ends the turn through its caller, so the fatal timer adds a second path that can only stop work that should go on.
+- **Action:** ask the user, because B deletes an error path that is on `origin/main`, the call to `fail()` in the timer, and only the user approves such a deletion.

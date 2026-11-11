@@ -39,6 +39,10 @@ These facts belong to this implementation, not to the protocol docs.
   `skills/changed`. The request does not delay the thread or the turn.
   A failed or unreadable list gives one local warning and keeps reads
   as plain commands.
+- Each App Server request selects its timeout mode. A skill-list timeout
+  rejects only that request. Other request timeouts close the agent
+  connection. Each timeout stays at 60 seconds. The adapter gives no
+  skill-list warning after the connection closes.
 - A Codex command keeps kind `run`. Its parsed `read` actions name enabled
   skills from the list when their real paths match. The target holds the
   names in read order, with no repeats. The detail holds the command.

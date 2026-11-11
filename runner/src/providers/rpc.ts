@@ -35,7 +35,15 @@ export class JsonRpc {
     port.onExit(() => this.fail())
   }
 
-  request(method: string, params: unknown): Promise<unknown> {
+  get isClosed(): boolean {
+    return this.closed
+  }
+
+  request(
+    method: string,
+    params: unknown,
+    timeoutMode: 'close-connection' | 'reject-request',
+  ): Promise<unknown> {
     if (this.closed)
       return Promise.reject(new Error('The agent process ended.'))
     const id = this.nextId++
@@ -43,7 +51,7 @@ export class JsonRpc {
       const timer = setTimeout(() => {
         this.pending.delete(id)
         reject(new Error('The agent request did not finish.'))
-        this.fail()
+        if (timeoutMode === 'close-connection') this.fail()
       }, 60_000)
       this.pending.set(id, { resolve, reject, timer })
       try {
