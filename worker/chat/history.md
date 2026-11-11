@@ -95,11 +95,10 @@ streams, and the order of the runner commands.
 ## Session history pages
 
 The browser history route checks the requested session before it reads
-history. A request with `order=newest` reads the pages of that session
-backwards. A request without that flag keeps the forward read.
-[`chatHistoryPath`](../../src/shared/events.ts) accepts a newest-first
-options object in place of its `after` number. That object has
-`order: 'newest'` and an optional `beforeEventNumber`.
+history. Every request reads the pages of that session backwards.
+[`chatHistoryPath`](../../src/shared/events.ts) takes the org, workspace,
+session, optional `beforeEventNumber`, and optional `throughEventNumber`.
+It builds the `sessionId`, `before`, and `through` query fields.
 
 The first reverse page includes the cutoff event. A later page takes
 `before`, an exclusive upper bound. Each page takes the same `through`
@@ -120,9 +119,15 @@ sets `hasMore`. This check avoids an extra page when compaction removed
 the oldest storage keys. It projects no event.
 
 The route uses `BROWSER_PAGE_LIMITS`: 2,048 stored steps or 4 MiB of shown
-events. `ChatTransaction.history` takes the session options as its first
-argument for a reverse read. Its numeric first argument keeps the forward
-read. The events socket and the other internal readers keep that read.
+events. `ChatTransaction.newestHistory` takes the session ID, an optional
+`before` cursor, and an optional cutoff. It clamps that cutoff to the
+workspace's current event number.
+
+`ChatTransaction.history` and `HistoryPages.read` read forward after a
+numeric cursor. Each page reads one storage list of 32 events. The events
+socket, workspace summary, Continue, and transcript copy use that read.
+The transcript copy also uses its session filter. The browser's scan and
+byte limits apply only to the newest-first read.
 
 [`readNewestStoredEvents`](../../src/chat/api/read-workspace.ts) reads the
 reverse response. `ChatHistoryResponse` and `readStoredEvents` keep the

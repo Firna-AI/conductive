@@ -20,7 +20,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('serves reverse session pages through the route without changing forward reads', async () => {
+it('serves newest session pages by default and keeps internal forward reads', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
   await fixture.changeWorkspace(WORKSPACE_ID, async (view) => {
@@ -38,7 +38,7 @@ it('serves reverse session pages through the route without changing forward read
     fixture.org.id,
     WORKSPACE_ID,
     session.id,
-    { order: 'newest', beforeEventNumber: 4 },
+    4,
     5,
   )
   const newestResponse = await fixture.fetch(newestPath)
@@ -52,9 +52,7 @@ it('serves reverse session pages through the route without changing forward read
   expect(parsed.nextBeforeEventNumber).toBeNull()
   expect(newest).not.toHaveProperty('nextAfterEventNumber')
   const firstResponse = await fixture.fetch(
-    chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, {
-      order: 'newest',
-    }),
+    chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id),
   )
   const first = readNewestStoredEvents(await firstResponse.json())
   expect(first.envelopes.map(({ eventNumber }) => eventNumber)).toEqual(
@@ -62,17 +60,15 @@ it('serves reverse session pages through the route without changing forward read
   )
   expect(first.throughEventNumber).toBe(40)
   expect(first.nextBeforeEventNumber).toBeNull()
-  const forwardResponse = await fixture.fetch(
-    chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, 2, 5),
+  const forward = await fixture.chat.store.read(WORKSPACE_ID, (view) =>
+    view.history(2, 5, { sessionId: session.id }),
   )
   expect(
-    readStoredEvents(await forwardResponse.json()).envelopes.map(
-      ({ eventNumber }) => eventNumber,
-    ),
+    readStoredEvents(forward).envelopes.map(({ eventNumber }) => eventNumber),
   ).toEqual([3, 4, 5])
 })
 
-it('checks session access before reverse history and gives the forward refusal for an unreachable session', async () => {
+it('checks session access before newest history for an owner and a member', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
   await fixture.appendWorkspaceEvent(WORKSPACE_ID, {
@@ -84,10 +80,7 @@ it('checks session access before reverse history and gives the forward refusal f
     userMessageIds: [],
   })
   const allowed = await fixture.fetch(
-    chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, {
-      order: 'newest',
-      beforeEventNumber: 2,
-    }),
+    chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, 2),
     undefined,
     fixture.memberCookie,
   )
@@ -111,21 +104,17 @@ it('checks session access before reverse history and gives the forward refusal f
     },
   })
   for (const sessionId of ['missing', 'other-session']) {
-    const forward = await fixture.fetch(
+    const owner = await fixture.fetch(
+      chatHistoryPath(fixture.org.id, WORKSPACE_ID, sessionId),
+    )
+    const member = await fixture.fetch(
       chatHistoryPath(fixture.org.id, WORKSPACE_ID, sessionId),
       undefined,
       fixture.memberCookie,
     )
-    const newest = await fixture.fetch(
-      chatHistoryPath(fixture.org.id, WORKSPACE_ID, sessionId, {
-        order: 'newest',
-      }),
-      undefined,
-      fixture.memberCookie,
-    )
-    expect(forward.status).toBe(404)
-    expect(newest.status).toBe(404)
-    expect(await newest.json()).toEqual(await forward.json())
+    expect(owner.status).toBe(404)
+    expect(member.status).toBe(404)
+    expect(await member.json()).toEqual(await owner.json())
   }
   expect(lists.filter(({ prefix }) => prefix === CHAT_EVENT_PREFIX)).toEqual([])
 })

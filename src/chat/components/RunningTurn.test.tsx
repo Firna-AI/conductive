@@ -65,7 +65,7 @@ describe('the running turn of a session', () => {
     const reload = await renderChat({
       conversation: 'running',
       setup: (server: FakeApiServer) =>
-        server.json('GET', chatHistoryPath(org, ws, id, { order: 'newest' }), {
+        server.json('GET', chatHistoryPath(org, ws, id), {
           events: [...recordedChatEvents('running'), late],
           throughEventNumber: eventNumber,
         }),
@@ -115,12 +115,7 @@ describe('the running turn of a session', () => {
               : session,
           ),
         })
-        server.json(
-          'GET',
-          chatHistoryPath(org, ws, debounce, { order: 'newest' }),
-          failure,
-          500,
-        )
+        server.json('GET', chatHistoryPath(org, ws, debounce), failure, 500)
       },
     })
     await chat.controller.select(debounce)
@@ -145,12 +140,7 @@ describe('the running turn of a session', () => {
     const { chat, text } = await renderChat({
       conversation: 'running',
       setup: (server) =>
-        server.json(
-          'GET',
-          chatHistoryPath(org, ws, id, { order: 'newest' }),
-          failure,
-          500,
-        ),
+        server.json('GET', chatHistoryPath(org, ws, id), failure, 500),
     })
     const snapshot = chat.controller.getSnapshot()
     expect(snapshot.load).toEqual({ state: 'ready' })

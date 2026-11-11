@@ -17,18 +17,18 @@ export async function readChatHistoryPages(
 ) {
   const events: Record<string, unknown>[] = []
   const rawPages: Record<string, unknown>[] = []
-  let after = 0
+  let before: number | undefined
   let through: number | undefined
   while (true) {
     const response = await request(
-      chatHistoryPath(orgId, workspaceId, sessionId, after, through),
+      chatHistoryPath(orgId, workspaceId, sessionId, before, through),
     )
     expect(response.status).toBe(200)
     const page = record(await response.json())
     rawPages.push(page)
-    events.push(...array(page.events, record))
+    events.unshift(...array(page.events, record))
     through ??= counter(page.throughEventNumber)
     if (page.hasMore !== true) return { ...page, events, rawPages }
-    after = counter(page.nextAfterEventNumber)
+    before = counter(page.nextBeforeEventNumber)
   }
 }

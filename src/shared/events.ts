@@ -21,18 +21,12 @@ export function chatHistoryPath(
   orgId: string,
   workspaceId: string,
   sessionId: string,
-  afterEventNumber:
-    number | { order: 'newest'; beforeEventNumber?: number } = 0,
+  beforeEventNumber?: number,
   throughEventNumber?: number,
 ): string {
   const query = new URLSearchParams({ sessionId })
-  if (typeof afterEventNumber === 'number')
-    query.set('after', String(afterEventNumber))
-  else {
-    query.set('order', afterEventNumber.order)
-    if (afterEventNumber.beforeEventNumber !== undefined)
-      query.set('before', String(afterEventNumber.beforeEventNumber))
-  }
+  if (beforeEventNumber !== undefined)
+    query.set('before', String(beforeEventNumber))
   if (throughEventNumber !== undefined)
     query.set('through', String(throughEventNumber))
   return `${workspacePath(orgId, workspaceId)}/history?${query}`

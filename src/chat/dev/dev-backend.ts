@@ -142,7 +142,7 @@ export class DevBackend {
       live ? 1 : recorded.length + 1,
     )
     if (live || loss || unread) {
-      const path = chatHistoryPath(org, workspaceId, shown, { order: 'newest' })
+      const path = chatHistoryPath(org, workspaceId, shown)
       server.json('GET', path, {
         events: live ? [] : recorded,
         throughEventNumber: live ? 0 : recorded.length,

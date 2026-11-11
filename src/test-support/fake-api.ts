@@ -147,16 +147,10 @@ export class FakeApiServer implements FakeRouteWriter {
     const response = this.replies.get(key) ?? this.uploadReply(request)
     if (response) return response.clone()
     const historyPath = new URL(
-      chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session, {
-        order: 'newest',
-      }),
+      chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session),
       FAKE_ORIGIN,
     ).pathname
-    if (
-      request.method === 'GET' &&
-      url.pathname === historyPath &&
-      url.searchParams.get('order') === 'newest'
-    ) {
+    if (request.method === 'GET' && url.pathname === historyPath) {
       const history = this.events.history()
       const through = Number(
         url.searchParams.get('through') ?? history.throughEventNumber,

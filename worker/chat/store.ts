@@ -40,14 +40,13 @@ export class ChatTransaction extends ChatRecords {
   readonly previews: PreviewRevocations
   readonly output: RunnerOutputState
   private readonly summary: WorkspaceSummaryProjection
-  private readonly pages: HistoryPages
+  private readonly pages = new HistoryPages(this.data)
   private through: number
   private commandThrough: number
 
   constructor(data: ChatData, metadata: ChatMetadata, now: number) {
     super(data)
     this.output = new RunnerOutputState(data)
-    this.pages = new HistoryPages(data)
     this.files = chatFilesStorage(data)
     this.github = {
       get: (key) => data.get(key),
@@ -162,11 +161,13 @@ export class ChatTransaction extends ChatRecords {
   saveCursor(streamId: string, through: number): Promise<void> {
     return this.data.put(key('cursor', streamId), through)
   }
-  history = <Cursor extends number | SessionPage>(
-    after: Cursor,
-    through = this.through,
-    session?: SessionPage,
-  ) => this.pages.read(after, Math.min(through, this.through), session)
+  history(after: number, through = this.through, session?: SessionPage) {
+    return this.pages.read(after, Math.min(through, this.through), session)
+  }
+  newestHistory(sessionId: string, before?: number, through = this.through) {
+    through = Math.min(through, this.through)
+    return this.pages.readNewest(before, through, { sessionId })
+  }
 
   async emit(
     event: WorkspaceEvent,

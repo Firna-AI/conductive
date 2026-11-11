@@ -11,7 +11,6 @@ import {
   loadHistoryEvent,
   type StoredWorkspaceEvent,
 } from './history-storage'
-import { jsonBytes } from '../../src/shared/event-limits'
 import { CHAT_EVENT_PREFIX, chatEventKey, chatKey } from './storage-keys'
 import type { ChatData } from './types'
 
@@ -30,20 +29,13 @@ function inSession(event: WorkspaceEvent, sessionId: string): boolean {
   )
 }
 
-/** The limits that end a page of the history. */
+/** The limits that end a newest-first page of the history. */
 export interface PageLimits {
   /** The most stored events that the page reads, of every session. */
   scan: number
   /** The JSON bytes of shown events that end the page. */
   bytes: number
 }
-
-/**
- * A page of one storage list. The readers inside the Durable Object use it:
- * the events socket, the workspace summary, Continue, and the transcript
- * copy, which yields the serial chat queue between pages.
- */
-const LIST_PAGE_LIMITS: PageLimits = { scan: PAGE_SIZE, bytes: Infinity }
 
 /**
  * A page of one session for a history request of the browser. Each page
@@ -57,13 +49,9 @@ export const BROWSER_PAGE_LIMITS: PageLimits = {
   bytes: 4_194_304,
 }
 
-/** The session of a page, and the limits that end the page. */
+/** The session whose events the page shows. */
 export interface SessionPage {
   sessionId: string
-  /** The exclusive upper bound of a newest-first page. */
-  before?: number
-  /** Forward reads use one storage list when absent. */
-  limits?: PageLimits
 }
 
 /** The index keeps replacement identities without retaining event payloads. */
@@ -119,7 +107,7 @@ export class HistoryPages {
   async readNewest(
     before: number | undefined,
     through: number,
-    session: SessionPage,
+    session: SessionPage & { limits?: PageLimits },
   ): Promise<NewestChatHistoryResponse> {
     await this.prepare(through)
     return readNewestHistory(
@@ -132,53 +120,28 @@ export class HistoryPages {
   }
 
   /**
-   * Reads the page of the history after `after`, through `through`. The
-   * page holds the events of the whole workspace in one storage list, or
-   * the events of one session within the limits of `session`.
-   * Session options in place of `after` select a newest-first page.
+   * Reads one storage list after `after`, through `through`. The events
+   * socket, workspace summary, Continue, and transcript copy use this read.
+   * A session filter keeps only that session's events in the list.
    */
-  read<Cursor extends number | SessionPage>(
-    after: Cursor,
-    through: number,
-    session?: SessionPage,
-  ): Promise<
-    Cursor extends number ? ChatHistoryResponse : NewestChatHistoryResponse
-  >
   async read(
-    after: number | SessionPage,
+    after: number,
     through: number,
     session?: SessionPage,
-  ): Promise<ChatHistoryResponse | NewestChatHistoryResponse> {
-    if (typeof after !== 'number')
-      return this.readNewest(after.before, through, after)
+  ): Promise<ChatHistoryResponse> {
     await this.prepare(through)
-    const sessionId = session?.sessionId
-    const limits = session?.limits ?? LIST_PAGE_LIMITS
     const events: WorkspaceEventEnvelope[] = []
+    const records = await this.list(after, through)
     let last = after
-    let scanned = 0
-    let bytes = 0
-    // The range can still hold stored events after `last`.
-    let more = true
-    while (more && scanned < limits.scan && bytes < limits.bytes) {
-      const records = await this.list(last, through)
-      more = records.length === PAGE_SIZE
-      for (const [index, stored] of records.entries()) {
-        if (stored.eventNumber > through) {
-          more = false
-          break
-        }
-        last = stored.eventNumber
-        scanned += 1
-        const envelope = await this.shown(stored, through, sessionId)
-        if (!envelope) continue
-        events.push(envelope)
-        if (limits.bytes === Infinity) continue
-        bytes += jsonBytes(envelope)
-        if (bytes < limits.bytes) continue
-        more ||= index < records.length - 1
+    let more = records.length === PAGE_SIZE
+    for (const stored of records) {
+      if (stored.eventNumber > through) {
+        more = false
         break
       }
+      last = stored.eventNumber
+      const envelope = await this.shown(stored, through, session?.sessionId)
+      if (envelope) events.push(envelope)
     }
     if (!more || last >= through) return { events, throughEventNumber: through }
     return {

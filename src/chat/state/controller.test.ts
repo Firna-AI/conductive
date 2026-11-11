@@ -157,14 +157,10 @@ describe('ChatController', () => {
       { session: fresh, eventNumber: 0 },
       201,
     )
-    chat.server.json(
-      'GET',
-      chatHistoryPath(org, ws, 'third', { order: 'newest' }),
-      {
-        events: [],
-        throughEventNumber: 0,
-      },
-    )
+    chat.server.json('GET', chatHistoryPath(org, ws, 'third'), {
+      events: [],
+      throughEventNumber: 0,
+    })
     await chat.controller.newSession()
     expect(await chat.bodies('POST', sessionsPath(org, ws))).toEqual([
       { choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' } },

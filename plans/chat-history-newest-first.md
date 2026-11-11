@@ -406,11 +406,11 @@ pages.
 - [x] Move each consumer of the oldest-first load that "Replaced ways"
       lists to the newest-first pages. Search `src/` for `chatHistoryPath`
       again first, and move each new consumer too.
-- [ ] Remove the forward session read of the browser route, as decision 281
+- [x] Remove the forward session read of the browser route, as decision 281
       says. Move each Worker consumer that "Replaced ways" lists to the
       newest-first read. Search `worker/` for `chatHistoryPath` again
       first, and move each new consumer too.
-- [ ] Update the route table in `worker/chat/README.md`, and the notes in
+- [x] Update the route table in `worker/chat/README.md`, and the notes in
       `worker/chat/key-code.md` and `worker/chat/history.md`.
 - [x] Update `src/chat/loads-and-sends.md` and the doc comment of
       `loadChat`.
@@ -424,7 +424,8 @@ pages.
 - [ ] Smoke test a long session with `npm run dev`: the order of the pages,
       the "Loading earlier messages" line, and the live events during the
       load.
-- Evidence: `.context/chat-history-newest-first/milestone-3/report.md`.
+- Evidence: `.context/chat-history-newest-first/milestone-3/report.md` and
+  `.context/chat-history-newest-first/decision-281/report.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

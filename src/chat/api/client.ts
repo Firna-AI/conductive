@@ -93,16 +93,7 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
      */
     history: (sessionId: string, before?: number, through?: number) =>
       client.get(
-        chatHistoryPath(
-          orgId,
-          workspaceId,
-          sessionId,
-          {
-            order: 'newest',
-            beforeEventNumber: before,
-          },
-          through,
-        ),
+        chatHistoryPath(orgId, workspaceId, sessionId, before, through),
         readNewestStoredEvents,
       ),
     /** The saved view, with the routine of a run workspace. */

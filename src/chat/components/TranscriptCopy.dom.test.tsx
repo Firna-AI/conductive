@@ -64,9 +64,7 @@ function transcriptReads(server: FakeApiServer): string[] {
 /** The reads of the stored history of the copied session. */
 function historyReads(server: FakeApiServer): number {
   const history = new URL(
-    chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, sessionId, {
-      order: 'newest',
-    }),
+    chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, sessionId),
     FAKE_ORIGIN,
   )
   return server.requests.filter((request) => {

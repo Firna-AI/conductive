@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
-import { readStoredEvents } from '../../src/chat/api/read-workspace'
+import { readNewestStoredEvents } from '../../src/chat/api/read-workspace'
 import { chatHistoryPath } from '../../src/shared/events'
 import { createWorkspaceToolClient } from '../../tools/client'
 import {
@@ -58,7 +58,7 @@ it('keeps a turn end reason in stored history and read_session after a restart',
   )
   expect(history.status).toBe(200)
   expect(
-    readStoredEvents(await history.json())
+    readNewestStoredEvents(await history.json())
       .envelopes.map((envelope) => envelope.event)
       .filter((item) => item?.type === 'turn.completed'),
   ).toEqual([event])

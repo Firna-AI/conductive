@@ -51,9 +51,7 @@ export async function handleTranscript(
   const api = createChatApi(backend.client, backend.target)
   const [stored, models, members] = await Promise.all([
     backend.server
-      .fetch(
-        chatHistoryPath(orgId, workspaceId, session.id, { order: 'newest' }),
-      )
+      .fetch(chatHistoryPath(orgId, workspaceId, session.id))
       .then(async (response) => readNewestStoredEvents(await response.json())),
     api.models(),
     api.members(),

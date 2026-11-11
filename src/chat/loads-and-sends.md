@@ -24,9 +24,9 @@ the message field of each composer, and Stop.
   the reads and the stream gets lost. The view also gives the routine of a run
   workspace, with the pull request of a pull request run. The snapshot keeps
   it as `routine` for the workspace header.
-- The history API reads newest first with `order=newest`. Each earlier
-  request uses the preceding page's `nextBeforeEventNumber` as an exclusive
-  `before` cursor. Every request keeps the first page's cutoff. A cursor
+- The history API reads newest first. Each earlier request uses the
+  preceding page's `nextBeforeEventNumber` as an exclusive `before`
+  cursor. Every request keeps the first page's cutoff. A cursor
   that does not move back fails the history load.
 - Earlier pages load one after another. The load holds their events and
   merges them once, after the oldest page or an earlier-page failure.

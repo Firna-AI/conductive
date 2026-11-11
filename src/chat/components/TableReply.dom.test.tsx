@@ -68,9 +68,7 @@ it('shows a reply with a table from the saved history as after its last live upd
     setup: (server) =>
       server.json(
         'GET',
-        chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session, {
-          order: 'newest',
-        }),
+        chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session),
         {
           events: [
             ...recorded,

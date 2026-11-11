@@ -54,12 +54,15 @@ first.
   requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
-  chunks of large file reports and tree deltas.
+  chunks of large file reports and tree deltas. `ChatTransaction.newestHistory`
+  serves the browser's session history. `history` keeps the forward read
+  for the events socket, workspace summary, Continue, and transcript copy.
 - `history-pages.ts`: `HistoryPages`, the pages of the stored history and
-  the index of replaced answers and tool states. A page reads one storage
-  list of 32 events. The session history route of the browser passes
-  `BROWSER_PAGE_LIMITS`, so its page reads on up to 2,048 stored events or
-  4 MiB of session events, and a long workspace costs few requests.
+  the index of replaced answers and tool states. `read` reads one forward
+  storage list of 32 events. `readNewest` uses `BROWSER_PAGE_LIMITS` for the
+  browser: up to 2,048 stored events or 4 MiB of session events.
+- `history-newest-pages.ts`: the reverse storage loop, its byte and scan
+  limits, and the exclusive cursor of the next earlier page.
 - `routine-run.ts`: reports a routine's stored first-turn result after a chat transaction commits.
 - `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and routine outcome recovery after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the

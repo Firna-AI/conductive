@@ -60,21 +60,17 @@ describe('the note of Continue', () => {
   it('shows in a closed session when its stored history loads', async () => {
     const chat = chatFor()
     const closed = workspaceFixtures().sessions.history[0].id
-    chat.server.json(
-      'GET',
-      chatHistoryPath(org, ws, closed, { order: 'newest' }),
-      {
-        events: [
-          {
-            workspaceId: ws,
-            eventNumber: 900,
-            occurredAt: FAKE_TIME,
-            event: note(closed),
-          },
-        ],
-        throughEventNumber: 900,
-      },
-    )
+    chat.server.json('GET', chatHistoryPath(org, ws, closed), {
+      events: [
+        {
+          workspaceId: ws,
+          eventNumber: 900,
+          occurredAt: FAKE_TIME,
+          event: note(closed),
+        },
+      ],
+      throughEventNumber: 900,
+    })
     await chat.controller.start()
 
     await chat.controller.loadHistory(closed)

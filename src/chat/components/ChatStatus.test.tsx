@@ -11,7 +11,7 @@ import { renderChat } from './render-kit'
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
 const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
-const history = chatHistoryPath(org, ws, 'debounce', { order: 'newest' })
+const history = chatHistoryPath(org, ws, 'debounce')
 const failure = {
   error: { code: 'internal_error', message: 'The server is busy.' },
 }
@@ -103,16 +103,7 @@ describe('the load status of the chat', () => {
 describe('the history status of a session', () => {
   it('shows Loading earlier messages above the newest page until the oldest page arrives', async () => {
     const events = recordedChatEvents('history', ws, 'debounce')
-    const earlier = chatHistoryPath(
-      org,
-      ws,
-      'debounce',
-      {
-        order: 'newest',
-        beforeEventNumber: 8,
-      },
-      9,
-    )
+    const earlier = chatHistoryPath(org, ws, 'debounce', 8, 9)
     const { chat, text } = await renderChat({
       conversation: 'history',
       hold: (request) => request.url.endsWith(earlier),
@@ -155,13 +146,7 @@ describe('the history status of a session', () => {
   it('shows that the earlier messages did not load beside live text, and Try again adds them once', async () => {
     const events = recordedChatEvents('history', ws, 'debounce')
     const path = (beforeEventNumber: number, through = 9) =>
-      chatHistoryPath(
-        org,
-        ws,
-        'debounce',
-        { order: 'newest', beforeEventNumber },
-        through,
-      )
+      chatHistoryPath(org, ws, 'debounce', beforeEventNumber, through)
     const { chat, text } = await renderChat({
       conversation: 'history',
       setup: (server) => {

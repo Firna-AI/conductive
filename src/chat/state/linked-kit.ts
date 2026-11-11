@@ -89,7 +89,7 @@ export const loginPrivate = (session: Session): Session => ({
  * again as `retry-1`. The linked session has an empty history.
  */
 function opensLinked(server: FakeApiServer) {
-  server.json('GET', chatHistoryPath(org, ws, LINKED, { order: 'newest' }), {
+  server.json('GET', chatHistoryPath(org, ws, LINKED), {
     events: [],
     throughEventNumber: 0,
   })

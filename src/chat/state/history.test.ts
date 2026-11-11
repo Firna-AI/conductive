@@ -45,33 +45,16 @@ describe('session history', () => {
         new URL(request.url).searchParams.get('sessionId') === 'autocomplete',
     })
     const events = recordedChatEvents('history', ws, 'autocomplete')
-    chat.server.json(
-      'GET',
-      chatHistoryPath(org, ws, 'autocomplete', { order: 'newest' }),
-      {
-        events: events.filter(({ eventNumber }) => eventNumber >= 8),
-        throughEventNumber: 11,
-        hasMore: true,
-        nextBeforeEventNumber: 8,
-      },
-    )
-    chat.server.json(
-      'GET',
-      chatHistoryPath(
-        org,
-        ws,
-        'autocomplete',
-        {
-          order: 'newest',
-          beforeEventNumber: 8,
-        },
-        11,
-      ),
-      {
-        events: events.filter(({ eventNumber }) => eventNumber < 8),
-        throughEventNumber: 11,
-      },
-    )
+    chat.server.json('GET', chatHistoryPath(org, ws, 'autocomplete'), {
+      events: events.filter(({ eventNumber }) => eventNumber >= 8),
+      throughEventNumber: 11,
+      hasMore: true,
+      nextBeforeEventNumber: 8,
+    })
+    chat.server.json('GET', chatHistoryPath(org, ws, 'autocomplete', 8, 11), {
+      events: events.filter(({ eventNumber }) => eventNumber < 8),
+      throughEventNumber: 11,
+    })
     const loaded = chat.controller.start()
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     const loading = chat.controller.getSnapshot()
@@ -112,7 +95,9 @@ describe('session history', () => {
     const history = chat.server.requests
       .map((request) => new URL(request.url))
       .find((url) => url.searchParams.get('sessionId') === 'debounce')
-    expect(history?.searchParams.get('order')).toBe('newest')
+    expect(Object.fromEntries(history?.searchParams ?? [])).toEqual({
+      sessionId: 'debounce',
+    })
     await vi.waitFor(
       () => expect(shown(chat.controller, 'debounce')).toEqual(recordedHistory),
       shortly,
@@ -159,7 +144,7 @@ describe('session history', () => {
 
   it('tries a failed history again only when the user asks', async () => {
     const chat = chatFor({ conversation: 'history' })
-    const history = chatHistoryPath(org, ws, 'debounce', { order: 'newest' })
+    const history = chatHistoryPath(org, ws, 'debounce')
     chat.server.json(
       'GET',
       history,
@@ -201,29 +186,17 @@ describe('session history', () => {
     // The pages leave out the running state of the tool, which its end replaces.
     chat.server.json(
       'GET',
-      chatHistoryPath(org, ws, 'debounce', { order: 'newest' }),
+      chatHistoryPath(org, ws, 'debounce'),
       page([8, 9], 8),
     )
     chat.server.json(
       'GET',
-      chatHistoryPath(
-        org,
-        ws,
-        'debounce',
-        { order: 'newest', beforeEventNumber: 8 },
-        9,
-      ),
+      chatHistoryPath(org, ws, 'debounce', 8, 9),
       page([7], 7),
     )
     chat.server.json(
       'GET',
-      chatHistoryPath(
-        org,
-        ws,
-        'debounce',
-        { order: 'newest', beforeEventNumber: 7 },
-        9,
-      ),
+      chatHistoryPath(org, ws, 'debounce', 7, 9),
       page([1, 2, 3, 4, 5]),
     )
     await chat.controller.start()

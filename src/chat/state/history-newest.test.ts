@@ -36,7 +36,7 @@ function pagedChat(holdBefore: number) {
       org,
       ws,
       session,
-      { order: 'newest', beforeEventNumber },
+      beforeEventNumber,
       beforeEventNumber === undefined ? undefined : 20,
     )
   chat.server.json('GET', path(), {

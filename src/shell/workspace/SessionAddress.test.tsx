@@ -84,7 +84,7 @@ async function startWhileHidden(
     ...sessions,
     sessions: [...sessions.sessions, fresh],
   })
-  server.json('GET', chatHistoryPath(org, id, 'fresh', { order: 'newest' }), {
+  server.json('GET', chatHistoryPath(org, id, 'fresh'), {
     events: [],
     throughEventNumber: 0,
   })

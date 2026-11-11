@@ -176,14 +176,10 @@ export function fakeWorkspaceRoutes(
         paths === 'masked'
           ? withMaskedTurnFiles(recorded, maskedChangedFiles())
           : recorded
-      routes.json(
-        'GET',
-        chatHistoryPath(org, id, session.id, { order: 'newest' }),
-        {
-          events,
-          throughEventNumber: events.at(-1)?.eventNumber ?? 0,
-        },
-      )
+      routes.json('GET', chatHistoryPath(org, id, session.id), {
+        events,
+        throughEventNumber: events.at(-1)?.eventNumber ?? 0,
+      })
     }
   }
 }

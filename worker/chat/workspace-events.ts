@@ -63,10 +63,6 @@ export function presentWorkspaceHistory(
 export function presentWorkspaceHistory(
   history: ChatHistoryResponse | NewestChatHistoryResponse,
   context: WorkspaceLinkContext,
-): PublicHistory | PublicNewestHistory
-export function presentWorkspaceHistory(
-  history: ChatHistoryResponse | NewestChatHistoryResponse,
-  context: WorkspaceLinkContext,
 ): PublicHistory | PublicNewestHistory {
   return {
     ...history,
