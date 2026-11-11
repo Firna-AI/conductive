@@ -1,3 +1,4 @@
+import { sessionLink } from '../session-link'
 import type { ToolCall } from '../chat-events'
 import type { DeviceCommandRecord } from '../device'
 import type { ChangedFile } from '../files'
@@ -28,6 +29,8 @@ import {
   filesUnread,
   omittedFiles,
   stoppedSummary,
+  stoppedAttribution,
+  stoppedNotes,
   turnCopy,
   type ChatReaders,
 } from './turn-words'
@@ -66,6 +69,7 @@ export function itemMarkdown(
   item: TranscriptItem,
   transcript: Transcript,
   readers: ChatReaders,
+  links: { origin: string; orgId: string },
 ): string {
   switch (item.kind) {
     case 'user':
@@ -95,10 +99,24 @@ export function itemMarkdown(
         `${turnCopy.finished} ${formatDuration(item.durationMs)}${files.length > 0 ? `. ${turnCopy.changedFiles}: ${files.join(' · ')}` : ''}${unread ? ` · ${turnFilesUnavailable}` : ''}`,
       )
     }
-    case 'stopped':
-      return note(
-        plainText(stoppedSummary(transcript, item.turnId, item.by, readers)),
+    case 'stopped': {
+      const source = stoppedAttribution(
+        transcript,
+        item.turnId,
+        item.by,
+        readers,
       )
+      return note(
+        source.kind === 'session'
+          ? [
+              `${source.text} <${sessionLink(links.origin, links.orgId, source.reference.workspaceId, source.reference.sessionId)}>`,
+              ...stoppedNotes(transcript, item.turnId).map(plainText),
+            ].join(' · ')
+          : plainText(
+              stoppedSummary(transcript, item.turnId, item.by, readers),
+            ),
+      )
+    }
     case 'failed':
       return note(`${turnCopy.failed}: ${plainText(item.error.message)}`)
     case 'lost':

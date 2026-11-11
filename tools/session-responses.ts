@@ -1,12 +1,12 @@
+import type { AgentWorkspaceSummary } from '../src/shared/agent-tools.ts'
 import type {
   AgentCreateSessionResponse,
   AgentSendMessageResponse,
   AgentListSessionsResponse,
   AgentReadSessionResponse,
   AgentTranscriptPosition,
-  AgentWorkspaceSummary,
   AgentSessionResume,
-} from '../src/shared/agent-tools.ts'
+} from '../src/shared/agent-sessions.ts'
 import type { UserMessage } from '../src/shared/messages.ts'
 import type { Session } from '../src/shared/sessions.ts'
 import { choice, record, text, ToolInputError } from './input.ts'
@@ -50,6 +50,7 @@ function workspace(value: unknown): AgentWorkspaceSummary {
 export function listedSessions(value: unknown): AgentListSessionsResponse {
   const fields = record(value)
   return {
+    ...(fields.hasMore !== undefined && { hasMore: flag(fields.hasMore) }),
     workspace: workspace(fields.workspace),
     sessions: array(fields.sessions).map((value) => {
       const item = record(value)

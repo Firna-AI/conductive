@@ -1,4 +1,6 @@
 import workspaceContractSource from '../../src/shared/agent-workspaces.ts?raw'
+import sessionPathsSource from '../../src/shared/agent-session-paths.ts?raw'
+import sessionContractSource from '../../src/shared/agent-sessions.ts?raw'
 import contractSource from '../../src/shared/agent-tools.ts?raw'
 import cliSource from '../../tools/cli.ts?raw'
 import clientSource from '../../tools/client.ts?raw'
@@ -37,5 +39,7 @@ export const WORKSPACE_TOOL_SOURCES = [
   { path: 'src/shared/device.ts', contents: deviceSource },
   { path: 'src/shared/device-read.ts', contents: deviceReadSource },
   { path: 'src/shared/agent-tools.ts', contents: contractSource },
+  { path: 'src/shared/agent-session-paths.ts', contents: sessionPathsSource },
+  { path: 'src/shared/agent-sessions.ts', contents: sessionContractSource },
   { path: 'src/shared/agent-workspaces.ts', contents: workspaceContractSource },
 ] as const satisfies readonly WorkspaceToolSource[]

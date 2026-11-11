@@ -26,11 +26,35 @@ export function productionAgentTools(
         writeWorkspaceFromTool(env, dependencies, input),
       models: async () => configuredModels(env),
       writeSession: (input) => writeSessionFromTool(env, dependencies, input),
-      listSessions: async (orgId, workspaceId) =>
+      listSessions: async (orgId, workspaceId, input) =>
         requireFeatureResult(
           await workspaceBinding(env)
             .getByName(workspaceId)
-            .listAgentSessions(orgId, workspaceId, env.APP_ORIGIN),
+            .listAgentSessions(orgId, workspaceId, env.APP_ORIGIN, input),
+        ),
+      getSession: async (orgId, workspaceId, sessionId) =>
+        requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(workspaceId)
+            .getAgentSession(orgId, workspaceId, sessionId, env.APP_ORIGIN),
+        ),
+      getMessage: async (orgId, workspaceId, sessionId, messageId) =>
+        requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(workspaceId)
+            .getAgentMessage(
+              orgId,
+              workspaceId,
+              sessionId,
+              messageId,
+              env.APP_ORIGIN,
+            ),
+        ),
+      manageSession: async (input) =>
+        requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(input.workspaceId)
+            .manageAgentSession(input, env.APP_ORIGIN),
         ),
       readSession: async (orgId, workspaceId, sessionId, input) =>
         requireFeatureResult(

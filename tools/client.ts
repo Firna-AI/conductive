@@ -1,19 +1,23 @@
 import {
   MACHINE_PATHS,
-  agentSessionsPath,
-  agentSessionTranscriptPath,
-  agentSessionMessagesPath,
-  type AgentCreateSessionRequest,
-  type AgentCreateSessionResponse,
-  type AgentSendMessageRequest,
-  type AgentSendMessageResponse,
-  type AgentReadSessionRequest,
-  type AgentReadSessionResponse,
-  type AgentListSessionsResponse,
   type AgentListModelsResponse,
   type AgentListRepositoriesResponse,
   type AgentListSectionsResponse,
 } from '../src/shared/agent-tools.ts'
+import type {
+  AgentCreateSessionRequest,
+  AgentCreateSessionResponse,
+  AgentSendMessageRequest,
+  AgentSendMessageResponse,
+  AgentReadSessionRequest,
+  AgentReadSessionResponse,
+  AgentListSessionsResponse,
+} from '../src/shared/agent-sessions.ts'
+import {
+  agentSessionsPath,
+  agentSessionTranscriptPath,
+  agentSessionMessagesPath,
+} from '../src/shared/agent-session-paths.ts'
 import type {
   AgentCreateWorkspaceRequest,
   AgentCreateWorkspaceResponse,

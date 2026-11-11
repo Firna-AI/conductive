@@ -77,6 +77,7 @@ export async function buildSessionTranscript(
           : undefined,
       ])
       return {
+        linkContext: { origin: access.origin, orgId: access.orgId },
         session,
         eventNumber: view.eventNumber,
         copiedAt: view.now,

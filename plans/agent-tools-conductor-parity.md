@@ -591,23 +591,26 @@ Depends on: 3
 Add the session and message calls, and the stored session of a stop by an
 agent.
 
-- [ ] Add `get_session`, `rename_session`, `close_session`, `stop_session`,
+- [x] Add `get_session`, `rename_session`, `close_session`, `stop_session`,
       and `get_message` to `worker/tools/`. Reuse the session routes of
       `worker/chat` without a browser context.
-- [ ] Add the approved limit and offset paging to `list_sessions`. Keep a
+- [x] Add the approved limit and offset paging to `list_sessions`. Keep a
       call without options unchanged, including closed sessions.
-- [ ] Let a close that stops a running turn record the member, so the stop
+- [x] Let a close that stops a running turn record the member, so the stop
       line names that member, as decision 72 says for Stop. Today such a
       close records no stopper, and the line says "The agent stopped".
-- [ ] Store the sending workspace and session IDs on a stop by a tool, also through
+- [x] Store the sending workspace and session IDs on a stop by a tool, also through
       `close_session`. Give it to the words in
       `src/shared/transcript/turn-words.ts`, for the chat and the copy of a
       transcript.
-- [ ] Add tests beside the code: each call for a session of another
+- [x] Add tests beside the code: each call for a session of another
       workspace, a close of a running session with and without the stop, a
       stop of an idle session, the stored sending session, the stop line
       in the copy, and a message of another workspace.
 - [ ] Update `worker/tools/README.md` and `worker/chat/README.md`.
+
+Evidence: `.context/agent-tools-conductor-parity/reports/m4-sessions.md`
+and `.context/agent-tools-conductor-parity/checks/m4-orchestrator-tests.log`.
 
 ## Milestone 5: Section and preview calls
 

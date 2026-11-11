@@ -1,3 +1,4 @@
+import type { AgentWorkspaceSummary } from '../../src/shared/agent-tools'
 import type {
   AgentListSessionsResponse,
   AgentReadSessionRequest,
@@ -5,8 +6,13 @@ import type {
   AgentCreateSessionRequest,
   AgentSendMessageRequest,
   AgentSessionWriteResponse,
-  AgentWorkspaceSummary,
-} from '../../src/shared/agent-tools'
+  AgentSessionResponse,
+  AgentStopSessionResponse,
+  AgentGetMessageResponse,
+  AgentListSessionsRequest,
+  AgentRenameSessionRequest,
+  AgentCloseSessionRequest,
+} from '../../src/shared/agent-sessions'
 import type {
   AgentCreateWorkspaceResponse,
   AgentRenameWorkspaceRequest,
@@ -56,6 +62,19 @@ export type ToolSessionWrite = {
   | { kind: 'send'; sessionId: string; input: AgentSendMessageRequest }
 )
 
+export type ToolSessionManagement = {
+  orgId: string
+  workspaceId: string
+  sessionId: string
+  callerWorkspaceId: string
+  callerSessionId: string
+  senderUserId: string
+} & (
+  | ({ kind: 'rename' } & AgentRenameSessionRequest)
+  | ({ kind: 'close' } & Required<AgentCloseSessionRequest>)
+  | { kind: 'stop' }
+)
+
 export type ToolWorkspaceWrite = {
   orgId: string
   workspaceId: string
@@ -78,10 +97,25 @@ export interface AgentToolServices {
   ): Promise<AgentCreateWorkspaceResponse | null>
   writeWorkspace(input: ToolWorkspaceWrite): Promise<void>
   models(): Promise<readonly AgentModel[]>
+  manageSession(
+    input: ToolSessionManagement,
+  ): Promise<AgentSessionResponse | AgentStopSessionResponse>
+  getSession(
+    orgId: string,
+    workspaceId: string,
+    sessionId: string,
+  ): Promise<AgentSessionResponse>
+  getMessage(
+    orgId: string,
+    workspaceId: string,
+    sessionId: string,
+    messageId: string,
+  ): Promise<AgentGetMessageResponse>
   writeSession(input: ToolSessionWrite): Promise<AgentSessionWriteResponse>
   listSessions(
     orgId: string,
     workspaceId: string,
+    input?: AgentListSessionsRequest,
   ): Promise<AgentListSessionsResponse>
   readSession(
     orgId: string,

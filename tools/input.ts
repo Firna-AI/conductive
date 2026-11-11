@@ -2,7 +2,7 @@ import type {
   AgentCreateSessionRequest,
   AgentSendMessageRequest,
   AgentReadSessionRequest,
-} from '../src/shared/agent-tools.ts'
+} from '../src/shared/agent-sessions.ts'
 import type { AgentCreateWorkspaceRequest } from '../src/shared/agent-workspaces.ts'
 import type { Agent, AgentChoice, Effort } from '../src/shared/agents.ts'
 
