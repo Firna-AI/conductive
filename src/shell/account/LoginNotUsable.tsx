@@ -4,6 +4,7 @@ import styles from '../../../docs/mockups/src/components/settings/LoginNotUsable
 import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import type { AgentLoginStatus } from '../../shared/account'
 import { ActionButton } from '../ui/actions'
+import type { FocusRef } from '../ui/inline-form'
 
 /**
  * Why the app can no longer use a connected login, such as a ChatGPT
@@ -24,16 +25,19 @@ export function SignedOutStatus() {
  * The cause under the row of a login that the app can no longer use, then
  * Sign in again, which opens the Connect form of its agent and lines up
  * with Remove. `disabled` turns Sign in again off, as it does Connect.
+ * `buttonRef` gets Sign in again, which the form gives the focus back to.
  */
 export function LoginNotUsable(props: {
   cause: string
   signInAgain: () => void
   disabled: boolean
+  buttonRef: FocusRef
 }) {
   return (
     <div className={styles.notUsable}>
       <p className={styles.cause}>{props.cause}</p>
       <ActionButton
+        buttonRef={props.buttonRef}
         disabled={props.disabled}
         onPress={props.signInAgain}
         tone="primary"

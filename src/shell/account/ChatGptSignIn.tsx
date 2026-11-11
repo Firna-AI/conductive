@@ -10,9 +10,9 @@ import { useStore } from '../../app/store'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { ExternalLink } from '../ui/links'
+import ui from '../ui/ui.module.css'
 import { CodexSignIn, type SignInCode, type SignInState } from './codex-sign-in'
 import { useStepFocus } from './step-focus'
-import focus from './step-focus.module.css'
 
 /** The first line of a step, which takes the focus as `useStepFocus` says. */
 type Line = Ref<HTMLParagraphElement>
@@ -55,7 +55,7 @@ function CodeShown(props: { code: SignInCode; ref: Line }) {
   return (
     <>
       <p
-        className={classes(formStyles.text, focus.line)}
+        className={classes(formStyles.text, ui.focusTarget)}
         ref={ref}
         tabIndex={-1}
       >
@@ -92,7 +92,7 @@ function Problem(props: {
       className={classes(
         styles.problem,
         props.refused && styles.refused,
-        focus.line,
+        ui.focusTarget,
       )}
       ref={ref}
       role={props.refused ? 'alert' : undefined}
@@ -134,7 +134,7 @@ function Step(props: {
       return (
         <>
           <p
-            className={classes(formStyles.text, focus.line)}
+            className={classes(formStyles.text, ui.focusTarget)}
             ref={ref}
             tabIndex={-1}
           >
@@ -201,7 +201,7 @@ export function ChatGptSignIn(props: {
     void signIn.start(() => connected.current())
   }
   return (
-    <div className={focus.steps} ref={steps}>
+    <div className={ui.contents} ref={steps}>
       <Step close={props.close} ref={line} start={start} state={state} />
     </div>
   )

@@ -178,6 +178,21 @@ export function byText(text: string, root: ParentNode = document): HTMLElement {
   return present(queryByText(text, root), `has the text "${text}"`)
 }
 
+/**
+ * The element with the focus, by its role and its accessible name, such as
+ * `button Connect Claude`. An element without a role gives its tag, and
+ * `the page` means that the focus fell to the page.
+ */
+export function focusedElement(): string {
+  const active = document.activeElement
+  if (active === null || active === document.body) return 'the page'
+  const role =
+    active.getAttribute('role') ??
+    implicitRoles[active.tagName] ??
+    active.tagName.toLowerCase()
+  return `${role} ${accessibleName(active)}`
+}
+
 /** The one shown `<dialog>` with the name. None or more than one fails. */
 export function byDialog(
   name: string,

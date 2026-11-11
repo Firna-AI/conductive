@@ -13,7 +13,8 @@ const copy = getStartedCopy.agent
  * default model opens, and it stays open until a login is saved. Before
  * that, Connect stays on, as the mockup draws it: a login belongs to the
  * person, not to the org, so it can come first. A connect loads the steps
- * again.
+ * again. The list stays on the page when the state of the step changes, so
+ * the focus that a closed form gave back stays in the list.
  */
 export function AgentStep(props: { state: StepState }) {
   const app = useApp()
@@ -34,7 +35,6 @@ export function AgentStep(props: { state: StepState }) {
         connected={refresh.run}
         disabled={false}
         initial={initial}
-        key={props.state}
         removable={false}
       />
     </Section>

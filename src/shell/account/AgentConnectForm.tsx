@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Input } from '@firna/ui/input'
 import { SegmentedControl } from '@firna/ui/segmented'
 import { TriangleAlert } from 'lucide-react'
@@ -12,6 +12,7 @@ import type { SaveAgentLoginRequest } from '../../shared/account'
 import type { Agent } from '../../shared/agents'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
+import { useInlineFormFocus, type InlineFormFocus } from '../ui/inline-form'
 import { ExternalLink } from '../ui/links'
 import { ChatGptSignIn } from './ChatGptSignIn'
 import { agentNames, loginLabels, type LoginKind } from './labels'
@@ -191,14 +192,18 @@ function SecretFields(props: {
  * default the first kind of the agent. A secret has its field and Connect.
  * The ChatGPT plan has the steps of its sign-in, which another kind stops.
  * Cancel shows when `close` is set. `connected` runs after a save or a
- * sign-in.
+ * sign-in. The form is an inline form: `focus` places the focus as it opens
+ * and closes, as `useInlineFormFocus` says, and the switch takes it first.
  */
 export function AgentConnectForm(props: {
   agent: Agent
   kind?: LoginKind
   close?: () => void
   connected: () => void
+  focus: InlineFormFocus
 }) {
+  const root = useRef<HTMLDivElement>(null)
+  useInlineFormFocus(root, props.focus)
   const { field } = useControlSizes()
   const [form] = useState(() => new SecretForm())
   const kinds = connectKinds[props.agent]
@@ -206,7 +211,7 @@ export function AgentConnectForm(props: {
   const state = useStore(form.state)
   const ask = asks[props.agent][kind]
   return (
-    <div className={styles.form}>
+    <div className={styles.form} ref={root}>
       <SegmentedControl
         accessibilityLabel="Connect with"
         disabled={state.saving}

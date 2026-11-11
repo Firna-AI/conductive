@@ -5,9 +5,9 @@ import type { SignInStage } from './codex-sign-in'
  * Moves the focus to the first line of each step of the ChatGPT sign-in
  * that shows, so that the keyboard keeps its place when a step takes away
  * the button that the user pressed, or gives that button another action.
- * `steps` holds every step, and `line` is the first line of the step that
- * shows, with a tabindex of -1 and the class `line` of
- * `step-focus.module.css`.
+ * `steps` holds every step, in a wrapper without a box, and `line` is the
+ * first line of the step that shows, with a tabindex of -1 and the class
+ * `focusTarget` of `ui.module.css`, which shows no focus ring.
  *
  * The focus moves only from the steps, or from nowhere, as after a press of
  * a button that leaves, such as Sign in again. So a control outside the
