@@ -5,11 +5,9 @@ import styles from '../../../docs/mockups/src/components/chat/Composer.module.cs
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { useStore } from '../../app/store'
-import {
-  DraftFiles,
-  OversizeNotice,
-} from '../../chat/components/AttachmentChips'
+import { OversizeNotice } from '../../chat/components/AttachmentChips'
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
+import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useSendKey } from '../../chat/components/send-key'
 import type { AgentChoice, AgentModel } from '../../shared/agents'
 import { IconButton } from '../ui/actions'
@@ -17,15 +15,16 @@ import { ModelPicker } from '../ui/ModelPicker'
 import ui from '../ui/ui.module.css'
 
 /**
- * The composer of a new workspace: attached files above the text, then the
- * attach button, the model and effort picker, and Send. The files upload
- * before the workspace exists, with the chips and the notice of the
- * workspace chat. Send is off until the message can go, as the screen
- * decides for Send and Try again. Enter sends as in every composer: on a
- * computer, Enter sends and Shift+Enter adds a line. While the create runs,
- * the text and the attach button are off. A kept message shows with the
- * cursor at its end. A pasted workspace link shows as a chip, which
- * `OrgLinks` finds.
+ * The composer of a new workspace: the text, with a chip for each attached
+ * file at its place, then the attach button, the model and effort picker,
+ * and Send. The files of a pick go into the text at the caret, or at the end
+ * when the text has no caret. They upload before the workspace exists, with
+ * the chips and the notice of the workspace chat. Send is off until the
+ * message can go, as the screen decides for Send and Try again. Enter sends
+ * as in every composer: on a computer, Enter sends and Shift+Enter adds a
+ * line. While the create runs, the text and the attach button are off. A
+ * kept message shows with the cursor at its end. A pasted workspace link
+ * shows as a chip, which `OrgLinks` finds.
  */
 export function Composer(props: {
   model: NewWorkspaceModel
@@ -38,27 +37,23 @@ export function Composer(props: {
   const control = useControlSizes()
   const draft = useStore(props.model.draft)
   const create = useStore(props.model.create)
-  const files = useRef<HTMLInputElement>(null)
+  const picker = useRef<HTMLInputElement>(null)
+  const field = useRef<FieldHandle>(null)
   const sending = create.state === 'sending'
   const sendKey = useSendKey(props.ready, props.send)
   return (
     <>
       <OversizeNotice
-        onAttach={() => files.current?.click()}
+        onAttach={() => picker.current?.click()}
         refused={draft.refused}
       />
       <div className={styles.wrap}>
         <div className={styles.composer}>
-          {draft.files.length > 0 ? (
-            <DraftFiles
-              files={draft.files}
-              onRemove={(id) => props.model.removeFile(id)}
-              onRetry={(id) => void props.model.retryFile(id)}
-            />
-          ) : null}
           <ChipTextField
             caretAtEnd
             editable={!sending}
+            files={props.model.filesSource}
+            handle={field}
             label="Message"
             lines={2}
             maxLines={8}
@@ -73,7 +68,7 @@ export function Composer(props: {
               disabled={sending}
               icon={Paperclip}
               label="Attach files"
-              onPress={() => files.current?.click()}
+              onPress={() => picker.current?.click()}
             />
             <input
               className={ui.hidden}
@@ -81,9 +76,10 @@ export function Composer(props: {
               onChange={(event) => {
                 const chosen = Array.from(event.currentTarget.files ?? [])
                 event.currentTarget.value = ''
-                if (chosen.length > 0) void props.model.attach(chosen)
+                if (chosen.length === 0) return
+                field.current?.insertFiles(props.model.attach(chosen))
               }}
-              ref={files}
+              ref={picker}
               tabIndex={-1}
               type="file"
             />

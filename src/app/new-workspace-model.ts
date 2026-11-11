@@ -1,3 +1,4 @@
+import type { FieldFiles } from '../chat/components/chip-field/attached-files'
 import type { AgentChoice } from '../shared/agents'
 import type { BuildsResponse, Repository } from '../shared/org-settings'
 import {
@@ -8,12 +9,18 @@ import {
 import type { ApiError } from './api/client'
 import { readCreated } from './api/read-workspaces'
 import {
-  failSent,
   filesWait,
   isMissingFile,
   readyIds,
   type DraftFile,
 } from './draft-files'
+import {
+  failSentDraft,
+  markedFiles,
+  messageText,
+  withoutFileMarks,
+} from './draft-file-state'
+import { withoutMarks } from './draft-marks'
 import { DraftUploads } from './new-workspace-files'
 import type { OrgModel } from './org-model'
 import { asApiError, Store, valueOf } from './store'
@@ -31,6 +38,8 @@ export interface Draft {
   choice: AgentChoice | null
   /** The files, each with its upload. Only ready ones go with the message. */
   files: readonly DraftFile[]
+  /** Files without chips, kept for undo until this draft ends. */
+  detached: readonly DraftFile[]
   /** The names of the files of the last pick that are over the size limit. */
   refused: readonly string[]
   /** The client ID of the first message. Try again sends the same one. */
@@ -48,7 +57,10 @@ export type CreateState =
  * with no upload that runs or failed. Send and Try again both wait for it.
  */
 export function draftReady(draft: Draft): boolean {
-  return draft.text.trim() !== '' && !filesWait(draft.files)
+  return (
+    withoutMarks(draft.text).trim() !== '' &&
+    !filesWait(markedFiles(draft.text, draft.files))
+  )
 }
 
 /**
@@ -89,6 +101,16 @@ export class NewWorkspaceModel {
   readonly sectionId: string | null
   private readonly org: OrgModel
   private readonly uploads: DraftUploads
+  readonly filesSource: FieldFiles = {
+    files: () => {
+      const draft = this.draft.get()
+      return [...draft.files, ...draft.detached]
+    },
+    retry: (id) => {
+      void this.retryFile(id)
+    },
+    subscribe: (listener) => this.draft.subscribe(listener),
+  }
 
   constructor(org: OrgModel, sectionId: string | null) {
     this.org = org
@@ -115,6 +137,7 @@ export class NewWorkspaceModel {
       repository: keep?.repository?.picked ? keep.repository : null,
       choice: keep?.choice ?? null,
       files: [],
+      detached: [],
       refused: [],
       messageId: this.org.services.newId(),
     }
@@ -145,7 +168,8 @@ export class NewWorkspaceModel {
   }
 
   setText(text: string): void {
-    this.draft.change((draft) => this.withShownRepository({ ...draft, text }))
+    this.uploads.setText(text)
+    this.keepShownRepository()
   }
 
   setRepository(repositoryId: string): void {
@@ -160,12 +184,12 @@ export class NewWorkspaceModel {
   }
 
   /**
-   * Attaches the files of one pick to the draft, as `DraftUploads` says.
+   * Attaches one pick and returns its new file IDs immediately.
    * While the create runs, it uploads nothing, because the create already
    * sent the files of the draft.
    */
-  attach(files: readonly File[]): Promise<void> {
-    if (this.create.get().state === 'sending') return Promise.resolve()
+  attach(files: readonly File[]): string[] {
+    if (this.create.get().state === 'sending') return []
     const uploads = this.uploads.attach(files)
     // The files show at once, before they upload, so the draft has them now.
     this.keepShownRepository()
@@ -176,10 +200,6 @@ export class NewWorkspaceModel {
   retryFile(fileId: string): Promise<void> {
     if (this.create.get().state === 'sending') return Promise.resolve()
     return this.uploads.retry(fileId)
-  }
-
-  removeFile(fileId: string): void {
-    this.uploads.remove(fileId)
   }
 
   /**
@@ -206,8 +226,8 @@ export class NewWorkspaceModel {
       ...(this.sectionId ? { sectionId: this.sectionId } : {}),
       firstMessage: {
         id: draft.messageId,
-        text: draft.text,
-        attachmentIds: readyIds(draft.files),
+        text: messageText(draft.text, draft.files),
+        attachmentIds: readyIds(markedFiles(draft.text, draft.files)),
         choice: draft.choice ?? defaults.choice,
       },
     }
@@ -227,7 +247,17 @@ export class NewWorkspaceModel {
       if (!life.live) return null
       this.org.putWorkspace(created.workspace)
       opened?.(created)
-      this.draft.set(this.emptyDraft(draft))
+      this.uploads.end()
+      this.draft.change((current) => ({
+        ...this.emptyDraft(current),
+        text:
+          current.text === draft.text
+            ? ''
+            : withoutFileMarks(
+                current.text,
+                [...current.files, ...current.detached].map(({ id }) => id),
+              ),
+      }))
       this.create.set({ state: 'idle' })
       return created
     } catch (error) {
@@ -238,7 +268,7 @@ export class NewWorkspaceModel {
         const sent = request.firstMessage.attachmentIds
         this.draft.change((current) => ({
           ...current,
-          files: failSent(current.files, sent, error),
+          ...failSentDraft(current, sent, error),
         }))
       }
       this.create.set({ state: 'failed', error: asApiError(error) })

@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import { uploadsSettled } from '../../app/draft-files.test-support'
+import { fileMark } from '../../app/draft-marks'
+import { pickChatFiles } from './draft-files.test-support'
 import type { FileReply, FileTransport } from '../../app/api/client'
 import {
   attachmentUploadPath,
@@ -61,11 +64,13 @@ describe('the files of a chat draft', () => {
     })
     await chat.controller.start()
     chat.controller.setDraft(id, 'See the screenshot.')
-    await chat.controller.attachFiles(id, [file()])
+    await pickChatFiles(chat, id, [file()])
     const [failed] = chat.draftOf(id)?.files ?? []
     await chat.controller.send(id)
     const whileFailed = chat.requests('POST', messages).length
-    await chat.controller.retryFile(id, failed?.id ?? 'missing')
+    const source = chat.controller.draftFiles(chat.draftOf(id)?.id ?? 'missing')
+    source.retry(failed?.id ?? 'missing')
+    await uploadsSettled(source.files, source.subscribe)
     await chat.controller.send(id)
     const [first, second] = await sentFiles(chat.server.requests)
     const sent = await chat.bodies('POST', messages)
@@ -96,7 +101,7 @@ describe('the files of a chat draft', () => {
     }
     const chat = chatFor({ conversation: 'history', files })
     await chat.controller.start()
-    const uploading = chat.controller.attachFiles(id, [file()])
+    const uploading = pickChatFiles(chat, id, [file()])
     const sentBytes = () =>
       chat
         .draftOf(id)
@@ -126,10 +131,7 @@ describe('the files of a chat draft', () => {
     const chat = chatFor({ conversation: 'history' })
     await chat.controller.start()
     chat.controller.setDraft(id, 'See the recording.')
-    await chat.controller.attachFiles(id, [
-      sized('recording.mov', 25_000_001),
-      file(),
-    ])
+    await pickChatFiles(chat, id, [sized('recording.mov', 25_000_001), file()])
     const picked = chat.draftOf(id)
     const uploaded = await sentFiles(chat.server.requests)
     await chat.controller.send(id)
@@ -151,10 +153,9 @@ describe('the files of a chat draft', () => {
     const { chat, uploads } = chatThatHolds()
     await chat.controller.start()
     chat.controller.setDraft(id, 'See the screenshot.')
-    const uploading = chat.controller.attachFiles(id, [file()])
+    const uploading = pickChatFiles(chat, id, [file()])
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
-    const [item] = chat.draftOf(id)?.files ?? []
-    chat.controller.removeFile(id, item?.id ?? 'missing')
+    chat.controller.setDraft(id, 'See the screenshot.')
     const aborted = uploads[0]?.signal.aborted
     chat.held.splice(0, 1)[0]()
     await uploading
@@ -171,10 +172,7 @@ describe('the files of a chat draft', () => {
   it('aborts the upload when the chat stops, ignores its late reply, and starts no later upload', async () => {
     const { chat, uploads } = chatThatHolds()
     await chat.controller.start()
-    const uploading = chat.controller.attachFiles(id, [
-      file(),
-      file('later.png'),
-    ])
+    const uploading = pickChatFiles(chat, id, [file(), file('later.png')])
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     chat.controller.stop()
     const aborted = uploads[0]?.signal.aborted
@@ -190,7 +188,7 @@ describe('the files of a chat draft', () => {
       }),
     }).toEqual({
       aborted: true,
-      states: ['uploading', 'uploading'],
+      states: [],
       requests: [
         attachmentUploadUrl(org, target, {
           name: 'overlap.png',
@@ -212,10 +210,12 @@ describe('the files of a chat draft', () => {
     })
     await chat.controller.start()
     chat.controller.setDraft(id, 'See the screenshot.')
-    await chat.controller.attachFiles(id, [file()])
+    await pickChatFiles(chat, id, [file()])
     await chat.controller.send(id)
     const expired = chat.draftOf(id)
-    await chat.controller.retryFile(id, expired?.files[0]?.id ?? 'missing')
+    const source = chat.controller.draftFiles(expired?.id ?? 'missing')
+    source.retry(expired?.files[0]?.id ?? 'missing')
+    await uploadsSettled(source.files, source.subscribe)
     await chat.controller.send(id)
     const [first, second] = await sentFiles(chat.server.requests)
     const sent = await chat.bodies('POST', messages)
@@ -228,7 +228,7 @@ describe('the files of a chat draft', () => {
       sent: sent.map((body) => record(body).attachmentIds),
     }).toEqual({
       expired: [gone],
-      text: 'See the screenshot.',
+      text: `See the screenshot. ${fileMark('file-1')} `,
       sent: [['attachment-1'], ['attachment-1']],
     })
   })

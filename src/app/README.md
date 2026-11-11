@@ -202,7 +202,8 @@ feedback draft.
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
 layers, the focus, saved drafts, New workspace as a page or a dialog,
-with the send key that every composer shares, and the waitlist.
+with its attached files and the send key that every composer shares, and
+the waitlist.
 [The command palette and Feedback](palette-screens.md) gives the rules of
 the palette and of the Feedback dialog.
 
@@ -282,19 +283,17 @@ mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
 clicks, types, and lets the answers of the fake API settle.
 `../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
 for the tests of New workspace as a page or a dialog, and of its send key.
+Its `markOf` gives the mark of a file of the draft by the name of the file.
 
 ## Key code
 
-- `clipboard.ts`: `copyText`, the clipboard write for plain or pending text.
-  It starts a pending `ClipboardItem` write during the user press when the
-  browser supports it. The fallback waits for the text and calls `writeText`.
-  Both paths propagate failures. `AppServices.copy` accepts a string or a
-  promise of a string. Live services and development hosts use this owner.
-
 [Key code](key-code.md) names the files, the types, and the functions to
-open first. It covers the dev fake, the API client, the attached files, the
+open first. It covers the dev fake, the API client, the clipboard, the
 models, the waitlist and its codes, the routines, and the workspace list.
 It also covers the event streams, the drag, and the operator section.
+[Key code: drafts and attached files](key-code-drafts.md) covers the draft
+text, the attached files, and their uploads, which the chat and New
+workspace share.
 [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
 covers the command palette, the layers, the frames, New workspace as a
 dialog, and feedback with its screenshots.

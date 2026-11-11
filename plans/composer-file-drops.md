@@ -51,6 +51,8 @@ Contract owners:
   for the file tab of an image.
 - The [chat README](../src/chat/README.md) and
   [Loads, records, and sends](../src/chat/loads-and-sends.md).
+- [The message field](../src/chat/message-field.md) and
+  [Attached files of a draft](../src/chat/draft-files.md).
 - The [files README](../src/files/README.md).
 - The [app README](../src/app/README.md), for New workspace.
 - [Chat attachment storage and delivery](../worker/chat/attachments.md).
@@ -587,6 +589,14 @@ test, unless it names a decision or another date.
   compares and returns the opaque draft string. Reason: every draft
   reader must keep the same text. This is my call on 11 November 2026.
 
+- Send lists an attached file once, at its first mark, and writes its
+  mention at every mark. Reason: repeated marks name one held file. This
+  is my call on 11 November 2026, from the checked state implementation.
+- Each fresh chat run gives its local drafts a new identity. The existing
+  fresh start still resets the drafts. Reason: a source of an ended draft
+  must not read the files of a later draft. This is my call on 11 November
+  2026, from the checked identity regression.
+
 ### The copy path
 
 - The copy path of a file is `.context/attachments/<digest>/<safe name>`.
@@ -749,6 +759,7 @@ desktop and a phone variant.
       `InlineChip.module.css`, `ChipRemove`, `attachmentCopy.ts`, and
       `sizes.ts`: the icon cell with each glyph, the name, the muted
       label, Try again in a failed chip, and the × of each pointer kind.
+      Its phone controls remain blocked by composer drops decision 1.
 - [x] Add a pure mockup part for the file chip of a sent message: the
       kind icon, the name, the muted size, and its look as a link.
 - [ ] Apply the chosen phone touch rule and draw the chosen notice for
@@ -966,28 +977,38 @@ Depends on: 3, 4, 6
 
 Main integration notes: `.context/composer-file-drops/merge-justifications.md`.
 
-- [ ] Make the attach of each draft give the new file IDs at once, while
+- [x] Make the attach of each draft give the new file IDs at once, while
       the uploads run.
-- [ ] Bring the files of each draft in line with the marks of each new
+- [x] Bring the files of each draft in line with the marks of each new
       text: detach and stop a file whose chip left, and bring back a
       detached file whose chip came back.
-- [ ] Build the text of each send from the marks and the paths of the
+- [x] Build the text of each send from the marks and the paths of the
       files. Clear the draft text when it is still the draft text, with
       its marks, that the send took.
-- [ ] Take the mark of each file out of the text when the file leaves
+- [x] Take the mark of each file out of the text when the file leaves
       the draft without its chip: a send whose text changed during the
       send, a model change that keeps fewer files, and a sign-out.
-- [ ] Apply the same rules to New workspace: the attach, the detached
+- [x] Apply the same rules to New workspace: the attach, the detached
       files, the send text, the need for words, and the sign-out.
-- [ ] Make the paperclip of each composer insert its files at the caret.
-- [ ] Remove the row above the text, `DraftFiles`, `DraftChip`, the
+- [x] Make the paperclip of each composer insert its files at the caret.
+- [x] Remove the row above the text, `DraftFiles`, `DraftChip`, the
       `onRemoveFile` props, and the remove actions. Move their tests to
       the chips of the text.
-- [ ] Update `src/chat/README.md`, `src/chat/key-code.md`,
+- [x] Update `src/chat/README.md`, `src/chat/key-code.md`,
       `src/chat/loads-and-sends.md`, and `src/app/README.md`.
-- [ ] Add the tests of the detach, the return, the send text, the marks
+- [x] Add the tests of the detach, the return, the send text, the marks
       that leave with their files, the order of the files, and New
       workspace.
+
+State implementation and verification evidence: `.context/composer-file-drops/m7-state-report.md`,
+`.context/composer-file-drops/m7-state-imports-report.md`, and
+`.context/composer-file-drops/m7-root-state-acceptance.md`.
+
+UI, cleanup, docs, and combined verification evidence: `.context/composer-file-drops/m7-ui-report.md`,
+`.context/composer-file-drops/m7-state-cleanup-report.md`,
+`.context/composer-file-drops/m7-docs-report.md`,
+`.context/composer-file-drops/m7-docs-final-tidy-report.md`, and
+`.context/composer-file-drops/m7-root-combined-regressions.log`.
 
 ## Milestone 8: Drops into each composer
 
@@ -995,6 +1016,9 @@ Tags: ui
 
 Depends on: 7
 
+- [ ] Expose the folder names of a drop with the draft's existing refused
+      file data, through the attach boundary, without notice words. Keep
+      folder-only drops, draft ownership, and existing notice cleanup.
 - [ ] Add a drop hook for the message box: file drags only, the drop
       state, no drop while the composer takes no change, and the split of
       files and folders.
@@ -1015,7 +1039,8 @@ Depends on: 7
       `docs/protocol/conductor-comparison.md#statuses` says. Reason: the
       merge of this change ships the feature, and the row stays Under
       consideration on `main` until then.
-- [ ] Update `src/chat/README.md`, `src/chat/key-code.md`, and
+- [ ] Update `src/chat/README.md`, `src/chat/key-code.md`,
+      `src/chat/message-field.md`, `src/chat/draft-files.md`, and
       `src/app/README.md`.
 - [ ] Add the DOM tests of the drop, the drop state, a box that takes no
       change, a folder, and a drop outside the box.

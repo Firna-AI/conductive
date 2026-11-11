@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-11, from branch `calummoore/composer-file-drag-and-drop`, as Composer drops decision 2 of its plan. The second-pass options check of 11 November 2026 added option D.
-- **Location:** `docs/mockups/src/components/chat/attachmentCopy.ts:32-40`, `docs/mockups/src/screens/composerNotice.tsx:63-77`, `docs/mockups/src/screens/composerNotice.tsx:92-98`, and `src/chat/components/AttachmentChips.tsx:196-200`.
+- **Location:** `docs/mockups/src/components/chat/attachmentCopy.ts:32-40`, `docs/mockups/src/screens/composerNotice.tsx:63-77`, `docs/mockups/src/screens/composerNotice.tsx:92-98`, and `src/chat/components/AttachmentChips.tsx:63-66`.
 - **Reason:** The options are correct notices with different layouts and words, and no copy rule chooses among them, so only the user can choose.
 
 - **Source:** Implementation. **Category:** UX wording.
@@ -17,7 +17,7 @@
   - The notice names a file over 25 MB as before that change: its name, or a count for two or more.
   - That change does not attach the files inside a dropped folder.
   - `docs/protocol/message-attachments.md:15-16` says only that the composer refuses a larger file before its upload and names the limit. No protocol doc states the words of a notice or the number of notices.
-  - `docs/mockups/src/components/chat/attachmentCopy.ts:32-40` holds two titles: "<name> wasn't attached" and "<count> files weren't attached". The app uses the same two titles, in `src/chat/components/AttachmentChips.tsx:196-200`.
+  - `docs/mockups/src/components/chat/attachmentCopy.ts:32-40` holds two titles: "<name> wasn't attached" and "<count> files weren't attached". The app uses the same two titles, in `src/chat/components/AttachmentChips.tsx:63-66`.
   - The body of that notice is "Each file can be up to 25 MB.", and its action is "Attach a smaller file".
   - The notice gives no size of a refused file, as `attachmentCopy.ts:42-46` says. The size formatter counts in units of 1024, and the limit counts in units of 1000.
   - The mockup notice for a folder names one folder: "checkout-screens wasn't attached", then "Attach the files in the folder instead.", with "Attach files". It is `folderNotice` in `docs/mockups/src/screens/composerNotice.tsx:63-77`.

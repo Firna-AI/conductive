@@ -21,6 +21,15 @@ export type DraftFile =
   | { state: 'failed'; id: string; file: File; error: ApiError }
   | { state: 'ready'; id: string; file: File; attachment: Attachment }
 
+/** Cancels both a running upload and a reserved place in a pick's queue. */
+export function stopFile(
+  uploads: Map<string, AbortController>,
+  id: string,
+): void {
+  uploads.get(id)?.abort()
+  uploads.delete(id)
+}
+
 /**
  * One pick of the file picker: the files that upload, and the names of the
  * files over the size limit, which never upload and get no chip.
@@ -93,11 +102,11 @@ export function failSent(
 interface FileJob {
   id: string
   file: File
-  /** The draft still holds the file, and its chat or its person goes on. */
+  /** Its chip is attached, its generation is current, and its owner is live. */
   live: () => boolean
   /** Changes the file in the draft that holds it, wherever that is now. */
   change: (change: (item: DraftFile) => DraftFile) => void
-  /** Stops the request of the upload, such as after Remove or a sign-out. */
+  /** Stops the request of the upload after detachment or sign-out. */
   signal: AbortSignal
   /** Uploads the file, as `uploadAttachment` does, with these hooks. */
   upload: (file: File, hooks: UploadHooks) => Promise<Attachment>
@@ -116,11 +125,12 @@ export interface UploadHooks {
 /**
  * Runs the upload of one file and puts its outcome on the file: each
  * measured progress, then ready with its attachment, or failed with the
- * error. After Remove, a change of person, or a stopped chat, the upload
+ * error. After detachment, a change of person, or a stopped chat, the upload
  * starts no request, as its `live` check says, the owner aborts the request
  * that runs, and a reply or a progress that comes later changes nothing.
  */
 export async function runFileJob(job: FileJob): Promise<void> {
+  if (!job.live() || job.signal.aborted) return
   const { id, file } = job
   try {
     const attachment = await job.upload(file, {
@@ -138,4 +148,11 @@ export async function runFileJob(job: FileJob): Promise<void> {
     if (!job.live()) return
     job.change(() => ({ state: 'failed', id, file, error: asApiError(error) }))
   }
+}
+
+/** Starts reserved generations one at a time, also for files restored by undo. */
+export async function runFileQueue(
+  jobs: readonly (() => Promise<void>)[],
+): Promise<void> {
+  for (const start of jobs) await start()
 }

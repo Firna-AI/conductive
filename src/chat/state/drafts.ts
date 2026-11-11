@@ -1,4 +1,5 @@
 import type { DraftFile } from '../../app/draft-files'
+import { withoutFileMarks } from '../../app/draft-file-state'
 import type { MessageDraft, SendMessageRequest } from '../../shared/messages'
 import {
   blankDraft,
@@ -55,11 +56,43 @@ export function changeDraft(
  * when the user did not change it during the send. A file that the user
  * added during the send stays for the next message.
  */
-export function afterSend(draft: Draft, request: SendMessageRequest): Draft {
+export function afterSend(
+  draft: Draft,
+  request: SendMessageRequest,
+  capturedText: string,
+): Draft {
+  const files = withoutFiles(draft.files, request.attachmentIds)
+  const gone = [
+    ...draft.files.filter((item) => !files.includes(item)),
+    ...draft.detached,
+  ]
   return {
     ...draft,
-    text: draft.text === request.text ? '' : draft.text,
-    files: withoutFiles(draft.files, request.attachmentIds),
+    text:
+      draft.text === capturedText
+        ? ''
+        : withoutFileMarks(
+            draft.text,
+            gone.map(({ id }) => id),
+          ),
+    files,
+    detached: [],
+    sendId: null,
+    sending: false,
+  }
+}
+
+/** A stopped chat ends its files and removes their marks in the same snapshot. */
+export function endDraftFiles(draft: Draft): Draft {
+  return {
+    ...draft,
+    text: withoutFileMarks(
+      draft.text,
+      [...draft.files, ...draft.detached].map(({ id }) => id),
+    ),
+    files: [],
+    detached: [],
+    refused: [],
     sendId: null,
     sending: false,
   }
@@ -110,6 +143,19 @@ export function keepFiles(
     (id) => !kept.attachmentIds.includes(id),
   )
   const files = withoutFiles(draft.files, dropped)
-  if (files.length === draft.files.length) return draft
-  return { ...draft, files, sendId: null }
+  const detached = withoutFiles(draft.detached, dropped)
+  const gone = [...draft.files, ...draft.detached].filter(
+    (item) => !files.includes(item) && !detached.includes(item),
+  )
+  if (gone.length === 0) return draft
+  return {
+    ...draft,
+    files,
+    detached,
+    text: withoutFileMarks(
+      draft.text,
+      gone.map(({ id }) => id),
+    ),
+    sendId: null,
+  }
 }

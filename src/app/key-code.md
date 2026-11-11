@@ -17,23 +17,14 @@ Each path is relative to `src/app/`, the folder of this page.
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
   through the file transport of the services: `api/xhr-files.ts` in the
   browser and in the Mac app. `api/read-*.ts`: the readers.
-- `attachment-upload.ts`: `uploadAttachment`, the one upload of a file for
-  both composers. `draft-files.ts`: `DraftFile`, the upload state of each
-  file of a draft, and `runFileJob`. `new-workspace-files.ts`:
-  `DraftUploads`, the uploads of a first message before its workspace
-  exists, which a change of person ends.
-- `draft-marks.ts`: the draft text of a message field with attached files,
-  which the chip text field and the mockups share. `fileMark` writes the
-  mark of a file: its draft ID between U+E000 and U+E001. `literalText`
-  escapes literal text: each U+E000, U+E001, and U+E002 becomes U+E002 and
-  `0`, `1`, or `2`. So only an attached file makes a mark. `draftParts`
-  gives the parts of a draft in order: decoded literal text, and the ID of
-  each mark. `withoutMarks` gives the decoded text alone. Code that builds
-  a draft writes its text with `literalText` and its files with
-  `fileMark`. The draft of a field without attached files has no escapes,
-  so no code reads it with these functions. `draft-marks.test.ts` checks
-  the escapes, malformed escapes, a literal path beside a real mark, and
-  opaque file IDs.
+- `clipboard.ts`: `copyText`, the clipboard write for plain or pending text.
+  It starts a pending `ClipboardItem` write during the user press when the
+  browser supports it. The fallback waits for the text and calls `writeText`.
+  Both paths propagate failures. `AppServices.copy` accepts a string or a
+  promise of a string. Live services and development hosts use this owner.
+- [Key code: drafts and attached files](key-code-drafts.md) names the
+  entry points of the draft text, the attached files, and their uploads,
+  which the chat and New workspace share.
 - `replay-socket.ts`: `replaySubscribe`, the raw event stream of a feature
   store over the event source of the app, with the reconnect rules of
   [Data lifecycle](data-lifecycle.md).
@@ -166,6 +157,13 @@ Each path is relative to `src/app/`, the folder of this page.
   kept workspace model, with its shown and confirmed numbers. They stop
   while the workspace is archived, and go again after a Restore.
 - `new-workspace-model.ts`: the first message that creates a workspace.
+  `NewWorkspaceModel.filesSource` is the `FieldFiles` of its draft.
+  `attach` gives the IDs of a pick at once, `setText` takes each new text
+  of the field, and `retryFile` is Try again.
+  `new-workspace-marks.test.ts` checks the IDs at once, the words outside
+  the chips, and the mentions in the order of the chips. It also checks
+  undo of a ready file, stopped and queued uploads, a sign-out, and the
+  text that a create took.
   `creations.ts`: `Creations`, the life of the create requests of an org in
   this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
   which tells a failed first start, and `resumesAtOpen`.

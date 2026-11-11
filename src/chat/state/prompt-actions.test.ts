@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { attachmentPath } from '../../shared/attachment-paths'
+import { pickChatFiles } from './draft-files.test-support'
+import { mentionText } from '../../shared/mention-text'
 import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { record, text } from '../api/json'
@@ -38,7 +41,7 @@ describe('a fixed prompt of the member', () => {
     const chat = chatFor({ answer: refusing((words) => words !== prompt) })
     await chat.controller.start()
     chat.controller.setDraft(first, 'Half a thought')
-    await chat.controller.attachFiles(first, [new File(['x'], 'note.txt')])
+    await pickChatFiles(chat, first, [new File(['x'], 'note.txt')])
     await chat.controller.send(first)
     const draft = chat.draftOf(first)
 
@@ -56,7 +59,7 @@ describe('a fixed prompt of the member', () => {
       bodies: [
         {
           id: 'client-1',
-          text: 'Half a thought',
+          text: `Half a thought ${mentionText(await attachmentPath({ id: 'attachment-1', name: 'postcode-overlap.png' }), false)} `,
           attachmentIds: ['attachment-1'],
           choice: session?.choice,
         },

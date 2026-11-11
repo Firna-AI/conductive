@@ -6,10 +6,7 @@ import styles from '../../../docs/mockups/src/components/new-workspace/NewWorksp
 import { useNavigation } from '../../app/navigation'
 import { defaultSection } from '../../app/sections'
 import { useStore, valueOf } from '../../app/store'
-import {
-  DraftFiles,
-  OversizeNotice,
-} from '../../chat/components/AttachmentChips'
+import { OversizeNotice } from '../../chat/components/AttachmentChips'
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useSendKey } from '../../chat/components/send-key'
@@ -73,8 +70,9 @@ function CreateButton(props: {
  * kept message. As it closes, the focus goes back to the control that
  * opened it. When another screen opened, the main area of that screen
  * takes the focus. In a suspended org, the refused bar takes the place of
- * the composer. The files upload before the workspace exists, with the
- * chips and the notice of the workspace chat, as on the page.
+ * the composer. The files of a pick go into the text at the caret, and they
+ * upload before the workspace exists, with the chips and the notice of the
+ * workspace chat, as on the page.
  */
 function DialogCard(props: {
   org: OrgSummary
@@ -98,9 +96,9 @@ function DialogCard(props: {
   const card = useRef<HTMLElement>(null)
   const message = useRef<FieldHandle>(null)
   // The file picker opens from the attach button and from the notice of a
-  // file over the size limit.
-  const files = useRef<HTMLInputElement>(null)
-  const pick = () => files.current?.click()
+  // file over the size limit. Its files go into the text at the caret.
+  const picker = useRef<HTMLInputElement>(null)
+  const pick = () => picker.current?.click()
   useModalLayer(
     card,
     () => {
@@ -148,17 +146,11 @@ function DialogCard(props: {
       ) : (
         <>
           <div className={styles.body}>
-            {form.draft.files.length > 0 ? (
-              <DraftFiles
-                files={form.draft.files}
-                onRemove={(id) => model.removeFile(id)}
-                onRetry={(id) => void model.retryFile(id)}
-              />
-            ) : null}
             <OrgLinks orgId={org.id}>
               <ChipTextField
                 caretAtEnd
                 editable={!sending}
+                files={model.filesSource}
                 handle={message}
                 label="Message"
                 lines={7}
@@ -203,9 +195,10 @@ function DialogCard(props: {
               onChange={(event) => {
                 const chosen = Array.from(event.currentTarget.files ?? [])
                 event.currentTarget.value = ''
-                if (chosen.length > 0) void model.attach(chosen)
+                if (chosen.length === 0) return
+                message.current?.insertFiles(model.attach(chosen))
               }}
-              ref={files}
+              ref={picker}
               tabIndex={-1}
               type="file"
             />

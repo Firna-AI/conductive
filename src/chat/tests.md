@@ -25,7 +25,9 @@ a failed start from a read and the stream, and a send that the Worker
 refuses. `components/FirstStart.dom.test.tsx` mounts the chat without a
 host, sends with Enter and Send during the first start and after it failed,
 and checks the saved message on the bar of a failed first start and of a
-failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
+failed resume. It attaches a file with the file picker, and Enter waits for
+its upload. The first send then carries the mention of the returned path of
+the file. `components/WorkFold.dom.test.tsx` reads the folds of ended
 turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
 fold and a message line, and checks that each line keeps its place. It
 also presses a workspace chip in a message line, with and without a
@@ -150,13 +152,10 @@ happy-dom cannot do.
 files of a chat: a fake with two plain states, no tree and a tree of
 entries, or the real store of the Files screens over the fake API for the
 states that the cloud computer marks. The attached kit takes its tree from
-the same fake. `components/AttachmentChips.dom.test.tsx`
-removes an attached file with the cell of its icon, also a failed upload
-that keeps its Try again, and on a phone with its × at the end. The DOM
-tests focus, type, paste, clear, and read the field through
-`src/test-support/message-field.ts`. Its `messageText` reads each field as
-a field without attached files, so the tests of attached files read the
-draft that the owner keeps.
+the same fake. The DOM tests focus, type, paste, clear, and read the field
+through `src/test-support/message-field.ts`. Its `messageText` reads each
+field as a field without attached files, so the tests of attached files
+read the draft that the owner keeps.
 `../shared/mention-text.test.ts` reads and writes mentions, and
 `mentions/mention-rows.test.ts` orders the rows of the list.
 `../shared/attachment-mentions.test.ts` finds the attached file of a file
@@ -177,7 +176,10 @@ waits, and in a chat without the files of its workspace, the chip shows
 and opens nothing. A copy of the messages gives the mention of each
 chip, also of a chip that opens nothing.
 `links/mention-copy-test-kit.tsx` holds the copy helpers of both DOM
-tests.
+tests. `components/AttachmentChips.test.tsx` renders the notice of the
+files over the size limit, with one name or the count and the limit. It
+also renders the files under a sent message, with their sizes and no
+Remove.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
@@ -189,6 +191,50 @@ list while it shows, and not while it is hidden. The workspace screen's
 `FileMentions.test.tsx` lists the files on a phone before a visit to
 Files, and opens a file and a folder from their chips, also into a hidden
 right column.
+
+`components/ComposerFiles.dom.test.tsx` mounts the chat with its
+controller, whose uploads wait for the test, from
+`components/composer-files-test-kit.tsx`. It presses Attach files and
+picks files through `pickFiles` of `src/test-support/file-picker.ts`. A
+pick puts its chips at the end of a text without a caret, and at the
+caret that the field kept while the button had the focus. The chips go in
+order, each with a space, and the field takes the focus. Each chip shows
+the upload of its file: the measured percent, Uploading before a
+measurement, or the size when it is ready. Only a failed chip shows Try
+again, which uploads the same file again. On a computer, the cell of the
+icon is the one button that removes a chip, and Backspace after a chip
+removes it whole. On a phone, the icon stays, and the button at the end
+of the chip removes it. Each removal takes the file off the draft and
+stops its upload.
+`state/attachment-actions.test.ts` attaches files to a chat draft over
+the fake API. A failed upload keeps its file, Send waits, and Try again
+through the files source of the draft uploads the same file. It also
+checks the measured bytes of an upload and a file over the size limit. A
+removed file and a stopped chat abort their uploads. An expired file that
+Send finds gone turns failed, and Try again uploads its kept `File`.
+`state/draft-file-lifecycle.test.ts` attaches files through the controller
+and gets their IDs before the uploads end, with the queue of the pick. It
+keeps a ready file for undo, and it detaches a file only when its last
+mark leaves. It aborts the upload of a detached file, and ignores its late
+progress, reply, and failure after undo starts it again, also from a
+queued start. Undo of several stopped uploads starts them again in one
+new queue, and the stopped queue starts none of them.
+`state/draft-file-send.test.ts` sends a chat with only chips. It writes
+the returned path at every mark, with each attachment ID once, in the
+order of the first marks. After an edit during the send, the new text,
+the new files, and the escapes of literal text stay, without the sent
+marks. A refused send keeps the encoded text and the files, and a missing
+file turns failed, also when its chip left during the send.
+`state/draft-file-moves.test.ts` reads the files of a moving draft through
+its source during store notifications. A model change sends the encoded
+text as it is, and its reply takes out each mark of an unkept file, also
+of a detached one. A stopped chat ends the attached and detached files and
+ignores late uploads. `state/draft-file-identity.test.ts` checks that a
+fresh start clears the old draft, and that the source of the old draft
+never reads the files of the new one. `state/draft-files.test-support.ts`
+gives `readyChat`, a started chat whose uploads wait for the test. Its
+`pickChatFiles` attaches files and writes their marks as the field does.
+Both use the helpers of `../app/draft-files.test-support.ts`.
 
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
 A right click and Shift and F10 open a tab menu with only the copy items, with no line.

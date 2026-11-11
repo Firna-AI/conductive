@@ -134,9 +134,12 @@ await view.rerender(<OwnerPicker {...props} workspace={next} />)
   It returns `container`, `rerender(element)`, and `unmount()`. Each mounted tree unmounts after its test.
 - `press(element)` clicks the element. `typeText(field, text)` types into an input or a text area, so React sees the change. A message field takes the text as `typeMessage` types it.
 - `message-field.ts` acts on the message field of a composer, the chip text field: `focusMessage(field)` moves the focus into the field as Tab does, with no press of the pointer, `typeMessage(field, text)` selects all and types the text, `pasteMessage(field, text)` pastes plain text at the caret through a paste event, `pressInField(field, key)` presses a key, `clearMessage(field)` deletes all the text as Ctrl+A and Backspace do, and `messageText(field)` gives the plain draft with the link of each chip. Each one commits the change of the field, as a browser does before the next input. `asMessageField(element)` checks that an element is such a field, also while it takes no change.
-  `messageText` reads without a files source. For a field with attached files, it gives unescaped text and file marks. Read the owner's state for the encoded draft.
+  `messageText` reads each field as a field without a files source. For a field with attached files, it gives the text without escapes and the mark of each attached file, so it is not the draft text. Read the draft that the owner keeps instead.
   `pressKey(key)` sends a keydown and a keyup to the focused element. Each runs inside `act`.
   Each fails with a named error when a person cannot use the target. `pressKey` checks the focused element.
+- `file-picker.ts`: `pickFiles(root, files)` picks files with the Attach files button of a composer in `root`, as a member does.
+  It focuses and presses the button, so the focus leaves the message field for the button, as in Chrome.
+  It then gives the file input of `root` the files and fires its change event, as a browser does after a pick.
 - `byRole(role, name)` gives the one element with the role and exactly the accessible name.
   It fails when it finds none or more than one. `queryByRole` gives null for none. `queryAllByRole` gives all.
 - `byLabel(label)` and `queryByLabel(label)` match an exact `aria-label`. `accessibleName(element)` gives the name.
@@ -174,6 +177,7 @@ Replies, timers, and `waitFor` go on.
 - `mount.ts` mounts React components in DOM tests, acts as a person does, and waits for a state.
 - `dom-queries.ts` finds shown elements in DOM tests, and says whether a person can use them.
 - `message-field.ts` focuses, types into, pastes into, presses keys in, clears, and reads the message field of a composer.
+- `file-picker.ts` picks files with the Attach files button of a composer.
 - `fake-core-routes.ts` records account, org, settings, section, member, and routine replies: the list, and the read, update, and delete of each routine, and a create. Each routine, and the routine that a create answers, also has each page of its runs and a Run now that starts a run on a new workspace.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies, also the member action routes of GitHub.

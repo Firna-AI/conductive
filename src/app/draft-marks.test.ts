@@ -1,8 +1,22 @@
 import { describe, expect, test } from 'vitest'
 import { mentionText } from '../shared/mention-text'
-import { draftParts, fileMark, literalText, withoutMarks } from './draft-marks'
+import {
+  draftParts,
+  draftText,
+  fileMark,
+  literalText,
+  withoutMarks,
+} from './draft-marks'
 
 describe('the text of a draft', () => {
+  test('rebuilds decoded text and file parts without inventing literal marks', () => {
+    const rebuilt = draftText([
+      { kind: 'text', text: '\uE000literal\uE001 \uE0020 ' },
+      { kind: 'file', id: 'kept' },
+    ])
+    expect(rebuilt).toBe('\uE0020literal\uE0021 \uE00220 \uE000kept\uE001')
+  })
+
   test('keeps a literal file path beside a real attachment mark', () => {
     const mention = mentionText('src/\uE000ordinary-name\uE001.ts', false)
     const text = `${literalText(mention)} ${fileMark('draft-shot')}`

@@ -28,6 +28,15 @@ export function literalText(text: string): string {
 export type DraftPart =
   { kind: 'text'; text: string } | { kind: 'file'; id: string }
 
+/** Rebuilds an internal draft without turning literal text into marks. */
+export function draftText(parts: readonly DraftPart[]): string {
+  return parts
+    .map((part) =>
+      part.kind === 'text' ? literalText(part.text) : fileMark(part.id),
+    )
+    .join('')
+}
+
 /** Splits an encoded draft into decoded literal text and attached-file marks. */
 export function draftParts(text: string): DraftPart[] {
   const parts: DraftPart[] = []

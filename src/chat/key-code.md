@@ -10,7 +10,9 @@ is relative to `src/chat/`, the folder of this guide.
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
   state and its actions, with `show` and `hide` for a kept chat.
-- `state/controller-context.ts`: the context, upload identities, devices, and event stream of one controller run.
+- `state/controller-context.ts`: the context of one controller run. It
+  holds the local IDs of drafts and files, the upload generations, the
+  devices, and the event stream. Each draft ID holds the run.
 - `state/tab-order.ts`: the pure row order, the places of the open
   sessions, and the move before or after a neighbour.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
@@ -38,11 +40,14 @@ is relative to `src/chat/`, the folder of this guide.
   `ChatHost`, the start steps and the sandbox bar that the app can draw.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
-  states.
+  states. It gives its field the `files` of the draft, and it holds the
+  handle of the field. So a pick puts the chips of its files at the caret.
+  `components/SessionChat.tsx` keeps one source for each `Draft.id`, in
+  `useDraftFiles`.
 - `components/chip-field/`: `ChipTextField`, the message field of every
   composer, with its handle and the chips of attached files.
-  [The message field](loads-and-sends.md#the-message-field) gives its
-  rules and the files of its folder.
+  [The message field](message-field.md) gives its rules and the files of
+  its folder.
 - `state/load.ts`: the order of the first reads and the stream start.
 - `state/address-session.ts`: `showAddressSession`, the open of the
   session of a session address, behind `ChatController.showAddress`. A
@@ -103,20 +108,33 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+  `holderOf` finds the session that holds a draft now. `afterSend`,
+  `keepFiles`, and `endDraftFiles` take files off a draft with their
+  marks, as [Attached files of a draft](draft-files.md) says.
+- `state/message-actions.ts`: `setDraftText`, which makes the files of a
+  draft follow the marks of each new text, and `sendDraft`, the send of a
+  draft. It also holds Try again of a failed turn, Stop, and Resume.
 - `state/message-send.ts`: `postMessage`, the post of one message and the
   route of its reply, which a draft and a fixed prompt share.
 - `state/prompt-actions.ts`: `sendPrompt`, a fixed prompt to the session of
   the chat, which changes no draft, as
   [Fixed prompts](loads-and-sends.md#fixed-prompts) says.
-- `state/attachment-actions.ts`: attach, Try again, and Remove for the files
-  of a draft. Each upload goes through the app's `uploadAttachment`, ends
-  on its draft after a move, and stops with Remove and with the chat.
-- `components/AttachmentChips.tsx`: the file chips of both composers, with
-  the measured share of an upload and the notice for files over the size
-  limit, from the mockups' `attachmentCopy.ts`. The cell of the icon of
-  each draft file removes it, as `ChipIconCell` of the mockups draws it.
+- `state/attachment-actions.ts`: attach and Try again for the files of a
+  draft. `attachFiles` gives the IDs of a pick at once, and queues its
+  uploads. `resumeFiles` starts again the uploads that a new text brings
+  back, such as after undo, and `retryFile` is Try again. Each upload goes
+  through the app's `uploadAttachment`, and it ends on its draft after a
+  move. It stops when its chip leaves the text, and when the chat stops.
+- `state/draft-file-source.ts`: `draftFileSource`, the `FieldFiles` of one
+  draft identity, behind `ChatController.draftFiles`. It reads the session
+  that holds the draft at each call, and gives its attached and detached
+  files. Its `retry` runs Try again, except in a read-only workspace.
+- `components/AttachmentChips.tsx`: `SentFiles` and `OversizeNotice`.
   `SentFiles` lists under a sent message the files without a chip in its
-  text.
+  text. `OversizeNotice` is the notice of the files of a pick over the size
+  limit, with the words of the mockups' `attachmentCopy.ts`. A file of a
+  draft is a chip in the message field, which
+  `components/chip-field/attached-file-chip.tsx` draws.
 - `state/archive-view.ts`: the tabs and the session history of a
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot

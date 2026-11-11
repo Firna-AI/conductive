@@ -72,8 +72,13 @@ chips.
   the chat shares with the file preview and the mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, the fixed prompts of the pull request bar, the message field of
-  each composer, and Stop.
+  sends, the fixed prompts of the pull request bar, and Stop.
+- [The message field](message-field.md) gives the rules of the message
+  field of each composer: its chips, the chips of attached files, the
+  copy, the paste, the drag, and the handle that inserts files.
+- [Attached files of a draft](draft-files.md) gives the rules of the files
+  of a draft in each composer: their sources, the attach, the marks that
+  hold them, undo, their uploads, the send, and their end.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,
@@ -102,10 +107,14 @@ shows the chat, in the whole app, with the limits that
 
 ## Tests
 
-Run `npm run test -- src/chat src/shared/transcript src/shared/mention-text src/shared/attachment-mentions src/app/draft-marks.test.ts`.
+Run `npm run test -- src/chat src/shared/transcript src/shared/mention-text src/shared/attachment-mentions src/app/draft-marks.test.ts src/app/draft-files.test.ts`.
 The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
-`react-dom/server`. `state/test-kit.ts` holds their helpers. The
+`react-dom/server`. `state/test-kit.ts` holds their helpers.
+`state/draft-files.test-support.ts` and
+[`draft-files.test-support.ts`](../app/draft-files.test-support.ts) of the
+app attach files and write their marks as the field does, with uploads
+that wait for the test. The
 [workspace screen](../shell/workspace/README.md#key-code) tests the kept
 chat in the whole app.
 [Chat tests](tests.md) says what each test file checks.

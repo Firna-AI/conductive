@@ -48,3 +48,8 @@
   - Pricing now links to `docs/protocol/conductor-comparison.md`.
   - File mentions now links to `docs/protocol/tokens-and-secrets.md#secrets-that-users-enter`.
   - Both observations are closed. The approved future reference check remains open. This branch adds no gate.
+- **Evidence update, 2026-11-11:** a link check on branch `calummoore/composer-file-drag-and-drop` read only Markdown headings as anchors. It reported one link as missing, but that link has a target.
+  - `worker/files/README.md:38` links `../chat/integration/README.md#milestone-9-files`.
+  - `worker/chat/integration/README.md:142` keeps that anchor in HTML: `<a id="milestone-9-files"></a>`. The heading under it is `## Files`, with the anchor `#files`.
+  - Both files are the same on captured main `f5eb804fcc2007b3348fa76d67d759363d01fb3d`.
+  - A check that reads only headings reports this link as missing. This note closes the report. It changes no file and adds no gate.

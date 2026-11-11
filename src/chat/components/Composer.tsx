@@ -12,14 +12,22 @@ import {
 } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import type { Draft } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
-import { DraftFiles, OversizeNotice } from './AttachmentChips'
+import { OversizeNotice } from './AttachmentChips'
+import type { FieldFiles } from './chip-field/attached-files'
 import { ChipTextField } from './chip-field/ChipTextField'
+import type { FieldHandle } from './chip-field/focus-plugins'
 import local from './chat.module.css'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
 
 export interface ComposerProps {
   draft: Draft
+  /**
+   * The attached files of the draft, which the chips in its text show, as
+   * `FieldFiles` says. The source follows the identity of the draft, so keep
+   * one for each `Draft.id`.
+   */
+  files: FieldFiles
   /** The model and the effort of the session. */
   choice: AgentChoice
   models: readonly AgentModel[]
@@ -44,32 +52,36 @@ export interface ComposerProps {
   onChangeText: (text: string) => void
   onSend: () => void
   onStop: () => void
-  onAttach: (files: readonly File[]) => void
-  /** Try again on a file whose upload failed. */
-  onRetryFile: (id: string) => void
-  onRemoveFile: (id: string) => void
+  /**
+   * Attaches the files of a pick to the draft. It gives their IDs at once,
+   * while they upload, so their chips go into the text in the same event.
+   */
+  onAttach: (files: readonly File[]) => readonly string[]
   onChooseModel: (choice: AgentChoice) => void
 }
 
 /**
- * The message box: attached files above the text, then a bar with the
- * attach button, the model picker, and Send. Send waits while a file
- * uploads or failed. Files over the size limit get a notice over the box,
- * which can open the file picker again. While a turn runs, a message
- * steers the turn, and Stop sits beside Send. While the sandbox is not
- * ready, Send still sends, and the workspace queues the message. When a
- * message spends the agent login of another member, a label after the
- * model picker names that login, so the box keeps its place. Enter follows
- * the shared rule of `useSendKey`: on desktop, Enter sends and Shift+Enter
- * starts a new line. The text field asks the send key before it adds a
- * line, so Enter never adds a line to a message that it sends. A pasted
- * workspace link shows as a chip, and the draft keeps the plain link. In a
- * chat with the files of its workspace, `@` opens the list of the files and
- * folders just above the box, and a pick shows as a file chip.
+ * The message box: the text, with a chip for each attached file at its
+ * place, then a bar with the attach button, the model picker, and Send. The
+ * files of a pick go into the text at the caret, or at the end when the text
+ * has no caret, and a chip that leaves the text takes its file off the
+ * draft. Send waits while a file uploads or failed. Files over the size
+ * limit get a notice over the box, which can open the file picker again.
+ * While a turn runs, a message steers the turn, and Stop sits beside Send.
+ * While the sandbox is not ready, Send still sends, and the workspace queues
+ * the message. When a message spends the agent login of another member, a
+ * label after the model picker names that login, so the box keeps its place.
+ * Enter follows the shared rule of `useSendKey`: on desktop, Enter sends and
+ * Shift+Enter starts a new line. The text field asks the send key before it
+ * adds a line, so Enter never adds a line to a message that it sends. A
+ * pasted workspace link shows as a chip, and the draft keeps the plain link.
+ * In a chat with the files of its workspace, `@` opens the list of the files
+ * and folders just above the box, and a pick shows as a file chip.
  */
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
-  const files = useRef<HTMLInputElement>(null)
+  const picker = useRef<HTMLInputElement>(null)
+  const field = useRef<FieldHandle>(null)
   const [mentionHost, setMentionHost] = useState<HTMLDivElement | null>(null)
   const { draft } = props
   const empty = draft.text.trim() === '' && draft.files.length === 0
@@ -79,20 +91,15 @@ export function Composer(props: ComposerProps) {
   return (
     <>
       <OversizeNotice
-        onAttach={() => files.current?.click()}
+        onAttach={() => picker.current?.click()}
         refused={draft.refused}
       />
       <div className={styles.wrap}>
         <MentionAnchor onElement={setMentionHost}>
           <div className={styles.composer}>
-            {draft.files.length > 0 ? (
-              <DraftFiles
-                files={draft.files}
-                onRemove={props.onRemoveFile}
-                onRetry={props.onRetryFile}
-              />
-            ) : null}
             <ChipTextField
+              files={props.files}
+              handle={field}
               label="Message"
               lines={2}
               maxLines={8}
@@ -109,17 +116,18 @@ export function Composer(props: ComposerProps) {
               <IconButton
                 icon={Paperclip}
                 label="Attach files"
-                onPress={() => files.current?.click()}
+                onPress={() => picker.current?.click()}
               />
               <input
                 aria-hidden
                 className={local.fileInput}
                 multiple
                 onChange={(event) => {
-                  props.onAttach([...(event.currentTarget.files ?? [])])
+                  const chosen = [...(event.currentTarget.files ?? [])]
                   event.currentTarget.value = ''
+                  field.current?.insertFiles(props.onAttach(chosen))
                 }}
-                ref={files}
+                ref={picker}
                 tabIndex={-1}
                 type="file"
               />
