@@ -199,7 +199,9 @@ No git credential endpoint is implemented here.
 Run `npm run test -- worker/tools` from the repository root.
 The handler tests use the existing real local D1 harness.
 The CLI and MCP tests call `runToolProcess` and reach this handler.
-The tests inject the lifecycle and active-turn services.
+Workspace handler tests inject the lifecycle and active-turn services.
+Session CLI and MCP tests use production composition, native chat storage, and a stored calling turn.
+Their request bridge lives in [session-test-support.ts](session-test-support.ts).
 The production services live in [composition.ts](composition.ts).
 The real-object route tests live in [worker/features](../features/).
 

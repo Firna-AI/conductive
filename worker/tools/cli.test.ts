@@ -178,6 +178,19 @@ it('runs CLI create and list through workspace auth and forwards the calling tur
 })
 
 it('rejects incomplete CLI choices and missing runtime login before any request', async () => {
+  const help = toolOutput()
+  expect(
+    await runToolProcess(
+      ['sessions', 'send', '--help'],
+      {},
+      inputLines(),
+      help.output,
+      fixture.send,
+    ),
+  ).toBe(0)
+  expect(help.stderr).toEqual([])
+  expect(help.stdout[0]).toContain('conductive sessions send')
+  expect(fixture.requests).toEqual([])
   const invalid = toolOutput()
   const status = await runToolProcess(
     [

@@ -92,6 +92,10 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
           { name: 'list_repositories' },
           { name: 'list_sections' },
           { name: 'list_models' },
+          { name: 'list_sessions' },
+          { name: 'read_session' },
+          { name: 'create_session' },
+          { name: 'send_message' },
         ],
       },
     },
@@ -195,7 +199,7 @@ it('separates MCP parse, protocol, and tool failures while ignoring notification
         content: [
           {
             type: 'text',
-            text: 'The workspace login is not valid. Start the workspace again.',
+            text: 'workspace_token_invalid: The workspace login is not valid. Start the workspace again.',
           },
         ],
       },

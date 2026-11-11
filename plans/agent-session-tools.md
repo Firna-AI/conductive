@@ -242,8 +242,9 @@ Added on 10 November 2026 from the options check of decisions 257 to 261.
 
 ## Design
 
-Each item below is an agent call of 10 November 2026, unless it names a
-decision.
+The original planning calls below date from 10 November 2026. Later
+implementation sections give their own dates. A named user decision
+keeps the date of its recorded answer.
 
 ### Calls and routes
 
@@ -533,6 +534,36 @@ These are agent calls of 10 November 2026 within the approved write contract.
   read in full. Their statements already keep accepted messages and make
   starts subject to the normal checks.
 
+### Session tool clients
+
+These are agent calls of 11 November 2026 within the approved tool contract.
+
+- The CLI uses `--workspace` and `--session` for target IDs, and
+  `--detail`, `--start-line`, and `--start-offset` for transcript windows.
+  Reason: named flags keep the two IDs distinct and match the MCP fields.
+- Session option parsing accepts dash-prefixed string values and checks
+  the supplied option names and missing values. Reason: an opaque
+  session ID can start with a dash and remains an ID.
+  Help detection uses those tokens before credential setup. A consumed
+  `--help` message stays message text, while the help flag needs no login.
+- The client omits absent choices and sends generated request IDs only
+  for writes. It keeps supplied IDs and message spacing exact.
+  Reason: the Worker owns sender defaults and durable acceptance.
+- Session reply readers keep paired empty and populated acceptance.
+  A send permits only populated acceptance. Reason: a successful send
+  always names its stored message and turn.
+- One client HTTP reader serves workspace, list, session, and Mac calls.
+  It retains the Worker code and message and masks the known credential.
+  Mac polling adds Stop guidance without replacing the Worker refusal.
+  Reason: every tool exposes the same actionable error contract.
+- Session CLI, MCP schemas, and replies have their own small source files.
+  The image embeds all three through its existing allowlist and raw assets.
+  Reason: source responsibilities stay clear and native Node gets every
+  runtime import without a second install mechanism.
+- The existing image rebuild follow-up also holds the deployed session
+  calls and footer-link smoke. Reason: a refresh keeps old tool sources,
+  and deployment checks must stay outside the branch completion boundary.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -715,23 +746,27 @@ Depends on: 4a
 
 Give both workspace tools the four calls, and tell the agents about them.
 
-- [ ] Add `conductive sessions list`, `read`, `create`, and `send` to
+- [x] Add `conductive sessions list`, `read`, `create`, and `send` to
       `tools/cli.ts`, and `list_sessions`, `read_session`,
       `create_session`, and `send_message` to `tools/mcp-tools.ts` and
       `tools/mcp.ts`. Parse inputs in `tools/input.ts` and replies in
       `tools/responses.ts`.
-- [ ] Give the agent the error code and the message of each Worker refusal
+- [x] Give the agent the error code and the message of each Worker refusal
       in `tools/client.ts`, for every call.
-- [ ] Write the tool descriptions: what a session link holds, the default
+- [x] Write the tool descriptions: what a session link holds, the default
       workspace, the active turn rule, and that a workspace or session link
       in an answer shows as a chip. Tell an agent not to answer a
       `Sent by:` message only to confirm it (decision 262 A).
-- [ ] Update the workspace tools line of `runner/src/instructions.ts` and its
+- [x] Update the workspace tools line of `runner/src/instructions.ts` and its
       tests: the four calls, and what a `Sent by:` line means.
-- [ ] Add CLI and MCP tests in `worker/tools/` against the handler.
-- [ ] Update `tools/README.md` and `runner/agent-tools.md`.
-- [ ] Add the four commands to
+- [x] Add CLI and MCP tests in `worker/tools/` against the handler.
+- [x] Update `tools/README.md` and `runner/agent-tools.md`.
+- [x] Add the four commands to
       `plans/follow-ups/full-image-build-for-agent-tools.md`.
+
+Evidence: `.context/agent-session-tools/reports/m5-clients.md`, with
+the installed CLI/MCP smoke, runtime import closure, failure proofs,
+focused checks, and final ten-run results under `evidence/m5-*`.
 
 ## Milestone 6: Session links in the app
 
