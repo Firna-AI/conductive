@@ -49,6 +49,8 @@ Ask the agent to change a file, or use **Terminal**.
 2. Select a changed file.
 3. Review its diff against the workspace's base branch.
 
+The diff shows syntax colours, as a file does.
+
 The base branch is the branch that the workspace's work targets.
 A workspace you create uses the repository's default branch.
 A run for an opened or pushed pull request uses that pull request's head branch.

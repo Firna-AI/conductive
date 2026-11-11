@@ -5,7 +5,12 @@ import { DiffView } from '../diff/DiffView'
 import { parsePatch } from '../diff/parse-patch'
 import { labelName, pageLabel } from '../model/file-labels'
 import type { WorkspaceFiles } from '../model/files-store'
-import type { DiffTab, FilesLayout, FilesNavigation } from '../navigation'
+import {
+  splitPath,
+  type DiffTab,
+  type FilesLayout,
+  type FilesNavigation,
+} from '../navigation'
 import { useFilesSnapshot } from '../panel/FilesPanel'
 import { ActionLink } from '../ui/actions'
 import { DiffStat } from '../ui/DiffStat'
@@ -99,7 +104,14 @@ export function DiffPage(props: {
   } else if (diff && rows.length === 0) {
     body = <EmptyState icon={FileDiff} title="The lines did not change" />
   } else if (diff) {
-    body = <DiffView rows={rows} />
+    body = (
+      <DiffView
+        name={splitPath(tab.path).name}
+        newContent={diff.newContent}
+        oldContent={diff.oldContent}
+        rows={rows}
+      />
+    )
   }
   return (
     <LayoutRoot

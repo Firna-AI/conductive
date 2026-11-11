@@ -4,7 +4,8 @@ The Files screens show the files of a workspace branch. All files is a
 tree of every file. Changes lists the files that the branch changes
 against the base branch, under the totals of the change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
-A changed file opens its unified diff. The requirements are in
+A changed file opens its unified diff, with the same syntax colours. The
+requirements are in
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes).
 The visual spec is the `app/files` page of the
 [mockup catalogue](../../docs/mockups/README.md), and
@@ -267,7 +268,11 @@ tests keep their static markup checks in Node.
   `panel/file-icons.tsx` draws the icon of each kind through `EntryIcon` of
   the mockups, the one icon map of All files, the tabs, the list of `@`,
   and the file chips.
-- `diff/`: the unified diff parser and view.
+- `diff/`: the unified diff parser and view. `diff/highlight-diff.ts`
+  colours each diff line from the whole old or new file of the diff
+  reply, so a line inside a comment that opens above its hunk keeps its
+  colour. A line that does not match its file line takes its colours from
+  the diff text alone, side by side, and each hunk starts again in code.
 - `dev/`: the development page, its Vite config, its fixtures, its Copy
   and Download targets, `RepairControls`, the controls of the failed
   repairs and of a failed read, and `dev-unread.ts`, the stored state of
