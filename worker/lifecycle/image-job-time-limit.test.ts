@@ -19,7 +19,7 @@ const FAILURE =
   'The cloud computer image did not build within the 60-minute limit. Check the log and try again.'
 
 it('ends an install that never exits at the original build deadline after phase changes and reconstruction', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const image = await imageRetryFixture(fixture)
   await image.tick(TEST_TIME + 3_000_000)
   await image.tick(TEST_TIME + 3_001_000)
@@ -47,7 +47,7 @@ it('ends an install that never exits at the original build deadline after phase 
 })
 
 it('ends a refresh whose computer never becomes ready after reconstruction', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const image = await imageRetryFixture(fixture, { kind: 'refresh', steps: 1 })
   fixture.boat.states.set('bx_1', 'provisioning')
   await image.tick(TEST_TIME + 3_599_999)
@@ -71,7 +71,7 @@ it('ends a refresh whose computer never becomes ready after reconstruction', asy
 })
 
 it('schedules and enforces the build deadline before a later provider retry', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const image = await imageRetryFixture(fixture)
   const fault = statusFault(fixture)
   fault.fail('60')
@@ -90,7 +90,7 @@ it('schedules and enforces the build deadline before a later provider retry', as
 })
 
 it('fails a build when its final provider read returns at the deadline before publication', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const image = await imageRetryFixture(fixture)
   for (let step = 0; step < 8; step++) {
     if ((await image.job()).phase === 'publish') break
@@ -114,7 +114,7 @@ it('fails a build when its final provider read returns at the deadline before pu
 })
 
 it('publishes the build limit while retaining source cleanup until its encrypted token is revoked', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const image = await imageRetryFixture(fixture, { steps: 1 })
   const { env, dependencies } = fixture.runtime
   const source = await insertSourceJob(

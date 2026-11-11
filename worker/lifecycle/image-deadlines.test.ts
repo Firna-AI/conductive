@@ -12,7 +12,7 @@ import { readOrgImage } from './org-image-data'
 const backendFixture = setupBackendTests()
 
 it('preserves the saved daily refresh deadline after a build fails at hour 23', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const { images, org, user, runtime } = fixture
   const good = await startImageBuild(images, {
     orgId: org.id,
@@ -48,7 +48,7 @@ it('preserves the saved daily refresh deadline after a build fails at hour 23', 
 })
 
 it('advances an admitted daily refresh before failure and waits until the next day when a push is also due', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const { images, org, user, runtime } = fixture
   const good = await startImageBuild(images, {
     orgId: org.id,

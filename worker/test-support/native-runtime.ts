@@ -15,6 +15,7 @@ import { NativeHostBridge } from './native-host-bridge'
 import { nativeWorkspaceBundle } from './native-bundle'
 import { readNativeReply } from './native-protocol'
 import { forceNativeEviction } from './native-eviction'
+import type { NativeRemote } from './native-values'
 
 const WORKER_NAME = 'worker-core-tests'
 const EXPORT_NAME = 'NativeWorkspace'
@@ -241,7 +242,7 @@ export async function createNativeRuntime(
 
 export interface NativeActor {
   ready: Promise<void>
-  api: NativeWorkspaceApi
+  api: NativeRemote<NativeWorkspaceApi>
   rpc: DurableObjectStub<NativeWorkspace>
   fetch(request: Request): Promise<Response>
   lifecycle: WorkspaceLifecycleEndpoint & TurnTokenEndpoint

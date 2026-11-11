@@ -13,7 +13,7 @@ import { readOrgImage } from './org-image-data'
 const backendFixture = setupBackendTests()
 
 it('refreshes the captured repositories and revision with push throttling and a durable daily deadline', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     const { images, org, user, runtime, boat } = fixture
     const good = await startImageBuild(images, {

@@ -25,6 +25,20 @@ export interface NativeInvocation {
   arguments: NativeValue[]
 }
 
+/**
+ * A value of the other runtime. Each call crosses the bridge, so it returns
+ * a promise, also when the method of that runtime returns a plain value.
+ */
+export type NativeRemote<T> = {
+  [K in keyof T]: T[K] extends (...args: infer A) => infer R
+    ? R extends PromiseLike<unknown>
+      ? T[K]
+      : (...args: A) => Promise<R>
+    : T[K] extends object
+      ? NativeRemote<T[K]>
+      : T[K]
+}
+
 export type NativeResult =
   | { ok: true; value: NativeValue }
   | {

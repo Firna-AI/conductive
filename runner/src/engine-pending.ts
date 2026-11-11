@@ -75,7 +75,9 @@ export class PendingTurns {
   }
 
   async close(): Promise<void> {
-    await Promise.all([...this.turns.keys()].map((id) => this.stop(id)))
+    await Promise.all(
+      [...this.turns.keys()].flatMap((id) => this.stop(id) ?? []),
+    )
     await Promise.all(this.ended.values())
   }
 }

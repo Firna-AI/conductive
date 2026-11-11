@@ -12,7 +12,7 @@ import { WORKSPACE_TOOLS_DIRECTORY } from '../tools/image'
 const backendFixture = setupBackendTests()
 
 it('removes sensitive command output before requesting an image snapshot', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const { images, org, user, boat, runtime } = fixture
   const local = await localSavedScriptFixture(fixture.repositoryId, 'build')
   const sensitive = 'sensitive-fixture-output'

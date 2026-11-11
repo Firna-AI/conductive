@@ -20,7 +20,7 @@ it.each([
 ] as const)(
   '%s a saved image after a lost reply and retains its name for Delete org',
   async (_action, refuseLookup, state) => {
-    const fixture = await backendFixture()
+    const fixture = backendFixture()
     try {
       const { images, org, user, boat, runtime, harness } = fixture
       const buildId = await startImageBuild(images, {
@@ -101,7 +101,7 @@ it.each([
 )
 
 it('replays an undispatched snapshot intent and waits for a racing save before publication', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     const { images, org, user, boat, runtime } = fixture
     const buildId = await startImageBuild(images, {

@@ -14,7 +14,7 @@ it.each([
 ] as const)(
   'uses confirmed $native state for idle stop when refusal is $refused',
   async ({ native, refused, expected, reads }) => {
-    const fixture = await backendFixture()
+    const fixture = backendFixture()
     const { runtime, org, user, boat } = fixture
     const created = await fixture.run(() =>
       createCompletedWorkspace(runtime, org.id, user, {

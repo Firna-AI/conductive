@@ -11,7 +11,7 @@ import { refreshImagesForPush } from './image-timers'
 const backendFixture = setupBackendTests()
 
 it('keeps the good image across build and provider failures and publishes a successful retry', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     const { images, org, user, boat, runtime } = fixture
     const replacement = await startImageBuild(images, {

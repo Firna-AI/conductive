@@ -16,7 +16,7 @@ import { startImageBuild } from './image-builds'
 const fixtureForTest = setupBackendTests()
 
 it('bounds accumulated output and streams retained ends with the omitted byte count', async () => {
-  const { runtime, images, org, user } = await fixtureForTest()
+  const { runtime, images, org, user } = fixtureForTest()
   const db = runtime.env.DB
   const id = await startImageBuild(images, {
     orgId: org.id,

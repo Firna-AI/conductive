@@ -183,7 +183,7 @@ startDesktop({
       () => {
         void signIn.start().catch(warn)
       },
-      updates.check,
+      () => void updates.check(),
       updates.available,
     )
   },

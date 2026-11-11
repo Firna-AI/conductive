@@ -17,7 +17,7 @@ const backendFixture = setupBackendTests()
 it.each([0, 7])(
   'recovers a finished install with exit code %i after a restart before its process ID was saved',
   async (exitCode) => {
-    const fixture = await backendFixture()
+    const fixture = backendFixture()
     const { images, org, user, boat, runtime } = fixture
     const local = await localSavedScriptFixture(fixture.repositoryId, 'build')
     try {
@@ -88,7 +88,7 @@ it.each([0, 7])(
 )
 
 it('recovers a running startup after a lost start reply without repeating its side effect', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const local = await localSavedScriptFixture(fixture.repositoryId)
   const gate = await local.gate()
   const runs: Promise<CommandResult>[] = []

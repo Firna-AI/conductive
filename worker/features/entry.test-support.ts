@@ -8,6 +8,12 @@ import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 
 const app = createApp({ now: () => DEVICE_TEST_NOW })
 
+/**
+ * A stored value as a test reads it. RPC types a result that holds `unknown`
+ * as `never`. This union holds the same values in a form that RPC accepts.
+ */
+type StoredValue = NonNullable<unknown> | null
+
 export class Workspace extends NativeAlarmWorkspace {
   private suspensions = 0
   private readonly observers = new Map<number, () => void>()
@@ -35,8 +41,8 @@ export class Workspace extends NativeAlarmWorkspace {
     })
   }
 
-  async inspectFeatureState() {
-    return [...(await this.ctx.storage.list()).entries()]
+  async inspectFeatureState(): Promise<[string, StoredValue][]> {
+    return [...(await this.ctx.storage.list<StoredValue>()).entries()]
   }
 
   waitForActivity(): Promise<void> {

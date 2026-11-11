@@ -13,7 +13,7 @@ import { finishImageBuild as finish } from './image-test-support'
 const backendFixture = setupBackendTests()
 
 it('keeps a leased image until its workspace starts across a replacement publication', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     const { images, org, user, boat, runtime } = fixture
     const initial = await startImageBuild(images, {

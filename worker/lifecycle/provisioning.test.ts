@@ -9,7 +9,7 @@ import { stopWorkspaceSandbox } from './workspace-actions'
 const backendFixture = setupBackendTests()
 
 it('recovers an accepted create after its caller closes and the actor restarts', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     fixture.pauseStarts()
     const input = {

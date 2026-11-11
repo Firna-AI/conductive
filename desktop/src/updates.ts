@@ -38,7 +38,7 @@ export function startUpdates(dependencies: {
   warn(error: unknown): void
 }) {
   if (!dependencies.packaged || !dependencies.enabled)
-    return { available: false, check() {}, stop() {} }
+    return { available: false, check: async () => {}, stop() {} }
   const { updater, nativeUpdater } = dependencies
   updater.setFeedURL(UPDATE_FEED)
   updater.allowPrerelease = false

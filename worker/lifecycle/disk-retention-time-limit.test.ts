@@ -14,7 +14,7 @@ const FAILURE =
   'The cloud computer did not start within the 20-minute limit. Try again.'
 
 async function retentionFixture() {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const created = await fixture.run(() =>
     createCompletedWorkspace(fixture.runtime, fixture.org.id, fixture.user, {
       repositoryId: fixture.repositoryId,

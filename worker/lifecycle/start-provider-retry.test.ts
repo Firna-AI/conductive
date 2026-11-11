@@ -6,7 +6,7 @@ import { startRetryFixture, statusFault } from './retry-test-support'
 const backendFixture = setupBackendTests()
 
 it('bounds lasting start status faults across alarm restarts and retains existing failure cleanup', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const start = await startRetryFixture(fixture)
   statusFault(fixture)
   const now = fixture.runtime.dependencies.now() + 1_000
@@ -34,7 +34,7 @@ it('bounds lasting start status faults across alarm restarts and retains existin
 })
 
 it('preserves captured start output and lets cancellation bypass a pending retry', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const start = await startRetryFixture(fixture)
   const fault = statusFault(fixture)
   const now = fixture.runtime.dependencies.now() + 1_000

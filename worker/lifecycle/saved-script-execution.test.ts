@@ -27,7 +27,7 @@ async function saveScripts(
 }
 
 it('runs the saved image install script in Bash with its existing directory and no org environment', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const local = await localSavedScriptFixture(fixture.repositoryId, 'build')
   try {
     await saveScripts(fixture)
@@ -64,7 +64,7 @@ it('runs the saved image install script in Bash with its existing directory and 
 })
 
 it('runs saved workspace startup in Bash with the org environment before marking ready and restarting the runner', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const local = await localSavedScriptFixture(fixture.repositoryId)
   try {
     await saveScripts(fixture)
@@ -99,7 +99,7 @@ it('runs saved workspace startup in Bash with the org environment before marking
 })
 
 it('runs retention startup in Bash with its org environment without marking ready or restarting the runner', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const local = await localSavedScriptFixture(fixture.repositoryId, 'retention')
   try {
     await saveScripts(fixture)

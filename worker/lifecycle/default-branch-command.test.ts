@@ -9,7 +9,7 @@ import { defaultBranchFixture } from './default-branch-test-support'
 const backendFixture = setupBackendTests()
 
 it('pushes an empty root as the turn sender without staged files and fetches it once again on retry', async () => {
-  const fixture = await defaultBranchFixture(await backendFixture())
+  const fixture = await defaultBranchFixture(backendFixture())
   try {
     expect(await fixture.remoteGit('for-each-ref')).toBe('')
     await fixture.write(
@@ -71,7 +71,7 @@ it('pushes an empty root as the turn sender without staged files and fetches it 
 })
 
 it('fetches normal history without a push', async () => {
-  const fixture = await defaultBranchFixture(await backendFixture())
+  const fixture = await defaultBranchFixture(backendFixture())
   try {
     const commit = await fixture.createRemoteCommit()
     const result = await fixture.execute()
@@ -89,7 +89,7 @@ it('fetches normal history without a push', async () => {
 })
 
 it('does not bootstrap a missing default branch when the remote has another ref', async () => {
-  const fixture = await defaultBranchFixture(await backendFixture())
+  const fixture = await defaultBranchFixture(backendFixture())
   try {
     const commit = await fixture.createRemoteCommit('refs/tags/existing')
     const result = await fixture.execute()
@@ -111,7 +111,7 @@ it('does not bootstrap a missing default branch when the remote has another ref'
 })
 
 it('fetches a concurrent first commit without replacing it and keeps it on retry', async () => {
-  const fixture = await defaultBranchFixture(await backendFixture())
+  const fixture = await defaultBranchFixture(backendFixture())
   try {
     let winner = ''
     fixture.github.beforeReceive = async () => {
@@ -134,7 +134,7 @@ it('fetches a concurrent first commit without replacing it and keeps it on retry
 it.each(['denied', 'unavailable'] as const)(
   'does not create a commit when remote inspection is %s',
   async (failure) => {
-    const fixture = await defaultBranchFixture(await backendFixture())
+    const fixture = await defaultBranchFixture(backendFixture())
     try {
       fixture.github.readFailure = failure
       const result = await fixture.execute()
@@ -152,7 +152,7 @@ it.each(['denied', 'unavailable'] as const)(
 )
 
 it('fails when the first push is denied and the remote stays empty', async () => {
-  const fixture = await defaultBranchFixture(await backendFixture())
+  const fixture = await defaultBranchFixture(backendFixture())
   try {
     fixture.github.denyPush = true
     const result = await fixture.execute()

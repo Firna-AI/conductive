@@ -12,7 +12,7 @@ const FAILURE =
   'The cloud computer did not start within the 20-minute limit. Try again.'
 
 it('polls a retained never-ending maintenance script across reconstruction and stops it at the original deadline', async () => {
-  const fixture = await retentionCommandFixture(await backendFixture())
+  const fixture = await retentionCommandFixture(backendFixture())
   const { boat, platform } = fixture
   const held = heldOperation()
   boat.commandRunning = true
@@ -78,7 +78,7 @@ it('polls a retained never-ending maintenance script across reconstruction and s
 })
 
 it('hands an active maintenance script to confirmed stop cleanup before accepting a user resume', async () => {
-  const fixture = await retentionCommandFixture(await backendFixture())
+  const fixture = await retentionCommandFixture(backendFixture())
   const { boat, platform, runtime, org, user, id } = fixture
   boat.commandRunning = true
   await platform.endpoint().advance()
