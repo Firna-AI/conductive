@@ -2,6 +2,7 @@ import { vi } from 'vitest'
 import { routes } from '../../src/app/router'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { sessionLink } from '../../src/shared/session-link'
 import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import { createWorkspaceToolClient } from '../../tools/client'
 import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
@@ -9,7 +10,11 @@ import { requestBodyEntry } from '../http/request-body'
 import { hash } from '../security/crypto'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import { createAgentToolsHandler } from './handler'
-import type { CallingTurn, ToolWorkspaceCreation } from './services'
+import type {
+  AgentToolServices,
+  CallingTurn,
+  ToolWorkspaceCreation,
+} from './services'
 
 export const TOOL_TEST_ORIGIN = 'https://machine.conductive.test'
 export const TOOL_TEST_TOKEN = 'workspace-token-for-tools-tests'
@@ -140,6 +145,7 @@ export async function toolFixture(harness: TestHarness) {
     workspaceId: 'calling-workspace',
     turnId: TOOL_TEST_TURN,
     senderUserId: 'teammate',
+    sessionId: 'calling-session',
   }))
   const ownerDefaultChoice = vi.fn(
     async (): Promise<AgentChoice | null> => null,
@@ -165,8 +171,22 @@ export async function toolFixture(harness: TestHarness) {
       restoreUntil: null,
     },
     sessionId: 'created-session',
+    sessionLink: sessionLink(
+      harness.env.APP_ORIGIN,
+      input.orgId,
+      'created-workspace',
+      'created-session',
+    ),
   }))
-  const services = { callingTurn, ownerDefaultChoice, createWorkspace, models }
+  const services = {
+    callingTurn,
+    ownerDefaultChoice,
+    createWorkspace,
+    models,
+    listSessions: vi.fn<AgentToolServices['listSessions']>(),
+    readSession: vi.fn<AgentToolServices['readSession']>(),
+    writeSession: vi.fn<AgentToolServices['writeSession']>(),
+  }
   const env = { ...harness.env, MACHINE_ORIGIN: TOOL_TEST_ORIGIN }
   const entry = requestBodyEntry(createAgentToolsHandler(env, services))
   const handler = (request: Request) => entry(request, env)

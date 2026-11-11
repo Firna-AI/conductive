@@ -1,7 +1,7 @@
 # The design of the chat
 
 This page belongs to [the design](design.md), which gives the style, the
-layouts, the design tokens, and the shared parts. This page gives workspace and file chips,
+layouts, the design tokens, and the shared parts. This page gives workspace, session, and file chips,
 attached files, Markdown tables, and the work fold of a turn. It also gives the data that the chat does
 not have, and the files that the cloud computer could not read.
 
@@ -101,7 +101,7 @@ not have, and the files that the cloud computer could not read.
   no time. With no saved list, All files says "The list of all files is
   unavailable" in place of the tree. `lostCopy.ts` holds these words too.
 
-## Workspace and file chips
+## Workspace, session, and file chips
 
 - `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
   the org as a chip in a line of text: a small rounded pill with the list
@@ -136,6 +136,25 @@ not have, and the files that the cloud computer could not read.
     pointer hovers, as on a phone, the icon stays, and `ChipEndRemove`
     puts a × at the end of the chip. Attached files follow the same rule,
     and on a phone they keep their × button of touch size.
+  - The bubble of a sent message is never wider than its column, and in a
+    message box the box around a chip is never wider than the chip. So a
+    chip with a long name is cut short in place, with no gap after it, and
+    it never pushes a bubble past the edge of the chat.
+- `SessionChip` in `src/components/chat/` draws a link to a session as a
+  chip of the same size: the list mark, `WorkspaceMark`, and the label of the workspace
+  of the session, the icon of a session tab, and the title of the session,
+  or Untitled. The icon tells it from a workspace chip, whose name takes
+  the same place. Its title is the whole title of the session, and screen
+  readers hear "Session" before it. It takes no fixtures, so the app can
+  use it too.
+  - `MessageText` shows a session chip for a link to the address of a
+    session that the chat read. `ChatWorkspaces` gives each linked
+    workspace the sessions that the chat read when it loaded, open and
+    closed. A link to any other session shows the chip of its workspace.
+  - A press on a session chip shows the session. A press on the chip of a
+    closed session opens the page of its workspace, so no tab reopens for
+    the other members. In a message box a session chip works as a
+    workspace chip does.
 - `FileChip` in `src/components/chat/` draws a file or a folder of the
   workspace as a chip of the same size: the icon that All files gives it,
   and its name. Its title is the whole path. `EntryIcon` in

@@ -4,6 +4,7 @@ import {
   type WorkspaceEventEnvelope,
 } from './workspace-events'
 import type { UserMessage } from '../../src/shared/messages'
+import type { ToolSessionAccess, ToolSessionWrite } from '../tools/services'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
@@ -64,6 +65,13 @@ export class WorkspaceChat {
 
   flushRunner(): Promise<void> {
     return this.runner.flush()
+  }
+
+  acceptToolWrite(
+    input: ToolSessionWrite,
+    authorize: () => Promise<ToolSessionAccess>,
+  ) {
+    return this.operations.writeTool(input, authorize)
   }
 
   async acceptFirstMessage(first: FirstWorkspaceMessage): Promise<UserMessage> {
@@ -139,6 +147,7 @@ export class WorkspaceChat {
       bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
       closeRunner: () => this.runner.close(),
+      flushRunner: () => this.runner.flush(),
     })
   }
 

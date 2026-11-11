@@ -69,7 +69,14 @@ requirements.
   `links/LinksContext.tsx`, as
   [The list mark](../../docs/protocol/workspace-life.md#the-list-mark)
   says. The chip opens the page that the router read, with its tab path,
-  query, and hash. Every other link stays as the text has it. The message
+  query, and hash. A link whose path names a session that the reader knows
+  shows as the session chip of the mockups instead: `useLinkedSession` in
+  `links/session-links.ts` finds a live session of the chat's workspace, or
+  a session from the one read of another workspace for the load of the
+  chat. Its mark follows the workspace list, as a workspace chip does.
+  While that read runs, after it fails, and for a session that the
+  workspace does not hold, the link keeps the chip of its workspace. Every
+  other link stays as the text has it. The message
   field reads its text with `textParts`, which reads no code. A message line of
   a work fold shows chips too. A click on a chip there stays with the
   chip, so the line does not toggle, and a click with a modifier key opens

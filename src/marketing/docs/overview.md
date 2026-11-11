@@ -41,8 +41,12 @@ Select **+** to start another session in the same workspace.
 The sessions share its files and branch.
 Use a separate workspace when a task needs its own files and branch.
 
+Agents can create sessions, send messages, and read results across the org's workspaces.
+Messages from agent tools link to the session that sent them.
+
 - [Connect and share agent logins](/docs/agent-logins)
 - [Use sessions and chat](/docs/sessions-and-chat)
+- [Understand what agents can reach](/docs/security#understand-what-agents-can-reach)
 
 ## Follow and review the work
 

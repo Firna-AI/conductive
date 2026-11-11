@@ -134,6 +134,8 @@ A build also installs the newest Conductive cloud computer software.
 An existing workspace keeps the software of the setup that it started from, also after a resume.
 To get newer software, start a new workspace after an admin runs **Build computer**.
 This also gives the new workspace the server list in **Preview**.
+The same steps give it the tools that create sessions, send messages, and read chats across the org.
+Resuming an existing workspace does not update its installed tools.
 
 After the first successful build, removed repositories and saved install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build runs.

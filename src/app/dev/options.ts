@@ -17,6 +17,7 @@ const CONVERSATIONS = [
   'failed',
   'queued',
   'first-turn',
+  'sent-by',
 ] as const satisfies readonly RecordedChatScenario[]
 
 /** The run lists of Review pull requests that the mockups also draw. */

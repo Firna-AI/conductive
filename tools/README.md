@@ -1,6 +1,7 @@
 # Workspace CLI and MCP server
 
 These tools create and list Conductive workspaces from a running workspace.
+They also create sessions, list sessions, send messages, and read chats across the org.
 They can also ask to run a command on the active turn sender's connected Mac.
 They call the machine route `/v1/tools/workspaces` from the [shared contract](../src/shared/agent-tools.ts).
 They also list repositories, sections, and models through that contract's machine routes.
@@ -20,6 +21,10 @@ conductive models list
 conductive workspaces create --repository repo-id --message 'Build this feature.'
 conductive workspaces create --repository repo-id --message 'Review the change.' \
   --agent codex --model model-name --effort high --section section-id --name 'Review the change'
+conductive sessions list
+conductive sessions create --workspace workspace-id --title 'Review the change'
+conductive sessions send --workspace workspace-id --session session-id --message 'Check this change.' --request-id review-1
+conductive sessions read --workspace workspace-id --session session-id --detail full
 conductive mcp
 conductive mac run --command 'pwd' --folder '/Users/me/project' --reason 'Check the local folder'
 ```
@@ -35,7 +40,7 @@ It keeps whole words when possible and keeps an ellipsis.
 It keeps each underscore, as [Create and list calls](../docs/protocol/agent-tools.md#create-and-list-calls) says.
 A blank result counts as no name, and the app shows "Untitled".
 The name does not change the branch.
-The create answer holds the stored name.
+The create answer holds the stored name, the first session ID, and its absolute `sessionLink`.
 `workspaces list` returns every workspace in the org, including archived workspaces.
 Each list item gives its number and canonical web link.
 Create gives both fields in the complete workspace record.
@@ -51,7 +56,12 @@ The [agent-tool protocol](../docs/protocol/agent-tools.md#repository-section-and
 
 The CLI writes one JSON response to stdout.
 It writes a failure message to stderr and returns exit status 1.
+Both tools preserve the Worker's error code and message, such as `session_closed: Reopen the session to send a message.`
+They give a generic failure for malformed replies and network failures.
+Error text never includes the known workspace credential.
 `conductive --help` works without runtime credentials.
+A session option's string value can start with a dash.
+For example, `--message '--help'` sends that exact text.
 
 The runner supplies these values in the process environment:
 
@@ -65,12 +75,49 @@ The tools send the token as a bearer credential.
 They send the turn ID in `X-Conductive-Turn-Id`.
 The turn ID selects context.
 It grants no access by itself.
-Create requires valid active turn context.
-All four lists need only the workspace token.
+Workspace creation and session writes require valid active turn context.
+All lists and session transcript reads need only the workspace token.
+
+## Sessions
+
+The [session call contract](../docs/protocol/session-calls.md) gives the reach and message rules.
+Each session command accepts `--workspace ID`.
+Its omission names the calling workspace.
+Read and send require `--session ID`.
+A session link holds both IDs.
+A session link in an answer shows as a session chip.
+
+`sessions create` accepts an optional `--title`, `--message`, choice, and `--request-id`.
+The title follows the same Worker rule and underscore guidance as `--name`.
+Omitted model or effort uses the calling turn sender's saved default, then the app default.
+Without a message, creation returns an empty session with null `message` and `turnId`.
+`sessions send` requires nonblank `--message` text and keeps its exact spacing.
+An omitted choice keeps the session's model and effort.
+The reply gives the actual receiving session with its link, the accepted message, and its turn ID.
+A message can join a running turn or open a linked session on its sender's login.
+Each tool message ends with `---` and `Sent by:` followed by the sending session link.
+Do not answer such a message only to confirm it.
+
+Each write accepts `--request-id` for a stable retry. An omitted ID generates a new opaque ID.
+An accepted write also gives `resume`, with state `not_needed`, `queued`, `waiting`, or `failed`.
+A failed resume keeps the accepted message and gives its existing error code and message.
+Retry the same request ID to check current resume state or retry a refused start without another message.
+
+`sessions list` includes closed sessions and the workspace state.
+`sessions read` defaults to concise and the newest transcript text. `--detail full` reads the full kind.
+The JSON reply gives `markdown`, `startLine`, `endLine`, `totalLines`, `startOffset`, `endOffset`, and `next`.
+Use `--start-line` and `--start-offset` to read from an earlier position.
+Lines start at one. Offsets count UTF-16 code units within a line.
+Use `next.line` and `next.offset` for the following read until `next` is null.
+A long line can span several replies. Keep each fragment to recover all its text.
 
 ## MCP
 
 The stdio server exposes `create_workspace`, `list_workspaces`, `list_repositories`, `list_sections`, `list_models`, and `run_mac_command`.
+It also exposes `create_session`, `list_sessions`, `send_message`, and `read_session`.
+Their optional `workspaceId` defaults to the caller. Read and send require `sessionId`.
+Create accepts `firstMessage`, and send requires `text`.
+Transcript fields are `detail`, `startLine`, and `startOffset`.
 The ID fields of `create_workspace` name the list tools that supply their values.
 Its optional `name` uses the same Worker rule as CLI `--name`.
 Its description gives the same guidance as the `--name` help.
@@ -116,7 +163,7 @@ Both adapters keep the complete command result, including its output, timeout, a
 Each call to create or read a Mac command needs the active turn.
 So the tool cannot read a `turn_ended` result after Stop.
 The Worker answers its next call with HTTP 403 `calling_turn_required`.
-The tool then stops polling and reports: `The agent turn ended. The tool cannot read the Mac command result.`
+The tool then stops polling and reports the Worker code and message, followed by `The agent turn ended. The tool cannot read the Mac command result.`
 The CLI writes that message to stderr and returns status 1.
 MCP returns it in a tool result with `isError: true`.
 
@@ -166,8 +213,11 @@ Run them with `npm run test -- worker/devices/tools.test.ts`.
 - [cli.ts](cli.ts) parses the CLI and writes its result.
 - [mcp.ts](mcp.ts) serves the stdio protocol.
 - [client.ts](client.ts) sends authenticated requests and parses responses.
+- [session-cli.ts](session-cli.ts) parses session commands and gives their help.
+- [session-mcp-tools.ts](session-mcp-tools.ts) describes session tools and their inputs.
+- [session-responses.ts](session-responses.ts) checks transcript windows and paired write replies.
 - [device-client.ts](device-client.ts) creates Mac commands and polls their returned URL keys.
-- [input.ts](input.ts) parses the shared create request without changing message text.
+- [input.ts](input.ts) parses workspace and session requests without changing message text.
 - [runtime.ts](runtime.ts) reads runtime configuration without storing credentials.
 
 The MCP implementation follows the official [lifecycle](https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle),

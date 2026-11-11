@@ -143,6 +143,18 @@ These facts belong to this implementation, not to the protocol docs.
   `file_too_large`. Patch size reports the first byte over the limit.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no credential and starts no agent.
+- After a start from a saved snapshot, the sandbox provider restores the
+  disk in the background. When the restore ends, a running program keeps
+  an old view of the disk at another path, such as
+  `/var/lib/ascii-lazy/retired/home/code/<name>`. A repository watch made
+  before that end then misses every later edit, so the file lists stop.
+  The runner checks once a second for the
+  [terminal's restore marker](../worker/terminal/README.md), which the
+  Worker writes when the provider reports the end of the restore. When the
+  marker appears, the runner watches the live folder again and scans the
+  repository once. A marker that exists when the watch starts changes
+  nothing, because that watch already sees the live folder. Each Git
+  command already resolves the folder path again, so only the watch moves.
 
 ## Event limits
 
@@ -271,6 +283,8 @@ tools that time the first agent start after a resume.
 - `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
   queue, the file tree, the branch changes, bounded reads, and the files of
   one turn.
+- `src/restore-end.ts`: `onRestoreEnd` waits for the restore marker, so the
+  runner can move its repository watch to the live folder.
 - `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
   indexes and objects for Git comparisons. The real index stays unchanged.
 - `src/git.ts`: Git commands and merge-base selection, which prefers the fetched remote-tracking base over a local branch.

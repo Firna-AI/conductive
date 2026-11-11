@@ -27,6 +27,7 @@ import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
 import { conversationKeys } from './conversationKeys'
 import { fileMentionConversations } from './fileMentions'
+import { sessionLinkConversations } from './sessionLinkConversations'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -258,6 +259,7 @@ export const conversations: Readonly<
   ...linkedConversations,
   ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
   ...workspaceLinkConversations(history),
+  ...sessionLinkConversations(history),
   ...fileMentionConversations(history),
   ...workConversations({
     start: autocompleteStart,
