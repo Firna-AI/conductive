@@ -298,7 +298,7 @@ Depends on: 2, 3
   - [x] A runner disconnect during the user check of the success keeps
         the start job. A later readiness report completes the start.
   - [x] A Resume during a held reply settles and adds no start job.
-- [ ] Update the known limit of
+- [x] Update the known limit of
       `worker/chat/integration/workspace-lifecycle.md`, and update
       `worker/lifecycle/workspace-object.md`,
       `worker/lifecycle/alarm-scheduler.md`,
@@ -308,7 +308,7 @@ Depends on: 2, 3
 
 Depends on: 1, 2, 3, 4
 
-- [ ] Run each new asynchronous test 10 times. Save the pass counts under
+- [x] Run each new asynchronous test 10 times. Save the pass counts under
       `.context/start-calls-outside-chat-queue/`.
 - [ ] Run the targeted tests, `npm run test -- worker/chat worker/lifecycle
       worker/members`, and the complete gate, `npm run check`.

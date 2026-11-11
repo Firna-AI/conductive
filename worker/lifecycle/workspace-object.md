@@ -179,10 +179,44 @@ create and resume. The workspace object runs that start:
   runs no startup command again and keeps its due time at that deadline.
   Each alarm and readiness report still checks the owner and requester.
   The shared success path prepares the lifecycle only after its final
-  access, cancellation, and deadline checks.
+  access, cancellation, deadline, and runner connection checks.
+- When the runner disconnects during these final checks, the start job
+  stays in its runner phase. The start then completes after a later
+  readiness report.
 - While a start job exists, the start keeps its own due time, and the
   lifecycle state keeps none. After the start ends, the alarm run sets the
   lifecycle due time from the saved state.
+- The progress phases of a start are `records`, `machine`, `ready`,
+  `fetch`, `branch`, `startup`, `terminal`, `terminal-password`, and
+  `runner`, up to the success of the start. They make most of their D1 and
+  Boat calls outside the chat queue. The start guard in
+  [`start-guard.ts`](start-guard.ts) runs each group of these calls with
+  `outside`, as [History and event order](../chat/history.md) says. So
+  chat reads, messages, and runner receipts do not wait for those calls.
+- Before and after each outside call, in the queue task, the start guard
+  reads the start job and the stop epoch. It also checks that the member
+  receiver fence is active with the generation of the start's queue task.
+  When the start job is gone, the fence check fails, or the second read
+  differs from the first, the call throws `StartSuperseded`. The advance
+  then ends with no further write, as after a lost reply. The lifecycle
+  run sets the start due time one second later.
+- The storage reads and writes of a start stay in its queue task. So do
+  its calls to the controller and to `DurableLifecycle`, with each
+  lifecycle state write. The token write, the admission, the runner
+  readiness check, and the D1 publication of a create result also stay in
+  the queue. The failure path of a cancelled or failed start makes all its
+  calls in the queue.
+- Allocation saves its encrypted request in the queue task. Then one
+  outside call records the ledger intent, creates the sandbox, records the
+  returned ID, and assigns the sandbox to the workspace row. No guard check
+  runs between the create reply and these D1 writes. So a member
+  suspension during the create still leaves the sandbox ID in D1.
+- When Archive ends a running start, Archive runs only its initialization
+  in that queue task. The initialization ends the start as stopped. The
+  next lifecycle run of the alarm runs the later Archive phases, with the
+  provider stop. Only the regular alarm task starts a lifecycle run, one
+  run at a time. So the provider stop comes after the last outside call of
+  the start.
 - The first lifecycle prepare of each create and resume also starts the
   restore watch. After a start from a saved snapshot, Boat downloads the
   file content in the background. The

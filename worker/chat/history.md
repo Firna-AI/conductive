@@ -9,8 +9,10 @@ streams, and the order of the runner commands.
   one at a time.
 - `ChatStore.run` gives each queue task a `QueueTurn` handle from
   [`queue-turn.ts`](queue-turn.ts). With `outside(call)` of the handle, a
-  task runs one call outside the queue. No production code calls `outside`
-  yet.
+  task runs one call outside the queue. In production code, only the start
+  guard of a sandbox start calls `outside`, as
+  [Creates and resumes](../lifecycle/workspace-object.md#creates-and-resumes)
+  says.
 - `outside` first gives the committed turn ends to the
   [`turnEnded`](integration/workspace-lifecycle.md#hooks-and-events) hook.
   Then the task gives the queue up and runs the call. When the call ends,
