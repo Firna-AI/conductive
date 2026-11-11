@@ -66,7 +66,7 @@ it('refreshes the captured repositories and revision with push throttling and a 
         defaultBranch: 'main',
       },
     ])
-    expect(boat.commands).toHaveLength(0)
+    expect(boat.commands.join('\n')).not.toContain('/tmp/conductive-install.sh')
     expect(
       fixture.sourceCalls
         .at(-1)

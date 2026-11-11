@@ -2,11 +2,13 @@ import type { ImageBuild } from '../../src/shared/org-settings'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { activeOrgIdPredicate } from '../data/org-access'
 import { requireActiveOrg } from '../data/user-access'
+import { softwareVersion } from '../software-image/version'
 import type { BuildJob } from './build-data'
 import type { SelectedRepository } from './settings-data'
 import type { RepositoryLocation } from './repository-locations'
 import type { ImageSoftwareArtifact } from './image-software'
 import { serializeSavedScript, type SavedScript } from './saved-script'
+import { installScriptRevision, type RefreshCause } from './image-records'
 
 export async function finishUnscheduledBuild(
   db: D1Database,
@@ -45,37 +47,45 @@ export async function insertBuild(
     previousRepositoryLocations: readonly RepositoryLocation[]
     software: ImageSoftwareArtifact
     softwareVersion?: string
+    installScriptRevision?: string | null
+    refreshCause?: RefreshCause
     previousImageName: string | null
     previousRunnerProtocolVersion: number | null
     now: number
     nextImageRefreshAt?: number
   },
 ): Promise<void> {
+  const version =
+    input.softwareVersion ?? (await softwareVersion(input.software))
+  const scriptRevision =
+    input.installScriptRevision === undefined
+      ? await installScriptRevision(input.installScript)
+      : input.installScriptRevision
   await db.batch([
     db
       .prepare(
         `INSERT INTO image_builds (id, org_id, kind, state, settings_revision,
-       runner_protocol_version, started_by_user_id, started_at, provider_account)
-       SELECT ?, ?, ?, 'running', ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}`,
+       runner_protocol_version, started_by_user_id, started_at, provider_account, refresh_cause)
+       SELECT ?, ?, ?, 'running', ?, ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}`,
       )
       .bind(
         input.id,
         input.orgId,
         input.kind,
         input.settingsRevision,
-        input.kind === 'refresh'
-          ? (input.previousRunnerProtocolVersion ?? 1)
-          : RUNNER_PROTOCOL_VERSION,
+        RUNNER_PROTOCOL_VERSION,
         input.userId,
         input.now,
         input.providerAccount,
+        input.kind === 'refresh' ? (input.refreshCause ?? 'request') : null,
         input.orgId,
       ),
     db
       .prepare(
         `INSERT INTO image_build_jobs (build_id, phase, install_script, repositories_json, software_json, previous_image_name,
-          repository_locations_json, previous_repository_locations_json, provider_account, software_image_name)
-       SELECT ?, 'create', ?, ?, ?, ?, ?, ?, ?,
+          repository_locations_json, previous_repository_locations_json, provider_account,
+          software_version, install_script_revision, software_image_name)
+       SELECT ?, 'create', ?, ?, ?, ?, ?, ?, ?, ?, ?,
          (SELECT snapshot_name FROM software_images
           WHERE provider_account = ? AND version = ? AND state = 'ready'
           ORDER BY started_at DESC, id DESC LIMIT 1)
@@ -90,8 +100,10 @@ export async function insertBuild(
         JSON.stringify(input.repositoryLocations),
         JSON.stringify(input.previousRepositoryLocations),
         input.previousProviderAccount,
+        version,
+        scriptRevision,
         input.providerAccount,
-        input.softwareVersion ?? null,
+        version,
         input.id,
       ),
     db
@@ -139,9 +151,11 @@ export async function publishBuild(
       ),
     db
       .prepare(
-        `UPDATE image_builds SET state = 'succeeded', completed_at = ?, error = NULL, provider_retry_json = NULL WHERE id = ? AND ${activeOrgIdPredicate('image_builds.org_id')}`,
+        `UPDATE image_builds SET state = 'succeeded', completed_at = ?, error = NULL,
+         provider_retry_json = NULL, software_version = ?, install_script_revision = ?
+         WHERE id = ? AND ${activeOrgIdPredicate('image_builds.org_id')}`,
       )
-      .bind(now, job.buildId),
+      .bind(now, job.softwareVersion, job.installScriptRevision, job.buildId),
     db
       .prepare(
         `UPDATE image_build_jobs SET phase = CASE WHEN

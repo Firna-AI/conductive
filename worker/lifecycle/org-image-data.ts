@@ -1,6 +1,7 @@
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import type { ImageVersions } from './image-records'
 
-export interface OrgImage {
+export interface OrgImage extends ImageVersions {
   orgId: string
   providerAccount: string
   imageName: string | null
@@ -18,12 +19,16 @@ export function readOrgImage(
 ): Promise<OrgImage | null> {
   return db
     .prepare(
-      `SELECT org_id AS orgId, provider_account AS providerAccount,
-       image_name AS imageName, image_build_id AS imageBuildId,
-       last_refresh_at AS lastRefreshAt, last_push_refresh_at AS lastPushRefreshAt,
-       pending_push_refresh_at AS pendingPushRefreshAt,
-       next_image_refresh_at AS nextImageRefreshAt
-       FROM org_images WHERE org_id = ? AND provider_account = ?`,
+      `SELECT i.org_id AS orgId, i.provider_account AS providerAccount,
+       i.image_name AS imageName, i.image_build_id AS imageBuildId,
+       i.last_refresh_at AS lastRefreshAt, i.last_push_refresh_at AS lastPushRefreshAt,
+       i.pending_push_refresh_at AS pendingPushRefreshAt,
+       i.next_image_refresh_at AS nextImageRefreshAt,
+       b.software_version AS softwareVersion, b.install_script_revision AS installScriptRevision
+       FROM org_images i LEFT JOIN image_builds b ON b.id = i.image_build_id
+         AND b.org_id = i.org_id AND b.provider_account = i.provider_account
+         AND b.snapshot_name = i.image_name AND b.state = 'succeeded'
+       WHERE i.org_id = ? AND i.provider_account = ?`,
     )
     .bind(orgId, providerAccount)
     .first<OrgImage>()

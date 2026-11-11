@@ -8,7 +8,7 @@ import {
   type BuildJob,
   type BuildPhase,
 } from './build-data'
-import { savedScriptCommand } from './saved-script'
+import { savedScriptCommand, serializeSavedScript } from './saved-script'
 import { installImageSoftware } from './image-software'
 import { imageIsLeased } from './image-leases'
 import { scheduleIdleImage } from './image-schedule'
@@ -34,6 +34,13 @@ export async function advanceBuildCommand(
   const sandboxId = job.sandboxId
   if (!sandboxId) throw new Error('Missing build sandbox')
   if (job.processId === null) {
+    if (
+      job.phase === 'install' &&
+      serializeSavedScript(job.installScript) === ''
+    ) {
+      await completeBuildPhase(runtime.env.DB, job.buildId, 'snapshot')
+      return false
+    }
     if (job.phase === 'software')
       await installWorkspaceTools(WORKSPACE_TOOL_SOURCES, (command) =>
         provider.runCommand(sandboxId, privilegedCommand(command)),

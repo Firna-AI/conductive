@@ -57,6 +57,11 @@ it('recovers scheduling and allocation replies while streaming a successful imag
   const fixture = await backendFixture()
   try {
     const { images, org, user, boat, runtime } = fixture
+    await runtime.env.DB.prepare(
+      'UPDATE settings SET install_script = ? WHERE org_id = ?',
+    )
+      .bind('echo build-install', org.id)
+      .run()
     const schedule = images.scheduler.schedule
     let firstSchedule = true
     images.scheduler.schedule = async (...args) => {

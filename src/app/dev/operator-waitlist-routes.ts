@@ -1,6 +1,5 @@
 import {
   operatorCodesPath,
-  operatorSignupPausePath,
   operatorWaitlistPath,
   type OperatorApprovalEmail,
   type OperatorApprovalResponse,
@@ -52,27 +51,15 @@ function approvalEmail(
 }
 
 /**
- * The waitlist, the codes, and the pause of the dev fake, over the records
- * of the samples. An approval gives the person a referral code, as the
- * grant of the Worker does. The waitlist routes of the person signed in
- * use the same codes and pause. The records last until the page loads
- * again.
+ * The waitlist and the codes of the dev fake, over the records of the
+ * samples. An approval gives the person a referral code, as the grant of
+ * the Worker does. The waitlist routes of the person signed in use the same
+ * codes. The records last until the page loads again. `signupRoutes` holds
+ * the pause and the waitlist switch.
  */
 export function operatorWaitlistRoutes(kit: OperatorRouteKit): Route[] {
   const { backend, base, guard, userOf, operator } = kit
   const records = () => backend.state.operator
-  const changePause = (paused: boolean) => {
-    guard()
-    const pause = records().pause
-    if (pause.paused !== paused) {
-      records().pause = {
-        paused,
-        updatedAt: backend.now(),
-        operator: operator(),
-      }
-    }
-    return json(records().pause)
-  }
   return [
     {
       method: 'GET',
@@ -187,24 +174,6 @@ export function operatorWaitlistRoutes(kit: OperatorRouteKit): Route[] {
         }
         return json(codeReply(found))
       },
-    },
-    {
-      method: 'GET',
-      path: operatorSignupPausePath(),
-      answer: () => {
-        guard()
-        return json(records().pause)
-      },
-    },
-    {
-      method: 'POST',
-      path: operatorSignupPausePath(),
-      answer: () => changePause(true),
-    },
-    {
-      method: 'DELETE',
-      path: operatorSignupPausePath(),
-      answer: () => changePause(false),
     },
   ]
 }

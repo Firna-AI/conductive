@@ -80,6 +80,18 @@ and body for stable delivery retries. A missing verified email saves the
 disabled a code. [The operator backend](../worker/operator/README.md#approval-email-delivery)
 owns email delivery and code management.
 
+`202611092050_waitlist_switch.sql` adds the waitlist switch to the one row
+of `signup_settings`. `waitlist_on` starts on, also on the existing row.
+`waitlist_updated_at` and `waitlist_updated_by_user_id` keep the last
+change, and both start empty. The deletion of that operator clears the
+reference. The migration rebuilds `user_app_access` with the new source
+`open_signup`. It keeps every existing row and value, and the same keys,
+references, and checks. No table refers to `user_app_access`, so the
+rebuild drops no reference.
+[The operator backend](../worker/operator/README.md#waitlist-codes-and-sign-ups)
+owns the switch, and [the waitlist backend](../worker/waitlist/README.md#integration)
+owns open sign-up grants.
+
 `202611092100_provider_accounts.sql` adds `provider_account` to each table
 that holds a sandbox ID or a saved snapshot name: `workspaces`,
 `image_builds`, `image_build_jobs`, `lifecycle_sandbox_cleanup`,
@@ -190,6 +202,19 @@ A Worker with the serial source loader cannot safely resume a parallel job.
 After a parallel job starts, deploy fixes forward instead of rolling back to that loader, as [When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails) describes.
 The [source loader](../worker/lifecycle/repository-layout.md#the-source-loader) gives the rules of these records.
 
+`202611111600_image_software_records.sql` adds the software version and the
+install script revision to image jobs and published builds. It also adds
+the refresh cause to each build record. The current org image points to
+its published build through `org_images.image_build_id`.
+Each workspace gets the software version, the starting image build, the
+install script revision, and a failed software update mark.
+The starting build ID is retained text, so org deletion can remove builds
+before workspaces.
+Existing versions and revisions stay null because their installed values
+are not known. A missing workspace software version requires an update.
+The failed update mark starts at zero.
+The [lifecycle backend](../worker/lifecycle/README.md#key-code) owns these records.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -227,6 +252,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
 | Computer ledger account merge | `202611100900`–`202611100959` |
 | Software image for first builds | `202611101200`–`202611101259` |
+| Image software records | `202611111600`–`202611111659` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 | Routines: records and routes | `202611101300`–`202611101359` |

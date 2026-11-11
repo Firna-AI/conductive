@@ -79,6 +79,11 @@ it('keeps the original failure age when healthy running polls continue beyond th
 
 it('honors Retry-After and healthy progress while resetting the window only after image phase completion', async () => {
   const fixture = await backendFixture()
+  await fixture.runtime.env.DB.prepare(
+    'UPDATE settings SET install_script = ? WHERE org_id = ?',
+  )
+    .bind('echo build-install', fixture.org.id)
+    .run()
   const image = await imageRetryFixture(fixture)
   const fault = statusFault(fixture)
   const now = fixture.runtime.dependencies.now()

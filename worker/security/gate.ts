@@ -77,7 +77,7 @@ export async function sessionGate(
       'Sign in with GitHub to continue.',
     )
   }
-  await requireAppAccess(request, env.DB, user.id)
+  await requireAppAccess(request, env.DB, user.id, now)
   return { user, sessionId }
 }
 

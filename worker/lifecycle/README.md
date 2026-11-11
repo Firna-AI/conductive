@@ -73,7 +73,11 @@ turn repair from the committed chat and the one writer of the shown state.
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
 The [software image area](../software-image/README.md) builds the shared
-image that each build uses when a matching version is ready.
+image that each build and refresh uses when a matching version is ready.
+Each job copies its repositories into fresh folders and runs its install
+script. An empty script skips the install step and its log entry.
+Refreshes keep the repositories, folders, and install script of the newest
+successful build. Saved script changes wait for a build.
 
 ## Settings
 
@@ -111,6 +115,36 @@ A confirmed missing archived disk uses that batch too.
 
 [Lifecycle key code](key-code.md) names the files, the types, and the
 functions of the lifecycle that a reader opens first.
+
+- [build-admission-data.ts](build-admission-data.ts): `insertBuild` pins the
+  software version and install script revision in the job. `publishBuild`
+  copies them to the published build in the same D1 batch as the org image
+  pointer. Builds and refreshes record the current software and runner
+  versions. A refresh keeps the script revision of the newest good build.
+- [image-records.ts](image-records.ts): `installScriptRevision` hashes the
+  exact saved script text. Its types add `refreshCause` to build history
+  and build responses. New refreshes record `push`, `daily`, or `request`
+  at admission. Builds and older refreshes keep a null cause.
+- [org-image-data.ts](org-image-data.ts): `readOrgImage` reads the version
+  and script revision from the published build of that provider account.
+- [start-allocation.ts](start-allocation.ts): `allocateWorkspace` records
+  the allocated snapshot's build and versions before the provider request.
+  A newer org image cannot change those records. A retained computer keeps
+  its records.
+- [workspace-software-data.ts](workspace-software-data.ts):
+  `readWorkspaceImageRecords` reads the workspace's software version,
+  starting image build, install script revision, and failed update mark.
+  `workspaceSoftwareIsOlder` treats a different or missing version as old.
+  Versions are content digests, so they have no time order.
+  `workspaceInstallScriptDiffers` compares the workspace script revision
+  with the current org image in its provider account. A new image with the
+  same script does not change the result.
+  `recordWorkspaceSoftwareVersion` records a good software update and clears
+  the failed update mark. `recordWorkspaceSoftwareUpdateFailed` sets or
+  clears that mark without changing the version. It stays set until a
+  caller clears it at the next start or records a good software update.
+  `recordWorkspaceInstallScriptRevision` records a good install script run
+  without changing the software version or the starting image build.
 
 ### Related Docs
 

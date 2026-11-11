@@ -18,6 +18,12 @@ const backendFixture = setupBackendTests()
 it('stores a detached status reply above two million output bytes in bounded rows without losing output', async () => {
   const fixture = await backendFixture()
   const { images, org, user, boat, runtime } = fixture
+  // An empty install script skips the install step, so give this build one.
+  await runtime.env.DB.prepare(
+    "UPDATE settings SET install_script = 'true' WHERE org_id = ?",
+  )
+    .bind(org.id)
+    .run()
   const id = await startImageBuild(images, {
     orgId: org.id,
     userId: user.id,

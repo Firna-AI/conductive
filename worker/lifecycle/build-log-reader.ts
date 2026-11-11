@@ -1,9 +1,6 @@
-import type {
-  BuildLogEvent,
-  BuildResponse,
-  ImageBuild,
-} from '../../src/shared/org-settings'
+import type { BuildLogEvent } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
+import type { BuildWithCause, RecordedImageBuild } from './image-records'
 
 /** D1 batches keep the completion state and the last log in one snapshot. */
 export async function readBuildSnapshot(
@@ -12,11 +9,11 @@ export async function readBuildSnapshot(
   buildId: string,
   after = 0,
   limit = -1,
-): Promise<BuildResponse> {
-  const [header, events] = await db.batch<ImageBuild | BuildLogEvent>([
+): Promise<BuildWithCause> {
+  const [header, events] = await db.batch<RecordedImageBuild | BuildLogEvent>([
     db
       .prepare(
-        `SELECT id, org_id AS orgId, kind, state, started_at AS startedAt, completed_at AS completedAt,
+        `SELECT id, org_id AS orgId, kind, refresh_cause AS refreshCause, state, started_at AS startedAt, completed_at AS completedAt,
      CASE WHEN completed_at IS NULL THEN NULL ELSE completed_at - started_at END AS durationMs,
      error FROM image_builds WHERE org_id = ? AND id = ?`,
       )

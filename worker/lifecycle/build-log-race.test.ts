@@ -74,6 +74,6 @@ it('delivers the final failure log when completion races an empty log read', asy
     wait: async () => {},
   })
   expect(await response.text()).toBe(
-    `id: 1\nevent: log\ndata: ${JSON.stringify({ eventNumber: 1, occurredAt: TEST_TIME + 1, text: 'The final image failure.\n' })}\n\nevent: build\ndata: ${JSON.stringify({ id, orgId: org.id, kind: 'build', state: 'failed', startedAt: TEST_TIME, completedAt: TEST_TIME + 1, durationMs: 1, error: 'The final image failure.\n' })}\n\n`,
+    `id: 1\nevent: log\ndata: ${JSON.stringify({ eventNumber: 1, occurredAt: TEST_TIME + 1, text: 'The final image failure.\n' })}\n\nevent: build\ndata: ${JSON.stringify({ id, orgId: org.id, kind: 'build', refreshCause: null, state: 'failed', startedAt: TEST_TIME, completedAt: TEST_TIME + 1, durationMs: 1, error: 'The final image failure.\n' })}\n\n`,
   )
 })

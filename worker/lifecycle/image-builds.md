@@ -10,15 +10,11 @@ files of the image code.
 
 ## Build sandboxes
 
-- A build sandbox starts from the software image that its job pins, or as
-  a new default sandbox without a pin. A refresh sandbox starts from the
-  current org image. Each env holds only the folder variables.
-- Risk: in a refresh, an earlier install can leave a program with root
-  access in the image. That program can read the clone token of a later
-  copy. That token can only read its own repository, which the image
-  already holds. The Worker revokes it when the copy ends, as
-  [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens)
-  says.
+- A build or refresh sandbox starts from the software image that its job
+  pins, or from the provider's base image without a pin. No image job
+  starts from an org image. Each env holds only the folder variables.
+- No org install script has run on either starting image. An earlier
+  install cannot leave a program that reads a later clone token.
 - Repository copies use the [shared GitHub App credential flow](../github/app-credentials.ts).
   The [source loader](repository-layout.md#the-source-loader) gives the token and revocation steps.
 
@@ -31,8 +27,9 @@ Suspended orgs get no disk retention restart, including after an owner change.
 
 ## Runner version
 
-- A full build records the Worker's runner protocol version.
-  A refresh copies the version of the image that it refreshes.
+- Each build and refresh records the Worker's runner protocol version.
+  Both install the current runner, through the software image or the
+  software step.
 - Each new computer allocation stores the runner version of its image snapshot before the provider call.
   This includes a first start, Try again, and a restored allocation.
   A missing image version counts as version 1.
@@ -73,7 +70,9 @@ keeps the published image and writes one fixed warning. A failed build
 starts no added build. A refresh after a failed build gets none either.
 
 `readBuildHistory` in [`build-data.ts`](build-data.ts) returns
-`BuildsResponse.changes` with the build history. `readBuildChanges` in
+`BuildsResponse.changes` with the build history. It includes each refresh
+with its kind, cause, and result in the existing order. The build detail
+and log routes also return refreshes. `readBuildChanges` in
 [`build-changes-data.ts`](build-changes-data.ts) compares the raw saved
 install script with the newest successful build's script in the requested
 provider account. Before that account's first image, it uses the newest
@@ -86,15 +85,20 @@ D1 keeps at most 4 MiB of each build log: the first and the last output.
 A write that passes that budget removes whole rows from the middle.
 The line `[N output bytes omitted]` takes their place in the event order.
 
-- Admission of a build pins the ready software image of its software
-  version and provider account, in the job insert. The pin stays until the
+- Admission of a build or refresh pins the ready software image of its
+  software version and provider account, in the job insert. The pin stays until the
   job reaches `done`, including its cleanup. The
   [software image backend](../software-image/README.md) owns these images.
-- A build with a pin starts from that image. It loads the chosen
-  repositories into new folders, runs the install script with Bash, and
-  saves a snapshot. A build without a pin installs the image software
-  between the repository load and the install script. A refresh pins none. It only loads the repositories of
-  the current image again, and saves a snapshot.
+- A job with a pin starts from that image. It copies its repositories into
+  new folders, runs the install script with Bash, and saves a snapshot.
+  A job without a pin installs the image software between the repository
+  copy and the install script. An empty script runs no install command and
+  adds no install step to the log.
+- A refresh takes its repositories, folders, settings revision, and
+  install script from the newest successful build in its provider account.
+  It copies the newest commits. Saved script or repository changes wait
+  for a build. A newer failed build or older refresh does not supply these
+  settings.
 - The org image changes only when the new snapshot is ready. Each job
   deletes every live ledger computer of that org and build, and keeps its history and log.
   A failed Delete keeps cleanup scheduled until each computer is removed.
@@ -191,6 +195,9 @@ verified GitHub webhook receiver may call it. The
 [GitHub backend](../github/README.md) owns that receiver. The image
 coordinator starts the daily refresh by itself.
 A daily refresh sets the saved daily deadline 24 hours after its start.
+At admission, a timer refresh uses the current Worker archive settings.
+An older saved timer cannot pin the archive of an earlier deploy.
+An unfinished job keeps the software that its admission captured.
 
 Both refreshes start with the first admin who is not suspended, from
 `firstActiveOrgAdmin` in [`settings-data.ts`](settings-data.ts). An org
@@ -203,6 +210,8 @@ states the rule.
 ## Key Code
 
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
+- [`build-data.ts`](build-data.ts): `readLatestGoodBuild`, the settings
+  source of a refresh, and the build history and detail readers.
 - [`build-changes-data.ts`](build-changes-data.ts): `readBuildChanges`, the
   saved install script change and the added and removed repositories in
   `BuildsResponse.changes`. It reads the script reference and the published

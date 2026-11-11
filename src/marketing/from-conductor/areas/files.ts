@@ -27,7 +27,7 @@ export const filesFeatures: readonly ParityFeature[] = [
     area: 'files',
     name: 'File tabs and editor',
     status: 'different',
-    note: 'Files open in tabs with line numbers and syntax colours. File editing and search within a file are under consideration.',
+    note: 'Files open in tabs with line numbers and syntax colours. Temporary preview tabs are planned, with editing and file search under consideration.',
   },
   {
     id: 'markdown-and-html-previews',
@@ -37,11 +37,19 @@ export const filesFeatures: readonly ParityFeature[] = [
     note: 'Markdown files have rendered and source views. HTML and SVG open as source.',
   },
   {
+    id: 'image-previews',
+    area: 'files',
+    name: 'Image previews',
+    status: 'planned',
+    note: 'Image previews in sent messages and file tabs are planned.',
+    due: null,
+  },
+  {
     id: 'media-and-data-previews',
     area: 'files',
     name: 'Media and data previews',
     status: 'considering',
-    note: 'Media previews, CSV tables, and JSON trees are under consideration. Text files open as source.',
+    note: 'Audio and video previews, CSV tables, and JSON trees are under consideration. Text files open as source.',
   },
   {
     id: 'artifacts-tab',

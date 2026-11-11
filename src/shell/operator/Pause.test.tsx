@@ -5,6 +5,7 @@ import { routes } from '../../app/router'
 import { HeldRequests } from '../../app/test-kit'
 import {
   operatorSignupPausePath,
+  operatorWaitlistSwitchPath,
   type OperatorSignupPause,
 } from '../../shared/operator-waitlist'
 import {
@@ -33,7 +34,7 @@ function pause(paused: boolean, at: number): OperatorSignupPause {
 }
 
 const notice =
-  'Sign-ups paused on 15 Jan at 07:35 by @calummoore Invite codes, referral codes, and org invitations let nobody in until sign-ups resume. The waitlist stays open, and Approve still works. Resume sign-ups'
+  'Sign-ups paused on 15 Jan at 07:35 by @calummoore Invite codes, referral codes, and org invitations let nobody in until sign-ups resume. New people wait, also while the waitlist is off. Approve still works. Resume sign-ups'
 
 /** The text of the notice of the pause at the top of the page, or null. */
 function noticeOf(view: HTMLElement): string | null {
@@ -65,9 +66,9 @@ describe('the pause of sign-ups in the operator section', () => {
       boxAfter: queryByRole('button', 'Pause sign-ups'),
       requests: await operatorRequests(server, { pause: true }),
     }).toEqual({
-      box: 'Sign-ups Open Invite codes, referral codes, and org invitations let new people in. Pause sign-ups',
+      box: 'Sign-ups Waitlist on Invite codes, referral codes, and org invitations let new people in. Turn off the waitlist Pause sign-ups',
       asked:
-        'Pause sign-ups? Invite codes, referral codes, and org invitations let nobody in until sign-ups resume. Each code keeps its uses. The waitlist stays open, and Approve still works. Cancel Pause sign-ups',
+        'Pause sign-ups? Invite codes, referral codes, and org invitations let nobody in until sign-ups resume. Each code keeps its uses. New people wait, also while the waitlist is off. Approve still works. Cancel Pause sign-ups',
       notice,
       boxAfter: null,
       requests: [
@@ -114,7 +115,7 @@ describe('the pause of sign-ups in the operator section', () => {
     })
   })
 
-  test('each page reads the pause when it opens', async () => {
+  test('each page reads the pause and the waitlist switch when it opens', async () => {
     const server = new FakeApiServer()
     serveOperator(server)
     const { view } = await mountShell(server, routes.operator())
@@ -122,11 +123,16 @@ describe('the pause of sign-ups in the operator section', () => {
     if (!tabs) throw new Error('The page has no tabs.')
     click(byText('Waitlist', tabs))
     await settle()
-    expect(await operatorRequests(server, { pause: true })).toEqual([
+    const switchPath = operatorWaitlistSwitchPath()
+    expect(
+      await operatorRequests(server, { pause: true, waitlistSwitch: true }),
+    ).toEqual([
       'GET /api/operator/overview',
       `GET ${pausePath}`,
+      `GET ${switchPath}`,
       'GET /api/operator/waitlist',
       `GET ${pausePath}`,
+      `GET ${switchPath}`,
     ])
   })
 

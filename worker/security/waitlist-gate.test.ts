@@ -25,6 +25,8 @@ import {
   accessRecord,
   addInviteCode,
   sessionState,
+  setPaused,
+  setWaitlist,
   waitingInvitation,
   waitlistFixture,
 } from '../waitlist/waitlist.test-support'
@@ -54,6 +56,7 @@ it('creates a waiting account and keeps it waiting at its next GitHub sign-in', 
   ).toEqual({
     appAccess: false,
     signupsPaused: false,
+    waitlistOn: true,
     approvalEmail: null,
     referralCode: null,
   })
@@ -86,6 +89,38 @@ it('allows a waiting session to use a code and get app access without signing in
   expect((await harness.request(API_PATHS.orgs, member.session)).status).toBe(
     200,
   )
+})
+
+it('gives a waiting person open-sign-up access on their next request with the request time', async () => {
+  const { admin, member, other } = await waitlistFixture(harness)
+  await setWaitlist(harness, false, admin.user.id)
+  harness.setTime(TEST_TIME + 1000)
+  const response = await harness.request(API_PATHS.orgs, member.session)
+  expect(response.status).toBe(200)
+  expect(await accessRecord(harness, member.user.id)).toMatchObject({
+    source: 'open_signup',
+    grantedAt: TEST_TIME + 1000,
+    operatorUserId: admin.user.id,
+  })
+  expect(await accessRecord(harness, other.user.id)).toBeNull()
+  expect(
+    await (await harness.request(WAITLIST_PATHS.state, member.session)).json(),
+  ).toMatchObject({
+    appAccess: true,
+    waitlistOn: false,
+  })
+})
+
+it('keeps a waiting request blocked while open sign-up is paused', async () => {
+  const { admin, member } = await waitlistFixture(harness)
+  await setWaitlist(harness, false, admin.user.id)
+  await setPaused(harness)
+  const response = await harness.request(API_PATHS.orgs, member.session)
+  expect(response.status).toBe(403)
+  expect(await response.json()).toMatchObject({
+    error: { code: 'access_required' },
+  })
+  expect(await accessRecord(harness, member.user.id)).toBeNull()
 })
 
 it('allows only its own pending invitations and acceptance, then opens the org', async () => {

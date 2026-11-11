@@ -8,8 +8,16 @@ import { startImageBuild } from './image-builds'
 const fixtureForTest = setupBackendTests()
 
 it.each([
-  { kind: 'refresh', sourceVersion: 1, expectedVersion: 1 },
-  { kind: 'refresh', sourceVersion: 2, expectedVersion: 2 },
+  {
+    kind: 'refresh',
+    sourceVersion: 1,
+    expectedVersion: RUNNER_PROTOCOL_VERSION,
+  },
+  {
+    kind: 'refresh',
+    sourceVersion: 2,
+    expectedVersion: RUNNER_PROTOCOL_VERSION,
+  },
   {
     kind: 'build',
     sourceVersion: 1,

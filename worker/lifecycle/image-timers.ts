@@ -1,4 +1,5 @@
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { runnerSoftware } from '../configuration'
 import type { ImageSoftwareArtifact } from './image-software'
 import { runningBuild } from './build-data'
 import {
@@ -79,6 +80,7 @@ export async function refreshImagesForPush(
           orgId: repository.orgId,
           userId: admin.userId,
           kind: 'refresh',
+          refreshCause: 'push',
           software: input.software,
         },
         providerAccount,
@@ -162,8 +164,14 @@ export async function runImageAlarm(
       orgId: state.orgId,
       userId: admin.userId,
       kind: 'refresh',
-      software: state.software,
+      software:
+        runtime.env.CONDUCTIVE_RUNNER_ARCHIVE_URL === undefined &&
+        runtime.env.CONDUCTIVE_RUNNER_ARCHIVE_SHA256 === undefined
+          ? state.software
+          : runnerSoftware(runtime.env),
       dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
+      refreshCause:
+        next.dailyAt <= runtime.dependencies.now() ? 'daily' : 'push',
     },
     providerAccount,
   )
