@@ -72,6 +72,7 @@ export function sessionChipOf(
     workspace: {
       label: workspaceLabel(workspace.number),
       status: workspace.state,
+      github: workspace.github,
     },
     title: nameLabel(session.title),
   }

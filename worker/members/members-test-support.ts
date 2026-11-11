@@ -195,7 +195,7 @@ async function readWorkspace(
 ): Promise<Workspace> {
   const row = await harness.env.DB.prepare(
     `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId, w.section_id AS sectionId,
-     ${workspaceNameColumn('w')}, w.branch, w.state, w.created_at AS createdAt, w.updated_at AS updatedAt,
+     ${workspaceNameColumn('w')}, w.branch, w.state, w.github_summary AS github, w.created_at AS createdAt, w.updated_at AS updatedAt,
      w.archived_at AS archivedAt, w.sandbox_id AS sandboxId, u.id AS userId, u.github_login AS githubLogin,
      u.display_name AS displayName, u.avatar_url AS avatarUrl
      FROM workspaces w JOIN users u ON u.id = w.owner_user_id WHERE w.org_id = ? AND w.id = ?`,
@@ -226,6 +226,7 @@ async function readWorkspace(
     name: row.name,
     branch: row.branch,
     state: row.state,
+    github: row.github,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,

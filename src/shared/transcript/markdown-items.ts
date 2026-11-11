@@ -1,6 +1,7 @@
 import type { ToolCall } from '../chat-events'
 import type { DeviceCommandRecord } from '../device'
 import type { ChangedFile } from '../files'
+import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
 import {
   leftOutOfCall,
   leftOutOfRun,
@@ -29,6 +30,7 @@ import {
   omittedFiles,
   stoppedSummary,
   turnCopy,
+  turnEndReason,
   type ChatReaders,
 } from './turn-words'
 
@@ -86,6 +88,7 @@ export function itemMarkdown(
     case 'tool':
       return toolMarkdown(item.tool)
     case 'turn-end': {
+      const reason = turnEndReason(transcript, item.turnId)
       const omitted = omittedFiles(transcript, item.turnId)
       const files = [
         ...item.files.map(changedFile),
@@ -93,9 +96,13 @@ export function itemMarkdown(
       ]
       const unread =
         item.files.length === 0 && filesUnread(transcript, item.turnId)
-      return note(
+      const summary = note(
         `${turnCopy.finished} ${formatDuration(item.durationMs)}${files.length > 0 ? `. ${turnCopy.changedFiles}: ${files.join(' · ')}` : ''}${unread ? ` · ${turnFilesUnavailable}` : ''}`,
       )
+      return [
+        ...(reason === undefined ? [] : [note(endReasonText(reason))]),
+        summary,
+      ].join('\n\n')
     }
     case 'stopped':
       return note(

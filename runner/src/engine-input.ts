@@ -6,9 +6,10 @@ import {
   type SessionRuntime,
   type ActiveTurn,
 } from './engine-session'
-import type { ProviderInput } from './providers/types'
+import type { ProviderEvent, ProviderInput } from './providers/types'
 import { TurnOutput } from './turn-output'
 import { legacyInstructionBranches } from './instruction-state'
+import { BackgroundWait } from './engine-background'
 
 export interface InputActions {
   created: (session: SessionRuntime) => void
@@ -17,6 +18,8 @@ export interface InputActions {
   enqueue: (action: () => Promise<void>) => void
   start: (command: ProviderInput) => Promise<void>
   deliver: (command: ProviderInput) => Promise<'sent' | 'deferred' | 'failed'>
+  receivedAt: number
+  finish: (event: Extract<ProviderEvent, { type: 'result' }>) => Promise<void>
 }
 
 export async function inputCommand(
@@ -87,6 +90,7 @@ export async function inputCommand(
       return
     }
     if (session.active.stopped) return
+    session.active.background?.input(actions.receivedAt)
     if (session.active.waiting.length) session.active.waiting.push(command)
     else if ((await actions.deliver(command)) === 'deferred')
       session.active?.waiting.push(command)
@@ -110,6 +114,24 @@ export async function inputCommand(
     baseline: null,
     controller,
     files: null,
+    backgroundNoteIds: new Set(),
+    background:
+      session.agent === 'claude'
+        ? new BackgroundWait(
+            options.now,
+            () =>
+              actions.enqueue(async () => {
+                if (session.active === turn && turn.background?.shouldExpire())
+                  await actions.finish({
+                    type: 'result',
+                    state: 'finished',
+                    userMessageIds: [],
+                    endReason: 'background_work_limit',
+                  })
+              }),
+            options.backgroundWorkLimitMs,
+          )
+        : null,
     output: new TurnOutput(context, actions.emit, actions.enqueue),
   }
   session.active = turn

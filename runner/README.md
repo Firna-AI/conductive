@@ -118,13 +118,15 @@ These facts belong to this implementation, not to the protocol docs.
   result that lists them. Each result frees only the messages that it
   lists. Closing discards held input. The engine matches result lists exactly.
 - A Claude SDK result with the origin `task-notification` belongs to a
-  background task, such as a background command or subagent. The adapter
-  ignores such a result when it lists no sent message that still waits. An
-  ignored result does not take the message list of an earlier SDK frame. It
-  does not end the active turn, and it frees no sent message. When such a
+  background task, such as a background command or subagent. When such a
   result lists sent messages that still wait, it answers them as usual. So
   each result stays with the
   [messages that it answers](../docs/protocol/chat-and-events.md#what-the-chat-shows).
+- Such a result that lists no waiting message ends a wake-up reply during
+  a [background wait](background-work.md#the-wait). That reply stays in the
+  same turn. Outside a wait, the adapter ignores the result. An ignored
+  result does not take the message list of an earlier SDK frame. It does
+  not end the active turn, and it frees no sent message.
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, and
@@ -180,6 +182,13 @@ These facts belong to this implementation, not to the protocol docs.
   repository once. A marker that exists when the watch starts changes
   nothing, because that watch already sees the live folder. Each Git
   command already resolves the folder path again, so only the watch moves.
+
+## Background work
+
+[Background work](background-work.md) gives how a Claude turn waits for the
+background work of its agent, the note at the end of a reply, the time
+limit of 120 minutes, the end reason, and their key code. A workspace gets
+this behaviour only from an org image built with this runner.
 
 ## Event limits
 
@@ -272,7 +281,8 @@ guides that give the entry points of each part.
 
 - [Architecture: sandbox software](../docs/architecture/components.md#sandbox-software)
 - [Agent runner](../docs/protocol/agent-runner.md)
-- [Agent runner: lost workspace updates](../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Agent runner: background work](../docs/protocol/agent-runner.md#background-work)
+- [Agent runner: lost workspace updates](../docs/protocol/lost-workspace-updates.md)
 - [Agent runner: listening ports](../docs/protocol/agent-runner.md#listening-ports)
 - [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)

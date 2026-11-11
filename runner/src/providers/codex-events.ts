@@ -49,15 +49,15 @@ export function codexNotification(
             : item.status === 'declined'
               ? 'stopped'
               : 'done'
-      const name =
-        type === 'mcpToolCall'
-          ? `${typeof item.server === 'string' ? item.server : ''}:${typeof item.tool === 'string' ? item.tool : ''}`
-          : type
+      const mcp = type === 'mcpToolCall'
+      const server = typeof item.server === 'string' ? item.server : ''
+      const toolName = typeof item.tool === 'string' ? item.tool : ''
       const tool = mapTool(
         string(item.id),
-        name,
-        type === 'mcpToolCall' ? item.arguments : item,
+        mcp ? `${server}:${toolName}` : type,
+        mcp ? item.arguments : item,
         state,
+        mcp && toolName ? toolName : null,
       )
       emit({
         type: 'tool',

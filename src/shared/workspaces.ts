@@ -1,5 +1,6 @@
 import type { AgentChoice } from './agents'
 import { orgPath, type Timestamp } from './api'
+import type { GitHubSummary } from './github'
 import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
@@ -55,6 +56,7 @@ export interface Workspace {
   branch: string
   choice: AgentChoice
   state: WorkspaceState
+  github: GitHubSummary | null
   createdAt: Timestamp
   updatedAt: Timestamp
   archivedAt: Timestamp | null

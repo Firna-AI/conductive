@@ -36,6 +36,7 @@ export class SessionEngine {
 
   command(command: Command): Promise<void> {
     if (this.closed) return Promise.resolve()
+    const receivedAt = this.options.now()
     if (command.type === 'interrupt') {
       if (this.starts.hasEnded(command.turnId)) return Promise.resolve()
       const turn = this.session?.active
@@ -77,7 +78,7 @@ export class SessionEngine {
           }
         } else {
           if (command.type === 'turn') await this.starts.wait(command.turnId)
-          await this.input(command)
+          await this.input(command, receivedAt)
         }
       } catch (error) {
         if (
@@ -141,6 +142,7 @@ export class SessionEngine {
   }
 
   private cancel(turn: ActiveTurn): void {
+    turn.background?.close()
     turn.stopped = true
     turn.waiting.length = 0
     turn.controller.abort()
@@ -159,8 +161,13 @@ export class SessionEngine {
     return this.pending
   }
 
-  private input(command: ProviderInput): Promise<void> {
-    return inputCommand(this.options, this.session, command, {
+  private async input(
+    command: ProviderInput,
+    receivedAt: number,
+  ): Promise<void> {
+    const turn = this.session?.active
+    const wasWaiting = turn?.background?.waiting
+    await inputCommand(this.options, this.session, command, {
       created: (session) => {
         this.session = session
       },
@@ -174,7 +181,15 @@ export class SessionEngine {
       },
       start: (input) => this.start(input),
       deliver: (input) => this.deliver(input),
+      receivedAt,
+      finish: (event) => this.finish(event),
     })
+    if (wasWaiting && this.session?.active === turn && turn?.waiting.length)
+      await this.event({
+        type: 'result',
+        state: 'finished',
+        userMessageIds: [],
+      })
   }
 
   private async start(command: ProviderInput): Promise<void> {

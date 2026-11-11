@@ -28,6 +28,8 @@ export const conversationKeys = [
   'lost-turn-end',
   'files-unavailable',
   'stopped-files-unavailable',
+  'background-waiting',
+  'background-limit',
   'linked',
   'sent-files',
   'queued-files',
@@ -51,5 +53,7 @@ export const conversationKeys = [
   'skills-running',
   'skills-in-work',
   'five-skills-in-work',
+  'headings',
+  'headings-in-work',
   ...barConversationKeys,
 ] as const

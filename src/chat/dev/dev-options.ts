@@ -39,10 +39,11 @@ export interface DevOptions {
    */
   files: 'listed' | 'unread'
   /**
-   * The answer of each scripted turn: a line of text, or three tables that
-   * arrive one line at a time.
+   * The answer of each scripted turn: a line of text, three tables that
+   * arrive one line at a time, or a review under headings, with a plan
+   * under a heading.
    */
-  answer: 'text' | 'tables'
+  answer: 'text' | 'tables' | 'headings'
 }
 
 export const choices = {
@@ -95,7 +96,7 @@ export const choices = {
   change: ['done', 'done-not-saved', 'failed'],
   page: ['chat', 'this-mac'],
   files: ['listed', 'unread'],
-  answer: ['text', 'tables'],
+  answer: ['text', 'tables', 'headings'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
 /** The options in the order that the page lists them. */

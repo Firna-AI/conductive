@@ -13,6 +13,28 @@ function rollup(after: string): string {
   }`
 }
 
+function checks(after: string, mergeAfter: string): string {
+  return `headRefOid
+    ${rollup(after)}
+    potentialMergeCommit {
+      oid
+      ${rollup(mergeAfter)}
+    }`
+}
+
+function reviews(after: string): string {
+  return `latestOpinionatedReviews(first: 100, after: ${after}) {
+    nodes { state author { login } }
+    ${PAGE}
+  }`
+}
+
+const PULL_FIELDS = `number title url state isDraft mergeable mergeStateStatus
+  baseRefName headRefName headRepository { databaseId }
+  mergedAt closedAt reviewDecision
+  ${checks('null', 'null')}
+  ${reviews('null')}`
+
 export const COMPARE = `query BannerCompare($owner: String!, $name: String!,
   $baseRef: String!, $headRef: String!) {
   repository(owner: $owner, name: $name) {
@@ -28,9 +50,9 @@ export const LOOKUP = `query BannerLookup($owner: String!, $name: String!,
   repository(owner: $owner, name: $name) {
     databaseId nameWithOwner defaultBranchRef { name }
     ref(qualifiedName: $ref) { target { oid } }
-    pullRequests(first: 100, after: $after, headRefName: $head, states: $states,
+    pullRequests(first: 5, after: $after, headRefName: $head, states: $states,
       orderBy: {field: CREATED_AT, direction: DESC}) {
-      nodes { number headRefName headRepository { databaseId } baseRefName }
+      nodes { ${PULL_FIELDS} }
       ${PAGE}
     }
   }
@@ -40,9 +62,7 @@ export const PULL = `query BannerPull($owner: String!, $name: String!, $number: 
   repository(owner: $owner, name: $name) {
     databaseId
     pullRequest(number: $number) {
-      number title url state isDraft mergeable mergeStateStatus
-      baseRefName headRefName headRefOid headRepository { databaseId }
-      mergedAt closedAt reviewDecision
+      ${PULL_FIELDS}
     }
   }
 }`
@@ -52,10 +72,7 @@ export const REVIEWS = `query BannerReviews($owner: String!, $name: String!,
   repository(owner: $owner, name: $name) {
     databaseId
     pullRequest(number: $number) {
-      latestOpinionatedReviews(first: 100, after: $after) {
-        nodes { state author { login } }
-        ${PAGE}
-      }
+      ${reviews('$after')}
     }
   }
 }`
@@ -65,12 +82,7 @@ export const CHECKS = `query BannerChecks($owner: String!, $name: String!,
   repository(owner: $owner, name: $name) {
     databaseId
     pullRequest(number: $number) {
-      headRefOid
-      ${rollup('$after')}
-      potentialMergeCommit {
-        oid
-        ${rollup('$mergeAfter')}
-      }
+      ${checks('$after', '$mergeAfter')}
     }
   }
 }`

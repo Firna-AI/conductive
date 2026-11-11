@@ -1,5 +1,7 @@
 import type { MarkdownBlock } from '../../fixtures/fileContents'
+import { classes } from '../common/classes'
 import { InlineText } from '../common/InlineText'
+import headingStyles from '../common/MarkdownHeadings.module.css'
 import { MarkdownTable } from '../common/MarkdownTable'
 import styles from './MarkdownView.module.css'
 
@@ -12,9 +14,18 @@ function Block(props: { block: MarkdownBlock }) {
   const { block } = props
   switch (block.kind) {
     case 'h1':
-      return <h1>{block.text}</h1>
     case 'h2':
-      return <h2>{block.text}</h2>
+    case 'h3':
+    case 'h4':
+    case 'h5':
+    case 'h6': {
+      const Heading = block.kind
+      return (
+        <Heading>
+          <InlineText text={block.text} />
+        </Heading>
+      )
+    }
     case 'p':
       return (
         <p>
@@ -53,7 +64,7 @@ function Block(props: { block: MarkdownBlock }) {
 export function MarkdownView(props: { blocks: readonly MarkdownBlock[] }) {
   return (
     <div className={styles.scroll} data-mokly-scroll="file-preview">
-      <article className={styles.doc}>
+      <article className={classes(styles.doc, headingStyles.headings)}>
         {props.blocks.map((block, index) => (
           <Block block={block} key={index} />
         ))}

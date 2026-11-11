@@ -88,6 +88,15 @@ it('ignores malformed skill values without making a browser event unreadable', (
   }
 })
 
+it('keeps a known optional end reason and reads older or unknown reasons without it', () => {
+  const event = { ...completed, state: 'finished' }
+  const ended = { ...event, endReason: 'background_work_limit' }
+  expect(readEnvelope(envelope(ended)).event).toEqual(ended)
+  for (const endReason of [undefined, 'future_reason', null, false]) {
+    expect(readEnvelope(envelope({ ...event, endReason })).event).toEqual(event)
+  }
+})
+
 it('reads a workspace with no name, as a new workspace has until its title comes', () => {
   const { workspace } = workspaceFixtures().created
   const owner = senderSnapshot(workspace.owner)

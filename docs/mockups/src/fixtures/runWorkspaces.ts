@@ -74,6 +74,7 @@ const reviewRun: Workspace = {
   section: review.section,
   choice: review.choice,
   status: 'working',
+  github: null,
   updated: 'now',
   owner: 'cal',
   baseBranch: checkoutAutocomplete.branch,
@@ -89,6 +90,7 @@ const summaryRun: Workspace = {
   section: summary.section,
   choice: defaultChoice,
   status: 'working',
+  github: null,
   updated: 'now',
   owner: 'cal',
 }

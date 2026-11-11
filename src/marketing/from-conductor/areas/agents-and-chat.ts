@@ -63,7 +63,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Stop, retry, and background tasks',
     status: 'available',
-    note: 'Stop ends a turn, and Try again retries failures. Keeping turns open for background work with agents powered by Claude is in progress.',
+    note: 'Stop ends a turn, and Try again retries failures. Agents powered by Claude keep turns open for background work.',
   },
   {
     id: 'plan-mode',
@@ -133,7 +133,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Chat shows Markdown, tables, lists, and code. Headings are in progress, with diagrams, maths, media, and Run buttons under consideration.',
+    note: 'Chat shows Markdown, headings, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
   },
   {
     id: 'chat-links',

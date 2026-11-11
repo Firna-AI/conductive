@@ -22,7 +22,14 @@ reply while the agent writes it, before its separator row arrives and
 after its table appears. `app/chat/lists` draws a reply with a numbered
 list of choices, each with its options in a list under its text, as the
 user chose on 10 November 2026, and an open message line in the work of a
-turn with a plan whose steps sit under each item. `app/chat/lost-data` draws the data that the
+turn with a plan whose steps sit under each item. `app/chat/headings`
+draws headings in a reply, as the user chose on 11 November 2026: a review
+with a title at level 1, the section Needs your answer at level 2, a
+heading at level 3 for each choice with its bold fields under it, and a
+heading at level 4 inside the first choice. Its `work` variant has the
+open work of a turn: a closed message line that shows its heading as text
+in the line, and an open message line that shows its heading on its own
+line, in the weight of a heading. `app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the
 runner left out, and the lines of runner events that the workspace
 refused.
@@ -40,6 +47,12 @@ could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
+`app/chat/background-limit` draws a turn that waited for the background
+work of its agent, a watch of the checks of pull request #482. The checks
+still ran at the time limit, so the turn ends as finished, with
+"Background work stopped at the time limit" above its duration and its
+files. Its `waiting` variant draws the same turn before the limit, which
+shows as any running turn.
 
 `app/routines` lists the routines of Acme, which the Routines link below
 New workspace opens. Its child pages:

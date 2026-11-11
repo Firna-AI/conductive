@@ -17,7 +17,7 @@
   - The user chose these four actions on 9 November 2026. The user also chose no workspace menu button and the existing hover Archive shortcut.
   - `docs/protocol/workspace-menu.md` requires unavailable actions and their choices to disappear. Available actions remain usable.
   - Reassign to keeps the header owner picker's loading, saving, error, and refusal states. A valid running change keeps its result visible.
-  - `src/app/org-model.ts:46` and `src/app/refresh.ts:46` refresh the list. A reply can remove a section, archive a row, or change its owner.
+  - `src/app/org-model.ts` and `src/app/refresh.ts` refresh the list. `src/app/org-waits.ts` gives its wait. A reply can remove a section, archive a row, or change its owner.
   - The org role loads at boot and after the person's own org actions in `src/app/app-model.ts:154` and `:235`. It has no automatic live refresh today.
 - **Problem:**
   - `PointMenu` focuses the menu only when it mounts. The phone sheet restores choice focus only while its choices show.

@@ -1,6 +1,5 @@
 import type { Agent, AgentChoice, Effort } from '../../shared/agents'
 import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
-import type { ChangedFile, ChangeKind } from '../../shared/files'
 import type {
   Attachment,
   MessageDraft,
@@ -8,6 +7,7 @@ import type {
   UserMessage,
 } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
+import { readChangedFile } from './read-changed-file'
 import { readContinued } from './read-continued'
 import { readTool, safeCount } from './read-tool'
 import {
@@ -16,7 +16,6 @@ import {
   list,
   nullable,
   oneOf,
-  optional,
   record,
   text,
   UnreadableResponse,
@@ -30,13 +29,6 @@ export const readEffort = oneOf<Effort>({
   high: true,
   xhigh: true,
   max: true,
-})
-const readChange = oneOf<ChangeKind>({
-  added: true,
-  modified: true,
-  deleted: true,
-  renamed: true,
-  untracked: true,
 })
 const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'turn.started': true,
@@ -130,33 +122,6 @@ export function readSession(value: unknown): Session {
   }
 }
 
-/** A display label, or nothing. A label never makes an event unreadable. */
-function label(value: unknown): string | undefined {
-  return typeof value === 'string' && value !== '' ? value : undefined
-}
-
-/**
- * A file that a turn changed. `path` stays the real path that opens its
- * diff, and `displayPath` is the label that hides a secret value.
- */
-function readChangedFile(value: unknown): ChangedFile {
-  const source = record(value, 'file')
-  const displayPath = label(source.displayPath)
-  const previousPath = optional(text)(source.previousPath)
-  const previousDisplayPath = label(source.previousDisplayPath)
-  return {
-    path: text(source.path),
-    ...(displayPath === undefined ? {} : { displayPath }),
-    ...(previousPath === undefined ? {} : { previousPath }),
-    ...(previousPath === undefined || previousDisplayPath === undefined
-      ? {}
-      : { previousDisplayPath }),
-    change: readChange(source.change),
-    added: count(source.added),
-    removed: count(source.removed),
-  }
-}
-
 function readError(value: unknown): { code: string; message: string } {
   const source = record(value, 'error')
   return { code: text(source.code), message: text(source.message) }
@@ -236,6 +201,9 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         type: source.type,
         state: oneOf({ finished: true, stopped: true })(source.state),
         durationMs: count(source.durationMs),
+        ...(source.endReason === 'background_work_limit'
+          ? { endReason: source.endReason }
+          : {}),
         files: list(readChangedFile)(source.files),
         // Only the value true marks files that the runner could not read.
         ...(source.filesUnavailable === true ? { filesUnavailable: true } : {}),
