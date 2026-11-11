@@ -107,7 +107,7 @@ export function DevWorkspaceFrame(props: {
             </span>
           </div>
           {props.owner}
-          <span className={styles.state}>Ready</span>
+          {mobile ? <span className={styles.state}>Ready</span> : null}
         </header>
         <div className={styles.placeholder} />
       </div>
