@@ -1,0 +1,48 @@
+# A long chat freezes while its history folds
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from branch `calummoore/chat-history-loading-3c`, while planning the newest-first history load of the chat. This item is the wider fix that the agent split off. The direct fix, one merge of the earlier pages, is part of that load.
+- **Location:** `SessionLog.add` and `fold` in `src/shared/transcript/session-log.ts:97` and `:126`, `turnOf` in `src/shared/transcript/known-turns.ts:100`, `placeOf` and `placeInTurn` in `src/shared/transcript/item-placement.ts:33` and `:67`, `placeAnswer` and `agentItem` in `src/shared/transcript/turn-events.ts:52` and `:118`, the first record of the load at `src/chat/state/load.ts:79`, and the folds of the Durable Object at `worker/chat/session-transcript.ts:111` and `worker/tools/workspace.ts:132`.
+- **Reason:** The fix is a Large change to the shared transcript fold, outside the files of the newest-first load, and it also serves the transcript copy and the replies of the chat.
+
+- **Source:** Design. **Category:** Performance.
+- **Terms:**
+  - **Session log:** the browser's ordered list of the events of one session, `SessionLog` in `src/shared/transcript/session-log.ts`. It builds the transcript that the chat shows.
+  - **Fold:** the step that turns the events of a session, in event order, into the items of its transcript: messages, tool calls, and turn ends.
+  - **Whole fold:** a fold of every entry of a session log from the first entry. The log runs one when an entry lands before its last entry.
+  - **History page:** one reply of the history route for one session. It holds the events of that session from one range of the stored events of the workspace.
+  - **Newest-first load:** a change to the chat load that the user chose on 11 November 2026. The browser reads the newest history page of a session first and starts the live events after it. Then it reads the earlier pages, which show above the newest messages.
+- **Background:**
+  - For most events, the fold looks through the items of the transcript and copies the list of items. For each user message that it passes, `turnOf` also looks through every known turn. So the time of a whole fold grows with the square of the length of the session.
+  - The fold runs on the main thread of the browser, so the tab does not respond while it runs.
+  - The first load reads the session list before the history. So each session log already ends with a record at the newest workspace event number. Every history page holds older events, so every page starts a whole fold.
+  - A reply of a send, a rename, a model change, a close, or a reopen can arrive before its event on the stream. That event then lands before the record of the reply and starts a whole fold.
+  - The workspace's Durable Object folds a whole session in one block for each transcript copy and for each read of a session by an agent tool. The Durable Object runs one request at a time.
+- **Problem:**
+  - One-time measurements on 11 November 2026 used synthetic sessions shaped like compacted history, on a cloud sandbox with Node 24.
+  - A whole fold took 0.36 s for 1,400 items, 1.3 s for 2,800 items, and 3.3 s for 4,200 items.
+  - With the record of the session list, the load of `main`, with pages of 32 stored events, folded 1,400 items for 5.0 s, not 0.27 s.
+  - 4,200 items in four pages of 2,048 stored events folded for 5.5 s, with up to 3.1 s for one page. Newest first, page by page, took 5.2 s. One merge of the earlier pages took 3.2 s.
+  - 4,200 items in 20 pages folded for 15.6 s in order, and for 14.2 s newest first. One merge of the earlier pages took 2.4 s.
+  - A reply before its stream event started a whole fold of 2.8 s at 4,200 items.
+  - The Durable Object folded 8,400 items for 18 s for one copy, and every other request of the workspace waited.
+- **Impact if no action:** A long session freezes the tab for seconds while it loads, and again after some replies. A transcript copy or an agent read of a long session stops every request of its workspace for seconds.
+- **Root question:** How does the product build the transcript of a long session, in the tab and in the workspace's Durable Object, without blocking either for seconds?
+- **Options:**
+  - **A.** Change nothing in the fold. The newest-first load holds the earlier pages and merges them once, after the oldest page. The tab freezes once, now while the chat shows, and for less time than today's load. The freezes after replies and in the Durable Object stay. Effort: Small.
+  - **B.** Fold the newest pages at first, and fold the earlier pages only when the reader scrolls up to them. The transcript stays partial until then, and parts of the chat read a partial history, such as the agent of the model menu. The tab freezes for the whole fold when the reader scrolls up. Effort: Medium.
+  - **D.** Do A, and keep the state of the log after its last event. When new entries land only before records, fold them and those records onto that state. This removes the whole folds that records start, such as the fold after a reply. The one merge of the earlier pages and the fold of the Durable Object stay. Effort: Medium.
+  - **E.** Do A, and run a whole fold in short slices that give the browser time between them. The tab stays responsive, but the work stays quadratic, about 18 s of slices at 8,400 items. Two fold states must stay in step with the live events. Effort: Medium.
+  - **C.** Make the fold grow about linearly with the session. Look up a turn by its message, and an item by its ID, through indexes. Fold a batch of events into one working copy, and publish one transcript for each batch. Each placement rule stays as it is. It removes the freeze in the tab and in the Durable Object, because both run the same code. Effort: Large.
+  - **F.** Apply A in the newest-first load now, and build C on its own branch. Neither waits for the other. A stays correct after C, and then its one merge costs one linear fold. Effort: Large.
+- **Left out:**
+  - Index only the turns by their messages. It fails the goal, because the 4,200-item fold still took 1.9 s.
+  - Fold in a background worker of the browser. C is better on every point, because C removes the cost, and the worker keeps the quadratic work and the fold of the Durable Object.
+  - Keep the state of the log at many places. D is better on every point, because the earlier pages land at the front of the log, where no saved state helps.
+  - Fold in the Durable Object and send the transcript. It fails the goal, because it moves the same fold onto the one thread of the workspace.
+- **Wider fix:** C. It removes the cost for each history load, each reply, each session that opens later, and each fold of the Durable Object.
+- **Previous examples:** None found.
+- **Related:** The newest-first load applies A, and its plan is `plans/chat-history-newest-first.md` while that change is open. C changes only `src/shared/transcript/` and its callers, so it can start at once on its own branch.
+- **Recommendation:** F. A makes the load faster than today at once, and C then removes every freeze of this class without holding up the load.
+- **Action:** fix now, apply A, and fix after merge, apply C, because C is a Large change to the shared fold outside the files of the newest-first load, and it also serves the transcript copy and the replies.
