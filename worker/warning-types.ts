@@ -18,6 +18,8 @@ export const SIMPLE_WARNINGS = {
     'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',
   github_installation_status_failed:
     'Could not read GitHub installation status for Get started.',
+  github_merge_refresh_failed:
+    'GitHub merged the pull request, but the read of its new state failed. A later read will retry.',
   first_image_build_start_failed:
     'Could not start the first cloud computer build.',
   added_image_build_start_failed:

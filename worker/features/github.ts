@@ -87,6 +87,7 @@ export class WorkspaceGitHub {
       ...this.dependencies,
       storage: this.storage,
       refresh: (workspace, signal) => this.refresh(workspace, signal),
+      scheduleRefresh: (workspace) => this.scheduleFresh(workspace),
     })
   }
 

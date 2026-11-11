@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 
 import { githubPaths } from '../../src/shared/github'
 import { record, string } from '../chat/inputs'
@@ -121,4 +121,35 @@ it('returns an immediate merged result and refreshes shared state', async () => 
   expect(
     fixture.harness.memory('workspace-1').published.at(-1)?.event,
   ).toMatchObject({ type: 'github.updated', banner: { state: 'merged' } })
+})
+
+it('returns a merged result when the read after the merge fails, then reads again', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  const { orgId, session } = await fixture.seed()
+  const { api } = fixture.harness
+  api.pulls[2].state = 'MERGED'
+  api.pulls[2].mergedAt = '2026-11-09T22:00:00Z'
+  // GitHub takes the merge, then refuses each later read, as at a rate limit.
+  api.onRequest = async (operation) => {
+    if (operation === 'MergeStart')
+      api.failure = Response.json(
+        { message: 'API rate limit exceeded' },
+        { status: 403 },
+      )
+  }
+  const response = await fixture.start(orgId, session, input)
+  expect(response.status).toBe(200)
+  expect(await response.json()).toEqual({ state: 'merged' })
+  const memory = fixture.harness.memory('workspace-1')
+  expect(memory.published).toEqual([])
+  expect(warn).toHaveBeenCalledWith(
+    expect.objectContaining({ kind: 'github_merge_refresh_failed' }),
+  )
+  api.failure = null
+  await fixture.harness.runScheduled('workspace-1')
+  expect(memory.published.at(-1)?.event).toMatchObject({
+    type: 'github.updated',
+    banner: { state: 'merged' },
+  })
+  warn.mockRestore()
 })

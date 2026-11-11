@@ -95,7 +95,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
    Read the stored workspace stream before subscribing after its common event number.
    Reconnect with that number, so a repeated publication shows only once.
 8. Forward the member merge routes to the workspace Durable Object.
-   Call `handleGitHubMerge` there with the object's storage and its internal refresh operation.
+   Call `handleGitHubMerge` there with the object's storage, its internal refresh operation, and its scheduled fresh read.
    [Mounting](merges.md#mounting) names the production entry points.
 
 Example refresh operation inside the workspace Durable Object:

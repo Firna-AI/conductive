@@ -52,6 +52,10 @@ export async function createMergeHarness() {
         fetch: (request) => harness.api.fetch(request),
         randomToken: () => `merge-${++sequence}`,
         refresh: harness.refresh,
+        scheduleRefresh: (workspace) =>
+          harness
+            .memory(workspace.id)
+            .state.scheduleRefresh({ workspace, signal: {} }, 0),
         storage: {
           get: async (key) => structuredClone(jobs.get(key)),
           put: async (key, value) => {

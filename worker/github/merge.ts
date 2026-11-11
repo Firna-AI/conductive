@@ -4,7 +4,9 @@ import type {
   GitHubMergeResponse,
 } from '../../src/shared/github'
 import type { AppEnv } from '../env'
+import { HttpError } from '../http'
 import { freshGitHubUserToken } from '../security/github-tokens'
+import { warnWorker } from '../warnings'
 import { GitHubReader } from './client'
 import type { GitHubWorkspace } from './contracts'
 import { authorizeMerge } from './merge-access'
@@ -160,11 +162,28 @@ export class GitHubMerge {
     userId: string,
   ): Promise<GitHubMergeResponse> {
     await authorizeMerge(this.env.DB, workspace, userId)
-    await this.dependencies.refresh(workspace, {
-      userId,
-      requireWritable: true,
-    })
+    try {
+      await this.dependencies.refresh(workspace, {
+        userId,
+        requireWritable: true,
+      })
+    } catch (error) {
+      if (!isGitHubReadFailure(error)) throw error
+      // GitHub merged the pull request, so a failed read of the new state is
+      // not a failed merge. A pending read has already scheduled its retry.
+      warnWorker({ kind: 'github_merge_refresh_failed' })
+      if (error.code === 'github_unavailable')
+        await this.dependencies.scheduleRefresh(workspace)
+    }
     await authorizeMerge(this.env.DB, workspace, userId)
     return { state: 'merged' }
   }
+}
+
+/** GitHub failed the read, or it has not settled the merged state yet. */
+function isGitHubReadFailure(error: unknown): error is HttpError {
+  return (
+    error instanceof HttpError &&
+    (error.code === 'github_unavailable' || error.code === 'github_pending')
+  )
 }

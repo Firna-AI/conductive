@@ -1,7 +1,7 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { gate } from '../security/gate'
-import type { GitHubRefreshWorkspace } from './contracts'
+import type { GitHubRefreshWorkspace, GitHubWorkspace } from './contracts'
 import { readMergeWorkspace } from './merge-access'
 import { GitHubMerge } from './merge'
 
@@ -13,6 +13,8 @@ export interface MergeStorage {
 export interface GitHubMergeDependencies extends AppDependencies {
   storage: MergeStorage
   refresh: GitHubRefreshWorkspace
+  /** Stores a fresh read for the workspace alarm, which retries a failed read. */
+  scheduleRefresh: (workspace: GitHubWorkspace) => Promise<void>
 }
 
 export async function handleGitHubMerge(
