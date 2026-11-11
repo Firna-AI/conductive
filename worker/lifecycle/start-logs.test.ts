@@ -2,7 +2,8 @@ import { expect, it } from 'vitest'
 
 import { nativeLifecycleStorage } from './native-storage.test-support'
 import { TEST_TIME } from '../test-support/harness'
-import { durableStartStorage, readStartLog } from './start-storage'
+import { durableStartStorage } from './start-storage'
+import { readStartLog } from './start-log-storage'
 import type { WorkspaceStartJob } from './start-types'
 import { readSavedScript } from './saved-script'
 

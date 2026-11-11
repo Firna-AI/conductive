@@ -15,8 +15,10 @@ export class QueueGenerations {
 
   current = (): number | undefined => {
     const turn = this.currentTurn()
-    return turn ? this.generations.get(turn) : undefined
+    return turn ? this.forTurn(turn) : undefined
   }
+
+  forTurn = (turn: QueueTurn): number | undefined => this.generations.get(turn)
 
   withGeneration = async <T>(
     turn: QueueTurn,

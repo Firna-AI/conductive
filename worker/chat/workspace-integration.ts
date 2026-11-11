@@ -226,6 +226,8 @@ export function createWorkspaceIntegration(
     dependencies,
     {
       ...platform,
+      assertStartActive: (turn) =>
+        assertReceiverActive(storage, generations.forTurn(turn)),
       deviceWaiting: (id) => devices.waiting(id),
       stopping: async (id) => {
         for (const hook of stoppedHooks) await hook(id)

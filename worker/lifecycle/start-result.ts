@@ -19,9 +19,9 @@ export async function publishStartCompletion(
   result: WorkspaceStartResult,
   prepare: () => Promise<boolean>,
 ): Promise<boolean> {
-  if (result.ok && !(await prepare())) return false
   const job = await storage.job()
-  await storage.complete(result)
+  if (result.ok && !(await prepare())) return false
+  if (job) await storage.complete(job.attempt, result)
   const stored = (await storage.result()) ?? result
   if (job?.kind === 'create') {
     const admitted = await storage.admission()

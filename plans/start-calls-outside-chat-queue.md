@@ -241,63 +241,63 @@ Depends on: 2
 
 Depends on: 2, 3
 
-- [ ] Add `StartSuperseded` and the start guard of design call 4 in a new
+- [x] Add `StartSuperseded` and the start guard of design call 4 in a new
       file under `worker/lifecycle/`.
-- [ ] Remove the `accepting` chain, and make `begin` refuse when a start
+- [x] Remove the `accepting` chain, and make `begin` refuse when a start
       job exists, as design call 7 says. Keep the epoch guard control of
       `worker/test-support/native-lifecycle-controls.ts` correct without
       the chain.
-- [ ] Pass the turn from `alarmLifecycle` through `controller.alarm` and
+- [x] Pass the turn from `alarmLifecycle` through `controller.alarm` and
       `runWorkspaceAlarm` to `starts.advance`.
-- [ ] Run each D1 and Boat call group of the progress phases as one
+- [x] Run each D1 and Boat call group of the progress phases as one
       outside call with the guard:
-  - [ ] `start-coordinator.ts`: the archive read, the user checks, the
+  - [x] `start-coordinator.ts`: the archive read, the user checks, the
         provider client, and the workspace read, before the failure path
         starts.
-  - [ ] `start-records.ts` and `creation-admission-response.ts`: the D1
+  - [x] `start-records.ts` and `creation-admission-response.ts`: the D1
         reads and writes before and after the controller calls. The token
         write stays in the turn, as design call 11 says.
-  - [ ] `start-machine.ts`, `start-progress.ts`, and
+  - [x] `start-machine.ts`, `start-progress.ts`, and
         `start-command-execution.ts`: the token, settings, and
         environment reads, and each Boat call. The token write stays in
         the turn.
-  - [ ] `start-allocation.ts` and `resource-intents.ts`: one outside call,
+  - [x] `start-allocation.ts` and `resource-intents.ts`: one outside call,
         as design call 6 says.
-  - [ ] `start-completion.ts`: the user check of `prepareStartSuccess`.
+  - [x] `start-completion.ts`: the user check of `prepareStartSuccess`.
         Then read the runner connection in the turn, as design call 4
         says.
-- [ ] Keep the failure path in the queue, as design call 10 says.
-- [ ] Make `WorkspaceArchive.begin` in `worker/lifecycle/archive-state.ts`
+- [x] Keep the failure path in the queue, as design call 10 says.
+- [x] Make `WorkspaceArchive.begin` in `worker/lifecycle/archive-state.ts`
       run only its first phase when it ends a running start, as design
       call 12 says.
-- [ ] Rethrow `StartSuperseded` in the three catches of design call 5.
+- [x] Rethrow `StartSuperseded` in the three catches of design call 5.
       Make `complete` check the attempt.
-- [ ] Make `runWorkspaceAlarm` set the start due time one second after a
+- [x] Make `runWorkspaceAlarm` set the start due time one second after a
       superseded advance.
-- [ ] Keep each changed file under 300 lines. On `origin/main`,
+- [x] Keep each changed file under 300 lines. On `origin/main`,
       `worker/lifecycle/archive-state.ts` has 298 lines,
       `worker/lifecycle/start-storage.ts` 294,
       `worker/lifecycle/workspace-controller.ts` 293, and
       `worker/lifecycle/start-coordinator.ts` 287. Split before you add.
-- [ ] Add hooks to `LifecycleBoat` in
+- [x] Add hooks to `LifecycleBoat` in
       `worker/lifecycle/lifecycle-boat-test-support.ts`. One holds a
       successful create reply. Today `afterLostCreate` only holds a lost
       reply. One holds a resume request before the fake applies it.
-- [ ] Add integration tests with the production `Workspace`. Each test
+- [x] Add integration tests with the production `Workspace`. Each test
       holds a Boat reply with the hooks of `LifecycleBoat`. Each asserts
       the event order, with a polling deadline of 10 seconds and no
       elapsed-time assertion:
-  - [ ] A history read settles while the reply of a start step is held.
-  - [ ] Archive during a held resume request, before the fake applies
+  - [x] A history read settles while the reply of a start step is held.
+  - [x] Archive during a held resume request, before the fake applies
         it, ends the start as stopped. No start step follows the archive
         event. The next lifecycle run stops the sandbox, and Archive
         records it as retained only after that stop.
-  - [ ] A member suspension during a held create reply keeps the sandbox
+  - [x] A member suspension during a held create reply keeps the sandbox
         ID in the ledger and in the workspace row. The start writes
         nothing after the suspension.
-  - [ ] A runner disconnect during the user check of the success keeps
+  - [x] A runner disconnect during the user check of the success keeps
         the start job. A later readiness report completes the start.
-  - [ ] A Resume during a held reply settles and adds no start job.
+  - [x] A Resume during a held reply settles and adds no start job.
 - [ ] Update the known limit of
       `worker/chat/integration/workspace-lifecycle.md`, and update
       `worker/lifecycle/workspace-object.md`,

@@ -27,7 +27,7 @@ import {
   type StoredWorkspaceStartJob,
 } from './lifecycle/start-job-codec'
 import { nativeWorkspaceStorage } from './lifecycle/platform-storage'
-import { readEncryptedStartLog } from './lifecycle/start-storage'
+import { readEncryptedStartLog } from './lifecycle/start-log-storage'
 import {
   startResultForTransport,
   type WorkspaceLifecycleTransport,
@@ -277,7 +277,7 @@ export class WorkspaceLifecycle
   }
 
   protected async alarmLifecycle(): Promise<void> {
-    await this.run(() => this.controller.alarm())
+    await this.run((turn) => this.controller.alarm(turn))
   }
 
   deviceOperation(
