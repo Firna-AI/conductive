@@ -17,6 +17,8 @@ export interface WebhookRoute {
   repositoryId: number
   installationId: number
   branch?: string
+  /** The branches that a check event names. Empty when it names none. */
+  branches?: string[]
   push: boolean
   pullRequest?: GitHubPullRequestEvent
 }
@@ -131,10 +133,27 @@ export function webhookRoute(
     }
   }
   const check = event === 'check_run' ? value.check_run : value.check_suite
-  // Validate the commit field. A status can refer to a test merge commit.
-  // The workspace always reads its current display state for these events.
-  if (event === 'status') string(value.sha)
-  else if (isRecord(check)) string(check.head_sha)
-  else invalid()
-  return common
+  // Validate the commit field. A status can refer to a test merge commit,
+  // which names no branch. Such an event reaches each open pull request.
+  if (event === 'status') {
+    string(value.sha)
+    return { ...common, branches: statusBranches(value.branches) }
+  }
+  if (!isRecord(check)) return invalid()
+  string(check.head_sha)
+  const suite = event === 'check_run' ? check.check_suite : check
+  const branch = isRecord(suite) ? suite.head_branch : undefined
+  return {
+    ...common,
+    branches: typeof branch === 'string' && branch ? [branch] : [],
+  }
+}
+
+function statusBranches(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item) =>
+    isRecord(item) && typeof item.name === 'string' && item.name
+      ? [item.name]
+      : [],
+  )
 }
