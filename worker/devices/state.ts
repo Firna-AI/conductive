@@ -14,6 +14,14 @@ const INPUT_KEY = 'devices:v1:input-state'
 interface InputState {
   previous: WorkspaceState
 }
+/**
+ * The workspace of a fallback event. It carries the failed update mark as
+ * an event of the shared state writer does, in a field that the shared
+ * type does not name yet.
+ */
+type FallbackWorkspace = Omit<Workspace, 'link'> & {
+  softwareUpdateFailed: boolean
+}
 export type DeviceStateProjection = (
   request: DeviceCommandRecord,
   now: number,
@@ -85,7 +93,7 @@ async function publishFallback(
     view.session(request.sessionId),
   )
   if (!row || !session) return
-  const workspace: Omit<Workspace, 'link'> = {
+  const workspace: FallbackWorkspace = {
     id: row.id,
     number: row.number,
     orgId: row.orgId,
@@ -101,6 +109,7 @@ async function publishFallback(
     branch: row.branch,
     choice: session.choice,
     state: row.state,
+    softwareUpdateFailed: row.softwareUpdateFailed === 1,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,

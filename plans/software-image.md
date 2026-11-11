@@ -1049,17 +1049,30 @@ Depends on: 3
       still starts the runner. Branch:
       `conductor/software-image-m7-update-old-workspaces`.
 
+## Milestone 8a: Report a changed install script
+
+Depends on: 3, 9a
+
+Every option of decision 17 shows the notice when the install scripts
+differ, so this report runs before the answers. It waits for Milestone 9a
+only because both change the same Worker queries.
+
+- [ ] Send with each workspace whether the install script of the current
+      org image differs from the install script that its disk holds, as
+      design item 6 says, in each Worker path that sends a workspace to the
+      browser.
+- [ ] Tests: a workspace whose install script revision differs from that of
+      the current org image reports the change, and one with the same
+      revision does not.
+
 ## Milestone 8: Old org setup, backend
 
-Depends on: 3
+Depends on: 3, 8a
 
-- [ ] Report to the workspace when its org image is older than the current
-      org image.
 - [ ] Add the action of design item 6, which runs the install script in
       the workspace and streams its output.
-- [ ] Tests: a workspace of an older org image gets the notice, and one of
-      the current org image does not. The action runs the current install
-      script in the folder of the workspace's repository.
+- [ ] Tests: the action runs the current install script in the folder of
+      the workspace's repository.
 
 ## Milestone 9a: Texts and the warning mark
 
@@ -1069,16 +1082,16 @@ Depends on: 1, 5, 7
 
 These items depend on no open decision, so they run before Milestone 8.
 
-- [ ] Load the warning mark of Milestone 7 in the workspace list query and
+- [x] Load the warning mark of Milestone 7 in the workspace list query and
       in the device fallback of `worker/devices/state.ts`, which do not load
       it yet. Check that the start card of the app shows the software step
       from the label of the Worker, and that a failed update step ends with
       "failed", as the mockup of a failed update draws it.
-- [ ] Change "The install script runs only when you build the computer." in
+- [x] Change "The install script runs only when you build the computer." in
       `src/shell/settings/ComputerTab.tsx` and "only at a build" in
       `src/members/MemberComputerView.tsx`, with their tests, to the words
       of the mockup.
-- [ ] Change the build log line "Installing the cloud computer software."
+- [x] Change the build log line "Installing the cloud computer software."
       in `phaseLabel` of `worker/lifecycle/build-execution.ts` to
       "Installing the agent and terminal software", with its tests, as
       decision 1 E and the software step of `docs/protocol/org-image.md`
@@ -1093,15 +1106,22 @@ Depends on: 1, 5, 7, 8, 9a
 - [ ] Show refreshes on the Cloud computer tab, as the mockup of Milestone
       1 draws them.
 - [ ] Show the warning bar of Milestone 7. Its words and its action wait
-      for decisions 30 and 33.
-- [ ] Show the notice of an old org setup and its action.
+      for decisions 30 and 33. Add `softwareUpdateFailed` to the shared
+      `Workspace` type in `src/shared/workspaces.ts`, and read it in the
+      three browser parsers: `src/app/api/read-workspaces.ts`,
+      `src/chat/api/read-workspace.ts`, and `src/members/api/parseCore.ts`.
+      The brief says what a missing field means. Today the parsers drop the
+      field, so a bar on the browser store never shows.
+- [ ] Show the notice of an old org setup and its action. Read
+      `installScriptChanged` of Milestone 8a in the shared type and the
+      three parsers, as for the warning mark.
 - [ ] Capture the org pictures of the marketing site again with
       `npm run marketing:pictures`, because the Cloud computer tab of the
       mockups now shows refreshes.
 
 ## Milestone 10: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 9, 9a
+Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 8a, 9, 9a
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
       Run each new asynchronous test 10 times, as the `testing` skill

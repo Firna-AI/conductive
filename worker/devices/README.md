@@ -154,6 +154,7 @@ Without it, or without a lifecycle state, the device-only fallback runs in the s
 - The feature restores the prior state only when no request still waits.
 - Metadata changes do not prevent restoration.
 - Restoration changes only a current `input` state, and it preserves newer stopped, archived, or error states.
+- Its `workspace.updated` event carries the failed update mark of the D1 row, as an event of the shared writer does.
 
 ## Permission policy and limits
 

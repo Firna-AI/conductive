@@ -187,10 +187,14 @@ functions of the lifecycle that a reader opens first.
   the failed update mark when it admits a start.
 - [workspace-data.ts](workspace-data.ts): `workspaceRecord` reads the failed
   update mark of the D1 row into `softwareUpdateFailed`. `workspaceView`
-  keeps that field. So each workspace detail reply and each
-  `workspace.updated` event carries the mark. Replies give the mark only
-  in that field. The shared `Workspace`
-  type in `src/shared/` does not name it yet.
+  keeps that field. These queries select the mark: `readWorkspace`, the
+  workspace list query in [shell-data.ts](../app-api/shell-data.ts), and
+  `readDeviceWorkspace` in [data.ts](../devices/data.ts) for the
+  device-only fallback. So the workspace list, each workspace detail
+  reply, and each `workspace.updated` event carry the mark. A row that a
+  query reads without the mark gives no value, never false. Replies give
+  the mark only in that field. The shared `Workspace` type in
+  `src/shared/` does not name it yet.
 - [workspace-response.ts](workspace-response.ts):
   `presentProvisionedWorkspace` reads the current mark for a repeated
   create, because the saved create reply can hold an older value.

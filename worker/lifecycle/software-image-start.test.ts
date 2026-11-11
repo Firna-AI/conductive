@@ -48,7 +48,7 @@ it.each(['first', 'later'] as const)(
     expect(build.build.state).toBe('succeeded')
     const log = build.log.map((event) => event.text).join('')
     expect(log).toContain('Running the install script.')
-    expect(log).not.toContain('Installing the cloud computer software.')
+    expect(log).not.toContain('Installing the agent and terminal software.')
   },
 )
 
@@ -99,11 +99,11 @@ it.each([
         .map((event) => event.text)
         .filter(
           (text) =>
-            text === 'Installing the cloud computer software.\n' ||
+            text === 'Installing the agent and terminal software.\n' ||
             text === 'Running the install script.\n',
         ),
     ).toEqual([
-      'Installing the cloud computer software.\n',
+      'Installing the agent and terminal software.\n',
       'Running the install script.\n',
     ])
   },

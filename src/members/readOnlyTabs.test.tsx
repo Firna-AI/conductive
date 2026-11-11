@@ -209,7 +209,7 @@ describe('the read-only settings of a member', () => {
           },
         }),
         present: [
-          'Cloud computers run Ubuntu 26.04 and include Node.js 26 and uv. The install script runs only at a build of the computer.',
+          'Cloud computers run Ubuntu 26.04 and include Node.js 26 and uv. The install script runs at each build and refresh of the computer.',
         ],
         absent: ['Ubuntu 24.04'],
       },

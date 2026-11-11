@@ -18,7 +18,7 @@ beforeAll(async () => {
   bundle = await outerWorkerBundle('worker/features/entry.test-support.ts')
 })
 
-it('keeps the stored software warning in projected reads and repeated create replies', async () => {
+it('keeps the stored software warning in projected reads, the workspace list, and repeated create replies', async () => {
   const fixture = await featureFixture(bundle, {
     configuration: {
       CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
@@ -64,8 +64,7 @@ it('keeps the stored software warning in projected reads and repeated create rep
     const listed = array(record(await list.json()).workspaces, record).find(
       (workspace) => workspace.id === id,
     )
-    expect(listed).toMatchObject({ id })
-    expect(listed).not.toHaveProperty('softwareUpdateFailed', false)
+    expect(listed).toMatchObject({ id, softwareUpdateFailed: true })
     const repeated = await create()
     expect(repeated.status).toBe(201)
     const replayed = await repeated.json()

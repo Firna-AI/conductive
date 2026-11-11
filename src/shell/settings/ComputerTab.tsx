@@ -94,7 +94,7 @@ export function ComputerSettings(props: {
               computer={computer}
               description={[
                 softwareSentence(value.baseImage),
-                'The install script runs only when you build the computer.',
+                'The install script runs at each build and refresh of the computer.',
               ]
                 .filter((sentence) => sentence !== null)
                 .join(' ')}

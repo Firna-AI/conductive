@@ -111,7 +111,7 @@ describe('the org settings of a member who is not an admin', () => {
       'Startup script Runs in the cloud computer of each workspace, at each start and resume. #!/usr/bin/env bash set -euo pipefail redis-server --daemonize yes',
     )
     expect(textOf(pages['cloud computer'])).toContain(
-      'Install software Cloud computers run Ubuntu 24.04 and include Node.js 24, npm, pnpm, Bun, Python 3.12, uv, Go, Rust, Java, GCC, Clang, Docker, git, and gh. The install script runs only at a build of the computer.',
+      'Install software Cloud computers run Ubuntu 24.04 and include Node.js 24, npm, pnpm, Bun, Python 3.12, uv, Go, Rust, Java, GCC, Clang, Docker, git, and gh. The install script runs at each build and refresh of the computer.',
     )
     expect(textOf(pages['cloud computer'])).toContain(
       `DATABASE_URL Secret •••••••• PLACES_API_KEY Secret •••••••• STRIPE_SECRET_KEY Secret •••••••• NEXT_PUBLIC_SITE_URL •••••••• ${productName} hides secret values in agent output and start logs. Changes apply at the next start.`,

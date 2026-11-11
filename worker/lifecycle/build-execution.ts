@@ -192,6 +192,6 @@ function phaseLabel(phase: BuildPhase): string {
   return phase === 'sources'
     ? 'Updating the repositories.\n'
     : phase === 'software'
-      ? 'Installing the cloud computer software.\n'
+      ? 'Installing the agent and terminal software.\n'
       : 'Running the install script.\n'
 }

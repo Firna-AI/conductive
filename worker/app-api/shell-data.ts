@@ -61,7 +61,7 @@ export async function shellWorkspaces(
      w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
      u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
      ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId,
-     w.provider_account AS providerAccount, w.state,
+     w.provider_account AS providerAccount, w.state, w.software_update_failed AS softwareUpdateFailed,
      w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
      w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
      r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId,

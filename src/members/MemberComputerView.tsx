@@ -96,7 +96,7 @@ export function MemberComputerView(props: MemberComputerViewProps) {
       <ScriptSection
         description={[
           softwareSentence(settings.baseImage),
-          'The install script runs only at a build of the computer.',
+          'The install script runs at each build and refresh of the computer.',
         ]
           .filter((sentence) => sentence !== null)
           .join(' ')}

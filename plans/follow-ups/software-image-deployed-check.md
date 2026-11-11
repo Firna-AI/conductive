@@ -17,7 +17,7 @@
 - **Task:**
   - Watch the first deploy run after the merge. Check that the step "Build software image" prints the phases and ends with the result `ready`, and that the job `software-image` passes.
   - Note the length of the step. A build that needs more than 15 minutes fails the run, as `docs/automatic-deploys.md` says.
-  - Create a test org with one repository on the deployed app. Check that its first build log goes from "Updating the repositories." to "Running the install script." with no "Installing the cloud computer software." line.
+  - Create a test org with one repository on the deployed app. Check that its first build log goes from "Updating the repositories." to "Running the install script." with no "Installing the agent and terminal software." line.
   - Compare the length of that first build with a first build before this change.
   - Send a first message in the test org, and check that the workspace starts and an agent answers.
 - **Impact if no action:** A fault that only the real Cloudflare binding or the real provider shows can fail every deploy run, or keep first builds slow, without anyone noticing.
