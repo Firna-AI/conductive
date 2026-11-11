@@ -1,4 +1,5 @@
 import { requireActiveStartUsers } from './start-access'
+import { prepareWorkspaceSoftwareUpdate } from './workspace-software-update'
 import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
@@ -32,6 +33,7 @@ export async function advanceStartMachine(
 ): Promise<{
   phase: WorkspaceMachinePhase
   environmentCiphertext: string | null
+  softwareUpdate?: WorkspaceStartJob['softwareUpdate']
 } | null> {
   if (job.phase === 'machine') {
     await ensureWorkspaceToken(
@@ -134,6 +136,17 @@ export async function advanceStartMachine(
         : 'Resuming with your files as you left them',
       'completed',
     )
+    const softwareUpdate = await prepareWorkspaceSoftwareUpdate(
+      env,
+      job.orgId,
+      job.workspaceId,
+    )
+    if (softwareUpdate)
+      return {
+        phase: 'software',
+        environmentCiphertext: job.environmentCiphertext,
+        softwareUpdate,
+      }
     return {
       phase:
         job.afterReadyPhase ?? (job.kind === 'create' ? 'fetch' : 'startup'),

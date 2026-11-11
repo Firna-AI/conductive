@@ -25,6 +25,7 @@ export interface WorkspaceRow {
   baseBranch?: string | null
   sandboxId: string | null
   providerAccount: string
+  softwareUpdateFailed?: number
   state: WorkspaceState
   createdAt: number
   updatedAt: number
@@ -44,7 +45,7 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   ${workspaceNameColumn('w')}, w.branch,
   COALESCE(w.base_branch, (SELECT default_branch FROM repositories WHERE id = w.repository_id AND org_id = w.org_id)) AS baseBranch,
   w.sandbox_id AS sandboxId,
-  w.provider_account AS providerAccount, w.state,
+  w.provider_account AS providerAccount, w.state, w.software_update_failed AS softwareUpdateFailed,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
   r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
@@ -72,16 +73,20 @@ export async function readWorkspace(
   return row
 }
 
-export function workspaceView(row: WorkspaceRow, origin: string): Workspace {
-  return presentWorkspace(workspaceRecord(row), {
-    origin,
-    orgId: row.orgId,
-    workspaceId: row.id,
-    number: row.number,
-  })
+export function workspaceView(row: WorkspaceRow, origin: string) {
+  const record = workspaceRecord(row)
+  return {
+    ...record,
+    ...presentWorkspace(record, {
+      origin,
+      orgId: row.orgId,
+      workspaceId: row.id,
+      number: row.number,
+    }),
+  }
 }
 
-export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
+export function workspaceRecord(row: WorkspaceRow) {
   return {
     id: row.id,
     number: row.number,
@@ -98,6 +103,10 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     branch: row.branch,
     choice: { agent: row.agent, model: row.model, effort: row.effort },
     state: row.state,
+    softwareUpdateFailed:
+      row.softwareUpdateFailed === undefined
+        ? undefined
+        : row.softwareUpdateFailed === 1,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,

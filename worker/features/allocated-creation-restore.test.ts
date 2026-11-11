@@ -6,6 +6,7 @@ import { record, string } from '../chat/inputs'
 import {
   OUTER_ORG,
   OUTER_REPOSITORY,
+  OUTER_SOFTWARE,
 } from '../chat/integration/outer-seed.test-support'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
 import { orgEnvironmentContext } from '../lifecycle/settings-data'
@@ -126,6 +127,9 @@ it.each(['ready', 'fetch'] as const)(
       },
     })
     expect(active.boat.commands.slice(commandsBefore)).toEqual([
+      ...(phase === 'ready'
+        ? [expect.stringContaining(OUTER_SOFTWARE.url)]
+        : []),
       expect.stringContaining('git fetch origin'),
       expect.stringContaining('git checkout'),
       expect.stringContaining('/run/conductive/startup.sh'),

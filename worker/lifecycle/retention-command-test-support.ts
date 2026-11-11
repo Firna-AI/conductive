@@ -3,9 +3,14 @@ import type { backendFixture } from './backend-test-support'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { readRetention } from './retention-data'
+import {
+  recordWorkspaceSoftwareUpdateFailed,
+  recordWorkspaceSoftwareVersion,
+} from './workspace-software-data'
 
 export async function retentionCommandFixture(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
+  software: { version?: string; updateFailed?: boolean } = {},
 ) {
   const { runtime, org, user } = fixture
   const created = await fixture.run(() =>
@@ -17,6 +22,20 @@ export async function retentionCommandFixture(
   const id = created.workspace.id
   const platform = fixture.actors.get(id)
   if (!platform) throw new Error('Missing retention controller')
+  if (software.version !== undefined)
+    await recordWorkspaceSoftwareVersion(
+      runtime.env.DB,
+      org.id,
+      id,
+      software.version,
+    )
+  if (software.updateFailed !== undefined)
+    await recordWorkspaceSoftwareUpdateFailed(
+      runtime.env.DB,
+      org.id,
+      id,
+      software.updateFailed,
+    )
   await fixture.setTime(TEST_TIME)
   fixture.boat.states.set('bx_1', 'archived')
   await platform.endpoint().lifecycleStopped()

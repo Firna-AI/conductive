@@ -3,6 +3,7 @@ import { expect, it } from 'vitest'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
+import { softwareVersion } from '../software-image/version'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { seedPublishedImage } from './published-image-test-support'
@@ -65,7 +66,7 @@ it('records the claimed image at first start even after a newer image publishes'
   }
   await pending
   expect(await readWorkspaceImageRecords(db, org.id, id)).toEqual({
-    softwareVersion: 'claimed-version',
+    softwareVersion: await softwareVersion(SOFTWARE),
     orgImageBuildId: 'published-image',
     installScriptRevision: 'claimed-script',
     softwareUpdateFailed: false,
@@ -86,7 +87,7 @@ it('compares and updates software and script records independently', async () =>
   expect(await workspaceSoftwareIsOlder(db, org.id, id, 'current')).toBe(true)
   await recordWorkspaceSoftwareUpdateFailed(db, org.id, id, true)
   expect(await readWorkspaceImageRecords(db, org.id, id)).toMatchObject({
-    softwareVersion: null,
+    softwareVersion: await softwareVersion(SOFTWARE),
     softwareUpdateFailed: true,
   })
   await recordWorkspaceSoftwareVersion(db, org.id, id, 'current')

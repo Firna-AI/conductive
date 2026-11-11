@@ -201,7 +201,7 @@ it('leases the image and captured branch from the same publication at claim admi
       .bind(id)
       .first('runner_protocol_version'),
   ).toBe(2)
-  expect(lifecycleCommandBody(boat.commands[0])).toContain(
+  expect(lifecycleCommandBody(boat.commands[1])).toContain(
     "git fetch origin '+refs/heads/published-next:refs/remotes/origin/published-next'",
   )
   expect(

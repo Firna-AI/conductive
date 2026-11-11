@@ -67,7 +67,7 @@ it('captures the create branch and masks legacy encrypted settings in its stream
   const actor = fixture.actors.get(id)?.endpoint()
   if (!actor) throw new Error('Missing workspace controller')
   expect((await actor.readLifecycleStartLog()).text).toBe(
-    'configured [hidden]\n'.repeat(4),
+    'configured [hidden]\n'.repeat(5),
   )
   const captured = await runningEnvironment(runtime.env.DB, id)
   expect(captured).not.toContain(initialSecret)

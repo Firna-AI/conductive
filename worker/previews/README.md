@@ -155,8 +155,10 @@ The response header allowlist removes the mark before the browser gets the answe
 
 When the relay socket unit is missing or inactive, the open and the proxy refuse with
 409 `preview_relay_unavailable`. The message says:
-"Previews need newer cloud computer software. Start a new workspace after an admin runs Build computer."
-The image build installs the relay. An existing workspace keeps its image's software.
+"Previews need an update to the agent and terminal software. The next workspace start will update it."
+The image build installs the relay.
+The update of the app's own software at a workspace start installs and starts it too, as
+[Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says.
 systemd holds the relay port in the socket unit while the service restarts.
 The Worker checks the socket state, so a service restart does not trigger the software refusal.
 

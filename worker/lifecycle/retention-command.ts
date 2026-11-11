@@ -6,6 +6,8 @@ import { JobTimeLimit } from './job-time-limit'
 import { setRetention } from './retention-data'
 import { readImageSettings } from './settings-data'
 import type { WorkspaceActionContext } from './workspace-actions'
+import type { WorkspaceSoftwareUpdate } from './workspace-software-update'
+import type { StartStep } from '../../src/shared/workspaces'
 
 export interface RetentionCommandState {
   attempt: string
@@ -13,11 +15,15 @@ export interface RetentionCommandState {
   stdoutOffset: number
   stderrOffset: number
   stopRequestedAt?: number
+  /** Keep a saved software process from becoming the startup process. */
+  phase?: 'software' | 'startup'
+  softwareUpdate?: WorkspaceSoftwareUpdate | null
 }
 
 export interface RetentionCommandPort {
   read(): RetentionCommandState
   save(state: RetentionCommandState): Promise<void>
+  softwareStep(status: StartStep['state']): Promise<void>
 }
 
 export async function advanceRetentionCommand(
@@ -27,7 +33,17 @@ export async function advanceRetentionCommand(
   deadlineAt: number,
   command: RetentionCommandPort,
 ): Promise<DiskRetentionResult> {
-  const state = command.read()
+  let state = command.read()
+  if (state.phase === 'software') {
+    state = {
+      ...state,
+      phase: 'startup',
+      processId: null,
+      stdoutOffset: 0,
+      stderrOffset: 0,
+    }
+    await command.save(state)
+  }
   let error: string | null = null
   try {
     if (state.processId === null) {

@@ -10,7 +10,14 @@ import {
   type WorkspaceSnapshot,
 } from '../data/workspace-link'
 
-export interface ProvisionedWorkspace extends WorkspaceResponse {
+interface WorkspaceSoftwareResponse extends Omit<
+  WorkspaceResponse,
+  'workspace'
+> {
+  workspace: ReturnType<typeof workspaceView>
+}
+
+export interface ProvisionedWorkspace extends WorkspaceSoftwareResponse {
   first: FirstWorkspaceMessage
 }
 
@@ -26,17 +33,21 @@ export async function presentProvisionedWorkspace(
   saved: SavedProvisionedWorkspace,
 ): Promise<ProvisionedWorkspace> {
   const { orgId, id } = saved.workspace
-  const number =
-    saved.workspace.number ??
-    (await readWorkspace(runtime.env.DB, orgId, id)).number
+  const current = workspaceView(
+    await readWorkspace(runtime.env.DB, orgId, id),
+    runtime.env.APP_ORIGIN,
+  )
   return {
     ...saved,
-    workspace: presentWorkspace(saved.workspace, {
-      origin: runtime.env.APP_ORIGIN,
-      orgId,
-      workspaceId: id,
-      number,
-    }),
+    workspace: {
+      ...presentWorkspace(saved.workspace, {
+        origin: runtime.env.APP_ORIGIN,
+        orgId,
+        workspaceId: id,
+        number: saved.workspace.number ?? current.number,
+      }),
+      softwareUpdateFailed: current.softwareUpdateFailed,
+    },
   }
 }
 
@@ -44,7 +55,7 @@ export async function workspaceResponse(
   runtime: WorkspaceRuntime,
   orgId: string,
   workspaceId: string,
-): Promise<WorkspaceResponse> {
+): Promise<WorkspaceSoftwareResponse> {
   const row = await readWorkspace(runtime.env.DB, orgId, workspaceId)
   const state = await runtime.workspace(workspaceId).readLifecycle()
   return {

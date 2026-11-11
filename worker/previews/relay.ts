@@ -13,6 +13,6 @@ export async function requirePreviewRelay(
     throw new HttpError(
       409,
       'preview_relay_unavailable',
-      'Previews need newer cloud computer software. Start a new workspace after an admin runs Build computer.',
+      'Previews need an update to the agent and terminal software. The next workspace start will update it.',
     )
 }

@@ -9,6 +9,7 @@ import type {
 } from './start-types'
 import { readWorkspace } from './workspace-data'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
+import { recordWorkspaceSoftwareUpdateFailed } from './workspace-software-data'
 
 /** The coordinator holds its serial task until native admission is durable. */
 export async function enqueueWorkspaceStart(
@@ -61,6 +62,12 @@ export async function enqueueWorkspaceStart(
     ))
   )
     return false
+  await recordWorkspaceSoftwareUpdateFailed(
+    env.DB,
+    job.orgId,
+    job.workspaceId,
+    false,
+  )
   await endpoint.beginLifecycleStart(job.kind)
   await storage.schedule()
   return true

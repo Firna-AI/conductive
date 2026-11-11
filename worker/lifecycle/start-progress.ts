@@ -13,6 +13,7 @@ import type { WorkspaceRow } from './workspace-data'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
+import { recordSoftwareUpdateOutcome } from './workspace-software-update'
 
 export async function advanceStartSteps(
   env: AppEnv,
@@ -36,18 +37,35 @@ export async function advanceStartSteps(
     job.phase === 'fetch' && job.baseBranch
       ? await creationFetchLabel(env.DB, job)
       : stepLabel(job.phase)
-  if (
-    !(await advanceStartCommand(
-      env,
-      endpoint,
-      storage,
-      provider,
-      row,
-      job,
-      label,
-    ))
+  const outcome = await advanceStartCommand(
+    env,
+    endpoint,
+    storage,
+    provider,
+    row,
+    job,
+    label,
   )
+  if (startTimeLimitReached(job, dependencies.now()))
+    throw new JobTimeLimit('start')
+  if (!outcome) return false
+  if (job.phase === 'software') {
+    if (!job.softwareUpdate) throw new WorkspaceStartError(null)
+    await recordSoftwareUpdateOutcome(
+      env.DB,
+      job.orgId,
+      job.workspaceId,
+      job.softwareUpdate,
+      outcome,
+    )
+    await endpoint.lifecycleStep(job.phase, label, outcome)
+    await nextStartCommand(
+      storage,
+      job,
+      job.afterReadyPhase ?? (job.kind === 'create' ? 'fetch' : 'startup'),
+    )
     return false
+  }
   if (job.phase === 'startup' || job.phase === 'terminal') {
     await nextStartCommand(
       storage,

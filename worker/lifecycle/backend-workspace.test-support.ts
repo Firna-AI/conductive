@@ -10,6 +10,9 @@ import { ensureWorkspaceToken } from './tokens'
 import { assignSandbox, insertWorkspace } from './workspace-data'
 import { orgProviderForAccount } from '../sandbox/client'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { runnerSoftware } from '../configuration'
+import { softwareVersion } from '../software-image/version'
+import { recordWorkspaceSoftwareVersion } from './workspace-software-data'
 
 export async function seededCompletedWorkspace(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
@@ -84,6 +87,12 @@ export async function seededCompletedWorkspace(
     labels: { org: org.id, workspace: id },
   })
   await assignSandbox(env.DB, org.id, id, sandbox.id, job.providerAccount)
+  await recordWorkspaceSoftwareVersion(
+    env.DB,
+    org.id,
+    id,
+    await softwareVersion(runnerSoftware(env)),
+  )
   await ensureWorkspaceToken(env, id, dependencies.randomToken, now)
   await recordRunningEnvironment(
     env.DB,

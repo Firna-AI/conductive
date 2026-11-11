@@ -19,6 +19,7 @@ import type { WorkspaceRuntime } from './workspace-runtime'
 import type { ImageRuntime, PrepareImageSources } from './image-builds'
 import type { ImageCoordinatorState } from './image-timers'
 import { seedPublishedImage } from './published-image-test-support'
+import { softwareVersion } from '../software-image/version'
 
 export const SOFTWARE = {
   url: 'https://software.conductive.test/runner.tar.gz',
@@ -33,6 +34,8 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     ...harness.env,
     WORKSPACES: harness.native.bindings.WORKSPACES,
     MACHINE_ORIGIN: 'https://machine.conductive.test',
+    CONDUCTIVE_RUNNER_ARCHIVE_URL: SOFTWARE.url,
+    CONDUCTIVE_RUNNER_ARCHIVE_SHA256: SOFTWARE.sha256,
   }
   const repositoryId = 'repository-one'
   await env.DB.prepare(
@@ -55,6 +58,11 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     software: SOFTWARE,
     now: TEST_TIME - 1,
   })
+  await env.DB.prepare(
+    'UPDATE image_builds SET software_version = ? WHERE id = ?',
+  )
+    .bind(await softwareVersion(SOFTWARE), 'published-image')
+    .run()
   let now = TEST_TIME
   let sequence = 0
   const dependencies: AppDependencies = {
@@ -90,6 +98,9 @@ export async function backendFixture(sharedHarness?: TestHarness) {
         id,
         {
           MACHINE_ORIGIN: env.MACHINE_ORIGIN,
+          CONDUCTIVE_RUNNER_ARCHIVE_URL: env.CONDUCTIVE_RUNNER_ARCHIVE_URL,
+          CONDUCTIVE_RUNNER_ARCHIVE_SHA256:
+            env.CONDUCTIVE_RUNNER_ARCHIVE_SHA256,
           SANDBOX_PROVIDER_ACCOUNTS: env.SANDBOX_PROVIDER_ACCOUNTS,
           GITHUB_APP_PRIVATE_KEY: id.startsWith('org-image:')
             ? imageAppKey()
