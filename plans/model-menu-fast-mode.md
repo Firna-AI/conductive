@@ -43,11 +43,6 @@ Contract owners:
   decisions below, and the sources that it read.
 - `.context/fast-mode/257/` holds the mockup pictures of the options of
   decision 257, and the scratch patch that drew them.
-- On 2026-11-10 the user said that fast mode does not need usage credits.
-  The Claude Code fast mode docs and the text of the pinned Claude program
-  say that a Claude subscription pays for fast mode only from usage
-  credits. A Claude API key and Codex use none. The post-merge test checks
-  a subscription without usage credits.
 
 ## Decisions
 
@@ -92,8 +87,9 @@ Contract owners:
 ### Decision 256: Who may turn on fast mode
 
 - **Answer:** The user chose A on 2026-11-10. Any member who may send in a
-  session may turn fast on or off, as for the model and the effort. The
-  menu says that fast can cost more.
+  session may turn fast on or off, as for the model and the effort. On
+  2026-11-11 the user asked for no extra text about fast mode, so the menu
+  shows no note about the cost.
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Docs or spec.
@@ -108,11 +104,7 @@ Contract owners:
     route checks neither the starter nor the share switch.
   - Each message then carries the choice of the session. This also holds
     for a message of the starter.
-  - Fast mode costs more on each kind of login. Anthropic's fast mode docs
-    say that a Claude subscription pays for it only from usage credits, also
-    while plan usage is left. A Claude API key pays a higher price for each
-    token, and uses no usage credits. Codex uses no usage credits either. It
-    says "increased usage" for its Fast tier.
+  - Fast mode costs more on each kind of login.
   - Each change of speed reads the conversation again without the cache.
 - **Problem:** If fast follows the rule of the model and the effort, any
   member can turn it on. Then the starter's login pays the higher price, also
@@ -299,9 +291,8 @@ My calls, on 2026-11-10, under decision 255:
   `menuitemcheckbox` role, and its switch picture is decoration. A click or
   Space changes the switch, and the menu stays open. The arrow keys reach
   the row. Reason: a switch shows its new state in place, as in Conductor.
-- A one-line note under the row says that fast output can cost more. The
-  mockup milestone sets the words. Reason: fast spends more of the login,
-  and the answer A of decision 256 asks for the note.
+- The row shows only "Fast" and the switch, with no note, as in Conductor.
+  Reason: on 2026-11-11 the user asked for no extra text about fast mode.
 - The row shows only for a model that the model list marks. Reason: the
   menu already lists only the efforts of the chosen model, and
   claude.ai/code shows its switch only for a model that supports it.
@@ -357,7 +348,7 @@ variant.
 - [ ] Add a switch row to the mockup menu in
       `docs/mockups/src/components/common/Menu.tsx`, with the switch styles
       of `@firna/ui/switch`.
-- [ ] Add the Fast row and its note to `pickerMenu` in
+- [ ] Add the Fast row to `pickerMenu` in
       `docs/mockups/src/components/chat/pickers.ts`. Show Fast in the
       trigger of `docs/mockups/src/components/chat/ModelPicker.tsx`.
 - [ ] Add the child page `app/composer/fast`, because `app/composer` already
@@ -398,7 +389,7 @@ the agent tools, and the model list.
       the Claude Agent SDK, check which Claude models send the fast speed
       field, and update the fast marks of the model list.
 - [ ] Read each public guide in `src/marketing/docs/` in full. Update each
-      sentence on the model menu and on the cost of a login.
+      sentence on the model menu.
 - [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in
       `src/marketing/privacy.ts` in full. Update each sentence that restates
       a changed fact.
@@ -468,7 +459,7 @@ The model menus show the switch, and the triggers show Fast.
 - [ ] Add a switch row to `src/chat/ui/Menu.tsx` and to
       `src/shell/ui/MenuList.tsx`, as the mockup shows. Add
       `menuitemcheckbox` to the keyboard selector of `src/chat/ui/Menu.tsx`.
-- [ ] Add the Fast row and its note to `src/chat/components/model-menu.ts`
+- [ ] Add the Fast row to `src/chat/components/model-menu.ts`
       and to `src/shell/ui/ModelPicker.tsx`. Add `fastFor` beside
       `effortFor` in `src/chat/state/format.ts`.
 - [ ] In `src/chat/components/ModelPicker.tsx`, keep the menu open for a
