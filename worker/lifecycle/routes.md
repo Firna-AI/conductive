@@ -175,6 +175,11 @@ or the workspace owner for a request without a turn header.
 Its final D1 read in [`machine-credential-data.ts`](machine-credential-data.ts) checks the shared workspace token rule, sender membership, and sender suspension together.
 The handler does no asynchronous work between that final read and the reply.
 It also checks that both authorizations selected the same person.
+Each failed request logs the warning `git_credential_failed`. The warning
+holds the workspace ID when the token names one, whether a turn header came,
+and the error kind, with the HTTP status and an allowlisted code for a
+refusal. The helper in the sandbox keeps no record, so this warning is the
+trace of a failed Git push in Workers Logs.
 
 `createApp` in [`worker/application.ts`](../application.ts) routes
 `MACHINE_PATHS.gitCredential` to this handler, and
