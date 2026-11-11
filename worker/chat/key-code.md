@@ -57,7 +57,7 @@ first.
   chunks of large file reports and tree deltas.
 - `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
   `QueueTurn`, the handle whose `outside(call)` runs one call outside the
-  queue.
+  queue. `hasOutsideTurns` tells Archive that a queue task is outside.
 - `queue-generation.ts`: `QueueGenerations`, which keeps the member
   receiver generation of each queue task for the guarded storage, the Boat
   fetch check, and the start guard.

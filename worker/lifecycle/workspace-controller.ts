@@ -24,6 +24,7 @@ import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type { WorkspacePlatform } from './workspace-platform'
 import type { WorkspaceController } from './workspace-controller-types'
 import { WorkspaceArchive } from './archive-state'
+import { workspaceArchivePlatform } from './archive-context'
 import { restoreWorkspace } from './restore-workspace'
 import {
   taskWorkspaceStorage,
@@ -279,14 +280,12 @@ export function createWorkspaceController(
     (turn) => startGuard(platform, turn),
   )
   const archive = new WorkspaceArchive({
+    ...workspaceArchivePlatform(platform),
     env,
     dependencies,
-    storage: taskWorkspaceStorage(platform.storage, 'lifecycle:archive'),
     lifecycle,
     starts,
     startJobs,
-    publish: platform.publish,
-    stopped: platform.stopped,
     alarms,
   })
   return controller

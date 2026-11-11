@@ -21,6 +21,7 @@ interface WorkspaceChatRecovery {
 export interface WorkspacePlatform {
   storage: WorkspaceStorage
   assertStartActive?(turn: QueueTurn): Promise<void>
+  hasOutsideTurns?(): boolean
   blockConcurrencyWhile<T>(operation: () => Promise<T>): Promise<T>
   waitUntil(promise: Promise<unknown>): void
   publish(event: WorkspaceEventPublication): Promise<void>

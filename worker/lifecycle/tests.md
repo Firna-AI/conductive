@@ -76,6 +76,8 @@ These tests check the order of the events, not the elapsed time.
 It also refuses a Resume during such a hold.
 `start-outside-archive.test.ts` archives during a held resume request.
 The provider stop of Archive comes only after the resume applies.
+`start-outside-restore.test.ts` runs Archive then Restore, and Archive twice then Restore, during a held resume request.
+Boat gets no other resume, and the sandbox ends stopped after the held resume applies.
 
 `start-outside-suspension.test.ts` suspends the member lifecycle during a held create reply.
 D1 keeps the sandbox ID.

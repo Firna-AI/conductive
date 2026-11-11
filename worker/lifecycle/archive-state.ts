@@ -84,6 +84,7 @@ export class WorkspaceArchive {
       await this.save({ ...state, phase: 'stop', stopRequestedAt: undefined })
     await this.advance()
     return (
+      !this.context.hasOutsideTurns?.() &&
       (await storage.get('archive', ARCHIVE_STATE_KEY))?.phase === 'retained'
     )
   }
@@ -149,7 +150,7 @@ export class WorkspaceArchive {
         )
         await this.save(state)
       }
-      if (initializeOnly) {
+      if (initializeOnly || this.context.hasOutsideTurns?.()) {
         await storage.setAlarm(dependencies.now())
         return
       }

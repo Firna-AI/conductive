@@ -12,6 +12,7 @@ function completion() {
 
 export class ChatQueue {
   private holding: QueueTurn | undefined
+  private outsideTurns = 0
   private tail: Promise<void> = Promise.resolve()
   private readonly pending = new Set<Promise<void>>()
   private settledWork: Promise<void> = Promise.resolve()
@@ -24,6 +25,10 @@ export class ChatQueue {
 
   get currentTurn(): QueueTurn | undefined {
     return this.holding
+  }
+
+  get hasOutsideTurns(): boolean {
+    return this.outsideTurns > 0
   }
 
   run<T>(work: (turn: QueueTurn) => Promise<T>): Promise<T> {
@@ -39,10 +44,11 @@ export class ChatQueue {
       outside: async (call) => {
         await this.report()
         leave()
+        this.outsideTurns++
         try {
           return await call()
         } finally {
-          leave = await this.enter(turn)
+          leave = await this.enter(turn, true)
         }
       },
     }
@@ -71,12 +77,13 @@ export class ChatQueue {
     return Promise.all([...this.pending]).then(() => undefined)
   }
 
-  private enter(turn: QueueTurn): Promise<() => void> {
+  private enter(turn: QueueTurn, returning = false): Promise<() => void> {
     const released = completion()
     const prior = this.tail
     this.tail = prior.then(() => released.promise)
     return prior.then(() => {
       this.holding = turn
+      if (returning) this.outsideTurns--
       return () => {
         this.holding = undefined
         released.resolve()

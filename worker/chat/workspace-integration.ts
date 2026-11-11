@@ -17,14 +17,14 @@ import {
   lifecycleDependencies,
   type LifecycleEnvironment,
 } from '../lifecycle/runtime'
-import type { LifecyclePublisher } from '../lifecycle/durable-types'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
 import { WorkspaceChat } from './backend'
 import { firstMessageIdentity } from './first-message'
 import { projectWorkspaceTitle } from './workspace-title'
-import type { ChatCallbackPublisher, ChatDependencies } from './types'
+import type { ChatDependencies } from './types'
 import { WorkspaceSockets } from '../native-sockets'
 import {
+  callbackPublisher,
   observeWorkspaceCallbacks,
   type WorkspaceCallbackObservers,
 } from './workspace-callbacks'
@@ -48,10 +48,6 @@ export type WorkspaceChatResolvers = Partial<
 > & {
   callbackObservers?: WorkspaceCallbackObservers
   socketAutoResponseAt?: (socket: WebSocket) => number | null
-}
-
-function callbackPublisher(publish: ChatCallbackPublisher): LifecyclePublisher {
-  return ({ event, occurredAt }) => publish(event, occurredAt)
 }
 
 export function createWorkspaceIntegration(
@@ -228,6 +224,7 @@ export function createWorkspaceIntegration(
       ...platform,
       assertStartActive: (turn) =>
         assertReceiverActive(storage, generations.forTurn(turn)),
+      hasOutsideTurns: () => chat.store.hasOutsideTurns,
       deviceWaiting: (id) => devices.waiting(id),
       stopping: async (id) => {
         for (const hook of stoppedHooks) await hook(id)

@@ -39,7 +39,7 @@ points of each part.
   [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with no env values or startup command.
   [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
   [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
-- [`archive-begin.ts`](archive-begin.ts): `beginWorkspaceArchive` writes the first Archive state and tells `WorkspaceArchive.begin` to run only the initialization while a start job exists.
+- [`archive-begin.ts`](archive-begin.ts): `beginWorkspaceArchive` writes the first Archive state and tells `WorkspaceArchive.begin` to run only the initialization while a start job exists or a queue task is outside the chat queue.
 - [`restore-workspace.ts`](restore-workspace.ts): the member Restore route action with an explicit app origin and the fixed expiry check.
 - [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which

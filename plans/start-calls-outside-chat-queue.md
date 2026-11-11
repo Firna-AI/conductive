@@ -175,6 +175,14 @@ it.
     starts only after the earlier run and its outside call end, so the
     final stop of Archive comes last. A Stop, an access stop, and a member
     suspension already wait for the start.
+    - Review finding 1 of round 1, 11 November 2026: a second Archive, or a
+      Restore after one Archive, still ran the provider steps, because the
+      first Archive had deleted the start job. Option D now also defers
+      while any queue turn is outside the queue, and `finishStop` then
+      reports no stop, so Restore leaves a pending stop to the lifecycle.
+      Rejected: B, a tracker of the running start advance, because D also
+      covers later outside callers; E and F, waits in the request, because
+      they hold the request or the queue for the rest of the call.
 
 ## Milestone 1: Documentation and protocol
 
@@ -313,6 +321,8 @@ Depends on: 1, 2, 3, 4
 - [x] Run the targeted tests, `npm run test -- worker/chat worker/lifecycle
       worker/members`, and the complete gate, `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
+
+Merge decisions: `.context/start-calls-outside-chat-queue/merge-decisions.md`.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

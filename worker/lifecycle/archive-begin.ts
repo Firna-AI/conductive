@@ -51,5 +51,5 @@ export async function beginWorkspaceArchive(
       await transaction.setAlarm(dependencies.now())
     })
   }
-  return { defer: Boolean(job) }
+  return { defer: Boolean(job) || Boolean(context.hasOutsideTurns?.()) }
 }

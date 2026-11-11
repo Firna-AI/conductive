@@ -1,5 +1,4 @@
 import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
-import { HttpError } from '../http'
 import {
   FIRST_MESSAGE_ADMISSION_KEY,
   type FirstWorkspaceMessage,
@@ -23,12 +22,7 @@ import {
 import type { ChatData, ChatStorage, PendingCommand, StoredTurn } from './types'
 import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
 import { ChatQueue, type QueueTurn } from './queue-turn'
-
-interface ChatMetadata {
-  workspaceId: string
-  through: number
-  commandThrough: number
-}
+import { readChatMetadata, type ChatMetadata } from './store-metadata'
 
 export class ChatTransaction extends ChatRecords {
   readonly workspaceId: string
@@ -233,27 +227,16 @@ export class ChatStore {
     return this.queue.currentTurn
   }
 
+  get hasOutsideTurns(): boolean {
+    return this.queue.hasOutsideTurns
+  }
+
   reportTurnEnds(): Promise<void> {
     return this.turnEnds.flush()
   }
 
   async workspaceId(): Promise<string | undefined> {
     return (await this.storage.get<ChatMetadata>(META))?.workspaceId
-  }
-
-  private async metadata(
-    data: ChatData,
-    workspaceId: string,
-  ): Promise<ChatMetadata> {
-    const stored = await data.get<ChatMetadata>(META)
-    if (stored && stored.workspaceId !== workspaceId) {
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The workspace is not available.',
-      )
-    }
-    return stored ?? { workspaceId, through: 0, commandThrough: 0 }
   }
 
   async read<T>(
@@ -263,7 +246,7 @@ export class ChatStore {
     return work(
       new ChatTransaction(
         this.storage,
-        await this.metadata(this.storage, workspaceId),
+        await readChatMetadata(this.storage, workspaceId),
         this.now(),
       ),
     )
@@ -278,7 +261,7 @@ export class ChatStore {
       async (data) => {
         const transaction = new ChatTransaction(
           data,
-          await this.metadata(data, workspaceId),
+          await readChatMetadata(data, workspaceId),
           this.now(),
         )
         const result = await work(transaction)

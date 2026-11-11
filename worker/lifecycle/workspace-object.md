@@ -217,6 +217,11 @@ create and resume. The workspace object runs that start:
   provider stop. Only the regular alarm task starts a lifecycle run, one
   run at a time. So the provider stop comes after the last outside call of
   the start.
+- While any queue task is outside the queue, Archive also runs only its
+  initialization, also for a second Archive. Then `finishStop` reports no
+  stop, so Restore leaves a pending stop to the lifecycle. So no Archive
+  or Restore step reads or changes the sandbox while a cancelled start
+  call can still reach Boat.
 - The first lifecycle prepare of each create and resume also starts the
   restore watch. After a start from a saved snapshot, Boat downloads the
   file content in the background. The
