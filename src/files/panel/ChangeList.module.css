@@ -5,8 +5,8 @@
 }
 
 /*
- * The right padding lines the totals up with the line counts of the rows:
- * the list and row padding, the change square, and the gap before it.
+ * The right padding is the list and row padding, so the totals line up
+ * with the right edge of the rows, at the change squares.
  */
 .summary {
   display: flex;
@@ -14,7 +14,7 @@
   align-items: center;
   gap: 10px;
   height: calc(var(--ui-row-height) + 6px);
-  padding: 0 39px 0 16px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--ui-border);
 }
 
