@@ -179,9 +179,24 @@ export function byText(text: string, root: ParentNode = document): HTMLElement {
 }
 
 /**
+ * Whether a browser lets the element take the focus: a control, a link, an
+ * editable element, or an element with a `tabindex` attribute. happy-dom
+ * focuses any element, also one that a browser would not focus.
+ */
+function browserFocusable(element: Element): boolean {
+  return (
+    element.hasAttribute('tabindex') ||
+    element.matches(
+      'a[href], button, input, select, textarea, [contenteditable="true"]',
+    )
+  )
+}
+
+/**
  * The element with the focus, by its role and its accessible name, such as
  * `button Connect Claude`. An element without a role gives its tag, and
- * `the page` means that the focus fell to the page.
+ * `the page` means that the focus fell to the page. An element that a
+ * browser cannot focus says so, as `span Claude, not focusable in a browser`.
  */
 export function focusedElement(): string {
   const active = document.activeElement
@@ -190,7 +205,10 @@ export function focusedElement(): string {
     active.getAttribute('role') ??
     implicitRoles[active.tagName] ??
     active.tagName.toLowerCase()
-  return `${role} ${accessibleName(active)}`
+  const named = `${role} ${accessibleName(active)}`
+  return browserFocusable(active)
+    ? named
+    : `${named}, not focusable in a browser`
 }
 
 /** The one shown `<dialog>` with the name. None or more than one fails. */

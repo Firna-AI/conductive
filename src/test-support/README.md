@@ -92,6 +92,7 @@ Preview and desktop URLs are recorded placeholders. Tests can replace them with 
 
 `mount.ts` mounts React components in a DOM test and acts as a person does. Use it only in tests, because it imports Vitest.
 `dom-queries.ts` finds elements by their role and accessible name, by their `aria-label`, or by their text.
+`focusedElement()` names the element with the focus by its role and name, or `the page`. happy-dom focuses any element, so it also says when a browser could not focus that element.
 The global test environment stays Node.
 Start each DOM test file with the line `// @vitest-environment happy-dom`.
 Give the file the test timeout `MOUNTED_TEST_TIMEOUT`, 15 seconds, with `vi.setConfig`.

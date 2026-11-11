@@ -99,12 +99,13 @@ export function useInlineForms<Key extends string>(
 }
 
 /**
- * Places the focus for an inline form while it shows. `form` holds the form,
- * and `focus` comes from its owner. When a press opened the form, the form
- * takes the focus: `initial`, else its first part that can take the focus.
- * A part that took the focus as it showed keeps it, such as the first line
- * of the ChatGPT sign-in. When the form leaves the page, for any reason, and
- * the focus was in it or fell to the page, `focus.back` places the focus.
+ * Places the focus for an inline form while it shows, as the one owner of
+ * its first focus. `form` holds the form, and `focus` comes from its owner.
+ * When a press opened the form, the form takes the focus: `initial` while it
+ * shows, such as the first line of the ChatGPT sign-in, else its first part
+ * that can take the focus. A form that opens with its page takes none. When
+ * the form leaves the page, for any reason, and the focus was in it or fell
+ * to the page, `focus.back` places the focus.
  */
 export function useInlineFormFocus(
   form: RefObject<HTMLElement | null>,
@@ -121,7 +122,7 @@ export function useInlineFormFocus(
       const active = document.activeElement
       return active instanceof Node && node?.contains(active) === true
     }
-    if (latest.current.pressed && node && !inForm()) {
+    if (latest.current.pressed && node) {
       const first =
         initial?.current ?? node.querySelector<HTMLElement>(focusableSelector)
       first?.focus()

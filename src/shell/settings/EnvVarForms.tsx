@@ -122,7 +122,8 @@ export function ChangeValueRow(props: {
  * A new variable: its name, its value, and its Secret mark, which is on at
  * the start. The name must not be empty. The value may be empty, as the
  * value of an env var may. The form is an inline form, as `focus` says, in
- * a wrapper without a box, so the section spaces its parts.
+ * a wrapper without a box, so the section spaces its parts. Name takes the
+ * focus first.
  */
 export function AddVariableForm(props: {
   computer: ComputerModel
@@ -130,7 +131,8 @@ export function AddVariableForm(props: {
   focus: InlineFormFocus
 }) {
   const root = useRef<HTMLDivElement>(null)
-  useInlineFormFocus(root, props.focus)
+  const nameField = useRef<InputHandle>(null)
+  useInlineFormFocus(root, props.focus, nameField)
   const { field } = useControlSizes()
   const [name, setName] = useState('')
   const [secret, setSecret] = useState(true)
@@ -147,6 +149,7 @@ export function AddVariableForm(props: {
         autoCapitalize="none"
         autoComplete="off"
         autoCorrect={false}
+        inputRef={nameField}
         label="Name"
         onChangeText={setName}
         size={field}

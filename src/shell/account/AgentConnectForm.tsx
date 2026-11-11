@@ -193,7 +193,8 @@ function SecretFields(props: {
  * The ChatGPT plan has the steps of its sign-in, which another kind stops.
  * Cancel shows when `close` is set. `connected` runs after a save or a
  * sign-in. The form is an inline form: `focus` places the focus as it opens
- * and closes, as `useInlineFormFocus` says, and the switch takes it first.
+ * and closes, as `useInlineFormFocus` says. The switch takes it first, or
+ * the first line of the ChatGPT sign-in while the sign-in shows.
  */
 export function AgentConnectForm(props: {
   agent: Agent
@@ -203,7 +204,8 @@ export function AgentConnectForm(props: {
   focus: InlineFormFocus
 }) {
   const root = useRef<HTMLDivElement>(null)
-  useInlineFormFocus(root, props.focus)
+  const line = useRef<HTMLParagraphElement>(null)
+  useInlineFormFocus(root, props.focus, line)
   const { field } = useControlSizes()
   const [form] = useState(() => new SecretForm())
   const kinds = connectKinds[props.agent]
@@ -231,7 +233,11 @@ export function AgentConnectForm(props: {
           form={form}
         />
       ) : (
-        <ChatGptSignIn close={props.close} connected={props.connected} />
+        <ChatGptSignIn
+          close={props.close}
+          connected={props.connected}
+          line={line}
+        />
       )}
     </div>
   )

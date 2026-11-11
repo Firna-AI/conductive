@@ -85,11 +85,13 @@ describe('the keyboard focus of the ChatGPT sign-in', () => {
     })
   })
 
-  test('Sign in again gives the focus to the first line of the sign-in that takes its place, and Cancel gives it back to Sign in again', async () => {
+  test('a sign-in that opens with the page takes no focus, Sign in again gives the focus to the first line of the sign-in that takes its place, and Cancel gives it back to Sign in again', async () => {
     const server = new FakeApiServer()
     const cause = copy.causes.notRenewed
     serveAccount(server, [{ ...chatGptLogin, unusableCause: cause }])
-    const { view } = await openAccount(server, {}, null)
+    const { view } = await openAccount(server, {}, 'codex')
+    const withPage = focusedElement()
+    await press(byRole('button', 'Cancel', view))
     const again = byRole('button', copy.signInAgain, view)
     focus(again)
     await press(again)
@@ -97,7 +99,8 @@ describe('the keyboard focus of the ChatGPT sign-in', () => {
     const cancel = byRole('button', 'Cancel', view)
     focus(cancel)
     await press(cancel)
-    expect({ opened, cancelled: focusedElement() }).toEqual({
+    expect({ withPage, opened, cancelled: focusedElement() }).toEqual({
+      withPage: 'the page',
       opened: {
         text: `${copy.intro} ${copy.settingsLink.label}`,
         tabIndex: '-1',
