@@ -6,9 +6,13 @@ import {
   changeFile,
   hasFile,
   runFileJob,
+  runFileQueue,
   splitPick,
   uploadingFile,
+  stopFile,
+  type DraftFile,
 } from './draft-files'
+import { reconcileFiles, withoutFileMarks } from './draft-file-state'
 import type { Draft } from './new-workspace-model'
 import type { Store } from './store'
 
@@ -33,7 +37,7 @@ interface DraftUploadsHost {
 export class DraftUploads {
   private readonly host: DraftUploadsHost
   private followed: Lifetime | null = null
-  /** The uploads that run, by file ID, which Remove and a sign-out abort. */
+  /** Running and queued generations, cancelled by detachment or sign-out. */
   private readonly running = new Map<string, AbortController>()
 
   constructor(host: DraftUploadsHost) {
@@ -43,18 +47,56 @@ export class DraftUploads {
   /**
    * Attaches the files of one pick. A file over the size limit never
    * uploads, and its name goes to the notice, which the next pick replaces.
-   * Each other file shows at once and uploads, one after another.
+   * Each other file shows at once and uploads, one after another. The new
+   * IDs return immediately so the field can insert the chips in this event.
+   * Folder names stay refusal data and start no upload.
    */
-  async attach(files: readonly File[]): Promise<void> {
+  attach(files: readonly File[], folders: readonly string[] = []): string[] {
+    if (files.length === 0 && folders.length === 0) return []
     const life = this.follow()
-    const { uploads, refused } = splitPick(files)
+    const { uploads, refused, refusedFolders } = splitPick(files, folders)
     const added = uploads.map((file) => uploadingFile(this.host.newId(), file))
+    const queued = added.map((item) => this.reserve(life, item))
     this.host.draft.change((draft) => ({
       ...draft,
       files: [...draft.files, ...added],
       refused,
+      refusedFolders,
     }))
-    for (const item of added) await this.upload(life, item)
+    void runFileQueue(queued)
+    return added.map(({ id }) => id)
+  }
+
+  /** Reconciles chips and their files together, then restarts restored uploads. */
+  setText(text: string): void {
+    const current = this.host.draft.get()
+    const next = reconcileFiles(current, text)
+    for (const item of current.files) {
+      if (!hasFile(next.files, item.id)) stopFile(this.running, item.id)
+    }
+    this.host.draft.change((draft) => ({ ...draft, ...next, text }))
+    const restored = next.files.filter(
+      (item) =>
+        item.state === 'uploading' && hasFile(current.detached, item.id),
+    )
+    if (restored.length > 0) {
+      const life = this.follow()
+      const queued = restored.map((item) => this.reserve(life, item))
+      void runFileQueue(queued)
+    }
+  }
+
+  /** Ends the upload generations when a successful send starts a new draft. */
+  end(): void {
+    for (const upload of this.running.values()) upload.abort()
+    this.running.clear()
+  }
+
+  private reserve(life: Lifetime, item: DraftFile): () => Promise<void> {
+    const job = new AbortController()
+    this.running.set(item.id, job)
+    const messageId = this.host.draft.get().messageId
+    return () => this.upload(life, item, job, messageId)
   }
 
   /** Try again uploads the kept `File` of a failed file again. */
@@ -62,23 +104,14 @@ export class DraftUploads {
     const item = this.host.draft.get().files.find(({ id }) => id === fileId)
     if (item?.state !== 'failed') return
     const life = this.follow()
+    const start = this.reserve(life, item)
     this.host.draft.change((draft) => ({
       ...draft,
       files: changeFile(draft.files, fileId, () =>
         uploadingFile(fileId, item.file),
       ),
     }))
-    await this.upload(life, item)
-  }
-
-  /** Takes a file off the draft, and aborts its upload when one runs. */
-  remove(fileId: string): void {
-    this.running.get(fileId)?.abort()
-    this.running.delete(fileId)
-    this.host.draft.change((draft) => ({
-      ...draft,
-      files: draft.files.filter(({ id }) => id !== fileId),
-    }))
+    await start()
   }
 
   /**
@@ -90,12 +123,17 @@ export class DraftUploads {
     if (this.followed !== life) {
       this.followed = life
       life.onEnd(() => {
-        for (const upload of this.running.values()) upload.abort()
-        this.running.clear()
+        this.end()
         this.host.draft.change((draft) => ({
           ...draft,
+          text: withoutFileMarks(
+            draft.text,
+            [...draft.files, ...draft.detached].map(({ id }) => id),
+          ),
           files: [],
+          detached: [],
           refused: [],
+          refusedFolders: [],
         }))
       })
     }
@@ -105,19 +143,24 @@ export class DraftUploads {
   private async upload(
     life: Lifetime,
     item: { id: string; file: File },
+    job: AbortController,
+    messageId: string,
   ): Promise<void> {
     const { draft, api, orgId } = this.host
     const target: AttachmentUploadTarget = {
       type: 'new-workspace',
-      messageId: draft.get().messageId,
+      messageId,
     }
-    const job = new AbortController()
-    this.running.set(item.id, job)
     try {
       await runFileJob({
         id: item.id,
         file: item.file,
-        live: () => life.live && hasFile(draft.get().files, item.id),
+        live: () =>
+          life.live &&
+          !job.signal.aborted &&
+          this.running.get(item.id) === job &&
+          draft.get().messageId === messageId &&
+          hasFile(draft.get().files, item.id),
         signal: job.signal,
         change: (change) =>
           draft.change((current) => ({

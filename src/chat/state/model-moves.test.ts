@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
+import { fileMark } from '../../app/draft-marks'
 import type { AgentChoice } from '../../shared/agents'
 import { filePaths } from '../../shared/files'
 import { sessionPaths } from '../../shared/sessions'
@@ -17,6 +19,8 @@ const codex: AgentChoice = {
 }
 /** The ID of the new session: the first client ID that the chat takes. */
 const created = 'client-1'
+const initialText = `Check the postcode rules. ${fileMark('file-1')} ${fileMark('file-2')} `
+const keptText = `Check the postcode rules. ${fileMark('file-1')}  `
 
 /**
  * The view that the user chose, with the place of the new session at the
@@ -50,7 +54,7 @@ async function attach(chat: Chat, sessionId: string, fileId: string) {
     201,
   )
   const file = new File(['png'], `${fileId}.png`, { type: 'image/png' })
-  await chat.controller.attachFiles(sessionId, [file])
+  await pickChatFiles(chat, sessionId, [file])
 }
 
 /** The user types at the end of the text that the composer of a session shows. */
@@ -58,7 +62,9 @@ function type(chat: Chat, sessionId: string, words: string) {
   const shown = chat.draftOf(sessionId)?.text ?? ''
   chat.controller.setDraft(
     sessionId,
-    shown === '' ? words : `${shown} ${words}`,
+    shown === '' || /\s$/.test(shown)
+      ? `${shown}${words}`
+      : `${shown} ${words}`,
   )
 }
 
@@ -116,7 +122,7 @@ describe('a model change that opens a session', () => {
     const snapshot = chat.controller.getSnapshot()
     expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
     expect(snapshot.activeSessionId).toBe(id)
-    expect(chat.draftOf(created)?.text).toBe('Check the postcode rules.')
+    expect(chat.draftOf(created)?.text).toBe(keptText)
     expect(chat.draftOf(id)?.text).toBe('')
     expect(chat.histories(created)).toBe(0)
   })
@@ -148,11 +154,11 @@ describe('a model change that opens a session', () => {
       expect(chat.draftOf('debounce')?.text).toBe('Finish the lookup tests.')
       expect(chat.draftOf(created)).toMatchObject({
         id: draftId,
-        text: 'Check the postcode rules.',
+        text: keptText,
       })
       expect(files(chat, created)).toEqual(['kept-file'])
       expect(chat.draftOf(id)?.text).toBe('')
-      expect(firstShown).toEqual(['Check the postcode rules.'])
+      expect(firstShown).toEqual([initialText])
       expect(chat.histories(created)).toBe(0)
     },
   )
@@ -168,18 +174,18 @@ describe('a model change that opens a session', () => {
     await attach(chat, created, 'late-file')
     await reply()
     expect(chat.draftOf(created)?.text).toBe(
-      'Check the postcode rules. Also check Irish postcodes.',
+      `${keptText}Also check Irish postcodes. ${fileMark('file-3')} `,
     )
     expect(files(chat, created)).toEqual(['kept-file', 'late-file'])
     expect(chat.draftOf(id)?.text).toBe('')
     expect(files(chat, id)).toEqual([])
-    expect(firstShown).toEqual(['Check the postcode rules.'])
+    expect(firstShown).toEqual([initialText])
     expect(chat.controller.getSnapshot().activeSessionId).toBe(created)
     expect(await chat.bodies('PUT', sessionPaths.model(org, ws, id))).toEqual([
       {
         choice: codex,
         draft: {
-          text: 'Check the postcode rules.',
+          text: initialText,
           attachmentIds: ['kept-file', 'dropped-file'],
         },
         newSessionId: created,
@@ -190,7 +196,7 @@ describe('a model change that opens a session', () => {
   it('moves the draft once when the reply comes before the stream record', async () => {
     const { chat, firstShown, reply } = await pickThatWaits()
     await reply()
-    expect(firstShown).toEqual(['Check the postcode rules.'])
+    expect(firstShown).toEqual([initialText])
     expect(files(chat, created)).toEqual(['kept-file'])
     await chat.controller.select(id)
     type(chat, id, 'Next, the shipping form.')
@@ -199,7 +205,7 @@ describe('a model change that opens a session', () => {
       session: newSessionRecord(created, codex),
     })
     expect(chat.draftOf(id)?.text).toBe('Next, the shipping form.')
-    expect(chat.draftOf(created)?.text).toBe('Check the postcode rules.')
+    expect(chat.draftOf(created)?.text).toBe(keptText)
     expect(chat.controller.getSnapshot().activeSessionId).toBe(id)
   })
 
@@ -219,7 +225,7 @@ describe('a model change that opens a session', () => {
     const snapshot = chat.controller.getSnapshot()
     expect(snapshot.history.map((item) => item.id)).toContain(created)
     expect(snapshot.sessions.map((item) => item.id)).not.toContain(created)
-    expect(chat.draftOf(created)?.text).toBe('Check the postcode rules.')
+    expect(chat.draftOf(created)?.text).toBe(keptText)
     expect(files(chat, created)).toEqual(['kept-file'])
     expect(chat.draftOf(id)?.text).toBe('Next, the shipping form.')
   })

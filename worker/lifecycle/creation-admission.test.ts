@@ -39,6 +39,7 @@ it('answers with the stored queued first message before starting a sandbox and p
           {
             id: 'attachment-one',
             name: 'notes.txt',
+            path: null,
             kind: 'file',
             mediaType: 'text/plain',
             sizeBytes: 7,

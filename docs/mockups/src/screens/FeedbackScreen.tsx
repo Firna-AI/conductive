@@ -7,10 +7,10 @@ import {
   type FeedbackProblem,
 } from '../components/feedback/FeedbackDialog'
 import type { FeedbackReply } from '../components/feedback/FeedbackReply'
-import type { Attachment } from '../fixtures/attachments'
 import {
   feedbackMessage,
   feedbackScreenshot,
+  type FeedbackScreenshot,
   largeCapture,
   longFeedbackMessage,
   longFeedbackScreenshots,
@@ -61,7 +61,7 @@ export const feedbackDraft: FeedbackState = {
 }
 
 const screenshots: Readonly<
-  Record<FeedbackState['draft'], readonly Attachment[]>
+  Record<FeedbackState['draft'], readonly FeedbackScreenshot[]>
 > = {
   empty: [],
   message: [],

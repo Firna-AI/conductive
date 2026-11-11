@@ -215,10 +215,11 @@ the Help row of the command palette opens.
   empty page of the org says. Both ask only after the repositories load.
 - New workspace sends and uploads one at a time: the create waits for the
   files, and the paperclip is off while the create runs. Send, Create, Try
-  again, and Enter read one readiness: the text, the files, the agent
-  login, the image of the org, the repository and its build, the model,
-  and an org that is not suspended. In a suspended org, the refused bar
-  takes the place of the composer of the dialog, as on the page.
+  again, and Enter read one readiness: the text outside the chips of its
+  files, the files of its chips, the agent login, the image of the org, the
+  repository and its build, the model, and an org that is not suspended.
+  In a suspended org, the refused bar takes the place of the composer of
+  the dialog, as on the page.
 - While the builds of the org show no good image, New workspace shows the
   notice of the first build on the page and in the dialog, as
   [Create a workspace](../../docs/protocol/create-a-workspace.md#before-the-first-good-build)
@@ -255,6 +256,15 @@ the Help row of the command palette opens.
   does, and the dialog shows 7 to 14 lines. The field of the dialog takes
   the focus through the handle of the field. While a create runs, the
   field takes no change, and it keeps the focus.
+- The page and the dialog give their field `NewWorkspaceModel.filesSource`.
+  So each attached file of the draft is a chip in the text, as
+  [The message field](../chat/message-field.md) says. A pick attaches its
+  files with `NewWorkspaceModel.attach`, and puts their chips at the caret,
+  or at the end, in the same event. The page box and the whole dialog card
+  take a drop of files, except during a create and in a suspended org. The
+  files of the draft follow its marks, and a create that succeeds or a
+  sign-out ends them, as
+  [Attached files of a draft](../chat/draft-files.md) says.
 - A create request that fails keeps the message in the form, with "The
   workspace wasn't created". Try again sends the same message ID. A failed
   first start keeps its workspace instead, as

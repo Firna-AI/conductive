@@ -46,6 +46,10 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
       return state.paths === 'masked' ? 'masked-diff' : 'diff'
     case 'unnamed-file':
       return 'unnamed'
+    case 'image':
+    case 'image-not-drawn':
+    case 'attachment':
+      return state.tab
     case 'session':
     case 'new-session':
     case 'linked-session':
@@ -65,6 +69,9 @@ function backFrom(open: FileTabView): BackLink {
       return { label: 'All files', to: paths.maskedPathsAllFiles }
     case 'code':
     case 'markdown':
+    case 'image':
+    case 'image-not-drawn':
+    case 'attachment':
       return { label: 'All files', to: paths.filesAll }
   }
 }

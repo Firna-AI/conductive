@@ -16,12 +16,16 @@ serves the page with React on the fake API alone, without the Worker and its
 sign-in gate.
 
 The composer lists the files of the Files development page after `@`, and
-a press on a file chip notes what the app opens.
+a press on a file chip notes what the app opens. The page has no file tab,
+so a press on the chip of a sent attached file also only notes its path.
+As in the app, its message box takes a drop of files, and a drop of files
+elsewhere on the page does nothing.
 
 `npm run dev` also shows the chat, in the workspace screen of the whole
 app, over the fake API of the app. That fake has limits for the chat, as
 [Run it](../../app/README.md#run-it) says. Use this page for live events and
-writes.
+writes. Use the app to open the copy of a sent attached file in the file
+tab.
 
 ## Options
 
@@ -70,6 +74,14 @@ run the command and keep the choice. The bar of the 15 minutes shows above
 the header while they run. The Mac refuses a change of an older pairing, as
 the Worker does.
 
+Uploads keep their bytes in memory. While the sandbox runs, an accepted
+message gets copies of its files at their returned paths, before the page
+shows it as sent. A queued message gets them when the sandbox becomes
+ready, such as after Resume, before the agent gets it. The page uses the
+copy store of the app's fake, with its own copies. So its reads follow the
+rules of [The development fake](../../app/dev-fake.md). All files and
+Changes do not list the copies.
+
 The transcript route gives concise and full Markdown from the fake's stored
 and live events, also for a tab that never showed and for an archived
 workspace. `dev-transcript.ts` uses the same shared `SessionMarkdown` as
@@ -91,14 +103,16 @@ and never in an archived workspace, so a name that the reader gave stays.
 With `workspace=new`, the workspace and its first session start with no
 name. The create of the workspace accepted its first message before the
 page loaded. About a second after the page loads, the page writes the
-title "Saved carts", whether or not the sandbox is ready. After a first
-message with no text, the next message with text that the page accepts
-gives the title, about a second later. The workspace and its first session
-take the title.
+title "Saved carts", whether or not the sandbox is ready. A message whose
+text is empty or holds only the mentions of its own attached files has no
+own words. After a first message with no own words, the next accepted
+message with own words gives the same title, about a second later. The
+workspace and its first session take the title.
 
-Each other session takes the first line of its first message with text as
-its title, from `sessionTitleFrom` in `src/shared/session-title.ts`, which
-the Worker uses too.
+Each other session takes the first line of its first message with own words
+as its title. The rule is `sessionTitleFrom` in
+`src/shared/session-title.ts`, which the Worker uses too. That rule first
+puts the original name of each attached file in place of its mention.
 
 ## Key code
 

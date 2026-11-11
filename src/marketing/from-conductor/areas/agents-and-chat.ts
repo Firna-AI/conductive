@@ -33,9 +33,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'drag-and-drop-attachments',
     area: 'agents-and-chat',
     name: 'Drag and drop attachments',
-    status: 'in-progress',
-    note: 'Dropping files into the message box, each as a chip in the text, is in progress. Use the attachment button today.',
-    due: null,
+    status: 'available',
+    note: 'Drop files into chat or New workspace as inline chips at the pointer or caret. Sent chips open their copies in file tabs after delivery.',
   },
   {
     id: 'large-text-pastes',

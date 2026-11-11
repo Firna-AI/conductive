@@ -1,6 +1,7 @@
 import type { RunnerLifecycleEvent } from './runner-lifecycle'
 import { HttpError } from '../http'
 import { heldOperation } from '../test-support/held-operation'
+import { fakeAttachments } from '../test-support/attachments'
 import type { TestHarness } from '../test-support/harness'
 import type { NativeWorkspaceOptions } from '../test-support/native-workspace-api'
 import type { NativeStorageHooks } from '../test-support/native-storage'
@@ -48,13 +49,7 @@ export function backendActor(
     environment,
     callbacks: {
       resolveAttachments: async (_user, _workspace, ids) => ({
-        attachments: ids.map((attachmentId) => ({
-          id: attachmentId,
-          name: `${attachmentId}.txt`,
-          kind: 'file',
-          mediaType: 'text/plain',
-          sizeBytes: 7,
-        })),
+        attachments: await fakeAttachments(ids),
         paths: [],
       }),
       prepareAttachments: async () => null,

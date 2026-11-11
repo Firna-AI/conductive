@@ -1,0 +1,35 @@
+# Overlapping chat dev uploads can share one ID
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-11, from the code report of Milestone 3 of the plan `plans/composer-file-drops.md`, branch `calummoore/composer-file-drag-and-drop`.
+- **Location:** `src/chat/dev/dev-routes.ts:209`, the ID of the upload route in `handleWrite`, and the map `attachments` at `src/chat/dev/dev-routes.ts:44`.
+- **Reason:** The race already exists on `origin/main`, and the branch that found it kept its code changes to the shared attachment paths.
+
+- **Terms:**
+  - **Chat development page:** the page in `src/chat/dev/` that runs the chat in a browser on a fake API with state, with no Worker. `src/chat/dev/README.md` gives its command.
+  - **Upload route:** the branch of `handleWrite` in `src/chat/dev/dev-routes.ts` for `POST` on `filePaths.attachments(orgId, workspaceId)`. It keeps each uploaded file and replies with its metadata.
+- **Background:**
+  - The upload route keeps each file in the module map `attachments`, at `src/chat/dev/dev-routes.ts:44`.
+  - It chooses the ID `` `dev-file-${attachments.size + 1}` `` at line 209.
+  - It then waits twice. Line 214 waits for `attachmentPath(file)`, which hashes the file ID with SHA-256 to build the copy path. Line 217 waits for `request.arrayBuffer()`.
+  - Only after both waits does line 219 store the file with `attachments.set(attachment.id, attachment)`.
+  - A send reads each named file back with `attachments.get(id)`, at line 52.
+- **Problem:**
+  - Two uploads whose route calls overlap read the same map size before either one stores its file. Both choose the same ID, and the second `attachments.set` replaces the first file.
+  - On `origin/main` at commit `067e82b6`, the route has the same race. It chooses the ID the same way at line 208, waits for `request.arrayBuffer()` at line 212, and stores the file at line 214.
+  - The branch `calummoore/composer-file-drag-and-drop` added the digest wait before the body read. Nobody reproduced the collision in a run.
+  - The chat composer uploads the files of one pick one after another, at `src/chat/state/attachment-actions.ts:78`. So a collision needs two uploads at the same time, such as a second pick before the first upload ends.
+- **Impact if no action:** On the chat development page, both overlapping uploads reply with one ID. A send that names that ID gets the metadata of the second file, so the first file is lost from the fake. The product is not affected: `storeAttachment` in `worker/chat/attachment-storage.ts:49` takes a random token as each upload ID before any wait.
+- **Root question:** How does the chat development page give each upload its own ID, also when two uploads overlap?
+- **Options:**
+  - **A.** Keep a separate counter beside the map, such as `let uploadCount = 0`. Increment it before any wait, and build the ID `` `dev-file-${++uploadCount}` `` from it. The page keeps its short `dev-file-<n>` IDs. Add a regression test that starts two uploads before either one stores its file, and checks two IDs. Effort: Small.
+  - **B.** Take `crypto.randomUUID()` as each upload ID, before any wait. The development fake of the app does this already: `src/app/dev/attachment-routes.ts` takes `backend.newId()`, which `src/app/dev/fake-services.ts:49` sets to `crypto.randomUUID()`. The IDs of the page then get long. No other tracked file uses a `dev-file-` ID, so nothing else changes. Add the same regression test. Effort: Small.
+- **Left out:**
+  - A placeholder in the map under the chosen ID: A is better on every point, because a counter holds no partial file.
+  - A queue that runs one upload at a time: A is better on every point, because a queue adds state and still needs IDs.
+  - Change nothing: it fails the goal, because two files still share one ID.
+- **Wider fix:** None. This item checked no other fake for an ID that comes from a collection size before a wait. The production route and the development fake of the app already take their ID before any wait.
+- **Previous examples:** None found.
+- **Recommendation:** A. A counter keeps the readable IDs of the page and removes the race with a change of a few lines.
+- **Action:** fix after merge, apply A, because the race predates the branch that found it, and that branch was directed to keep the fix separate.

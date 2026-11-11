@@ -73,9 +73,11 @@ mount the chat.
   tree: the `WorkspaceFiles` of the Files screens fits it. `openFile`
   opens a file as a press in All files does, `showFolder` shows All files
   with a folder open, and `href` gives the address of the page of a chip.
-  Without `mentions`, the composer has no list, and a message shows each
-  mention as text, as
-  [File mentions](../../docs/protocol/file-mentions.md) says.
+  Without `mentions`, the composer has no list. A message then shows each
+  mention of a file or a folder of the workspace as text, as
+  [Chips of files and folders](../../docs/protocol/file-mentions.md#chips-of-files-and-folders)
+  says. The chip of each attached file of the message still shows, but it
+  opens nothing.
 - `onOpenPage` gets the page of a workspace chip or a session chip in a
   sent message or an answer, such as `/orgs/acme/workspaces/<id>/files`,
   after a plain click. The app opens it in the same window. A click with a
