@@ -6,10 +6,11 @@ app and acts on one org or one user (decision 142). The operator also runs
 the waitlist there (decision 160).
 [Operator actions](operator-actions.md) states who is an operator, and
 what a suspension and a lift do. [Waitlist](waitlist.md) states the
-waitlist, the codes, and the pause. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+waitlist and the codes. [Sign-ups](sign-ups.md) states the pause, the
+waitlist switch, and their controls in the section. The terms are those
+of the [architecture doc](../architecture.md#terms). A decision number
+names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Access
 
@@ -36,9 +37,10 @@ says.
   gets `access_required`, as
   [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
   says.
-- The section changes two settings of the app: the codes and the pause
-  (decision 160). It makes and disables invite codes, disables referral
-  codes, and turns the pause on and off. It changes no other setting
+- The section changes three settings of the app: the codes, the pause,
+  and the waitlist switch (decisions 160 and 230). It makes and disables
+  invite codes, disables referral codes, turns the pause on and off, and
+  turns the waitlist off and on. It changes no other setting
   (decision 143).
 - The section cannot change who is an operator. Reason: a stolen session
   of an operator then cannot add an operator.
@@ -50,8 +52,8 @@ says.
 - The section shows only counts, names, IDs, dates, roles, states, and
   codes. It shows no chat, file, env value, agent login, or email address.
   Reason: the section then holds the least personal data.
-- While the pause is on, each tab starts with the notice of the pause, as
-  [The pause](#the-pause) says.
+- While the pause is on or the waitlist is off, each tab starts with a
+  notice, as [The notices](sign-ups.md#the-notices) says.
 
 ## The Overview
 
@@ -181,7 +183,7 @@ says.
 - A repeat approval, or the approval of a user who already has app
   access, gets HTTP 200, changes nothing, and sends no email.
 - Approve also works during the pause, as
-  [The pause](waitlist.md#the-pause) says.
+  [The pause](sign-ups.md#the-pause) says.
 - [The approval email](waitlist.md#the-approval-email) states the email
   and its retries.
 
@@ -206,19 +208,10 @@ says.
 
 ## The pause
 
-- A Sign-ups box at the top of the Invite codes tab says that sign-ups are
-  open. It holds Pause sign-ups (decision 160).
-- Pause sign-ups asks first. The question says that codes and org
-  invitations let nobody in until sign-ups resume, and that each code
-  keeps its uses. It also says that the waitlist stays open, and that
-  Approve still works.
-- While the pause is on, each tab of the section starts with a notice. The
-  notice names the operator who paused sign-ups, and when. It says what
-  waits, and it holds Resume sign-ups. On the Invite codes tab, it takes
-  the place of the Sign-ups box.
-- Resume sign-ups acts at once, with no question. Reason: it brings back
-  the usual state.
-- [The pause](waitlist.md#the-pause) states what the pause stops.
+- The section holds the controls of sign-ups: Pause sign-ups and the
+  waitlist switch. [The Sign-ups box](sign-ups.md#the-sign-ups-box),
+  [The questions](sign-ups.md#the-questions), and
+  [The notices](sign-ups.md#the-notices) state them.
 
 ## Suspend and Lift on a page
 

@@ -32,7 +32,7 @@ import { runRoutes } from './run-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
-import { waitlistRoutes } from './waitlist-routes'
+import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
 /**
@@ -81,7 +81,10 @@ export function createFakeServices(search: string): AppServices {
   ]
   const fetch = routeFetch(
     routes,
-    (path, method) => guardScope(backend.state, path, method),
+    (path, method) => {
+      admitOpenSignup(backend)
+      guardScope(backend.state, path, method)
+    },
     server.fetch,
   )
   const events: WorkspaceEventSource = {

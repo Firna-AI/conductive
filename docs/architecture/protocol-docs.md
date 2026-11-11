@@ -11,6 +11,9 @@ them, and this page lists each protocol doc and what it covers.
   - [New workspace as a dialog](../protocol/new-workspace-dialog.md): the
     parts of the dialog, its notices, its close, its draft, the create, and
     its focus.
+  - [New workspace build notices](../protocol/new-workspace-build-notices.md):
+    the notice before the first good build and the notice of a waiting
+    repository.
   - [Continue a branch](../protocol/continue-a-branch.md): a new workspace on
     a branch or an open pull request from GitHub, the pull requests from
     forks, and two workspaces on one branch.
@@ -48,6 +51,7 @@ them, and this page lists each protocol doc and what it covers.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+  - [Import uploads and storage](../protocol/import-uploads.md)
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar and its
@@ -100,9 +104,11 @@ them, and this page lists each protocol doc and what it covers.
   agent session gets, the sender line of each message, and the base
   prompt of Claude agents.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
-  ways in, the pause, and the approval email.
+  ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of
   the waitlist, the join link, and the use of a code.
+- [Sign-ups](../protocol/sign-ups.md): the pause, the waitlist switch, open
+  sign-up, and the main action of the marketing site.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.

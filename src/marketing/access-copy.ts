@@ -12,12 +12,13 @@ export const siteActionCopy = {
 } as const
 
 /**
- * The sentence under the last call to action of a page of the site. A new
- * account waits for app access, which an approval, an invite code, or an
- * org invitation gives. The buttons do not name the waitlist, so this
- * sentence says that the app opens only when the account gets access. It
- * starts with the words of the main action. The site and its mockups show
- * the same words.
+ * The sentence under the last call to action of a page of the site.
+ * Outside open sign-up, a new account waits for app access, which an
+ * approval, an invite code, or an org invitation gives. During open
+ * sign-up, the sign-in gives app access at once. The buttons do not name
+ * the waitlist, so this sentence says that the app opens when the account
+ * gets access, which is true in both cases. It starts with the words of
+ * the main action. The site and its mockups show the same words.
  */
 export const waitlistText =
   'Sign up with GitHub. The app opens for you when your account gets access.'

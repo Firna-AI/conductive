@@ -6,15 +6,20 @@ and the Privacy page. It also has the Conductor comparison page,
 [the pricing page](pricing-page.md), and a page for an unknown address.
 Visitors need no sign-in. The pages run no
 script and set no cookie. Every sign-in link leads to the app, on the
-`app.` host. The main action, Sign up, and Sign in lead to the same
-sign-in. A new person waits there for app access, as the
-[waitlist protocol](../../docs/protocol/waitlist.md) says. No button names
-the waitlist. The sentence under the last call to action says that a new
-account waits for access, so the page promises no use at once. The second
-action of the hero and of the last call to action, Download for Mac, leads
-to the Mac app section of the home page, because a page runs no script to
-pick the chip of the visitor. The site and the mockups read the words of
-both actions from `siteActionCopy` in `access-copy.ts`.
+`app.` host.
+
+The main action, Sign up, and Sign in lead to the same sign-in. A new
+person waits there for app access, as the
+[waitlist protocol](../../docs/protocol/waitlist.md) says, except during
+[open sign-up](../../docs/protocol/sign-ups.md#open-sign-up). No button
+names the waitlist, and the words stay the same in each state of sign-ups,
+as [The main action of the site](../../docs/protocol/sign-ups.md#the-main-action-of-the-site)
+says. The sentence under the last call to action says that the app opens
+when the account gets access, so the page promises no use at once. The
+second action of the hero and of the last call to action, Download for
+Mac, leads to the Mac app section of the home page, because a page runs no
+script to pick the chip of the visitor. The site and the mockups read the
+words of both actions from `siteActionCopy` in `access-copy.ts`.
 
 The shared header links to the public source repository on GitHub.
 The link appears on phones and desktops. On desktops, the header also has
@@ -209,6 +214,7 @@ before the Worker serves them.
 ### Key code
 
 [Marketing site key code](key-code.md) names the files, the types, and the
-functions of the site that a reader opens first. It also names the shared
-parts and words of the pages, such as `StatusMark.astro`,
+functions of the site that a reader opens first. It gives the entry points
+of the site, its public guides, and its shared Worker helpers. It also
+names the shared parts and words of the pages, such as `StatusMark.astro`,
 `ClosingCall.astro`, and `access-copy.ts`.

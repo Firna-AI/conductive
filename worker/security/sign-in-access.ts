@@ -7,7 +7,7 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { isOperator } from '../operator/access'
 import { displayAccessCode, normalizeAccessCode } from '../waitlist/codes'
-import { hasAppAccess } from '../waitlist/data'
+import { hasAppAccess, isOpenSignup } from '../waitlist/data'
 import { grantAppAccess } from '../waitlist/grant'
 import { redeemInviteCode } from '../waitlist/use-code'
 
@@ -19,6 +19,8 @@ export async function signInAppAccess(
 ): Promise<string> {
   if (isOperator(env, user.githubId))
     await grantAppAccess(env.DB, user.id, { source: 'operator' }, now)
+  if (!(await hasAppAccess(env.DB, user.id)) && (await isOpenSignup(env.DB)))
+    await grantAppAccess(env.DB, user.id, { source: 'open_signup' }, now)
   let location = env.APP_ORIGIN
   if (
     typeof inviteCode === 'string' &&

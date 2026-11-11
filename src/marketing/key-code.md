@@ -2,7 +2,8 @@
 
 This page belongs to the [marketing site README](README.md#key-code). It
 names the files, the types, and the functions of the site that a reader
-opens first.
+opens first. Each path is relative to `src/marketing/` unless the link
+names another folder.
 
 - [`worker/marketing/site.ts`](../../worker/marketing/site.ts): public
   page paths, site files, the favicon, and the unknown-address page.
@@ -54,7 +55,8 @@ opens first.
   one feature of the home page, and the downloads of the Mac app section,
   with one link for each chip and the oldest macOS version.
 - `access-copy.ts`: the words of the two actions of the site, and the
-  sentence under the last call to action.
+  sentence under the last call to action, which fits each state of
+  sign-ups.
 - `pricing.ts` and `pages/pricing.astro`: the one source of the plans and
   words of the pricing page and its mockup, and the page. Its
   [key code](pricing-page.md#key-code) names each part.

@@ -1,6 +1,6 @@
 # Import from Conductor
 
-Status: Active. On branch `calummoore/conductor-import-option`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #223](https://github.com/Firna-AI/remote-code/pull/223) is open as draft. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Conductive replaces Conductor Cloud. Conductor Cloud goes read-only on
 13 November 2026, and on 20 November 2026 Conductor starts to delete the
@@ -1564,6 +1564,7 @@ Depends on: every other milestone
 
 Captured-main integration record: `.context/import-from-conductor/current/next-main-integration/root-integration-audit.md`.
 Desktop integration record: `.context/import-from-conductor/current/next-m6-integration/root-integration-audit.md`.
+PR main integration record: `.context/import-from-conductor/current/pr-main-integration/root-integration-audit.md`.
 
 - [ ] Run the targeted tests and the complete gate, `npm run check`.
 - [ ] Smoke-test the import in the Mac app with one transferred Claude

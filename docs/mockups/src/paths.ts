@@ -105,6 +105,10 @@ export const paths = {
   operatorCodesSearch: 'app/operator/codes/search',
   operatorCodesPause: 'app/operator/codes/pause',
   operatorCodesPaused: 'app/operator/codes/pause/paused',
+  operatorCodesPauseWaitlistOff: 'app/operator/codes/pause/waitlist-off',
+  operatorCodesWaitlistOff: 'app/operator/codes/waitlist-off',
+  operatorCodesWaitlistTurnedOff: 'app/operator/codes/waitlist-off/turned-off',
+  operatorCodesWaitlistOffPaused: 'app/operator/codes/waitlist-off/paused',
   newWorkspace: 'app/new-workspace',
   newWorkspaceDialog: 'app/new-workspace/dialog',
   newWorkspaceBranch: 'app/new-workspace/branch',
@@ -157,6 +161,7 @@ export const paths = {
     'app/org-settings/cloud-computer/first-build/failed',
   firstBuildComputerNoBuild:
     'app/org-settings/cloud-computer/first-build/no-build',
+  repositoriesChanged: 'app/org-settings/cloud-computer/repositories-changed',
   repositoriesChangedFailed:
     'app/org-settings/cloud-computer/repositories-changed/build-failed',
   repositoriesChangedNoBuild:

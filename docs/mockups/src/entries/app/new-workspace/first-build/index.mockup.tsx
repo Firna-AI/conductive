@@ -10,9 +10,9 @@ const join = ['user-flows/join']
 export const firstBuild = defineScreen({
   title: 'First build',
   description:
-    'New workspace of Firna, the new org of the invite-link flow, while the first build of its cloud computer runs. Cal has typed the task of the first workspace. A notice over the composer says that the cloud computer is being prepared, with the time of the build, and that Cal can send when it is ready. Send is off, and the message stays in the composer.',
+    'New workspace of Firna, the new org of the invite-link flow, while the first build of its cloud computer runs. Cal has typed the task of the first workspace. A notice over the composer says that the cloud computer is being prepared, with the time of the build, and that Cal can send when it is ready. Cloud computer settings leads Cal, an admin, to the build with its log, where Cal can set up the scripts and the env vars during the wait. Send is off, and the message stays in the composer.',
   rationale:
-    'The user chose option C of decision 150 on 8 November 2026. A workspace starts from the org image (decision 13), so the page keeps Send off until the first build succeeds, in place of a create that fails and asks for a manual build. The notice shows only while the org has no good image. After the first good image, a later build or a failed later build leaves that image in use, as decision 9 says, so the New workspace page of Acme shows no notice.',
+    'The user chose option C of decision 150 on 8 November 2026. A workspace starts from the org image (decision 13), so the page keeps Send off until the first build succeeds, in place of a create that fails and asks for a manual build. The notice shows only while the org has no good image. After the first good image, a later build or a failed later build leaves that image in use, as decision 9 says, so the New workspace page of Acme shows no notice. The user asked on 10 November 2026 for a link that sets up the cloud computer while the build runs. Only an admin builds and sets up the computer (decision 57), so only an admin gets the link.',
   relatedDocs: [],
   propSchema: newWorkspaceSchema,
   props: { ...newWorkspaceForm, org: 'new', firstBuild: 'running' },
@@ -33,7 +33,7 @@ export const firstBuild = defineScreen({
       slug: 'failed',
       title: 'First build failed',
       description:
-        'The first build of Firna failed. The notice says that the cloud computer did not build, and Open Cloud computer leads Cal, an admin, to the failed build with its log and Try again. Send stays off, and the message stays. The Settings link in the sidebar shows a dot.',
+        'The first build of Firna failed. The notice says that the cloud computer did not build, and Cloud computer settings leads Cal, an admin, to the failed build with its log and Try again. Send stays off, and the message stays. The Settings link in the sidebar shows a dot.',
       rationale:
         'Only an admin builds the computer (decision 57), so only an admin gets the link. A failed build gets no automatic retry (decision 12).',
       props: { firstBuild: 'failed' },
@@ -42,7 +42,7 @@ export const firstBuild = defineScreen({
       slug: 'no-build',
       title: 'No build',
       description:
-        'Firna has repositories, but no build and no build that runs, such as after a first build that did not start. The notice asks for a build, and Open Cloud computer leads Cal to Build computer. Send stays off.',
+        'Firna has repositories, but no build and no build that runs, such as after a first build that did not start. The notice asks for a build, and Cloud computer settings leads Cal to Build computer. Send stays off.',
       rationale:
         'The user learns the cause before sending, in place of a failed create. When the first build cannot start, Create org still succeeds, and Get started and the Cloud computer tab offer Build computer, as app/sign-in/get-started/no-build shows.',
       props: { firstBuild: 'none' },
