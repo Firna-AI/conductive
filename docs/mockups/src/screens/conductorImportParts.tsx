@@ -100,10 +100,10 @@ function importItems(step: UploadStep): ImportItem[] {
 function Waiting(props: { text: string; busy: boolean }) {
   const theme = useSharedUiTheme()
   return (
-    <p className={styles.waiting}>
+    <div className={styles.waiting}>
       {props.busy ? <Spinner color={theme.colors.muted} size={13} /> : null}
       {props.text}
-    </p>
+    </div>
   )
 }
 

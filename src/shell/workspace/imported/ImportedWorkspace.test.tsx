@@ -4,7 +4,8 @@ import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
 import { conductorOldDocumentPath } from '../../../shared/conductor-import'
 import { filePaths } from '../../../shared/files'
-import { sessionsPath } from '../../../shared/sessions'
+import type { ImportSessionMetadata } from '../../../shared/import-session'
+import { sessionsPath, type Session } from '../../../shared/sessions'
 import { workspacePaths } from '../../../shared/workspaces'
 import { textOf } from '../../test-render'
 import { byRole, queryByRole } from '../../../test-support/dom-queries'
@@ -29,7 +30,7 @@ import { click, settle } from '../../test-mount'
 import { documentHref } from '../documents/document-address'
 import { emit } from '../kept-test-kit'
 import { shownWorkspaces } from '../tab-memory'
-import { linkTo, openTab } from '../wiring-test-kit'
+import { linkTo, linksTo, openTab } from '../wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -56,6 +57,22 @@ async function openImported(imported: FakeImport) {
   // snapshot of the fake stream, so a store that connected has a tree.
   const files = () => shownWorkspaces(app, fakeUser).files(org, id)
   return { server, view, files }
+}
+
+/**
+ * The open session of the fake workspace as a session that continues the
+ * old session `documentId`, before or after the runner learns that its
+ * agent could not resume it.
+ */
+function continuing(
+  documentId: string,
+  preparation: ImportSessionMetadata['preparation'],
+): Session {
+  const open = workspaceFixtures().sessions.sessions.find(
+    (session) => session.id === FAKE_IDS.session,
+  )
+  if (!open) throw new Error('The open session fixture is missing.')
+  return { ...open, conductorImport: { documentId, preparation } }
 }
 
 /** The texts of the bars and the notices that the page announces. */
@@ -164,5 +181,54 @@ describe('a failed activation', () => {
     await settle()
     expect(shown()).toBe('Untitled')
     expect(starts(server)).toBe(1)
+  })
+})
+
+describe('an activated import', () => {
+  test('a continued session names its old session, then says that it could not resume, and its title opens the document', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ imported: 'ready' })
+    const document = fakeOldDocuments[1]
+    const { sessions } = workspaceFixtures()
+    server.json('GET', sessionsPath(org, id), {
+      ...sessions,
+      sessions: sessions.sessions.map((session) =>
+        session.id === FAKE_IDS.session
+          ? continuing(document.id, 'prepared')
+          : session,
+      ),
+    })
+    const { view, navigation } = await openTab(
+      server,
+      routes.workspace(org, id),
+    )
+    expect(view.textContent).toContain(
+      'Continues Apply coupons before tax from Conductor',
+    )
+    // The Worker stores the fallback and streams the session when the
+    // runner reports that the agent could not resume the old session.
+    emit(server, {
+      type: 'session.updated',
+      session: continuing(document.id, 'fallback'),
+    })
+    await settle()
+    expect(view.textContent).toContain(
+      "Apply coupons before tax couldn't resume, so this session started fresh with its old chat",
+    )
+    expect(view.textContent).not.toContain('Continues Apply coupons')
+    const href = documentHref(org, id, document.id)
+    const links = linksTo(view, href)
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Apply coupons before tax',
+    ])
+    click(links[0])
+    await settle()
+    expect(navigation.href()).toBe(href)
+    const page = queryByRole('region', 'Apply coupons before tax', view)
+    expect(page).not.toBeNull()
+    expect(page?.textContent).toContain('33 messages')
+    expect(
+      sent(server, 'GET', conductorOldDocumentPath(org, id, document.id)),
+    ).toBe(1)
   })
 })

@@ -31,10 +31,10 @@ import { ImportProgressView } from './ImportProgressView'
 function Waiting(props: { text: string }) {
   const theme = useSharedUiTheme()
   return (
-    <p className={styles.waiting}>
+    <div className={styles.waiting}>
       <Spinner color={theme.colors.muted} size={13} />
       {props.text}
-    </p>
+    </div>
   )
 }
 
