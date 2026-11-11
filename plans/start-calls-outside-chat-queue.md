@@ -227,7 +227,7 @@ outside yet, so the behaviour stays.
         queue again.
   - [x] `idle()` and `settled()` wait for a turn that is outside.
   - [x] Another turn sees no generation of a turn that is outside.
-- [ ] Update the serial queue bullets of `worker/chat/history.md`.
+- [x] Update the serial queue bullets of `worker/chat/history.md`.
 
 ## Milestone 3: Drains wait for the outside turns
 
@@ -235,7 +235,7 @@ Depends on: 2
 
 - [x] Call `idle()` in `suspend`, `restore`, and `remove` of
       `worker/members/workspace-receiver.ts`, as design call 8 says.
-- [ ] Update the drain sentences of `worker/members/README.md`.
+- [x] Update the drain sentences of `worker/members/README.md`.
 
 ## Milestone 4: The start steps outside the queue
 
