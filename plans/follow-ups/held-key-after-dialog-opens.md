@@ -1,23 +1,39 @@
 # A held shortcut key reaches the browser after a dialog
 
-- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-10, from `calummoore/keyboard-shortcuts-settings`, the implementation of the keys in the app, part B, item 3.
-- **Location:** `src/app/shortcuts/decision.ts` (`decideShortcut`) and `src/shell/shortcuts/shortcut-listener.ts`
-- **Reason:** The fix needs a key-up event in the app services, which the app does not have, and people seldom hold a key that opens a dialog.
+- **Added:** 2026-11-10, from `calummoore/keyboard-shortcuts-settings`, the implementation of the keys in the app, part B, item 3. Updated on 2026-11-11 from review round 3, finding 12, and its finding check.
+- **Location:** `src/app/services.ts` (the key source of `windowKeys`), `src/app/shortcuts/decision.ts` (`decideShortcut`), `src/shell/shortcuts/shortcut-listener.ts`, and the held-key test in `src/shell/shortcuts/ShortcutListener.test.tsx`
+- **Reason:** People seldom hold a key whose first press opens a dialog or moves the focus, and the review round that confirmed it came after the two fix rounds of the branch.
 
 - **Terms:**
   - **Repeat:** a key press that the browser sends again while a person holds the key down. Its `KeyboardEvent.repeat` is true.
   - **Shortcut listener:** the one listener of the app on `AppServices.onKey` in `src/shell/shortcuts/`. It asks the model in `src/app/shortcuts/decision.ts` about each press.
-- **Background:** The keyboard shortcuts protocol, `docs/protocol/keyboard-shortcuts.md`, says that a held key runs its command once, and that the browser's own action does not run for a key that runs a command. The model decides each repeat against the page as it is at that moment. When the repeat's first press would run a command now, the listener stops the repeat and runs nothing.
-- **Problem:** When the first press opens a dialog, the page under the dialog no longer offers the command. So each later repeat of the held key passes to the page and to the browser. For example, a held ⌥⌘N opens the New workspace dialog, and the repeats then reach Chrome, which opens a new split tab on ⌥⌘N.
-- **Impact if no action:** A person who holds a shortcut key that opens a dialog can trigger the browser's own action of that key.
-- **Root question:** How does the app keep every repeat of a held command key from the browser, also after the first press changed the page?
+  - **Key source:** the one key listener of each window in `src/app/services.ts` (`windowKeys`). It already tracks key-up and window blur, for the held layout switch keys, and it keeps that state between listener subscriptions.
+- **Background:**
+  - The keyboard shortcuts protocol, `docs/protocol/keyboard-shortcuts.md`, says that a held key runs its command once, and that a key that runs a command goes no further: the browser's own action does not run, and no element of the page gets the key.
+  - The model decides each repeat against the page as it is at that moment. When the repeat's first press would run a command now, the listener stops the repeat and runs nothing.
+  - The New workspace dialog marks its modal layer with its own owner (`useLayerFocus` in `src/shell/ui/Overlay.tsx`). `PaletteKeys` offers New workspace without a layer, so while the dialog is open the page offers no command.
+- **Problem:**
+  - When the first press opens a dialog, the page under the dialog no longer offers the command, so each later repeat of the held key passes to the page and to the browser. For example, hold Alt+Shift+N in Chrome on Windows, with New workspace set to open as a dialog. Chromium maps Shift+Alt+N to its New split tab command (`IDC_NEW_SPLIT_TAB` in `chrome/browser/ui/accelerator_table.cc`), and that command is not reserved, so Chrome acts on each repeat that the page does not stop. On a Mac, ⌥⌘N maps to the same command (`accelerators_cocoa.mm`).
+  - The same cause lets a recorded key that types text, such as K for Command palette, type its repeats into the field that its first press focused, such as the search field of the palette, because the text-field check passes each repeat.
+  - The existing held-key test uses Ctrl+K, whose offer names the palette's own layer, so no test sends a repeat after a layer of another owner opens.
+- **Impact if no action:** A person who holds a shortcut key that opens a dialog or moves the focus can trigger the browser's own action of that key, or type stray characters.
+- **Root question:** How does a key whose first press ran a command keep every repeat from the page and the browser until the key goes up, also after that press changed the page?
 - **Options:**
-  - **A.** Change nothing. People seldom hold such a key. Effort: Small.
-  - **B.** The listener remembers the key of the last press that ran a command until that key goes up, and stops each repeat of it. Cost: a key-up event in `AppServices`, a reset when the window loses the focus, and a test. Effort: Medium.
-- **Left out:** Stopping every repeat of every key, because a held arrow or letter must still repeat in the page.
-- **Wider fix:** B. One memory of the held command key covers each command that changes the page.
+  - **A.** The key source remembers each physical key that the shortcut listener consumed, and it stops the repeats of that key itself until its key-up or window blur. A key whose first press went to text or to the terminal stays untouched. Add the dialog case to the existing held-key test. Effort: Small.
+  - **B.** The shortcut listener keeps the consumed-key state. Its service contract gets release and blur notices, and it keeps the state between subscriptions. Same test. Effort: Medium.
+  - **C.** The key source records, for each key that is down, whether a listener consumed its first press, and clears the record at key-up or window blur, also between listener subscriptions. It adds that state to each press, as it adds `layoutModifiers` now. `decideShortcut` then stops a repeat of a consumed key without a run, also when the page offers no command now. Other repeats keep today's rule. Add the dialog case and the text-key case to the existing held-key test, and update the READMEs of the key source, the model, and the shortcut layer. Cost: one new field on `KeyPress` and on `ShortcutPress`. Effort: Small.
+  - **D.** As C, but each repeat follows its first press: a repeat of a key whose first press passed also passes. Risk: today's rule stops a repeat of a key that runs a command by then, such as a key that the recorder has just saved, and D lets that repeat reach the browser. Effort: Small.
+- **Left out:**
+  - A filter that stops every repeat of every key fails, because a held arrow or letter must still repeat in the page.
+  - Other default keys leave the same defect in the keys that a person records.
+  - The offer of each command that opens a dialog naming that dialog's layer, as the palette does, fails: a recorded text key still types its repeats, and an offer that ends after its first press, such as Archive workspace, still leaks.
+  - Each dialog stopping the keys that are down when it opens fails for a page change without a dialog, and it needs the same key-up record as C.
+  - Running a command at key-up delays every shortcut and loses the command when no key-up comes. C is better on every point.
+  - Stopping repeats for a fixed time after a run fails for a longer hold.
+  - Accepting the repeats in the protocol drops a requirement that stays, and a Small fix exists.
+- **Wider fix:** C. The result of the first press stays with the key until its key-up, so it covers each page change and each command.
 - **Previous examples:** Before the shortcut listener, the palette key stopped its own repeats while the palette was open.
-- **Recommendation:** B. It meets the protocol for every held key at a small cost.
-- **Action:** fix after merge, apply B, because it needs a new key-up service and the case is rare.
+- **Recommendation:** C. It keeps the state in the key source, which owns key-up and blur, and keeps the repeat rule in `decideShortcut` with the other shortcut rules.
+- **Action:** fix after merge, apply C, because the case is rare and the two fix rounds of the branch were used.

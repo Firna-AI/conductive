@@ -1402,10 +1402,13 @@ Depends on: every other milestone
   - [ ] Before the pull request.
 - [ ] Run the targeted tests and `npm run check` on the tree with
       Milestones 1, 2, 3, and 9 and the last merge of `main`.
-- [ ] Review the complete local diff against `origin/main` again with the
+- [x] Review the complete local diff against `origin/main` again with the
       `implementation-review` skill after the push, with a focus on the
       commits since review round 2: the answers to review items 4 and 10
-      and to decisions 196 to 198. Then apply the fix rule.
+      and to decisions 196 to 198. Then apply the fix rule. Round 3 found
+      2 (both Medium and rare, confirmed, deferred after the two used fix
+      rounds): `plans/follow-ups/browser-tab-keys-miss-keypad-and-address-keys.md`
+      and the updated `plans/follow-ups/held-key-after-dialog-opens.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
@@ -1415,7 +1418,11 @@ Depends on: every other milestone
 ## Post-merge follow-up (non-blocking)
 
 - [ ] On a Mac, check in the Mac app that ⌘N, ⌘T, and ⌘W reach the page,
-      and that ⌘R still reloads.
+      and that ⌘R still reloads. Also check whether ⌘ with the keypad 0
+      resets the zoom, as the fixed key ⌘0 of the View menu does. If it
+      does, a recorded ⌘ with the keypad 0 takes that menu key, so making
+      it a fixed key needs a decision of the user, because it adds a
+      rejection. From the finding check of review round 3.
 - [ ] Check an installed app window in Chrome, and a browser tab in
       Chrome, Firefox, and Safari, on the deployed app.
 - [ ] On Linux with the Alt+Shift layout switch, check in Firefox that
