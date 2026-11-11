@@ -9,7 +9,7 @@
 - **Source:** Implementation. **Category:** Product bug.
 - **Terms:**
   - **Check event:** a GitHub webhook of the type `check_run`, `check_suite`, or `status`. GitHub sends one each time that a check or a commit status starts, changes, or ends.
-  - **Workspace refresh:** one fresh GitHub read of one workspace, in `worker/github/refresh.ts`. It asks for an installation token and sends about five GraphQL queries.
+  - **Workspace refresh:** one fresh GitHub read of one workspace, in `worker/github/refresh.ts`. It asks for an installation token. An open pull request normally needs one GraphQL query, with more queries for pagination.
   - **Timed read:** the fresh read that an open tab asks for 5 minutes after its last read. `freshReadWait` in `src/github/githubStore.ts` sets the wait.
 - **Background:**
   - The pull request bar and the Checks tab show the checks of the pull request of the workspace branch.
@@ -26,7 +26,7 @@
   - **B.** Route each check event to the workspace whose branch the event names, and refresh only that workspace. A `check_run` or `check_suite` payload lists its pull requests with their head branch, and a `check_suite` also has `head_branch`. A `status` payload lists up to 10 branches that hold its commit. An event with no branch, such as a check of a fork pull request, still waits for the timed read. Effort: Medium.
   - **C.** Do B, and also join the check events of one workspace into one read. The workspace Durable Object waits a few seconds after the first event, then reads once. A run of many checks then costs a few reads, not one read for each event. Effort: Medium.
 - **Left out:** A fresh read of every workspace for each check event, because it fails the goal: it hit GitHub's rate limits. A match of the event commit to the head commit that each workspace stored, because the stored state lives in each Durable Object, so the match needs a new D1 column or a call to each object. B finds the same workspace from the payload alone.
-- **Wider fix:** None. Push events also start a branch lookup for every workspace of the repository, but they need the base branch of each pull request, which only a GitHub read gives. That is a separate problem.
+- **Wider fix:** C. Joining check events into one workspace read bounds the requests from a run of checks. Push routing already uses stored workspace state to skip unrelated branches.
 - **Previous examples:** None found.
 - **Recommendation:** C. It reads GitHub only for the one workspace that needs it, and a run of many checks costs only a few reads.
 - **Action:** ask the user, because C changes the requirement that the user chose on 2026-11-11: the Worker reads nothing for a check event.

@@ -156,7 +156,10 @@ Resolving or unresolving a review thread refreshes its pull request branch.
 Repository and installation IDs must match active local records.
 A foreign fork's same-named branch cannot update a workspace in the base repository.
 Push routing sends the active repository workspaces to their coordinators as candidates.
-Each coordinator reads the current head branch, head commit, pull request, and base branch.
+A coordinator with a stored state of its current branch decides without GitHub.
+It reads only when the pushed branch is its head, or the base of its open pull request.
+A merged or closed pull request and a branch without a pull request skip a push to another branch.
+Without that stored state, the coordinator reads the current head branch, head commit, pull request, and base branch.
 It refreshes only when the pushed branch is that head or base.
 An explicit workspace base takes precedence.
 Otherwise, the base comes from the pull request, or the repository default when no pull request exists.
@@ -179,6 +182,11 @@ A failed send to one tab does not fail the refresh.
 
 Pull request lookup prefers an open request for the exact repository and branch.
 It then considers merged and closed requests, in GitHub's newest-created order.
+Each lookup page reads five pull requests with their banner fields, both check rollups, and latest opinionated reviews.
+Each check and review connection includes its first 100 entries.
+When those first pages are complete, an open pull request needs one GraphQL query.
+A merged or closed pull request needs two queries, including the empty open lookup.
+Further lookup pages and later pages of the chosen check rollup or reviews need additional queries.
 Without a pull request, a GraphQL comparison uses the explicit head commit and the workspace base branch.
 It reads the commit count and repository identity.
 It selects no file patches.
@@ -203,8 +211,9 @@ UNSTABLE remains retryable if the read checks show no failed, running, or queued
 It keeps the previous stored state until a read can confirm the current state.
 The bounded scheduled reads retry that state without a browser request.
 
-Workspace state does not limit a GitHub read or webhook refresh.
-The workspace queries read repository and access bindings without selecting or filtering workspace state.
+The webhook candidate query skips archived workspaces: `archived_at` is set or the state is `archived`.
+An archived workspace still reads GitHub when a tab asks, and its scheduled reads still run.
+No other workspace state limits a GitHub read or webhook refresh.
 This includes a workspace in `input` while its agent waits for the user.
 
 ## Verification

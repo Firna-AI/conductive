@@ -59,6 +59,11 @@ number names a dated record, as
 - A fresh read of each workspace of the repository for each check or
   status event was rejected. Reason: a run of checks sends many of these
   events, and those reads used up GitHub's rate limits.
+- Events do not reach an archived workspace. Its open tab still reads the
+  state when it opens. The user chose this on 11 November 2026.
+- Reason: each event read every workspace of the repository, also the
+  archived ones, and these reads used up the hourly GitHub limit of the
+  App.
 
 ## Banner states
 

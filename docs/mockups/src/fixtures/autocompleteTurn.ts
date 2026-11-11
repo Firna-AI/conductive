@@ -55,10 +55,15 @@ export const autocompleteTests: readonly ChatItem[] = [
 
 const e2eTarget = 'npx playwright test checkout.spec.ts'
 
-const autocompleteEnd: readonly ChatItem[] = [
+/** The end-to-end run, the README, and the call that opens pull request #482. */
+export const autocompletePullRequest: readonly ChatItem[] = [
   tool('e2e', 'run', e2eTarget, '3 passed'),
   tool('readme', 'edit', 'README.md', '+4 −1'),
   tool('pr', 'run', 'gh pr create --fill', '#482'),
+]
+
+const autocompleteEnd: readonly ChatItem[] = [
+  ...autocompletePullRequest,
   {
     kind: 'agent',
     id: 'done',

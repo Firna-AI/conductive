@@ -31,6 +31,19 @@ export async function providerEvent(
   }
   const turn = session.active
   if (!turn || (turn.stopped && !acceptedBeforeStop)) return
+  if (event.type === 'background' || event.type === 'activity') {
+    const done =
+      event.type === 'background'
+        ? turn.background?.work(event.live, event.idle)
+        : turn.background?.activity(event.idle)
+    if (done && turn.messageIds.every((id) => turn.resolvedMessageIds.has(id)))
+      await continueResult(
+        session,
+        { type: 'wake-up', state: 'finished' },
+        actions,
+      )
+    return
+  }
   await turn.output.accept(event)
   if (turn.stopped) return
   const signal = turn.controller.signal
@@ -47,28 +60,44 @@ export async function providerEvent(
     await actions.finish(event)
     return
   }
-  if (event.type === 'result') await continueResult(session, event, actions)
+  if (event.type === 'result' || event.type === 'wake-up')
+    await continueResult(session, event, actions)
 }
 
 async function continueResult(
   session: SessionRuntime,
-  event: Extract<ProviderEvent, { type: 'result' }>,
+  event: Extract<ProviderEvent, { type: 'result' | 'wake-up' }>,
   actions: EventActions,
 ): Promise<void> {
   const turn = session.active
   if (!turn) return
   const signal = turn.controller.signal
-  const answered = event.userMessageIds.length
-    ? event.userMessageIds
-    : turn.messageIds
+  const answered =
+    event.type === 'wake-up'
+      ? []
+      : event.userMessageIds.length
+        ? event.userMessageIds
+        : turn.messageIds
   for (const id of answered) turn.resolvedMessageIds.add(id)
   if (turn.messageIds.some((id) => !turn.resolvedMessageIds.has(id))) return
   const next = turn.waiting.shift()
   if (!next) {
-    await actions.finish(event)
+    const result =
+      event.type === 'wake-up'
+        ? { type: 'result' as const, state: event.state, userMessageIds: [] }
+        : event
+    const disposition =
+      event.state === 'finished' ? turn.background?.reply() : 'finish'
+    if (disposition === 'wait') return
+    await actions.finish(
+      disposition === 'limit'
+        ? { ...result, endReason: 'background_work_limit' }
+        : result,
+    )
     return
   }
   await turn.output.finish('stopped')
+  turn.background?.restart()
   session.generation++
   const closing = disposeProvider(turn)
   await cancelable(signal, () => closing)
