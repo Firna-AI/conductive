@@ -1,4 +1,8 @@
 import { defaultAgentLoginNoReuse } from '../../src/shared/account'
+import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+
+const CURRENT_LOGIN_DATE = `(SELECT updated_at FROM agent_logins
+  WHERE user_id = codex_devices.user_id AND agent = 'codex')`
 
 export interface StoredCodexDevice {
   ciphertext: string | null
@@ -22,8 +26,9 @@ export async function insertCodexDevice(
   await db
     .prepare(
       `INSERT INTO codex_devices
-    (handle_hash, user_id, ciphertext, state, poll_interval_ms, next_poll_at, expires_at)
-    VALUES (?, ?, ?, 'pending', ?, ?, ?)`,
+    (handle_hash, user_id, ciphertext, state, poll_interval_ms, next_poll_at, expires_at, login_updated_at)
+    VALUES (?, ?, ?, 'pending', ?, ?, ?,
+      (SELECT updated_at FROM agent_logins WHERE user_id = ? AND agent = 'codex'))`,
     )
     .bind(
       handleHash,
@@ -32,6 +37,7 @@ export async function insertCodexDevice(
       pollIntervalMs,
       now + pollIntervalMs,
       now + 900_000,
+      userId,
     )
     .run()
 }
@@ -121,6 +127,38 @@ export async function failCodexDevice(
     .run()
 }
 
+function changedLoginStatement(
+  db: D1Database,
+  userId: string,
+  handleHash: string,
+): D1PreparedStatement {
+  return db
+    .prepare(
+      `UPDATE codex_devices SET state = 'failed', ciphertext = NULL,
+      poll_claim = NULL, poll_claim_until = NULL, failure_cause = ?
+      WHERE handle_hash = ? AND user_id = ? AND state IN ('pending', 'polling')
+      AND login_updated_at IS NOT ${CURRENT_LOGIN_DATE}`,
+    )
+    .bind(chatGptSignInCopy.causes.loginChanged, handleHash, userId)
+}
+
+export async function invalidateChangedCodexDevice(
+  db: D1Database,
+  userId: string,
+  handleHash: string,
+): Promise<string | null> {
+  const results = await db.batch<Pick<StoredCodexDevice, 'failureCause'>>([
+    changedLoginStatement(db, userId, handleHash),
+    db
+      .prepare(
+        `SELECT failure_cause AS failureCause FROM codex_devices
+        WHERE handle_hash = ? AND user_id = ? AND state = 'failed'`,
+      )
+      .bind(handleHash, userId),
+  ])
+  return results[1].results[0]?.failureCause ?? null
+}
+
 export async function finishCodexDevice(
   db: D1Database,
   userId: string,
@@ -130,12 +168,14 @@ export async function finishCodexDevice(
   now: number,
 ): Promise<void> {
   await db.batch([
+    changedLoginStatement(db, userId, handleHash),
     db
       .prepare(
         `INSERT INTO agent_logins
       (user_id, agent, kind, ciphertext, no_reuse, created_at, updated_at)
       SELECT user_id, 'codex', 'token', ?, ?, ?, ? FROM codex_devices
       WHERE handle_hash = ? AND user_id = ? AND state = 'polling' AND poll_claim = ? AND expires_at > ?
+      AND login_updated_at IS ${CURRENT_LOGIN_DATE}
       ON CONFLICT(user_id, agent) DO UPDATE SET kind = excluded.kind, ciphertext = excluded.ciphertext,
       no_reuse = CASE WHEN agent_logins.kind = excluded.kind THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
       updated_at = excluded.updated_at, refresh_claim = NULL, refresh_claim_until = NULL, failure_cause = NULL`,

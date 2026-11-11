@@ -59,6 +59,9 @@ View writes cannot change this branch.
 - Codex connects to ChatGPT through the [device sign-in service](../codex-auth/README.md).
   Its start reply holds the code, verification link, expiry, and poll interval.
   Its poll reply reports waiting, connected, expired, or failed.
+  An unfinished sign-in compares the saved login date with the current login
+  before each OpenAI request and in its final conditional login write.
+  A change ends the sign-in with a cause that asks for a new code.
   After completion, each poll reads the current Codex login through `accountLogins`.
   A removed login returns a disconnected status while the sign-in state stays connected until expiry.
   The required credential task owner retains the poll's exchange and save through `execution.waitUntil`.
@@ -165,6 +168,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   Repeated finished polls keep the current share setting, failure cause, login kind, and removal.
   `codex-device-failure.test.ts` keeps the failed exchange and safe-cause checks.
   `codex-device-owner.test.ts` checks that an approved exchange commits after the polling client leaves.
+  `codex-device-login-change.test.ts` checks removals, API key saves, and newer
+  ChatGPT sign-ins before polling, between OpenAI calls, and before the final save.
+  It also checks the accepted save-and-remove return to an absent login.
   Its OpenAI replies come from `codex-device.test-support.ts`.
 - `agent-login-reuse.test.ts` checks the login-kind defaults, the private
   preference update, and unchanged secret data and timestamps.

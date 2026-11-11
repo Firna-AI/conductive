@@ -37,6 +37,15 @@ function CodeButton(props: { label: string; to: string }) {
   )
 }
 
+/** The link to the security settings of ChatGPT, in a new tab. */
+function SettingsLink() {
+  return (
+    <ExternalLink href={copy.settingsLink.href}>
+      {copy.settingsLink.label}
+    </ExternalLink>
+  )
+}
+
 /**
  * The link to the page of OpenAI, the code in large type, the warning
  * never to share it, and the line that says that the page waits.
@@ -58,8 +67,16 @@ function CodeShown() {
   )
 }
 
-/** A sign-in that did not finish, with an icon on the first line. */
-function Problem(props: { icon: LucideIcon; text: string; refused?: boolean }) {
+/**
+ * A sign-in that did not finish, with an icon on the first line. A link,
+ * such as the one to the setting that the text names, follows the text.
+ */
+function Problem(props: {
+  icon: LucideIcon
+  text: string
+  refused?: boolean
+  children?: ReactNode
+}) {
   const Icon = props.icon
   return (
     <p
@@ -67,18 +84,23 @@ function Problem(props: { icon: LucideIcon; text: string; refused?: boolean }) {
       role={props.refused ? 'alert' : undefined}
     >
       <Icon aria-hidden className={styles.icon} size={14} />
-      <span>{props.text}</span>
+      <span>
+        {props.text}
+        {props.children ? <> {props.children}</> : null}
+      </span>
     </p>
   )
 }
 
 /**
  * The ChatGPT sign-in of Codex, in the Connect form, by step. Before the
- * start, the words name the setting of ChatGPT that must be on. Get a code
- * shows a one-time code and the link to the page of OpenAI where the user
- * enters it, while the page waits for the sign-in. An expired code and a
- * refused sign-in offer a new code. Each button that gets a code leads to
- * `codeTo`. Cancel shows when the form can close.
+ * start, the words name the setting of ChatGPT that must be on, with the
+ * link to it. Get a code shows a one-time code and the link to the page of
+ * OpenAI where the user enters it, while the page waits for the sign-in. An
+ * expired code offers Get a new code. The refused sign-in is the refusal of
+ * the first request, because the setting is off: it names the setting, with
+ * the link, and offers Get a code, because no code showed yet. Each button
+ * that gets a code leads to `codeTo`. Cancel shows when the form can close.
  */
 export function ChatGptSignIn(props: {
   step: SignInStep
@@ -89,7 +111,9 @@ export function ChatGptSignIn(props: {
     case 'start':
       return (
         <>
-          <p className={formStyles.text}>{copy.intro}</p>
+          <p className={formStyles.text}>
+            {copy.intro} <SettingsLink />
+          </p>
           <Actions cancel={props.cancel}>
             <CodeButton label={copy.getCode} to={props.codeTo} />
           </Actions>
@@ -114,9 +138,11 @@ export function ChatGptSignIn(props: {
     case 'refused':
       return (
         <>
-          <Problem icon={CircleAlert} refused text={signInRefusedCause} />
+          <Problem icon={CircleAlert} refused text={signInRefusedCause}>
+            <SettingsLink />
+          </Problem>
           <Actions cancel={props.cancel}>
-            <CodeButton label={copy.newCode} to={props.codeTo} />
+            <CodeButton label={copy.getCode} to={props.codeTo} />
           </Actions>
         </>
       )

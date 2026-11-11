@@ -15,6 +15,7 @@ import {
   failCodexDevice,
   finishCodexDevice,
   insertCodexDevice,
+  invalidateChangedCodexDevice,
   readCodexDevice,
   releaseCodexDevice,
   type StoredCodexDevice,
@@ -131,6 +132,14 @@ export function pollCodexDevice(
       await expireCodexDevice(env.DB, userId, handleHash, now)
       return { state: 'expired' }
     }
+    if (device.state === 'pending' || device.state === 'polling') {
+      const cause = await invalidateChangedCodexDevice(
+        env.DB,
+        userId,
+        handleHash,
+      )
+      if (cause) return { state: 'failed', cause }
+    }
     if (device.state === 'polling') {
       if ((device.pollClaimUntil ?? 0) <= now && device.pollClaim !== null) {
         await failCodexDevice(
@@ -160,7 +169,18 @@ export function pollCodexDevice(
           env.BOAT_KEY_ENCRYPTION_KEY,
         ),
       )
-      const tokens = await exchangeCodexDevice(authorization, dependencies)
+      const tokens = await exchangeCodexDevice(authorization, {
+        ...dependencies,
+        fetch: async (request) => {
+          const cause = await invalidateChangedCodexDevice(
+            env.DB,
+            userId,
+            handleHash,
+          )
+          if (cause) throw new Error(cause)
+          return dependencies.fetch(request)
+        },
+      })
       if (tokens === null) {
         await releaseCodexDevice(
           env.DB,

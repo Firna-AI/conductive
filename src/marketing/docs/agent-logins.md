@@ -60,6 +60,8 @@ Sign-in works with any ChatGPT plan, including Plus and Pro.
 First turn on device code sign-in in your ChatGPT security settings.
 Ask your ChatGPT admin if you cannot change that setting.
 
+- [Open ChatGPT settings](https://chatgpt.com/settings/security)
+
 1. Choose **ChatGPT plan**.
 2. Select **Get a code**.
 3. Open [OpenAI's sign-in page](https://auth.openai.com/codex/device).
@@ -70,7 +72,7 @@ Never share the code.
 The code expires in 15 minutes.
 Keep the Conductive page open while it shows **Waiting for you to sign in**.
 If the code expires, select **Get a new code**.
-If ChatGPT refuses sign-in, check the security setting before you get a new code.
+If ChatGPT refuses sign-in, check the security setting, then select **Get a code** again.
 
 Conductive renews your saved ChatGPT sign-in for you.
 OpenAI offers its own **Sign in with ChatGPT** for apps only to partners.

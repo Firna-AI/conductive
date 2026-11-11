@@ -10,7 +10,11 @@ import {
   type StartCodexDeviceResponse,
 } from '../../shared/account'
 import type { Agent } from '../../shared/agents'
-import { byRole, queryByText } from '../../test-support/dom-queries'
+import {
+  byRole,
+  queryByRole,
+  queryByText,
+} from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import {
   coreFixtures,
@@ -68,6 +72,11 @@ export function serveAccount(
       (login) => logins.find((item) => item.agent === login.agent) ?? login,
     ),
   })
+}
+
+/** An answer of the Worker that refuses a request, with its message. */
+export function refusal(code: string, message: string) {
+  return { error: { code, message } }
 }
 
 /** Answers Get a code with this sign-in. */
@@ -155,6 +164,15 @@ export async function askForCode(
     () => view.querySelector('[aria-busy="true"]') === null,
     'the end of the request for a code',
   )
+}
+
+/**
+ * The address and the target of the link to the ChatGPT settings, or null
+ * when the view has no such link.
+ */
+export function settingsLink(view: HTMLElement): (string | null)[] | null {
+  const link = queryByRole('link', copy.settingsLink.label, view)
+  return link && [link.getAttribute('href'), link.getAttribute('target')]
 }
 
 /** The text of the Codex form while it shows `userCode` and waits. */

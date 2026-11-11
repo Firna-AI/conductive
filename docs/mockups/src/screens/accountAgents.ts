@@ -49,16 +49,45 @@ const openForms: Readonly<Record<FormKey, OpenAgentForm>> = {
   },
 }
 
-/** The logins of the agents in a state, without the agent of the form. */
+/**
+ * Whether a form of Codex is open under a Codex login that the app can no
+ * longer use, as Sign in again opens it. The login then stays in its row.
+ */
+function signingInAgain(state: AccountState): boolean {
+  if (state.form === 'none' || state.codexUse === 'usable') return false
+  if (state.connections === 'not-connected') return false
+  return openForms[state.form].agent === 'codex'
+}
+
+/**
+ * The logins of the agents in a state. The agent of the form has no login,
+ * except a Codex login that the app can no longer use, which stays in its
+ * row while the form is open.
+ */
 function loginsFor(state: AccountState): AgentLogins {
   const logins: Partial<Record<AgentKey, LoginKind>> = {}
   if (state.connections === 'not-connected') return logins
   const kinds = { ...accountLogins, codex: state.codexLogin }
-  const formAgent = state.form === 'none' ? null : openForms[state.form].agent
+  const formAgent =
+    state.form === 'none' || signingInAgain(state)
+      ? null
+      : openForms[state.form].agent
   for (const key of agentKeys) {
     if (key !== formAgent) logins[key] = kinds[key]
   }
   return logins
+}
+
+/**
+ * The open form, with the step of its ChatGPT sign-in. Under a Codex login
+ * that the app can no longer use, the button that gets a code leads to the
+ * code under that login.
+ */
+function formFor(state: AccountState): OpenAgentForm | undefined {
+  if (state.form === 'none') return undefined
+  const form = { ...openForms[state.form], signIn: state.codexSignIn }
+  if (state.form !== 'codex-token' || !signingInAgain(state)) return form
+  return { ...form, connectTo: paths.codexSignInAgainCode }
 }
 
 /** A Codex login that the app can no longer use, in a state. */
@@ -67,7 +96,7 @@ function unusableFor(state: AccountState): UnusableLogin | undefined {
   return {
     agent: 'codex',
     cause: codexUnusableCause,
-    signInTo: paths.connectCodexChatGpt,
+    signInTo: paths.codexSignInAgain,
   }
 }
 
@@ -75,17 +104,13 @@ function unusableFor(state: AccountState): UnusableLogin | undefined {
  * The Agents section in a state of the account: the open form with the
  * step of its ChatGPT sign-in, the connected logins, the share setting
  * that the app did not save, and a Codex login that the app can no longer
- * use, whose Sign in again opens the ChatGPT sign-in form.
+ * use, whose Sign in again opens the ChatGPT sign-in form under its row.
  */
 export function agentsFor(
   state: AccountState,
 ): ComponentProps<typeof AgentsSection> {
-  const form =
-    state.form === 'none'
-      ? undefined
-      : { ...openForms[state.form], signIn: state.codexSignIn }
   return {
-    form,
+    form: formFor(state),
     logins: loginsFor(state),
     shares: { notSaved: state.shareChange === 'not-saved' ? 'claude' : null },
     unusable: unusableFor(state),

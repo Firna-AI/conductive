@@ -302,6 +302,36 @@ towards. The user's account has no admin console for access tokens.
 - **Action:** ask the user, because A changes decision 37 and the login kind of decision 170.
 - **Chosen by the user on 10 November 2026:** A. It replaces the access token of decision 170 A. The token route of decision 173 B carries over: Codex runs its own ChatGPT sign-in mode through the gateway.
 
+## Answers to the items of the sign-in work
+
+The user answered these items of the implementation and the review in the
+conversation. Each line gives the question, the choice, and the date.
+
+- The share switch of a ChatGPT plan: B, a switch that starts off, with a
+  hint that only the owner may use the plan. 10 November 2026.
+- The name of the ChatGPT setting: C, "device code sign-in in your
+  ChatGPT security settings", with no quoted label. 10 November 2026.
+- The warning on the code step: B. 10 November 2026.
+- The share note of both agents: remove it. 10 November 2026.
+- When to remove the share switch: not now. 11 November 2026.
+  `plans/follow-ups/remove-share-switch.md` keeps the question.
+- The live test: B, a new sign-in with another ChatGPT account.
+  11 November 2026.
+- A link to the ChatGPT setting: B, a link "Open ChatGPT settings" to
+  `https://chatgpt.com/settings/security`. 11 November 2026. The user has
+  not confirmed the address yet.
+- What the form shows when a poll fails: A, keep it as built, and record
+  it as the requirement. 11 November 2026.
+- "Sign in again" differs from the mockup: A, draw the app in the mockup.
+  11 November 2026.
+- The label before any code: B, "Get a code" until a code shows, then
+  "Get a new code". 11 November 2026.
+- The keyboard focus after each step: B, move the focus to the first line
+  of the new step. 11 November 2026.
+- A sign-in that finishes after a removal or a replacement of the login,
+  finding 7 of review round 2: D, the sign-in saves only while the Codex
+  login of its start is still current. 11 November 2026.
+
 ## Design
 
 These are the agent's calls of 9 November 2026. Each gives its reason.
@@ -444,6 +474,25 @@ These are the agent's calls of 9 November 2026. Each gives its reason.
     from the account reader. The device table keeps no copy of the login.
     Reason: a copy goes stale after a share change, a failure cause, a new
     API key, or a removal.
+- The calls of 11 November 2026 for the user's answers to the form items
+  and to finding 7:
+  - The device row stores the `updated_at` of the member's Codex login when
+    the sign-in starts, read in the same insert. The poll compares it
+    before each call to OpenAI, and the final save compares it in the same
+    database batch. Two absent logins compare as equal. Reason: one
+    consistent start value, and no gap between the check and the save.
+  - The settings link shows on the start step, and on the refused step
+    only for the cause that names the setting. The app finds that cause by
+    its words, because the Worker sends causes as text.
+  - The button says "Get a code" until a code has shown in this form.
+    Cancel and the kind switch start a new form.
+  - The first line of each new step takes the focus only when the focus was
+    inside the steps or nowhere, so a control elsewhere keeps it. The page
+    does not scroll.
+  - The mockup page `app/account/codex-token` gets two states for Sign in
+    again, with the old login kept in the row and the share switch after
+    the form, as the app shows. The unused mockup path
+    `connectCodexChatGpt`, which this branch added, is removed.
 
 Risks:
 
@@ -760,28 +809,34 @@ Depends on: every other milestone
 The live check proves the token route with the real Codex program. The gate
 and the review prove the change.
 
-- [ ] Run the live check with a real Codex access token. It needs a token
-      from the user. Run it on a development machine with the pinned Codex
-      and the runner's Codex adapter. Keep the token out of every prompt,
-      argument, file, and log.
-  - [ ] A turn completes on the token with each Codex model in
+- [ ] Run the live check with a real ChatGPT sign-in, since decision 175
+      in place of a Codex access token. It needs a sign-in from the user.
+      Run it on a development machine with the pinned Codex, the runner's
+      Codex adapter, and the gateway modules. Keep the tokens out of every
+      prompt, argument, file, and log.
+  - [x] A turn completes on the sign-in with each Codex model in
         `CONDUCTIVE_MODELS` of the deployed app.
-  - [ ] No process that the agent starts holds the token in its
+  - [x] No process that the agent starts holds a token in its
         environment: a shell command, each MCP server, and each hook.
-  - [ ] After the turn, no file under the agent home folder holds the token
+  - [x] After the turn, no file under the agent home folder holds a token
         or another credential.
-  - [ ] Record which settings of the runner the token run keeps: the
-        approval policy, the sandbox mode, and the MCP servers.
-  - [ ] A conversation that started on an API key resumes on the token.
-        Record a failure as a finding.
-  - [ ] Save the evidence under `.context/codex-access-token/`.
-  - [ ] Update the line of
+  - [x] Record which settings of the runner the sign-in run keeps: the
+        approval policy, the sandbox mode, and the MCP servers. The run
+        keeps the approval policy `never`, the sandbox mode
+        `danger-full-access`, and the MCP servers `conductive` and
+        `codex_apps`, which Codex adds in its ChatGPT mode.
+  - [ ] A conversation that started on an API key resumes on the sign-in.
+        Record a failure as a finding. Not run on 11 November 2026: no
+        OpenAI API key was available.
+  - [x] Save the evidence under `.context/codex-access-token/`. Evidence:
+        `.context/codex-access-token/live/report.md`.
+  - [x] Update the line of
         `plans/follow-ups/agent-login-in-tool-processes.md` that says no
         run has shown the real programs take their routes.
 - [x] Run the targeted tests and `npm run check`, after
       `npm --prefix desktop ci` and `npm ci --prefix runner`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review

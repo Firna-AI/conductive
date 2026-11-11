@@ -144,6 +144,8 @@ Ask your ChatGPT admin if you cannot change that setting.
 ChatGPT sign-in also works with Plus and Pro.
 Follow [Connect Codex](/docs/agent-logins#connect-codex) for the sign-in steps.
 
+- [Open ChatGPT settings](https://chatgpt.com/settings/security)
+
 Never share the code.
 Enter only a code that the Conductive page shows.
 The code expires in 15 minutes.

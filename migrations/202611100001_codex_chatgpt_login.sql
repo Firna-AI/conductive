@@ -12,7 +12,8 @@ CREATE TABLE codex_devices (
   expires_at INTEGER NOT NULL,
   poll_claim TEXT,
   poll_claim_until INTEGER,
-  failure_cause TEXT
+  failure_cause TEXT,
+  login_updated_at INTEGER
 );
 
 CREATE INDEX codex_devices_expiry ON codex_devices(expires_at);

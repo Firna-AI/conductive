@@ -107,7 +107,9 @@ export type OpenAgentForm = {
  * `removable` gives each connected login its Remove, and `shares` its
  * share setting, as on the account. `unusable` names a connected login
  * that the app can no longer use: its row says Signed out, with the cause
- * and Sign in again.
+ * and Sign in again. Sign in again opens the form in the place of the
+ * cause, and the login keeps its row, Remove, and its share setting, as in
+ * the app.
  */
 export function AgentList(props: {
   logins: AgentLogins
@@ -121,9 +123,14 @@ export function AgentList(props: {
     <ul aria-label="Agents" className={classes(styles.list, styles.agentList)}>
       {agentKeys.map((key) => {
         const login = props.logins[key]
-        const form = props.form?.agent === key ? props.form : undefined
         const unusable =
           login && props.unusable?.agent === key ? props.unusable : undefined
+        // The form opens in place of Connect, or under a login that the app
+        // can no longer use, as Sign in again opens it.
+        const form =
+          props.form?.agent === key && (!login || unusable)
+            ? props.form
+            : undefined
         const nameId = `${ids}-${key}`
         let action = form ? null : <ActionButton>Connect</ActionButton>
         if (login) {
@@ -154,10 +161,19 @@ export function AgentList(props: {
               </span>
               {action}
             </div>
-            {unusable ? (
+            {unusable && !form ? (
               <LoginNotUsable
                 cause={unusable.cause}
                 signInTo={unusable.signInTo}
+              />
+            ) : null}
+            {form ? (
+              <AgentConnectForm
+                agent={key}
+                cancel={form.cancel}
+                connectTo={form.connectTo}
+                kind={form.kind}
+                signIn={form.signIn}
               />
             ) : null}
             {login && props.shares ? (
@@ -168,15 +184,6 @@ export function AgentList(props: {
                 nameId={nameId}
                 onChange={noop}
                 shared={sharedByDefault[key][login]}
-              />
-            ) : null}
-            {form && !login ? (
-              <AgentConnectForm
-                agent={key}
-                cancel={form.cancel}
-                connectTo={form.connectTo}
-                kind={form.kind}
-                signIn={form.signIn}
               />
             ) : null}
           </li>

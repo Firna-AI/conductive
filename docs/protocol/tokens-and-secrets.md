@@ -99,6 +99,15 @@ decision number names a decision of the change that adds the
 - The Worker alone holds the pending device state, encrypted for that
   signed-in user. A poll reports waiting, connected, expired, or failed
   with a cause. The Worker removes the pending secret when the flow ends.
+- An unfinished ChatGPT sign-in can complete only while the member's Codex
+  login matches the login at its start.
+  A removal or save of that login ends each unfinished sign-in with a
+  cause that asks for a new code.
+  A save followed by removal can restore an absent login before the next poll.
+  That sign-in can still complete.
+- When a poll gets no response, HTTP 429, or HTTP 5xx, the form waits and
+  polls again until the code expires.
+  Any other poll failure shows its cause.
 - After a sign-in completes, each poll returns the current Codex login status.
   A removed login is disconnected. The sign-in state stays connected until expiry.
 - Started sign-in exchanges and renewals keep their credential writes alive

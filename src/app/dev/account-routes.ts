@@ -14,6 +14,7 @@ import {
   type SetNewWorkspaceViewResponse,
   type UpdateAgentLoginResponse,
 } from '../../shared/account'
+import { chatGptSignInCopy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import type { Agent } from '../../shared/agents'
 import {
   GET_STARTED_PATH,
@@ -34,6 +35,11 @@ function savedLogin(backend: DevBackend, agent: Agent): AgentLoginStatus {
       connected: false,
     }
   )
+}
+
+function codexLoginDate(backend: DevBackend): number | null {
+  const login = savedLogin(backend, 'codex')
+  return login.connected ? login.updatedAt : null
 }
 
 /** Puts the status of one agent login in the account, in the order of `AGENTS`. */
@@ -145,7 +151,11 @@ export function accountRoutes(backend: DevBackend): Route[] {
   const { state } = backend
   const devices = new Map<
     string,
-    { expiresAt: number; state: 'waiting' | 'ready' | 'connected' }
+    {
+      expiresAt: number
+      loginUpdatedAt: number | null
+      state: 'waiting' | 'ready' | 'connected' | 'failed'
+    }
   >()
   let deviceSequence = 0
   return [
@@ -155,7 +165,11 @@ export function accountRoutes(backend: DevBackend): Route[] {
       answer: () => {
         const handle = `dev-codex-${++deviceSequence}`
         const expiresAt = backend.now() + 900_000
-        devices.set(handle, { expiresAt, state: 'waiting' })
+        devices.set(handle, {
+          expiresAt,
+          loginUpdatedAt: codexLoginDate(backend),
+          state: 'waiting',
+        })
         return json({
           handle,
           userCode: 'WXYZ-1234',
@@ -178,7 +192,17 @@ export function accountRoutes(backend: DevBackend): Route[] {
           )
         let result: PollCodexDeviceResponse
         if (device.expiresAt <= backend.now()) result = { state: 'expired' }
-        else if (device.state === 'waiting') {
+        else if (
+          device.state === 'failed' ||
+          (device.state !== 'connected' &&
+            device.loginUpdatedAt !== codexLoginDate(backend))
+        ) {
+          device.state = 'failed'
+          result = {
+            state: 'failed',
+            cause: chatGptSignInCopy.causes.loginChanged,
+          }
+        } else if (device.state === 'waiting') {
           device.state = 'ready'
           result = { state: 'waiting', pollIntervalMs: 5000 }
         } else {

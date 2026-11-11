@@ -20,6 +20,17 @@ const codeMinutes = 15
 export const chatGptSignInCopy = {
   intro:
     'Sign in to ChatGPT, and Codex runs on your plan. First turn on device code sign-in in your ChatGPT security settings, or ask your ChatGPT admin.',
+  /**
+   * The link after each line that names the setting, to the security
+   * settings of ChatGPT. The app and the mockups read the address only
+   * from here. Two public guides in `src/marketing/docs/` repeat it as
+   * Markdown links.
+   */
+  settingsLink: {
+    label: 'Open ChatGPT settings',
+    href: 'https://chatgpt.com/settings/security',
+  },
+  /** The button that asks for a code, until a code showed. */
   getCode: 'Get a code',
   /** The steps after the start, before and after the link to OpenAI. */
   steps: {
@@ -29,18 +40,21 @@ export const chatGptSignInCopy = {
   keep: `Never share this code, and enter only a code that this page shows. It expires in ${codeMinutes} minutes.`,
   waiting: 'Waiting for you to sign in',
   expired: 'The code expired.',
+  /** The button that asks for a code, once a code showed. */
   newCode: 'Get a new code',
   /** The state of a login that the app can no longer use. */
   signedOut: 'Signed out',
   signInAgain: 'Sign in again',
   /**
    * The causes that the Worker gives: OpenAI refused the sign-in because
-   * device code sign-in is off, or OpenAI did not renew a sign-in, which the
-   * field `unusableCause` of the login status carries.
+   * device code sign-in is off, the Codex login changed while the sign-in
+   * ran, or OpenAI did not renew a sign-in, which the field `unusableCause`
+   * of the login status carries.
    */
   causes: {
     refused:
       'ChatGPT refused the sign-in, because device code sign-in is off. Turn it on in your ChatGPT security settings, or ask your ChatGPT admin.',
+    loginChanged: 'Your Codex login changed. Get a new code.',
     notRenewed: 'ChatGPT access expired.',
     failed: 'ChatGPT sign-in failed.',
   },

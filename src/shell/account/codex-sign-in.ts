@@ -30,6 +30,11 @@ export interface SignInState {
   stage: SignInStage
   /** A request for a code runs, so the button that asked for it is busy. */
   starting: boolean
+  /**
+   * A code showed in this sign-in, so the button that asks for a code asks
+   * for a new one.
+   */
+  codeShown: boolean
 }
 
 /** The sign-in that the polls follow. */
@@ -74,6 +79,7 @@ export class CodexSignIn {
   private readonly shown = new Store<SignInState>({
     stage: { step: 'start' },
     starting: false,
+    codeShown: false,
   })
   readonly state: Readable<SignInState> = this.shown
   /** Counts up at each start and stop, so an older answer knows it is old. */
@@ -188,7 +194,9 @@ export class CodexSignIn {
     }
   }
 
+  /** Shows the step, and keeps that a code showed in this sign-in. */
   private show(stage: SignInStage): void {
-    this.shown.set({ stage, starting: false })
+    const codeShown = this.shown.get().codeShown || stage.step === 'code'
+    this.shown.set({ stage, starting: false, codeShown })
   }
 }

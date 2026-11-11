@@ -34,6 +34,7 @@ import {
   requestsTo,
   runPoll,
   serveAccount,
+  settingsLink,
   startedSignIn,
 } from './sign-in-test-kit'
 
@@ -88,7 +89,7 @@ describe('the Connect form of Codex', () => {
     )
     const first = kindChoices(view)
     await press(byRole('radio', 'ChatGPT plan', view))
-    const intro = codexItem(view)
+    const intro = { item: codexItem(view), settings: settingsLink(view) }
     await getCode(view, started.userCode)
     const link = byText('auth.openai.com/codex/device', view)
     const code = {
@@ -134,7 +135,10 @@ describe('the Connect form of Codex', () => {
         { kind: 'API key', selected: true },
         { kind: 'ChatGPT plan', selected: false },
       ],
-      intro: `Codex API key ChatGPT plan ${copy.intro} Cancel ${copy.getCode}`,
+      intro: {
+        item: `Codex API key ChatGPT plan ${copy.intro} ${copy.settingsLink.label} Cancel ${copy.getCode}`,
+        settings: [copy.settingsLink.href, '_blank'],
+      },
       code: {
         item: codeShown('HZQW-7KMT'),
         link: ['A', 'https://auth.openai.com/codex/device', '_blank'],

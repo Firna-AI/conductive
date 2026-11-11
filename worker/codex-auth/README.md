@@ -10,6 +10,11 @@ The device service encrypts pending authorizations under the signed-in
 account and a hash of the browser handle. D1 claims serialize polls and
 exchanges. A terminal state removes the encrypted authorization. The
 scheduled cleanup removes records at their 15-minute expiry.
+Each start stores the current Codex login's `updated_at`, or null without a login.
+Before each OpenAI poll or exchange request, the service checks that saved date.
+A changed login ends the unfinished sign-in with the shared `loginChanged` cause.
+The final D1 batch checks the date again in its conditional login write.
+It marks a changed sign-in failed and clears its authorization and claim.
 Finished polls read the current login through `accountLogins`.
 They return a disconnected login if it was removed after completion.
 The device row keeps no copy of the login status.
@@ -55,7 +60,7 @@ The device poll interval defaults to 5 seconds and never falls below it.
 
 ## Development
 
-Run `npm run test -- worker/app-api/codex-device.test.ts worker/codex-auth/renew.test.ts`
+Run `npm run test -- worker/app-api/codex-device worker/codex-auth`
 from the repository root. The tests use local D1, fake OpenAI responses,
 explicit request barriers, and an injected clock.
 [`rotation.test.ts`](rotation.test.ts) also checks completion during the
@@ -66,7 +71,8 @@ observer's pending-state check.
 - [`device.ts`](device.ts): `startCodexDevice` and `pollCodexDevice` run
   account-owned device sign-in.
 - [`device-store.ts`](device-store.ts): claimed device writes and
-  `cleanupCodexDevices` for scheduled expiry cleanup.
+  conditional login saves. `invalidateChangedCodexDevice` ends stale sign-ins.
+  `cleanupCodexDevices` handles scheduled expiry cleanup.
 - [`renew.ts`](renew.ts): `freshCodexLogin` renews before expiry. Its
   optional failed access token forces one renewal after an upstream 401.
   A call with an older failed token reads the committed rotation.

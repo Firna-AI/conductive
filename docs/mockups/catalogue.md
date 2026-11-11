@@ -164,14 +164,19 @@ the tabs of the org settings are. Its child pages:
   with API key selected.
 - `app/account/connect-codex` has the Connect form of Codex, whose switch
   starts on API key. Its child page `app/account/connect-codex/chatgpt` has
-  that form with ChatGPT plan selected, before the sign-in starts, with Get
-  a code. Its `code` variant shows the one-time code while the page waits
-  for the sign-in. Its `expired` variant has a code that expired, and its
-  `refused` variant a sign-in that OpenAI refused, each with Get a new code.
+  that form with ChatGPT plan selected, before the sign-in starts, with the
+  link to the ChatGPT settings and Get a code. Its `code` variant shows the
+  one-time code while the page waits for the sign-in. Its `expired` variant
+  has a code that expired, with Get a new code. Its `refused` variant has a
+  first request for a code that OpenAI refused, with the link and Get a
+  code.
 - `app/account/codex-token` has Codex connected by a sign-in to a ChatGPT
   plan, whose share switch starts off.
   Its `not-usable` variant has a sign-in that OpenAI did not renew: the row
-  says Signed out, with the cause and Sign in again.
+  says Signed out, with the cause and Sign in again. Its `sign-in-again`
+  variant has the ChatGPT sign-in form that Sign in again opens under that
+  row, which keeps Remove and the share switch. Its `sign-in-again-code`
+  variant has the code in that form.
 - `app/account/share-not-saved` shows General after a login share setting
   failed to save, with its saved value and the cause beside the switch.
 - `app/account/invites` has the invite code while sign-ups are paused.

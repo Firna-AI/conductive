@@ -20,9 +20,11 @@ import {
   kindChoices,
   openAccount,
   openSignIn,
+  refusal,
   requestsTo,
   runPoll,
   serveAccount,
+  settingsLink,
   startedSignIn,
 } from './sign-in-test-kit'
 
@@ -36,11 +38,9 @@ const shown = {
   expired: `Codex API key ChatGPT plan ${copy.expired} Cancel ${copy.newCode}`,
   refused: (cause: string) =>
     `Codex API key ChatGPT plan ${cause} Cancel ${copy.newCode}`,
-}
-
-/** An answer of the Worker that refuses a request, with its message. */
-function refusal(code: string, message: string) {
-  return { error: { code, message } }
+  /** The refusal because the setting is off, by the label of its button. */
+  off: (button: string) =>
+    `Codex API key ChatGPT plan ${copy.causes.refused} ${copy.settingsLink.label} Cancel ${button}`,
 }
 
 describe('the ChatGPT sign-in of Codex', () => {
@@ -89,7 +89,7 @@ describe('the ChatGPT sign-in of Codex', () => {
     })
   })
 
-  test('a request for a code that the Worker refused shows its cause as a refused sign-in, and Get a new code asks again', async () => {
+  test('a request for a code that the Worker refused shows its cause as an alert with the link to the ChatGPT settings, and its button says Get a code until a code showed, then Get a new code', async () => {
     const server = new FakeApiServer()
     serveAccount(server)
     const off = refusal('codex_device_failed', copy.causes.refused)
@@ -97,13 +97,27 @@ describe('the ChatGPT sign-in of Codex', () => {
     const delay = new ManualDelay()
     const { view } = await openSignIn(server, delay)
     await askForCode(view)
+    const alert = `${copy.causes.refused} ${copy.settingsLink.label}`
     expect({
-      alert: queryByRole('alert', copy.causes.refused, view) !== null,
+      alert: queryByRole('alert', alert, view) !== null,
       item: codexItem(view),
-    }).toEqual({ alert: true, item: shown.refused(copy.causes.refused) })
+      link: settingsLink(view),
+    }).toEqual({
+      alert: true,
+      item: shown.off(copy.getCode),
+      link: [copy.settingsLink.href, '_blank'],
+    })
     answerStart(server, first)
-    await getCode(view, first.userCode, copy.newCode)
-    expect(delay.waits).toEqual([5_000])
+    await getCode(view, first.userCode)
+    const waits = delay.waits
+    answerPolls(server, first.handle, { state: 'expired' })
+    await runPoll(delay)
+    server.json('POST', ACCOUNT_PATHS.codexDevice, off, 502)
+    await askForCode(view, copy.newCode)
+    expect({ waits, after: codexItem(view) }).toEqual({
+      waits: [5_000],
+      after: shown.off(copy.newCode),
+    })
   })
 
   test('a poll that the server failed waits for the same time, and the next poll connects', async () => {
@@ -191,7 +205,7 @@ describe('the ChatGPT sign-in of Codex', () => {
     expect({ signedOut, signIn, connected: codexItem(view) }).toEqual({
       signedOut: `Codex ${copy.signedOut} ChatGPT plan Remove ${cause} ${copy.signInAgain} ${share}`,
       signIn: {
-        item: `Codex ${copy.signedOut} ChatGPT plan Remove API key ChatGPT plan ${copy.intro} Cancel ${copy.getCode} ${share}`,
+        item: `Codex ${copy.signedOut} ChatGPT plan Remove API key ChatGPT plan ${copy.intro} ${copy.settingsLink.label} Cancel ${copy.getCode} ${share}`,
         kinds: [
           { kind: 'API key', selected: false },
           { kind: 'ChatGPT plan', selected: true },

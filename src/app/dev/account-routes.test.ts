@@ -99,3 +99,73 @@ it('answers finished device polls with current login status without restoring an
     backend.state.account.agentLogins.find((login) => login.agent === 'codex'),
   ).toEqual({ agent: 'codex', connected: false })
 })
+
+it.each(['removal', 'API key', 'newer ChatGPT sign-in'] as const)(
+  'ends an unfinished device sign-in after %s and keeps the current login',
+  async (change) => {
+    const server = new FakeApiServer()
+    let now = FAKE_TIME
+    const backend = createBackend(
+      seedState(readDevOptions('?login=none')),
+      server.events,
+      () => now,
+      () => 'unused',
+    )
+    const fetch = routeFetch(
+      accountRoutes(backend),
+      (path, method) => guardScope(backend.state, path, method),
+      server.fetch,
+    )
+    const request = (path: string, method = 'POST', body: unknown = {}) =>
+      fetch(path, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+    const saveKey = () =>
+      request(agentLoginPath('codex'), 'PUT', {
+        agent: 'codex',
+        kind: 'api-key',
+        secret: 'replacement-api-key',
+      })
+    expect((await saveKey()).status).toBe(200)
+    const { handle } = readCodexDeviceStart(
+      await (await request(ACCOUNT_PATHS.codexDevice)).json(),
+    )
+    expect(await (await request(codexDevicePath(handle))).json()).toEqual({
+      state: 'waiting',
+      pollIntervalMs: 5000,
+    })
+    now += 10_000
+    const connectNewerSignIn = async () => {
+      const newer = readCodexDeviceStart(
+        await (await request(ACCOUNT_PATHS.codexDevice)).json(),
+      )
+      await request(codexDevicePath(newer.handle))
+      const connected = await request(codexDevicePath(newer.handle))
+      expect(await connected.clone().json()).toMatchObject({
+        state: 'connected',
+      })
+      return connected
+    }
+    const changed =
+      change === 'removal'
+        ? await request(agentLoginPath('codex'), 'DELETE')
+        : change === 'API key'
+          ? await saveKey()
+          : await connectNewerSignIn()
+    expect(changed.status).toBe(change === 'removal' ? 204 : 200)
+    const saved = structuredClone(backend.state.account.agentLogins)
+    const failed = {
+      state: 'failed',
+      cause: 'Your Codex login changed. Get a new code.',
+    }
+    expect(await (await request(codexDevicePath(handle))).json()).toEqual(
+      failed,
+    )
+    expect(await (await request(codexDevicePath(handle))).json()).toEqual(
+      failed,
+    )
+    expect(backend.state.account.agentLogins).toEqual(saved)
+  },
+)

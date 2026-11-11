@@ -126,23 +126,29 @@ plan limits.
 - ChatGPT plan has no field. Its words say that Codex then runs on the
   plan, and that device code sign-in must be on first in the ChatGPT
   security settings, as `app/account/connect-codex/chatgpt` shows. They
-  quote no label of ChatGPT, so they stay true after a rename. Get a code
-  shows a one-time code in large type, the link to
+  quote no label of ChatGPT, so they stay true after a rename. The link
+  Open ChatGPT settings follows them, and opens those settings in a new
+  tab. Get a code shows a one-time code in large type, the link to
   `auth.openai.com/codex/device`, the warning never to share the code and
   to enter only a code that the page shows, and a line that the page waits
   for the sign-in, as its `code` variant shows. A code works for 15
-  minutes. An expired code and a refused sign-in each offer Get a new
-  code, as its `expired` and `refused` variants show. `ChatGptSignIn` in
-  `src/components/settings/` draws the steps.
+  minutes. An expired code offers Get a new code, as its `expired` variant
+  shows. A refused sign-in gives its cause in the same place, as its
+  `refused` variant shows. Its button says Get a code until a code showed,
+  then Get a new code. A refusal because the setting is off has the same
+  link. `ChatGptSignIn` in `src/components/settings/` draws the steps.
 - The app renews a ChatGPT sign-in alone. When OpenAI does not renew it,
   the app can no longer use the login. Its row then says Signed out in
   place of Connected, gives the cause under the row, and offers Sign in
-  again, which opens the ChatGPT sign-in form, as
-  `app/account/codex-token/not-usable` shows. The cause comes from the
-  field `unusableCause` of the login status. `LoginNotUsable.tsx` in
-  `src/components/settings/` draws it.
+  again, as `app/account/codex-token/not-usable` shows. The cause comes
+  from the field `unusableCause` of the login status. `LoginNotUsable.tsx`
+  in `src/components/settings/` draws it. Sign in again opens the ChatGPT
+  sign-in form in the place of the cause, as
+  `app/account/codex-token/sign-in-again` shows. The row keeps the login
+  with Remove, and the share switch stays, until a new sign-in replaces
+  the login.
 - `chatGptSignInCopy.ts` in `src/components/settings/` gives the words of
-  the ChatGPT sign-in, the note under its share switch, the row of a
+  the ChatGPT sign-in, the address of the ChatGPT settings, the row of a
   sign-in that stopped working, and the causes of the Worker. It imports no
   fixture, so the app and the Worker can import the same words.
 - A connected login shows its kind and Remove. The name of the kind

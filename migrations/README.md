@@ -122,6 +122,8 @@ It keeps every row, column, and other rule, including `no_reuse`, the primary ke
 `202611100001_codex_chatgpt_login.sql` adds the refresh claim and safe failure cause to `agent_logins`.
 It preserves the encrypted secret and its login timestamps.
 It adds `codex_devices` for encrypted, account-owned device authorizations and their safe terminal states and causes.
+Its nullable `login_updated_at` holds the current Codex login date at start, or null without a login.
+Polls and the final conditional save compare that date with the current login.
 Completed device rows keep no login-status copy. Poll replies read the current `agent_logins` record.
 Its expiry index serves scheduled cleanup. User deletion removes these records through the user foreign key.
 
