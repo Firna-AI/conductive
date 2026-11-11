@@ -8,6 +8,7 @@ import type {
 } from './contracts'
 import { activeWorkspace } from './data'
 import { readMergeWorkspace } from './merge-access'
+import { InstallationLimit } from './rate-limit'
 import type { WorkspaceGitHubState } from './workspace-state'
 
 // Three fresh reads, one second apart, bound GitHub's merge-state retry work.
@@ -68,6 +69,12 @@ export async function refreshWorkspace(
   }
   return state.refresh(
     async () => {
+      const limit = new InstallationLimit(
+        db,
+        workspace.installationId,
+        dependencies.now,
+      )
+      await limit.check()
       const token = await dependencies.token(workspace)
       await authorize()
       const reader = new GitHubReader(
@@ -75,7 +82,7 @@ export async function refreshWorkspace(
           ...dependencies,
           fetch: async (request) => {
             await authorize()
-            return dependencies.fetch(request)
+            return limit.fetch(dependencies.fetch, request)
           },
         },
         workspace,
@@ -94,6 +101,7 @@ export async function refreshWorkspace(
         return snapshot
       } catch (error) {
         await authorize()
+        limit.throwIfLimited()
         if (error instanceof HttpError && error.code === 'github_pending')
           await schedule()
         throw error

@@ -49,6 +49,16 @@ number names a dated record, as
 - The Worker pushes the new state to every open tab of that workspace.
 - When a tab opens, the Worker reads the current pull request and the
   current checks of the branch from the GitHub API.
+- When GitHub reports that an install of the GitHub App has used up its
+  API limit, the Worker sends GitHub no reads of pull requests and checks
+  for that install until the reset time that GitHub gives. Meanwhile, a
+  tab that opens shows that the GitHub state did not load, as after any
+  failed read.
+- After the reset, each workspace that waited reads GitHub once, and the
+  Worker pushes the new state to its open tabs.
+- Only longer waits between retries, while webhooks and tabs still read,
+  was rejected. Reason: GitHub can ban an app that keeps sending requests
+  while it is limited, and the ban would also stop sign-in.
 
 ## Banner states
 

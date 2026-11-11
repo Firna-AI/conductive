@@ -13,6 +13,7 @@ import { HttpError } from '../http'
 import { handleGitHubMerge } from '../github/merge-handler'
 import { authorizeMerge } from '../github/merge-access'
 import { GitHubReader } from '../github/client'
+import { GitHubRateLimited } from '../github/rate-limit'
 import type { WorkspaceAlarms } from './alarms'
 import type { ReceiverStorage } from '../members/receiver-storage'
 
@@ -20,6 +21,9 @@ interface ScheduledRead {
   at: number
   request: GitHubRefreshRequest
 }
+
+// The read that waits for the reset of a used-up GitHub limit.
+const LIMIT_READ_KEY = 'github-refresh:after-limit'
 
 export class WorkspaceGitHub {
   private state: WorkspaceGitHubState | undefined
@@ -79,6 +83,10 @@ export class WorkspaceGitHub {
         this.dependencies.fetch,
         this.dependencies.now,
       ),
+    }).catch(async (error: unknown) => {
+      if (error instanceof GitHubRateLimited)
+        await this.readAfterLimit(workspace, error.resetAt)
+      throw error
     })
   }
 
@@ -141,7 +149,10 @@ export class WorkspaceGitHub {
         await this.refresh(read.request.workspace, read.request.signal)
         await this.storage.delete(key)
       } catch (error) {
-        if (
+        if (error instanceof GitHubRateLimited) {
+          // The one read after the reset replaces this read.
+          if (key !== LIMIT_READ_KEY) await this.storage.delete(key)
+        } else if (
           error instanceof HttpError &&
           [404, 403, 503].includes(error.status) &&
           error.code !== 'github_unavailable'
@@ -154,6 +165,18 @@ export class WorkspaceGitHub {
           })
       }
     }
+    await this.schedule()
+  }
+
+  /** Each workspace reads once after the reset, however many reads waited. */
+  private async readAfterLimit(
+    workspace: GitHubWorkspace,
+    at: number,
+  ): Promise<void> {
+    await this.storage.put(LIMIT_READ_KEY, {
+      at,
+      request: { workspace, signal: {} },
+    } satisfies ScheduledRead)
     await this.schedule()
   }
 

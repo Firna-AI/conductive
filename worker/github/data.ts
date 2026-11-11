@@ -71,3 +71,30 @@ export async function completeDelivery(
     .bind(now, id)
     .run()
 }
+
+/** The time when GitHub takes the reads of the installation again, if known. */
+export function installationResetAt(
+  db: D1Database,
+  installationId: number,
+): Promise<number | null> {
+  return db
+    .prepare(
+      'SELECT reset_at FROM github_installation_limits WHERE installation_id = ?',
+    )
+    .bind(installationId)
+    .first<number>('reset_at')
+}
+
+/** Keeps the later reset time when reads report different times. */
+export async function saveInstallationResetAt(
+  db: D1Database,
+  installationId: number,
+  resetAt: number,
+) {
+  await db
+    .prepare(
+      'INSERT INTO github_installation_limits (installation_id, reset_at) VALUES (?, ?) ON CONFLICT (installation_id) DO UPDATE SET reset_at = MAX(reset_at, excluded.reset_at)',
+    )
+    .bind(installationId, resetAt)
+    .run()
+}

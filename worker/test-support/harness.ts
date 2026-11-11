@@ -126,6 +126,7 @@ export async function createHarness(
           'chat_attachments',
           'github_webhook_deliveries',
           'github_connections',
+          'github_installation_limits',
           'github_installations',
           'org_invites',
           'org_deletion_resources',
