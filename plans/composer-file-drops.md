@@ -1,6 +1,6 @@
 # Drop files into the composer as chips in the text
 
-Status: Active. On branch `calummoore/composer-file-drag-and-drop`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #266](https://github.com/Firna-AI/conductive/pull/266) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Today the paperclip button of each composer attaches files, and their
 chips show in a row above the text. A member cannot drop a file on the
