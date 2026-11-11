@@ -1446,7 +1446,7 @@ description copies them.
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Delete `plans/follow-ups/own-endpoints-through-model-gateway.md`,
+- [x] Delete `plans/follow-ups/own-endpoints-through-model-gateway.md`,
       which Milestone 5b completes.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
