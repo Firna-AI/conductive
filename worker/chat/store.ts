@@ -6,7 +6,7 @@ import {
 } from '../lifecycle/workspace-runtime'
 import { chatFilesStorage } from './files-storage'
 import { saveHistoryEvent } from './history-storage'
-import { HistoryPages } from './history-pages'
+import { HistoryPages, type SessionPage } from './history-pages'
 import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
@@ -162,8 +162,8 @@ export class ChatTransaction extends ChatRecords {
   saveCursor(streamId: string, through: number): Promise<void> {
     return this.data.put(key('cursor', streamId), through)
   }
-  history(after: number, through = this.through, sessionId?: string) {
-    return this.pages.read(after, Math.min(through, this.through), sessionId)
+  history(after: number, through = this.through, session?: SessionPage) {
+    return this.pages.read(after, Math.min(through, this.through), session)
   }
 
   async emit(
