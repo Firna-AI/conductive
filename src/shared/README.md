@@ -114,6 +114,9 @@ shortens port labels only after its final filter.
 Its omission count measures normalized source UTF-8 bytes before JSON escaping.
 Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.
 They count omitted files. The complete Changes response has no summary cap.
+A `turn.completed` event can carry `endReason`, of the type `TurnEndReason`.
+The runner, the Worker, and the browser use that one type.
+Its one value is `background_work_limit`.
 `runner.event-refused` belongs only to workspace chat events.
 It identifies the lost runner event without copying its data.
 Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
@@ -207,8 +210,9 @@ The git credential payload is not defined yet.
   [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
   and the rule that starts a run open.
 - [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
-  lines, with omitted-file and unavailable-file data, and the member of a
-  Continue note: "You" to that member, its name to others and in a copy.
+  lines, the end reason of a turn, omitted-file and unavailable-file data,
+  and the member of a Continue note: "You" to that member, its name to
+  others and in a copy.
 - [Command words](transcript/command-words.ts) supply Mac names, command
   states, notes, and output text. Browser code supplies icons and colours.
 - [Session events](transcript/session-events.ts) take stored Worker envelopes

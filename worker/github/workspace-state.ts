@@ -81,10 +81,15 @@ export class WorkspaceGitHubState {
   ): Promise<void> {
     if (!copy) return
     // An old receipt can replay a snapshot that D1 must not copy.
-    const committed = await this.port.read<GitHubSnapshot>('github:state')
+    const committed = await this.stored()
     if (!committed) return
     await authorize()
     await copy(committed)
+  }
+
+  /** The last committed snapshot. Read it inside a refresh read. */
+  stored(): Promise<GitHubSnapshot | undefined> {
+    return this.port.read<GitHubSnapshot>('github:state')
   }
 
   scheduleRefresh(

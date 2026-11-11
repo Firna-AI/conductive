@@ -49,6 +49,11 @@ number names a dated record, as
 - The Worker pushes the new state to every open tab of that workspace.
 - When a tab opens, the Worker reads the current pull request and the
   current checks of the branch from the GitHub API.
+- Events do not reach an archived workspace. Its open tab still reads the
+  state when it opens. The user chose this on 11 November 2026.
+- Reason: each event read every workspace of the repository, also the
+  archived ones, and these reads used up the hourly GitHub limit of the
+  App.
 
 ## Banner states
 

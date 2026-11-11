@@ -81,6 +81,7 @@ npm run typecheck
   `history-grown-delta.test.ts` checks an enlarged tree delta.
 - `native-store.test-support.ts` gives direct storage tests the native records of a production object.
   Pure storage owners can run locally over that native storage.
+  `history-session-pages.test.ts` reads session pages of `HistoryPages` there with small limits, and checks where each limit ends a page.
 - `outputFixture` in `runner-output.test-support.ts` seeds an encrypted environment capture in D1 and starts a turn.
   `runner-output-durability.test.ts` fails the native commit of held text.
   It retries on the live object, then checks eviction, replay, and a gap.

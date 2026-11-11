@@ -122,6 +122,9 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         type: input.type,
         state: input.state,
         durationMs: number(input.durationMs),
+        ...(input.endReason === 'background_work_limit'
+          ? { endReason: input.endReason }
+          : {}),
         files: array(input.files, changedFile),
         ...(input.filesUnavailable === true ? { filesUnavailable: true } : {}),
         omittedFileCount: counter(input.omittedFileCount),
