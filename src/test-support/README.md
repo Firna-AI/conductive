@@ -5,6 +5,9 @@ The production Worker does not import them.
 They use the same contracts as the real API.
 The fixtures reuse the mockup data and keep all dates deterministic.
 Workspace records include their number and canonical link on `FAKE_ORIGIN`.
+Each record also gives the GitHub summary of its mockup workspace.
+The default workspace takes the summary of the chosen banner instead, `ready-to-merge` by default, so its list mark and its bar agree.
+The created workspace of the fake API starts with no summary.
 A fixture that changes a workspace ID or org must rebuild its link.
 Use `FAKE_TIME` as the screen's clock when it shows relative times.
 
@@ -86,6 +89,11 @@ Unknown routes return `fake_route_missing`. They never reach the real network.
 The default org is `acme`. The default workspace is `checkout-autocomplete`.
 `FAKE_IDS` in `fixtures/core.ts` names the shared sample IDs.
 Options select the org role, workspace state, conversation, and GitHub banner state.
+`github` sets the GitHub summary of the default workspace record, and `null` gives none.
+Without it, `fakeGitHubSummary` gives the summary of the banner and its checks, as the Worker copies it.
+`workspaceFixtures(state, github)` takes that summary for the default workspace.
+The dev fake of `../app/dev/` uses `fakeGitHubSummary` too.
+Its seed makes `email-dark-mode` work without GitHub state, so its grey mark moves.
 Replace a reply to draw a missing login, a first run, or a deleted org.
 `endpointLoginFixtures(updatedAt)` in `fixtures/agent-logins.ts` supplies
 connected own endpoint metadata for both agents. The development seed uses

@@ -4,6 +4,7 @@ import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import type { RoutineRun } from '../../shared/routines'
 import type { Workspace } from '../../shared/workspaces'
+import { fakeGitHubSummary } from '../../test-support/fake-api'
 import {
   coreFixtures,
   FAKE_IDS,
@@ -105,14 +106,22 @@ function seedRuns(
  * Acme with the recorded sections, workspaces, settings, build, members,
  * and routines with their runs. A starting workspace has the recorded
  * resume step, and a workspace in the error state has the recorded start
- * error.
+ * error. `checkout-autocomplete` has the GitHub state of its recorded bar,
+ * as the fake API gives it.
  */
 function acme(
   summary: OrgSummary,
   core: CoreFixtures,
   options: DevOptions,
 ): OrgState {
-  const { workspaces } = workspaceFixtures(options.server.workspaceState)
+  const { workspaces } = workspaceFixtures(
+    options.server.workspaceState,
+    fakeGitHubSummary(options.server),
+  )
+  const active = workspaces.workspaces.find(
+    (workspace) => workspace.id === 'email-dark-mode',
+  )
+  if (active) active.state = 'working'
   const fixtures = routineFixtures(summary.id)
   const starting = workspaceFixtures('starting').detail.start
   const failed = workspaceFixtures('error').detail.error

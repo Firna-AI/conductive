@@ -45,5 +45,12 @@ states of the workspace screen draw them. The child pages:
   that moved to the new branch, and the note of a Continue by another
   member.
 
+On each page, the row of the workspace in the list shows the GitHub state
+of the bar: amber while checks run, red after a failed check, green after
+passed checks, and purple after the merge. A conflict, requested changes,
+a draft, and a block keep the green of the passed checks. A branch without
+a pull request or without commits, and a pull request closed without a
+merge, show the dim mark.
+
 The flow `user-flows/merge-and-continue` goes from Ready to merge through
 the merge and Continue to the next task.

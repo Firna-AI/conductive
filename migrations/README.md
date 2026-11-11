@@ -202,6 +202,13 @@ the last successful read time, the last attempt time, and an attempt ID to
 `agent_logins`. It alters the table without replacing or deleting rows.
 The attempt ID prevents a late response from overwriting a newer read.
 
+`202611102114_workspace_github_summary.sql` adds the nullable `workspaces.github_summary` column.
+A check accepts only `checks-running`, `checks-failed`, `checks-passed`, and `merged`.
+The migration copies nothing, so each existing row keeps `NULL` until its next GitHub refresh.
+The workspace object keeps the column as a copy of its committed banner state, as [The summary copy](../worker/github/README.md#the-summary-copy) says.
+The complete banner state and its events stay in Durable Object storage.
+[The GitHub state](../docs/protocol/github-banner.md#the-github-state) states the four values.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

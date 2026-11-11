@@ -13,7 +13,10 @@
   `?paths=masked`. `dev/options.ts` lists them. With `?login=endpoint`,
   `?modelList=unlisted` gives the Claude own endpoint a last model list that
   does not name the last Claude model, and `?modelList=none` a list that
-  names no Claude model. `dev/attachment-routes.ts`
+  names no Claude model. `?banner=<state>`, such as
+  `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
+  bar, and its list mark shows the GitHub state of that bar. The other rows
+  keep the GitHub states of the mockups. `dev/attachment-routes.ts`
   keeps the uploaded files of both composers. With `?upload=wait` each
   upload keeps running, and with `?upload=fail` the first upload of the
   page fails once, so Try again works. `?sent=<percent>` makes the dev

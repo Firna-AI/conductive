@@ -22,3 +22,7 @@
 - **Previous examples:** The 502 failure of 11 November 2026 in the Desktop run of pull request #176, as the problem says.
 - **Recommendation:** B. It keeps the check green through short outages, with no new host to trust.
 - **Action:** ask the user, because the fix changes a CI workflow file, and no option is clearly best between no change and a cache.
+
+## Later occurrence, 11 November 2026
+
+PR #208 head `1eff1176cc99b604f03e4b419475e595b2a27bff`, Desktop run `43014403770`, failed on Intel in `test:electron`. At 11:50 UTC, two Electron downloads reported `TypeError: fetch failed`. `approval-region.spec.ts:83` and `browser-window.spec.ts:10` then failed at `electron.launch` with `Electron failed to install correctly`. Their product assertions did not run. A third download succeeded and the remaining ten cases passed. The one failed-job rerun passed on the same head. Apple silicon and the complete gate also passed. The suspected source is the same intermittent GitHub Electron binary download setup, not a failed product assertion. No workflow, retry loop, timeout, or product source was changed for this occurrence. The cache decision above remains for separate work.

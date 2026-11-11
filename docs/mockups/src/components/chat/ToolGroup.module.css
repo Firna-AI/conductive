@@ -164,6 +164,28 @@
   margin-top: 6px;
 }
 
+/*
+ * A heading of a message, in the weight of a heading. The closed line
+ * shows its text in the line, so the words after it read as new text. The
+ * open line shows it on its own line, a little further from the block
+ * above it. The block under it stands as far as under a paragraph.
+ */
+.heading {
+  font-weight: var(--ui-weight-heading);
+}
+
+.message[open] .heading {
+  display: block;
+}
+
+.message[open] :is(.paragraph, .bullets, .heading) + .heading {
+  margin-top: 10px;
+}
+
+.message[open] .heading + .paragraph {
+  margin-top: 6px;
+}
+
 .message[open] .bullets {
   padding-left: 20px;
 }
@@ -227,6 +249,21 @@
 
 .messageBody li + li {
   margin-top: 2px;
+}
+
+/*
+ * A heading after the table, under the line. It is outside the summary,
+ * so it is a heading element, in the look of a heading of the open line.
+ */
+.messageBody :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+  font-size: inherit;
+  font-weight: var(--ui-weight-heading);
+  line-height: inherit;
+}
+
+.messageBody > * + :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 4px;
 }
 
 /* A Mac command card among the steps of an open fold. */
