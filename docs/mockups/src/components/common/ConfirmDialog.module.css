@@ -31,6 +31,11 @@
   box-sizing: border-box;
 }
 
+/* A form with a message box, such as Send feedback, takes a wider dialog. */
+.wide {
+  max-width: 520px;
+}
+
 .title {
   margin: 0;
   color: var(--ui-ink);

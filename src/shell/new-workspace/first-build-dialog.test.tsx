@@ -22,7 +22,7 @@ import {
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-test('before the first good build, Create and Enter keep the draft, and Open Cloud computer closes the dialog', async () => {
+test('before the first good build, Create and Enter keep the draft, and Cloud computer settings closes the dialog', async () => {
   const server = serverWith('dialog')
   server.json('GET', orgSettingsPaths.builds(org), {
     builds: [],
@@ -52,7 +52,7 @@ test('before the first good build, Create and Enter keep the draft, and Open Clo
     creates: 0,
     text: task,
   })
-  click(byRole('button', 'Open Cloud computer', dialog))
+  click(byRole('button', 'Cloud computer settings', dialog))
   await settle()
   expect({
     dialog: dialogIn(tab.view),

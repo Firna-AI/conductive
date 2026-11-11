@@ -1,4 +1,8 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import {
+  FEEDBACK_BODY_MAX_BYTES,
+  FEEDBACK_PATH,
+} from '../../src/shared/feedback'
 import type { AppEnv } from '../env'
 import { GITHUB_WEBHOOK_BODY_BYTES } from '../github/webhook'
 import { hostSurface } from '../hosts'
@@ -118,9 +122,18 @@ export function requestBodyEntry(
     try {
       const raw =
         env && hostSurface(request, env) === 'app' && rawUploadRoute(request)
+      const feedback =
+        env &&
+        hostSurface(request, env) === 'app' &&
+        request.method === 'POST' &&
+        new URL(request.url).pathname === FEEDBACK_PATH
       return await withRequestBodyLimit(
         request,
-        raw ? raw.maxBytes : requestBodyBudget(request, env?.MACHINE_ORIGIN),
+        raw
+          ? raw.maxBytes
+          : feedback
+            ? FEEDBACK_BODY_MAX_BYTES
+            : requestBodyBudget(request, env?.MACHINE_ORIGIN),
         (bounded) => handle(bounded, env, context),
         raw ? attachmentTooLarge : oversizedRequest,
       )

@@ -18,7 +18,8 @@ how a screen is built, and links to the other pages.
 | `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list with its toast and Restore, and the menus of each role |
-| `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
+| `app/command-palette` | The command palette over the list: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
+| `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
@@ -41,11 +42,11 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
-`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
+`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
@@ -59,8 +60,9 @@ and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`, and
-`app/archive` moved into their own folders and kept their paths, so that
-each of those pages shows only its canonical screen. `app/sign-in/get-started` moved into its own folder and
+`app/archive` and `app/command-palette/search` moved into their own folders
+and kept their paths, so that each of those pages shows only its canonical
+screen. `app/sign-in/get-started` moved into its own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
 the page shows only its canonical screen. Get started is the only first
@@ -103,8 +105,9 @@ decision 151. The mockups draw it for Firna, the first org of the sign-up:
 - `app/new-workspace/first-build` has a notice over the composer with the
   time of the build, and Send is off. The notice shows only while the org
   has no good image. Its `ready` variant has the good build, without a
-  notice. `failed` and `no-build` link an admin to the Cloud computer tab,
-  and `member` shows a failed build to a member, without the link.
+  notice. The running build, `failed`, and `no-build` link an admin to the
+  Cloud computer tab, and `member` shows a failed build to a member,
+  without the link.
 - `app/org-settings/cloud-computer/first-build` has the Cloud computer tab
   of Firna: the first build with its log, then its `failed` and `no-build`
   variants. A new org has empty scripts and no env vars, and its history
@@ -122,9 +125,10 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   acme/admin-dashboard keeps its place, off, with a note that says when it
   is ready, and the form holds the first ready repository. Its
   `kept-draft` variant has a kept draft in acme/admin-dashboard, with a
-  notice over the composer, and Send is off. Its `none-ready` variant has
-  no chosen repository ready after a failed build, with Open Cloud
-  computer for an admin, and its `member` variant has the same notice
+  notice over the composer and Cloud computer settings for an admin, and
+  Send is off. Its `none-ready` variant has
+  no chosen repository ready after a failed build, with Cloud computer
+  settings for an admin, and its `member` variant has the same notice
   without the link. The dialog shows the same repository menu and the
   same notices, as the `repositories`, `repositoryMenu`, and
   `waitingBuild` controls of `app/new-workspace/dialog` show, so the
@@ -201,40 +205,9 @@ chose these four actions on 9 November 2026. Its child pages:
   still offers Restore on hover, and a suspended org, whose rows have no
   menu.
 
-`app/command-palette` shows the All tab of the command palette over the
-list of Acme. Its child pages:
-
-- `app/command-palette/workspaces` has the Workspaces tab. Its
-  `repository` variant has the menu of the repository filter, and its
-  `archived` variant has the archived workspaces. Its `empty` variant has
-  the Archived filter of `acme/marketing-site`, which holds no archived
-  workspace, and the line that says where they show. Its `unavailable`
-  variant has a workspace list that did not load: the notice with Try
-  again fills the tab.
-- `app/command-palette/actions` has the Actions tab over the list. Its
-  `workspace` variant has the tab over an open workspace, whose actions
-  come first. Its `archived` variant has the tab over an archived
-  workspace, as Priya, a member who is not an admin, sees it: Session
-  history and Restore workspace.
-- `app/command-palette/settings` has the Settings tab.
-- `app/command-palette/search` has a search that finds a workspace and an
-  archived one. Its `no-results` variant has a search without results.
-  Its `loading`, `unavailable`, and `repositories-unavailable` variants
-  have a search for "new" while the repository names load, after the
-  workspace list did not load, and after the repository names did not
-  load. A spinner, or a notice with Try again, stands first in place of
-  the workspace groups, and the actions and the setting that match follow.
-  With an empty field, the All tab needs only the list. While the list
-  loads, or after it did not load, the status part stands before Actions,
-  in place of Recent workspaces.
-- `app/command-palette/number-search` has a search that finds a workspace
-  by its label, `W-395`, from decision 212. Its `number-part` variant
-  finds each workspace whose label holds `39`, with the label before the
-  name in each row.
-
-In `search/unavailable` and `workspaces/unavailable`, the list behind the
-palette on desktop shows the same failure, because it reads the same
-workspace list.
+[The command palette and feedback](catalogue-palette.md) gives the
+child pages of `app/command-palette` and of `app/feedback`, and the flow
+that sends feedback.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the

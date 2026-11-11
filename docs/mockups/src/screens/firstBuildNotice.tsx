@@ -13,7 +13,7 @@ const elapsed = runningBuild.elapsed.replaceAll(' ', '\u00a0')
 function ComputerLink(props: { to: string }) {
   return (
     <ScreenLink asChild to={props.to}>
-      <ActionButton icon={ArrowRight}>{copy.open}</ActionButton>
+      <ActionButton icon={ArrowRight}>{copy.settings}</ActionButton>
     </ScreenLink>
   )
 }
@@ -22,8 +22,8 @@ function ComputerLink(props: { to: string }) {
  * The notice over the composer of New workspace while the org has no good
  * image: its first build runs, failed, or never started. Send stays off
  * until a build succeeds, so no create fails for want of an image. Only an
- * admin builds the computer, so only an admin gets the link to the Cloud
- * computer tab, and a member reads who can act.
+ * admin builds and sets up the computer, so only an admin gets the link to
+ * the Cloud computer tab, in each state, and a member reads who can act.
  */
 export function FirstBuildNotice(props: {
   build: Exclude<FirstBuildState, 'succeeded'>
@@ -34,6 +34,9 @@ export function FirstBuildNotice(props: {
     case 'running':
       return (
         <Notice
+          action={
+            admin ? <ComputerLink to={paths.firstBuildComputer} /> : undefined
+          }
           body={copy.running.body}
           busy
           icon={Hammer}
