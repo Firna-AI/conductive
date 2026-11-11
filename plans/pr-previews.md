@@ -612,16 +612,18 @@ Depends on: 3
 
 The tool deploys, deletes, and sweeps previews.
 
-- [ ] Add `deploy`: the D1 database with its reset after a changed
+- [x] Add `deploy`: the D1 database with its reset after a changed
       migration, the migrations, the runner archive, the deploy, the
       health check, and the registry entry.
-- [ ] Add `delete`: the registry entry, the Boat sandboxes and snapshots,
+- [x] Add `delete`: the registry entry, the Boat sandboxes and snapshots,
       the attachments, the Worker and its routes, then the database. A
       failed step stops it.
-- [ ] Add `sweep`: the list of preview Workers, databases, and registry
+- [x] Add `sweep`: the list of preview Workers, databases, and registry
       entries, and the delete of each closed pull request.
-- [ ] Add unit tests with fake command, Boat, Cloudflare, and GitHub
-      replies, and see each fail once.
+- [x] Add unit tests with fake command, Boat, Cloudflare, and GitHub
+      replies, and see each fail once. Done on 11 November 2026: 50 tests
+      of the tool pass in 10 runs. The milestone also added the `comment`
+      command. Evidence: `.context/pr-previews/m4/report.md`.
 
 ## Milestone 5: Relay and GitHub App manifest
 

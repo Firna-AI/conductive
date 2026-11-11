@@ -1,14 +1,30 @@
+import { parseArgs } from 'node:util'
+import { runOperationCommand, type OperationResult } from './commands.ts'
+import { writePreviewConfig, type ConfigInputs } from './config.ts'
+import { previewNames } from './names.ts'
+import type { ExternalIO } from './operations.ts'
+import { defaultIO } from './runtime.ts'
+import { checkSettings } from './settings.ts'
+
 type CommandResult =
   | { kind: 'written'; path: string }
   | { kind: 'skip'; warning: string }
   | { kind: 'help'; text: string }
+  | OperationResult
 
 const USAGE = `Usage: node tools/pr-previews/main.ts config \\
   --pr NUMBER --database-id ID --runner-url URL --runner-sha256 SHA256 \\
   [--build-config dist/conductive/wrangler.json]
 
 The config command reads preview settings from the environment.
-It prints the generated config path and deploys nothing.`
+It prints the generated config path and deploys nothing.
+
+Other commands:
+  deploy --pr NUMBER --build-folder PATH --wrangler PATH --sha SHA \\
+    --runner-url URL --runner-sha256 SHA256 [--runner-archive PATH]
+  delete --pr NUMBER --wrangler PATH
+  sweep --wrangler PATH
+  comment --pr NUMBER --state deploying|live|failed|deleted --sha SHA [--data-reset]`
 
 function configOptions(args: string[]) {
   try {
@@ -35,11 +51,17 @@ function configOptions(args: string[]) {
 export async function runPreviewCommand(
   args: string[],
   environment: Readonly<Record<string, string | undefined>> = process.env,
+  io: ExternalIO = defaultIO(),
 ): Promise<CommandResult> {
   const [command, ...options] = args
   if (command === undefined || command === '--help')
     return { kind: 'help', text: USAGE }
   switch (command) {
+    case 'deploy':
+    case 'delete':
+    case 'sweep':
+    case 'comment':
+      return runOperationCommand(command, options, environment, io)
     case 'config': {
       const result = checkSettings(environment)
       if (result.kind === 'skip') return result
@@ -72,7 +94,3 @@ export async function runPreviewCommand(
       throw new Error('Unknown preview command. Use --help for usage.')
   }
 }
-import { parseArgs } from 'node:util'
-import { writePreviewConfig, type ConfigInputs } from './config.ts'
-import { previewNames } from './names.ts'
-import { checkSettings } from './settings.ts'

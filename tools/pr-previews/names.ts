@@ -43,3 +43,14 @@ export function previewNames(number: number, zone: string): PreviewNames {
     machineOrigin: `https://${machineHost}`,
   }
 }
+
+export function previewNumber(
+  value: unknown,
+  prefix: 'pr-' | 'conductive-pr-',
+): number | null {
+  if (typeof value !== 'string' || !value.startsWith(prefix)) return null
+  const suffix = value.slice(prefix.length)
+  if (!/^[1-9]\d*$/.test(suffix)) return null
+  const number = Number(suffix)
+  return Number.isSafeInteger(number) ? number : null
+}
