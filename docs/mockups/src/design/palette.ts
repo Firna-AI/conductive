@@ -14,6 +14,12 @@ type AppColors = {
   raised: string
   /** The fill of the user's own messages. */
   bubble: string
+  /**
+   * The body text of the chat: answers and the user's messages. In the dark
+   * scheme it is softer than `ink`, so long answers do not glare. Headings
+   * and bold text keep `ink`.
+   */
+  chatInk: string
   composer: string
   /** A selected row or tab. */
   selected: string
@@ -100,6 +106,8 @@ export const darkPalette: Palette = {
   panel: '#0c0d0f',
   raised: '#16191c',
   bubble: '#1a1d21',
+  // 13.8:1 on `surface`: softer than `ink` at 15.8:1, brighter than `ink2`.
+  chatInk: '#d8dbdf',
   composer: '#121417',
   selected: '#1c2025',
   link: '#5cc8ff',
@@ -167,6 +175,7 @@ export const lightPalette: Palette = {
   panel: '#ffffff',
   raised: '#f0f3f6',
   bubble: '#edf0f4',
+  chatInk: '#121519',
   composer: '#ffffff',
   selected: '#e3e8ee',
   link: '#0a6fa8',
