@@ -1,7 +1,9 @@
 # Agent input
 
 The runner prepares the workspace context folder and builds the input of
-both agents. The [runner README](README.md#key-code) names its entry points.
+both agents: the instructions of each session, and the lines that it adds
+to each message. Its [key code](#key-code) names its entry points. The
+[runner README](README.md) gives the rest of the runner.
 
 ## The context folder
 
@@ -31,12 +33,38 @@ or wording. A saved session without text takes the current text once.
 [Agent instructions](../docs/protocol/agent-instructions.md) states these
 requirements.
 
+- A new session takes its workspace branch and target branch from the
+  `branches` of the command that starts it. A command of an older Worker
+  has no `branches`, so the session then takes the branches of the runner
+  configuration.
+- Beside the text, the runner saves the pair of branches that the text
+  names, as `instructionBranches`. Later starts keep that pair with the
+  text, also after a conversation update or a model change.
+- An older saved session has no saved pair. The runner reads the pair from
+  the `Workspace branch:` and `Target branch:` lines of its saved text, and
+  leaves the text unchanged. When it cannot read both, the pair is unknown.
+
 ## Messages and files
 
 Each message to an agent starts with a sender line, then an empty line:
 `Sender: <display name> (@<login>)`, or `Sender: @<login>` without a
 display name. No adapter maps a user message to an event, so the chat
 never shows the sender line.
+
+- Each `turn` and `message` command of the current Worker carries the
+  current branches in `branches`, also a message during a turn.
+- When those branches differ from the saved pair of the session, or the
+  saved pair is unknown, a branch line follows the sender line:
+  `Current branches: workspace "<branch>"; target "<branch>".` Each name is
+  a JSON string, so it stays on one line. Then the empty line follows.
+- A session whose saved pair names the current branches gets no branch
+  line. So a new session after Continue gets none, because its text names
+  the new branch.
+- The branch line exists only in the text that reaches the agent. The
+  stored message, its events, and the titles from messages use only the
+  text that the member wrote.
+- Each sandbox keeps the runner of the org image that it starts from. An
+  older runner reads no `branches`, so its sessions get no branch line.
 
 A message with attached files adds one read instruction after the
 member's text, then one JSON line per file. Each line gives its original
@@ -47,3 +75,17 @@ A message without files gets no extra line.
 
 [Agent input](../worker/chat/attachments.md#agent-input) in the attachment
 guide gives the exact instruction and the metadata source.
+
+## Key code
+
+- `src/context-folder.ts`: `prepareContextFolder` adds the local exclude
+  rule and makes the context folders before startup reports.
+- `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
+- `src/instruction-state.ts`: the built text with its branches, the parser
+  of saved branches, and the reader of the branches of older saved text.
+- `src/engine-input.ts`: the instructions and the saved pair of a session
+  at its first input.
+- `src/providers/message.ts`: `providerMessage`, the sender line and the
+  branch line.
+- `src/providers/instructions.test.ts` and `src/providers/branches.test.ts`:
+  the saved text, the sender line, and the branch line of both agents.

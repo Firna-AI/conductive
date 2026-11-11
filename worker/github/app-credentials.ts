@@ -2,7 +2,7 @@ import type { HttpFetch } from '../env'
 import { base64Url } from '../security/crypto'
 import { githubFailure, object, text } from './parsers'
 import { appSigningKey } from './private-key'
-import { githubJson, githubRequest } from './transport'
+import { githubJson, githubRequest, withGitHubResponse } from './transport'
 
 interface GitHubAppIdentity {
   clientId: string
@@ -83,11 +83,14 @@ export async function revokeInstallationAccessToken(
   failure: () => Error,
 ): Promise<void> {
   try {
-    const response = await fetch(
+    await withGitHubResponse(
+      fetch,
       githubRequest('/installation/token', token, { method: 'DELETE' }),
+      async (response) => {
+        await response.body?.cancel()
+        if (response.status !== 204 && response.status !== 401) throw failure()
+      },
     )
-    await response.body?.cancel()
-    if (response.status !== 204 && response.status !== 401) throw failure()
   } catch {
     throw failure()
   }

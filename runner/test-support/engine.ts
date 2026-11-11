@@ -21,7 +21,14 @@ export async function engineFixture(overrides: Partial<EngineOptions> = {}) {
   const options: EngineOptions = {
     cwd: '/repo',
     home: '/home/agent',
-    instructions: agentInstructions({ cwd: '/repo', defaultBranch: 'main' }),
+    instructions: (branches) => ({
+      text: agentInstructions({
+        cwd: '/repo',
+        defaultBranch: branches?.targetBranch ?? 'main',
+        workspaceBranch: branches?.workspaceBranch,
+      }),
+      branches: branches ?? null,
+    }),
     tools: {
       machineOrigin: 'https://machines.conductive.test',
       workspaceToken: 'workspace-secret',

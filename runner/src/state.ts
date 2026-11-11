@@ -20,6 +20,8 @@ import {
   type SavedTurn,
 } from './state-turns'
 import { SerialQueue } from './serial-queue'
+import { parseBranches } from './instruction-state'
+import type { RunnerBranches } from '../../src/shared/runner'
 import {
   emptyReports,
   parseReports,
@@ -34,6 +36,7 @@ export interface SavedSession {
   agent: Agent
   providerSessionId: string | null
   instructions?: string
+  instructionBranches?: RunnerBranches | null
 }
 
 export interface RunnerState {
@@ -100,6 +103,14 @@ function parseState(value: unknown): RunnerState {
         ...(session.instructions === undefined
           ? {}
           : { instructions: string(session.instructions) }),
+        ...(session.instructionBranches === undefined
+          ? {}
+          : {
+              instructionBranches:
+                session.instructionBranches === null
+                  ? null
+                  : parseBranches(session.instructionBranches),
+            }),
         providerSessionId:
           session.providerSessionId === null
             ? null

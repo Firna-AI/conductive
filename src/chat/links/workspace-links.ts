@@ -27,6 +27,8 @@ export interface LinkTarget {
   workspace: Workspace
   /** The path, the query, and the hash of the page, as the router reads them. */
   to: string
+  /** The session of a session link, or null for another page of the workspace. */
+  sessionId: string | null
 }
 
 /** The target of a Markdown link: a web address, which can stand in angle brackets. */
@@ -131,5 +133,9 @@ export function linkTarget(
     (item) => item.id === route.workspaceId,
   )
   if (!workspace || originOf(workspace.link) !== url.origin) return undefined
-  return { workspace, to: `${url.pathname}${url.search}${url.hash}` }
+  return {
+    workspace,
+    to: `${url.pathname}${url.search}${url.hash}`,
+    sessionId: route.session ?? null,
+  }
 }

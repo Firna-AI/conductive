@@ -55,6 +55,9 @@ A part stored as one value, without a manifest, stays readable.
 A newer revision, a refusal, and a new stream remove each obsolete part with its chunks.
 After the last part, `accept` joins the entries in part order.
 A complete changes report must have a summary that counts its files and the sum of their added and removed lines.
+It also keeps two counts across parts, storage, and publication: the current branch's `unpushedCommits`, and `uncommittedFileCount`, the raw status count of the runner.
+Each part of a report must repeat the same counts, or the part is invalid.
+Reports from older runner images can omit either count. The stored report and API keep it absent.
 `accept` then applies the complete report to the projection and returns it for the history and the browser tabs.
 It returns `null` while parts are pending and for an identical repeated part.
 It applies a tree delta only when the delta has the next tree revision and no tree report is incomplete.
@@ -142,6 +145,7 @@ It must carry request cancellation to the object or detach pending requests when
 The handler reads the stored workspace base from D1.
 A null base uses the repository default branch.
 It does not use a browser-supplied base branch.
+The runner uses that name only when the current branch has no `gh-merge-base` Git setting, as [The comparison base](../../runner/file-reports.md#the-comparison-base) says.
 
 The repository root is required because lifecycle and runner code own the checkout folder.
 The Boat read adapter accepts roots under `/home/user/`.

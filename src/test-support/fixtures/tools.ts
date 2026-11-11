@@ -30,6 +30,7 @@ import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './core'
 import { withRealPath } from './masked-paths'
 
 export const FAKE_FILE_PATH = 'src/app/checkout/AddressForm.tsx'
+export const FAKE_GITHUB_HEAD_SHA = 'a'.repeat(40)
 export const fakeTerminalOutput =
   'storefront (calummoore/checkout-autocomplete) $ npm run dev\r\nLocal: http://localhost:3000\r\nReady\r\n'
 
@@ -67,8 +68,12 @@ export function toolFixtures(
     sizeBytes: 0,
   }
   content.sizeBytes = new TextEncoder().encode(content.content).byteLength
+  // A deliberate legacy report: a runner from before the raw count of Git
+  // status sends none. The recorded file events reuse it. The current
+  // reports, with both counts, are in `fake-bar.ts`.
   const changes: ChangesResponse = {
     baseBranch: 'main',
+    unpushedCommits: 1,
     files: changed.map((file) =>
       withRealPath({ ...file, uncommitted: file.path === FAKE_FILE_PATH }),
     ),
@@ -96,14 +101,10 @@ export function toolFixtures(
         ? {
             state: bannerState,
             pullRequest: null,
-            createPullRequestUrl:
-              bannerState === 'none'
-                ? 'https://github.com/acme/storefront/compare/main...calummoore:checkout-autocomplete?expand=1'
-                : null,
           }
         : {
             state: bannerState,
-            pullRequest,
+            pullRequest: { ...pullRequest, headSha: FAKE_GITHUB_HEAD_SHA },
             // A missing approval is the common reason that GitHub blocks a merge.
             review:
               bannerState === 'changes-requested'

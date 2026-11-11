@@ -1,4 +1,5 @@
 import { HttpError } from '../http'
+import { pendingContinue } from '../lifecycle/continue-types'
 import { WorkspaceFiles } from '../files/workspace'
 import { durableFilesStorage } from '../files/storage'
 import { WorkspaceAlarms, nativeAlarmStorage } from '../features/alarms'
@@ -143,6 +144,7 @@ export function createWorkspaceIntegration(
           runnerDisconnected: async (_id, publish) =>
             controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
           turnDispatching: async (_id, turn, publish) => {
+            if (await pendingContinue(storage)) return false
             const state = await controller.readLifecycle()
             if (!state) return true
             if (!['ready', 'working', 'unread', 'input'].includes(state.state))

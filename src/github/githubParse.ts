@@ -78,10 +78,16 @@ function readPullRequest(value: unknown): PullRequest | null {
     !isRecord(value) ||
     !isNumber(value.number) ||
     typeof value.title !== 'string' ||
-    typeof value.url !== 'string'
+    typeof value.url !== 'string' ||
+    typeof value.headSha !== 'string'
   )
     return null
-  return { number: value.number, title: value.title, url: value.url }
+  return {
+    number: value.number,
+    title: value.title,
+    url: value.url,
+    headSha: value.headSha,
+  }
 }
 
 function readBanner(value: unknown): GitHubBanner | null {
@@ -100,13 +106,7 @@ function readBanner(value: unknown): GitHubBanner | null {
   const state = value.state
   if (state === 'none' || state === 'no-commits') {
     if (value.pullRequest !== null) return null
-    if (!isStringOrNull(value.createPullRequestUrl)) return null
-    return {
-      ...branch,
-      state,
-      pullRequest: null,
-      createPullRequestUrl: value.createPullRequestUrl,
-    }
+    return { ...branch, state, pullRequest: null }
   }
   const pullRequest = readPullRequest(value.pullRequest)
   if (

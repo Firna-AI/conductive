@@ -32,6 +32,18 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
+- The report of the branch changes also gives the number of commits of
+  the current branch that no remote branch holds. The pull request bar
+  counts them as local work, as [Actions](github-banner.md#actions) says.
+- After a start from a saved snapshot, the runner watches the live
+  repository folder again when the app sees the end of the restore, and it
+  scans the repository once. It uses the same signal as the terminal below.
+- Reason: a watch made before the restore ends stays on the old view of the
+  disk, so the lists stop updating. A file that the provider writes inside
+  the sandbox at the end of its restore was rejected, because the provider
+  does not document it and can change it. A timer that compares the
+  identity of the folder was rejected, because the app already has a
+  documented signal for the end of the restore.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
   This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
 - The complete runner envelope also meets the

@@ -1,1 +1,12 @@
-{ "order": ["checks", "blocked", "no-commits"] }
+{
+  "order": [
+    "checks",
+    "blocked",
+    "no-commits",
+    "merge",
+    "local-work",
+    "sent",
+    "continue",
+    "continued"
+  ]
+}

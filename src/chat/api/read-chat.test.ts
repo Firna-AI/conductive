@@ -41,6 +41,21 @@ function envelope(event: unknown) {
   return { workspaceId: 'workspace-1', eventNumber: 9, occurredAt: 25, event }
 }
 
+it('preserves the complete Continue note in browser history without changing its member or branches', () => {
+  const { workspace } = workspaceFixtures().created
+  const event = {
+    type: 'workspace.continued',
+    sessionId: 'session-1',
+    member: senderSnapshot(workspace.owner),
+    branch: 'owner/next',
+    baseBranch: 'trunk',
+  }
+  expect(readEnvelope(envelope(event))).toEqual({
+    ...envelope(event),
+    late: false,
+  })
+})
+
 it('reads exact positive omission counts from browser event envelopes', () => {
   for (const event of [tool, completed]) {
     expect(readEnvelope(envelope(event))).toEqual({

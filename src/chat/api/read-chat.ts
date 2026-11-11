@@ -1,10 +1,5 @@
 import type { Agent, AgentChoice, Effort } from '../../shared/agents'
-import {
-  readToolSkills,
-  type ChatEvent,
-  type RunnerEventRefused,
-  type ToolCall,
-} from '../../shared/chat-events'
+import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
 import type { ChangedFile, ChangeKind } from '../../shared/files'
 import type {
   Attachment,
@@ -13,6 +8,8 @@ import type {
   UserMessage,
 } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
+import { readContinued } from './read-continued'
+import { readTool, safeCount } from './read-tool'
 import {
   count,
   flag,
@@ -41,21 +38,6 @@ const readChange = oneOf<ChangeKind>({
   renamed: true,
   untracked: true,
 })
-const readToolKind = oneOf<ToolCall['kind']>({
-  read: true,
-  search: true,
-  create: true,
-  edit: true,
-  run: true,
-  computer: true,
-  other: true,
-})
-const readToolState = oneOf<ToolCall['state']>({
-  running: true,
-  done: true,
-  stopped: true,
-  failed: true,
-})
 const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'turn.started': true,
   'turn.thinking': true,
@@ -74,14 +56,6 @@ const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'workspace.title': true,
   unknown: true,
 })
-
-/** The new count fields require whole, non-negative, safe integer values. */
-function safeCount(value: unknown): number {
-  const result = count(value)
-  if (!Number.isSafeInteger(result) || result < 0)
-    throw new UnreadableResponse('count')
-  return result
-}
 
 export function readChoice(value: unknown): AgentChoice {
   const source = record(value, 'choice')
@@ -156,20 +130,6 @@ export function readSession(value: unknown): Session {
   }
 }
 
-function readTool(value: unknown): ToolCall {
-  const source = record(value, 'tool')
-  const skills = readToolSkills(source.skills)
-  return {
-    id: text(source.id),
-    kind: readToolKind(source.kind),
-    ...(skills === undefined ? {} : { skills }),
-    target: text(source.target),
-    detail: nullable(text)(source.detail),
-    omittedDetailBytes: safeCount(source.omittedDetailBytes),
-    state: readToolState(source.state),
-  }
-}
-
 /** A display label, or nothing. A label never makes an event unreadable. */
 function label(value: unknown): string | undefined {
   return typeof value === 'string' && value !== '' ? value : undefined
@@ -205,6 +165,8 @@ function readError(value: unknown): { code: string; message: string } {
 /** Reads one chat event. A type that this app does not know yet throws. */
 export function readChatEvent(source: Record<string, unknown>): ChatEvent {
   switch (source.type) {
+    case 'workspace.continued':
+      return readContinued(source)
     case 'message.accepted':
       return { type: source.type, message: readUserMessage(source.message) }
     case 'message.sent':

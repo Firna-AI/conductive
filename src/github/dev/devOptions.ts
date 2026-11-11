@@ -1,4 +1,5 @@
 import type { BannerState } from '../../shared/github'
+import { readScenario, type BarScenario } from '../../test-support/fake-bar-dev'
 import { samples, type Sample } from './devSamples'
 import type { GitHubMode } from './devSource'
 
@@ -18,6 +19,7 @@ export const bannerStates: readonly BannerState[] = [
 export const schemes = ['dark', 'light'] as const
 export const viewers = ['owner', 'admin', 'member'] as const
 export const modes: readonly GitHubMode[] = ['normal', 'slow', 'error']
+export const turns = ['none', 'running'] as const
 
 export interface DevOptions {
   state: BannerState
@@ -25,6 +27,9 @@ export interface DevOptions {
   viewer: (typeof viewers)[number]
   github: GitHubMode
   sample: Sample
+  /** A turn runs in the session of the chat. */
+  turn: (typeof turns)[number]
+  scenario: BarScenario
 }
 
 function pick<T extends string>(
@@ -44,9 +49,12 @@ export function readOptions(search: string): DevOptions {
     viewer: pick(viewers, query.get('viewer'), 'owner'),
     github: pick(modes, query.get('github'), 'normal'),
     sample: pick(samples, query.get('sample'), 'fake'),
+    turn: pick(turns, query.get('turn'), 'none'),
+    scenario: readScenario(query),
   }
 }
 
 export function optionsQuery(options: DevOptions): string {
-  return `?${new URLSearchParams({ ...options })}`
+  const { scenario, ...rest } = options
+  return `?${new URLSearchParams({ ...rest, ...scenario })}`
 }
