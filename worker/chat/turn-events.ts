@@ -27,18 +27,6 @@ export async function prepareAgentEvent(
     )
   }
   const { session, turn } = target
-  if (
-    event.type === 'turn.failed' &&
-    event.error.code === 'agent_model_unavailable' &&
-    turn.endpointModel
-  )
-    event = {
-      ...event,
-      error: {
-        code: event.error.code,
-        message: `The endpoint of this login does not serve ${turn.endpointModel}. Choose another model.`,
-      },
-    }
   let acknowledged: readonly string[] = []
   if (event.type === 'turn.started') {
     sameAgent(session, event.choice)
@@ -62,6 +50,23 @@ export async function prepareAgentEvent(
         'runner_message_mismatch',
         'The message is not available.',
       )
+    }
+    if (event.error.code === 'agent_model_unavailable' && turn.endpointModel) {
+      const message =
+        session.choice.agent === 'codex'
+          ? await transaction.message(event.retryMessageId)
+          : undefined
+      const model =
+        message?.sessionId === turn.sessionId
+          ? message.choice.model
+          : turn.endpointModel
+      event = {
+        ...event,
+        error: {
+          code: event.error.code,
+          message: `The endpoint of this login does not serve ${model}. Choose another model.`,
+        },
+      }
     }
   }
   for (const messageId of acknowledged) {

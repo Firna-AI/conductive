@@ -46,12 +46,12 @@ export async function gatewayHttp(
     beforeFailure?: () => Promise<void>
     tasks?: CodexTaskOwner
   } = {},
-  endpointSecret?: string,
+  endpointLogin: { secret?: string; endpoint?: string } = {},
 ) {
   const turn = await runningGatewayTurn(harness, choice, {
     kind,
     protocolVersion,
-    secret: endpointSecret,
+    ...endpointLogin,
   })
   const { fixture } = turn
   const clock = new ManualChatClock(fixture.clock.now())
@@ -184,7 +184,8 @@ export async function gatewayHttp(
     workspaceCalls,
     request,
     fetch: (request: Request) => fetch(request, fixture.env),
-    secret: endpointSecret ?? `secret-${fixture.member.id}-${choice.agent}`,
+    secret:
+      endpointLogin.secret ?? `secret-${fixture.member.id}-${choice.agent}`,
     async dispose() {
       await fixture.chat.closeConnections()
     },

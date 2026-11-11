@@ -22,6 +22,7 @@ export async function runningGatewayTurn(
     protocolVersion?: RunnerProtocolVersion
     kind?: 'api-key' | 'token' | 'endpoint'
     secret?: string
+    endpoint?: string
   } = {},
 ) {
   const fixture = await createChatFixture(harness)
@@ -40,7 +41,7 @@ export async function runningGatewayTurn(
         body: JSON.stringify({
           agent: choice.agent,
           kind: 'endpoint',
-          endpoint: gatewayOwnEndpoint,
+          endpoint: options.endpoint ?? gatewayOwnEndpoint,
           secret:
             options.secret ?? `secret-${fixture.member.id}-${choice.agent}`,
         }),

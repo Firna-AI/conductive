@@ -12,6 +12,7 @@ export interface EndpointAddress {
   origin: string
   host: string
   upstream: string
+  secretForms: readonly string[]
 }
 
 interface EndpointAddressOptions {
@@ -41,6 +42,11 @@ export function readEndpointAddress(
     if (agent === 'claude') path = path.replace(/\/v1$/, '')
     url.pathname = path
     const endpoint = `${url.origin}${path}${url.search}`
+    const relative = `${path}${url.search}`
+    const parts = [
+      ...path.split('/').map(decodePathSegment),
+      ...url.searchParams.values(),
+    ].filter((part) => part.length >= 12)
     if (route !== undefined) {
       const routes =
         agent === 'claude'
@@ -51,8 +57,50 @@ export function readEndpointAddress(
       if (search)
         url.search += `${url.search ? '&' : '?'}${search.replace(/^\?/, '')}`
     }
-    return { endpoint, origin: url.origin, host: url.host, upstream: url.href }
+    const secretForms = [
+      value,
+      endpoint,
+      url.href,
+      url.origin,
+      url.host,
+      url.hostname,
+      relative,
+      `${url.pathname}${url.search}`,
+      ...parts,
+    ].filter(Boolean)
+    return {
+      endpoint,
+      origin: url.origin,
+      host: url.host,
+      upstream: url.href,
+      secretForms: [
+        ...new Set(
+          secretForms.flatMap((part) => [
+            part,
+            encodeAddressPart(part),
+            JSON.stringify(part).slice(1, -1),
+            JSON.stringify(part).slice(1, -1).replaceAll('/', '\\/'),
+          ]),
+        ),
+      ],
+    }
   } catch {
     return null
+  }
+}
+
+function decodePathSegment(part: string): string {
+  try {
+    return decodeURIComponent(part)
+  } catch {
+    return part
+  }
+}
+
+function encodeAddressPart(part: string): string {
+  try {
+    return encodeURIComponent(part)
+  } catch {
+    return part
   }
 }

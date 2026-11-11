@@ -91,7 +91,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         agent logins. An own endpoint login holds the endpoint address and
         its key. ${productName} stores these values encrypted. It
         uses your login only for the turns of the sessions that you start,
-        also the sessions that the runs of your routines start.
+        also the sessions that the runs of your routines start. The one
+        exception is that ${productName} reads an own endpoint's model list
+        with its key, at the times in Endpoint models below.
         The messages of other members in those sessions use it only when
         you let other members use that login. A newer cloud computer starts
         from an org image that requires ${productName} to keep agent logins

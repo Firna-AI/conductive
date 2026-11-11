@@ -195,3 +195,70 @@ it.each([CLAUDE, CODEX])(
     ])
   },
 )
+
+it('names the failed Codex message model when another model starts inside the same turn', async () => {
+  const { fixture, runner, turn, session } = await runningGatewayTurn(
+    harness,
+    CODEX,
+    { protocolVersion: 2, kind: 'endpoint' },
+  )
+  const next = { ...CODEX, model: 'missing-next-model' }
+  runner.emit({
+    type: 'turn.started',
+    sessionId: session.id,
+    turnId: turn.turnId,
+    senderId: turn.message.sender.id,
+    choice: CODEX,
+    startedAt: TEST_TIME,
+    messageIds: [turn.message.id],
+  })
+  await fixture.drain()
+  await fixture.send(
+    session.id,
+    'next-model-message',
+    fixture.ownerCookie,
+    next,
+  )
+  expect(runner.commands).toContainEqual(
+    expect.objectContaining({
+      type: 'message',
+      turnId: turn.turnId,
+      message: expect.objectContaining({
+        id: 'next-model-message',
+        choice: next,
+      }),
+    }),
+  )
+  runner.emit({
+    type: 'turn.failed',
+    sessionId: session.id,
+    turnId: turn.turnId,
+    error: {
+      code: 'agent_model_unavailable',
+      message: 'The selected model is unavailable. Choose another model.',
+    },
+    retryMessageId: 'next-model-message',
+    durationMs: 25,
+  })
+  await fixture.drain()
+  const error = {
+    code: 'agent_model_unavailable',
+    message:
+      'The endpoint of this login does not serve missing-next-model. Choose another model.',
+  }
+  expect(turnEnds(await fixture.history(session.id))).toMatchObject([
+    {
+      event: {
+        type: 'turn.failed',
+        retryMessageId: 'next-model-message',
+        error,
+      },
+    },
+  ])
+  expect(
+    await fixture.chat.store.read(
+      WORKSPACE_ID,
+      async (view) => (await view.turn(turn.turnId))?.error,
+    ),
+  ).toEqual(error)
+})

@@ -137,6 +137,12 @@ the palette and of the Feedback dialog.
   and when its reply shows. A read shows the login of an agent only while
   that login had no change during the read. An open shares a read that
   runs already, and a failed read keeps what shows.
+- `AccountLoginReads` in `account-login-reads.ts` shares those reads with
+  each return to the visible page. While the account has an own endpoint
+  login, it also reads once a minute. Each read merges only the logins,
+  with the same guards against local changes. A read across a new app
+  start or a sign-out changes nothing. Polling stops without an own
+  endpoint login or while the app is not ready.
 - Timers, the focus, the visibility, the input, and the keys of the page
   come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
   `onKey`), so that no unit test runs a real timer or needs a browser

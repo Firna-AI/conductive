@@ -127,8 +127,13 @@ stored account ID. The request cannot choose another account.
 Response headers use the content type, retry, request ID, and provider rate-limit rules.
 No provider cookie passes.
 Allowed response header values redact the real login.
-For an own endpoint, redaction covers the key, saved base, built request address, origin, and host.
-Error bodies redact plain and JSON-escaped values across chunk boundaries.
+For an own endpoint, both filters use the secret forms from the shared address builder.
+These include whole and relative addresses, origin, host, and host name without its port.
+The builder also includes each saved path segment and query value with at least 12 characters.
+It lists plain, percent-encoded, and JSON-escaped forms, including escaped slashes.
+Shorter address parts match only inside a whole address form.
+Key redaction keeps its existing rules.
+Error bodies redact these values across chunk boundaries.
 Success body chunks pass directly, with no text decoding or copy.
 
 For a ChatGPT sign-in, the fixed request names also include

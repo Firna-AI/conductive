@@ -7,6 +7,13 @@ import { readEndpointAddress } from './endpoint-address'
 it('normalizes public addresses and builds only the model routes of each agent', () => {
   for (const [agent, input, route, endpoint, upstream] of [
     [
+      'codex',
+      'https://proxy.example.test/\ud800',
+      '/responses',
+      'https://proxy.example.test/%EF%BF%BD',
+      'https://proxy.example.test/%EF%BF%BD/responses',
+    ],
+    [
       'claude',
       'https://proxy.example.test/base/v1/?key=value#part',
       '/v1/messages',
@@ -47,6 +54,7 @@ it('normalizes public addresses and builds only the model routes of each agent',
       origin: new URL(endpoint).origin,
       host: new URL(endpoint).host,
       upstream,
+      secretForms: expect.arrayContaining([endpoint, upstream]),
     })
   }
   expect(
@@ -139,6 +147,9 @@ it('keeps query bytes when they end with a slash and joins a request query', () 
     host: 'proxy.example.test',
     upstream:
       'https://proxy.example.test/v1/responses?key=abc%2F&path=/&trace=a%20b',
+    secretForms: expect.arrayContaining([
+      'https://proxy.example.test/v1?key=abc%2F&path=/',
+    ]),
   })
 })
 

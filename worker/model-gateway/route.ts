@@ -124,14 +124,7 @@ export async function routeModelGateway(
         `${agent === 'claude' ? 'https://api.anthropic.com' : 'https://api.openai.com/v1'}${suffix}${url.search}`
       const secrets =
         login.kind === 'endpoint' && address
-          ? [
-              login.secret,
-              login.endpoint,
-              address.endpoint,
-              address.upstream,
-              address.origin,
-              address.host,
-            ]
+          ? [login.secret, ...address.secretForms]
           : [login.secret]
       const auth = chatgpt
         ? await lifetime.wait(

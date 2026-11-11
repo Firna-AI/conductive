@@ -100,7 +100,12 @@ The browser posts one raw file as `application/octet-stream` with its known byte
 `endpoint-address.ts` owns `readEndpointAddress`, the shared endpoint
 address builder for forms, saves, dispatch, and the model gateway.
 It takes the agent and an options object with an optional model route, request query, and extra refused domains.
-It returns the normalized endpoint, origin, host, and exact upstream address, or null for a refused address.
+It returns the normalized endpoint, origin, host, exact upstream address, and `secretForms`, or null for a refused address.
+`secretForms` owns the address patterns that both gateway output filters use.
+It includes whole and relative addresses and the host name without its port.
+It also includes saved path segments and query values with at least 12 characters.
+Each form has plain, percent-encoded, and JSON-escaped variants, including escaped slashes.
+Shorter parts match only inside a whole address form.
 `endpoint-host.ts` owns its public host check.
 It accepts only public host names and refuses every IPv4 and IPv6 address.
 It reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.

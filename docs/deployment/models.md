@@ -28,7 +28,7 @@ for local development.
 - An own endpoint login uses the same list. The owner's pickers hide each
   model of the list that the endpoint does not name in its own model
   list, as
-  [Own endpoint logins](../protocol/tokens-and-secrets.md#own-endpoint-logins)
+  [Own endpoint logins](../protocol/own-endpoint-logins.md)
   says. The endpoint gets the full model ID that the agent program sends.
 - These routes read the two variables:
   - `GET /api/models` of the app reads `CONDUCTIVE_MODELS`. A missing or

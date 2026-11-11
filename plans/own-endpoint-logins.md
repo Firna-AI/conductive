@@ -35,12 +35,13 @@ before the replay is the local branch
 Contract owners:
 
 - [Tokens and secrets](../docs/protocol/tokens-and-secrets.md), the
-  section "Agent logins".
+  section "Agent logins", and
+  [Own endpoint logins](../docs/protocol/own-endpoint-logins.md).
 - [Isolation](../docs/protocol/isolation.md), the section "Agent logins
   in a sandbox".
 - [Model gateway](../docs/protocol/model-gateway.md), and its
   [requests and answers](../docs/protocol/model-gateway-requests.md).
-- [Deployment inputs](../docs/deployment.md), the section "Models".
+- [Models](../docs/deployment/models.md) of the deployment guide.
 - [Data and trust](../docs/architecture/data-and-trust.md) and
   [Flows](../docs/architecture/flows.md) of the architecture.
 - The account, composer, and Get started mockups, and

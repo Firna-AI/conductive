@@ -61,7 +61,7 @@ and the separate preview domain.
 - The gateway calls an own endpoint only at a public https address. So a
   saved address cannot point the Worker at a private network, at the app,
   or at a preview, as
-  [Own endpoint logins](../protocol/tokens-and-secrets.md#own-endpoint-logins)
+  [Own endpoint logins](../protocol/own-endpoint-logins.md)
   and [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints) say.
 - During a turn, a sandbox with a runner of protocol version 1 holds the
   agent login of the starter itself. A workspace with a version pin of 1

@@ -211,8 +211,9 @@ No endpoint address or key enters a runner command or chat record.
 The read uses `waitUntil` and does not delay the runner command.
 The private turn record keeps its dispatched endpoint model ID.
 It follows model commands sent to Claude, which applies them during the turn.
-Codex keeps its active turn model when a model change waits for the next turn.
-`turn-events.ts` uses that ID for `agent_model_unavailable` failures.
+Codex can start a message on another model inside the same turn.
+For Codex `agent_model_unavailable` failures, `turn-events.ts` reads the model of the checked `retryMessageId`.
+Claude uses the dispatched endpoint model ID, which also supplies the fallback for Codex.
 The public cause names the missing model and no host.
 Native logins keep their existing cause text.
 `endpoint-models.test.ts` checks background dispatch, owner privacy, and both agents' failure text.

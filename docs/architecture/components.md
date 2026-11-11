@@ -194,7 +194,7 @@ the rules.
   messages, the files, and the command results of those turns. Only a
   runner of protocol version 2 or later runs such a turn, and no sandbox
   gets the address or the key.
-  [Own endpoint logins](../protocol/tokens-and-secrets.md#own-endpoint-logins)
+  [Own endpoint logins](../protocol/own-endpoint-logins.md)
   and [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
   state the rules.
 - **Workers AI:** the Cloudflare model service writes a title for a

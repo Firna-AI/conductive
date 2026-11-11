@@ -45,6 +45,9 @@ This page lists each protocol doc and what it covers.
     - [Version pins](../protocol/version-pins.md): the login rules and the
       risks of each version pin.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
+    - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
+      endpoint and the key of each agent, the model list of the endpoint,
+      and the addresses that the app accepts.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.

@@ -103,14 +103,14 @@ decision number names a decision of the change that adds the gateway, as
 
 - For an own endpoint login, the gateway sends each model request of the
   turn to the endpoint, with the key in the header that
-  [Own endpoint logins](tokens-and-secrets.md#own-endpoint-logins) names
+  [Own endpoint logins](own-endpoint-logins.md) names
   (gateway decision 10). No runner gets the address or the key, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.
 - The endpoint gets the messages, the files, and the command results of
   each turn on the login, whoever sent the message.
 - Before each request, the gateway checks the address again with the rule
-  of [Own endpoint logins](tokens-and-secrets.md#own-endpoint-logins). It
+  of [Own endpoint logins](own-endpoint-logins.md). It
   follows no redirect. Reason: a redirect could send the key and the turn
   to an address that the rule refuses.
 - A request reaches only a public IP address, also when a public name

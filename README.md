@@ -85,7 +85,7 @@ feature that is not complete yet says so.
     API key, or an own endpoint that serves the OpenAI Responses API
 
 An own endpoint is a gateway or a proxy that the user chose, with its key.
-[Own endpoint logins](docs/protocol/tokens-and-secrets.md#own-endpoint-logins)
+[Own endpoint logins](docs/protocol/own-endpoint-logins.md)
 states its address rule and its other rules.
 
 ## Get started

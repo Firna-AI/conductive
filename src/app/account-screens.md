@@ -25,7 +25,7 @@ agent login forms, and model lists in the web app.
 - The own endpoint form names the API that the endpoint must serve, with
   the models of the app for the agent from `GET /api/models`. The form
   checks the address with the rule of the save, as
-  [Own endpoint logins](../../docs/protocol/tokens-and-secrets.md#own-endpoint-logins)
+  [Own endpoint logins](../../docs/protocol/own-endpoint-logins.md)
   says. The hint under the address names the address of the requests, and
   first the address that the form saves when the rule changes the typed
   one. Connect with an address that the rule refuses shows the refusal at
