@@ -7,7 +7,7 @@ import { EmptyState } from '../components/common/EmptyState'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
-import { CommandPalette } from '../components/palette/CommandPalette'
+import { useMacApp } from '../components/mac/MacApp'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { ChecksActions } from '../components/workspace/BarActions'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
@@ -23,6 +23,8 @@ import { mayArchiveWorkspace } from '../components/workspaces/permissions'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
+import { bannerSummary } from '../fixtures/pullRequests'
+import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
 import { composerFor } from './composerFor'
@@ -42,6 +44,7 @@ import {
 import {
   transcriptToast,
   workspaceOverlay,
+  workspacePalette,
   workspaceToast,
 } from './workspaceOverlays'
 import { openWorkspace } from './workspaceRun'
@@ -68,14 +71,18 @@ const widenedRight = 560
  * `overlay` lies over the workspace in place of the overlay of its state,
  * such as a dialog that another screen opens over it. The chat and the
  * overlay find the workspaces of their chips in the list of the screen.
- * The toast of the state lies over everything.
+ * The toast of the state lies over everything. `shortcuts` holds the
+ * person's changes to the shortcuts. With them, the palette rows show their
+ * keys, and the Search row shows the person's key of the palette.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
   viewport: Viewport
   overlay?: ReactNode
+  shortcuts?: ShortcutChanges
 }) {
   const { viewport } = props
+  const mac = useMacApp()
   const state = drawnState(props.state)
   const suspended = state.org === 'suspended'
   const open = openWorkspace(state)
@@ -84,11 +91,13 @@ export function WorkspaceScreen(props: {
   // admin sees. A suspended org refuses the start of every owner.
   const ownerRefused = state.sandbox === 'refused' && !suspended
   const owner = ownerRefused ? suspendedOwner : record.owner
+  // Its row in the list shows the GitHub state of its pull request bar.
   const workspace = {
     ...record,
     owner,
     name: workspaceName(state, record),
     branch: branchOf(state, record),
+    github: bannerSummary(state.banner),
   }
   const status = activityOf(state)
   const archived = state.sandbox === 'archived'
@@ -191,19 +200,17 @@ export function WorkspaceScreen(props: {
   })
   const tool = <ToolContent state={state} viewport={viewport} />
   const toast = workspaceToast(state, workspace, viewport)
+  const palette = workspacePalette(state, viewport, {
+    open: { workspace, status },
+    archivable,
+    restorable,
+    rightColumn: !rightHidden,
+    mac: mac !== undefined,
+    shortcuts: props.shortcuts,
+  })
   if (viewport === 'mobile') {
     if (state.palette !== 'closed') {
-      // A phone opens the palette from the list, so it offers no actions
-      // of a workspace.
-      return (
-        <MobileFrame>
-          <CommandPalette
-            context={{ archivable: false }}
-            view={state.palette}
-            viewport={viewport}
-          />
-        </MobileFrame>
-      )
+      return <MobileFrame>{palette}</MobileFrame>
     }
     const body = {
       chat: (
@@ -233,19 +240,6 @@ export function WorkspaceScreen(props: {
     )
   }
   const file = openFile(state)
-  const palette =
-    state.palette === 'closed' ? null : (
-      <CommandPalette
-        context={{
-          open: { workspace, status },
-          archivable,
-          restorable,
-          rightColumn: !rightHidden,
-        }}
-        view={state.palette}
-        viewport={viewport}
-      />
-    )
   return (
     <AppFrame
       overlay={
@@ -270,6 +264,7 @@ export function WorkspaceScreen(props: {
         viewer: membership,
         changed: changedWorkspaces(state),
         restoreOpen: state.archive === 'kept',
+        shortcuts: props.shortcuts,
       })}
     >
       <WorkspaceBody

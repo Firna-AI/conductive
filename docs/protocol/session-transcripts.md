@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the copy of
 a session transcript. It covers the copy items of the tab menu, what each
-copy holds, the text of a copy, the route that gives the text, and the
-reads of the same text by agents. It belongs to
+copy holds, the text of a copy, and the route that gives the text. A
+linked page covers the reads of the same text by agents. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -57,10 +57,10 @@ at `app/tabs` and `app/transcripts`.
   the same way.
 - The tab keeps that text only in its memory. No chat stays on the disk of
   the device, as [Events](chat-and-events.md#events) says.
-- For now, no key copies a transcript, and the command palette has no row
-  for it.
-- A copy on ⌘⌥C, the key of the concise copy in Conductor, was rejected,
-  because ⌘⌥C opens the developer tools in Chrome.
+- Two commands of [Keyboard shortcuts](keyboard-shortcuts.md) copy the
+  transcript of the shown session tab, as its tab menu does (decision 199).
+  [The default keys](keyboard-shortcuts-keys.md#the-default-keys) gives
+  their keys. The command palette has no row for them.
 
 ### Read-only workspaces
 
@@ -101,7 +101,12 @@ at `app/tabs` and `app/transcripts`.
   [What the chat shows](chat-and-events.md#what-the-chat-shows) states
   these items.
 - Their lines use the words of the chat, such as the fold lines, the tool
-  verbs, and the lines of turn ends, stops, failures, and lost data.
+  verbs, and the lines of turn ends, end reasons, stops, failures, and lost
+  data.
+- A turn end with an end reason gives the line of that reason before its
+  duration and its files, in the order of the chat. An example is
+  "Background work stopped at the time limit", as
+  [What the chat shows](chat-and-events.md#what-the-chat-shows) says.
 - As in the chat, a run of tool calls shows open in the concise copy when
   the chat shows it open at first. That is the newest run of a running
   turn, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
@@ -219,7 +224,7 @@ at `app/tabs` and `app/transcripts`.
 - The route is on `app.conductive.build`, behind its gate, as
   [Hostnames and gates](access-and-security.md#hostnames-and-gates) says.
   The workspace token of a sandbox gets the same text from the route of
-  [Reads by agents](#reads-by-agents).
+  [Transcript reads by agents](transcript-reads.md).
 - The text holds the session as it stood at one event of the workspace:
   each event up to that event, and none after it. Reason: the copy then
   shows one state of the chat, as a load of the history does.
@@ -228,36 +233,6 @@ at `app/tabs` and `app/transcripts`.
 
 ## Reads by agents
 
-- `GET /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/transcript`
-  on `api.conductive.build` gives the text of one session to the workspace
-  token of a sandbox (decision 258). The `read_session` call of the
-  [session calls](session-calls.md) uses it.
-- The route reaches each session of each workspace of the org of the
-  sandbox, as [Reach](session-calls.md#reach) says. It needs no active
-  turn.
-- The text is the text of a copy, from the same build. So
-  [What each copy holds](#what-each-copy-holds) and [The text](#the-text)
-  hold for it too. A read leaves out nothing that a copy holds.
-- Reason: an agent then reads what a member would paste, and one build
-  keeps the two texts the same.
-- The query can name the kind of text, as on the route of a copy:
-  `detail=concise` or `detail=full`. Without a kind, a read gives the
-  concise text. Reason: the concise text is smaller.
-- Each reply stays within a size limit. The limit follows the budgets and
-  the guidance that both agents publish for the result of a tool. It is
-  not a promise for each limit that the settings of an agent can change.
-- A longer text comes in parts of whole lines. Without a start line, a
-  read gives the newest lines that fit the limit. Reason: agent clients
-  cut long tool results, and the newest answer matters most.
-- A read can name a start line. It then gives the lines from that line on
-  that fit the limit.
-- A line that alone passes the limit comes in pieces that fit it. The
-  reply of each piece says where the next piece starts, and a read can
-  start there. No reply is empty, and no text is lost.
-- The reply gives the numbers of the first and the last line of its part,
-  and the number of lines of the whole text. The text starts at line 1.
-- Each read builds the text again. So when the session changes between
-  two reads, a line number can hold other text.
-- A read also reaches a closed session, as the route of a copy does. An
-  unknown session, or a session of another workspace, gets HTTP 404 with
-  the error code `session_not_found`.
+[Transcript reads by agents](transcript-reads.md) states the route that
+gives the text of a session to the workspace token of a sandbox, for the
+`read_session` call, and the parts of a long text.

@@ -5,3 +5,13 @@
   font-size: 0.85em;
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * The name of a workspace with output that the reader has not read takes
+ * the strong weight, as in the list. The rule sits under the text of the
+ * chip, so it outranks the weight of the shared name of
+ * `InlineChip.module.css` in any order of the stylesheets.
+ */
+.text .strong {
+  font-weight: var(--ui-weight-strong);
+}

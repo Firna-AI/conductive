@@ -4,6 +4,7 @@ import {
   workspaceEventsPath,
   type WorkspaceSocketMessage,
 } from '../../src/shared/events'
+import { githubSummary } from '../../src/shared/github'
 import { WorkspaceChat } from '../chat/backend'
 import { chatDependencies } from '../chat/dependencies'
 import { createSession } from '../chat/sessions'
@@ -11,14 +12,27 @@ import type { ChatData, ChatStorage } from '../chat/types'
 import { sessionUser } from '../data/users'
 import type { AppEnv } from '../env'
 import { createGitHubStatePort } from './chat-store'
+import type { GitHubWorkspace } from './contracts'
 import { queuedAccessRace } from './queued-access.test-support'
 import {
   SQLITE_CHOICE,
   SQLITE_TIME,
   SQLITE_WORKSPACE_ID,
+  sqlitePullSnapshot,
   sqliteSnapshot,
 } from './sqlite-fixtures.test-support'
+import { saveWorkspaceGitHubSummary } from './summary-data'
 import { WorkspaceGitHubState } from './workspace-state'
+
+const GITHUB_WORKSPACE: GitHubWorkspace = {
+  id: SQLITE_WORKSPACE_ID,
+  orgId: 'org',
+  branch: 'owner/workspace',
+  repositoryId: 10,
+  fullName: 'owner/repo',
+  defaultBranch: 'main',
+  installationId: 10,
+}
 
 export class Workspace extends DurableObject<AppEnv> {
   private readonly chat: WorkspaceChat
@@ -140,10 +154,18 @@ export class Workspace extends DurableObject<AppEnv> {
             this.reads++
             if (url.searchParams.has('forbid-read'))
               throw new Error('Replay read GitHub')
-            return sqliteSnapshot()
+            return url.searchParams.has('pull-request')
+              ? sqlitePullSnapshot()
+              : sqliteSnapshot()
           },
           async () => undefined,
           deliveryId === null ? {} : { deliveryId },
+          (committed) =>
+            saveWorkspaceGitHubSummary(
+              this.env.DB,
+              GITHUB_WORKSPACE,
+              githubSummary(committed.banner, committed.checks.checks),
+            ),
         )
         await this.interleaved
         return Response.json({ snapshot })

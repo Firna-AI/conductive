@@ -105,7 +105,8 @@ The screens:
   age. The notices show under each of the three tabs, and they have no
   Dismiss. The `now` prop
   gives the clock of the ages. Pass a stable function. The default is
-  `Date.now`.
+  `Date.now`. The `listKeys` prop gives the key of the command that opens
+  each list, as a tooltip and a name for `aria-keyshortcuts` of its tab.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode.
 - `DiffPage` shows the diff of one changed file.
@@ -245,6 +246,8 @@ tests keep their static markup checks in Node.
   reader that the chat shares, and the line tests of
   `../markdown/lines.ts`. [List parts](../chat/agent-text.md#list-parts)
   gives the rules of the shared list code.
+  `src/markdown/headings.ts` holds its heading levels and the rules for
+  hash headings and underline headings.
 - `markdown/markdown-tables.ts`: `parseTable`, which reads one table of a
   file and fills its short rows, and `TableBudget`, the empty cells that
   the tables of one file may add. It reads each row with
@@ -256,7 +259,9 @@ tests keep their static markup checks in Node.
 - `markdown/MarkdownView.tsx`: the safe renderer of a parsed document.
   `parser` replaces the worker for a static render. It draws each table
   through the shared `MarkdownTable` of the mockups, with the margin of
-  its `.table` class.
+  its `.table` class. Its headings take their look from the shared
+  `MarkdownHeadings.module.css` of the mockups, which chat answers use
+  too, and its own CSS sets only their margins.
 - `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
   `fileKind`, the kind of a file by its name: Markdown, code, or another
   file. A file is code when the code view gives it syntax colours.

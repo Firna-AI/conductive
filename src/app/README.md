@@ -20,7 +20,10 @@ pull request bar, and the owner picker. A host can give its own parts, as
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
   `?waiting=1`, `?paused=1`, `?waitlist=off`, or
-  `?paths=masked`. `dev/options.ts` lists them. `dev/attachment-routes.ts`
+  `?paths=masked`. `dev/options.ts` lists them. `?banner=<state>`, such as
+  `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
+  bar, and its list mark shows the GitHub state of that bar. The other rows
+  keep the GitHub states of the mockups. `dev/attachment-routes.ts`
   keeps the uploaded files of both composers. With `?upload=wait` each
   upload keeps running, and with `?upload=fail` the first upload of the
   page fails once, so Try again works. `?sent=<percent>` makes the dev
@@ -134,6 +137,12 @@ The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
 Workspace readers keep the number and link that the Worker supplies.
 
+The development fake saves shortcut batches through `dev/shortcut-routes.ts`.
+It checks the whole batch with the shared reader before it changes state.
+It keeps each keyboard separate, preserves empty key lists, and removes
+an override when the request sends null keys.
+The next account read returns both keyboards.
+
 ## Composition
 
 `App` in `src/App.tsx` takes three props:
@@ -203,14 +212,19 @@ feedback draft.
 the account and Get started, sign-in, invitations, orgs, panels and
 layers, the focus, saved drafts, New workspace as a page or a dialog,
 with the send key that every composer shares, and the waitlist.
-[The command palette and Feedback](palette-screens.md) gives the rules of
-the palette and of the Feedback dialog.
+[Command palette and keys](palette-and-keys.md) gives the rules of the
+command palette and of the keyboard shortcuts.
+[Feedback](palette-screens.md) gives the rules of the Feedback dialog that
+the Help row of the palette opens.
 
 ## Rules for this code
 
 - A screen reads data only through a model and `useStore`. A model sends the
   request, parses the answer with the readers in `api/`, and keeps the
   result. An answer of an unknown shape is an `ApiError`, not a guess.
+  One field is the exception. A missing or unknown `github` summary of a
+  workspace reads as null, so an older reply still reads. The
+  [shared contracts](../shared/README.md) give that reader.
 - A screen never sets a value of an org. The stores of `OrgModel` are
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
@@ -263,11 +277,20 @@ the palette and of the Feedback dialog.
   page. The browser hears the input and the keys in the capture phase,
   before a field can stop them. An open workspace counts the input
   anywhere on the page as activity, at most once a minute. `onKey` is not
-  passive, so the palette key stops the browser's own action.
-  `AppServices.platform` says whether the keyboard is a Mac, which
-  chooses the palette key and its hint. It never says whether the page
-  runs in the Mac app: the caller of `FeedbackModel.open` gives that
-  `desktop` flag.
+  passive, so the shortcut listener stops the browser's own action of a
+  key that runs a command.
+  `AppServices.platform` chooses the shortcut defaults and their key text.
+  It never says whether the page runs in the Mac app: the caller of
+  `FeedbackModel.open` gives that `desktop` flag.
+  `AppServices.host` identifies the Mac app, an installed Chromium app,
+  or a browser tab with its browser and system. `KeyPress.code` identifies
+  the physical key. `KeyPress.stopPropagation` can stop delivery to a
+  field or terminal after a shortcut consumes the press.
+  `KeyPress.layoutModifiers` carries the modifiers taken by held layout
+  switch keys. `onKey.layoutModifiers()` gives a recorder the same state
+  for its own event. `windowKeys` shares this state per window and resets
+  it on key-up or blur. `windowLayoutModifiers(window)` reads the same
+  snapshot for callers with a window.
 - `AppServices.appVersion` is the version of the build: the version of the
   root `package.json` and the short commit, as `<version> (<commit>)`.
   `build-version.ts` at the repository root makes it for the web and Mac

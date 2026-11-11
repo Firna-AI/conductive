@@ -68,7 +68,7 @@ Closing the dialog keeps that draft.
 
 ## Follow the task
 
-The header shows the repository, owner, and state.
+The header shows the repository, owner, and state of the agent or cloud computer.
 The workspace can show **Untitled** before it receives an automatic name.
 The name comes from the first message.
 
@@ -85,7 +85,27 @@ Renaming it can stop the pull request bar from following the work.
 Use **Continue** after a merge to start a new branch that the bar follows.
 
 Open another workspace while an agent works.
-The list shows when a workspace needs input or has unread output.
+The list mark shows the pull request's GitHub state:
+
+| Colour | Meaning |
+| --- | --- |
+| Red | Checks failed. |
+| Amber | Checks are running. |
+| Green | Checks passed. |
+| Purple | The pull request merged. |
+| Dim grey | No pull request, no checks, or closed without a merge. |
+
+Failed checks take priority over checks that still run.
+A merge takes priority over all checks.
+Archived workspaces keep a faint grey mark.
+
+A light runs around the mark while the agent works.
+The mark pulses when the agent needs input.
+With reduced motion, a still ring means the agent works.
+A still middle column means it needs input.
+Bold workspace names mark unread output.
+
+The command palette and workspace links use the same marks.
 
 Sessions in one workspace share its files and branch.
 Use **+** for a new conversation on that same task.
@@ -99,8 +119,8 @@ Use **+** for a new conversation on that same task.
 3. Paste the copied link into a message in the same org.
 
 **Link copied** confirms the copy.
-The pasted link shows the workspace's number, name, and state in a small box.
-Its name and state follow the workspace as they change.
+The pasted link shows the workspace's number, name, and list mark in a small box.
+Its name and mark follow the workspace as they change.
 
 The link opens the workspace for a person who has access.
 It grants no org membership.

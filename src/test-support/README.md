@@ -5,6 +5,9 @@ The production Worker does not import them.
 They use the same contracts as the real API.
 The fixtures reuse the mockup data and keep all dates deterministic.
 Workspace records include their number and canonical link on `FAKE_ORIGIN`.
+Each record also gives the GitHub summary of its mockup workspace.
+The default workspace takes the summary of the chosen banner instead, `ready-to-merge` by default, so its list mark and its bar agree.
+The created workspace of the fake API starts with no summary.
 A fixture that changes a workspace ID or org must rebuild its link.
 Use `FAKE_TIME` as the screen's clock when it shows relative times.
 
@@ -62,6 +65,9 @@ mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
 Writes return recorded replies. They do not change backend state.
+The account fixture includes empty shortcut changes for both keyboards.
+The recorded shortcut save answers for the Mac keyboard.
+Override that reply to test another keyboard or saved changes.
 The GitHub action routes answer as a member with write access and the
 `squash` method. A merge returns HTTP 202 with a pending job named
 `merge-<workspace ID>`, and the poll of that job returns a completed merge.
@@ -86,6 +92,11 @@ Unknown routes return `fake_route_missing`. They never reach the real network.
 The default org is `acme`. The default workspace is `checkout-autocomplete`.
 `FAKE_IDS` in `fixtures/core.ts` names the shared sample IDs.
 Options select the org role, workspace state, conversation, and GitHub banner state.
+`github` sets the GitHub summary of the default workspace record, and `null` gives none.
+Without it, `fakeGitHubSummary` gives the summary of the banner and its checks, as the Worker copies it.
+`workspaceFixtures(state, github)` takes that summary for the default workspace.
+The dev fake of `../app/dev/` uses `fakeGitHubSummary` too.
+Its seed makes `email-dark-mode` work without GitHub state, so its grey mark moves.
 Replace a reply to draw a missing login, a first run, or a deleted org.
 The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
 `server.signIn(user)` serves the session of another person, with app access, as a sign-in of that person does.

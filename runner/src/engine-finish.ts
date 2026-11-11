@@ -39,6 +39,7 @@ export async function finishTurn(
 ): Promise<void> {
   const turn = session.active
   if (!turn) return
+  turn.background?.close()
   const context = { sessionId: session.id, turnId: turn.first.turnId }
   const durationMs = Math.max(0, options.now() - turn.startedAt)
   let stopped =
@@ -99,6 +100,9 @@ export async function finishTurn(
         state: stopped ? 'stopped' : 'finished',
         durationMs,
         files: turn.files ?? [],
+        ...(!stopped && result.type === 'result' && result.endReason
+          ? { endReason: result.endReason }
+          : {}),
         ...(turn.baseline !== null && turn.files === null
           ? { filesUnavailable: true }
           : {}),

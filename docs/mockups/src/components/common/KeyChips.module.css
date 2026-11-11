@@ -1,0 +1,49 @@
+/* In a line of text, the chips centre on the text. */
+.shortcut {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font: inherit;
+}
+
+/*
+ * One key: a small chip with a full hairline outline, as a key cap. The
+ * sans font draws ⌘, ⌥, ⇧, and ⌃ on every system.
+ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-raised);
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-sans);
+  font-size: var(--ui-text-xs);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/*
+ * A key that does not work where the page runs, such as a key that a
+ * browser tab keeps: an outline with dashes, no fill, and muted text. The
+ * text keeps the contrast of muted text, because the key stays a control.
+ */
+.dimmed .chip {
+  border-style: dashed;
+  background: none;
+  color: var(--ui-muted);
+  font-weight: 400;
+}

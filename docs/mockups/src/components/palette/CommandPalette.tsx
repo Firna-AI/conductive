@@ -2,6 +2,7 @@ import type { Viewport } from '@mokly/mokly'
 import { InputFrame } from '@firna/ui/input'
 import { Archive, ChevronDown, FolderGit2, Search } from 'lucide-react'
 import { repositories } from '../../fixtures/repositories'
+import { pageHost } from '../../fixtures/shortcutHosts'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
@@ -13,10 +14,11 @@ import {
   paletteContent,
   type PaletteContent,
   type PaletteContext,
-  type PaletteFilters,
 } from './paletteContent'
-import { PaletteResults } from './PaletteRows'
+import type { PaletteFilters } from './paletteFilters'
+import { PaletteResults, type PaletteKeys } from './PaletteRows'
 import {
+  macPaletteTabPaths,
   paletteTabLabels,
   paletteTabPaths,
   paletteTabs,
@@ -103,12 +105,20 @@ function Filters(props: { filters: PaletteFilters; mobile: boolean }) {
   )
 }
 
-/** The tabs, each a link to its own view. A desktop puts the filters after them. */
-function TabBar(props: { content: PaletteContent; mobile: boolean }) {
+/**
+ * The tabs, each a link to its own view, which the Mac app draws on its own
+ * pages where it has them. A desktop puts the filters after the tabs.
+ */
+function TabBar(props: {
+  content: PaletteContent
+  mobile: boolean
+  mac?: boolean
+}) {
   const { content } = props
+  const tabPaths = props.mac ? macPaletteTabPaths : paletteTabPaths
   const tabs = paletteTabs.map((tab) => ({
     label: paletteTabLabels[tab],
-    to: paletteTabPaths[tab],
+    to: tabPaths[tab],
     selected: tab === content.tab,
   }))
   return (
@@ -161,16 +171,23 @@ function PalettePage(props: { content: PaletteContent }) {
 /**
  * The command palette: one search for the workspaces of the org, the
  * actions of the current page, and the settings. A desktop shows it as a
- * dialog near the top of the window, over the dimmed app. A phone shows it
- * as a page.
+ * dialog near the top of the window, over the dimmed app, and each command
+ * row ends with the first key of its command that works there. A browser
+ * page draws a normal Chrome tab on a Mac, which keeps ⌘N, so New
+ * workspace shows ⌥⌘N. A phone shows the palette as a page, without keys.
  */
 export function CommandPalette(props: {
   view: OpenPaletteView
   context: PaletteContext
   viewport: Viewport
 }) {
-  const content = paletteContent(props.view, props.context)
+  const { context } = props
+  const content = paletteContent(props.view, context)
   if (props.viewport === 'mobile') return <PalettePage content={content} />
+  const keys: PaletteKeys = {
+    changes: context.shortcuts ?? {},
+    host: pageHost(context.mac === true),
+  }
   return (
     <div className={styles.layer}>
       <div aria-hidden className={styles.scrim} />
@@ -183,8 +200,8 @@ export function CommandPalette(props: {
         <div className={styles.field}>
           <SearchField content={content} mobile={false} />
         </div>
-        <TabBar content={content} mobile={false} />
-        <PaletteResults content={content} />
+        <TabBar content={content} mac={context.mac} mobile={false} />
+        <PaletteResults content={content} keys={keys} />
       </section>
     </div>
   )

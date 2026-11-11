@@ -6,8 +6,10 @@ import { createApiClient } from '../api/client'
 import { browserDelay, type WorkspaceEventSource } from '../events'
 import {
   windowFocus,
+  windowHost,
   windowInput,
   windowKeys,
+  windowNewTab,
   windowPlatform,
   windowStorage,
   windowVisibility,
@@ -96,10 +98,12 @@ export function createFakeServices(search: string): AppServices {
     onInput: windowInput(window),
     onKey: windowKeys(window),
     platform: windowPlatform(window),
+    host: windowHost(window),
     visible: windowVisibility(window),
     storage: windowStorage(window),
     newId,
     leave: (url) => window.location.assign(url),
+    openInNewTab: windowNewTab(window),
     appOrigin: window.location.origin,
     appVersion: APP_VERSION,
     copy: (text) => copyText(window, text),
