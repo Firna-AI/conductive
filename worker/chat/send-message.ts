@@ -1,4 +1,9 @@
-import type { SendMessageResponse } from '../../src/shared/messages'
+import type {
+  SendMessageRequest,
+  SendMessageResponse,
+} from '../../src/shared/messages'
+import type { User } from '../../src/shared/api'
+import type { ChatTransaction } from './store'
 import { HttpError } from '../http'
 import type { RequestContext } from '../security/gate'
 import { sendMessage } from './inputs'
@@ -11,12 +16,16 @@ import type { ChatDependencies } from './types'
 export async function send(
   operation: ChatOperation,
   sessionId: string,
-  context: RequestContext,
+  input: SendMessageRequest,
+  user: User,
   dependencies: ChatDependencies,
+  accepted?: (
+    transaction: ChatTransaction,
+    response: SendMessageResponse,
+  ) => Promise<void>,
 ): Promise<SendMessageResponse> {
-  const input = sendMessage(context.body)
   const existing = await operation.read((view) =>
-    existingMessage(view, sessionId, input, context.user),
+    existingMessage(view, sessionId, input, user),
   )
   if (existing) return existing
   const source = await operation.read((view) => sessionFor(view, sessionId))
@@ -30,14 +39,14 @@ export async function send(
   const { session: observed, login } = await operation.logins.observe(
     sessionId,
     undefined,
-    context.user.id,
+    user.id,
   )
   let linked = false
   if (!login) {
     const ownLogin =
-      source.startedBy?.id === context.user.id
+      source.startedBy?.id === user.id
         ? null
-        : await operation.logins.forMember(context.user.id, input.choice.agent)
+        : await operation.logins.forMember(user.id, input.choice.agent)
     if (!ownLogin || ownLogin.agent !== input.choice.agent)
       throw new HttpError(
         409,
@@ -53,23 +62,23 @@ export async function send(
           transaction,
           input.choice,
           dependencies.randomId(),
-          context.user,
+          user,
           dependencies,
           observed.id,
         )
       : source
     const attachments = await dependencies.resolveAttachments(
-      context.user.id,
+      user.id,
       transaction.workspaceId,
       input.attachmentIds,
       input.id,
-      await transaction.usedAttachments(input.attachmentIds, context.user.id),
+      await transaction.usedAttachments(input.attachmentIds, user.id),
     )
     const response = await acceptMessage(
       transaction,
       target.id,
       input,
-      context.user,
+      user,
       attachments,
       dependencies.randomId,
       dependencies.readAutomaticTitleWorkspace,
@@ -82,6 +91,7 @@ export async function send(
         await transaction.emit({ type: 'session.updated', session: source })
       }
     }
+    await accepted?.(transaction, response)
     return response
   })
 }
@@ -110,15 +120,13 @@ export async function retryMessage(
   return send(
     operation,
     sessionId,
-    {
-      ...context,
-      body: {
-        id: dependencies.randomId(),
-        text: previous.text,
-        attachmentIds: previous.attachments.map((attachment) => attachment.id),
-        choice: previous.choice,
-      },
-    },
+    sendMessage({
+      id: dependencies.randomId(),
+      text: previous.text,
+      attachmentIds: previous.attachments.map((attachment) => attachment.id),
+      choice: previous.choice,
+    }),
+    context.user,
     dependencies,
   )
 }

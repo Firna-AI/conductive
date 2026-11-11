@@ -72,7 +72,8 @@ chips.
   the chat shares with the file preview and the mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, the message field of each composer, and Stop.
+  sends, the fixed prompts of the pull request bar, the message field of
+  each composer, and Stop.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,
@@ -152,14 +153,22 @@ check in the Mac app.
   composer. [The message field](loads-and-sends.md#the-message-field)
   gives its rules and its files.
 - `state/load.ts`: the order of the first reads and the stream start.
+- `state/address-session.ts`: `showAddressSession`, the open of the
+  session of a session address, behind `ChatController.showAddress`. A
+  missing session gets one read of the list, of which only that record
+  counts, and a later choice of a tab or an abort stops the lookup.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
-  links of a message field, and `linkTarget`, `chat-parts.ts`, the one
-  tokenizer of sent messages and answers, `LinksContext.tsx`, the
-  workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
-  which draws the parts of a message or an answer, with its file chips,
-  and `mention-copy.ts`, the copy of chat text that gives the mention of
-  each file chip in it, and leaves out text that the browser leaves out of
-  a copy.
+  links of a message field, and `linkTarget`, with the session of a
+  session link, `chat-parts.ts`, the one tokenizer of sent messages and
+  answers, `LinksContext.tsx`, the workspaces that chips find and the open
+  of a chip, and `LinkedText.tsx`, which draws the parts of a message or an
+  answer, with its file chips and session chips, and `mention-copy.ts`,
+  the copy of chat text that gives the mention of each file chip in it,
+  and leaves out text that the browser leaves out of a copy.
+- `links/session-links.ts`: `useLinkedSession`, the session that a chip
+  finds: a live session of the chat's workspace, or one of the one read of
+  another workspace in `session-reads.ts`, made again for each load of a
+  chat or of New workspace. `chat-links.ts` gives a chat its links.
 - `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
   the entries that the list offers and their order, and
   `MentionsContext.tsx`, the files that the chat gets and the tree that
@@ -190,6 +199,11 @@ check in the Mac app.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+- `state/message-send.ts`: `postMessage`, the post of one message and the
+  route of its reply, which a draft and a fixed prompt share.
+- `state/prompt-actions.ts`: `sendPrompt`, a fixed prompt to the session of
+  the chat, which changes no draft, as
+  [Fixed prompts](loads-and-sends.md#fixed-prompts) says.
 - `state/attachment-actions.ts`: attach, Try again, and Remove for the files
   of a draft. Each upload goes through the app's `uploadAttachment`, ends
   on its draft after a move, and stops with Remove and with the chat.

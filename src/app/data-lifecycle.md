@@ -233,9 +233,9 @@ of the data that the screens read and write.
   the tool store. The store of `WorkspaceScreen` is a view of the kept
   workspace, so its stop keeps the parts, as the
   [workspace integration](../shell/workspace/README.md#integration) shows.
-  The `create` of the Files part finds the store that the tab keeps for the
-  workspace, as the [files integration](../files/README.md#integration)
-  shows.
+  The `create` of the Files connection of the screen finds the store that
+  the tab keeps for the workspace, as the
+  [files integration](../files/README.md#integration) shows.
 - A feature store that reads the raw socket messages itself, as the files
   do, follows the event source of the app through `replaySubscribe`. Each
   message reaches the store unchanged.
@@ -248,3 +248,7 @@ of the data that the screens read and write.
   - After the replay, the newest live event.
 - A live event during an unfinished replay moves no number. The store holds
   that event until the final page.
+- `WorkspaceStream.reconnects` counts the replays that end after a dropped
+  connection or a gap. A part that keeps its own reads, such as the
+  member's GitHub access of the pull request bar, reads again at each new
+  count. A start after a stop counts nothing.

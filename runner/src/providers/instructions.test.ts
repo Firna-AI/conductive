@@ -89,6 +89,17 @@ it.each(['claude', 'codex'] as const)(
     expect(provider.prompt()).toEqual(expect.any(String))
     const initialPrompt = string(provider.prompt())
     expect(initialPrompt).toContain('Conductive')
+    for (const tool of [
+      'create_session',
+      'list_sessions',
+      'send_message',
+      'read_session',
+    ])
+      expect(initialPrompt).toContain(tool)
+    expect(initialPrompt).toContain(
+      'A Sent by: line names the session that sent the message.',
+    )
+    expect(initialPrompt).toContain('Do not reply only to confirm it.')
     expect(initialPrompt).toContain(
       'Workspace repository folder: "/cloud/workspace"',
     )
@@ -116,6 +127,10 @@ it.each(['claude', 'codex'] as const)(
         agent,
         providerSessionId: 'legacy-conversation',
         instructions: initialPrompt,
+        instructionBranches: {
+          workspaceBranch: 'alice/tracked-task',
+          targetBranch: 'target-main',
+        },
       },
     ])
     expect(provider.conversationId()).toBe('legacy-conversation')
@@ -237,6 +252,10 @@ it.each(['claude', 'codex'] as const)(
       agent,
       providerSessionId: null,
       instructions: currentPrompt,
+      instructionBranches: {
+        workspaceBranch: 'bob/new-task',
+        targetBranch: 'new-target',
+      },
     })
     expect(h.warnings).toEqual([])
   },

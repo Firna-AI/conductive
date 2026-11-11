@@ -1,0 +1,31 @@
+# Privacy page omits cached preview files
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from branch `calummoore/untitled-v4`, item 4.
+- **Location:** `src/marketing/privacy.ts:105-106` and `src/marketing/privacy-uses.ts:145-146`.
+- **Reason:** a new sentence on a legal page needs the user's approval.
+
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Terms:**
+  - **Port preview:** a page of a server in a cloud computer, shown on a random `*.conductive.page` hostname through the Worker.
+  - **Cache rules:** the `Cache-Control` header of a reply. It says whether and how long a browser can keep the reply.
+- **Background:**
+  - Since branch `calummoore/untitled-v4`, a preview reply keeps the cache rules of the previewed server, and only the viewer's browser may keep it. A revoked viewer's browser keeps the files that it already received, as "Port previews" in `docs/protocol/terminal-previews-and-desktop.md` says. The user chose this on 11 November 2026.
+  - The Mac app shows previews in its `persist:conductive` session, so its cache can keep preview files on the Mac's disk too.
+  - The Privacy page lists data that stays in the browser. `privacy.ts` says "Panel widths stay in your browser until you clear its saved data." `privacy-uses.ts` says "Panel widths: your browser keeps the widths of the panels of the app. They stay in your browser."
+  - No sentence of the Privacy page says that the browser keeps no preview file, so no sentence is wrong.
+  - The security guide, `src/marketing/docs/security.md`, says that the browser can keep the preview files that it loaded.
+- **Problem:** The Privacy page names data that the browser keeps, such as panel widths, but not the preview files that browsers can now keep.
+- **Impact if no action:** A reader of the Privacy page does not learn that preview files, which can hold code or secret values, can stay in the browser.
+- **Root question:** Does the Privacy page tell readers that their browser can keep preview files?
+- **Options:**
+  - **A.** Leave the Privacy page as it is. The security guide already states the fact. Effort: Small.
+  - **B.** Add one sentence beside each panel widths sentence, for example: "Previews: your browser can keep the files of a preview, as the previewed app's cache rules allow. They stay in your browser until it removes them or you clear its saved data." Effort: Small.
+  - **C.** Add one section on all data that the browser and the Mac app keep: panel widths, drafts, cookies, and preview files. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** C, because one section then lists all data that the browser keeps, so each new kind has a clear place.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/privacy-cookies-miss-preview-cookie.md`, the same code: both change what the Privacy page says about browser storage for previews. One branch can apply both.
+- **Recommendation:** B. It puts one sentence where the page already lists data in the browser, and it agrees with the security guide. Option C protects the codebase best, but it rewrites more legal text than this fact needs.
+- **Action:** ask the user, because B adds a sentence to a legal page, which changes user-visible text beyond the current contract.

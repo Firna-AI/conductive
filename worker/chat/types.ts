@@ -153,6 +153,9 @@ export type ChatCallbackPublisher = (
 
 export interface ChatDependencies {
   refreshEndpointModels(userId: string, agent: Agent): Promise<void>
+  readBranches(
+    workspaceId: string,
+  ): Promise<import('../../src/shared/runner').RunnerBranches | null>
   readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,

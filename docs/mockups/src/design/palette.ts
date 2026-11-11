@@ -25,6 +25,28 @@ type AppColors = {
   warning: string
   /** The outline of a mark on a warning fill, such as `amberSoft`. */
   warningBorder: string
+  /**
+   * The tint of a merged pull request: its words and icon, the fill of its
+   * bar, and the outline of its number. The words keep a contrast of 4.5:1
+   * or more on the fill.
+   */
+  merged: string
+  mergedSoft: string
+  mergedBorder: string
+  /**
+   * The fills of a button in the tint of a bar state, at rest and on hover.
+   * Each one keeps the white `onFill` label at a contrast of 4.5:1 or more.
+   */
+  successFill: string
+  successFillHover: string
+  warningFill: string
+  warningFillHover: string
+  dangerFill: string
+  dangerFillHover: string
+  mergedFill: string
+  mergedFillHover: string
+  /** The label and the icon on a tinted fill. */
+  onFill: string
   codeKeyword: string
   codeString: string
   codeComment: string
@@ -85,6 +107,19 @@ export const darkPalette: Palette = {
   dangerBorder: '#4d1f22',
   warning: '#f2b84b',
   warningBorder: '#4d3a12',
+  merged: '#b794f6',
+  mergedSoft: '#221836',
+  mergedBorder: '#3f2d6b',
+  successFill: '#238636',
+  successFillHover: '#1a7f37',
+  warningFill: '#9e6a03',
+  warningFillHover: '#845306',
+  // A deep red: at the same lightness as the other fills, red looks louder.
+  dangerFill: '#a8352f',
+  dangerFillHover: '#8e2c27',
+  mergedFill: '#8250df',
+  mergedFillHover: '#7142c6',
+  onFill: '#ffffff',
   codeKeyword: '#c792ea',
   codeString: '#a5e075',
   codeComment: '#6b7380',
@@ -138,6 +173,18 @@ export const lightPalette: Palette = {
   dangerBorder: '#f2c9cb',
   warning: '#b7860b',
   warningBorder: '#ecd49a',
+  merged: '#7345d1',
+  mergedSoft: '#f3eefc',
+  mergedBorder: '#dacdf5',
+  successFill: '#1d7f45',
+  successFillHover: '#176a39',
+  warningFill: '#9a6a06',
+  warningFillHover: '#7a5304',
+  dangerFill: '#c8323a',
+  dangerFillHover: '#a3242b',
+  mergedFill: '#7345d1',
+  mergedFillHover: '#6337b8',
+  onFill: '#ffffff',
   codeKeyword: '#7c3aed',
   codeString: '#15803d',
   codeComment: '#6b7280',

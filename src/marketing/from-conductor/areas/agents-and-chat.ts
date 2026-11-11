@@ -148,9 +148,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'session-links',
     area: 'agents-and-chat',
     name: 'Session links',
-    status: 'in-progress',
-    note: 'Links that open individual chat sessions, shown as chips in chat, are in progress.',
-    due: null,
+    status: 'available',
+    note: 'Session links open one chat session and show as chips in chat. Agent tools give these links; Copy link copies only the workspace link.',
   },
   {
     id: 'copy-session-transcripts',
@@ -191,9 +190,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'agent-to-agent-messages',
     area: 'agents-and-chat',
     name: 'Agent-to-agent messages',
-    status: 'in-progress',
-    note: 'Agents can create another workspace with a first message. Sending messages to existing sessions is in progress.',
-    due: null,
+    status: 'available',
+    note: 'Agents can message sessions across the org. Each message links to the session that sent it.',
   },
   {
     id: 'codex-personalities',

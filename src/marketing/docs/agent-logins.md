@@ -136,7 +136,8 @@ Code and members with terminal access can read or copy that login during a turn.
 A copied login can remain usable after the turn ends.
 Installing newer software on that computer does not remove this risk.
 A new build gives the protection to new cloud computers created from its setup.
-Use **Build computer** and a new workspace to get the newer protection.
+Ask an admin to run **Build computer**.
+After it succeeds, create a new workspace to get the newer protection.
 
 The share switch does not hide either kind of credential from code or members with terminal access.
 Work in an org with people you trust with your agent and GitHub logins.

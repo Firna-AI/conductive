@@ -18,25 +18,32 @@ while the change is open. Its pull request keeps them after the merge.
 ## The workspace token
 
 - Each workspace has its own workspace token.
-- With the token, the sandbox of the workspace can do five things:
+- With the token, the sandbox of the workspace can do seven things:
   - connect its agent runner to the Durable Object of its own workspace
   - get a GitHub token for its own workspace
   - create and list workspaces through the agent tools
   - list the repositories of its org image, the sections of its org, and
     the models of the app, through the agent tools
+  - list the sessions of each workspace of its org, and read the chat of
+    each session, through the agent tools (decision 257)
+  - start sessions and send messages in the workspaces of its org that are
+    not archived, while a turn runs, through the agent tools
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
 - The token allows nothing else. It can never answer a request for a Mac
   command, and it can never choose the Mac that gets the request.
-- The Worker reads the sender of each Mac command request from its own
-  record of the turn that runs now. It never takes a sender from the
-  sandbox, and it never uses the workspace owner in place of the sender.
+- Some requests act for a sender: a create call, a new session, a message,
+  and a Mac command request. The Worker reads the sender of each such
+  request from its own record of the turn that runs now.
+- It never takes a sender from the sandbox, and it never uses the
+  workspace owner in place of the sender.
 - Reason: agent code runs in the sandbox, so a sender that the sandbox
   names can be false.
-- At each Mac command request, the Worker checks that the sender is still
-  a member of the org of the workspace.
+- At each such request, the Worker checks that the sender is still a
+  member of the org of the workspace.
 - [Agent tools](agent-tools.md#mac-commands) states the Mac command
-  requests.
+  requests. [The sender](session-calls.md#the-sender) states the sender of
+  the session calls.
 
 ## GitHub tokens
 

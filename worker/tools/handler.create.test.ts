@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { TOOL_TURN_HEADER } from '../../tools/context'
+import { sessionLink } from '../../src/shared/session-link'
 import { configuredDefaultChoice } from '../app-api/models'
 import { HttpError } from '../http'
 import { createHarness, type TestHarness } from '../test-support/harness'
@@ -52,7 +53,7 @@ it('inherits the org, owner, and owner defaults while the calling sender starts 
     repositoryId: 'repo-a',
     sectionId: 'general-a',
     choice: OWNER_CHOICE,
-    firstMessage: '  Keep this text.\nThen continue.  ',
+    firstMessage: `  Keep this text.\nThen continue.  \n\n---\nSent by: ${sessionLink(harness.env.APP_ORIGIN, 'org-a', 'calling-workspace', 'calling-session')}`,
     sender: {
       id: 'teammate',
       githubLogin: 'teammate-login',
@@ -165,18 +166,21 @@ it('rejects absent or stale turn context, mismatched workspaces, and senders out
     null,
     {
       workspaceId: 'outside-workspace',
+      sessionId: 'calling-session',
       turnId: TOOL_TEST_TURN,
       senderUserId: 'teammate',
     },
     {
       workspaceId: 'calling-workspace',
       turnId: 'old-turn',
+      sessionId: 'calling-session',
       senderUserId: 'teammate',
     },
     {
       workspaceId: 'calling-workspace',
       turnId: TOOL_TEST_TURN,
       senderUserId: 'outsider',
+      sessionId: 'calling-session',
     },
   ]) {
     fixture.services.callingTurn.mockResolvedValue(turn)

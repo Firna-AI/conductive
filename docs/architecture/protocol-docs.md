@@ -1,8 +1,9 @@
 # Protocol docs
 
-The protocol docs hold the requirements of each feature. The
-[architecture doc](../architecture.md) describes the components that meet
-them, and this page lists each protocol doc and what it covers.
+The protocol docs hold the requirements and the decisions in force of each
+feature. The [architecture doc](../architecture.md) describes the components
+that meet them, and gives the terms and the meaning of a decision number.
+This page lists each protocol doc and what it covers.
 
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
   image and the life of a workspace.
@@ -11,7 +12,11 @@ them, and this page lists each protocol doc and what it covers.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
     shell variable of each repository in a sandbox, and the context folder
     of each workspace.
-  - [Life of a workspace](../protocol/workspace-life.md)
+  - [Life of a workspace](../protocol/workspace-life.md): the start steps,
+    the time limits, the states, the stop and resume, the archive, the
+    restore, and Continue.
+  - [Continue](../protocol/continue.md): the next task of a workspace after a
+    merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
@@ -32,10 +37,13 @@ them, and this page lists each protocol doc and what it covers.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
-    session as concise or full Markdown, and its route.
+    session as concise or full Markdown, its route, and the reads of
+    agents.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
+    - [Version pins](../protocol/version-pins.md): the login rules and the
+      risks of each version pin.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
@@ -43,10 +51,12 @@ them, and this page lists each protocol doc and what it covers.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
     the upstream of each login, what passes to it and back, the own
     endpoints, the streams, and the risks.
-- [GitHub banner](../protocol/github-banner.md): the pull request bar and its
-  events.
+- [GitHub banner](../protocol/github-banner.md): the pull request bar, its
+  actions, Merge, and its events.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox.
+  - [Session calls](../protocol/session-calls.md): the calls that start,
+    list, message, and read the sessions of the org.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
@@ -81,11 +91,12 @@ them, and this page lists each protocol doc and what it covers.
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
   messages in the chat, with their tables.
-- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope,
-  and the author of each commit in a sandbox.
+- [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
+  scope of a cloud computer, the author of each commit in a sandbox, and the
+  GitHub actions of the Worker as a member.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets, the sender line of each message, and the base
-  prompt of Claude agents.
+  agent session gets, the sender line and the branch line of each message,
+  and the base prompt of Claude agents.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
   ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of
