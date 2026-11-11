@@ -421,10 +421,12 @@ pages.
       of a long session on the fake API. Give the fold time and the render
       time apart. Save the result under
       `.context/chat-history-newest-first/`.
-- [ ] Smoke test a long session with `npm run dev`: the order of the pages,
+- [x] Smoke test a long session with `npm run dev`: the order of the pages,
       the "Loading earlier messages" line, and the live events during the
-      load.
-- Evidence: `.context/chat-history-newest-first/milestone-3/report.md` and
+      load. Done on the chat's fake API in headless Chrome, not with
+      `npm run dev`: a 30-turn session in three pages, with screenshots.
+- Evidence: `.context/chat-history-newest-first/smoke/smoke-report.json`,
+  `.context/chat-history-newest-first/milestone-3/report.md`, and
   `.context/chat-history-newest-first/decision-281/report.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
