@@ -1,0 +1,32 @@
+# Where a session opens when the reader returns
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from branch `calummoore/chat-auto-scroll-issue`, finding 3 of review round 1, with the options of its check.
+- **Location:** `src/chat/components/ChatPane.tsx`, the `key` of the box that scrolls, and `docs/protocol/chat-and-events.md`.
+- **Reason:** the behaviour that the branch chose has no requirement and no recorded user decision, and each other option adds behaviour.
+
+- **Terms:**
+  - **Session:** one conversation with an agent, shown as a tab of the workspace.
+  - **Keeper:** `ReadingPlace` in `src/chat/components/reading-place.ts`. It keeps the row that the reader reads in place while the transcript changes size.
+- **Background:**
+  - Before branch `calummoore/chat-auto-scroll-issue`, all session tabs shared one box that scrolls. A session tab opened at the scroll place of the session shown before it, and then did not follow new messages.
+  - That branch gives each session a box of its own, keyed by the session ID. So a session tab opens at its newest message.
+  - The other ways back already opened at the newest message before that branch: a file or diff tab unmounts the chat in `src/chat/WorkspaceChat.tsx`, the phone views in `src/shell/workspace/WorkspaceScreen.tsx` mount it again, and the workspace key in `src/shell/OrgRoutes.tsx` mounts it again. A reload does the same.
+  - `docs/protocol/chat-and-events.md` says that "A reload or a new tab starts empty", so the chat keeps nothing on the disk of the device.
+- **Problem:** No protocol requirement says where a session opens when the reader returns to it. The branch made the call that it opens at its newest message, so a returning reader loses their earlier place.
+- **Impact if no action:** The behaviour stays a call of an agent, and a later change can alter it with no review against a requirement.
+- **Root question:** What does a reader see when they return to a session?
+- **Options:**
+  - **A.** Keep opening at the newest message on every way back. Record it as a requirement. Effort: Small.
+  - **B.** Restore each session's earlier place on every way back. Keep the place outside `ChatPane`, for example in the chat controller that the app keeps across pages, and wait for the history before the restore. Record it as a requirement. Effort: Medium.
+  - **C.** Do B, and show a control that moves the chat to its newest message while newer content is below the view. The control needs a mockup first. Option C of `plans/follow-ups/chat-send-while-scrolled-up.md` proposes the same control, so one mockup serves both items. Effort: Large.
+  - **D.** Open at the first row that arrived while the reader was away, with a marker line above it. If nothing new arrived, open at the earlier place. If that row folded away, the line of its fold takes its place. The marker needs a mockup first. Effort: Large.
+  - **E.** Do B, but keep the place of each member in each session on the server, with the saved workspace view, so it survives a reload and shows on other devices. A place in pixels differs on screens of other widths. This needs a backend change, stored data, and a frontend change. Effort: Large.
+  - **F.** Let each member choose A or B in the account settings. This needs a mockup, a stored preference, and both behaviours with their tests. Effort: Large.
+- **Left out:** Leaving the rule unwritten, because a protocol doc must let a reader judge each behaviour at the boundary. Removing the session key, because each session then opens at the scroll place of the session shown before it.
+- **Wider fix:** None, because this is a choice of behaviour, not a class of defect.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/chat-scroll-requirements.md`. Its requirements include the rule that this item chooses, so its doc update waits for this answer. `plans/follow-ups/chat-send-while-scrolled-up.md` shares the control of option C.
+- **Recommendation:** A. Every other way back already opens at the newest message, so A gives one rule with no saved state.
+- **Action:** ask the user, because the behaviour has no protocol requirement and no recorded user decision.

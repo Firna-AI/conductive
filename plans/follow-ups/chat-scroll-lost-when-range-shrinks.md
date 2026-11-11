@@ -1,0 +1,33 @@
+# A scroll is lost when the chat gets shorter
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from branch `calummoore/chat-auto-scroll-issue`, finding 1 of review round 1, with the options of its check.
+- **Location:** `src/chat/components/reading-place.ts`, the method `distance` of `ReadingPlace` and the observers in `useReadingPlace`.
+- **Reason:** the bug needs a scroll of the reader in the frame where a change makes the transcript shorter, and the recommended fix needs its own check of its cost while an agent streams.
+
+- **Terms:**
+  - **Keeper:** `ReadingPlace` in `src/chat/components/reading-place.ts`. It keeps the row that the reader reads in place while the transcript changes size.
+  - **Reversed box:** the box of the chat that scrolls. It uses `flex-direction: column-reverse` from `docs/mockups/src/components/chat/ChatPane.module.css`, so its scroll position counts up to 0 at the bottom.
+  - **Fold:** when a turn ends, the work before its answer folds into one line, as `docs/protocol/chat-and-events.md` says. The transcript then gets much shorter.
+- **Background:**
+  - While the reader is scrolled up, the keeper notes the top row in view and the scroll position at each scroll event.
+  - After a change of size, a `ResizeObserver` calls the keeper. The keeper moves the chat by the distance that the noted row moved in the transcript, so a scroll of the reader since the note stays.
+  - When the transcript gets shorter than the reader's place, the browser moves the chat to the top of the new range before the observer runs.
+  - In that case, the keeper cannot tell the browser's move from a scroll of the reader. It moves the row back to its old place in the box, so it undoes the reader's scroll of that frame.
+  - The test kit `src/chat/components/reading-place-test-kit.tsx` models the browser's move with `layoutAgain` and a scroll with `scrollBy`.
+- **Problem:** When the work of a long turn folds while the reader scrolls, the keeper undoes the reader's scroll of that frame. The reviewer measured it in Chrome: after an 80 px scroll down, the read row ended at 128 px, not at 48 px.
+- **Impact if no action:** Now and then, a scroll of the reader jumps back when a turn ends.
+- **Root question:** How does the chat keep a scroll of the reader when a change makes the transcript shorter than the reader's place?
+- **Options:**
+  - **A.** Use one distance with the old position bounded to the current range, as `inBox + position - max(kept.at, top)`. It keeps a scroll after the browser's move, but it still loses a scroll before the move in the same frame. Effort: Small.
+  - **B.** Track the movement of the reader apart from the noted row, and reconcile both after each change of size. It needs more state, and it cannot see a scroll that the browser's move absorbs. Effort: Medium.
+  - **C.** Change no code. Say in the README and in the comment of the class that the keeper keeps the row, not the reader's scroll, when a change makes the transcript shorter. Effort: Small.
+  - **D.** Settle right after each DOM change of the transcript, in the same task. A `MutationObserver` on the transcript calls the keeper while it keeps a row, and the `ResizeObserver` stays for changes with no DOM change. Then no scroll can land between a change and its correction. Check the cost of a forced layout for each DOM change while an agent streams and the reader is scrolled up. Effort: Medium.
+  - **E.** Hold the scroll range: give a wrapper of the transcript a `min-height` equal to its height at the last settle, so a shrink cannot move the chat before the keeper runs. The keeper corrects, releases the hold, and corrects again. A hold that stays shows blank space. Effort: Large.
+- **Left out:** Chrome's own scroll anchoring, because it moves the newest message out of view at the bottom and moves a row twice with the keeper. A box that keeps its top in place, because it moves the same problem to changes above the read row.
+- **Wider fix:** D. It closes the window in which a scroll lands on the browser's move, for every DOM change, so the keeper needs no rule for how the browser moves the chat.
+- **Previous examples:** The restore after a fold in commit `97f90da1` lost this scroll too.
+- **Related:** `plans/follow-ups/chat-read-row-creeps-while-streaming.md` and `plans/follow-ups/chat-read-row-moves-when-box-resizes.md` change the same keeper, so one branch can take all three. A taller box also shortens the range, and D does not cover that path, because a box change makes no DOM change.
+- **Recommendation:** D. In a probe, A kept a scroll after the browser's move but lost one before it, and D kept both. The review first recommended A.
+- **Action:** fix after merge, apply D, because the bug needs a scroll in the frame where a change shortens the range, and D needs its own check of its cost while an agent streams.

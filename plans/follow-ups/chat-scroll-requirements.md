@@ -17,12 +17,11 @@
 - **Impact if no action:** The behaviour that the fix restored has no requirement that reviews check.
 - **Root question:** Which requirements state where the chat of a session scrolls?
 - **Options:**
-  - **A.** Add these requirements to "What the chat shows" in `docs/protocol/chat-and-events.md`, and check the legal pages and the public guides for sentences that restate them. At the bottom, the chat keeps the newest message in view while the transcript grows. While the reader is scrolled up, the row that they read stays in place. The chat never undoes a scroll of the reader. Each session tab opens at its newest message. Effort: Small.
-  - **B.** Do A, but each session tab opens at the place where the reader left it. This also changes the code, which keeps a place for each session. Effort: Medium.
+  - **A.** Add these requirements to "What the chat shows" in `docs/protocol/chat-and-events.md`, and check the legal pages and the public guides for sentences that restate them. At the bottom, the chat keeps the newest message in view while the transcript grows. While the reader is scrolled up, the row that they read stays in place. The chat never undoes a scroll of the reader. Add the rules that the answers of the related items choose: where a session opens, and what a send while scrolled up shows. Effort: Small.
   - **C.** Keep the rules in the chat README and the code comments only. Effort: Small.
-- **Left out:** None. Each other approach is a variant of where a session opens, which B covers.
+- **Left out:** Where a session opens when the reader returns, because it is its own question in `plans/follow-ups/chat-session-return-place.md`. That item took the earlier option B, a place for each session.
 - **Wider fix:** A. A requirement lets each review check the behaviour.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/chat-send-while-scrolled-up.md`. Its answer adds one more requirement to the same section, so the doc update waits for both answers.
+- **Related:** `plans/follow-ups/chat-session-return-place.md` and `plans/follow-ups/chat-send-while-scrolled-up.md`. Each answer adds one requirement to the same section, so the doc update waits for both answers. `plans/follow-ups/chat-read-row-moves-when-box-resizes.md`: the requirement that the read row stays in place can also settle that item.
 - **Recommendation:** A. The user reported this behaviour as a bug, so it is a requirement that each review must check.
 - **Action:** ask the user, because the recommended option adds requirements to a protocol doc, and the user reviews each new requirement.
