@@ -261,6 +261,12 @@ kept B for both. Its report and the checks of its claims are in
   is also true for both agents: Claude loads the instructions through its
   `Skill` tool, and Codex reads the file.
 - **Chosen:** A, by the user on 11 November 2026.
+- **Options check:** It ran on 11 November 2026, after the user's answer,
+  because the plan did not run it before. It confirmed A. It added D, a
+  label with no verb, and E, "Activating skill". It also added F: A with
+  the plural for two or more names, which design call 16 applies. It
+  found that "Using skill" stays true for a Claude skill that runs in a
+  forked agent, where "Loading skill" would not.
 
 ## Design calls
 
@@ -332,6 +338,13 @@ user can override each one.
     command. Reason: Codex reads a long `SKILL.md` in pages, and one load
     should give one skill line. Each Claude `Skill` call shows, because
     each call is a separate load.
+16. A skill line with two or more names reads "Using skills" or "Used
+    skills". Reason: the plural is a detail of decision 279, and the fold
+    line already uses "Skills:" for two or more names. The options check
+    of decision 279 proposed it as option F.
+17. On a narrow screen, the detail of a skill line shrinks before the
+    skill names. Reason: a long Codex command must not hide the names,
+    which are the point of the line.
 
 ## Milestone 1: Mockups
 
