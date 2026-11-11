@@ -32,6 +32,10 @@
   background: var(--ui-amber-soft);
 }
 
+.merged {
+  background: var(--ui-merged-soft);
+}
+
 .number {
   flex-shrink: 0;
   padding: 1px 6px;
@@ -56,6 +60,11 @@
 .warning .number {
   border-color: var(--ui-warning-border);
   color: var(--ui-amber-deep);
+}
+
+.merged .number {
+  border-color: var(--ui-merged-border);
+  color: var(--ui-merged);
 }
 
 /*
@@ -117,6 +126,10 @@
 
 .warning .state {
   color: var(--ui-amber-deep);
+}
+
+.merged .state {
+  color: var(--ui-merged);
 }
 
 /*
