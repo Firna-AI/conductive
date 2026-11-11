@@ -7,7 +7,7 @@ import { workspaceRowMove } from '../../app/shortcuts/navigation'
 import type { Workspace } from '../../shared/workspaces'
 import { nameLabel } from '../../shared/name-label'
 import ui from '../ui/ui.module.css'
-import { ArchivedGroup, archivedOpen } from './ArchivedGroup'
+import { ArchivedGroup, useArchivedOpen } from './ArchivedGroup'
 import type { DropTarget } from './drop-target'
 import { useListKeys } from './list-keys'
 import type { RowMenus } from './row-menu'
@@ -88,8 +88,11 @@ export function SectionList(props: {
   offersKeys?: boolean
   menus?: RowMenus
 }) {
-  const [opened, setOpened] = useState<boolean | null>(null)
-  const archived = archivedOpen(props.archived, props.selectedId, opened)
+  const [archived, setArchived] = useArchivedOpen(
+    props.groups,
+    props.archived,
+    props.selectedId,
+  )
   useListKeys({
     shown: [
       ...props.groups.flatMap((group) =>
@@ -206,7 +209,7 @@ export function SectionList(props: {
         <ArchivedGroup
           menus={props.menus}
           now={props.now}
-          onToggle={setOpened}
+          onToggle={setArchived}
           open={archived}
           restoreAction={props.restoreAction}
           rows={props.archived}
