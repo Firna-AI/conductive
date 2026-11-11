@@ -8,7 +8,7 @@
 
 - **Terms:**
   - **Pull request bar:** the strip at the top of the right column of a workspace. It shows the GitHub state of the branch and one main action.
-  - **barTint:** the mockup function in `prStatus.ts` that returns the tint of the main action for a bar state: green, amber, red, or none.
+  - **barTint:** the mockup function in `prStatus.ts` that returns the tint of the main action for a bar state: green, amber, red, purple after a merge, or none.
   - **Outline tone:** the `secondary` tone of the Firna button, with a border and no fill.
 - **Background:** On 11 November 2026 the user asked that no bar action show the blue primary fill. On a bar without a tint, the main action now takes the outline tone. `src/github/ActionButton.tsx` and `docs/mockups/src/components/workspace/BarActions.tsx` apply the rule, and `docs/mockups/design-bar.md` states it.
 - **Problem:** The comment of `barTint` still says: "A bar without a tint keeps the primary fill." The code does the opposite.

@@ -261,7 +261,7 @@ describe('the tint of the main action', () => {
       ['changes-requested', 'warning'],
       ['blocked', 'warning'],
       ['draft', null],
-      ['merged', null],
+      ['merged', 'merged'],
       ['none', null],
     ])
   })
