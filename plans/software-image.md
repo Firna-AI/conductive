@@ -127,7 +127,10 @@ Each item marked "my call" is a design call of the planning agent, made on
    notice stays with Try again. The action runs from the folder of the
    workspace's repository and shows its output. Decision 15 sets its
    environment, decision 17 a missing repository, decision 23 its time
-   limit, and decision 24 a question before it runs.
+   limit, and decision 24 a question before it runs. My call: each member
+   of the org may run it, because each member can already send messages in
+   every workspace (decision 39 and "Orgs and members"), and an agent turn
+   can run the same script.
 7. **Parallel copies.** The source loader keeps one source record for each
    repository. Each copy gets its own token and one-use grant, and the
    Worker revokes each token as soon as its copy ends. My call: the
@@ -176,7 +179,8 @@ keeps both.
 
 The options check of the `implementation-review` skill ran over decisions
 4, 5, and 6 on 9 November 2026, over decisions 1, 12, and 13 on 10
-November 2026, and over decision 14 on 10 November 2026. Its reports are
+November 2026, over decision 14 on 10 November 2026, and over decisions
+15, 17, 22, 23, 24, and 25 on 11 November 2026. Its reports are
 in `.context/software-image/`. Each decision below has the user's answer.
 
 ### 1. First and later builds: confusing software step label
@@ -333,13 +337,23 @@ Open. From finding 1 of Milestone 1.
   - **A.** Run it with no org env vars, as a build does. Effort: Small.
   - **B.** Keep the env vars and hide exact copies in the output. The notice
     says that the script gets them. The risk stays. Effort: Small.
+  - **C.** Run the script through the same command builder as a build. It
+    gets only the folder variables, and it starts where a build starts it,
+    not in the folder of the workspace's repository. The output still hides
+    exact copies, because a script can read a secret from a file. Effort:
+    Small.
 - **Left out:** Giving builds the env vars too, because a saved snapshot
   must not hold them. Running the script in the member's terminal, because
-  that gives it the env vars too, so it is the same as B.
-- **Wider fix:** A. One rule then covers every run of the install script.
+  the app cannot tell a good run from a failed one there. Giving the script
+  only the env vars that are not secret, because A is better on every
+  point.
+- **Wider fix:** C. One command builder keeps the run equal to a build, also
+  when builds later get another variable or start folder.
 - **Previous examples:** None found.
-- **Recommendation:** A. The script runs in the environment that its author
-  tested, and no secret reaches its output.
+- **Recommendation:** C. The first recommendation was A. The run gets the
+  variables and the start folder that a build tested. The env vars are not
+  a secrecy line, because each member with a terminal already gets them.
+  The risk that stays is a script that acts on a real service.
 - **Action:** ask the user, because the run adds behaviour at a security
   boundary that no requirement covers.
 
@@ -360,8 +374,11 @@ Open. From finding 3 of Milestone 1.
   repositories changed. A run then fails at the missing folder.
 - **Impact if no action:** The member sees a failed run, and the error does
   not say why.
-- **Root question:** What does an old workspace offer when the current
-  setup needs a repository that its disk lacks?
+- **Root question:** What does an old workspace offer when its repository
+  folders differ from those of the current org image? The options check
+  replaced "What does an old workspace offer when the current setup needs a
+  repository that its disk lacks?", because a renamed folder breaks the run
+  too.
 - **Options:**
   - **A.** Run the script, and let the output show the error at the missing
     folder. Effort: Small.
@@ -369,16 +386,23 @@ Open. From finding 3 of Milestone 1.
     workspace has the new setup, and it offers no run. This needs a new
     mockup state. Effort: Medium.
   - **C.** The action copies each missing repository first, then runs the
-    script. It needs a token path, as workspace #578 does. Effort: Large.
+    script. It changes the rule that a workspace keeps the folders of its
+    org image. Effort: Large.
+  - **D.** When the workspace lacks a repository or a folder of the current
+    org image, the notice names it. It says that the run can fail without
+    it, and that a new workspace has the new setup. It still offers the run.
+    Effort: Medium.
 - **Left out:** Running only the lines for the workspace's repository,
-  because the install script runs as one script.
-- **Wider fix:** C. It gives an old workspace each repository of the
-  current setup. It overlaps workspace #578.
+  because the install script runs as one script. A folder check that the
+  admin writes in the script, because every build has every folder, so a
+  missing check never fails a build.
+- **Wider fix:** D, or B when it compares the folder of each repository.
 - **Previous examples:** Decision 10 D. Its copy part moved to workspace
   #578.
 - **Related:** Design item 6: the notice compares the install scripts.
-- **Recommendation:** B. It tells the member the real cause at small cost,
-  and C can follow after workspace #578.
+- **Recommendation:** D. The first recommendation was B. At the same cost,
+  D names the cause, blocks no run that skips the missing folder, and lets
+  the notice end.
 - **Action:** ask the user, because the options trade cost against a clear
   result, and B adds a state that no requirement covers.
 
@@ -398,20 +422,28 @@ Open. From finding 8 of Milestone 1.
   refresh runs each day. An active org can add hundreds of rows each month.
 - **Impact if no action:** The history becomes a long list, and the builds
   get lost in it.
-- **Root question:** How does the history stay short enough to read?
+- **Root question:** How does the history keep the builds and the failures
+  easy to find while refreshes add a job up to every 30 minutes? The
+  options check replaced "How does the history stay short enough to read?",
+  because a short list of refreshes still buries the builds.
 - **Options:**
   - **A.** Change nothing. Effort: Small.
   - **B.** Show the newest 50 jobs with "Show older", as the Runs list of a
     routine does. This needs a mockup state and a paged API. Effort: Medium.
   - **C.** Group the good refreshes between two other jobs into one row,
     such as "12 refreshes". This needs a mockup state. Effort: Medium.
-- **Left out:** Hiding good refreshes, because design item 2 says that the
-  tab shows each refresh.
+  - **D.** The history lists the builds, the failed refreshes, and the
+    newest refresh, and the API returns only those jobs. An older good
+    refresh no longer shows. Design item 2 and the Refreshes mockup change.
+    Effort: Small.
+- **Left out:** A switch between builds and all jobs, because the groups of
+  C give the hidden rows one press away.
 - **Wider fix:** B. It keeps the list bounded for any number of jobs.
 - **Previous examples:** The Runs list of a routine, which holds the newest
   50 runs.
-- **Recommendation:** B. It reuses a known pattern, and it also bounds the
-  API reply.
+- **Recommendation:** D. The first recommendation was B. D shows each
+  build and each failure at the smallest cost, and B can follow if failed
+  refreshes pile up.
 - **Action:** ask the user, because B and C trade a familiar pattern
   against a shorter list, and each adds a mockup state.
 
@@ -430,17 +462,28 @@ Open. From finding 9 of Milestone 1.
   run does not count as member activity, so the idle stop can end it.
 - **Impact if no action:** A script that never ends runs until the idle
   stop, which cuts it off at a random point.
-- **Root question:** How long can a run of the install script go on?
+- **Root question:** How does each run of the install script come to a
+  clear end, and what may end it early? The options check replaced "How
+  long can a run of the install script go on?", because the idle stop is a
+  second symptom of the same problem.
 - **Options:**
   - **A.** No limit, and a run does not count as activity. Effort: Small.
   - **B.** A 60-minute limit, as for a build, and a run keeps the sandbox
     from its idle stop. Effort: Medium.
+  - **C.** A Stop action on the notice while the run goes on. The run has no
+    limit, and it does not keep the sandbox up, so the idle stop still ends
+    a run that nobody watches. Effort: Medium.
+  - **D.** As B, with the Stop action of C. Effort: Medium.
 - **Left out:** A 20-minute limit, as for a start, because the script is
-  the same one that a build runs with 60 minutes.
+  the same one that a build runs with 60 minutes. A run in the terminal,
+  because the app cannot tell a good run from a failed one there. A run
+  that keeps the sandbox up with no limit, because a script that never
+  ends would keep it up forever.
 - **Wider fix:** None.
 - **Previous examples:** Decision 128 set the limits for builds and starts.
-- **Recommendation:** B. The run then ends the same way as a build, and the
-  idle stop cannot cut it.
+- **Recommendation:** D. The first recommendation was B. Each run then ends
+  by itself, by Stop, or at the limit, and the idle stop cannot cut it. B
+  and D change the idle stop rule of `docs/protocol/workspace-life.md`.
 - **Action:** ask the user, because B adds a new limit, and the user
   chooses each new limit.
 
@@ -460,18 +503,27 @@ Open. From finding 10 of Milestone 1.
   undoes it.
 - **Impact if no action:** A member can start a run by mistake and lose the
   current state of the files.
-- **Root question:** How does a member confirm a run that cannot be undone?
+- **Root question:** How does a member start a run only on purpose, and
+  know what it will change? The options check replaced "How does a member
+  confirm a run that cannot be undone?", because a view of the change and
+  an undo also meet the goal.
 - **Options:**
   - **A.** No dialog. The notice says what the run does. Effort: Small.
   - **B.** A `ConfirmDialog` that says the script runs in this workspace and
     can change its files. This adds a mockup state. Effort: Small.
-- **Left out:** A snapshot before each run, because a saved disk costs
-  storage and time.
+  - **C.** As B, and the dialog shows the lines of the install script that
+    changed since the setup of this workspace. Effort: Medium.
+  - **D.** Before the run, the app saves a Git checkpoint of each repository
+    folder, and the notice offers Undo for the files after the run. It
+    cannot undo installed packages. Effort: Large.
+- **Left out:** A saved snapshot before each run, because the disk of a
+  workspace holds agent sessions with secret values, and no saved snapshot
+  may hold them.
 - **Wider fix:** None.
 - **Previous examples:** The question before closing a running session, in
   `docs/mockups/src/screens/workspaceOverlays.tsx`.
-- **Recommendation:** B. It follows the rule in `design.md`, and it keeps
-  the choice with the member, which is the reason for decision 11 C.
+- **Recommendation:** B. It guards against a press by mistake at small
+  cost, and C can add the changed lines later.
 - **Action:** ask the user, because B adds a step that decision 11 C does
   not name.
 
@@ -490,19 +542,104 @@ Open. From finding 11 of Milestone 1.
 - **Problem:** The log of such a job ends with the copies. The save can
   take minutes with no new line.
 - **Impact if no action:** An admin can think that the job hangs.
-- **Root question:** How does the log show the work after the last step?
+- **Root question:** How does an admin see that a job still works during a
+  step that writes no output? The options check replaced "How does the log
+  show the work after the last step?", because the start of the build
+  sandbox and the provider retries are silent too.
 - **Options:**
   - **A.** Change nothing. The head still says "Building" with its time.
     Effort: Small.
   - **B.** Add a line such as "Saving the cloud computer" before the save
     in every build and refresh. Effort: Small.
+  - **C.** Each phase of a job writes its label when it starts, from one
+    table keyed by the phase, such as "Starting the cloud computer" and
+    "Saving the cloud computer". Effort: Small.
+  - **D.** The head of the card names the current phase after "Building".
+    Effort: Medium.
 - **Left out:** A line only for an empty script, because every job saves
-  its image.
-- **Wider fix:** B. It covers the save of every job.
+  its image. A moving mark in the log, because a running log already ends
+  with a cursor.
+- **Wider fix:** C. It covers each phase, also a phase that a later change
+  adds.
 - **Previous examples:** None found.
-- **Recommendation:** B. One line says what the job does while it saves.
+- **Recommendation:** C. The first recommendation was B. At about the same
+  cost, C also names the start of the build sandbox and each later silent
+  step.
 - **Action:** ask the user, because B adds a build log line that no
   requirement names.
+
+### 28. Refresh: the logs of clean refreshes pile up
+
+Open. From the options check of 11 November 2026. Its own options check
+waits.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Review.
+- **Category:** Performance.
+- **Location:** "Build jobs" in `worker/lifecycle/image-builds.md`, and
+  `worker/lifecycle/build-log-retention.ts`.
+- **Background:** Moments: the refresh after a push and the daily refresh.
+  Each job keeps its log in D1, up to 4 MiB, with no age limit. A clean
+  refresh runs the install script, so each refresh now keeps a full install
+  log. An org with many pushes can run up to 49 refreshes a day. All orgs
+  share one D1 database.
+- **Problem:** The stored logs grow without limit, mostly from good
+  refreshes that nobody opens.
+- **Impact if no action:** One busy org can add up to about 200 MiB of logs
+  a day to the shared database.
+- **Root question:** How long does the app keep the log of each job?
+- **Options:**
+  - **A.** Keep every log, as today. Effort: Small.
+  - **B.** Keep the logs of builds and of failed refreshes, and the log of
+    the newest good refresh. Delete the logs of older good refreshes, and
+    keep their job records. Effort: Small.
+  - **C.** Keep each log for 30 days, then delete it, and keep the job
+    record. Effort: Small.
+  - **D.** Move the logs out of D1 into file storage. Effort: Medium.
+- **Left out:** None.
+- **Wider fix:** C. One age limit covers every kind of job.
+- **Previous examples:** None found.
+- **Related:** Decision 22: its option D shows the same jobs whose logs B
+  keeps.
+- **Recommendation:** B. It keeps each log that the history can show, and
+  it drops only logs that nobody can open.
+- **Action:** ask the user, because a deletion of stored logs is a new rule
+  that no requirement covers.
+
+### 29. Old org setup: an agent turn during the run
+
+Open. From the options check of 11 November 2026. Its own options check
+waits.
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Location:** the design call of Milestone 1 that keeps the composer
+  usable during the run, in
+  `docs/mockups/src/entries/app/workspace-updates/install-script/`.
+- **Background:** Moment: a workspace that runs. The mockup keeps the
+  composer usable while the install script runs. An agent turn or the
+  terminal can then change the same files, such as `node_modules`, at the
+  same time.
+- **Problem:** Two writers can break installed packages or build output.
+- **Impact if no action:** A run or a turn can fail in a way that is hard
+  to explain.
+- **Root question:** May an agent turn change the workspace while the
+  install script runs?
+- **Options:**
+  - **A.** Yes, as the mockup shows. The member decides. Effort: Small.
+  - **B.** The composer holds new messages until the run ends, and the
+    notice says why. Effort: Medium.
+  - **C.** The run starts only when no agent turn runs, and the notice warns
+    that a turn during the run can change the same files. Effort: Medium.
+- **Left out:** A stop of the terminal during the run, because the terminal
+  is the member's own tool, and a stop loses its state.
+- **Wider fix:** None.
+- **Previous examples:** None found.
+- **Recommendation:** C. A run then never starts in the middle of a turn,
+  and the member keeps the composer.
+- **Action:** ask the user, because B and C change how the composer and the
+  run work together, and no requirement covers it.
 
 ## Milestone 1: Mockups
 
@@ -553,6 +690,8 @@ The docs state the requirements of each moment that this plan changes.
       because no image job does so after this plan.
 - [ ] In `docs/architecture.md`, change the term "Refresh", and add an old
       workspace. PR #194 already changed the term "Build".
+- [ ] Change the sentence of `docs/protocol/org-image.md` that says that the
+      install script runs only in a build.
 - [ ] Update the reason of "The repository notice" in
       `docs/protocol/org-image.md`, which says that the card shows no
       refresh.
