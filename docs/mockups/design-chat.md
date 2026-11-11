@@ -1,9 +1,11 @@
 # The design of the chat
 
 This page belongs to [the design](design.md), which gives the style, the
-layouts, the design tokens, and the shared parts. This page gives workspace, session, and file chips,
-attached files, Markdown tables, the work fold of a turn, and the line of a stopped turn. It also gives the data that the chat does
-not have, and the files that the cloud computer could not read.
+layouts, the design tokens, and the shared parts. This page gives workspace,
+session, and file chips with the list of `@`, attached files, and Markdown
+tables in replies and file previews. It gives the work fold of a turn and
+the line of a stopped turn. It also gives the data that the chat does not
+have, and the files that the cloud computer could not read.
 
 - `AttachmentChips` in `src/components/chat/` draws each attached file as a
   chip: a glyph, the name, a label, and its actions. While a file uploads,

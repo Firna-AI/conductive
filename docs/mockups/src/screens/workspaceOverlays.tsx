@@ -9,6 +9,7 @@ import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
+import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
@@ -95,6 +96,8 @@ export function workspaceOverlay(
       return null
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
+    case 'continue-unpushed':
+      return <ContinueDialog viewport={viewport} workspace={workspace} />
     case 'history':
       return mobile ? (
         <Sheet title="Session history">

@@ -13,7 +13,7 @@ function countingFiles() {
 }
 
 describe('the connection of the kept files', () => {
-  test('the Files part and the chat share one connection, which stops after the last part stops', () => {
+  test('two connects of one store share one connection, which stops after the last connect stops', () => {
     const { files, calls } = countingFiles()
     const stopFiles = startFiles(files)
     const stopChat = startFiles(files)

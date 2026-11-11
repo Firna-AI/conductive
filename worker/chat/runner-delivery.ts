@@ -226,6 +226,8 @@ export class RunnerDelivery {
       await this.failLogin(active.workspace.id, command)
       return this.unavailable(active.workspace.id, command)
     }
+    const branches = await this.dependencies.readBranches(active.workspace.id)
+    if (!branches) throw new RunnerAccessDenied()
     const fields = {
       commandId: command.commandId,
       sessionId: command.sessionId,
@@ -233,6 +235,7 @@ export class RunnerDelivery {
       message: { ...message, state: 'sent' as const },
       attachments: command.attachments,
       login,
+      branches,
     }
     if (command.type === 'message')
       return { state: 'send', command: { type: 'message', ...fields } }

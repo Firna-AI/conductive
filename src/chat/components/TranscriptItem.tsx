@@ -1,5 +1,6 @@
 import { CircleAlert, CircleStop } from 'lucide-react'
 import type { UserMessage } from '../../shared/messages'
+import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
@@ -9,6 +10,7 @@ import type {
   TranscriptItem,
 } from '../../shared/transcript/transcript'
 import {
+  continuedBy,
   filesUnread,
   omittedFiles,
   stoppedSummary,
@@ -111,5 +113,13 @@ export function ItemView(props: {
       )
     case 'lost':
       return <LostEventLine marker={item.marker} />
+    case 'continued':
+      return (
+        <ContinuedLine
+          base={item.baseBranch}
+          branch={item.branch}
+          who={continuedBy(item.member, props.readers)}
+        />
+      )
   }
 }

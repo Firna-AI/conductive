@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 10 November 2026.`,
+  accepted it. Effective date: 11 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -48,8 +48,9 @@ export const termsDocument: LegalDocument = {
       title: 'The service',
       blocks: [
         paragraph`${productName} is a coding tool in the browser and in the
-          Mac app. Each workspace is one task with its own branch and its
-          own cloud computer, where agents powered by Claude and Codex work.`,
+          Mac app. Each workspace has its own cloud computer, where agents
+          powered by Claude and Codex work. A workspace can hold one task
+          after another, with one branch at a time.`,
         paragraph`${productName} is free until billing starts. Nobody pays
           until they choose a plan.`,
       ],
@@ -60,7 +61,9 @@ export const termsDocument: LegalDocument = {
         list(
           text`You sign in with GitHub, through the GitHub App of
             ${productName}. The app can reach each repository where you
-            install its GitHub App and have access.`,
+            install its GitHub App and have access. It reads your repository
+            rights and merge method from GitHub. It shows Merge only when
+            your GitHub rights let you merge.`,
           text`${productName} runs the cloud computers of every org in its
             own account with its cloud computer provider. You need no
             account or key of your own for them.`,
@@ -194,6 +197,13 @@ export const termsDocument: LegalDocument = {
           passes on the model requests of a newer cloud computer, it keeps no
           copy of a request or of its answer. It writes no body or header
           value of them to its logs.`,
+        paragraph`Continue starts a new branch from the latest default branch
+          of the repository. It keeps the cloud computer and its sessions.
+          Changed files move to the new branch. Commits that are not pushed
+          stay on their local branches.`,
+        paragraph`The agent actions in the pull request bar send messages as
+          the member who clicks. The chat history keeps these messages and a
+          note that names who used Continue and the branches.`,
         paragraph`You keep any rights that you have in your repositories,
           files, messages, and other content. You give the operator
           permission to store, copy, process, and transmit that content as

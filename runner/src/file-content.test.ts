@@ -8,6 +8,8 @@ import { runnerHarness } from '../test-support/harness'
 
 const textChanges: ChangesResponse = {
   baseBranch: 'main',
+  unpushedCommits: 0,
+  uncommittedFileCount: 1,
   files: [
     {
       path: 'README.md',
@@ -127,6 +129,8 @@ it('reports a second binary edit when tree fields and zero line counts stay equa
       type: 'changes.updated',
       changes: {
         baseBranch: 'main',
+        unpushedCommits: 0,
+        uncommittedFileCount: 1,
         files: [
           {
             path: 'committed.txt',
@@ -157,6 +161,7 @@ it('reports a moved merge base when working files and line counts stay equal', a
   await h.write('README.md', 'first\nmain\n')
   await h.git('add', 'README.md')
   await h.git('commit', '-m', 'main work')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'main')
   await h.git('checkout', 'task')
   await h.runner.files.refresh()
   expect(h.endpoint.runnerEvents.slice(before)).toEqual([])
@@ -170,6 +175,8 @@ it('reports a moved merge base when working files and line counts stay equal', a
       changes: {
         ...textChanges,
         files: [{ ...textChanges.files[0], uncommitted: false }],
+        unpushedCommits: 2,
+        uncommittedFileCount: 0,
         revision: 3,
         partNumber: 1,
         partCount: 1,
@@ -187,6 +194,7 @@ it('refreshes a committed symlink when its ignored readable target changes', asy
   await h.git('add', '.gitignore', 'readable-link')
   await h.git('commit', '-m', 'ignored link target')
   await h.git('update-ref', 'refs/heads/main', 'HEAD')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   await h.runner.files.refresh(true)
   await h.write('ignored.txt', 'later\n')
   await expectReadRefresh(h, 'readable-link', 'later\n')
@@ -202,6 +210,7 @@ it('refreshes readable raw bytes when a clean filter keeps the Git content equal
   await h.git('add', '.gitattributes', 'filtered.txt')
   await h.git('commit', '-m', 'filtered content')
   await h.git('update-ref', 'refs/heads/main', 'HEAD')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   await h.runner.files.refresh(true)
   await h.write('filtered.txt', 'FIRST\n')
   await expectReadRefresh(h, 'filtered.txt', 'FIRST\n')

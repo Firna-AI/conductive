@@ -1,4 +1,5 @@
 import type { User } from '../api'
+import type { MessageSender } from '../messages'
 import {
   turnFilesUnavailable,
   unlistedFiles,
@@ -33,6 +34,19 @@ function stoppedLine(by: string | null, readers: ChatReaders): string {
   const member = readers.members.find((item) => item.id === by)
   if (!member) return 'The agent stopped'
   return `${member.displayName ?? member.githubLogin} stopped the agent`
+}
+
+/**
+ * Who pressed Continue: "You" to that member, and the name that the note
+ * keeps of the member to the others, also after the member left the org. A
+ * copy has no reader, so it always gives the name.
+ */
+export function continuedBy(
+  member: MessageSender,
+  readers: ChatReaders,
+): string {
+  if (member.id === readers.viewerId) return 'You'
+  return member.displayName ?? member.githubLogin
 }
 
 /** The newest end of a turn, with the data that its rows do not keep. */

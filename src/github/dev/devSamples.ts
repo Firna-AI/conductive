@@ -15,7 +15,6 @@ export const samples = [
   'fake',
   'every-check',
   'no-checks',
-  'no-create-link',
   'long-base',
 ] as const
 
@@ -81,14 +80,6 @@ export function sampleReplies(
         banner,
         checks: available ? { state: 'available', checks: [] } : checks,
       }
-    case 'no-create-link': {
-      const branch = banner.banner
-      if (branch.pullRequest !== null) return { banner, checks }
-      return {
-        banner: { banner: { ...branch, createPullRequestUrl: null } },
-        checks,
-      }
-    }
     case 'long-base':
       return {
         banner: { banner: { ...banner.banner, baseBranch: longBase } },

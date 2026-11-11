@@ -95,7 +95,12 @@ export function pullBanner(
     branch: workspace.branch,
     baseBranch: workspace.baseBranch ?? pull.baseBranch,
     updatedAt: now,
-    pullRequest: { number: pull.number, title: pull.title, url: pull.url },
+    pullRequest: {
+      number: pull.number,
+      title: pull.title,
+      url: pull.url,
+      headSha: pull.headSha,
+    },
     review: pull.review,
     changesRequestedBy,
     mergedAt: pull.mergedAt,
