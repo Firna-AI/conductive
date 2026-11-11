@@ -41,9 +41,11 @@ number names a dated record, as
 
 ## Folders over time
 
-- A refresh keeps the folders and the variables of the org image.
-- A build copies each chosen repository into a new folder, because it
-  starts on a clean machine, as
+- A refresh keeps the folders and the variables of the newest good build.
+  Reason: it runs the install script of that build, which uses those
+  folders.
+- A build or a refresh copies each repository into a new folder, because
+  it starts on a clean machine, as
   [The software image](org-image.md#the-software-image) says. No file of
   an earlier org image stays, also no untracked file such as an installed
   dependency.
@@ -84,10 +86,12 @@ number names a dated record, as
   the folder with its notes and attached files. Reason: Conductor has the
   same limit, and the app still stores each attached file outside the
   cloud computer.
-- Each build of the org image installs the newest runner, as
+- Each build and each refresh of the org image installs the newest runner,
+  and a workspace start updates an older runner, as
   [The agent runner](agent-runner.md#the-agent-runner) says. A cloud
-  computer with an older runner gets no rule and no folder at its start.
-  Its agents are not told about the folder.
+  computer whose runner stays older, such as after a failed update, gets
+  no rule and no folder at its start. Its agents are not told about the
+  folder.
 - These ways were rejected:
   - A `.context/` line in the `.gitignore` of each repository. It adds a
     tracked change on every branch.

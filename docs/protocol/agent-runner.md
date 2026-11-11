@@ -9,7 +9,9 @@ sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A gateway decision number names a decision of the change that adds
-the [model gateway](model-gateway.md), as that doc says.
+the [model gateway](model-gateway.md), as that doc says. An image job
+decision number names a decision of the change that makes every build and
+every refresh of the org image clean, as [Org image](org-image.md) says.
 
 ## The agent runner
 
@@ -20,13 +22,18 @@ the [model gateway](model-gateway.md), as that doc says.
 - The runner connection carries a protocol version. The Durable Object
   serves each version that a live org image or sandbox can hold, within
   the version pin of its workspace.
-- Each build of the org image installs the newest runner. Reason: a stopped
-  sandbox can resume weeks later with an old runner.
+- Each build and each refresh of the org image installs the newest runner.
+  At each workspace start, first or later, a workspace with an older
+  version of the app's own software gets the newest runner before the
+  runner starts (image job decision 8 B), as
+  [Old workspaces](workspace-life.md#old-workspaces) says. Reason: a
+  stopped sandbox can resume weeks later with an old runner.
+- When that update fails, the start goes on with the older runner, which
+  the workspace still accepts.
 - A connection to the runner through a Boat port address was rejected,
   because it ties the runner to Boat.
-- Each build of the org image records the runner protocol version that it
-  installs. A refresh keeps the version of the image that it refreshes,
-  because a refresh keeps the installed runner.
+- Each build and each refresh of the org image records the runner protocol
+  version that it installs.
 - Each cloud computer of a workspace takes the runner version of the org
   image that it starts from as the version pin of the workspace, before it
   can connect. So a Try again that starts a new cloud computer from a newer

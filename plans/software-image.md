@@ -124,8 +124,8 @@ Each item marked "my call" is a design call of the planning agent, made on
    the install scripts, not the org images, because each refresh makes a new
    org image with the same script. A good run records the current script for
    the workspace, so the notice ends. A failed run records nothing, so the
-   notice stays with Try again. The action runs from the folder of the
-   workspace's repository and shows its output. Decision 15 sets its
+   notice stays with Try again. The action shows its output. Decision 15
+   sets its start folder and its
    environment, decision 17 a missing repository, decision 23 its time
    limit, and decision 24 a question before it runs. My call: each member
    of the org may run it, because each member can already send messages in

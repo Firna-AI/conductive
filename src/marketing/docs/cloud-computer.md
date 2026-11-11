@@ -65,8 +65,8 @@ Existing workspaces keep the repositories and folders from the setup they starte
 3. Select **Save script**.
 4. Select **Build computer**.
 
-Bash runs the install script during a build.
-The build copies the chosen repositories before it runs that script.
+Bash runs the install script during each build and each refresh.
+A build or a refresh copies the repositories before it runs that script.
 Use the install script for dependencies and shared software.
 
 For an npm repository in `~/code/storefront` with a committed `package-lock.json`, a script can use:
@@ -83,7 +83,7 @@ Repeated repository names get an owner prefix, such as `~/code/acme-storefront`.
 A remaining folder-name collision adds a numeric suffix.
 
 The page lists the software included before your install script runs.
-Builds do not get your org's environment variable values.
+Builds and refreshes do not get your org's environment variable values.
 Use startup commands for work that needs those values.
 
 ## Run commands at startup
@@ -125,43 +125,49 @@ It does not hide values in file content, diffs, or Terminal.
 
 ## Apply setup changes
 
-A successful build updates the starting setup for new workspaces.
-A failed build keeps the last successful setup.
+A successful build or refresh updates the starting setup for new workspaces.
+A failed build or refresh keeps the last successful setup.
 Existing workspaces keep their files.
 
 Adding a repository starts a build automatically.
-A build also installs the newest Conductive cloud computer software.
-An existing workspace keeps the software of the setup that it started from, also after a resume.
-To get newer software, start a new workspace after an admin runs **Build computer**.
-This also gives the new workspace the server list in **Preview**.
+Each build and refresh also installs the newest Conductive cloud computer software.
+An existing workspace gets that software when its computer next starts or resumes.
+That start shows the step **Updating the agent and terminal software**.
+If the update fails, the workspace starts with its earlier software.
+A warning then stays until the next start, which tries the update again.
+The newer software also gives the workspace the server list in **Preview**.
 
 After the first successful build, removed repositories and saved install-script changes need **Build computer**.
-New workspaces can keep using the last successful setup while a later build runs.
+New workspaces can keep using the last successful setup while a later build or a refresh runs.
 
 Changes during the first successful build get one extra build automatically.
 If that first build fails, **Try again** uses the saved settings.
-The build action stays unavailable while a build is running.
+The build action stays unavailable while a build or a refresh is running.
 
 ## Recover from a failed build
 
-Open **Cloud computer** to read the build log and its error.
+Open **Cloud computer** to read the log and the error of a failed build or refresh.
 Check the install script and repository access when the error names them.
 Correct the cause before you select **Try again**.
+After a failed refresh, **Try again** starts a build with the saved settings.
 
-A build or repository refresh has a 60-minute limit.
-A failed later build leaves the last successful setup available.
+A build or refresh has a 60-minute limit.
+A failed later build or a failed refresh leaves the last successful setup available.
 If no build has succeeded, workspaces must wait for one that does.
 
-The **History** list shows earlier build results.
+The **History** list shows earlier builds and refreshes, with their results.
 Other members must ask an admin to change the setup or retry a build.
 
 ## Keep repository copies current
 
-Conductive refreshes the prepared repositories after default-branch pushes and with a daily timer.
+Conductive refreshes the setup after default-branch pushes and with a daily timer.
 Push refreshes run at most once per 30 minutes.
-A refresh fetches repository commits without running the install script.
+A refresh starts on a clean computer and copies the repositories at their newest commits.
+It then runs the install script of the last successful build.
+So the install script also runs on the newest code, such as a changed lock file.
 
-Use a new build when changed dependencies need the install script again.
+A refresh keeps the install script and the repositories of the last successful build.
+Saved install-script changes and removed repositories still need **Build computer**.
 Existing workspaces keep their own files and branch.
 
 - [Create and manage workspaces](/docs/workspaces)

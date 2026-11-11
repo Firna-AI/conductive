@@ -3,12 +3,17 @@
 This doc holds the requirements and the decisions in force for the org
 image that every sandbox of an org starts from. It covers the builds and
 the refreshes of the org image, the first build of a new org, the
-software image that each build starts from, and the builds and the
-notices of a change of the repositories. It
+software image that each build and each refresh starts from, and the
+builds and the notices of a change of the repositories. It
 belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md). The
 terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. An image job
+is a build or a refresh of the org image. An image job decision number,
+such as image job decision 12, names the dated record of one decision of
+the change that makes every image job clean and updates old workspaces.
+The plan of that change keeps these records while the change is open.
+Its pull request keeps them after the merge.
 
 ## The org image
 
@@ -22,8 +27,12 @@ decision number names a dated record, as
   build, not at a refresh, as [Repository changes](#repository-changes)
   says.
 - The install script prepares the image. It is a script, not a terminal
-  session, and it runs only in a build.
+  session. It runs in each build and each refresh, and in an old workspace
+  when a member chooses, as
+  [Old workspaces](workspace-life.md#old-workspaces) says.
 - Bash runs the install script.
+- A build or a refresh with an empty install script skips the install
+  step, so its log shows no install step.
 - The Cloud computer tab lists the operating system and software that the
   base image includes before the install script runs.
 - "Build computer" starts a build. A build runs the install script with
@@ -34,23 +43,24 @@ decision number names a dated record, as
 - The app also starts some builds by itself, as
   [The first build](#the-first-build) and
   [Added repositories](#added-repositories) say.
-- A build replaces the org image only when it succeeds. A failed build
-  keeps the last good image (decision 9).
-- While a build runs, its log streams on the Cloud computer tab. New
-  workspaces keep starting from the last good image.
-- A failed build shows the end of its log and Try again. The Settings link
-  of the sidebar then shows a mark.
+- A build or a refresh replaces the org image only when it succeeds. A
+  failed build or refresh keeps the last good image (decision 9).
+- While a build or a refresh runs, its log streams on the Cloud computer
+  tab. New workspaces keep starting from the last good image.
+- A failed build or refresh shows the end of its log and Try again, which
+  builds the current settings. The Settings link of the sidebar then shows
+  a mark.
 - After a failed build, the app starts no new build by itself
   (decision 12). This also holds for the first build of an org. Reason: a
   broken install script fails again.
 - The Cloud computer tab shows the install script notice while the saved
   install script differs from the script that the org image ran
-  (decision 241). The notice asks for a build, because the script runs
-  only in a build.
+  (decision 241). The notice asks for a build, because only a build runs
+  a saved change of the script.
 - While the org has no image, the script of the newest build takes the
   place of the script that the org image ran.
-- A refresh does not end the notice, because a refresh does not run the
-  script.
+- A refresh does not end the notice, because a refresh runs the script of
+  the newest good build, not the saved script.
 - A change of the repositories shows the
   [repository notice](#the-repository-notice), not the install script
   notice. Reason: each notice then names the change that waits for a
@@ -61,16 +71,29 @@ decision number names a dated record, as
   notice asks for no build. It says that one more build runs the script
   when that build succeeds, as [The first build](#the-first-build) says.
 - The Cloud computer tab lists the builds, each with its time, its result,
-  and its length.
+  and its length. It lists the refreshes too. A refresh shows its log and
+  its result, as a build does, and it names what started it.
 - A push to the default branch of a chosen repository refreshes the org
   image, at most once in 30 minutes. A daily timer refreshes it too. Each
   automatic refresh needs an admin who is not suspended, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
-- A refresh fetches the new commits of each repository that the org image
-  holds. It does not run the install script, and it adds or removes no
-  repository.
 - Reason: a new workspace then needs only a small fetch. The limit of one
   refresh in 30 minutes saves starts, because each refresh is a start.
+- Each refresh records what started it: a push, the daily timer, or a
+  request of an admin to the refresh route of the API.
+- Each refresh starts on a clean computer, as a build does (image job
+  decisions 7 D and 12 G). It copies each repository of the newest good
+  build fresh, at its newest commit, and runs the install script of that
+  build. The newest good build is the newest build that succeeded.
+- So a refresh adds or removes no repository, and a saved change of the
+  install script still waits for Build computer. A refresh also runs after
+  a failed build, because it runs no saved change.
+- Reason: every image job then follows one path, and nothing of an earlier
+  org image stays. A clean refresh takes longer, but nobody waits for it.
+- A clean refresh only once a day or only when an input changed, and a
+  refresh on top of the last org image, were rejected. Each keeps a path
+  from an old org image, where the output of an earlier install script
+  stays and a program that it left can read a later clone token.
 
 ### The first build
 
@@ -131,10 +154,9 @@ decision number names a dated record, as
 - It holds no org data and no secret, because every org uses it.
 - One software image belongs to each version of the app's own software. A
   change of any install step of that software makes a new version.
-- Each build starts from the ready software image of the current version.
-  It copies every chosen repository fresh, then runs the install script.
-  It does not install the app's own software. A refresh starts from
-  the last org image.
+- Each build and each refresh starts from the ready software image of the
+  current version. It copies each of its repositories fresh, then runs its
+  install script. It does not install the app's own software.
 - Reason: a build from the software image waits for no app software install.
   The install script always runs on a clean machine. No output of an
   earlier org install script stays.
@@ -145,10 +167,12 @@ decision number names a dated record, as
     current software
   - with an install script that must be safe to run more than once
   - with a variable for the kind of build, or with a "Clean build" choice
-- Without a ready software image of the current version, a build starts
-  from the base image. It copies the repositories, installs the app's own
-  software, then runs the install script. A missing software image slows a
-  build and never fails it.
+- Without a ready software image of the current version, a build or a
+  refresh starts from the base image. It copies the repositories, installs
+  the app's own software, then runs the install script. Its log names that
+  step "Installing the agent and terminal software" (image job decision
+  1 E). A missing software image slows a build or a refresh and never
+  fails it.
 - Each deploy run asks the Worker to build the software image of the
   deployed version, and waits for the result. A deploy run whose version
   has a ready software image waits for nothing.
@@ -169,9 +193,9 @@ decision number names a dated record, as
   outlasts the wait of its deploy run goes on until it ends or reaches
   that limit.
 - When a new software image is ready, the app deletes each older one that
-  no running build still starts from. A rollback of the Worker then finds
-  no software image of its version, so builds install the app's own
-  software until the next deploy run builds one.
+  no running build or refresh still starts from. A rollback of the Worker
+  then finds no software image of its version, so builds and refreshes
+  install the app's own software until the next deploy run builds one.
 
 ## Repository changes
 
@@ -255,8 +279,9 @@ decision number names a dated record, as
   3. In each other case, the notice says that the change waits for the
      next build. An admin gets Build computer. This case covers a running
      refresh, a removal alone, and a build that could not start.
-- A refresh never counts as a running build. Reason: the build card of
-  the Cloud computer tab does not show a refresh.
+- In these states, a refresh never counts as a build, also while it runs
+  or after it fails. Reason: a refresh holds the repositories of the
+  newest good build, so it makes no waiting repository ready.
 - The words say "after the build", not "after this build". Reason: an add
   during a build waits for the added build that follows it.
 - On the Cloud computer tab, the notice has no button, also for an admin.

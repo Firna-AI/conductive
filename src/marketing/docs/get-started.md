@@ -215,7 +215,7 @@ Use your repository's folder name in the script.
 2. Select **Cloud computer**.
 3. Enter your install script under **Install software**.
 4. Select **Save script**.
-5. Select **Build computer** after any current build finishes.
+5. Select **Build computer** after any current build or refresh finishes.
 
 New workspaces use the changed setup after its build succeeds.
 A failed build keeps the last successful setup.

@@ -86,7 +86,8 @@ A copied login can remain usable after the turn ends.
 Removing a login from Account does not revoke a copy held elsewhere.
 
 Installing newer software on that computer does not remove this risk.
-A new build gives the protection to new cloud computers created from its setup.
+This includes the software update when that computer starts.
+A new build or refresh gives the protection to new cloud computers created from its setup.
 Use **Build computer** and a new workspace to get the newer protection.
 
 Agent settings in the repository can send model requests and their credentials to another address.

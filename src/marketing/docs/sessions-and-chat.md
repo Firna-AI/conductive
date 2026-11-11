@@ -39,7 +39,7 @@ Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
-New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
+Workspaces with newer cloud computer software also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
 Use **Terminal** to find the ignored files.
 **All files** and **Changes** do not list them.

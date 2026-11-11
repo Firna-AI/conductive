@@ -59,11 +59,15 @@ hold the requirements of each feature.
   the added build after the first build.
 - **Software image:** the saved snapshot of the base image with the app's
   own software, and no org data. Each deploy run builds the one of its
-  version. Each build uses it when a matching image is ready.
-- **Refresh:** an update of the org image that fetches the new commits of
-  each repository that the org image holds. It does not run the install
-  script. A push to the default branch of a chosen repository starts one
-  at most once in 30 minutes, and a daily timer starts one too.
+  version. Each build and each refresh uses it when a matching image is
+  ready.
+- **Refresh:** a run of the install script of the newest build that
+  succeeded, on a clean computer, with a fresh copy of each repository of
+  that build at its newest commit. Like a build, it starts from a matching
+  ready software image, or from the base image, and it replaces the org
+  image only when it succeeds. A push to the default branch of a chosen
+  repository starts one at most once in 30 minutes, and a daily timer
+  starts one too.
 - **Deploy run:** one run of the GitHub Actions workflow `Deploy`. Each
   push to `main` starts one, and it deploys the test deployment, as
   [Automatic deploys](automatic-deploys.md) says.
@@ -75,6 +79,11 @@ hold the requirements of each feature.
   branch in the folder of that repository.
 - **Later workspace start:** each resume of the sandbox of a workspace,
   also the restart near day 14 of a stop.
+- **Old workspace:** a workspace whose disk holds an older version of the
+  app's own software than the current version, or the result of another
+  install script than the one of the current org image.
+  [Old workspaces](protocol/workspace-life.md#old-workspaces) says how its
+  starts and a notice update it.
 - **Agent runner:** our program in each sandbox. It runs the agents through
   the agent SDKs, and it reports the files, the changes, and the listening
   ports of its workspace.

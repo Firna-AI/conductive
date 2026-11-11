@@ -3,6 +3,9 @@
 This doc states how a cloud computer gets GitHub access, and who its
 commits name as their author.
 [Access and security](access-and-security.md) states the shared access rules.
+An image job is a build or a refresh of the org image. An image job
+decision number names a decision of the change that makes every image job
+clean, as [Org image](org-image.md) says.
 
 ## Git and the GitHub CLI
 
@@ -45,11 +48,11 @@ commits name as their author.
 - In an agent turn, the author is the sender of the turn, the member whose
   message started the turn. A message that another member sends during the
   turn does not change the author.
-- A sandbox keeps the agent runner of its org image, also after a resume.
-  In a sandbox whose runner gives an agent no turn author, the commits of
-  each agent turn name the workspace owner. The member starts a new
-  workspace after an admin runs Build computer to get the turn sender as
-  the author.
+- A running sandbox keeps its agent runner. Its next workspace start
+  updates an older runner, as
+  [The agent runner](agent-runner.md#the-agent-runner) says. In a sandbox
+  whose runner gives an agent no turn author, such as after a failed
+  update, the commits of each agent turn name the workspace owner.
 - Outside an agent turn, such as in the shared terminal or in the startup
   script, the author is the workspace owner.
 - The author of the first commit that the app pushes to an empty
@@ -101,21 +104,36 @@ commits name as their author.
   build sandbox, as decision 90 requires. Each copy uses its own GitHub App
   installation token, which can only read the contents of that one
   repository.
-- The Worker gives the token only to the Git command of that copy. The
-  Worker and Git do not write it to command text, command history, a
+- The copies of one image job run in parallel. Each copy has its own token
+  and its own one-use build grant.
+- The Git commands of an image job, its copies and its checkouts, run at
+  once only within a memory budget. The budget comes from the size of each
+  repository that GitHub reports and from the free memory of the build
+  sandbox (image job decision 14 F). So a large repository copies alone,
+  and many small ones copy together.
+- All copies at once, and a fixed number of copies or Git commands at
+  once, were rejected for that reason. One sandbox command for all copies
+  was rejected, because each token then lives from the start of that
+  command.
+- To read the size of each repository, the Worker uses one more
+  installation token, which can only read the metadata of the repositories
+  of the job. That token
+  never reaches the build sandbox. The Worker revokes it before the first
+  copy starts.
+- The Worker gives each copy token only to the Git command of that copy.
+  The Worker and Git do not write it to command text, command history, a
   remote URL, a Git config, a file, or a saved snapshot.
 - The Git command gets the token with a one-use build grant. The grant
   works once, and only for its own build and repository.
-- The Worker revokes the token as soon as the Git command ends, also when
-  the command fails. The build goes on only after GitHub confirms the
-  revocation. The build starts no checkout, software step, install script,
-  snapshot, or other repository code before that.
-- Risk: a refresh starts from the last org image. A program with root
-  access that an earlier install left in that image can read the clone
-  token of a later copy. That token can only read its own repository,
-  which the image already holds. The Worker revokes it when the copy ends.
-- Each build starts from the software image or from the base image, where
-  no org code has run.
+- The Worker revokes each copy token as soon as its Git command ends, also
+  when the command fails. A failed copy fails the job, and the Worker then
+  revokes each token of the job that still works.
+- The job goes on only after GitHub confirms the revocation of every token
+  of the job. Before that, the job starts no checkout, software step,
+  install script, snapshot, or other repository code.
+- Each build and each refresh starts from the software image or from the
+  base image, where no org code has run (image job decision 12 G). So no
+  program of an earlier install can read a clone token.
 - Reason: Git in the build sandbox copies a repository of any size, and the
   Git data does not pass through the Worker. Larger uploads and stored
   progress were rejected, because one repository or one Git response must

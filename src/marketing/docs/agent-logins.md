@@ -132,7 +132,8 @@ An older cloud computer starts from an earlier setup that still permits software
 Code and members with terminal access can read or copy that login during a turn.
 A copied login can remain usable after the turn ends.
 Installing newer software on that computer does not remove this risk.
-A new build gives the protection to new cloud computers created from its setup.
+This includes the software update when that computer starts.
+A new build or refresh gives the protection to new cloud computers created from its setup.
 Use **Build computer** and a new workspace to get the newer protection.
 
 The share switch does not hide either kind of credential from code or members with terminal access.

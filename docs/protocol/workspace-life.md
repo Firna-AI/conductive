@@ -1,14 +1,17 @@
 # Life of a workspace
 
 This doc holds the requirements and the decisions in force for the life of a
-workspace. It covers the create, the start steps, the time limits, the
-states, the stop and resume, the archive, and the restore of a workspace.
+workspace. It covers the create, the start steps, the updates of an old
+workspace, the time limits, the states, the stop and resume, the archive,
+and the restore of a workspace.
 It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
 which covers the provider, the org image, and the startup script. The
 terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. An image job decision number names a decision of the change that
+makes every build and every refresh of the org image clean, as
+[Org image](org-image.md) says.
 
 ## Create a workspace
 
@@ -29,8 +32,52 @@ says.
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
   gives its steps.
 - A resume shows that the files come back as the user left them.
+- The start of an old workspace also shows the update of the app's own
+  software, as [Old workspaces](#old-workspaces) says.
 - The chat history shows at once while a sandbox starts. The files and the
   tools wait until the sandbox is ready.
+
+## Old workspaces
+
+- At each workspace start, first or later, a workspace whose version of
+  the app's own software is older than the current version gets the
+  current version before its runner starts (image job decision 8 B). The
+  workspace then records its new version.
+- Reason: every workspace gets the fixes of each release, for one slower
+  start after each release. No update, an update only when the Worker
+  stops serving the protocol version of the runner, and a download in the
+  background with a switch at the next start were rejected.
+- The update is its own start step, "Updating the agent and terminal
+  software", right after the resume or the start from the org image. The
+  build log names the same software with the same words (image job
+  decision 1 E). Reason: members see this step at many starts, so one name
+  covers both places. A new name only in the build log was rejected.
+- The restart of an archived sandbox updates nothing, because it only
+  resumes the sandbox and stops it again, as
+  [Stop and resume](#stop-and-resume) says.
+- When the update fails, its step shows that it failed, and the start goes
+  on with the older software. Reason: the app still accepts a runner of an
+  older protocol version, as
+  [The agent runner](agent-runner.md#the-agent-runner) says.
+- After a failed update, the workspace shows a warning until its next
+  workspace start, also in a tab that opens later. That start tries the
+  update again.
+- The install script of a workspace is the script of the org image that it
+  started from, until a run of the notice below succeeds. While it differs
+  from the install script of the current org image, the workspace shows a
+  notice (image job decision 11 C).
+- The notice compares the install scripts, not the org images. Reason:
+  each refresh makes a new org image with the same install script.
+- The action of the notice runs the install script of the current org
+  image in the workspace, only when a member chooses. The notice shows its
+  output as it runs.
+- A run that succeeds records the current install script for the
+  workspace, so the notice ends. A run that fails records nothing, so the
+  notice stays, with Try again.
+- Reason: the member keeps control of the files of the workspace. A run at
+  each workspace start was rejected, because it changes the files without
+  a choice of the member. No notice was rejected, because the workspace
+  then misses the new setup without a word.
 
 ## Time limits of builds and starts
 
