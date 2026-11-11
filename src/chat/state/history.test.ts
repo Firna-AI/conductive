@@ -38,6 +38,31 @@ function record(id: string, closedAt: number | null): Session {
 }
 
 describe('session history', () => {
+  it('shows the workspace and the composer while the history of the shown session loads, and opens the stream after it', async () => {
+    const chat = chatFor({
+      conversation: 'history',
+      hold: (request) =>
+        new URL(request.url).searchParams.get('sessionId') === 'autocomplete',
+    })
+    const events = recordedChatEvents('history', ws, 'autocomplete')
+    chat.server.json('GET', chatHistoryPath(org, ws, 'autocomplete'), {
+      events,
+      throughEventNumber: 11,
+    })
+    const loaded = chat.controller.start()
+    await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
+    const loading = chat.controller.getSnapshot()
+    expect(loading.load.state).toBe('ready')
+    expect(loading.workspace).not.toBeNull()
+    expect(loading.sessionStates.autocomplete.hydration).toBe('loading')
+    expect(chat.after).toEqual([])
+    chat.held[0]()
+    await loaded
+    expect(chat.after).toEqual([11])
+    const state = chat.controller.getSnapshot().sessionStates.autocomplete
+    expect(state.hydration).toBe('ready')
+  })
+
   it('loads the stored history of the session that a close from another tab shows', async () => {
     const chat = chatFor({ conversation: 'history' })
     await chat.controller.start()
