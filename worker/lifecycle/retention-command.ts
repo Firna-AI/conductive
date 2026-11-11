@@ -4,6 +4,7 @@ import type { DiskRetentionResult } from './durable-types'
 import { workspaceStartupCommand } from './image-software'
 import { JobTimeLimit } from './job-time-limit'
 import { setRetention } from './retention-data'
+import { ownerCommitAuthor } from './sandbox-environment'
 import { readImageSettings } from './settings-data'
 import type { WorkspaceActionContext } from './workspace-actions'
 
@@ -26,6 +27,7 @@ export async function advanceRetentionCommand(
   sandboxId: string,
   deadlineAt: number,
   command: RetentionCommandPort,
+  ownerUserId: string,
 ): Promise<DiskRetentionResult> {
   const state = command.read()
   let error: string | null = null
@@ -41,7 +43,11 @@ export async function advanceRetentionCommand(
             attempt: state.attempt,
           },
           'startup',
-          workspaceStartupCommand(settings.startupScript, 'retention'),
+          workspaceStartupCommand(
+            settings.startupScript,
+            await ownerCommitAuthor(context.env.DB, ownerUserId),
+            'retention',
+          ),
         ),
       )
       await command.save({ ...state, processId: started.processId })

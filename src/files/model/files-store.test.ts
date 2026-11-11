@@ -25,7 +25,7 @@ function paths(files: ReturnType<typeof filesFor>): string[] {
 }
 
 it(
-  'applies the recorded creation, move, removal, and totals after the route reads',
+  'applies the recorded creation, move, removal, totals, and unpushed commits after the route reads',
   slow,
   async () => {
     const server = new FakeApiServer()
@@ -43,6 +43,7 @@ it(
       added: 161,
       removed: 50,
     })
+    expect(snapshot.changes).toMatchObject({ unpushedCommits: 2 })
     expect(
       snapshot.changes?.files.find((file) => file.path === 'docs/README.md'),
     ).toMatchObject({ change: 'renamed', previousPath: 'README.md' })

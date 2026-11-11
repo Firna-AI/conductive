@@ -3,8 +3,8 @@
 This page belongs to the [workspace lifecycle README](README.md), beside
 [Workspace Durable Object](workspace-object.md). It gives the shared rules
 of the one alarm of each workspace object and each image coordinator: the
-owners and their due times, the security sources, the run lease, and the
-steps at the end of each run.
+owners and their due times, the security sources, Continue, the run lease,
+and the steps at the end of each run.
 
 `WorkspaceAlarms` in [`alarms.ts`](../features/alarms.ts) is the one
 scheduler of the object alarm. Each owner of a timed task stores its own
@@ -14,8 +14,8 @@ a failed create, the access stop, and the image coordinator are lifecycle
 owners too. Archive owns `lifecycle:archive` separately. Its saved phases keep
 allocation recovery, stop confirmation, retention, and deletion across reconstruction.
 Its publication retries include confirmed deletion, even while the state stays archived.
-The previews and GitHub store their due times there too. So do the
-`browser`, `runner`, and `devices` security sources, on raw storage, as
+The previews, GitHub, and Continue store their due times there too. So do
+the `browser`, `runner`, and `devices` security sources, on raw storage, as
 [Alarms](../README.md#alarms) says.
 
 - Each write that changes a due time sets the object alarm to the earliest
@@ -25,15 +25,21 @@ The previews and GitHub store their due times there too. So do the
 - A due time stays stored until its owner clears it. So a run that fails
   or ends early still leaves the next alarm, also after a restart of the
   object.
-- The scheduler clears the due time of a security source after its run
-  succeeds, unless that run stored a new one.
+- The scheduler clears the due time of a security source, and of
+  Continue, after its run succeeds, unless that run stored a new one.
 - `WorkspaceAlarmRunner` in [`workspace-alarm.ts`](../features/workspace-alarm.ts)
   runs the due security sources first. After the member fence checks, its
   regular task calls `runWorkspaceAlarms` in
   [`workspace-alarms.ts`](../workspace-alarms.ts), the outer run. The outer
-  run runs the previews and GitHub. It also starts the lifecycle run,
+  run first advances a running [Continue](continue.md#phases). It runs the
+  previews and GitHub. It also starts the lifecycle run,
   `runWorkspaceAlarm` in [`workspace-alarm.ts`](workspace-alarm.ts). The
   lifecycle run runs the lifecycle owners.
+- While a Continue job is pending, the outer run starts the lifecycle run
+  only when a start is saved, as
+  [The reservation](continue.md#the-reservation) says. Otherwise it moves
+  the lifecycle due times that had come, as the steps at the end of each
+  run do.
 - Each run reads the due times that have come, and it runs their owners.
 - The lifecycle run also has a run lease, the due time `lifecycle:run`.
   At its start, before it runs any owner, the run reads all stored due
@@ -61,7 +67,7 @@ The previews and GitHub store their due times there too. So do the
   2. The run finds each of its due times that had come when the run
      started and that did not change during the run. The lifecycle run
      looks only at due times of the lifecycle owners. The outer run looks
-     only at due times of the previews and GitHub.
+     only at due times of Continue, the previews, and GitHub.
   3. It moves each due time that it found to the earliest stored due time
      in the future. When no stored due time is in the future, it moves the
      due time 30 seconds into the future.

@@ -76,6 +76,12 @@ export type WorkerWarning =
       error: ErrorSummary
     }
   | {
+      kind: 'git_credential_failed'
+      workspaceId: WarningId | null
+      turn: boolean
+      error: ErrorSummary
+    }
+  | {
       kind: 'terminal_start_failed'
       workspaceId: WarningId
       exitCode: number | null

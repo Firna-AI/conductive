@@ -2,7 +2,12 @@ import process from 'node:process'
 import { createInterface } from 'node:readline'
 import { pathToFileURL } from 'node:url'
 
-import { CLI_HELP, runWorkspaceCli, toolErrorMessage } from './cli.ts'
+import {
+  CLI_HELP,
+  runWorkspaceCli,
+  toolErrorMessage,
+  toolHelpRequested,
+} from './cli.ts'
 import { createWorkspaceToolClient } from './client.ts'
 import { createWorkspaceMcp } from './mcp.ts'
 import { runtimeConfiguration } from './runtime.ts'
@@ -14,7 +19,7 @@ export async function runToolProcess(
   output: { stdout(text: string): void; stderr(text: string): void },
   send?: (request: Request) => Promise<Response>,
 ): Promise<number> {
-  if (args.length === 0 || args.includes('--help')) {
+  if (toolHelpRequested(args)) {
     output.stdout(CLI_HELP)
     return 0
   }

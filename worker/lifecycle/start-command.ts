@@ -1,3 +1,4 @@
+import type { CommitAuthor } from '../../src/shared/commit-author'
 import { shellQuote } from './commands'
 import { defaultBranchCommand } from './default-branch-command'
 import { repositoryLocation } from './repository-locations'
@@ -9,8 +10,10 @@ import type { WorkspaceStartJob } from './start-types'
 export function workspacePhaseCommand(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
+  owner: CommitAuthor | null,
 ): string {
-  if (job.phase === 'startup') return workspaceStartupCommand(job.startupScript)
+  if (job.phase === 'startup')
+    return workspaceStartupCommand(job.startupScript, owner)
   const directory = repositoryLocation(
     job.repositoryLocations,
     row.repositoryId,

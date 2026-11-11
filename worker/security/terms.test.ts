@@ -81,7 +81,8 @@ it('requires consent at OAuth start before it creates a new account', async () =
       'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
     ).first(),
   ).toEqual({
-    version: TERMS_VERSION,
+    version:
+      '2026-11-11-gateway-actions-sessions-archive-restore-routines-feedback',
     acceptedAt: TEST_TIME,
   })
   harness.setTime(TEST_TIME + 1_000)
@@ -90,10 +91,7 @@ it('requires consent at OAuth start before it creates a new account', async () =
     await harness.env.DB.prepare(
       'SELECT terms_version AS version, terms_accepted_at AS acceptedAt FROM users WHERE github_id = 7',
     ).first(),
-  ).toEqual({
-    version: TERMS_VERSION,
-    acceptedAt: TEST_TIME,
-  })
+  ).toEqual({ version: TERMS_VERSION, acceptedAt: TEST_TIME })
 })
 
 it('records explicit consent for an existing account and keeps its identity', async () => {

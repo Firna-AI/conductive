@@ -251,6 +251,9 @@ decision number names a dated record, as
   workspace gets a name.
 - Reason: a GitHub login is unique, so the branches of each person stay
   together. A first name was rejected, because two people can share one.
+- The new branch of [Continue](continue.md#the-base-and-the-new-branch)
+  follows the same rule, with the GitHub login that the workspace owner has
+  at the Continue.
 - A new workspace has no name, and the app shows "Untitled" in its place,
   as [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says (decision 182).

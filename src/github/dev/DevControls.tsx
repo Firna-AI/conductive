@@ -1,9 +1,14 @@
 import { useState } from 'react'
 import type { BannerState } from '../../shared/github'
 import {
+  scenarioValues,
+  type BarScenario,
+} from '../../test-support/fake-bar-dev'
+import {
   bannerStates,
   modes,
   schemes,
+  turns,
   viewers,
   type DevOptions,
 } from './devOptions'
@@ -46,6 +51,19 @@ export function DevControls(props: {
 }) {
   const { options, onChange } = props
   const [live, setLive] = useState<BannerState>('merged')
+  const answer = <K extends keyof BarScenario>(key: K, label: string) => (
+    <Choice
+      label={label}
+      onChange={(value: BarScenario[K]) =>
+        onChange({
+          ...options,
+          scenario: { ...options.scenario, [key]: value },
+        })
+      }
+      value={options.scenario[key]}
+      values={scenarioValues[key]}
+    />
+  )
   return (
     <div className={styles.controls}>
       <Choice
@@ -78,6 +96,17 @@ export function DevControls(props: {
         value={options.sample}
         values={samples}
       />
+      <Choice
+        label="Turn"
+        onChange={(turn) => onChange({ ...options, turn })}
+        value={options.turn}
+        values={turns}
+      />
+      {answer('access', 'Access')}
+      {answer('method', 'Method')}
+      {answer('merge', 'Merge')}
+      {answer('work', 'Local work')}
+      {answer('continue', 'Continue')}
       <Choice
         label="Live event"
         onChange={setLive}

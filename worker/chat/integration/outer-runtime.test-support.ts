@@ -161,10 +161,15 @@ export async function createOuterRuntime(
                   response.webSocket
                 )
                   return response
-                return new RuntimeResponse(await response.arrayBuffer(), {
-                  status: response.status,
-                  headers: [...response.headers.entries()],
-                })
+                return new RuntimeResponse(
+                  [204, 205, 304].includes(response.status)
+                    ? null
+                    : await response.arrayBuffer(),
+                  {
+                    status: response.status,
+                    headers: [...response.headers.entries()],
+                  },
+                )
               },
             },
           },

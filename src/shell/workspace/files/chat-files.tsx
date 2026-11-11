@@ -29,7 +29,7 @@ import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
 import { useFilesNavigation, useLeaveForSession } from './files-navigation'
 import { filesTabsOf, sameFilesTab, withoutTab } from './view-tabs'
-import { useConnectedFilesWhile, useKeptFilesWhile } from './workspace-files'
+import { useKeptFilesWhile } from './workspace-files'
 
 /** The subscription while the row shows no file tabs: to nothing. */
 function followNothing(): () => void {
@@ -161,8 +161,9 @@ function useMentions(
  * its path from the kept files, for its title and its drawing, so each name
  * of the tab hides each secret value. When the chat makes a session active
  * while `content` shows a file, the address goes back to the chat. The
- * chat keeps the files connected, for the list of `@` and the file chips.
- * An archived workspace has no files.
+ * chat reads the kept files for the list of `@` and the file chips, also
+ * on a phone before a visit to Files: `KeptFilesConnection` of the screen
+ * keeps them connected. An archived workspace has no files.
  */
 export function useChatFiles(
   context: WorkspaceContext,
@@ -174,7 +175,7 @@ export function useChatFiles(
   const archived = context.sandbox === 'archived'
   const tabs = !archived && context.viewport !== 'phone'
   const labelOf = useTabLabels(context, tabs)
-  const files = useConnectedFilesWhile(context, !archived)
+  const files = useKeptFilesWhile(context, !archived)
   const mentions = useMentions(context, files, navigation)
   if (archived) return {}
   const renderTab: RenderTab = (tab) => {

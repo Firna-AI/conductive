@@ -4,11 +4,19 @@ This guide belongs to the [sandbox software](README.md).
 
 ## Commit author
 
-At each create and resume, the Worker gives the sandbox the workspace
-owner's commit author. This includes a disk retention restart.
-It sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and
-`GIT_COMMITTER_EMAIL`. These variables take precedence over Git settings
-and org variables with the same names.
+At each create and resume, the startup command writes the workspace
+owner's commit author to the Git system settings, `/etc/gitconfig`, as
+`author.name`, `author.email`, `committer.name`, and `committer.email`.
+This includes a disk retention restart. Git uses this author outside an
+agent turn, such as in the terminal and in the startup script. These keys
+win over a `user.name` and a `user.email` that a script writes into a
+repository.
+
+In an agent turn, the runner gives each agent process `GIT_AUTHOR_NAME`,
+`GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` with
+the turn sender's author. These variables take precedence over all Git
+settings. The sandbox variables do not hold them, so a login shell that
+loads the sandbox variables again keeps them.
 [Commit author](../docs/protocol/github-tokens.md#commit-author) states the
 name and email rules.
 
@@ -28,8 +36,13 @@ caller's `CONDUCTIVE_TURN_ID`, loads the sandbox variables, and runs
 - It gives git the token as the password of the user `x-access-token`.
 - The Worker returns a fresh GitHub user token of the sender of that turn.
   The helper saves nothing, so each git operation asks again.
-- Without a current turn, or when the Worker refuses, the helper writes one
-  fixed message. Git then gets no credential from the helper.
+- In Git credential mode without a turn ID, the helper writes that Git
+  gets GitHub access in an agent turn, and it sends no request.
+- When the Worker refuses, the helper writes the Worker's error message.
+  It writes it only when it is one line of at most 300 characters with no
+  control or format characters.
+- Any other failure writes "GitHub access failed. Try again." Git then
+  gets no credential from the helper.
 
 The Worker serves that route on the machine hostname, as the
 [lifecycle README](../worker/lifecycle/README.md#machine-route) says.

@@ -10,6 +10,7 @@ import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
 import { showTarget, takeReply } from './linked-replies'
+import { postMessage, sendFailedTitle } from './message-send'
 import { confirmWorkspace } from './workspace-records'
 
 function change(
@@ -68,16 +69,9 @@ export async function sendDraft(
     sendId: request.id,
     sending: true,
   }))
-  let target: string | null = null
-  try {
-    target = takeReply(context, await context.api.send(sessionId, request))
-    changeDraft(context, draftId, (current) => afterSend(current, request))
-    const holder = holderOf(context.store.get(), draftId)
-    const owner = context.store.get().notice?.sessionId
-    if (context.live() && owner && (owner === sessionId || owner === holder)) {
-      context.store.update((current) => ({ ...current, notice: null }))
-    }
-  } catch (error) {
+  const posted = await postMessage(context, sessionId, request)
+  if ('error' in posted) {
+    const { error } = posted
     changeDraft(context, draftId, (current) => ({
       ...current,
       files: isMissingFile(error)
@@ -86,9 +80,16 @@ export async function sendDraft(
       sending: false,
     }))
     const holder = holderOf(context.store.get(), draftId) ?? sessionId
-    showNotice(context, holder, "Your message didn't send", error)
+    showNotice(context, holder, sendFailedTitle, error)
+    return
   }
-  await showTarget(context, sessionId, target, draftId)
+  changeDraft(context, draftId, (current) => afterSend(current, request))
+  const holder = holderOf(context.store.get(), draftId)
+  const owner = context.store.get().notice?.sessionId
+  if (context.live() && owner && (owner === sessionId || owner === holder)) {
+    context.store.update((current) => ({ ...current, notice: null }))
+  }
+  await showTarget(context, sessionId, posted.target, draftId)
 }
 
 /**

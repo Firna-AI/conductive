@@ -2,6 +2,7 @@ import { ApiError } from '../../app/api/client'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { DeviceChannel } from '../device/device-actions'
+import type { SessionReads } from '../links/session-reads'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
 import type { PendingMove } from './model-moves'
@@ -28,6 +29,12 @@ export interface ChatContext {
   /** The model changes whose new session has not shown yet, by its ID. */
   readonly moves: Map<string, PendingMove>
   readonly newId: () => string
+  /**
+   * The client ID of each fixed prompt that did not send, by its session and
+   * its text. So a second try in that session is the same message, and the
+   * same prompt in another session is a new one.
+   */
+  readonly prompts: Map<string, string>
   /** A new identity for a draft that a session starts after its draft moved. */
   readonly newDraftId: () => string
   /** A new local identity for a file of a draft, in this tab. */
@@ -47,6 +54,16 @@ export interface ChatContext {
   readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
+  /**
+   * The one read of the sessions of each other workspace that a session
+   * link names, for this run, as `SessionReads` says.
+   */
+  readonly sessionReads: SessionReads
+  /**
+   * The choices of a shown session in this run, so that an address lookup
+   * that a later choice overtook selects nothing.
+   */
+  readonly tabChoices: { count: number }
 }
 
 const RETRY_MESSAGE = 'The request failed. Try again.'

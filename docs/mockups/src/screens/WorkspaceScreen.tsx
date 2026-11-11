@@ -8,8 +8,8 @@ import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
-import { CommandPalette } from '../components/palette/CommandPalette'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { ChecksActions } from '../components/workspace/BarActions'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
   PullRequestBar,
@@ -29,8 +29,9 @@ import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
-import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
+import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
+import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
   filesPlaceholder,
@@ -42,6 +43,7 @@ import {
 import {
   transcriptToast,
   workspaceOverlay,
+  workspacePalette,
   workspaceToast,
 } from './workspaceOverlays'
 import { openWorkspace } from './workspaceRun'
@@ -88,7 +90,12 @@ export function WorkspaceScreen(props: {
   // admin sees. A suspended org refuses the start of every owner.
   const ownerRefused = state.sandbox === 'refused' && !suspended
   const owner = ownerRefused ? suspendedOwner : record.owner
-  const workspace = { ...record, owner, name: workspaceName(state, record) }
+  const workspace = {
+    ...record,
+    owner,
+    name: workspaceName(state, record),
+    branch: branchOf(state, record),
+  }
   const status = activityOf(state)
   const archived = state.sandbox === 'archived'
   const readOnly = archived || suspended
@@ -100,6 +107,7 @@ export function WorkspaceScreen(props: {
     !readOnly && mayArchiveWorkspace(membership, workspace.owner)
   // Every member restores it while the app keeps its cloud computer.
   const restorable = archiveRestore(state) === 'available'
+  const bar = barOf(state, { archivable, readOnly })
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
@@ -176,25 +184,30 @@ export function WorkspaceScreen(props: {
       viewport={viewport}
     />
   )
+  // A phone shows the actions of the bar at the top of the Checks tab.
+  const checksTop =
+    viewport === 'mobile' ? (
+      <ChecksActions bar={bar} workspace={workspace} />
+    ) : undefined
   const { header, files } = placeLostUpdate(state, {
     header: workspaceHeader,
-    files: <FilesContent state={state} viewport={viewport} />,
+    files: (
+      <FilesContent checksTop={checksTop} state={state} viewport={viewport} />
+    ),
   })
   const tool = <ToolContent state={state} viewport={viewport} />
   const toast = workspaceToast(state, workspace, viewport)
+  const palette = workspacePalette(state, viewport, {
+    open: { workspace, status },
+    archivable,
+    restorable,
+    rightColumn: !rightHidden,
+    mac: mac !== undefined,
+    shortcuts: props.shortcuts,
+  })
   if (viewport === 'mobile') {
     if (state.palette !== 'closed') {
-      // A phone opens the palette from the list, so it offers no actions
-      // of a workspace.
-      return (
-        <MobileFrame>
-          <CommandPalette
-            context={{ archivable: false }}
-            view={state.palette}
-            viewport={viewport}
-          />
-        </MobileFrame>
-      )
+      return <MobileFrame>{palette}</MobileFrame>
     }
     const body = {
       chat: (
@@ -209,9 +222,7 @@ export function WorkspaceScreen(props: {
     return (
       <MobileFrame>
         {header}
-        {archived ? null : (
-          <PullRequestRow state={state.banner} workspace={workspace} />
-        )}
+        {archived ? null : <PullRequestRow bar={bar} />}
         <div className={styles.mobileBody}>
           {archived ? body.chat : body[state.focus]}
         </div>
@@ -226,21 +237,6 @@ export function WorkspaceScreen(props: {
     )
   }
   const file = openFile(state)
-  const palette =
-    state.palette === 'closed' ? null : (
-      <CommandPalette
-        context={{
-          open: { workspace, status },
-          archivable,
-          restorable,
-          rightColumn: !rightHidden,
-          mac: mac !== undefined,
-          shortcuts: props.shortcuts,
-        }}
-        view={state.palette}
-        viewport={viewport}
-      />
-    )
   return (
     <AppFrame
       overlay={
@@ -263,7 +259,7 @@ export function WorkspaceScreen(props: {
         status,
         suspended,
         viewer: membership,
-        created: createdWorkspaces(state),
+        changed: changedWorkspaces(state),
         restoreOpen: state.archive === 'kept',
         shortcuts: props.shortcuts,
       })}
@@ -278,13 +274,7 @@ export function WorkspaceScreen(props: {
         }
         files={files}
         header={header}
-        pullRequest={
-          <PullRequestBar
-            archivable={archivable}
-            state={state.banner}
-            workspace={workspace}
-          />
-        }
+        pullRequest={<PullRequestBar bar={bar} workspace={workspace} />}
         rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
         tabs={tabRow}
