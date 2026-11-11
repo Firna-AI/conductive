@@ -27,8 +27,10 @@ terms. A decision number names a dated record, as
   not run Open workspace 8. Reason: a digit matches by its physical key.
 - A punctuation key, such as the / of ⌘/, can sit at another place on
   another layout. The person can then record another key.
-- On German and French layouts, [ and ] need AltGr. So the bracket keys of
-  Previous tab and Next tab do not work there. Their arrow keys still work.
+- On German and French layouts, [ and ] need AltGr, or ⌥ on a Mac. So the
+  bracket keys of Previous tab and Next tab do not work there, and their
+  arrow keys still work. The plain [ and ] of the two View toggles do not
+  work there either, and their keys with B still work.
 - [The layout switch](#the-layout-switch) gives how a key matches while a
   layout switch key is down.
 

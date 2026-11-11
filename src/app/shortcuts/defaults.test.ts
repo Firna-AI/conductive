@@ -3,9 +3,9 @@ import { shortcutCommands } from './commands'
 import { decideShortcut } from './decision'
 import { defaultShortcutKeys } from './defaults'
 import { buildShortcutKeymap } from './keymap'
-import { context, key, press, tab } from './shortcut-test-support'
+import { context, key, macApp, press, tab } from './shortcut-test-support'
 
-test('Restore workspace and Send feedback follow their groups and run assigned keys only when offered', () => {
+test('Restore workspace and Send feedback follow their groups, start with the keys of Conductor, and run their keys only when offered', () => {
   const cases = [
     {
       id: 'restore-workspace',
@@ -13,6 +13,7 @@ test('Restore workspace and Send feedback follow their groups and run assigned k
       group: 'Workspace',
       label: 'Restore workspace',
       words: ['unarchive'],
+      defaults: { mac: [], other: [] },
     },
     {
       id: 'send-feedback',
@@ -20,6 +21,7 @@ test('Restore workspace and Send feedback follow their groups and run assigned k
       group: 'General',
       label: 'Send feedback',
       words: ['bug', 'idea', 'support', 'contact', 'help', 'report'],
+      defaults: { mac: ['Alt+Meta+F'], other: ['Alt+Shift+F'] },
     },
   ] as const
   for (const item of cases) {
@@ -34,7 +36,9 @@ test('Restore workspace and Send feedback follow their groups and run assigned k
       words: item.words,
     })
     for (const keyboard of ['mac', 'other'] as const) {
-      expect(defaultShortcutKeys(item.id, keyboard)).toEqual([])
+      expect
+        .soft(defaultShortcutKeys(item.id, keyboard), `${item.id} ${keyboard}`)
+        .toEqual(item.defaults[keyboard])
       const keymap = buildShortcutKeymap(keyboard, [
         { command: item.id, keys: [key('Ctrl+Alt+P')] },
       ])
@@ -58,6 +62,65 @@ test('Restore workspace and Send feedback follow their groups and run assigned k
         kind: 'pass',
       })
     }
+  }
+  // The key of Conductor runs Send feedback also from the message field of a tab.
+  const feedback = [
+    {
+      keyboard: 'mac',
+      host: tab('firefox'),
+      press: press({ key: 'ƒ', code: 'KeyF', altKey: true }),
+    },
+    {
+      keyboard: 'other',
+      host: tab('firefox', 'linux'),
+      press: press({
+        key: 'F',
+        code: 'KeyF',
+        metaKey: false,
+        altKey: true,
+        shiftKey: true,
+      }),
+    },
+  ] as const
+  for (const item of feedback) {
+    expect
+      .soft(decideShortcut(context({ ...item, focus: 'text' })), item.keyboard)
+      .toEqual({ kind: 'command', command: 'send-feedback', closeMenu: false })
+  }
+})
+
+test('a plain ] toggles the right column and a plain [ the sidebar of the Mac app outside a text field, and each goes on to the message field', () => {
+  const right = press({ key: ']', code: 'BracketRight', metaKey: false })
+  const left = press({ key: '[', code: 'BracketLeft', metaKey: false })
+  const cases = [
+    {
+      keyboard: 'mac',
+      host: tab('chrome'),
+      press: right,
+      command: 'toggle-right-column',
+    },
+    {
+      keyboard: 'other',
+      host: tab('chrome', 'windows'),
+      press: right,
+      command: 'toggle-right-column',
+    },
+    { keyboard: 'mac', host: macApp, press: left, command: 'toggle-sidebar' },
+  ] as const
+  for (const { command, ...item } of cases) {
+    // A pass leaves the press to the message field, which types its character.
+    expect
+      .soft(
+        {
+          page: decideShortcut(context(item)),
+          message: decideShortcut(context({ ...item, focus: 'text' })),
+        },
+        `${item.press.key} on ${item.keyboard}`,
+      )
+      .toEqual({
+        page: { kind: 'command', command, closeMenu: false },
+        message: { kind: 'pass' },
+      })
   }
 })
 

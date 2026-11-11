@@ -105,8 +105,8 @@ same thing, and the key runs only where the palette lists the row, as
 says. Each row of the palette names its command in `CommandRow.command`.
 A Switch to row names the command of the place of its org, whose key it
 shows, but the rail runs that key, so `listedCommands` leaves it out.
-The Help group offers Send feedback on each page. It has no default key.
-An assigned key opens the Feedback dialog through the same row action.
+The Help group offers Send feedback on each page. Its key opens the
+Feedback dialog through the same row action.
 
 ## Mark a terminal
 

@@ -4,11 +4,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { Store } from '../../app/store'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
-import {
-  byRole,
-  queryByLabel,
-  queryByRole,
-} from '../../test-support/dom-queries'
+import { queryByLabel, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import {
@@ -16,12 +12,11 @@ import {
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
 import type { MacWindowState } from '../mac/mac-app'
-import { replyWith, savesOf } from '../account/shortcuts/shortcuts-test-kit'
 import { feedbackDialog, serveFeedback } from '../feedback/feedback-test-kit'
 import { placeOf, serverWith } from '../new-workspace/dialog-test-kit'
 import { openPaletteTab } from '../palette/palette-test-kit'
-import { click, press, settle } from '../test-mount'
-import { pressHintKey, pressShortcut } from './shortcut-test-kit'
+import { press, settle } from '../test-mount'
+import { pressHintKey } from './shortcut-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -57,23 +52,14 @@ describe('the keys of the commands of a page', () => {
       opened: { place: 'Acme · General', address: routes.account() },
       shortcuts: { prevented: true, at: routes.accountTab('shortcuts') },
     })
-    expect(
-      queryByRole('button', 'Add shortcut for Send feedback') !== null,
-    ).toBe(true)
-    const change = { command: 'send-feedback', keys: ['Alt+Shift+F'] } as const
-    replyWith(server, [change], 'other')
-    click(byRole('button', 'Add shortcut for Send feedback'))
-    pressShortcut('Alt+Shift+F')
-    await settle()
-    const feedback = pressShortcut('Alt+Shift+F', document.body)
+    // The key of Send feedback opens the Feedback dialog over the tab.
+    const feedback = pressHintKey(app, 'send-feedback', document.body)
     await settle()
     expect({
-      saves: await savesOf(server),
       prevented: feedback.defaultPrevented,
       dialog: feedbackDialog() !== null,
       at: navigation.href(),
     }).toEqual({
-      saves: [{ keyboard: 'other', changes: [change] }],
       prevented: true,
       dialog: true,
       at: routes.accountTab('shortcuts'),

@@ -31,9 +31,9 @@ gives the rules and the terms. A decision number names a dated record, as
 | General | Keyboard shortcuts | ⌥⌘/ | Alt+Shift+/ | Palette |
 | General | Account page | ⌘, | Ctrl+, | Every page |
 | General | Create org | – | – | Palette |
-| General | Send feedback | – | – | Palette |
-| View | Hide or show the sidebar | ⌘B | – | Palette, Mac app |
-| View | Hide or show the right column | ⌥⌘B | Alt+Shift+B | Workspace |
+| General | Send feedback | ⌥⌘F | Alt+Shift+F | Palette |
+| View | Hide or show the sidebar | ⌘B, [ | – | Palette, Mac app |
+| View | Hide or show the right column | ⌥⌘B, ] | Alt+Shift+B, ] | Workspace |
 | Navigation | Back | ⌘[ | – | Mac app |
 | Navigation | Forward | ⌘] | – | Mac app |
 | Navigation | Workspace list | ⇧⌘H | Ctrl+Shift+H | Org page |

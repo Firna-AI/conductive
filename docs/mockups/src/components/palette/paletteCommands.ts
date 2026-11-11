@@ -185,7 +185,7 @@ export const appActions: readonly Command[] = [
 /**
  * The row that opens the Feedback dialog over the page. It shows on each
  * page where the palette opens, also without an org and in a suspended org,
- * because feedback changes no org. Its command has no default key.
+ * because feedback changes no org.
  */
 export const helpActions: readonly Command[] = [
   {

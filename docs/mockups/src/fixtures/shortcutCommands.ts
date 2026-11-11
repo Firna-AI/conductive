@@ -115,9 +115,9 @@ function command(
 function macAppCommand(
   id: CommandId,
   label: string,
-  key: Shortcut,
+  ...mac: Shortcut[]
 ): CommandSpec {
-  return { ...command(id, label, key), only: 'mac-app' }
+  return { ...command(id, label, ...mac), only: 'mac-app' }
 }
 
 /** The nine commands that open the org or the workspace at a place. */
@@ -153,7 +153,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('keyboard-shortcuts', 'Keyboard shortcuts', '⌥⌘/'),
       command('account-page', 'Account page', '⌘,'),
       command('create-org', 'Create org'),
-      command('send-feedback', sendFeedbackLabel),
+      command('send-feedback', sendFeedbackLabel, '⌥⌘F'),
       fixed('Close a dialog or a menu', ['Esc']),
       focusedButtonKeys,
     ],
@@ -161,8 +161,13 @@ export const shortcutSpecs: readonly GroupSpec[] = [
   {
     label: 'View',
     rows: [
-      macAppCommand('toggle-sidebar', 'Hide or show the sidebar', '⌘B'),
-      command('toggle-right-column', 'Hide or show the right column', '⌥⌘B'),
+      macAppCommand('toggle-sidebar', 'Hide or show the sidebar', '⌘B', '['),
+      command(
+        'toggle-right-column',
+        'Hide or show the right column',
+        '⌥⌘B',
+        ']',
+      ),
     ],
   },
   {
