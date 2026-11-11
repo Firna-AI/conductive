@@ -15,6 +15,8 @@ This page lists each protocol doc and what it covers.
   - [Life of a workspace](../protocol/workspace-life.md): the start steps,
     the time limits, the states, the stop and resume, the archive, the
     restore, and Continue.
+    - [Workspace list marks](../protocol/workspace-marks.md): GitHub colours,
+      agent motion, unread output, and reduced motion.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
@@ -56,6 +58,8 @@ This page lists each protocol doc and what it covers.
   Worker routes that add the agent login to each model request.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
+  - [The GitHub state](../protocol/github-summary.md): the four summary
+    values for workspace list marks and their order.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox.
   - [Session calls](../protocol/session-calls.md): the calls that start,
@@ -100,7 +104,11 @@ This page lists each protocol doc and what it covers.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
-  messages in the chat, with their tables.
+  messages in the chat, with their headings and lists, and their lines in
+  the work of a turn.
+  - [Chat tables](../protocol/chat-tables.md): the tables of agent
+    messages, their short rows and wide tables, and the table rules that
+    they share with the file preview.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member.

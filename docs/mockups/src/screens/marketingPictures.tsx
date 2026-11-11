@@ -89,7 +89,10 @@ const screens: Readonly<
       viewport={viewport}
     />
   ),
-  /** The workspace list of a phone, with the state of each workspace. */
+  /**
+   * The workspace list of a phone: the GitHub state of each workspace, and
+   * whether its agent works.
+   */
   phone: (viewport) => (
     <WorkspaceListScreen
       state={{ list: 'workspaces', menu: 'none', palette: 'closed' }}

@@ -130,7 +130,11 @@ describe('Continue in the pull request bar', () => {
       [...sessions.sessions, ...sessions.history],
       senderSnapshot(priya),
     )
-    const moved = { ...detail.workspace, branch: CONTINUED_BRANCH }
+    const moved = {
+      ...detail.workspace,
+      branch: CONTINUED_BRANCH,
+      github: null,
+    }
     continuedReply(server, moved, lastEvent(server) + events.length)
     await tab.press('Continue anyway', byLabel(question, tab.view))
     for (const event of events.slice(0, -1)) emit(server, event)

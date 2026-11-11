@@ -15,6 +15,7 @@ export const WORKSPACE_TOOL_SOURCE_PATHS = [
   'tools/session-mcp-tools.ts',
   'src/shared/device.ts',
   'src/shared/device-read.ts',
+  'src/shared/github-read.ts',
   'src/shared/agent-tools.ts',
 ] as const
 

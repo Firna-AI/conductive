@@ -1,4 +1,4 @@
-import type { WorkspaceState } from '../../src/shared/workspaces'
+import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
 import { workspaceNameColumn } from '../data/workspace-name'
 
@@ -28,6 +28,7 @@ export interface WorkspaceRow {
   name: string | null
   branch: string
   state: WorkspaceState
+  github: Workspace['github']
   createdAt: number
   updatedAt: number
   archivedAt: number | null
@@ -43,6 +44,7 @@ export function readDeviceWorkspace(db: D1Database, workspaceId: string) {
     .prepare(
       `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
     COALESCE(w.section_id, s.id) AS sectionId, ${workspaceNameColumn('w')}, w.branch, w.state,
+    w.github_summary AS github,
     w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
     w.sandbox_id AS sandboxId,
     u.id AS ownerId, u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl

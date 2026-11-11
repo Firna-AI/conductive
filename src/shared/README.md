@@ -9,6 +9,12 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.number` is the immutable number in its org.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
+`Workspace.github` is the GitHub summary of its pull request, or null.
+`GitHubSummary` and `githubSummary` in `github.ts` give its four values from a banner and its checks.
+[The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
+`readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
+The browser readers and the sandbox tools use it, so an older reply still reads.
+It has no runtime import, so the tool image can embed it.
 `AgentCreateWorkspaceResponse.sessionLink` gives the first session's absolute app link.
 `AgentSessionWriteResponse` keeps the accepted session, message, and turn while reporting current workspace and resume state.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
@@ -30,60 +36,8 @@ Errors without details keep the code and message only.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
 
-`runner.ts` defines the versioned handshake, commands, numbered events,
-confirmations, and resend rules. Its comments state the delivery contract.
-`RunnerProtocolVersion` is 1 or 2. The Worker accepts both versions.
-The `welcome` repeats the version of the runner's `hello`.
-The optional `hello.loginKinds` declares the login kinds the runner can use.
-A version 2 runner without it has only legacy support.
-ChatGPT sign-in needs an explicit declaration. Version 1 cannot declare it usable.
-`RUNNER_PROTOCOL_VERSION` is 2. The packaged runner sends it, and
-each full image build records it.
-The credential of a turn belongs to the session starter, whoever sent the
-message:
-
-- `RunnerTurnV1` and `RunnerMessageDuringTurnV1` carry the real agent
-  login in `login`, with its agent, kind, and secret. Their typed login
-  excludes Codex ChatGPT sign-in.
-- `RunnerTurnV2` carries a turn token in `credential`, with the agent and
-  the login kind. A Codex ChatGPT credential also carries public account
-  claims for its temporary login file. It has no `login`.
-- `RunnerMessageDuringTurnV2` carries no credential and no login.
-
-`RunnerTurn`, `RunnerMessageDuringTurn`, `RunnerCommand`, and
-`WorkspaceToRunner` cover both versions. Their `V1` and `V2` forms give the
-shapes of one version. The runner imports the `V2` forms and uses
-a turn token.
-The [model gateway](../../worker/model-gateway/README.md#model-requests)
-gives the form of a turn token.
-
-`account.ts` defines the start and poll contracts of the Codex device code
-sign-in. Replies contain the public code and state, never the sign-in tokens.
-`RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.
-The 1 MiB limit leaves room for the workspace storage wrapper.
-The workspace stores a refusal marker before it confirms a permanent refusal.
-Storage and network failures remain unconfirmed.
-After a refused file tree, changes list, start steps, workspace name, or port list,
-`RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
-It carries no login and no turn token. A redelivery keeps its command ID.
-`ports.ts` defines the common listening-port fields and both report phases.
-`RunnerPortsUpdated` carries complete selected private labels.
-`PortsUpdated` carries final filtered display labels, with a null list when
-there is no current report. The display limits apply only after the workspace
-filter. The module owns those limits and the shared count limit.
-`terminal.ts` owns `TERMINAL_PORT`, shared by the runner exclusion
-and the terminal backend.
-[Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
-that report, its limits, and its refresh kind.
-`runner-transport.ts` defines the injectable socket boundary.
-`RunnerConnection` and `RunnerConnector` take the type of the Worker's
-messages.
-Browser response types carry no login and no turn token.
-`RunnerTurn` and `RunnerMessageDuringTurn` carry the current `branches`: the workspace branch and the target branch.
-The current Worker always sends them. A command of an older producer can omit them.
-Turn commands also carry the commit author of the member whose message started the turn.
-Message commands carry no commit author.
-An uploaded attachment reaches the runner as a path, after the backend puts it there.
+[Runner contracts](runner-contracts.md) gives the handshake, commands, events,
+confirmations, reports, and credentials.
 
 `messages.ts` owns the attachment metadata and target identity.
 `AttachmentUploadTarget` names a workspace or stable first-message ID.
@@ -307,6 +261,7 @@ The git credential payload is not defined yet.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
 - [Workspace contracts](workspaces.ts) give `workspacePaths.continue` and `workspacePaths.continueResult`. `ContinueWorkspaceRequest` sends the `expectedBranch` that the caller shows, and an optional `allowLocalWork`. `ContinueWorkspaceResponse` is a pending job with its `continueId`, a `confirmation-required` reply with the `branch`, the `baseBranch`, and the `LocalWork` that the check of Continue found, or a `continued` reply with the `workspace` and its `eventNumber`. [Continue routes](../../worker/lifecycle/continue-routes.md) gives the routes and the errors.
 - [GitHub contracts](github.ts) give the five `githubPaths` routes of a workspace: the banner and checks reads, the member capability, the merge start, and the merge result. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
+- `githubSummary` in [GitHub contracts](github.ts) maps the banner and checks to the list mark. [The summary reader](github-read.ts) reads `Workspace.github`.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
 - [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.

@@ -11,8 +11,8 @@ import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { OrgTile } from '../orgs/OrgTile'
-import { activityPresentation } from '../workspaces/status'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { activityPresentation, listMarkLabel } from '../workspaces/status'
+import { WorkspaceMark } from '../workspaces/WorkspaceMark'
 import type { CommandLead } from './paletteCommands'
 import type { PaletteContent, PaletteRow } from './paletteContent'
 import { EmptyTab, NoResults } from './PaletteEmpty'
@@ -65,7 +65,7 @@ function shortcutOf(row: PaletteRow, keys?: PaletteKeys): Shortcut | undefined {
 }
 
 /**
- * One result. A workspace shows its state mark, its name, its repository,
+ * One result. A workspace shows its list mark, its name, its repository,
  * and the age of its last activity, as the list does. When the query
  * matches the label of its number, the label leads the name, as in a chip.
  * A command shows its icon, its label, the page of a setting in a mixed
@@ -78,7 +78,7 @@ function Row(props: {
 }) {
   const { row, highlighted } = props
   if (row.kind === 'workspace') {
-    const { workspace, status, to } = row.row
+    const { workspace, status, github, to } = row.row
     const presentation = activityPresentation[status]
     return (
       <RowLink
@@ -90,7 +90,7 @@ function Row(props: {
         to={to}
       >
         <span className={styles.lead}>
-          <StatusGlyph status={status} />
+          <WorkspaceMark github={github} status={status} />
         </span>
         {row.number ? (
           <span className={styles.number}>{row.number}</span>
@@ -100,7 +100,7 @@ function Row(props: {
           {repositories[workspace.repository].name}
         </span>
         <span className={styles.end}>{workspace.updated}</span>
-        <span className={a11y.hidden}>, {presentation.label}</span>
+        <span className={a11y.hidden}>, {listMarkLabel(github, status)}</span>
       </RowLink>
     )
   }

@@ -4,18 +4,20 @@ The [mockups README](README.md) gives the commands, the folder layout,
 how a screen is built, and links to the other pages.
 
 The design is Graphite: dark-first, with near-black surfaces, cool greys, and
-one bright sky accent for what is active, such as the selected rail item, a
-working agent, and the main action. It is dense, with small radii, and its
-labels (tabs, section names, times) use the monospace font in capitals. The
-light scheme uses the same cool greys and a darker accent.
+one bright sky accent for what is active, such as the selected rail item,
+the mark of a working agent in the header, and the main action. It is
+dense, with small radii, and its labels (tabs, section names, times) use
+the monospace font in capitals. The light scheme uses the same cool greys
+and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
-status mark, the name, and the time, and it moves to another section by
-drag and drop. Archive covers the time on hover only, without moving the
-row content, and Restore does so in the Archived group. Selection and
+mark in the colour of its GitHub state, the name, and the time, and it
+moves to another section by drag and drop. Archive covers the time on
+hover only, without moving the row content, and Restore does so in the
+Archived group. Selection and
 keyboard focus alone keep the time visible. A right click on a row opens
 the menu of the workspace. The centre column has a slim header that names
 the
@@ -209,26 +211,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and Replace and Cancel. Reset all asks first with `ConfirmDialog`,
   because nothing brings the changes back. The error of a failed Reset all
   stands under the lines and Reset all, across the width of the tab.
-- `AgentMark` in `src/components/chat/` marks the agent of a session with two
-  letters on a small tile, CL or CX, because the app draws no brand logo.
+- [The marks](design-marks.md) give the list mark, the mark
+  of the header, and the marks of routine runs. They also give the mark of
+  an agent.
 - [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
   gives the workspace links, the session links, file mentions, the list of
   `@`, and chip removal.
-- `StatusGlyph` in `src/components/workspaces/` draws the state of a
-  workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
-  working and starting move with CSS. A finished turn is a full bright green
-  square, and ready is one bright cell on a faint green grid. A workspace
-  whose agent waits for the user, such as for the approval of a command,
-  shows Needs input: a middle column in the accent colour that pulses.
-  A routine run takes the mark of its workspace. A run without a
-  workspace shows an hourglass while it waits for one, and a chevron when
-  a rule skipped it. A failed run shows the mark of its failure. It keeps
-  that mark after Try again, because the run keeps its failed outcome.
-  - A run whose first start failed shows the cross, as its workspace in
-    the error state does.
-  - A run that a check failed before it had a workspace, and a run whose
-    first turn failed, show a slash in rose. After a failed turn, the mark
-    of the workspace shows a finished turn, which would hide the failure.
 - The parts of routines live in `src/components/routines/`. The routine
   page puts its form beside the Runs column on desktop. A phone shows a
   saved routine in two tabs, Routine and Runs. The Runs list holds the
@@ -306,9 +294,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the sandbox, the tab row, and the number with Copy link. It also gives
   the bars of the cloud computer.
 - [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables of a reply and of a file preview, and the fold of the work
-  of a turn. It also gives the data that the chat does not have, and the
-  files that the cloud computer could not read.
+  Markdown tables and headings of a reply and of a file preview, and the
+  fold of the work of a turn. It also gives the data that the chat does
+  not have, and the files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the

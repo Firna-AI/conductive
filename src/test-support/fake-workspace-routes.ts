@@ -1,5 +1,6 @@
 import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import { chatHistoryPath } from '../shared/events'
+import type { GitHubSummary } from '../shared/github'
 import { workspaceOwnerPath } from '../shared/members'
 import {
   retryMessagePath,
@@ -45,8 +46,10 @@ export function fakeWorkspaceRoutes(
   state: WorkspaceState,
   conversation: RecordedChatScenario,
   paths: PathState = 'plain',
+  /** The GitHub state of the default workspace, as `workspaceFixtures` takes it. */
+  github?: GitHubSummary | null,
 ) {
-  const data = workspaceFixtures(state)
+  const data = workspaceFixtures(state, github)
   const org = FAKE_IDS.org
   routes.json('GET', workspacesPath(org), data.workspaces)
   routes.json('POST', workspacesPath(org), data.created, 201)

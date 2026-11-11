@@ -113,7 +113,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Unread marks',
     status: 'available',
-    note: 'Bold names and state marks show unread agent output. A Next unread command is under consideration.',
+    note: 'Bold names show unread agent output. A Next unread command is under consideration.',
   },
   {
     id: 'context-folder',

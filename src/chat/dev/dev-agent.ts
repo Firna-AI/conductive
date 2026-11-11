@@ -1,6 +1,7 @@
 import type { ChatEvent, ToolCall } from '../../shared/chat-events'
 import type { UserMessage } from '../../shared/messages'
 import type { Clock } from '../ui/clock'
+import type { DevScript } from './dev-answers'
 import type { DevStream } from './dev-stream'
 
 interface Turn {
@@ -11,6 +12,10 @@ interface Turn {
   tool: ToolCall | null
   startedAt: number
 }
+
+/** When the plan of a turn starts, and the time between two of its parts. */
+const planAt = 1_600
+const planGap = 300
 
 /** When the answer of a turn starts, and the time between two of its parts. */
 const answerAt = 7_200
@@ -30,14 +35,16 @@ const tool = (
 })
 
 /**
- * A scripted agent for the development page. Each turn thinks, writes, runs
- * three tool calls, answers every message that it read, and ends. Each part
- * of `answer` comes as its own update, and the whole answer with the last
- * part. A message during a turn steers it, and Stop ends it as stopped.
+ * A scripted agent for the development page. Each turn thinks, writes its
+ * plan, runs three tool calls, answers every message that it read, and
+ * ends. Each part of `plan` and of `answer` comes as its own update, and
+ * the whole answer with the last part. A message during a turn steers it,
+ * and Stop ends it as stopped.
  */
 export class DevAgent {
   private readonly stream: DevStream
   private readonly clock: Clock
+  private readonly plan: readonly string[]
   private readonly answer: readonly string[]
   private readonly turns = new Map<string, Turn>()
   private count = 0
@@ -51,10 +58,11 @@ export class DevAgent {
     at: number | null,
   ) => void = () => {}
 
-  constructor(stream: DevStream, clock: Clock, answer: readonly string[]) {
+  constructor(stream: DevStream, clock: Clock, script: DevScript) {
     this.stream = stream
     this.clock = clock
-    this.answer = answer
+    this.plan = script.plan
+    this.answer = script.answer
   }
 
   running(sessionId: string): string | null {
@@ -96,24 +104,15 @@ export class DevAgent {
         }),
       ],
       [600, () => ({ ...context, type: 'turn.thinking' })],
-      [
-        1_600,
+      ...this.plan.map((text, index): [number, () => ChatEvent] => [
+        planAt + index * planGap,
         () => ({
           ...context,
           type: 'assistant.delta',
           messageId: `${answer}-plan`,
-          text: 'I will read ',
+          text,
         }),
-      ],
-      [
-        1_900,
-        () => ({
-          ...context,
-          type: 'assistant.delta',
-          messageId: `${answer}-plan`,
-          text: 'the files that this touches first.',
-        }),
-      ],
+      ]),
       ...this.toolSteps(
         turn,
         2_400,

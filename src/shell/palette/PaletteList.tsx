@@ -8,8 +8,11 @@ import {
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
 import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
-import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
-import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
+import {
+  activityPresentation,
+  listMarkLabel,
+} from '../../../docs/mockups/src/components/workspaces/status'
+import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
 import type { PaletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'
 import type { PaletteRead } from '../../app/palette/palette-source'
@@ -39,9 +42,9 @@ function opensElsewhere(event: MouseEvent): boolean {
 }
 
 /**
- * What a row shows. A workspace shows its state mark, the label of its
- * number while the query matches that label, its name, its repository, and
- * the age of its latest activity. A command row ends with the key of its
+ * What a row shows. A workspace shows its list mark, as the list does, the
+ * label of its number while the query matches that label, its name, its
+ * repository, and the age of its latest activity. A command row ends with the key of its
  * command, as `useShortcutHint` gives it. The option names that key to a
  * screen reader, so the chips are hidden from it.
  */
@@ -73,7 +76,7 @@ function RowContent(props: {
   return (
     <>
       <span className={styles.lead}>
-        <StatusGlyph status={workspace.state} />
+        <WorkspaceMark github={workspace.github} status={workspace.state} />
       </span>
       {row.numberLabel ? (
         <span className={styles.number}>{row.numberLabel}</span>
@@ -84,7 +87,7 @@ function RowContent(props: {
         {formatAgo(props.now, workspace.updatedAt)}
       </span>
       <span className={ui.hidden}>
-        , {activityPresentation[workspace.state].label}
+        , {listMarkLabel(workspace.github, workspace.state)}
       </span>
     </>
   )

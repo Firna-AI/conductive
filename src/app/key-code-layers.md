@@ -15,7 +15,7 @@ the folder of this page.
   ranks the matches. `rowTexts` includes the workspace number label, such
   as `W-395`, in the search texts. `withNumberLabel` adds that label when
   a query word matches it. `../shell/palette/PaletteList.tsx` draws it
-  before the name. `commands.ts` holds the labels, the search words, and
+  between the list mark and the name. `commands.ts` holds the labels, the search words, and
   `actionCommands`, the command of the keys of each action. Each command
   row names its command in `CommandRow.command`. The Account group of the
   Settings tab lists `accountSettingIds` in the order of the Account page

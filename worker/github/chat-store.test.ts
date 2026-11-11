@@ -6,6 +6,7 @@ import { CHAT_EVENT_PREFIX, CHAT_META } from '../chat/storage-keys'
 import {
   SQLITE_TIME,
   SQLITE_WORKSPACE_ID,
+  sqlitePullSnapshot,
   sqliteSnapshot,
 } from './sqlite-fixtures.test-support'
 import {
@@ -144,4 +145,68 @@ it('uses one publisher for a fresh commit and replays its original envelope afte
     events: [envelope],
     throughEventNumber: 1,
   })
+})
+
+it('repairs a failed summary copy after SQLite eviction without another GitHub read', async () => {
+  const snapshot = sqlitePullSnapshot()
+  const original = {
+    ...envelope,
+    event: {
+      type: 'github.updated',
+      banner: snapshot.banner,
+      checks: snapshot.checks,
+    },
+  }
+  const summary = () =>
+    harness.db
+      .prepare('SELECT github_summary FROM workspaces WHERE id = ?')
+      .bind(SQLITE_WORKSPACE_ID)
+      .first('github_summary')
+  expect((await harness.request('/observe')).status).toBe(204)
+  await harness.db
+    .prepare(
+      `CREATE TRIGGER fail_summary_copy BEFORE UPDATE OF github_summary ON workspaces
+    BEGIN SELECT RAISE(ABORT, 'Injected summary copy failure'); END`,
+    )
+    .run()
+  const failed = await harness.request(
+    '/refresh?delivery=summary-retry&pull-request',
+  )
+  expect(failed.status).toBe(500)
+  expect(await failed.json()).toEqual({
+    error: expect.stringContaining('Injected summary copy failure'),
+  })
+  const committed = await harness.inspect()
+  const records = storedRecords(committed)
+  expect(records.get('github:state')).toEqual(snapshot)
+  expect(records.get('github:delivery:summary-retry')).toEqual({
+    ...receipt,
+    snapshot,
+  })
+  expect(
+    [...records.entries()]
+      .filter(([key]) => key.startsWith(CHAT_EVENT_PREFIX))
+      .map(([, value]) => value),
+  ).toEqual([original])
+  expect(liveEvents(committed)).toEqual([original])
+  expect(committed.reads).toBe(1)
+  expect(await summary()).toBeNull()
+
+  await harness.evict()
+  await harness.db.prepare('DROP TRIGGER fail_summary_copy').run()
+  expect((await harness.request('/observe')).status).toBe(204)
+  const replay = await harness.request(
+    '/refresh?delivery=summary-retry&pull-request&forbid-read',
+  )
+  expect(replay.status).toBe(200)
+  expect(await replay.json()).toEqual({ snapshot })
+  const repaired = await harness.inspect()
+  expect(await summary()).toBe('checks-passed')
+  expect(repaired.reads).toBe(0)
+  expect(repaired.staged).toEqual([])
+  expect(storedRecords(repaired)).toEqual(records)
+  expect(liveEvents(repaired)).toEqual([original])
+  expect(historyMessages(repaired)).toEqual([
+    { events: [original], throughEventNumber: 1 },
+  ])
 })
