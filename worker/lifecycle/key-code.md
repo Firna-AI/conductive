@@ -24,6 +24,7 @@ points of each part.
   It saves the encrypted request in the start job before one outside call makes the create and its D1 writes.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
+  The snapshot holds the stored GitHub summary of the row.
   `workspaceView` adds the canonical web link for an explicit app origin.
   In the `records` phase of a create, `insertWorkspace`
   writes the new row and its runtime record in one D1 batch. The new row
@@ -42,6 +43,7 @@ points of each part.
 - [`archive-begin.ts`](archive-begin.ts): `beginWorkspaceArchive` writes the first Archive state and tells `WorkspaceArchive.begin` to run only the initialization while a start job exists or a queue task is outside the chat queue.
 - [`restore-workspace.ts`](restore-workspace.ts): the member Restore route action with an explicit app origin and the fixed expiry check.
 - [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
+  An older admission without a GitHub summary gives null.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):

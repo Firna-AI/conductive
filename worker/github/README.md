@@ -4,6 +4,7 @@ This module reads GitHub branch state for the shared banner and checks API.
 It also reads each member's merge access and runs direct merges as that member.
 It also verifies GitHub App webhooks and finds their workspace targets.
 It stores its state and events in the [chat store](../chat/README.md) of the workspace Durable Object.
+It also keeps a copy of the GitHub summary of each workspace in D1, as [The summary copy](#the-summary-copy) says.
 The production Worker mounts the browser reads, the member merge routes, and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
@@ -34,6 +35,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   It checks active org, installation, repository, branch, and optional user access before reading.
   It repeats the access check before storage and publication.
   The port checks access once more inside the chat queue, before each commit or replay.
+  It gives `WorkspaceGitHubState.refresh` the copy callback, which writes through [saveWorkspaceGitHubSummary](summary-data.ts).
 - [WorkspaceGitHubState](workspace-state.ts) serializes reads and commits within one workspace.
   Its port stores the snapshot, a common workspace stream event, and a delivery receipt in one transaction.
   The port publishes that event to every open tab after the commit.
@@ -42,6 +44,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   It republishes the event of a changed delivery with the same event number.
   A fresh read with unchanged banner and checks stores no snapshot and publishes no event.
   The comparison ignores `banner.updatedAt` and object-key order.
+  After each commit, unchanged read, or receipt replay, it copies the summary in the same queue.
 - [createGitHubStatePort](chat-store.ts) builds that port on the `WorkspaceChat` of the workspace Durable Object.
   Its `read` uses `readWorkspace`, and the receipt read writes nothing.
   Its `run` uses `authorizedWorkspaceOperation`.
@@ -217,65 +220,27 @@ An archived workspace still reads GitHub when a tab asks, and its scheduled read
 No other workspace state limits a GitHub read or webhook refresh.
 This includes a workspace in `input` while its agent waits for the user.
 
+## The summary copy
+
+[The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states the four summary values and their order.
+`githubSummary` in the [shared contracts](../../src/shared/github.ts) gives the value from a banner and its checks.
+`pullBanner` uses it for `checks-failed` and `checks-running` after its draft, conflict, and review checks.
+So the bar and the copy count the checks with one rule.
+After a commit, an unchanged read, or a receipt replay, `WorkspaceGitHubState` reads the committed `github:state` again.
+It checks access once more and calls the copy callback with that snapshot, before the next refresh starts.
+So a replay of an older receipt copies the current state, not the snapshot of its receipt.
+The replay still publishes the original event of that receipt.
+An unchanged read stores no snapshot and publishes no event, but it still repairs a missing or old copy.
+A read that returns `null`, such as an unrelated push, copies nothing.
+`saveWorkspaceGitHubSummary` updates only `github_summary`, when the value differs and the workspace still has the snapshot's branch.
+Continue clears the summary when it stores the new branch, so an old branch's copy cannot restore its mark.
+The summary copy changes no activity time, update time, or list position.
+A failed copy rejects the refresh, so the delivery stays retryable.
+The retry of a committed delivery replays its receipt and copies again, without a GitHub request or a fresh event.
+
 ## Verification
 
-Run `npm run test -- worker/github src/github/githubStore.test.ts` from the repository root with Node 24.
-The app and webhook tests use the existing sign-in fake and real local D1 harness.
-[RepositoryGitHub](fake-repository.ts) adds a small repository model without changing that fake.
-Fixtures set `branches` by qualified ref and `comparisons` by base ref and head commit.
-They set `pulls` by number with its head repository, head name, base, test merge commit, and reviews.
-They set `checks` by commit ID for head and test merge rollups.
-[repositoryPull](fake-pull.ts) supplies a complete pull request fixture.
-Every response follows the query's repository, ref, head, state, number, and cursor variables.
-Lookup filters by head name and orders requests by their creation time.
-Set `pageSize` to exercise lookup, check, and review pagination.
-An unknown ref or comparison returns `null`.
-An unknown pull request number returns a GraphQL error.
-An unknown commit rollup returns `null`.
-The reader tests cover merge checks, head fallback, page order, and commit changes during paging.
-[MemoryWorkspace](memory-workspace.ts) is a unit-test port double.
-It does not replace [createGitHubStatePort](chat-store.ts), the production adapter.
-Its `failWritePrefix` injects a storage failure for matching keys.
-Its event list includes only committed events.
-Like the production adapter, it publishes each committed event after its transaction.
-Its `run` calls `authorize` before the work.
-The receipt-write test proves rollback with no stored state, event, receipt, or publication.
-Retry reads the snapshot once more and stores and publishes one event numbered 1.
-This test does not prove the shared production store's transaction behavior.
-Its `restart()` replaces the coordinator over the same stored records.
-Its `scheduled` queue captures plain requests and delays.
-[GitHubTestHarness.runScheduled](test-harness.ts) runs one captured request without a timer or sleep.
-[receipt-size.test.ts](receipt-size.test.ts) uses `MemoryWorkspace` for a check list that fits in one stored value once, but not twice.
-It commits and replays that delivery.
-It does not test the value limit of real storage.
-
-[chat-store.test.ts](chat-store.test.ts) proves the production store's transaction behavior.
-It runs `WorkspaceGitHubState` through `createGitHubStatePort` and `WorkspaceChat` on SQLite storage in Miniflare.
-[createGitHubSQLiteHarness](sqlite-harness.test-support.ts) starts the test Durable Object of [sqlite-worker.test-support.ts](sqlite-worker.test-support.ts).
-The tests cover a failed receipt write and its retry, and chat and GitHub events in one sequence.
-They also cover one transaction for the snapshot, event, and receipt, and a replay after eviction with one publisher.
-
-[queued-access.test.ts](queued-access.test.ts) removes the D1 membership while a commit or a replay waits in the real chat queue.
-The queued operation then fails with `404 workspace_not_found`.
-The stored records, the history, and the open tabs stay unchanged.
-[queuedAccessRace](queued-access.test-support.ts) holds the queue after the receipt read and the outside access checks.
-
-[Recorded routing fields](recorded-webhooks.ts) come from the MIT-licensed
-[Octokit webhook examples](https://github.com/octokit/webhooks/tree/main/payload-examples/api.github.com).
-The fixtures retain the payload shapes and use one test installation.
-The push fixture targets the test branch.
-The review-thread fixture keeps reduced routing fields from the
-[recorded resolved example](https://raw.githubusercontent.com/octokit/webhooks/main/payload-examples/api.github.com/pull_request_review_thread/resolved.payload.json).
-
-API references:
-
-- [Webhook validation](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries)
-- [Webhook events](https://docs.github.com/en/webhooks/webhook-events-and-payloads)
-- [Pull request fields](https://docs.github.com/en/graphql/reference/pulls)
-- [Check fields](https://docs.github.com/en/graphql/reference/checks)
-- [Combined status rollup](https://docs.github.com/en/graphql/reference/commits#statuscheckrollup)
-- [Ref comparison](https://docs.github.com/en/graphql/reference/git#ref)
-- [Installation tokens](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app)
+[Verification](verification.md) gives the test commands and the native storage checks.
 
 ### Key Code
 
@@ -285,7 +250,9 @@ API references:
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
 - [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
-- [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, and replays delivery receipts.
+- [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, replays delivery receipts, and runs the summary copy.
+- [summary-data.ts](summary-data.ts) writes a changed GitHub summary to the workspace record.
+- [Shared summary](../../src/shared/github.ts) gives `githubSummary`, which the bar and the copy share.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.

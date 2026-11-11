@@ -1,12 +1,14 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import chipStyles from '../../../docs/mockups/src/components/chat/WorkspaceChip.module.css'
 import { routes } from '../../app/router'
-import { requestLines } from '../../app/test-kit'
+import { ManualDelay, requestLines } from '../../app/test-kit'
 import type { UserMessage } from '../../shared/messages'
 import { sessionLink } from '../../shared/session-link'
 import { sessionsPath } from '../../shared/sessions'
-import type { Workspace } from '../../shared/workspaces'
+import { workspacesPath, type Workspace } from '../../shared/workspaces'
 import { accessibleName } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
@@ -22,7 +24,7 @@ import {
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { settle } from '../test-mount'
 import { emit, here, id, org } from './kept-test-kit'
-import { linksTo, openTab } from './wiring-test-kit'
+import { linksTo, linkTo, openTab } from './wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -69,7 +71,8 @@ describe('session chips in the chat of the app', () => {
   test('show the live title of a session of the chat, the read titles of another workspace, and the workspace chip for an unknown session', async () => {
     const server = new FakeApiServer()
     server.json('GET', sessionsPath(org, other.id), otherSessions)
-    const { view } = await openTab(server, here)
+    const timers = new ManualDelay()
+    const { view } = await openTab(server, here, { delay: timers.delay })
     emit(server, { type: 'message.accepted', message })
     await settle()
     const renamed = { ...second, title: 'Debounce lookups by 300 ms' }
@@ -86,11 +89,38 @@ describe('session chips in the chat of the app', () => {
       unknown: chipsTo(view, other.id, 'missing'),
       reads: reads.length,
     }).toEqual({
-      own: [`W-${own.number} Session Debounce lookups by 300 ms, Ready`],
+      own: [
+        `W-${own.number} Session Debounce lookups by 300 ms, Checks passed, Ready`,
+      ],
       open: [`${label} Session Plan saved carts, Starting`],
       closed: [`${label} Session Read the cart notes, Starting`],
       unknown: [`${label} ${other.name}, Starting`],
       reads: 1,
+    })
+    const emphasis = async (state: 'ready' | 'unread') => {
+      server.json('GET', workspacesPath(org), {
+        workspaces: workspaces.workspaces.map((workspace) =>
+          workspace.id === other.id ? { ...workspace, state } : workspace,
+        ),
+      })
+      await act(() => timers.runAll())
+      await settle()
+      const chip = linkTo(view, routes.session(org, other.id, 'plan'))
+      const title = Array.from(chip.querySelectorAll('span')).find(
+        (node) => node.textContent === 'Plan saved carts',
+      )
+      if (!title) throw new Error('Expected the linked session title.')
+      return {
+        strong: title.classList.contains(chipStyles.strong),
+        text: title.parentElement?.classList.contains(chipStyles.text),
+      }
+    }
+    expect({
+      ready: await emphasis('ready'),
+      unread: await emphasis('unread'),
+    }).toEqual({
+      ready: { strong: false, text: true },
+      unread: { strong: true, text: true },
     })
   })
 })

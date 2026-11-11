@@ -26,6 +26,7 @@ export interface WorkspaceRow {
   sandboxId: string | null
   providerAccount: string
   state: WorkspaceState
+  github: Workspace['github']
   createdAt: number
   updatedAt: number
   archivedAt: number | null
@@ -44,7 +45,7 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   ${workspaceNameColumn('w')}, w.branch,
   COALESCE(w.base_branch, (SELECT default_branch FROM repositories WHERE id = w.repository_id AND org_id = w.org_id)) AS baseBranch,
   w.sandbox_id AS sandboxId,
-  w.provider_account AS providerAccount, w.state,
+  w.provider_account AS providerAccount, w.state, w.github_summary AS github,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
   r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
@@ -98,6 +99,7 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     branch: row.branch,
     choice: { agent: row.agent, model: row.model, effort: row.effort },
     state: row.state,
+    github: row.github,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,

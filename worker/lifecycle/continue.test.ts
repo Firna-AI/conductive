@@ -6,6 +6,7 @@ import { createHarness, type TestHarness } from '../test-support/harness'
 import { continueFixture } from './continue.test-support'
 import { continueJobKey, type ContinueJob } from './continue-types'
 import { readWorkspace } from './workspace-data'
+import { saveWorkspaceGitHubSummary } from '../github/summary-data'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -35,15 +36,19 @@ it('continues as another member, keeps workspace identity, and publishes one not
   )
     .bind(f.owner.id)
     .run()
-  await f.env.DB.prepare('UPDATE workspaces SET base_branch = ? WHERE id = ?')
+  await f.env.DB.prepare(
+    "UPDATE workspaces SET base_branch = ?, github_summary = 'merged' WHERE id = ?",
+  )
     .bind('feature/review', WORKSPACE_ID)
     .run()
   const pending = await f.start()
   expect(pending.state).toBe('pending')
   expect(await f.start()).toEqual(pending)
-  expect(await f.active()).toMatchObject({
+  const job = await f.active()
+  expect(job).toMatchObject({
     binding: { baseBranch: 'feature/review' },
   })
+  if (!job) throw new Error('Expected pending Continue job.')
   await f.finish()
   if (pending.state !== 'pending') throw new Error('Expected pending Continue.')
   const result = await f.result(pending.continueId)
@@ -55,10 +60,13 @@ it('continues as another member, keeps workspace identity, and publishes one not
     name: 'Kept name',
     owner: { id: f.owner.id },
     branch: expect.stringMatching(/^current-owner\/[a-z]+-[a-z0-9]{4}$/),
+    github: null,
   })
+  await saveWorkspaceGitHubSummary(f.env.DB, job.binding, 'merged')
   expect(await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).toMatchObject({
     sandboxId: 'bx_continue',
     baseBranch: 'main',
+    github: null,
   })
   expect(f.refreshed).toMatchObject([
     {

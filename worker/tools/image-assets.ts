@@ -13,6 +13,7 @@ import deviceClientSource from '../../tools/device-client.ts?raw'
 import deviceCliSource from '../../tools/device-cli.ts?raw'
 import deviceSource from '../../src/shared/device.ts?raw'
 import deviceReadSource from '../../src/shared/device-read.ts?raw'
+import githubReadSource from '../../src/shared/github-read.ts?raw'
 import sessionCliSource from '../../tools/session-cli.ts?raw'
 import sessionResponsesSource from '../../tools/session-responses.ts?raw'
 import sessionMcpToolsSource from '../../tools/session-mcp-tools.ts?raw'
@@ -35,5 +36,6 @@ export const WORKSPACE_TOOL_SOURCES = [
   { path: 'tools/session-mcp-tools.ts', contents: sessionMcpToolsSource },
   { path: 'src/shared/device.ts', contents: deviceSource },
   { path: 'src/shared/device-read.ts', contents: deviceReadSource },
+  { path: 'src/shared/github-read.ts', contents: githubReadSource },
   { path: 'src/shared/agent-tools.ts', contents: contractSource },
 ] as const satisfies readonly WorkspaceToolSource[]

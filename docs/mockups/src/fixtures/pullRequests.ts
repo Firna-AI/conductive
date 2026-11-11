@@ -1,3 +1,7 @@
+import type { GitHubSummary } from '../../../../src/shared/github'
+
+export type { GitHubSummary } from '../../../../src/shared/github'
+
 /**
  * The GitHub state of the open workspace branch: its pull request and the
  * checks that GitHub reports for it.
@@ -83,6 +87,25 @@ export const checksByState: Readonly<Record<BannerState, readonly Check[]>> = {
   draft: allPassed,
   closed: allPassed,
   blocked: allPassed,
+}
+
+/**
+ * The GitHub state of the pull request in a banner state. The merge wins
+ * over the checks, a failed check wins over one that runs, and a pull
+ * request without checks has none. A branch without a pull request and a
+ * pull request closed without a merge have none either.
+ */
+export function bannerSummary(state: BannerState): GitHubSummary | null {
+  if (state === 'none' || state === 'no-commits' || state === 'closed') {
+    return null
+  }
+  if (state === 'merged') return 'merged'
+  const checks = checksByState[state]
+  if (checks.some((check) => check.state === 'failed')) return 'checks-failed'
+  if (checks.some((check) => check.state === 'running')) {
+    return 'checks-running'
+  }
+  return checks.length > 0 ? 'checks-passed' : null
 }
 
 /** The review state that GitHub reports, when the pull request has one. */

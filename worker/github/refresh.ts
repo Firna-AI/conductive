@@ -1,3 +1,4 @@
+import { githubSummary } from '../../src/shared/github'
 import { HttpError } from '../http'
 import { GitHubReader } from './client'
 import type {
@@ -7,6 +8,7 @@ import type {
   GitHubWorkspace,
 } from './contracts'
 import { activeWorkspace } from './data'
+import { saveWorkspaceGitHubSummary } from './summary-data'
 import { readMergeWorkspace } from './merge-access'
 import type { WorkspaceGitHubState } from './workspace-state'
 
@@ -129,5 +131,12 @@ export async function refreshWorkspace(
     },
     authorize,
     signal,
+    // A receipt can replay committed state from before Continue.
+    (snapshot) =>
+      saveWorkspaceGitHubSummary(
+        db,
+        { ...workspace, branch: snapshot.banner.branch },
+        githubSummary(snapshot.banner, snapshot.checks.checks),
+      ),
   )
 }
