@@ -717,7 +717,7 @@ Depends on: every other milestone
 - [x] Update the `agent-workspace-controls` comparison row to Available
       after Milestones 3 to 7 implement the calls. Follow the claim
       rules and keep features outside this plan under consideration.
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and `npm run check`.
 - [x] Smoke-test the stop line in the app of `npm run dev`.
 - [x] Commit with Conventional Commits and push the branch.
@@ -756,6 +756,11 @@ no reply shape. Reports:
 `.context/reviews/calummoore/untitled-v3/round-2-review.md`,
 `.context/reviews/calummoore/untitled-v3/round-2-checks.md`, and
 `.context/agent-tools-conductor-parity/reports/m8-finding-2-fix.md`.
+
+Final verification evidence:
+`.context/agent-tools-conductor-parity/reports/m8-verification-final.md`.
+Release metadata integration notes:
+`.context/agent-tools-conductor-parity/merge-release-notes.md`.
 
 ## Post-merge follow-up (non-blocking)
 
