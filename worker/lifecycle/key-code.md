@@ -21,6 +21,7 @@ points of each part.
   The browser create and the agent tools share that message.
 - [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
 - [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
+  It saves the encrypted request in the start job before one outside call makes the create and its D1 writes.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
   The snapshot holds the stored GitHub summary of the row.
@@ -39,6 +40,7 @@ points of each part.
   [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with no env values or startup command.
   [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
   [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
+- [`archive-begin.ts`](archive-begin.ts): `beginWorkspaceArchive` writes the first Archive state and tells `WorkspaceArchive.begin` to run only the initialization while a start job exists or a queue task is outside the chat queue.
 - [`restore-workspace.ts`](restore-workspace.ts): the member Restore route action with an explicit app origin and the fixed expiry check.
 - [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
   An older admission without a GitHub summary gives null.
@@ -60,8 +62,13 @@ points of each part.
   each blocking callback through the platform. A caller that needs the
   reset calls the object state directly.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
-  the durable start. [`start-storage.ts`](start-storage.ts) keeps its
+  the durable start. Its admission and each advance run in the queue task
+  of their caller. [`start-storage.ts`](start-storage.ts) keeps its
   phases, admission, process IDs, output offsets, retry state, deadline, and results.
+  Its `begin` refuses while a start job exists. Its `complete` ends only
+  the job of the given attempt.
+- [`start-advance.ts`](start-advance.ts): `advanceStartPhases` runs the code of the saved phase for one advance, in each phase after `records`.
+- [`start-guard.ts`](start-guard.ts): `startGuard` gives the `StartCall` that runs each call group of a start outside the chat queue and throws `StartSuperseded` when a check fails.
 - [`creation-fetch-label.ts`](creation-fetch-label.ts) names the pull request or base branch in the fetch step from saved run facts.
 - [`start-progress.ts`](start-progress.ts): the command steps, the
   terminal setup and its password read, and the move into the saved runner
@@ -73,6 +80,8 @@ points of each part.
   the password read.
 - [`start-completion.ts`](start-completion.ts): restores runner-step progress
   and prepares successful starts through the lifecycle writer.
+  `prepareStartSuccess` reads the runner connection again after its user check.
+  When the runner is not connected, the start job stays.
 - [`creation-publication.ts`](creation-publication.ts): `publishCreationResult`
   writes the stored result of a create to D1, with its own due time, as
   [Creates and resumes](workspace-object.md#creates-and-resumes) says.
@@ -88,6 +97,7 @@ points of each part.
   `readStartJob`, which convert the start job for storage and internal RPC.
 - [`start-logs.ts`](start-logs.ts): `releasedStartLog`, which masks the
   decrypted log as a [`MaskedStartLog`](masked-start-log.ts).
+- [`start-log-storage.ts`](start-log-storage.ts): `readStartLog` and `readEncryptedStartLog` read the saved start log under the `START_LOG_PREFIX` keys.
 - [`org-environment.ts`](org-environment.ts): parses stored env values and
   secret marks. It treats older plain values as secret. `environmentSecrets`
   selects marked values without a length rule.
@@ -101,7 +111,7 @@ points of each part.
   first-message admission and workspace identity after a failed first start.
   [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.
 - [`start-admission.ts`](start-admission.ts): `enqueueWorkspaceStart` admits
-  initial starts, replacements, and resumes in the coordinator's serial task.
+  initial starts, replacements, and resumes in the queue task of its caller.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
 - [`durable-turns.ts`](durable-turns.ts): `applyLifecycleTurn`, the turn
@@ -132,10 +142,13 @@ points of each part.
   marker of the [terminal backend](../terminal/README.md) when the restore
   ends, as the [restore watch](workspace-object.md#creates-and-resumes)
   says.
-- [`resource-intents.ts`](resource-intents.ts): `createResource`, the only
-  path to a Boat call that creates a sandbox or a snapshot. It stores the
-  request first, so the lifecycle finds the resource after a lost reply.
-  It records a computer allocation before create and attaches the returned ID.
+- [`resource-intents.ts`](resource-intents.ts): `createResource` and
+  `createSandboxResource`, the only paths to a Boat call that creates a
+  sandbox or a snapshot. `createResource` stores the request first, so the
+  lifecycle finds the resource after a lost reply. `createSandboxResource`
+  records a computer allocation before create and attaches the returned ID.
+  `allocateWorkspace` calls it directly, after it saves the request in the
+  start job.
 - [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
   confirmed deletions, and the live computers that still need cleanup.
 - [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.

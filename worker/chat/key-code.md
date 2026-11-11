@@ -55,6 +55,15 @@ first.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
   chunks of large file reports and tree deltas.
+- `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
+  `QueueTurn`, the handle whose `outside(call)` runs one call outside the
+  queue. `hasOutsideTurns` tells Archive that a queue task is outside.
+- `queue-generation.ts`: `QueueGenerations`, which keeps the member
+  receiver generation of each queue task for the guarded storage, the Boat
+  fetch check, and the start guard.
+- `lifecycle-queue.ts`: `runWorkspaceLifecycle`, which runs one lifecycle
+  change in a queue task with its receiver generation, then calls
+  `flushRunner`.
 - `history-pages.ts`: `HistoryPages`, the pages of the stored history and
   the index of replaced answers and tool states. A page reads one storage
   list of 32 events. The session history route of the browser passes
@@ -150,8 +159,9 @@ first.
 - `turn-end-reports.ts`: `TurnEndReports` keeps the recorded ends of each
   committed transaction. `ChatStore.reportTurnEnds` gives each end to the
   `turnEnded` hook. It runs after the runner confirm, before each dispatch,
-  and at the end of each queued task. So the workspace lifecycle gets each
-  end by its turn ID, from one path, whatever ended the turn.
+  before a task steps outside the queue, and at the end of each queue task.
+  So the workspace lifecycle gets each end by its turn ID, from one path,
+  whatever ended the turn.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-connections.ts` and `browser-registration.ts`:
   `BrowserConnections`, the native acceptance, restore, and close of tab
