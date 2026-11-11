@@ -4,10 +4,14 @@ export type Clip = { x: number; y: number; width: number; height: number }
 export type Viewport = { width: number; height: number; mobile: boolean }
 
 /**
- * Open a page at two device pixels per CSS pixel, with the animations of the
- * clock stopped.
+ * Open a page with the clock stopped, at two device pixels per CSS pixel
+ * unless the capture supplies its output scale.
  */
-export async function openPage(browser: Browser, viewport: Viewport) {
+export async function openPage(
+  browser: Browser,
+  viewport: Viewport,
+  deviceScaleFactor = 2,
+) {
   const targetId = string(
     (await browser.send('Target.createTarget', { url: 'about:blank' }))
       .targetId,
@@ -25,7 +29,7 @@ export async function openPage(browser: Browser, viewport: Viewport) {
     await send('Animation.setPlaybackRate', { playbackRate: 0 })
     await send('Emulation.setDeviceMetricsOverride', {
       ...viewport,
-      deviceScaleFactor: 2,
+      deviceScaleFactor,
     })
 
     async function evaluate(expression: string): Promise<unknown> {
@@ -39,16 +43,8 @@ export async function openPage(browser: Browser, viewport: Viewport) {
       return object(result.result).value
     }
 
-    return {
-      evaluate,
-      async goto(url: string) {
-        const loaded = browser.waitFor('Page.loadEventFired', sessionId)
-        const [, result] = await Promise.all([
-          loaded,
-          send('Page.navigate', { url }),
-        ])
-        if (result.errorText) throw new Error(string(result.errorText))
-        await evaluate(`(async () => {
+    async function waitForAssets() {
+      await evaluate(`(async () => {
           for (const image of document.images) image.loading = 'eager'
           await document.fonts.ready
           await Promise.all([...document.images].map((image) => image.decode()))
@@ -62,6 +58,24 @@ export async function openPage(browser: Browser, viewport: Viewport) {
           }
           await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
         })()`)
+    }
+
+    return {
+      evaluate,
+      async setContent(html: string) {
+        const { frameTree } = await send('Page.getFrameTree')
+        const frameId = string(object(object(frameTree).frame).id)
+        await send('Page.setDocumentContent', { frameId, html })
+        await waitForAssets()
+      },
+      async goto(url: string) {
+        const loaded = browser.waitFor('Page.loadEventFired', sessionId)
+        const [, result] = await Promise.all([
+          loaded,
+          send('Page.navigate', { url }),
+        ])
+        if (result.errorText) throw new Error(string(result.errorText))
+        await waitForAssets()
       },
       async screenshot(clip: Clip): Promise<Buffer> {
         const { data } = await send('Page.captureScreenshot', {

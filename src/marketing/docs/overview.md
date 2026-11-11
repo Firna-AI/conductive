@@ -33,7 +33,7 @@ The message box lets you choose a model and its effort.
 
 Connect your own agent login before you start.
 Claude accepts a subscription token or an Anthropic API key.
-Codex accepts an OpenAI API key.
+Codex accepts an OpenAI API key or a sign-in to your ChatGPT plan.
 Each session uses the agent login of the member who starts it.
 Model use goes to that member's connected account.
 

@@ -11,6 +11,7 @@ Each handler returns `null` for a path that it does not own. The
 | Handler | Routes |
 | --- | --- |
 | `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
@@ -48,11 +49,27 @@ View writes cannot change this branch.
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
 - A new login or a change of kind sets `noReuse` to true for a Claude
-  subscription token and false for an API key. Replacing a secret of the
-  same kind keeps its preference. A `PATCH` changes only that login's
-  preference for the signed-in account. It needs no secret and keeps `updatedAt` as the
-  last secret-save time. It returns the current metadata, including a
+  subscription token or a Codex ChatGPT sign-in, and false for an API key.
+  The Worker and the dev backend use `defaultAgentLoginNoReuse` in the
+  [account contract](../../src/shared/account.ts) for these defaults.
+  Replacing a secret of the same kind keeps its preference. A `PATCH`
+  changes only that login's preference for the signed-in account. It needs
+  no secret and keeps `updatedAt` as the last secret-save time. It returns
+  the current metadata, including a
   disconnected status when the login was removed.
+- Codex connects to ChatGPT through the [device sign-in service](../codex-auth/README.md).
+  Its start reply holds the code, verification link, expiry, and poll interval.
+  Its poll reply reports waiting, connected, expired, or failed.
+  An unfinished sign-in compares the saved login date with the current login
+  before each OpenAI request and in its final conditional login write.
+  A change ends the sign-in with a cause that asks for a new code.
+  After completion, each poll reads the current Codex login through `accountLogins`.
+  A removed login returns a disconnected status while the sign-in state stays connected until expiry.
+  The required credential task owner retains the poll's exchange and save through `execution.waitUntil`.
+  Both routes use the signed-in account. A handle from another account returns 404.
+  The ordinary login save accepts only an API key for Codex.
+  A connected Codex login can carry `unusableCause` after a refused renewal.
+  Reconnect clears the failure and its refresh claim.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
@@ -148,14 +165,27 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 
 - `boot.test.ts` checks the boot routes, the saved preferences, the
   encrypted logins, and a missing model list. Two users save different
-  defaults, New workspace views, and logins, both with a Claude login.
-  After each save and a delete, each reads only their own account and
-  Get started step.
+  defaults, New workspace views, and logins, including a Codex ChatGPT
+  sign-in. After each save and a delete, each reads only their own account
+  and Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
+  It also checks that an older runner gets no ChatGPT login and reports
+  the next steps for a turn that it cannot run.
+- `codex-device.test.ts` checks the device exchange, encrypted storage,
+  account isolation, expiry, and overlapping polls.
+  Repeated finished polls keep the current share setting, failure cause, login kind, and removal.
+  `codex-device-failure.test.ts` keeps the failed exchange and safe-cause checks.
+  `codex-device-owner.test.ts` checks that an approved exchange commits after the polling client leaves.
+  `codex-device-login-change.test.ts` checks removals, API key saves, and newer
+  ChatGPT sign-ins before polling, between OpenAI calls, and before the final save.
+  It also checks the accepted save-and-remove return to an absent login.
+  Its OpenAI replies come from `codex-device.test-support.ts`.
 - `agent-login-reuse.test.ts` checks the login-kind defaults, the private
   preference update, and unchanged secret data and timestamps.
+- `agent-login-migration.test.ts` checks that the table rebuild keeps
+  existing login values and accepts Codex tokens.
 - `feature-github-install.test.ts` checks the install link of the GitHub
   App, and the default app when the slug is missing or not valid.
 - `shell-resources.test.ts` and `chat-read-state.test.ts` check the lists,
@@ -200,6 +230,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [`get-started-data.ts`](get-started-data.ts), and
   [`models.ts`](models.ts): the account, its logins, Get started, and the
   model variables.
+- [`codex-device.ts`](codex-device.ts): the account routes for ChatGPT
+  device sign-in, over the [Codex auth service](../codex-auth/README.md).
 - [`get-started-github.ts`](get-started-github.ts):
   `getStartedGitHubComplete`, the one owner of the `github-app` step.
 - [`shell.ts`](shell.ts) and [`shell-data.ts`](shell-data.ts): the lists of

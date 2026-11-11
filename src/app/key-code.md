@@ -94,6 +94,10 @@ Each path is relative to `src/app/`, the folder of this page.
   waitlist state for the invite code of the account.
   `../shell/account/InviteCodeSection.tsx`: that invite code, in each
   state of the code, of the pause, and of open sign-up.
+  `startCodexSignIn` and `pollCodexSignIn` send the requests of the
+  ChatGPT sign-in of Codex. `../shell/account/codex-sign-in.ts`:
+  `CodexSignIn`, the steps, the polls, and the timer of that sign-in.
+  `api/read-core.ts`: `loginUsable`, whether turns can run on a login.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and

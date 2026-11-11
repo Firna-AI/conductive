@@ -1,6 +1,8 @@
 import { API_PATHS } from '../src/shared/api'
 import type { SessionResponse } from '../src/shared/account'
 import { bootRoute } from './app-api/boot'
+import { codexDeviceRoute } from './app-api/codex-device'
+import type { CodexTaskOwner } from './codex-auth/tasks'
 import { chatLifecycleRoute } from './app-api/lifecycle'
 import { shellRoute } from './app-api/shell'
 import type { AppDependencies, AppEnv } from './env'
@@ -27,8 +29,17 @@ export async function route(
   env: AppEnv,
   context: RequestContext,
   dependencies: AppDependencies,
+  codexTasks: CodexTaskOwner,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const codexDevice = await codexDeviceRoute(
+    request,
+    env,
+    context,
+    dependencies,
+    codexTasks,
+  )
+  if (codexDevice) return codexDevice
   const feedback = await feedbackRoute(request, env, context, dependencies)
   if (feedback) return feedback
   const waitlist = await waitlistRoute(request, env, context, dependencies)

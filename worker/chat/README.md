@@ -12,6 +12,11 @@ to each open tab. A tab is one browser connection to the events socket.
 requirements. This README names the code, its guarantees, and the seams
 for other milestones.
 
+A Codex ChatGPT login stores its structured sign-in only in the Worker.
+Version 2 delivery gives the runner a turn token and public account claims.
+The [Codex authentication backend](../codex-auth/README.md) renews the real
+tokens. A failed renewal makes the login unavailable to chat dispatch.
+
 ## Entry points
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable

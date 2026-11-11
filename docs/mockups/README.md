@@ -23,11 +23,14 @@ peer range of `@firna/ui`.
 | `npm run mockups:typecheck`  | Type-check the catalogue sources                                |
 | `npm run mockups:check`      | Run the type check, then the strict build                       |
 | `npm run marketing:pictures` | Capture the pictures of the marketing site again                |
+| `npm run marketing:preview` | Capture only the public share card                              |
 | `npm run lint`               | Run ESLint                                                      |
 | `npm run format:check`       | Check the formatting with Prettier                              |
 
 A change to a screen that a picture of the marketing site shows needs a
 new capture with `npm run marketing:pictures`.
+That command also rebuilds the [share card](../../src/marketing/link-previews.md)
+from the current workspace screen and the approved blue design.
 [Pictures](../../src/marketing/README.md#pictures) gives the steps.
 
 Git ignores the build output, `mokly-static/` and
