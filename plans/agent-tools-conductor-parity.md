@@ -48,6 +48,9 @@ The brainstorm notes are in `.context/conductor-cli-parity/brainstorm.md`.
 The options check of 11 November 2026 ran over decisions 277 to 280. Its
 report is in `.context/agent-tools-conductor-parity/options-check.md`.
 Cal answered every decision of this plan on 11 November 2026.
+Cal approved the plan on 11 November 2026, in the words "impl all plan
+milestones". A `default orchestrator` session in this workspace runs the
+milestones by delegation.
 
 ## Decisions
 
