@@ -190,6 +190,10 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611111230_workspace_first_session_title.sql` adds the nullable `workspace_creation_plans.first_session_title` column.
+The agent create tool stores the requested first session title there, so a repeated create keeps it.
+Existing plans keep `NULL`. A plan with `NULL` gives its first session no title at admission.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -233,6 +237,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Routines: records and routes | `202611101300`–`202611101359` |
 | Routines: runs and Run now | `202611101400`–`202611101459` |
 | Routines: pull request runs | `202611101500`–`202611101559` |
+| Agent workspace calls | `202611111200`–`202611111259` |
 
 ## Key code
 

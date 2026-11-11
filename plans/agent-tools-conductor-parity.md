@@ -553,6 +553,8 @@ Completion: `.context/agent-tools-conductor-parity/reports/m2-complete.md` and
 
 Depends on: 2
 
+Completed: 11 November 2026.
+
 Add the workspace calls and the options of `list_workspaces` and
 `create_workspace` to the Worker. Read the `typescript` and `testing`
 skills first.
@@ -574,11 +576,13 @@ skills first.
       archive of the calling workspace, a rename that no automatic name
       replaces, a move to the top of a section, each filter, the paging
       edges, a first session title, and a repeat with a request ID.
-- [ ] Update `worker/tools/README.md`.
+- [x] Update `worker/tools/README.md`.
 
 
 Evidence: `.context/agent-tools-conductor-parity/reports/m3-workspaces.md`
 and `.context/agent-tools-conductor-parity/checks/m3-orchestrator-tests.log`.
+
+README evidence: `.context/agent-tools-conductor-parity/reports/m3-readmes.md`.
 
 ## Milestone 4: Session and message calls
 

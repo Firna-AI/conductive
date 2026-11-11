@@ -55,6 +55,8 @@ gives their rules.
 
 - `acceptLifecycleFirstMessage(first)` returns the stored first message of
   a create. A repeat returns the same message and adds no history.
+  Admission cleans an optional `firstSessionTitle` once and saves it before
+  the message, in the same transaction.
 - `readChatWorkspaceSummary()` returns the last event number, the last
   event number with visible output, and whether a dispatched turn runs.
 - `readChatWorkspaceResponse(orgId, workspaceId, appOrigin)` returns the reply of a
@@ -98,7 +100,7 @@ The browser copy still returns the complete text with its existing detail query 
 [Workspace and session names](workspace-titles.md) gives the background
 model request, the shared title writer, the first session name, and the
 names of later sessions. It also gives the local development setup.
-New workspaces and sessions have null names. The shared `nameLabel` helper
+Workspaces and sessions without a provided name start with null names. The shared `nameLabel` helper
 in `src/shared/name-label.ts` gives their display label, "Untitled".
 
 ## Message admission

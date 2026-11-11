@@ -4,6 +4,8 @@ This area handles workspace and session calls from agents inside a Conductive wo
 It implements the [agent-tool requirements](../../docs/protocol/agent-tools.md).
 It uses the existing [shared contracts](../../src/shared/README.md) and D1 tables.
 The [workspace name migration](../../migrations/202611081300_workspace_creation_name.sql) keeps an agent's chosen name through creation retries.
+The [first session title migration](../../migrations/202611111230_workspace_first_session_title.sql) keeps a requested first session title in the same way.
+[Workspace calls](workspaces.md) gives the get, rename, move, and archive routes, the list options, and the replay of a create.
 
 The [Mac command feature](../devices/README.md) also uses this area's machine entry point.
 `mac-command.ts` forwards only its fixed paths to the token's exact workspace object.
@@ -11,7 +13,7 @@ The real application dispatches those paths before the machine stub.
 The object resolves the stored active sender and selects that sender's connected Mac.
 Command reads use the returned `requestKey` in the URL.
 The raw request ID stays in retry input and device messages.
-The create handler and Mac command handler use `readJsonObject` from the [shared request reader](../http/README.md#json-request-objects).
+The create handler, the session writes, the workspace rename and move routes, and the Mac command handler use `readJsonObject` from the [shared request reader](../http/README.md#json-request-objects).
 The entry owns the 1,000,000-byte cap, and the reader owns the media type policy.
 The entry preserves HTTP 413, and the handler preserves HTTP 415.
 Direct handler tests also use the shared entry policy before dispatch.
@@ -22,6 +24,7 @@ Direct handler tests also use the shared entry policy before dispatch.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
 It accepts session list, transcript read, create, and send routes under `/v1/tools/workspaces/<workspaceId>/sessions`.
+It accepts GET at `/v1/tools/workspaces/<workspaceId>`, and POST at its `rename`, `move`, and `archive` paths, as [Routes and access](workspaces.md#routes-and-access) says.
 It uses workspace bearer authentication instead of browser sessions.
 It returns private responses with caching disabled.
 
@@ -31,9 +34,11 @@ Its current owner must still belong to that org.
 The token must not be revoked.
 The handler grants no access to other routes, methods, hosts, or sockets.
 
-GET returns the number, web link, name, branch, and state of every workspace in the calling org.
+GET returns the number, web link, name, branch, state, and owner of every workspace in the calling org.
+The owner gives `id`, `githubLogin`, and `displayName`, with no avatar.
 The link uses the configured app origin, not the machine request origin.
 It includes other owners' workspaces and archived workspaces.
+Its optional filters and paging follow [Workspace lists](workspaces.md#workspace-lists).
 The repository list reads the calling org's newest good image, in GitHub name order.
 `current` marks the calling workspace's repository.
 Without a good image, it returns HTTP 409 `image_required`.
@@ -114,10 +119,12 @@ It cleans an optional name with `sessionTitleFrom` in the [shared title helper](
 It keeps the first line with text, makes white space single, and removes one final full stop while keeping an ellipsis.
 It cuts at 60 Unicode code points, at a whole word when possible.
 It keeps each underscore, and it does not use `modelTitleFrom`, the title model rule that changes underscores to spaces.
-The tool description and the CLI help ask the agent to avoid underscores unless the user asks for them, as [Create and list calls](../../docs/protocol/agent-tools.md#create-and-list-calls) says.
+The tool description and the CLI help ask the agent to avoid underscores unless the user asks for them, as [Names from the workspace tools](../../docs/protocol/tool-names.md) says.
 A blank result counts as no name, and the app shows "Untitled".
 The create answer gives the stored name and the first session's absolute `sessionLink`. The branch and stored city keep the city.
 The tools preserve string names, including blank names, and ignore names of other types.
+An optional `firstSessionTitle` and an optional `requestId` follow [Creation replay and first title](workspaces.md#creation-replay-and-first-title).
+A repeat with the same request ID resolves before the default lookup below.
 It reads saved owner preferences when the request omits model or effort.
 The injected account policy supplies defaults when no preference exists.
 Production returns HTTP 503 `default_model_unavailable` when no required default choice exists.
@@ -133,6 +140,7 @@ It never uses the workspace owner as a substitute sender.
 
 `createWorkspace` receives one `ToolWorkspaceCreation` value.
 The value keeps the inherited owner separate from the first message sender.
+It also carries the stable first-message ID and the optional first session title.
 The lifecycle service must keep the first message durably and start it at once.
 It must use the latest good org image.
 It must use the sender's agent login.
@@ -182,8 +190,10 @@ Only an absent runtime value falls back to that file.
 The production machine route calls `productionAgentTools` in [composition.ts](composition.ts).
 It resolves the calling turn through `Workspace.callingToolTurn` and the real chat store.
 It reads the configured account default model when the owner has no saved preference.
-Creation calls the normal workspace lifecycle with a separate owner and sender.
+[workspace-create-composition.ts](workspace-create-composition.ts) calls the normal workspace lifecycle with a separate owner and sender.
+It also replays a saved creation.
 It waits for creation to finish before it returns the workspace and session.
+[workspace-write-composition.ts](workspace-write-composition.ts) sends a rename or a move to the app's metadata write, and an archive to the workspace object.
 
 Each org build that needs the software step calls `installWorkspaceTools` with `WORKSPACE_TOOL_SOURCES`
 before it installs the rest of the image software.
@@ -204,13 +214,20 @@ Session CLI and MCP tests use production composition, native chat storage, and a
 Their request bridge lives in [session-test-support.ts](session-test-support.ts).
 The production services live in [composition.ts](composition.ts).
 The real-object route tests live in [worker/features](../features/).
+[Tests](workspaces.md#tests) lists the tests of the workspace calls.
 
 ## Key code
 
 - [handler.ts](handler.ts) owns the public machine handler and token gate.
-- [create.ts](create.ts) resolves the owner, sender, section, and model choice.
+- [create.ts](create.ts) builds the stable first-message ID and tries a replay. It then resolves the owner, sender, section, and model choice.
 - [lists.ts](lists.ts) reads the four lists and resolves the listed default choice.
-- [store.ts](store.ts) queries scoped D1 records and builds list links from the app origin.
+- [store.ts](store.ts) reads the token's workspace, members, owner defaults, sections, and repository admission in D1.
+- [workspace-routes.ts](workspace-routes.ts) matches the workspace routes and runs their reads and writes.
+- [workspace-input.ts](workspace-input.ts) reads the options of the workspace list.
+- [workspace-data.ts](workspace-data.ts) queries the workspace list and the details of one workspace.
+- [workspace-write-composition.ts](workspace-write-composition.ts) runs a rename, a move, or an archive as the sender.
+- [workspace-create-composition.ts](workspace-create-composition.ts) completes a create and its replay.
+- [agent-workspaces.ts](../../src/shared/agent-workspaces.ts) holds the workspace request and reply types and their paths.
 - [services.ts](services.ts) defines the lifecycle and active-turn integration boundary.
 - [session-routes.ts](session-routes.ts) parses the machine session routes and read query options.
 - [session-input.ts](session-input.ts) narrows session create and send inputs while preserving message text.
