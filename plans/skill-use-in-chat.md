@@ -575,16 +575,23 @@ Depends on: 2
 The public guides and the Conductor comparison page describe the skill
 lines.
 
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that the skill lines make incomplete or wrong, such as the
       fold lines in `sessions-and-chat.md`. Follow
       `docs/protocol/website-docs.md`.
-- [ ] Update the note of the `skills` row in
+- [x] Update the note of the `skills` row in
       `src/marketing/from-conductor/areas/agents-and-chat.ts`. It names the
       repository folder that each agent loads skills from:
       `.claude/skills/` for Claude and `.agents/skills/` for Codex. It
-      says that the chat names each skill use. The status stays
+      keeps "Personal Mac skills are not copied." The status stays
       `available`. Follow `docs/protocol/conductor-comparison.md`.
+- [x] Set the `skill-use-indicators` row of the same file to `available`,
+      with a note that says that the chat names each skill use, because
+      this branch ships the feature. Main added that row as planned after
+      this plan was written. The external docs agent found it, and the
+      orchestrator made the change.
+
+Evidence: `.context/skill-use-in-chat/m7/`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
