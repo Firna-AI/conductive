@@ -104,6 +104,19 @@ test('keeps the list GitHub summary through title events, older records, and rea
       state: 'ready',
       github: 'checks-failed',
     })
+    live(3, {
+      type: 'workspace.updated',
+      workspace: {
+        ...initial.detail.workspace,
+        branch: 'calummoore/next-task',
+        github: null,
+      },
+    })
+    await flushMicrotasks()
+    expect(org.workspace(id)).toMatchObject({
+      branch: 'calummoore/next-task',
+      github: null,
+    })
     org.putWorkspace({ ...initial.created.workspace, github: 'merged' })
     expect(org.workspace(initial.created.workspace.id)?.github).toBe('merged')
     expect(valueOf(org.workspaces.get())?.[0]?.id).toBe(

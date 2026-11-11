@@ -26,6 +26,10 @@ export const workspacePaths = {
     `${workspacePath(orgId, id)}/activity`,
   read: (orgId: string, id: string) => `${workspacePath(orgId, id)}/read`,
   archive: (orgId: string, id: string) => `${workspacePath(orgId, id)}/archive`,
+  continue: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/continue`,
+  continueResult: (orgId: string, id: string, continueId: string) =>
+    `${workspacePath(orgId, id)}/continue/${encodeURIComponent(continueId)}`,
   restore: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restore`,
 } as const
 
@@ -94,3 +98,22 @@ export interface CreateWorkspaceResponse extends WorkspaceResponse {
   sessionId: string
   firstMessage: UserMessage
 }
+export interface LocalWork {
+  uncommittedFiles: readonly string[]
+  unpushedCommits: number
+}
+
+export interface ContinueWorkspaceRequest {
+  expectedBranch: string
+  allowLocalWork?: boolean
+}
+
+export type ContinueWorkspaceResponse =
+  | { state: 'pending'; continueId: string }
+  | {
+      state: 'confirmation-required'
+      branch: string
+      baseBranch: string
+      localWork: LocalWork
+    }
+  | { state: 'continued'; workspace: Workspace; eventNumber: number }

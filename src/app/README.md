@@ -279,8 +279,8 @@ the palette and of the Feedback dialog.
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
 fake API, with raw file uploads through its fetch, requests or answers that
 wait for the test (also two at one path), a manual timer with the wait of
-each pending timer, a manual page focus, visibility, input, and keys, and a
-recording event source.
+each pending timer, which can run only the timers of one wait, a manual page
+focus, visibility, input, and keys, and a recording event source.
 `../shell/test-render.tsx` draws a screen with every provider through
 server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and

@@ -30,7 +30,6 @@ it('compares the run branch with its workspace base and opens its own pull reque
       branch: 'run/fixes',
       baseBranch: 'feature/review',
       pullRequest: null,
-      createPullRequestUrl: null,
     },
   })
   h.api.defaultBranch = 'release'
@@ -44,8 +43,6 @@ it('compares the run branch with its workspace base and opens its own pull reque
       branch: 'run/fixes',
       baseBranch: 'feature/review',
       pullRequest: null,
-      createPullRequestUrl:
-        'https://github.com/Codertocat/Hello-World/compare/feature%2Freview...run%2Ffixes?expand=1',
     },
   })
   h.api.pulls[3] = {

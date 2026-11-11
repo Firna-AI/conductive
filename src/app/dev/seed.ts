@@ -117,6 +117,10 @@ function acme(
     options.server.workspaceState,
     fakeGitHubSummary(options.server),
   )
+  const active = workspaces.workspaces.find(
+    (workspace) => workspace.id === 'email-dark-mode',
+  )
+  if (active) active.state = 'working'
   const fixtures = routineFixtures(summary.id)
   const starting = workspaceFixtures('starting').detail.start
   const failed = workspaceFixtures('error').detail.error

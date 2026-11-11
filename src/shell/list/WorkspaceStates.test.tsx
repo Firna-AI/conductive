@@ -40,6 +40,11 @@ describe('workspace states', () => {
     })
     if (detail.state !== 'ready') throw new Error('The workspace did not open.')
     const { workspace } = detail.value
+    const chat = new ChatController({
+      target: { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace },
+      client: app.services.api,
+      subscribe: () => () => undefined,
+    })
     const header = textOf(
       renderScreen(
         app,
@@ -61,13 +66,10 @@ describe('workspace states', () => {
             viewport: 'desktop',
             view: [],
             stream: open.stream,
-            // The header reads no saved view and no tool events, so the chat
-            // never starts and the tool events follow no stream.
-            savedView: new ChatController({
-              target: { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace },
-              client: app.services.api,
-              subscribe: () => () => undefined,
-            }),
+            // The header reads no saved view, no chat, and no tool events,
+            // so the chat never starts and the tool events follow no stream.
+            savedView: chat,
+            chat,
             toolEvents: new ToolEvents().subscribe,
             archive: null,
             restore: null,

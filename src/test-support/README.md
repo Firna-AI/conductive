@@ -45,6 +45,8 @@ Each full report is explicitly part 1 of 1. Its tree ends at revision 2.
 `recordedMultipartRunnerFileEvents` supplies eight events for part-joining checks.
 It splits trees and changes into two parts and uses tree delta revisions 2 and 3.
 The small samples exercise joining without large fixtures.
+Current changes fixtures include `unpushedCommits`. The HTTP fixture has
+one commit, and the later recorded report has two, so readers see a change.
 
 `recorded-repairs.ts` records the lost updates without a session: the file tree, the changes list, the start steps, the workspace name, and the list of servers.
 `firstLoss(kind)` gives the marker of a first loss. For the file tree, it is a refused tree delta.
@@ -63,6 +65,19 @@ mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
 Writes return recorded replies. They do not change backend state.
+The GitHub action routes answer as a member with write access and the
+`squash` method. A merge returns HTTP 202 with a pending job named
+`merge-<workspace ID>`, and the poll of that job returns a completed merge.
+Each banner with a pull request carries `FAKE_GITHUB_HEAD_SHA` as the head
+that the bar shows, which the action client sends back.
+`fake-bar.ts` sets the other answers of the actions of the bar: the
+member's access, the end of a merge with the Worker's safe words, the local
+work as a route reply and a newer changes report in the stream, and the
+start and the poll of Continue. `continuedEvents` gives the events of a
+Continue: the workspace on its new branch, a note in each session, the
+changes report of the new branch, and its GitHub state. `fake-bar-dev.ts`
+gives `scenarioFetch`, which answers as the Worker does with its state, for
+the development pages.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
 Set the next reply with `server.json(method, path, body, status)`.
@@ -78,6 +93,7 @@ Options select the org role, workspace state, conversation, and GitHub banner st
 Without it, `fakeGitHubSummary` gives the summary of the banner and its checks, as the Worker copies it.
 `workspaceFixtures(state, github)` takes that summary for the default workspace.
 The dev fake of `../app/dev/` uses `fakeGitHubSummary` too.
+Its seed makes `email-dark-mode` work without GitHub state, so its grey mark moves.
 Replace a reply to draw a missing login, a first run, or a deleted org.
 The fake answers `GET /api/invites` with no invitations. A test sets its own list with `server.json`.
 `server.signIn(user)` serves the session of another person, with app access, as a sign-in of that person does.
@@ -166,7 +182,7 @@ Replies, timers, and `waitFor` go on.
 - `message-field.ts` focuses, types into, pastes into, presses keys in, clears, and reads the message field of a composer.
 - `fake-core-routes.ts` records account, org, settings, section, member, and routine replies: the list, and the read, update, and delete of each routine, and a create. Each routine, and the routine that a create answers, also has each page of its runs and a Run now that starts a run on a new workspace.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
-- `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies.
+- `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies, also the member action routes of GitHub.
 - `fake-api-routes.ts` defines the reply registration interface.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
@@ -186,7 +202,7 @@ Replies, timers, and `waitFor` go on.
   A run whose first start or first turn failed keeps its workspace, and a run that a check failed has none.
 - `fixtures/routine-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
-- `fixtures/tools.ts` maps file, GitHub, and tool samples.
+- `fixtures/tools.ts` maps file, GitHub, and tool samples. `FAKE_GITHUB_HEAD_SHA` is the head commit of each fake pull request.
 - `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.
 - `fake-device-routes.ts` records the Mac command, pairing, answer, and Mac settings replies.
 

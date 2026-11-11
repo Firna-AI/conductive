@@ -2,7 +2,7 @@
 
 This doc holds the requirements and the decisions in force for the life of a
 workspace. It covers the create, the start steps, the time limits, the
-states, the stop and resume, the archive, and the restore of a workspace.
+states, the stop and resume, the archive, the restore, and Continue of a workspace.
 It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
 which covers the provider, the org image, and the startup script. The
 terms are those of the
@@ -82,37 +82,7 @@ keeps them after the merge.
 
 ### The list mark
 
-- The list mark of a workspace is a grid of 3 × 3 cells. It shows in the
-  list, in the rows of the command palette, and in the chips. It means the
-  same in each place.
-- Its colour gives the [GitHub state](github-banner.md#the-github-state)
-  of the workspace (list mark decision 1). It is red when the checks
-  failed, amber while they run, green when they passed, and purple after
-  the merge.
-- Without a GitHub state, the mark is dim grey.
-- A mark shape for each state was rejected for the list. Reason: the list
-  and the pull request bar can then disagree, and the user wants the
-  checks at a glance.
-- The motion of the mark shows whether the agent works (list mark
-  decision 1). A light runs around the outer ring of cells while the agent
-  works. The whole mark pulses slowly while the agent needs input. In each
-  other state, the mark is still.
-- Reason: the pulse keeps needs input in the list, as decision 68 requires.
-  A still middle column for needs input was rejected, because the user
-  asked for a mark of one full colour.
-- With reduced motion, the ring stays lit while the agent works. The middle
-  column stays lit while the agent needs input. The other cells stay dim,
-  so the state of the agent stays visible without motion.
-- Bold text alone marks unread output. A green mark for unread output was
-  rejected, because green means passed checks.
-- An archived workspace shows a fainter grey mark, whatever its GitHub
-  state. Reason: a chip of an archived workspace must show the archive, as
-  [Chips](workspace-links.md#chips) says.
-- In each place, screen readers hear the GitHub state in words before the
-  state, such as "Checks failed, Working". Reason: only the colour shows
-  the GitHub state. For an archived workspace, they hear no GitHub state.
-- A change of the GitHub state does not change the activity time of the
-  row.
+[Workspace list marks](workspace-marks.md) gives the requirements and their reasons.
 
 ## Stop and resume
 
@@ -226,7 +196,7 @@ keeps them after the merge.
   The push shows as a push of the owner, and it can start the CI of the
   repository. It can also put files with secret values on GitHub.
 - The pull request bar offers Archive after the merge, as
-  [GitHub banner](github-banner.md#banner-states) says. The menu of a
+  [After the merge](github-banner.md#after-the-merge) says. The menu of a
   workspace row offers it too, as [Archive](workspace-menu.md#archive)
   says.
 - An archived workspace has no file lists and no tools. A phone shows only
@@ -264,3 +234,12 @@ keeps them after the merge.
   history.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may
   restore a workspace.
+
+## Continue
+
+- After the merge of its pull request, Continue moves a workspace to a new
+  branch from the latest default branch. The workspace keeps its sandbox
+  and its sessions (decision 223).
+- [Continue](continue.md) holds its requirements: who may continue, when
+  Continue runs, its check for local work, the new branch, and the
+  sessions after it.

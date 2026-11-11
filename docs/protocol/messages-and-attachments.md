@@ -187,6 +187,15 @@ says.
   rejected, because the name then holds underscores that no member asked
   for. A member who wants underscores names the workspace with Rename.
 
+### Messages from the bar
+
+- An [agent action](github-banner.md#agent-actions) of the pull request bar
+  sends its fixed prompt as a message of the member who clicks, to the
+  session that the member saw last, with its model and effort.
+- It follows each rule of a message from the composer, and the draft stays
+  as it is. The chat shows it as a message of that member, with no mark of
+  the action. Reason: an action is a message (decision 220).
+
 ## Attachments
 
 [Message attachments](message-attachments.md#attachments) states the size

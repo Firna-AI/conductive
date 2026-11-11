@@ -17,7 +17,6 @@ export function sqliteSnapshot(large = false): GitHubSnapshot {
       baseBranch: 'main',
       updatedAt: 1,
       pullRequest: null,
-      createPullRequestUrl: null,
     },
     checks: large
       ? {
@@ -48,6 +47,7 @@ export function sqlitePullSnapshot(): GitHubSnapshot {
         number: 1,
         title: 'Summary copy',
         url: 'https://github.com/owner/repo/pull/1',
+        headSha: 'pull-head',
       },
       review: 'approved',
       changesRequestedBy: [],

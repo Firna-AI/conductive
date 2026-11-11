@@ -41,7 +41,7 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     area: 'automation-and-api',
     name: 'Routines',
     status: 'available',
-    note: 'Routines run on a schedule or on pull request events. Each run gets a new workspace, with run history and manual runs. Pull request triggers filter by author.',
+    note: 'Routines run on schedules or author-filtered pull request events, with history and manual runs. Each run opens a workspace in a chosen sidebar section.',
   },
   {
     id: 'hosted-mcp-server',

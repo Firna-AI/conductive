@@ -36,6 +36,7 @@ it('retains a leading UTF-8 BOM in both sides of a file diff', async () => {
   await h.git('add', 'bom.txt')
   await h.git('commit', '-m', 'BOM base')
   await h.git('update-ref', 'refs/heads/main', 'HEAD')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   await h.write('bom.txt', '\uFEFFxyz')
   h.endpoint.send({
     type: 'file.diff',

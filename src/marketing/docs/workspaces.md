@@ -7,7 +7,8 @@ order: 10
 
 ## Before you create a workspace
 
-A workspace gives one task its own branch and cloud computer.
+A workspace has its own cloud computer and one branch at a time.
+After a merge, **Continue** starts its next task on a new branch.
 Use separate workspaces for tasks that need separate files and branches.
 
 You need access to Conductive and membership of an org.
@@ -81,6 +82,7 @@ git branch --show-current
 
 Keep the workspace's branch name when you push.
 Renaming it can stop the pull request bar from following the work.
+Use **Continue** after a merge to start a new branch that the bar follows.
 
 Open another workspace while an agent works.
 The list mark shows the pull request's GitHub state:
@@ -170,6 +172,38 @@ If the org has no successful build, ask an admin to check **Cloud computer** in 
 
 For a repository with no branches or tags, Conductive creates an empty first commit at the first start.
 Your GitHub account needs permission to push that commit.
+
+## Continue after a merge
+
+Every org member can continue a workspace after its pull request merges.
+Your GitHub account needs read access to fetch the repository's latest default branch.
+
+1. Open the merged workspace.
+2. Wait for every running agent turn in that workspace to finish.
+3. Select **Continue** in the pull request bar.
+4. Read the question if it lists work that is not pushed.
+5. Select **Continue anyway** to keep going, or **Cancel** to keep the current branch.
+
+On a phone, open **Checks** from the pull request row to find **Continue**.
+The computer starts first if it is stopped.
+The new branch starts from the repository's latest default branch.
+That default branch becomes the workspace's base branch for its new task.
+
+Continue keeps the same cloud computer, files, installed software, running servers, sessions, and workspace name.
+Changed files move to the new branch.
+Commits that are not pushed stay on their local branches.
+The question counts those commits across all local branches, including earlier tasks.
+
+The earlier branch stays on GitHub with its merged pull request.
+Each session shows who continued and the new branch.
+The pull request bar then follows that branch without a pull request.
+
+If changed files clash with the latest default branch, Continue stops and keeps the earlier branch.
+Review the files with the agent or **Terminal** before trying again.
+For another failure, follow the reason shown under the bar.
+
+- [Use pull request actions](/docs/pull-requests)
+- [Apply updated cloud computer software](/docs/cloud-computer#apply-setup-changes)
 
 ## Archive a workspace
 

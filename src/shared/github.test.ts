@@ -11,7 +11,7 @@ import {
 function banner(state: BannerState): GitHubBanner {
   const common = { branch: 'changes', baseBranch: 'main', updatedAt: 1 }
   if (state === 'none' || state === 'no-commits')
-    return { ...common, state, pullRequest: null, createPullRequestUrl: null }
+    return { ...common, state, pullRequest: null }
   return {
     ...common,
     state,
@@ -19,6 +19,7 @@ function banner(state: BannerState): GitHubBanner {
       number: 1,
       title: 'Changes',
       url: 'https://github.com/a/b/pull/1',
+      headSha: 'changes-head',
     },
     review: null,
     changesRequestedBy: [],

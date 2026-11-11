@@ -1,10 +1,11 @@
 # GitHub banner backend
 
 This module reads GitHub branch state for the shared banner and checks API.
+It also reads each member's merge access and runs direct merges as that member.
 It also verifies GitHub App webhooks and finds their workspace targets.
 It stores its state and events in the [chat store](../chat/README.md) of the workspace Durable Object.
 It also keeps a copy of the GitHub summary of each workspace in D1, as [The summary copy](#the-summary-copy) says.
-The production Worker mounts both browser reads and the signed webhook route.
+The production Worker mounts the browser reads, the member merge routes, and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
 Verified pull request events also store [routine runs](../routines/README.md).
@@ -20,9 +21,16 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 - [handleGitHubWebhook](webhook.ts) accepts `POST /v1/github/webhooks` on `MACHINE_ORIGIN`.
   It verifies `X-Hub-Signature-256` against the raw body before parsing or D1 access.
   It authenticates machines with `GITHUB_WEBHOOK_SECRET`, without the app gate.
-- [handleGitHubRead](app-handler.ts) accepts GET and HEAD for both `githubPaths` routes.
+- [handleGitHubRead](app-handler.ts) accepts GET and HEAD for the banner and checks routes of `githubPaths`.
   It runs the existing app gate and checks the workspace's org before a read.
   It returns the shared banner or checks response, with private response headers.
+- [handleGitHubMerge](merge-handler.ts) serves the member capability, merge start, and merge result routes of `githubPaths`.
+  It uses the existing app gate and keeps member capabilities out of workspace events.
+  [GitHubMerge](merge.ts) derives the repository and pull request from the authorized workspace.
+  It merges with the member's fresh GitHub token and rechecks access around each GitHub request.
+  Its stored job binds an opaque app ID to the member and the workspace binding, without a token or error text.
+  A completed merge refreshes the shared state through the existing queue and publisher.
+  [Member merges](merges.md) gives the routes, replies, error codes, jobs, polling, and tests.
 - [refreshWorkspace](refresh.ts) runs inside the target workspace Durable Object.
   It checks active org, installation, repository, branch, and optional user access before reading.
   It repeats the access check before storage and publication.
@@ -48,7 +56,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   The caller implements only `scheduleRefresh`.
 - [installationTokenProvider](credentials.ts) gets an installation token for one repository through the shared App credential flow.
   Its permissions allow repository content, pull request, check, and commit status reads only.
-  The token stays on the server.
+  The token stays on the server. A merge never uses it.
   This module has no sandbox credential endpoint.
 - [appSigningKey](private-key.ts) imports `GITHUB_APP_PRIVATE_KEY` for each GitHub App feature: these reads and the repository copies of image builds.
   It accepts each key text that the deployment guide allows.
@@ -89,6 +97,9 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 7. On tab open, read the banner and checks through the shared app routes.
    Read the stored workspace stream before subscribing after its common event number.
    Reconnect with that number, so a repeated publication shows only once.
+8. Forward the member merge routes to the workspace Durable Object.
+   Call `handleGitHubMerge` there with the object's storage and its internal refresh operation.
+   [Mounting](merges.md#mounting) names the production entry points.
 
 Example refresh operation inside the workspace Durable Object:
 
@@ -104,6 +115,7 @@ Neither public HTTP handler accepts a caller-supplied workspace token or install
 
 The production workspace object persists each scheduled workspace binding and refresh signal.
 The signal keeps the delivery ID, pushed branch, retry attempt, and user ID when present.
+The refresh after a merge also keeps its `requireWritable` flag.
 The consumer can schedule Durable Object alarm retries for failed reads or publication.
 A retry must keep these inputs so delivery receipts and access checks still apply.
 A failed scheduled refresh remains a failure until the current read and publication succeed.
@@ -116,6 +128,11 @@ A base-branch push schedules the first later read even when the first read still
 A `github_pending` read schedules another attempt while that bound permits it.
 A known scheduled result ends the retry chain.
 An exhausted chain keeps the last stored state and returns `github_pending`.
+
+After [Continue](../lifecycle/continue.md#publication) stores a new branch, the workspace object schedules one fresh read of the new binding.
+That read has no user ID, and it uses the same retry alarm.
+A read or a retry that captured the old branch fails its binding check, so it stores and publishes nothing.
+Webhook routing follows the new branch, because the candidate query reads the current branch of the D1 row.
 
 ## Body budgets
 
@@ -179,7 +196,8 @@ All links point to GitHub.
 The reader maps BEHIND and BLOCKED to the shared `blocked` banner.
 Terminal, draft, conflict, review, and check states take priority over `blocked`.
 The banner keeps the pull request's GitHub link and the existing shared fields.
-It adds no blocker reasons or GitHub write action.
+Its `pullRequest.headSha` is the head commit that the reader captured, which a merge sends back.
+The banner read adds no blocker reasons. The separate member routes own merge writes.
 An unresolved merge condition still returns `github_pending` with HTTP 503.
 UNKNOWN mergeability or merge state remains retryable when no earlier state applies.
 UNSTABLE remains retryable if the read checks show no failed, running, or queued check.
@@ -202,85 +220,19 @@ So a replay of an older receipt copies the current state, not the snapshot of it
 The replay still publishes the original event of that receipt.
 An unchanged read stores no snapshot and publishes no event, but it still repairs a missing or old copy.
 A read that returns `null`, such as an unrelated push, copies nothing.
-`saveWorkspaceGitHubSummary` updates only `github_summary`, and only when the value differs.
+`saveWorkspaceGitHubSummary` updates only `github_summary`, when the value differs and the workspace still has the snapshot's branch.
+Continue clears the summary when it stores the new branch, so an old branch's copy cannot restore its mark.
 It changes no activity time, update time, or list position.
 A failed copy rejects the refresh, so the delivery stays retryable.
 The retry of a committed delivery replays its receipt and copies again, without a GitHub request or a fresh event.
 
 ## Verification
 
-Run `npm run test -- worker/github src/github/githubStore.test.ts src/shared/github.test.ts` from the repository root with Node 24.
-The app and webhook tests use the existing sign-in fake and real local D1 harness.
-[RepositoryGitHub](fake-repository.ts) adds a small repository model without changing that fake.
-Fixtures set `branches` by qualified ref and `comparisons` by base ref and head commit.
-They set `pulls` by number with its head repository, head name, base, test merge commit, and reviews.
-They set `checks` by commit ID for head and test merge rollups.
-[repositoryPull](fake-pull.ts) supplies a complete pull request fixture.
-Every response follows the query's repository, ref, head, state, number, and cursor variables.
-Lookup filters by head name and orders requests by their creation time.
-Set `pageSize` to exercise lookup, check, and review pagination.
-An unknown ref or comparison returns `null`.
-An unknown pull request number returns a GraphQL error.
-An unknown commit rollup returns `null`.
-The reader tests cover merge checks, head fallback, page order, and commit changes during paging.
-[MemoryWorkspace](memory-workspace.ts) is a unit-test port double.
-It does not replace [createGitHubStatePort](chat-store.ts), the production adapter.
-Its `failWritePrefix` injects a storage failure for matching keys.
-Its event list includes only committed events.
-Like the production adapter, it publishes each committed event after its transaction.
-Its `run` calls `authorize` before the work.
-The receipt-write test proves rollback with no stored state, event, receipt, or publication.
-Retry reads the snapshot once more and stores and publishes one event numbered 1.
-This test does not prove the shared production store's transaction behavior.
-Its `restart()` replaces the coordinator over the same stored records.
-Its `scheduled` queue captures plain requests and delays.
-[GitHubTestHarness.runScheduled](test-harness.ts) runs one captured request without a timer or sleep.
-[receipt-size.test.ts](receipt-size.test.ts) uses `MemoryWorkspace` for a check list that fits in one stored value once, but not twice.
-It commits and replays that delivery.
-It does not test the value limit of real storage.
-
-[chat-store.test.ts](chat-store.test.ts) proves the production store's transaction behavior.
-It runs `WorkspaceGitHubState` through `createGitHubStatePort` and `WorkspaceChat` on SQLite storage in Miniflare.
-[createGitHubSQLiteHarness](sqlite-harness.test-support.ts) starts the test Durable Object of [sqlite-worker.test-support.ts](sqlite-worker.test-support.ts).
-The tests cover a failed receipt write and its retry, and chat and GitHub events in one sequence.
-They also cover one transaction for the snapshot, event, and receipt, and a replay after eviction with one publisher.
-They also prove the summary copy retry with the real D1 of the harness and `saveWorkspaceGitHubSummary`.
-A D1 trigger fails the copy of a snapshot with a pull request, after its snapshot, event, and receipt commit.
-After a real eviction, the same delivery retries with GitHub reads forbidden.
-The retry repairs the summary, adds no record or event, and replays the original event.
-
-[queued-access.test.ts](queued-access.test.ts) removes the D1 membership while a commit or a replay waits in the real chat queue.
-The queued operation then fails with `404 workspace_not_found`.
-The stored records, the history, and the open tabs stay unchanged.
-[queuedAccessRace](queued-access.test-support.ts) holds the queue after the receipt read and the outside access checks.
-
-[workspace-summary.test.ts](workspace-summary.test.ts) sends signed webhooks and protected banner reads, then reads the list reply from local D1.
-It covers a failed check and a later passed read, with an unchanged activity time and position.
-It also covers an older receipt replay, the repair of a missing copy, and a failed copy whose retry restarts `MemoryWorkspace`.
-A D1 trigger makes the copy fail.
-[summary-queue.test.ts](summary-queue.test.ts) proves with `MemoryWorkspace` that each copy ends before the next refresh reads GitHub.
-[The shared summary tests](../../src/shared/github.test.ts) cover the order of the four values.
-
-[Recorded routing fields](recorded-webhooks.ts) come from the MIT-licensed
-[Octokit webhook examples](https://github.com/octokit/webhooks/tree/main/payload-examples/api.github.com).
-The fixtures retain the payload shapes and use one test installation.
-The push fixture targets the test branch.
-The review-thread fixture keeps reduced routing fields from the
-[recorded resolved example](https://raw.githubusercontent.com/octokit/webhooks/main/payload-examples/api.github.com/pull_request_review_thread/resolved.payload.json).
-
-API references:
-
-- [Webhook validation](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries)
-- [Webhook events](https://docs.github.com/en/webhooks/webhook-events-and-payloads)
-- [Pull request fields](https://docs.github.com/en/graphql/reference/pulls)
-- [Check fields](https://docs.github.com/en/graphql/reference/checks)
-- [Combined status rollup](https://docs.github.com/en/graphql/reference/commits#statuscheckrollup)
-- [Ref comparison](https://docs.github.com/en/graphql/reference/git#ref)
-- [Installation tokens](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app)
+[Verification](verification.md) gives the test commands and the native storage checks.
 
 ### Key Code
 
-- [Production composition](../features/github.ts) owns the state adapter and retry alarm.
+- [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue asks for.
 - [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background routine starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
@@ -292,8 +244,18 @@ API references:
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
-- [client.ts](client.ts) reads current GitHub state and follows pagination.
+- [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue.
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
+- [merge-handler.ts](merge-handler.ts) gates and parses the member merge routes.
+- [merge.ts](merge.ts) selects the capability, starts and polls merges, and diagnoses refusals.
+- [merge-capabilities.ts](merge-capabilities.ts) reads member permissions, allowed methods, and the member's default method with their fresh token.
+- [merge-client.ts](merge-client.ts) sends direct asynchronous merges with the displayed head and reads their result.
+- [merge-jobs.ts](merge-jobs.ts) reads and stores member jobs in the workspace object.
+- [merge-access.ts](merge-access.ts) and [merge-data.ts](merge-data.ts) check active member access for merge operations and their shared-state publication.
+- [merge-errors.ts](merge-errors.ts) defines the safe merge error codes and messages.
+- [transport.ts](transport.ts) owns each request's 30-second deadline through its complete body read, then clears the timer.
 - [Shared state comparison](../../src/shared/github-state.ts) compares the backend and browser displays without banner time.
 - [credentials.ts](credentials.ts) gets server-only installation read tokens.
 - [app-credentials.ts](app-credentials.ts) shares the signing key cache, JWT, token request, and revocation for GitHub App features.
+
+[Tests](merges.md#tests) in the merge guide gives the merge tests, their fakes, and their primary schemas.

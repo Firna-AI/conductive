@@ -130,6 +130,18 @@ it('replays an older delivery event without replacing the newer workspace summar
       .memory(fixture.workspace.id)
       .published.map((event) => event.eventNumber),
   ).toEqual([1, 2, 1])
+  const branch = 'owner/continued'
+  await harness.env.DB.prepare(
+    'UPDATE workspaces SET branch = ?, github_summary = NULL WHERE id = ?',
+  )
+    .bind(branch, fixture.workspace.id)
+    .run()
+  await harness.refresh(
+    { ...fixture.workspace, branch },
+    { deliveryId: 'older' },
+  )
+  expect(await list(fixture)).toMatchObject({ workspaces: [{ github: null }] })
+  expect(harness.api.requests).toHaveLength(reads)
 })
 
 it('repairs a missing summary on an unchanged read and skips a matching copy', async () => {

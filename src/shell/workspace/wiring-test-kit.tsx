@@ -12,15 +12,21 @@ import { recordingSocket } from './kept-test-kit'
 
 /**
  * The whole app in a tab at `href`, over the fake API and its stream. The
- * services can replace the event source, such as with a terminal socket.
+ * services can replace the event source, such as with a terminal socket,
+ * and the timer, such as with a `ManualDelay` that runs the reads again.
  */
 export async function openTab(
   server: FakeApiServer,
   href: string,
-  options: { viewport?: Viewport; events?: AppServices['events'] } = {},
+  options: {
+    viewport?: Viewport
+    events?: AppServices['events']
+    delay?: AppServices['delay']
+  } = {},
 ) {
   const app = await startedApp(server, {
     events: options.events ?? recordingSocket(server).source,
+    ...(options.delay ? { delay: options.delay } : {}),
   })
   const navigation = memoryNavigation(href)
   const view = mountScreen(

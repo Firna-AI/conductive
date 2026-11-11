@@ -9,8 +9,8 @@ export async function saveWorkspaceGitHubSummary(
   await db
     .prepare(
       `UPDATE workspaces SET github_summary = ?
-    WHERE id = ? AND org_id = ? AND github_summary IS NOT ?`,
+    WHERE id = ? AND org_id = ? AND branch = ? AND github_summary IS NOT ?`,
     )
-    .bind(summary, workspace.id, workspace.orgId, summary)
+    .bind(summary, workspace.id, workspace.orgId, workspace.branch, summary)
     .run()
 }

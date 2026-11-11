@@ -9,12 +9,19 @@ import {
   authenticateWorkspaceToken,
   workspaceTokenRefusedError,
 } from './tokens'
-import type { WorkspaceRuntime } from './workspace-runtime'
+import type {
+  WorkspaceRuntime,
+  WorkspaceLifecycleEndpoint,
+} from './workspace-runtime'
+
+type CredentialRuntime = Omit<WorkspaceRuntime, 'workspace'> & {
+  workspace(id: string): Pick<WorkspaceLifecycleEndpoint, 'credentialSender'>
+}
 
 /** The machine-host dispatcher calls this handler before browser routing. */
 export async function handleGitCredential(
   request: Request,
-  runtime: WorkspaceRuntime,
+  runtime: CredentialRuntime,
 ): Promise<Response> {
   if (
     !runtime.env.MACHINE_ORIGIN ||
@@ -40,7 +47,7 @@ export async function handleGitCredential(
 }
 
 async function authenticatedCredentialResponse(
-  runtime: WorkspaceRuntime,
+  runtime: CredentialRuntime,
   bearer: string,
   turnId: string | null,
 ): Promise<Response> {
@@ -62,7 +69,7 @@ async function authenticatedCredentialResponse(
 }
 
 async function authorizeCredential(
-  runtime: WorkspaceRuntime,
+  runtime: CredentialRuntime,
   bearer: string,
   tokenHash: string,
   turnId: string | null,

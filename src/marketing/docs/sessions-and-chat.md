@@ -51,6 +51,20 @@ The workspace keeps accepted messages for the agent.
 The org must have a successful build before you create a new workspace.
 That first build is separate from the start of an existing workspace's computer.
 
+## Use pull request actions in chat
+
+Open the session you want before selecting an agent action in the pull request bar.
+The action sends a fixed message from you to the session you viewed last.
+It uses that session's model, effort, and login rules.
+This also works while you view a file or **Checks**.
+
+Your draft, attached files, and uploads stay as they were.
+The action's message appears in chat as your message.
+During a turn, it follows the same rules as a message you send from the box.
+If it cannot send, the chat opens and shows the cause.
+
+- [Choose a pull request action](/docs/pull-requests#read-the-pull-request-state)
+
 ## Delegate work to another session
 
 Ask an agent to create a session, list sessions, send a message, or read a result.
@@ -129,6 +143,12 @@ A phone shows the session tabs there.
 Closing a session keeps its conversation in **Session history**.
 If its agent is working, closing asks first because it stops the turn.
 Open **Session history** to reopen the conversation.
+
+After a merge, **Continue** keeps these sessions and their conversation context on the workspace's new branch.
+Each session shows a note with the member who continued, the new branch, and its starting branch.
+With current agent software, later messages tell the agent the current branch names when they change.
+
+- [Continue after a merge](/docs/workspaces#continue-after-a-merge)
 
 ## Copy a transcript
 

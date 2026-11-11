@@ -9,6 +9,7 @@ import type {
 } from './contracts'
 import { activeWorkspace } from './data'
 import { saveWorkspaceGitHubSummary } from './summary-data'
+import { readMergeWorkspace } from './merge-access'
 import type { WorkspaceGitHubState } from './workspace-state'
 
 // Three fresh reads, one second apart, bound GitHub's merge-state retry work.
@@ -24,12 +25,20 @@ export async function refreshWorkspace(
   dependencies: GitHubReadDependencies,
 ): Promise<GitHubSnapshot | null> {
   const authorize = async () => {
-    const current = await activeWorkspace(
-      db,
-      workspace.id,
-      workspace.orgId,
-      signal.userId,
-    )
+    const current =
+      signal.requireWritable && signal.userId !== undefined
+        ? await readMergeWorkspace(
+            db,
+            workspace.orgId,
+            workspace.id,
+            signal.userId,
+          )
+        : await activeWorkspace(
+            db,
+            workspace.id,
+            workspace.orgId,
+            signal.userId,
+          )
     if (
       !current ||
       current.repositoryId !== workspace.repositoryId ||
@@ -53,6 +62,7 @@ export async function refreshWorkspace(
         signal: {
           retryAttempt: attempt + 1,
           ...(signal.userId === undefined ? {} : { userId: signal.userId }),
+          ...(signal.requireWritable ? { requireWritable: true } : {}),
         },
       },
       MERGE_STATE_RETRY_DELAY_MS,
@@ -93,10 +103,11 @@ export async function refreshWorkspace(
     },
     authorize,
     signal,
+    // A receipt can replay committed state from before Continue.
     (snapshot) =>
       saveWorkspaceGitHubSummary(
         db,
-        workspace,
+        { ...workspace, branch: snapshot.banner.branch },
         githubSummary(snapshot.banner, snapshot.checks.checks),
       ),
   )

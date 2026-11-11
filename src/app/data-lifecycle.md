@@ -16,10 +16,11 @@ of the data that the screens read and write.
   at focus only. The waits are choices of the app, not product
   limits. `org-waits.ts` holds them.
 - A row that the list already has takes its GitHub state only from list
-  reads. Each other record keeps that row's GitHub state: a read, a
+  reads while its branch stays the same. Each other record keeps that row's GitHub state: a read, a
   Resume reply, a `workspace.updated` event, or a partial change of the
   open workspace. So the open row shows a newer GitHub state at the
   next list read, as every other row does.
+- A record for a new branch takes that branch's GitHub state. Continue clears it when it stores the branch, before its refresh.
 - A new row, such as a created workspace, takes the GitHub state of its
   record. Titles and read marks still change the row at once. The shared
   record readers still read and give `github`, so no API field goes away.
@@ -246,9 +247,9 @@ of the data that the screens read and write.
   the tool store. The store of `WorkspaceScreen` is a view of the kept
   workspace, so its stop keeps the parts, as the
   [workspace integration](../shell/workspace/README.md#integration) shows.
-  The `create` of the Files part finds the store that the tab keeps for the
-  workspace, as the [files integration](../files/README.md#integration)
-  shows.
+  The `create` of the Files connection of the screen finds the store that
+  the tab keeps for the workspace, as the
+  [files integration](../files/README.md#integration) shows.
 - A feature store that reads the raw socket messages itself, as the files
   do, follows the event source of the app through `replaySubscribe`. Each
   message reaches the store unchanged.
@@ -261,3 +262,7 @@ of the data that the screens read and write.
   - After the replay, the newest live event.
 - A live event during an unfinished replay moves no number. The store holds
   that event until the final page.
+- `WorkspaceStream.reconnects` counts the replays that end after a dropped
+  connection or a gap. A part that keeps its own reads, such as the
+  member's GitHub access of the pull request bar, reads again at each new
+  count. A start after a stop counts nothing.

@@ -26,6 +26,9 @@ cleanup records, and image pins.
   account, so the two can differ only in an older saved job.
 - A saved start job keeps its account. `readStartJob` reads an older job
   without one as `DEFAULT_PROVIDER_ACCOUNT`.
+- A Continue job takes the account of the workspace record when Continue
+  is admitted. `readContinueJob` reads an older job without one as
+  `DEFAULT_PROVIDER_ACCOUNT`.
 
 ## Routing
 
@@ -35,6 +38,12 @@ stores, through `providerForAccount` or `orgProviderForAccount` in
 
 - Workspace actions, disk retention, input activity, archive, and
   suspension stops use the account of the workspace record.
+- Continue uses the account of its saved job for the deadline, each
+  command, each poll, the read of the branch, and the status read of its
+  fetch grant, as [Continue](continue.md#phases) says. Its resume and its
+  check of local work use the account of the workspace record, as a resume
+  and Archive do. Each phase checks that the workspace record still names
+  the saved account and sandbox.
 - A start uses the account of its saved job. When the workspace record
   already holds a sandbox in another account, the start reaches that
   sandbox through the account of the record.

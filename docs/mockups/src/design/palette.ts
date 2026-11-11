@@ -27,6 +27,18 @@ type AppColors = {
   warningBorder: string
   /** A merged pull request, in GitHub's purple. */
   merged: string
+  /**
+   * The fills of a button in the tint of a bar state, at rest and on hover.
+   * Each one keeps the white `onFill` label at a contrast of 4.5:1 or more.
+   */
+  successFill: string
+  successFillHover: string
+  warningFill: string
+  warningFillHover: string
+  dangerFill: string
+  dangerFillHover: string
+  /** The label and the icon on a tinted fill. */
+  onFill: string
   codeKeyword: string
   codeString: string
   codeComment: string
@@ -88,6 +100,14 @@ export const darkPalette: Palette = {
   warning: '#f2b84b',
   warningBorder: '#4d3a12',
   merged: '#a371f7',
+  successFill: '#238636',
+  successFillHover: '#1a7f37',
+  warningFill: '#9e6a03',
+  warningFillHover: '#845306',
+  // A deep red: at the same lightness as the other fills, red looks louder.
+  dangerFill: '#a8352f',
+  dangerFillHover: '#8e2c27',
+  onFill: '#ffffff',
   codeKeyword: '#c792ea',
   codeString: '#a5e075',
   codeComment: '#6b7380',
@@ -142,6 +162,13 @@ export const lightPalette: Palette = {
   warning: '#b7860b',
   warningBorder: '#ecd49a',
   merged: '#8250df',
+  successFill: '#1d7f45',
+  successFillHover: '#176a39',
+  warningFill: '#9a6a06',
+  warningFillHover: '#7a5304',
+  dangerFill: '#c8323a',
+  dangerFillHover: '#a3242b',
+  onFill: '#ffffff',
   codeKeyword: '#7c3aed',
   codeString: '#15803d',
   codeComment: '#6b7280',

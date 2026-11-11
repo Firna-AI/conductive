@@ -6,8 +6,8 @@ import type {
   ToolCall,
 } from '../chat-events'
 import type { ChangedFile } from '../files'
-import type { UserMessage } from '../messages'
-import { userKey } from './item-keys'
+import type { MessageSender, UserMessage } from '../messages'
+import { continuedKey, userKey } from './item-keys'
 import { hasEnded, noteTurn, takeMessage, type KnownTurn } from './known-turns'
 import { foldLate } from './late-events'
 import { foldRefused } from './refused-events'
@@ -45,6 +45,17 @@ export type TranscriptItem =
       kind: 'lost'
       id: string
       marker: RunnerEventRefused
+    }
+  | {
+      /**
+       * The note of Continue, at its place in the chat: the member who
+       * pressed it, the new branch, and its base. It belongs to no turn.
+       */
+      kind: 'continued'
+      id: string
+      member: MessageSender
+      branch: string
+      baseBranch: string
     }
 
 export interface RunningTurn {
@@ -90,6 +101,29 @@ export const emptyTranscript: Transcript = {
 }
 
 /**
+ * Applies the note of Continue at its place in the event order. Each new
+ * branch has one note in a session, so a repeat of the note replaces it.
+ */
+function foldContinued(
+  transcript: Transcript,
+  event: Extract<ChatEvent, { type: 'workspace.continued' }>,
+): Transcript {
+  const item: TranscriptItem = {
+    kind: 'continued',
+    id: continuedKey(event.branch),
+    member: event.member,
+    branch: event.branch,
+    baseBranch: event.baseBranch,
+  }
+  const index = transcript.items.findIndex((entry) => entry.id === item.id)
+  const items =
+    index < 0
+      ? [...transcript.items, item]
+      : replaceAt(transcript.items, index, item)
+  return { ...transcript, items }
+}
+
+/**
  * Applies one chat event of a session to its transcript. The chat shows only
  * the messages that people sent. A message ID that no accepted message has,
  * such as one that the agent SDK added, shows nothing. A session record ends
@@ -103,6 +137,8 @@ export function foldEvent(
   late = false,
 ): Transcript {
   switch (event.type) {
+    case 'workspace.continued':
+      return foldContinued(transcript, event)
     case 'session.updated':
       return foldRecord(transcript, event.session)
     case 'runner.event-refused':

@@ -13,7 +13,6 @@ it('finishes each summary copy before the next refresh reads GitHub', async () =
       baseBranch: 'main',
       updatedAt: 1,
       pullRequest: null,
-      createPullRequestUrl: null,
     },
     checks: { state: 'waiting-for-pull-request', checks: [] },
     headSha: null,
@@ -24,7 +23,6 @@ it('finishes each summary copy before the next refresh reads GitHub', async () =
       ...first.banner,
       state: 'none',
       pullRequest: null,
-      createPullRequestUrl: 'https://github.com/a/b/compare/main...changes',
     },
   }
   const copied: GitHubSnapshot[] = []
