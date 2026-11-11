@@ -129,12 +129,15 @@ decisions 2 and 3. Its report is in
 - Stop, a shutdown, a model change, and a message during the wait work as
   they do for any running turn.
 
-Draft of the note. It follows the naming rules of the instructions, so it
+The note follows the naming rules of the instructions, so it
 names neither Boat nor the product of the agent SDK.
 
 ```text
-Background work still runs: <one line for each task or wake-up>.
-This turn stays open while it runs, for up to 2 hours.
+Background work still runs:
+- Task <id>: <description>
+- Wake-up <id> (<schedule>): <prompt>
+This turn stays open while it runs, for up to 2 hours from the first wait.
+A member message during a wait starts the count again.
 You get a notification when each task ends or each wake-up fires.
 Stop each task that you do not need, such as a dev server, with TaskStop.
 Delete each wake-up that you do not need with CronDelete.
@@ -229,6 +232,22 @@ Design calls:
 - 11 November 2026, the non-UI implementor's call: an early timer callback
   re-arms only the remaining delay. Reason: a backwards clock adjustment
   must not remove the only deadline timer.
+
+- 11 November 2026, the non-UI implementor's call: the active turn owns
+  named task and wake-up IDs across provider handoffs. Reason: a process
+  restart must not give a second note for the same work.
+- 11 November 2026, the non-UI implementor's call: tasks and wake-ups use
+  separate ID namespaces, and only live work enters the set. Reason:
+  an excluded task must retain its first note if it becomes live later.
+- 11 November 2026, the non-UI implementor's call: a closed provider's
+  hook cannot consume new IDs or give guidance. Reason: a late callback
+  must not suppress the current provider's note.
+- 11 November 2026, the non-UI implementor's call: whitespace in each
+  work label becomes one space. Reason: each listed task and wake-up
+  stays on one line.
+- 11 November 2026, the non-UI implementor's call: the note names the
+  first wait and the member-message reset. Reason: the short guidance
+  must state the approved count and its exception accurately.
 
 Risks:
 
@@ -326,13 +345,17 @@ The pinned program proof uses scripted replies from a local model endpoint.
 
 Depends on: 4
 
-- [ ] Register the Stop hook and give the note when the turn has new
+- [x] Register the Stop hook and give the note when the turn has new
       live work.
-- [ ] Add runner tests: one note for each new task set, no note without
+- [x] Add runner tests: one note for each new task set, no note without
       live work, and no second note for the same work.
-- [ ] Run the real Claude program once: the agent gets the note, stops a
+- [x] Run the real Claude program once: the agent gets the note, stops a
       dev server with `TaskStop`, and deletes a wake-up with `CronDelete`.
       Save the evidence beside the earlier one.
+
+Evidence: `.context/background-work-keeps-turn-open/milestone-5-report.md`.
+The real program received the note and completed TaskStop and CronDelete
+before its single turn end, with scripted local model replies.
 
 ## Milestone 6: The line of the end reason in the chat
 

@@ -37,6 +37,7 @@ export interface ActiveTurn {
   controller: AbortController
   files: readonly ChangedFile[] | null
   background: BackgroundWait | null
+  backgroundNoteIds: Set<string>
 }
 
 export interface SessionRuntime {
@@ -132,6 +133,7 @@ export async function startProvider(
         warn: options.warn,
         signal,
         lifetime,
+        backgroundNoteIds: turn.backgroundNoteIds,
       }),
     dispose,
   )

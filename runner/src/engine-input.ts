@@ -114,6 +114,7 @@ export async function inputCommand(
     baseline: null,
     controller,
     files: null,
+    backgroundNoteIds: new Set(),
     background:
       session.agent === 'claude'
         ? new BackgroundWait(

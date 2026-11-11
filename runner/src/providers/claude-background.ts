@@ -5,6 +5,7 @@ import type { ProviderEvent } from './types'
 /** Process-local level signals. A removed task can still have a queued reply. */
 export class ClaudeBackground {
   private tasks = new Set<string>()
+  private ambient = new Set<string>()
   private crons: readonly SessionCronSummary[] = []
   private idle = false
   private readonly emit: (event: ProviderEvent) => void
@@ -26,6 +27,10 @@ export class ClaudeBackground {
     this.waited = false
   }
 
+  isAmbient(id: string): boolean {
+    return this.ambient.has(id)
+  }
+
   stop(crons: readonly SessionCronSummary[]): void {
     this.idle = false
     this.emit({ type: 'activity', idle: false })
@@ -45,6 +50,7 @@ export class ClaudeBackground {
     if (input.subtype !== 'background_tasks_changed') return false
     const all = new Set<string>()
     const live = new Set<string>()
+    const ambient = new Set<string>()
     for (const value of Array.isArray(input.tasks) ? input.tasks : []) {
       if (typeof value !== 'object' || value === null || !('task_id' in value))
         continue
@@ -52,10 +58,12 @@ export class ClaudeBackground {
       all.add(value.task_id)
       if (!('ambient' in value) || value.ambient !== true)
         live.add(value.task_id)
+      else ambient.add(value.task_id)
     }
     // Becoming ambient needs no notification. Removal can precede its wake-up.
     if ([...this.tasks].some((id) => !all.has(id))) this.idle = false
     this.tasks = live
+    this.ambient = ambient
     this.publish()
     return true
   }

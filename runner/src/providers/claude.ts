@@ -10,6 +10,7 @@ import {
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeBackground } from './claude-background'
+import { ClaudeBackgroundNote } from './claude-background-note'
 import { ClaudeInputWindow } from './claude-input-window'
 import { spawnClaudeProcess } from './claude-process'
 import { writeClaudeProfile } from './claude-profile'
@@ -78,6 +79,10 @@ export function createClaudeFactory(
     } else env.ANTHROPIC_BASE_URL = options.endpoint
     const input = new ClaudeInputWindow()
     const background = new ClaudeBackground(options.event)
+    const note = new ClaudeBackgroundNote(
+      (id) => background.isAmbient(id),
+      options.backgroundNoteIds,
+    )
     env.CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS = '1'
     let resultReceived = false
     const mapper = new ClaudeEvents(
@@ -104,8 +109,21 @@ export function createClaudeFactory(
               {
                 hooks: [
                   async (hook) => {
-                    if (hook.hook_event_name === 'Stop' && !hook.agent_id)
+                    if (
+                      !closed &&
+                      hook.hook_event_name === 'Stop' &&
+                      !hook.agent_id
+                    ) {
                       background.stop(hook.session_crons ?? [])
+                      const context = note.context(hook)
+                      if (context !== undefined)
+                        return {
+                          hookSpecificOutput: {
+                            hookEventName: 'Stop',
+                            additionalContext: context,
+                          },
+                        }
+                    }
                     return {}
                   },
                 ],

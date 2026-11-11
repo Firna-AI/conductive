@@ -62,6 +62,8 @@ export interface ProviderOptions {
   warn: (message: string) => void
   signal?: AbortSignal
   lifetime?: ProviderLifetime
+  /** Work already named by the Stop hook of this turn, across process handoffs. */
+  backgroundNoteIds?: Set<string>
 }
 
 export type ProviderFactory = (
