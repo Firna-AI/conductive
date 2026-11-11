@@ -341,33 +341,35 @@ forward session pages stay until Milestone 3 moves the browser.
 
 - [x] Merge `main` into this branch after option A of item 1 merges.
       Commit `3b7635ed`.
-- [ ] Write the tests first, and see each fail before the change:
-  - [ ] The first page holds the newest events of the session through the
+- [x] Write the tests first, and see each fail before the change:
+  - [x] The first page holds the newest events of the session through the
         cutoff, in event order.
-  - [ ] Each later page moves back from its cursor. It skips the events of
+  - [x] Each later page moves back from its cursor. It skips the events of
         other sessions and of the workspace.
-  - [ ] The last page ends at the oldest event of the session.
-  - [ ] Each page keeps the scan limit and the size limit, and each page
+  - [x] The last page ends at the oldest event of the session.
+  - [x] Each page keeps the scan limit and the size limit, and each page
         moves the cursor back.
-  - [ ] An answer that completed before the cutoff shows its full text once,
+  - [x] An answer that completed before the cutoff shows its full text once,
         at its first place, across the pages.
-  - [ ] A request for a session that the member cannot reach gets the same
+  - [x] A request for a session that the member cannot reach gets the same
         refusal as the forward read.
-- [ ] Add the newest-first read to `HistoryPages` in
+- [x] Add the newest-first read to `HistoryPages` in
       `worker/chat/history-pages.ts`, with the `BROWSER_PAGE_LIMITS` of the
       forward read. Move it to its own file when `history-pages.ts` would
       pass 300 lines.
-- [ ] Accept the newest-first query and its cursor on the history route in
+- [x] Accept the newest-first query and its cursor on the history route in
       `worker/chat/http-routes.ts`. Keep the session check before the read.
-- [ ] Give the newest-first page its own response type and reader, beside
+- [x] Give the newest-first page its own response type and reader, beside
       `ChatHistoryResponse` in `src/shared/events.ts` and
       `readStoredEvents` in `src/chat/api/read-workspace.ts`. The replay
       of the events socket keeps `ChatHistoryResponse`.
-- [ ] A newest-first page with an earlier page sets `hasMore: true` and
+- [x] A newest-first page with an earlier page sets `hasMore: true` and
       names its cursor in a new field. So an old reader refuses the page
       and never shows a partial chat as complete.
-- [ ] Add the newest-first query to `chatHistoryPath`.
-- [ ] Update `worker/chat/history.md`.
+- [x] Add the newest-first query to `chatHistoryPath`.
+- [x] Update `worker/chat/history.md`.
+- Evidence: `.context/chat-history-newest-first/milestone-2/` and
+  `.context/chat-history-newest-first/reports/m2-worker.md`.
 
 ## Milestone 3: Newest-first history load in the browser
 

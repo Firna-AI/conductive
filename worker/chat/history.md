@@ -88,5 +88,43 @@ streams, and the order of the runner commands.
   command. The first end of a turn removes each command of that turn. When
   a failed file copy ends a running turn, it then saves one `interrupt` for
   that turn, as [Chat attachments](attachments.md#dispatch) says.
+
 - A new `model` command replaces the pending `model` command of its
   session.
+
+## Session history pages
+
+The browser history route checks the requested session before it reads
+history. A request with `order=newest` reads the pages of that session
+backwards. A request without that flag keeps the forward read.
+[`chatHistoryPath`](../../src/shared/events.ts) accepts a newest-first
+options object in place of its `after` number. That object has
+`order: 'newest'` and an optional `beforeEventNumber`.
+
+The first reverse page includes the cutoff event. A later page takes
+`before`, an exclusive upper bound. Each page takes the same `through`
+cutoff. The response holds its events in ascending event order.
+`NewestChatHistoryResponse` names the next cursor as
+`nextBeforeEventNumber` while `hasMore` is true. It has no
+`nextAfterEventNumber`.
+
+`HistoryPages.readNewest` prepares the compaction index before it reads.
+[`history-newest-pages.ts`](history-newest-pages.ts) lists stored events
+with `reverse: true`. It counts skipped workspace and other-session events
+against the scan limit. It projects session events through the fixed
+cutoff before it counts their JSON bytes. Each page takes at least one
+stored step, also when that event exceeds its byte budget. The cursor
+names the last stored step, also when the page has no shown events.
+A one-row lookahead checks for an earlier stored event before the response
+sets `hasMore`. This check avoids an extra page when compaction removed
+the oldest storage keys. It projects no event.
+
+The route uses `BROWSER_PAGE_LIMITS`: 2,048 stored steps or 4 MiB of shown
+events. `ChatTransaction.history` takes the session options as its first
+argument for a reverse read. Its numeric first argument keeps the forward
+read. The events socket and the other internal readers keep that read.
+
+[`readNewestStoredEvents`](../../src/chat/api/read-workspace.ts) reads the
+reverse response. `ChatHistoryResponse` and `readStoredEvents` keep the
+forward response. The forward reader refuses a partial reverse page
+because that page has no forward cursor.

@@ -1,9 +1,11 @@
 import type {
   ChatHistoryResponse,
+  NewestChatHistoryResponse,
   WorkspaceEventEnvelope,
   WorkspaceEvent,
 } from './workspace-events'
 import { HistoryCompaction } from './history-compaction'
+import { readNewestHistory } from './history-newest-pages'
 import {
   deleteHistoryEvent,
   loadHistoryEvent,
@@ -58,7 +60,9 @@ export const BROWSER_PAGE_LIMITS: PageLimits = {
 /** The session of a page, and the limits that end the page. */
 export interface SessionPage {
   sessionId: string
-  /** One storage list when absent. */
+  /** The exclusive upper bound of a newest-first page. */
+  before?: number
+  /** Forward reads use one storage list when absent. */
   limits?: PageLimits
 }
 
@@ -111,16 +115,42 @@ export class HistoryPages {
     await this.data.put(POSITION_THROUGH, through)
   }
 
+  /** Prepares compaction through one cutoff, then reads a session backwards. */
+  async readNewest(
+    before: number | undefined,
+    through: number,
+    session: SessionPage,
+  ): Promise<NewestChatHistoryResponse> {
+    await this.prepare(through)
+    return readNewestHistory(
+      this.data,
+      before,
+      through,
+      session.limits ?? BROWSER_PAGE_LIMITS,
+      (stored) => this.shown(stored, through, session.sessionId),
+    )
+  }
+
   /**
    * Reads the page of the history after `after`, through `through`. The
    * page holds the events of the whole workspace in one storage list, or
    * the events of one session within the limits of `session`.
+   * Session options in place of `after` select a newest-first page.
    */
-  async read(
-    after: number,
+  read<Cursor extends number | SessionPage>(
+    after: Cursor,
     through: number,
     session?: SessionPage,
-  ): Promise<ChatHistoryResponse> {
+  ): Promise<
+    Cursor extends number ? ChatHistoryResponse : NewestChatHistoryResponse
+  >
+  async read(
+    after: number | SessionPage,
+    through: number,
+    session?: SessionPage,
+  ): Promise<ChatHistoryResponse | NewestChatHistoryResponse> {
+    if (typeof after !== 'number')
+      return this.readNewest(after.before, through, after)
     await this.prepare(through)
     const sessionId = session?.sessionId
     const limits = session?.limits ?? LIST_PAGE_LIMITS

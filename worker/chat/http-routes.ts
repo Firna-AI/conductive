@@ -44,13 +44,20 @@ export async function chatRoute(
     const sessionId = identifier(url.searchParams.get('sessionId'))
     await operation.read((view) => sessionFor(view, sessionId))
     const through = url.searchParams.get('through')
-    const history = await operation.read((view) =>
-      view.history(
-        afterNumber(url),
-        through === null ? undefined : counter(Number(through)),
-        { sessionId, limits: BROWSER_PAGE_LIMITS },
-      ),
-    )
+    const cutoff = through === null ? undefined : counter(Number(through))
+    const session = { sessionId, limits: BROWSER_PAGE_LIMITS }
+    const history = await operation.read(async (view) => {
+      if (url.searchParams.get('order') !== 'newest')
+        return view.history(afterNumber(url), cutoff, session)
+      const before = url.searchParams.get('before')
+      return view.history(
+        {
+          ...session,
+          before: before === null ? undefined : counter(Number(before)),
+        },
+        cutoff,
+      )
+    })
     return Response.json(presentWorkspaceHistory(history, presentation))
   }
   if (suffix === '/sessions') {

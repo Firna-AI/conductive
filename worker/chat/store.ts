@@ -162,9 +162,11 @@ export class ChatTransaction extends ChatRecords {
   saveCursor(streamId: string, through: number): Promise<void> {
     return this.data.put(key('cursor', streamId), through)
   }
-  history(after: number, through = this.through, session?: SessionPage) {
-    return this.pages.read(after, Math.min(through, this.through), session)
-  }
+  history = <Cursor extends number | SessionPage>(
+    after: Cursor,
+    through = this.through,
+    session?: SessionPage,
+  ) => this.pages.read(after, Math.min(through, this.through), session)
 
   async emit(
     event: WorkspaceEvent,
