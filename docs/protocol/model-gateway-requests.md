@@ -17,14 +17,26 @@ decision number names a decision of the change that adds the gateway, as
 ## Requests and answers
 
 - The upstream is Anthropic for a Claude subscription token or an
-  Anthropic API key. It is OpenAI for an OpenAI API key. It is the endpoint
+  Anthropic API key. It is OpenAI for an OpenAI API key or a ChatGPT sign-in. It is the endpoint
   of the login for an own endpoint login, as [Own endpoints](#own-endpoints)
   says.
-- [Agent logins](tokens-and-secrets.md#agent-logins) states that both
-  providers confirmed this use of their logins.
-- The gateway forwards only a fixed list of model routes for each agent.
+- [Agent logins](tokens-and-secrets.md#agent-logins) states which login
+  kinds the providers confirmed, and the risks of a ChatGPT sign-in.
+- The gateway forwards only a fixed list of routes for each agent and login kind.
   Examples are the Messages API of Anthropic and the Responses API of
   OpenAI.
+- A ChatGPT sign-in has only these gateway routes:
+  - `GET /backend-api/wham/config/bundle` on `chatgpt.com`
+  - `GET /backend-api/wham/accounts/check` on `chatgpt.com`
+  - `GET /backend-api/codex/models` on `chatgpt.com`
+  - `POST /backend-api/codex/responses` on the workspace backend that
+    OpenAI selects, or `chatgpt.com` when routing has no constraint
+- For this kind, the gateway accepts the ChatGPT account and Codex headers
+  that these requests need. It gets the routing header from OpenAI.
+- A routed backend must be an HTTPS origin with no user credentials,
+  path, query, or fragment. Failed or invalid routing stops the request.
+- The gateway refuses WebSocket upgrades. Codex then uses HTTP streaming.
+  The runner turns off request compression for ChatGPT turns.
 - The gateway refuses every other route, with no call to the upstream.
 - A pass-through of every path was rejected, because sandbox code could
   then use the login on every API of the provider.
@@ -47,7 +59,12 @@ decision number names a decision of the change that adds the gateway, as
 - The gateway sends back only allowed response headers.
 - The gateway passes each request body unchanged. It passes each answer
   body unchanged.
+- In an account-check answer, the gateway removes routed origins and routing
+  constraints. Codex stays on the gateway while the Worker follows real routing.
 - An error body also passes unchanged, unless it holds the real login.
+- For a ChatGPT sign-in, the gateway never passes on an OpenAI 401.
+  [How the agents reach the gateway](model-gateway.md#how-the-agents-reach-the-gateway)
+  states its recovery and terminal answers.
 - On the route of Codex, the gateway refuses a request whose body is not
   one JSON object, or is encoded. It also refuses a request whose
   top-level `background` field holds any value except `false` (gateway
@@ -77,6 +94,10 @@ decision number names a decision of the change that adds the gateway, as
   upstream's API, with a stable error code. A body above its limit gets
   the answer that [Request bodies](access-and-security.md#request-bodies)
   gives.
+
+- An invalid turn token gets HTTP 403 on a ChatGPT route, with the same
+  code and cause. Claude and API-key routes keep HTTP 401.
+- Reason: a ChatGPT 401 would make Codex try to renew its placeholder.
 
 ## Own endpoints
 
@@ -129,8 +150,8 @@ decision number names a decision of the change that adds the gateway, as
   could then spend the login for minutes after the turn.
 - When the agent program closes its connection, the gateway cancels the
   request to the upstream.
-- The gateway never sends a request to the upstream again by itself. The
-  agent program decides each retry.
+- The gateway can replay a body-less ChatGPT metadata request once after
+  renewal. It never copies or replays a model upload. The agent decides its resend.
 - The gateway adds no model filter, no rate limit, and no time or byte
   limit on an answer. The limits of the provider and of the agent program
   apply.

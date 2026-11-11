@@ -1,5 +1,13 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { Agent } from '../../src/shared/agents'
+import type { AgentLoginKind } from '../chat/login-kind'
+
+export const codexTokenPaths = {
+  bundle: '/backend-api/wham/config/bundle',
+  accounts: '/backend-api/wham/accounts/check',
+  models: '/backend-api/codex/models',
+  responses: '/backend-api/codex/responses',
+} as const
 
 export function gatewayPath(
   path: string,
@@ -14,11 +22,26 @@ export function gatewayPath(
   return null
 }
 
-export function allowedModelRoute(agent: Agent, method: string, path: string) {
-  return (
-    method === 'POST' &&
-    (agent === 'claude'
-      ? path === '/v1/messages' || path === '/v1/messages/count_tokens'
-      : path === '/responses')
-  )
+export function allowedModelRoute(
+  agent: Agent,
+  method: string,
+  path: string,
+  kind?: AgentLoginKind['kind'],
+) {
+  if (agent === 'claude')
+    return (
+      method === 'POST' &&
+      (path === '/v1/messages' || path === '/v1/messages/count_tokens')
+    )
+  if (kind !== 'token' && method === 'POST' && path === '/responses')
+    return true
+  if (kind !== undefined && kind !== 'token') return false
+  return method === 'POST'
+    ? path === codexTokenPaths.responses
+    : method === 'GET' &&
+        [
+          codexTokenPaths.bundle,
+          codexTokenPaths.accounts,
+          codexTokenPaths.models,
+        ].some((allowed) => path === allowed)
 }

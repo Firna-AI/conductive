@@ -1,5 +1,7 @@
 import type { Agent } from '../../src/shared/agents'
 import type { AppEnv } from '../env'
+import { CODEX_RECONNECT_CAUSE, parseCodexTokens } from '../codex-auth/tokens'
+import { failCodexRefresh } from '../codex-auth/token-store'
 import {
   workspaceTokenAccessPredicate,
   workspaceTokenResourcePredicate,
@@ -94,13 +96,28 @@ export async function readAgentLogin(
   agent: Agent,
 ): Promise<AgentLogin | null> {
   const row = await env.DB.prepare(
-    'SELECT kind, ciphertext FROM agent_logins WHERE user_id = ? AND agent = ?',
+    'SELECT kind, ciphertext FROM agent_logins WHERE user_id = ? AND agent = ? AND failure_cause IS NULL',
   )
     .bind(userId, agent)
     .first<{ kind: string; ciphertext: string }>()
   const loginKind = row ? agentLoginKind(agent, row.kind) : null
   if (!row || !loginKind) return null
-  return decryptAgentLogin(env, userId, loginKind, row.ciphertext)
+  const login = await decryptAgentLogin(env, userId, loginKind, row.ciphertext)
+  if (
+    login?.agent === 'codex' &&
+    login.kind === 'token' &&
+    !parseCodexTokens(login.secret)
+  ) {
+    await failCodexRefresh(
+      env.DB,
+      userId,
+      row.ciphertext,
+      null,
+      CODEX_RECONNECT_CAUSE,
+    )
+    return null
+  }
+  return login
 }
 
 export async function decryptAgentLogin(
@@ -115,7 +132,13 @@ export async function decryptAgentLogin(
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
   if (kind.kind !== 'endpoint')
-    return { ...kind, secret: loginSecret(plaintext) }
+    return {
+      ...kind,
+      secret:
+        kind.agent === 'codex' && kind.kind === 'token'
+          ? plaintext
+          : loginSecret(plaintext),
+    }
   const value: unknown = JSON.parse(plaintext)
   if (
     !value ||

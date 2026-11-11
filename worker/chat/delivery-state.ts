@@ -1,7 +1,7 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import { markSent } from './messages'
 import type { ChatStore } from './store'
-import type { AgentCommand, ChatDependencies, PendingCommand } from './types'
+import type { ResolvedCommand, ChatDependencies, PendingCommand } from './types'
 
 /** A login check precedes this commit. The transport send follows it. */
 export class DeliveryState {
@@ -22,7 +22,7 @@ export class DeliveryState {
   begin(
     workspaceId: string,
     command: PendingCommand,
-    outbound: AgentCommand,
+    outbound: ResolvedCommand,
   ): Promise<boolean> {
     return this.store.change(
       workspaceId,

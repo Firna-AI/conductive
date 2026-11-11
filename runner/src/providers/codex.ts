@@ -6,9 +6,12 @@ import {
   attachmentReadInstruction,
 } from './attachment-description'
 import { codexBinary } from './binaries'
+import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
+import { checkCodexGateway, codexSettings } from './codex-settings'
+import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
-import { prepareProviderHome, providerEnvironment } from './environment'
+import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
 import { providerMessage } from './message'
@@ -55,6 +58,7 @@ function input(command: ProviderInput, branches?: RunnerBranches | null) {
 
 export function createCodexFactory(
   start: StartProcess = startProcess,
+  credentials = writeCodexCredentials,
 ): ProviderFactory {
   return async (options) => {
     options.signal?.throwIfAborted()
@@ -63,13 +67,34 @@ export function createCodexFactory(
     options.signal?.throwIfAborted()
     const computer = await readComputerServer(options.warn)
     options.signal?.throwIfAborted()
+    const preparation =
+      options.credential.type === 'gateway' &&
+      options.credential.agent === 'codex' &&
+      options.credential.kind === 'token'
+        ? credentials(
+            options.home,
+            options.sessionId,
+            options.credential.token,
+            options.credential.account,
+          )
+        : Promise.resolve(null)
+    lifetime.registerCleanup(() =>
+      preparation.then(
+        (value) => value?.remove(),
+        () => {},
+      ),
+    )
+    const settings = codexSettings(options)
+    try {
+      const credential = await preparation
+      if (credential) settings.env.CODEX_HOME = credential.directory
+      options.signal?.throwIfAborted()
+    } catch (error) {
+      await lifetime.close()
+      throw error
+    }
     const configs = {
-      model_provider: 'conductive',
-      'model_providers.conductive.name': 'Conductive',
-      'model_providers.conductive.base_url': options.endpoint,
-      'model_providers.conductive.wire_api': 'responses',
-      'model_providers.conductive.requires_openai_auth': true,
-      cli_auth_credentials_store: 'ephemeral',
+      ...settings.config,
       'mcp_servers.conductive.command': WORKSPACE_TOOLS_MCP.command,
       'mcp_servers.conductive.args': WORKSPACE_TOOLS_MCP.args,
       'mcp_servers.conductive.env_vars': Object.values(TOOL_ENV),
@@ -82,47 +107,54 @@ export function createCodexFactory(
           }
         : {}),
     }
-    const args = [
-      codexBinary(),
-      'app-server',
-      ...Object.entries(configs).flatMap(([key, value]) => [
-        '-c',
-        `${key}=${JSON.stringify(value)}`,
-      ]),
-    ]
     let activeTurn: string | null = null
     let userIds: string[] = []
     let choice = options.choice
     let activeChoice = choice
     let closed = false
-    const rpc = new JsonRpc(
-      start({
-        command: process.execPath,
-        args,
-        cwd: options.cwd,
-        env: providerEnvironment(
-          options.home,
-          options.tools,
-          options.commitAuthor,
-        ),
-        signal: options.signal,
-        lifetime,
-      }),
-      (method, params) => {
-        if (method === 'turn/started')
-          activeTurn = string(object(object(params).turn).id)
-        codexNotification(method, params, userIds, options.event)
-        if (method === 'turn/completed') activeTurn = null
-      },
-      () => {
-        if (!closed)
-          options.event({
-            type: 'failed',
-            code: 'agent_exited',
-            message: 'The agent process ended.',
-          })
-      },
-    )
+    let rpc: JsonRpc
+    try {
+      const args = [
+        codexBinary(),
+        'app-server',
+        ...Object.entries(configs).flatMap(([key, value]) => [
+          '-c',
+          `${key}=${JSON.stringify(value)}`,
+        ]),
+      ]
+      rpc = new JsonRpc(
+        start({
+          command: process.execPath,
+          args,
+          cwd: options.cwd,
+          env: settings.env,
+          signal: options.signal,
+          lifetime,
+        }),
+        (method, params) => {
+          if (method === 'turn/started')
+            activeTurn = string(object(object(params).turn).id)
+          codexNotification(method, params, userIds, options.event)
+          if (method === 'turn/completed') activeTurn = null
+        },
+        () => {
+          void lifetime.close().then(
+            () => {
+              if (!closed)
+                options.event({
+                  type: 'failed',
+                  code: 'agent_exited',
+                  message: 'The agent process ended.',
+                })
+            },
+            (error: unknown) => options.event(failureCause(error)),
+          )
+        },
+      )
+    } catch (error) {
+      await lifetime.close()
+      throw error
+    }
     let closing: Promise<void> | null = null
     const close = () => {
       closed = true
@@ -147,30 +179,20 @@ export function createCodexFactory(
         capabilities: { experimentalApi: true },
       })
       rpc.notify('initialized')
-      await rpc.request('account/login/start', {
-        type: 'apiKey',
-        apiKey:
-          options.credential.type === 'gateway'
-            ? options.credential.token
-            : options.credential.login.secret,
-      })
-      const response = object(
-        await rpc.request(
-          options.conversationId ? 'thread/resume' : 'thread/start',
-          {
-            ...(options.conversationId
-              ? { threadId: options.conversationId }
-              : {}),
-            model: choice.model,
-            modelProvider: 'conductive',
-            cwd: options.cwd,
-            developerInstructions: options.instructions,
-            approvalPolicy: 'never',
-            sandbox: 'danger-full-access',
-          },
-        ),
+      if (settings.tokenMode) await checkCodexGateway(rpc, options.endpoint)
+      else
+        await rpc.request('account/login/start', {
+          type: 'apiKey',
+          apiKey:
+            options.credential.type === 'gateway'
+              ? options.credential.token
+              : options.credential.login.secret,
+        })
+      const threadId = await openCodexThread(
+        rpc,
+        options,
+        settings.modelProvider,
       )
-      const threadId = string(object(response.thread).id)
       options.event({ type: 'conversation', id: threadId })
       return {
         send: async (command) => {

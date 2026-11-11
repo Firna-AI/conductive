@@ -15,7 +15,7 @@ export async function gatewayLogin(
     `SELECT l.kind, l.ciphertext, l.updated_at AS updatedAt
      FROM agent_logins l JOIN workspaces w ON w.id = ?
      WHERE l.user_id = ? AND l.agent = ?
-       AND w.state NOT IN ('stopped', 'archived', 'error')`,
+       AND w.state NOT IN ('stopped', 'archived', 'error') AND l.failure_cause IS NULL`,
   )
     .bind(workspaceId, starterId, agent)
     .first<{ kind: string; ciphertext: string; updatedAt: number }>()

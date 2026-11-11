@@ -12,6 +12,11 @@ to each open tab. A tab is one browser connection to the events socket.
 requirements. This README names the code, its guarantees, and the seams
 for other milestones.
 
+A Codex ChatGPT login stores its structured sign-in only in the Worker.
+Version 2 delivery gives the runner a turn token and public account claims.
+The [Codex authentication backend](../codex-auth/README.md) renews the real
+tokens. A failed renewal makes the login unavailable to chat dispatch.
+
 ## Entry points
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
@@ -212,6 +217,10 @@ The public cause names the missing model and no host.
 Native logins keep their existing cause text.
 `endpoint-models.test.ts` checks background dispatch, owner privacy, and both agents' failure text.
 `endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for invalid addresses and protocol 1.
+
+`runner-command-preparation.ts` owns the login and runner capability checks
+before dispatch. Own endpoints require protocol 2 and support for the
+agent's API-key mode. `runner-delivery.ts` owns the prepared command's send.
 
 ## Related docs
 

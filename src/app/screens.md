@@ -40,46 +40,8 @@ the command palette and of the Feedback dialog.
   Continue to workspaces. Without invitations, or after Continue to
   workspaces, it opens Get started or the org of Get started. The
   `?invite=` link of an invitation email leads there.
-- The account has two tabs, General and Preferences, as the org settings
-  have. Each tab is a link with its own address. General holds the
-  sign-in, This Mac, GitHub, and the agents. The `?connect=` address of an
-  agent opens its Connect form on General. Preferences holds the New
-  workspaces section: Model and effort, and
-  [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
-- The account of the Mac app shows This Mac after the sign-in section. A
-  browser shows none and asks no Mac.
-- Each connected login of the account shows its share switch, "Let other
-  members use this login", and Get started shows none. The switch saves
-  at once through `AccountModel.setNoReuse`. While it saves, it shows the
-  new value and takes no other change. A failed save shows its cause under
-  the switch until the next change, and the switch shows the saved value.
-  A share reply that a later save or remove of the same login overtook does
-  not show, so a removed login stays removed.
-- The Connect form of an agent offers each kind of its login: Claude a
-  subscription token, an API key, or an own endpoint, and Codex an API key
-  or an own endpoint. On a phone the kinds wrap onto two lines. Get
-  started shows the same form.
-- The own endpoint form names the API that the endpoint must serve, with
-  the models of the app for the agent from `GET /api/models`. The form
-  checks the address with the rule of the save, as
-  [Own endpoint logins](../../docs/protocol/tokens-and-secrets.md#own-endpoint-logins)
-  says. The hint under the address names the address of the requests, and
-  first the address that the form saves when the rule changes the typed
-  one. Connect with an address that the rule refuses shows the refusal at
-  the address and sends nothing. A refusal of the save shows there too.
-  The key stays in its field.
-- A connected own endpoint login shows "Own endpoint at" its host under
-  its row. Under that, the account names each app model that the last model
-  list of the endpoint does not name, with its model ID, the time of the
-  last read, and Refresh. A list that names every app model of the agent
-  shows no line. A list that names none of them says that the pickers show
-  all of them. The save of the login and Refresh read the account again,
-  because only the account holds the list.
-- The model pickers of the person follow these lists: the default model of
-  Preferences, New workspace, the routine editor, and the composer of a
-  message on the person's own login. Each picker keeps the model that it
-  shows. `offeredModels` in `endpoint-models.ts` holds the rule, and
-  `useOfferedModels` in `../shell/context.ts` gives it to the shell.
+- [Account and agent screens](account-screens.md) describes the account tabs,
+  sharing, own endpoint model lists, and the ChatGPT sign-in.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the

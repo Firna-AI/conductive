@@ -9,10 +9,8 @@ export function agentLoginKind(
   agent: Agent,
   kind: string,
 ): AgentLoginKind | null {
-  if (kind === 'endpoint') return { agent, kind }
-  if (agent === 'claude' && (kind === 'token' || kind === 'api-key'))
+  if (kind === 'endpoint' || kind === 'token' || kind === 'api-key')
     return { agent, kind }
-  if (agent === 'codex' && kind === 'api-key') return { agent, kind }
   return null
 }
 

@@ -68,6 +68,7 @@ export function createClaudeFactory(
     )
     if (
       options.credential.type === 'gateway' &&
+      options.credential.agent === 'claude' &&
       (options.credential.kind === 'token' ||
         options.credential.promptCacheTtl === '1h')
     )

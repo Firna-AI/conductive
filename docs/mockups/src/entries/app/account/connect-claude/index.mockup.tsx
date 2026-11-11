@@ -17,4 +17,15 @@ export const connectClaude = defineScreen({
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),
+  variants: [
+    {
+      slug: 'api-key',
+      title: 'Connect Claude with an API key',
+      description:
+        'The user chose API key in the switch of the Claude form. The form asks for an Anthropic API key, with a link to the page where Anthropic makes one. Connect leads to the account.',
+      rationale:
+        'Decisions 24 and 37 allow an Anthropic API key for Claude. The app already offers this form, so the catalogue draws it too.',
+      props: { form: 'claude-api-key' },
+    },
+  ],
 })

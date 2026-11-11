@@ -8,26 +8,19 @@ import {
   AgentsSection,
   GitHubSection,
   SignInSection,
-  type OpenAgentForm,
 } from '../components/settings/AccountSections'
-import type { EndpointEntry } from '../components/settings/EndpointFields'
+import { signInSteps } from '../components/settings/chatGptSignInCopy'
 import { inviteStates } from '../components/settings/inviteCodeCopy'
 import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { agentKeys, type AgentKey } from '../fixtures/agents'
-import {
-  accountLogins,
-  endpointLogins,
-  unlistedModelLogins,
-  type AgentLogin,
-  type AgentLogins,
-} from '../fixtures/logins'
+import { accountLogins, loginKinds } from '../fixtures/logins'
 import { account, orgList, orgs } from '../fixtures/orgs'
 import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
+import { agentsFor } from './accountAgents'
 
 export const accountSchema = {
   type: 'object',
@@ -35,7 +28,10 @@ export const accountSchema = {
   required: [
     'tab',
     'connections',
+    'codexLogin',
+    'codexUse',
     'form',
+    'codexSignIn',
     'view',
     'save',
     'shareChange',
@@ -51,11 +47,29 @@ export const accountSchema = {
     tab: { enum: ['general', 'preferences'] },
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
+    /** The kind of the Codex login while Codex is connected. */
+    codexLogin: { enum: loginKinds },
     /**
-     * The Connect form that is open. Its agent is not connected yet, and the
+     * Whether the app can still use the Codex login while Codex is
+     * connected. A ChatGPT sign-in that OpenAI did not renew is not usable,
+     * and its row shows the cause with Sign in again.
+     */
+    codexUse: { enum: ['usable', 'not-usable'] },
+    /**
+     * The Connect form that is open, and the kind that its switch selects:
+     * the subscription token or the API key of Claude, or the API key or
+     * the ChatGPT plan of Codex. Its agent is not connected yet, and the
      * other agent is.
      */
-    form: { enum: ['none', 'claude', 'codex'] },
+    form: {
+      enum: ['none', 'claude', 'claude-api-key', 'codex', 'codex-token'],
+    },
+    /**
+     * The step of the ChatGPT sign-in while the form of Codex has ChatGPT
+     * plan selected: before the start, the code while the page waits for
+     * the sign-in, the code expired, or the sign-in refused.
+     */
+    codexSignIn: { enum: signInSteps },
     /** How New workspace opens on a computer: as the page, or as a dialog. */
     view: { enum: ['page', 'dialog'] },
     /**
@@ -94,11 +108,17 @@ export const accountSchema = {
 
 export type AccountState = SchemaProps<typeof accountSchema>
 
-/** The General tab of a connected account, with no form open. */
+/**
+ * The General tab of a connected account, with no form open: Claude with a
+ * subscription token, and Codex with an API key.
+ */
 export const accountGeneral: AccountState = {
   tab: 'general',
   connections: 'connected',
+  codexLogin: accountLogins.codex.kind,
+  codexUse: 'usable',
   form: 'none',
+  codexSignIn: 'start',
   view: 'page',
   save: 'saved',
   shareChange: 'none',
@@ -111,48 +131,6 @@ const connectedRail: RailState = { orgs: orgList, current: 'account' }
 
 /** At the first run the rail has no org yet. */
 const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
-
-/** The saved logins of each state of the own endpoint login. */
-function savedLogins(ownEndpoint: AccountState['ownEndpoint']): AgentLogins {
-  if (ownEndpoint === 'none') return accountLogins
-  return ownEndpoint === 'unlisted' ? unlistedModelLogins : endpointLogins
-}
-
-/** The logins of the agents in a state, without the agent of the form. */
-function loginsFor(state: AccountState): AgentLogins {
-  const logins: Partial<Record<AgentKey, AgentLogin>> = {}
-  if (state.connections === 'not-connected') return logins
-  const saved = savedLogins(state.ownEndpoint)
-  for (const key of agentKeys) {
-    const login = saved[key]
-    if (login && key !== state.form) logins[key] = login
-  }
-  return logins
-}
-
-/** What the address field of the open own endpoint form holds in a state. */
-const endpointEntries: Partial<
-  Record<AccountState['ownEndpoint'], EndpointEntry>
-> = { form: 'empty', typed: 'typed', refused: 'refused' }
-
-/**
- * The Connect form that is open in a state. On the own endpoint kind, the
- * form leads to the logins on the proxy.
- */
-function formFor(state: AccountState): OpenAgentForm | undefined {
-  const { form, ownEndpoint } = state
-  if (form === 'none') return undefined
-  const endpoint = endpointEntries[ownEndpoint]
-  if (endpoint) {
-    return {
-      agent: form,
-      connectTo: paths.ownEndpointConnected,
-      cancel: true,
-      endpoint,
-    }
-  }
-  return { agent: form, connectTo: paths.account, cancel: true }
-}
 
 /**
  * The General tab: the GitHub sign-in, and what every org shares, the
@@ -168,13 +146,7 @@ function GeneralTab(props: { state: AccountState }) {
       <SignInSection />
       {mac ? <ThisMacSection /> : null}
       <GitHubSection connected={props.state.connections === 'connected'} />
-      <AgentsSection
-        form={formFor(props.state)}
-        logins={loginsFor(props.state)}
-        shares={{
-          notSaved: props.state.shareChange === 'not-saved' ? 'claude' : null,
-        }}
-      />
+      <AgentsSection {...agentsFor(props.state)} />
       <InviteCodeSection
         fresh={props.state.connections !== 'connected'}
         openSignUp={props.state.openSignUp === 'on'}

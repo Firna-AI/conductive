@@ -1,171 +1,34 @@
 import {
   ACCOUNT_PATHS,
-  agentLoginPath,
-  refreshAgentLoginModelsPath,
+  codexDevicePath,
   type AccountResponse,
-  type AgentLoginStatus,
-  type SaveAgentLoginRequest,
   type GitHubInstallationsResponse,
-  type SaveAgentLoginResponse,
+  type StartCodexDeviceResponse,
+  type PollCodexDeviceResponse,
   type SetDefaultModelResponse,
   type SetNewWorkspaceViewResponse,
-  type UpdateAgentLoginResponse,
 } from '../../shared/account'
-import type { Agent } from '../../shared/agents'
-import {
-  ENDPOINT_ADDRESS_ERROR,
-  readEndpointAddress,
-} from '../../shared/endpoint-address'
+import { chatGptSignInCopy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import {
   GET_STARTED_PATH,
   type GetStartedResponse,
 } from '../../shared/onboarding'
 import { coreFixtures } from '../../test-support/fixtures/core'
-import { choice, flag, nested, record } from '../api/parse'
+import { nested, record } from '../api/parse'
 import { AGENTS, readChoice, readNewWorkspaceView } from '../api/read-core'
 import type { DevBackend } from './backend'
-import { json, noContent, requiredText, RouteError, type Route } from './router'
+import { json, RouteError, type Route } from './router'
 import { completeStep } from './state'
+import {
+  loginRoutes,
+  savedLogin,
+  putLogin,
+  noReuseOf,
+} from './agent-login-routes'
 
-/** The saved status of one agent login of the account. */
-function savedLogin(backend: DevBackend, agent: Agent): AgentLoginStatus {
-  return (
-    backend.state.account.agentLogins.find((item) => item.agent === agent) ?? {
-      agent,
-      connected: false,
-    }
-  )
-}
-
-/** Puts the status of one agent login in the account, in the order of `AGENTS`. */
-function putLogin(backend: DevBackend, login: AgentLoginStatus): void {
-  backend.state.account = {
-    ...backend.state.account,
-    agentLogins: AGENTS.map((agent): AgentLoginStatus =>
-      agent === login.agent ? login : savedLogin(backend, agent),
-    ),
-  }
-}
-
-/**
- * Whether a saved login keeps other members out of the sessions of its
- * owner, as the Worker decides. A new secret of the same kind keeps the
- * choice. A new login, or one of another kind, takes the default of its
- * kind: on for a subscription token, off for an API key or an own endpoint.
- */
-function noReuseOf(
-  saved: AgentLoginStatus,
-  kind: SaveAgentLoginRequest['kind'],
-): boolean {
-  return saved.connected && saved.kind === kind
-    ? saved.noReuse
-    : kind === 'token'
-}
-
-/**
- * Save an agent login. The secret goes nowhere, and the answer holds only
- * the login metadata and its share choice. It completes the last step
- * of Get started.
- */
-function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
-  const fields = record(body)
-  choice(fields, 'agent', [agent])
-  requiredText(fields, 'secret')
-  const updatedAt = backend.now()
-  const saved = savedLogin(backend, agent)
-  let login: AgentLoginStatus
-  if (fields.kind === 'endpoint') {
-    const address = readEndpointAddress(fields.endpoint, agent)
-    if (!address)
-      throw new RouteError(
-        400,
-        ENDPOINT_ADDRESS_ERROR.code,
-        ENDPOINT_ADDRESS_ERROR.message,
-      )
-    login = {
-      agent,
-      connected: true,
-      kind: 'endpoint',
-      host: address.host,
-      noReuse: noReuseOf(saved, 'endpoint'),
-      updatedAt,
-    }
-  } else if (agent === 'codex') {
-    const kind = choice(fields, 'kind', ['api-key'])
-    const noReuse = noReuseOf(saved, kind)
-    login = { agent, connected: true, kind, noReuse, updatedAt }
-  } else {
-    const kind = choice(fields, 'kind', ['token', 'api-key'])
-    const noReuse = noReuseOf(saved, kind)
-    login = { agent, connected: true, kind, noReuse, updatedAt }
-  }
-  putLogin(
-    backend,
-    login.connected && login.kind === 'endpoint'
-      ? {
-          ...login,
-          modelList: { missing: [], checkedAt: updatedAt },
-        }
-      : login,
-  )
-  completeStep(backend.state, 'agent-login')
-  return json(login satisfies SaveAgentLoginResponse)
-}
-
-/**
- * Changes the share choice of a login, without its secret, and answers
- * with the saved status. A login that is gone answers as not connected.
- * With `shareSave=fail`, the change fails as a failed save of the Worker.
- */
-function updateLogin(
-  backend: DevBackend,
-  agent: Agent,
-  body: unknown,
-): Response {
-  const noReuse = flag(record(body), 'noReuse')
-  if (backend.state.shareSaveFails) throw new Error('The save failed.')
-  const saved = savedLogin(backend, agent)
-  const login: UpdateAgentLoginResponse = saved.connected
-    ? { ...saved, noReuse }
-    : saved
-  putLogin(backend, login)
-  return json(login)
-}
-
-function loginRoutes(backend: DevBackend, agent: Agent): Route[] {
-  return [
-    {
-      method: 'POST',
-      path: refreshAgentLoginModelsPath(agent),
-      answer: () => {
-        const login = savedLogin(backend, agent)
-        if (login.connected && login.kind === 'endpoint')
-          putLogin(backend, {
-            ...login,
-            modelList: { missing: [], checkedAt: backend.now() },
-          })
-        return noContent()
-      },
-    },
-    {
-      method: 'PUT',
-      path: agentLoginPath(agent),
-      answer: ({ body }) => saveLogin(backend, agent, body),
-    },
-    {
-      method: 'PATCH',
-      path: agentLoginPath(agent),
-      answer: ({ body }) => updateLogin(backend, agent, body),
-    },
-    {
-      method: 'DELETE',
-      path: agentLoginPath(agent),
-      answer: () => {
-        putLogin(backend, { agent, connected: false })
-        return noContent()
-      },
-    },
-  ]
+function codexLoginDate(backend: DevBackend): number | null {
+  const login = savedLogin(backend, 'codex')
+  return login.connected ? login.updatedAt : null
 }
 
 /**
@@ -175,7 +38,79 @@ function loginRoutes(backend: DevBackend, agent: Agent): Route[] {
  */
 export function accountRoutes(backend: DevBackend): Route[] {
   const { state } = backend
+  const devices = new Map<
+    string,
+    {
+      expiresAt: number
+      loginUpdatedAt: number | null
+      state: 'waiting' | 'ready' | 'connected' | 'failed'
+    }
+  >()
+  let deviceSequence = 0
   return [
+    {
+      method: 'POST',
+      path: ACCOUNT_PATHS.codexDevice,
+      answer: () => {
+        const handle = `dev-codex-${++deviceSequence}`
+        const expiresAt = backend.now() + 900_000
+        devices.set(handle, {
+          expiresAt,
+          loginUpdatedAt: codexLoginDate(backend),
+          state: 'waiting',
+        })
+        return json({
+          handle,
+          userCode: 'WXYZ-1234',
+          verificationUrl: 'https://auth.openai.com/codex/device',
+          expiresAt,
+          pollIntervalMs: 5000,
+        } satisfies StartCodexDeviceResponse)
+      },
+    },
+    {
+      method: 'POST',
+      path: codexDevicePath(':handle'),
+      answer: ({ params }) => {
+        const device = devices.get(params.handle)
+        if (!device)
+          throw new RouteError(
+            404,
+            'codex_device_not_found',
+            'The ChatGPT sign-in is not available.',
+          )
+        let result: PollCodexDeviceResponse
+        if (device.expiresAt <= backend.now()) result = { state: 'expired' }
+        else if (
+          device.state === 'failed' ||
+          (device.state !== 'connected' &&
+            device.loginUpdatedAt !== codexLoginDate(backend))
+        ) {
+          device.state = 'failed'
+          result = {
+            state: 'failed',
+            cause: chatGptSignInCopy.causes.loginChanged,
+          }
+        } else if (device.state === 'waiting') {
+          device.state = 'ready'
+          result = { state: 'waiting', pollIntervalMs: 5000 }
+        } else {
+          if (device.state === 'ready') {
+            putLogin(backend, {
+              agent: 'codex',
+              connected: true,
+              kind: 'token',
+              noReuse: noReuseOf(savedLogin(backend, 'codex'), 'token'),
+              updatedAt: backend.now(),
+            })
+            completeStep(state, 'agent-login')
+            device.state = 'connected'
+          }
+          result = { state: 'connected', login: savedLogin(backend, 'codex') }
+        }
+        return json(result)
+      },
+    },
     {
       method: 'GET',
       path: ACCOUNT_PATHS.account,

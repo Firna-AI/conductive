@@ -100,7 +100,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         there gets only a credential that works through ${productName}
         while that turn runs. An older cloud computer starts from an earlier
         org image. ${productName} still permits older software there that
-        receives your login itself. Installing newer software in that cloud
+        receives supported agent logins themselves. A ChatGPT sign-in never
+        enters a cloud computer. ${productName} stores its tokens encrypted
+        and renews them alone. Installing newer software in that cloud
         computer does not remove this risk. A new image build gives the
         protection to each cloud computer that starts from it.
         An own endpoint's address and key never reach a cloud computer.

@@ -25,7 +25,7 @@ it('reads endpoint metadata for both agents without keeping a key or full addres
   }
 })
 
-it('requires an endpoint host and still refuses a Codex subscription token', () => {
+it('requires an endpoint host', () => {
   expect(() =>
     readLogin({
       agent: 'claude',
@@ -35,15 +35,6 @@ it('requires an endpoint host and still refuses a Codex subscription token', () 
       updatedAt: 123,
     }),
   ).toThrow(new ParseError('host is not a string.'))
-  expect(() =>
-    readLogin({
-      agent: 'codex',
-      connected: true,
-      kind: 'token',
-      noReuse: true,
-      updatedAt: 123,
-    }),
-  ).toThrow(new ParseError('kind is not one of api-key.'))
 })
 
 it('reads model-list metadata and refuses malformed IDs or times', () => {
@@ -70,4 +61,22 @@ it('reads model-list metadata and refuses malformed IDs or times', () => {
   expect(() =>
     readLogin({ ...metadata, modelList: { missing: [], checkedAt: 'bad' } }),
   ).toThrow(new ParseError('checkedAt is not a number.'))
+})
+
+it('reads a connected Codex ChatGPT sign-in with its share setting', () => {
+  expect(
+    readLogin({
+      agent: 'codex',
+      connected: true,
+      kind: 'token',
+      noReuse: true,
+      updatedAt: 123,
+    }),
+  ).toEqual({
+    agent: 'codex',
+    connected: true,
+    kind: 'token',
+    noReuse: true,
+    updatedAt: 123,
+  })
 })

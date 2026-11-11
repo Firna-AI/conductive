@@ -1,6 +1,6 @@
-import type { MacChip } from '../../docs/mockups/src/brand'
-import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList'
-import type { FeatureIconName } from './icon-shapes'
+import type { MacChip } from '../../docs/mockups/src/brand.ts'
+import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList.ts'
+import type { FeatureIconName } from './icon-shapes.ts'
 
 /**
  * The words of the site that the mockups also show: the lines that sum up
@@ -10,8 +10,9 @@ import type { FeatureIconName } from './icon-shapes'
  * the same words, icons, and pictures, in the same order.
  */
 
-/** The lines that sum up the product. Both name the browser and the Mac app. */
+/** The headline and the lines that sum up the product. */
 export const productSummary = {
+  heroTitle: 'Give every coding task its own cloud computer.',
   /**
    * The sentence under the headline of the home page. It is also the
    * description of the home page, which a search result can show.

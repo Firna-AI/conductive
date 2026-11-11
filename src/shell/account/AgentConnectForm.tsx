@@ -11,6 +11,7 @@ import type { Agent } from '../../shared/agents'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { addressProblem, EndpointFields } from './EndpointFields'
+import { ChatGptSignIn } from './ChatGptSignIn'
 import {
   agentLoginKinds,
   agentNames,
@@ -33,7 +34,7 @@ function loginRequest(
 /**
  * The form that connects an agent, open under its row: Claude with a
  * subscription token, an API key, or an own endpoint, and Codex with an
- * OpenAI API key or an own endpoint. On a phone the kinds wrap onto a
+ * OpenAI API key, a ChatGPT plan, or an own endpoint. On a phone the kinds wrap onto a
  * second line. The secret leaves the browser once, in the save. The form
  * checks the address of an own endpoint with the rule of the save, and
  * shows a refusal at the address before any request. A failed save keeps
@@ -41,6 +42,7 @@ function loginRequest(
  */
 export function AgentConnectForm(props: {
   agent: Agent
+  kind?: LoginKind
   close?: () => void
   connected: () => void
 }) {
@@ -48,7 +50,7 @@ export function AgentConnectForm(props: {
   const { field } = useControlSizes()
   const [form] = useState(() => new SecretForm())
   const kinds = agentLoginKinds[props.agent]
-  const [kind, setKind] = useState<LoginKind>(kinds[0])
+  const [kind, setKind] = useState<LoginKind>(props.kind ?? kinds[0])
   const [address, setAddress] = useState('')
   const [refusal, setRefusal] = useState<string | null>(null)
   const state = useStore(form.state)
@@ -75,54 +77,60 @@ export function AgentConnectForm(props: {
         disabled={state.saving}
         onChange={setKind}
         options={kinds.map((item) => ({
-          label: loginLabels[item],
+          label: loginLabels[props.agent][item],
           value: item,
         }))}
         size={field}
         value={kind}
         wrap
       />
-      {kind === 'endpoint' ? (
-        <EndpointFields
-          address={address}
-          agent={props.agent}
-          changeAddress={(text) => {
-            setAddress(text)
-            setRefusal(null)
-          }}
-          form={form}
-          refusal={refusal}
-          submit={submit}
-        />
+      {props.agent === 'codex' && kind === 'token' ? (
+        <ChatGptSignIn close={props.close} connected={props.connected} />
       ) : (
         <>
-          <SecretText agent={props.agent} kind={kind} />
-          <SecretField
-            agent={props.agent}
-            form={form}
-            kind={kind}
-            submit={submit}
-          />
+          {kind === 'endpoint' ? (
+            <EndpointFields
+              address={address}
+              agent={props.agent}
+              changeAddress={(text) => {
+                setAddress(text)
+                setRefusal(null)
+              }}
+              form={form}
+              refusal={refusal}
+              submit={submit}
+            />
+          ) : (
+            <>
+              <SecretText agent={props.agent} kind={kind} />
+              <SecretField
+                agent={props.agent}
+                form={form}
+                kind={kind}
+                submit={submit}
+              />
+            </>
+          )}
+          {state.error && !refusesAddress(state.error) ? (
+            <Notice
+              body={state.error.message}
+              icon={TriangleAlert}
+              title={`${agentNames[props.agent]} wasn't connected`}
+              tone="danger"
+            />
+          ) : null}
+          <div className={styles.actions}>
+            {props.close ? (
+              <ActionButton disabled={state.saving} onPress={props.close}>
+                Cancel
+              </ActionButton>
+            ) : null}
+            <ActionButton busy={state.saving} onPress={submit} tone="primary">
+              Connect
+            </ActionButton>
+          </div>
         </>
       )}
-      {state.error && !refusesAddress(state.error) ? (
-        <Notice
-          body={state.error.message}
-          icon={TriangleAlert}
-          title={`${agentNames[props.agent]} wasn't connected`}
-          tone="danger"
-        />
-      ) : null}
-      <div className={styles.actions}>
-        {props.close ? (
-          <ActionButton disabled={state.saving} onPress={props.close}>
-            Cancel
-          </ActionButton>
-        ) : null}
-        <ActionButton busy={state.saving} onPress={submit} tone="primary">
-          Connect
-        </ActionButton>
-      </div>
     </div>
   )
 }

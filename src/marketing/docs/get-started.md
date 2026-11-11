@@ -12,7 +12,7 @@ Have these ready:
 - A GitHub account.
 - GitHub read access to the repository where you will create a workspace.
 - Permission to install a GitHub App if you will set up your own org.
-- A Claude subscription token, an Anthropic API key, an OpenAI API key, or an endpoint address and key.
+- A Claude subscription token, an Anthropic API key, an OpenAI API key, a ChatGPT plan, or an endpoint address and key.
 
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
@@ -132,6 +132,7 @@ Choose the login you want to use:
 | Claude | Own endpoint | Select **Own endpoint**. Enter **Endpoint** and **API key**. |
 | Codex | OpenAI API key | Select **API key**. Paste your OpenAI API key. |
 | Codex | Own endpoint | Select **Own endpoint**. Enter **Endpoint** and **API key**. |
+| Codex | ChatGPT plan | Select **ChatGPT plan**. Select **Get a code**. Complete the ChatGPT sign-in. |
 
 For a subscription token, run this command on a computer where the `claude` command is installed:
 
@@ -160,12 +161,24 @@ Model use bills where its owner runs the endpoint.
 An own endpoint login starts with sharing on.
 Open **Account** to change **Let other members use this login**.
 
+For a ChatGPT plan, first turn on device code sign-in in your ChatGPT security settings.
+Ask your ChatGPT admin if you cannot change that setting.
+ChatGPT sign-in also works with Plus and Pro.
+Follow [Connect Codex](/docs/agent-logins#connect-codex) for the sign-in steps.
+
+- [Open ChatGPT settings](https://chatgpt.com/settings/security)
+
+Never share the code.
+Enter only a code that the Conductive page shows.
+The code expires in 15 minutes.
+
 One connected agent is enough to finish setup.
 You can connect the other later in **Account**.
 
 If your first agent request reports a login error, open **Account**.
 Remove that agent's login.
-Then connect the correct token, key, or endpoint.
+Then connect the correct token, key, account, or endpoint.
+If the Codex row shows **Signed out**, select **Sign in again** instead.
 
 - [Connect an own endpoint and check its models](/docs/agent-logins#connect-an-own-endpoint)
 - [Manage logins and sharing](/docs/agent-logins)

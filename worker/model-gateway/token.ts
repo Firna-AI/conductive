@@ -4,6 +4,8 @@ import { base64Url } from '../security/crypto'
 export interface TurnTokenState {
   nonce: string
   loginVersion: number
+  codexRecoveryUsed?: boolean
+  codexRecoveryPending?: boolean
 }
 
 export interface TurnTokenRoute {

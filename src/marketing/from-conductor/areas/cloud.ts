@@ -142,7 +142,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Sleep and wake',
     status: 'different',
-    note: 'Cloud computers stop after 30 idle minutes. Files and sessions stay. Opening a stopped workspace resumes it.',
+    note: 'Idle computers stop after 30 minutes, keep files and sessions, and resume when opened. Agent wake-ups that can keep computers running are planned.',
   },
   {
     id: 'cloud-desktop',

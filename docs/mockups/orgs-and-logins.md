@@ -117,69 +117,57 @@ plan limits.
   key for its cloud computers, and no screen asks for one or for another
   account.
 - The account connects Claude with a subscription token from
-  `claude setup-token`, an API key, or an own endpoint, and Codex with an
-  OpenAI API key or an own endpoint. `AgentConnectForm` opens under the
-  row of the agent, with a choice of the kinds of that agent. On a phone
-  the three kinds of Claude wrap onto two lines. The hint of a token or an
-  API key says that the app tests it once and never shows it again. The
-  hint of an own endpoint key promises no test. The save reads the model
-  list of the endpoint with the key, and the account page shows the
-  result, as `app/account/endpoint-models` shows. A connected login shows
-  its kind and Remove.
-- An own endpoint login sends the turns of its agent to a gateway or a
-  proxy that the user chose, from decision 1 A of the own endpoint plan.
-  The model gateway in the Worker, not the cloud computer, sends each model
-  request of those turns to the endpoint, with the key, so the cloud
-  computer gets neither. Its form asks for the address of the endpoint and
-  its key, and the app stores both encrypted. `EndpointFields` in
-  `src/components/settings/` draws the fields, as `app/account/own-endpoint`
-  and its `codex` variant show.
-  - The form says that the endpoint must serve the Anthropic Messages API
-    for Claude, or the OpenAI Responses API for Codex. It names the models
-    that the app offers. The app reads the model list of the endpoint, and
-    the owner's pickers hide each model of the app that the list does not
-    name (decision 10 G of that plan), as `app/account/endpoint-models`
-    and `app/chat/endpoint-models` show.
-  - The address is the base address of the endpoint. The placeholder gives
-    an example, without `/v1` for Claude, and with `/v1` for Codex. One
-    shared rule checks the address and builds the exact address of each
-    request from it (decision 9 E of that plan). It keeps a query, and it
-    drops a fragment, a trailing slash, and a final `/v1` of a Claude
-    address. The hint names where the requests go, through the app, from
-    the address in the field, such as https://gateway.example.com/v1/messages.
-    When the rule changes the typed address, the hint first names the
-    address that the form saves, such as "Saves as
-    https://proxy.example.com", as `app/account/own-endpoint/typed` shows.
-  - The rule accepts only an `https://` address with a public host name,
-    because the gateway calls the endpoint over the internet. It refuses
-    `localhost`, names of one label, internal names, the names of the app
-    and of its previews, and a user name or a password in the address. It
-    also refuses each IP address, IPv4 or IPv6, as the host, because a
-    fetch from the Worker to an IP address can fail (decision 13 A of that
-    plan). A host name that points to the IP address, such as
-    `136.115.241.64.sslip.io`, works when the server has a certificate for
-    that name. The form and the save use the same rule. Its refusal names
-    the rule in plain words: "Use a public https:// address with a host
-    name, without a user name or a password." The refusal takes the place
-    of the hint under the address, and the key stays in its field, as
-    `app/account/own-endpoint/refused` shows.
-  - A connected own endpoint login shows its kind with the host of its
-    endpoint under its row, such as "Own endpoint at proxy.example.com", so
-    that a phone shows both in full. It never shows the key or the full
-    address, as `app/account/own-endpoint/connected` shows. The part lives
-    in `src/components/settings/LoginEndpoint.tsx`.
-  - In a session on the own endpoint of another member, the bar of the
-    composer names the login as for every login, such as "Cal's login".
-    It names no host, because the members of an org trust each other with
-    their logins (decision 5 of the own endpoint plan, which Cal changed on
-    10 November 2026).
+  `claude setup-token` or an API key. It connects Codex with an OpenAI API
+  key or with a device code sign-in to the ChatGPT plan of the member,
+  from decision 175. `AgentConnectForm` opens under the row of the agent,
+  as `app/account/connect-claude` and `app/account/connect-codex` show. Its
+  switch chooses the kind of the login, and the first kind starts
+  selected: Subscription token, API key, and Own endpoint for Claude, and
+  API key, ChatGPT plan, and Own endpoint for Codex. For a token or a key, the words above the field
+  say what to paste and where to make it.
+- [Own endpoint login mockups](own-endpoint-logins.md) describes the fields,
+  connected host, model list, and address refusal for both agents.
+- ChatGPT plan has no field. Its words say that Codex then runs on the
+  plan, and that device code sign-in must be on first in the ChatGPT
+  security settings, as `app/account/connect-codex/chatgpt` shows. They
+  quote no label of ChatGPT, so they stay true after a rename. The link
+  Open ChatGPT settings follows them, and opens those settings in a new
+  tab. Get a code shows a one-time code in large type, the link to
+  `auth.openai.com/codex/device`, the warning never to share the code and
+  to enter only a code that the page shows, and a line that the page waits
+  for the sign-in, as its `code` variant shows. A code works for 15
+  minutes. An expired code offers Get a new code, as its `expired` variant
+  shows. A refused sign-in gives its cause in the same place, as its
+  `refused` variant shows. Its button says Get a code until a code showed,
+  then Get a new code. A refusal because the setting is off has the same
+  link. `ChatGptSignIn` in `src/components/settings/` draws the steps.
+- The app renews a ChatGPT sign-in alone. When OpenAI does not renew it,
+  the app can no longer use the login. Its row then says Signed out in
+  place of Connected, gives the cause under the row, and offers Sign in
+  again, as `app/account/codex-token/not-usable` shows. The cause comes
+  from the field `unusableCause` of the login status. `LoginNotUsable.tsx`
+  in `src/components/settings/` draws it. Sign in again opens the ChatGPT
+  sign-in form in the place of the cause, as
+  `app/account/codex-token/sign-in-again` shows. The row keeps the login
+  with Remove, and the share switch stays, until a new sign-in replaces
+  the login.
+- `chatGptSignInCopy.ts` in `src/components/settings/` gives the words of
+  the ChatGPT sign-in, the address of the ChatGPT settings, the row of a
+  sign-in that stopped working, and the causes of the Worker. It imports no
+  fixture, so the app and the Worker can import the same words.
+- A connected login shows its kind and Remove. The name of the kind
+  depends on the agent: a Claude token is a "Subscription token", the
+  ChatGPT sign-in of Codex is "ChatGPT plan", and a key is an "API key".
+  `loginLabels` in `src/fixtures/logins.ts` holds the names. On a phone,
+  the state and the kind go on a second line under the name of the agent,
+  so that the kind shows in full.
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude
-  subscription, and on for an API key and an own endpoint (decision 4 B of
-  the own endpoint plan), as `app/account` and
-  `app/account/own-endpoint/connected` show. It saves at once. A change
-  that the app did not save shows its cause beside the switch, as
+  subscription token and on for an API key or own endpoint, as `app/account` shows. A
+  ChatGPT plan of Codex starts off too, from decisions 171 and 175, as
+  `app/account/codex-token` shows. The switch saves at once. A
+  change that the app did not save shows its cause beside the switch, as
   `app/account/share-not-saved` shows. The part lives in
   `src/components/settings/LoginShare.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and

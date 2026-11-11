@@ -36,7 +36,9 @@ draft moves, the login of each session, and the linked sessions.
   `loginAvailable` and `loginShared` decide. The notice over the composer
   says so before Send, with the reason, the composer names no login, and
   it offers no steering. Stop still ends a running turn. Without an own
-  login, the Connect notice shows in its place, and Send is off.
+  login that the app can still use, the Connect notice shows in its place,
+  and Send is off. A login with an `unusableCause` of the account, such as
+  a ChatGPT sign-in that OpenAI did not renew, counts as none.
   `linkedCopy.ts` of the mockups holds the words of the notice.
 - The reply of Send and of Try again names the session that took the
   message. The session record of the reply follows the

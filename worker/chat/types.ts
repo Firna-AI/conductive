@@ -8,6 +8,7 @@ import type {
   RunnerChangeModel,
   RunnerCommandV1,
   RunnerInterrupt,
+  RunnerLoginKind,
   WorkspaceToRunnerV1,
   WorkspaceToRunnerV2,
   RunnerEventEnvelope,
@@ -95,16 +96,6 @@ export type PreparedMessageCommand = (
   | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments' | 'login'>
 ) & { attachments: readonly StoredAttachment[]; login: AgentLogin }
 
-export type AgentCommand =
-  | (Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'login'> & {
-      login: AgentLogin
-    })
-  | (Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'login'> & {
-      login: AgentLogin
-    })
-  | RunnerInterrupt
-  | RunnerChangeModel
-
 export type PreparedCommand =
   PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
 
@@ -121,6 +112,12 @@ export type PendingCommand =
   | RunnerInterrupt
   | RunnerChangeModel
 
+type ResolveCommand<Command> = Command extends PreparedMessageCommand
+  ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }
+  : Command
+
+export type ResolvedCommand = ResolveCommand<PreparedCommand>
+
 export interface RunnerPeer {
   send(message: WorkspaceToRunnerV1 | WorkspaceToRunnerV2): void
   close(): void
@@ -132,6 +129,7 @@ export interface ActiveRunner {
   workspace: RunnerWorkspaceRecord
   streamId: string | null
   protocolVersion: RunnerProtocolVersion | null
+  loginKinds?: readonly RunnerLoginKind[]
   ready: boolean
 }
 

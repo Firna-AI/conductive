@@ -38,7 +38,7 @@ function fieldOf(agent: Agent, kind: LoginKind) {
   if (kind === 'api-key') {
     return { label: 'Anthropic API key', placeholder: 'Paste the key' }
   }
-  return { label: loginLabels.token, placeholder: 'Paste the token' }
+  return { label: loginLabels.claude.token, placeholder: 'Paste the token' }
 }
 
 /** What to paste for a token or an API key, and where the user gets it. */

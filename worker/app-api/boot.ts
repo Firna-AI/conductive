@@ -105,7 +105,11 @@ export async function bootRoute(
   }
   if (request.method !== 'PUT') return null
   const body = context.body
-  if (body?.agent !== agent || typeof body.kind !== 'string')
+  if (
+    body?.agent !== agent ||
+    typeof body.kind !== 'string' ||
+    (agent === 'codex' && body.kind === 'token')
+  )
     return invalidInput()
   const loginKind = agentLoginKind(agent, body.kind)
   if (!loginKind) return invalidInput()

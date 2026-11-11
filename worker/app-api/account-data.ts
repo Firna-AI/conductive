@@ -1,7 +1,8 @@
-import type {
-  AgentLoginStatus,
-  NewWorkspaceView,
-  SaveAgentLoginRequest,
+import {
+  defaultAgentLoginNoReuse,
+  type AgentLoginStatus,
+  type NewWorkspaceView,
+  type SaveAgentLoginRequest,
 } from '../../src/shared/account'
 import type { Agent, AgentChoice, AgentModel } from '../../src/shared/agents'
 import { agentLoginKind } from '../chat/login-kind'
@@ -15,6 +16,7 @@ interface LoginRow {
   updatedAt: number
   modelIds: string | null
   modelsReadAt: number | null
+  unusableCause: string | null
 }
 
 export async function accountLogins(
@@ -26,7 +28,7 @@ export async function accountLogins(
     .prepare(
       `SELECT agent, kind, endpoint_origin AS endpointOrigin,
        no_reuse AS noReuse, updated_at AS updatedAt,
-       endpoint_model_ids AS modelIds, endpoint_models_read_at AS modelsReadAt FROM agent_logins
+       endpoint_model_ids AS modelIds, endpoint_models_read_at AS modelsReadAt, failure_cause AS unusableCause FROM agent_logins
        WHERE user_id = ? ORDER BY agent`,
     )
     .bind(userId)
@@ -55,7 +57,13 @@ export async function accountLogins(
         ...(modelList ? { modelList } : {}),
       }
     }
-    return { ...loginKind, ...metadata }
+    return {
+      ...loginKind,
+      ...metadata,
+      ...(loginKind.agent === 'codex' && login.unusableCause !== null
+        ? { unusableCause: login.unusableCause }
+        : {}),
+    }
   })
 }
 
@@ -136,7 +144,8 @@ export async function saveAccountLogin(
          THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
        endpoint_model_ids = NULL, endpoint_models_read_at = NULL,
        endpoint_models_attempted_at = NULL, endpoint_models_attempt_id = NULL,
-       updated_at = excluded.updated_at RETURNING no_reuse`,
+       updated_at = excluded.updated_at, refresh_claim = NULL,
+       refresh_claim_until = NULL, failure_cause = NULL RETURNING no_reuse`,
     )
     .bind(
       userId,
@@ -144,7 +153,7 @@ export async function saveAccountLogin(
       kind,
       ciphertext,
       endpointOrigin,
-      kind === 'token' ? 1 : 0,
+      defaultAgentLoginNoReuse(agent, kind) ? 1 : 0,
       now,
       now,
     )

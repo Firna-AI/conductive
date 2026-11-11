@@ -69,8 +69,7 @@ export const privacyDocument: LegalDocument = {
             Germany, Finland, and France. UK adequacy regulations approve
             transfers to countries in the European Economic Area. Other
             provider operations can involve processing outside that area.`,
-          text`For a Claude subscription token or an Anthropic or OpenAI
-            API key, Anthropic or OpenAI processes agent requests under
+          text`For a Claude subscription, ChatGPT plan, or provider API key, Anthropic or OpenAI processes agent requests under
             the agreement for the connected account that the session uses.
             Their published privacy and data processing terms describe
             adequacy approvals, standard contractual clauses, and the UK

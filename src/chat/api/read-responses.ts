@@ -34,12 +34,12 @@ import {
 } from './read-chat'
 
 /**
- * What the composer needs to know about the agent logins of the user:
- * whether each agent is connected, and the last model list of an own
- * endpoint login, which the picker of the user's own messages follows.
+ * The composer's login status, its unavailable cause, and the endpoint
+ * model list that the owner's picker follows.
  */
 type AgentLogin = Pick<AgentLoginStatus, 'agent' | 'connected'> & {
   modelList?: EndpointModelList
+  unusableCause?: string
 }
 
 export interface AccountSummary {
@@ -134,6 +134,9 @@ export function readAccount(value: unknown): AccountSummary {
         agent: readAgent(login.agent),
         connected: flag(login.connected),
         ...(modelList ? { modelList } : {}),
+        ...(login.unusableCause === undefined
+          ? {}
+          : { unusableCause: text(login.unusableCause) }),
       }
     })(source.agentLogins),
   }

@@ -26,6 +26,11 @@ decision number names a decision of the change that adds the
 - Claude reads the token from a file that only the sandbox user can read.
   Each process of the sandbox runs as that user, so it can read the file
   (gateway decision 11).
+- Codex reads its ChatGPT turn token from the login file of its session.
+  Only the sandbox user can read it. Processes of that user can copy it
+  while the turn runs (decision 175).
+- The email, account ID, and ChatGPT workspace name of the signed-in account also reach
+  the sandbox. A process or member with a terminal can read them.
 - Such a process or member can spend the login of the starter through the
   gateway while the turn runs. A copy of the token works in the same way
   outside the sandbox. A request that still runs at the end of the turn
@@ -53,8 +58,9 @@ decision number names a decision of the change that adds the
 ## A sandbox with a version pin of 1
 
 - The workspace of a sandbox with a version pin of 1 accepts an older
-  runner and a newer runner. An older runner gets the agent login itself
-  with each turn (gateway decision 2), but never an own endpoint login.
+  runner and a newer runner. An older runner gets a supported agent login
+  itself with each turn (gateway decision 2). It never gets a ChatGPT
+  sign-in or an own endpoint login.
 - Reason: an older runner cannot use a turn token, and a sandbox keeps the
   runner of its org image. A refusal of each turn of an older runner was
   rejected, because each workspace with an older runner would then lose

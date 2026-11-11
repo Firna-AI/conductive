@@ -41,11 +41,14 @@ own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - The gateway adds the agent login of the turn, and sends the request on
   to the upstream.
 - A runner of protocol version 1 gets the agent login itself with each
-  turn, as
+  supported turn, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says (gateway decision 2).
   [The agent runner](agent-runner.md#the-agent-runner) states which
   runner versions a workspace accepts.
+- A ChatGPT sign-in requires declared runner support. An unsupported turn
+  fails before any credential is sent, as
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox) says.
 - An HTTPS proxy on a new server was rejected. Reason: it is one more
   server to run and secure. The agent programs must also trust its
   certificate authority.
@@ -123,8 +126,47 @@ own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   Reason: after each pause of more than 5 minutes, the next request writes
   the cache again. A pool of subscriptions behind the endpoint then uses
   its limits faster.
-- Codex gets the gateway address in its config, and the turn token in its
-  login request. Neither is in the environment of Codex.
+- For an OpenAI API key or a Codex own endpoint, Codex gets the gateway address in its settings,
+  and the turn token in its login request. Neither is in its environment.
+- For a ChatGPT sign-in, Codex runs its own ChatGPT mode through the
+  gateway (decisions 173 and 175).
+- Each session has its own Codex login file. It holds the turn token in
+  place of the access token, a placeholder refresh token, and public
+  account claims. It holds no real sign-in token.
+- Only the sandbox user can read the file. The runner removes it after
+  the agent exits, including after Stop or a failed start.
+- Neither the turn token nor the gateway address is in the environment
+  of Codex or its helpers. The gateway address is in its settings.
+- Only the Worker renews the real sign-in. It saves each rotated refresh
+  token before using the new access token. Each login has one renewal at a time.
+- A renewal and its credential writes continue after the initiating request ends,
+  within the Worker's background-task limit.
+  Uploads and model answers keep their own request lifetime.
+- After an OpenAI 401, a turn can claim one renewal for all its requests.
+  The app saves the claim before renewal. Concurrent calls and resends
+  share that claim, including after a restart.
+- Concurrent 401s for one access token share the turn's claimed renewal.
+  A request can use the newer login when that renewal finishes.
+  It starts no further renewal.
+- A request waits at most 5 seconds for that renewal. If renewal still
+  runs, the request gets HTTP 502 with no saved cause.
+- A body-less metadata request can replay once after renewal.
+- Each `POST /backend-api/codex/responses` upload goes to OpenAI once.
+  After its 401, the gateway cancels the answer, renews, and returns
+  HTTP 502 with `model_upstream_unavailable`. Codex sends the upload again
+  with the renewed login.
+- A failed renewal returns a terminal login error with HTTP 403.
+- A further 401 returns that terminal error only after recovery ends
+  without a newer login. The app saves its reconnect cause only if the
+  stored access token still matches the failed token and no renewal runs.
+- Reason: a final 401 would make Codex try to renew its placeholder.
+- Codex reads the rules of the ChatGPT workspace through the gateway.
+  A rule that moves Codex off the gateway fails the turn with a cause.
+- The gateway follows the account routing of that workspace in the Worker.
+  It gives Codex no routed origin. Codex stays on the gateway.
+- The email, account ID, and workspace name of the signed-in account reach the
+  sandbox. [Isolation](isolation.md#agent-logins-in-a-sandbox) states the
+  risk of commands from a ChatGPT workspace rule.
 
 ## Addresses
 

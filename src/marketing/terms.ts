@@ -69,7 +69,7 @@ export const termsDocument: LegalDocument = {
             account or key of your own for them.`,
           text`The agents run on the agent login that you connect.
             Each session uses the login of the member who started it.
-            For a subscription token or an API key, model use bills to that
+            For a Claude subscription, ChatGPT plan, or provider API key, model use bills to that
             member's connected account under the terms of Anthropic or OpenAI.
             For an own endpoint login, model use bills where the endpoint's
             owner runs it. You are responsible for the endpoint that you
@@ -89,7 +89,8 @@ export const termsDocument: LegalDocument = {
             a cloud computer. A turn on an own endpoint needs agent software
             that supports temporary credentials. An older cloud computer
             starts from an earlier org image. ${productName}
-            still permits older software there that receives the login itself.
+            still permits older software there that receives supported agent
+            logins themselves. A ChatGPT sign-in is never sent there.
             With that older software, the agents send their model requests to
             Anthropic or OpenAI from the cloud computer. Installing newer
             software in that cloud computer does not remove this risk. A new

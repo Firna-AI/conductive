@@ -128,6 +128,17 @@ A Worker version from before this migration cannot run on the new schema, as
 The [lifecycle provider accounts](../worker/lifecycle/provider-accounts.md#org-images)
 page gives the readers and the rules of these records.
 
+`202611100000_codex_access_token.sql` rebuilds `agent_logins` to accept a Codex access token with the kind `token`.
+It keeps every row, column, and other rule, including `no_reuse`, the primary key, and the user deletion cascade.
+
+`202611100001_codex_chatgpt_login.sql` adds the refresh claim and safe failure cause to `agent_logins`.
+It preserves the encrypted secret and its login timestamps.
+It adds `codex_devices` for encrypted, account-owned device authorizations and their safe terminal states and causes.
+Its nullable `login_updated_at` holds the current Codex login date at start, or null without a login.
+Polls and the final conditional save compare that date with the current login.
+Completed device rows keep no login-status copy. Poll replies read the current `agent_logins` record.
+Its expiry index serves scheduled cleanup. User deletion removes these records through the user foreign key.
+
 `202611100900_computer_ledger.sql` adds the retained computer ledger. Each
 entry names its computer by the provider account and the sandbox ID
 together, so equal IDs in two accounts stay two entries.
@@ -183,7 +194,8 @@ Existing rows keep that fallback.
 the `endpoint` kind for both agents. The nullable `endpoint_origin` column
 is required only for that kind. The full endpoint stays inside the
 ciphertext with its key. The rebuild copies every existing row, ciphertext,
-timestamp, and `no_reuse` choice. Existing rows get a null origin.
+timestamp, and `no_reuse` choice. It also keeps Codex token rows and the
+refresh claim, claim expiry, and failure cause. Existing rows get a null origin.
 
 `202611110407_agent_login_models.sql` adds nullable endpoint model IDs,
 the last successful read time, the last attempt time, and an attempt ID to
@@ -225,6 +237,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Workspace link chips | `202611091200`–`202611091259` |
 | Chat attachment metadata | `202611081800`–`202611081859` |
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
+| Codex logins | `202611100000`–`202611100059` |
 | Computer ledger account merge | `202611100900`–`202611100959` |
 | Software image for first builds | `202611101200`–`202611101259` |
 | 16 Deployment | `202611071800`–`202611071859` |

@@ -2,6 +2,7 @@ import { agentLoginPath } from '../../src/shared/account'
 import type { AgentChoice } from '../../src/shared/agents'
 import type { ChatHistoryResponse } from '../chat/workspace-events'
 import type { RunnerProtocolVersion } from '../../src/shared/runner'
+import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import {
   CLAUDE,
   createChatFixture,
@@ -12,6 +13,7 @@ import { agentLoginContext } from '../chat/queries'
 import { encrypt } from '../security/crypto'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import { FakeRunner } from '../test-support/fake-runner'
+import { codexTestTokens } from './codex-login.test-support'
 
 export async function runningGatewayTurn(
   harness: TestHarness,
@@ -47,11 +49,28 @@ export async function runningGatewayTurn(
     if (saved.status !== 200)
       throw new Error('The endpoint login was not saved.')
   }
+  if (options.kind === 'token' && choice.agent === 'codex')
+    await fixture.env.DB.prepare(
+      'UPDATE agent_logins SET ciphertext = ? WHERE user_id = ? AND agent = ?',
+    )
+      .bind(
+        await encrypt(
+          JSON.stringify(codexTestTokens(`secret-${fixture.member.id}-codex`)),
+          agentLoginContext(fixture.member.id, 'codex'),
+          fixture.env.BOAT_KEY_ENCRYPTION_KEY,
+        ),
+        fixture.member.id,
+        'codex',
+      )
+      .run()
   const session = await fixture.createSession(choice, fixture.memberCookie)
   const runner = await fixture.connect(
     new FakeRunner({
       workspaceId: WORKSPACE_ID,
       protocolVersion: options.protocolVersion,
+      ...(options.protocolVersion === 2
+        ? { loginKinds: RUNNER_SUPPORTED_LOGIN_KINDS }
+        : {}),
     }),
   )
   runner.emit({ type: 'runner.ready' })

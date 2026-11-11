@@ -63,6 +63,10 @@ The gateway tests use these factories to observe cancellation on the original st
 Every harness uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
 It applies migrations in filename order with Wrangler's SQL splitter.
 The splitter keeps each trigger body in one statement.
+The optional `before` filename stops before that migration.
+The optional `from` filename starts with that migration.
+`createHarness({ migrationsBefore })` creates a database at an earlier schema
+for a migration test.
 
 Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
 Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
@@ -176,6 +180,7 @@ A callback counts as complete only after the `waitUntil` work that it starts end
   stored Worker envelopes and parsed browser envelopes.
 
 - `harness.ts` owns D1 setup and the HTTP test app.
+  Its HTTP requests provide a fake execution context for credential task ownership.
 - [native-close.test-support.ts](native-close.test-support.ts): `NativeCloseProbe`, the close-first control of the native browser, runner, and Mac fixture entries.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
 - `native-global-setup.ts` builds and provides the current native bundle before tests and watch reruns.

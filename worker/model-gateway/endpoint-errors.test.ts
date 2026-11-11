@@ -18,6 +18,8 @@ it('redacts the key and secret endpoint addresses from split error bytes and all
     CODEX,
     'endpoint',
     2,
+    undefined,
+    {},
     'key"with\\escape',
   )
   try {

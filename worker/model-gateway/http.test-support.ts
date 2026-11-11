@@ -9,6 +9,12 @@ import {
 import { terminalEvent } from '../chat/turn-lifecycle.test-support'
 import { ManualChatClock } from '../chat/chat-clock.test-support'
 import { requestBodyEntry } from '../http/request-body'
+import type { HttpFetch } from '../env'
+import { freshCodexLogin } from '../codex-auth/renew'
+import { failCodexAccessToken } from '../codex-auth/failure'
+import { waitForCodexRotation } from '../codex-auth/rotation'
+import type { CodexTaskOwner } from '../codex-auth/tasks'
+import { fakeCodexTasks } from '../codex-auth/tasks.test-support'
 import { FakeAnthropic } from '../test-support/fake-anthropic'
 import { FakeOpenAI } from '../test-support/fake-openai'
 import { FakeModelUpstream } from '../test-support/fake-model-upstream'
@@ -33,6 +39,13 @@ export async function gatewayHttp(
   choice: AgentChoice = CLAUDE,
   kind: 'api-key' | 'token' | 'endpoint' = 'api-key',
   protocolVersion: RunnerProtocolVersion = 1,
+  upstream?: HttpFetch,
+  recovery: {
+    wait?: (milliseconds: number) => Promise<void>
+    beforeRenew?: () => Promise<void>
+    beforeFailure?: () => Promise<void>
+    tasks?: CodexTaskOwner
+  } = {},
   endpointSecret?: string,
 ) {
   const turn = await runningGatewayTurn(harness, choice, {
@@ -42,6 +55,7 @@ export async function gatewayHttp(
   })
   const { fixture } = turn
   const clock = new ManualChatClock(fixture.clock.now())
+  const tasks = recovery.tasks ?? fakeCodexTasks().owner
   const anthropic = new FakeAnthropic()
   const openai = new FakeOpenAI()
   const ownEndpoint = new FakeModelUpstream(
@@ -57,29 +71,64 @@ export async function gatewayHttp(
   const workspaceLookups: string[] = []
   const workspaceCalls: string[] = []
   const endpoint = {
-    checkTurnToken(token: string) {
+    checkTurnToken(token: string, claim?: true | 'complete') {
       checks.push(WORKSPACE_ID)
-      return fixture.chat.turnTokens.check(WORKSPACE_ID, token)
+      return fixture.chat.turnTokens.check(WORKSPACE_ID, token, claim)
     },
   }
   const fetch = requestBodyEntry(async (request) => {
     const response = await routeModelGateway(request, {
       previewDomain: fixture.env.PREVIEW_DOMAIN,
+      codexTasks: tasks,
       dependencies: {
         now: clock.now,
         randomToken: () => 'unused',
         scheduleGatewayCheck: clock.schedule,
-        fetch: (request) =>
-          new URL(request.url).hostname === 'proxy.example.test'
-            ? ownEndpoint.fetch(request)
-            : new URL(request.url).hostname === 'api.anthropic.com'
-              ? anthropic.fetch(request)
-              : openai.fetch(request),
+        fetch:
+          upstream ??
+          ((request) =>
+            new URL(request.url).hostname === 'proxy.example.test'
+              ? ownEndpoint.fetch(request)
+              : new URL(request.url).hostname === 'api.anthropic.com'
+                ? anthropic.fetch(request)
+                : openai.fetch(request)),
       },
       workspaceAllowed(id) {
         workspaceLookups.push(id)
         return gatewayWorkspaceAllowed(fixture.env.DB, id)
       },
+      codexLogin: async (userId, failed) => {
+        if (failed) await recovery.beforeRenew?.()
+        return freshCodexLogin(
+          fixture.env,
+          userId,
+          {
+            now: clock.now,
+            fetch: upstream ?? openai.fetch,
+            wait:
+              recovery.wait ?? ((milliseconds) => clock.advance(milliseconds)),
+          },
+          tasks,
+          failed,
+        )
+      },
+      codexLoginFailed: async (userId, failed) => {
+        await recovery.beforeFailure?.()
+        return failCodexAccessToken(fixture.env, userId, failed)
+      },
+      codexWaitForRotation: (userId, failed, pending) =>
+        waitForCodexRotation(
+          fixture.env,
+          userId,
+          failed,
+          {
+            now: clock.now,
+            fetch: upstream ?? openai.fetch,
+            wait:
+              recovery.wait ?? ((milliseconds) => clock.advance(milliseconds)),
+          },
+          pending,
+        ),
       workspace(id) {
         workspaceCalls.push(id)
         return endpoint
@@ -113,6 +162,7 @@ export async function gatewayHttp(
   }
   return {
     ...turn,
+    tasks,
     fixture: {
       ...fixture,
       clock: {

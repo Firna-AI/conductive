@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest'
 
 import type { RunnerTurn } from '../../src/shared/runner'
 import { turn } from '../test-support/harness'
+import { fakeCodexAccount } from '../test-support/providers'
 import { parseWorkspaceMessage } from './commands'
 
 const parse = (value: unknown) => parseWorkspaceMessage(value, () => {})
@@ -93,6 +94,58 @@ it('parses a turn credential and a message without a credential', () => {
       login: { agent: 'claude', kind: 'api-key', secret: 'real-login' },
     }),
   ).toThrow()
+})
+
+it('keeps public ChatGPT identity and requires its typed fields on token turns', () => {
+  const input = turn('chatgpt', 'alice', 'codex')
+  const credential = {
+    agent: 'codex',
+    kind: 'token',
+    token: 'sk-turn-token',
+    account: fakeCodexAccount,
+  }
+  expect(parse({ ...input, credential })).toEqual({
+    ...input,
+    credential,
+  })
+  expect(
+    parse({
+      ...input,
+      credential: {
+        ...credential,
+        account: {
+          accountId: 'account',
+          email: null,
+          planType: null,
+          userId: null,
+        },
+      },
+    }),
+  ).toMatchObject({
+    credential: {
+      account: {
+        accountId: 'account',
+        email: null,
+        planType: null,
+        userId: null,
+      },
+    },
+  })
+  expect(() =>
+    parse({
+      ...input,
+      credential: { ...credential, account: undefined },
+    }),
+  ).toThrow('Expected an object.')
+  expect(() =>
+    parse({
+      ...input,
+      credential: {
+        ...credential,
+        account: { ...fakeCodexAccount, accountId: 123 },
+      },
+    }),
+  ).toThrow('Expected text.')
 })
 
 it('keeps the supplied commit author only on a turn command', () => {
