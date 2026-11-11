@@ -53,3 +53,17 @@ it.each([
 ])('$name', ({ text, title }) => {
   expect(sessionTitleFrom(text)).toBe(title)
 })
+
+it('titles from attached-file names before it cuts the first line', () => {
+  const file = {
+    id: 'image',
+    name: 'Login screen.png',
+    path: '.context/attachments/image/Login-screen.png',
+    kind: 'image' as const,
+    mediaType: 'image/png',
+    sizeBytes: 100,
+  }
+  expect(
+    sessionTitleFrom(`Inspect @${file.path} with @src/login.ts.`, [file]),
+  ).toBe('Inspect Login screen.png with @src/login.ts')
+})

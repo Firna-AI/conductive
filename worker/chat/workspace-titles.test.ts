@@ -9,6 +9,7 @@ import {
 } from 'vitest'
 
 import { createHarness, type TestHarness } from '../test-support/harness'
+import { sessionPaths } from '../../src/shared/sessions'
 import { CLAUDE, WORKSPACE_ID } from './harness.test-support'
 import { sessionRecord } from './retry.test-support'
 import type { TitleModelCall } from './title-model'
@@ -88,6 +89,7 @@ it('asks nothing for an attachment-only first message and titles from the next a
           {
             id: 'screenshot',
             name: 'login.png',
+            path: '.context/attachments/image/login.png',
             kind: 'image',
             mediaType: 'image/png',
             sizeBytes: 100,
@@ -98,27 +100,60 @@ it('asks nothing for an attachment-only first message and titles from the next a
     },
   )
   await fixture.actor.api.controls.captureWarnings(true)
-  first.request.text = ''
+  first.request.text = '@.context/attachments/image/login.png'
   first.request.attachmentIds = ['screenshot']
   await acceptFirst()
   await drain()
-  expect(run).not.toHaveBeenCalled()
+  expect(run.mock.calls.length).toBe(0)
   expect(await fixture.actor.api.controls.warningCount()).toBe(0)
   expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
-  await fixture.send(
-    first.sessionId,
-    'first-text',
-    fixture.ownerCookie,
-    CLAUDE,
-    'Inspect the login screenshot',
+  const response = await fixture.fetch(
+    sessionPaths.messages(fixture.org.id, WORKSPACE_ID, first.sessionId),
+    {
+      id: 'first-text',
+      text: 'Inspect @.context/attachments/image/login.png with @src/login.ts',
+      choice: CLAUDE,
+      attachmentIds: ['screenshot'],
+    },
   )
+  expect(response.status).toBe(202)
   await drain()
   expect((await sessionRecord(fixture, first.sessionId)).title).toBe(
     'Inspect login screenshot',
   )
   expect(run).toHaveBeenCalledTimes(1)
   expect(run.mock.calls[0][1].messages?.[1].content).toBe(
-    'Task message as a JSON string:\n"Inspect the login screenshot"',
+    'Task message as a JSON string:\n"Inspect login.png with @src/login.ts"',
+  )
+})
+
+it('requests a workspace title with its attached-file names and unchanged typed mentions', async () => {
+  const run = vi
+    .fn<TitleModelCall>()
+    .mockResolvedValue({ response: 'Inspect login screenshot' })
+  const { first, acceptFirst, drain } = await createTitleFixture(harness, run, {
+    resolveAttachments: async () => ({
+      attachments: [
+        {
+          id: 'screenshot',
+          name: 'Login screen.png',
+          path: '.context/attachments/image/Login-screen.png',
+          kind: 'image',
+          mediaType: 'image/png',
+          sizeBytes: 100,
+        },
+      ],
+      paths: [],
+    }),
+  })
+  first.request.text =
+    'Inspect @.context/attachments/image/Login-screen.png with @src/login.ts'
+  first.request.attachmentIds = ['screenshot']
+  await acceptFirst()
+  await drain()
+  expect(run.mock.calls.length).toBe(1)
+  expect(run.mock.calls[0][1].messages?.[1].content).toBe(
+    'Task message as a JSON string:\n"Inspect Login screen.png with @src/login.ts"',
   )
 })
 

@@ -68,6 +68,10 @@ workspace on a phone, a finger that moves first opens nothing, and a long
 press lifts no tab, keeps the menu of the browser shut, and opens a sheet
 with only the copy items. The late click of the finger selects nothing,
 and Copy concise transcript copies the concise text.
+`../shared/transcript/session-markdown.test.ts` builds the concise and the
+full text of a copy. In a member's message, it checks the name of each
+attached file in place of its mention. It also checks that the attachments
+line lists only the other files.
 `components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
 its fades. It also scrolls a full row over the browser layout of
 `components/row-layout-test-kit.ts`, which gives the row and its tabs
@@ -113,8 +117,12 @@ removes an attached file with the cell of its icon, also a failed upload
 that keeps its Try again, and on a phone with its × at the end. The DOM
 tests focus, type, paste, clear, and read the field through
 `src/test-support/message-field.ts`.
-`mentions/mention-text.test.ts` reads and writes mentions, and
+`../shared/mention-text.test.ts` reads and writes mentions, and
 `mentions/mention-rows.test.ts` orders the rows of the list.
+`../shared/attachment-mentions.test.ts` finds the attached file of a file
+mention, and leaves a folder mention and other mentions alone. It puts the
+original names in place of those mentions, and checks for words outside
+them.
 `links/chat-parts-mentions.test.ts` reads mentions in a sent message, and
 `links/FileLink.dom.test.tsx` opens a file and a folder from its chip, and
 copies messages with file chips, without hidden text.

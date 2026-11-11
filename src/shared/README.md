@@ -79,6 +79,11 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 `ATTACHMENT_MAX_BYTES` is the decoded file limit.
 `attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
 The browser posts one raw file as `application/octet-stream` with its known byte length.
+`Attachment.path` is the copy path of the file, relative to the workspace repository.
+The upload reply gives it, so each upload has its path before Send.
+Each file of an accepted message gives it too, and the browser builds no path.
+A file of a message stored before this field has no path.
+The browser and runner readers give null for it, and no mention matches it.
 
 `feedback.ts` owns `FEEDBACK_PATH`, the request and reply types of the
 feedback routes, and their byte limits. `FEEDBACK_BODY_MAX_BYTES` is the
@@ -215,7 +220,10 @@ The git credential payload is not defined yet.
 
 - [Session Markdown](transcript/session-markdown.ts) folds session pages and
   builds concise or full transcripts. [Markdown items](transcript/markdown-items.ts)
-  format the shared chat words, paths, and commands. [Markdown code](transcript/markdown-code.ts)
+  format the shared chat words, paths, and commands. In a member's message,
+  they put the escaped name of each attached file in place of its mention.
+  The attachments line then lists only the other files.
+  [Markdown code](transcript/markdown-code.ts)
   keeps inline and block fences longer than their content's backticks.
 - [Lost data](transcript/lost-data.ts) maps refusal event types to the same
   product names for the browser line and the copied transcript.
@@ -241,6 +249,21 @@ The git credential payload is not defined yet.
   [Transcript entries](transcript/transcript-entries.ts) group the items and
   generic inserts. Browser callers use React nodes as the insert content.
 
+- [Mention text](mention-text.ts) reads and writes the mention of a file or
+  a folder, for the chat field, sent messages, and the attachment mentions.
+- [Attachment paths](attachment-paths.ts): `attachmentPath` builds the copy
+  path of a file: `ATTACHMENTS_DIRECTORY`, a digest of the file ID alone,
+  and the safe file name. The Worker and the development and test fakes
+  call it.
+- [Attachment mentions](attachment-mentions.ts): `attachmentForMention`
+  finds the attached file that a file mention of the message names.
+  `textWithAttachmentNames` puts the original name of each such file in
+  place of its mention. `hasOwnWords` says whether the text holds more than
+  spaces and those mentions.
+- [Session title](session-title.ts): `sessionTitleFrom` puts in those names
+  before it takes the first line and cuts it to 60 code points. It gives
+  null when the text holds nothing but those mentions. `modelTitleFrom`
+  first changes each underscore of a model answer to a space.
 - [Port reports](ports.ts) carry sorted listening ports and their safe labels.
 - [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.

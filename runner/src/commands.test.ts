@@ -90,6 +90,27 @@ it('parses a turn credential and a message without a credential', () => {
   ).toThrow()
 })
 
+it('keeps stable attachment paths and reads older metadata with a null path', () => {
+  const original = command()
+  const file = {
+    id: 'file',
+    name: 'trace.txt',
+    kind: 'file',
+    mediaType: 'text/plain',
+    sizeBytes: 7,
+  }
+  for (const path of ['.context/attachments/file/trace.txt', null, undefined]) {
+    const attachment = { ...file, path }
+    const input = {
+      ...original,
+      message: { ...original.message, attachments: [attachment] },
+    }
+    expect(parse(input)).toMatchObject({
+      message: { attachments: [{ ...file, path: path ?? null }] },
+    })
+  }
+})
+
 it('keeps the supplied commit author only on a turn command', () => {
   const command = turn()
   command.commitAuthor = {

@@ -9,6 +9,7 @@ import { textOf } from './render-kit'
 const screenshot: Attachment = {
   id: 'attachment-1',
   name: 'overlap.png',
+  path: null,
   kind: 'image',
   mediaType: 'image/png',
   sizeBytes: 290_816,

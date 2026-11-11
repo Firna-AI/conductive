@@ -1,5 +1,5 @@
 import type { FileEntry } from '../../shared/files'
-import { mentionAt, type Mention } from '../mentions/mention-text'
+import { mentionAt, type Mention } from '../../shared/mention-text'
 import {
   bareLinkAt,
   linkTarget,

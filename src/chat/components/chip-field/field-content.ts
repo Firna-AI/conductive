@@ -18,7 +18,7 @@ import {
   textParts,
   type WorkspaceLinks,
 } from '../../links/workspace-links'
-import { mentionParts, type Mention } from '../../mentions/mention-text'
+import { mentionParts, type Mention } from '../../../shared/mention-text'
 import { findMentioned, type MentionTree } from '../../mentions/MentionsContext'
 import {
   $createLinkTextNode,

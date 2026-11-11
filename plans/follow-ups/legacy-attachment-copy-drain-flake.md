@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, during the merge of main into `calummoore/routines-feature-brainstorm`.
-- **Location:** `worker/chat/attachment-legacy-path.test.ts:73`, `worker/chat/harness.test-support.ts:210`, and `worker/chat/attachment-delivery.ts:87`.
+- **Location:** `worker/chat/attachment-legacy-path.test.ts:78`, `worker/chat/harness.test-support.ts:210`, and `worker/chat/attachment-delivery.ts:98`.
 - **Reason:** The unchanged test failed under full-suite load and passed alone, so its investigation belongs on a separate branch.
 
 - **Terms:**

@@ -1,5 +1,6 @@
 import { filePaths } from '../../shared/files'
 import type { Attachment, UserMessage } from '../../shared/messages'
+import { attachmentPath } from '../../shared/attachment-paths'
 import { sessionsPath, type Session } from '../../shared/sessions'
 import { workspaceViewPath } from '../../shared/workspace-view'
 import { workspacePaths } from '../../shared/workspaces'
@@ -76,8 +77,8 @@ function accept(backend: DevBackend, session: Session, outgoing: Outgoing) {
   const steered = backend.agent.steer(message)
   if (!steered) backend.stream.emit({ type: 'message.accepted', message })
   clearRetry(backend, session.id)
-  titleFromMessage(backend, session.id, message.text)
-  askTitle(backend, message.text)
+  titleFromMessage(backend, message)
+  askTitle(backend, message)
   const answer = (turnId: string | null) =>
     recordReply(
       backend,
@@ -204,9 +205,13 @@ export async function handleWrite(
   if (method === 'POST' && path === filePaths.attachments(orgId, workspaceId)) {
     const query = new URL(request.url).searchParams
     const mediaType = text(query.get('mediaType'))
-    const attachment = readAttachment({
+    const file = {
       id: `dev-file-${attachments.size + 1}`,
       name: text(query.get('name')),
+    }
+    const attachment = readAttachment({
+      ...file,
+      path: await attachmentPath(file),
       kind: mediaType.startsWith('image/') ? 'image' : 'file',
       mediaType,
       sizeBytes: (await request.arrayBuffer()).byteLength,

@@ -101,7 +101,8 @@ shows the chat, in the whole app, with the limits that
 
 ## Tests
 
-Run `npm run test -- src/chat src/shared/transcript`. The tests drive the controller and the stream
+Run `npm run test -- src/chat src/shared/transcript src/shared/mention-text src/shared/attachment-mentions`.
+The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers. The
 [workspace screen](../shell/workspace/README.md#key-code) tests the kept
@@ -160,11 +161,12 @@ check in the Mac app.
   and `mention-copy.ts`, the copy of chat text that gives the mention of
   each file chip in it, and leaves out text that the browser leaves out of
   a copy.
-- `mentions/`: `mention-text.ts`, the text of a mention, `mention-rows.ts`,
-  the entries that the list offers and their order, and
-  `MentionsContext.tsx`, the files that the chat gets and the tree that
-  the list and the chips find, with one value for each tree, and
-  `MentionIcon.tsx`, the icon of All files for an entry.
+- `mentions/`: `mention-rows.ts` gives the entries that the list offers and
+  their order. `MentionsContext.tsx` gives the files that the chat gets and
+  the tree that the list and the chips find, with one value for each tree.
+  `MentionIcon.tsx` gives the icon of All files for an entry.
+  [`mention-text.ts`](../shared/mention-text.ts) in the shared contracts
+  owns the text of a mention, which the chat shares with the Worker.
 - `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat

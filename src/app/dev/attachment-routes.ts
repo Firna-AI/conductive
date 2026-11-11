@@ -4,6 +4,7 @@ import {
   type Attachment,
   type UploadAttachmentResponse,
 } from '../../shared/messages'
+import { attachmentPath } from '../../shared/attachment-paths'
 import { ParseError } from '../api/parse'
 import type { DevBackend } from './backend'
 import { ID, json, RouteError, type Route } from './router'
@@ -33,10 +34,10 @@ export function attachmentRoutes(
   mode: DevUploadMode,
 ): Route[] {
   let failed = false
-  const upload = (
+  const upload = async (
     query: URLSearchParams,
     body: unknown,
-  ): Response | Promise<Response> => {
+  ): Promise<Response> => {
     if (!(body instanceof ArrayBuffer)) throw new ParseError('No file.')
     const name = required(query, 'name')
     const mediaType = required(query, 'mediaType')
@@ -52,9 +53,10 @@ export function attachmentRoutes(
       failed = true
       throw new RouteError(502, 'upload_failed', 'The upload failed.')
     }
+    const file = { id: backend.newId(), name }
     const attachment: Attachment = {
-      id: backend.newId(),
-      name,
+      ...file,
+      path: await attachmentPath(file),
       kind: mediaType.startsWith('image/') ? 'image' : 'file',
       mediaType,
       sizeBytes: body.byteLength,

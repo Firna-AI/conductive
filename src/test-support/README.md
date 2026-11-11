@@ -60,6 +60,7 @@ Writes return recorded replies. They do not change backend state.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
 Set the next reply with `server.json(method, path, body, status)`.
+Its `body` can be a promise, such as an upload reply that waits for the digest of its file path.
 Use `server.empty` for a 204 response.
 Use `server.response` for a download or a custom error response.
 Each response is cloned, so a caller can read it once without changing later replies.
@@ -157,6 +158,7 @@ Replies, timers, and `waitFor` go on.
 - `fake-core-routes.ts` records account, org, settings, section, member, and routine replies: the list, and the read, update, and delete of each routine, and a create. Each routine, and the routine that a create answers, also has each page of its runs and a Run now that starts a run on a new workspace.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies.
+  Its upload replies give each file the `path` that `attachmentPath` in `src/shared/attachment-paths.ts` builds, as the Worker does.
 - `fake-api-routes.ts` defines the reply registration interface.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.

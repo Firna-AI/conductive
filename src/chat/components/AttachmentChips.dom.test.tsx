@@ -12,6 +12,7 @@ import { DraftFiles } from './AttachmentChips'
 const notes: Attachment = {
   id: 'file-notes',
   name: 'notes.md',
+  path: null,
   kind: 'file',
   mediaType: 'text/markdown',
   sizeBytes: 2048,

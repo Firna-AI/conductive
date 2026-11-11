@@ -91,6 +91,7 @@ it('keeps an attachment-only session untitled until it accepts text', async () =
   const screenshot: Attachment = {
     id: 'screenshot',
     name: 'screen.png',
+    path: '.context/attachments/image/screen.png',
     kind: 'image',
     mediaType: 'image/png',
     sizeBytes: 100,
@@ -106,7 +107,7 @@ it('keeps an attachment-only session untitled until it accepts text', async () =
     sessionPaths.messages(fixture.org.id, WORKSPACE_ID, later.id),
     {
       id: 'image-only',
-      text: '',
+      text: `@${screenshot.path}`,
       choice: CLAUDE,
       attachmentIds: [screenshot.id],
     },
@@ -115,15 +116,19 @@ it('keeps an attachment-only session untitled until it accepts text', async () =
   const accepted: SendMessageResponse = await response.json()
   expect(accepted.session.title).toBeNull()
   await fixture.restart()
-  const next = await fixture.send(
-    later.id,
-    'text-after-image',
-    fixture.ownerCookie,
-    CLAUDE,
-    'Explain this screenshot.',
+  const nextResponse = await fixture.fetch(
+    sessionPaths.messages(fixture.org.id, WORKSPACE_ID, later.id),
+    {
+      id: 'text-after-image',
+      text: `Explain @${screenshot.path} with @src/login.ts.`,
+      choice: CLAUDE,
+      attachmentIds: [screenshot.id],
+    },
   )
-  expect(next.session.title).toBe('Explain this screenshot')
+  expect(nextResponse.status).toBe(202)
+  const next: SendMessageResponse = await nextResponse.json()
+  expect(next.session.title).toBe('Explain screen.png with @src/login.ts')
   expect((await sessionRecord(fixture, later.id)).title).toBe(
-    'Explain this screenshot',
+    'Explain screen.png with @src/login.ts',
   )
 })

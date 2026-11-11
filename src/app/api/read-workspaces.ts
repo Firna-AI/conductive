@@ -109,6 +109,7 @@ export function readAttachment(value: unknown): Attachment {
   return {
     id: text(attachment, 'id'),
     name: text(attachment, 'name'),
+    path: maybeText(attachment, 'path'),
     kind: choice(attachment, 'kind', ['image', 'file']),
     mediaType: text(attachment, 'mediaType'),
     sizeBytes: count(attachment, 'sizeBytes'),

@@ -89,14 +89,16 @@ and never in an archived workspace, so a name that the reader gave stays.
 With `workspace=new`, the workspace and its first session start with no
 name. The create of the workspace accepted its first message before the
 page loaded. About a second after the page loads, the page writes the
-title "Saved carts", whether or not the sandbox is ready. After a first
-message with no text, the next message with text that the page accepts
-gives the title, about a second later. The workspace and its first session
-take the title.
+title "Saved carts", whether or not the sandbox is ready. A message whose
+text is empty or holds only the mentions of its own attached files has no
+own words. After a first message with no own words, the next accepted
+message with own words gives the same title, about a second later. The
+workspace and its first session take the title.
 
-Each other session takes the first line of its first message with text as
-its title, from `sessionTitleFrom` in `src/shared/session-title.ts`, which
-the Worker uses too.
+Each other session takes the first line of its first message with own words
+as its title. The rule is `sessionTitleFrom` in
+`src/shared/session-title.ts`, which the Worker uses too. That rule first
+puts the original name of each attached file in place of its mention.
 
 ## Key code
 

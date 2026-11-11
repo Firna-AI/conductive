@@ -106,6 +106,7 @@ export function readAttachment(value: unknown): Attachment {
   return {
     id: text(source.id),
     name: text(source.name),
+    path: nullable(text)(source.path ?? null),
     kind: oneOf<Attachment['kind']>({ image: true, file: true })(source.kind),
     mediaType: text(source.mediaType),
     sizeBytes: count(source.sizeBytes),

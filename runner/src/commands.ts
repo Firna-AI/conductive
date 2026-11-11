@@ -45,6 +45,7 @@ function parseAttachment(value: unknown): Attachment {
   return {
     id: string(input.id),
     name: string(input.name),
+    path: nullable(input.path ?? null),
     kind: oneOf(input.kind, ['file', 'image']),
     mediaType: string(input.mediaType),
     sizeBytes: integer(input.sizeBytes),

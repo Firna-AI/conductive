@@ -797,29 +797,29 @@ The Worker and the development fakes share the mention syntax and the
 path builder. Each file has its path from the upload on. Titles and
 transcript copies read the mentions of the files.
 
-- [ ] Move `src/chat/mentions/mention-text.ts` to `src/shared/`, and move
+- [x] Move `src/chat/mentions/mention-text.ts` to `src/shared/`, and move
       each consumer and test to it.
-- [ ] Move `attachmentPath`, `safeName`, and `ATTACHMENTS_DIRECTORY` to
+- [x] Move `attachmentPath`, `safeName`, and `ATTACHMENTS_DIRECTORY` to
       `src/shared/attachment-paths.ts`. Make the digest come from the
       file ID only. Move the Worker consumers, the path check of
       `worker/chat/attachment-copy.ts`, and the tests of the path.
-- [ ] Add `path` to the attachment of `src/shared/messages.ts`. Give it in
+- [x] Add `path` to the attachment of `src/shared/messages.ts`. Give it in
       the upload reply and in each sent message, through
       `publicAttachment`. Read it in `src/app/api/read-workspaces.ts` and
       `src/chat/api/read-chat.ts`, with null for a stored message
       without it.
-- [ ] Add `src/shared/attachment-mentions.ts`: the file of a mention, the
+- [x] Add `src/shared/attachment-mentions.ts`: the file of a mention, the
       text with the names of the files, and the test for own words.
-- [ ] Use the names in `worker/chat/session-titles.ts` and
+- [x] Use the names in `worker/chat/session-titles.ts` and
       `worker/chat/workspace-titles.ts`. Start no title from a message
       with only file mentions.
-- [ ] Use the names and the shorter attachments line in
+- [x] Use the names and the shorter attachments line in
       `src/shared/transcript/markdown-items.ts`.
-- [ ] Give the development fakes in `src/chat/dev/`, `src/app/dev/`, and
+- [x] Give the development fakes in `src/chat/dev/`, `src/app/dev/`, and
       `src/test-support/` the paths and the titles.
-- [ ] Update `worker/chat/attachments.md`, with the copy of a later
+- [x] Update `worker/chat/attachments.md`, with the copy of a later
       message with the same file, and `src/shared/README.md`.
-- [ ] Add the tests of the path of an upload and of a sent file, the
+- [x] Add the tests of the path of an upload and of a sent file, the
       copy of a later message with the same file, the titles, and the
       transcript copy. See each fail first.
 
@@ -942,6 +942,10 @@ Depends on: 7
       files and folders.
 - [ ] Make the box of each composer a drop target, which attaches the
       files and inserts them at the caret of the point.
+- [ ] Keep uploaded bytes in the development fakes, and make their file
+      reads show the copies at the returned paths for the required Chrome
+      sent-chip smoke test. Keep those copies out of the file tree and keep
+      the existing read limit.
 - [ ] Name each dropped folder in the notice over the box.
       Mixed-drop and multiple-folder notice words remain blocked by
       composer drops decision 2. Apply no interim notice option.
