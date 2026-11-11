@@ -132,8 +132,12 @@ Every org image holds the app's own sandbox software:
 
 The Worker builds one software image for each version of this software,
 when the deploy run asks. The software image holds the base image and this
-software, and no org data. A build of an org without an org image starts
-from it, so that build installs none of this software.
+software, and no org data. Each build and each refresh of an org image
+starts from the software image of the current version, when that image is
+ready. Such a build or refresh installs none of this software. At a
+workspace start, the Worker installs the current version of this software
+in a workspace that holds an older version, as
+[Old workspaces](../protocol/workspace-life.md#old-workspaces) says.
 
 The agent runner runs Claude through the Claude Agent SDK, with the agent
 program that the SDK bundles at its own version. A pinned version guards
@@ -151,8 +155,8 @@ settings file in the repository can send the requests of Claude to another
 address, as
 [How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
 says. A runner of protocol version 1 gives the agent programs the agent
-login itself. Each sandbox keeps the runner of the org image that it starts
-from.
+login itself. An older runner runs only in a sandbox that has run since
+before a release, or whose update at its start failed.
 
 The preview relay forwards each preview request to a local port of the
 sandbox. The previewed server then gets its local address as `Host`

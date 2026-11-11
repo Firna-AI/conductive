@@ -104,7 +104,9 @@ decision number names a dated record, as
 - The Worker refuses previews with 409 `preview_relay_unavailable` without
   a running relay, because the app is not live and the Worker keeps one route.
   Decision 219 rejects a direct fallback, installation at preview open,
-  startup by the Worker, and software updates at each workspace start.
+  and startup by the Worker. A workspace with an older version of the app's
+  own software gets the relay at its next workspace start, as
+  [Old workspaces](workspace-life.md#old-workspaces) says.
 - Through the relay, each request reaches the previewed server with
   `Host: localhost:<port>`, as a browser in the sandbox would send it
   (decision 218).

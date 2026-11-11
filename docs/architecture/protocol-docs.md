@@ -11,7 +11,9 @@ them, and this page lists each protocol doc and what it covers.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
     shell variable of each repository in a sandbox, and the context folder
     of each workspace.
-  - [Life of a workspace](../protocol/workspace-life.md)
+  - [Life of a workspace](../protocol/workspace-life.md): the start steps,
+    the updates of an old workspace, the time limits, the states, the stop
+    and resume, the archive, and the restore.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)

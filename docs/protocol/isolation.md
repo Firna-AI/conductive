@@ -121,10 +121,11 @@ decision number names a decision of the change that adds the
   its connection to the Durable Object. Reason: the sandbox gets its
   secrets only at a start, and the sessions of one sandbox can have
   different starters.
-- The runner of a sandbox comes from its org image. A newer runner has
-  protocol version 2 or later. An older runner has protocol version 1.
+- The runner of a sandbox comes from its org image, or from the update of
+  the app's own software at a workspace start. A newer runner has protocol
+  version 2 or later. An older runner has protocol version 1.
   [The agent runner](agent-runner.md#the-agent-runner) states which runner
-  versions a workspace accepts.
+  versions a workspace accepts, and when a start updates the runner.
 - A newer runner gets a turn token as the credential of each turn. An
   older runner gets the agent login itself. This rule holds for each
   runner connection.
@@ -235,10 +236,10 @@ decision number names a decision of the change that adds the
 - The workspace of a sandbox with a version pin of 1 accepts an older
   runner and a newer runner. An older runner gets the agent login itself
   with each turn (gateway decision 2).
-- Reason: an older runner cannot use a turn token, and a sandbox keeps the
-  runner of its org image. A refusal of each turn of an older runner was
-  rejected, because each workspace with an older runner would then lose
-  its agent turns.
+- Reason: an older runner cannot use a turn token, and a sandbox can still
+  hold one, such as after a failed update at its start. A refusal of each
+  turn of an older runner was rejected, because each workspace with an
+  older runner would then lose its agent turns.
 - A newer runner in such a sandbox gets a turn token for each of its
   turns. The turn token risks of
   [A sandbox with a version pin of 2 or later](#a-sandbox-with-a-version-pin-of-2-or-later)

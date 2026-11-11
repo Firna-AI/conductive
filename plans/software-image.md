@@ -831,10 +831,11 @@ The docs state the requirements of each moment that this plan changes.
 - [x] Check the rows of `src/marketing/from-conductor/` for a feature that
       this plan ships, as `AGENTS.md` says.
 - [x] Check each relative link of each changed Markdown file.
-- [ ] Fix the sentences of `docs/protocol/port-previews.md`,
-      `docs/protocol/isolation.md`, `docs/architecture/components.md`, and
-      `docs/protocol/message-attachments.md` that contradict decision 8 B,
-      and add "Old workspaces" to the doc lists of
+- [x] Fix the sentences of `docs/protocol/port-previews.md`,
+      `docs/protocol/isolation.md`, `docs/architecture/components.md`,
+      `docs/protocol/message-attachments.md`, and
+      `docs/protocol/terminal-previews-and-desktop.md` that contradict
+      decision 8 B, and add "Old workspaces" to the doc lists of
       `docs/protocol/workspaces-and-sandboxes.md` and
       `docs/architecture/protocol-docs.md`.
 - [ ] Apply the answers to decisions 15, 17, 22, 23, 24, 25, 28, 29, 30,
@@ -917,6 +918,10 @@ Depends on: 3
 - [ ] At a workspace start, when the workspace's app software version is
       older than the current one, run the software step before the runner
       starts, and record the new version. Show it as its own start step.
+- [ ] Change the 409 `preview_relay_unavailable` text in
+      `worker/previews/relay.ts` and `worker/previews/README.md`, which says
+      "Start a new workspace after an admin runs Build computer", to the
+      update at the next workspace start.
 - [ ] When the update fails, go on with the old app software, and warn.
       The update runs inside the 20-minute limit of the start, so a hung
       update fails the start.

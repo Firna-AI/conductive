@@ -81,8 +81,9 @@ says.
   text holds only the words of the member.
 - Image input for Claude was not chosen, because an image that the model
   service cannot decode can fail the whole turn.
-- An older runner gives the agent no read line and no size. Each build of
-  the org image installs the newest runner, as
+- An older runner gives the agent no read line and no size. Each build and
+  each refresh of the org image installs the newest runner, and a
+  workspace start updates an older runner, as
   [The agent runner](agent-runner.md#the-agent-runner) says.
 - A turn cannot start when a file of its message cannot reach the cloud
   computer. That turn fails and names the cause. Try again copies the
