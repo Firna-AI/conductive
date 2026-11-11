@@ -15,6 +15,7 @@ import { toolSessionWorkspace } from './session-access'
 import { toolUser } from './composition-data'
 import { findChatWorkspace } from '../chat/queries'
 import { HttpError } from '../http'
+import { activeStoredTurn } from '../devices/access'
 import type { ToolSessionWrite } from './services'
 
 async function sessionState(
@@ -34,6 +35,22 @@ async function sessionState(
 
 /** Trusted calls still bind the exact object and scope each target to its org. */
 export class AgentSessionWorkspace extends AttachmentWorkspace {
+  async callingToolTurn(workspaceId: string, turnId: string) {
+    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
+      return null
+    return this.chat.runLifecycle(async () => {
+      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
+      return turn
+        ? {
+            workspaceId,
+            turnId,
+            senderUserId: turn.senderId,
+            sessionId: turn.sessionId,
+          }
+        : null
+    })
+  }
+
   writeAgentSession(input: ToolSessionWrite) {
     return featureResult(() =>
       this.chat.acceptToolWrite(input, async () => {

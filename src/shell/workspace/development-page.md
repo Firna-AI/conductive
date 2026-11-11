@@ -26,7 +26,10 @@ this server is the repository root, so it also serves the
 | `list`     | The list of the Files panel: `changes`, the default, or `all`, or `checks`. |
 | `controls` | `off` hides the controls, as for a picture. |
 | `start`    | Opens the new workspace of the create flow in a state of its first start, with its queued messages: `waiting`, `failed`, `time-limit`, or `retrying`, as `app/new-workspace` draws them. The app's own Files part then shows. |
-| `viewer`   | `member` signs in Priya, a member who is not the owner. |
+| `viewer`   | `member` signs in Priya, a member who is not the owner. With `bar`, Priya has the member role, so she may not archive. |
+| `bar`      | The GitHub state of the pull request bar, such as `ready-to-merge` or `merged`. The page then uses the app's own Files part, so a phone shows the actions at the top of Checks, and `list` names the list of a phone. |
+| `turn`     | `running` starts the fake with a turn that runs. |
+| `access`, `method`, `merge`, `work`, `continue` | How the actions of the bar end: the member's access, the merge method, the end of a merge, the local work, and the end of Continue. The first value of each is the default. |
 
 For example, `?viewport=phone&view=terminal&repair=name,start,all-files,changes`
 draws the bars of the name and the start steps on the Terminal tab of a
@@ -45,10 +48,20 @@ Changes.
   tab. The kept notices start a new view, so a bar that Dismiss hid shows
   again, with no new read of the stored history.
 
-The page gives its own Files part, so the real chat fills the centre.
-`dev/main.tsx` makes the store of that part in a stable `create`, and
-`DevPage` connects it through `useWorkspaceStore`. The other parts are the
-app's own: the tools, the pull request bar, and the owner picker. The fake
-has no terminal socket, so the terminal shows Disconnected.
+Without `bar`, the page gives its own Files part, so the real chat fills
+the centre. That part reads the kept files, which the workspace screen
+connects. The other parts are the app's own: the tools, the pull request
+bar, and the owner picker. The page gives the command palette of the app.
+The fake has no terminal socket, so the terminal shows Disconnected.
+
+With `bar`, `scenarioFetch` of `src/test-support/fake-bar-dev.ts` answers
+the actions of the bar as the Worker does with its state. A completed merge
+publishes the merged state. A Continue publishes the workspace on its new
+branch, a note in each session, the changes report of the new branch, and
+its GitHub state. A message shows the text that it sent. So the page runs
+the real action state, the real chat send, and the real event pipeline.
+For example, `?bar=merged&work=files&continue=question&viewer=member`
+asks the question of Continue, and `?bar=checks-failed&work=none` offers
+Fix checks.
 
 Run the tests with `npm run test -- src/shell/workspace`.

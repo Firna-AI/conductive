@@ -65,11 +65,19 @@ export class WorkspaceStream {
    * which the state applied can have no event of its own.
    */
   readonly last = new Store(0)
+  /**
+   * Counts the replays that end after a dropped connection or a gap, so a
+   * part that keeps its own reads, such as the access of the member, reads
+   * again after a reconnect. A start after a stop counts nothing.
+   */
+  readonly reconnects = new Store(0)
   private readonly listeners = new Set<(envelope: StreamEnvelope) => void>()
   private closeSource: (() => void) | null = null
   private cancelRetry: (() => void) | null = null
   private failures = 0
   private running = false
+  /** The connection takes the place of a lost one. */
+  private reopened = false
   /**
    * The number that the pages of a replay have read through. The state
    * through it can still miss an event that a later page replaces, so only
@@ -97,6 +105,7 @@ export class WorkspaceStream {
   start(): void {
     if (this.running) return
     this.running = true
+    this.reopened = false
     this.connect()
   }
 
@@ -129,6 +138,7 @@ export class WorkspaceStream {
   private reconnect(): void {
     this.closeSource?.()
     this.closeSource = null
+    this.reopened = true
     if (this.running) this.connect()
   }
 
@@ -139,6 +149,7 @@ export class WorkspaceStream {
     this.failures += 1
     this.cancelRetry = this.delay(wait, () => {
       this.cancelRetry = null
+      this.reopened = true
       if (this.running) this.connect()
     })
   }
@@ -187,6 +198,10 @@ export class WorkspaceStream {
     this.replay = null
     this.progress = Math.max(this.progress, through)
     if (this.progress > this.last.get()) this.last.set(this.progress)
+    if (this.reopened) {
+      this.reopened = false
+      this.reconnects.set(this.reconnects.get() + 1)
+    }
     const waiting = this.waiting.sort((a, b) => a.eventNumber - b.eventNumber)
     this.waiting = []
     for (const envelope of waiting) {

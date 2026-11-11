@@ -17,7 +17,6 @@ export function sqliteSnapshot(large = false): GitHubSnapshot {
       baseBranch: 'main',
       updatedAt: 1,
       pullRequest: null,
-      createPullRequestUrl: null,
     },
     checks: large
       ? {

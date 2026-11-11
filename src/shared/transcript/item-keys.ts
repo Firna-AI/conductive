@@ -16,3 +16,6 @@ export const endKey = (turnId: string) => `end:${turnId}`
 export const stoppedKey = (turnId: string) => `stopped:${turnId}`
 
 export const failedKey = (turnId: string) => `failed:${turnId}`
+
+/** The note of Continue: one for each new branch in a session. */
+export const continuedKey = (branch: string) => `continued:${branch}`
