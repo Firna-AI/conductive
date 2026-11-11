@@ -7,13 +7,14 @@ import {
 import { darkPalette, lightPalette } from '../../design/palette'
 
 /** The tint of a filled button: the tone of the bar state that it acts on. */
-export type ButtonTint = 'success' | 'warning' | 'danger'
+export type ButtonTint = 'success' | 'warning' | 'danger' | 'merged'
 
 /** The palette keys of the fill of each tint, at rest and on hover. */
 const fills = {
   success: ['successFill', 'successFillHover'],
   warning: ['warningFill', 'warningFillHover'],
   danger: ['dangerFill', 'dangerFillHover'],
+  merged: ['mergedFill', 'mergedFillHover'],
 } as const
 
 /**

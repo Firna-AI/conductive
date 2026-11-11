@@ -114,9 +114,15 @@ Values and marks apply at the next start of each workspace's computer.
 Every workspace receives the org's environment values, except values with a name that Conductive sets itself.
 Agents and members with terminal access can read the values that the computer receives.
 
-Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for commit authors and committers.
+In an agent turn, Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for the agent's commands.
+These values name the person whose message started the turn.
+They take priority over every Git setting.
 An org variable with one of these names has no effect.
-These values also take priority over an author that a script or an agent writes into Git settings.
+Outside an agent turn, Git takes the workspace owner's author from the computer's system Git settings.
+Conductive writes these settings at each start.
+The owner's author takes priority over a `user.name` or `user.email` setting.
+An `author` or `committer` setting in the repository or in the global Git settings takes priority over the owner's author.
+In a workspace with older cloud computer software, agent commits name the workspace owner.
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 

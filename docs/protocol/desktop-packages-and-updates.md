@@ -23,7 +23,7 @@ It includes the download names and addresses of the public GitHub releases.
 ## Releases
 
 - The update feed is the GitHub releases of this repository,
-  `Firna-AI/remote-code`, which is public.
+  `Firna-AI/conductive`, which is public.
 - A separate feed repository was rejected. Reason: releases here need no
   stored credential and no second repository.
 - One version covers the whole product. Reason: the Mac app bundles the
@@ -69,7 +69,7 @@ It includes the download names and addresses of the public GitHub releases.
 - Each DMG of a release has a fixed name, without the version:
   `Conductive-mac-arm64.dmg` for arm64 and `Conductive-mac-x64.dmg` for
   x64. So the address
-  `https://github.com/Firna-AI/remote-code/releases/latest/download/<name>`
+  `https://github.com/Firna-AI/conductive/releases/latest/download/<name>`
   always gives the DMG of the latest release for that processor type.
 - Reason: the marketing site runs no script, so it needs one address that
   always gives the newest DMG. A link to the release page was rejected,

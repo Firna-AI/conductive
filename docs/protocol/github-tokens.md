@@ -25,6 +25,19 @@ rules. A decision number names a dated record, as
   never falls back to the workspace owner.
 - A trusted Continue job is the one other case. Its fetch gets the token
   of the member who pressed Continue, as [Continue](#continue) says.
+- Each command that an agent runs in a turn has the ID of that turn. This
+  holds also in a shell that loads the sandbox's own variables again, such
+  as the login shell in which Codex runs each command.
+- The sandbox's own variables hold no turn ID. An empty turn ID in them was
+  rejected, because a shell that loads them again then removes the turn ID,
+  and Git gets no GitHub access.
+- When Git gets no GitHub access, it shows the reason. Outside an agent
+  turn, it says that Git gets GitHub access in an agent turn. When the
+  Worker refuses, it shows the Worker's message, such as an ended turn or an
+  expired GitHub sign-in. Any other failure shows one fixed message that
+  says to try again.
+- One fixed message for every failure was rejected, because it told the
+  person to sign in again also when a new sign-in cannot help.
 - The helper asks the Worker at `/v1/git/credential` on
   `api.conductive.build`. It proves itself with the workspace token.
 - The Worker checks access before it gets the GitHub token and again
@@ -85,14 +98,26 @@ rules. A decision number names a dated record, as
 - The name and the email of the person's own Git settings on their Mac
   were rejected, because a member without the Mac app has none.
 - The committer is the same person as the author.
-- Git gets the author from the four variables `GIT_AUTHOR_NAME`,
-  `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL`.
-- The app's values of these four variables replace an org env var with
-  the same name (decision 233). The app's other own variables do the same,
-  as [Startup script and env vars](workspaces-and-sandboxes.md#startup-script-and-env-vars)
+- In an agent turn, Git gets the author from the four variables
+  `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and
+  `GIT_COMMITTER_EMAIL` of each agent process. This author also wins over
+  an author that a script or an agent writes into the Git settings.
+- Outside an agent turn, Git gets the workspace owner's author from the Git
+  system settings of the sandbox. The app writes them at each start and
+  each resume.
+- Where Git uses the owner's author, it also wins over a `user.name` and a
+  `user.email` that a script or an agent writes into the Git settings. Only
+  an `author` or a `committer` setting of a repository or of the sandbox
+  user wins over it, because Git reads those settings after its system
+  settings. This holds also in an agent turn whose runner gives no turn
+  author.
+- The sandbox's own variables hold none of the four variables. The owner's
+  author in them was rejected. A shell that loads them again, such as a
+  login shell, then replaces the turn sender's author with the owner's.
+- The sandbox gets no org env var with one of these four names
+  (decision 233). The app's author applies in its place, as
+  [Startup script and env vars](workspaces-and-sandboxes.md#startup-script-and-env-vars)
   says.
-- The app's author also wins over an author that a script or an agent
-  writes into the Git settings.
 - Org env vars that win over the app's author were rejected, because the
   commits of that org then stop naming the person of the token.
 - Risk: one Git command can still give its own author, with an option or
