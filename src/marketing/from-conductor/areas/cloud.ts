@@ -69,7 +69,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Managed Git identity',
     status: 'available',
-    note: 'Turns use the sender’s GitHub account and name that person in commits, while older software names the owner. Terminals and GitHub CLI outside turns use the owner’s account, while Merge and Continue use yours.',
+    note: 'Git and the GitHub CLI use the message sender’s GitHub account, and commits name that person. The terminal uses the workspace owner’s account. Workspaces with older cloud computer software name the owner in commits. Updating that software when a workspace starts is in progress.',
   },
   {
     id: 'organization-environment-and-secrets',
