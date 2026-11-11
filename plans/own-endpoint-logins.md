@@ -778,6 +778,9 @@ Added on 11 November 2026 from the orchestrator's check of Milestone 5b.
   turn an IP address into such a name by itself. Reason: the certificate
   of the server must name the host, and the app would trust a DNS service
   that the user did not choose. The decision stays open.
+- **Chosen:** A, by Cal on 11 November 2026, after the changed item that
+  adds the guide line about names such as `<IP address>.sslip.io`.
+  Milestone 5e applies it.
 
 ## Design
 
@@ -1339,6 +1342,30 @@ same change keeps the model list in the reply of a share change, a defect
 that the Milestone 6 UI check found. Evidence:
 `.context/own-endpoint-logins/non-ui-5d/` and
 `.context/own-endpoint-logins/m5d-docs/`.
+
+## Milestone 5e: Refuse an IP address as the endpoint host
+
+Depends on: 5b
+
+The address rule refuses an IP address as the host, as decision 13 A
+says, so that the app saves no address that fails each turn.
+
+- [ ] Refuse an IP address, IPv4 or IPv6, as the host in the shared rule
+      of `src/shared/endpoint-address.ts`, so that the form, the save, the
+      dispatch, and the gateway refuse it. The refusal says "Use a public
+      https:// address with a host name, without a user name or a
+      password." A saved login with an IP address then counts as a login
+      that cannot be used, with the cause of Milestone 5b.
+- [ ] State the rule and its reason in "Own endpoint logins" of
+      `docs/protocol/tokens-and-secrets.md`.
+- [ ] Change the refusal text and the rule in the mockups.
+- [ ] Say in the agent logins guide that a free name such as
+      `<IP address>.sslip.io` works when the server has a certificate for
+      that name. The legal and guide step of Milestone 6 does it.
+- [ ] Add tests: an IPv4 and an IPv6 host refused at the save, the
+      dispatch, and the fetch, and a name such as
+      `136.115.241.64.sslip.io` accepted.
+- [ ] Update the READMEs of the changed areas.
 
 ## Milestone 6: Account and Get started
 
