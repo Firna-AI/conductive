@@ -182,6 +182,10 @@ The first review added these calls on 10 November 2026:
     eviction. The queue unit test stays. Reason: only recovery depends on
     the store, and the real chat queue can block a nested store read.
 
+39. The canonical workspace-links mockup shows an unread chip beside a
+    normal chip. Reason: the existing page can show the weight difference
+    without a new variant.
+
 ## Contracts
 
 - `GitHubSummary` in `src/shared/github.ts`: `'checks-running'`,
@@ -389,17 +393,19 @@ Depends on: 5
 
 The shared chip restores the approved visible unread signal.
 
-- [ ] Apply finding 2 A in the shared workspace chip. Use strong weight
+- [x] Apply finding 2 A in the shared workspace chip. Use strong weight
       on its unread name only. Preserve the shared file-chip styles.
-- [ ] Show an unread workspace in an existing chip mockup page.
-- [ ] Cover unread emphasis in the chip, row, and palette render tests.
+- [x] Show an unread workspace in an existing chip mockup page.
+- [x] Cover unread emphasis in the chip, row, and palette render tests.
       Keep the existing state words and archive checks.
-- [ ] Check the real app and the mockups at both sizes and in both
+- [x] Check the real app and the mockups at both sizes and in both
       schemes. Record computed weights and screenshots.
-- [ ] Capture marketing pictures again. Keep intentional changes and
+- [x] Capture marketing pictures again. Keep intentional changes and
       remove only proven capture noise.
-- [ ] Run the targeted checks and ten runs of changed async regressions.
-- [ ] Update the design text and any tasks that the visual check changes.
+- [x] Run the targeted checks and ten runs of changed async regressions.
+- [x] Update the design text and any tasks that the visual check changes.
+
+- Evidence: `.context/workspace-marks-show-github-state/fix-round-1-ui/`.
 
 ## Milestone 7: Keep the latest list summary
 
@@ -408,13 +414,13 @@ Depends on: 6
 Other records update their owned fields without replacing the list's
 GitHub summary.
 
-- [ ] Apply finding 1 D in `workspaceUpdated`. Preserve `github` for an
+- [x] Apply finding 1 D in `workspaceUpdated`. Preserve `github` for an
       existing row and keep the initial summary for a new row.
-- [ ] Add a regression through the app models. A title event after a
+- [x] Add a regression through the app models. A title event after a
       newer list summary keeps its colour. An older full record also
       keeps it. Titles and read marks still update at once.
-- [ ] See the regression fail first. Run its targets and ten async runs.
-- [ ] Update the app data lifecycle doc for the field owner.
+- [x] See the regression fail first. Run its targets and ten async runs.
+- [x] Update the app data lifecycle doc for the field owner.
 
 ## Milestone 8: Prove native retry recovery
 
@@ -422,21 +428,25 @@ Depends on: 6
 
 The failed-copy retry uses real chat storage, D1, and eviction.
 
-- [ ] Apply finding 3 D through the existing native SQLite fixture.
+- [x] Apply finding 3 D through the existing native SQLite fixture.
       Pass the real copy callback and use a non-null pull request summary.
-- [ ] Inject a failed D1 copy. Evict the object and retry the delivery
+- [x] Inject a failed D1 copy. Evict the object and retry the delivery
       with reads forbidden. Keep one stored event and repair the summary.
-- [ ] Keep the valid queue unit test and the D1 logic tests.
-- [ ] See the native regression fail first. Run its targets and ten runs.
-- [ ] Update the GitHub backend README for the native proof.
+- [x] Keep the valid queue unit test and the D1 logic tests.
+- [x] See the native regression fail first. Run its targets and ten runs.
+- [x] Update the GitHub backend README for the native proof.
+
+- Evidence for Milestones 7 and 8: `.context/workspace-marks-show-github-state/fix-round-1-nonui/`.
 
 ## Milestone 9: Verify the fixes and deliver
 
 Depends on: 6, 7, 8
 
-- [ ] Record the two deferred wider fixes and the outside-scope owner
+- [x] Record the two deferred wider fixes and the outside-scope owner
       problem as self-contained follow-up items.
-- [ ] Run the combined targeted checks and complete gate on the fixed tree.
+- [x] Run the combined targeted checks and complete gate on the fixed tree.
+- Evidence: `.context/workspace-marks-show-github-state/fix-round-1/gate.log`
+  and `.context/workspace-marks-show-github-state/fix-round-1/new-test-costs.md`.
 - [ ] Commit and push the fixes. Re-review once with fresh context. Run
       finding checks for any new item, then apply the fix rule and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
@@ -452,8 +462,11 @@ Depends on: 6, 7, 8
       purple after the merge. Recorded in
       `follow-ups/workspace-github-marks-deployed-check.md`.
 - [ ] Use a shared state-aware name component after the direct chip fix,
-      as wider option 2 B says.
+      as wider option 2 B says. Recorded in
+      `follow-ups/workspace-name-emphasis-not-shared.md`.
 - [ ] Give future GitHub integration tests a native default backend,
-      as wider option 3 F says.
+      as wider option 3 F says. This is part of the existing approved
+      native-harness work in `follow-ups/github-tests-on-real-object.md`.
 - [ ] Fix the old owner restored by partial workspace changes on a
-      separate branch. It already occurs on `origin/main`.
+      separate branch. It already occurs on `origin/main`. Recorded in
+      `follow-ups/partial-change-restores-old-owner.md`.

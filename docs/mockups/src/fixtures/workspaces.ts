@@ -180,6 +180,25 @@ export function workspace(
   return { key, name, link: workspaceLink(id), branch, choice, ...rest, owner }
 }
 
+/**
+ * A workspace whose agent finished a turn that Cal has not read yet. Its
+ * checks passed, so its list mark is green and only its bold name shows
+ * the unread output.
+ */
+export const webhookRetries: Workspace = workspace(
+  'webhook-retries',
+  'Retry failed webhooks',
+  {
+    number: 399,
+    id: 'dKe1UpohWZD_r7BFTPBvx9FhBhZRb5I_Ec77f_T-ALM',
+    repository: 'billing-service',
+    section: 'checkout',
+    status: 'unread',
+    github: 'checks-passed',
+    updated: '5m',
+  },
+)
+
 /** The workspaces of Acme when the app opens, newest first in each section. */
 export const workspaceList: readonly Workspace[] = [
   workspace('email-dark-mode', 'Dark mode for emails', {
@@ -230,15 +249,7 @@ export const workspaceList: readonly Workspace[] = [
     },
     codex,
   ),
-  workspace('webhook-retries', 'Retry failed webhooks', {
-    number: 399,
-    id: 'dKe1UpohWZD_r7BFTPBvx9FhBhZRb5I_Ec77f_T-ALM',
-    repository: 'billing-service',
-    section: 'checkout',
-    status: 'unread',
-    github: 'checks-passed',
-    updated: '5m',
-  }),
+  webhookRetries,
   workspace('apple-pay', 'Apple Pay button', {
     number: 398,
     id: 'Vi1ajLlUgS7Q581Q6lWrNplWT2aOgFeubaecbNP1gDM',

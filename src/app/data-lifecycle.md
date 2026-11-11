@@ -15,9 +15,15 @@ of the data that the screens read and write.
   people, and GitHub show. Repositories and the members read at entry and
   at focus only. The waits are choices of the app, not product
   limits. `org-waits.ts` holds them.
-- A row takes its GitHub state from each workspace record that the app
-  gets: the list reads, and the records that the open workspace shows. A
-  `github.updated` event of an open workspace changes its pull request
+- A row that the list already has takes its GitHub state only from list
+  reads. Each other record keeps that row's GitHub state: a read, a
+  Resume reply, a `workspace.updated` event, or a partial change of the
+  open workspace. So the open row shows a newer GitHub state at the
+  next list read, as every other row does.
+- A new row, such as a created workspace, takes the GitHub state of its
+  record. Titles and read marks still change the row at once. The shared
+  record readers still read and give `github`, so no API field goes away.
+  A `github.updated` event of an open workspace changes its pull request
   bar, not its row.
   [The list mark](../../docs/protocol/workspace-life.md#the-list-mark)
   says what the row shows.

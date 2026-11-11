@@ -1,0 +1,40 @@
+# A partial change restores an older owner
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-10, from branch `calummoore/workspace-status-icons`, review round 1. The check of finding 1 found it outside the scope of that branch.
+- **Location:** `src/app/workspace-detail-order.ts:127` and `:193`, `src/app/workspace-model.ts:220`, `src/app/list-changes.ts:21`, `worker/members/ownership.ts:27` and `:50`, `worker/members/membership.ts:66`, and `worker/lifecycle/ownership-maintenance.ts:3`.
+- **Reason:** The path exists on `main`, and the GitHub mark change keeps only its own field, so the owner needs its own branch.
+
+- **Terms:**
+  - **Workspace:** one task in Conductive, the coding tool at `conductive.build`. A workspace has its own branch, cloud computer, and chat.
+  - **Kept record:** the record of the open workspace that `DetailOrder` in `src/app/workspace-detail-order.ts` holds for one tab.
+  - **Partial change:** a change of one part of the kept record: a `workspace.title` event, a `start.updated` event, or a read mark that clears unread output.
+  - **List read:** the read of the sections and workspaces of an org, every 5 to 30 seconds and when the person comes back to the window.
+  - **Reassign:** the change of the workspace owner, from the owner picker of the header or Reassign to in the row menu.
+- **Background:**
+  - An admin reassigns a workspace through `reassignWorkspace` in `worker/members/ownership.ts`. A member removal or a leave moves each workspace of that member through `worker/members/membership.ts:66`.
+  - Both paths call `workspaceOwnerChanged`. Its hook in `worker/lifecycle/ownership-maintenance.ts` reruns the access check of the workspace object. It publishes no `workspace.updated` event.
+  - Renames, moves, and section deletes publish that event through `publishWorkspaceMetadata` in `worker/workspace.ts`. So every open tab follows them.
+  - The owner write sets `updated_at` to the later of the old time and the write time, in `worker/members/ownership-data.ts`.
+  - The tab that reassigns puts the new owner into its own kept record, at `src/app/workspace-model.ts:167`. Every other tab of the workspace gets no change.
+  - A list read in such a tab shows the new owner. `DetailOrder` follows the list only for the archive fields, through `syncLifecycle`. So the kept record keeps the old owner.
+  - `DetailOrder.event` and `DetailOrder.local` pass each partial change to `show`. `show` sends the whole kept record to `OrgModel.putWorkspace`, at `src/app/workspace-detail-order.ts:193`. The read mark of `clearUnread` in `src/app/workspace-model.ts:220` takes the same path.
+  - `workspaceUpdated` in `src/app/list-changes.ts` puts that record into the list row. It keeps the section and the GitHub summary. It takes every other field, also the owner and `updatedAt`.
+  - `Resource.confirm` keeps that put over each list read that started before it. The next list read that starts after it shows the new owner again.
+  - `docs/protocol/workspace-menu.md` says that each action changes only its own part of the workspace. It also says that the reply to an action does not bring back an older value of another part.
+- **Problem:** Another person reassigns a workspace that is open in a tab. A later title, start step, or read mark in that tab puts the old owner back into the list row. A normal case: the workspace has unread output while its tab is hidden, and the viewer then returns. The read mark then sends the old owner. The row also takes the older activity time. Both stay until the next list read, up to 30 seconds.
+- **Impact if no action:** For that time, the row shows the wrong owner: Reassign to in its menu marks the old owner. The menu can also offer Archive to the old owner and hide it from the new owner. The server refuses a wrong Archive with `archive_forbidden`, so no data changes. The Leave org count of owned workspaces can also be wrong. This is the same visible harm as an older GitHub colour in a row, with the server refusal as the workaround.
+- **Root question:** How does a partial change of the open workspace keep the newer owner that the list shows?
+- **Options:**
+  - **A.** Send only the owned fields of a partial change to the list. A title sends the name, a read mark sends the state, and a start step sends nothing. Reuse the field changes of `src/app/list-changes.ts`, such as `workspaceRenamed`. Keep full records for reads, Resume replies, and `workspace.updated` events. Add a regression test: after a list read with a new owner, a title event keeps that owner. Effort: Small.
+  - **B.** Follow the listed owner into the kept record before a partial change, as `syncLifecycle` follows the archive fields. The header then also shows the new owner after the next list read. Cost: a second sync rule, which must not put the record back into the list. It covers the owner only. Effort: Small.
+  - **C.** Publish the existing `workspace.updated` event after each owner change, as `publishWorkspaceMetadata` does after a rename. Every open tab, its header, and its kept record then show the new owner at once. Cost: a Worker change in the reassign and member removal paths. No protocol requirement names an event for a reassign, so the user reviews the new event first. Effort: Small.
+- **Left out:**
+  - A merge that keeps the newer record by `updatedAt` stays out. A read mark changes the state of an older kept record, so the merge would keep unread output in the list. The GitHub summary also changes without a new time.
+  - Changing nothing stays out, because the row keeps going back to the old owner.
+- **Wider fix:** A. A partial change that sends only its own fields cannot bring back any field that changed without an event.
+- **Previous examples:** Commit `8eaf4b21` added field merges for Archive and Restore in `src/app/list-changes.ts`, so their replies keep newer names, owners, and sections. Commit `ebfc286b` added the flag that keeps the menu's own name and owner changes of the kept record out of the list. Branch `calummoore/workspace-status-icons` keeps the GitHub summary of a row in `workspaceUpdated` for the same class.
+- **Related:** `plans/follow-ups/workspace-menu-state-after-actions-change.md` also covers list changes after a reassign. Its cause is the focus and the busy state of an open menu, so it stays a separate item.
+- **Recommendation:** A. It enforces the protocol rule that a change touches only its own part, with a small change in the app. C also refreshes the header of other tabs, but it adds an event that needs the user.
+- **Action:** fix after merge, apply A, because the path exists on `main` and needs its own branch.

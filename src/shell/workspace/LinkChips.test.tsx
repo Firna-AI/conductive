@@ -2,12 +2,13 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import chipStyles from '../../../docs/mockups/src/components/chat/WorkspaceChip.module.css'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { ManualDelay, requestLines } from '../../app/test-kit'
 import type { UserMessage } from '../../shared/messages'
 import { workspacesPath, type Workspace } from '../../shared/workspaces'
-import { accessibleName } from '../../test-support/dom-queries'
+import { accessibleName, byText } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import {
@@ -129,10 +130,11 @@ describe('workspace chips in the chat of the app', () => {
     expect(navigation.href()).toBe(routes.workspace(org, linked.id))
   })
 
-  test('follows a rename, then a change of the GitHub state alone, while the chat shows on a phone, and reads no list while it is hidden', async () => {
+  test('follows a rename, then a change of the GitHub state alone, then unread output in a bold name, while the chat shows on a phone, and reads no list while it is hidden', async () => {
     const { server, timers, view, navigation, listReads } =
       await openPhoneChat()
-    const renamed: Workspace = { ...linked, name: 'Saved carts for guests' }
+    const name = 'Saved carts for guests'
+    const renamed: Workspace = { ...linked, name }
     serveList(server, [archived, renamed])
     await timers.runAll()
     await settle()
@@ -140,12 +142,43 @@ describe('workspace chips in the chat of the app', () => {
       `W-${linked.number} ${renamed.name}, Checks running, Starting`,
     ])
     // Only the GitHub state changes: the name, the state, and the time stay.
-    serveList(server, [archived, { ...renamed, github: 'checks-passed' }])
+    const passed: Workspace = { ...renamed, github: 'checks-passed' }
+    serveList(server, [archived, passed])
     await timers.runAll()
     await settle()
     expect(chipsOf(view, linked)).toEqual([
       `W-${linked.number} ${renamed.name}, Checks passed, Starting`,
     ])
+    // Its cloud computer is ready, then its agent finishes a turn that the
+    // reader has not read. With the same GitHub state, only the bold name
+    // shows the unread output.
+    const strongName = () =>
+      byText(
+        name,
+        linkTo(view, routes.workspace(org, linked.id)),
+      ).classList.contains(chipStyles.strong)
+    serveList(server, [archived, { ...passed, state: 'ready' }])
+    await timers.runAll()
+    await settle()
+    const ready = { words: chipsOf(view, linked), strong: strongName() }
+    serveList(server, [archived, { ...passed, state: 'unread' }])
+    await timers.runAll()
+    await settle()
+    expect({
+      ready,
+      unread: { words: chipsOf(view, linked), strong: strongName() },
+    }).toEqual({
+      ready: {
+        words: [`W-${linked.number} ${renamed.name}, Checks passed, Ready`],
+        strong: false,
+      },
+      unread: {
+        words: [
+          `W-${linked.number} ${renamed.name}, Checks passed, Done, unread`,
+        ],
+        strong: true,
+      },
+    })
 
     act(() => navigation.push(routes.accountTab('general')))
     await settle()

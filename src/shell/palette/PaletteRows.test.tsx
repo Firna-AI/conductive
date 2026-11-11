@@ -2,6 +2,7 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import paletteStyles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
 import { workspacePaths } from '../../shared/workspaces'
@@ -147,7 +148,13 @@ describe('the rows of the command palette', () => {
     await openPaletteTab(routes.org(org), { server })
     pressPaletteKey('other', document.body)
     typeText(searchField(), '39')
-    const number = { groups: groupLabels(), starts: rowStarts() }
+    const number = {
+      groups: groupLabels(),
+      starts: rowStarts(),
+      strong: options().map((row) =>
+        row.classList.contains(paletteStyles.strong),
+      ),
+    }
     typeText(searchField(), 'storefront')
     const search = {
       groups: groupLabels(),
@@ -191,6 +198,8 @@ describe('the rows of the command palette', () => {
           ['W-391', 'Move retries to a queue'],
           ['W-395', 'Checkout address autocomplete'],
         ],
+        // Only the unread workspace shows its name in bold.
+        strong: [false, true, false, false, false, false],
       },
       search: {
         groups: ['Workspaces', 'Archived'],

@@ -244,6 +244,10 @@ It runs `WorkspaceGitHubState` through `createGitHubStatePort` and `WorkspaceCha
 [createGitHubSQLiteHarness](sqlite-harness.test-support.ts) starts the test Durable Object of [sqlite-worker.test-support.ts](sqlite-worker.test-support.ts).
 The tests cover a failed receipt write and its retry, and chat and GitHub events in one sequence.
 They also cover one transaction for the snapshot, event, and receipt, and a replay after eviction with one publisher.
+They also prove the summary copy retry with the real D1 of the harness and `saveWorkspaceGitHubSummary`.
+A D1 trigger fails the copy of a snapshot with a pull request, after its snapshot, event, and receipt commit.
+After a real eviction, the same delivery retries with GitHub reads forbidden.
+The retry repairs the summary, adds no record or event, and replays the original event.
 
 [queued-access.test.ts](queued-access.test.ts) removes the D1 membership while a commit or a replay waits in the real chat queue.
 The queued operation then fails with `404 workspace_not_found`.
@@ -252,7 +256,7 @@ The stored records, the history, and the open tabs stay unchanged.
 
 [workspace-summary.test.ts](workspace-summary.test.ts) sends signed webhooks and protected banner reads, then reads the list reply from local D1.
 It covers a failed check and a later passed read, with an unchanged activity time and position.
-It also covers an older receipt replay, the repair of a missing copy, and a failed copy with its receipt retry.
+It also covers an older receipt replay, the repair of a missing copy, and a failed copy whose retry restarts `MemoryWorkspace`.
 A D1 trigger makes the copy fail.
 [summary-queue.test.ts](summary-queue.test.ts) proves with `MemoryWorkspace` that each copy ends before the next refresh reads GitHub.
 [The shared summary tests](../../src/shared/github.test.ts) cover the order of the four values.

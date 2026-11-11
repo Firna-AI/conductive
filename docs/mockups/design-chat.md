@@ -106,10 +106,12 @@ not have, and the files that the cloud computer could not read.
 - `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
   the org as a chip in a line of text: a small rounded pill with the list
   mark of the workspace, `WorkspaceMark`, its label in a muted colour, and
-  its current name. Its height is the height of the line less 2 px, so a
-  line with a chip keeps its height. A chip is never wider than its line
-  or than 22 times the size of its font, and a long name is cut short. It
-  takes no fixtures, so the app can use it too.
+  its current name. The name of a workspace with unread output takes the
+  strong weight of 600, as in the list, in place of the chip's 500. Its
+  height is the height of the line less 2 px, so a line with a chip keeps
+  its height. A chip is never wider than its line or than 22 times the
+  size of its font, and a long name is cut short. It takes no fixtures, so
+  the app can use it too.
   - `MessageText` shows the chips in sent messages and in answers, as
     links to the screens of the workspaces. A Markdown link to a
     workspace shows as the chip alone, and a link in code stays code. A
