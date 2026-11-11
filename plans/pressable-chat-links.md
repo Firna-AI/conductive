@@ -1,6 +1,6 @@
 # Pressable links in the chat
 
-Status: Active. On branch `calummoore/chat-link-handling`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #265](https://github.com/Firna-AI/conductive/pull/265) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The chat shows each web address of an agent answer or a sent message as
 plain text, except a link to a workspace of the same org, which shows as a
