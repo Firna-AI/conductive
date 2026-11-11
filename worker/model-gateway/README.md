@@ -25,6 +25,25 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 | `/v1/model/codex`, ChatGPT sign-in only | `POST /backend-api/codex/responses` | The workspace's HTTPS backend origin, or `https://chatgpt.com` |
 
 The `/responses` suffix is for an OpenAI API key only.
+
+### ChatGPT egress proxy
+
+OpenAI blocks Cloudflare Worker traffic on `chatgpt.com`.
+It returns HTTP 403 and a block page, and Codex then stops with "workspace routing discovery failed".
+When the Worker has both `CHATGPT_EGRESS_URL` and `CHATGPT_EGRESS_SECRET`, the gateway sends each request for `chatgpt.com` or a `*.chatgpt.com` origin to that HTTPS proxy instead.
+It keeps the path, the query, the method, the headers, and the streamed body.
+It adds `x-conductive-egress-secret` with the shared secret and `x-conductive-egress-origin` with the ChatGPT origin.
+Every other upstream keeps the direct path.
+Without both settings, or with a URL that is not HTTPS, the gateway keeps the direct path.
+
+[tools/chatgpt-egress/proxy.ts](../../tools/chatgpt-egress/proxy.ts) is the proxy.
+It runs on a host outside Cloudflare, behind a named Cloudflare Tunnel.
+A quick tunnel does not work, because it does not stream server-sent events.
+The proxy refuses a request without the secret with HTTP 403.
+It calls only an `https` origin on `chatgpt.com` or a subdomain of it.
+It drops the Cloudflare, tunnel, and connection headers before it calls OpenAI, and it streams the answer back.
+The proxy sees the ChatGPT access token in transit, so it must run on a host that the operator controls.
+
 The gateway preserves the query and the request body.
 It refuses every other suffix and method locally, including the connection probe and model discovery.
 
@@ -176,6 +195,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, observation of concurrent rotation, and the redaction set for the request.
 - [../codex-auth/tasks.ts](../codex-auth/tasks.ts): the required credential task owner, built from the request execution context.
 - [codex-routing.ts](codex-routing.ts): account selection, backend validation, and the routing-free account reply.
+- [egress.ts](egress.ts): the optional ChatGPT egress proxy for `chatgpt.com` requests.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
   `hasClaudeMarkers` checks the markers of the `claude` program.
   For a Claude API key, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.
