@@ -28,12 +28,12 @@
     - `docs/protocol/org-image.md`: 98 lines.
     - `docs/protocol/desktop-app.md`: 164 lines.
     - `docs/architecture.md`: 181 lines.
-    - `docs/architecture/components.md`: 150 lines.
-  - These three pages are at the target, within a few lines of 250:
-    - `docs/protocol/model-gateway.md`: 292 lines, after the own endpoint branch `calummoore/cli-proxy-setup` on 10 November 2026.
+    - `docs/architecture/components.md`: 204 lines, after the own endpoint branch `calummoore/cli-proxy-setup` on 11 November 2026.
+    - `docs/protocol/model-gateway.md`: 184 lines, and `docs/protocol/model-gateway-requests.md`: 156 lines. The own endpoint branch `calummoore/cli-proxy-setup` split the gateway page on 11 November 2026.
+  - These two pages are at the target, within a few lines of 250:
     - `docs/protocol/operator-section.md`: 254 lines.
     - `docs/protocol/command-palette.md`: 259 lines.
-  - `docs/protocol/isolation.md` has 298 lines after the own endpoint branch `calummoore/cli-proxy-setup` on 10 November 2026 (265 before it). The merge added the rules and the risks of each version pin to its section "Agent logins in a sandbox". That section, with "A sandbox with a version pin of 2 or later" and "A sandbox with a version pin of 1", fills lines 100 to 265. The merge kept the page structure of main, so it did not split the page.
+  - `docs/protocol/isolation.md` has 294 lines after the own endpoint branch `calummoore/cli-proxy-setup` on 11 November 2026 (265 before it). The merge added the rules and the risks of each version pin to its section "Agent logins in a sandbox". That section, with "A sandbox with a version pin of 2 or later" and "A sandbox with a version pin of 1", fills lines 100 to 265. The merge kept the page structure of main, so it did not split the page.
   - `docs/deployment.md` has 361 lines. It is a deployment guide, not a protocol doc. "The runner archive", with "The archive in each deploy", fills lines 219 to 289. "Models" and "The title model" fill lines 146 to 218.
   - `docs/protocol/operator-actions.md` has 295 lines. "Suspend an org", "What members of a suspended org keep", and "Lift a suspension" fill lines 187 to 287. The other sections hold the operator, the suspension of a user and the access that it ends, and the abuse reports.
   - Two mockup docs pass 300 lines: `docs/mockups/design.md` has 376 lines, and `docs/mockups/catalogue.md` has 335. The `mockups` skill gives their rules. Each has only its title heading, so a split needs topic headings first.

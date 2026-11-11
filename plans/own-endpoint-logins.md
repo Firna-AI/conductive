@@ -38,7 +38,8 @@ Contract owners:
   section "Agent logins".
 - [Isolation](../docs/protocol/isolation.md), the section "Agent logins
   in a sandbox".
-- [Model gateway](../docs/protocol/model-gateway.md).
+- [Model gateway](../docs/protocol/model-gateway.md), and its
+  [requests and answers](../docs/protocol/model-gateway-requests.md).
 - [Deployment inputs](../docs/deployment.md), the section "Models".
 - [Data and trust](../docs/architecture/data-and-trust.md) and
   [Flows](../docs/architecture/flows.md) of the architecture.
@@ -709,6 +710,65 @@ recommendation from C to D.
 - **Closed:** on 10 November 2026, with no option applied, because Cal changed
   decision 5: the chat window shows no host.
 
+### 12. Choose the prompt cache of a Claude own endpoint
+
+Added on 11 November 2026 from the Milestone 5b report.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Location:** `runner/src/providers/claude.ts`, which sets `CLAUDE_CODE_PROMPT_CACHE_TTL=1h` only for a turn on a subscription token, and "How the agents reach the gateway" in `docs/protocol/model-gateway.md`.
+- **Terms:**
+  - **Prompt cache:** Anthropic keeps the earlier part of a conversation for a time, so that the next request reads it for less money and less use of the limits.
+- **Background:**
+  - Gateway decision 13 makes Claude ask for a prompt cache of 1 hour when the login of the turn is a Claude subscription token. Otherwise Claude asks for about 5 minutes.
+  - A turn on an own endpoint runs Claude in its API key mode. So it asks for about 5 minutes.
+  - An own endpoint can pool subscriptions, as Cal's proxy does. It can also bill a metered API key, or send the request to another cloud, such as Amazon Bedrock.
+  - Anthropic charges 1.25 times the input price to write the 5-minute cache, and 2 times the input price to write the 1-hour cache.
+  - The app cannot tell from the address or the key what is behind an endpoint.
+- **Problem:** After each pause of more than 5 minutes, the next request of a turn on an own endpoint writes the whole cache again.
+- **Impact if no action:** A subscription pool behind an own endpoint uses its limits faster than a subscription token that the app holds.
+- **Root question:** How long does the prompt cache of a Claude turn on an own endpoint last?
+- **Options:**
+  - **A.** Keep about 5 minutes for every own endpoint. Cost: a subscription pool writes the cache again after each pause of more than 5 minutes. Effort: Small.
+  - **B.** Ask for 1 hour on every Claude own endpoint, as for a subscription token. Cost: a metered key pays more for each cache write, and an endpoint that does not accept the 1-hour cache can fail each turn. The runner command needs a new field. Effort: Medium.
+  - **C.** Give each Claude own endpoint login a choice "Keep the prompt cache for 1 hour", off by default. Cost: a field on the account form, a column, a field in the runner command, a runner change, and a mockup. Effort: Medium.
+- **Left out:**
+  - A change of the request body in the gateway, because the gateway passes each request body unchanged.
+  - A check of what is behind the endpoint, because no request or answer shows it reliably.
+- **Wider fix:** None. The item chooses a behaviour, and it has no class of defect.
+- **Previous examples:** Gateway decision 13, which chose 1 hour for subscription tokens.
+- **Recommendation:** C. It gives a subscription pool such as Cal's the 1-hour cache, and it changes the cost and the support of no other endpoint.
+- **Action:** ask the user, because the options trade the limits of a pool against the cost and the failures of other endpoints, and no option is clearly best.
+
+### 13. Choose whether the address rule accepts an IP address
+
+Added on 11 November 2026 from the orchestrator's check of Milestone 5b.
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `isPublicEndpointHost` in `src/shared/endpoint-host.ts`, and the address rule in "Own endpoint logins" of `docs/protocol/tokens-and-secrets.md`.
+- **Background:**
+  - The address rule of decision 9 E accepts an `https://` address whose host is a public name or a public IP address.
+  - Users on Cloudflare's forum reported in 2018 and 2023 that a fetch of a Worker to an IP address fails with "Direct IP access not allowed", error 1003. Cloudflare's docs do not say it.
+  - No check ran on Cloudflare, because this machine has no Cloudflare login.
+  - A name that points to the IP address works. Free services such as sslip.io give such a name, and Cal's proxy uses one.
+  - Few https servers have a certificate for an IP address.
+- **Problem:** An endpoint such as `https://203.0.113.7` saves, but each turn on it can fail with an error of Cloudflare.
+- **Impact if no action:** A user who enters an IP address can see each turn fail, with an error that does not say why.
+- **Root question:** Which hosts does the address rule accept, so that the app saves no address that fails each turn?
+- **Options:**
+  - **A.** Refuse an IP address as the host, at the form, the save, the dispatch, and the gateway. The refusal says "Use a public https:// address with a host name, without a user name or a password." Cost: a new refusal and a text change in the mockups. Effort: Small.
+  - **B.** Keep the rule. After the merge, run a turn on an endpoint with an IP address on `conductive.build`, and refuse IP addresses only if the turn fails. Cost: the check needs an endpoint with a certificate for its IP address. Effort: Small.
+  - **C.** Keep the rule, and make the gateway answer such a refused fetch with a cause that says to use a name. Cost: the gateway must recognise an error page of Cloudflare, which can change. Effort: Medium.
+- **Left out:** A fetch through a TCP socket of the Worker, because the gateway then needs its own HTTP client.
+- **Wider fix:** A. One rule then refuses each address form that a fetch of the Worker cannot reach, as decision 9 E intends.
+- **Previous examples:** Decision 9 E, which refused loopback and private addresses because the Worker cannot reach them.
+- **Related:** Decision 9 E. Option A changes its rule and its refusal text.
+- **Recommendation:** A. A name for an IP address is free and quick to get, so the refusal costs little and prevents a login that fails each turn.
+- **Action:** ask the user, because option A adds a refusal and changes the address rule of the protocol.
+
 ## Design
 
 ### Facts from the checks
@@ -730,6 +790,16 @@ output are in `.context/own-endpoint-logins/checks/` and
   to `<base_url>/responses`. It refuses `wire_api = "chat"`.
 - One live turn of each agent through Cal's proxy worked with these
   routes. The proxy needed no extra header.
+- On 11 November 2026, a local workerd refused a fetch to a public name
+  that a local resolver pointed to `127.0.0.1`. Cloudflare's blog of 2
+  February 2023 says that its proxy refuses resolved localhost and private
+  addresses. No check ran on Cloudflare. Evidence:
+  `.context/own-endpoint-logins/m5b/network-findings.md`.
+- A fetch of the Worker reaches any port of a host outside Cloudflare's
+  proxy. For a host behind Cloudflare's proxy, it reaches only the https
+  ports 443, 2053, 2083, 2087, 2096, and 8443, and Cloudflare ignores
+  another port. Source: the `allow_custom_ports` entry of Cloudflare's
+  compatibility flags, which is on for the Worker's date.
 
 ### Design calls
 
@@ -810,6 +880,33 @@ them.
   workspace dialog, routines, and the default model in Preferences. The
   agent tool `list_models` keeps the full app list, because it has no
   login of its own. Agent call of 10 November 2026.
+- The runner runs an own endpoint turn in the API key mode of its agent,
+  with a turn token. So the runner needs no change. Agent call of 11
+  November 2026, from Milestone 5b.
+- The gateway adds the query of the agent's request after the query of the
+  saved address, so that both reach the endpoint. Agent call of 11
+  November 2026, from Milestone 5b.
+- The error redaction hides the saved address, the built address, its
+  origin, its host, and the key. Agent call of 11 November 2026, from
+  Milestone 5b.
+- The rule refuses no port. Reason: a host outside Cloudflare's proxy takes
+  any port, and the rule cannot tell whether a host is behind the proxy.
+  Agent call of 11 November 2026.
+- The two header rules of an Anthropic API key also apply to a Claude own
+  endpoint login: the turn token can be in `x-api-key` or in a bearer
+  header, and the gateway removes only the `oauth-2025-04-20` value from
+  `anthropic-beta`. Reason: the endpoint gets the key in `x-api-key`,
+  Claude runs the turn in its API key mode, and the key does not use the
+  OAuth login mode. Agent call of 11 November 2026, from the Milestone 2b
+  docs report.
+- The rule takes the product domain from `docs/mockups/src/brand.ts`, and
+  the Worker adds the preview domain of its configuration. Reason: one
+  change of the brand file renames the product. Agent call of 11 November
+  2026, from the check of Milestone 5b.
+- A read of the session metadata checks the address from the plain origin
+  column, and decrypts nothing. The dispatch and the gateway check the
+  whole address. Agent call of 11 November 2026, from the check of
+  Milestone 5b.
 
 ## Milestone 1: Mockups
 
@@ -934,12 +1031,12 @@ The protocol states the own endpoint login with the gateway.
 - [x] Update the feature list and "What a user needs" in `README.md`.
 - [x] Read both legal pages in full, as `AGENTS.md` says, and list each
       sentence that Milestone 6 must change.
-- [ ] Add the own endpoint as an upstream in
+- [x] Add the own endpoint as an upstream in
       `docs/architecture/components.md`, which names only Anthropic and
       OpenAI.
-- [ ] State the list of ports in `docs/protocol/model-gateway.md` after the
+- [x] State the list of ports in `docs/protocol/model-gateway.md` after the
       port check of Milestone 5b. A refusal of other ports follows decision
-      9 E.
+      9 E. The rule refuses no port, as the design calls say.
 - [x] Change the sentence "The app makes no other call to the endpoint" in
       `docs/protocol/tokens-and-secrets.md` if decision 10 reads the
       endpoint's model list.
@@ -951,6 +1048,12 @@ The legal sentences that Milestone 6 must change are listed in
 Decision 5 changed on 10 November 2026: the protocol now says that the
 session record and the composer label name no host, and it records the
 host label as rejected.
+
+On 11 November 2026, the last two TODOs also split the gateway protocol:
+"Requests and answers", "Own endpoints", "Streams", "No copies", and
+"Risks" moved to `docs/protocol/model-gateway-requests.md`. The legal and
+guide sentences that Milestone 6 must change are listed again in
+`.context/own-endpoint-logins/m2b-leftovers-report.md`.
 
 ## Milestone 3: Fix the Claude endpoint for every login
 
@@ -1084,41 +1187,50 @@ The gateway sends the model requests of an own endpoint turn to the
 endpoint, with the real key that stays in the Worker. This milestone does
 the tasks of `plans/follow-ups/own-endpoints-through-model-gateway.md`.
 
-- [ ] Let the gateway's login reader decrypt an own endpoint login, and
+- [x] Let the gateway's login reader decrypt an own endpoint login, and
       remove the refusal that Milestone 4 added. The runner still gets
       only the gateway address and a turn token.
-- [ ] Forward each allowed model route to the stored endpoint. Keep the
+- [x] Forward each allowed model route to the stored endpoint. Keep the
       gateway's body limit, allowed headers, error redaction, turn and
       access checks, login change checks, cancellation, and request lease.
       Milestone 5c reads the endpoint's model list.
-- [ ] Send the key in `x-api-key` for Claude and in `Authorization:
+- [x] Send the key in `x-api-key` for Claude and in `Authorization:
       Bearer` for Codex.
-- [ ] Use the address rule of decision 9 at the save and before every
+- [x] Use the address rule of decision 9 at the save and before every
       fetch to the endpoint, and follow no redirect. Check that
       `global_fetch_strictly_public` refuses a public name that points to
       a private address.
-- [ ] Check the address when the Worker dispatches a turn. A refused
+- [x] Check the address when the Worker dispatches a turn. A refused
       address fails the turn before an agent starts, with a plain cause
       that names the starter and the agent and points to the account page.
       A failed connection names the endpoint as unreachable.
-- [ ] Keep main's unusable-login path for a runner of protocol 1.
-- [ ] Check which https ports a Worker fetch reaches on a host outside
+- [x] Keep main's unusable-login path for a runner of protocol 1.
+- [x] Check which https ports a Worker fetch reaches on a host outside
       Cloudflare, for the protocol text of Milestone 2b.
-- [ ] Add tests: a public endpoint, refusals at the save, the dispatch,
+- [x] Add tests: a public endpoint, refusals at the save, the dispatch,
       and the fetch, an unreachable endpoint, the failed-turn cause, both
       agents' key headers, no endpoint or key in a runner command, a
       runner of protocol 1, and secret endpoint values in the error
       redaction.
-- [ ] Update the READMEs of the changed areas.
-- [ ] Remove the `oauth-2025-04-20` beta value for a Claude own endpoint,
+- [x] Update the READMEs of the changed areas.
+- [x] Remove the `oauth-2025-04-20` beta value for a Claude own endpoint,
       as the gateway does for an Anthropic API key, because the endpoint
       gets the key in `x-api-key`.
-- [ ] Check whether an own endpoint that pools subscriptions should get the
+- [x] Check whether an own endpoint that pools subscriptions should get the
       1-hour prompt cache of gateway decision 13, which today applies only
       to a subscription token. Raise a decision if it should.
-- [ ] Replace the rule in `src/shared/endpoint-address.ts` with the builder
+- [x] Replace the rule in `src/shared/endpoint-address.ts` with the builder
       of decision 9 E, and its refusal text with the mockup's: "Use a
       public https:// address, without a user name or a password."
+
+The gateway forwards own endpoint turns for both agents since 11 November
+2026. The flag `global_fetch_strictly_public` routes same-zone requests
+through the public front door. It is not the check of a resolved address.
+That check is the outbound network of workerd locally, and the deny list
+of Cloudflare's proxy in production, as "Facts from the checks" says. The
+cache check raised decision 12, and the orchestrator's check raised
+decision 13. Evidence: `.context/own-endpoint-logins/m5b/` and
+`.context/own-endpoint-logins/m5b-fixes/`.
 
 ## Milestone 5c: Read the endpoint's model list
 
