@@ -106,8 +106,8 @@ export const darkPalette: Palette = {
   panel: '#0c0d0f',
   raised: '#16191c',
   bubble: '#1a1d21',
-  // 12.7:1 on `surface`: softer than `ink` at 15.8:1, brighter than `ink2`.
-  chatInk: '#cfd3d8',
+  // 13.8:1 on `surface`: softer than `ink` at 15.8:1, brighter than `ink2`.
+  chatInk: '#d8dbdf',
   composer: '#121417',
   selected: '#1c2025',
   link: '#5cc8ff',

@@ -51,7 +51,7 @@ of background work.
     and `app/chat/tables/rows` show.
 - `ChatItemView.module.css` in `src/components/chat/` draws the body text
   of a reply and of a sent message in the `chatInk` colour. In the dark
-  scheme `chatInk` is softer than `ink`, at a contrast of 12.7:1 on the
+  scheme `chatInk` is softer than `ink`, at a contrast of 13.8:1 on the
   chat, so long replies do not glare. Headings and bold text keep `ink`.
   In the light scheme the two colours are the same. The user chose this
   colour on 11 November 2026.
