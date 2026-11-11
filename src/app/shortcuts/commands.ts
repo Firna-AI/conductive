@@ -56,6 +56,7 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'preferences',
   ]),
   palette('create-org', 'General'),
+  palette('send-feedback', 'General'),
   command(
     'toggle-sidebar',
     'View',

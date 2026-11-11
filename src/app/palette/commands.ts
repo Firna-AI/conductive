@@ -94,7 +94,7 @@ export const actionCommands: Readonly<
   'show-sidebar': 'toggle-sidebar',
   'new-workspace': 'new-workspace',
   'create-org': 'create-org',
-  'send-feedback': null,
+  'send-feedback': 'send-feedback',
 }
 
 /**

@@ -37,6 +37,7 @@ it('saves ordered shortcut changes, keeps empty overrides, and resets only the c
   const other = [
     { command: 'command-palette', keys: ['Ctrl+P'] },
     { command: 'restore-workspace', keys: ['Alt+Shift+R'] },
+    { command: 'send-feedback', keys: ['Alt+Shift+F'] },
   ]
   const otherSaved = await save(cookie, { keyboard: 'other', changes: other })
   expect(otherSaved.status).toBe(200)

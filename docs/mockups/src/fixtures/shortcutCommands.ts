@@ -1,5 +1,9 @@
 import type { Shortcut } from '../components/common/KeyChips'
 import {
+  sendFeedbackLabel,
+  sendFeedbackWords,
+} from '../components/feedback/feedbackCopy'
+import {
   fixed,
   fixedGroups,
   focusedButtonKeys,
@@ -19,6 +23,7 @@ export type CommandId =
   | 'keyboard-shortcuts'
   | 'account-page'
   | 'create-org'
+  | 'send-feedback'
   | 'toggle-sidebar'
   | 'toggle-right-column'
   | 'back'
@@ -81,6 +86,7 @@ const commandWords: Partial<Record<CommandId, readonly string[]>> = {
   'keyboard-shortcuts': ['keys', 'hotkeys', 'keybindings'],
   'account-page': ['settings', 'preferences'],
   'create-org': ['new', 'team'],
+  'send-feedback': sendFeedbackWords,
   'previous-tab': ['session'],
   'next-tab': ['session'],
   'close-tab': ['session'],
@@ -147,6 +153,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('keyboard-shortcuts', 'Keyboard shortcuts', '⌥⌘/'),
       command('account-page', 'Account page', '⌘,'),
       command('create-org', 'Create org'),
+      command('send-feedback', sendFeedbackLabel),
       fixed('Close a dialog or a menu', ['Esc']),
       focusedButtonKeys,
     ],

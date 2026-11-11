@@ -4,7 +4,11 @@ import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { Store } from '../../app/store'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
-import { queryByLabel, queryByRole } from '../../test-support/dom-queries'
+import {
+  byRole,
+  queryByLabel,
+  queryByRole,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import {
@@ -12,10 +16,12 @@ import {
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
 import type { MacWindowState } from '../mac/mac-app'
+import { replyWith, savesOf } from '../account/shortcuts/shortcuts-test-kit'
+import { feedbackDialog, serveFeedback } from '../feedback/feedback-test-kit'
 import { placeOf, serverWith } from '../new-workspace/dialog-test-kit'
 import { openPaletteTab } from '../palette/palette-test-kit'
-import { press, settle } from '../test-mount'
-import { pressHintKey } from './shortcut-test-kit'
+import { click, press, settle } from '../test-mount'
+import { pressHintKey, pressShortcut } from './shortcut-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -24,8 +30,10 @@ const { org, workspace } = FAKE_IDS
 describe('the keys of the commands of a page', () => {
   test('a command that the palette lists runs from its key as its row does, also on the Account page', async () => {
     holdAnimationFrames()
+    const server = serverWith('dialog')
+    serveFeedback(server)
     const { app, navigation } = await openPaletteTab(routes.account(), {
-      server: serverWith('dialog'),
+      server,
     })
     // The Account page works on Acme, the first org, as the palette does.
     pressHintKey(app, 'new-workspace', document.body)
@@ -48,6 +56,27 @@ describe('the keys of the commands of a page', () => {
     }).toEqual({
       opened: { place: 'Acme · General', address: routes.account() },
       shortcuts: { prevented: true, at: routes.accountTab('shortcuts') },
+    })
+    expect(
+      queryByRole('button', 'Add shortcut for Send feedback') !== null,
+    ).toBe(true)
+    const change = { command: 'send-feedback', keys: ['Alt+Shift+F'] } as const
+    replyWith(server, [change], 'other')
+    click(byRole('button', 'Add shortcut for Send feedback'))
+    pressShortcut('Alt+Shift+F')
+    await settle()
+    const feedback = pressShortcut('Alt+Shift+F', document.body)
+    await settle()
+    expect({
+      saves: await savesOf(server),
+      prevented: feedback.defaultPrevented,
+      dialog: feedbackDialog() !== null,
+      at: navigation.href(),
+    }).toEqual({
+      saves: [{ keyboard: 'other', changes: [change] }],
+      prevented: true,
+      dialog: true,
+      at: routes.accountTab('shortcuts'),
     })
   })
 

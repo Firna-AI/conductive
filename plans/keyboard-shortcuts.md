@@ -1392,9 +1392,10 @@ Tags: mockup
 Depends on: none. It comes from the agent call of the sixth merge of
 `main`.
 
-- [ ] Add the command Send feedback, without a default key, to the rows of
+- [x] Add the command Send feedback, without a default key, to the rows of
       the tab after Create org, and its key to the Send feedback row of
-      the palette. Run `npm run mockups:check`.
+      the palette. Run `npm run mockups:check`. Report:
+      `.context/keyboard-shortcuts/reports/send-feedback-docs-mockups.md`.
 
 ## Milestone 11: The Send feedback command in the protocol and the model
 
@@ -1402,10 +1403,15 @@ Depends on: none. Agent call, 2026-11-11: it runs beside Milestone 10,
 because a command row without a key raises no design question that the
 mockup could find.
 
-- [ ] Add Send feedback, without a default key, to the default keys of
+- [x] Add Send feedback, without a default key, to the default keys of
       `docs/protocol/keyboard-shortcuts-keys.md`.
-- [ ] Add the command Send feedback without a default key, and run it from
-      the palette's Send feedback row, with tests.
+- [x] Add the command Send feedback without a default key, and run it from
+      the palette's Send feedback row, with tests. Report:
+      `.context/keyboard-shortcuts/reports/send-feedback-model.md`.
+- [ ] Split `docs/protocol/keyboard-shortcuts.md` and
+      `docs/protocol/keyboard-shortcuts-keys.md`, which pass the 250 lines
+      of the `documentation` skill, into linked pages, from the docs
+      report of Milestone 10.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

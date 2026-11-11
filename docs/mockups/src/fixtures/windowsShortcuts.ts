@@ -16,6 +16,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'keyboard-shortcuts': ['Alt+Shift+/'],
   'account-page': ['Ctrl+,'],
   'create-org': [],
+  'send-feedback': [],
   'toggle-sidebar': [],
   'toggle-right-column': ['Alt+Shift+B'],
   back: [],

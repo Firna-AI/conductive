@@ -16,6 +16,7 @@ export const shortcutCommandIds = [
   'keyboard-shortcuts',
   'account-page',
   'create-org',
+  'send-feedback',
   'toggle-sidebar',
   'toggle-right-column',
   'back',

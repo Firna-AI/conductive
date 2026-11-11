@@ -41,6 +41,7 @@ test('the palette lists the command of each row but Switch to org, which the rai
     futex: switches({ org: futex }),
     deleted: switches({ orgs: [acme, deleted, firna] }),
     suspended: commands({ suspended: true }),
+    withoutOrg: commands({ org: null, orgs: [] }),
   }).toEqual({
     page: [
       'new-session',
@@ -49,11 +50,18 @@ test('the palette lists the command of each row but Switch to org, which the rai
       'new-section',
       'create-org',
       'toggle-sidebar',
+      'send-feedback',
       'repositories-settings',
       'keyboard-shortcuts',
     ],
     futex: ['org-1', 'org-3'],
     deleted: ['org-3'],
-    suspended: ['create-org', 'repositories-settings', 'keyboard-shortcuts'],
+    suspended: [
+      'create-org',
+      'send-feedback',
+      'repositories-settings',
+      'keyboard-shortcuts',
+    ],
+    withoutOrg: ['create-org', 'send-feedback', 'keyboard-shortcuts'],
   })
 })

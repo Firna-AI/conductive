@@ -21,6 +21,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'keyboard-shortcuts': { mac: ['Alt+Meta+/'], other: ['Alt+Shift+/'] },
   'account-page': { mac: ['Meta+,'], other: ['Ctrl+,'] },
   'create-org': { mac: [], other: [] },
+  'send-feedback': { mac: [], other: [] },
   'toggle-sidebar': { mac: ['Meta+B'], other: [] },
   'toggle-right-column': { mac: ['Alt+Meta+B'], other: ['Alt+Shift+B'] },
   back: { mac: ['Meta+['], other: [] },

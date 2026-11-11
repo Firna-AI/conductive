@@ -5,41 +5,59 @@ import { defaultShortcutKeys } from './defaults'
 import { buildShortcutKeymap } from './keymap'
 import { context, key, press, tab } from './shortcut-test-support'
 
-test('Restore workspace follows Archive workspace and runs an assigned key only when offered', () => {
-  const archive = shortcutCommands.findIndex(
-    (command) => command.id === 'archive-workspace',
-  )
-  expect.soft(shortcutCommands[archive + 1]).toEqual({
-    id: 'restore-workspace',
-    group: 'Workspace',
-    scope: 'palette',
-    label: 'Restore workspace',
-    words: ['unarchive'],
-  })
-  for (const keyboard of ['mac', 'other'] as const) {
-    expect(defaultShortcutKeys('restore-workspace', keyboard)).toEqual([])
-    const keymap = buildShortcutKeymap(keyboard, [
-      { command: 'restore-workspace', keys: [key('Ctrl+Alt+P')] },
-    ])
-    const restored = context({
-      keyboard,
-      keymap,
-      press: press({
-        key: 'p',
-        code: 'KeyP',
-        metaKey: false,
-        ctrlKey: true,
-        altKey: true,
-      }),
+test('Restore workspace and Send feedback follow their groups and run assigned keys only when offered', () => {
+  const cases = [
+    {
+      id: 'restore-workspace',
+      previous: 'archive-workspace',
+      group: 'Workspace',
+      label: 'Restore workspace',
+      words: ['unarchive'],
+    },
+    {
+      id: 'send-feedback',
+      previous: 'create-org',
+      group: 'General',
+      label: 'Send feedback',
+      words: ['bug', 'idea', 'support', 'contact', 'help', 'report'],
+    },
+  ] as const
+  for (const item of cases) {
+    const previous = shortcutCommands.findIndex(
+      (command) => command.id === item.previous,
+    )
+    expect.soft(shortcutCommands[previous + 1], item.id).toEqual({
+      id: item.id,
+      group: item.group,
+      scope: 'palette',
+      label: item.label,
+      words: item.words,
     })
-    expect.soft(decideShortcut(restored), keyboard).toEqual({
-      kind: 'command',
-      command: 'restore-workspace',
-      closeMenu: false,
-    })
-    expect(decideShortcut({ ...restored, offered: new Set() })).toEqual({
-      kind: 'pass',
-    })
+    for (const keyboard of ['mac', 'other'] as const) {
+      expect(defaultShortcutKeys(item.id, keyboard)).toEqual([])
+      const keymap = buildShortcutKeymap(keyboard, [
+        { command: item.id, keys: [key('Ctrl+Alt+P')] },
+      ])
+      const offered = context({
+        keyboard,
+        keymap,
+        press: press({
+          key: 'p',
+          code: 'KeyP',
+          metaKey: false,
+          ctrlKey: true,
+          altKey: true,
+        }),
+      })
+      expect.soft(decideShortcut(offered), `${item.id} ${keyboard}`).toEqual({
+        kind: 'command',
+        command: item.id,
+        closeMenu: false,
+      })
+      expect(decideShortcut({ ...offered, offered: new Set() })).toEqual({
+        kind: 'pass',
+      })
+    }
   }
 })
 

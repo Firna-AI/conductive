@@ -87,7 +87,7 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
 | Commands | Owner |
 | --- | --- |
 | Command palette | `PaletteProvider.tsx` |
-| Each command that the palette lists: New workspace, New section, Archive workspace, Restore workspace, the Go to rows, New session, Session history, Create org, Repositories settings, Keyboard shortcuts, and Hide or show the sidebar | `PaletteKeys.tsx` of the palette, from the rows of `listedCommands` |
+| Each command that the palette lists: New workspace, New section, Archive workspace, Restore workspace, the Go to rows, New session, Session history, Create org, Send feedback, Repositories settings, Keyboard shortcuts, and Hide or show the sidebar | `PaletteKeys.tsx` of the palette, from the rows of `listedCommands` |
 | Switch to org 1 to 9 | `OrgRail.tsx`, while the rail shows, for each org by its place, also the org of the page and a deleted org |
 | Account page | `Signed` in `Shell.tsx`, on each page of the signed-in app |
 | Workspace list | `OrgRoutes.tsx`, on each page of an org that is not deleted |
@@ -105,6 +105,8 @@ same thing, and the key runs only where the palette lists the row, as
 says. Each row of the palette names its command in `CommandRow.command`.
 A Switch to row names the command of the place of its org, whose key it
 shows, but the rail runs that key, so `listedCommands` leaves it out.
+The Help group offers Send feedback on each page. It has no default key.
+An assigned key opens the Feedback dialog through the same row action.
 
 ## Mark a terminal
 
