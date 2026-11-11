@@ -108,6 +108,14 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     note: 'Agents powered by Claude load repository skills. Personal Mac skills are not copied.',
   },
   {
+    id: 'skill-use-indicators',
+    area: 'agents-and-chat',
+    name: 'Skill use indicators',
+    status: 'planned',
+    note: 'Showing skill names in chat and on folded tool groups is planned for agents powered by Claude and Codex.',
+    due: null,
+  },
+  {
     id: 'context-meter-and-compaction',
     area: 'agents-and-chat',
     name: 'Context meter and compaction',
@@ -126,7 +134,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Answers show Markdown, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
+    note: 'Answers show Markdown, tables, lists, and code. Headings show as plain text today, and real headings are planned. Diagrams, maths, media, and Run buttons are under consideration.',
   },
   {
     id: 'chat-links',
@@ -140,8 +148,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'session-links',
     area: 'agents-and-chat',
     name: 'Session links',
-    status: 'planned',
-    note: 'Links to individual chat sessions are planned.',
+    status: 'in-progress',
+    note: 'Links that open individual chat sessions, shown as chips in chat, are in progress.',
     due: null,
   },
   {
@@ -183,8 +191,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'agent-to-agent-messages',
     area: 'agents-and-chat',
     name: 'Agent-to-agent messages',
-    status: 'planned',
-    note: 'Agents can create another workspace with a first message. Sending messages to existing sessions is planned.',
+    status: 'in-progress',
+    note: 'Agents can create another workspace with a first message. Sending messages to existing sessions is in progress.',
     due: null,
   },
   {
