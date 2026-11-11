@@ -945,17 +945,18 @@ The docs state the requirements of each moment that this plan changes.
 
 Depends on: 2
 
-- [ ] Add a D1 migration for the records of design item 4: the app
+- [x] Add a D1 migration for the records of design item 4: the app
       software version and the install script revision of each org image,
       the cause of each refresh, and the app software version, the org
       image, the install script revision, and the failed update mark of
       each workspace.
-- [ ] Write the records at each build, refresh, workspace start, and
+- [x] Write the records at each build, refresh, workspace start, and
       update of an old workspace. A workspace with no recorded version
       counts as older than the current version.
-- [ ] Tests: a build from a software image and a build with the software
+- [x] Tests: a build from a software image and a build with the software
       step each record the right version. A first workspace start records
       the version and the org image of its image.
+      Evidence: `.context/software-image/records/report.md`.
 
 ## Milestone 4: Clean later builds
 

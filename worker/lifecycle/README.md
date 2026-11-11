@@ -112,6 +112,35 @@ A confirmed missing archived disk uses that batch too.
 [Lifecycle key code](key-code.md) names the files, the types, and the
 functions of the lifecycle that a reader opens first.
 
+- [build-admission-data.ts](build-admission-data.ts): `insertBuild` pins the
+  software version and install script revision in the job. `publishBuild`
+  copies them to the published build in the same D1 batch as the org image
+  pointer. A refresh that starts from an org image inherits its records.
+- [image-records.ts](image-records.ts): `installScriptRevision` hashes the
+  exact saved script text. Its types add `refreshCause` to build history
+  and build responses. New refreshes record `push`, `daily`, or `request`
+  at admission. Builds and older refreshes keep a null cause.
+- [org-image-data.ts](org-image-data.ts): `readOrgImage` reads the version
+  and script revision from the published build of that provider account.
+- [start-allocation.ts](start-allocation.ts): `allocateWorkspace` records
+  the allocated snapshot's build and versions before the provider request.
+  A newer org image cannot change those records. A retained computer keeps
+  its records.
+- [workspace-software-data.ts](workspace-software-data.ts):
+  `readWorkspaceImageRecords` reads the workspace's software version,
+  starting image build, install script revision, and failed update mark.
+  `workspaceSoftwareIsOlder` treats a different or missing version as old.
+  Versions are content digests, so they have no time order.
+  `workspaceInstallScriptDiffers` compares the workspace script revision
+  with the current org image in its provider account. A new image with the
+  same script does not change the result.
+  `recordWorkspaceSoftwareVersion` records a good software update and clears
+  the failed update mark. `recordWorkspaceSoftwareUpdateFailed` sets or
+  clears that mark without changing the version. It stays set until a
+  caller clears it at the next start or records a good software update.
+  `recordWorkspaceInstallScriptRevision` records a good install script run
+  without changing the software version or the starting image build.
+
 ### Related Docs
 
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):

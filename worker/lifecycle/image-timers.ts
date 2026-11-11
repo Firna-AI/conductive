@@ -79,6 +79,7 @@ export async function refreshImagesForPush(
           orgId: repository.orgId,
           userId: admin.userId,
           kind: 'refresh',
+          refreshCause: 'push',
           software: input.software,
         },
         providerAccount,
@@ -164,6 +165,8 @@ export async function runImageAlarm(
       kind: 'refresh',
       software: state.software,
       dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
+      refreshCause:
+        next.dailyAt <= runtime.dependencies.now() ? 'daily' : 'push',
     },
     providerAccount,
   )

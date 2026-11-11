@@ -167,6 +167,19 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611111600_image_software_records.sql` adds the software version and the
+install script revision to image jobs and published builds. It also adds
+the refresh cause to each build record. The current org image points to
+its published build through `org_images.image_build_id`.
+Each workspace gets the software version, the starting image build, the
+install script revision, and a failed software update mark.
+The starting build ID is retained text, so org deletion can remove builds
+before workspaces.
+Existing versions and revisions stay null because their installed values
+are not known. A missing workspace software version requires an update.
+The failed update mark starts at zero.
+The [lifecycle backend](../worker/lifecycle/README.md#key-code) owns these records.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -204,6 +217,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Preferences and New workspace dialog | `202611082300`–`202611082359` |
 | Computer ledger account merge | `202611100900`–`202611100959` |
 | Software image for first builds | `202611101200`–`202611101259` |
+| Image software records | `202611111600`–`202611111659` |
 | 16 Deployment | `202611071800`–`202611071859` |
 | 17 Verification | `202611071900`–`202611071959` |
 | Routines: records and routes | `202611101300`–`202611101359` |

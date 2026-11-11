@@ -10,6 +10,7 @@ import {
 import { orgProviderForAccount, providerForAccount } from '../sandbox/client'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { softwareVersion } from '../software-image/version'
+import type { RefreshCause } from './image-records'
 import type { SandboxProvider } from '../sandbox/provider'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
 import {
@@ -86,6 +87,7 @@ export async function startImageBuild(
     kind: ImageBuild['kind']
     software: ImageSoftwareArtifact
     dailyRefresh?: boolean
+    refreshCause?: RefreshCause
   },
   providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<string> {
@@ -147,14 +149,23 @@ export async function startImageBuild(
         input.kind === 'refresh' && previous
           ? previous.settingsRevision
           : settings.revision,
-      installScript: settings.installScript,
+      installScript:
+        input.kind === 'refresh' && previous
+          ? previous.installScript
+          : settings.installScript,
       repositories,
       repositoryLocations: locations,
       previousRepositoryLocations:
         input.kind === 'build' ? [] : previousLocations,
       software,
       softwareVersion:
-        input.kind === 'build' ? await softwareVersion(software) : undefined,
+        input.kind === 'build'
+          ? await softwareVersion(software)
+          : (previous?.softwareVersion ?? undefined),
+      installScriptRevision:
+        input.kind === 'refresh' ? previous?.installScriptRevision : undefined,
+      refreshCause:
+        input.refreshCause ?? (input.dailyRefresh ? 'daily' : 'request'),
       previousImageName: image?.imageName ?? null,
       previousRunnerProtocolVersion: previous?.runnerProtocolVersion ?? null,
       now,

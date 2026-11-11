@@ -5,6 +5,7 @@ import type { SandboxProvider, SandboxStart } from '../sandbox/provider'
 import { encrypt, decrypt } from '../security/crypto'
 import { createResource } from './resource-intents'
 import { assignSandbox } from './workspace-data'
+import { recordWorkspaceImage } from './workspace-software-data'
 import type { StartJobStorage, WorkspaceStartJob } from './start-types'
 
 function strings(value: unknown): Record<string, string> {
@@ -90,6 +91,12 @@ export async function allocateWorkspace(
   )
     .bind(job.orgId, payload.snapshotName ?? null, job.orgId, job.workspaceId)
     .run()
+  await recordWorkspaceImage(env.DB, {
+    orgId: job.orgId,
+    workspaceId: job.workspaceId,
+    providerAccount: job.providerAccount,
+    imageName: payload.snapshotName ?? null,
+  })
   try {
     if (!job.allocatedSandboxId) {
       const sandbox = await createResource(env.DB, provider, {

@@ -1,8 +1,4 @@
-import type {
-  BuildResponse,
-  BuildsResponse,
-  ImageBuild,
-} from '../../src/shared/org-settings'
+import type { ImageBuild } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { readOrgImage } from './org-image-data'
@@ -14,6 +10,13 @@ import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
 import { readBuildChanges } from './build-changes-data'
+import type {
+  BuildWithCause,
+  BuildsWithCauses,
+  ImageVersions,
+  RecordedImageBuild,
+  RefreshCause,
+} from './image-records'
 
 export type BuildPhase =
   | 'create'
@@ -27,13 +30,14 @@ export type BuildPhase =
   | 'cleanup-build'
   | 'done'
 
-export interface BuildJob {
+export interface BuildJob extends ImageVersions {
   providerRetry: ProviderRetryState | null
   startedAt: number
   buildId: string
   orgId: string
   providerAccount: string
   kind: ImageBuild['kind']
+  refreshCause: RefreshCause | null
   state: ImageBuild['state']
   sandboxId: string | null
   snapshotName: string | null
@@ -54,7 +58,8 @@ export interface BuildJob {
   previousProviderAccount: string
 }
 
-const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.started_at AS startedAt,
+const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.refresh_cause AS refreshCause,
+  b.state, b.started_at AS startedAt,
   b.sandbox_id AS sandboxId, b.snapshot_name AS snapshotName,
   b.provider_account AS providerAccount,
   b.settings_revision AS settingsRevision, b.runner_protocol_version AS runnerProtocolVersion,
@@ -65,10 +70,12 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.start
   j.repository_locations_json AS repositoryLocationsJson,
   j.previous_repository_locations_json AS previousRepositoryLocationsJson,
   j.previous_image_name AS previousImageName, j.software_image_name AS softwareImageName,
+  COALESCE(b.software_version, j.software_version) AS softwareVersion,
+  COALESCE(b.install_script_revision, j.install_script_revision) AS installScriptRevision,
   j.provider_account AS previousProviderAccount,
   b.provider_retry_json AS providerRetryJson`
 
-const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,
+const buildColumns = `id, org_id AS orgId, kind, refresh_cause AS refreshCause, state, started_at AS startedAt,
   completed_at AS completedAt, CASE WHEN completed_at IS NULL THEN NULL
   ELSE completed_at - started_at END AS durationMs, error`
 
@@ -191,13 +198,13 @@ export async function readBuildHistory(
   db: D1Database,
   orgId: string,
   providerAccount = DEFAULT_PROVIDER_ACCOUNT,
-): Promise<BuildsResponse> {
+): Promise<BuildsWithCauses> {
   const { results } = await db
     .prepare(
       `SELECT ${buildColumns} FROM image_builds WHERE org_id = ? ORDER BY started_at DESC, id DESC`,
     )
     .bind(orgId)
-    .all<ImageBuild>()
+    .all<RecordedImageBuild>()
   const image = await readOrgImage(db, orgId, providerAccount)
   return {
     builds: results,
@@ -210,7 +217,7 @@ export async function readBuild(
   db: D1Database,
   orgId: string,
   buildId: string,
-): Promise<BuildResponse> {
+): Promise<BuildWithCause> {
   return readBuildSnapshot(db, orgId, buildId)
 }
 
