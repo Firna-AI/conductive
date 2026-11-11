@@ -15,7 +15,7 @@ Opening a file or a change starts the computer again.
 On a computer, the file lists sit beside the chat.
 On a phone, open the workspace's **Files** view.
 
-- **All files** shows the repository as a tree.
+- **All files** shows the repository as a tree. After a new computer build, it also lists the files in `.context/`.
 - **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 

@@ -14,6 +14,10 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 
 - All files shows every file of the branch as a tree. A small mark shows
   each added or changed file.
+- All files also shows the files of the context folder that Git ignores,
+  without a mark, as
+  [The context folder](repository-folders.md#the-context-folder) says.
+  Changes leaves them out.
 - A file opens as a tab in the centre column. Markdown shows rendered, with
   a switch to its source. Code shows with line numbers and syntax colours.
 - The header of a file tab can copy and download the file.

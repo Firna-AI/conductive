@@ -12,7 +12,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   return { ...original, appendFile: vi.fn(original.appendFile) }
 })
 
-it('excludes context files before the first reports and keeps tracked and nested files visible', async () => {
+it('lists context files in the tree only and keeps tracked and nested files visible', async () => {
   let exclude = ''
   const h = await runnerHarness(async (repository) => {
     exclude = resolve(
@@ -24,6 +24,8 @@ it('excludes context files before the first reports and keeps tracked and nested
     await repository.git('add', '.context/tracked.md')
     await repository.git('commit', '-m', 'keep tracked context')
     await repository.write('.context/note.md', 'private\n')
+    await repository.write('.context/attachments/a1/.gitignore', '*')
+    await repository.write('.context/attachments/a1/shot.png', 'image\n')
     await repository.write('nested/.context/visible.md', 'visible\n')
     await repository.write('ignored.tmp', 'ignored\n')
   })
@@ -38,7 +40,9 @@ it('excludes context files before the first reports and keeps tracked and nested
   )
   expect(files).toContain('.context/tracked.md')
   expect(files).toContain('nested/.context/visible.md')
-  expect(files).not.toContain('.context/note.md')
+  expect(files).toContain('.context/note.md')
+  expect(files).toContain('.context/attachments/a1/shot.png')
+  expect(files).toContain('.context/attachments')
   expect(files).not.toContain('ignored.tmp')
   expect(
     h.endpoint.runnerEvents.flatMap(({ event }) =>

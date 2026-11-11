@@ -41,8 +41,8 @@ On a phone, **Enter** adds a line.
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
 New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
-Use **Terminal** to find the ignored files.
-**All files** and **Changes** do not list them.
+After a new computer build, **All files** lists them, so you can open them there.
+**Changes** does not list them.
 
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.
