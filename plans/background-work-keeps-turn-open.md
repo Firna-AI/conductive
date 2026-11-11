@@ -28,6 +28,7 @@ Contract owners:
 
 - [Agent runner](../docs/protocol/agent-runner.md), in a new section on background work.
 - [Chat and events](../docs/protocol/chat-and-events.md), for the output after a wake-up and the end at the limit.
+- [Session transcripts](../docs/protocol/session-transcripts.md), for the end reason in copied transcripts and `read_session` output.
 - The term "Turn" in the [architecture doc](../docs/architecture.md#terms).
 - The chat mockups in [`docs/mockups/`](../docs/mockups/README.md), for the end at the limit.
 - The [runner README](../runner/README.md).
@@ -120,7 +121,7 @@ decisions 2 and 3. Its report is in
 - The end reason is a new optional field of `turn.completed`. Its one
   value now names the limit. Later causes can add values. The Worker
   accepts the field, stores it with the turn end, and keeps it in session
-  transcripts and `read_chat` output, as it does for `filesUnavailable`.
+  transcripts and `read_session` output, as it does for `filesUnavailable`.
 - The chat shows "Background work stopped at the time limit" above the
   row of the duration and the files. The line is centred and muted, as
   the other event lines of the chat. The wait uses the existing running
@@ -176,6 +177,18 @@ Design calls:
   component serve the mockups and app. Reason: both use the same words
   and layout. A waiting variant shows the existing running-turn display.
 
+- 11 November 2026, the docs implementor's call: the lost-update and
+  transcript-read requirements move into linked pages with stubs at their
+  old anchors. Reason: each touched protocol doc stays under 250 lines
+  without losing any requirement or inbound link.
+- 11 November 2026, the docs implementor's call: the docs use the short
+  name "background work decision" and define "Background work" in the
+  architecture terms. Reason: the decisions and terms stay clear across
+  the runner, chat, and transcript requirements.
+- 11 November 2026, my check: the limit still applies after a reply when
+  the last task already ended. Reason: agent work after a wake-up counts,
+  and the approved design applies an elapsed limit at the reply end.
+
 Risks:
 
 - While a turn waits, each process in the sandbox can still read its turn
@@ -210,21 +223,25 @@ The mockups found no problem that changes an approved decision.
 
 Depends on: 1
 
-- [ ] Add a section on background work to `docs/protocol/agent-runner.md`:
+- [x] Add a section on background work to `docs/protocol/agent-runner.md`:
       the wait, its end, the note, the limit and its count, the end
       reason, and Stop during the wait.
-- [ ] Update `docs/protocol/chat-and-events.md` for the output after a
+- [x] Update `docs/protocol/chat-and-events.md` for the output after a
       wake-up and for the line at the end of a turn at the limit.
-- [ ] Update `docs/protocol/session-transcripts.md` when transcripts name
+- [x] Update `docs/protocol/session-transcripts.md` when transcripts name
       the end reason.
-- [ ] Update the term "Turn" in `docs/architecture.md`.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+- [x] Update the term "Turn" in `docs/architecture.md`.
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact, as
       [Website docs](../docs/protocol/website-docs.md#words-of-the-guides) says.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
+
+Evidence: `.context/background-work-keeps-turn-open/milestone-2-report.md`.
+The legal pages and all 12 guides need no correction of an existing fact.
+Milestone 7 adds the new behavior to the chat guide.
 
 ## Milestone 3: The end reason of a turn
 
@@ -234,7 +251,7 @@ Depends on: 2
       `src/shared/chat-events.ts` and in the runner contract.
 - [ ] Accept and store it in the Worker, in `worker/chat/agent-events.ts`
       and its neighbours. Keep it in session transcripts and in
-      `read_chat` output.
+      `read_session` output.
 - [ ] Add Worker and shared tests for a turn end with and without it.
 
 ## Milestone 4: Hold the turn while background work runs

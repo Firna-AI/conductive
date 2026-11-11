@@ -9,7 +9,9 @@ that reach the browser. Linked pages cover
 [the agent runner](agent-runner.md) in the sandbox. The terms are those of
 the [architecture doc](../architecture.md#terms). A decision number names
 a dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A background work decision number names a decision of the change
+that keeps a turn open for background work, as
+[Agent runner](agent-runner.md) says.
 
 ## Agents
 
@@ -71,7 +73,21 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   the end of the turn.
 - While a turn runs, the chat shows the time since the turn started, and
   Stop sits beside Send.
+- A Claude turn that waits for its
+  [background work](agent-runner.md#background-work) shows as any running
+  turn. The output of the agent after each notification joins that turn.
+- The chat shows no line and no workspace state for the wait (background
+  work decision 3). A line in the running turn that names the work, and a
+  workspace state such as "waiting", were not chosen.
 - A finished turn ends with its duration and the files that it changed.
+- A turn that ended at the time limit of background work shows
+  "Background work stopped at the time limit" in its end, above its
+  duration and its files (background work decision 3). The
+  [mockup catalogue](../mockups/catalogue.md) draws it at
+  `app/chat/background-limit`.
+- The line names no length of the limit. Reason: the member cannot change
+  the limit.
+- A toast at the limit was rejected, because a routine run has no open tab.
 - When the runner cannot tell which files a turn changed, its end shows
   "Changed files unavailable" in place of the files (decision 109). The
   turn still shows as finished or stopped, not as failed.
@@ -149,4 +165,4 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 
 ## The agent runner
 
-[The agent runner](agent-runner.md#the-agent-runner) states its connection, events, limits, turns, and report repairs.
+[The agent runner](agent-runner.md) states its connection, events, limits, turns, the background work of Claude turns, and report repairs.
