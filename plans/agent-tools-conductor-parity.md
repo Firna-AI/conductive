@@ -588,6 +588,8 @@ README evidence: `.context/agent-tools-conductor-parity/reports/m3-readmes.md`.
 
 Depends on: 3
 
+Completed: 11 November 2026.
+
 Add the session and message calls, and the stored session of a stop by an
 agent.
 
@@ -607,10 +609,13 @@ agent.
       workspace, a close of a running session with and without the stop, a
       stop of an idle session, the stored sending session, the stop line
       in the copy, and a message of another workspace.
-- [ ] Update `worker/tools/README.md` and `worker/chat/README.md`.
+- [x] Update `worker/tools/README.md` and `worker/chat/README.md`.
 
 Evidence: `.context/agent-tools-conductor-parity/reports/m4-sessions.md`
 and `.context/agent-tools-conductor-parity/checks/m4-orchestrator-tests.log`.
+
+README evidence: `.context/agent-tools-conductor-parity/reports/m4-readmes.md`.
+Main integration notes: `.context/agent-tools-conductor-parity/merge-m4-docs-notes.md`.
 
 ## Milestone 5: Section and preview calls
 

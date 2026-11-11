@@ -9,11 +9,9 @@ async function firstStoredRequester(
   if (turn.state === 'queued' || turn.state === 'running') return undefined
   let after = 0
   for (;;) {
-    const page = await transaction.history(
-      after,
-      transaction.eventNumber,
-      turn.sessionId,
-    )
+    const page = await transaction.history(after, transaction.eventNumber, {
+      sessionId: turn.sessionId,
+    })
     for (const { event } of page.events) {
       if (event.type === 'turn.stop-requested' && event.turnId === turn.id) {
         return event.requestedBySession !== undefined

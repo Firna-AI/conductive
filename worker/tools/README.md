@@ -6,6 +6,7 @@ It uses the existing [shared contracts](../../src/shared/README.md) and D1 table
 The [workspace name migration](../../migrations/202611081300_workspace_creation_name.sql) keeps an agent's chosen name through creation retries.
 The [first session title migration](../../migrations/202611111230_workspace_first_session_title.sql) keeps a requested first session title in the same way.
 [Workspace calls](workspaces.md) gives the get, rename, move, and archive routes, the list options, and the replay of a create.
+[Session management calls](sessions.md) gives the session get, rename, close, and stop routes, the message get, and the session list paging.
 
 The [Mac command feature](../devices/README.md) also uses this area's machine entry point.
 `mac-command.ts` forwards only its fixed paths to the token's exact workspace object.
@@ -24,6 +25,7 @@ Direct handler tests also use the shared entry policy before dispatch.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
 It accepts session list, transcript read, create, and send routes under `/v1/tools/workspaces/<workspaceId>/sessions`.
+It also accepts session get, message get, rename, close, and stop routes there, as [Routes](sessions.md#routes) says.
 It accepts GET at `/v1/tools/workspaces/<workspaceId>`, and POST at its `rename`, `move`, and `archive` paths, as [Routes and access](workspaces.md#routes-and-access) says.
 It uses workspace bearer authentication instead of browser sessions.
 It returns private responses with caching disabled.
@@ -52,7 +54,7 @@ All four lists need only the workspace token. They need no active turn.
 ## Session reads
 
 The [session call contract](../../docs/protocol/session-calls.md) gives the access and replies.
-`agentSessionsPath` and `agentSessionTranscriptPath` in the shared contracts build the machine paths.
+`agentSessionsPath` and `agentSessionTranscriptPath` in [agent-session-paths.ts](../../src/shared/agent-session-paths.ts) build the machine paths.
 The reserved workspace path value `current` resolves to the calling workspace from its token.
 No new sandbox credential supplies that ID.
 The handler and the real target object both check the target's org and the org's active state.
@@ -60,6 +62,7 @@ The object also checks its exact workspace identity before it reads chat storage
 An archived target remains readable. The caller's own token still needs its normal live-workspace access.
 
 The session list includes closed sessions, in creation order with ID as the tie breaker.
+Its optional `limit` and `offset` follow [Session list paging](sessions.md#session-list-paging).
 It gives the choice, starter, title, closed mark, state, and session link.
 Queued, running, and stopping work counts as `running`.
 Without active work, a newest failed turn gives `failed`, and other cases give `idle`.
@@ -87,6 +90,7 @@ The stored turn gives the sender and the sending session. Input supplies neither
 The real object repeats the target org, active org, archived-workspace, member, and exact-object checks inside the chat queue.
 `create_session` uses the sender's saved model choice, then the configured app choice.
 Workspace creation keeps its owner's default choice.
+Rename, close, and stop use the same stored turn and queue checks, without admission or resume, as [Queued management](sessions.md#queued-management) says.
 
 `ToolSessionWrite` carries the trusted caller and typed request to the object's `writeAgentSession` RPC.
 Chat commits a request fingerprint and its acceptance in the same transaction as the session and message.
@@ -194,6 +198,7 @@ It reads the configured account default model when the owner has no saved prefer
 It also replays a saved creation.
 It waits for creation to finish before it returns the workspace and session.
 [workspace-write-composition.ts](workspace-write-composition.ts) sends a rename or a move to the app's metadata write, and an archive to the workspace object.
+Session gets, message gets, and session management call the target object's RPCs with the app origin.
 
 Each org build that needs the software step calls `installWorkspaceTools` with `WORKSPACE_TOOL_SOURCES`
 before it installs the rest of the image software.
@@ -214,7 +219,7 @@ Session CLI and MCP tests use production composition, native chat storage, and a
 Their request bridge lives in [session-test-support.ts](session-test-support.ts).
 The production services live in [composition.ts](composition.ts).
 The real-object route tests live in [worker/features](../features/).
-[Tests](workspaces.md#tests) lists the tests of the workspace calls.
+[Tests](workspaces.md#tests) lists the tests of the workspace calls, and [Tests](sessions.md#tests) those of session management.
 
 ## Key code
 
@@ -229,11 +234,15 @@ The real-object route tests live in [worker/features](../features/).
 - [workspace-create-composition.ts](workspace-create-composition.ts) completes a create and its replay.
 - [agent-workspaces.ts](../../src/shared/agent-workspaces.ts) holds the workspace request and reply types and their paths.
 - [services.ts](services.ts) defines the lifecycle and active-turn integration boundary.
-- [session-routes.ts](session-routes.ts) parses the machine session routes and read query options.
+- [session-routes.ts](session-routes.ts) parses the machine session routes and read query options, and sends management to `manageSession`.
+- [session-page.ts](session-page.ts) reads the session list `limit` and `offset`.
+- [session-summary.ts](session-summary.ts) builds one session entry and its state.
+- [session-read-workspace.ts](session-read-workspace.ts) holds the trusted session list, get, message, and transcript read RPCs.
+- [agent-sessions.ts](../../src/shared/agent-sessions.ts) holds the session request and reply types and the transcript byte budget.
 - [session-input.ts](session-input.ts) narrows session create and send inputs while preserving message text.
 - [session-write-composition.ts](session-write-composition.ts) preserves admission while applying the normal open/resume policy.
 - [message-text.ts](message-text.ts) builds the canonical sending-session footer and selects title input.
-- [workspace.ts](workspace.ts) exposes the trusted session read RPCs through the real workspace object.
+- [workspace.ts](workspace.ts) exposes the trusted calling-turn, session write, and session management RPCs, with their queued access check.
 - [session-access.ts](session-access.ts) reads a target workspace inside the calling org, including archives.
 - [image.ts](image.ts) installs the CLI and MCP source into the image.
 - [image-assets.ts](image-assets.ts) embeds the allowed sources as Worker-safe text assets.

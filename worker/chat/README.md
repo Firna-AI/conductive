@@ -64,6 +64,9 @@ gives their rules.
   [Browser routes](../lifecycle/README.md#browser-routes) says.
 - `writeAgentSession(input)` accepts trusted tool requests after exact-object, org, archive, and current-sender checks inside the queue.
   The [tools README](../tools/README.md#session-writes) gives its machine routes and resume behavior.
+- `manageAgentSession(input, origin)` renames, closes, or stops a session for the stored sender of a tool call.
+  It runs the same checks inside the queue, and it uses no admission or resume.
+  [Queued management](../tools/sessions.md#queued-management) gives its routes and replies.
 
 [The workspace lifecycle](integration/README.md#the-workspace-lifecycle)
 says how the lifecycle and chat work together.
@@ -86,6 +89,8 @@ through that cutoff in a separate `ChatStore.run` task. Runner events and
 writes can proceed between pages. The captured session record stays fixed.
 The shared `SessionMarkdown` folds pages and renders both kinds of copy.
 It uses the same grouping, command placement, and words as browser chat.
+The route gives it the app origin and the org as `TranscriptDocument.linkContext`.
+So the copy of a tool stop writes "Stopped from" and the session link, in angle brackets.
 The route keeps no generated transcript in storage.
 
 `buildSessionTranscript` also serves the workspace tools through trusted workspace RPCs.
@@ -102,6 +107,32 @@ model request, the shared title writer, the first session name, and the
 names of later sessions. It also gives the local development setup.
 Workspaces and sessions without a provided name start with null names. The shared `nameLabel` helper
 in `src/shared/name-label.ts` gives their display label, "Untitled".
+
+## Stop requests
+
+Stop, a close that stops a turn, and a tool stop or close of an active turn
+all call `TurnLifecycle.stop` with a `TurnStopRequester` from
+`src/shared/session-stop.ts`.
+
+- A browser request names the authenticated member in `requestedById`.
+  A tool request names the calling workspace and session in
+  `requestedBySession`, from the stored calling turn. No request body
+  names the requester. The references hold IDs only, and no origin.
+- `recordStopRequest` in `stop-request.ts` emits `turn.stop-requested`
+  before the stop saves its interrupt. So the event commits before the
+  runner gets the interrupt.
+- `StoredTurn.stopRequest` keeps the first requester. A later request emits
+  its own event and leaves that field. The transcript fold keeps the first
+  request of each turn, so the chat and the copy name the first stopper.
+- An older turn record has no `stopRequest`. When such a turn is stopping
+  or has ended, the next request reads the session history for its first
+  request.
+- The browser rename and the tool rename share `renameSession` in
+  `session-management.ts`.
+- `readStopRequester` in `src/chat/api/read-stop.ts` reads both event forms
+  in the browser. `stoppedAttribution` in the shared turn words gives
+  "Stopped from" and the session of a tool stop. The chat line still uses
+  `stoppedSummary`, which shows the generic stopped words for a tool stop.
 
 ## Message admission
 

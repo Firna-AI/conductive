@@ -72,9 +72,11 @@ streams, and the order of the runner commands.
 - A `workspace.continued` note names its session, so the history of that
   session holds it, also after the session closes and reopens.
 - The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
-- The interrupt route stores and pushes `turn.stop-requested` with the
-  authenticated member's ID before it interrupts the runner. Runner events
-  cannot set that member.
+- Stop, a close that stops a turn, and a tool stop or close store and push
+  `turn.stop-requested` before they interrupt the runner. The event names
+  the authenticated member, or the calling workspace and session of a tool
+  call. Runner events cannot set either. [Stop requests](README.md#stop-requests)
+  gives the rule of the first request.
 - A message accepted while the active turn stops waits in another stored
   turn. Its commands go out only after that turn becomes active.
 - After a finished turn, its unanswered messages run before later waiting
