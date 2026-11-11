@@ -1,0 +1,24 @@
+/*
+ * The headings of Markdown, in the look that the replies of the chat and
+ * the file preview share: the size of each level, the weight, the colour,
+ * and the line under a level-one heading. A view adds `.headings` to the
+ * element around its blocks, and sets the space around its headings.
+ */
+.headings :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: var(--ui-tracking-heading);
+  line-height: 1.35;
+}
+
+.headings h1 {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ui-border);
+  font-size: var(--ui-text-xl);
+  line-height: 1.25;
+}
+
+.headings h2 {
+  font-size: var(--ui-text-lg);
+}

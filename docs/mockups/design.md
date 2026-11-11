@@ -301,9 +301,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
 - [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables of a reply and of a file preview, and the fold of the work
-  of a turn. It also gives the data that the chat does not have, and the
-  files that the cloud computer could not read.
+  Markdown tables and headings of a reply and of a file preview, and the
+  fold of the work of a turn. It also gives the data that the chat does
+  not have, and the files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the window, or the

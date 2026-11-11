@@ -55,6 +55,28 @@ Contract owners:
 - **Action:** ask the user, because B changes a rule of `docs/protocol/chat-markdown.md`, and C and D reverse recorded choices.
 - **Chosen:** B, by the user on 11 November 2026. The user answered `1 = B`. The options check added E after the answer. E changes no requirement of B, so the plan builds B with the style module of E, as a design call.
 
+### 2. Headings do not stand out from bold labels
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `docs/mockups/src/components/common/MarkdownHeadings.module.css`, `src/chat/links/LinkedText.tsx:138`
+- **Background:** Milestone 1 gives chat headings the look of the file preview's headings: `h1` 16 px, `h2` 13.5 px, and `h3` to `h6` 13 px, all at weight 600. Body text is 13 px. Bold text in a chat answer has no style of its own, so the browser draws it at weight 700. The file preview draws bold text at the token weight 600. Screenshots of A, B, and C are in `.context/chat-markdown-headings/mockups/`: `headings-desktop.png`, `s2-headings-desktop.png`, and `s3-headings-desktop.png`.
+- **Problem:** `### 1. <title>` looks lighter than the `**Severity:**` labels under it, and `## Needs your answer` looks like one more bold label. In the file preview, `h2` and `h3` look almost the same.
+- **Impact if no action:** Decision messages stay hard to scan, which was the reason for the change.
+- **Root question:** How does a heading stand out from bold text and from the next heading level?
+- **Options:**
+  - **A.** Keep the file preview's look. Effort: Small.
+  - **B.** Give the shared heading style a larger scale at weight 700: `h1` 18 px, `h2` 15 px, `h3` 14 px, and `h4` to `h6` 13 px. Both views get it and look heavier. The type tokens have no 18, 15, or 14 px size yet. Effort: Small.
+  - **C.** Give the shared heading style the same larger scale at weight 600. Draw bold text in chat answers at the token weight 600, as the file preview does. Bold text in every answer gets a little lighter. Effort: Small.
+  - **D.** Give the larger scale to the chat alone. The file preview keeps its look, so the two views look different again. Effort: Small.
+- **Left out:** The larger sizes alone at weight 600, because `h3` still competes with bold text at 700.
+- **Wider fix:** None. The shared style module already gives one source for the look.
+- **Previous examples:** None found.
+- **Related:** Decision 1: the user chose the look of the file preview's headings. B, C, and D change that look. Milestones 1a, 2, and 4 wait for the answer.
+- **Recommendation:** C. Both weights then follow their design tokens, and the size alone sets a heading above a bold label.
+- **Action:** ask the user, because B, C, and D change the look that the user chose in decision 1.
+
 ## Design calls
 
 Agent calls, 11 November 2026:
@@ -103,6 +125,20 @@ Agent calls, 11 November 2026:
   it on its own line in the heading weight. Reason: the closed line stays
   one line. A `<summary>` may hold a heading, but its button role hides
   the heading from the heading list of a screen reader.
+- The closed line also shows the text of a heading in the heading weight.
+  Reason: the mockups showed "Plan Wait 250 ms after the last key press",
+  where the heading ran into the text after it. The weight shows where the
+  heading ends, and the line keeps the agent's words. A ` · ` after the
+  heading, as between table cells, was the other way.
+- Under an open line, a heading after the first table is a heading element
+  in the look of the open line's headings. Reason: it is outside the
+  `<summary>`, and the work stays quieter than the answer.
+- A heading inside a list item stands as far from the block above it as a
+  heading at the top of an answer. Reason: agents rarely write one, and one
+  rule keeps the spacing simple. The mockups do not draw this case.
+- The mockups now draw `**` as bold text in answers, as the app does.
+  Reason: decision messages put bold labels under each heading, and the
+  look of a heading must be judged beside them.
 - The text of a heading shows inline code, strong text, and workspace
   chips, as a paragraph does. Reason: it uses the same `LinkedText`.
 - The public guide and the comparison note name headings in the same
@@ -117,18 +153,34 @@ Depends on: none
 The mockups draw headings in agent answers and in a message line of the
 folded work, as the visual spec of the chat.
 
-- [ ] Add a heading block to the mockup agent blocks: `AgentBlock` in `docs/mockups/src/fixtures/conversations.ts`, drawn by `docs/mockups/src/components/chat/AgentBlocks.tsx` and the mockup `MessageLine.tsx`.
-- [ ] Add the shared heading style module in `docs/mockups/src/components/common/`. Use it for the chat answer and the mockup file preview. Draw `h3` to `h6` in the mockup file preview too.
-- [ ] Give the headings of an agent answer their margins in `ChatItemView.module.css`, and the heading of a message line its style in `ToolGroup.module.css`.
-- [ ] Compare the size and the weight of `h2` and `h3` with the strong text of an answer, which is bolder than the heading weight. When a heading does not stand out from a bold label, show a stronger scale beside it, for a decision.
-- [ ] Add the chat state `app/chat/headings`: an answer with `## Needs your answer`, `### 1. <title>`, a list under it, the other levels, and a message line that holds a heading.
-- [ ] Update the chat rows of `docs/mockups/catalogue.md` and the agent text of `docs/mockups/design-chat.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the new state in the mockup preview.
-- [ ] Update the design and the TODOs of this plan for each problem that the mockups show.
+- [x] Add a heading block to the mockup agent blocks: `AgentBlock` in `docs/mockups/src/fixtures/conversations.ts`, drawn by `docs/mockups/src/components/chat/AgentBlocks.tsx` and the mockup `MessageLine.tsx`.
+- [x] Add the shared heading style module in `docs/mockups/src/components/common/`. Use it for the chat answer and the mockup file preview. Draw `h3` to `h6` in the mockup file preview too.
+- [x] Give the headings of an agent answer their margins in `ChatItemView.module.css`, and the heading of a message line its style in `ToolGroup.module.css`.
+- [x] Compare the size and the weight of `h2` and `h3` with the strong text of an answer, which is bolder than the heading weight. When a heading does not stand out from a bold label, show a stronger scale beside it, for a decision.
+- [x] Add the chat state `app/chat/headings`: an answer with `## Needs your answer`, `### 1. <title>`, a list under it, the other levels, and a message line that holds a heading.
+- [x] Update the chat rows of `docs/mockups/catalogue.md` and the agent text of `docs/mockups/design-chat.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the new state in the mockup preview.
+- [x] Update the design and the TODOs of this plan for each problem that the mockups show.
+
+Evidence: `.context/chat-markdown-headings/m1-report.md` and the screenshots
+beside it.
+
+## Milestone 1a: Heading scale
+
+Tags: mockup
+
+Depends on: 1, and the answer to decision 2
+
+The mockups take the heading scale of the answer to decision 2. With
+option A, this milestone has no work.
+
+- [ ] Apply the answer to decision 2 to `MarkdownHeadings.module.css`, and to the weight of bold text in mockup answers when the answer asks for it.
+- [ ] Update the page texts and `docs/mockups/design-chat.md` where they give the sizes or the weights.
+- [ ] Run `npm run mockups:check`. Smoke-test `app/chat/headings` and `app/files/markdown`.
 
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1
+Depends on: 1a
 
 The protocol doc states the heading requirements. The public guide and
 the comparison page name headings.
@@ -155,7 +207,7 @@ does not change, except that a lazy line no longer makes a setext heading.
 
 Tags: ui
 
-Depends on: 2, 3
+Depends on: 1a, 2, 3
 
 The chat reads headings with the shared reader and draws them.
 
@@ -163,7 +215,8 @@ The chat reads headings with the shared reader and draws them.
 - [ ] Draw it in `AgentText.tsx` and as a span in `MessageLine.tsx`, as the mockups show.
 - [ ] Use the shared heading style in the app's chat answer and in the app's file preview. Remove the heading rules of `src/files/markdown/MarkdownView.module.css`.
 - [ ] Update the heading cases of `agent-text.test.ts`, and add tests for the levels, the closing run, setext, the underline at the end of the text, a lazy underline, a quote line above an underline, the lines above and under a heading, and the drawn elements.
-- [ ] Update `src/chat/agent-text.md` and the `agent-text.ts` entry of `src/chat/README.md`. Give the right reason for spans in a `<summary>` there and in `MessageLine.tsx`.
+- [ ] Update `src/chat/agent-text.md` and the `agent-text.ts` entry of `src/chat/README.md`. Give the right reason for spans in a `<summary>` there, in `MessageLine.tsx`, and in the comments of `OpenFold.dom.test.tsx`.
+- [ ] Apply the answer to decision 2 to the weight of bold text in the app's answers, when the answer asks for it.
 - [ ] Delete `plans/follow-ups/chat-heading-joins-next-line.md`, which this milestone fixes. In `plans/follow-ups/one-markdown-reader-for-chat-and-preview.md`, update the sentence on headings, and add the choice of 9 November 2026 to option C.
 - [ ] Smoke-test an agent message with headings in the app.
 

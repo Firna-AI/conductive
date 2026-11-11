@@ -5,6 +5,8 @@ import type { ChatItem } from '../../fixtures/conversations'
 import { people, type PersonKey } from '../../fixtures/members'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
+import { classes } from '../common/classes'
+import headingStyles from '../common/MarkdownHeadings.module.css'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
@@ -50,7 +52,7 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
       )
     case 'agent':
       return (
-        <div className={styles.agent}>
+        <div className={classes(styles.agent, headingStyles.headings)}>
           <AgentBlocks blocks={item.blocks} />
         </div>
       )

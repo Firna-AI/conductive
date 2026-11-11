@@ -2,7 +2,7 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives workspace and file chips,
-attached files, Markdown tables, and the work fold of a turn. It also gives the data that the chat does
+attached files, Markdown tables and headings, and the work fold of a turn. It also gives the data that the chat does
 not have, and the files that the cloud computer could not read.
 
 - `AttachmentChips` in `src/components/chat/` draws each attached file as a
@@ -46,6 +46,24 @@ not have, and the files that the cloud computer could not read.
     pipes, until a separator row with as many cells follows it. Then the
     table shows the rows that have arrived, as `app/chat/tables/header`
     and `app/chat/tables/rows` show.
+- `MarkdownHeadings.module.css` in `src/components/common/` gives the
+  Markdown headings of a reply and of the Markdown preview of a file one
+  look, under its `headings` class. It sets the size, the weight, the
+  colour, and the letter spacing of each level, and the line under a
+  level-one heading. Each view sets the space around its headings, as
+  `app/chat/headings` and `app/files/markdown` show.
+  - A heading shows at the level that the agent wrote, from `h1` to `h6`.
+    Level 1 has the large text size and a 1 px line in the border colour
+    under it. Level 2 has the size between, and levels 3 to 6 have the
+    size of the text of a reply. Each level has the heading weight and the
+    ink colour.
+  - In a reply, a heading after another block stands 6 px further from it
+    than two paragraphs stand from each other. A heading that starts the
+    reply has no space above it, and the gap of the reply sets the space
+    under each heading. The file preview keeps 20 px above a heading and
+    6 px under it.
+  - The text of a heading shows inline code, bold text, and workspace
+    chips, as a paragraph does. A heading with no text draws nothing.
 - When a turn ends, the work before its answer folds into one line, from
   decision 150. The work is the agent messages and the tool calls, with
   the Mac command cards and the lost lines among them. The answer is the
@@ -68,13 +86,22 @@ not have, and the files that the cloud computer could not read.
     open run of tool calls: the call line that `ToolGroup` shares, a
     message as its first words on one line, the Mac command card, and the
     lost line, which starts at the left edge. A click on a message line
-    grows it to the full text, with its paragraphs and bullets.
-  - A message line holds no table, because a summary holds only phrasing
-    content. Closed, the line shows a table as its cells, row by row, with
+    grows it to the full text, with its paragraphs, headings, and bullets.
+  - A message line holds no table, because HTML allows no table in a
+    summary. Closed, the line shows a table as its cells, row by row, with
     a dot between two cells. Open, the line keeps the paragraphs before
     the first table, and the table and the rest of the message show under
     the line, at the left edge of its text, as `app/chat/work/table`
     shows.
+  - A message line holds no heading element either. A summary may hold a
+    heading, but its button role hides the heading from the heading list
+    of a screen reader. Each heading of the line has the heading weight
+    and the size of the text of the line. Closed, the line shows the text
+    of a heading in the line, so the line stays one line, and the weight
+    shows where the heading ends. Open, the line shows each heading on its
+    own line, 10 px under the block above it, as
+    `app/chat/headings/work` shows. A heading after the first table shows
+    under the line as a heading element, in the same look.
   - The `fold` state of the workspace opens the folds, and `open-message`
     also opens the last message line of each. A view runs no script, so a
     chat with open folds starts at its top.
@@ -111,7 +138,8 @@ not have, and the files that the cloud computer could not read.
   than 22 times the size of its font, and a long name is cut short. It
   takes no fixtures, so the app can use it too.
   - `MessageText` shows the chips in sent messages and in answers, as
-    links to the screens of the workspaces. A Markdown link to a
+    links to the screens of the workspaces. In an answer, `**` marks bold
+    text, and a chip inside it is bold too. A Markdown link to a
     workspace shows as the chip alone, and a link in code stays code. A
     link to another org, or to a workspace that the list does not hold,
     stays plain text, and a long link breaks to fit the line.

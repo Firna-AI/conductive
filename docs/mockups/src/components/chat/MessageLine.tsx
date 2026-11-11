@@ -5,6 +5,7 @@ import type {
   ChatItem,
   MessageTable,
 } from '../../fixtures/conversations'
+import type { MessageHeading } from '../../fixtures/headingConversations'
 import type { MessageList } from '../../fixtures/listConversations'
 import { classes } from '../common/classes'
 import { AgentBlocks } from './AgentBlocks'
@@ -31,7 +32,7 @@ function TableText(props: { table: MessageTable }) {
   return cells.map((cell, index) => (
     <Fragment key={index}>
       {index > 0 ? ' · ' : null}
-      <MessageText text={cell} />
+      <MessageText strong text={cell} />
     </Fragment>
   ))
 }
@@ -52,7 +53,7 @@ function LineList(props: { list: MessageList }) {
               <span className={styles.number}>{index + 1}.</span>{' '}
             </>
           ) : null}
-          <MessageText text={item.text} />{' '}
+          <MessageText strong text={item.text} />{' '}
           {item.list ? <LineList list={item.list} /> : null}
         </span>
       ))}
@@ -60,16 +61,37 @@ function LineList(props: { list: MessageList }) {
   )
 }
 
-/** A block of a message line: a paragraph, a list, or a table as text. */
+/**
+ * A heading of a message line, as a span in the weight of a heading. The
+ * closed line shows its text in the line, so the line stays one line. The
+ * open line shows it on its own line. A `<summary>`
+ * may hold a heading, but its button role hides the heading from the
+ * heading list of a screen reader. A heading with no text draws nothing.
+ */
+function LineHeading(props: { heading: MessageHeading }) {
+  const { text } = props.heading
+  if (text.trim() === '') return null
+  return (
+    <span className={styles.heading}>
+      <MessageText strong text={text} />{' '}
+    </span>
+  )
+}
+
+/**
+ * A block of a message line: a paragraph, a heading, a list, or a table as
+ * text.
+ */
 function LineBlock(props: { block: AgentBlock }) {
   const { block } = props
   if (typeof block === 'string') {
     return (
       <span className={styles.paragraph}>
-        <MessageText text={block} />{' '}
+        <MessageText strong text={block} />{' '}
       </span>
     )
   }
+  if (block.kind === 'heading') return <LineHeading heading={block} />
   if (block.kind === 'list') return <LineList list={block} />
   return (
     <>
@@ -81,13 +103,13 @@ function LineBlock(props: { block: AgentBlock }) {
 /**
  * A message of the agent in an open fold: an icon and the first words of
  * the message on one line, cut with an ellipsis. A click opens the line to
- * the full text, with its paragraphs, lists, and tables. A list shows the
- * lists that the agent indents under its items.
+ * the full text, with its paragraphs, headings, lists, and tables. A list
+ * shows the lists that the agent indents under its items.
  *
- * A `<summary>` holds only phrasing content, so a table never goes into the
- * line. The closed line shows the first table, and all that follows it, as
- * text. When the message opens, the line keeps the blocks before the table,
- * and the table and the rest of the message show under the line.
+ * A `<summary>` holds no table, so a table never goes into the line. The
+ * closed line shows the first table, and all that follows it, as text. When
+ * the message opens, the line keeps the blocks before the table, and the
+ * table and the rest of the message show under the line.
  */
 export function MessageLine(props: { message: AgentItem; open: boolean }) {
   const { lead, rest } = splitAtTable(props.message.blocks)
