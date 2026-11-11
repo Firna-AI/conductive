@@ -28,6 +28,8 @@ export const conversationKeys = [
   'lost-turn-end',
   'files-unavailable',
   'stopped-files-unavailable',
+  'background-waiting',
+  'background-limit',
   'linked',
   'sent-files',
   'queued-files',

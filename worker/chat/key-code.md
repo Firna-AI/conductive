@@ -64,6 +64,11 @@ first.
 - `lifecycle-queue.ts`: `runWorkspaceLifecycle`, which runs one lifecycle
   change in a queue task with its receiver generation, then calls
   `flushRunner`.
+- `history-pages.ts`: `HistoryPages`, the pages of the stored history and
+  the index of replaced answers and tool states. A page reads one storage
+  list of 32 events. The session history route of the browser passes
+  `BROWSER_PAGE_LIMITS`, so its page reads on up to 2,048 stored events or
+  4 MiB of session events, and a long workspace costs few requests.
 - `routine-run.ts`: reports a routine's stored first-turn result after a chat transaction commits.
 - `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and routine outcome recovery after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the

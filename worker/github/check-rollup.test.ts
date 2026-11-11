@@ -29,9 +29,8 @@ it('refuses a changed test merge commit while paging either chosen rollup', asyn
     const checks = [passedRun, { ...passedRun, id: 'second-check' }]
     api.checks.set(HEAD_SHA, checks)
     api.checks.set('merge-commit', selected === 'merge' ? checks : [])
-    let pages = 0
     api.onRequest = async (operation) => {
-      if (operation === 'BannerChecks' && ++pages === 2)
+      if (operation === 'BannerChecks')
         api.pulls[2].potentialMergeCommit = { oid: 'new-merge' }
     }
     await expect(read(), selected).rejects.toMatchObject({

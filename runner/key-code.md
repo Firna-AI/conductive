@@ -39,8 +39,14 @@ part.
 - `src/engine-disposal.ts`: one close path for deferred model changes, turn
   ends, Stop, and shutdown.
 - `src/engine-pending.ts`: accepted turn saves and the ends of pending starts.
+- [Background work](background-work.md#key-code): `src/engine-background.ts`,
+  the wait clock of a Claude turn, `src/providers/claude-background.ts`, the
+  live work and idle state of its process, and
+  `src/providers/claude-background-note.ts`, the note at the end of a reply.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
+  `tool.ts` maps each tool call to its chat line, and each adapter names
+  the tool of an MCP call for it.
   `message.ts` puts the sender line before the text of each message.
   `codex-thread.ts` resumes saved Codex conversations and forks after a
   saved provider refusal. `rpc.ts` keeps structured JSON-RPC error data.

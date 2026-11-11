@@ -24,6 +24,7 @@ function connection(pull: Record<string, unknown>, merge: boolean) {
 /** Choose one commit's rollup, then page it without mixing commit versions. */
 export async function readChecks(
   pull: GitHubPull,
+  firstPage: Record<string, unknown>,
   readPage: ReadPage,
 ): Promise<GitHubCheck[]> {
   const page = async (after: string | null, mergeAfter: string | null) => {
@@ -31,7 +32,7 @@ export async function readChecks(
     if (text(current.headRefOid) !== pull.headSha) throw githubFailure()
     return current
   }
-  let current = await page(null, null)
+  let current = firstPage
   const capturedMergeId = mergeId(current)
   const mergeConnection =
     capturedMergeId === null ? null : connection(current, true)
