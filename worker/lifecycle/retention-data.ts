@@ -1,7 +1,7 @@
 import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'
 
 export interface RetentionProgress {
-  phase: 'resume' | 'wait' | 'startup' | 'stop'
+  phase: 'resume' | 'wait' | 'software' | 'startup' | 'stop'
   error: string | null
 }
 

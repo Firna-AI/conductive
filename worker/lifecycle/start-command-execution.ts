@@ -22,6 +22,7 @@ import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { WorkspaceStartError } from './workspace-start'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
+import { softwareUpdateOutcome } from './workspace-software-update'
 
 export async function advanceStartCommand(
   env: AppEnv,
@@ -31,15 +32,18 @@ export async function advanceStartCommand(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
   label: string,
-): Promise<boolean> {
+): Promise<false | 'completed' | 'failed'> {
   if (!row.sandboxId) throw new WorkspaceStartError(null)
   if (
+    job.phase !== 'software' &&
     job.phase !== 'fetch' &&
     job.phase !== 'branch' &&
     job.phase !== 'startup' &&
     job.phase !== 'terminal'
   )
     throw new WorkspaceStartError(null)
+  if (job.phase === 'software' && job.softwareUpdate?.kind === 'unavailable')
+    return 'failed'
   await provider.setAutoStop(row.sandboxId, 1_800)
   if (job.processId === null) {
     const values = await workspaceEnvironmentSettings(
@@ -78,6 +82,7 @@ export async function advanceStartCommand(
   await storage.capture(job, status)
   await storage.retry(job.attempt, 'progress')
   if (status.more || status.running) return false
+  if (job.phase === 'software') return softwareUpdateOutcome(status)
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
     if (job.phase === 'terminal')
       warnWorker({
@@ -88,7 +93,7 @@ export async function advanceStartCommand(
       })
     throw new WorkspaceStartError(null)
   }
-  return true
+  return 'completed'
 }
 
 export async function nextStartCommand(

@@ -1027,19 +1027,23 @@ batches of at most 500 job repositories, with saved read progress.
 
 Depends on: 3
 
-- [ ] At a workspace start, when the workspace's app software version is
+- [x] At a workspace start, when the workspace's app software version is
       older than the current one, run the software step before the runner
-      starts, and record the new version. Show it as its own start step.
-- [ ] Change the 409 `preview_relay_unavailable` text in
+      starts, and record the new version. Show it as its own start step. Branch:
+      `conductor/software-image-m7-update-old-workspaces`.
+- [x] Change the 409 `preview_relay_unavailable` text in
       `worker/previews/relay.ts` and `worker/previews/README.md`, which says
       "Start a new workspace after an admin runs Build computer", to the
-      update at the next workspace start.
-- [ ] When the update fails, go on with the old app software, and warn.
+      update at the next workspace start. Branch:
+      `conductor/software-image-m7-update-old-workspaces`.
+- [x] When the update fails, go on with the old app software, and warn.
       The update runs inside the 20-minute limit of the start, so a hung
-      update fails the start.
-- [ ] Tests: an old workspace gets the current version and starts its
+      update fails the start. Branch:
+      `conductor/software-image-m7-update-old-workspaces`.
+- [x] Tests: an old workspace gets the current version and starts its
       runner. A current workspace runs no software step. A failed update
-      still starts the runner.
+      still starts the runner. Branch:
+      `conductor/software-image-m7-update-old-workspaces`.
 
 ## Milestone 8: Old org setup, backend
 

@@ -10,7 +10,8 @@ from the provider's base image without one.
 
 ## Responsibilities
 
-- Compute the version from the exact tools and image software commands.
+- Compute the version from the shared install command, including its
+  initial `set -eu` before the tools and image software steps.
 - Keep each attempt, phase, resource intent, command offset, and output in D1.
 - Build one image at a time in the default provider account.
 - Recover resource requests and detached commands after a lost reply.
@@ -48,7 +49,9 @@ The tests use local D1 and the lifecycle fake provider.
 
 ### Key Code
 
-- [version.ts](version.ts): the hash of both software commands.
+- [install-command.ts](install-command.ts): the shared install command for
+  workspace updates and version calculation. It enables `set -eu` first.
+- [version.ts](version.ts): the hash of that exact shared command text.
 - [route.ts](route.ts) and [deploy-gate.ts](deploy-gate.ts): the machine route and token gate.
 - [build.ts](build.ts): admission, version replacement, and resumable advancement.
 - [steps.ts](steps.ts): sandbox readiness, commands, snapshot, and publication.

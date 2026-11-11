@@ -11,6 +11,11 @@ import { providerForAccount } from '../sandbox/client'
 import { record } from '../chat/inputs'
 import { readWorkspace } from './workspace-data'
 import { computerRecords } from './computer-ledger.test-support'
+import {
+  readWorkspaceImageRecords,
+  recordWorkspaceSoftwareUpdateFailed,
+  recordWorkspaceSoftwareVersion,
+} from './workspace-software-data'
 
 const fixtureForTest = setupBackendTests()
 const day = 86_400_000
@@ -20,6 +25,18 @@ it('bridges an old archived disk without secrets or startup and rearms a restore
   const saved = await archiveFixture(fixture, true)
   await fixture.setTime(TEST_TIME + day)
   await saved.archive()
+  await recordWorkspaceSoftwareVersion(
+    fixture.runtime.env.DB,
+    fixture.org.id,
+    saved.id,
+    'old-software',
+  )
+  await recordWorkspaceSoftwareUpdateFailed(
+    fixture.runtime.env.DB,
+    fixture.org.id,
+    saved.id,
+    true,
+  )
   const commands = fixture.boat.commands.length
   await fixture.advanceTo(TEST_TIME + 13 * day, saved.id)
   expect(fixture.boat.resumeIds).toEqual([saved.sandboxId])
@@ -31,6 +48,16 @@ it('bridges an old archived disk without secrets or startup and rearms a restore
   await saved.actor.restart()
   await fixture.advanceTo(TEST_TIME + 13 * day + 5_000, saved.id)
   expect(fixture.boat.commands).toHaveLength(commands)
+  expect(
+    await readWorkspaceImageRecords(
+      fixture.runtime.env.DB,
+      fixture.org.id,
+      saved.id,
+    ),
+  ).toMatchObject({
+    softwareVersion: 'old-software',
+    softwareUpdateFailed: true,
+  })
   expect(fixture.boat.stopIds).toEqual([saved.sandboxId])
   const restored = requireFeatureResult(await saved.restore())
   expect(restored.workspace.state).toBe('stopped')

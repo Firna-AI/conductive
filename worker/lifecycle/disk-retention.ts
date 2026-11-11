@@ -27,6 +27,9 @@ import {
   type RetentionCommandPort,
 } from './retention-command'
 import { stopRetention } from './retention-stop'
+import { advanceRetentionSoftware } from './retention-software'
+import { prepareWorkspaceSoftwareUpdate } from './workspace-software-update'
+import { recordWorkspaceSoftwareUpdateFailed } from './workspace-software-data'
 
 /** The caller serializes this action with user starts in the workspace object. */
 export async function keepWorkspaceDisk(
@@ -42,10 +45,12 @@ export async function keepWorkspaceDisk(
     !(row.state === 'stopped' || (row.state === 'error' && confirmedStopped))
   )
     return { done: true, error: null, stoppedAt: null, eligible: false }
-  let progress: RetentionProgress = (await readRetention(
-    env.DB,
-    workspaceId,
-  )) ?? {
+  const saved = await readRetention(env.DB, workspaceId)
+  if (!saved) {
+    await recordWorkspaceSoftwareUpdateFailed(env.DB, orgId, workspaceId, false)
+    await setRetention(env.DB, workspaceId, 'resume')
+  }
+  let progress: RetentionProgress = saved ?? {
     phase: 'resume',
     error: null,
   }
@@ -130,22 +135,40 @@ export async function keepWorkspaceDisk(
       await setRetention(env.DB, workspaceId, 'resume')
       return { done: false, error: null }
     }
-    if (status === 'ready') await setRetention(env.DB, workspaceId, 'startup')
+    if (status === 'ready') {
+      const pinned = command.read().softwareUpdate
+      const softwareUpdate =
+        pinned === undefined
+          ? await prepareWorkspaceSoftwareUpdate(env, orgId, workspaceId)
+          : pinned
+      await command.save({
+        ...command.read(),
+        softwareUpdate,
+        phase: softwareUpdate ? 'software' : 'startup',
+        processId: null,
+        stdoutOffset: 0,
+        stderrOffset: 0,
+      })
+      await setRetention(
+        env.DB,
+        workspaceId,
+        softwareUpdate ? 'software' : 'startup',
+      )
+      if (softwareUpdate) await command.softwareStep('running')
+    }
     return { done: false, error: null }
   }
-  if (progress.phase === 'startup') {
+  if (progress.phase === 'startup' || progress.phase === 'software') {
     if (status === 'stopped') {
       await setRetention(env.DB, workspaceId, 'resume')
       return { done: false, error: null }
     }
     if (status !== 'ready') return { done: false, error: null }
-    return advanceRetentionCommand(
-      context,
-      provider,
-      sandboxId,
-      deadlineAt,
-      command,
-    )
+    return (
+      progress.phase === 'software'
+        ? advanceRetentionSoftware
+        : advanceRetentionCommand
+    )(context, provider, sandboxId, deadlineAt, command)
   }
   return { done: false, error: null }
 }
@@ -173,7 +196,7 @@ export async function finishDiskMaintenance(
           context.env.DB,
           context.workspaceId,
         )
-        if (progress?.phase === 'startup')
+        if (progress?.phase === 'startup' || progress?.phase === 'software')
           await setRetention(
             context.env.DB,
             context.workspaceId,

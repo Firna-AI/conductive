@@ -27,7 +27,7 @@ const unavailable = {
   error: {
     code: 'preview_relay_unavailable',
     message:
-      'Previews need newer cloud computer software. Start a new workspace after an admin runs Build computer.',
+      'Previews need an update to the agent and terminal software. The next workspace start will update it.',
   },
 }
 

@@ -1,6 +1,9 @@
 import type { WorkspaceStorage } from './platform-storage'
 import type { WorkspaceResponse } from '../../src/shared/workspaces'
-import type { WorkspacePlatform } from './workspace-platform'
+import type {
+  WorkspaceEventPublication,
+  WorkspacePlatform,
+} from './workspace-platform'
 import type { WorkspaceSnapshot } from '../data/workspace-link'
 
 export interface LifecyclePublication extends Omit<
@@ -32,10 +35,17 @@ export class WorkspaceEventJournal {
     publish = this.publish,
   ): Promise<void> {
     return this.serial(async () => {
+      const event = {
+        type: 'workspace.updated',
+        workspace: response.workspace,
+        error: response.error
+          ? { code: response.error.code, message: response.error.message }
+          : null,
+      } satisfies WorkspaceEventPublication['event']
       const signature = JSON.stringify({
-        state: response.workspace.state,
+        ...event,
+        workspace: { ...event.workspace, updatedAt: undefined },
         start: response.start,
-        error: response.error,
       })
       if ((await this.storage.get('text', LAST_PUBLISHED)) === signature) return
       const start = response.start
@@ -54,13 +64,7 @@ export class WorkspaceEventJournal {
       if (failedCreate) await publishStart()
       await publish({
         workspaceId: response.workspace.id,
-        event: {
-          type: 'workspace.updated',
-          workspace: response.workspace,
-          error: response.error
-            ? { code: response.error.code, message: response.error.message }
-            : null,
-        },
+        event,
         occurredAt: now,
       })
       if (!failedCreate) await publishStart()

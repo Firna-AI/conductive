@@ -6,6 +6,7 @@ import type { RepositoryLocation } from './repository-locations'
 import type { SavedScript } from './saved-script'
 import type { ProviderRetryState } from './provider-retry'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
+import type { WorkspaceSoftwareUpdate } from './workspace-software-update'
 
 interface WorkspaceStartData {
   workspaceId: string
@@ -24,6 +25,7 @@ interface WorkspaceStartData {
   commandAttempt?: string
   /** A retained create rebuilds runtime files from this phase after readiness. */
   afterReadyPhase?: 'fetch' | 'branch' | 'startup'
+  softwareUpdate?: WorkspaceSoftwareUpdate
   creation?: WorkspaceCreation
   processId: number | null
   stdoutOffset: number
@@ -51,6 +53,7 @@ export type WorkspaceStartIntent =
 export type WorkspaceMachinePhase =
   | 'machine'
   | 'ready'
+  | 'software'
   | 'fetch'
   | 'branch'
   | 'startup'

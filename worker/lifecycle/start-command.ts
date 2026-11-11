@@ -10,6 +10,11 @@ export function workspacePhaseCommand(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
 ): string {
+  if (job.phase === 'software') {
+    if (job.softwareUpdate?.kind !== 'available')
+      throw new Error('Missing pinned software update')
+    return job.softwareUpdate.command
+  }
   if (job.phase === 'startup') return workspaceStartupCommand(job.startupScript)
   const directory = repositoryLocation(
     job.repositoryLocations,

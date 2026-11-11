@@ -22,6 +22,10 @@ gives the create, read, resume, and activity routes of a workspace to
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
   starts a stopped sandbox briefly, so that Boat keeps its disk.
+- Update the app's own software on the disk of a workspace with an older
+  version at each workspace start. The restart of an archived sandbox
+  updates nothing. [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces)
+  states the rules.
 - Stop and retain archived sandboxes, and delete them after the Restore window.
 - Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
 - Repair the running turns, the idle time, and the name of a workspace
@@ -145,12 +149,78 @@ functions of the lifecycle that a reader opens first.
   caller clears it at the next start or records a good software update.
   `recordWorkspaceInstallScriptRevision` records a good install script run
   without changing the software version or the starting image build.
+- [workspace-software-update.ts](workspace-software-update.ts): the update
+  that creates, resumes, and the disk retention restart share.
+  - `prepareWorkspaceSoftwareUpdate` compares the recorded version with the
+    current version, which `softwareVersion` computes from the configured
+    runner archive. It returns no update for current software. For an older
+    or missing version, it returns the archive, the version, and the
+    command for the caller to pin. Without valid archive settings, it
+    returns an update that fails at once.
+  - `softwareUpdateOutcome` reads the end of the update command. A failed
+    restore of the earlier files, or a lost command, fails the start.
+  - `recordSoftwareUpdateOutcome` records the version or sets the failed
+    update mark.
+- [start-software-command.ts](start-software-command.ts):
+  `workspaceSoftwareUpdateCommand` runs the shared `softwareInstallCommand`
+  from [install-command.ts](../software-image/install-command.ts).
+  `softwareVersion` hashes that exact command, including its initial
+  `set -eu` before the tools install. After a
+  good install, it starts the relay socket and restarts the relay service,
+  so the current relay runs at once. The image installers still start no
+  unit. The command saves the earlier app files first. A failed backup
+  keeps those files and removes temporary files. A failed install restores
+  the earlier files.
+- [start-machine.ts](start-machine.ts): after provider readiness,
+  `advanceStartMachine` asks for an update. With one, the start enters its
+  `software` phase before the fetch step of a create or the startup step of
+  a resume. The start job keeps the pinned update in `softwareUpdate`. So a
+  restart of the object or a new archive setting does not change that
+  update.
+- [start-progress.ts](start-progress.ts): `advanceStartSteps` shows that
+  phase as "Updating the agent and terminal software", the label of
+  `stepLabel` in [start-step-label.ts](start-step-label.ts). After a failed
+  update, the step shows as failed, and the start goes on with the old
+  software. The 20-minute start limit covers the update, so a hung update
+  fails the start.
+- [start-admission.ts](start-admission.ts): `enqueueWorkspaceStart` clears
+  the failed update mark when it admits a start.
+- [workspace-data.ts](workspace-data.ts): `workspaceRecord` reads the failed
+  update mark of the D1 row into `softwareUpdateFailed`. `workspaceView`
+  keeps that field. So each workspace detail reply and each
+  `workspace.updated` event carries the mark. Replies give the mark only
+  in that field. The shared `Workspace`
+  type in `src/shared/` does not name it yet.
+- [workspace-response.ts](workspace-response.ts):
+  `presentProvisionedWorkspace` reads the current mark for a repeated
+  create, because the saved create reply can hold an older value.
+- [durable-journal.ts](durable-journal.ts): `WorkspaceEventJournal` compares
+  public event data, so a warning change reaches open tabs even when the
+  workspace state stays unchanged. Timestamp-only polls remain suppressed.
+- [disk-retention.ts](disk-retention.ts): `keepWorkspaceDisk` clears the
+  failed update mark when a restart near day 14 of a stop begins. After
+  Boat reports the sandbox ready, it pins the same update before the
+  retention startup script. The workspace stays stopped, and no runner
+  starts.
+- [retention-software.ts](retention-software.ts): `advanceRetentionSoftware`
+  runs that pinned update. It resumes the saved process after a restart of
+  the object. After a failed update, the restart goes on to its
+  startup script. A failed restore, a lost command, or the 20-minute limit
+  stops the restart with an error, before the startup script.
+- [disk-retention-state.ts](disk-retention-state.ts): the `softwareStep`
+  hook of `RetentionCommandPort` writes the update step, after a completed
+  resume step, into the start steps of the stopped workspace. A restart
+  that ends while the step runs marks the step failed.
+- [archive-maintenance.ts](archive-maintenance.ts): the restart of an
+  archived sandbox reads no archive setting and runs no update. It keeps
+  the recorded version and the failed update mark.
 
 ### Related Docs
 
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):
   the org image. [Life of a workspace](../../docs/protocol/workspace-life.md)
-  gives the start steps, stop and resume, Archive, and Restore.
+  gives the start steps, the updates of an old workspace, stop and resume,
+  Archive, and Restore.
 - [Access and security](../../docs/protocol/access-and-security.md): what a
   sandbox holds, the workspace token, and GitHub tokens.
 - [Architecture](../../docs/architecture/components.md): the Worker, the workspace
