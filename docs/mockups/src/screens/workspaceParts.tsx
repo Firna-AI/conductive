@@ -178,8 +178,9 @@ export function ToolContent(props: {
 
 /**
  * The sidebar beside an open workspace, which shows its current status. An
- * archived workspace sits in the open Archived group. In a suspended org
- * every row shows stopped, and nothing in the sidebar changes the org.
+ * archived workspace sits in the Archived group, which is open unless
+ * `archivedCollapsed`. In a suspended org every row shows stopped, and
+ * nothing in the sidebar changes the org.
  */
 export function workspaceSidebar(props: {
   workspace: Workspace
@@ -190,6 +191,8 @@ export function workspaceSidebar(props: {
   changed: readonly ChangedWorkspace[]
   /** The last day of Restore of the archived workspace has not passed. */
   restoreOpen: boolean
+  /** The Archive of the open workspace kept the Archived group collapsed. */
+  archivedCollapsed?: boolean
 }): ReactNode {
   const { workspace, status, suspended, viewer, changed } = props
   if (status !== 'archived') {
@@ -209,6 +212,7 @@ export function workspaceSidebar(props: {
   return (
     <Sidebar
       archived={list.archived}
+      archivedCollapsed={props.archivedCollapsed}
       org={orgs.acme}
       sections={list.sections}
       suspended={suspended}

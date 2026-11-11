@@ -270,6 +270,8 @@ export function WorkspaceScreen(props: {
         viewer: membership,
         changed: changedWorkspaces(state),
         restoreOpen: state.archive === 'kept',
+        // An Archive keeps the Archived group as it was, here collapsed.
+        archivedCollapsed: state.toast === 'archived',
       })}
     >
       <WorkspaceBody

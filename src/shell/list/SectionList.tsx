@@ -6,7 +6,7 @@ import { stepTarget, type SectionGroup } from '../../app/sections'
 import type { Workspace } from '../../shared/workspaces'
 import { nameLabel } from '../../shared/name-label'
 import ui from '../ui/ui.module.css'
-import { ArchivedGroup } from './ArchivedGroup'
+import { ArchivedGroup, useArchivedOpen } from './ArchivedGroup'
 import type { DropTarget } from './drop-target'
 import type { RowMenus } from './row-menu'
 import { SectionHeader, type SectionActions } from './SectionHeader'
@@ -86,6 +86,11 @@ export function SectionList(props: {
   const rows = useRowFocus()
   /** What a move by keys says to a screen reader. */
   const [announcement, setAnnouncement] = useState('')
+  const archivedGroup = useArchivedOpen(
+    props.groups,
+    props.archived,
+    props.selectedId,
+  )
   const onKeyDown = (
     workspace: Workspace,
     event: KeyboardEvent<HTMLElement>,
@@ -185,8 +190,10 @@ export function SectionList(props: {
         <ArchivedGroup
           menus={props.menus}
           now={props.now}
+          open={archivedGroup.open}
           restoreAction={props.restoreAction}
           rows={props.archived}
+          setOpen={archivedGroup.setOpen}
           running={props.running}
           selectedId={props.selectedId}
           variant={props.variant}
