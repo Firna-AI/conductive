@@ -101,6 +101,11 @@ export class RunnerDelivery {
       ))
     )
       return 'skip'
+    if (
+      (command.type === 'turn' || command.type === 'message') &&
+      !(await this.dependencies.runnerPreparationAllowed(active.workspace.id))
+    )
+      return 'wait'
     let prepared: DispatchResult<PreparedCommand>
     try {
       prepared = await this.command(active, command)

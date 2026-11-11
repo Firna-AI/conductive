@@ -1,0 +1,44 @@
+/* The facts of a row: muted, on one line, with the branch in code. */
+.facts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}
+
+.branch {
+  overflow: hidden;
+  min-width: 0;
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  text-overflow: ellipsis;
+}
+
+/* A chip keeps the line height of the row, and never pushes the name out. */
+.chip {
+  display: inline-flex;
+  flex-shrink: 1;
+  max-width: 50%;
+  min-width: 0;
+  line-height: 22px;
+}
+
+/* The state of an upload that stopped, under the facts of its row. */
+.reservation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.reservationIcon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}

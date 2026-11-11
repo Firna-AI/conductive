@@ -14,13 +14,12 @@ import {
   useWorkspaceStore,
   type WorkspaceIdentity,
 } from '../../app/workspace-store'
-import { failedFirstStart } from '../../app/first-start'
+import { awaitsActivation, failedFirstStart } from '../../app/first-start'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
-import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
 import { ChatArea } from './ChatArea'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
@@ -29,6 +28,7 @@ import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { archivedRestore, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
+import { useStartAction } from './start-action'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
 import { useArchiveActions } from './useArchiveActions'
@@ -106,7 +106,9 @@ export function WorkspaceScreen(props: {
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
-  const resume = useAction(() => model.resume(), "The sandbox didn't start.")
+  const activates =
+    detail.state === 'ready' && awaitsActivation(detail.value.workspace)
+  const resume = useStartAction(model, chat, activates)
   const lifecycle = useArchiveActions(props.org.id, props.viewer)
   // Restore ends at its last day while the page shows, with no other event.
   const passed = usePassedDeadlines([
@@ -226,7 +228,13 @@ export function WorkspaceScreen(props: {
   )
   // The actions of the screen for the palette.
   const paletteOffer = <WorkspacePaletteActions chat={chat} context={context} />
-  const tabOpen = <ResumeOnTabOpen context={context} />
+  // The resume at the open of a tab, and the question of Archive.
+  const tabOpen = (
+    <>
+      <ResumeOnTabOpen context={context} />
+      {lifecycle.question}
+    </>
+  )
   if (phone) {
     const view = phoneView(props.view)
     const archived = sandbox === 'archived'

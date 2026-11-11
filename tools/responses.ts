@@ -7,6 +7,7 @@ import type {
 } from '../src/shared/agent-tools.ts'
 import type { MessageSender } from '../src/shared/messages.ts'
 import type { Workspace, WorkspaceState } from '../src/shared/workspaces.ts'
+import { readWorkspaceImport } from '../src/shared/conductor-import.ts'
 import { agent, choice, effort, record, text, ToolInputError } from './input.ts'
 
 export function workspaceState(value: unknown): WorkspaceState {
@@ -15,6 +16,7 @@ export function workspaceState(value: unknown): WorkspaceState {
     case 'input':
     case 'unread':
     case 'ready':
+    case 'inactive':
     case 'starting':
     case 'stopped':
     case 'error':
@@ -66,6 +68,7 @@ function workspace(value: unknown): Workspace {
       fields.archivedAt === null ? null : timestamp(fields.archivedAt),
     restoreUntil:
       fields.restoreUntil === null ? null : timestamp(fields.restoreUntil),
+    ...readWorkspaceImport(fields.conductorImport),
   }
 }
 

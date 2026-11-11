@@ -3,6 +3,7 @@ import { FolderGit2, Sparkles } from 'lucide-react'
 import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/screens/NewWorkspaceScreen.module.css'
+import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { currentBuild } from '../../app/org-model'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
@@ -14,6 +15,7 @@ import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useViewport } from '../ui/viewport'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
+import { BranchLine } from './BranchChoice'
 import { Composer } from './Composer'
 import { useShownForm } from './NewWorkspaceHost'
 import { OrgLinks } from './OrgLinks'
@@ -30,17 +32,18 @@ function builtWhen(when: When): string {
 }
 
 /**
- * The start of the empty chat, with the repository of the new workspace. An
- * org without chosen repositories asks for them first: an admin gets Choose
- * repositories, and a member reads that an admin chooses them. It asks only
- * after the repositories load, as the dialog does. While the repository of
- * the form waits for its build, the notice over the composer says when it
- * is ready, so the note of the cloud computer gives way.
+ * The start of the empty chat, with the repository of the new workspace and
+ * the line of its branch under it. An org without chosen repositories asks
+ * for them first: an admin gets Choose repositories, and a member reads
+ * that an admin chooses them. It asks only after the repositories load, as
+ * the dialog does. While the repository of the form waits for its build,
+ * the notice over the composer says when it is ready, so the note of the
+ * cloud computer gives way.
  */
 function Start(props: {
   org: OrgSummary
   form: NewWorkspaceForm
-  choose: (id: string) => void
+  model: NewWorkspaceModel
 }) {
   const { org, form } = props
   const app = useApp()
@@ -54,8 +57,9 @@ function Start(props: {
     build && chosen && !form.waiting.ids.has(chosen.id)
       ? (build.completedAt ?? build.startedAt)
       : null
+  // The line of the branch says on which branch the workspace starts.
   const body = chosen
-    ? 'Your first message creates it, on a new branch of the repository.'
+    ? 'Your first message creates it.'
     : unchosen
       ? `${repositoriesFirst(org)}.`
       : null
@@ -67,7 +71,7 @@ function Start(props: {
       {chosen ? (
         <RepositoryMenu
           chevron={styles.chevron}
-          choose={props.choose}
+          choose={(id) => props.model.setRepository(id)}
           chosen={chosen}
           repositories={form.repositories ?? []}
           waiting={form.waiting}
@@ -79,6 +83,9 @@ function Start(props: {
         >
           Choose repositories
         </ActionButton>
+      ) : null}
+      {chosen ? (
+        <BranchLine model={props.model} orgId={org.id} repository={chosen} />
       ) : null}
       {chosen && builtAt !== null ? (
         <p className={styles.note}>
@@ -126,13 +133,7 @@ export function NewWorkspaceScreen(props: {
         className={classes(chat.chat, phone && chat.mobile)}
       >
         <div className={chat.empty}>
-          {suspended ? null : (
-            <Start
-              choose={(id) => model.setRepository(id)}
-              form={form}
-              org={org}
-            />
-          )}
+          {suspended ? null : <Start form={form} model={model} org={org} />}
         </div>
         <div className={chat.footer}>
           {suspended ? (

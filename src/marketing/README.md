@@ -213,5 +213,8 @@ before the Worker serves them.
 
 ### Key code
 
-[Key code](key-code.md) gives the entry points of the site, its public guides,
-and its shared Worker helpers.
+[Marketing site key code](key-code.md) names the files, the types, and the
+functions of the site that a reader opens first. It gives the entry points
+of the site, its public guides, and its shared Worker helpers. It also
+names the shared parts and words of the pages, such as `StatusMark.astro`,
+`ClosingCall.astro`, and `access-copy.ts`.

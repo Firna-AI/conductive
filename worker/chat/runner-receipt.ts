@@ -135,6 +135,29 @@ async function applyRunnerEvent(
   readWorkspace: ChatDependencies['readAutomaticTitleWorkspace'],
 ): Promise<{ ready: boolean; accepted: boolean }> {
   const event = parsed.event
+  if (event.type === 'import.preparation') {
+    const session = await transaction.session(event.sessionId)
+    const turn = await transaction.turn(event.turnId)
+    if (
+      !session ||
+      session.conductorImport?.documentId !== event.documentId ||
+      turn?.sessionId !== session.id ||
+      !turn.started
+    )
+      return { ready: false, accepted: true }
+    if (session.conductorImport.preparation !== 'fallback') {
+      session.conductorImport = {
+        documentId: event.documentId,
+        preparation: 'fallback',
+      }
+      await transaction.saveSession(session)
+      await transaction.emit(
+        { type: 'session.updated', session },
+        parsed.occurredAt,
+      )
+    }
+    return { ready: false, accepted: true }
+  }
   let apply: (() => Promise<void>) | undefined
   if ('sessionId' in event) {
     try {

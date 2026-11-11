@@ -14,11 +14,16 @@ import { ProviderLifetime } from './lifetime'
 import { providerMessage } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
+import { codexHistoryFailure, NativeHistoryError } from './native-history'
 import type { ProviderFactory, ProviderInput } from './types'
 
-function input(command: ProviderInput) {
+function input(command: ProviderInput, importDocument?: string) {
   return [
-    { type: 'text', text: providerMessage(command.message), text_elements: [] },
+    {
+      type: 'text',
+      text: providerMessage(command.message, importDocument),
+      text_elements: [],
+    },
     ...(command.attachments.length
       ? [
           {
@@ -86,6 +91,7 @@ export function createCodexFactory(
       ]),
     ]
     let activeTurn: string | null = null
+    let importDocument = options.importDocument
     let userIds: string[] = []
     let choice = options.choice
     let activeChoice = choice
@@ -150,9 +156,8 @@ export function createCodexFactory(
             : options.credential.login.secret,
       })
       const response = object(
-        await rpc.request(
-          options.conversationId ? 'thread/resume' : 'thread/start',
-          {
+        await rpc
+          .request(options.conversationId ? 'thread/resume' : 'thread/start', {
             ...(options.conversationId
               ? { threadId: options.conversationId }
               : {}),
@@ -162,8 +167,12 @@ export function createCodexFactory(
             developerInstructions: options.instructions,
             approvalPolicy: 'never',
             sandbox: 'danger-full-access',
-          },
-        ),
+          })
+          .catch((error: unknown) => {
+            if (options.importedHistory && codexHistoryFailure(error))
+              throw new NativeHistoryError()
+            throw error
+          }),
       )
       const threadId = string(object(response.thread).id)
       options.event({ type: 'conversation', id: threadId })
@@ -177,7 +186,7 @@ export function createCodexFactory(
                 threadId,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: input(command),
+                input: input(command, importDocument),
               })
             } catch (error) {
               userIds = before
@@ -189,7 +198,7 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId,
-                input: input(command),
+                input: input(command, importDocument),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,
@@ -197,6 +206,7 @@ export function createCodexFactory(
             )
             activeTurn = string(object(result.turn).id)
           }
+          importDocument = undefined
         },
         model: async (next) => {
           choice = next

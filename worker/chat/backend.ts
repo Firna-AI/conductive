@@ -1,4 +1,3 @@
-import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import {
   type WorkspaceEvent,
   type WorkspaceEventEnvelope,
@@ -6,8 +5,10 @@ import {
 import type { UserMessage } from '../../src/shared/messages'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
+import type { RunnerImportCommand } from '../../src/shared/runner-import'
+import { seedImportSession, type SeedImportSession } from './import-sessions'
 import type { AppEnv } from '../env'
-import { errorResponse, HttpError, privateResponse } from '../http'
+import { HttpError } from '../http'
 import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
 import {
@@ -15,7 +16,6 @@ import {
   type BrowserAccess,
 } from './browser-authorization'
 import { afterNumber } from './http-routes'
-import { browserRequest } from './browser-request'
 import {
   BrowserConnections,
   type NativeBrowserConnections,
@@ -33,7 +33,7 @@ import {
   runWorkspaceOperation,
   type WorkspaceOperation,
 } from './workspace-operation'
-import { browserUpgrade, runnerUpgrade } from './sockets'
+import { fetchWorkspaceChat } from './backend-http'
 import type {
   BrowserPeer,
   ChatDependencies,
@@ -64,6 +64,22 @@ export class WorkspaceChat {
 
   flushRunner(): Promise<void> {
     return this.runner.flush()
+  }
+
+  sendImportCommand(
+    workspaceId: string,
+    command: Omit<RunnerImportCommand, 'connectionId'>,
+  ) {
+    return this.runner.sendImportCommand(workspaceId, command)
+  }
+
+  seedImportSession(workspaceId: string, input: SeedImportSession) {
+    this.binding.bind(workspaceId)
+    return this.store.change(
+      workspaceId,
+      (transaction) => seedImportSession(transaction, input, this.dependencies),
+      this.publish,
+    )
   }
 
   async acceptFirstMessage(first: FirstWorkspaceMessage): Promise<UserMessage> {
@@ -142,26 +158,16 @@ export class WorkspaceChat {
     })
   }
 
-  async fetch(request: Request): Promise<Response> {
-    try {
-      if (new URL(request.url).pathname === MACHINE_PATHS.runner)
-        return await runnerUpgrade(this, request)
-      const access = await this.authorizeBrowser(request)
-      if (access.suffix === '/events')
-        return await browserUpgrade(this, request, access)
-      return await browserRequest(
-        request,
-        access,
-        this.store,
-        this.storage,
-        this.env,
-        this.dependencies,
-        this.operation(access.workspace.id),
-        () => this.runner.flush(),
-      )
-    } catch (error) {
-      return privateResponse(errorResponse(error))
-    }
+  fetch(request: Request): Promise<Response> {
+    return fetchWorkspaceChat(
+      this,
+      request,
+      this.env,
+      this.dependencies,
+      (id) => this.operation(id),
+      () => this.runner.flush(),
+      this.storage,
+    )
   }
 
   async authorizeBrowser(request: Request): Promise<BrowserAccess> {

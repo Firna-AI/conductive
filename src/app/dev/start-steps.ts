@@ -5,6 +5,8 @@ import type {
   WorkspaceStart,
 } from '../../shared/workspaces'
 import { changeWorkspace, requireWorkspace, type DevBackend } from './backend'
+import { earlySessionOf } from '../../test-support/fake-import-routes'
+import { RouteError } from './router'
 import type { OrgState } from './state'
 
 /** The time from the start of one step to the start of the next one. */
@@ -21,14 +23,41 @@ const resumePlan: readonly PlannedStep[] = [
   { id: 'restore', label: 'Resuming with your files as you left them' },
 ]
 
-/** A new workspace starts from the org image, fetches, and makes its branch. */
+/** The steps of the activation of a workspace from Conductor. */
+const activationPlan: readonly PlannedStep[] = [
+  { id: 'image', label: 'Starting from the newest image' },
+  { id: 'import-software', label: 'Preparing the cloud computer' },
+  { id: 'import-launch', label: 'Preparing the cloud computer' },
+  { id: 'import-preflight', label: 'Checking space for your work' },
+  { id: 'import-restore', label: 'Restoring your work' },
+  { id: 'startup', label: 'Applying your startup script' },
+  { id: 'runner', label: 'Starting the agent' },
+]
+
+/**
+ * A new workspace starts from the org image, fetches, and makes its branch.
+ * With `existing`, it fetches that branch and checks it out with tracking
+ * instead, as the mockups draw it.
+ */
 export function createPlan(
   orgName: string,
   repository: Repository,
   branch: string,
+  existing = false,
 ): PlannedStep[] {
+  const image = {
+    id: 'image',
+    label: `Starting from the cloud computer of ${orgName}`,
+  }
+  if (existing) {
+    return [
+      image,
+      { id: 'fetch', label: `Fetching ${branch} of ${repository.fullName}` },
+      { id: 'branch', label: `Checking out ${branch} with tracking` },
+    ]
+  }
   return [
-    { id: 'image', label: `Starting from the cloud computer of ${orgName}` },
+    image,
     {
       id: 'fetch',
       label: `Fetching ${repository.defaultBranch} of ${repository.fullName}`,
@@ -55,15 +84,27 @@ function later(org: OrgState, workspaceId: string, run: () => void): void {
   org.running.set(workspaceId, () => clearTimeout(timer))
 }
 
-/** The last step is done, so the workspace is ready. */
+/**
+ * The last step is done, so the workspace is ready. A workspace from
+ * Conductor records its successful activation.
+ */
 function finish(backend: DevBackend, org: OrgState, workspaceId: string): void {
   const current = org.workspaces.find((item) => item.id === workspaceId)
   if (!current) return
   org.starts.set(workspaceId, { start: null, error: null })
+  const origin = current.conductorImport
   changeWorkspace(backend, org, {
     ...current,
     state: 'ready',
     updatedAt: backend.now(),
+    ...(origin
+      ? {
+          conductorImport: {
+            ...origin,
+            activatedAt: origin.activatedAt ?? backend.now(),
+          },
+        }
+      : {}),
   })
 }
 
@@ -167,6 +208,44 @@ export function resumeWorkspace(
     state: 'starting',
     updatedAt: Math.max(backend.now(), current.updatedAt),
   })
+}
+
+/**
+ * Activate of a workspace from Conductor before a successful activation:
+ * its first start, with the steps of an activation. A repeat while it runs
+ * joins it. It refuses a workspace that came from no import, or one that
+ * an activation already brought in, as the Worker does.
+ */
+export function activateWorkspace(
+  backend: DevBackend,
+  org: OrgState,
+  workspaceId: string,
+): string {
+  const current = requireWorkspace(org, workspaceId)
+  if (current.conductorImport?.activatedAt !== null) {
+    throw new RouteError(
+      404,
+      'workspace_not_found',
+      'The workspace is not available.',
+    )
+  }
+  if (current.state === 'starting' && org.running.has(workspaceId)) {
+    return earlySessionOf(current, backend.state.account.user, 0).id
+  }
+  runStart(backend, org, workspaceId, 'create', activationPlan)
+  changeWorkspace(backend, org, {
+    ...current,
+    state: 'starting',
+    updatedAt: Math.max(backend.now(), current.updatedAt),
+  })
+  // The early session of the person who activates, as the Worker stores it.
+  const session = earlySessionOf(
+    current,
+    backend.state.account.user,
+    backend.now(),
+  )
+  backend.emit(workspaceId, { type: 'session.updated', session })
+  return session.id
 }
 
 /** The `stop` preview: the sandbox stops while its workspace is open. */

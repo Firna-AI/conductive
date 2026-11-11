@@ -71,8 +71,8 @@ The header shows the repository, owner, and state.
 The workspace can show **Untitled** before it receives an automatic name.
 The name comes from the first message.
 
-The branch name uses a GitHub login, a city, and a short suffix.
-It stays the same when the workspace receives a name.
+A new branch's name uses a GitHub login, a city, and a short suffix.
+The branch name stays the same when the workspace receives a name.
 To see the checked-out branch, run this command in **Terminal**:
 
 ```bash
@@ -166,7 +166,7 @@ Archive does not check for uncommitted files or unpushed commits.
 It asks no confirmation question.
 Archive stops the computer and its agent work at once.
 
-Conductive keeps the computer and its files for 14 days after Archive.
+When the workspace has a cloud computer, Conductive keeps it and its files for 14 days after Archive.
 The chat stays read-only in **Archived**.
 File lists, Terminal, previews, and other workspace tools stay unavailable while it is archived.
 

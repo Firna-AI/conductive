@@ -1,5 +1,6 @@
 import { nameLabel } from '../../../../src/shared/name-label'
 import type { MenuEntry } from '../components/common/Menu'
+import { oldSessionHistory } from '../components/conductor-import/ImportedParts'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
@@ -7,23 +8,41 @@ import {
   newSession,
   workspaceSessions,
 } from '../fixtures/sessions'
+import { oldSessions } from '../fixtures/conductorImport'
 import { splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { importedTabs } from './importedSessions'
+import { isImported, oldSessionLinks } from './importedWorkspace'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
+
+/**
+ * The workspaces that the create flow made: Saved carts on a new branch,
+ * and the same task on the chosen branch.
+ */
+const newWorkspaces: ReadonlySet<WorkspaceState['workspace']> = new Set([
+  'saved-carts',
+  'saved-carts-branch',
+])
 
 /**
  * A workspace that the create flow or a routine run made has one session,
  * and no edits of its own.
  */
 export function isNew(state: WorkspaceState): boolean {
-  return state.workspace === 'saved-carts' || state.run !== undefined
+  return newWorkspaces.has(state.workspace) || state.run !== undefined
 }
 
-/** The history of the workspace, with a note while a new workspace has none. */
+/**
+ * The history of the workspace, with a note while a new workspace has none.
+ * An imported workspace lists its old sessions from Conductor.
+ */
 export function historyFor(state: WorkspaceState): readonly MenuEntry[] {
+  if (isImported(state)) {
+    return oldSessionHistory(oldSessions, oldSessionLinks(state))
+  }
   return isNew(state)
     ? [{ kind: 'note', text: 'Sessions that you close show here.' }]
     : historyEntries
@@ -61,6 +80,7 @@ export function tabsFor(
   state: WorkspaceState,
   workspace: Workspace,
 ): WorkspaceTab[] {
+  if (isImported(state)) return importedTabs(state)
   if (isNew(state)) {
     const title = workspaceName(state, workspace)
     return [{ key: 'session', kind: 'session', title, selected: true }]

@@ -1,5 +1,5 @@
 import type { Membership } from '../../fixtures/members'
-import { sections, type SectionKey } from '../../fixtures/sections'
+import { sectionOf, type SectionKey } from '../../fixtures/sections'
 import type { MenuEntry } from '../common/Menu'
 import { reassignMenu } from '../workspace/OwnerPicker'
 import type { OpenSubmenu, RowControls } from './RowMenu'
@@ -42,7 +42,7 @@ function sectionChoices(
     { kind: 'label', label: 'Section' },
     ...keys.map((key): MenuEntry => ({
       kind: 'item',
-      label: sections[key].name,
+      label: sectionOf(key).name,
       checked: key === current,
     })),
   ]

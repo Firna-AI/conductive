@@ -3,7 +3,8 @@
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
 runner, its events and their limits, its turns, its report of the
-listening ports, and the repair of lost workspace updates. It belongs to
+listening ports, the work of an imported workspace, and the repair of
+lost workspace updates. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -145,6 +146,26 @@ the [model gateway](model-gateway.md), as that doc says.
 
 The [listening-port requirements](listening-ports.md) give the scanner,
 its labels, its limits, and its full reports.
+
+## The work of an imported workspace
+
+- At the [activation](imported-workspaces.md#the-activation) of an
+  imported workspace, the workspace gives the runner the stored work
+  before any turn.
+- The runner checks the free disk first. It changes nothing in the
+  checkout when the work does not fit, as the activation requires.
+- The runner then puts the work in place, and it restores each imported
+  session with its memory file.
+- It reports one result: done, or failed with its cause. The cause of a
+  disk that is too small names the space that the work needs and the
+  space that the disk has.
+- With a done result, it also reports each imported session that its
+  agent cannot resume.
+- The workspace sends no turn to the runner before that result.
+- A repeat of the same work after a reconnect or a restart puts nothing in
+  place twice. The runner reports the same result again.
+- The runner keeps the agent session of each imported session across a
+  restart, as it does for each session.
 
 ## Lost workspace updates
 

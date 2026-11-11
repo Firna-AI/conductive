@@ -20,6 +20,7 @@ import type {
   WorkspaceMachinePhase,
   StartJobStorage,
 } from './start-types'
+import { ensureActivationSession } from './import-activation'
 
 export async function advanceStartMachine(
   env: AppEnv,
@@ -34,6 +35,8 @@ export async function advanceStartMachine(
   environmentCiphertext: string | null
 } | null> {
   if (job.phase === 'machine') {
+    if (job.kind === 'activate')
+      await ensureActivationSession(env, endpoint, job)
     await ensureWorkspaceToken(
       env,
       job.workspaceId,
@@ -57,8 +60,8 @@ export async function advanceStartMachine(
       diskKeepalive: false,
     })
     await endpoint.lifecycleStep(
-      job.kind === 'create' ? 'image' : 'disk',
-      job.kind === 'create'
+      job.kind !== 'resume' ? 'image' : 'disk',
+      job.kind !== 'resume'
         ? 'Starting from the newest image'
         : 'Resuming with your files as you left them',
       'running',
@@ -125,18 +128,23 @@ export async function advanceStartMachine(
     if (status === 'error') throw new WorkspaceStartError(null)
     if (status !== 'ready') return null
     await provider.setAutoStop(row.sandboxId, 1_800)
-    if (job.kind === 'create')
+    if (job.kind !== 'resume')
       await releaseImageLease(env.DB, job.orgId, job.workspaceId)
     await endpoint.lifecycleStep(
-      job.kind === 'create' ? 'image' : 'disk',
-      job.kind === 'create'
+      job.kind !== 'resume' ? 'image' : 'disk',
+      job.kind !== 'resume'
         ? 'Starting from the newest image'
         : 'Resuming with your files as you left them',
       'completed',
     )
     return {
       phase:
-        job.afterReadyPhase ?? (job.kind === 'create' ? 'fetch' : 'startup'),
+        job.afterReadyPhase ??
+        (job.kind === 'activate'
+          ? 'import-software'
+          : job.kind === 'create'
+            ? 'fetch'
+            : 'startup'),
       environmentCiphertext: job.environmentCiphertext,
     }
   }

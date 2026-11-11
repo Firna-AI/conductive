@@ -1,8 +1,9 @@
 import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, CircleAlert, CirclePause } from 'lucide-react'
+import { Archive, CircleAlert, CirclePause, Power } from 'lucide-react'
 import { archivedOn, restoreUntil } from '../../fixtures/archive'
+import { startErrors } from '../../fixtures/starting'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
@@ -22,6 +23,8 @@ type Problem = {
   title: string
   /** The text of the bar under the chat. */
   body: string
+  /** The title of the files and tools panels, when it is not the title. */
+  panelTitle?: string
   /** The text of the files and tools panels. */
   panelBody: string
   /** The one way forward, when the sandbox can come back. */
@@ -68,6 +71,15 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
       panelBody: history,
       tone: 'neutral',
     },
+    inactive: {
+      icon: Power,
+      title: 'Activate this workspace',
+      body: 'A cloud computer starts with your work from Conductor.',
+      panelTitle: 'Not active',
+      panelBody: 'Activate the workspace to open its files and tools.',
+      action: 'Activate',
+      tone: 'neutral',
+    },
   }
 
 const archivedTitle = `Archived on ${archivedOn}`
@@ -83,6 +95,7 @@ const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
     icon: Archive,
     title: archivedTitle,
     body: `Restore it until ${restoreUntil} to bring back its files and sessions.`,
+    panelTitle: 'Archived',
     panelBody: 'The files and the tools come back with Restore.',
     action: 'Restore',
     tone: 'neutral',
@@ -91,6 +104,7 @@ const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
     icon: Archive,
     title: archivedTitle,
     body: history,
+    panelTitle: 'Archived',
     panelBody: history,
     tone: 'neutral',
   },
@@ -98,6 +112,7 @@ const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
     icon: Archive,
     title: archivedTitle,
     body: `Restore ended on ${restoreUntil}, and the chat is read-only.`,
+    panelTitle: 'Archived',
     panelBody: history,
     tone: 'neutral',
   },
@@ -105,6 +120,7 @@ const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
     icon: Archive,
     title: archivedTitle,
     body: 'Its cloud computer is deleted, and the chat is read-only.',
+    panelTitle: 'Archived',
     panelBody: 'The files and the tools went with the cloud computer.',
     tone: 'neutral',
   },
@@ -119,21 +135,36 @@ function problemOf(state: SandboxNoticeState): Problem {
 /**
  * The screen that the one way forward leads to, when the mockups draw it:
  * the start of a new cloud computer after the one failed first start that
- * they draw, and the workspace back in its section after a Restore.
+ * they draw, for Saved carts, and the workspace back in its section after a
+ * Restore. A branch that is gone stays gone until someone restores it on
+ * GitHub, so its Try again leads to no drawn screen. The screens of a
+ * workspace from Conductor draw their own Activate, with the link of their
+ * state, so Activate here leads to no drawn screen either.
  */
 function recoveryPath(state: SandboxNoticeState): string | undefined {
   if (state.problem === 'archived') return paths.restored
-  if (state.problem === 'error' && state.firstStart === true) {
-    return paths.retrying
-  }
-  return undefined
+  if (state.problem !== 'error' || state.firstStart !== true) return undefined
+  return state.message === startErrors['branch-gone']
+    ? undefined
+    : paths.retrying
 }
 
-/** The one way forward, as a link where the mockups draw its screen. */
-function RecoveryButton(props: { label: string; state: SandboxNoticeState }) {
+/**
+ * The one way forward, as a link where the mockups draw its screen.
+ * `restoreTo` is the screen of Restore, when it is not the native one.
+ */
+function RecoveryButton(props: {
+  label: string
+  state: SandboxNoticeState
+  restoreTo?: string | null
+}) {
   const button = <ActionButton tone="primary">{props.label}</ActionButton>
-  const to = recoveryPath(props.state)
-  if (to === undefined) return button
+  const restore = props.state.problem === 'archived'
+  const to =
+    restore && props.restoreTo !== undefined
+      ? props.restoreTo
+      : recoveryPath(props.state)
+  if (to === undefined || to === null) return button
   return (
     <ScreenLink asChild to={to}>
       {button}
@@ -155,6 +186,7 @@ function barBody(state: SandboxNoticeState, body: string): string {
       return state.message ? `${state.message} ${body}` : body
     case 'stopped':
     case 'archived':
+    case 'inactive':
       return body
   }
 }
@@ -166,15 +198,24 @@ function barBody(state: SandboxNoticeState, body: string): string {
  * action, because the start stays refused until its cause changes. A start
  * that failed shows the message that the app saved for it, such as the
  * 20-minute limit of a start, before the body. An archived workspace offers
- * Restore until the app deletes its cloud computer.
+ * Restore until the app deletes its cloud computer. A workspace from
+ * Conductor asks to activate it before its first activation. `restoreTo`
+ * is the screen of Restore, when it is not the native one. Null keeps
+ * Restore static.
  */
-export function SandboxBar(props: SandboxNoticeState) {
+export function SandboxBar(
+  props: SandboxNoticeState & { restoreTo?: string | null },
+) {
   const problem = problemOf(props)
   return (
     <Notice
       action={
         problem.action ? (
-          <RecoveryButton label={problem.action} state={props} />
+          <RecoveryButton
+            label={problem.action}
+            restoreTo={props.restoreTo}
+            state={props}
+          />
         ) : undefined
       }
       body={barBody(props, keptBody(props, problem.body))}
@@ -218,7 +259,7 @@ export function SandboxPanel(props: {
           : keptBody(state, problem.panelBody)
       }
       icon={problem.icon}
-      title={state.problem === 'archived' ? 'Archived' : problem.title}
+      title={problem.panelTitle ?? problem.title}
     />
   )
 }

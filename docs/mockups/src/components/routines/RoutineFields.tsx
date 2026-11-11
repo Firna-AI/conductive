@@ -5,7 +5,7 @@ import { Switch } from '@firna/ui/switch'
 import type { LucideIcon } from 'lucide-react'
 import { ChevronDown, FolderGit2, Rows3 } from 'lucide-react'
 import { repositoryOf, type Routine } from '../../fixtures/routines'
-import { sections } from '../../fixtures/sections'
+import { sectionOf } from '../../fixtures/sections'
 import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
@@ -99,7 +99,7 @@ export function RoutineFields(props: { routine: Routine; viewport: Viewport }) {
           <Picker
             icon={Rows3}
             name="Section of the run workspaces"
-            value={sections[routine.section].name}
+            value={sectionOf(routine.section).name}
           />
         </Field>
         <Creator routine={routine} />
@@ -123,7 +123,7 @@ export function RoutineFacts(props: { routine: Routine; schedules: boolean }) {
       rows={[
         { term: 'State', value: routine.active ? 'Active' : 'Off' },
         { term: 'Repository', value: repositoryOf(routine) },
-        { term: 'Section', value: sections[routine.section].name },
+        { term: 'Section', value: sectionOf(routine.section).name },
         { term: 'By', value: routine.owner.name },
         ...(props.schedules
           ? [{ term: 'Time zone', value: routine.timeZone }]

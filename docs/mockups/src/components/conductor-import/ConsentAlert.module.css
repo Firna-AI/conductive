@@ -1,0 +1,71 @@
+/*
+ * The alert lies over the window, near its top, as macOS places an alert of
+ * an app. macOS draws its own controls, so the alert does not use the
+ * controls of the app.
+ */
+.layer {
+  display: flex;
+  position: absolute;
+  z-index: 50;
+  inset: 0;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 170px;
+}
+
+.alert {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 272px;
+  padding: 20px 16px 16px;
+  border: 1px solid var(--ui-border2);
+  border-radius: 14px;
+  background: var(--ui-composer);
+  box-shadow: 0 22px 60px -12px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.title {
+  margin: 4px 0 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+  line-height: 1.35;
+}
+
+.text {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* The default button of macOS, in the accent colour of the system. */
+.default {
+  background: var(--ui-primary);
+  color: var(--ui-on-solid);
+}

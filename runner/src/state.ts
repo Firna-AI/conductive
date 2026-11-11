@@ -3,6 +3,10 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
 import type { Agent } from '../../src/shared/agents'
+import {
+  readImportSessionMetadata,
+  type ImportSessionMetadata,
+} from '../../src/shared/import-session'
 import { FILE_EVENT_MAX_BYTES } from '../../src/shared/files'
 import {
   RUNNER_EVENT_MAX_BYTES,
@@ -34,6 +38,8 @@ export interface SavedSession {
   agent: Agent
   providerSessionId: string | null
   instructions?: string
+  conductorImport?: ImportSessionMetadata
+  importFallbackTurnId?: string
 }
 
 export interface RunnerState {
@@ -97,6 +103,16 @@ function parseState(value: unknown): RunnerState {
       return {
         sessionId: string(session.sessionId),
         agent: oneOf(session.agent, ['claude', 'codex']),
+        ...(session.conductorImport === undefined
+          ? {}
+          : {
+              conductorImport: readImportSessionMetadata(
+                session.conductorImport,
+              ),
+            }),
+        ...(session.importFallbackTurnId === undefined
+          ? {}
+          : { importFallbackTurnId: string(session.importFallbackTurnId) }),
         ...(session.instructions === undefined
           ? {}
           : { instructions: string(session.instructions) }),

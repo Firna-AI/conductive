@@ -1,4 +1,5 @@
 import type { ProviderEvent } from './types'
+import { NativeHistoryError } from './native-history'
 
 export function errorText(value: unknown): string | null {
   if (typeof value === 'string') return value.trim() || null
@@ -35,6 +36,12 @@ export function authenticationFailure(): Extract<
 export function failureCause(
   value: unknown,
 ): Extract<ProviderEvent, { type: 'failed' }> {
+  if (value instanceof NativeHistoryError)
+    return {
+      type: 'failed',
+      code: 'native_history_unavailable',
+      message: value.message,
+    }
   const message = errorText(value) ?? 'The agent request failed. Try again.'
   if (
     /401|unauth|authentication|invalid.?api.?key|expired.?token|invalid.?token|not logged in/i.test(

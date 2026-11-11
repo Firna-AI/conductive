@@ -17,6 +17,7 @@ import { routinesRoute } from './routines/route'
 import { routineRunsRoute } from './routines/run-route'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
+import { conductorDocumentRoute } from './conductor-import/routes'
 import { feedbackRoute } from './app-api/feedback'
 
 export { routeDevice } from './devices/router'
@@ -28,6 +29,13 @@ export async function route(
   dependencies: AppDependencies,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const document = await conductorDocumentRoute(
+    request,
+    env,
+    context,
+    dependencies.now,
+  )
+  if (document) return document
   const feedback = await feedbackRoute(request, env, context, dependencies)
   if (feedback) return feedback
   const waitlist = await waitlistRoute(request, env, context, dependencies)

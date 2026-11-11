@@ -6,8 +6,9 @@ settings the Worker gives to each workspace sandbox.
 [Architecture](architecture.md) describes the Worker and its hostnames.
 The [Worker README](../worker/README.md#routes) lists the routes that the
 Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
-push to `main` deploys the test deployment. Two linked pages hold the
-[model inputs](deployment/models.md) and the
+push to `main` deploys the test deployment. Three linked pages hold the
+[attachment bucket](deployment/attachment-bucket.md), the
+[model inputs](deployment/models.md), and the
 [runner archive and software image](deployment/runner-archive.md).
 
 Each input names the routes that read it. A route that does not read an
@@ -62,7 +63,7 @@ examples.
 | `DB` | D1 database | Every route that reads users, orgs, or workspaces | The production database. Apply the migrations with `npx wrangler d1 migrations apply DB --remote`. |
 | `ASSETS` | Static assets | The pages of the web app | The client build of `npm run build`. |
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
-| `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion | The bucket `conductive-chat-attachments`, as [The attachment bucket](#the-attachment-bucket) says. |
+| `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion. The import from Conductor uses it too, as [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says. | The bucket `conductive-chat-attachments`, as [The attachment bucket](deployment/attachment-bucket.md#the-attachment-bucket) says. |
 | `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](deployment/models.md#the-title-model) says. |
 | `CF_VERSION_METADATA` | Version metadata | The software image route of the deploy run | The ID, the tag, and the creation time of the running Worker version. `wrangler.jsonc` sets it. Without it, the route answers 404, as [The software image](deployment/runner-archive.md#the-software-image) says. |
 
@@ -80,10 +81,11 @@ examples.
 | `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
-| `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
-| `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
+| `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds, refreshes, and new import activation attempts | The public HTTPS URL of the runner archive. |
+| `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds, refreshes, and new import activation attempts | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
 | `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](deployment/runner-archive.md#the-software-image) says. It is not a secret. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
+| `CHAT_ATTACHMENTS_S3_BUCKET_URL` | The upload links of an import from Conductor | The S3 API address of the bucket of `CHAT_ATTACHMENTS`, in path style: `https://<account ID>.r2.cloudflarestorage.com/conductive-chat-attachments`. It is not a secret. [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says more. |
 | `OPERATOR_GITHUB_IDS` | The operator section and the suspension of users and orgs | Optional. The numeric GitHub user IDs of the operators, separated by commas. It is not a secret. Without it, each operator request gets `403 operator_required`, as the [operator area](../worker/operator/README.md#overview) says. |
 
 - Without `MACHINE_ORIGIN`, the Worker refuses each request on the machine
@@ -105,6 +107,8 @@ examples.
 | `BOAT_KEY_ENCRYPTION_KEY` | Every route that stores or reads a stored secret | A separate 32 random bytes, encoded as Base64. |
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. A PKCS#8 PEM works too. |
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhooks on the machine hostname | The webhook secret of the GitHub App. The Worker checks each delivery with it. Without it, each delivery gets `503 github_unavailable`. |
+| `CHAT_ATTACHMENTS_ACCESS_KEY_ID` | The upload links of an import from Conductor | The Access Key ID of an R2 API token for the bucket of `CHAT_ATTACHMENTS` only, as [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says. |
+| `CHAT_ATTACHMENTS_SECRET_ACCESS_KEY` | The upload links of an import from Conductor | The Secret Access Key of the same token. |
 | `RESEND_API_KEY` | The invitation emails of the member routes, the approval emails of the operator section, and the feedback emails of `POST /api/feedback` | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. The approval emails come from the same sender. The feedback emails come from `feedback@mail.conductive.build`, on the same domain. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link and each feedback email to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. A feedback send gets HTTP 502 too. An approval still gives app access, and the app tries its email again for 24 hours, as [The approval email](protocol/waitlist.md#the-approval-email) says. |
 | `FEEDBACK_EMAIL` | The feedback emails of `POST /api/feedback` | The address of the team inbox, which gets each feedback email, as [The email](protocol/feedback.md#the-email) says. It is a secret, so that a personal address stays out of the repository. Without it, each send gets HTTP 503, also on a local `APP_ORIGIN`. With it, a local `APP_ORIGIN` writes each feedback email to the log of the Worker, and needs no `RESEND_API_KEY`. Elsewhere, the feedback emails also need `RESEND_API_KEY`. |
 
@@ -116,31 +120,10 @@ examples.
 
 ## The attachment bucket
 
-`CHAT_ATTACHMENTS` holds the files that users attach to chat messages, as
-[Attachments](protocol/messages-and-attachments.md#attachments) says. One bucket
-serves every org.
-
-- Create the private bucket once, before the first deploy that declares
-  the binding:
-  `npx wrangler r2 bucket create conductive-chat-attachments --location weur`.
-  The primary orchestrator does this at the next deployment.
-- The location hint puts the bucket in Western Europe, near the production
-  database and the workspace objects. A bucket keeps the location of its
-  first creation.
-- Without the bucket, `wrangler deploy` creates it with no location hint.
-  So create it first.
-- Keep public access off. Add no custom domain, no `r2.dev` address, and
-  no CORS rule. Only the Worker reads and writes the bucket, as
-  [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
-  says.
-- Add no lifecycle rule that deletes files by age. Such a rule would also
-  delete the files of sent messages, which stay until the app deletes their
-  workspace.
-- The copy of each file into a sandbox also needs the `file.write` action
-  on the Boat key, as [The app's Boat account](#the-apps-boat-account)
-  says.
-- Local development and the Worker tests use local R2 storage. They need no
-  Cloudflare account and no bucket.
+[The attachment bucket](deployment/attachment-bucket.md#the-attachment-bucket)
+gives the setup of `CHAT_ATTACHMENTS`.
+[Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import)
+gives the inputs of the upload links of an import from Conductor.
 
 ## The GitHub App
 

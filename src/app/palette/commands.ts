@@ -38,7 +38,11 @@ export type OfferedActionId = (typeof offeredActionIds)[number]
  * Send feedback, which opens the Feedback dialog over each page.
  */
 export type OwnActionId =
-  'new-workspace' | 'create-org' | 'switch-org' | 'send-feedback'
+  | 'new-workspace'
+  | 'import-from-conductor'
+  | 'create-org'
+  | 'switch-org'
+  | 'send-feedback'
 
 export const actionTexts: Readonly<
   Record<OfferedActionId | OwnActionId, CommandText>
@@ -55,6 +59,10 @@ export const actionTexts: Readonly<
   'restore-workspace': { label: 'Restore workspace', words: ['unarchive'] },
   'new-workspace': { label: 'New workspace', words: ['create', 'task'] },
   'new-section': { label: 'New section', words: ['group'] },
+  'import-from-conductor': {
+    label: 'Import from Conductor',
+    words: ['migrate', 'workspaces'],
+  },
   'create-org': { label: 'Create org', words: ['new', 'team'] },
   // The row adds the name of the org to the label.
   'switch-org': { label: 'Switch to', words: ['org'] },

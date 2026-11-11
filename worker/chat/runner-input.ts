@@ -10,6 +10,8 @@ import {
   checkRunnerEventLimits,
 } from './runner-event-limits'
 import { checkDisplayedPortReport } from './port-reports'
+import { readRunnerImportReply } from '../../src/shared/runner-import-read'
+import type { RunnerImportReply } from '../../src/shared/runner-import'
 
 export interface IncomingRunnerEnvelope {
   type: 'event'
@@ -26,9 +28,11 @@ export function parseRunnerTransport(
 ):
   | RunnerHello
   | IncomingRunnerEnvelope
+  | RunnerImportReply
   | { type: 'file.read.result'; value: unknown }
   | { type: 'file.diff.result'; value: unknown } {
   const input = record(value)
+  if (input.type === 'import.result') return readRunnerImportReply(value)
   if (input.type === 'hello') {
     if (input.protocolVersion !== 1 && input.protocolVersion !== 2)
       return invalidInput()

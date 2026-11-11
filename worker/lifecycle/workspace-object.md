@@ -20,12 +20,13 @@ one role:
 
 Its public methods are internal RPC, not HTTP routes. This folder uses the
 `WorkspaceLifecycleEndpoint` interface of
-[`workspace-runtime.ts`](workspace-runtime.ts). Inside the object,
-`createWorkspaceIntegration` in
-[`workspace-integration.ts`](../chat/workspace-integration.ts) calls these
-lifecycle steps from the chat hooks, as
+[`workspace-runtime.ts`](workspace-runtime.ts). Inside the object, the chat
+hooks call these lifecycle steps, as
 [The workspace lifecycle](../chat/integration/workspace-lifecycle.md)
-says:
+says. `workspaceLifecycleHooks` in
+[`workspace-lifecycle-hooks.ts`](../chat/workspace-lifecycle-hooks.ts)
+makes those hooks, and `createWorkspaceIntegration` in
+[`workspace-integration.ts`](../chat/workspace-integration.ts) sets them:
 
 - `registerLifecycleTurn` records a turn and its sender before the turn
   goes out, after a check of the org membership, and marks its session as
@@ -122,7 +123,9 @@ history, with chat and lifecycle events.
 ## Creates and resumes
 
 The [browser routes](README.md#browser-routes) queue the start of each
-create and resume. The workspace object runs that start:
+create and resume. [Import activation](import-activation.md) gives the third start kind.
+
+The workspace object runs that start:
 
 - A create or a resume queues its start with `queueLifecycleStart`. The
   workspace object runs the start, so a closed browser does not cancel it.

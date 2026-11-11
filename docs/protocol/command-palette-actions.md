@@ -24,6 +24,9 @@ actions at `app/command-palette/actions`, and the settings at
   takes changes. It uses the
   [saved view of New workspace](create-a-workspace.md#page-or-dialog).
 - New section shows only where the page shows the workspace list.
+- Import from Conductor shows only in the Mac app, on each page where the
+  palette has an org that takes changes. The palette of a browser never
+  shows it.
 - The Go to rows show only where the page shows the right column.
 - On the All tab and on the Actions tab, the actions come in this order:
   1. While a workspace is open, its actions: New session, Session history,
@@ -32,7 +35,9 @@ actions at `app/command-palette/actions`, and the settings at
      Preview. Desktop has no Go to row while the app hides it, as
      [Desktop](workspace-tools.md#desktop) says. An archived workspace
      offers only Session history and Restore workspace.
-  2. The actions of the org: New workspace and New section.
+  2. The actions of the org: New workspace and New section. In the Mac
+     app, Import from Conductor follows them, as
+     [Entry points](desktop-import.md#entry-points) says.
   3. Create org, then a Switch to row for each other org of the person, in
      the order of the org rail.
   4. In the Mac app, "Hide the sidebar" or "Show the sidebar", as the

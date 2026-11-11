@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
   ArchiveRestore,
+  ArrowDownToLine,
   Bot,
   Building2,
   FileDiff,
@@ -126,6 +127,20 @@ export const orgActions: readonly Command[] = [
     to: paths.newWorkspace,
   },
   { label: 'New section', lead: icon(FolderPlus), words: ['group'] },
+]
+
+/**
+ * The actions that only the window of the Mac app offers, because they
+ * read the data of this Mac: the import of the local workspaces of
+ * Conductor into the org, which asks before its first read.
+ */
+export const macActions: readonly Command[] = [
+  {
+    label: 'Import from Conductor',
+    lead: icon(ArrowDownToLine),
+    words: ['migrate', 'workspaces'],
+    to: paths.macImportConsent,
+  },
 ]
 
 /** Create org, then a switch to each other org of the person. */

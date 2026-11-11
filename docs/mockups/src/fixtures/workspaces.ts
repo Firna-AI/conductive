@@ -24,13 +24,12 @@ export type ActivityStatus =
   | 'error'
   | 'archived'
 
-/** The workspaces that a screen can show open. */
-export const openableWorkspaces = [
-  'checkout-autocomplete',
-  'saved-carts',
-] as const
-
-export type OpenableWorkspace = (typeof openableWorkspaces)[number]
+/**
+ * What a screen shows of a workspace: its activity, or `inactive`. An
+ * inactive workspace came from an import of Conductor and has no cloud
+ * computer until a member activates it.
+ */
+export type WorkspaceStatus = ActivityStatus | 'inactive'
 
 export type Workspace = {
   key: string
@@ -56,8 +55,8 @@ export type Workspace = {
   section: SectionKey
   /** The agent, model, and effort of its last message. */
   choice: AgentChoice
-  /** The status in the workspace list when the app opens. */
-  status: ActivityStatus
+  /** The status in the workspace list when the screen opens. */
+  status: WorkspaceStatus
   /** The time since the last activity, such as `2h`. */
   updated: string
   /**
@@ -65,6 +64,14 @@ export type Workspace = {
    * runs on the agent login of the member who started it.
    */
   owner: PersonKey
+  /** The workspace came from an import of Conductor, which it shows. */
+  from?: 'conductor'
+  /**
+   * The activation of the workspace from Conductor succeeded. An Archive
+   * alone never marks it, because a workspace can be archived before its
+   * activation, or while it runs.
+   */
+  activated?: true
   /**
    * The branch that its work goes to. Changes and each diff compare with
    * it from the merge base, and the pull request bar names it. Without
@@ -80,6 +87,9 @@ export function baseBranchOf(workspace: Workspace): string {
     workspace.baseBranch ?? repositories[workspace.repository].defaultBranch
   )
 }
+
+/** A workspace of the list when the app opens. None of them is inactive. */
+type ListedWorkspace = Workspace & { status: ActivityStatus }
 
 /**
  * The web address of a workspace: the app, the ID of the org, and the ID
@@ -100,7 +110,7 @@ function branchFor(owner: PersonKey, name: string): string {
   return `${people[owner].login}/${name}`
 }
 
-export const checkoutAutocomplete: Workspace = {
+export const checkoutAutocomplete: ListedWorkspace = {
   key: 'checkout-autocomplete',
   name: 'Checkout address autocomplete',
   number: 395,
@@ -136,13 +146,6 @@ export const savedCarts: Workspace = {
   owner: 'cal',
 }
 
-export const openableWorkspaceRecords: Readonly<
-  Record<OpenableWorkspace, Workspace>
-> = {
-  'checkout-autocomplete': checkoutAutocomplete,
-  'saved-carts': savedCarts,
-}
-
 /** The Codex model and effort of the workspaces that use Codex. */
 export const codex: AgentChoice = {
   agent: 'codex',
@@ -151,7 +154,7 @@ export const codex: AgentChoice = {
 }
 
 type Details = Pick<
-  Workspace,
+  ListedWorkspace,
   'number' | 'repository' | 'section' | 'status' | 'updated'
 > & {
   /** The ID of the workspace in its link. */
@@ -165,14 +168,14 @@ export function workspace(
   name: string,
   details: Details,
   choice: AgentChoice = defaultChoice,
-): Workspace {
+): ListedWorkspace {
   const { id, owner = 'cal', ...rest } = details
   const branch = branchFor(owner, key)
   return { key, name, link: workspaceLink(id), branch, choice, ...rest, owner }
 }
 
 /** The workspaces of Acme when the app opens, newest first in each section. */
-export const workspaceList: readonly Workspace[] = [
+export const workspaceList: readonly ListedWorkspace[] = [
   workspace('email-dark-mode', 'Dark mode for emails', {
     number: 401,
     id: 'O9k18xFxGwojR6dZ-C3QxC6x0UdyUubyOLkiNw_N73o',

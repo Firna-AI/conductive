@@ -8,6 +8,7 @@ import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
+import { ImportedArchiveDialog } from '../components/conductor-import/ImportedArchiveDialog'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
@@ -16,7 +17,10 @@ import { transcriptToasts } from '../components/workspace/transcriptCopy'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { importedScreensOf } from './importedScreens'
+import { neverActivated } from './importedWorkspace'
 import type { WorkspaceState } from './workspaceState'
+import { archiveRestore } from './workspaceSandbox'
 import { historyFor } from './workspaceTabs'
 
 /**
@@ -78,7 +82,7 @@ export function transcriptToast(
 
 /**
  * What lies open over a workspace. Desktop draws the menus beside their
- * buttons, and the tab menu below its tab, so only the dialog lies over the
+ * buttons, and the tab menu below its tab, so only the dialogs lie over the
  * app. A phone draws each one as a sheet. `row` holds the tabs that the
  * viewport shows, the tab whose menu is open, if any, and whether the
  * workspace is read-only, which leaves items out of that menu.
@@ -95,6 +99,21 @@ export function workspaceOverlay(
       return null
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
+    case 'imported-archive': {
+      // Archive asks no question, except for a workspace from Conductor that
+      // was never activated. It has no cloud computer, so its question checks
+      // nothing and says what Archive changes.
+      if (!neverActivated(state)) return null
+      const screens = importedScreensOf(state)
+      return (
+        <ImportedArchiveDialog
+          archiveTo={screens.afterArchive}
+          cancelTo={screens.chat}
+          viewport={viewport}
+          workspace={workspace}
+        />
+      )
+    }
     case 'history':
       return mobile ? (
         <Sheet title="Session history">
@@ -128,8 +147,8 @@ export function workspaceOverlay(
 
 /**
  * The toast of the state, over the whole screen. Just after Archive, the
- * toast names the workspace and offers Restore, which does what Restore on
- * the archived bar does.
+ * toast names the workspace. It offers Restore, which does what Restore on
+ * the archived bar does, while the app keeps the cloud computer.
  */
 export function workspaceToast(
   state: WorkspaceState,
@@ -141,7 +160,11 @@ export function workspaceToast(
       return null
     case 'archived':
       return (
-        <ArchivedToast name={workspace.name} phone={viewport === 'mobile'} />
+        <ArchivedToast
+          name={workspace.name}
+          phone={viewport === 'mobile'}
+          restorable={archiveRestore(state) === 'available'}
+        />
       )
   }
 }

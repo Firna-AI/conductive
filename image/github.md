@@ -16,8 +16,8 @@ name and email rules.
 
 `install.sh` installs `git-credential-helper.sh` as
 `/usr/local/bin/conductive-git-credential`. This wrapper keeps the
-caller's `CONDUCTIVE_TURN_ID`, loads the sandbox variables, and runs
-`git-credential-helper.mjs` with the private Node.
+caller's `CONDUCTIVE_TURN_ID` and `CONDUCTIVE_ACTIVATION_ID`, loads the
+sandbox variables, and runs `git-credential-helper.mjs` with the private Node.
 
 - In Git credential mode, the helper answers only a `get` request for `https` on `github.com`. It
   ignores every other request.
@@ -28,8 +28,12 @@ caller's `CONDUCTIVE_TURN_ID`, loads the sandbox variables, and runs
 - It gives git the token as the password of the user `x-access-token`.
 - The Worker returns a fresh GitHub user token of the sender of that turn.
   The helper saves nothing, so each git operation asks again.
-- Without a current turn, or when the Worker refuses, the helper writes one
-  fixed message. Git then gets no credential from the helper.
+- During the restore of an import activation, the runner sets
+  `CONDUCTIVE_ACTIVATION_ID` for its Git and LFS processes. The helper then
+  sends it in the `X-Conductive-Activation-Id` header in place of a turn ID,
+  and the Worker returns the activator's token.
+- Without a current turn or activation, or when the Worker refuses, the
+  helper writes one fixed message. Git then gets no credential from the helper.
 
 The Worker serves that route on the machine hostname, as the
 [lifecycle README](../worker/lifecycle/README.md#machine-route) says.

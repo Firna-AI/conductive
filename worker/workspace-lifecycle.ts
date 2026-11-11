@@ -1,17 +1,13 @@
-import { DurableObject } from 'cloudflare:workers'
+import { WorkspaceObjectBase } from './lifecycle/workspace-object-base'
 import type { RunnerLifecycleEvent } from './lifecycle/runner-lifecycle'
 import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
-import { WorkspaceChat } from './chat/backend'
 import type { DeviceOperationResult } from './devices/internal'
 import {
-  createWorkspaceIntegration,
-  type WorkspaceCompositionEnv,
-  type WorkspaceChatResolvers,
-} from './chat/workspace-integration'
-import { DeviceRuntime } from './devices/runtime'
-import { credentialSender } from './lifecycle/credential-sender'
+  checkWorkspaceTurnToken,
+  credentialSender,
+} from './lifecycle/credential-sender'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type {
@@ -29,74 +25,42 @@ import {
   startResultForTransport,
   type WorkspaceLifecycleTransport,
 } from './lifecycle/workspace-transport'
-import type { WorkspaceController } from './lifecycle/workspace-controller-types'
 import type { WorkspaceStartIntent } from './lifecycle/start-types'
-import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
-import { lifecycleDependencies } from './lifecycle/runtime'
-import type { ConnectionScheduler } from './security/connection-access'
+import { recordWorkspaceActivity } from './lifecycle/create-input-activity'
 import type { ComputerIdentity } from './lifecycle/computer-ledger'
-import type { TurnTokenCheck } from './model-gateway/types'
+import { featureResult } from './features/result'
+import { acceptLifecycleMessage } from './lifecycle/workspace-first-message'
 
 export class WorkspaceLifecycle
-  extends DurableObject<WorkspaceCompositionEnv>
+  extends WorkspaceObjectBase
   implements WorkspaceLifecycleTransport
 {
-  protected readonly chat: WorkspaceChat
-  protected readonly controller: WorkspaceController
-  protected readonly devices: DeviceRuntime
-  protected readonly context: DurableObjectState
-  protected readonly activity: ReturnType<typeof createWorkspaceInputActivity>
-  private readonly activityNow: () => number
-
-  protected readonly integration: ReturnType<typeof createWorkspaceIntegration>
-
-  constructor(
-    context: DurableObjectState,
-    env: WorkspaceCompositionEnv,
-    now: () => number = Date.now,
-    resolvers: WorkspaceChatResolvers = {},
-    activitySchedule?: ConnectionScheduler,
-  ) {
-    super(context, env)
-    this.context = context
-    this.activityNow = now
-    const integration = createWorkspaceIntegration(context, env, now, resolvers)
-    this.integration = integration
-    this.chat = integration.chat
-    this.devices = integration.devices
-    this.controller = integration.controller
-    context.blockConcurrencyWhile(() => integration.sockets.restore())
-    this.activity = createWorkspaceInputActivity(
-      context,
-      env,
-      { ...lifecycleDependencies(), now },
-      integration,
-      (operation) =>
-        this.chat.runLifecycle(() => integration.withGeneration(operation)),
-      activitySchedule,
+  activateImportedWorkspace(orgId: string, id: string, userId: string) {
+    return featureResult(() =>
+      this.run(() =>
+        this.controller.activateImportedWorkspace(orgId, id, userId),
+      ),
     )
   }
 
-  protected run<T>(operation: () => Promise<T>): Promise<T> {
+  activationCredentialSender(id: string) {
     return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const result = await operation()
-        await this.chat.flushRunner()
-        return result
-      }),
+      this.controller.activationCredentialSender(id),
     )
   }
 
-  webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
-    return this.integration.sockets.message(socket, message)
+  sendImportCommand(
+    id: string,
+    command: Parameters<WorkspaceLifecycleEndpoint['sendImportCommand']>[1],
+  ) {
+    return this.run(() => this.controller.sendImportCommand(id, command))
   }
 
-  webSocketClose(socket: WebSocket) {
-    return this.integration.sockets.close(socket)
-  }
-
-  webSocketError(socket: WebSocket) {
-    return this.integration.sockets.close(socket)
+  seedImportSession(
+    id: string,
+    input: Parameters<WorkspaceLifecycleEndpoint['seedImportSession']>[1],
+  ) {
+    return this.run(() => this.controller.seedImportSession(id, input))
   }
 
   queueComputerStops(
@@ -117,11 +81,9 @@ export class WorkspaceLifecycle
   async acceptLifecycleFirstMessage(
     first: FirstWorkspaceMessage,
   ): Promise<UserMessage> {
-    return this.run(async () => {
-      const message = await this.chat.acceptFirstMessage(first)
-      await this.controller.acknowledgeLifecycleFirstMessage()
-      return message
-    })
+    return this.run(() =>
+      acceptLifecycleMessage(this.chat, this.controller, first),
+    )
   }
 
   async readChatWorkspaceSummary(): Promise<ChatWorkspaceSummary> {
@@ -183,14 +145,10 @@ export class WorkspaceLifecycle
   }
 
   async lifecycleActivity() {
-    const at = this.activityNow()
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const state = await this.controller.readLifecycle()
-        const result = await this.controller.lifecycleActivity(true)
-        if (result.ok && state) this.activity.record(state.workspaceId, at)
-        return result
-      }),
+    return recordWorkspaceActivity(
+      this.integration,
+      this.activity,
+      this.activityNow(),
     )
   }
 
@@ -238,11 +196,8 @@ export class WorkspaceLifecycle
     return credentialSender(this.chat, this.controller, turnId)
   }
 
-  async checkTurnToken(token: string): Promise<TurnTokenCheck> {
-    const workspaceId = await this.chat.store.workspaceId()
-    return workspaceId
-      ? this.chat.turnTokens.check(workspaceId, token)
-      : { ok: false, reason: 'turn_not_active' }
+  checkTurnToken(token: string) {
+    return checkWorkspaceTurnToken(this.chat, token)
   }
 
   async reportRunnerLifecycle(event: RunnerLifecycleEvent): Promise<void> {

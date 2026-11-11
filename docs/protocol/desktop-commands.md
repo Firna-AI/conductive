@@ -16,6 +16,9 @@ decision number names a dated record, as
   tab.
 - Mac commands add no bridge and no permission to the page. The page has
   no direct access to the commands of the Mac.
+- The import from Conductor adds no bridge and no permission either. The
+  page asks the Worker for each operation of the import, as
+  [Device operations](desktop-import.md#device-operations) says.
 - The page can only answer a request that waits. The answer goes through
   the Worker to the Mac app on the Mac that got the request.
 - Only the main frame on the desktop origin can use a sanitized clipboard

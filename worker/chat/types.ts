@@ -29,6 +29,7 @@ import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
 import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
+import type { RunnerImportReply } from '../../src/shared/runner-import'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -228,6 +229,11 @@ export interface ChatDependencies {
   ) => Promise<string | null>
   /** File owners validate results here. Results never enter history. */
   receiveFileResult: (value: unknown, connectionId: string) => Promise<void>
+  receiveImportResult: (
+    value: RunnerImportReply,
+    connectionId: string,
+  ) => Promise<void>
+  runnerPreparationAllowed: (workspaceId: string) => Promise<boolean>
   /** The supplied publisher preserves the callback's place in the serial task. */
   runnerEventStored: (
     envelope: WorkspaceEventEnvelope,

@@ -11,6 +11,7 @@ export async function dropBroker(
 ): Promise<void> {
   const connection = broker.connection
   broker.connection = null
+  broker.imports.closeAll()
   try {
     await connection?.retire?.()
   } finally {

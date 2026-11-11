@@ -40,7 +40,7 @@ export async function prepareCreationRequest(
   reservedId?: string,
   providerAccount = DEFAULT_PROVIDER_ACCOUNT,
   base?: WorkspaceCreationBase,
-): Promise<WorkspaceStartJob> {
+): Promise<Extract<WorkspaceStartJob, { kind: 'create' }>> {
   const { env, dependencies } = runtime
   await requireOrgMember(env.DB, orgId, user.id)
   const image = await readCreationImage(
@@ -61,7 +61,10 @@ export async function prepareCreationRequest(
         'abcdefghijklmnopqrstuvwxyz0123456789'[character.charCodeAt(0) % 36],
     )
     .join('')
-  const branch = `${user.githubLogin}/${city}-${suffix}`
+  const branch =
+    input.branch?.type === 'existing'
+      ? input.branch.name
+      : `${user.githubLogin}/${city}-${suffix}`
   return {
     workspaceId: id,
     orgId,
@@ -85,6 +88,7 @@ export async function prepareCreationRequest(
       city,
       ...(input.name !== undefined && { name: input.name }),
       branch,
+      branchMode: input.branch?.type ?? 'new',
       sessionId,
       request: input.firstMessage,
       createdAt: dependencies.now(),

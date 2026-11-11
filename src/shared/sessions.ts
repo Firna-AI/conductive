@@ -2,6 +2,7 @@ import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
 import type { MessageDraft, MessageSender } from './messages'
 import { workspacePath } from './workspaces'
+import type { ImportSessionMetadata } from './import-session.ts'
 
 export function sessionsPath(orgId: string, workspaceId: string): string {
   return `${workspacePath(orgId, workspaceId)}/sessions`
@@ -66,6 +67,7 @@ export interface Session {
   sourceSessionId: string | null
   loginAvailable: boolean
   loginShared: boolean
+  conductorImport?: ImportSessionMetadata
 }
 export interface SessionsResponse {
   eventNumber: number

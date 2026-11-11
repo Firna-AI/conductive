@@ -127,6 +127,8 @@ The [Worker asset module](../worker/tools/image-assets.ts) exports `WORKSPACE_TO
 Vite embeds the allowed sources as text through static `?raw` imports.
 The asset module uses the source contract in [image-manifest.ts](image-manifest.ts).
 It needs no filesystem at runtime and reads no environment values or secret files.
+The assets include the [import origin reader](../src/shared/conductor-import.ts),
+which preserves imported workspace metadata in the tools' workspace parser.
 The image builder passes these assets to `installWorkspaceTools` from [the installer](../worker/tools/image.ts).
 
 The installer places the sources under `/opt/conductive/agent-tools`.

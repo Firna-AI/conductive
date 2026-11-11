@@ -109,7 +109,7 @@ Each path is relative to `src/app/`, the folder of this page.
 - `../shell/workspace/shown-workspaces.ts`: `ShownWorkspaces.rename`,
   `reassigned`, and `archive` use a kept model when one exists. They open
   no workspace and create no model for an unopened row.
-- `../shell/workspace/useArchiveActions.ts`: `useArchiveActions`, Archive
+- `../shell/workspace/useArchiveActions.tsx`: `useArchiveActions`, Archive
   and Restore for each control, with their toasts. The toast of a done
   Archive offers Restore only while the workspace can come back.
 - `deadlines.ts`: `usePassedDeadlines`, which renders a screen again at
@@ -138,7 +138,10 @@ Each path is relative to `src/app/`, the folder of this page.
   `menu-keys.ts`: `opensMenu`, the menu keys of a row and of a tab.
 - `workspace-model.ts` and `archive-model.ts`: an open workspace, its
   `startError` and `reassigned`, and Archive and Restore, each with one
-  request. `WorkspaceModel.renamed` takes the confirmed name into the kept
+  request. `WorkspaceModel.resume` sends Activate in place of Resume for a
+  workspace from Conductor that waits for its activation, also for Try
+  again. The Activate reply has no event number, so it takes the number
+  of the state that showed when it left, and a newer stream event wins. `WorkspaceModel.renamed` takes the confirmed name into the kept
   detail. `workspace-detail-order.ts`: `DetailOrder`, the order of the
   detail: its read and Resume replies, its stream, its local changes,
   which stay over pending replies, and the Archive and Restore records of
@@ -156,7 +159,23 @@ Each path is relative to `src/app/`, the folder of this page.
 - `new-workspace-model.ts`: the first message that creates a workspace.
   `creations.ts`: `Creations`, the life of the create requests of an org in
   this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
-  which tells a failed first start, and `resumesAtOpen`.
+  which tells a failed first start, and `resumesAtOpen`. `awaitsActivation`
+  marks a workspace from Conductor before a successful activation, which
+  an open, a file, and an old session never start, and which counts a
+  failed or stopped activation as a failed first start.
+- `conductor-documents.ts`: `ConductorDocuments`, the old sessions of a
+  workspace from Conductor: their metadata, read page by page through the
+  cursor, and the Markdown of each, from the routes of the app in each
+  state of the workspace. It never reads the cloud computer.
+- `import/`: the import from Conductor in the Mac app.
+  `import-operation.ts`: `runImportOperation`, one operation of this Mac
+  through the Worker, with the pairing of this window, read one NDJSON
+  line at a time until `done`, a failure, an error, or the end of the
+  connection. `complete` does not end it. `import-model.ts`:
+  `ConductorImport`, the scan, the selection, and the uploads of one org,
+  one after the other, with Try again of a reservation.
+  `import-uploads.ts`: the state of one upload, with the verified bytes
+  apart from the bytes on their way, and its results.
 - `computer-model.ts`: the scripts, the env vars with their Secret marks,
   the builds, and the log. `classifyEnvVar` changes only the mark of a
   variable, and sends no value. `replaceEnvVar` changes only the value,

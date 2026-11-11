@@ -50,9 +50,10 @@ On the app hostname, the Worker serves these API routes:
 - The sections, the repositories, the members, and the workspace list of an org.
 - The list, read, create, update, and delete routes of an org's routines, Run now, and run history.
 - Leave org, under the existing last-active-admin rule.
-- The create, read, resume, and activity routes of a workspace.
+- The create, read, resume, and activity routes of a workspace, and the Activate route of an imported workspace, through the [import activation](lifecycle/import-activation.md).
 - The view and the read mark of a workspace.
 - The Mac device routes.
+- The import operations of the Mac app and the old documents of an imported workspace, through the [import area](conductor-import/README.md).
 - `GET /api/feedback`, the reply address of feedback, and `POST /api/feedback`, the send of feedback, as [Feedback routes](app-api/feedback.md) says.
 - `GET /api/operator/overview`, the app-wide numbers for operators.
 - `GET /api/operator/orgs`, the org search and cursor pages for operators.
@@ -247,9 +248,10 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
-- [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
+- [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds, refreshes, and new import activation attempts.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
-- [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
+- [conductor-import/README.md](conductor-import/README.md): the import from Conductor, with its Mac operations, reservations, verified publication, old documents, and cleanup.
+- [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its base class, `WorkspaceObjectBase` in [lifecycle/workspace-object-base.ts](lifecycle/workspace-object-base.ts), restores the native sockets in its constructor, and receives their message, close, and error events.
 - [native-sockets.ts](native-sockets.ts): `WorkspaceSockets`, the trusted socket roles, the attachment check, the restore, and the dispatch of native socket events.
 - [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
   The `turn` commands of a version 2 runner carry these tokens. The packaged runner uses version 2.

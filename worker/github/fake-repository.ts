@@ -1,6 +1,7 @@
 import type { HttpFetch } from '../env'
 import { isRecord } from '../http'
 import type { FakeGitHub } from '../test-support/fake-github'
+import { branchPickerReply } from './fake-branches'
 import {
   HEAD_SHA,
   passedRun,
@@ -65,6 +66,8 @@ export class RepositoryGitHub {
     const variables = body.variables
     if (`${variables.owner}/${variables.name}` !== this.fullName)
       return Response.json({ data: { repository: null } })
+    const branches = branchPickerReply(this, operation, variables)
+    if (branches) return Response.json({ data: { repository: branches } })
     const repository: Record<string, unknown> = {
       databaseId: this.repositoryId,
     }

@@ -1,6 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import type { RailState } from '../components/layout/OrgRail'
+import { ImportSection } from '../components/conductor-import/ImportSection'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
 import {
@@ -111,9 +112,10 @@ function loginsFor(state: AccountState): AgentLogins {
  * The General tab: the GitHub sign-in, and what every org shares, the
  * GitHub App and the agents, then the invite code of the user, last, so
  * that a phone shows the form of an agent near the top. The Mac app adds
- * the This Mac section.
+ * the This Mac section, and the import from Conductor, which reads the
+ * data of this Mac. `importTo` is the screen of Choose workspaces.
  */
-function GeneralTab(props: { state: AccountState }) {
+function GeneralTab(props: { state: AccountState; importTo?: string | null }) {
   const { form } = props.state
   const mac = useMacApp()
   const openForm: OpenAgentForm | undefined =
@@ -124,6 +126,7 @@ function GeneralTab(props: { state: AccountState }) {
     <>
       <SignInSection />
       {mac ? <ThisMacSection /> : null}
+      {mac ? <ImportSection to={props.importTo} /> : null}
       <GitHubSection connected={props.state.connections === 'connected'} />
       <AgentsSection
         form={openForm}
@@ -150,6 +153,12 @@ function GeneralTab(props: { state: AccountState }) {
 export function AccountScreen(props: {
   state: AccountState
   viewport: Viewport
+  /**
+   * The screen of Choose workspaces in the Mac app, for a step of the
+   * import. Null keeps it static. Without it, the button opens the
+   * question of the first import.
+   */
+  importTo?: string | null
 }) {
   const { state } = props
   const mac = useMacApp()
@@ -167,7 +176,7 @@ export function AccountScreen(props: {
       viewport={props.viewport}
     >
       {state.tab === 'general' ? (
-        <GeneralTab state={state} />
+        <GeneralTab importTo={props.importTo} state={state} />
       ) : (
         <DefaultsSection
           saveFailed={state.save === 'failed'}

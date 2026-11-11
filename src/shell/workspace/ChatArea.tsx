@@ -11,6 +11,8 @@ import { WorkspaceChatView } from '../../chat/WorkspaceChat'
 import type { WorkspaceStart } from '../../shared/workspaces'
 import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'
+import { documentCenter } from './documents/document-center'
+import { useOldSessions } from './documents/OldSessionLinks'
 import { useFeatures, type WorkspaceContext } from './features'
 import { useChatFiles } from './files/chat-files'
 import { filesCenter } from './files/files-features'
@@ -21,7 +23,7 @@ import { ChatColumn } from './WorkspaceColumns'
 /**
  * The kept chat of the workspace, with the parts that the shell draws, and
  * the open files: their tabs at their places in the tab row, and `content`,
- * a file or diff tab in place of the chat of the session.
+ * a file, diff, or old session tab in place of the chat of the session.
  */
 function KeptChat(props: {
   context: WorkspaceContext
@@ -34,14 +36,16 @@ function KeptChat(props: {
   const go = useGo()
   const clock = useMemo(() => ({ now: services.now }), [services])
   const files = useChatFiles(context, props.content)
+  const old = useOldSessions(context)
   return (
     <WorkspaceChatView
       clock={clock}
       content={props.content}
       controller={props.chat}
       copy={services}
-      host={props.host}
+      host={{ ...props.host, empty: old.empty, importLine: old.line }}
       mentions={files.mentions}
+      moreHistory={old.history}
       onConnectAgent={(agent) => go(routes.account(agent))}
       onOpenDiff={files.onOpenDiff}
       onOpenPage={go}
@@ -64,9 +68,11 @@ function KeptChat(props: {
  * the notice of a suspended org above the bar of an archived workspace. A
  * read-only workspace shows its chat read-only. The chat shows the open
  * file tabs, and on desktop the file or diff tab of the address in place of
- * the chat of its session. A host that gives the `tabs`, `transcript`, or
- * `composer` slot gets the shell's own column with those slots instead. A
- * `center` part of the host takes the place of the chat.
+ * the chat of its session. An old session from Conductor at the address
+ * shows in its place too, and a phone shows it in place of the whole chat.
+ * A host that gives the `tabs`, `transcript`, or `composer` slot gets the
+ * shell's own column with those slots instead. A `center` part of the host
+ * takes the place of the chat.
  */
 export function ChatArea(props: {
   context: WorkspaceContext
@@ -126,14 +132,15 @@ export function ChatArea(props: {
       </>
     )
   }
+  const oldSession = features.center ? null : documentCenter(context)
+  if (center) return center
+  if (phone && oldSession) return oldSession
   return (
-    center ?? (
-      <KeptChat
-        chat={props.chat}
-        content={features.center ? null : filesCenter(context)}
-        context={context}
-        host={{ starting, sandboxBar, keepsComposer }}
-      />
-    )
+    <KeptChat
+      chat={props.chat}
+      content={features.center ? null : (filesCenter(context) ?? oldSession)}
+      context={context}
+      host={{ starting, sandboxBar, keepsComposer }}
+    />
   )
 }

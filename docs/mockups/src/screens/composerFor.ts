@@ -13,6 +13,7 @@ import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { resumedChoiceOf } from './importedSessions'
 import { otherStarter, sessionLoginFor } from './sessionStarter'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -114,6 +115,8 @@ export function isRunning(state: WorkspaceState): boolean {
  * A message with a pasted link to another workspace shows the link as a
  * chip, and the draft keeps the plain link. `@` opens the list of the
  * files and folders above the box, and a picked entry shows as a chip.
+ * A session from Conductor keeps the agent and the model of its old
+ * session.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -139,20 +142,21 @@ export function composerFor(
   else if (!fresh && state.composer === 'draft') {
     draft = isNew(state) ? savedCartsDraft : followUpDraft
   }
+  const choice = resumedChoiceOf(state) ?? workspace.choice
   let sendTo: string | undefined
   if (opensLinked) sendTo = paths.linkedSession
   else if (files && sendsFiles.has(state.composer)) {
     sendTo = paths.attachmentsSent
   }
   return {
-    choice: workspace.choice,
+    choice,
     running: !fresh && isRunning(state),
     draft,
     attachments: files ?? [],
     attachTo:
       files && state.composer === 'attachments' ? paths.attachments : undefined,
     picker: state.composer === 'picker',
-    sessionAgent: fresh ? undefined : workspace.choice.agent,
+    sessionAgent: fresh ? undefined : choice.agent,
     sendTo,
     startsSession: opensLinked,
     blocked: needsLogin,

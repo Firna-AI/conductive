@@ -140,6 +140,14 @@ Presentation fills both fields while it keeps each saved name, state, time, and 
 The HTTP history route uses the same presentation.
 No origin is saved in the chat records or the history.
 
+## Old documents of an import
+
+An imported workspace has one old document for each session that it imported from Conductor.
+No stored event, session, history page, or events socket holds an old document.
+The [import area](../conductor-import/publication.md#old-documents) serves them to members through its own routes, with no sandbox, in every workspace state.
+Its activation seeds the early session and each continuation session through `seedImportSession`.
+The chat holds their turns until the activation succeeds, as [Import activation](../lifecycle/import-activation.md#sessions-and-held-messages) says.
+
 ## Tests
 
 ```sh

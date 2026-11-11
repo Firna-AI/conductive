@@ -8,7 +8,6 @@ import {
   readyLifecycle,
   withPreparedStart,
 } from './durable-start'
-import type { SendMessageRequest } from '../../src/shared/messages'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import { reconciledLifecycle } from './durable-reconciliation'
 import { advanceDiskRetentionState } from './disk-retention-state'
@@ -29,6 +28,7 @@ import {
   type LifecycleHooks,
   type LifecycleStorage,
   type LifecyclePublisher,
+  type LifecycleInitialization,
 } from './durable-types'
 
 /** One instance lives inside each workspace Durable Object. */
@@ -68,11 +68,7 @@ export class DurableLifecycle {
     return this.storage.get(LIFECYCLE_STATE_KEY)
   }
 
-  initialize(input: {
-    workspaceId: string
-    orgId: string
-    firstMessage: SendMessageRequest
-  }): Promise<void> {
+  initialize(input: LifecycleInitialization): Promise<void> {
     return this.serial(async () => {
       if (await this.read()) return
       await this.write(initialLifecycle(input, this.now()))

@@ -12,6 +12,11 @@ the workspace repository. It keeps existing exclude rules and tracked
 files. It leaves a file or link named `.context` alone. A failed step
 warns and lets the runner continue.
 
+During an import activation, the runner skips this step at its start. After
+the disk check, the restore makes `.context/attachments/` with its destination
+checks, and `prepareContextExclude` adds the same `/.context/` rule, as
+[The import activation guide](import.md#the-restore) says.
+
 [The context folder](../docs/protocol/repository-folders.md#the-context-folder)
 states its use and limits. A new org image build installs the runner with this
 startup step and the instruction text below.

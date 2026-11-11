@@ -1,11 +1,14 @@
 import { ChevronDown, FolderGit2, Sparkles } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import { Menu, type MenuEntry } from '../components/common/Menu'
+import { BranchLine } from '../components/new-workspace/BranchLine'
+import type { BranchLinks } from '../components/new-workspace/branchScreens'
 import {
   ChooseRepositoriesButton,
   chooseRepositoriesFirst,
 } from '../components/new-workspace/notices'
 import { formWait } from '../components/new-workspace/waitingRepository'
+import type { NewWorkspaceState } from './NewWorkspaceScreen'
 import type { PageOrg } from './newWorkspacePageParts'
 import styles from './NewWorkspaceScreen.module.css'
 
@@ -39,10 +42,13 @@ function RepositoryPicker(props: {
 
 /**
  * The start of an empty chat, with the repository of the new workspace.
- * The note names the build that the workspace starts from. Before the
- * first good build there is none, and the notice over the composer says
- * why. While the repository of the form waits for its build, the notice
- * over the composer says when it is ready, so the note gives way.
+ * The line under the repository names the branch, a new one by default,
+ * with a quiet link that changes it, where `links`, the branch links of
+ * the form, name a screen. The note names the build that the workspace
+ * starts from. Before the first good build there is none, and the notice
+ * over the composer says why. While the repository of the form waits for
+ * its build, the notice over the composer says when it is ready, so the
+ * note gives way.
  */
 export function Start(props: {
   page: PageOrg
@@ -50,6 +56,9 @@ export function Start(props: {
   admin: boolean
   /** The open repository menu, on a computer. */
   menu?: readonly MenuEntry[]
+  state: NewWorkspaceState
+  phone: boolean
+  links: BranchLinks
 }) {
   const { page } = props
   const ready = formWait(page) === undefined
@@ -59,7 +68,7 @@ export function Start(props: {
       <h2 className={styles.title}>Start a workspace</h2>
       <p className={styles.body}>
         {props.chosen
-          ? 'Your first message creates it, on a new branch of the repository.'
+          ? 'Your first message creates it.'
           : props.admin
             ? `${chooseRepositoriesFirst(page.org.name)}.`
             : `An admin of ${page.org.name} chooses its repositories first.`}
@@ -68,6 +77,14 @@ export function Start(props: {
         <RepositoryPicker menu={props.menu} repository={page.repository.name} />
       ) : props.admin ? (
         <ChooseRepositoriesButton />
+      ) : null}
+      {props.chosen ? (
+        <BranchLine
+          choice={props.state.branch}
+          links={props.links}
+          phone={props.phone}
+          picker={props.state.picker}
+        />
       ) : null}
       {props.chosen && ready && page.built ? (
         <p className={styles.note}>

@@ -46,7 +46,8 @@ export function reassignRuntimeWorkspace(fixture: RuntimeFixture, id: string) {
 
 export async function queueRuntimeResume(fixture: RuntimeFixture, id: string) {
   const row = await readWorkspace(fixture.env.DB, 'runtime-org', id)
-  if (!row.sandboxId) throw new Error('Missing runtime sandbox')
+  if (!row.sandboxId || row.firstTurnId === null)
+    throw new Error('Missing native runtime resume identity')
   const settings = await readImageSettings(fixture.env.DB, row.orgId)
   const repository = await workspaceRepository(
     fixture.env.DB,

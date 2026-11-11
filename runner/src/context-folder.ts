@@ -18,20 +18,7 @@ export async function prepareContextFolder(
   warn: (message: string) => void,
 ): Promise<void> {
   try {
-    const exclude = resolve(
-      cwd,
-      (await new Git(cwd).run(['rev-parse', '--git-path', 'info/exclude']))
-        .toString('utf8')
-        .trim(),
-    )
-    const rules = (await readFile(exclude, 'utf8').catch(missingFile)) ?? ''
-    if (!rules.split(/\r?\n/u).includes('/.context/')) {
-      await mkdir(dirname(exclude), { recursive: true })
-      await appendFile(
-        exclude,
-        `${rules && !rules.endsWith('\n') ? '\n' : ''}/.context/\n`,
-      )
-    }
+    await prepareContextExclude(cwd)
     const context = contextFolderPath(cwd)
     const existing = await lstat(context).catch(missingFile)
     if (existing && !existing.isDirectory()) {
@@ -41,5 +28,22 @@ export async function prepareContextFolder(
     await mkdir(join(context, 'attachments'), { recursive: true })
   } catch {
     warn('The context folder could not be prepared. The runner will continue.')
+  }
+}
+
+export async function prepareContextExclude(cwd: string): Promise<void> {
+  const exclude = resolve(
+    cwd,
+    (await new Git(cwd).run(['rev-parse', '--git-path', 'info/exclude']))
+      .toString('utf8')
+      .trim(),
+  )
+  const rules = (await readFile(exclude, 'utf8').catch(missingFile)) ?? ''
+  if (!rules.split(/\r?\n/u).includes('/.context/')) {
+    await mkdir(dirname(exclude), { recursive: true })
+    await appendFile(
+      exclude,
+      `${rules && !rules.endsWith('\n') ? '\n' : ''}/.context/\n`,
+    )
   }
 }

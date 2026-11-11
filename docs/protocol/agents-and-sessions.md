@@ -32,6 +32,10 @@ says.
   - with the first message of a new workspace
   - with a message that starts a new session, as
     [Messages](messages-and-attachments.md#messages) says
+  - with an import from Conductor: the importer starts each imported
+    session, and the member who activates starts the new session of the
+    activation, as [The activation](imported-workspaces.md#the-activation)
+    says
 - A routine run starts the first session of its workspace in the name of
   the routine owner, as
   [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.

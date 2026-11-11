@@ -3,8 +3,9 @@
 This doc holds the requirements and the decisions in force for the command
 palette. The palette is one search over the app. It finds the workspaces of
 an org, runs the actions of the current page, and opens the settings
-pages. On each page, it also opens the Feedback dialog. The terms are
-those of the
+pages. On each page, it also opens the Feedback dialog.
+[Command palette: actions and settings](command-palette-actions.md) gives
+its actions and its settings rows. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at

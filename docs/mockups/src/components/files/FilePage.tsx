@@ -13,6 +13,10 @@ import {
   FileX,
 } from 'lucide-react'
 import {
+  oldSessionMarkdown,
+  openOldSession,
+} from '../../fixtures/conductorImport'
+import {
   addressFormDiff,
   autocompleteHook,
   readme,
@@ -79,6 +83,14 @@ function specFor(view: FileTabView): FileSpec {
           <EmptyState icon={FileX} title="This file moved or was deleted" />
         ),
         closed: true,
+      }
+    case 'old-session':
+      // The app keeps the file, so it opens with no cloud computer too.
+      return {
+        path: `Conductor/${openOldSession.title}`,
+        icon: FileText,
+        meta: `${openOldSession.messages} messages`,
+        content: <MarkdownView blocks={oldSessionMarkdown} />,
       }
   }
 }
@@ -154,7 +166,9 @@ export function FilePage(props: {
             icon={Copy}
             label={`Copy the text of ${name}`}
           />
-          {props.view === 'markdown' ? <ViewSwitch /> : null}
+          {props.view === 'markdown' || props.view === 'old-session' ? (
+            <ViewSwitch />
+          ) : null}
         </div>
       </div>
       <div className={styles.body}>{props.placeholder ?? spec.content}</div>

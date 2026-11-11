@@ -46,8 +46,13 @@ full desktop layout.
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
-share. Its linked pages give the parts of [the chat](design-chat.md) and
-of [the operator section](design-operator.md).
+share. Its linked pages give the parts of [the chat](design-chat.md), with
+the chips of workspace links and files, of
+[the operator section](design-operator.md), of
+[workspace numbers](design-workspace-links.md), of
+[routines](design-routines.md), of
+[builds and starts](design-cloud-computer.md), and of
+[branches and the import from Conductor](design-import.md).
 
 ## The catalogue
 
@@ -60,7 +65,9 @@ the New workspace dialog, and the repositories that wait for a build. Its
 linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
-operator section.
+operator section. Its linked page,
+[branches and the import from Conductor](catalogue-import.md), gives the
+child pages of `app/new-workspace/branch` and `app/imported`.
 The [workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 page gives their child pages and flows. The
 [command palette and feedback](catalogue-palette.md) page gives the child
@@ -99,14 +106,19 @@ shows them in the New workspace dialog.
 - An entry module in `src/entries/` exports one `defineScreen` with a named
   export. Its props and saved states (`variants`) choose the state. The
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
-  `mockups:serve` offers a control for each part of the state. The routine
-  screen declares its states in `src/screens/routineState.ts` in the same
-  way.
+  `mockups:serve` offers a control for each part of the state. Some key
+  lists of those states live beside it, in `composerKeys.ts`,
+  `overlayKeys.ts`, `sandboxKeys.ts`, and `resultKeys.ts`. `resultKeys.ts`
+  holds the resume results of a session from Conductor and the copy
+  results. The routine screen declares its states in
+  `src/screens/routineState.ts` in the same way.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
   `src/components/common/`, which renders Mokly's `MockLink`. A Firna control
-  becomes a link through `ScreenLink asChild`. Tabs are links, so each view
+  becomes a link through `ScreenLink asChild`. `LinkedControl` does the same,
+  and keeps the control static where its screen is null, because no entry
+  draws a matching screen. Tabs are links, so each view
   has its own path. A link to a page outside the app reads its address from
   `useOutsideHref`.
 - Layout styles are CSS Modules beside their component. They read the design
@@ -151,7 +163,8 @@ code on the Account page, and open sign-up.
 ## The Mac app
 
 [The Mac app](mac-app.md) gives the screens of the Mac app: its window, the
-waitlist, the commands that an agent runs on the Mac, and This Mac.
+waitlist, the commands that an agent runs on the Mac, This Mac, and the
+import from Conductor.
 
 ## The marketing site
 

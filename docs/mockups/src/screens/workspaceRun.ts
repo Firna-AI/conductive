@@ -1,12 +1,10 @@
 import type { RunSource } from '../components/workspace/RunLinks'
 import { conversations, type ChatItem } from '../fixtures/conversations'
-import { freshSessionPrompt } from '../fixtures/terminal'
+import { idlePrompt } from '../fixtures/terminal'
 import { runWorkspaces, type RunWorkspaceKey } from '../fixtures/runWorkspaces'
 import type { StartingLog } from '../fixtures/starting'
-import {
-  openableWorkspaceRecords,
-  type Workspace,
-} from '../fixtures/workspaces'
+import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
+import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 
@@ -53,9 +51,14 @@ export function runStartingLog(state: WorkspaceState): StartingLog | undefined {
   return state.run === undefined ? undefined : runWorkspaces[state.run].starting
 }
 
-/** The prompt of the terminal of a new workspace, on its own branch. */
+/**
+ * The prompt of the terminal of a new workspace, on its own repository and
+ * branch, also of the workspace of a routine run.
+ */
 export function freshPromptFor(state: WorkspaceState): string {
-  if (state.run === undefined) return freshSessionPrompt
-  const { workspace } = runWorkspaces[state.run]
-  return `${workspace.repository} (${workspace.branch}) $ `
+  const workspace =
+    state.run === undefined
+      ? openableWorkspaceRecords[state.workspace]
+      : runWorkspaces[state.run].workspace
+  return idlePrompt(workspace)
 }

@@ -23,6 +23,9 @@ import {
   LiftedFileTab,
 } from '../../../files/tabs/FileTabItem'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
+import { documentPlace } from '../documents/document-address'
+import { useDocumentTabs } from '../documents/document-tabs'
+import { useOldDocuments } from '../documents/use-old-documents'
 import type { WorkspaceContext } from '../features'
 import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
@@ -156,10 +159,12 @@ function useMentions(
  * their places in the tab row, with the copy that a drag lifts, and the
  * diff that a file of a finished turn opens. Each tab takes the label of
  * its path from the kept files, for its title and its drawing, so each name
- * of the tab hides each secret value. When the chat makes a session active
- * while `content` shows a file, the address goes back to the chat. The
- * chat keeps the files connected, for the list of `@` and the file chips.
- * An archived workspace has no files.
+ * of the tab hides each secret value. The tabs of the old sessions from
+ * Conductor take the titles of their list. When the chat makes a session
+ * active while `content` shows a file or an old session, the address goes
+ * back to the chat. The chat keeps the files connected, for the list of
+ * `@` and the file chips. An archived workspace has no files, and it keeps
+ * the tabs of its old sessions.
  */
 export function useChatFiles(
   context: WorkspaceContext,
@@ -167,14 +172,19 @@ export function useChatFiles(
 ): ChatFiles {
   const navigation = useFilesNavigation(context)
   const shown = content === null ? null : tabOf(filesPlace(context.view))
-  useLeaveForSession(context, shown !== null)
+  const shownDocument =
+    content === null ? null : (documentPlace(context.view)?.documentId ?? null)
+  useLeaveForSession(context, shown !== null || shownDocument !== null)
   const archived = context.sandbox === 'archived'
-  const tabs = !archived && context.viewport !== 'phone'
-  const labelOf = useTabLabels(context, tabs)
+  const desktop = context.viewport !== 'phone'
+  const labelOf = useTabLabels(context, !archived && desktop)
   const files = useConnectedFilesWhile(context, !archived)
   const mentions = useMentions(context, files, navigation)
-  if (archived) return {}
+  const documents = useOldDocuments(context)
+  const documentTab = useDocumentTabs(context, documents, shownDocument)
   const renderTab: RenderTab = (tab) => {
+    if (tab.kind === 'conductor-document') return documentTab(tab)
+    if (archived) return null
     const label = labelOf(tab)
     return {
       title: fileTabName(tab, label),
@@ -193,8 +203,9 @@ export function useChatFiles(
         ),
     }
   }
+  if (archived) return { renderTab: desktop ? renderTab : undefined }
   return {
-    renderTab: tabs ? renderTab : undefined,
+    renderTab: desktop ? renderTab : undefined,
     onOpenDiff: (path) => navigation.navigate({ kind: 'diff', path }),
     mentions,
   }

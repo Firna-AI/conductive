@@ -49,6 +49,7 @@
 .starting,
 .stopped,
 .archived,
+.inactive,
 .queued,
 .skipped {
   color: var(--ui-muted);

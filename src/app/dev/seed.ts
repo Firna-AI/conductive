@@ -21,6 +21,7 @@ import {
   sampleUsers,
 } from '../../test-support/fixtures/operator-samples'
 import { waitingUser } from '../../test-support/fixtures/waitlist'
+import { importedFixtures } from '../../test-support/fake-import-routes'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
@@ -115,12 +116,17 @@ function acme(
   const fixtures = routineFixtures(summary.id)
   const starting = workspaceFixtures('starting').detail.start
   const failed = workspaceFixtures('error').detail.error
+  const { imported } = options.server
+  const fromImport = imported ? importedFixtures(imported) : null
+  const list = fromImport?.workspaces ?? workspaces.workspaces
   const startOf = (workspace: Workspace): [string, StartRecord] => [
     workspace.id,
-    {
-      start: workspace.state === 'starting' ? starting : null,
-      error: workspace.state === 'error' ? failed : null,
-    },
+    fromImport && workspace.id === FAKE_IDS.workspace
+      ? { start: fromImport.detail.start, error: fromImport.detail.error }
+      : {
+          start: workspace.state === 'starting' ? starting : null,
+          error: workspace.state === 'error' ? failed : null,
+        },
   ]
   const deletion = {
     deletedAt: FAKE_TIME,
@@ -133,12 +139,9 @@ function acme(
       ...(options.suspended ? { suspension: { suspendedAt: FAKE_TIME } } : {}),
     },
     sections: core.sectionList.sections,
-    workspaces: workspaces.workspaces,
-    workspaceNumberCount: Math.max(
-      0,
-      ...workspaces.workspaces.map(({ number }) => number),
-    ),
-    starts: new Map(workspaces.workspaces.map(startOf)),
+    workspaces: list,
+    workspaceNumberCount: Math.max(0, ...list.map(({ number }) => number)),
+    starts: new Map(list.map(startOf)),
     created: new Set(),
     running: new Map(),
     repositories: core.repositories.repositories,

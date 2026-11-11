@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   Archive,
   ArchiveRestore,
+  ArrowDownToLine,
   Bot,
   Building2,
   FileDiff,
@@ -52,6 +53,7 @@ const actionIcons: Readonly<Record<OfferedActionId | OwnActionId, LucideIcon>> =
     'hide-sidebar': PanelLeft,
     'show-sidebar': PanelLeft,
     'new-workspace': Plus,
+    'import-from-conductor': ArrowDownToLine,
     'create-org': Building2,
     'switch-org': Building2,
     'send-feedback': MessageSquareHeart,

@@ -50,6 +50,20 @@ export const newWorkspaceFormProperties = {
    * a build runs, or no build runs, such as after a start that failed.
    */
   waitingBuild: { enum: repositoryWaits },
+  /**
+   * The branch of the new workspace: a new branch, as by default, an
+   * existing branch, or the branch of an open pull request.
+   */
+  branch: { enum: ['new', 'existing', 'pull-request'] },
+  /**
+   * The branch picker: closed, open, open with a search that finds a pull
+   * request, finds nothing, or finds the pull request from a fork, or open
+   * while its list loads or after the list did not load. A phone opens it
+   * in a sheet.
+   */
+  picker: {
+    enum: ['closed', 'open', 'search', 'no-match', 'fork', 'loading', 'failed'],
+  },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties
@@ -59,6 +73,23 @@ export type NewWorkspaceFormState = {
   [
     Key in FormProperty
   ]: (typeof newWorkspaceFormProperties)[Key]['enum'][number]
+}
+
+/**
+ * Whether a form state matches the base example of its form in every field
+ * apart from the branch and the picker. `fields` is the list of every field
+ * from the schema of the form, so a field that a schema adds takes part
+ * too.
+ */
+export function matchesBaseForm<S extends NewWorkspaceFormState>(
+  fields: readonly (keyof S)[],
+  state: S,
+  base: S,
+): boolean {
+  return fields.every(
+    (field) =>
+      field === 'branch' || field === 'picker' || state[field] === base[field],
+  )
 }
 
 /** The text of an empty message, on the page and in the dialog. */

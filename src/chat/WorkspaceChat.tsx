@@ -16,6 +16,7 @@ import { rowOf, shownTab, type RenderTab } from './components/tab-row'
 import { ChatToasts, useTranscriptCopy } from './components/TranscriptCopy'
 import { LinksProvider, type ChatLinks } from './links/LinksContext'
 import { useMentionCopy } from './links/mention-copy'
+import type { MenuEntry } from './ui/Menu'
 import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import {
@@ -76,6 +77,11 @@ export interface ChatViewProps {
   mentions?: ChatMentions
   /** The start steps and the sandbox bar that the app draws, as `ChatHost` says. */
   host?: ChatHost
+  /**
+   * More entries of the session history, after the closed sessions, such
+   * as the old sessions of a workspace from Conductor under their label.
+   */
+  moreHistory?: readonly MenuEntry[]
   /**
    * The app shows the workspace read-only, such as while its org is
    * suspended. The chat then shows its history, changes its tabs in the
@@ -144,12 +150,15 @@ function ChatBody(
     (sessionId: string) => void controller.reopen(sessionId),
     [controller],
   )
-  const history = historyEntries(
-    historySessions(snapshot, readOnly),
-    now,
-    reopen,
-    (item) => endedAt(snapshot, item),
-  )
+  const closed = historySessions(snapshot, readOnly)
+  const more = props.moreHistory ?? []
+  // The note of an empty history gives way to the entries of the host.
+  const history = [
+    ...(closed.length === 0 && more.length > 0
+      ? []
+      : historyEntries(closed, now, reopen, (item) => endedAt(snapshot, item))),
+    ...more,
+  ]
   const body = (
     <>
       <SessionTabs

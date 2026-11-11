@@ -1,6 +1,8 @@
 import type { AgentChoice } from './agents'
 import { orgPath, type Timestamp } from './api'
 import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
+import type { WorkspaceBranchChoice } from './workspace-branches'
+import type { ConductorImportOrigin } from './conductor-import'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
 
@@ -20,6 +22,8 @@ export function workspacePath(orgId: string, workspaceId: string): string {
   return `${workspacesPath(orgId)}/${encodeURIComponent(workspaceId)}`
 }
 export const workspacePaths = {
+  activate: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/activate`,
   resume: (orgId: string, id: string) => `${workspacePath(orgId, id)}/resume`,
   activity: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/activity`,
@@ -34,6 +38,7 @@ export type WorkspaceState =
   | 'input'
   | 'unread'
   | 'ready'
+  | 'inactive'
   | 'starting'
   | 'stopped'
   | 'error'
@@ -55,6 +60,7 @@ export interface Workspace {
   updatedAt: Timestamp
   archivedAt: Timestamp | null
   restoreUntil: Timestamp | null
+  conductorImport?: ConductorImportOrigin
 }
 
 export interface StartStep {
@@ -86,9 +92,14 @@ export interface WorkspacesResponse {
 export interface CreateWorkspaceRequest {
   repositoryId: string
   sectionId?: string
+  branch?: WorkspaceBranchChoice
   firstMessage: SendMessageRequest
 }
 export interface CreateWorkspaceResponse extends WorkspaceResponse {
   sessionId: string
   firstMessage: UserMessage
+}
+
+export interface ActivateWorkspaceResponse extends WorkspaceResponse {
+  sessionId: string
 }

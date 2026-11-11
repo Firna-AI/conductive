@@ -15,11 +15,12 @@ import type { MaskedStartLog } from './masked-start-log'
 import { readStartJob, serializeStartJob } from './start-job-codec'
 import { START_ALLOCATION_CLEANUP_KEY } from './start-allocation-cleanup'
 import { startAlarmDeadline } from './start-provider-retry'
-import type {
-  StartJobStorage,
-  WorkspaceStartResult,
-  WorkspaceCreationAdmission,
-} from './start-types'
+import { completeStoredStart } from './start-storage-completion'
+import {
+  activationCleanupStorage,
+  IMPORT_CHECKPOINT_KEY as IMPORT_CHECKPOINT,
+} from './import-activation-cleanup'
+import type { StartJobStorage, WorkspaceStartResult } from './start-types'
 
 export const START_JOB_KEY = 'lifecycle:start-job'
 const JOB = START_JOB_KEY
@@ -90,6 +91,7 @@ export function durableStartStorage(
     }
   }
   return {
+    ...activationCleanupStorage(rawStorage),
     job: async () => {
       const job = await storage.get('job', JOB)
       return job ? readStartJob(job) : undefined
@@ -189,47 +191,29 @@ export function durableStartStorage(
     clearPublication: async () => {
       await rawStorage.transaction(async (transaction) => {
         await transaction.delete(PUBLICATION)
-        await taskWorkspaceTransaction(
-          transaction,
-          'lifecycle:publication',
-        ).deleteAlarm()
-      })
-    },
-    complete: async (result) => {
-      await rawStorage.transaction(async (transaction) => {
-        const current = await transaction.get('job', JOB)
-        if (!current || (current.cancelled && result.ok)) return
-        const stored = result.ok
-          ? result
-          : { ...result, error: { ...result.error, log: null } }
-        await transaction.put('result', RESULT, stored)
-        if (current.kind === 'create') {
-          let admission: WorkspaceCreationAdmission
-          if (current.phase === 'records') {
-            if (stored.ok)
-              throw new Error('A create completed before admission')
-            admission = stored
-          } else admission = { ok: true, created: current.admission }
-          await transaction.put('creation', CREATE_RESULT, {
-            result: stored,
-            admission,
-          })
-          await transaction.put('publication', PUBLICATION, {
-            workspaceId: current.workspaceId,
-            state: result.ok ? 'succeeded' : 'failed',
-          })
+        const checkpoint = await transaction.get('job', IMPORT_CHECKPOINT)
+        if (
+          checkpoint?.kind !== 'activate' ||
+          !checkpoint.activation.cleanupPending
+        )
           await taskWorkspaceTransaction(
             transaction,
             'lifecycle:publication',
-          ).setAlarm(now() + 30_000)
-        }
-        await transaction.delete(JOB)
-        await taskWorkspaceTransaction(
-          transaction,
-          'lifecycle:start',
-        ).deleteAlarm()
+          ).deleteAlarm()
       })
     },
+    complete: (result) =>
+      completeStoredStart(
+        rawStorage,
+        {
+          job: JOB,
+          result: RESULT,
+          creation: CREATE_RESULT,
+          publication: PUBLICATION,
+        },
+        now,
+        result,
+      ),
     secrets: async (values) => {
       const context =
         (await storage.get('text', 'lifecycle:start-log-context')) ?? ''

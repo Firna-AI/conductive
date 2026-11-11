@@ -17,6 +17,11 @@ first.
 - `workspace-integration.ts`: `createWorkspaceIntegration`, which joins
   chat, the lifecycle, and the Mac devices in the workspace object. It
   sets the hooks, and gives the Mac devices the shared state writer.
+- `workspace-lifecycle-hooks.ts`: `workspaceLifecycleHooks`, the lifecycle
+  hooks that `createWorkspaceIntegration` sets: the turn ends, the runner
+  events, the file results, the import results, and the import
+  preparation check. These hooks hold the turns of an unfinished import, as
+  [Workspace lifecycle](integration/workspace-lifecycle.md) says.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
   lifecycle events. Its stop transaction clears the port report with
@@ -61,12 +66,24 @@ first.
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event. A connection keeps the protocol
   version of its `hello`, 1 or 2, and its `welcome` repeats that version.
+  The channel also sends the private import commands and passes their
+  results to the lifecycle, as
+  [Import controls](integration/runner/README.md#import-controls) says.
 - `runner-connections.ts` and `runner-connection-store.ts`:
   `RunnerConnections`, the native acceptance, restore, close, and idle
   alarm of the current runner, and the chunked durable record of a
   physical runner socket. That record keeps the negotiated protocol
   version. So after a wake, the runner gets the commands of its version
   with no second `hello` or `welcome`.
+- `runner-import-controls.ts`: `sendRunnerImport`, the send of one
+  `import.command` to the ready, authorized connection of the workspace, and
+  `sendRunnerFile`, the send of one file command.
+- `import-sessions.ts`: `seedImportSession`, the idempotent seed of the early
+  session of an activation and of each continuation session, with its starter
+  and its import metadata.
+- `backend-http.ts`: `fetchWorkspaceChat`, the socket upgrades of
+  `WorkspaceChat.fetch`. It gives each other browser request to
+  `browserRequest`.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. One workspace record keeps each shown answer end
@@ -115,7 +132,8 @@ first.
   `parseRunnerEnvelope` applies the byte limits to the raw message.
   `parseRunnerOutputEnvelope` checks each filtered event again. It skips
   the byte limits only for file events, because masked labels can make
-  them larger.
+  them larger. `other-events.ts` turns a valid `import.preparation` into a
+  `session.updated` of its continuation session.
 - `turn-lifecycle.ts`, `turn-events.ts`, `turn-context.ts`, and
   `continuation.ts`: active and waiting turns, the dispatch rule of each
   command, the retry message of a turn end, safe turn context, late data,

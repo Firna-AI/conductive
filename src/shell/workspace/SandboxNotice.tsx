@@ -9,12 +9,13 @@ import type {
   SandboxPanelState,
 } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
+import { awaitsActivation } from '../../app/first-start'
 import { useServices } from '../../app/services'
 import { formatDay } from '../../app/time'
 import type { Workspace } from '../../shared/workspaces'
 import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
-import { barBody, keptBody, problemOf } from './notice-copy'
+import { barBody, problemOf } from './notice-copy'
 
 /**
  * The notice of a start in a suspended org. The org's metadata and the
@@ -53,11 +54,15 @@ function useProblem(notice: SandboxNoticeState, workspace: Workspace) {
   const { timeZone } = useServices()
   const archivedAt = workspace.archivedAt ?? workspace.updatedAt
   const { restoreUntil } = workspace
-  return problemOf(notice, {
-    archivedOn: formatDay(archivedAt, timeZone),
-    restoreUntil:
-      restoreUntil === null ? '' : formatDay(restoreUntil, timeZone),
-  })
+  return problemOf(
+    notice,
+    {
+      archivedOn: formatDay(archivedAt, timeZone),
+      restoreUntil:
+        restoreUntil === null ? '' : formatDay(restoreUntil, timeZone),
+    },
+    awaitsActivation(workspace),
+  )
 }
 
 /**
@@ -92,7 +97,8 @@ export interface BarAction {
  * because the start stays refused until its cause changes. A start that
  * failed shows the message that the workspace saved for it, such as its
  * time limit, before the body. An archived workspace offers Restore until
- * its last day, which the bar gives.
+ * its last day, which the bar gives. A workspace from Conductor asks to
+ * activate it before its first activation, and its Activate runs `resume`.
  */
 export function SandboxBar(props: {
   notice: SandboxNoticeState
@@ -120,7 +126,7 @@ export function SandboxBar(props: {
           </ActionButton>
         ) : undefined
       }
-      body={barBody(notice, keptBody(notice, problem.body))}
+      body={barBody(notice, problem.body)}
       icon={problem.icon}
       title={problem.title}
       tone={problem.tone}
@@ -137,8 +143,8 @@ export function SandboxPanel(props: {
   state: SandboxPanelState
   workspace: Workspace
   /**
-   * Resume, or Try again, which a phone shows. Null where the panel shows
-   * only a start or a refusal, which have no action.
+   * Resume, Try again, or Activate, which a phone shows. Null where the
+   * panel shows only a start or a refusal, which have no action.
    */
   resume: Action<[]> | null
   phone: boolean
@@ -171,12 +177,10 @@ export function SandboxPanel(props: {
         ) : undefined
       }
       body={
-        phone && state.problem === 'refused'
-          ? state.reason
-          : keptBody(state, problem.panelBody)
+        phone && state.problem === 'refused' ? state.reason : problem.panelBody
       }
       icon={problem.icon}
-      title={state.problem === 'archived' ? 'Archived' : problem.title}
+      title={problem.panelTitle ?? problem.title}
     />
   )
 }

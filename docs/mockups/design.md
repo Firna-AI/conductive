@@ -74,7 +74,14 @@ sessions as tabs above the chat, and four tabs at the bottom.
   avatar, and end with a muted detail and an icon. An item that is off
   keeps its place, greyed, and its detail keeps the muted colour, so that
   the reason stays readable. An item with choices ends with an arrow, and
-  its submenu opens beside the menu, level with the item.
+  its submenu opens beside the menu, level with the item. A choice that the
+  menu shows but cannot take is a row that is off, with its reason under
+  it and one action beside it, outside the item, such as Open on GitHub.
+  A picker can add a search field above its rows and a status part under
+  them, such as a spinner or `LoadFailure`, as the branch picker of New
+  workspace does. A row can lead to the screen that its choice shows. It
+  is then a link with the look of a row, and hidden words name the checked
+  choice, because a link of the catalogue takes no menu role.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
@@ -142,6 +149,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `paletteSearch.ts` beside it holds the rule of a search. A search also
   finds a workspace by the label of its number, such as `W-395` or `39`.
   A workspace row then shows the label before the name, as a chip does.
+  In the window of the Mac app, the palette reads `useMacApp()`. It adds
+  `macActions`, today Import from Conductor, to the actions of the org,
+  and its tabs open the Mac pages of the palette or stay static.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
   and Try again.
@@ -164,6 +174,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the attach button and Create, with the hint of the Enter key, at the
   bottom right. A phone always opens the page, so the dialog has no phone
   layout.
+- [Branches and the import from Conductor](design-import.md) gives the
+  branch picker of New workspace, a workspace from Conductor, and the links
+  of its controls. It also gives `LinkedControl`, the terminal of each
+  workspace, and the mixed mark of Select all.
 - The account has two tabs, General and Preferences, as links, as the org
   settings have. Preferences holds the New workspaces section, whose rows
   put each label beside its control in two columns. A segmented control
@@ -172,25 +186,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   under the control.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
-- Each workspace has a number in its org, and `workspaceLabel` in
-  `src/components/workspaces/label.ts` shows it as `W-395`. The number
-  shows in the header, in chips, and in a row of the command palette
-  whose search matches it. The rows of the list keep their layout.
-  - `CopyLinkButton` in `src/components/workspace/` is the label in the
-    header, after the name. The label shows alone, without an icon, as a
-    plain Firna button: a pointer over it shows the hover fill, and the
-    keyboard focus shows the focus ring. A press copies the link of the
-    workspace, and a note under it says "Link copied" for a moment, over
-    the content, so nothing moves. When the copy fails, the note says
-    "The link didn't copy. Try again." in the danger colour. The note is
-    a status, so screen readers hear it. The name of the button is "Copy
-    link to W-395".
-  - On desktop, the repository takes only the room that the other parts
-    leave. The name is cut short only when the repository has no room left.
-  - On a phone the label leads the line under the name, before the
-    repository, so the name keeps its room. The button
-    keeps the height of that line, and its touch area of 44 px reaches up
-    over the name and down to the bottom edge of the header.
+- [Workspace numbers](design-workspace-links.md) gives the number of each
+  workspace and its copy button.
 - [Workspace and file chips](design-chat.md#workspace-and-file-chips) gives
   the workspace links, file mentions, the list of `@`, and chip removal.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
@@ -198,7 +195,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   working and starting move with CSS. A finished turn is a full bright green
   square, and ready is one bright cell on a faint green grid. A workspace
   whose agent waits for the user, such as for the approval of a command,
-  shows Needs input: a middle column in the accent colour that pulses.
+  shows Needs input: a middle column in the accent colour that pulses. A
+  workspace from Conductor that has no cloud computer yet shows Not active:
+  the four corners, in the muted colour. `WorkspaceStatus` in
+  `src/fixtures/workspaces.ts` adds that state to the activity of a
+  workspace. `workspaceList` keeps only the states of the app, because the
+  tests of the app read it.
   A routine run takes the mark of its workspace. A run without a
   workspace shows an hourglass while it waits for one, and a chevron when
   a rule skipped it. A failed run shows the mark of its failure. It keeps
@@ -209,14 +211,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
     first turn failed, show a slash in rose. After a failed turn, the mark
     of the workspace shows a finished turn, which would hide the failure.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
-  cloud computer: stopped, error, archived, and refused. A refused start
-  shows "The sandbox can't start" with the words of its cause and no
+  cloud computer: stopped, error, archived, refused, and inactive. A refused
+  start shows "The sandbox can't start" with the words of its cause and no
   action. The notice takes any refusal reason. An archived workspace
   offers Restore until its last day, and the bar gives that day. After
   it, the bar gives the day when Restore ended while a failed delete of
   the cloud computer tries again, and it says that the cloud computer is
-  deleted only after the delete. `sandboxNoticeState.ts` beside it owns
-  the types of the bar and the panels, which the app imports too.
+  deleted only after the delete. Inactive is a workspace from Conductor
+  before its first activation, with the words of the Activate question and
+  the Not active panels. `sandboxNoticeState.ts` beside it owns the types
+  of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.
@@ -228,30 +232,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
     place of the line on the chat history, as the `files` variants of
     `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
     keeps its short panels beside the bar.
-- The parts of routines live in `src/components/routines/`. The routine
-  page puts its form beside the Runs column on desktop. A phone shows a
-  saved routine in two tabs, Routine and Runs. The Runs list holds the
-  newest 50 runs, and Show older runs ends it when older runs exist. A
-  phone opens the Add trigger menu and the author filter of a pull request
-  trigger in a sheet. A suspended org keeps its Routines link, and shows
-  its routines read-only under its notice. `RunLinks` in
-  `src/components/workspace/` draws the line under the header of a run
-  workspace, which links to its routine and to its pull request. The pull
-  request bar names the base branch of a workspace: the default branch, or
-  for a pull request run the head branch of its pull request. A long base
-  branch ends in an ellipsis at half of the line. The
-  bubble of a message keeps its line breaks, as in the app, so the first
-  message of a run shows the facts of its trigger on their own lines.
-  - `runCopy.ts` gives the words of a failed run from its stored cause, and
-    from the agent and the owner of the run itself, not of its routine. So
-    a later change of the agent, or a move of the routine to another owner,
-    changes no past row. A failed start and a failed first turn keep their
-    workspace, and their rows open it, as `app/routines/runs/failed` shows.
-  - When the routine page cannot show its routine, the page keeps Routine
-    as its name and shows no tabs, no Runs list, and no actions. A routine
-    that the org no longer has shows the empty state "This routine is not
-    available" with Open Routines. A read that failed shows `LoadFailure`.
-    `app/routines/routine/unavailable` and `not-loaded` show them.
+- [Routines](design-routines.md) gives the parts of routines, the routine
+  page and its runs, and its failed and unavailable states.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of
@@ -264,33 +246,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   action that it refuses.
 - Copy says cloud computer or sandbox. No screen names Boat, also not the
   marketing site or Get started.
-- A build of the cloud computer runs for at most 60 minutes, and a start of
-  a sandbox for at most 20 minutes. A build that runs names its limit under
-  its log. The start card does not name the limit of a start. A failed
-  build or start shows the message that the app saved for it, so a job that
-  passed its limit names that limit, as
-  `app/org-settings/cloud-computer/build-failed/time-limit`,
-  `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show.
-- A new org has no image until its first build succeeds. Until then New
-  workspace keeps Send off under a notice with the state of that build, as
-  `app/new-workspace/first-build` shows. A notice of work that runs, such
-  as that build, shows a spinner in place of its icon: `Notice` in
-  `src/components/common/` takes `busy`.
-- A chosen repository that the cloud computer does not hold yet waits for
-  its build, from decisions 240 and 241. The repository menu of New
-  workspace keeps it in place, off, with the note of when it is ready as
-  the muted detail of its row. A form whose repository waits keeps Send
-  off under a notice. `WaitingRepositoryNotice` in
-  `src/components/new-workspace/waitingRepository.tsx` draws that notice,
-  and `formWait` beside it says what the form waits for. The app shares
-  that module. `RepositoryNotice` in `src/components/settings/`
-  draws the notice of the Repositories and Cloud computer tabs, with a
-  spinner while the build of an added repository runs. An admin gets its
-  Try again or Build computer on the Repositories tab only, because the
-  build card of the Cloud computer tab has the same action.
-  `repositoryChangeCopy.ts` beside it holds the words of both, which the
-  app shares, as `app/new-workspace/waiting-repository` and
-  `app/org-settings/repositories` show.
+- [Builds and starts](design-cloud-computer.md) gives the time limits of
+  builds and starts, a first start on a chosen branch, the disk check of an
+  activation, the first build of a new org, and a repository that waits
+  for its build.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no

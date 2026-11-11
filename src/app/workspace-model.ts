@@ -1,14 +1,18 @@
 import {
   workspacePath,
   workspacePaths,
+  type OrderedWorkspaceResponse,
   type Workspace,
   type WorkspaceResponse,
 } from '../shared/workspaces'
 import type { ApiError } from './api/client'
-import { readOrderedWorkspaceResponse } from './api/read-workspaces'
+import {
+  readActivated,
+  readOrderedWorkspaceResponse,
+} from './api/read-workspaces'
 import { ArchiveModel } from './archive-model'
 import { WorkspaceStream, type Delay } from './events'
-import { resumesAtOpen } from './first-start'
+import { awaitsActivation, resumesAtOpen } from './first-start'
 import type { OrgModel } from './org-model'
 import { asApiError, Store, valueOf, type Loadable } from './store'
 import { WorkspaceReadMarks } from './workspace-read-marks'
@@ -70,7 +74,8 @@ export class WorkspaceModel {
   /**
    * Opens the workspace. A stopped sandbox, or one whose later start failed,
    * resumes, and the steps stream in. A failed first start waits for Try
-   * again.
+   * again. A workspace from Conductor that waits for its activation starts
+   * only with Activate.
    * The input of the user on the page counts as activity until `close`. A
    * call to `close` while the request runs makes its answer obsolete, so an
    * old open never starts the stream again. A suspended org refuses each
@@ -173,23 +178,56 @@ export class WorkspaceModel {
   }
 
   /**
-   * Resume of a stopped sandbox, and Try again after a start that failed. Its
-   * reply shows only when no newer state of the workspace came first.
+   * The Activate of a workspace from Conductor. Its reply carries no event
+   * number, so it takes the number of the state that showed when it left:
+   * the activation came after each event up to it. A newer event of the
+   * stream wins over the reply, and the stream brings the activation.
    */
-  async resume(): Promise<void> {
+  private activate(
+    opened: (sessionId: string) => void,
+  ): Promise<OrderedWorkspaceResponse> {
+    const eventNumber = this.order.through
+    return this.api
+      .send(
+        'POST',
+        workspacePaths.activate(this.org.orgId, this.workspaceId),
+        {},
+        readActivated,
+      )
+      .then(({ workspace, start, error, sessionId }) => {
+        opened(sessionId)
+        return { workspace, start, error, eventNumber }
+      })
+  }
+
+  /**
+   * Resume of a stopped sandbox, and Try again after a start that failed. A
+   * workspace from Conductor that waits for its activation sends Activate
+   * in its place, also for Try again and after a Restore. Its reply shows
+   * only when no newer state of the workspace came first. The result is the
+   * early session that an Activate reply names for this person, which the
+   * chat shows once it has it, or null.
+   */
+  async resume(): Promise<string | null> {
     const run = this.generation
-    const ownerId = valueOf(this.detail.get())?.workspace.owner.id
+    const shown = valueOf(this.detail.get())
+    let sessionId: string | null = null
+    const ownerId = shown?.workspace.owner.id
     if (this.startError.get()?.code !== 'user_suspended')
       this.startError.set(null)
     let resumed: WaitedReply
     try {
       resumed = await this.order.wait(
-        this.api.send(
-          'POST',
-          workspacePaths.resume(this.org.orgId, this.workspaceId),
-          {},
-          readOrderedWorkspaceResponse,
-        ),
+        awaitsActivation(shown?.workspace)
+          ? this.activate((id) => {
+              sessionId = id
+            })
+          : this.api.send(
+              'POST',
+              workspacePaths.resume(this.org.orgId, this.workspaceId),
+              {},
+              readOrderedWorkspaceResponse,
+            ),
       )
     } catch (error) {
       const problem = asApiError(error)
@@ -206,10 +244,11 @@ export class WorkspaceModel {
       }
       throw error
     }
-    if (run !== this.generation) return
+    if (run !== this.generation) return null
     this.refusedOwnerId = null
     this.startError.set(null)
     this.order.confirm(resumed)
+    return sessionId
   }
 
   /** Counts input in the open workspace, at most once a minute. */

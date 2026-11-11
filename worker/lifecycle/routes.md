@@ -33,9 +33,14 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
   gives it its work, so the work continues when the browser closes.
 
 `chatLifecycleRoute` makes the runtime with `workspaceRuntime` and
-`imageRuntime`. It gives `software` as a getter, so only a build or a
-refresh reads the archive variables. It gives `acceptFirstMessage` to
+`imageRuntime`. It gives `software` as a getter, so this handler reads the
+archive variables only for a build or a refresh. It gives `acceptFirstMessage` to
 `acceptLifecycleFirstMessage` of the workspace object.
+
+`chatLifecycleRoute` also serves `POST` of `workspacePaths.activate` itself,
+through `activateImportedWorkspace` of the workspace object. A new activation
+attempt reads the archive variables there, as
+[Import activation](import-activation.md#the-route-and-the-admission) says.
 
 For a read or a resume, the `projectWorkspace` of `chatLifecycleRoute`
 takes the reply from `readChatWorkspaceResponse` of the workspace object.
@@ -166,6 +171,13 @@ For the GitHub CLI outside an agent turn, the helper omits the turn header.
 The handler then selects the workspace owner in its authorized D1 read.
 A present but invalid turn header still fails, without an owner fallback.
 
+During the restore of an import activation, the helper sends the attempt ID
+in the `X-Conductive-Activation-Id` header in place of a turn ID. The runner
+sets that ID only for its restore Git and LFS processes. A request with both
+headers fails. `Workspace.activationCredentialSender`
+maps that ID to the activator, as
+[The git credential sender](#the-git-credential-sender) says.
+
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
 It stores no token. A user without a stored GitHub token must sign in again.
@@ -199,6 +211,10 @@ gives the handler, which reads that turn ID from a request header.
   turn, also after a queued Stop, a session close, or a login failure.
 - A stopped or archived workspace gives no sender. The lifecycle admission
   keeps no turn record for the queued first message.
+- An import activation has its own grant. The start job is the current
+  activation attempt in the `import-restore` phase and epoch, not cancelled,
+  failed, or past its deadline. Its users are current, and the workspace is
+  not archived. The grant gives the activator.
 
 `machine.test.ts` runs the route with `machineCredentialFixture` in
 [`machine-test-support.ts`](machine-test-support.ts), over the production

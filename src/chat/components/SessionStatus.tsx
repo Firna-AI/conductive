@@ -92,13 +92,16 @@ function Waiting(props: { text: string }) {
  * session, the history of a session with nothing to show yet, or a new
  * session. A chat with content shows its history status beside it. The
  * start steps count as content while `starting` holds. A read-only chat
- * names only the session history, because it starts no session.
+ * names only the session history, because it starts no session. `empty`
+ * of the host takes the place of no open session and of a new session,
+ * such as the links to the old sessions of a workspace from Conductor.
  */
 export function emptyView(props: {
   snapshot: ChatSnapshot
   controller: ChatController
   starting: boolean
   readOnly?: boolean
+  empty?: ReactNode
 }): ReactNode {
   const { snapshot, controller } = props
   const { load, workspace } = snapshot
@@ -119,6 +122,7 @@ export function emptyView(props: {
     return <Waiting text="Loading the chat" />
   }
   if (!id) {
+    if (props.empty) return props.empty
     return (
       <EmptyState
         body={
@@ -143,6 +147,7 @@ export function emptyView(props: {
       />
     )
   }
+  if (props.empty) return props.empty
   return (
     <EmptyState
       body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}

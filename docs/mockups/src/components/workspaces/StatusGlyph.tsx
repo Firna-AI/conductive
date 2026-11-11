@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { RunState } from '../../fixtures/routineRuns'
+import type { WorkspaceStatus } from '../../fixtures/workspaces'
 import { classes } from '../common/classes'
 import styles from './StatusGlyph.module.css'
 
@@ -10,10 +11,16 @@ const cells = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const
 const ring = [0, 1, 2, 5, 8, 7, 6, 3]
 
 /**
+ * What a mark can show: the state of a workspace, also before the activation
+ * of a workspace from Conductor, or the state of a routine run.
+ */
+type GlyphStatus = WorkspaceStatus | RunState
+
+/**
  * The cells that each state lights. Each state has its own shape, so the
  * state never depends on colour alone.
  */
-const shapes: Readonly<Record<RunState, readonly number[]>> = {
+const shapes: Readonly<Record<GlyphStatus, readonly number[]>> = {
   /** A light runs around the ring. */
   working: ring,
   /** The middle column pulses, like a text cursor: the agent asks. */
@@ -33,6 +40,8 @@ const shapes: Readonly<Record<RunState, readonly number[]>> = {
   error: [0, 2, 4, 6, 8],
   /** No cell lit: nothing runs, and nothing can start. */
   archived: [],
+  /** The four corners, like an empty frame: no cloud computer yet. */
+  inactive: [0, 2, 6, 8],
   /** An hourglass: a routine run waits for its workspace. */
   queued: [0, 1, 2, 4, 6, 7, 8],
   /**
@@ -53,7 +62,7 @@ const wave = 1200
  * The delay of a lit cell, so the cells move in order. Each delay is
  * negative, so every view shows the motion already under way.
  */
-function delay(status: RunState, cell: number): CSSProperties {
+function delay(status: GlyphStatus, cell: number): CSSProperties {
   if (status === 'working') {
     return { animationDelay: `${(ring.indexOf(cell) * turn) / 8 - turn}ms` }
   }
@@ -69,7 +78,7 @@ function delay(status: RunState, cell: number): CSSProperties {
  * the ring, starting fills the middle row, and a workspace that needs input
  * pulses.
  */
-export function StatusGlyph(props: { status: RunState }) {
+export function StatusGlyph(props: { status: GlyphStatus }) {
   const lit = new Set(shapes[props.status])
   return (
     <span aria-hidden className={classes(styles.glyph, styles[props.status])}>

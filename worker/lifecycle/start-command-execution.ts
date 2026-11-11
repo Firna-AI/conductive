@@ -20,6 +20,8 @@ import type {
 import type { WorkspaceRow } from './workspace-data'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { WorkspaceStartError } from './workspace-start'
+import { HttpError } from '../http'
+import { BRANCH_NOT_FOUND_EXIT_CODE } from './existing-branch-command'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
 
@@ -37,6 +39,8 @@ export async function advanceStartCommand(
     job.phase !== 'fetch' &&
     job.phase !== 'branch' &&
     job.phase !== 'startup' &&
+    job.phase !== 'import-software' &&
+    job.phase !== 'import-launch' &&
     job.phase !== 'terminal'
   )
     throw new WorkspaceStartError(null)
@@ -59,7 +63,10 @@ export async function advanceStartCommand(
         {
           kind: 'workspace',
           id: job.workspaceId,
-          attempt: job.commandAttempt ?? job.attempt,
+          attempt:
+            job.kind === 'activate' && job.phase === 'import-launch'
+              ? (job.activation.launchAttempt ?? job.attempt)
+              : (job.commandAttempt ?? job.attempt),
         },
         job.phase,
         job.phase === 'terminal'
@@ -79,6 +86,18 @@ export async function advanceStartCommand(
   await storage.retry(job.attempt, 'progress')
   if (status.more || status.running) return false
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
+    if (
+      job.phase === 'fetch' &&
+      job.creation?.branchMode === 'existing' &&
+      status.state === 'exited' &&
+      status.exitCode === BRANCH_NOT_FOUND_EXIT_CODE &&
+      !status.timedOut
+    )
+      throw new HttpError(
+        409,
+        'branch_not_found',
+        `The branch "${row.branch}" no longer exists on GitHub. Restore it, then try again.`,
+      )
     if (job.phase === 'terminal')
       warnWorker({
         kind: 'terminal_start_failed',

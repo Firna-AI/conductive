@@ -9,6 +9,7 @@ import {
   text,
   type LegalDocument,
 } from './legal-text'
+import { privacyClosingSections } from './privacy-closing'
 import { privacyUsesSection } from './privacy-uses'
 
 /**
@@ -18,6 +19,7 @@ import { privacyUsesSection } from './privacy-uses'
  * contact address. The section on what the product uses, and why, is in
  * `privacy-uses.ts`. Its Keys and logins item defines the newer and older
  * cloud computers that the section on who gets the data uses.
+ * The sections from Cookies to the end are in `privacy-closing.ts`.
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
@@ -89,11 +91,15 @@ export const privacyDocument: LegalDocument = {
             Your messages in another
             member's session use that member's login only when that member
             lets other members use it. When that member does not share the
-            login, your message starts a new session on your own login. The
-            terms of that provider apply.`,
+            login, your message starts a new session on your own login. When
+            an agent continues a session that a member imported from
+            Conductor, the provider also gets the earlier history of that
+            session. The terms of that provider apply.`,
           text`The members of your orgs see the workspaces of the org,
             their chats, and each Mac command request and result. They also see
-            the routines of the org, with their prompts and their runs.
+            the routines of the org, with their prompts and their runs. They
+            also see the documents of the sessions that a member imports from
+            Conductor.
             A member with a terminal in a cloud computer can read
             the GitHub token of a turn that runs there. Outside an agent turn,
             the GitHub CLI uses the workspace owner's account. Each member with
@@ -188,6 +194,13 @@ export const privacyDocument: LegalDocument = {
         paragraph`${productName} keeps each file that you send with a message
           until it deletes the workspace of the message. It deletes an unsent
           file 7 days after you upload it.`,
+        paragraph`For an import from Conductor, ${productName} deletes the
+          uploaded parts of a workspace whose upload did not finish 7 days
+          after the import started it. It keeps the uploaded work of an
+          imported workspace until a member activates the workspace, and then
+          deletes it. Work of a workspace that nobody activates stays until
+          ${productName} deletes the workspace. The documents of the imported
+          sessions stay until ${productName} deletes their workspace.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
         paragraph`Account records, the latest Terms acceptance, and
@@ -243,54 +256,6 @@ export const privacyDocument: LegalDocument = {
         ),
       ],
     },
-    {
-      title: 'Cookies',
-      blocks: [
-        paragraph`This site sets no cookies. The web app and the Mac app each
-          set their own cookie that keeps you signed in. Only the Mac app's
-          cookie store holds its session cookie. Another cookie protects the
-          GitHub sign-in while it runs. When the web app sends you to GitHub
-          to install the GitHub App or change its access, a third cookie
-          keeps the screen that you left, so that the app can return you
-          there.`,
-        paragraph`Each sign-in cookie lasts for up to 7 days. The GitHub
-          sign-in protection cookie lasts for up to 10 minutes. The GitHub
-          return cookie lasts for up to 1 hour, and the app deletes it when
-          you come back. These cookies support sign-in, security, and the
-          return from GitHub. They use secure connections and cannot be read
-          by page scripts.`,
-      ],
-    },
-    {
-      title: 'Your rights',
-      blocks: [
-        paragraph`Depending on where you live, the law can give you rights
-          over your personal data. You can ask for a copy of it, and ask to
-          correct it, to delete it, to limit its use, or to object to its
-          use. You can also ask to take it to another service.`,
-        paragraph`To exercise these rights, write to
-          ${mailLink(legalAddress)}. Describe your request and the account
-          or org it concerns. The operator may need information to verify
-          your identity before acting on the request.`,
-      ],
-    },
-    {
-      title: 'Complaints',
-      blocks: [
-        paragraph`You can complain to the data protection authority that
-          has jurisdiction over your complaint. You can also raise a
-          privacy concern with the operator at ${mailLink(legalAddress)}.`,
-        paragraph`In the UK, you can contact the Information Commissioner's
-          Office at ico.org.uk/make-a-complaint/ or on 0303 123 1113.`,
-      ],
-    },
-    {
-      title: 'Changes to this notice',
-      blocks: [
-        paragraph`The operator publishes changes on this page and updates
-          its effective date. Check this page for the current notice. Any
-          additional notice required by applicable law still applies.`,
-      ],
-    },
+    ...privacyClosingSections,
   ],
 }

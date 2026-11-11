@@ -20,6 +20,7 @@ import { readJsonObject } from '../http/json-body'
 import { requestBearer } from './access'
 import { deviceBrokerName } from './paths'
 import type { DeviceOperationValue } from './internal'
+import { importBrokerRoute } from '../conductor-import/broker-route'
 import type { DeviceSockets } from './native-sockets'
 
 export function approvalAction(value: unknown): DeviceApprovalAction {
@@ -107,6 +108,8 @@ export async function brokerBrowserRoute(
   )
   if (url.pathname === '/api/devices/current' && request.method === 'GET')
     return Response.json({ device })
+  const imported = await importBrokerRoute(broker, request, context)
+  if (imported) return imported
   if (
     url.pathname === '/api/devices/current/settings' &&
     ['GET', 'POST'].includes(request.method)

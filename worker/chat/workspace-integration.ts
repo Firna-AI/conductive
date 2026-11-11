@@ -16,17 +16,16 @@ import {
   lifecycleDependencies,
   type LifecycleEnvironment,
 } from '../lifecycle/runtime'
-import type { LifecyclePublisher } from '../lifecycle/durable-types'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
 import { WorkspaceChat } from './backend'
 import { firstMessageIdentity } from './first-message'
-import { projectWorkspaceTitle } from './workspace-title'
-import type { ChatCallbackPublisher, ChatDependencies } from './types'
+import type { ChatDependencies } from './types'
 import { WorkspaceSockets } from '../native-sockets'
+import type { WorkspaceCallbackObservers } from './workspace-callbacks'
 import {
-  observeWorkspaceCallbacks,
-  type WorkspaceCallbackObservers,
-} from './workspace-callbacks'
+  callbackPublisher,
+  workspaceLifecycleHooks,
+} from './workspace-lifecycle-hooks'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
@@ -46,10 +45,6 @@ export type WorkspaceChatResolvers = Partial<
 > & {
   callbackObservers?: WorkspaceCallbackObservers
   socketAutoResponseAt?: (socket: WebSocket) => number | null
-}
-
-function callbackPublisher(publish: ChatCallbackPublisher): LifecyclePublisher {
-  return ({ event, occurredAt }) => publish(event, occurredAt)
 }
 
 export function createWorkspaceIntegration(
@@ -111,65 +106,16 @@ export function createWorkspaceIntegration(
         })
       },
       runnerDetached: (connectionId) => files.runner.detach(connectionId),
-      runnerHello: async (_id, publish) =>
-        controller.recoverLifecycle(callbackPublisher(publish)),
-      ...observeWorkspaceCallbacks(
-        {
-          turnEnded: async (_id, turnId, publish) => {
-            try {
-              const fence =
-                await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY)
-              if (fence && fence.mode !== 'active') return
-              await controller.finishLifecycleTurn(
-                turnId,
-                callbackPublisher(publish),
-              )
-            } finally {
-              context.waitUntil(devices.reconcile())
-            }
-          },
-          receiveFileResult: async (value, connectionId) => {
-            files.runner.receive(connectionId, value)
-          },
-          runnerReady: async (_id, publish) => {
-            await controller.reportRunnerLifecycle(
-              { type: 'runner.ready' },
-              callbackPublisher(publish),
-            )
-            await controller.acknowledgeLifecycleFirstMessage(
-              callbackPublisher(publish),
-            )
-          },
-          runnerDisconnected: async (_id, publish) =>
-            controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
-          turnDispatching: async (_id, turn, publish) => {
-            const state = await controller.readLifecycle()
-            if (!state) return true
-            if (!['ready', 'working', 'unread', 'input'].includes(state.state))
-              return false
-            await controller.registerLifecycleTurn(
-              turn,
-              callbackPublisher(publish),
-            )
-            const registered = await controller.readLifecycle()
-            return registered?.state === 'working'
-          },
-          turnDispatchFailed: async (_id, turnId, publish) =>
-            controller.finishLifecycleTurn(turnId, callbackPublisher(publish)),
-          runnerEventStored: async (envelope, publish) => {
-            const event = envelope.event
-            if (
-              event.type === 'turn.started' ||
-              event.type === 'start.updated'
-            ) {
-              await controller.reportRunnerLifecycle(
-                event,
-                callbackPublisher(publish),
-              )
-            }
-            await projectWorkspaceTitle(env.DB, envelope, now())
-          },
+      ...workspaceLifecycleHooks(
+        env,
+        storage,
+        now,
+        () => controller,
+        async (value, connectionId) => {
+          files.runner.receive(connectionId, value)
         },
+        () => devices.reconcile(),
+        (promise) => context.waitUntil(promise),
         resolvers.callbackObservers,
       ),
     },
@@ -219,6 +165,8 @@ export function createWorkspaceIntegration(
     dependencies,
     {
       ...platform,
+      sendImportCommand: (id, command) => chat.sendImportCommand(id, command),
+      seedImportSession: (id, input) => chat.seedImportSession(id, input),
       deviceWaiting: (id) => devices.waiting(id),
       stopping: async (id) => {
         for (const hook of stoppedHooks) await hook(id)

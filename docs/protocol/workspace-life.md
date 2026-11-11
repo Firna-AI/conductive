@@ -23,11 +23,16 @@ says.
 - The steps reach every open tab of the workspace as they happen.
 - The steps are product steps, not the raw output of the provider.
 - A new workspace shows steps such as the start from the org image, the
-  fetch of the default branch, and the creation of the branch.
+  fetch of the default branch, and the creation of the branch. On an
+  existing branch, the steps show the fetch and the checkout of that
+  branch.
 - The run of a pull request fetches that pull request, or its base branch
   after a merge.
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
   gives its steps.
+- An activation shows steps such as the copy of the work from Conductor
+  and the restore of its sessions, as
+  [The activation](imported-workspaces.md#the-activation) says.
 - A resume shows that the files come back as the user left them.
 - The chat history shows at once while a sandbox starts. The files and the
   tools wait until the sandbox is ready.
@@ -37,7 +42,8 @@ says.
 - A build or a refresh of the org image has a time limit of 60 minutes
   (decision 128).
 - A start of a workspace's sandbox has a time limit of 20 minutes. This
-  holds at create, at resume, and at the restart near day 14 of a stop.
+  holds at create, at an activation, at resume, and at the restart near
+  day 14 of a stop.
 - Each time limit covers the whole build, refresh, or start, from the
   moment that it began. Progress and provider retries do not reset it.
 - Reason: a time limit on the whole build or start ends it when it makes
@@ -65,7 +71,12 @@ says.
 ## Workspace states
 
 - The workspace list shows one state for each workspace: working, needs
-  input, finished with unread output, ready, starting, stopped, or error.
+  input, finished with unread output, ready, starting, stopped, error, or
+  not active.
+- Not active shows only for an imported workspace before its first
+  activation starts, as
+  [Before the activation](imported-workspaces.md#before-the-activation)
+  says.
 - Needs input shows while the agent waits for the user, such as for help,
   an approval, or an answer (decision 68). The workspace header and its
   row in the list show it, in the web app and in the Mac app.
@@ -137,6 +148,12 @@ says.
   the Archived group (decision 16).
 - Archive runs no check of the work in the sandbox and asks no question.
   It works in each state of the workspace. It ends a start that runs.
+- An imported workspace with no successful activation is the one exception.
+  Its Archive asks the question of
+  [Archive before the activation](imported-workspaces.md#archive-before-the-activation),
+  with no check. Its Restore needs a kept sandbox, as [Restore](#restore)
+  says. So an import that never started a sandbox offers no Restore. Its
+  stored work and its old documents stay.
 - Archive revokes the workspace token. After a Restore, the next resume
   gives the sandbox a new token, as
   [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)

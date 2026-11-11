@@ -35,7 +35,7 @@ The standalone integration takes only complete reports.
 
 ### Combined integration with the chat backend
 
-The [chat backend](../chat/integration/README.md#milestone-9-files) owns the runner stream, its cursor, and its confirmations.
+The [chat backend](../chat/integration/README.md#files) owns the runner stream, its cursor, and its confirmations.
 It creates `RunnerFileReports` on `ChatTransaction.files`.
 That adapter writes in the chat transaction of the runner message.
 So the assembly state, the projection, the history event, and the cursor commit together before the confirm.

@@ -7,7 +7,7 @@ It adds no D1 migration or separate deployment binding.
 ## Public contract
 
 [device.ts](../../src/shared/device.ts) defines the paths, records, limits, and socket messages.
-It has no imports and works in the Mac app's NodeNext build.
+Its only import is a type import of the shared import frames, so it still works in the Mac app's NodeNext build.
 [device-read.ts](../../src/shared/device-read.ts) validates unknown wire values.
 `DeviceSender` contains the stored sender's ID and display labels.
 The Worker never reads these fields from a sandbox request.
@@ -23,6 +23,7 @@ saved permission windows. Displays use the shared `nameLabel` helper.
 - GET `/api/devices/connect?deviceId=...` opens the main-process socket.
 - GET `/api/devices/current` identifies the paired desktop connection.
 - GET and POST `/api/devices/current/settings` relay local settings operations.
+- App POST of `conductorImportOperationsPath` starts one import operation on the paired Mac, as [Import operations](#import-operations) says.
 
 App reads use the existing host, Origin, session, app access, and membership checks.
 The gate refuses a waiting user's device upgrade with 403 `access_required`
@@ -179,6 +180,18 @@ It also clips excessive output as a defensive bound.
 Each encoded socket frame has a 1,000,000-byte cap.
 The Worker watchdog allows the command time limit plus one heartbeat for result delivery.
 
+## Import operations
+
+The same main-process socket also carries the operations of an import from Conductor.
+`DeviceBroker.imports` holds the `ImportBroker` of the [import area](../conductor-import/operations.md), which owns them.
+The operation route checks its pairing with `requireDevicePairing`, the same check as approvals and settings.
+The broker gives `import.frame` and `import.part.ack` messages to the import broker outside its serial queue.
+So an import that waits for a slow page never delays a command, a settings relay, or a heartbeat.
+An import uses no settings waiter and no settings timer.
+Each drop of the connection closes its import operations: a replacement, a close, a sleep, an expired lease, or an expired session.
+Commands and settings keep their frames, their limits, and their behaviour.
+`DeviceRuntime` answers an `ImportContractError` with 400 `invalid_input`, as it does a `DeviceContractError`.
+
 ## Composition and checks
 
 `worker/application.ts` dispatches this feature inside its request budget, before the machine stub or app JSON gate.
@@ -237,7 +250,8 @@ When the turn ends, the request fails with `turn_ended`, and D1 shows `ready`.
 - `workspace-commands.ts`, `workspace-browser.ts`: machine commands and scoped app records/approvals.
 - `broker.ts`, `broker-routes.ts`, `broker-messages.ts`: the broker, its upgrade route, and its relays.
 - `native-sockets.ts`, `connection-store.ts`: `DeviceSockets`, the native acceptance, restore, close, and automatic heartbeat response of the Mac socket, and the durable current connection with its generation.
-- `broker-lifecycle.ts`: the lease and session check, the drop that settles pending work, and the alarm schedule.
+- `broker-lifecycle.ts`: the lease and session check, the drop that closes the import operations and settles pending work, and the alarm schedule.
+- `broker-pairing.ts`: `requireDevicePairing`, the check of the page's user, its sign-in session, and both pairing IDs.
 - `records.ts`, `storage.ts`: durable requests and chunked values.
   `record-read.ts` lists their records for device reads and the transcript snapshot.
 - `state.ts`: `publishDeviceState`, the queue-owned call of the shared state writer, and the device-only fallback.

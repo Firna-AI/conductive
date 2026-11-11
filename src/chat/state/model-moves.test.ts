@@ -99,27 +99,34 @@ async function pickThatWaits() {
 }
 
 describe('a model change that opens a session', () => {
-  it('keeps a file tab selected when a model reply moves the last shown session draft', async () => {
-    const { chat, reply } = await pickThatWaits()
-    const file: WorkspaceTab = {
-      kind: 'file',
-      path: 'src/checkout.ts',
-      mode: 'source',
-    }
-    chat.controller.updateView((view) => ({
-      ...view,
-      tabs: [...view.tabs, file],
-      activeTab: file,
-    }))
-    const selectedView = chat.controller.getSnapshot().view
-    await reply()
-    const snapshot = chat.controller.getSnapshot()
-    expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
-    expect(snapshot.activeSessionId).toBe(id)
-    expect(chat.draftOf(created)?.text).toBe('Check the postcode rules.')
-    expect(chat.draftOf(id)?.text).toBe('')
-    expect(chat.histories(created)).toBe(0)
-  })
+  it.each([
+    {
+      name: 'a file',
+      page: { kind: 'file', path: 'src/checkout.ts', mode: 'source' },
+    },
+    {
+      name: 'an old session',
+      page: { kind: 'conductor-document', documentId: 'apply-coupons' },
+    },
+  ] satisfies { name: string; page: WorkspaceTab }[])(
+    'keeps $name tab selected when a model reply moves the last shown session draft',
+    async ({ page }) => {
+      const { chat, reply } = await pickThatWaits()
+      chat.controller.updateView((view) => ({
+        ...view,
+        tabs: [...view.tabs, page],
+        activeTab: page,
+      }))
+      const selectedView = chat.controller.getSnapshot().view
+      await reply()
+      const snapshot = chat.controller.getSnapshot()
+      expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
+      expect(snapshot.activeSessionId).toBe(id)
+      expect(chat.draftOf(created)?.text).toBe('Check the postcode rules.')
+      expect(chat.draftOf(id)?.text).toBe('')
+      expect(chat.histories(created)).toBe(0)
+    },
+  )
 
   it.each(['reply', 'stream'] as const)(
     'keeps a newer tab selection when the %s first shows the new session',

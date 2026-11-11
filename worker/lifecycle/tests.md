@@ -103,3 +103,21 @@ It saves user and org scopes into one org task, restarts it, and changes no susp
 Its provider fault checks that the task and alarm exist before dispatch.
 The build ledger cleanup tests retain older and current computer IDs.
 They confirm retry after failed Delete and after suspension blocks initial provider setup.
+
+## Import activation
+
+`activationFixture` in [`import-activation.test-support.ts`](import-activation.test-support.ts)
+publishes a verified import through the import area, with no first chat identity.
+It runs the production workspace object with `LifecycleBoat` as the provider.
+It plays the runner connection through the native test peers.
+
+- [`import-activation.test.ts`](import-activation.test.ts) admits one real
+  activation session from an older good image. It holds messages and
+  attachments until the restore and the startup finish. It waits for current
+  durable acknowledgements, and it keeps the original deadline after a
+  reconstruction. It keeps the stored work after a disk failure, and it waits
+  for an explicit Activate.
+- [`import-activation-archive.test.ts`](import-activation-archive.test.ts) lets
+  Archive take over an incomplete activation. Restore stays stopped until an
+  explicit Activate continues the kept attempt.
+- No test needs a live cloud computer, a provider login, or a real Mac.

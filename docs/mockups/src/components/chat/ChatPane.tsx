@@ -39,6 +39,16 @@ export function ChatPane(props: {
    * refused start its reason.
    */
   problem?: SandboxNoticeState
+  /**
+   * The screen that Restore on the bar of an archived workspace opens, when
+   * it is not the native one. Null keeps Restore static.
+   */
+  restoreTo?: string | null
+  /**
+   * A bar in place of the composer, such as the question that activates a
+   * workspace from Conductor, which has no cloud computer yet.
+   */
+  replaceComposer?: ReactNode
   starting?: StartingLog
   empty?: ReactNode
   /** A message above the composer, such as a failed create. */
@@ -54,7 +64,9 @@ export function ChatPane(props: {
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
-  const composer = !props.problem || !replacesComposer(props.problem)
+  const composer =
+    props.replaceComposer === undefined &&
+    (!props.problem || !replacesComposer(props.problem))
   const pending = props.items.filter(isPendingCommand)
   const transcript = props.items.filter((item) => !isPendingCommand(item))
   const fold = props.fold ?? 'closed'
@@ -117,7 +129,10 @@ export function ChatPane(props: {
         ) : null}
         {mac?.choicesOpen && pending.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
-        {props.problem ? <SandboxBar {...props.problem} /> : null}
+        {props.problem ? (
+          <SandboxBar {...props.problem} restoreTo={props.restoreTo} />
+        ) : null}
+        {props.replaceComposer}
         {composer ? <Composer {...props.composer} /> : null}
       </div>
     </section>

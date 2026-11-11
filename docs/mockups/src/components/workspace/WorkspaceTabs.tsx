@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, type ReactElement } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { History, Plus, RotateCcw } from 'lucide-react'
 import { nameLabel } from '../../../../../src/shared/name-label'
@@ -34,11 +34,32 @@ export const historyEntries: readonly MenuEntry[] = closedSessions.map(
   }),
 )
 
+/**
+ * The screens of + and of the session history for a workspace whose
+ * screens are not those of every workspace. A control without a screen
+ * there, or with null, stays static.
+ */
+export type SessionLinks = Readonly<{
+  newSession?: string | null
+  history?: string | null
+}>
+
+/** A button that leads to `to`, or a static one when it has no screen. */
+function Linked(props: { to?: string; children: ReactElement }) {
+  if (props.to === undefined) return props.children
+  return (
+    <ScreenLink asChild to={props.to}>
+      {props.children}
+    </ScreenLink>
+  )
+}
+
 /** The clock that opens the session history, with its menu when open. */
 function HistoryButton(props: {
   open: boolean
   anchored: boolean
   entries: readonly MenuEntry[]
+  to?: string
 }) {
   const hasHistory = props.entries.some((entry) => entry.kind === 'item')
   const button = (
@@ -55,9 +76,7 @@ function HistoryButton(props: {
         props.open ? (
           button
         ) : (
-          <ScreenLink asChild to={paths.sessionHistory}>
-            {button}
-          </ScreenLink>
+          <Linked to={props.to}>{button}</Linked>
         )
       ) : null}
       {props.open && props.anchored ? (
@@ -107,8 +126,10 @@ export function WorkspaceTabs(props: {
   menuTab?: string
   renaming?: string
   full?: boolean
+  /** The screens of + and of the history, for the workspace of the row. */
+  links?: SessionLinks
 }) {
-  const { tabs, drag, menuTab } = props
+  const { tabs, drag, menuTab, links } = props
   const readOnly = props.readOnly ?? false
   const phone = props.viewport === 'mobile'
   const full = props.full ?? false
@@ -160,14 +181,15 @@ export function WorkspaceTabs(props: {
         {dropAt(tabs.length)}
       </ul>
       {readOnly ? null : (
-        <ScreenLink asChild to={paths.sessions}>
+        <Linked to={links ? (links.newSession ?? undefined) : paths.sessions}>
           <IconButton icon={Plus} label="New session" />
-        </ScreenLink>
+        </Linked>
       )}
       <HistoryButton
         anchored={!phone}
         entries={props.historyEntries ?? historyEntries}
         open={props.historyOpen ?? false}
+        to={links ? (links.history ?? undefined) : paths.sessionHistory}
       />
     </nav>
   )

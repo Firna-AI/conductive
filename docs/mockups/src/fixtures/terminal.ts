@@ -3,7 +3,8 @@
  */
 
 import { failedBuild, timedOutBuild } from './computer'
-import { checkoutAutocomplete, savedCarts } from './workspaces'
+import type { OpenableWorkspace } from './openableWorkspaces'
+import { checkoutAutocomplete, type Workspace } from './workspaces'
 
 export type TerminalTone =
   'prompt' | 'plain' | 'muted' | 'success' | 'accent' | 'error'
@@ -31,11 +32,17 @@ function success(text: string): TerminalLine {
   return [{ text, tone: 'success' }]
 }
 
-const workspaceLocation = `storefront (${checkoutAutocomplete.branch})`
+/**
+ * Where the terminal of a workspace stands: the folder of its repository,
+ * which the cloud computer names as the repository, and its branch.
+ */
+function locationOf(workspace: Workspace): string {
+  return `${workspace.repository} (${workspace.branch})`
+}
 
 /** The dev server in the open workspace. */
 export const workspaceSession: readonly TerminalLine[] = [
-  prompt(workspaceLocation, 'npm run dev'),
+  prompt(locationOf(checkoutAutocomplete), 'npm run dev'),
   plain(''),
   muted('> storefront@2.4.0 dev'),
   muted('> next dev --turbopack'),
@@ -161,5 +168,21 @@ export const timedOutFirstBuildLog: readonly TerminalLine[] = [
   muted(timedOutBuild.error),
 ]
 
-/** A new workspace: the terminal waits at its first prompt. */
-export const freshSessionPrompt = `storefront (${savedCarts.branch}) $ `
+/**
+ * The process that the terminal of each workspace runs, where it runs one.
+ * Each other terminal waits at an idle prompt on its own workspace.
+ */
+export const terminalProcesses: Readonly<
+  Record<OpenableWorkspace, readonly TerminalLine[] | null>
+> = {
+  'checkout-autocomplete': workspaceSession,
+  'saved-carts': null,
+  'saved-carts-branch': null,
+  'coupon-totals': null,
+  'coupon-totals-activated': null,
+}
+
+/** An idle terminal: it waits at a prompt on the repository and the branch. */
+export function idlePrompt(workspace: Workspace): string {
+  return `${locationOf(workspace)} $ `
+}

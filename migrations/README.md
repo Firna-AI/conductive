@@ -152,6 +152,16 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
+`202611101104_workspace_branch_choice.sql` adds `workspace_creation_plans.branch_mode`.
+Existing creation plans keep `new`. A chosen existing branch keeps its mode
+through admission, object restart, and failed-first-start retry.
+
+`202611101135_imported_workspace_records.sql` rebuilds only `workspace_runtime`.
+Its first session, turn, and message IDs can be null. All native row values and uniqueness stay.
+It adds source, importer, and activation completion columns to `workspaces`.
+A unique org and source ID index deduplicates imports. Native source IDs remain null.
+The workspace table and its numbering and computer ledger triggers remain in place.
+
 `202611101200_software_images.sql` adds `software_images`, which owns each
 software image attempt and its provider account, version, artifact, phase,
 resources, output, and deploy token digest. A partial unique index allows
@@ -178,6 +188,25 @@ Existing runs keep null because their original choice is not known.
 `202611101500_workspace_base_branches.sql` adds the nullable workspace base branch and the creation plan base branch and start commit.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
+
+`202611101830_conductor_import_reservations.sql` adds the nine `conductor_import_*` tables of the import service.
+It changes no earlier table, index, or trigger. `workspaces`, `workspace_runtime`, the org numbering, and the computer ledger stay as they were.
+A reservation keeps its org, importer, chosen repository, local Conductor ID, name, branch, state, creation and expiry times, and snapshot.
+A partial unique index keeps one open or complete reservation for each org and local Conductor ID. That index is the source slot.
+Child tables keep the ordered manifest records, the content objects, the parts, each issued upload identity, the old documents, the GitHub proofs, and the verified prerequisites.
+A reservation goes with its org, and each child table goes with its reservation.
+The cleanup table has no foreign key. So a cleanup record and its unresolved write stay after the org and reservation rows.
+The [import area](../worker/conductor-import/reservations.md) owns these records, and its publication writes the workspace record in the same batch that ends the reservation.
+
+`202611101900_import_image_leases.sql` adds `workspace_import_image_leases`.
+Each row leases one org image snapshot and its provider account for the activation of one imported workspace.
+It goes with its workspace and its org. An index on the org, the account, and the snapshot serves the lease check of image cleanup.
+Native creation keeps `image_leases`, because its claim needs a first message. The migration changes no earlier table.
+
+`202611102030_import_activation_fences.sql` adds `workspace_import_activation_attempts`.
+Each row keeps the current activation attempt of one imported workspace: its attempt ID, epoch, state, and completion time.
+It goes with its workspace and its org. The migration changes no earlier table.
+The [import activation](../worker/lifecycle/import-activation.md) owns both tables.
 
 ## Reserved ranges
 

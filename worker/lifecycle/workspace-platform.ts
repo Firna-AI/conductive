@@ -4,6 +4,8 @@ import type {
   WorkspaceLifecycleEndpoint,
 } from './workspace-runtime'
 import type { WorkspaceStorage } from './platform-storage'
+import type { RunnerImportCommand } from '../../src/shared/runner-import'
+import type { SeedImportSession } from '../chat/import-sessions'
 
 export interface WorkspaceEventPublication {
   workspaceId: string
@@ -30,6 +32,14 @@ export interface WorkspacePlatform {
   deviceWaiting?(workspaceId: string): Promise<boolean>
   readChatRecovery?(workspaceId: string): Promise<WorkspaceChatRecovery>
   chatRecovered?(): void
+  sendImportCommand?(
+    workspaceId: string,
+    command: Omit<RunnerImportCommand, 'connectionId'>,
+  ): Promise<string | null>
+  seedImportSession?(
+    workspaceId: string,
+    input: SeedImportSession,
+  ): Promise<unknown>
 }
 
 export function nativeWorkspacePlatform(

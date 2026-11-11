@@ -9,6 +9,12 @@ import type {
 } from '../../src/shared/runner-transport'
 import { checkpoint, changedSince } from './checkpoint'
 import { prepareContextFolder } from './context-folder'
+import {
+  ImportReceiver,
+  pendingImport,
+  type ImportReceiverOptions,
+} from './import-receiver'
+import { clearImportedCredentials } from './import-native-location'
 import { AgentEngine } from './engine'
 import { boundChatEvent } from '../../src/shared/event-limits'
 import {
@@ -42,6 +48,8 @@ export interface RunnerOptions extends WorkspaceContext {
   warn: (message: string) => void
   disconnected: () => void
   ports?: PortReporterOptions
+  imports?: Pick<ImportReceiverOptions, 'measureDisk' | 'lfs'>
+  importHome?: string
 }
 
 export class Runner {
@@ -49,6 +57,7 @@ export class Runner {
   readonly files: FileReporter
   readonly engine: AgentEngine
   readonly ports: PortReporter | null
+  readonly imports: ImportReceiver
   private readonly options: RunnerOptions
   private readonly sanitizer = new OutputSanitizer()
   private readonly emitted = new SerialQueue()
@@ -58,6 +67,7 @@ export class Runner {
   private stopped = false
   private warmed = false
   private watchFiles = true
+  private importPreparing = false
 
   constructor(options: RunnerOptions) {
     this.options = options
@@ -94,12 +104,26 @@ export class Runner {
           before,
         ),
       emit: (event) => this.emit(event),
+      emitImport: (event) => this.emit(event),
     })
     this.link = new RunnerLink(options.store, {
       ...options,
       connected: async () => {
+        for (const session of options.store.snapshot.sessions) {
+          if (
+            session.importFallbackTurnId &&
+            session.conductorImport?.preparation === 'fallback'
+          )
+            await this.emit({
+              type: 'import.preparation',
+              sessionId: session.sessionId,
+              turnId: session.importFallbackTurnId,
+              documentId: session.conductorImport.documentId,
+              preparation: 'fallback',
+            })
+        }
         try {
-          await this.files.refresh(true)
+          if (!this.importPreparing) await this.files.refresh(true)
         } catch {
           options.warn('The initial file reports could not be saved.')
           await this.emit({ type: 'files.unavailable' })
@@ -108,65 +132,86 @@ export class Runner {
         await this.emit({ type: 'runner.ready' })
       },
       disconnected: () => {
+        this.imports.disconnect()
         if (!this.stopped) options.disconnected()
       },
       command: (command) => {
         if (command.type === 'turn')
           this.sanitizer.add(command.credential.token)
         const action =
-          command.type === 'file.read' || command.type === 'file.diff'
-            ? this.files.request(command).then((response) => {
-                const text = (value: string) => this.sanitizer.text(value)
-                if (response.result.ok)
-                  this.link.reply(
-                    response.type === 'file.read.result'
-                      ? {
-                          ...response,
-                          result: {
-                            ok: true,
-                            file: filterFileResponse(
-                              response.result.file,
-                              text,
-                            ),
+          command.type === 'import.command'
+            ? this.imports.receive(command)
+            : command.type === 'file.read' || command.type === 'file.diff'
+              ? this.files.request(command).then((response) => {
+                  const text = (value: string) => this.sanitizer.text(value)
+                  if (response.result.ok)
+                    this.link.reply(
+                      response.type === 'file.read.result'
+                        ? {
+                            ...response,
+                            result: {
+                              ok: true,
+                              file: filterFileResponse(
+                                response.result.file,
+                                text,
+                              ),
+                            },
+                          }
+                        : {
+                            ...response,
+                            result: {
+                              ok: true,
+                              diff: filterDiffResponse(
+                                response.result.diff,
+                                text,
+                              ),
+                            },
                           },
-                        }
-                      : {
-                          ...response,
-                          result: {
-                            ok: true,
-                            diff: filterDiffResponse(
-                              response.result.diff,
-                              text,
-                            ),
-                          },
-                        },
-                  )
-                else this.link.reply(response)
-              })
-            : command.type === 'report.refresh'
-              ? this.refresh(command)
-              : this.engine.command(command)
+                    )
+                  else this.link.reply(response)
+                })
+              : command.type === 'report.refresh'
+                ? this.refresh(command)
+                : this.engine.command(command)
         this.commands.add(action)
         void action
           .finally(() => this.commands.delete(action))
           .catch(() => options.warn('The runner command could not finish.'))
       },
     })
+    this.imports = new ImportReceiver({
+      ...options,
+      ...options.imports,
+      storageHome: options.importHome ?? options.home,
+      reply: (reply) => this.link.reply(reply),
+      refresh: async () => {
+        await clearImportedCredentials(this.options.cwd, this.options.home)
+        this.importPreparing = false
+        await this.files.refresh(true)
+        await this.ports?.refresh(true)
+        if (this.watchFiles && !this.stopWatching)
+          this.stopWatching = this.files.watch(this.options.warn)
+      },
+    })
   }
 
   async start(watchFiles = true): Promise<void> {
     this.watchFiles = watchFiles
-    await prepareContextFolder(this.options.cwd, this.options.warn)
+    this.importPreparing = Boolean(
+      await pendingImport(this.options.importHome ?? this.options.home),
+    )
+    if (!this.importPreparing)
+      await prepareContextFolder(this.options.cwd, this.options.warn)
     await this.connect()
   }
 
   async connect(): Promise<void> {
     if (!this.warmed) {
-      await clearClaudeCredentials(this.options.home)
+      if (!this.importPreparing) await clearClaudeCredentials(this.options.home)
       await this.options.warm()
       this.warmed = true
     }
-    if (this.watchFiles && !this.stopWatching)
+    if (!this.importPreparing && this.watchFiles && !this.stopWatching)
       this.stopWatching = this.files.watch(this.options.warn)
     this.ports?.watch()
     await this.link.connect()
@@ -181,6 +226,7 @@ export class Runner {
 
   async close(): Promise<void> {
     this.stopped = true
+    this.imports.disconnect()
     this.stopWatching?.()
     const closingPorts = this.ports?.close()
     await this.engine.close()
@@ -232,6 +278,11 @@ export class Runner {
   }
 
   private async refresh(command: RunnerReportRefresh): Promise<void> {
+    if (
+      this.importPreparing &&
+      (command.kind === 'files.snapshot' || command.kind === 'changes.updated')
+    )
+      return
     if (this.refreshed.has(command.commandId)) return
     this.refreshed.add(command.commandId)
     const kind = command.kind

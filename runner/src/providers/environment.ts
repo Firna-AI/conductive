@@ -24,6 +24,7 @@ export function providerEnvironment(
 ): Record<string, string | undefined> {
   const env = { ...process.env }
   delete env.CONDUCTIVE_MEASURE_LOGIN
+  delete env.CONDUCTIVE_ACTIVATION_ID
   for (const key of Object.keys(env)) {
     if (/^(ANTHROPIC_|CLAUDE_|CLAUDECODE$|OPENAI_|CODEX_)/.test(key))
       delete env[key]

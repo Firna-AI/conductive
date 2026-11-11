@@ -22,9 +22,11 @@ import { Overlay, useModalLayer } from '../ui/Overlay'
 import { trapTab } from '../ui/Sheet'
 import ui from '../ui/ui.module.css'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
+import { BranchControl } from './BranchChoice'
 import { ChooseRepositoriesNotice } from './notices'
 import { RepositoryMenu } from './parts'
 import local from './new-workspace.module.css'
+import { useOpener } from './opener'
 import { OrgLinks } from './OrgLinks'
 import { useNewWorkspaceForm } from './useNewWorkspaceForm'
 
@@ -71,10 +73,11 @@ function CreateButton(props: {
  * leave it open. An action that opens another page closes it first. The
  * message takes the focus as it opens, with the cursor at the end of a
  * kept message. As it closes, the focus goes back to the control that
- * opened it. When another screen opened, the main area of that screen
- * takes the focus. In a suspended org, the refused bar takes the place of
- * the composer. The files upload before the workspace exists, with the
- * chips and the notice of the workspace chat, as on the page.
+ * opened it, the one with the focus as the dialog first showed. When
+ * another screen opened, the main area of that screen takes the focus. In
+ * a suspended org, the refused bar takes the place of the composer. The
+ * files upload before the workspace exists, with the chips and the notice
+ * of the workspace chat, as on the page.
  */
 function DialogCard(props: {
   org: OrgSummary
@@ -101,12 +104,17 @@ function DialogCard(props: {
   // file over the size limit.
   const files = useRef<HTMLInputElement>(null)
   const pick = () => files.current?.click()
+  const returnFocus = useOpener()
   useModalLayer(
     card,
     () => {
       if (!sending) props.close()
     },
-    { initial: message, moved: () => navigation.href() !== openedAt },
+    {
+      initial: message,
+      moved: () => navigation.href() !== openedAt,
+      returnFocus,
+    },
   )
   const sendKey = useSendKey(form.ready, form.send)
   const unchosen = form.repositories?.length === 0
@@ -129,14 +137,21 @@ function DialogCard(props: {
     >
       <div className={styles.header}>
         {form.repository && !suspended ? (
-          <RepositoryMenu
-            chevron={styles.chevron}
-            choose={(id) => model.setRepository(id)}
-            chosen={form.repository}
-            repositories={form.repositories ?? []}
-            tone="plain"
-            waiting={form.waiting}
-          />
+          <>
+            <RepositoryMenu
+              chevron={styles.chevron}
+              choose={(id) => model.setRepository(id)}
+              chosen={form.repository}
+              repositories={form.repositories ?? []}
+              tone="plain"
+              waiting={form.waiting}
+            />
+            <BranchControl
+              model={model}
+              orgId={org.id}
+              repository={form.repository}
+            />
+          </>
         ) : null}
         <span className={styles.place}>{place}</span>
       </div>
@@ -223,12 +238,13 @@ function DialogCard(props: {
 
 /**
  * New workspace as a dialog over the whole frame, on a computer, as the
- * mockup draws it. The repository picker sits at the top left, and the org
- * and the section of the new workspace at the top right. The message and
- * its files fill the middle, with the notices of the page under them. The
- * model picker sits at the bottom left, and the attach button and Create
- * at the bottom right. The dialog and the page of an org and a section
- * share one draft, so a close keeps the message and its files.
+ * mockup draws it. The repository picker sits at the top left, with the
+ * quiet branch picker beside it, and the org and the section of the new
+ * workspace at the top right. The message and its files fill the middle,
+ * with the notices of the page under them. The model picker sits at the
+ * bottom left, and the attach button and Create at the bottom right. The
+ * dialog and the page of an org and a section share one draft, so a close
+ * keeps the message and its files.
  */
 export function NewWorkspaceDialog(props: {
   orgId: string

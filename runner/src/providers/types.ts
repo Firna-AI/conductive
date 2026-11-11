@@ -50,6 +50,8 @@ export interface ProviderOptions {
   commitAuthor: CommitAuthor | null
   choice: AgentChoice
   conversationId: string | null
+  importDocument?: string
+  importedHistory?: boolean
   instructions: string
   tools: WorkspaceToolContext
   event: (event: ProviderEvent) => void

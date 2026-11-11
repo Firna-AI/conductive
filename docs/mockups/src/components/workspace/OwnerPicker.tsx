@@ -8,8 +8,8 @@ import {
 } from '../../fixtures/members'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
+import { LinkedControl } from '../common/LinkedControl'
 import { Menu, type MenuEntry } from '../common/Menu'
-import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
 import { useControlSizes } from '../common/touch'
 import { PersonAvatar } from '../orgs/OrgTile'
@@ -53,6 +53,11 @@ export function OwnerPicker(props: {
   open?: boolean
   compact?: boolean
   readOnly?: boolean
+  /**
+   * The screen with the open menu, which the picker opens. Null keeps the
+   * picker static. Without it, the picker opens the menu of the mockups.
+   */
+  to?: string | null
 }) {
   const control = useControlSizes()
   const { owner } = props
@@ -104,9 +109,9 @@ export function OwnerPicker(props: {
       {props.open ? (
         button
       ) : (
-        <ScreenLink asChild to={paths.reassign}>
+        <LinkedControl to={props.to === undefined ? paths.reassign : props.to}>
           {button}
-        </ScreenLink>
+        </LinkedControl>
       )}
       {props.open && !props.compact ? (
         <Menu

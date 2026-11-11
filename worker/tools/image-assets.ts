@@ -13,6 +13,7 @@ import deviceClientSource from '../../tools/device-client.ts?raw'
 import deviceCliSource from '../../tools/device-cli.ts?raw'
 import deviceSource from '../../src/shared/device.ts?raw'
 import deviceReadSource from '../../src/shared/device-read.ts?raw'
+import importSource from '../../src/shared/conductor-import.ts?raw'
 
 /** Vite embeds these allowed sources as text in the Worker bundle. */
 export const WORKSPACE_TOOL_SOURCES = [
@@ -29,5 +30,6 @@ export const WORKSPACE_TOOL_SOURCES = [
   { path: 'tools/device-cli.ts', contents: deviceCliSource },
   { path: 'src/shared/device.ts', contents: deviceSource },
   { path: 'src/shared/device-read.ts', contents: deviceReadSource },
+  { path: 'src/shared/conductor-import.ts', contents: importSource },
   { path: 'src/shared/agent-tools.ts', contents: contractSource },
 ] as const satisfies readonly WorkspaceToolSource[]

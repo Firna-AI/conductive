@@ -1,0 +1,19 @@
+/* What the import does, above the list, as a quiet line. */
+.intro {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+/* A wait of the page: a quiet line, with a spinner while the app reads. */
+.waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 48px 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}

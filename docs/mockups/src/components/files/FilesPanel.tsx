@@ -29,17 +29,27 @@ export type TreeState = (typeof treeStates)[number]
 /**
  * The kinds of file that open as a tab in the centre column: a code file,
  * a Markdown file, a diff, the diff of a file whose label hides a secret
- * value, and a file whose name the app does not know.
+ * value, a file whose name the app does not know, and the Markdown file of
+ * a session from Conductor.
  */
 export type FileTabView =
-  'code' | 'markdown' | 'diff' | 'masked-diff' | 'unnamed'
+  'code' | 'markdown' | 'diff' | 'masked-diff' | 'unnamed' | 'old-session'
+
+/**
+ * The screens of the list tabs for a workspace whose screens are not those
+ * of every workspace. A tab without a screen there, or with null, stays
+ * static.
+ */
+export type FileListLinks = Readonly<Partial<Record<FileList, string | null>>>
 
 /** The All files, Changes, and Checks tabs, as links. */
 function FileTabs(props: {
   view: FileList
   changes: number
   banner: BannerState
+  links?: FileListLinks
 }) {
+  const { links } = props
   return (
     <PanelBar>
       <LinkTabs
@@ -47,18 +57,18 @@ function FileTabs(props: {
         tabs={[
           {
             label: 'All files',
-            to: paths.filesAll,
+            to: links ? (links.all ?? undefined) : paths.filesAll,
             selected: props.view === 'all',
           },
           {
             label: 'Changes',
-            to: paths.filesChanges,
+            to: links ? (links.changes ?? undefined) : paths.filesChanges,
             count: props.changes > 0 ? props.changes : undefined,
             selected: props.view === 'changes',
           },
           {
             label: 'Checks',
-            to: checksPaths[props.banner],
+            to: links ? (links.checks ?? undefined) : checksPaths[props.banner],
             selected: props.view === 'checks',
           },
         ]}
@@ -75,6 +85,9 @@ function FileTabs(props: {
  * from GitHub and still show. When the cloud computer could not read the
  * files, `tree` keeps the saved list under a notice, or says that no list
  * is available. `paths` adds two files whose labels hide a secret value.
+ * `links` gives the list tabs of a workspace whose screens are not those of
+ * every workspace. Its rows are then static, because the mockups draw no
+ * file of that workspace.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -84,19 +97,30 @@ export function FilesPanel(props: {
   open?: FileTabView
   placeholder?: ReactNode
   paths?: PathState
+  links?: FileListLinks
 }) {
-  const { view, open } = props
+  const { view, open, links } = props
   const masked = props.paths === 'masked'
   const files = filesFor(props.paths ?? 'plain')
-  const changes = props.edited ? files.changes : []
-  const tree = props.edited
-    ? files.tree
-    : files.tree.map((entry) => ({ ...entry, change: undefined }))
+  const shown = props.edited ? files.changes : []
+  const changes = links
+    ? shown.map((file) => ({ ...file, diff: false }))
+    : shown
+  const tree = files.tree.map((entry) => ({
+    ...entry,
+    change: props.edited ? entry.change : undefined,
+    preview: links ? undefined : entry.preview,
+  }))
   const treeOpen = open === 'code' || open === 'markdown' ? open : undefined
   const lists = !props.placeholder
   return (
     <div className={styles.files}>
-      <FileTabs banner={props.banner} changes={changes.length} view={view} />
+      <FileTabs
+        banner={props.banner}
+        changes={changes.length}
+        links={links}
+        view={view}
+      />
       {view === 'checks' ? <ChecksList state={props.banner} /> : null}
       {view !== 'checks' && props.placeholder ? props.placeholder : null}
       {view === 'all' && lists && props.tree === 'none' ? (

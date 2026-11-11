@@ -2,7 +2,8 @@
 
 This doc holds the requirements and the decisions in force for sign-in,
 the gates of the Worker, and the secrets. It also covers the isolation of
-sandboxes, the terminal, and the port previews. The terms are those of the
+sandboxes, the terminal, the port previews, and the uploads and the storage
+of an import from Conductor. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A gateway decision number names a decision of the change that adds
@@ -19,6 +20,8 @@ These docs belong to this doc:
 - [Terminal, previews, and desktop](terminal-previews-and-desktop.md): the
   security of the terminal, the port previews, the proxies, and the
   desktop.
+- [Import uploads and storage](import-uploads.md): the upload links of an
+  import from Conductor, and how long the app keeps import data.
 
 ## Sign-in
 
@@ -193,6 +196,17 @@ rejected, because it needs a new secret, CORS rules, and a new host.
   content type needs no preflight, so the gate refuses it.
 - Reason: the URL carries the file name and the media type, so the
   preflight allows no new request header.
+
+## Import uploads
+
+- [Import uploads and storage](import-uploads.md#import-uploads) states the
+  upload links of an import from Conductor and their checks.
+
+### How long the app keeps import data
+
+- [How long the app keeps import data](import-uploads.md#how-long-the-app-keeps-import-data)
+  states how long the app keeps the parts, the stored work, and the old
+  documents of an import.
 
 ## Content security policy
 

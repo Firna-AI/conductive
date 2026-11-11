@@ -5,6 +5,7 @@ import type {
   DeviceToWorker,
   WorkerToDevice,
 } from '../../../src/shared/device.ts'
+import type { ImportController } from '../import/controller.ts'
 import { AlwaysAllowLimitError, type PermissionStore } from './permissions.js'
 import { validCommand } from './runner.js'
 import type { CommandRun } from './runner.js'
@@ -19,6 +20,7 @@ interface SessionDependencies {
   notify(request: DeviceCommandRecord): () => void
   invalid(): void
   warn(): void
+  importer?: ImportController
 }
 interface LocalRequest {
   request: DeviceCommandRecord
@@ -87,6 +89,16 @@ export function createDeviceSession(dependencies: SessionDependencies) {
   return {
     receive(message: WorkerToDevice): void {
       if (disposed) return
+      if (
+        message.type === 'import.operation' ||
+        message.type === 'import.ack' ||
+        message.type === 'import.part' ||
+        message.type === 'import.error' ||
+        message.type === 'import.cancel'
+      ) {
+        dependencies.importer?.receive(message)
+        return
+      }
       if (message.type === 'command.request') {
         const request = message.request
         if (
@@ -170,6 +182,7 @@ export function createDeviceSession(dependencies: SessionDependencies) {
     },
     dispose(): void {
       disposed = true
+      dependencies.importer?.dispose()
       requests.forEach((entry) => {
         const cancel = entry.cancel
         finish(entry)

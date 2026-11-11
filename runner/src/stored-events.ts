@@ -128,6 +128,17 @@ function port(value: unknown): ListeningPort {
 export function parseEvent(value: unknown): RunnerEvent {
   const input = object(value)
   const type = string(input.type)
+  if (type === 'import.preparation') {
+    if (input.preparation !== 'fallback')
+      throw new Error('Invalid imported preparation.')
+    return {
+      type,
+      sessionId: string(input.sessionId),
+      turnId: string(input.turnId),
+      documentId: string(input.documentId),
+      preparation: 'fallback',
+    }
+  }
   if (type === 'runner.ready') return { type }
   if (type === 'files.unavailable') return { type }
   if (type === 'workspace.title') return { type, name: string(input.name) }

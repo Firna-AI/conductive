@@ -20,6 +20,9 @@ opens first.
   Its `imageAdmissionError` gives a waiting repository the next-build message.
   The browser create and the agent tools share that message.
 - [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
+  `releaseImageLease` deletes the native lease and the import lease, and `imageIsLeased` counts both.
+- [Import activation](import-activation.md#key-code): the entries of the activation of an imported workspace,
+  its image lease, and its attempt fence.
 - [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
@@ -45,7 +48,9 @@ opens first.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):
   `WorkspaceStateProjection`, the one writer of the shown state and of the
   repaired name, as
-  [The shown state](recovery-and-shown-state.md#the-shown-state) says.
+  [The shown state](recovery-and-shown-state.md#the-shown-state) says. It
+  writes the D1 state with `persistLifecycleState` of
+  [`workspace-state-data.ts`](workspace-state-data.ts).
 - [`workspace-controller.ts`](workspace-controller.ts):
   `createWorkspaceController`, the lifecycle methods of the workspace
   object. [`lifecycle-admission.ts`](lifecycle-admission.ts) checks a create
@@ -74,6 +79,9 @@ opens first.
 - [`creation-publication.ts`](creation-publication.ts): `publishCreationResult`
   writes the stored result of a create to D1, with its own due time, as
   [Creates and resumes](workspace-object.md#creates-and-resumes) says.
+  After a successful activation, it calls `cleanupImportWork` of the import area.
+  [`start-storage-completion.ts`](start-storage-completion.ts): `completeStoredStart`
+  saves the result of a start, and the checkpoint of an activation.
 - [`start-runner.ts`](start-runner.ts): readiness admission, the original
   deadline, and the active owner and requester checks for runner reports.
 - [`job-time-limit.ts`](job-time-limit.ts): the build and start time limits
@@ -190,4 +198,7 @@ opens first.
 - [`repair.ts`](repair.ts) and [`repair-data.ts`](repair-data.ts): bounded Cron repair with shared eligibility rules and persisted retry signals.
 - [`worker/workspace.ts`](../workspace.ts): the composed `Workspace` class.
   [`worker/workspace-lifecycle.ts`](../workspace-lifecycle.ts) exposes its lifecycle methods.
+  Its base class, `WorkspaceObjectBase` in
+  [`workspace-object-base.ts`](workspace-object-base.ts), builds the object,
+  restores the native sockets, and receives their events.
 - [Member receivers](../members/workspace-receiver.ts) install durable generations, drain active phases, and restore maintenance timers.

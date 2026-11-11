@@ -16,6 +16,7 @@ import { featureSettings } from './feature-settings'
 import { shellChildId } from './feature-shell-access'
 import { featureWorkspaceWrite } from './feature-workspaces'
 import { workspaceChildId } from './workspace-path'
+import { workspaceBranchesRoute } from './workspace-branches'
 
 export async function featureShellRoute(
   request: Request,
@@ -45,6 +46,13 @@ export async function featureShellRoute(
     return createShellOrg(env, context, dependencies)
   if (!context.org) return null
   const orgId = context.org.id
+  const branches = await workspaceBranchesRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (branches) return branches
   if (
     path === orgSettingsPaths.settings(orgId) &&
     ['GET', 'PATCH'].includes(request.method)

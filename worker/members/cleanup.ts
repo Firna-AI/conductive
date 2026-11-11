@@ -31,12 +31,21 @@ import {
 } from '../chat/attachment-cleanup'
 import { warnWorker } from '../warnings'
 import { cleanupOrgArchives } from './archive-cleanup'
+import {
+  cleanupExpiredImports,
+  purgeOrgImports,
+} from '../conductor-import/cleanup'
 
 export async function cleanupDeletedOrgs(
   env: AppEnv,
   dependencies: AppDependencies,
   hooks: Omit<MembersHooks, 'readWorkspace'>,
 ): Promise<{ purged: string[]; pending: string[] }> {
+  try {
+    await cleanupExpiredImports(env, dependencies.now())
+  } catch {
+    warnWorker({ kind: 'import_cleanup_retry' })
+  }
   try {
     await cleanupDraftAttachments(env, dependencies.now())
   } catch {
@@ -154,6 +163,9 @@ export async function cleanupDeletedOrgs(
             )
           }
           await purgeOrgAttachments(env, org.id, () =>
+            keepCleanupLease(env, org.id, token, dependencies),
+          )
+          await purgeOrgImports(env, org.id, () =>
             keepCleanupLease(env, org.id, token, dependencies),
           )
           if (!(await purgeOrgRecords(env.DB, org.id, token)))

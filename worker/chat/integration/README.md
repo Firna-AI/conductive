@@ -8,8 +8,10 @@ A file name without a folder names a file in `worker/chat/`.
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
 `createWorkspaceIntegration` in `workspace-integration.ts` sets them for
 the workspace object, as [The workspace lifecycle](workspace-lifecycle.md)
-says. Its `turnEnded` starts device cleanup at each turn end, also after a
-refused end or a lifecycle error. A later handler must keep it.
+says. Its lifecycle hooks come from `workspaceLifecycleHooks` in
+`workspace-lifecycle-hooks.ts`. Their `turnEnded` starts device cleanup at
+each turn end, also after a refused end or a lifecycle error. A later
+handler must keep it.
 
 ## Trusted workspace calls
 

@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import type { SandboxPanelState } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ArchiveAction } from '../../app/archive-model'
 import type { WorkspaceStream } from '../../app/events'
+import { awaitsActivation } from '../../app/first-start'
 import type { ChatController } from '../../chat/state/controller'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
@@ -11,9 +12,13 @@ import type { Action } from '../ui/useAction'
 import type { Viewport } from '../ui/viewport'
 import { appFeatures } from './app-features'
 
-/** The cloud computer of the open workspace, as the panels show it. */
+/**
+ * The cloud computer of the open workspace, as the panels show it.
+ * `inactive` is a workspace from Conductor before its first activation,
+ * which has no cloud computer yet.
+ */
 export type SandboxState =
-  'ready' | 'starting' | 'stopped' | 'error' | 'archived'
+  'ready' | 'inactive' | 'starting' | 'stopped' | 'error' | 'archived'
 
 /**
  * The kept chat as the owner of the saved workspace view: the open tabs,
@@ -45,8 +50,9 @@ export interface WorkspaceContext {
    */
   panel: SandboxPanelState | null
   /**
-   * Resume, or Try again after a failed start. A phone shows it on a part
-   * that shows the state of the sandbox in place of its content.
+   * Resume, Try again after a failed start, or Activate before the first
+   * activation. A phone shows it on a part that shows the state of the
+   * sandbox in place of its content.
    */
   resume: Action<[]>
   viewport: Viewport
@@ -124,11 +130,19 @@ export function useFeatures(): WorkspaceFeatures {
   return useMemo(() => ({ ...appFeatures, ...host }), [host])
 }
 
-/** The sandbox state that a workspace state shows in the panels. */
+/**
+ * The sandbox state that a workspace state shows in the panels. A workspace
+ * from Conductor that stopped before an activation succeeded, such as after
+ * the Restore of an Archive during its activation, shows its activation as
+ * failed, with Try again. Once an activation started, it never shows Not
+ * active again.
+ */
 export function sandboxState(workspace: Workspace): SandboxState {
   switch (workspace.state) {
-    case 'starting':
     case 'stopped':
+      return awaitsActivation(workspace) ? 'error' : 'stopped'
+    case 'inactive':
+    case 'starting':
     case 'error':
     case 'archived':
       return workspace.state

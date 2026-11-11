@@ -283,6 +283,8 @@ because no runner command carries a login.
   and the login request.
 - `src/runner.ts`: `Runner`, which gives each turn token to the output
   filter, and calls `clearClaudeCredentials` before its first connection.
+  During an import activation, it calls `clearImportedCredentials` after the
+  restore instead, as [the import activation guide](import.md#the-deferred-start) says.
 - `src/measure.ts`: the measure tool, with the native mode and the
   provider addresses.
 - [`output-sanitizer.ts`](../src/shared/output-sanitizer.ts):

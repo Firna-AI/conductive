@@ -33,8 +33,13 @@ More facts:
 - `runnerSoftware` in `worker/configuration.ts` reads and checks both
   values, as the `software` option of a build or a refresh. For a missing
   or invalid value, it gives `503 runner_software_unavailable`.
-- Only a build or a refresh needs the two values. A workspace read, a
-  history read, and the start of the app need no archive setting.
+- A new import activation attempt also reads both values, as the software
+  that it installs, as
+  [Import activation](../../worker/lifecycle/import-activation.md#the-route-and-the-admission)
+  says. A continued attempt keeps the software that it captured.
+- Only a build, a refresh, or a new import activation attempt needs the two
+  values. A workspace read, a history read, a create, a resume, and the start
+  of the app need no archive setting.
 - Image builds and refreshes run through the Worker routes that the
   [Worker README](../../worker/README.md#routes) lists.
 - The archive holds no Node. Each build downloads one pinned Node release
@@ -74,6 +79,10 @@ steps for the archive:
 - A new archive reaches the next build of each org image. A refresh keeps
   the installed runner. So an existing image keeps its runner until its
   next build.
+- An import activation installs the archive in its own new cloud computer
+  only, before the restore. It changes no org image, as
+  [An import activation](../../image/workspace-start.md#an-import-activation)
+  says.
 
 ### The software image
 

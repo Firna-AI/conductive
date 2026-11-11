@@ -8,6 +8,7 @@ import { Page } from '../layout/Page'
 import { useMacApp } from '../mac/mac-app'
 import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
+import { ImportSection } from '../import/ImportSection'
 import { AgentsSection, SignInSection } from './AccountSections'
 import { GitHubSection } from './GitHubSection'
 import { InviteCodeSection } from './InviteCodeSection'
@@ -43,7 +44,7 @@ function ThisMac() {
  * The General tab: the GitHub sign-in, and what every org shares, the
  * GitHub App and the agents. The invite code of the user comes last, so
  * that a phone shows the form of an agent near the top. The Mac app adds
- * This Mac. `connect` opens the Connect form of an agent at first, as the
+ * This Mac, and the import from Conductor after it. `connect` opens the Connect form of an agent at first, as the
  * link of a missing login does.
  */
 function GeneralTab(props: { user: User; connect: Agent | null }) {
@@ -51,6 +52,7 @@ function GeneralTab(props: { user: User; connect: Agent | null }) {
     <>
       <SignInSection user={props.user} />
       <ThisMac />
+      <ImportSection />
       <GitHubSection />
       <AgentsSection connect={props.connect} />
       <InviteCodeSection />

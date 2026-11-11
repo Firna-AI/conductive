@@ -9,18 +9,21 @@ import { LinkTabs } from '../common/LinkTabs'
 import { Menu, type MenuEntry } from '../common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import { Sheet } from '../common/Sheet'
+import { useMacApp } from '../mac/MacApp'
+import type { PaletteContext } from './paletteActions'
 import {
   paletteContent,
   type PaletteContent,
-  type PaletteContext,
   type PaletteFilters,
 } from './paletteContent'
 import { PaletteResults } from './PaletteRows'
 import {
+  macPaletteTabPaths,
   paletteTabLabels,
   paletteTabPaths,
   paletteTabs,
   type OpenPaletteView,
+  type PaletteTab,
 } from './paletteViews'
 import styles from './CommandPalette.module.css'
 
@@ -103,12 +106,19 @@ function Filters(props: { filters: PaletteFilters; mobile: boolean }) {
   )
 }
 
+/** The page of each tab. A tab without a page stays static. */
+type TabPaths = Readonly<Record<PaletteTab, string | undefined>>
+
 /** The tabs, each a link to its own view. A desktop puts the filters after them. */
-function TabBar(props: { content: PaletteContent; mobile: boolean }) {
+function TabBar(props: {
+  content: PaletteContent
+  mobile: boolean
+  tabPaths: TabPaths
+}) {
   const { content } = props
   const tabs = paletteTabs.map((tab) => ({
     label: paletteTabLabels[tab],
-    to: paletteTabPaths[tab],
+    to: props.tabPaths[tab],
     selected: tab === content.tab,
   }))
   return (
@@ -126,7 +136,7 @@ function TabBar(props: { content: PaletteContent; mobile: boolean }) {
  * field and Cancel at the top. Cancel goes back to the list, where the
  * Search row opened it.
  */
-function PalettePage(props: { content: PaletteContent }) {
+function PalettePage(props: { content: PaletteContent; tabPaths: TabPaths }) {
   const { content } = props
   return (
     <section aria-label="Search" className={styles.page}>
@@ -138,7 +148,7 @@ function PalettePage(props: { content: PaletteContent }) {
           <ActionButton tone="plain">Cancel</ActionButton>
         </ScreenLink>
       </header>
-      <TabBar content={content} mobile />
+      <TabBar content={content} mobile tabPaths={props.tabPaths} />
       {content.filters ? (
         <div className={styles.pageFilters}>
           <Filters filters={content.filters} mobile />
@@ -162,15 +172,20 @@ function PalettePage(props: { content: PaletteContent }) {
  * The command palette: one search for the workspaces of the org, the
  * actions of the current page, and the settings. A desktop shows it as a
  * dialog near the top of the window, over the dimmed app. A phone shows it
- * as a page.
+ * as a page. In the window of the Mac app it adds the actions of the Mac
+ * app, and its tabs keep to the pages of the Mac app.
  */
 export function CommandPalette(props: {
   view: OpenPaletteView
   context: PaletteContext
   viewport: Viewport
 }) {
-  const content = paletteContent(props.view, props.context)
-  if (props.viewport === 'mobile') return <PalettePage content={content} />
+  const mac = useMacApp() !== undefined
+  const content = paletteContent(props.view, { ...props.context, mac })
+  const tabPaths = mac ? macPaletteTabPaths : paletteTabPaths
+  if (props.viewport === 'mobile') {
+    return <PalettePage content={content} tabPaths={tabPaths} />
+  }
   return (
     <div className={styles.layer}>
       <div aria-hidden className={styles.scrim} />
@@ -183,7 +198,7 @@ export function CommandPalette(props: {
         <div className={styles.field}>
           <SearchField content={content} mobile={false} />
         </div>
-        <TabBar content={content} mobile={false} />
+        <TabBar content={content} mobile={false} tabPaths={tabPaths} />
         <PaletteResults content={content} />
       </section>
     </div>

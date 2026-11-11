@@ -19,6 +19,7 @@ import {
 import { workspaceBrowserRoute } from './workspace-browser'
 import { WorkspaceDevices } from './workspace-commands'
 import type { DeviceStateProjection } from './state'
+import { ImportContractError } from '../../src/shared/conductor-import-values.ts'
 import type { WorkspaceSockets } from '../native-sockets'
 import { DeviceSockets } from './native-sockets'
 
@@ -136,7 +137,8 @@ export class DeviceRuntime {
 }
 
 function deviceError(error: unknown): unknown {
-  return error instanceof DeviceContractError
+  return error instanceof DeviceContractError ||
+    error instanceof ImportContractError
     ? new HttpError(400, 'invalid_input', error.message)
     : error
 }

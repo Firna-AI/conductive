@@ -9,7 +9,11 @@ import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
-import { openableWorkspaces } from '../fixtures/workspaces'
+import { openableWorkspaces } from '../fixtures/openableWorkspaces'
+import { composerKeys } from './composerKeys'
+import { overlayKeys } from './overlayKeys'
+import { copyResults, resumeKeys } from './resultKeys'
+import { sandboxKeys } from './sandboxKeys'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -45,6 +49,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     'copyLink',
+    'resume',
     'copyTranscript',
   ],
   properties: {
@@ -60,14 +65,19 @@ export const workspaceStateSchema = {
      * The cloud computer. `archived` is a cloud computer that Archive
      * stopped, as `archive` says, and the workspace shows none of it.
      * `refused` is a stopped cloud computer whose start the app refuses,
-     * such as while the owner of the workspace is suspended.
+     * such as while the owner of the workspace is suspended. `inactive` is
+     * a workspace from Conductor before its activation, which has none yet.
+     * Its activation is its first start, and a failed one is its `error`.
+     * Such a workspace archived before its activation is
+     * `archived-inactive`: it never had a cloud computer, so its archive
+     * kept none.
      */
-    sandbox: {
-      enum: ['ready', 'starting', 'stopped', 'error', 'refused', 'archived'],
-    },
+    sandbox: { enum: sandboxKeys },
     /**
      * The message that the app saved for a start that failed, which the
-     * error state shows: a failure, or the 20-minute limit of a start.
+     * error state shows: a failure, the 20-minute limit of a start, a
+     * chosen branch that is gone from GitHub, or work from Conductor that
+     * does not fit the free disk of the cloud computer.
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
@@ -98,7 +108,8 @@ export const workspaceStateSchema = {
      * linked session that a member's message opened from the first session,
      * or a file, a Markdown preview, a diff, or a file whose name the app
      * does not know, such as a file that moved. A phone shows a file in
-     * Files.
+     * Files. `old-session` is the Markdown file of a session from
+     * Conductor, which a phone shows in Chat.
      */
     tab: {
       enum: [
@@ -109,6 +120,7 @@ export const workspaceStateSchema = {
         'markdown',
         'diff',
         'unnamed-file',
+        'old-session',
       ],
     },
     /**
@@ -138,30 +150,7 @@ export const workspaceStateSchema = {
      * attached file, where a × takes the place of the icon. A phone has no
      * pointer, so it shows the × at the end of each chip instead.
      */
-    composer: {
-      enum: [
-        'empty',
-        'draft',
-        'attachments',
-        'uploading',
-        'upload-failed',
-        'too-large',
-        'picker',
-        'no-agent',
-        'no-starter-login',
-        'not-shared',
-        'workspace-link',
-        'mention-query',
-        'mention-start',
-        'mention-none',
-        'mention-loading',
-        'mention-unavailable',
-        'file-chips',
-        'file-chip-pointer',
-        'workspace-link-pointer',
-        'attachment-pointer',
-      ],
-    },
+    composer: { enum: composerKeys },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**
@@ -171,12 +160,11 @@ export const workspaceStateSchema = {
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, or the
-     * tab menu of the first session.
+     * before a running session closes, the owner of the workspace, the tab
+     * menu of the first session, or the question of Archive of a workspace
+     * from Conductor that was never activated.
      */
-    overlay: {
-      enum: ['none', 'history', 'close-session', 'reassign', 'tab-menu'],
-    },
+    overlay: { enum: overlayKeys },
     /**
      * The cloud computer of an archived workspace: kept, until the app
      * deletes it 14 days after the Archive, kept past the last day of
@@ -237,18 +225,15 @@ export const workspaceStateSchema = {
      * opens it from the list, so a phone shows the palette of the list.
      */
     palette: { enum: paletteViews },
+    /** The label of the workspace number, just after a press or not. */
+    copyLink: { enum: copyResults },
+    /** A session from Conductor, as `resumeKeys` says. */
+    resume: { enum: resumeKeys },
     /**
-     * The label of the workspace number in the header, which copies the
-     * link of the workspace: as it is, or just after a press, while it
-     * shows for a moment that the copy worked or failed.
+     * The toast after Copy transcript of the tab menu. The menu closed on
+     * the press, and the shown tab stays.
      */
-    copyLink: { enum: ['none', 'copied', 'failed'] },
-    /**
-     * The toast after a copy of a session transcript from the tab menu: none,
-     * after a copy that worked, or after a request or a clipboard write that
-     * failed. The menu closed on the press, and the shown tab stays.
-     */
-    copyTranscript: { enum: ['none', 'copied', 'failed'] },
+    copyTranscript: { enum: copyResults },
   },
 } as const
 
@@ -282,6 +267,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   copyLink: 'none',
+  resume: 'none',
   copyTranscript: 'none',
 }
 
@@ -294,4 +280,19 @@ export const checksWorkspace: WorkspaceState = {
   files: 'checks',
   tool: 'preview',
   focus: 'files',
+}
+
+/**
+ * The workspace from Conductor as it opens after the import: no cloud
+ * computer yet, and its branch on GitHub without a pull request. No
+ * session has opened a port, also after its activation. Its entries change
+ * from here.
+ */
+export const importedWorkspace: WorkspaceState = {
+  ...readyWorkspace,
+  workspace: 'coupon-totals',
+  sandbox: 'inactive',
+  banner: 'none',
+  files: 'all',
+  ports: 'no-servers',
 }

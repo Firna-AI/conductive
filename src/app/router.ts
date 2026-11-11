@@ -52,6 +52,8 @@ export type Route =
       view: readonly string[]
     }
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
+  /** The import from Conductor into an org, which the Mac app shows. */
+  | { screen: 'conductor-import'; orgId: string }
   | { screen: 'routines'; orgId: string }
   | { screen: 'new-routine'; orgId: string }
   /** A phone shows the form of a saved routine and its runs in two tabs. */
@@ -98,6 +100,7 @@ export const routes = {
     [`/orgs/${encode(orgId)}/workspaces/${encode(workspaceId)}`]
       .concat(view.map(encode))
       .join('/'),
+  conductorImport: (orgId: string) => `/orgs/${encode(orgId)}/import`,
   settings: (orgId: string, tab: SettingsTab = 'general') =>
     tab === 'general'
       ? `/orgs/${encode(orgId)}/settings`
@@ -214,6 +217,9 @@ export function parseRoute(pathname: string, search: string): Route {
   if (area === undefined) return { screen: 'org', orgId }
   if (area === 'new' && id === undefined) {
     return { screen: 'new-workspace', orgId, sectionId: query.get('section') }
+  }
+  if (area === 'import' && id === undefined) {
+    return { screen: 'conductor-import', orgId }
   }
   if (area === 'workspaces' && id !== undefined) {
     return { screen: 'workspace', orgId, workspaceId: id, view: rest }

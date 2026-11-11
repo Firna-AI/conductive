@@ -1,5 +1,6 @@
 import type { AgentChoice } from '../shared/agents'
 import type { BuildsResponse, Repository } from '../shared/org-settings'
+import type { WorkspaceBranchOption } from '../shared/workspace-branches'
 import {
   workspacesPath,
   type CreateWorkspaceRequest,
@@ -7,6 +8,7 @@ import {
 } from '../shared/workspaces'
 import type { ApiError } from './api/client'
 import { readCreated } from './api/read-workspaces'
+import { branchOf, continuable } from './branch-options'
 import {
   failSent,
   filesWait,
@@ -35,6 +37,11 @@ export interface Draft {
   refused: readonly string[]
   /** The client ID of the first message. Try again sends the same one. */
   messageId: string
+  /**
+   * The existing branch or open pull request that the workspace continues,
+   * in the repository of the draft. `null` is a new branch, the default.
+   */
+  branch: WorkspaceBranchOption | null
 }
 
 export type CreateState =
@@ -108,7 +115,10 @@ export class NewWorkspaceModel {
     org.builds.subscribe(() => this.keepShownRepository())
   }
 
-  /** A new draft. It keeps the choice and a picked repository of `keep`. */
+  /**
+   * A new draft. It keeps the choice and a picked repository of `keep`, and
+   * the next workspace starts on a new branch again.
+   */
   private emptyDraft(keep?: Draft): Draft {
     return {
       text: '',
@@ -117,6 +127,7 @@ export class NewWorkspaceModel {
       files: [],
       refused: [],
       messageId: this.org.services.newId(),
+      branch: null,
     }
   }
 
@@ -125,7 +136,8 @@ export class NewWorkspaceModel {
    * repositories and the builds have loaded: a draft with text or a file
    * takes it when it has no repository yet. A kept repository that the org
    * no longer chose gives way to it, so the draft follows the form, as a
-   * draft without a repository does. A pick stays.
+   * draft without a repository does. A pick stays. A change of the
+   * repository also starts a new branch again.
    */
   private withShownRepository(draft: Draft): Draft {
     const repositories = valueOf(this.org.repositories.get())
@@ -136,8 +148,10 @@ export class NewWorkspaceModel {
     if (kept && chosen.some((item) => item.id === kept.id)) return draft
     const written = draft.text.trim() !== '' || draft.files.length > 0
     const shown = written ? firstReadyRepository(chosen, builds) : undefined
-    if (!shown) return kept ? { ...draft, repository: null } : draft
-    return { ...draft, repository: { id: shown.id, picked: false } }
+    if (!shown && !kept) return draft
+    // A branch belongs to its repository, so another one starts a new branch.
+    const repository = shown ? { id: shown.id, picked: false } : null
+    return { ...draft, repository, branch: null }
   }
 
   private keepShownRepository(): void {
@@ -148,11 +162,36 @@ export class NewWorkspaceModel {
     this.draft.change((draft) => this.withShownRepository({ ...draft, text }))
   }
 
+  /**
+   * The repository of the workspace, as a pick of the user. A branch belongs
+   * to its repository, so another repository starts a new branch again.
+   */
   setRepository(repositoryId: string): void {
     this.draft.change((draft) => ({
       ...draft,
       repository: { id: repositoryId, picked: true },
+      branch: repositoryId === draft.repository?.id ? draft.branch : null,
     }))
+  }
+
+  /**
+   * Continues `option`, an existing branch or open pull request of
+   * `repositoryId`. That repository becomes the repository of the draft, as
+   * a pick of the user. A pull request whose branch is in another repository
+   * cannot be continued, so it changes nothing.
+   */
+  chooseBranch(repositoryId: string, option: WorkspaceBranchOption): void {
+    if (!continuable(option)) return
+    this.draft.change((draft) => ({
+      ...draft,
+      repository: { id: repositoryId, picked: true },
+      branch: option,
+    }))
+  }
+
+  /** New branch, the default: the workspace starts its own branch. */
+  newBranch(): void {
+    this.draft.change((draft) => ({ ...draft, branch: null }))
   }
 
   setChoice(choice: AgentChoice): void {
@@ -204,6 +243,10 @@ export class NewWorkspaceModel {
     const request: CreateWorkspaceRequest = {
       repositoryId: draft.repository?.id ?? defaults.repositoryId,
       ...(this.sectionId ? { sectionId: this.sectionId } : {}),
+      // A new branch is the default, so its request names no branch.
+      ...(draft.branch
+        ? { branch: { type: 'existing', name: branchOf(draft.branch) } }
+        : {}),
       firstMessage: {
         id: draft.messageId,
         text: draft.text,

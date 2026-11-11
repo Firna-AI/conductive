@@ -1,5 +1,7 @@
 import type { Attachment, UserMessage } from '../../shared/messages'
+import { readWorkspaceImport } from '../../shared/conductor-import'
 import type {
+  ActivateWorkspaceResponse,
   CreateWorkspaceResponse,
   OrderedWorkspaceResponse,
   StartStep,
@@ -26,6 +28,7 @@ export const WORKSPACE_STATES = [
   'input',
   'unread',
   'ready',
+  'inactive',
   'starting',
   'stopped',
   'error',
@@ -50,6 +53,7 @@ export function readWorkspace(value: unknown): Workspace {
     updatedAt: count(workspace, 'updatedAt'),
     archivedAt: maybeCount(workspace, 'archivedAt'),
     restoreUntil: maybeCount(workspace, 'restoreUntil'),
+    ...readWorkspaceImport(workspace.conductorImport),
   }
 }
 
@@ -135,6 +139,15 @@ export function readCreated(value: unknown): CreateWorkspaceResponse {
     ...readWorkspaceResponse(value),
     sessionId: text(body, 'sessionId'),
     firstMessage: nested(body, 'firstMessage', readUserMessage),
+  }
+}
+
+/** An Activate reply, with the early session that it names. */
+export function readActivated(value: unknown): ActivateWorkspaceResponse {
+  const body = record(value, 'activated workspace')
+  return {
+    ...readWorkspaceResponse(value),
+    sessionId: text(body, 'sessionId'),
   }
 }
 

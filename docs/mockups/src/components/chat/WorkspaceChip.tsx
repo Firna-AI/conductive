@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { ActivityStatus } from '../../fixtures/workspaces'
+import type { WorkspaceStatus } from '../../fixtures/workspaces'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { activityPresentation } from '../workspaces/status'
@@ -19,8 +19,11 @@ export type ChipWorkspace = {
   label: string
   /** The current name. */
   name: string
-  /** The current state, which the state mark draws. */
-  status: ActivityStatus
+  /**
+   * The current state, which the state mark draws: an activity, or inactive
+   * before the activation of a workspace from Conductor.
+   */
+  status: WorkspaceStatus
 }
 
 /** What the element that opens the page of a chip gets from it. */

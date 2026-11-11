@@ -171,7 +171,11 @@ function overOf(
       // Archive took the workspace to the Archived group at once, and its
       // toast offers Restore.
       return target ? (
-        <ArchivedToast name={target.name} phone={viewport === 'mobile'} />
+        <ArchivedToast
+          name={target.name}
+          phone={viewport === 'mobile'}
+          restorable
+        />
       ) : null
   }
 }

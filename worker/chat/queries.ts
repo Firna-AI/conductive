@@ -9,6 +9,7 @@ import { decrypt, hash } from '../security/crypto'
 import { workspaceNameColumn } from '../data/workspace-name'
 import { agentLoginKind } from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
+import type { WorkspaceState } from '../../src/shared/workspaces'
 
 const workspaceColumns = `w.id, w.org_id AS orgId, w.archived_at AS archivedAt`
 
@@ -32,15 +33,17 @@ export function findChatWorkspace(
   db: D1Database,
   orgId: string,
   workspaceId: string,
-): Promise<(WorkspaceRecord & { number: number }) | null> {
+): Promise<
+  (WorkspaceRecord & { number: number; state: WorkspaceState }) | null
+> {
   return db
     .prepare(
-      `SELECT ${workspaceColumns}, w.number FROM workspaces w
+      `SELECT ${workspaceColumns}, w.number, w.state FROM workspaces w
      JOIN orgs ON orgs.id = w.org_id
      WHERE w.id = ? AND w.org_id = ? AND orgs.deleted_at IS NULL`,
     )
     .bind(workspaceId, orgId)
-    .first<WorkspaceRecord & { number: number }>()
+    .first<WorkspaceRecord & { number: number; state: WorkspaceState }>()
 }
 
 export async function updateWorkspaceTitle(

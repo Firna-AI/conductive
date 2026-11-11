@@ -4,7 +4,15 @@ import {
   type CreateWorkspaceResponse,
   type Workspace,
 } from '../../shared/workspaces'
-import { maybeText, nested, record, text, texts } from '../api/parse'
+import {
+  choice,
+  maybeText,
+  nested,
+  record,
+  text,
+  texts,
+  type JsonObject,
+} from '../api/parse'
 import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
 import { requireOrg, requireWorkspace, type DevBackend } from './backend'
@@ -63,16 +71,27 @@ export interface WorkspaceRequest {
    * the Worker keeps the workspace of a routine run.
    */
   keepFailedStart?: boolean
+  /** The existing branch that the workspace continues, or none for a new one. */
+  existingBranch?: string | null
+}
+
+/** The existing branch that a create continues, or `null` for a new one. */
+function existingBranch(fields: JsonObject): string | null {
+  if (fields.branch === undefined) return null
+  const branch = record(fields.branch, 'branch')
+  if (choice(branch, 'type', ['new', 'existing']) === 'new') return null
+  return requiredText(branch, 'name')
 }
 
 /**
  * Create workspace. The first message makes it, in the section of the
  * request or else in General. It has no name, as in the Worker, and the fake
- * writes no title, as local development has no title model. Its branch is
- * the login of the user, a city, and four random characters. A first message
- * that contains `fail` stands for a cloud computer that did not start: the
- * fake makes nothing, and the app keeps the draft. With `keepFailedStart`,
- * the workspace stays in the error state instead.
+ * writes no title, as local development has no title model. A new branch is
+ * the login of the user, a city, and four random characters. A workspace on
+ * an existing branch keeps the name of that branch. A first message that
+ * contains `fail` stands for a cloud computer that did not start: the fake
+ * makes nothing, and the app keeps the draft. With `keepFailedStart`, the
+ * workspace stays in the error state instead.
  */
 export function startWorkspace(
   backend: DevBackend,
@@ -80,6 +99,7 @@ export function startWorkspace(
   request: WorkspaceRequest,
 ): CreateWorkspaceResponse {
   const { first, repositoryId } = request
+  const existing = request.existingBranch ?? null
   if (org.currentImageBuildId === null)
     throw new RouteError(
       409,
@@ -118,7 +138,7 @@ export function startWorkspace(
   }
   const city = cityFor(org)
   const id = newWorkspaceId(org, city)
-  const branch = `${user.githubLogin}/${id}`
+  const branch = existing ?? `${user.githubLogin}/${id}`
   const at = backend.now()
   const workspace: Workspace = {
     id,
@@ -139,7 +159,7 @@ export function startWorkspace(
   }
   org.workspaces = [workspace, ...org.workspaces]
   org.created.add(id)
-  const plan = createPlan(org.org.name, repository, branch)
+  const plan = createPlan(org.org.name, repository, branch, existing !== null)
   const begun = fails
     ? failFirstStart(backend, org, id, plan)
     : { start: runStart(backend, org, id, 'create', plan), error: null }
@@ -175,6 +195,7 @@ function createWorkspace(
     repositoryId: requiredText(fields, 'repositoryId'),
     sectionId: maybeText(fields, 'sectionId'),
     first: readFirstMessage(fields.firstMessage),
+    existingBranch: existingBranch(fields),
   })
   return json(created satisfies CreateWorkspaceResponse, 201)
 }

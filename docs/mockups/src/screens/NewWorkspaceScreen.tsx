@@ -5,6 +5,11 @@ import { Sheet } from '../components/common/Sheet'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { Page } from '../components/layout/Page'
 import { useMacApp } from '../components/mac/MacApp'
+import { BranchPicker } from '../components/new-workspace/BranchPicker'
+import {
+  branchLinks,
+  type BranchLinks,
+} from '../components/new-workspace/branchScreens'
 import { formWait } from '../components/new-workspace/waitingRepository'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { firstBuildStates } from '../fixtures/computer'
@@ -14,6 +19,7 @@ import { FirstBuildNotice } from './firstBuildNotice'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
+  matchesBaseForm,
   newWorkspaceDraft,
   newWorkspaceFormProperties,
   taskPlaceholder,
@@ -32,6 +38,8 @@ export const newWorkspaceSchema = {
     'repositories',
     'repositoryMenu',
     'waitingBuild',
+    'branch',
+    'picker',
     'result',
     'org',
     'firstBuild',
@@ -60,10 +68,35 @@ export const newWorkspaceForm: NewWorkspaceState = {
   repositories: 'chosen',
   repositoryMenu: 'closed',
   waitingBuild: 'building',
+  branch: 'new',
+  picker: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
   viewer: 'admin',
+}
+
+/** The screen that Send opens for each branch choice, where one is drawn. */
+const createFlows: Readonly<
+  Record<NewWorkspaceState['branch'], string | undefined>
+> = {
+  new: paths.creating,
+  existing: paths.newWorkspaceBranchStart,
+  'pull-request': undefined,
+}
+
+/**
+ * The screen that Send opens, where one is drawn: the create flow of the
+ * task of Saved carts on a new branch, the screen of its queued files, or
+ * its start on the chosen branch. The file screens draw a new branch, so a
+ * chosen branch with files has no screen. Neither has a chosen pull
+ * request, whose branch starts in the same way.
+ */
+function sendFlow(state: NewWorkspaceState): string | undefined {
+  if (state.files === 'ready') {
+    return state.branch === 'new' ? paths.attachmentsQueued : undefined
+  }
+  return createFlows[state.branch]
 }
 
 /**
@@ -73,7 +106,11 @@ export const newWorkspaceForm: NewWorkspaceState = {
  * Before the first good build, and while the repository of the form waits
  * for its build, the draft stays and Send is off.
  */
-function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
+function NewChat(props: {
+  state: NewWorkspaceState
+  viewport: Viewport
+  links: BranchLinks
+}) {
   const { state } = props
   const page = pageOrg(state)
   const suspended = state.org === 'suspended'
@@ -81,8 +118,10 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const waiting = formWait(page) !== undefined
   const failed = !suspended && state.result === 'error'
   const draft = newWorkspaceDraft(state)
-  // Send leads to the create flow, which draws the task of Saved carts.
+  // Send leads to the create flow, which draws the task of Saved carts, so
+  // the mockups draw no create flow for another draft.
   const linked = state.draft === 'workspace-link'
+  const flow = sendFlow(state)
   const ownDraft = state.org === 'new' || waiting
   const text = ownDraft && state.draft !== 'empty' ? page.draft : draft.text
   const notices = formNotices(state, failed, !building && !waiting)
@@ -108,18 +147,20 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
   const menuOpen = state.repositoryMenu === 'open'
   // A first message with files leads to the screen of its queued files.
-  // The file screens draw the Saved carts task of Acme, so the attach button
-  // of Firna and of a linked task leads nowhere.
-  const created =
-    state.files === 'ready' ? paths.attachmentsQueued : paths.creating
+  // The file screens draw the Saved carts task of Acme on a new branch, so
+  // the attach button of Firna, of a linked task, and of a chosen branch
+  // leads nowhere.
+  const attachable =
+    state.files === 'none' &&
+    state.branch === 'new' &&
+    !failed &&
+    !linked &&
+    state.org !== 'new'
   return (
     <ChatPane
       composer={{
         attachments: draft.files,
-        attachTo:
-          state.files === 'none' && !failed && !linked && state.org !== 'new'
-            ? paths.newWorkspaceFiles
-            : undefined,
+        attachTo: attachable ? paths.newWorkspaceFiles : undefined,
         blocked: building || waiting || waits(state),
         choice: page.choice,
         draft: text,
@@ -128,19 +169,22 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
         sendTo:
           failed || linked || waiting || state.org === 'new' || text === ''
             ? undefined
-            : created,
+            : flow,
       }}
       empty={
         suspended ? undefined : (
           <Start
             admin={admin}
             chosen={state.repositories !== 'none'}
+            links={props.links}
             menu={
               menuOpen && props.viewport === 'desktop'
                 ? repositoryMenu(page, state.waitingBuild)
                 : undefined
             }
             page={page}
+            phone={props.viewport === 'mobile'}
+            state={state}
           />
         )
       }
@@ -157,13 +201,34 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   )
 }
 
-/** A New workspace page with the repositories and the composer of its org. */
+/**
+ * The branch links of the page, from its full state: live only while the
+ * state matches the base example of the page apart from the branch and
+ * the picker.
+ */
+function pageBranchLinks(state: NewWorkspaceState): BranchLinks {
+  const matches = matchesBaseForm(
+    newWorkspaceSchema.required,
+    state,
+    newWorkspaceForm,
+  )
+  return branchLinks('page', state.branch, matches)
+}
+
+/**
+ * A New workspace page with the repositories and the composer of its org.
+ * `branchLinks` are the branch links of the form that the page draws: the
+ * phone view of the dialog passes the links of the dialog, from the full
+ * state of the dialog. Otherwise the page derives its own links.
+ */
 export function NewWorkspaceScreen(props: {
   state: NewWorkspaceState
   viewport: Viewport
+  branchLinks?: BranchLinks
 }) {
   const mac = useMacApp()
   const { state } = props
+  const links = props.branchLinks ?? pageBranchLinks(state)
   const mobile = props.viewport === 'mobile'
   const pageOrgData = pageOrg(state)
   const page = (
@@ -174,7 +239,7 @@ export function NewWorkspaceScreen(props: {
       title="New workspace"
       viewport={props.viewport}
     >
-      <NewChat state={state} viewport={props.viewport} />
+      <NewChat links={links} state={state} viewport={props.viewport} />
     </Page>
   )
   if (mobile) {
@@ -194,6 +259,16 @@ export function NewWorkspaceScreen(props: {
       <MobileFrame>
         {page}
         {sheet}
+        {state.picker !== 'closed' && state.repositories !== 'none' ? (
+          <Sheet title="Branch">
+            <BranchPicker
+              choice={state.branch}
+              links={links}
+              placement="sheet"
+              state={state.picker}
+            />
+          </Sheet>
+        ) : null}
       </MobileFrame>
     )
   }

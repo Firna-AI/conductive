@@ -81,7 +81,11 @@ export function claimMoves(
   return moves
 }
 
-/** Moves each draft and selects its open target while its source stays selected. */
+/**
+ * Moves each draft and selects its open target while its source stays
+ * selected. A page that the view shows in place of the chat, such as a
+ * file or an old session from Conductor, keeps the focus.
+ */
 export function applyMoves(
   snapshot: ChatSnapshot,
   moves: readonly DraftMove[],
@@ -89,9 +93,9 @@ export function applyMoves(
   let next = snapshot
   for (const move of moves) {
     next = moveDraft(next, move)
-    const activeTab = next.view?.activeTab
-    const showsFile = activeTab?.kind === 'file' || activeTab?.kind === 'diff'
-    if (!move.open || next.activeSessionId !== move.from || showsFile) continue
+    const activeTab = next.view?.activeTab ?? null
+    const showsPage = activeTab !== null && activeTab.kind !== 'session'
+    if (!move.open || next.activeSessionId !== move.from || showsPage) continue
     next = {
       ...next,
       activeSessionId: move.to,

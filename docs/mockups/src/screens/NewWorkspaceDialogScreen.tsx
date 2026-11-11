@@ -1,5 +1,6 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame } from '../components/layout/AppFrame'
+import { branchLinks } from '../components/new-workspace/branchScreens'
 import { NewWorkspaceDialog } from '../components/new-workspace/NewWorkspaceDialog'
 import { ChooseRepositoriesNotice } from '../components/new-workspace/notices'
 import { formWait } from '../components/new-workspace/waitingRepository'
@@ -15,6 +16,7 @@ import { NewOrgEmpty } from './listParts'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formNotices,
+  matchesBaseForm,
   newWorkspaceDraft,
   newWorkspaceFormProperties,
   taskPlaceholder,
@@ -34,6 +36,8 @@ export const newWorkspaceDialogSchema = {
     'repositories',
     'repositoryMenu',
     'waitingBuild',
+    'branch',
+    'picker',
     'result',
     'org',
     'firstBuild',
@@ -65,6 +69,8 @@ export const emptyDialog: NewWorkspaceDialogState = {
   repositories: 'chosen',
   repositoryMenu: 'closed',
   waitingBuild: 'building',
+  branch: 'new',
+  picker: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -75,7 +81,8 @@ export const emptyDialog: NewWorkspaceDialogState = {
  * New workspace as a dialog over the ready workspace, for a user who chose
  * the dialog in Preferences. New workspace at the top of the list puts the
  * workspace in General. A phone always opens the page, so its view is the
- * New workspace page in the same state.
+ * New workspace page in the same state. Its branch links stay those of the
+ * dialog, from the full state of the dialog, so they keep its draft.
  */
 export function NewWorkspaceDialogScreen(props: {
   state: NewWorkspaceDialogState
@@ -86,8 +93,20 @@ export function NewWorkspaceDialogScreen(props: {
   const page = pageOrg(pageState)
   const org = page.org
   const building = state.org === 'new' && state.firstBuild !== 'succeeded'
+  const matches = matchesBaseForm(
+    newWorkspaceDialogSchema.required,
+    state,
+    emptyDialog,
+  )
+  const links = branchLinks('dialog', state.branch, matches)
   if (props.viewport === 'mobile') {
-    return <NewWorkspaceScreen state={pageState} viewport="mobile" />
+    return (
+      <NewWorkspaceScreen
+        branchLinks={links}
+        state={pageState}
+        viewport="mobile"
+      />
+    )
   }
   const chosen = state.repositories !== 'none'
   const waiting = formWait(page) !== undefined
@@ -123,6 +142,7 @@ export function NewWorkspaceDialogScreen(props: {
   const dialog = (
     <NewWorkspaceDialog
       attachments={draft.files}
+      branch={{ choice: state.branch, picker: state.picker, links }}
       choice={page.choice}
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}

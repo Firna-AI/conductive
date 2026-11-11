@@ -1,4 +1,5 @@
 import type { ChatEvent } from '../../shared/chat-events'
+import { readWorkspaceImport } from '../../shared/conductor-import'
 import type { WorkspaceEvent } from '../../shared/events'
 import type {
   OrderedWorkspaceResponse,
@@ -8,7 +9,8 @@ import type {
   WorkspaceState,
 } from '../../shared/workspaces'
 import { count, isRecord, list, nullable, oneOf, record, text } from './json'
-import { readChatEvent, readChoice, readSender } from './read-chat'
+import { readChoice, readSender } from './read-chat'
+import { readChatEvent } from './read-chat-events'
 
 /**
  * The workspace events that the chat reads. The stream also carries file,
@@ -52,6 +54,7 @@ const readState = oneOf<WorkspaceState>({
   input: true,
   unread: true,
   ready: true,
+  inactive: true,
   starting: true,
   stopped: true,
   error: true,
@@ -76,6 +79,7 @@ function readWorkspace(value: unknown): Workspace {
     updatedAt: count(source.updatedAt),
     archivedAt: nullable(count)(source.archivedAt),
     restoreUntil: nullable(count)(source.restoreUntil),
+    ...readWorkspaceImport(source.conductorImport),
   }
 }
 

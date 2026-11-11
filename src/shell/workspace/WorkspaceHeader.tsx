@@ -18,6 +18,7 @@ import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import { CopyLink } from './CopyLink'
 import type { WorkspaceContext } from './features'
+import { ImportFlag } from './imported/ImportFlag'
 import { RightColumnToggle } from './WorkspaceColumns'
 import { RunLine } from './RunLine'
 import { useRunRoutine } from './saved-view'
@@ -53,7 +54,8 @@ function State(props: { workspace: Workspace }) {
  * takes the room that the other parts leave. On a phone it leads
  * the line under the name. The list groups workspaces by section, so the
  * header names the repository. On desktop the header ends with the toggle
- * of the right column. A run workspace links to its routine below it.
+ * of the right column. A workspace from an import of Conductor shows its
+ * flag after the number. A run workspace links to its routine below it.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -78,6 +80,7 @@ export function WorkspaceHeader(props: {
   const copyLink = (
     <CopyLink inline={phone} key={workspace.link} workspace={workspace} />
   )
+  const flag = workspace.conductorImport ? <ImportFlag /> : null
   const header = phone ? (
     <header className={styles.mobile}>
       <IconButton
@@ -89,6 +92,7 @@ export function WorkspaceHeader(props: {
         <h1 className={styles.title}>{name}</h1>
         <span className={styles.line}>
           {copyLink}
+          {flag}
           <span className={styles.branch}>{repository}</span>
         </span>
       </div>
@@ -99,6 +103,7 @@ export function WorkspaceHeader(props: {
     <header className={classes(styles.bar, bar)}>
       <h1 className={styles.title}>{name}</h1>
       {copyLink}
+      {flag}
       <span className={styles.metas}>
         <span className={styles.meta}>
           <FolderGit2 aria-hidden className={styles.icon} size={13} />

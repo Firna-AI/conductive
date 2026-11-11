@@ -12,22 +12,35 @@ import {
 import {
   checkoutAutocomplete,
   workspaceList,
-  type ActivityStatus,
   type Workspace,
+  type WorkspaceStatus,
 } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
 
 export type WorkspaceRow = {
   workspace: Workspace
-  status: ActivityStatus
+  status: WorkspaceStatus
   selected: boolean
   /** The screen that opening this workspace shows, when the mockups draw it. */
   to?: string
+  /**
+   * The screen that Archive opens for this workspace, in place of the
+   * toast after Archive that the mockups draw for every row: the question
+   * of a workspace from Conductor that was never activated. Null keeps it
+   * static.
+   */
+  archiveTo?: string | null
   /**
    * An archived workspace whose last day of Restore has not passed, so that
    * its row offers Restore, except in a suspended org.
    */
   restoreOpen?: boolean
+  /**
+   * The screen that Restore of the row opens, in place of the native one,
+   * such as a workspace from Conductor back in its section. Null keeps
+   * Restore static.
+   */
+  restoreTo?: string | null
 }
 
 export type SidebarSection = {
@@ -36,7 +49,7 @@ export type SidebarSection = {
 }
 
 /** The workspace that the main area shows, with its current status. */
-export type OpenWorkspace = { workspace: Workspace; status: ActivityStatus }
+export type OpenWorkspace = { workspace: Workspace; status: WorkspaceStatus }
 
 /** The section whose menu the list shows open. */
 export type ListMenu = { section: SectionKey }
@@ -58,7 +71,7 @@ function linkFor(key: string, open: boolean): string | undefined {
 }
 
 /** The open workspace has activity now, so its row shows no age. */
-const liveStatuses: ReadonlySet<ActivityStatus> = new Set([
+const liveStatuses: ReadonlySet<WorkspaceStatus> = new Set([
   'working',
   'input',
   'starting',
@@ -69,6 +82,7 @@ function rowFor(
   open?: OpenWorkspace,
   needsInput?: string,
   created: readonly OpenWorkspace[] = [],
+  openTo?: string,
 ): WorkspaceRow {
   const isOpen = open !== undefined && workspace.key === open.workspace.key
   if (!isOpen && workspace.key === needsInput) {
@@ -86,7 +100,7 @@ function rowFor(
     workspace: busy ? { ...workspace, updated: 'now' } : workspace,
     status: isOpen ? open.status : (made?.status ?? workspace.status),
     selected: isOpen,
-    to: linkFor(workspace.key, isOpen),
+    to: (isOpen ? openTo : undefined) ?? linkFor(workspace.key, isOpen),
   }
 }
 
@@ -96,12 +110,14 @@ function rowFor(
  * `needsInput` marks a workspace whose agent waits for the user while the
  * main area shows another page. `created` adds the workspaces that the
  * create flow made by the time of the screen, with their states, at the
- * top of their sections.
+ * top of their sections. `openTo` is the screen of the open workspace in
+ * its state, which its selected row keeps, where the mockups draw one.
  */
 export function workspaceSections(
   open?: OpenWorkspace,
   needsInput?: string,
   created: readonly OpenWorkspace[] = [],
+  openTo?: string,
 ): SidebarSection[] {
   const isNew =
     open !== undefined &&
@@ -115,7 +131,7 @@ export function workspaceSections(
     section: sections[key],
     rows: all
       .filter((workspace) => workspace.section === key)
-      .map((workspace) => rowFor(workspace, open, needsInput, created)),
+      .map((workspace) => rowFor(workspace, open, needsInput, created, openTo)),
   }))
 }
 

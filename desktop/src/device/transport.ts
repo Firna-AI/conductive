@@ -17,10 +17,12 @@ import {
   DESKTOP_SESSION_COOKIE,
 } from '../../../worker/security/desktop-contract.js'
 import { workerMessage } from './messages.js'
-import { deviceFrame } from './frame.js'
+import { createDeviceWrites } from './write-queue.js'
+import type { ImportFrameSend } from '../import/types.ts'
 
 export interface DeviceSocket {
   send(message: DeviceToWorker): boolean
+  sendImport?: ImportFrameSend
   close(): void
 }
 export interface SocketEvents {
@@ -77,9 +79,16 @@ export function connectDevice(
   const end = (rejected = false) => {
     if (closed) return
     closed = true
+    writes.close()
     input.events.closed(rejected)
     socket.terminate()
   }
+  const writes = createDeviceWrites({
+    open: () => !closed && socket.readyState === WebSocket.OPEN,
+    buffered: () => socket.bufferedAmount,
+    write: (frame, callback) => socket.send(frame, callback),
+    fail: () => end(),
+  })
   socket.on('unexpected-response', (_request, response) => {
     end(response.statusCode === 401 || response.statusCode === 403)
     response.destroy()
@@ -105,32 +114,8 @@ export function connectDevice(
     input.events.message(message)
   })
   return {
-    send(message) {
-      const frame = deviceFrame(message)
-      if (frame === undefined) {
-        end()
-        return false
-      }
-      const size = Buffer.byteLength(frame)
-      if (
-        closed ||
-        socket.readyState !== WebSocket.OPEN ||
-        size > DEVICE_FRAME_LIMIT_BYTES ||
-        socket.bufferedAmount + size > DEVICE_FRAME_LIMIT_BYTES
-      ) {
-        end()
-        return false
-      }
-      try {
-        socket.send(frame, (error) => {
-          if (error) end()
-        })
-        return true
-      } catch {
-        end()
-        return false
-      }
-    },
+    send: writes.send,
+    sendImport: writes.sendImport,
     close: () => end(),
   }
 }

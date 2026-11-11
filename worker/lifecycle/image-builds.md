@@ -36,6 +36,9 @@ Suspended orgs get no disk retention restart, including after an owner change.
 - Each new computer allocation stores the runner version of its image snapshot before the provider call.
   This includes a first start, Try again, and a restored allocation.
   A missing image version counts as version 1.
+- An import activation stores that version too. It keeps the pin after it
+  installs the current runner archive, as
+  [The phases](import-activation.md#the-phases) says.
 
 ## Build jobs
 
@@ -107,6 +110,10 @@ The line `[N output bytes omitted]` takes their place in the event order.
 - Cleanup waits for a lease before it deletes an old snapshot. D1 keeps
   deferred cleanup. A ready sandbox, a workspace delete, or a claim that
   leaves the pending state releases the lease.
+- An import activation leases its snapshot in `workspace_import_image_leases`,
+  apart from the native lease, as
+  [The image lease](import-activation.md#the-image-lease) says. Cleanup
+  waits for either lease.
 - The composition root must pass the Members lifecycle hooks through
   `withImageSourceCleanup(env, fetch, hooks)` from `image-sources/members.ts`,
   as the [source loader](repository-layout.md#the-source-loader) says.

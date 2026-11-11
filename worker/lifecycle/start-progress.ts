@@ -29,13 +29,17 @@ export async function advanceStartSteps(
   if (job.phase === 'terminal-password') {
     await prepareStartTerminal(env, dependencies, job)
     await endpoint.lifecycleStep('startup', stepLabel('startup'), 'completed')
-    await nextStartCommand(storage, job, 'runner')
-    return true
+    await nextStartCommand(
+      storage,
+      job,
+      job.kind === 'activate' ? 'import-finish' : 'runner',
+    )
+    return job.kind !== 'activate'
   }
   const label =
     job.phase === 'fetch' && job.baseBranch
       ? await creationFetchLabel(env.DB, job)
-      : stepLabel(job.phase)
+      : stepLabel(job.phase, job.creation?.branchMode)
   if (
     !(await advanceStartCommand(
       env,

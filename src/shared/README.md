@@ -11,6 +11,19 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `AgentWorkspaceSummary` gives the same number and link.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
+`conductor-import.ts` owns the optional `Workspace.conductorImport` origin.
+It keeps the local Conductor ID, importer user ID, and nullable activation completion time.
+Native workspaces omit it. `readWorkspaceImport` validates that field for each workspace reader.
+An imported workspace starts in `inactive`, with no first message or session.
+The same module owns the old-document metadata and the paths of the import routes.
+The other `conductor-import-*.ts` modules own the device operations, the manifest, their parsers, and the page helpers.
+[Shared import contracts](conductor-import.md) lists them and their public and private values.
+
+`workspacePaths.activate` in `workspaces.ts` names the Activate route of an imported workspace.
+Its reply is `ActivateWorkspaceResponse`: a `WorkspaceResponse` with `sessionId`, the real early session of the activator.
+An activation shows its start with `WorkspaceStart.kind` `create`. A Resume of an activated import keeps `resume`.
+[Import activation](../../worker/lifecycle/import-activation.md) gives its steps and failures.
+
 Each area owns its paths and payloads. Import from that area directly.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
 Its `set` change carries a value and an optional mark. An omitted mark
@@ -27,6 +40,14 @@ Errors without details keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
+
+`workspace-branches.ts` owns `WorkspaceBranchChoice` and the paged picker reply.
+`repositoryBranchesPath` lists branch and open pull request rows of one selected repository.
+Requests carry `query` and the previous `nextCursor` as `cursor`.
+Follow a non-null cursor even when the current page has no matching rows.
+Start without a cursor when the query changes.
+`CreateWorkspaceRequest.branch` is optional. Omission keeps New branch.
+An existing choice carries the branch name. Unavailable fork rows cannot supply that choice.
 
 `runner.ts` defines the versioned handshake, commands, numbered events,
 confirmations, and resend rules. Its comments state the delivery contract.
@@ -49,6 +70,9 @@ shapes of one version. The runner imports the `V2` forms and uses
 a turn token.
 The [model gateway](../../worker/model-gateway/README.md#model-requests)
 gives the form of a turn token.
+`runner-import.ts` defines the private frames of an import activation: `import.command`, `import.result`, and the `import.preparation` event.
+Each command and result names its activation, epoch, and connection. `runnerImportWire` refuses a frame of `RUNNER_IMPORT_BYTES`, 1,048,576 bytes, or more.
+`readRunnerImportCommand` and `readRunnerImportReply` in `runner-import-read.ts` read them. No browser response type holds them.
 `RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
@@ -141,7 +165,7 @@ Its omission count measures normalized source UTF-8 bytes before JSON escaping.
 Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.
 They count omitted files. The complete Changes response has no summary cap.
 `runner.event-refused` belongs only to workspace chat events.
-It identifies the lost runner event without copying its data.
+It identifies the lost runner event without copying its data. Its `runnerEventType` never names `import.preparation`.
 Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
 Only the workspace sets that flag.
 [Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
@@ -163,6 +187,8 @@ Each other message of the session gets HTTP 409 with the code `retry_not_availab
 `Session.startedBy` names the member who started the session.
 It is null only for an older record whose starter is not known.
 `Session.sourceSessionId` names the session where a message opened this linked session, and null otherwise.
+`Session.conductorImport` marks a continuation session of an import. It holds the old-document `documentId` and `preparation`, `prepared` or `fallback`.
+`readImportSessionMetadata` in `import-session.ts` reads it. `prepared` means prepared native history, not a provider's acceptance. Native sessions omit it.
 `Session.loginAvailable` is the result of the last server check of the starter's login.
 It stays true when the starter does not share that login.
 `Session.loginShared` says whether the starter lets other members use that login, from the same check.
@@ -171,6 +197,19 @@ Each member reads the same values. None of these fields holds a login.
 `SendMessageResponse.session` in `messages.ts` is the record of the session that took the message.
 It can differ from the session of the request.
 [Agents](../../docs/protocol/agents-and-sessions.md#agents) states the starter rule.
+
+`workspace-view.ts` defines `workspaceViewPath` and `WorkspaceView`, the saved view of one member in one workspace.
+The server keeps the view. Only panel widths stay in the browser.
+A `WorkspaceTab` is a session, a file with its mode, a diff, or an old document from Conductor.
+`workspaceViewInput` of the Worker and `readView` of the chat keep only the fields of each kind.
+They remove all other fields.
+
+The tab of an old document has the kind `conductor-document` and a `documentId`.
+That ID is the `id` of a `ConductorOldDocument` from `conductor-import.ts`, as it is.
+The org and the workspace of the view give the scope of the ID.
+The tab holds no source path, native ID, storage object, upload link, or text of the document, so it gives no access.
+`conductorOldDocumentPath` reads the Markdown, with the checks that [Old documents](../../worker/conductor-import/publication.md#old-documents) gives.
+[Sessions from Conductor](../../docs/protocol/chat-and-events.md#sessions-from-conductor) states how members open the documents.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.
@@ -191,7 +230,8 @@ records include recipients with their GitHub names, or null.
 [Operator actions](../../worker/operator/README.md) gives the access and the reply codes.
 
 `device.ts` defines Mac command paths, socket messages, pairing, and local settings relays.
-It has no imports and also serves the Mac app's NodeNext build.
+Its socket messages also include the import frames.
+Its only import is a type import of those frames, with a `.ts` path, so it also serves the Mac app's NodeNext build.
 `device-read.ts` validates its wire values and preserves command text, timeouts, and truncation.
 Command records return `requestKey` for URLs and retain `requestId` for retries and device frames.
 Settings results distinguish applied and saved changes, applied but unsaved changes, and failed changes.
@@ -213,33 +253,10 @@ The git credential payload is not defined yet.
 
 ## Key code
 
-- [Session Markdown](transcript/session-markdown.ts) folds session pages and
-  builds concise or full transcripts. [Markdown items](transcript/markdown-items.ts)
-  format the shared chat words, paths, and commands. [Markdown code](transcript/markdown-code.ts)
-  keeps inline and block fences longer than their content's backticks.
-- [Lost data](transcript/lost-data.ts) maps refusal event types to the same
-  product names for the browser line and the copied transcript.
+- [Shared transcript code](transcript.md) names the modules of the pure
+  transcript fold that the browser and the Worker share.
 - [Agent words](agents.ts) supply the effort labels, model lookup, and model
   labels for the chat, the new-workspace picker, and the mockups.
-- [Duration](transcript/duration.ts) formats elapsed chat and command times.
-  [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
-  and the rule that starts a run open.
-- [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
-  lines, with omitted-file and unavailable-file data.
-- [Command words](transcript/command-words.ts) supply Mac names, command
-  states, notes, and output text. Browser code supplies icons and colours.
-- [Session events](transcript/session-events.ts) take stored Worker envelopes
-  or parsed browser envelopes and select one session's events.
-- [Session log](transcript/session-log.ts) folds those events and session
-  records in event order. It keeps the transcript and each item's first time.
-- [Transcript](transcript/transcript.ts) defines the items and folds each
-  session event with its [turn helpers](transcript/turn-events.ts).
-- [Item placement](transcript/item-placement.ts) keeps late items in their
-  turn. [Command placement](transcript/command-placement.ts) puts each Mac
-  command after the items that began before it.
-- [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
-  [Transcript entries](transcript/transcript-entries.ts) group the items and
-  generic inserts. Browser callers use React nodes as the insert content.
 
 - [Port reports](ports.ts) carry sorted listening ports and their safe labels.
 - [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.

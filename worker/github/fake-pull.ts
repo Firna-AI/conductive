@@ -22,7 +22,7 @@ export interface RepositoryPull {
   mergeable: string
   mergeStateStatus: string
   headRefName: string
-  headRepository: { databaseId: number }
+  headRepository: { databaseId: number } | null
   headRefOid: string
   baseRefName: string
   mergedAt: string | null

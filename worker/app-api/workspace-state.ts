@@ -25,6 +25,7 @@ export async function workspaceForViewer(
     return { ...workspace, state: 'archived' }
   if (
     workspace.state === 'starting' ||
+    workspace.state === 'inactive' ||
     workspace.state === 'stopped' ||
     workspace.state === 'error' ||
     workspace.state === 'input'

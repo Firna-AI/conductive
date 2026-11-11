@@ -8,11 +8,8 @@ import type {
   LifecyclePublication,
   WorkspaceEventJournal,
 } from './durable-journal'
-import {
-  persistLifecycleState,
-  readWorkspace,
-  workspaceRecord,
-} from './workspace-data'
+import { readWorkspace, workspaceRecord } from './workspace-data'
+import { persistLifecycleState } from './workspace-state-data'
 
 interface ProjectionOptions {
   env: AppEnv

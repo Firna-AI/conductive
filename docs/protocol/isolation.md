@@ -41,9 +41,13 @@ decision number names a decision of the change that adds the
 - No request names a sandbox or a saved snapshot. The Worker takes each
   one from its own records, and only from the records of an org that the
   request may reach.
-- One R2 bucket holds the uploaded files of all orgs (decision 132). So the
-  bucket does not keep the orgs apart. The checks in this section do.
-- Only the Worker reads and writes that bucket.
+- One R2 bucket holds the uploaded files of all orgs (decision 132). It
+  also holds the stored work and the old documents of each import from
+  Conductor. So the bucket does not keep the orgs apart. The checks in this
+  section do.
+- Only the Worker reads that bucket. Only the Worker writes it, apart from
+  the parts of an import, which the Mac app sends with the links of
+  [Import uploads](access-and-security.md#import-uploads).
 - Each upload names one workspace, or the first message of a new workspace
   of one org (decision 132). Only a message of the uploader in that
   workspace, or that first message, can use the file.

@@ -9,6 +9,7 @@ import type {
 import type { DeviceClock } from './clock.js'
 import type { DeviceSession } from './session.js'
 import type { DeviceSocket, SocketEvents } from './transport.js'
+import type { ImportFrameSend } from '../import/types.ts'
 
 export interface DeviceCredential {
   value: string
@@ -32,6 +33,7 @@ interface ConnectionDependencies {
     pairing: DevicePairing,
     send: (message: DeviceToWorker) => boolean,
     invalid: () => void,
+    sendImport?: ImportFrameSend,
   ): DeviceSession
   warn(): void
 }
@@ -133,6 +135,14 @@ export function createDeviceConnection(dependencies: ConnectionDependencies) {
               message.device,
               send,
               () => ended(true),
+              async (message, signal) => {
+                if (!live() || !socket || signal.aborted) return false
+                const sent = socket.sendImport
+                  ? await socket.sendImport(message, signal)
+                  : send(message)
+                if (!sent && live() && !signal.aborted) ended()
+                return sent
+              },
             )
           } else if (message.type === 'device.pong') {
             if (session) lastPong = dependencies.clock.now()

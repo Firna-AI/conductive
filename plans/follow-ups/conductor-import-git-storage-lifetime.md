@@ -1,0 +1,104 @@
+# Failed excludes query leaks private Git storage
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #204, branch `conductor/import-from-conductor-mac-scan-and-upload`, review round 3 of head `d6bd4fbf03c167ab0232fc29442d7c8800653cce`, finding 8. It includes the independent finding check and the review owner's outcome of the same day. The review owner corrected the severity from Medium to Low.
+- **Location:** `desktop/src/import/inventory.ts:55-63`, which creates the storage. `desktop/src/import/inventory.ts:64`, the excludes query before the cleanup scope. `desktop/src/import/inventory.ts:66-103`, the `try` and the `finally` that calls `controlled.dispose()`. `desktop/src/import/git.ts:133-163`, `userExcludesFile`. `desktop/src/import/git.ts:192-244`, `controlledWorktree`, with its `mkdtemp` at line 201 and its own catch at lines 240-243. `desktop/src/import/git.ts:229`, the scan's index copy.
+- **Reason:** This Rare, Low cleanup defect costs the same later and changes no stored format or public contract.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Severity is Low. The first review graded Medium. The finding check corrected it to Low on 2026-11-11, and the review owner confirmed Low. One occurrence leaves one small private folder, with no visible effect, wrong output, lost data, or exposure.
+  - Confidence is High. A read of the code shows the rejection path. The storage builder's own catch cannot cover an await that runs after it returns. No test or run reproduced it.
+  - Harder later is No. The fix stays in two files, and it changes no stored format, message, or public contract.
+- **Terms:**
+  - **Inventory:** the function `inventory` in `desktop/src/import/inventory.ts`. It records the source state of one workspace.
+  - **Controlled storage:** the private bare repository and index that `controlledWorktree` creates with `mkdtemp` in the OS temporary folder, at `desktop/src/import/git.ts:192-244`.
+  - **Excludes query:** `userExcludesFile` at `desktop/src/import/git.ts:133-163`. It runs one read-only `git config` call for the effective `core.excludesFile` path.
+  - **Cleanup scope:** the `try` block at `desktop/src/import/inventory.ts:66-103`. Its `finally` calls `controlled.dispose()`, which removes the controlled storage.
+  - **Job:** one import task in its own worker thread. A stop sends `abort` to the worker and waits for its cleanup code, at `desktop/src/import/worker-client.ts:96-105`.
+- **Background:**
+  - Conductive's Mac app imports local Conductor workspaces. For each workspace, an inventory records the changed, untracked, and `.context` files.
+  - Each inventory creates controlled storage and must remove it after a success, a failure, or a stop.
+  - Scans, uploads, and retry checks run inventories. `scanSource` runs one for each workspace, at `desktop/src/import/scan.ts:25-45`. `prepareStage` runs two, at `desktop/src/import/stage.ts:56` and `desktop/src/import/stage-capture.ts:88`. `reuseStage` runs one, at `desktop/src/import/stage.ts:192`.
+  - A stop is normal use. Quit stops every job, at `desktop/src/device/main.ts:98-108`. Sleep, sign-out, and a lost connection also stop the import work.
+  - The job runner keeps the worker alive after a stop until the job settles. So `finally` code is the cleanup path for a stop. At quit, `stopImportJobs` cancels each job, and the app waits until each worker and its Git process groups stop.
+  - The ignore-rule fix of commit `55f9407f` added the excludes query. It is the only import Git call that reads user config. Every other import Git call sets `GIT_CONFIG_GLOBAL=/dev/null`, at `desktop/src/import/git.ts:28`.
+- **Problem:**
+  - `inventory.ts:55-63` creates the controlled storage. `git.ts:201` makes its folder.
+  - `inventory.ts:64` awaits the excludes query. The cleanup scope starts only at `inventory.ts:66`.
+  - `controlledWorktree` removes its folder only when its own construction fails, at `git.ts:240-243`.
+  - The query rejects on a stop, at `git.ts:64` and `git.ts:111`. It rejects on a spawn error, at `git.ts:112`. It rejects on an exit code other than 0 or an allowed 1, at `git.ts:124-125`. The `git config` manual says that the command fails when "the config file is invalid (ret=3)".
+  - A rejected query skips `controlled.dispose()`, so the folder stays.
+  - A scan has one more window. It copies the source index with `readSourceFile` at `git.ts:229`. That reader checks the stop signal only at its start and for each chunk, at `desktop/src/import/safe-files.ts:49` and `:74`. A stop during its final checks returns normally. The query then throws at `git.ts:64`, outside the cleanup scope.
+  - The nested-repository fix caused it. At commit `55f9407f`, the query ran inside the cleanup scope. Commit `d6bd4fbf` moved it to line 64, before the `try`.
+  - No test catches it. The real-worker stop test blocks the first Git read at `.git/config`, at `desktop/src/import/worker-cancel.test.ts:47-49`, before the storage exists. No test asserts that the controlled storage is removed, on any path. The only spy on the excludes query counts calls, at `desktop/src/import/inventory-nested.test.ts:13` and `:21`.
+- **Impact if no action:** Failed or stopped inventories leave private folders in the OS temporary folder. Each folder holds a bare repository skeleton and one index file. The index holds paths, modes, blob IDs, and file metadata, but no file contents. In a scan, a failing query leaks one folder for each workspace, because `scanSource` catches each workspace's error and continues. Repeated attempts can add more folders.
+- **Root question:** How must each failed or stopped inventory release its private Git storage? The first review asked this question, and the finding check kept it, because it covers both a failure and a stop.
+- **Options:**
+  - **A.** Move the excludes lookup inside the current `try/finally`. Add a rejection regression that checks storage removal and unchanged source files. Effort: Small.
+    - From the first review. The order stays a call-site convention.
+  - **B.** Replace the returned disposable resource with a callback-owned helper. Run all dependent awaits inside its cleanup scope, including the excludes query. Add the same rejection regression. Effort: Small.
+    - From the first review, and the review owner's choice.
+    - The controlled Git helper owns the callback, and it removes the private storage around every dependent await. Its cleanup covers a success, a failure, and a stop.
+    - Keep exactly one excludes query for each repository. Its path must reach both the untracked list and `candidatePaths`.
+    - A failed query must fail the inventory, with no fallback to a default path.
+    - Keep the typed `ImportLocations` input, and keep the private ignore index inside the storage's lifetime.
+  - **C.** Give each worker job one temporary-storage owner that removes every registered Git resource before it returns its result. Adapt direct callers to that owner. Effort: Medium.
+    - From the first review.
+  - **D.** Run the excludes query before `controlledWorktree` creates the storage. Then the cleanup scope starts directly after creation. Keep one query for both users of its path. Add the regression below. Effort: Small.
+    - From the finding check. A failed or stopped query then creates no storage. The order stays a call-site convention, so a later await before the `try` brings the leak back.
+  - **E.** Give the controlled storage an async disposer, `Symbol.asyncDispose`. Declare it with `await using` in a block around the Git work in `inventory`. Every exit from that block then removes the storage. Effort: Medium.
+    - From the finding check. No desktop code uses `await using` yet, and the desktop `lib` is `ES2023`. So the change must check the types, Vitest, the compiled worker, Electron, ESLint, and Prettier.
+    - A caller can still declare the storage with `const` and leak it.
+  - **F.** Let the job runner own one private temporary root for each job, under the app's user-data folder. Effort: Medium.
+    - From the finding check. Pass the root in the typed locations.
+    - Make both owners that now use the OS temporary folder create their folders in it, at `git.ts:201` and `desktop/src/import/inventory-lfs.ts:26`.
+    - Remove the root after the worker exits, for every result. At app start, before the first job, remove leftover roots. The single-instance lock at `desktop/src/lifecycle.ts:35` keeps a second instance away from them.
+    - F covers a failure, a stop, a worker crash, and, at the next start, a forced quit.
+    - It changes the job runner, the worker entry, `ImportLocations`, two owners, and app start. It adds no source location.
+  - The review owner approved only B. D, E, and F are checked alternatives, not approved implementation.
+- **Shared assumptions checked:**
+  - Each inventory keeps its own private storage, because a private index compares working files without source filters. Kept.
+  - One excludes query runs for each repository, and its failure fails the inventory, because a default path is unsafe output. Kept.
+  - The storage lives in the OS temporary folder. This is code, not a requirement. Other processes use that folder too, so a sweep there by name can remove a folder in use. F drops it.
+  - Cleanup runs in the worker, in `finally` code. No worker code can run after a worker crash or a forced quit. F drops it.
+  - The regression forces the query to reject. A real input can do it: a malformed config file in the fixture home, which only the excludes query reads. Kept.
+- **Left out:**
+  - Rely on eventual OS cleanup. It fails the goal, because the storage outlives the operation.
+  - Reuse failed storage. It adds lifetime and retry state and gives the storage no owner. B is better on every point.
+  - Catch the query failure and use a default path. It breaks the ignore-rule protection of commit `55f9407f`, and a stop still rejects.
+  - Fold the query into the storage builder. B is better on every point, because it covers every later await at the same cost.
+  - Compare files without temporary storage. Hashing every tracked file instead conflicts with the fast-scan requirement at `docs/protocol/desktop-import.md:69-73`.
+  - A test for the class, or a lint. B is better on every point, because it removes the case instead of detecting it. Both are also blocked without the user.
+  - A garbage-collection finalizer. It fails the goal, because it may never run before a short-lived worker exits.
+  - Sweep the OS temporary folder by name, alone. It fails the goal, because the storage stays until the next sweep. As a crash fallback, F does the same in a root that no other process uses.
+  - Brought back: none. The first review left out nothing for a weak reason.
+- **Wider fix:** B. The helper's API owns its callback and the temporary resource, so a later await cannot escape the cleanup by a call-site convention. For this class, a failed or stopped step after creation, B, C, and F each prevent every case. F's extra cover is a different trigger, a crash, so it does not rank F above B here.
+- **Previous examples:** `withGitIndex` at `runner/src/git-index.ts:20-133` wraps every await after `mkdtemp` in one `try`, with `rm` in `finally`. Commit `66ad57da5c4f4441421cc6b80f66586aa445915b` introduced that pattern.
+- **Related:**
+  - [conductor-import-submodule-working-content.md](conductor-import-submodule-working-content.md): the same code. Its options change the candidate collection at `inventory.ts:67-100`, inside the same cleanup scope. Its options C and E add one private comparison repository for each initialized submodule, and each one needs this cleanup. B makes that automatic. When one later branch changes these lines, apply both fixes in one unit.
+  - [conductor-import-fixture-permissions.md](conductor-import-fixture-permissions.md): the same test file only, if this regression went into `inventory-nested.test.ts`. Keep this regression a separate small case, so that the failing tuple assertion cannot hide its Mac result.
+  - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md): no link.
+  - [temporary-folders-of-test-helpers.md](temporary-folders-of-test-helpers.md): the same class, a temporary folder whose removal is not tied to its creation, in Worker test helpers. Its option uses `fsPromises.mkdtempDisposable()` with `await using`, the mechanism of E here. The two items share no code.
+  - The nested-repository fix of commit `d6bd4fbf` moved the query out of the cleanup scope. Its test expects one excludes call for an ordinary workspace, at `inventory-nested.test.ts:21`. `candidatePaths` must stay inside the cleanup scope, because its private ignore index lives in the controlled storage.
+  - The typed `ImportLocations` of `desktop/src/import/locations.ts`: every option keeps that input. F must keep the rule that only the home and user-data prefixes resolve.
+  - The resolved fixture root `importTemporaryDirectory` of `desktop/tests/import-temporary.ts`: build any fixture-owned temporary root with it.
+  - A separate open review observation, not part of this item: the scan's copy at `git.ts:229` copies a split index without its shared index file. The Git manual puts that file at `$GIT_DIR/sharedindex.<SHA-1>`, and the private repository has its own `$GIT_DIR`. So a scan row may lose its size. Runtime behaviour is unverified.
+- **Recommendation:** B. Callback ownership encloses every dependent await and removes the controlled storage on a success, a failure, or a stop. It follows the runner's `withGitIndex` pattern and stays in the two changed files. C and F also prevent this class, but they add a job-wide mechanism at Medium cost.
+  - The first review recommended B. The finding check of 2026-11-11 kept B and corrected the severity to Low.
+  - The review owner kept B on 2026-11-11.
+- **Action:** fix after merge, apply B, because this Rare, Low cleanup defect costs the same later and changes no stored format or public contract.
+  - The two-round limit of the branch also applies, but it is not the only reason. The fix rule gives a Rare product bug that is not High `fix after merge`, also when the fix is Small.
+  - The first review's Action was: "fix after merge, apply B, because the two fix rounds are used and this cleanup defect is noncritical."
+- **Validation of the fix:**
+  - Add one separate small rejection or cancellation case. Do not add it to the existing timed package cases, or to the failing nested test.
+  - Keep every current assertion, guard, and time limit.
+  - Trigger the rejection with a malformed synthetic config file in the fixture home, which only the excludes query reads. Or stop the job at a FIFO at that config path, a deterministic process barrier. `desktop/src/import/worker-cancel.test.ts:47-49` uses a FIFO at `.git/config` in the same way. One trigger is enough, because both reject the same promise.
+  - Assert that the inventory rejects. This keeps the ignore-rule protection.
+  - Assert that no controlled storage remains. Find its folder through a fixture-owned temporary root, or through the existing spy seam on the Git helpers at `desktop/src/import/inventory-nested.test.ts:12-13`. Confirm the chosen seam in the change.
+  - Assert that the source files stay exactly unchanged, with `sourceHashes`.
+  - The finding check did not verify these at runtime:
+    - a fixture-owned temporary root with `os.tmpdir()`
+    - `await using` support in the toolchain
+    - Git's behaviour for a copied split index

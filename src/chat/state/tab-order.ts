@@ -5,6 +5,8 @@ export type TabPlace = { before: WorkspaceTab } | { after: WorkspaceTab }
 
 /** One file or diff keeps its identity when its display mode changes. */
 export function tabKey(tab: WorkspaceTab): string {
+  if (tab.kind === 'conductor-document')
+    return `conductor-document:${tab.documentId}`
   return tab.kind === 'session'
     ? `session:${tab.sessionId}`
     : `${tab.kind}:${tab.path}`

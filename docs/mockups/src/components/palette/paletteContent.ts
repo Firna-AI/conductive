@@ -2,19 +2,19 @@ import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
 import { helpGroupLabel } from '../feedback/feedbackCopy'
+import { workspaceSections, type WorkspaceRow } from '../workspaces/sections'
 import {
-  workspaceSections,
-  type OpenWorkspace,
-  type WorkspaceRow,
-} from '../workspaces/sections'
+  actionsOf,
+  openActions,
+  orgActionsOf,
+  type PaletteContext,
+} from './paletteActions'
 import {
   accountSettings,
   appActions,
   helpActions,
-  orgActions,
   orgSettings,
   orgSettingsLabel,
-  workspaceActions,
   type Command,
 } from './paletteCommands'
 import { matchingRows } from './paletteSearch'
@@ -62,20 +62,6 @@ export type PaletteContent = {
 }
 
 /**
- * Where the palette opens: over an open workspace, whose actions come
- * first, or over a page without one. Only the owner of the workspace and
- * the admins of the org can archive it. Every member of an org that is
- * not suspended can restore an archived workspace while the app keeps its
- * cloud computer.
- */
-export type PaletteContext = {
-  open?: OpenWorkspace
-  archivable: boolean
-  restorable?: boolean
-  rightColumn?: boolean
-}
-
-/**
  * The workspaces with the latest activity, the latest first, as decision
  * 146 chose. The open one is left out.
  */
@@ -103,25 +89,6 @@ function commandRows(
   detail?: string,
 ): PaletteRow[] {
   return commands.map((command) => ({ kind: 'command', command, detail }))
-}
-
-/** The actions of the open workspace, when the palette has one. */
-function openActions(context: PaletteContext): Command[] {
-  if (!context.open) return []
-  return workspaceActions({
-    archived: context.open.status === 'archived',
-    archivable: context.archivable,
-    restorable: context.restorable ?? false,
-    rightColumn: context.rightColumn ?? true,
-  })
-}
-
-/**
- * The actions in their order: those of the open workspace, of the org, and
- * of the orgs, then Send feedback, which comes last.
- */
-function actionsOf(context: PaletteContext): Command[] {
-  return [...openActions(context), ...orgActions, ...appActions, ...helpActions]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
@@ -236,7 +203,7 @@ function groupsOf(
         : []
       return [
         ...own,
-        { label: orgs.acme.name, rows: commandRows(orgActions) },
+        { label: orgs.acme.name, rows: commandRows(orgActionsOf(context)) },
         { label: 'Orgs', rows: commandRows(appActions) },
         { label: helpGroupLabel, rows: commandRows(helpActions) },
       ]

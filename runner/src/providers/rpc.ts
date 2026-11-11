@@ -1,6 +1,7 @@
 import { object, string } from '../parse'
 import type { ProcessPort } from './process'
 import { errorText } from './failure'
+import { AgentRpcError } from './native-history'
 
 interface Pending {
   resolve: (value: unknown) => void
@@ -87,7 +88,20 @@ export class JsonRpc {
     clearTimeout(pending.timer)
     if (input.error !== undefined)
       pending.reject(
-        new Error(errorText(input.error) ?? 'The agent refused the request.'),
+        new AgentRpcError(
+          errorText(input.error) ?? 'The agent refused the request.',
+          typeof input.error === 'object' &&
+            input.error !== null &&
+            'code' in input.error &&
+            typeof input.error.code === 'number'
+            ? input.error.code
+            : null,
+          typeof input.error === 'object' &&
+            input.error !== null &&
+            'data' in input.error
+            ? input.error.data
+            : undefined,
+        ),
       )
     else pending.resolve(input.result)
   }

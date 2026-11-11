@@ -24,7 +24,8 @@ how a screen is built, and links to the other pages.
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat with the line of its branch, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, an existing branch or pull request, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/imported`      | A workspace from Conductor: the list after the import, its flag and old sessions, the Markdown of an old session, its files, its activation, a failed activation, a disk that is too small, the activated workspace, and its resumed sessions |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lists in replies, lost data, lost updates, and unread files |
@@ -41,8 +42,8 @@ how a screen is built, and links to the other pages.
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
-| `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
+| `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, and the import from Conductor |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file, import from Conductor |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
@@ -50,7 +51,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
-`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/tools`, `app/new-workspace/branch`, `app/imported`, and `mac-app/import` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -115,40 +116,9 @@ decision 151. The mockups draw it for Firna, the first org of the sign-up:
   script that Cal saved during the first build. One more build runs it
   when the first build succeeds, so its notice has no Build computer.
 
-Repositories that wait for a build come from decisions 240 and 241 of
-10 November 2026. A waiting repository is a chosen repository that the
-cloud computer of the org does not hold yet. An added repository starts a
-build, and a removed one leaves at the next build. The mockups draw it for
-Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
-
-- `app/new-workspace/waiting-repository` has the open repository menu.
-  acme/admin-dashboard keeps its place, off, with a note that says when it
-  is ready, and the form holds the first ready repository. Its
-  `kept-draft` variant has a kept draft in acme/admin-dashboard, with a
-  notice over the composer and Cloud computer settings for an admin, and
-  Send is off. Its `none-ready` variant has
-  no chosen repository ready after a failed build, with Cloud computer
-  settings for an admin, and its `member` variant has the same notice
-  without the link. The dialog shows the same repository menu and the
-  same notices, as the `repositories`, `repositoryMenu`, and
-  `waitingBuild` controls of `app/new-workspace/dialog` show, so the
-  dialog page gets no more variants.
-- `app/org-settings/repositories` has the repository notice in each
-  state: `building` while the build of an add runs, `build-failed` with
-  Try again, and `removed` with Build computer. Its `member` variant has
-  the notice of a failed build without a button. The notice names the
-  repositories, so the rows of the list stay as they are.
-- `app/org-settings/cloud-computer/repositories-changed` has the same
-  notice under the intro while the build of an add runs. On this tab the
-  notice has no button, also for an admin, because the build card under
-  it has the same action. Its `build-failed` and `no-build` variants have
-  the notice above the Try again and the Build computer of the card. Its
-  `with-script` variant has a removal and a changed install script, each
-  with its own notice, and the notice of the install script keeps its
-  Build computer. `app/org-settings/cloud-computer/member/repositories-changed`
-  has the notice of a member. `app/org-settings/cloud-computer/script-changed`
-  keeps the notice of the install script, which shows only for a change
-  of the install script.
+[Repositories that wait for a build](catalogue-repositories.md) gives the
+pages of a chosen repository that the cloud computer of the org does not
+hold yet.
 
 `app/account` shows the General tab of the account. Its tabs are links, as
 the tabs of the org settings are. `app/account/preferences` shows the
@@ -242,3 +212,8 @@ pages, their child pages, and their related flows.
 
 [Workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 gives those catalogue pages and their related flows.
+
+[Branches and the import from Conductor](catalogue-import.md) gives the
+child pages of `app/new-workspace/branch` and `app/imported`. It also gives
+the controls of an imported workspace, and it links to the pages of the
+import in the Mac app.

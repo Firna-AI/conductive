@@ -36,7 +36,10 @@
   color: var(--ui-muted);
 }
 
-/* The repository picker, which its open menu hangs from. */
+/*
+ * The repository picker and the quiet branch picker beside it, which their
+ * open menus hang from. Each is a flex item of the header.
+ */
 .anchor {
   display: flex;
   position: relative;

@@ -87,6 +87,14 @@ methods of `Workspace`.
   returns `false`, and the turn waits. `turnDispatchFailed` removes that
   turn after a failed send. It also removes it when the runner disconnects
   while `turnDispatching` registers the turn, before the send.
+- With no lifecycle state, `turnDispatching` still holds the turns of an
+  imported workspace that is not activated. `runnerPreparationAllowed` lets
+  the runner prepare a turn only in a native workspace, or in an activated
+  import whose start is prepared, in the state `ready`, `working`, `unread`,
+  or `input`. So the messages of an
+  activation wait until it succeeds, as
+  [Import activation](../../lifecycle/import-activation.md#sessions-and-held-messages)
+  says.
 - `runnerDisconnected` reports a closed runner connection. It runs later in
   the queue, through `waitUntil`.
 - The other lifecycle events go through `commitWorkspaceEvent`, with the

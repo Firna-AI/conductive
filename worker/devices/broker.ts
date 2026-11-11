@@ -7,14 +7,9 @@ import {
   type DevicePairing,
   type DeviceSettingsAction,
 } from '../../src/shared/device'
-import {
-  deviceObject,
-  readDevicePairing,
-  readDeviceRecord,
-} from '../../src/shared/device-read'
+import { deviceObject, readDeviceRecord } from '../../src/shared/device-read'
 import type { ChatStorage } from '../chat/types'
 import type { AppEnv } from '../env'
-import { HttpError } from '../http'
 import type {
   BrokerRequest,
   DeviceConnection,
@@ -25,9 +20,12 @@ import { receiveDeviceMessage } from './broker-messages'
 import { deviceWire } from './socket'
 import { relayDeviceSettings } from './broker-settings'
 import { BrokerRequests } from './broker-store'
+import { ImportBroker } from '../conductor-import/broker'
+import { requireDevicePairing } from './broker-pairing'
 import { checkBroker, dropBroker, scheduleBroker } from './broker-lifecycle'
 
 export class DeviceBroker {
+  readonly imports: ImportBroker
   connection: DeviceConnection | null = null
   readonly settings = new Map<string, SettingsWaiter>()
   private tail: Promise<unknown> = Promise.resolve()
@@ -46,6 +44,7 @@ export class DeviceBroker {
     this.now = now
     this.alarm = alarm
     this.requests = new BrokerRequests(storage)
+    this.imports = new ImportBroker(env, () => this.connection, now)
   }
 
   serial<T>(work: () => Promise<T>): Promise<T> {
@@ -211,26 +210,19 @@ export class DeviceBroker {
     userId: string,
     sessionId: string,
   ): DeviceConnection {
-    const pairing = readDevicePairing(value)
-    const connection = this.connection
-    if (
-      !connection ||
-      connection.userId !== userId ||
-      connection.sessionId !== sessionId ||
-      connection.device.connectionId !== pairing.connectionId ||
-      connection.device.deviceId !== pairing.deviceId
-    )
-      throw new HttpError(
-        403,
-        'device_forbidden',
-        'Open this request on the connected Mac.',
-      )
-    return connection
+    return requireDevicePairing(this.connection, value, userId, sessionId)
   }
   relaySettings(connection: DeviceConnection, operation: DeviceSettingsAction) {
     return relayDeviceSettings(this.settings, connection, operation)
   }
   receive(connection: DeviceConnection, value: unknown): Promise<void> {
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      'type' in value &&
+      (value.type === 'import.frame' || value.type === 'import.part.ack')
+    )
+      return this.imports.receive(connection, value).catch(() => undefined)
     return this.serial(async () => {
       if (this.connection !== connection) return
       try {

@@ -18,7 +18,8 @@ export type LinkTab = {
 }
 
 /**
- * A row of tabs. Each tab is a link to the screen that shows it. `wrap`
+ * A row of tabs. Each tab is a link to the screen that shows it, or static
+ * when the mockups draw no such screen. `wrap`
  * puts the tabs in three columns on as many lines as they need, so that
  * every tab shows. `flow` keeps the tabs on one line while they fit, and
  * moves the rest to a second line. `fadeEnd` marks a row that clips tabs at

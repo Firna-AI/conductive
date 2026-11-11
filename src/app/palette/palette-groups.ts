@@ -70,9 +70,10 @@ function offeredRows(offers: readonly PaletteOffer[]): PaletteRow[] {
  * The actions in their five parts: the open workspace, the org, the orgs,
  * the window, and help. New workspace shows wherever the org takes
  * changes. Its row links to the page, and it opens as the page or the
- * dialog that the user chose. A deleted org has no Switch to row. Send
- * feedback shows on each page, also without an org and in a suspended org,
- * because feedback changes no org.
+ * dialog that the user chose. The Mac app adds Import from Conductor after
+ * the actions of the org, because it reads the data of this Mac. A deleted
+ * org has no Switch to row. Send feedback shows on each page, also without
+ * an org and in a suspended org, because feedback changes no org.
  */
 function actionGroups(source: PaletteSource): PaletteGroup[] {
   const { org, offers } = source
@@ -90,6 +91,11 @@ function actionGroups(source: PaletteSource): PaletteGroup[] {
       (offer) => offer.scope.kind === 'org' && offer.scope.orgId === org.id,
     )
     orgRows.push(...offeredRows(list))
+  }
+  if (org && source.mac && !source.suspended) {
+    orgRows.push(
+      linkRow('import-from-conductor', routes.conductorImport(org.id)),
+    )
   }
   const others = source.orgs.filter(
     (other) => !other.deletion && other.id !== org?.id,

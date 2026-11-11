@@ -94,12 +94,14 @@ export async function mountChat(options: {
 
 /**
  * Names and draws the file and diff tabs with the real tab of the Files
- * screens, as the app does. Each tab takes the label that the Worker sends
- * for its path: the path with the fake secret value hidden. So a name that
- * the row takes from a real path shows the secret value.
+ * screens, as the app does, and no tab of an old document. Each tab takes
+ * the label that the Worker sends for its path: the path with the fake
+ * secret value hidden. So a name that the row takes from a real path shows
+ * the secret value.
  */
 export function fileTabs(navigation: FilesNavigation): RenderTab {
   return (tab) => {
+    if (tab.kind === 'conductor-document') return null
     const label = labelOf(tab.path)
     return {
       title: fileTabName(tab, label),

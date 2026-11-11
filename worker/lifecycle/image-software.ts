@@ -95,6 +95,16 @@ export function workspaceStartupCommand(
   script: SavedScript,
   mode: 'workspace' | 'retention' = 'workspace',
 ): string {
+  return [
+    workspaceStartupBody(script, mode),
+    ...(mode === 'workspace' ? [workspaceRunnerLaunch()] : []),
+  ].join('\n')
+}
+
+export function workspaceStartupBody(
+  script: SavedScript,
+  mode: 'workspace' | 'retention' = 'workspace',
+): string {
   const path =
     mode === 'retention'
       ? '/run/conductive/retention-startup.sh'
@@ -109,11 +119,19 @@ export function workspaceStartupCommand(
       'set +a',
       'cd "$CONDUCTIVE_REPOSITORY_DIR"',
     ]),
-    ...(mode === 'workspace'
+  ].join('\n')
+}
+
+export function workspaceRunnerLaunch(activationId?: string): string {
+  return [
+    'set -eu',
+    ...(activationId
       ? [
-          'touch /run/conductive/workspace-ready',
-          'sudo -n systemctl restart conductive-runner.service',
+          'sudo -n install -d -m 700 -o user -g user /home/user/.conductive',
+          `printf '%s\\n' ${shellQuote(activationId)} > /home/user/.conductive/import-pending`,
         ]
       : []),
+    'touch /run/conductive/workspace-ready',
+    'sudo -n systemctl restart conductive-runner.service',
   ].join('\n')
 }

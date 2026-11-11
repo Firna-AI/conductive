@@ -3,11 +3,12 @@
 This doc holds the requirements and the decisions in force for the create
 of a workspace. It covers New workspace, as a page or as a dialog, the
 preference that chooses between them, the create, the branch, and a failed
-first start. It belongs to
+first start. This doc belongs to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
 provider, the org image, and the startup script.
-[Life of a workspace](workspace-life.md) covers the start steps and the
-rest of the life of a workspace. The terms are those of the
+[Continue a branch](continue-a-branch.md) covers a new workspace on an
+existing branch. [Life of a workspace](workspace-life.md) covers the start
+steps and the rest of the life of a workspace. The terms are those of the
 [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
@@ -75,42 +76,8 @@ decision number names a dated record, as
 
 ### The dialog
 
-- The dialog holds the parts of the page: the repository picker, the
-  message and its files, and the model picker.
-- The dialog always names the org and the section of the new workspace,
-  also General.
-- The button of the dialog is Create. The button of the page is Send,
-  because the page looks like the chat that it becomes.
-- The dialog shows the notices of the page: the first build, a waiting
-  repository, a missing agent login, a failed create with Try again, and an
-  org without chosen repositories.
-- In an org without chosen repositories, the dialog and the page tell a
-  member who is not an admin that an admin chooses them. An admin gets
-  Choose repositories. Reason: only an admin can choose them.
-- Escape and a press outside close the dialog, except while the create
-  runs.
-- An action of the dialog that opens another page, such as Connect Claude
-  or Choose repositories, closes the dialog first. The dialog also closes
-  when the address changes, such as with Back in the browser, also while
-  the create runs.
-- The dialog and the page of the same org and section share one draft.
-- A close of the dialog keeps the draft, with its message and its files,
-  as a move away from the page does. So no close loses a message.
-- When the page or the dialog shows a kept message again, the cursor
-  starts at the end of the message. After that, each click and key moves
-  the cursor as usual.
-- When the server accepts the create, the dialog closes, and the app opens
-  the new workspace, as after a create from the page. This holds also
-  when the dialog closed while the create ran.
-- A create in the background was rejected, because it needs a new notice
-  for a create that finished.
-- The dialog shows a failed create only when the create request fails.
-  When the sandbox of the new workspace then does not start, the workspace
-  keeps its queued messages and shows Try again, as
-  [A failed first start](#a-failed-first-start) says.
-- When the dialog opens, the message field gets the focus. When the dialog
-  closes and the screen stays, the focus goes back to the control that
-  opened it. When another screen opens, that screen takes the focus.
+[New workspace as a dialog](new-workspace-dialog.md) gives the parts of the
+dialog, its notices, its close, its draft, the create, and its focus.
 
 ### The send key
 
@@ -131,80 +98,15 @@ decision number names a dated record, as
 
 ### Before the first good build
 
-- A new workspace needs a good org image, because it starts from the org
-  image (decision 13). While the org has no good image, such as during its
-  [first build](org-image.md#the-first-build), New workspace
-  shows a notice over the composer. Send and Create then stay off
-  (decision 150 of PR #92).
-- The notice shows the state of the newest build of the org:
-  - While a build runs, it says that the cloud computer is being prepared,
-    with the time since the build began.
-  - After a failed build, it says that the cloud computer did not build.
-  - With no build, it says that the cloud computer needs a build.
-- In each state, an admin gets a link to the Cloud computer tab. After a
-  failed build or with no build, the tab offers Try again or Build
-  computer.
-- While a build runs, the admin can set up the cloud computer on that tab,
-  such as its install script. Such a change needs no Build computer, as
-  [The first build](org-image.md#the-first-build) says. A link only after a
-  failed build or with no build was rejected for that reason.
-- A member who is not an admin gets no link. After a failed build or with
-  no build, the notice says that an admin can build. Reason: only an admin
-  builds and changes the settings of the cloud computer (decision 57).
-- When a build succeeds, the notice goes, and Send and Create turn on.
-- Once the org has a good image, New workspace shows no such notice, also
-  during a later build or after a failed later build. New workspaces then
-  start from the last good image (decision 9).
-- A create that comes while the org has no good image, such as from an old
-  tab, gets a refusal. While a build runs, the refusal says that the cloud
-  computer is still being prepared. Otherwise, it says that the cloud
-  computer needs a build. The composer keeps the message.
-- Reason: the user learns the state before the send, in place of a refused
-  create. A create that waits for the first build was left out for now
-  (decision 152 of PR #92). Such a wait changes the start limit and the path that
-  creates every workspace.
+[New workspace build notices](new-workspace-build-notices.md#before-the-first-good-build)
+gives the notice while the org has no good image, its link for an admin,
+and the refused create.
 
 ### Waiting repositories
 
-- The repository picker lists each chosen repository, on the page and in
-  the dialog (decision 240). A removed repository is not in the list.
-- A [waiting repository](org-image.md#repository-changes) is off in the
-  list, with a note that says when it is ready. The note follows the
-  states of [The repository notice](org-image.md#the-repository-notice).
-- Reason: the person learns of the wait before the send. A change of only
-  the words of the refusal was rejected for that reason.
-- The form picks the first ready repository. A kept draft keeps its
-  repository, also when it waits. Reason: the form keeps the choice of the
-  person.
-- While the repository of the form waits, Send and Create stay off. A
-  notice over the composer says when the repository is ready, and whether
-  the person can choose another repository that is ready.
-- In each state, an admin gets a link in that notice to the Cloud computer
-  tab, as in the notice of the first build. When no build runs, the tab
-  offers Try again or Build computer.
-- While a build runs, the notice shows that build, and the admin can
-  follow it on that tab. Such a build adds a repository, or an admin
-  started it. A refresh never counts as a build that runs, as
-  [The repository notice](org-image.md#the-repository-notice) says. While
-  only a refresh runs, the notice follows its other states.
-- Reason: the link then follows one rule in both notices. A notice with no
-  link during a build was rejected for that reason.
-- A member who is not an admin gets no link. When an admin can act, the
-  notice tells the member so. Reason: only an admin builds (decision 57).
-- When a build that holds the repository succeeds, the repository turns
-  on in the picker. Its notice goes, and Send and Create turn on.
-- A create in a waiting repository, such as from an old tab, gets a
-  refusal that says that the repository is ready after the next build. A
-  create in another repository that the org image lacks gets a refusal
-  that says that the repository is not available.
-- Both refusals have HTTP 404 and the code `repository_not_found`. The
-  composer keeps the message.
-- A create that waits for the build of its repository was rejected.
-  Reason: such a wait changes the start limit and the path that creates
-  every workspace, as for decision 152.
-- A start that clones a waiting repository after the start from the org
-  image was rejected, because the install script never prepares that
-  repository.
+[New workspace build notices](new-workspace-build-notices.md#waiting-repositories)
+gives the waiting repositories in the picker, their notice, its link for an
+admin, and the refused creates.
 
 ## The create
 
@@ -222,6 +124,10 @@ decision number names a dated record, as
 
 - A new workspace starts from the newest good org image. It then creates
   its branch in the folder of its repository.
+- New branch is the default. The person can choose an existing branch or
+  an open pull request instead, as [Continue a branch](continue-a-branch.md)
+  says (import decision 1). The workspace then continues that branch,
+  with the name that the branch has on GitHub.
 - The run of a pull request creates its branch from that pull request, as
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
   says (decision 505 A).
@@ -241,8 +147,8 @@ decision number names a dated record, as
   Changes list compares with it, so that branch must exist on GitHub. A
   branch or a first commit only in the sandbox was rejected for that
   reason, and a refused start because it blocks work in a new repository.
-- The branch name starts with the GitHub login that the workspace owner has
-  at the create (decision 53).
+- The name of a new branch starts with the GitHub login that the workspace
+  owner has at the create (decision 53).
 - A city name and four random characters follow, such as
   `calummoore/lisbon-7k2q`. The branch keeps the city name when the
   workspace gets a name.
@@ -275,3 +181,9 @@ decision number names a dated record, as
   [Messages](messages-and-attachments.md#messages) says.
 - A routine run keeps its failed workspace and its cause, as
   [Failed runs](routine-runs.md#failed-runs) says (decision 512 B).
+
+## Imported workspaces
+
+- An import from Conductor creates a workspace with no first message and
+  no cloud computer. Its first start is its activation, as
+  [Imported workspaces](imported-workspaces.md) says.

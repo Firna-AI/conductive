@@ -1,14 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { MessageSquarePlus } from 'lucide-react'
-import { ChatPane } from '../components/chat/ChatPane'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
-import { EmptyState } from '../components/common/EmptyState'
 import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { CommandPalette } from '../components/palette/CommandPalette'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
   PullRequestBar,
@@ -19,23 +15,22 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { mayArchiveWorkspace } from '../components/workspaces/permissions'
-import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
-import { orgs, suspendedOrg } from '../fixtures/orgs'
+import { suspendedOrg } from '../fixtures/orgs'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
-import { composerFor } from './composerFor'
-import { composerNotice } from './composerNotice'
+import { importedScreensOf } from './importedScreens'
+import { isImported } from './importedWorkspace'
 import { placeLostUpdate } from './lostUpdates'
 import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
+import { WorkspaceChat } from './WorkspaceChat'
 import {
   FilesContent,
-  filesPlaceholder,
+  filePagePlaceholder,
   openFile,
-  startingLogFor,
+  PhoneFilePage,
   ToolContent,
-  workspaceSidebar,
 } from './workspaceParts'
 import {
   transcriptToast,
@@ -47,8 +42,9 @@ import {
   activityOf,
   archiveRestore,
   drawnState,
-  sandboxNotice,
+  isArchived,
 } from './workspaceSandbox'
+import { openRowLinks, workspaceSidebar } from './workspaceSidebar'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
 import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
@@ -66,7 +62,9 @@ const widenedRight = 560
  * `overlay` lies over the workspace in place of the overlay of its state,
  * such as a dialog that another screen opens over it. The chat and the
  * overlay find the workspaces of their chips in the list of the screen.
- * The toast of the state lies over everything.
+ * The toast of the state lies over everything. A workspace from Conductor
+ * lists its old sessions in place of an empty chat, and asks to activate
+ * it while it has no cloud computer.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
@@ -84,7 +82,7 @@ export function WorkspaceScreen(props: {
   const owner = ownerRefused ? suspendedOwner : record.owner
   const workspace = { ...record, owner, name: workspaceName(state, record) }
   const status = activityOf(state)
-  const archived = state.sandbox === 'archived'
+  const archived = isArchived(state)
   const readOnly = archived || suspended
   const admin = state.viewer === 'admin'
   const viewer = viewerOf(state)
@@ -94,44 +92,26 @@ export function WorkspaceScreen(props: {
     !readOnly && mayArchiveWorkspace(membership, workspace.owner)
   // Every member restores it while the app keeps its cloud computer.
   const restorable = archiveRestore(state) === 'available'
-  const problem = sandboxNotice(state)
-  const fresh = state.tab === 'new-session'
+  // A workspace from Conductor has no session of its own until a message,
+  // and its controls, also Back, the owner, and the org, stay in its own
+  // screens.
+  const links = isImported(state) ? importedScreensOf(state) : undefined
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
-    <ChatWorkspaces rows={rows}>
-      <ChatPane
-        composer={composerFor(state, workspace)}
-        empty={
-          <EmptyState
-            body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-            icon={MessageSquarePlus}
-            title="New session"
-          />
-        }
-        fold={state.fold}
-        items={fresh ? [] : chatItemsFor(open.items, state.paths)}
-        notice={
-          // An archived workspace keeps its archived bar, so the notice of a
-          // suspended org shows above it.
-          archived && suspended ? (
-            <SuspendedOrgNotice org={orgs[suspendedOrg]} />
-          ) : (
-            composerNotice(state, workspace)
-          )
-        }
-        problem={problem}
-        starting={startingLogFor(state)}
-        viewer={viewer}
-        viewport={viewport}
-      />
-    </ChatWorkspaces>
+    <WorkspaceChat
+      rows={rows}
+      state={state}
+      viewport={viewport}
+      workspace={workspace}
+    />
   )
   const workspaceHeader = (
     <WorkspaceHeader
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
+      links={links}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       run={open.run}
@@ -141,9 +121,12 @@ export function WorkspaceScreen(props: {
       workspace={workspace}
     />
   )
-  // A phone and an archived workspace show only the session tabs.
+  // A phone and an archived workspace show only the session tabs. The
+  // Markdown of an old session stays for the life of its workspace.
   const tabs = tabsFor(state, workspace).filter(
-    (tab) => tab.kind === 'session' || (!archived && viewport === 'desktop'),
+    (tab) =>
+      tab.kind === 'session' ||
+      (viewport === 'desktop' && (!archived || tab.key === 'old-session')),
   )
   const row = tabRowOf(state, tabs, viewport, readOnly)
   const overlay = (
@@ -163,8 +146,9 @@ export function WorkspaceScreen(props: {
       full={row.full}
       historyEntries={historyFor(state)}
       historyOpen={state.overlay === 'history'}
+      links={links}
       menuTab={row.menuTab}
-      readOnly={readOnly}
+      readOnly={readOnly || state.sandbox === 'inactive'}
       renaming={row.renaming}
       tabs={tabs}
       viewport={viewport}
@@ -191,12 +175,15 @@ export function WorkspaceScreen(props: {
       )
     }
     const body = {
-      chat: (
-        <>
-          {tabRow}
-          {chat}
-        </>
-      ),
+      chat:
+        state.tab === 'old-session' ? (
+          <PhoneFilePage state={state} view="old-session" />
+        ) : (
+          <>
+            {tabRow}
+            {chat}
+          </>
+        ),
       files,
       tool,
     }
@@ -211,6 +198,7 @@ export function WorkspaceScreen(props: {
         </div>
         {archived ? null : (
           <MobileTabBar
+            links={links}
             selected={state.focus === 'tool' ? state.tool : state.focus}
           />
         )}
@@ -245,6 +233,7 @@ export function WorkspaceScreen(props: {
         ...acmeRail,
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
+        currentTo: links ? links.list : undefined,
       }}
       sidebar={workspaceSidebar({
         // The toast of an Archive shows at once, so the row shows that Archive.
@@ -256,13 +245,19 @@ export function WorkspaceScreen(props: {
         suspended,
         viewer: membership,
         created: createdWorkspaces(state),
-        restoreOpen: state.archive === 'kept',
+        // Only a kept cloud computer comes back. A workspace from Conductor
+        // archived before its activation never had one.
+        restoreOpen: state.sandbox === 'archived' && state.archive === 'kept',
+        row: openRowLinks(state),
       })}
     >
       <WorkspaceBody
         center={
           file ? (
-            <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
+            <FilePage
+              placeholder={filePagePlaceholder(state, file)}
+              view={file}
+            />
           ) : (
             chat
           )
@@ -281,7 +276,9 @@ export function WorkspaceScreen(props: {
         tabs={tabRow}
         tools={
           archived ? undefined : (
-            <ToolsPanel tool={state.tool}>{tool}</ToolsPanel>
+            <ToolsPanel links={links} tool={state.tool}>
+              {tool}
+            </ToolsPanel>
           )
         }
       />
