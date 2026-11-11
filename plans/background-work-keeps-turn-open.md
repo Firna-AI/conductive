@@ -411,9 +411,9 @@ and `.context/background-work-keeps-turn-open/milestone-7-external-report.md`.
 
 Depends on: every other milestone
 
-- [ ] Run `npm ci --prefix runner` and `npm --prefix desktop ci`, then the
+- [x] Run `npm ci --prefix runner` and `npm --prefix desktop ci`, then the
       runner tests and the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
@@ -425,7 +425,10 @@ Depends on: every other milestone
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 
+Evidence: `.context/background-work-keeps-turn-open/complete-gate.log`
+and `.context/background-work-keeps-turn-open/verification.md`.
+
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After an org image builds with the new runner, run the routine once.
-      Check that its agent merges its PR after CI passes, in the same turn.
+- [ ] [Check a routine merge after background work](follow-ups/background-work-routine-merge.md)
+      after an org image builds with the new runner.
