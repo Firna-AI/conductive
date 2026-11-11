@@ -48,8 +48,8 @@ function Preview(props: {
   onNote: (note: string) => void
 }) {
   const { source, onNote } = props
-  const { fetch, subscribe, delay } = source
-  const github = useGitHubState(target, { fetch, subscribe, delay })
+  const { fetch, subscribe, delay, visible } = source
+  const github = useGitHubState(target, { fetch, subscribe, delay, visible })
   const { member, role } = viewers[props.viewer]
   const archivable = mayArchive({ role, suspended: false }, workspace, member)
   const archive = useMemo(

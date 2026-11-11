@@ -1,5 +1,6 @@
 import type { Delay } from '../app/events'
-import { ManualDelay } from '../app/test-kit'
+import type { Readable } from '../app/store'
+import { ManualDelay, ManualVisibility } from '../app/test-kit'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
@@ -16,7 +17,8 @@ import { GitHubStore } from './githubStore'
  * Test doubles for the store tests: GitHub events, a fake API that answers
  * at once but delivers late, and a stream whose stored history comes late,
  * as a socket's does. A store's timer runs only through a `ManualDelay`
- * that the test gives. Product code never imports this module.
+ * that the test gives. The page shows until a `ManualVisibility` of the
+ * test hides it. Product code never imports this module.
  */
 
 export const target = { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace }
@@ -52,11 +54,13 @@ export function connect(
   fetch: FetchLike,
   events: FakeWorkspaceEvents,
   delay: Delay = new ManualDelay().delay,
+  visible: Readable<boolean> = new ManualVisibility(),
 ): () => void {
   return store.connect({
     fetch,
     subscribe: (after, listener) => events.subscribe(after, listener),
     delay,
+    visible,
   })
 }
 
@@ -165,6 +169,7 @@ export function lateHistory(
       return () => undefined
     },
     delay: new ManualDelay().delay,
+    visible: new ManualVisibility(),
   })
   return deliver
 }

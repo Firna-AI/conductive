@@ -23,17 +23,18 @@ export interface GitHubSubscription extends GitHubFeed {
  * The GitHub state of one workspace, for the bar, the row, and the Checks
  * tab. Each workspace gets its own store, so one workspace never shows the
  * state of another. While a view shows it, the store reads it again on a
- * slow timer of `source.delay`. Pass stable `fetch`, `subscribe`, and
- * `delay` functions: a new function connects again and reloads.
+ * slow timer of `source.delay`, but not while `source.visible` says that the
+ * page is hidden. Pass stable `fetch`, `subscribe`, `delay`, and `visible`
+ * values: a new value connects again and reloads.
  */
 export function useGitHubState(
   target: WorkspaceTarget,
   source: GitHubSource,
 ): GitHubSubscription {
-  const { fetch, subscribe, delay } = source
+  const { fetch, subscribe, delay, visible } = source
   const connect = useCallback(
-    (store: GitHubStore) => store.connect({ fetch, subscribe, delay }),
-    [fetch, subscribe, delay],
+    (store: GitHubStore) => store.connect({ fetch, subscribe, delay, visible }),
+    [fetch, subscribe, delay, visible],
   )
   const { store, snapshot } = useWorkspaceStore(target, {
     create: createStore,
