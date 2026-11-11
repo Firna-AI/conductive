@@ -62,14 +62,14 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     area: 'automation-and-api',
     name: 'Agents that delegate',
     status: 'available',
-    note: 'Agents create workspaces and list workspaces, repositories, sections, and models. Creating, listing, reading, and messaging sessions are planned.',
+    note: 'Agents create workspaces and list workspaces, repositories, sections, and models. Listing and reading sessions are in progress. Creating and messaging sessions are planned.',
   },
   {
     id: 'read-session-transcripts',
     area: 'automation-and-api',
     name: 'Read session transcripts',
-    status: 'planned',
-    note: 'Tools that let agents read chats from other sessions and workspaces are planned.',
+    status: 'in-progress',
+    note: 'Tools that let agents read concise or full chats from sessions across the org are in progress.',
     due: null,
   },
   {
