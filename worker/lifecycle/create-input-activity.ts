@@ -11,6 +11,8 @@ import {
 } from '../members/receiver-fence'
 import { warnWorker } from '../warnings'
 import { InputActivityOwner } from './input-activity-owner'
+import { captureWorkerWarning } from '../error-reporting/policy'
+import { workspaceErrorReporting } from '../error-reporting/workspace'
 import { inputActivityUpdate } from './input-activity-update'
 
 export function createWorkspaceInputActivity(
@@ -22,11 +24,18 @@ export function createWorkspaceInputActivity(
   schedule: ConnectionScheduler = scheduleConnectionCheck,
 ) {
   const { controller, storage } = integration
+  const reporting = workspaceErrorReporting(
+    env,
+    (pending) => context.waitUntil(pending),
+    dependencies.errorReporting,
+  )
   return new InputActivityOwner({
     now: dependencies.now,
-    schedule,
+    schedule: reporting.schedule(schedule),
     waitUntil: (pending) => context.waitUntil(pending),
     warn: warnWorker,
+    onFailure: (warning, error) =>
+      reporting.callback(() => captureWorkerWarning(warning, error)),
     recordLocal: (_id, at) => local(() => controller.recordLifecycleInput(at)),
     update: inputActivityUpdate({
       env,

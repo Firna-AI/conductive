@@ -7,6 +7,10 @@ import {
   type UserConfig,
 } from 'vite'
 import { buildVersion } from './build-version.ts'
+import { errorReportingBuild } from './tools/build/error-reporting.ts'
+import { readBuildRelease } from './tools/build/release.ts'
+
+const release = readBuildRelease(import.meta.dirname)
 
 export function developmentScripts() {
   const sources = new Map<string, string>()
@@ -53,11 +57,28 @@ export function developmentScripts() {
 }
 
 export default defineConfig({
-  define: { __CONDUCTIVE_APP_VERSION__: JSON.stringify(buildVersion()) },
+  define: {
+    __CONDUCTIVE_RELEASE__: JSON.stringify(release) ?? 'undefined',
+    __CONDUCTIVE_APP_VERSION__: JSON.stringify(buildVersion()),
+  },
+  build: { sourcemap: 'hidden' },
+  environments: {
+    conductive: {
+      build: {
+        rolldownOptions: {
+          output: {
+            entryFileNames: 'index.js',
+            chunkFileNames: 'chunk-[hash].js',
+          },
+        },
+      },
+    },
+  },
   // Workers AI is remote only. Local development leaves new workspaces Untitled and needs no Cloudflare login.
   plugins: [
     react(),
     cloudflare({ remoteBindings: false }),
     developmentScripts(),
+    errorReportingBuild({ release, settings: process.env }),
   ],
 })

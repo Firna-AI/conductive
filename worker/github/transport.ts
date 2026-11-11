@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { HttpFetch } from '../env'
 import { readBoundedBody } from '../http/bounded-body'
 import { githubFailure, object } from './parsers'
@@ -55,8 +56,8 @@ export async function githubJson(
           : await readBoundedBody(response.body, GITHUB_API_BODY_BYTES)
       return JSON.parse(new TextDecoder().decode(body))
     })
-  } catch {
-    throw githubFailure()
+  } catch (error) {
+    throw linkWorkerError(githubFailure(), error)
   }
 }
 

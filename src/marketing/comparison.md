@@ -67,7 +67,7 @@ Keep each row true:
     name of a row link, as text without markup.
 - `styles/comparison.css`, `styles/comparison-table.css`: the comparison
   page and its table, in the cascade that `layouts/Document.astro` keeps.
-- [Key code](README.md#key-code) in the marketing site README names the
+- [Key code](key-code.md) of the marketing site names the
   shared parts that the page also uses, such as `StatusMark.astro`,
   `DueDay.astro`, `CopyText.astro`, `ClosingCall.astro`, and
   `access-copy.ts`.

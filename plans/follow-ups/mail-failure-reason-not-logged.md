@@ -3,13 +3,13 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-09, item 2 of the diagnosis of a failed org invitation, branch `calummoore/member-invite-failure`.
-- **Location:** `worker/mail-sender.ts:49`, `worker/invitation-mailer.ts:41`, `worker/operator/approval-email.ts:39`, and `errorSummary` in `worker/warnings.ts:36`.
+- **Location:** `worker/mail-sender.ts:49`, `worker/invitation-mailer.ts:41`, `worker/operator/approval-email.ts:39`, and `errorSummary` in `worker/warning-values.ts`.
 - **Reason:** The fix reaches three files outside the branch that restores invitation emails, and that branch must merge fast.
 
 - **Terms:**
   - **Mail sender:** `createMailSender` in `worker/mail-sender.ts`. It posts each email to Resend, the email service. On a local app address, it writes the email to the log instead.
   - **Workers Logs:** Cloudflare's store of the log lines of the Worker. `wrangler.jsonc` turns it on.
-  - **errorSummary:** the helper in `worker/warnings.ts` that turns an error into a safe log text. It keeps only known codes, states, and numbers. It never copies an error message or an upstream text, because they can hold a secret.
+  - **errorSummary:** the helper in `worker/warning-values.ts` that turns a caught error into typed warning fields. It keeps only allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name. It never copies an error message or an upstream text, because they can hold a secret.
 - **Background:**
   - The org invitation and the waitlist approval email both send through the mail sender.
   - The mail sender throws in three cases: no `RESEND_API_KEY`, a reply from Resend that is not ok, or a request that fails or times out after 30 seconds.

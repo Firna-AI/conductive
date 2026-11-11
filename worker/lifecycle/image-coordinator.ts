@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { requireActiveOrg } from '../data/user-access'
 import type { WorkspaceStorage } from './platform-storage'
 import type { AppEnv } from '../env'
@@ -100,7 +101,8 @@ export class ImageCoordinator {
     try {
       await runImageAlarm(runtime, state)
       if (!scheduled) await this.storage.deleteAlarm()
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('image_alarm_failed', error)
       await this.storage.setAlarm(this.dependencies.now() + 30_000)
     }
   }

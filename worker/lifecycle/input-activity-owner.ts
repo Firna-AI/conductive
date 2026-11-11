@@ -8,6 +8,7 @@ export interface InputActivityOptions {
   recordLocal(workspaceId: string, at: number): Promise<void>
   update(workspaceId: string, at: number): Promise<void>
   warn(warning: WorkerWarning): void
+  onFailure?(warning: WorkerWarning, error: unknown): void
 }
 
 export class InputActivityOwner {
@@ -54,8 +55,12 @@ export class InputActivityOwner {
           this.localAttempted = input.revision
           try {
             await this.options.recordLocal(input.workspaceId, input.at)
-          } catch {
-            this.options.warn({ kind: 'activity_timestamp_failed' })
+          } catch (error) {
+            const warning = {
+              kind: 'activity_timestamp_failed',
+            } as const
+            this.options.warn(warning)
+            this.options.onFailure?.(warning, error)
           }
         }
       })
@@ -86,9 +91,11 @@ export class InputActivityOwner {
     this.nextUpdateAt = this.options.now() + 60_000
     this.running = Promise.resolve()
       .then(() => this.options.update(input.workspaceId, input.at))
-      .catch(() => {
+      .catch((error: unknown) => {
         this.attempted = input.revision - 1
-        this.options.warn({ kind: 'activity_update_failed' })
+        const warning = { kind: 'activity_update_failed' } as const
+        this.options.warn(warning)
+        this.options.onFailure?.(warning, error)
       })
       .finally(() => {
         this.running = undefined

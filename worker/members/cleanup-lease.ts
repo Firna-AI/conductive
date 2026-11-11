@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import {
@@ -24,10 +25,13 @@ export async function withCleanupLease<T>(
     return await action(token, lease.suspendedAt !== null)
   } catch (error) {
     if (error instanceof HttpError) throw error
-    throw new HttpError(
-      502,
-      'org_cleanup_failed',
-      'The org cleanup could not finish. Try again.',
+    throw linkWorkerError(
+      new HttpError(
+        502,
+        'org_cleanup_failed',
+        'The org cleanup could not finish. Try again.',
+      ),
+      error,
     )
   } finally {
     await releaseCleanupLease(env.DB, orgId, token)

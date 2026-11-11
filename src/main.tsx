@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
+import { startBrowserErrorReporting } from './app/error-reporting'
 import { createLiveServices } from './app/live-services'
 import { browserNavigation } from './app/navigation'
 import type { AppServices } from './app/services'
@@ -18,13 +19,22 @@ async function services(): Promise<AppServices> {
   return createLiveServices(window)
 }
 
+const navigation = browserNavigation(window)
+const reporting = startBrowserErrorReporting({
+  platform: 'web',
+  target: window,
+  navigation,
+})
 const root = document.getElementById('root')
 
 if (root) {
   void services().then((ready) => {
-    createRoot(root).render(
+    createRoot(root, reporting.rootOptions).render(
       <StrictMode>
-        <App navigation={browserNavigation(window)} services={ready} />
+        <App
+          navigation={navigation}
+          services={{ ...ready, errorReporting: reporting.identity }}
+        />
       </StrictMode>,
     )
   })

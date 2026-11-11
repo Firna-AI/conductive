@@ -1,4 +1,9 @@
 import {
+  validateDeviceRequest,
+  invalidateDeviceRequest,
+} from './broker-availability'
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
+import {
   DEVICE_FRAME_LIMIT_BYTES,
   DEVICE_HEARTBEAT_MS,
   DEVICE_OUTPUT_LIMIT_BYTES,
@@ -25,9 +30,14 @@ import { receiveDeviceMessage } from './broker-messages'
 import { deviceWire } from './socket'
 import { relayDeviceSettings } from './broker-settings'
 import { BrokerRequests } from './broker-store'
+import {
+  workspaceErrorReporting,
+  type WorkspaceErrorReporting,
+} from '../error-reporting/workspace'
 import { checkBroker, dropBroker, scheduleBroker } from './broker-lifecycle'
 
 export class DeviceBroker {
+  readonly reporting: WorkspaceErrorReporting
   connection: DeviceConnection | null = null
   readonly settings = new Map<string, SettingsWaiter>()
   private tail: Promise<unknown> = Promise.resolve()
@@ -41,7 +51,9 @@ export class DeviceBroker {
     env: AppEnv,
     alarm: (when: number | null) => Promise<void>,
     now: () => number = Date.now,
+    reporting?: WorkspaceErrorReporting,
   ) {
+    this.reporting = reporting ?? workspaceErrorReporting(env)
     this.env = env
     this.now = now
     this.alarm = alarm
@@ -63,53 +75,11 @@ export class DeviceBroker {
   forget(item: BrokerRequest): Promise<void> {
     return this.requests.forget(item)
   }
-  async valid(item: BrokerRequest): Promise<boolean> {
-    try {
-      const reply = deviceObject(
-        await deviceCall(this.env, item.request.workspaceId, {
-          type: 'workspace.validate',
-          requestId: item.request.requestId,
-          tokenHash: item.tokenHash,
-        }),
-      )
-      return reply.valid === true
-    } catch {
-      return false
-    }
+  valid(item: BrokerRequest): Promise<boolean> {
+    return validateDeviceRequest(this, item)
   }
-  async invalid(item: BrokerRequest): Promise<void> {
-    let reply: Record<string, unknown>
-    try {
-      reply = deviceObject(
-        await deviceCall(this.env, item.request.workspaceId, {
-          type: 'workspace.validate',
-          requestId: item.request.requestId,
-          tokenHash: item.tokenHash,
-        }),
-      )
-    } catch {
-      return this.unavailable(item)
-    }
-    if (reply.reason !== 'turn_ended') return this.unavailable(item)
-    try {
-      this.connection?.send({
-        type: 'command.cancel',
-        workspaceId: item.request.workspaceId,
-        requestId: item.request.requestId,
-      })
-    } catch {
-      /* Still settle and forget work after transport loss. */
-    }
-    try {
-      await this.update(item, {
-        state: 'failed',
-        error: { code: 'turn_ended', message: 'The agent turn has ended.' },
-      })
-    } catch {
-      /* Deleted workspace state cannot block unrelated work. */
-    } finally {
-      await this.forget(item)
-    }
+  invalid(item: BrokerRequest): Promise<void> {
+    return invalidateDeviceRequest(this, item)
   }
   async update(item: BrokerRequest, update: Record<string, unknown>) {
     const reply = await deviceCall(this.env, item.request.workspaceId, {
@@ -133,7 +103,8 @@ export class DeviceBroker {
     }
     try {
       await this.update(item, { state: 'unavailable' })
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('device_state_update_failed', error)
       /* A deleted workspace has no request left to settle. */
     } finally {
       await this.forget(item)
@@ -235,7 +206,8 @@ export class DeviceBroker {
       if (this.connection !== connection) return
       try {
         await receiveDeviceMessage(this, connection, value)
-      } catch {
+      } catch (error) {
+        captureUnexpectedWorkerFailure('device_message_failed', error)
         await this.drop()
       }
     })

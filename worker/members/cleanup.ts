@@ -1,3 +1,7 @@
+import {
+  captureUnexpectedWorkerFailure,
+  captureWorkerWarning,
+} from '../error-reporting/policy'
 import type { AppDependencies, AppEnv } from '../env'
 import { providerForAccount } from '../sandbox/client'
 import {
@@ -39,8 +43,10 @@ export async function cleanupDeletedOrgs(
 ): Promise<{ purged: string[]; pending: string[] }> {
   try {
     await cleanupDraftAttachments(env, dependencies.now())
-  } catch {
-    warnWorker({ kind: 'attachment_cleanup_retry' })
+  } catch (error) {
+    const warning = { kind: 'attachment_cleanup_retry' } as const
+    warnWorker(warning)
+    captureWorkerWarning(warning, error)
   }
   const result: { purged: string[]; pending: string[] } = {
     purged: [],
@@ -161,7 +167,8 @@ export async function cleanupDeletedOrgs(
           result.purged.push(org.id)
         },
       )
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('org_cleanup_failed', error)
       result.pending.push(org.id)
     }
   }

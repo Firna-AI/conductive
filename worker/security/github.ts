@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import { productName } from '../../docs/mockups/src/brand'
 import type { GitHubIdentity } from '../data/users'
 import type { AppEnv, HttpFetch } from '../env'
@@ -146,16 +147,16 @@ export class GitHubClient {
       const response = await this.fetch(request)
       if (!response.ok) throw new Error('GitHub refused the request')
       return response
-    } catch {
-      throw signInFailed()
+    } catch (error) {
+      throw linkWorkerError(signInFailed(), error)
     }
   }
 
   private async json(response: Response): Promise<unknown> {
     try {
       return await response.json()
-    } catch {
-      throw signInFailed()
+    } catch (error) {
+      throw linkWorkerError(signInFailed(), error)
     }
   }
 }

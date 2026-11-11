@@ -2,8 +2,7 @@ import type { ArchiveContext } from './archive-context'
 import { finishArchiveRestore } from './archive-restore-state'
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import { providerForAccount } from '../sandbox/client'
-import { warnWorker } from '../warnings'
-import { errorSummary, WarningId } from '../warning-values'
+import { warnArchiveFailure } from './archive-failure'
 import { CREATE_CHECKPOINT_KEY } from '../members/creation-checkpoint'
 import { prepareArchivedLifecycle } from './archive-start'
 import { readStartJob, serializeStartJob } from './start-job-codec'
@@ -286,12 +285,7 @@ export class WorkspaceArchive {
       } catch (missingFailure) {
         failure = missingFailure
       }
-      warnWorker({
-        kind: 'workspace_archive_failed',
-        workspaceId: WarningId.checked(state.workspaceId),
-        phase: state.phase,
-        error: errorSummary(failure),
-      })
+      warnArchiveFailure(state, failure)
       await storage.setAlarm(dependencies.now() + 30_000)
     }
   }

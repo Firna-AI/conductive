@@ -10,6 +10,7 @@ import { installationTokenProvider } from '../github/credentials'
 import { refreshWorkspace } from '../github/refresh'
 import { WorkspaceGitHubState } from '../github/workspace-state'
 import { HttpError } from '../http'
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { handleGitHubMerge } from '../github/merge-handler'
 import { authorizeMerge } from '../github/merge-access'
 import { GitHubReader } from '../github/client'
@@ -147,11 +148,13 @@ export class WorkspaceGitHub {
           error.code !== 'github_unavailable'
         )
           await this.storage.delete(key)
-        else
+        else {
+          captureUnexpectedWorkerFailure('github_refresh_failed', error)
           await this.storage.put(key, {
             ...read,
             at: this.dependencies.now() + 30_000,
           })
+        }
       }
     }
     await this.schedule()

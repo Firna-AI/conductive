@@ -1,5 +1,6 @@
 import type { AppEnv } from '../env'
 import { warnWorker } from '../warnings'
+import { captureWorkerWarning } from '../error-reporting/policy'
 import {
   attachmentBatch,
   readAttachment,
@@ -124,8 +125,10 @@ export async function cleanupDraftAttachments(
               now,
             )
         } else await deleteAttachment(env, record)
-      } catch {
-        warnWorker({ kind: 'attachment_cleanup_retry' })
+      } catch (error) {
+        const warning = { kind: 'attachment_cleanup_retry' } as const
+        warnWorker(warning)
+        captureWorkerWarning(warning, error)
       }
       after = record.id
     }

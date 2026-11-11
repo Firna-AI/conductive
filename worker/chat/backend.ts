@@ -8,14 +8,10 @@ import type { ToolSessionAccess, ToolSessionWrite } from '../tools/services'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
-import { errorResponse, HttpError, privateResponse } from '../http'
+import { errorResponse, privateResponse } from '../http'
 import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
-import {
-  authorizeChatBrowser,
-  type BrowserAccess,
-} from './browser-authorization'
-import { afterNumber } from './http-routes'
+import type { BrowserAccess } from './browser-authorization'
 import { browserRequest } from './browser-request'
 import {
   BrowserConnections,
@@ -34,7 +30,11 @@ import {
   runWorkspaceOperation,
   type WorkspaceOperation,
 } from './workspace-operation'
-import { browserUpgrade, runnerUpgrade } from './sockets'
+import { browserUpgrade, openBrowser, runnerUpgrade } from './sockets'
+import {
+  workspaceErrorReporting,
+  type WorkspaceErrorReporting,
+} from '../error-reporting/workspace'
 import type {
   BrowserPeer,
   ChatDependencies,
@@ -44,6 +44,7 @@ import type {
 
 /** The Durable Object and the in-memory runner adapter use this boundary. */
 export class WorkspaceChat {
+  readonly reporting: WorkspaceErrorReporting
   private readonly storage: ChatStorage
   readonly store: ChatStore
   readonly turnTokens: WorkspaceTurnTokens
@@ -106,6 +107,7 @@ export class WorkspaceChat {
       overrides.matchesObject ?? (() => true),
     )
     this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
+    this.reporting = this.dependencies.reporting ?? workspaceErrorReporting(env)
     this.store = createWorkspaceChatStore(
       storage,
       env,
@@ -173,14 +175,12 @@ export class WorkspaceChat {
     }
   }
 
-  async authorizeBrowser(request: Request): Promise<BrowserAccess> {
-    const access = await authorizeChatBrowser(
+  authorizeBrowser(request: Request): Promise<BrowserAccess> {
+    return this.binding.authorizeBrowser(
       request,
       this.env,
       this.dependencies.now(),
     )
-    this.binding.bind(access.workspace.id)
-    return access
   }
 
   async connectRunner(
@@ -264,11 +264,8 @@ export class WorkspaceChat {
     )
   }
 
-  async openBrowser(request: Request, peer: BrowserPeer): Promise<() => void> {
-    const access = await this.authorizeBrowser(request)
-    if (access.suffix !== '/events')
-      throw new HttpError(404, 'not_found', 'The page is not available.')
-    return this.subscribe(access, afterNumber(new URL(request.url)), peer)
+  openBrowser(request: Request, peer: BrowserPeer): Promise<() => void> {
+    return openBrowser(this, request, peer)
   }
 
   subscribe(

@@ -46,6 +46,9 @@ This page lists each protocol doc and what it covers.
       risks of each version pin.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+- [Error reporting](../protocol/error-reporting.md): the reports of unexpected
+  failures to Better Stack, what each report holds, and what never leaves
+  the app.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its

@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import {
   MACHINE_PATHS,
   type AgentListModelsResponse,
@@ -46,8 +47,10 @@ async function defaultChoice(
     if (
       error instanceof HttpError &&
       error.code === 'default_model_unavailable'
-    )
+    ) {
+      captureUnexpectedWorkerFailure('default_model_fallback', error)
       return null
+    }
     throw error
   }
 }

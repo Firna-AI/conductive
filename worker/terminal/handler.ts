@@ -3,6 +3,7 @@ import {
   terminalPaths,
   type TerminalResponse,
 } from '../../src/shared/terminal'
+import { linkWorkerError } from '../error-reporting/causes'
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
 import {
@@ -113,8 +114,8 @@ export function createTerminalHandler(
         let upstream: Response
         try {
           upstream = await dependencies.fetch(portRequest(request, port, auth))
-        } catch {
-          throw new ProviderError('unavailable', 503)
+        } catch (error) {
+          throw linkWorkerError(new ProviderError('unavailable', 503), error)
         }
         if (upstream.headers.get('Sec-WebSocket-Protocol') !== 'tty')
           throw new ProviderError('invalid_response', 502)

@@ -1,4 +1,5 @@
 import type { HttpFetch } from '../env'
+import { linkWorkerError } from '../error-reporting/causes'
 import { base64Url } from '../security/crypto'
 import { githubFailure, object, text } from './parsers'
 import { appSigningKey } from './private-key'
@@ -70,9 +71,9 @@ export async function installationAccessToken(
     const token = text(result.token)
     if (!token) throw githubFailure()
     return token
-  } catch {
+  } catch (error) {
     if (imported?.pem === identity.privateKey) imported = undefined
-    throw dependencies.failure()
+    throw linkWorkerError(dependencies.failure(), error)
   }
 }
 
@@ -91,7 +92,7 @@ export async function revokeInstallationAccessToken(
         if (response.status !== 204 && response.status !== 401) throw failure()
       },
     )
-  } catch {
-    throw failure()
+  } catch (error) {
+    throw linkWorkerError(failure(), error)
   }
 }

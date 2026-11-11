@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { OrgSuspensionResponse } from '../../src/shared/operator'
 import { jobSoftware, readBuildJob } from '../lifecycle/build-data'
 import { imageRuntime } from '../lifecycle/runtime'
@@ -26,7 +27,8 @@ export async function suspendOrg(
           .suspendLifecycle(workspace.id, workspace.ownerUserId)
       )
         continue
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('operator_lifecycle_failed', error)
       // The persistent suspension also blocks every start and native alarm.
     }
     pendingWorkspaceIds.push(workspace.id)
@@ -42,7 +44,8 @@ export async function suspendOrg(
         dependencies.now(),
         build.id,
       )
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('operator_lifecycle_failed', error)
       // The saved image alarm retries cleanup after a failed wake.
     }
   }

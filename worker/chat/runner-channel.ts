@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
 import type { WorkspaceEventEnvelope } from './workspace-events'
@@ -78,9 +79,7 @@ export class RunnerChannel {
       if (!active || !active.peer.matches(peer)) return
       if (!(await active.peer.authorize())) return
       try {
-        const input: unknown =
-          typeof value === 'string' ? JSON.parse(value) : value
-        await this.handle(active, input)
+        await this.handle(active, runnerFrame(value))
       } catch (error) {
         warnWorker({
           kind: 'runner_message_failed',
@@ -128,7 +127,8 @@ export class RunnerChannel {
         )
       void this.store
         .run(() => this.flush())
-        .catch(() => {
+        .catch((error: unknown) => {
+          captureUnexpectedWorkerFailure('runner_message_failed', error)
           if (this.connections.current === active) this.close()
           active.peer.close()
         })
@@ -244,5 +244,14 @@ export class RunnerChannel {
       this.close()
       return false
     }
+  }
+}
+
+function runnerFrame(value: unknown): unknown {
+  if (typeof value !== 'string') return value
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
   }
 }

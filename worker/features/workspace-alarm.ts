@@ -9,6 +9,7 @@ import type { WorkspaceAlarms } from './alarms'
 import { WorkspaceAlarmTasks } from './alarm-tasks'
 import type { WorkspaceGitHub } from './github'
 import type { WorkspaceFeatures } from './workspace'
+import type { WorkspaceErrorReporting } from '../error-reporting/workspace'
 import type { WorkspaceContinue } from '../lifecycle/continue'
 import { pendingContinue } from '../lifecycle/continue-types'
 import {
@@ -30,6 +31,7 @@ interface WorkspaceAlarmInput {
   features: WorkspaceFeatures
   continuation: Pick<WorkspaceContinue, 'advance'>
   lifecycle: () => Promise<void>
+  reporting?: WorkspaceErrorReporting
 }
 
 export class WorkspaceAlarmRunner {
@@ -38,7 +40,7 @@ export class WorkspaceAlarmRunner {
 
   constructor(input: WorkspaceAlarmInput) {
     this.input = input
-    this.tasks = new WorkspaceAlarmTasks(input.context)
+    this.tasks = new WorkspaceAlarmTasks(input.context, input.reporting)
   }
 
   async alarm(): Promise<void> {

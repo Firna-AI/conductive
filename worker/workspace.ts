@@ -50,6 +50,8 @@ export class Workspace extends AgentSessionWorkspace {
       ...lifecycleDependencies(),
       now,
       terminalSchedule: activitySchedule,
+      errorReporting: this.reporting.runtime,
+      reporting: this.reporting,
     }
     const matches = (id: string) =>
       env.WORKSPACES.idFromName(id).equals(context.id)
@@ -97,6 +99,7 @@ export class Workspace extends AgentSessionWorkspace {
       context,
       env,
       now,
+      reporting: this.reporting,
       alarms: this.integration.alarms,
       storage: this.integration.storage,
       browsers: this.chat.browsers,
@@ -187,7 +190,7 @@ export class Workspace extends AgentSessionWorkspace {
   }
 
   alarm(): Promise<void> {
-    return this.alarmRunner.alarm()
+    return this.reporting.alarm(() => this.alarmRunner.alarm())
   }
 
   protected settledAlarms(): Promise<void> {
@@ -195,18 +198,21 @@ export class Workspace extends AgentSessionWorkspace {
   }
 
   async fetch(request: Request): Promise<Response> {
-    if (hostSurface(request, this.env) === 'preview')
-      return this.features.previews.proxy(request)
-    const feature = await this.features.fetch(request)
-    if (feature) return feature
-    if (/\/github(?:\/checks)?$/.test(new URL(request.url).pathname))
-      return handleGitHubRead(request, this.env, {
-        now: this.now,
-        refresh: (workspace, signal) => this.github.refresh(workspace, signal),
-      })
-    if (/\/github\/.*$/.test(new URL(request.url).pathname))
-      return this.github.fetch(request)
-    return this.fetchChat(request)
+    return this.reporting.fetch(async () => {
+      if (hostSurface(request, this.env) === 'preview')
+        return this.features.previews.proxy(request)
+      const feature = await this.features.fetch(request)
+      if (feature) return feature
+      if (/\/github(?:\/checks)?$/.test(new URL(request.url).pathname))
+        return handleGitHubRead(request, this.env, {
+          now: this.now,
+          refresh: (workspace, signal) =>
+            this.github.refresh(workspace, signal),
+        })
+      if (/\/github\/.*$/.test(new URL(request.url).pathname))
+        return this.github.fetch(request)
+      return this.fetchChat(request)
+    })
   }
 
   archiveWorkspace(

@@ -29,6 +29,10 @@ Each path is relative to `src/app/`, the folder of this page.
   `putOrg`, which takes a confirmed org record, and `admit`, which opens
   the app when app access arrives. `boot.ts`: `Boot`, the states of the
   first load, and `readShared`, what every screen of the app shares.
+- `error-reporting.ts` and the other `error-reporting-*.ts` modules: the
+  browser error reporter. [Error reporting](error-reporting.md#key-code)
+  names each one, with `AppServices.errorReporting` and the user ID
+  subscription of `AppModel.boot`.
 - `waitlist-model.ts`: `WaitlistModel`, the screen of a person who waits:
   the use of a code from the field or a join link, the invitations with
   Accept, and the read of the app access at each return to the page.

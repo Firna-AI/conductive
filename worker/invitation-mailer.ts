@@ -1,3 +1,4 @@
+import { linkWorkerError } from './error-reporting/causes'
 import { productName } from '../docs/mockups/src/brand'
 import type { AppEnv, HttpFetch } from './env'
 import { HttpError } from './http'
@@ -38,11 +39,14 @@ export function createInvitationMailer(
             `org-invite/${invitation.id}/${await hash(body)}`,
           developmentLog: `${invitation.invitedBy} invited ${invitation.email} to ${invitation.orgName}: ${invitation.link}`,
         })
-      } catch {
-        throw new HttpError(
-          502,
-          'invite_email_failed',
-          'The invitation email could not be sent. Try again.',
+      } catch (error) {
+        throw linkWorkerError(
+          new HttpError(
+            502,
+            'invite_email_failed',
+            'The invitation email could not be sent. Try again.',
+          ),
+          error,
         )
       }
     },

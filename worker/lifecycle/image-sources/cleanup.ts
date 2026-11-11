@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../../error-reporting/policy'
 import type { AppEnv, HttpFetch } from '../../env'
 import { decrypt } from '../../security/crypto'
 import type { LifecycleOwnership } from '../../members/lifecycle-contract'
@@ -32,7 +33,8 @@ export async function revokeSourceToken(
     await ownership?.renew()
     await clearSourceToken(env.DB, job.buildId, job.tokenCiphertext, ownership)
     return true
-  } catch {
+  } catch (error) {
+    captureUnexpectedWorkerFailure('image_source_cleanup_failed', error)
     return false
   }
 }

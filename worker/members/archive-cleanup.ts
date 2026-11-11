@@ -1,7 +1,6 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { providerForAccount } from '../sandbox/client'
-import { errorSummary, WarningId } from '../warning-values'
-import { warnWorker } from '../warnings'
+import { warnArchiveFailure } from '../lifecycle/archive-failure'
 import {
   ignoreAlreadyRemoved,
   requireDeletedOrgCleanup,
@@ -42,12 +41,10 @@ export async function cleanupOrgArchives(
       )
         throw cleanupBusy()
     } catch (error) {
-      warnWorker({
-        kind: 'workspace_archive_failed',
-        workspaceId: WarningId.checked(row.workspaceId),
-        phase: 'purge',
-        error: errorSummary(error),
-      })
+      warnArchiveFailure(
+        { workspaceId: row.workspaceId, phase: 'purge' },
+        error,
+      )
       failures.push(error)
     }
   }

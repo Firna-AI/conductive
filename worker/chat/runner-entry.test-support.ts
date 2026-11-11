@@ -77,10 +77,10 @@ export class Workspace extends ProductionWorkspace {
     const detach = this.integration.files.runner.detach.bind(
       this.integration.files.runner,
     )
-    this.integration.files.runner.detach = (id) => {
+    this.integration.files.runner.detach = (id, cause) => {
       if (this.fileBinding === id) this.fileBinding = null
       this.fileDetached.push(id)
-      detach(id)
+      return detach(id, cause)
     }
     const hello = this.controller.recoverLifecycle.bind(this.controller)
     this.controller.recoverLifecycle = async (...args) => {

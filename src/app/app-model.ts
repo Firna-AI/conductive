@@ -80,7 +80,23 @@ export class AppModel {
     this.invitations = new InvitationsModel(this)
     this.waitlist = new WaitlistModel(this)
     // The model lives as long as its store, so it never unsubscribes.
-    this.boot.subscribe(() => this.followPerson())
+    this.boot.subscribe(() => {
+      this.followPerson()
+      this.followReportingPerson()
+    })
+  }
+
+  private followReportingPerson(): void {
+    const boot = this.boot.get()
+    try {
+      this.services.errorReporting?.setUser(
+        boot.state === 'ready' || boot.state === 'waiting'
+          ? boot.user.id
+          : null,
+      )
+    } catch {
+      // Reporting must not change the app's session.
+    }
   }
 
   /**

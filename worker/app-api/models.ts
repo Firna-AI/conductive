@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import { choice, identifier, record } from '../chat/inputs'
 import type { AppEnv } from '../env'
@@ -25,8 +26,8 @@ export function configuredModels(env: AppEnv): AgentModel[] {
         ),
       }
     })
-  } catch {
-    throw unavailable()
+  } catch (error) {
+    throw linkWorkerError(unavailable(), error)
   }
 }
 
@@ -34,11 +35,14 @@ export function configuredDefaultChoice(env: AppEnv): AgentChoice {
   try {
     const value: unknown = JSON.parse(env.CONDUCTIVE_DEFAULT_CHOICE ?? '')
     return choice(value)
-  } catch {
-    throw new HttpError(
-      503,
-      'default_model_unavailable',
-      'The default model is not available. Ask the app administrator to configure it.',
+  } catch (error) {
+    throw linkWorkerError(
+      new HttpError(
+        503,
+        'default_model_unavailable',
+        'The default model is not available. Ask the app administrator to configure it.',
+      ),
+      error,
     )
   }
 }

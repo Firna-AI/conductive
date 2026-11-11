@@ -130,10 +130,19 @@ such as the ICO guidance on the privacy information to give.
 
 When you change a fact in the architecture doc or in a protocol doc, read
 both legal pages in full. The legal pages are the Terms page in
-`src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts`.
-In the same change, update each sentence of the legal pages that restates
-the fact. A search for the old words is not enough, because a legal page
-can restate a fact in other words.
+`src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts`,
+`src/marketing/privacy-uses.ts`, `src/marketing/privacy-recipients.ts`, and
+`src/marketing/privacy-transfers.ts`.
+In the same change, update each
+sentence of the legal pages that restates the fact. A search for the old
+words is not enough, because a legal page can restate a fact in other words.
+
+The Privacy page names each outside service that gets user data, except
+the cloud computer provider. A repository rule keeps the name of that
+provider out of user-facing text, as [AGENTS.md](../../AGENTS.md) says.
+Reason: a description by kind would hide a name that the app shows, such as
+the address of Better Stack in the content security policy of each app
+page. Each later service follows this rule with no new decision.
 
 ## Public docs
 
@@ -220,5 +229,7 @@ before the Worker serves them.
 
 ### Key code
 
-[Key code](key-code.md) gives the entry points of the site, its public guides,
-and its shared Worker helpers.
+[Key code](key-code.md) names the files to open first. It covers the Worker
+modules that serve the site, the pages and their parts, the public guides,
+the comparison page, the shared words and links, and the legal pages. It
+also covers the build, the styles, the pictures, and their tests.

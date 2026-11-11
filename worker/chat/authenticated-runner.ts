@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { WorkspaceToRunner } from '../../src/shared/runner'
 import { CONNECTION_CHECK_MS } from '../security/connection-access'
 import { RunnerAccessDenied } from './login-access'
@@ -40,7 +41,8 @@ export class AuthenticatedRunner {
         this.workspace.tokenHash,
       )
       if (allowed && !this.closed) return true
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('connection_authorization_failed', error)
       // A failed access read cannot keep this transport open.
     }
     this.close()

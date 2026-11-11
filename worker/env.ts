@@ -2,6 +2,8 @@ import type { InvitationMailer } from './invitation-mailer'
 import type { ProviderAccountConfigurations } from './sandbox/accounts'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { Workspace } from './workspace'
+import type { WorkerErrorRuntime } from './error-reporting/runtime'
+import type { WorkspaceErrorReporting } from './error-reporting/workspace'
 
 export interface AppEnv {
   DB: D1Database
@@ -17,6 +19,7 @@ export interface AppEnv {
   CONDUCTIVE_TITLE_MODEL?: string
   CONDUCTIVE_MODELS?: string
   CONDUCTIVE_DEFAULT_CHOICE?: string
+  CONDUCTIVE_ERROR_TRACKING_DSN?: string
   CONDUCTIVE_RUNNER_ARCHIVE_URL?: string
   CONDUCTIVE_RUNNER_ARCHIVE_SHA256?: string
   CF_VERSION_METADATA?: WorkerVersionMetadata
@@ -43,5 +46,7 @@ export interface AppDependencies {
   now: () => number
   randomToken: () => string
   invitationMailer?: InvitationMailer
+  errorReporting?: WorkerErrorRuntime
+  reporting?: WorkspaceErrorReporting
   scheduleGatewayCheck?: ConnectionScheduler
 }

@@ -28,6 +28,7 @@ and the separate preview domain.
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
 | Panel widths                                                                 | The browser, or the Mac app              |
+| Error reports of the Worker, the web app, and the Mac app window             | Better Stack Errors, in an EU region     |
 
 ## Trust boundaries
 

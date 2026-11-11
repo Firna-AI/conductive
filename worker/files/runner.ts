@@ -9,6 +9,7 @@ import {
 } from './errors'
 import { natural } from './parsers'
 import { checkByteLimit, readFilePath } from './paths'
+import { linkWorkerError } from '../error-reporting/causes'
 
 interface PendingRequest {
   connectionId: string
@@ -37,11 +38,17 @@ export class RunnerFiles {
     this.connection = { id: connectionId, send }
   }
 
-  detach(connectionId: string): void {
-    if (this.connection?.id !== connectionId) return
+  detach(connectionId: string, cause?: unknown): boolean {
+    if (this.connection?.id !== connectionId) return false
     this.connection = null
-    for (const request of [...this.pending.values()])
-      request.fail(fileUnavailable())
+    const pending = [...this.pending.values()]
+    for (const request of pending)
+      request.fail(
+        cause === undefined
+          ? fileUnavailable()
+          : linkWorkerError(fileUnavailable(), cause),
+      )
+    return pending.length > 0
   }
 
   /** Results bypass the owner's numbered event and chat history path. */
@@ -130,8 +137,8 @@ export class RunnerFiles {
       }
       try {
         connection.send(command)
-      } catch {
-        fail(fileUnavailable())
+      } catch (error) {
+        fail(linkWorkerError(fileUnavailable(), error))
       }
     })
   }

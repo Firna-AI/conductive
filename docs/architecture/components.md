@@ -39,8 +39,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - One Cloudflare Worker serves the web app, the marketing site, the API,
   the proxies to sandboxes, and the GitHub webhook endpoint.
 - It holds the GitHub App key, the Boat key, the key that signs the session
-  cookies, and the key that encrypts the stored secrets. The browser never
-  holds them.
+  cookies, the key that encrypts the stored secrets, and the DSN of its
+  error reports. The browser never holds them.
 - It runs the model gateway. The gateway takes the model requests of the
   agent programs in a sandbox, with the
   [turn token](../protocol/model-gateway.md#terms) of their turn. It adds the
@@ -196,3 +196,7 @@ the rules.
   with its screenshots, to the team inbox. The email provider of the
   operator hosts that inbox. The app keeps no copy of feedback, as
   [Feedback](../protocol/feedback.md) says.
+- **Better Stack Errors:** takes the reports of unexpected failures, in two
+  applications in the EU. The Worker sends its own reports. The web app and
+  the Mac app window send theirs directly from the page, as
+  [Error reporting](../protocol/error-reporting.md) says.

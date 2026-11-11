@@ -1,3 +1,4 @@
+import { linkWorkerError } from '../error-reporting/causes'
 import { suspendedOrgError } from '../data/org-access'
 import { API_PATHS } from '../../src/shared/api'
 import type { AppEnv } from '../env'
@@ -109,10 +110,13 @@ export function toolError(error: unknown): Response {
   return privateResponse(
     errorResponse(
       error instanceof ProviderError
-        ? new HttpError(
-            502,
-            'sandbox_unavailable',
-            'The cloud computer did not answer. Try again.',
+        ? linkWorkerError(
+            new HttpError(
+              502,
+              'sandbox_unavailable',
+              'The cloud computer did not answer. Try again.',
+            ),
+            error,
           )
         : error,
     ),

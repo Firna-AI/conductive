@@ -6,7 +6,7 @@ first.
 
 - `backend.ts`: `WorkspaceChat`, its gates, its trusted methods, the open
   tabs, and the one publisher of committed events.
-- `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
+- `workspace-binding.ts`: `ChatWorkspaceBinding`, which authorizes browser access, binds chat to one workspace, and checks the object identity.
 - [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
   It derives a running turn's token and checks the starter's current login in the chat queue.
   Runner delivery gets the token of each version 2 `turn` command from `forRunningTurn`.
@@ -17,6 +17,7 @@ first.
 - `workspace-integration.ts`: `createWorkspaceIntegration`, which joins
   chat, the lifecycle, and the Mac devices in the workspace object. It
   sets the hooks, and gives the Mac devices the shared state writer.
+- `runner-file-attachment.ts`: attaches the file bridge while preserving caught-failure reports and the original send result.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
   lifecycle events. Its stop transaction clears the port report with

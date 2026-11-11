@@ -24,17 +24,20 @@ import {
   readStartJob,
   type StoredWorkspaceStartJob,
 } from './lifecycle/start-job-codec'
-import { nativeWorkspaceStorage } from './lifecycle/platform-storage'
-import { readEncryptedStartLog } from './lifecycle/start-storage'
-import {
-  startResultForTransport,
-  type WorkspaceLifecycleTransport,
-} from './lifecycle/workspace-transport'
+import type { WorkspaceLifecycleTransport } from './lifecycle/workspace-transport'
 import type { WorkspaceController } from './lifecycle/workspace-controller-types'
 import type { WorkspaceStartIntent } from './lifecycle/start-types'
 import { createWorkspaceInputActivity } from './lifecycle/create-input-activity'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
+import type { WorkspaceErrorReporting } from './error-reporting/workspace'
+import {
+  checkWorkspaceTurnToken,
+  recordWorkspaceActivity,
+  readWorkspaceLog,
+  runWorkspaceLifecycle,
+  workspaceStartResults,
+} from './lifecycle/run-workspace'
 import type { ComputerIdentity } from './lifecycle/computer-ledger'
 import type { TurnTokenCheck } from './model-gateway/types'
 
@@ -46,6 +49,7 @@ export class WorkspaceLifecycle
   protected readonly controller: WorkspaceController
   protected readonly devices: DeviceRuntime
   protected readonly context: DurableObjectState
+  protected readonly reporting: WorkspaceErrorReporting
   protected readonly activity: ReturnType<typeof createWorkspaceInputActivity>
   private readonly activityNow: () => number
 
@@ -63,14 +67,21 @@ export class WorkspaceLifecycle
     this.activityNow = now
     const integration = createWorkspaceIntegration(context, env, now, resolvers)
     this.integration = integration
+    this.reporting = integration.reporting
     this.chat = integration.chat
     this.devices = integration.devices
     this.controller = integration.controller
-    context.blockConcurrencyWhile(() => integration.sockets.restore())
+    context.blockConcurrencyWhile(() =>
+      this.reporting.background(() => integration.sockets.restore()),
+    )
     this.activity = createWorkspaceInputActivity(
       context,
       env,
-      { ...lifecycleDependencies(), now },
+      {
+        ...lifecycleDependencies(),
+        now,
+        errorReporting: this.reporting.runtime,
+      },
       integration,
       (operation) =>
         this.chat.runLifecycle(() => integration.withGeneration(operation)),
@@ -79,12 +90,11 @@ export class WorkspaceLifecycle
   }
 
   protected run<T>(operation: () => Promise<T>): Promise<T> {
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const result = await operation()
-        await this.chat.flushRunner()
-        return result
-      }),
+    return runWorkspaceLifecycle(
+      this.chat,
+      this.integration.withGeneration,
+      this.reporting,
+      operation,
     )
   }
 
@@ -98,15 +108,19 @@ export class WorkspaceLifecycle
   }
 
   webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
-    return this.integration.sockets.message(socket, message)
+    return this.reporting.background(() =>
+      this.integration.sockets.message(socket, message),
+    )
   }
 
   webSocketClose(socket: WebSocket) {
-    return this.integration.sockets.close(socket)
+    return this.reporting.background(() =>
+      this.integration.sockets.close(socket),
+    )
   }
 
   webSocketError(socket: WebSocket) {
-    return this.integration.sockets.close(socket)
+    return this.webSocketClose(socket)
   }
 
   queueComputerStops(
@@ -139,31 +153,20 @@ export class WorkspaceLifecycle
   }
 
   async waitLifecycleStart() {
-    return startResultForTransport(
-      await this.controller.waitLifecycleStart(),
-      () => this.readLifecycleStartLog(),
-    )
+    return workspaceStartResults.waitLifecycleStart(this.controller, this)
   }
   async waitCreationLifecycle() {
-    return startResultForTransport(
-      await this.controller.waitCreationLifecycle(),
-      () => this.readLifecycleStartLog(),
-    )
+    return workspaceStartResults.waitCreationLifecycle(this.controller, this)
   }
   async waitCreationAdmission() {
     return this.controller.waitCreationAdmission()
   }
-  async readCreationLifecycleResult() {
-    const result = await this.controller.readCreationLifecycleResult()
-    return result
-      ? startResultForTransport(result, () => this.readLifecycleStartLog())
-      : undefined
+  readCreationLifecycleResult() {
+    return workspaceStartResults.readCreation(this.controller, this)
   }
 
   readLifecycleStartLog() {
-    return readEncryptedStartLog(
-      nativeWorkspaceStorage(this.integration.storage),
-    )
+    return readWorkspaceLog(this.integration.storage)
   }
 
   async initializeLifecycle(
@@ -192,15 +195,13 @@ export class WorkspaceLifecycle
     return this.run(() => this.controller.lifecycleFailed(error))
   }
 
-  async lifecycleActivity() {
-    const at = this.activityNow()
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const state = await this.controller.readLifecycle()
-        const result = await this.controller.lifecycleActivity(true)
-        if (result.ok && state) this.activity.record(state.workspaceId, at)
-        return result
-      }),
+  lifecycleActivity() {
+    return recordWorkspaceActivity(
+      this.chat,
+      this.integration.withGeneration,
+      this.controller,
+      this.activity,
+      this.activityNow(),
     )
   }
 
@@ -252,10 +253,7 @@ export class WorkspaceLifecycle
     token: string,
     claimCodexRecovery?: true | 'complete',
   ): Promise<TurnTokenCheck> {
-    const workspaceId = await this.chat.store.workspaceId()
-    return workspaceId
-      ? this.chat.turnTokens.check(workspaceId, token, claimCodexRecovery)
-      : { ok: false, reason: 'turn_not_active' }
+    return checkWorkspaceTurnToken(this.chat, token, claimCodexRecovery)
   }
 
   async reportRunnerLifecycle(event: RunnerLifecycleEvent): Promise<void> {
@@ -286,7 +284,7 @@ export class WorkspaceLifecycle
     target: string,
     operation: unknown,
   ): Promise<DeviceOperationResult> {
-    return this.devices.operation(target, operation)
+    return this.reporting.run(() => this.devices.operation(target, operation))
   }
 
   protected async fetchChat(request: Request): Promise<Response> {
@@ -294,7 +292,9 @@ export class WorkspaceLifecycle
     if (deviceResponse) return deviceResponse
     const response = await this.chat.fetch(request)
     if (request.method !== 'GET' && request.method !== 'HEAD')
-      this.context.waitUntil(this.devices.reconcile())
+      this.context.waitUntil(
+        this.reporting.background(() => this.devices.reconcile()),
+      )
     return response
   }
 }

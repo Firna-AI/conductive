@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { DeviceCommandRecord } from '../../src/shared/device'
 import {
   deviceObject,
@@ -58,6 +59,7 @@ export class WorkspaceDevices {
         reason: 'access_revoked',
       }
     } catch (error) {
+      captureUnexpectedWorkerFailure('device_relay_failed', error)
       return {
         valid: false,
         reason:

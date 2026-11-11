@@ -38,6 +38,7 @@ points of each part.
   [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with no env values or startup command.
   [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
   [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
+- [`archive-failure.ts`](archive-failure.ts): the archive retry warning and its filtered error report. The workspace ID stays in Workers Logs.
 - [`restore-workspace.ts`](restore-workspace.ts): the member Restore route action with an explicit app origin and the fixed expiry check.
 - [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
@@ -51,6 +52,7 @@ points of each part.
   object. [`lifecycle-admission.ts`](lifecycle-admission.ts) checks a create
   and calls the admission hook inside `blockConcurrencyWhile` of the
   platform. A refused admission ends the start as a normal failed start.
+- [`run-workspace.ts`](run-workspace.ts): the queue, generation, reporting, activity, log, encrypted start-result, and turn-token helpers of the workspace object.
 - [`workspace-platform.ts`](workspace-platform.ts): `nativeWorkspacePlatform`,
   the platform of the workspace object. A throw inside the runtime's
   `blockConcurrencyWhile` resets the object. So the platform keeps the

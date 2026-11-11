@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import {
   DEVICE_COMMAND_PATH,
   type DeviceCommandRecord,
@@ -90,7 +91,8 @@ export async function workspaceMachine(
               tokenHash: workspace.tokenHash,
             }),
           ).sent === true
-      } catch {
+      } catch (error) {
+        captureUnexpectedWorkerFailure('device_relay_failed', error)
         /* A failed relay must not leave an approval waiting. */
       }
       if (!sent)

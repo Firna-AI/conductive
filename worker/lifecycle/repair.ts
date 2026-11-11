@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { warnWorker } from '../warnings'
 import type { ImageRuntime } from './image-builds'
 import { scheduleIdleImage } from './image-schedule'
@@ -39,7 +40,8 @@ export async function repairLifecycleAlarms(
     try {
       if (kind === 'workspace') await check(id)
       else await scheduleIdleImage(images, id, software())
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('lifecycle_repair_failed', error)
       if (kind === 'workspace') result.pendingWorkspaces++
       else result.pendingOrgs++
     } finally {

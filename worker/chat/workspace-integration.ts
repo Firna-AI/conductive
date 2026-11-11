@@ -1,3 +1,5 @@
+import { workspaceErrorReporting } from '../error-reporting/workspace'
+import { reportingRunnerAttachment } from './runner-file-attachment'
 import { HttpError } from '../http'
 import { pendingContinue } from '../lifecycle/continue-types'
 import { WorkspaceFiles } from '../files/workspace'
@@ -33,6 +35,7 @@ export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
   Pick<
     ChatDependencies,
+    | 'reporting'
     | 'resolveAttachments'
     | 'prepareAttachments'
     | 'scheduleRunnerCheck'
@@ -59,12 +62,17 @@ export function createWorkspaceIntegration(
   now: () => number,
   resolvers: WorkspaceChatResolvers = {},
 ) {
+  const reporting =
+    resolvers.reporting ??
+    workspaceErrorReporting(env, (pending) => context.waitUntil(pending))
   const storage = receiverStorage(context.storage)
   let generation: number | undefined
   const original = lifecycleDependencies()
   const dependencies = {
     ...original,
     now,
+    errorReporting: reporting.runtime,
+    reporting,
     fetch: async (request: Request) => {
       await assertReceiverActive(storage, generation)
       const response = await original.fetch(request)
@@ -95,22 +103,14 @@ export function createWorkspaceIntegration(
     {
       ...resolvers,
       now,
+      reporting,
       matchesObject: matches,
       waitUntil: (promise) => context.waitUntil(promise),
       browserAlarm: (at) => alarms.set('browser', at),
       runnerAlarm: (at) => alarms.set('runner', at),
-      runnerAttached: (_workspaceId, connectionId, send) => {
-        files.runner.attach(connectionId, (command) => {
-          context.waitUntil(
-            send(command).then(
-              (sent) => {
-                if (!sent) files.runner.detach(connectionId)
-              },
-              () => files.runner.detach(connectionId),
-            ),
-          )
-        })
-      },
+      runnerAttached: reportingRunnerAttachment(files, reporting, (pending) =>
+        context.waitUntil(pending),
+      ),
       runnerDetached: (connectionId) => files.runner.detach(connectionId),
       runnerHello: async (_id, publish) =>
         controller.recoverLifecycle(callbackPublisher(publish)),
@@ -126,7 +126,7 @@ export function createWorkspaceIntegration(
                 callbackPublisher(publish),
               )
             } finally {
-              context.waitUntil(devices.reconcile())
+              context.waitUntil(reporting.background(() => devices.reconcile()))
             }
           },
           receiveFileResult: async (value, connectionId) => {
@@ -237,7 +237,8 @@ export function createWorkspaceIntegration(
             })),
           }
         }),
-      chatRecovered: () => context.waitUntil(devices.reconcile()),
+      chatRecovered: () =>
+        context.waitUntil(reporting.background(() => devices.reconcile())),
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (
@@ -261,11 +262,12 @@ export function createWorkspaceIntegration(
       stopped: async (id) => {
         for (const hook of stoppedHooks) await hook(id)
         await chat.stopWorkspace(id)
-        context.waitUntil(devices.reconcile())
+        context.waitUntil(reporting.background(() => devices.reconcile()))
       },
     },
   )
   return {
+    reporting,
     storage,
     chat,
     devices,

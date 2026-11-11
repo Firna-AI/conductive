@@ -9,6 +9,9 @@ Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
 push to `main` deploys the test deployment. Two linked pages hold the
 [model inputs](deployment/models.md) and the
 [runner archive and software image](deployment/runner-archive.md).
+[Error reporting setup](deployment/error-reporting.md) gives the Better
+Stack applications, the browser DSN, and the settings that upload the source
+maps of a build.
 
 Each input names the routes that read it. A route that does not read an
 input works without it. Keep secrets out of the repository and out of
@@ -105,6 +108,7 @@ examples.
 | `BOAT_KEY_ENCRYPTION_KEY` | Every route that stores or reads a stored secret | A separate 32 random bytes, encoded as Base64. |
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. A PKCS#8 PEM works too. |
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhooks on the machine hostname | The webhook secret of the GitHub App. The Worker checks each delivery with it. Without it, each delivery gets `503 github_unavailable`. |
+| `CONDUCTIVE_ERROR_TRACKING_DSN` | The error reports of the Worker and its Durable Objects | Optional. The DSN of the Worker's application in Better Stack Errors, as [The Worker DSN](deployment/error-reporting.md#the-worker-dsn) says. Without it, the Worker sends no report. A value that is not a Better Stack DSN turns the reports off, and the Worker logs a warning. |
 | `RESEND_API_KEY` | The invitation emails of the member routes, the approval emails of the operator section, and the feedback emails of `POST /api/feedback` | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. The approval emails come from the same sender. The feedback emails come from `feedback@mail.conductive.build`, on the same domain. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link and each feedback email to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. A feedback send gets HTTP 502 too. An approval still gives app access, and the app tries its email again for 24 hours, as [The approval email](protocol/waitlist.md#the-approval-email) says. |
 | `FEEDBACK_EMAIL` | The feedback emails of `POST /api/feedback` | The address of the team inbox, which gets each feedback email, as [The email](protocol/feedback.md#the-email) says. It is a secret, so that a personal address stays out of the repository. Without it, each send gets HTTP 503, also on a local `APP_ORIGIN`. With it, a local `APP_ORIGIN` writes each feedback email to the log of the Worker, and needs no `RESEND_API_KEY`. Elsewhere, the feedback emails also need `RESEND_API_KEY`. |
 
@@ -144,24 +148,8 @@ serves every org.
 
 ## The GitHub App
 
-Set these values on GitHub, in the settings of the GitHub App. Replace
-`<APP_ORIGIN>` and `<MACHINE_ORIGIN>` with the values of the variables
-above.
-
-| Setting | Value |
-| --- | --- |
-| Callback URL | `<APP_ORIGIN>/api/auth/github/callback`. Add one for each app origin that signs in, such as `http://127.0.0.1:5173/api/auth/github/callback` for `npm run dev`. |
-| Request user authorization (OAuth) during installation | Off. When it is on, GitHub turns off the Setup URL and sends each install to the sign-in callback, which refuses it. |
-| Setup URL | `<APP_ORIGIN>/github/setup`, such as `https://app.conductive.build/github/setup`. GitHub sends the user there after an install. |
-| Redirect on update | On, so that a change of an install, such as a new repository, returns to the app too. |
-| Webhook URL | `<MACHINE_ORIGIN>/v1/github/webhooks`, as [The GitHub App](protocol/github-banner.md#the-github-app) says. |
-| Webhook secret | The value of `GITHUB_WEBHOOK_SECRET`. |
-
-- Subscribe to the webhook events that the
-  [GitHub banner backend](../worker/github/README.md#server-integration)
-  lists.
-- A GitHub App has only one Setup URL. So an install from `npm run dev`
-  returns to the deployed app, not to the local app.
+[The GitHub App](deployment/github-app.md) gives each setting of the GitHub
+App on GitHub, with its callback, setup, and webhook addresses.
 
 ## Models
 
@@ -221,6 +209,14 @@ the desktop stream of a sandbox in such a frame.
   the preview domain itself. So give the Worker and the Mac build the same
   value: `https://*.<PREVIEW_DOMAIN> https://*.on.boat.dev`. The Worker
   lists the preview origin only once.
+
+## Error reporting
+
+The Worker sends its reports of unexpected failures to Better Stack Errors
+only while `CONDUCTIVE_ERROR_TRACKING_DSN` holds a valid DSN. The web app
+reads its own public DSN from the code, and the build reads the upload
+settings of the source maps from the shell. No Worker variable sets them.
+[Error reporting setup](deployment/error-reporting.md) gives each step.
 
 ## Settings of each workspace sandbox
 

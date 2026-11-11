@@ -148,6 +148,20 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         metadata, such as a photo's location, from selected screenshots
         before sending. The reply address is your primary verified email
         on GitHub, when available.`,
+      text`Error reports: when ${productName} fails in a way that it does
+        not expect, it makes an error report. A report from the app in
+        your browser or the Mac app window holds the type of error and
+        the ${productName} version. It also holds the place in the
+        ${productName} code where the error happened. It holds the kind of
+        screen that you had open, and your ${productName} user ID while
+        you are signed in. It also holds the names and versions of your
+        browser and operating system. A report from the server holds the
+        type of error, the place in the code, and the version. It also
+        holds the part of the service that failed, the kind of request,
+        and its result. It also holds Cloudflare's reference of the
+        request. No report holds your GitHub login or name, your
+        messages, your files, your code, page addresses, or secrets. The
+        operator uses the reports to find and fix failures.`,
       text`Panel widths: your browser keeps the widths of the panels of
         the app. They stay in your browser.`,
     ),

@@ -204,6 +204,14 @@ under `.wrangler/`, which Git also ignores.
 | `npm run format:check`      | Check formatting with Prettier                                 |
 | `npm run format`            | Format the files with Prettier                                 |
 
+Production builds give the web app, the Worker, and the Mac app window the
+release `conductive@<Git commit SHA>`. A build outside Git has no release.
+The web app and the Worker generate hidden source maps. The build removes
+them from its output. The operator can upload matching maps privately to
+Better Stack. Missing settings and upload failures warn and let the build
+continue. [Error reporting setup](docs/deployment/error-reporting.md) gives
+the settings and the upload steps.
+
 GitHub Actions uses `.nvmrc`. It installs with `npm ci`,
 `npm --prefix desktop ci`, and `npm ci --prefix runner`. Then it runs
 `npm run check` on pull requests, and on pushes to `main` and to the primary
@@ -271,7 +279,8 @@ features:
   the workspace screen, Get started, and the settings. The
   [web app README](src/app/README.md) also gives their rules and their
   key code.
-- `src/shared/`: the browser API contracts, route paths, and runner message types.
+- `src/shared/`: the browser API contracts, route paths, runner message
+  types, and the public error-reporting settings.
 - `src/test-support/`: the fake API, recorded chat and file events, and terminal fake.
 - `worker/test-support/`: local D1, fake GitHub and Boat servers, and runner fakes.
 - `migrations/`: the D1 schema migrations.

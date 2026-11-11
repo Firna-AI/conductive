@@ -1,3 +1,4 @@
+import { captureWorkerWarning } from '../error-reporting/policy'
 import { appDomain, productName } from '../../docs/mockups/src/brand'
 import type { AppDependencies, AppEnv } from '../env'
 import { createMailSender } from '../mail-sender'
@@ -36,8 +37,10 @@ export async function sendApprovalEmail(
       deliveryKey: async () => `waitlist-approval/${userId}`,
       developmentLog: `Approval email to ${email.recipient}: ${email.subject}\n${email.body}`,
     })
-  } catch {
-    warnWorker({ kind: 'approval_email_delivery_failed' })
+  } catch (error) {
+    const warning = { kind: 'approval_email_delivery_failed' } as const
+    warnWorker(warning)
+    captureWorkerWarning(warning, error)
     return true
   }
   await finishApprovalEmail(env.DB, userId, 'sent', dependencies.now())

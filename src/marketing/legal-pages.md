@@ -1,9 +1,9 @@
 # Legal pages
 
 The [marketing site README](README.md#legal-pages) gives the pages of the
-site and the rule for a change to a fact that the legal pages restate.
-This page gives the operator, the shared text, and the sources for the
-review of the Terms and Privacy pages.
+site, the rule for a change to a fact that the legal pages restate, and the
+rule that names each outside service. This page gives the operator, the
+shared text, and the sources for the review of the Terms and Privacy pages.
 
 The operator is Firna Ltd, registered in England and Wales.
 `legalOperator` in `legal-text.ts` holds its company number, registered
@@ -17,14 +17,19 @@ waitlist, the invite codes, and each record of app access keep, the
 GitHub token and the verified emails that each sign-in keeps, and Resend,
 which sends the emails, from
 [The record of app access](../../docs/protocol/waitlist.md#the-record-of-app-access).
+It names what each error report holds, Better Stack, which keeps the
+reports, and their retention, from
+[Error reporting](../../docs/protocol/error-reporting.md).
 
 The words of the legal pages, of the page for an unknown address, and of
 the sign-in agreement are text without markup. `terms.ts` with
-`terms-org.ts`, `privacy.ts` with `privacy-uses.ts` and
-`privacy-recipients.ts`, and `legal-text.ts` hold them. `terms.ts` takes
-its "Working in an org" section from `terms-org.ts`. `privacy.ts` takes
-its "What Conductive uses, and why" section from `privacy-uses.ts`, and
-its "Who gets your data" section from `privacy-recipients.ts`.
+`terms-org.ts`, `privacy.ts` with `privacy-uses.ts`, `privacy-recipients.ts`,
+and `privacy-transfers.ts`, and `legal-text.ts`
+hold them. `terms.ts` takes its "Working in an org" section from
+`terms-org.ts`, and `privacy.ts` takes its "What Conductive uses, and why"
+section from `privacy-uses.ts`. Its "Who gets your data" section comes from
+`privacy-recipients.ts`. Its "Transfers to other countries" section comes
+from `privacy-transfers.ts`.
 `layouts/LegalPage.astro` and `components/RunningText.astro` build their
 HTML for the site. The mockups and the sign-in screen of the app render the
 same text with React. So every surface shows the same words.
@@ -52,6 +57,14 @@ Sources for the review:
   [its data processing terms](https://www.anthropic.com/legal/data-processing-addendum),
   and [OpenAI's data processing terms](https://openai.com/policies/data-processing-addendum/)
   describe protections under the account that an agent session uses.
+- [Better Stack's data processing terms](https://betterstack.com/dpa/) and
+  [their schedules](https://betterstack.com/dpa/schedules) describe its
+  transfers and their safeguards, its subprocessors, and the kinds of
+  personal data, which include the IP address.
+- Better Stack's [Errors API](https://betterstack.com/docs/errors/api/applications/create/)
+  gives the data region of each application, and its default retention of
+  90 days. The Privacy page states the EU region and the 90 days that the
+  operator sets.
 - Boat's terms: <https://boat.dev/terms>. They cover the allowed use of
   the app's Boat organization, and they make the operator answer for what
   users do in it. The Terms and Privacy pages do not name the cloud computer

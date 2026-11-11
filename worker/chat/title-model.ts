@@ -1,3 +1,4 @@
+import { captureWorkerWarning } from '../error-reporting/policy'
 import type { AppEnv } from '../env'
 import { warnWorker } from '../warnings'
 import { errorSummary } from '../warning-values'
@@ -52,13 +53,15 @@ export async function requestWorkspaceTitle(
     if (!title) throw new Error('The title answer is empty.')
     return title
   } catch (error) {
-    warnWorker({
+    const warning = {
       kind: 'workspace_title_request_failed',
       error: errorSummary(error),
-    })
+    } as const
+    warnWorker(warning)
+    captureWorkerWarning(warning, error)
     return null
   } finally {
-    clearTimeout(timer)
+    if (timer !== undefined) clearTimeout(timer)
   }
 }
 

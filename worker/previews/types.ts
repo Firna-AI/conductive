@@ -1,6 +1,8 @@
 import type { WorkspaceState } from '../../src/shared/workspaces'
 import type { HttpFetch } from '../env'
 import type { ConnectionScheduler } from '../security/connection-access'
+import type { WorkerErrorRuntime } from '../error-reporting/runtime'
+import type { WorkspaceErrorReporting } from '../error-reporting/workspace'
 
 export interface ProxySocket {
   binaryType: 'blob' | 'arraybuffer'
@@ -18,6 +20,8 @@ export interface SocketRuntime {
 }
 
 export interface ToolDependencies {
+  errorReporting?: WorkerErrorRuntime
+  reporting?: WorkspaceErrorReporting
   terminalSchedule?: ConnectionScheduler
   fetch: HttpFetch
   now: () => number

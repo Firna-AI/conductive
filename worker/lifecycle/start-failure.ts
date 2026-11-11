@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { warnWorker } from '../warnings'
 import { warningCode, WarningId } from '../warning-values'
 import type { AppDependencies, AppEnv } from '../env'
@@ -188,7 +189,8 @@ export async function finishFailedStart(
         sandboxId,
         providerAccount,
       )
-    } catch {
+    } catch (error) {
+      captureUnexpectedWorkerFailure('workspace_start_cleanup_failed', error)
       cleanupPending = true
     }
   }

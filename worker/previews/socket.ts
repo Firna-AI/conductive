@@ -46,6 +46,22 @@ export function bridgeSocket(
   if (upstream.status !== 101 || !upstream.webSocket)
     throw new ProviderError('invalid_response', 502)
   const remote: ProxySocket = upstream.webSocket
+  const authorize = () =>
+    dependencies.reporting
+      ? dependencies.reporting.checked(
+          'preview_authorization_failed',
+          options.authorize,
+        )
+      : options.authorize()
+  const fromBrowser = options.fromBrowser
+  const transform = (data: string | ArrayBuffer) =>
+    fromBrowser
+      ? dependencies.reporting
+        ? dependencies.reporting.checked('background_task_failed', () =>
+            fromBrowser(data),
+          )
+        : fromBrowser(data)
+      : Promise.resolve(data)
   const pair = (dependencies.sockets ?? cloudflareSockets).pair()
   const browser: Endpoint = { socket: pair.server, peerClosed: false }
   const sandbox: Endpoint = { socket: remote, peerClosed: false }
@@ -76,15 +92,15 @@ export function bridgeSocket(
           pending = []
           const data = batch.filter((frame) => frame.type === 'data')
           if (data.length && !destination.peerClosed) {
-            await options.authorize()
+            await authorize()
             const output: (string | ArrayBuffer)[] = []
             for (const frame of data)
               output.push(
                 fromBrowser && options.fromBrowser
-                  ? await options.fromBrowser(frame.data)
+                  ? await transform(frame.data)
                   : frame.data,
               )
-            if (fromBrowser && options.fromBrowser) await options.authorize()
+            if (fromBrowser && options.fromBrowser) await authorize()
             if (!ended && !destination.peerClosed)
               for (const value of output) destination.socket.send(value)
           }

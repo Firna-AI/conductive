@@ -41,6 +41,7 @@ export async function createNativeRuntime(
         config: {
           name: WORKER_NAME,
           compatibilityDate: '2026-11-06',
+          compatibilityFlags: ['nodejs_compat'],
           exports: {
             [EXPORT_NAME]: { type: 'durable-object', storage: 'sqlite' },
           },

@@ -1,3 +1,4 @@
+import { captureWorkerWarning } from '../error-reporting/policy'
 import type {
   WorkspaceStartJob,
   WorkspaceStartIntent,
@@ -227,12 +228,14 @@ export class WorkspaceStartCoordinator {
       return await this.finish({ ok: true })
     } catch (error) {
       const current = (await this.storage.job()) ?? job
-      warnWorker({
+      const warning = {
         kind: 'workspace_start_failed',
         workspaceId: WarningId.checked(current.workspaceId),
         phase: current.phase,
         error: errorSummary(error),
-      })
+      } as const
+      warnWorker(warning)
+      captureWorkerWarning(warning, error)
       if (await retryStartError(this.storage, error, this.dependencies.now()))
         return false
       const failedJob = failedStartJob(current, error, this.dependencies.now())

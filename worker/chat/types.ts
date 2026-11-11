@@ -30,6 +30,7 @@ import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
 import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
+import type { WorkspaceErrorReporting } from '../error-reporting/workspace'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -148,6 +149,7 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  reporting?: WorkspaceErrorReporting
   readBranches(
     workspaceId: string,
   ): Promise<import('../../src/shared/runner').RunnerBranches | null>

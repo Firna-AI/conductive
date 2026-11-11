@@ -30,7 +30,10 @@ export async function buildNativeWorkspaceBundle(): Promise<string> {
         entry: join(import.meta.dirname, 'native-workspace-entry.ts'),
         formats: ['es'],
       },
-      rolldownOptions: { external: ['cloudflare:workers'] },
+      rolldownOptions: {
+        platform: 'neutral',
+        external: ['cloudflare:workers', /^node:/],
+      },
     },
   })
   const outputs = (Array.isArray(bundle) ? bundle : [bundle]).flatMap(

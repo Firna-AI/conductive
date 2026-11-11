@@ -1,4 +1,9 @@
+import type { AppEnv } from '../env'
 import { HttpError } from '../http'
+import {
+  authorizeChatBrowser,
+  type BrowserAccess,
+} from './browser-authorization'
 
 export class ChatWorkspaceBinding {
   id: string | null = null
@@ -6,6 +11,16 @@ export class ChatWorkspaceBinding {
 
   constructor(matchesObject: (id: string) => boolean) {
     this.matchesObject = matchesObject
+  }
+
+  async authorizeBrowser(
+    request: Request,
+    env: AppEnv,
+    now: number,
+  ): Promise<BrowserAccess> {
+    const access = await authorizeChatBrowser(request, env, now)
+    this.bind(access.workspace.id)
+    return access
   }
 
   bind(workspaceId: string): void {

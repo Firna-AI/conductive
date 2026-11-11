@@ -33,6 +33,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`The email provider of the operator hosts the team inbox and
         receives your feedback message, screenshots, context, and reply
         address. The team reads them there.`,
+      text`Better Stack gets the error reports described above, and keeps
+        them in the European Union. The app in your browser and the Mac
+        app window send their reports straight to Better Stack. These
+        requests send your network address to Better Stack, and it can
+        store that address with each of those reports.`,
       text`A cloud computer provider runs the cloud computers of every org
         for ${productName}, in the account of ${productName}. Your code,
         your files, and your agent sessions are in them. ${productName}

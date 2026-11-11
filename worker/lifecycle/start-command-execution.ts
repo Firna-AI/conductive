@@ -1,3 +1,4 @@
+import { userCommandFailure } from '../error-reporting/causes'
 import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
 import {
@@ -93,7 +94,10 @@ export async function advanceStartCommand(
         exitCode: status.exitCode,
         timedOut: status.timedOut,
       })
-    throw new WorkspaceStartError(null)
+    const failure = new WorkspaceStartError(null)
+    throw job.phase === 'startup' && status.state === 'exited'
+      ? userCommandFailure(failure)
+      : failure
   }
   return true
 }

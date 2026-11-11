@@ -1,4 +1,5 @@
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { captureWorkerWarning } from '../error-reporting/policy'
 import { warnWorker } from '../warnings'
 import { advanceSoftwareImage } from './build'
 import { cleanupOldSoftwareImages } from './cleanup'
@@ -15,8 +16,10 @@ export async function repairSoftwareImages(
     if (image.phase === 'done' && image.state !== 'deleting') continue
     try {
       await advanceSoftwareImage(runtime, image.id)
-    } catch {
-      warnWorker({ kind: 'software_image_repair_failed' })
+    } catch (error) {
+      const warning = { kind: 'software_image_repair_failed' } as const
+      warnWorker(warning)
+      captureWorkerWarning(warning, error)
     }
   }
   await cleanupOldSoftwareImages(runtime, DEFAULT_PROVIDER_ACCOUNT)

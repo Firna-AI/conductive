@@ -3,6 +3,7 @@ import {
   deleteSnapshotIfPresent,
 } from '../lifecycle/cleanup'
 import { providerForAccount } from '../sandbox/client'
+import { captureWorkerWarning } from '../error-reporting/policy'
 import { warnWorker } from '../warnings'
 import {
   claimSoftwareImageDeletion,
@@ -71,8 +72,11 @@ export async function retrySoftwareImageCleanup(
   try {
     await cleanupSoftwareImage(runtime, image)
   } catch (error) {
-    if (!(error instanceof AttemptChanged))
-      warnWorker({ kind: 'software_image_cleanup_failed' })
+    if (!(error instanceof AttemptChanged)) {
+      const warning = { kind: 'software_image_cleanup_failed' } as const
+      warnWorker(warning)
+      captureWorkerWarning(warning, error)
+    }
   }
 }
 

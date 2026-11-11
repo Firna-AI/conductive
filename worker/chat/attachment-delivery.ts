@@ -1,5 +1,6 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import { HttpError } from '../http'
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import { attachmentCopyKey } from './attachment-record'
 import { commandDispatchState, type DispatchState } from './ordered-dispatch'
 import type { ChatStore } from './store'
@@ -73,40 +74,43 @@ export class AttachmentPreparation {
       sandboxId,
     }
     this.pending.set(key, preparation)
-    const work = Promise.resolve()
-      .then(() =>
-        this.dependencies.prepareAttachments(
-          active.workspace.id,
-          command.message.sender.id,
-          command.message.id,
-          command.attachments,
-          sandboxId,
-        ),
-      )
-      .then(
-        () =>
-          this.store.run(async () => {
-            if (this.pending.get(key) !== preparation) return
-            if (sandboxId !== null)
-              await this.store.change(
-                active.workspace.id,
-                (view) =>
-                  view.saveAttachmentCopy(command.message.id, sandboxId),
-                this.publish,
-              )
-            preparation.ready = true
-            await this.resume()
-          }),
-        (error: unknown) =>
-          this.store.run(async () => {
-            if (this.pending.get(key) !== preparation) return
-            this.pending.delete(key)
-            const current = await this.currentCommand(preparation, command)
-            if (current)
-              await this.failTurn(active.workspace.id, current, error)
-            await this.resume()
-          }),
-      )
+    const start = () =>
+      Promise.resolve()
+        .then(() =>
+          this.dependencies.prepareAttachments(
+            active.workspace.id,
+            command.message.sender.id,
+            command.message.id,
+            command.attachments,
+            sandboxId,
+          ),
+        )
+        .then(
+          () =>
+            this.store.run(async () => {
+              if (this.pending.get(key) !== preparation) return
+              if (sandboxId !== null)
+                await this.store.change(
+                  active.workspace.id,
+                  (view) =>
+                    view.saveAttachmentCopy(command.message.id, sandboxId),
+                  this.publish,
+                )
+              preparation.ready = true
+              await this.resume()
+            }),
+          (error: unknown) =>
+            this.store.run(async () => {
+              if (this.pending.get(key) !== preparation) return
+              captureUnexpectedWorkerFailure('attachment_copy_failed', error)
+              this.pending.delete(key)
+              const current = await this.currentCommand(preparation, command)
+              if (current)
+                await this.failTurn(active.workspace.id, current, error)
+              await this.resume()
+            }),
+        )
+    const work = this.dependencies.reporting?.callback(start) ?? start()
     this.dependencies.waitUntil(
       work.catch((error: unknown) => {
         if (this.pending.get(key) === preparation) this.pending.delete(key)

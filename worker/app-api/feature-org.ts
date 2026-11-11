@@ -1,3 +1,4 @@
+import { captureWorkerWarning } from '../error-reporting/policy'
 import type { GitHubRepository } from '../../src/shared/account'
 import type { OrgSummary } from '../../src/shared/orgs'
 import { runnerSoftware } from '../configuration'
@@ -74,8 +75,10 @@ export async function createShellOrg(
         software: runnerSoftware(env),
       },
     )
-  } catch {
-    warnWorker({ kind: 'first_image_build_start_failed' })
+  } catch (error) {
+    const warning = { kind: 'first_image_build_start_failed' } as const
+    warnWorker(warning)
+    captureWorkerWarning(warning, error)
   }
   const org: OrgSummary = { id, name, role: 'admin' }
   if (initials !== undefined) org.initials = initials

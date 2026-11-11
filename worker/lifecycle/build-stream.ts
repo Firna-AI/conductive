@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type { AppEnv } from '../env'
 import { privateResponse } from '../http'
 import { requireOrgMember } from './access'
@@ -65,6 +66,7 @@ export async function buildEventsResponse(input: {
           await wait()
         }
       } catch (error) {
+        captureUnexpectedWorkerFailure('build_log_stream_failed', error)
         if (live) controller.error(error)
       }
     },

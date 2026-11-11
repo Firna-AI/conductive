@@ -18,6 +18,7 @@ import { prepareMessageAttachments } from './attachment-copy'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
+import { workspaceErrorReporting } from '../error-reporting/workspace'
 import { readRunnerBranches } from './branch-data'
 
 /**
@@ -30,6 +31,13 @@ export function chatDependencies(
   workspaceId: () => string | null,
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
+  const reporting =
+    overrides.reporting ?? workspaceErrorReporting(env, overrides.waitUntil)
+  const waitUntil =
+    overrides.waitUntil ??
+    ((pending: Promise<unknown>) => {
+      void pending.catch(() => undefined)
+    })
   return {
     readBranches: (id) => readRunnerBranches(env.DB, id),
     readCommitAuthor: async (userId) => {
@@ -90,11 +98,16 @@ export function chatDependencies(
     turnEnded: async () => undefined,
     browserOpened: async () => undefined,
     browserClosed: async () => undefined,
-    waitUntil: (promise) => {
-      void promise.catch(() => undefined)
-    },
     matchesObject: () => true,
     ...overrides,
+    reporting,
+    scheduleBrowserCheck: overrides.scheduleBrowserCheck
+      ? reporting.schedule(overrides.scheduleBrowserCheck)
+      : undefined,
+    scheduleRunnerCheck: overrides.scheduleRunnerCheck
+      ? reporting.schedule(overrides.scheduleRunnerCheck)
+      : undefined,
+    waitUntil: (pending) => waitUntil(reporting.observe(pending)),
     resolveLogin: loginResolver(env, workspaceId, overrides.resolveLogin),
   }
 }

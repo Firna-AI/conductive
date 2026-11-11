@@ -1,3 +1,4 @@
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import type {
   OrgSuspensionLiftResponse,
   UserSuspensionLiftResponse,
@@ -32,7 +33,8 @@ async function liftSuspension(
     for (const workspace of workspaces) {
       try {
         await check(workspace.id)
-      } catch {
+      } catch (error) {
+        captureUnexpectedWorkerFailure('operator_lifecycle_failed', error)
         pendingWorkspaceIds.push(workspace.id)
       }
     }

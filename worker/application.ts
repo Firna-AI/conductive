@@ -1,3 +1,5 @@
+import { scheduledWorker } from './application-scheduled'
+import { transferResponseError } from './error-reporting/causes'
 import { API_PATHS } from '../src/shared/api'
 import { MACHINE_PATHS } from '../src/shared/agent-tools'
 import {
@@ -29,9 +31,7 @@ import {
   handleImageSourceCredential,
   IMAGE_SOURCE_CREDENTIAL_PATH,
 } from './lifecycle/image-sources/credential'
-import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
-import { repairLifecycleAlarms } from './lifecycle/repair'
-import { repairSoftwareImages } from './software-image/repair'
+import { workspaceRuntime } from './lifecycle/runtime'
 import {
   handleSoftwareImage,
   SOFTWARE_IMAGE_PATH,
@@ -45,23 +45,17 @@ import { DESKTOP_EXCHANGE_PATH } from './security/desktop-contract'
 import { desktopCors, desktopPreflight } from './security/desktop-origin'
 import { checkOrigin, sessionGate } from './security/gate'
 import { membersGate } from './members/gate'
-import { productionMembersHooks } from './members/composition'
-import { cleanupDeletedOrgs } from './members/cleanup'
 import { routePreview, routeWorkspaceFeatures } from './features/router'
 import { productionAgentTools } from './tools/composition'
 import { isAgentToolPath } from './tools/lists'
 import { productionGitHubWebhook } from './github/composition'
-import { appFrameSources, runnerSoftware } from './configuration'
+import { appFrameSources } from './configuration'
 import { appSiteResponse } from './marketing/assets'
-import { retryApprovalEmails } from './operator/approval-email'
+import { workerFetchEntry } from './error-reporting/entry'
 import { freshCodexLogin } from './codex-auth/renew'
 import { codexTaskOwner } from './codex-auth/tasks'
 import { failCodexAccessToken } from './codex-auth/failure'
 import { waitForCodexRotation } from './codex-auth/rotation'
-import { cleanupCodexDevices } from './codex-auth/device-store'
-import { warnWorker } from './warnings'
-import { routineRunRuntime } from './routines/run-runtime'
-import { scanRoutineSchedules } from './routines/schedule-scan'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -124,7 +118,10 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             const asset = path.startsWith(`/${SITE_FOLDER}/`)
               ? await appSiteResponse(request, env.ASSETS)
               : await env.ASSETS.fetch(request)
-            const response = new Response(asset.body, asset)
+            const response = transferResponseError(
+              asset,
+              new Response(asset.body, asset),
+            )
             response.headers.set(
               'Content-Security-Policy',
               appContentSecurityPolicy(env.APP_ORIGIN, appFrameSources(env)),
@@ -255,35 +252,13 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     },
   }
   return {
-    fetch: requestBodyEntry(application.fetch),
-    async scheduled(event: ScheduledController, env: AppEnv): Promise<void> {
-      if (event.cron === '* * * * *') {
-        await scanRoutineSchedules(routineRunRuntime(env, dependencies))
-        return
-      }
-      if (event.cron !== '*/15 * * * *') return
-      await cleanupCodexDevices(env.DB, dependencies.now())
-      await cleanupDeletedOrgs(
-        env,
-        dependencies,
-        productionMembersHooks(env, dependencies),
-      )
-      await repairLifecycleAlarms(
-        workspaceRuntime(env, dependencies),
-        imageRuntime(env, dependencies),
-        () => runnerSoftware(env),
-      )
-      try {
-        await repairSoftwareImages({ env, dependencies })
-      } catch {
-        warnWorker({ kind: 'software_image_repair_failed' })
-      }
-      // Last, so that a slow or failed email never holds back the repairs.
-      try {
-        await retryApprovalEmails(env, dependencies)
-      } catch {
-        warnWorker({ kind: 'approval_email_retry_failed' })
-      }
+    fetch: workerFetchEntry(requestBodyEntry(application.fetch), dependencies),
+    scheduled(
+      event: ScheduledController,
+      env: AppEnv,
+      execution?: Pick<ExecutionContext, 'waitUntil'>,
+    ): Promise<void> {
+      return scheduledWorker(env, dependencies, execution, event.cron)
     },
   }
 }

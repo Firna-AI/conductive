@@ -5,6 +5,7 @@ import type {
 } from '../native-sockets'
 import { CONNECTION_CHECK_MS } from '../security/connection-access'
 import { AuthenticatedRunner } from './authenticated-runner'
+import { captureUnexpectedWorkerFailure } from '../error-reporting/policy'
 import {
   RunnerConnectionStore,
   type StoredRunnerConnection,
@@ -55,7 +56,8 @@ export class RunnerConnections {
         if (!peer) return
         try {
           await receive(peer, value)
-        } catch {
+        } catch (error) {
+          captureUnexpectedWorkerFailure('runner_message_failed', error)
           this.disconnect(peer)
         }
       },

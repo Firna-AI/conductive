@@ -45,7 +45,7 @@ export class DeviceRuntime {
   ) {
     this.env = env
     this.matches = matches
-    this.broker = new DeviceBroker(storage, env, alarm, now)
+    this.broker = new DeviceBroker(storage, env, alarm, now, chat.reporting)
     this.sockets = new DeviceSockets(
       native.context,
       native.sockets,

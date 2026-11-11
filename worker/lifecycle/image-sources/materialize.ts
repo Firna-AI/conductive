@@ -1,4 +1,6 @@
 import type { AppDependencies, AppEnv } from '../../env'
+import { captureUnexpectedWorkerFailure } from '../../error-reporting/policy'
+import { linkWorkerError } from '../../error-reporting/causes'
 import { HttpError } from '../../http'
 import { encrypt, hash, randomToken } from '../../security/crypto'
 import type { PrepareImageSources } from '../image-builds'
@@ -225,9 +227,11 @@ export function createGitHubImageSourceMaterializer(
           dependencies.fetch,
           input.buildId,
         ))
-      )
+      ) {
+        captureUnexpectedWorkerFailure('image_build_failed', error)
         return false
-      throw imageSourceFailure(missingKey)
+      }
+      throw linkWorkerError(imageSourceFailure(missingKey), error)
     }
   }
 }
