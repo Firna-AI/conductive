@@ -46,8 +46,9 @@ feature that is not complete yet says so.
 - Attach files of up to 25 MB each to a message.
 - Each user connects their own Claude subscription token or API keys. An
   own endpoint login, a gateway or a proxy that the user chose, is not
-  complete yet. The account API saves one, but the account page does not
-  offer it yet, and no turn runs on it yet.
+  complete yet. The account API saves one, and its turns run through the
+  model gateway on an agent runner of protocol version 2 or later. The
+  account page cannot connect one yet.
 - Files and Changes, a terminal, and port previews. The live desktop is
   hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
   says.
@@ -84,8 +85,7 @@ An own endpoint is a gateway or a proxy that the user chose, at a public
 `https://` address, with its key. A Claude endpoint must serve the
 Anthropic Messages API, and a Codex endpoint the OpenAI Responses API.
 [Own endpoint logins](docs/protocol/tokens-and-secrets.md#own-endpoint-logins)
-states the rules. Own endpoint logins are not complete yet, as
-[Features](#features) says.
+states the rules. [Features](#features) says what works today.
 
 ## Get started
 
@@ -111,10 +111,8 @@ bucket name in `wrangler.jsonc` name the production database and bucket.
 Local commands, such as `npm run db:migrate` and `npm run dev`, use only
 the local storage.
 
-This local setup creates no Cloudflare resources and deploys nothing. The
-`Deploy` workflow in GitHub Actions deploys each push to `main`, as
-[Automatic deploys](docs/automatic-deploys.md) says. Put local secrets in
-`.dev.vars`, which Git ignores.
+This local setup creates no Cloudflare resources and deploys nothing. Put
+local secrets in `.dev.vars`, which Git ignores.
 
 The app origin is the scheme, host, and port of the web app. A deployed
 Worker reads it from `APP_ORIGIN`, which `wrangler.jsonc` does not set.
@@ -212,9 +210,8 @@ under `.wrangler/`, which Git also ignores.
 GitHub Actions uses `.nvmrc`. It installs with `npm ci`,
 `npm --prefix desktop ci`, and `npm ci --prefix runner`. Then it runs
 `npm run check` on pull requests, and on pushes to `main` and to the primary
-branch of the plan. CI does not deploy. The `Deploy` workflow deploys each
-push to `main`, as [Automatic deploys](docs/automatic-deploys.md) says. It
-does not wait for CI.
+branch of the plan. CI does not deploy, as
+[Automatic deploys](docs/automatic-deploys.md) says.
 
 ## Mac app
 

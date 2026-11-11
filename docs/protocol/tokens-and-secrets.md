@@ -136,8 +136,8 @@ while the change is open. Its pull request keeps them after the merge.
   key in the `x-api-key` header. A Codex endpoint must serve the OpenAI
   Responses API, and accept the key as a bearer token in the
   `Authorization` header.
-- The [model gateway](model-gateway.md#own-endpoints) sends each model
-  request of a turn on the login to the endpoint, with the key.
+- The [model gateway](model-gateway-requests.md#own-endpoints) sends each
+  model request of a turn on the login to the endpoint, with the key.
 - The Worker also reads the model list of the endpoint, with the key: at
   the save, when the owner presses Refresh on the account page, and in the
   background when a turn on the login starts, at most once in 10 minutes

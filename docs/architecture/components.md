@@ -44,8 +44,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It runs the model gateway. The gateway takes the model requests of the
   agent programs in a sandbox, with the
   [turn token](../protocol/model-gateway.md#terms) of their turn. It adds the
-  agent login of the turn, and forwards each request to Anthropic or
-  OpenAI. [Model gateway](../protocol/model-gateway.md) states its rules.
+  agent login of the turn, and forwards each request to Anthropic, to
+  OpenAI, or to the endpoint of an own endpoint login, as
+  [External services](#external-services) says.
+  [Model gateway](../protocol/model-gateway.md) states its rules.
 - It reaches Boat through one provider adapter, so that a later change can
   add another provider. It calls only a fixed list of Boat routes.
 - It calls each sandbox and each saved snapshot through the client of its
@@ -169,14 +171,25 @@ the rules.
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the
   webhooks of every org.
-- **Anthropic and OpenAI:** the model use of each turn bills to the own
-  Claude or OpenAI account of the starter of its session. With a runner of
-  protocol version 2 or later, the model requests of a turn reach them
-  through the model gateway of the Worker. A settings file in the
-  repository can send the requests of Claude to another address instead.
-  The gateway keeps no copy of a request or an answer. With a runner of
-  version 1, the agent programs send their model requests from the sandbox
-  to the provider.
+- **Anthropic and OpenAI:** the model use of each turn on a subscription
+  token or an API key bills to the own Claude or OpenAI account of the
+  starter of its session. With a runner of protocol version 2 or later,
+  the model requests of a turn reach them through the model gateway of the
+  Worker. A settings file in the repository can send the requests of
+  Claude to another address instead. The gateway keeps no copy of a
+  request or an answer. With a runner of version 1, the agent programs
+  send their model requests from the sandbox to the provider.
+- **Own endpoints:** an own endpoint is a gateway or a proxy that a user
+  chose, such as a proxy that pools subscriptions. A user can connect one
+  as the agent login of Claude or of Codex. For each turn on such a login,
+  the model gateway forwards the model requests of the turn to the
+  endpoint, with the key that the user saved. So the endpoint gets the
+  messages, the files, and the command results of those turns. Only a
+  runner of protocol version 2 or later runs such a turn, and no sandbox
+  gets the address or the key.
+  [Own endpoint logins](../protocol/tokens-and-secrets.md#own-endpoint-logins)
+  and [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
+  state the rules.
 - **Workers AI:** the Cloudflare model service writes a title for a
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).

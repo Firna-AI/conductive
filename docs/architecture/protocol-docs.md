@@ -40,6 +40,9 @@ them, and this page lists each protocol doc and what it covers.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
+  - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
+    the upstream of each login, what passes to it and back, the own
+    endpoints, the streams, and the risks.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar and its
   events.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a

@@ -62,7 +62,7 @@ and the separate preview domain.
   saved address cannot point the Worker at a private network, at the app,
   or at a preview, as
   [Own endpoint logins](../protocol/tokens-and-secrets.md#own-endpoint-logins)
-  and [Own endpoints](../protocol/model-gateway.md#own-endpoints) say.
+  and [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints) say.
 - During a turn, a sandbox with a runner of protocol version 1 holds the
   agent login of the starter itself. A workspace with a version pin of 1
   accepts such a runner, also after a runner of version 2 or later

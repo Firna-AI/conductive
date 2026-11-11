@@ -127,7 +127,7 @@ says.
   then find the profile pair while the turn runs.
 - The Claude route of the gateway refuses the requests of such a program.
   They lack the markers of the `claude` program, as
-  [Requests and answers](../docs/protocol/model-gateway.md#requests-and-answers)
+  [Requests and answers](../docs/protocol/model-gateway-requests.md#requests-and-answers)
   says.
 - This route belongs to the `claude` program 2.1.318 that Claude Agent SDK
   0.3.318 installs. `package.json` pins that SDK version. Check the route

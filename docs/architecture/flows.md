@@ -30,9 +30,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
    Object, adds the agent login of the starter, and streams the answer of
    Anthropic or OpenAI back. For an own endpoint login, the gateway sends
    the request with the key to the endpoint of the starter instead, as
-   [Own endpoints](../protocol/model-gateway.md#own-endpoints) says. A
-   settings file in the repository can send the requests of Claude to
-   another address, as
+   [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
+   says. A settings file in the repository can send the requests of Claude
+   to another address, as
    [How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
    says. With a runner of version 1, the agent sends its model requests
    to the provider itself.
