@@ -11,7 +11,7 @@ const FAILURE =
   'The cloud computer did not start within the 20-minute limit. Try again.'
 
 it('ends a startup script that never exits at the original start deadline and publishes the existing failed-create events', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const start = await startRetryFixture(fixture)
   fixture.boat.commandRunning = true
   fixture.boat.commandOutput = 'unfinished startup output\n'
@@ -61,7 +61,7 @@ it('ends a startup script that never exits at the original start deadline and pu
 })
 
 it('gives each resume its own deadline and restores an old saved start when its computer never becomes ready', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const start = await startRetryFixture(fixture)
   const base = await start.job()
   if (!base) throw new Error('Missing original start')
@@ -120,7 +120,7 @@ it('gives each resume its own deadline and restores an old saved start when its 
 })
 
 it('enforces the start deadline before a later provider retry after reconstruction', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const start = await startRetryFixture(fixture)
   const fault = statusFault(fixture)
   fault.fail('60')
@@ -141,7 +141,7 @@ it('enforces the start deadline before a later provider retry after reconstructi
 })
 
 it('fails a start when terminal preparation completes at the deadline before publishing success', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const start = await startRetryFixture(fixture)
   await start.advance()
   await start.advance()
@@ -169,7 +169,7 @@ it('fails a start when terminal preparation completes at the deadline before pub
 })
 
 it('fails a start when its terminal password read completes at the deadline before publishing success', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const start = await startRetryFixture(fixture)
   for (let step = 0; step < 3; step++) await start.advance()
   expect(await start.job()).toMatchObject({ phase: 'terminal-password' })

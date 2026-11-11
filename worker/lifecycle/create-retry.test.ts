@@ -12,7 +12,7 @@ import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-
 const fixtureForTest = setupBackendTests()
 
 it('reserves one actor for simultaneous creates before any workspace row exists', async () => {
-  const fixture = await fixtureForTest()
+  const fixture = fixtureForTest()
   const { runtime, org, user } = fixture
   const input = {
     repositoryId: fixture.repositoryId,
@@ -63,7 +63,7 @@ it('reserves one actor for simultaneous creates before any workspace row exists'
 })
 
 it('admits concurrent pending creates once and publishes their later failure without losing the accepted message', async () => {
-  const fixture = await fixtureForTest()
+  const fixture = fixtureForTest()
   const { runtime, org, user, repositoryId, boat } = fixture
   const input = { repositoryId, firstMessage: FIRST_MESSAGE }
   const context = { user, org, body: input, sessionId: 'signed-in-session' }
@@ -144,7 +144,7 @@ it('admits concurrent pending creates once and publishes their later failure wit
 })
 
 it('repairs a claim with no queued job and keeps successful retries independent of a later resume', async () => {
-  const fixture = await fixtureForTest()
+  const fixture = fixtureForTest()
   const { runtime, org, user, repositoryId, boat } = fixture
   const input = {
     repositoryId,

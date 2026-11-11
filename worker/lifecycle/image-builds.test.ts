@@ -54,7 +54,7 @@ it.each(['allocating', 'sources'] as const)(
 )
 
 it('recovers scheduling and allocation replies while streaming a successful image build', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     const { images, org, user, boat, runtime } = fixture
     const schedule = images.scheduler.schedule

@@ -4,7 +4,7 @@ import { expect, it, vi } from 'vitest'
 import { startUpdates } from './updates.js'
 import { deferred, updateHarness } from './updates.test-support.js'
 
-it('keeps unpublished and development builds off the release feed', () => {
+it('keeps unpublished and development builds off the release feed', async () => {
   const updater = {
     setFeedURL: vi.fn(),
     on: vi.fn(),
@@ -29,7 +29,7 @@ it('keeps unpublished and development builds off the release feed', () => {
       inform: async () => {},
       warn: () => {},
     })
-    updates.check()
+    await updates.check()
     expect(updates.available).toBe(false)
   }
   expect(updater.setFeedURL).not.toHaveBeenCalled()

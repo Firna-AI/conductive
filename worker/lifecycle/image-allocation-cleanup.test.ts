@@ -31,7 +31,7 @@ it.each([
 ] as const)(
   'retains dispatched image allocation cleanup after $cause and deletes the recovered computer before done',
   async ({ cause, endAt, message }) => {
-    const fixture = await backendFixture()
+    const fixture = backendFixture()
     const image = await imageRetryFixture(fixture, { steps: 0 })
     const create = boatRoute({ operation: 'create' })
     const fetch = fixture.runtime.dependencies.fetch

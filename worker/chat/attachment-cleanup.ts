@@ -50,7 +50,7 @@ export async function deleteAttachment(
 /** The caller holds the workspace chat queue, including admission. */
 export async function expireClaimedAttachment(
   env: AppEnv,
-  store: ChatStore,
+  store: Pick<ChatStore, 'read'>,
   workspaceId: string,
   orgId: string,
   id: string,

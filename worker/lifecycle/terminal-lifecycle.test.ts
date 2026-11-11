@@ -13,7 +13,7 @@ import { lifecycleCommandBody } from './command-test-support'
 const backendFixture = setupBackendTests()
 
 it('starts and caches the terminal after startup at create and resume while retention starts no terminal', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const { runtime, org, user, boat } = fixture
   const queued = fixture.nextQueued()
   const creation = createWorkspace(runtime, org.id, user, {

@@ -16,7 +16,7 @@ import { lifecycleCommandBody } from './command-test-support'
 const fixtureForTest = setupBackendTests()
 
 it('creates from captured image repositories while current settings and selection change', async () => {
-  const fixture = await fixtureForTest()
+  const fixture = fixtureForTest()
   const { runtime, org, user, repositoryId, boat } = fixture
   const ciphertext = await encrypt(
     JSON.stringify({ CURRENT_ENV: 'current-value' }),
@@ -104,7 +104,7 @@ it('creates from captured image repositories while current settings and selectio
 })
 
 it('leases the image and captured branch from the same publication at claim admission', async () => {
-  const fixture = await fixtureForTest()
+  const fixture = fixtureForTest()
   const { runtime, org, user, repositoryId, boat } = fixture
   const db = runtime.env.DB
   const repositories = [
@@ -216,7 +216,7 @@ it('leases the image and captured branch from the same publication at claim admi
 })
 
 it('releases a failed claim lease before records exist and allows a fresh retry', async () => {
-  const fixture = await fixtureForTest()
+  const fixture = fixtureForTest()
   const { runtime, org, user, repositoryId } = fixture
   const input = {
     repositoryId,

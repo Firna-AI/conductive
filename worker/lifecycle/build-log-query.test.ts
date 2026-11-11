@@ -9,7 +9,7 @@ import { startImageBuild } from './image-builds'
 const fixtureForTest = setupBackendTests()
 
 it('reads no retained log rows when polling after the latest event', async () => {
-  const { runtime, images, org, user } = await fixtureForTest()
+  const { runtime, images, org, user } = fixtureForTest()
   const db = runtime.env.DB
   const id = await startImageBuild(images, {
     orgId: org.id,

@@ -14,7 +14,7 @@ import { lifecycleCommandBody } from './command-test-support'
 const backendFixture = setupBackendTests()
 
 it('keeps a failed create and its first message while revoking its token and retaining cleanup ownership', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     const { runtime, org, user, boat } = fixture
     boat.commandExitCode = 1
@@ -149,7 +149,7 @@ it('keeps a failed create and its first message while revoking its token and ret
 })
 
 it('resumes the same disk and retries a failed startup after stopping its old work', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     const { runtime, org, user, boat } = fixture
     const ciphertext = await encrypt(

@@ -6,6 +6,7 @@ import { nativePacket, readNativePacket } from './native-protocol'
 import {
   NativeValues,
   type NativeInvocation,
+  type NativeRemote,
   type NativeResult,
 } from './native-values'
 
@@ -39,14 +40,14 @@ export class NativeHostBridge {
     })
   }
 
-  remote<T extends object>(): T {
+  remote<T extends object>(): NativeRemote<T> {
     // The runtime exports the typed test API at this reference.
     return this.values.remote({
       type: 'reference',
       owner: 'worker',
       id: 'root',
       path: [],
-    }) as T
+    }) as NativeRemote<T>
   }
 
   async fetch(request: { url: string; json(): Promise<unknown> }) {

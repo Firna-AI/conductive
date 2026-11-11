@@ -192,5 +192,5 @@ it('replays only saved events while another append write is held', async () => {
   expect(store.snapshot.nextEventNumber).toBe(4)
   expect(store.snapshot.fileRevisions).toEqual({ tree: 1, changes: 1 })
   const saved = await storage.read()
-  expect(await store.snapshot).toEqual(saved)
+  expect(store.snapshot).toEqual(saved)
 })

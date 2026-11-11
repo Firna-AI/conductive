@@ -21,7 +21,7 @@ import {
 const backendFixture = setupBackendTests()
 
 it('captures the create branch and masks legacy encrypted settings in its streamed start log', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const { runtime, org, user, boat } = fixture
   const initialSecret = 'create-environment-secret'
   await saveOwnerDisplayName(fixture, '  Octocat \t')
@@ -80,7 +80,7 @@ it('captures the create branch and masks legacy encrypted settings in its stream
 })
 
 it('captures fresh resume settings, preserves the ready computer capture, and pins retention settings after rotation', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const { runtime, org, user, boat } = fixture
   const initialSecret = 'create-environment-secret'
   const resumedSecret = 'resume-environment-secret'
@@ -193,7 +193,7 @@ it.each([
 ])(
   'uses the owner login when the display name is $kind',
   async ({ displayName }) => {
-    const fixture = await backendFixture()
+    const fixture = backendFixture()
     const { runtime, org, user, boat } = fixture
     await saveOwnerDisplayName(fixture, displayName)
     await fixture.run(() =>

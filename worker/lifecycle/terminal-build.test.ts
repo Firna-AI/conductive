@@ -11,7 +11,7 @@ import { lifecycleCommandBody } from './command-test-support'
 const backendFixture = setupBackendTests()
 
 it('runs terminal installation inside the detached software command and streams its output without starting a terminal', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const { images, org, user, boat, runtime } = fixture
   const buildId = await startImageBuild(images, {
     orgId: org.id,

@@ -10,7 +10,7 @@ import { startImageBuild } from './image-builds'
 const fixtureForTest = setupBackendTests()
 
 it('delivers the final failure log when completion races an empty log read', async () => {
-  const { runtime, images, org, user } = await fixtureForTest()
+  const { runtime, images, org, user } = fixtureForTest()
   const id = await startImageBuild(images, {
     orgId: org.id,
     userId: user.id,

@@ -14,7 +14,7 @@ import { resumeWorkspace } from './workspace-resume'
 const backendFixture = setupBackendTests()
 
 it('ends endless allocation retries and preserves encrypted cleanup ownership across reconstruction', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   fixture.boat.lostCreateReplies = Infinity
   const created = await fixture.run(() =>
     createWorkspace(fixture.runtime, fixture.org.id, fixture.user, {
@@ -139,7 +139,7 @@ it.each([
 ] as const)(
   'ends allocation recovery by the original deadline after saved $reason and retains its cause and encrypted cleanup',
   async ({ reason, saved, code, message }) => {
-    const fixture = await backendFixture()
+    const fixture = backendFixture()
     const route = boatRoute({ operation: 'create' })
     const fetch = fixture.runtime.dependencies.fetch
     const keys: (string | null)[] = []

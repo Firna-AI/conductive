@@ -11,7 +11,7 @@ import { reconcileWorkspaceSandbox } from './workspace-actions'
 const backendFixture = setupBackendTests()
 
 it('keeps a stopped disk through startup and stop failures without a stale stop after user open', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     const { runtime, org, user, boat } = fixture
     const created = await fixture.run(() =>
@@ -91,7 +91,7 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
 })
 
 it('ends failed maintenance and refuses destructive resume of a normal errored workspace', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   try {
     const { runtime, org, user, boat } = fixture
     const created = await fixture.run(() =>

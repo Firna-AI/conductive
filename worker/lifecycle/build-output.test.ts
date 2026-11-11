@@ -16,7 +16,7 @@ import { finishImageBuild } from './image-test-support'
 const backendFixture = setupBackendTests()
 
 it('stores a detached status reply above two million output bytes in bounded rows without losing output', async () => {
-  const fixture = await backendFixture()
+  const fixture = backendFixture()
   const { images, org, user, boat, runtime } = fixture
   const id = await startImageBuild(images, {
     orgId: org.id,
@@ -71,7 +71,7 @@ it('stores a detached status reply above two million output bytes in bounded row
 })
 
 it('keeps UTF-8 characters and event order across all build log writers', async () => {
-  const { images, org, user, runtime } = await backendFixture()
+  const { images, org, user, runtime } = backendFixture()
   const id = await startImageBuild(images, {
     orgId: org.id,
     userId: user.id,
