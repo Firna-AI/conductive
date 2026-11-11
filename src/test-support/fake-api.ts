@@ -2,7 +2,11 @@ import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import type { SessionResponse } from '../shared/account'
 import { API_PATHS, type OrgRole, type User } from '../shared/api'
 import { chatHistoryPath } from '../shared/events'
-import type { BannerState } from '../shared/github'
+import {
+  githubSummary,
+  type BannerState,
+  type GitHubSummary,
+} from '../shared/github'
 import type { WorkspaceState } from '../shared/workspaces'
 import type { FakeMethod, FakeRouteWriter } from './fake-api-routes'
 import { fakeCoreRoutes } from './fake-core-routes'
@@ -16,6 +20,7 @@ import {
   maskedChangedFiles,
   withMaskedTurnFiles,
 } from './fixtures/masked-paths'
+import { toolFixtures } from './fixtures/tools'
 import { workspaceFixtures } from './fixtures/workspaces'
 import { recordedChatEvents, type RecordedChatScenario } from './recorded-chat'
 import { recordedFileEvents } from './recorded-files'
@@ -25,6 +30,12 @@ export interface FakeApiOptions {
   workspaceState?: WorkspaceState
   conversation?: RecordedChatScenario
   banner?: BannerState
+  /**
+   * The GitHub state of the record of the fake workspace. Without it, the
+   * record has the GitHub state of `banner`, so that its list mark and its
+   * bar agree. `null` gives a record without one, whatever the bar shows.
+   */
+  github?: GitHubSummary | null
   /** The Mac commands of the fake workspace. */
   macCommands?: FakeMacScenario
   /** The window is the Mac app on the Mac of the fake user. */
@@ -34,6 +45,19 @@ export interface FakeApiOptions {
    * the labels of the mockups, to the file lists and to each finished turn.
    */
   paths?: PathState
+}
+
+/**
+ * The GitHub state of the record of the fake workspace: `github` when the
+ * options give it, also `null`, or else the state of the bar of `banner` and
+ * its checks, as the Worker copies it.
+ */
+export function fakeGitHubSummary(
+  options: Pick<FakeApiOptions, 'banner' | 'github'>,
+): GitHubSummary | null {
+  if (options.github !== undefined) return options.github
+  const { banner, checks } = toolFixtures(options.banner)
+  return githubSummary(banner.banner, checks.checks)
 }
 
 function routeKey(method: string, path: string): string {
@@ -73,6 +97,7 @@ export class FakeApiServer implements FakeRouteWriter {
       options.workspaceState ?? 'ready',
       conversation,
       paths,
+      fakeGitHubSummary(options),
     )
     fakeToolRoutes(this, options.banner ?? 'ready-to-merge', paths)
     const { workspaces, created } = workspaceFixtures(options.workspaceState)

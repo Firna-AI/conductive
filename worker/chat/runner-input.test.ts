@@ -51,13 +51,24 @@ function envelope(event: unknown) {
   }
 }
 
-it('preserves positive omission counts in runner chat events', () => {
-  for (const event of [tool, completed]) {
+it('preserves omission counts and a known optional turn end reason in runner chat events', () => {
+  for (const event of [
+    tool,
+    completed,
+    { ...completed, endReason: 'background_work_limit' },
+  ]) {
     expect(
       parseRunnerEnvelope(
         numberedRunnerInput(envelope({ ...event, sdkOnly: 'discard' })),
       ),
     ).toEqual(envelope(event))
+  }
+  for (const endReason of ['future_reason', null, false]) {
+    expect(
+      parseRunnerEnvelope(
+        numberedRunnerInput(envelope({ ...completed, endReason })),
+      ),
+    ).toEqual(envelope(completed))
   }
 })
 

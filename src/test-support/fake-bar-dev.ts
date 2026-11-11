@@ -156,7 +156,11 @@ export function scenarioFetch(
     const last = server.events.history(
       Number.MAX_SAFE_INTEGER,
     ).throughEventNumber
-    const workspace = { ...detail.workspace, branch: CONTINUED_BRANCH }
+    const workspace = {
+      ...detail.workspace,
+      branch: CONTINUED_BRANCH,
+      github: null,
+    }
     server.json('GET', workspacePath(org, id), {
       ...detail,
       workspace,

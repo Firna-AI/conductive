@@ -2,13 +2,18 @@
 
 This doc holds the requirements and the decisions in force for the life of a
 workspace. It covers the create, the start steps, the time limits, the
-states, the stop and resume, the archive, the restore, and Continue of a
-workspace. It belongs to
-[Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
-provider, the org image, and the startup script. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+states, the stop and resume, the archive, the restore, and Continue of a workspace.
+It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
+which covers the provider, the org image, and the startup script. The
+terms are those of the
+[architecture doc](../architecture.md#terms).
+
+A decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. A list mark
+decision number, such as list mark decision 1, names the dated record of
+one decision. That decision belongs to the change that adds the list mark.
+Its plan keeps these records while the change is open. Its pull request
+keeps them after the merge.
 
 ## Create a workspace
 
@@ -64,14 +69,20 @@ says.
 
 ## Workspace states
 
-- The workspace list shows one state for each workspace: working, needs
-  input, finished with unread output, ready, starting, stopped, or error.
+- Each workspace has one state: working, needs input, finished with unread
+  output, ready, starting, stopped, or error.
 - Needs input shows while the agent waits for the user, such as for help,
   an approval, or an answer (decision 68). The workspace header and its
   row in the list show it, in the web app and in the Mac app.
-- Each state has its own mark shape, so no state depends on colour alone.
-  Bold text marks unread output.
+- The workspace header and the operator section give each state its own
+  mark shape, so no state there depends on colour alone. Reason: they also
+  show the state of the cloud computer. So the header can show ready beside
+  a bar with failed checks.
 - Archived workspaces sit in the Archived group at the end of the list.
+
+### The list mark
+
+[Workspace list marks](workspace-marks.md) gives the requirements and their reasons.
 
 ## Stop and resume
 

@@ -23,8 +23,9 @@ page.
   [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
   and the rule that starts a run open.
 - [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
-  lines, with omitted-file and unavailable-file data, and the member of a
-  Continue note: "You" to that member, its name to others and in a copy.
+  lines, the end reason of a turn, omitted-file and unavailable-file data,
+  and the member of a Continue note: "You" to that member, its name to
+  others and in a copy.
 - [Command words](transcript/command-words.ts) supply Mac names, command
   states, notes, and output text. Browser code supplies icons and colours.
 - [Session events](transcript/session-events.ts) take stored Worker envelopes
@@ -70,6 +71,7 @@ page.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
 - [Workspace contracts](workspaces.ts) give `workspacePaths.continue` and `workspacePaths.continueResult`. `ContinueWorkspaceRequest` sends the `expectedBranch` that the caller shows, and an optional `allowLocalWork`. `ContinueWorkspaceResponse` is a pending job with its `continueId`, a `confirmation-required` reply with the `branch`, the `baseBranch`, and the `LocalWork` that the check of Continue found, or a `continued` reply with the `workspace` and its `eventNumber`. [Continue routes](../../worker/lifecycle/continue-routes.md) gives the routes and the errors.
 - [GitHub contracts](github.ts) give the five `githubPaths` routes of a workspace: the banner and checks reads, the member capability, the merge start, and the merge result. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
+- `githubSummary` in [GitHub contracts](github.ts) maps the banner and checks to the list mark. [The summary reader](github-read.ts) reads `Workspace.github`.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
 - [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.

@@ -3,6 +3,7 @@
  */
 
 import type { TableCells } from '../../../../src/markdown/table-rows'
+import type { TurnEndReason } from '../../../../src/shared/chat-events'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
@@ -13,8 +14,13 @@ import {
   e2eRunning,
   history,
 } from './autocompleteTurn'
+import { backgroundConversations } from './backgroundConversations'
 import { barConversations, type ContinuedItem } from './barConversations'
 import type { ChangedFile } from './files'
+import {
+  headingConversations,
+  type MessageHeading,
+} from './headingConversations'
 import { linkedConversations } from './linkedConversations'
 import { listConversations, type MessageList } from './listConversations'
 import { lostConversations } from './lostConversations'
@@ -38,8 +44,11 @@ type ToolCallStatus = 'done' | 'running' | 'stopped'
 /** A table in a message of the agent. A short row keeps only its own cells. */
 export type MessageTable = { kind: 'table' } & TableCells<string>
 
-/** A block of a message of the agent: a paragraph, a table, or a list. */
-export type AgentBlock = string | MessageTable | MessageList
+/**
+ * A block of a message of the agent: a paragraph, a heading, a table, or a
+ * list.
+ */
+export type AgentBlock = string | MessageHeading | MessageTable | MessageList
 
 export type ChatItem =
   | {
@@ -56,7 +65,7 @@ export type ChatItem =
   | {
       kind: 'agent'
       id: string
-      /** The paragraphs, the tables, and the lists of the message, in order. */
+      /** The blocks of the message, in order. */
       blocks: readonly AgentBlock[]
     }
   | {
@@ -101,6 +110,8 @@ export type ChatItem =
       omittedFiles?: number
       /** The cloud computer could not read the changed files: none listed. */
       filesUnavailable?: true
+      /** A cause other than the end of the reply ended the turn. */
+      endReason?: TurnEndReason
     }
   | {
       /** A runner event that the workspace refused (decision 76). */
@@ -169,6 +180,7 @@ export const conversations: Readonly<
   ...macConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
+  ...backgroundConversations,
   ...linkedConversations,
   ...attachmentConversations(history),
   ...workspaceLinkConversations(history),
@@ -182,4 +194,5 @@ export const conversations: Readonly<
   ...tableConversations,
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
+  ...headingConversations,
 }

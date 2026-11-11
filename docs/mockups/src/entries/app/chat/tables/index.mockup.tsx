@@ -11,7 +11,10 @@ export const chatTables = defineScreen({
     'The agent answers with a table between two paragraphs: the resources of its cloud computer. The table has a header row on a raised fill and one thin line between cells, as in the Markdown preview of a file. A cell keeps its inline code, such as `/home`. The text before and after the table keeps the width of the chat.',
   rationale:
     'The user chose on 9 November 2026 that the chat adds tables to the formatting that it already has, and shares the table of the file preview, with the same look. Before, the chat joined the rows of a table into one paragraph of pipes. The chat shows a table as a native table, so a screen reader reads its rows and columns.',
-  relatedDocs: ['docs/protocol/chat-markdown.md'],
+  relatedDocs: [
+    'docs/protocol/chat-tables.md',
+    'docs/protocol/chat-markdown.md',
+  ],
   propSchema: workspaceStateSchema,
   props: {
     ...readyWorkspace,

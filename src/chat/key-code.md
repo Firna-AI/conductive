@@ -77,6 +77,7 @@ is relative to `src/chat/`, the folder of this guide.
   the copy of chat text with the mention of each chip that has a
   `data-mention` mark: each file chip and each `SentFileChip`. It leaves
   out text that the browser leaves out of a copy.
+  `chipOf` in `LinksContext.tsx` gives what a chip shows of its workspace.
 - `links/session-links.ts`: `useLinkedSession`, the session that a chip
   finds: a live session of the chat's workspace, or one of the one read of
   another workspace in `session-reads.ts`, made again for each load of a
@@ -91,24 +92,11 @@ is relative to `src/chat/`, the folder of this guide.
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
-- [`transcript.ts`](../shared/transcript/transcript.ts): how chat events become the parts of a transcript.
+- [Transcript key code](transcript.md#key-code): the shared transcript
+  modules, the turn words with the end reason of a turn, the work folds,
+  and the workspace stream.
 - [`agents.ts`](../shared/agents.ts): the shared effort words and model
   labels of the pickers.
-- [`duration.ts`](../shared/transcript/duration.ts),
-  [`tool-words.ts`](../shared/transcript/tool-words.ts), and
-  [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
-  tool words, fold counts, and turn lines that the browser and Worker share.
-- [`session-events.ts`](../shared/transcript/session-events.ts): the session
-  events from stored Worker envelopes or parsed browser envelopes.
-- [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
-  in event order and its newest record. The record owner keeps the logs private.
-- [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
-  `retryItemId`, the one failed item that offers Try again.
-- [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
-- [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
-- [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.
-- [`refused-events.ts`](../shared/transcript/refused-events.ts): how a refusal marker becomes a line, and how a
-  refused end ends its turn.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
@@ -161,25 +149,22 @@ is relative to `src/chat/`, the folder of this guide.
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
-  event from the mockups' `lostCopy.ts`. `UserBubble` reads the parts of a
-  sent message once, with `useChatParts`. It draws them with `ChatText`,
-  and it lists under the message only the files that no part shows as a
-  chip. It sets `opens` only when the message state is `sent`.
-- [`turn-work.ts`](../shared/transcript/turn-work.ts) and
-  [`transcript-entries.ts`](../shared/transcript/transcript-entries.ts):
-  `foldedWork` finds the work of each ended turn that folds, as the
-  [transcript rules](transcript.md) say. `groupEntries` makes the entries
-  that the chat draws, and puts each insert at its place, also in a fold.
-  It gives each run of tool calls its open state: while a turn runs, only
-  the run with its newest call is open.
+  event from the mockups' `lostCopy.ts`. `components/TurnEnd.tsx` draws the
+  end of a finished turn: the line of its end reason, from the mockups'
+  `EndReasonLine.tsx`, above its duration and its files. `UserBubble` reads
+  the parts of a sent message once, with `useChatParts`. It draws them with
+  `ChatText`, and it lists under the message only the files that no part
+  shows as a chip. It sets `opens` only when the message state is `sent`.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.
-- `components/agent-text.ts`: `textBlocks`, the paragraphs, lists, code
-  blocks, and tables of an agent message, with `TextTable`.
-  `components/AgentText.tsx`: `AgentText`, which draws them, and
-  `AgentBlocks`, which the message line shares. Their text draws through
-  `LinkedText` of `links/`.
+- `components/agent-text.ts`: `textBlocks`, the paragraphs, headings,
+  lists, code blocks, and tables of an agent message, with `TextTable`.
+  `components/agent-paragraph.ts`: `Paragraph`, the lines of a paragraph,
+  with the text that an underline turns into a heading.
+  `components/AgentText.tsx`: `AgentText`, which draws them, with the
+  heading style that the file preview shares, and `AgentBlocks`, which the
+  message line shares. Their text draws through `LinkedText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which
@@ -192,8 +177,6 @@ is relative to `src/chat/`, the folder of this guide.
   chat, so the line keeps its place.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
-- `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
-  the reconnect, and the `hold` and `release` of the workspace stream.
 - `transcript-copy.ts`: `copyTranscript`, the pending copy for a workspace,
   session, and detail. It retains resolved text for one minute after a
   clipboard failure. The next press consumes it at once. The cache uses the
@@ -203,7 +186,9 @@ is relative to `src/chat/`, the folder of this guide.
   it with the chat API of the controller.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
-  responses.
+  responses. `api/read-chat.ts` copies a known `endReason` of a turn end,
+  and drops an unknown value. `api/read-changed-file.ts` reads the changed
+  files of a turn end, with their real paths and display labels.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer
@@ -212,8 +197,8 @@ is relative to `src/chat/`, the folder of this guide.
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
-  in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the answers of the
-  scripted agent, which the `answer` option chooses. `dev/dev-routes.ts`
+  in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the plans and the
+  answers of the scripted agent, which the `answer` option chooses. `dev/dev-routes.ts`
   keeps the bytes of each upload. While the sandbox runs, it copies the
   files of each message that it accepts. `dev/dev-sandbox.ts` copies the
   files of each queued message when the sandbox becomes ready, before the

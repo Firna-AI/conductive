@@ -14,6 +14,7 @@ import {
   omittedFiles,
   stoppedSummary,
   turnCopy,
+  turnEndReason,
   type ChatReaders,
 } from '../../shared/transcript/turn-words'
 import { ActionButton } from '../ui/actions'
@@ -73,6 +74,7 @@ export function ItemView(props: {
       return (
         <TurnEnd
           durationMs={item.durationMs}
+          endReason={turnEndReason(props.transcript, item.turnId)}
           files={item.files}
           // Files that a row lists stay true, also after a later end.
           filesUnavailable={

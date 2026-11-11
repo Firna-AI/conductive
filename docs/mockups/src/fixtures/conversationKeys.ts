@@ -28,6 +28,8 @@ export const conversationKeys = [
   'lost-turn-end',
   'files-unavailable',
   'stopped-files-unavailable',
+  'background-waiting',
+  'background-limit',
   'linked',
   'sent-files',
   'sent-files-listed',
@@ -49,5 +51,7 @@ export const conversationKeys = [
   'tables-in-work',
   'nested-lists',
   'nested-lists-in-work',
+  'headings',
+  'headings-in-work',
   ...barConversationKeys,
 ] as const

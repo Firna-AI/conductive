@@ -10,7 +10,10 @@ the dev wiring in `dev/`, and what its fake routes do.
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
   `?waiting=1`, `?paused=1`, `?waitlist=off`, or
-  `?paths=masked`. `dev/options.ts` lists them. `dev/attachment-routes.ts`
+  `?paths=masked`. `dev/options.ts` lists them. `?banner=<state>`, such as
+  `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
+  bar, and its list mark shows the GitHub state of that bar. The other rows
+  keep the GitHub states of the mockups. `dev/attachment-routes.ts`
   keeps the uploaded files of both composers. With `?upload=wait` each
   upload keeps running, and with `?upload=fail` the first upload of the
   page fails once, so Try again works. `?sent=<percent>` makes the dev

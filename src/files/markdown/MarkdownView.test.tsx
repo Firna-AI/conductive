@@ -52,6 +52,19 @@ it('ends a list item at an unindented line after a code block or a table, as Com
   expect(html).toMatch(/<\/table><\/div><\/li><\/ul><p>That is all\.<\/p>/)
 })
 
+it('keeps lazy list lines as paragraph text and reads indented setext headings', () => {
+  const cases = [
+    ['- Foo\n===', '<ul><li>Foo\n===</li></ul>'],
+    ['- Foo\n--', '<ul><li>Foo\n--</li></ul>'],
+    ['- Foo\n  ===', '<ul><li><h1>Foo</h1></li></ul>'],
+    ['- Foo\n  --', '<ul><li><h2>Foo</h2></li></ul>'],
+    ['- Foo\n---', '<ul><li>Foo</li></ul><hr/>'],
+  ] as const
+  for (const [markdown, expected] of cases) {
+    expect(render(markdown), markdown).toContain(expected)
+  }
+})
+
 it('keeps a fence with an info string as one code block', () => {
   const html = render(
     '```bash\nnpm test\n# not a heading\n```\n\nAfter the tests.',

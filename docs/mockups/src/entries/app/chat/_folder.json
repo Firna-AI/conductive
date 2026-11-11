@@ -4,9 +4,11 @@
     "work",
     "tables",
     "lists",
+    "headings",
     "lost-data",
     "lost-updates",
     "unavailable-files",
+    "background-limit",
     "masked-paths"
   ]
 }

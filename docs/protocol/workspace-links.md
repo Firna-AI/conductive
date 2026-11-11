@@ -37,16 +37,17 @@ number names a dated record, as
 
 ## Chips
 
-- A chip is a small rounded box in a line of text. It shows the state
-  mark, the label of the number, and the current name of one workspace
+- A chip is a small rounded box in a line of text. It shows the list mark,
+  the label of the number, and the current name of one workspace
   (decision 211).
-- A chip changes when the name or the state of its workspace changes. This
-  holds also on a phone, where the workspace list is not on the screen.
+- A chip changes when the name, the state, or the GitHub state of its
+  workspace changes. This holds also on a phone, where the workspace list
+  is not on the screen.
 - Reason: the mark shows the live state, which matters when one workspace
   waits for another.
 - The marks mean what they mean in the workspace list, as
-  [Workspace states](workspace-life.md#workspace-states) says. A
-  chip of an archived workspace shows that the workspace is archived.
+  [The list mark](workspace-life.md#the-list-mark) says. A chip of an
+  archived workspace shows that the workspace is archived.
 - A chip keeps the height of its line of text. A long name is cut short,
   and the chip gives the whole name as its title.
 - A chip never makes a message wider than its column. Reason: a long chip
@@ -89,7 +90,7 @@ number names a dated record, as
 
 ### Session chips
 
-- A session chip shows the state mark and the label of the workspace of
+- A session chip shows the list mark and the label of the workspace of
   its session (decision 261). Then it shows the icon of a session tab and
   the title of the session.
 - The mark and the label follow the rules of a chip above. The icon tells
@@ -162,7 +163,7 @@ number names a dated record, as
   says. A paste of formatted text keeps only its text.
 - A chip in the field is one unit of the text. Backspace and Delete remove
   it whole, and the arrow keys step over it.
-- A chip in the field shows its state mark in a cell at its start. A
+- A chip in the field shows its list mark in a cell at its start. A
   pointer over the cell turns the mark into a × that removes the chip, as
   [Remove a chip of the composer](file-mentions.md#remove-a-chip-of-the-composer)
   says (decision 215).

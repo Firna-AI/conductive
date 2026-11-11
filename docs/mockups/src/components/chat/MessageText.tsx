@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
@@ -10,12 +10,18 @@ import { previewPaths } from '../files/previewPaths'
 import { workspaceLabel } from '../workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
 import type { ChipRemoval } from './ChipRemove'
-import { useChatWorkspaces } from './chatWorkspaces'
+import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
 import { FileChip } from './FileChip'
 import { entryName } from './entryPaths'
 import { SentFileChip } from './SentFileChip'
 import { SessionChip, type ChipSession } from './SessionChip'
-import { linkTarget, textParts, type LinkTarget } from './workspaceLinks'
+import { strongRuns } from './strongText'
+import {
+  linkTarget,
+  textParts,
+  type LinkTarget,
+  type TextPart,
+} from './workspaceLinks'
 import {
   WorkspaceChip,
   type ChipOpener,
@@ -28,6 +34,7 @@ function chipOf(row: WorkspaceRow): ChipWorkspace {
     label: workspaceLabel(row.workspace.number),
     name: row.workspace.name,
     status: row.status,
+    github: row.github,
   }
 }
 
@@ -78,6 +85,7 @@ export function LinkChip(props: {
       workspace: {
         label: workspaceLabel(row.workspace.number),
         status: row.status,
+        github: row.github,
       },
       title: nameLabel(session.title),
     }
@@ -100,14 +108,62 @@ export function LinkChip(props: {
 }
 
 /**
+ * One part of the text of a message: text, code, or a chip. While its
+ * message `waits` for the cloud computer, the chip of an attached file opens
+ * nothing, because its copy does not exist yet.
+ */
+function Part(props: {
+  part: TextPart
+  rows: readonly ChatRow[]
+  waits?: boolean
+}) {
+  const { part } = props
+  if (part.kind === 'text') return part.text
+  if (part.kind === 'code') {
+    return <code className={inline.code}>{part.text}</code>
+  }
+  if (part.kind === 'attached') {
+    const tab = props.waits === true ? undefined : part.file.tab
+    const to = tab ? attachedTabs[tab] : undefined
+    return (
+      <SentFileChip
+        file={part.file}
+        mention={part.source}
+        opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
+      />
+    )
+  }
+  if (part.kind === 'mention') {
+    const to = filePage(part.entry)
+    return (
+      <FileChip
+        entry={part.entry}
+        icon={iconOf(part.entry)}
+        mention={part.source}
+        opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
+      />
+    )
+  }
+  const target = linkTarget(part.href, props.rows)
+  if (!target) return part.source
+  const to = linkPage(target)
+  return (
+    <LinkChip
+      opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
+      target={target}
+    />
+  )
+}
+
+/**
  * The text of a sent message or an answer. Each part in backticks is code,
  * and each link to a workspace of the org is a chip that opens the
  * workspace, when the mockups draw its screen. A link to a session that the
  * chat read is a session chip that opens the session. A Markdown link to a
  * workspace or a session shows as the chip alone. Other links stay plain
- * text, and so does a link in code. In the text of a member, `mentions`
- * makes each mention of a file or a folder of the tree a chip that opens
- * the file.
+ * text, and so does a link in code. With `strong`, as in an answer, `**`
+ * marks bold. In the text of a member, `mentions` makes each mention of a
+ * file or a folder of the tree a chip that opens the file.
  *
  * `files` are the attached files of a sent message. A mention of the copy
  * path of one of them shows as the chip of that file, which opens the file
@@ -117,63 +173,23 @@ export function LinkChip(props: {
 export function MessageText(props: {
   text: string
   mentions?: boolean
+  strong?: boolean
   files?: readonly Attachment[]
   waits?: boolean
 }) {
   const rows = useChatWorkspaces()
   const parts = textParts(props.text, true, props.mentions, props.files)
-  return (
-    <>
-      {parts.map((part, index) => {
-        if (part.kind === 'text') return part.text
-        if (part.kind === 'code') {
-          return (
-            <code className={inline.code} key={index}>
-              {part.text}
-            </code>
-          )
-        }
-        if (part.kind === 'attached') {
-          const tab = props.waits === true ? undefined : part.file.tab
-          const to = tab ? attachedTabs[tab] : undefined
-          return (
-            <SentFileChip
-              file={part.file}
-              key={index}
-              mention={part.source}
-              opener={
-                to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined
-              }
-            />
-          )
-        }
-        if (part.kind === 'mention') {
-          const to = filePage(part.entry)
-          return (
-            <FileChip
-              entry={part.entry}
-              icon={iconOf(part.entry)}
-              key={index}
-              mention={part.source}
-              opener={
-                to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined
-              }
-            />
-          )
-        }
-        const target = linkTarget(part.href, rows)
-        if (!target) return part.source
-        const to = linkPage(target)
-        return (
-          <LinkChip
-            key={index}
-            opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
-            target={target}
-          />
-        )
-      })}
-    </>
-  )
+  const runs = props.strong ? strongRuns(parts) : [{ strong: false, parts }]
+  return runs.map((run, index) => {
+    const content = run.parts.map((part, inner) => (
+      <Part key={inner} part={part} rows={rows} waits={props.waits} />
+    ))
+    return run.strong ? (
+      <strong key={index}>{content}</strong>
+    ) : (
+      <Fragment key={index}>{content}</Fragment>
+    )
+  })
 }
 
 /**
