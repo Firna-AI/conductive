@@ -1,6 +1,8 @@
-import type {
-  AgentLoginStatus,
-  NewWorkspaceView,
+import {
+  defaultAgentLoginNoReuse,
+  type AgentLoginStatus,
+  type NewWorkspaceView,
+  type SaveAgentLoginRequest,
 } from '../../src/shared/account'
 import type { Agent, AgentChoice } from '../../src/shared/agents'
 
@@ -12,27 +14,25 @@ export async function accountLogins(
 ): Promise<AgentLoginStatus[]> {
   const { results } = await db
     .prepare(
-      `SELECT agent, kind, no_reuse AS noReuse, updated_at AS updatedAt FROM agent_logins
+      `SELECT agent, kind, no_reuse AS noReuse, updated_at AS updatedAt, failure_cause AS unusableCause FROM agent_logins
        WHERE user_id = ? ORDER BY agent`,
     )
     .bind(userId)
-    .all<Omit<ConnectedLogin, 'connected' | 'noReuse'> & { noReuse: number }>()
+    .all<
+      Omit<ConnectedLogin, 'connected' | 'noReuse'> & {
+        noReuse: number
+        unusableCause: string | null
+      }
+    >()
   return (['claude', 'codex'] as const).map((agent): AgentLoginStatus => {
     const login = results.find((item) => item.agent === agent)
     if (!login) return { agent, connected: false }
-    if (login.agent === 'claude')
-      return {
-        ...login,
-        agent: 'claude',
-        connected: true,
-        noReuse: login.noReuse === 1,
-      }
+    const { unusableCause, ...metadata } = login
     return {
-      ...login,
-      agent: 'codex',
-      kind: 'api-key',
+      ...metadata,
       connected: true,
       noReuse: login.noReuse === 1,
+      ...(agent === 'codex' && unusableCause !== null ? { unusableCause } : {}),
     }
   })
 }
@@ -100,7 +100,7 @@ export async function saveAccountLogin(
   db: D1Database,
   userId: string,
   agent: Agent,
-  kind: 'token' | 'api-key',
+  kind: SaveAgentLoginRequest['kind'],
   ciphertext: string,
   now: number,
 ): Promise<boolean> {
@@ -111,9 +111,18 @@ export async function saveAccountLogin(
        kind = excluded.kind, ciphertext = excluded.ciphertext,
        no_reuse = CASE WHEN agent_logins.kind = excluded.kind
          THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
-       updated_at = excluded.updated_at RETURNING no_reuse`,
+       updated_at = excluded.updated_at, refresh_claim = NULL,
+       refresh_claim_until = NULL, failure_cause = NULL RETURNING no_reuse`,
     )
-    .bind(userId, agent, kind, ciphertext, kind === 'token' ? 1 : 0, now, now)
+    .bind(
+      userId,
+      agent,
+      kind,
+      ciphertext,
+      defaultAgentLoginNoReuse(agent, kind) ? 1 : 0,
+      now,
+      now,
+    )
     .first<number>('no_reuse')
   return noReuse === 1
 }

@@ -115,15 +115,56 @@ plan limits.
   key for its cloud computers, and no screen asks for one or for another
   account.
 - The account connects Claude with a subscription token from
-  `claude setup-token` or an API key, and Codex with an OpenAI API key.
-  `AgentConnectForm` opens under the row of the agent. A connected login
-  shows its kind and Remove.
+  `claude setup-token` or an API key. It connects Codex with an OpenAI API
+  key or with a device code sign-in to the ChatGPT plan of the member,
+  from decision 175. `AgentConnectForm` opens under the row of the agent,
+  as `app/account/connect-claude` and `app/account/connect-codex` show. Its
+  switch chooses the kind of the login, and the first kind starts
+  selected: Subscription token, then API key, for Claude, and API key, then
+  ChatGPT plan, for Codex. For a token or a key, the words above the field
+  say what to paste and where to make it.
+- ChatGPT plan has no field. Its words say that Codex then runs on the
+  plan, and that device code sign-in must be on first in the ChatGPT
+  security settings, as `app/account/connect-codex/chatgpt` shows. They
+  quote no label of ChatGPT, so they stay true after a rename. The link
+  Open ChatGPT settings follows them, and opens those settings in a new
+  tab. Get a code shows a one-time code in large type, the link to
+  `auth.openai.com/codex/device`, the warning never to share the code and
+  to enter only a code that the page shows, and a line that the page waits
+  for the sign-in, as its `code` variant shows. A code works for 15
+  minutes. An expired code offers Get a new code, as its `expired` variant
+  shows. A refused sign-in gives its cause in the same place, as its
+  `refused` variant shows. Its button says Get a code until a code showed,
+  then Get a new code. A refusal because the setting is off has the same
+  link. `ChatGptSignIn` in `src/components/settings/` draws the steps.
+- The app renews a ChatGPT sign-in alone. When OpenAI does not renew it,
+  the app can no longer use the login. Its row then says Signed out in
+  place of Connected, gives the cause under the row, and offers Sign in
+  again, as `app/account/codex-token/not-usable` shows. The cause comes
+  from the field `unusableCause` of the login status. `LoginNotUsable.tsx`
+  in `src/components/settings/` draws it. Sign in again opens the ChatGPT
+  sign-in form in the place of the cause, as
+  `app/account/codex-token/sign-in-again` shows. The row keeps the login
+  with Remove, and the share switch stays, until a new sign-in replaces
+  the login.
+- `chatGptSignInCopy.ts` in `src/components/settings/` gives the words of
+  the ChatGPT sign-in, the address of the ChatGPT settings, the row of a
+  sign-in that stopped working, and the causes of the Worker. It imports no
+  fixture, so the app and the Worker can import the same words.
+- A connected login shows its kind and Remove. The name of the kind
+  depends on the agent: a Claude token is a "Subscription token", the
+  ChatGPT sign-in of Codex is "ChatGPT plan", and a key is an "API key".
+  `loginLabels` in `src/fixtures/logins.ts` holds the names. On a phone,
+  the state and the kind go on a second line under the name of the agent,
+  so that the kind shows in full.
 - Under each connected login, the switch "Let other members use this
   login" says whether the messages of other members in the sessions of the
   user run on it, from decision 116. The switch starts off for a Claude
-  subscription and on for an API key, as `app/account` shows. It saves at
-  once. A change that the app did not save shows its cause beside the
-  switch, as `app/account/share-not-saved` shows. The part lives in
+  subscription token and on for an API key, as `app/account` shows. A
+  ChatGPT plan of Codex starts off too, from decisions 171 and 175, as
+  `app/account/codex-token` shows. The switch saves at once. A
+  change that the app did not save shows its cause beside the switch, as
+  `app/account/share-not-saved` shows. The part lives in
   `src/components/settings/LoginShare.tsx`.
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.

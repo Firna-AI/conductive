@@ -12,7 +12,7 @@
   - **Squirrel.Mac:** the macOS update framework inside Electron. It accepts a downloaded version, and it replaces the app when the update installs.
   - **Read-only copy:** a copy of the app that runs from its mounted DMG, or from the hidden read-only place where macOS runs a downloaded app until the user moves it.
 - **Background:**
-  - The Mac app updates itself from the GitHub releases of `Firna-AI/remote-code`. It checks at launch and every 4 hours, and it downloads a new version automatically.
+  - The Mac app updates itself from the GitHub releases of `Firna-AI/conductive`. It checks at launch and every 4 hours, and it downloads a new version automatically.
   - The app shows "The update is ready." with Restart now and Later only after Squirrel.Mac accepts the downloaded version.
   - On 9 November 2026, the user chose a dialog for each manual check. With no new version, it says "Conductive is up to date.". After a failed check, it says "Conductive could not check for updates. Try again later.".
   - When a manual check finds a new version, the dialog says "Downloading the new version. Conductive tells you when it is ready.". When a downloaded version waits, the check shows "The update is ready." again. Automatic checks stay silent.

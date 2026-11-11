@@ -20,7 +20,7 @@ export async function gatewayLogin(
     `SELECT l.kind, l.ciphertext, l.updated_at AS updatedAt
      FROM agent_logins l JOIN workspaces w ON w.id = ?
      WHERE l.user_id = ? AND l.agent = ?
-       AND w.state NOT IN ('stopped', 'archived', 'error')`,
+       AND w.state NOT IN ('stopped', 'archived', 'error') AND l.failure_cause IS NULL`,
   )
     .bind(workspaceId, starterId, agent)
     .first<{ kind: string; ciphertext: string; updatedAt: number }>()
@@ -32,12 +32,14 @@ export async function decryptGatewayLogin(
   env: AppEnv,
   row: NonNullable<Awaited<ReturnType<typeof gatewayLogin>>>,
 ) {
-  const secret = loginSecret(
-    await decrypt(
-      row.ciphertext,
-      agentLoginContext(row.userId, row.loginKind.agent),
-      env.BOAT_KEY_ENCRYPTION_KEY,
-    ),
+  const stored = await decrypt(
+    row.ciphertext,
+    agentLoginContext(row.userId, row.loginKind.agent),
+    env.BOAT_KEY_ENCRYPTION_KEY,
   )
+  const secret =
+    row.loginKind.agent === 'codex' && row.loginKind.kind === 'token'
+      ? stored
+      : loginSecret(stored)
   return { ...row.loginKind, secret }
 }

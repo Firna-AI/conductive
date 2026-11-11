@@ -49,7 +49,7 @@ credentials when it ends.
 Ctrl+C and SIGTERM cancel the active tool before credential cleanup.
 
 The signing job of the release workflow runs the three commands above.
-It uses the `desktop-release` GitHub environment of `Firna-AI/remote-code`.
+It uses the `desktop-release` GitHub environment of `Firna-AI/conductive`.
 That environment admits only the `main` branch, so no run of a tag or of another branch gets its secrets.
 The rule is a GitHub setting, not a file in this repository.
 In GitHub, open Settings, Environments, `desktop-release`.
@@ -64,7 +64,7 @@ The signing job receives their values from the protected `desktop-release` envir
 [GitHub's reusable workflow guide](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-inputs-and-secrets-in-a-reusable-workflow)
 explains why the caller must pass environment secrets too.
 
-Use `gh secret set --repo Firna-AI/remote-code --env desktop-release NAME`
+Use `gh secret set --repo Firna-AI/conductive --env desktop-release NAME`
 to enter a secret without printing it.
 For a key file, pipe `openssl base64 -A -in FILE` into that command.
 Use `gh variable set` for the Apple team ID.
@@ -77,7 +77,7 @@ or cancellation.
 
 ## Releases
 
-Each GitHub release of `Firna-AI/remote-code` carries the signed Mac app.
+Each GitHub release of `Firna-AI/conductive` carries the signed Mac app.
 Installed copies update themselves from these releases.
 [Releases](../docs/protocol/desktop-packages-and-updates.md#releases) in the Mac app protocol states the requirements.
 
@@ -160,7 +160,7 @@ Use it to test signing.
 
 release-please uses the `RELEASE_PLEASE_TOKEN` repository Actions secret when it exists, and the built-in token otherwise.
 The repository has this secret.
-The secret needs a fine-grained personal access token for `Firna-AI/remote-code` only, with read and write access to contents, issues, and pull requests.
+The secret needs a fine-grained personal access token for `Firna-AI/conductive` only, with read and write access to contents, issues, and pull requests.
 The owner of that token then opens the release pull request, and CI runs on it with no approval.
 The workflow uses the secret while it exists, also after its token expires.
 So store a new token in the secret before the old one expires.
@@ -185,7 +185,13 @@ After that, the app updates itself.
 
 ## Updates
 
-electron-updater reads the GitHub releases of `Firna-AI/remote-code`.
+electron-updater reads the GitHub releases of `Firna-AI/conductive`.
+The [shared brand file](../docs/mockups/src/brand.ts) holds that name for the update feed, the publish step, and the site's download links.
+The `publish` block of `electron-builder.yml` repeats it.
+Releases up to `v0.8.0` read the old name of the repository, `Firna-AI/remote-code`.
+GitHub redirects the old name to the new one.
+Never create a repository with the old name in the Firna-AI organization.
+That stops the redirect, and copies that run those releases stop updating.
 `CONDUCTIVE_DESKTOP_UPDATES=enabled` at build time turns the updater on.
 Only the signing job of a release sets it.
 Manual signing runs, pull request builds, and local builds keep the updater off.

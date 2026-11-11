@@ -1,6 +1,7 @@
 import type { AccountResponse } from '../shared/account'
 import type { GetStartedResponse } from '../shared/onboarding'
 import type { OrgSummary } from '../shared/orgs'
+import { loginUsable } from './api/read-core'
 import { stepComplete } from './get-started'
 import type { Readable } from './store'
 
@@ -27,7 +28,7 @@ function deriveSteps(
   account: AccountResponse,
 ): GetStartedResponse {
   const org = setupOrg(orgs)
-  const agent = account.agentLogins.some((login) => login.connected)
+  const agent = account.agentLogins.some((login) => loginUsable(login))
   return {
     orgId: org?.id ?? null,
     steps: [
@@ -42,8 +43,9 @@ function deriveSteps(
  * The steps of Get started as the app shows them. Only the step of the
  * GitHub App comes from the reply of the API. The org step and the org of
  * Get started follow the org list, also a deleted org, as the address `/`
- * does. The step of the agent follows the logins of the account. So a leave
- * or a connect on another page shows at once. The value is null until the
+ * does. The step of the agent follows the logins of the account that can
+ * run turns, as the Worker counts them. So a leave or a connect on another
+ * page shows at once. The value is null until the
  * reply and the account are both loaded. It stays the same object until a
  * source changes, as `useStore` needs.
  */
