@@ -712,6 +712,40 @@ added after 2026-11-08: Copy link, Copy concise transcript, Copy full
 transcript, and the actions of the pull request bar. So the call above
 that left out "the pull request actions" no longer holds for them.
 
+Agent calls of 2026-11-11 for decision 199, from the key research in
+`.context/keyboard-shortcuts/key-table-newer.md`:
+
+- The labels use the words of the app: Copy link, Create PR, Fix checks,
+  Resolve conflicts, Address review, Commit and push, Copy concise
+  transcript, and Copy full transcript. Three bar labels need more words
+  in a list of every command: Merge PR (the bar names the merge method),
+  Continue after merge, and Open PR on GitHub (the bar links the number of
+  the pull request).
+- Copy link follows Restore workspace in the Workspace group. The bar
+  actions follow Next workspace that needs input, in the order of the
+  bar's states in `docs/protocol/github-banner.md`. The two copy commands
+  end the Chat group. Conductor groups them the same way.
+- Create PR gets the second key ⌥⇧⌘P, and Alt+Shift+P on Windows and
+  Linux. Reason: Firefox keeps ⇧⌘P and Ctrl+Shift+P for its private window
+  and never gives them to the page. The key adds ⌥, as ⌥⇧⌘T does for
+  Reopen closed session. ⌥⌘P was the other candidate: Chrome on a Mac
+  opens the system print dialog on it.
+- Fix checks gets ⌥⌘X, and Alt+Shift+X on Windows and Linux, in place of
+  Conductor's ⇧⌘X. Reason: Firefox switches the text direction of the
+  focused text field on ⇧⌘X and Ctrl+Shift+X, so they are text keys. ⌃⌘X
+  was the other candidate: Chrome on a Mac uses it for tab groups, and
+  decision 194 A gives it no Windows and Linux key.
+- The other keys are Conductor's keys, with Ctrl in place of ⌘ on Windows
+  and Linux: Copy link Ctrl+Shift+C, Copy concise transcript Alt+Shift+C,
+  Commit and push Ctrl+Shift+Y, Merge PR Ctrl+Shift+M, and Open PR on
+  GitHub Ctrl+Shift+G. Where the command runs, each key takes the place of
+  a browser key that the page may take, such as the DevTools element
+  picker on ⇧⌘C or find previous on ⇧⌘G.
+- Each bar key runs where its button shows and can take a click, and Open
+  PR on GitHub where a link to the pull request shows. Copy link runs
+  where the workspace label shows. The copy commands copy the open
+  session. Merge PR merges at once, as its button does.
+
 "Kept" names the browsers that keep a key in a normal tab. "Second key"
 is the key of decision 191 that a browser tab lets through.
 
@@ -744,6 +778,16 @@ is the key of decision 191 that a browser tab lets through.
 | Chat | Model picker | ⌘/ | Workspace |
 | Chat | Next effort level | ⌃⌘/ | Workspace |
 | Chat | Stop the agent | ⌃⌘⌫ | Workspace |
+| Workspace | Copy link | ⇧⌘C | Workspace header |
+| Workspace | Create PR | ⇧⌘P (kept in Firefox), second key ⌥⇧⌘P | Pull request bar |
+| Workspace | Fix checks | ⌥⌘X, chosen by hand | Pull request bar |
+| Workspace | Resolve conflicts, Address review | – | Pull request bar |
+| Workspace | Commit and push | ⇧⌘Y | Pull request bar |
+| Workspace | Merge PR | ⇧⌘M | Pull request bar |
+| Workspace | Continue after merge | – | Pull request bar |
+| Workspace | Open PR on GitHub | ⇧⌘G | Pull request bar |
+| Chat | Copy concise transcript | ⌥⌘C | Open session |
+| Chat | Copy full transcript | – | Open session |
 
 Fixed shortcuts, which show in the list with "Fixed shortcut":
 
