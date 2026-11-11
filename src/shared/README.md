@@ -33,7 +33,7 @@ confirmations, and resend rules. Its comments state the delivery contract.
 `RunnerProtocolVersion` is 1 or 2. The Worker accepts both versions.
 The `welcome` repeats the version of the runner's `hello`.
 `RUNNER_PROTOCOL_VERSION` is 2. The packaged runner sends it, and
-each full image build records it.
+each image build and refresh records it.
 The credential of a turn belongs to the session starter, whoever sent the
 message:
 

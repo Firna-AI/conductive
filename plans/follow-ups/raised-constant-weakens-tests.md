@@ -9,14 +9,15 @@
 - **Terms:**
   - **Break proof:** a deliberate break of the code under test, such as a flipped condition or a wrong value, that must make the new test fail. The `testing` skill asks for one for each test.
   - **Runner protocol version:** the number that Conductive's runner sends when it connects to the Worker. `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts` holds the version of the current runner.
-  - **Org image:** a saved cloud computer image from which a new workspace starts. A refresh of an org image keeps its installed runner.
+  - **Org image:** a saved cloud computer image from which a new workspace starts. Since 11 November 2026, a refresh of an org image installs the current runner, as a build does.
 - **Background:**
   - The section "Prove that each test can fail" of the `testing` skill asks the author to break the code on purpose and see the test fail. The author makes this proof once, when the test is new.
   - A later change can raise a constant that the code under test reads. When the test uses a value that is now equal to that constant, the right code and a wrong code give the same result. The test then passes for both.
-  - The example in this repository: a refresh of an org image must record the runner version of its source image. A full build records the Worker's `RUNNER_PROTOCOL_VERSION`.
+  - The example in this repository: until 11 November 2026, a refresh of an org image recorded the runner version of its source image. A build recorded the Worker's `RUNNER_PROTOCOL_VERSION`.
   - The refresh test came on 9 November 2026, when `RUNNER_PROTOCOL_VERSION` was 1. It set the source version to 2 and expected 2. So code that wrongly records the Worker's version for a refresh failed it.
   - On 10 November 2026 the packaged runner moved to protocol version 2, and the constant became 2. After that, the same wrong code passed the test. A review found this on the same day.
-  - The fix changed `worker/lifecycle/image-runner-version.test.ts` to a table of literal cases. A refresh of a version 1 image records 1. A refresh of a version 2 image records 2. A full build from a version 1 image records `RUNNER_PROTOCOL_VERSION`.
+  - The fix changed `worker/lifecycle/image-runner-version.test.ts` to a table of literal cases. A refresh of a version 1 image recorded 1. A refresh of a version 2 image recorded 2. A build from a version 1 image recorded `RUNNER_PROTOCOL_VERSION`.
+  - On 11 November 2026 each refresh became a clean build that records the Worker's `RUNNER_PROTOCOL_VERSION`. Since then, the table expects `RUNNER_PROTOCOL_VERSION` in all three cases.
   - No rule of the `testing` skill asks for a new break proof when a constant changes.
 - **Problem:** A test that a break proof once protected can stop protecting its code when a later change raises a constant. No rule asks the author of that change to prove the test again.
 - **Impact if no action:** A regression can pass every test after a change of a version or a limit. In the example, a wrong version would make new workspaces refuse the runner that their image holds.

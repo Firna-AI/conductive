@@ -9,7 +9,7 @@
 - **Terms:**
   - **Context folder:** the folder `.context` at the top of the workspace's repository folder. Attached files go to its folder `attachments`.
   - **Runner:** the agent runner, the program of the app in each cloud computer. It runs the agents and reports the files of the workspace.
-  - **Org image:** the prepared cloud computer image of an org. Each build installs the newest runner. A refresh keeps the installed runner.
+  - **Org image:** the prepared cloud computer image of an org. Each build and each refresh installs the newest runner.
   - **Older runner:** a runner from an org image that a build made before the deploy of the merge. It does not know the context folder.
 - **Background:**
   - On 10 November 2026, the user chose that the Worker copies each attached file into the repository folder of the workspace (decision 242).
@@ -25,9 +25,10 @@
   - The Worker tests use fake upload servers that model no folders. So they do not prove that the real provider makes missing folders.
   - A message that a workspace accepted before the deploy keeps its old hidden path in the home folder. Its copy fails once, and Try again gives it the new path. So send each test message after the deploy.
   - Under an older runner, a note that an agent writes in `.context/` shows in Changes. This is an accepted limit, so this item does not check notes.
+  - Since 11 November 2026, the first workspace start of a new workspace from an older image gives it the current runner, as [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says. So this check gets an older runner only after a failed update, and this item may be obsolete.
 - **Task:**
   1. Wait until the `Deploy` run of the merge commit passes.
-  2. Choose a test org whose org image a build made before that deploy. Refreshes do not matter, because a refresh keeps the installed runner. Do not press **Build computer** for that org until this check ends.
+  2. Choose a test org whose org image a build made before that deploy. A refresh after that deploy also installs the new runner. Do not press **Build computer** for that org until this check ends.
   3. Create a new workspace from that image. Send its first message to a model of either agent, with no file. Wait until the workspace is ready.
   4. Open the Terminal tab. Run these commands, and check each result:
      - `pwd` prints the repository folder, such as `/home/user/code/<name>`. This item calls it `<repository folder>`.

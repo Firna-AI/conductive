@@ -49,6 +49,8 @@ For an existing shell, `tmux set-option -g mouse on` enables scrolling
 immediately. Run it inside that workspace's Terminal tab. The setting lasts
 until the sandbox stops. A rebuilt image gives new workspaces the setting
 at each start.
+[Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says
+how an existing workspace gets the shell server that sets it.
 
 One quoted privileged-command helper owns the root commands.
 Both units require a nonsecret enable marker under `/run`.

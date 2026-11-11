@@ -11,7 +11,8 @@
 - **Background:**
   - Before the workflow, a person uploaded the archive `runner-a145db0.tar.gz` by hand and set the two Worker variables.
   - Each deploy run now sets both variables to `https://runner.conductive.build/runner-<sha256>.tar.gz` and its digest.
-  - A refresh keeps the installed runner, so only a new build installs the new archive.
+  - Each build and each refresh after the deploy gives the org image the new archive. A workspace start gives it to an existing workspace, as [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says.
+  - No build log names the archive URL, because `image/install.sh` downloads the archive with a silent `curl`. Since 11 November 2026, a build from a ready software image also runs no software step. So step 2 of the task needs another check before anyone runs it.
 - **Task:**
   1. After a deploy run with both settings, start a new build of an org image in the deployed app.
   2. Check that the build log names the new archive URL, and that the build passes.

@@ -748,6 +748,10 @@ Open. From finding 1 of Milestone 2. Its options check ran on 11 November
   agent turns only where an update fails. C ends the real-login path
   without depending on anything that sandbox code controls. E is the safe
   form of B, if agent turns must stay after a failed update.
+- **Note:** the Terms page and the Privacy page say "A new image build
+  gives the protection to each cloud computer that starts from it". A
+  refresh now gives it too. The answer to this decision rewrites that
+  sentence in `src/marketing/terms.ts` and `src/marketing/privacy-uses.ts`.
 - **Action:** ask the user, because B changes the pin rule of gateway
   decisions 2 and 5 and the risk text of the legal pages.
 
@@ -1057,29 +1061,47 @@ Depends on: 3
       the current org image does not. The action runs the current install
       script in the folder of the workspace's repository.
 
-## Milestone 9: Screens
+## Milestone 9a: Texts and the warning mark
 
 Tags: ui
 
-Depends on: 1, 5, 7, 8
+Depends on: 1, 5, 7
 
-- [ ] Show refreshes on the Cloud computer tab, as the mockup of Milestone
-      1 draws them.
-- [ ] Show the start step and the warning of Milestone 7. Load the warning
-      mark in the workspace list query and in the device fallback of
-      `worker/devices/state.ts`, which do not load it yet.
-- [ ] Show the notice of an old org setup and its action.
+These items depend on no open decision, so they run before Milestone 8.
+
+- [ ] Load the warning mark of Milestone 7 in the workspace list query and
+      in the device fallback of `worker/devices/state.ts`, which do not load
+      it yet. Check that the start card of the app shows the software step
+      from the label of the Worker, and that a failed update step ends with
+      "failed", as the mockup of a failed update draws it.
 - [ ] Change "The install script runs only when you build the computer." in
       `src/shell/settings/ComputerTab.tsx` and "only at a build" in
       `src/members/MemberComputerView.tsx`, with their tests, to the words
       of the mockup.
+- [ ] Change the build log line "Installing the cloud computer software."
+      in `phaseLabel` of `worker/lifecycle/build-execution.ts` to
+      "Installing the agent and terminal software", with its tests, as
+      decision 1 E and the software step of `docs/protocol/org-image.md`
+      say. No earlier milestone named this change.
+
+## Milestone 9: Screens
+
+Tags: ui
+
+Depends on: 1, 5, 7, 8, 9a
+
+- [ ] Show refreshes on the Cloud computer tab, as the mockup of Milestone
+      1 draws them.
+- [ ] Show the warning bar of Milestone 7. Its words and its action wait
+      for decisions 30 and 33.
+- [ ] Show the notice of an old org setup and its action.
 - [ ] Capture the org pictures of the marketing site again with
       `npm run marketing:pictures`, because the Cloud computer tab of the
       mockups now shows refreshes.
 
 ## Milestone 10: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 9
+Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 9, 9a
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
       Run each new asynchronous test 10 times, as the `testing` skill
@@ -1103,4 +1125,10 @@ Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 9
 - [ ] Measure the memory of the parallel copies in a real build, and tune
       the numbers of design item 8.
 - [ ] Resume a workspace that was created before a release. Check that its
-      start updates our software and that an agent answers.
+      start updates our software and that an agent answers. In its
+      terminal, run `conductive repositories list`, `conductive sections
+      list`, and `conductive models list`, and check that the `--name` help
+      of `conductive --help` says "Use plain words separated by spaces.
+      Avoid underscores unless the user tells you to add them." This check
+      replaces the follow-up item `full-image-build-for-agent-tools.md`,
+      whose rebuild the update at a workspace start makes unnecessary.

@@ -9,7 +9,7 @@
 - **Terms:**
   - **Context folder:** the folder `.context` at the top of the workspace's repository folder. Git ignores it. Attached files go to its folder `attachments`.
   - **Runner:** the agent runner, the program of the app in each cloud computer. It runs the agents and reports the files of the workspace.
-  - **Org image:** the prepared cloud computer image of an org. Each build installs the newest runner. A refresh keeps the installed runner.
+  - **Org image:** the prepared cloud computer image of an org. Each build and each refresh installs the newest runner.
   - **Local exclude file:** the ignore file of one Git repository, `info/exclude` in its Git folder. Git does not track it.
   - **Read line:** the line that the runner adds after the words of the member in each message with files.
 - **Background:**
@@ -33,7 +33,7 @@
   - The runner tests use a temporary repository, not a real cloud computer.
 - **Task:**
   1. Wait until the `Deploy` run of the merge commit passes.
-  2. Sign in at `https://app.conductive.build` as the admin of a test org. On the Cloud computer tab of the org settings, press **Build computer**. Wait until the build succeeds. A refresh does not count, because it keeps the old runner.
+  2. Sign in at `https://app.conductive.build` as the admin of a test org. On the Cloud computer tab of the org settings, press **Build computer**. Wait until the build succeeds. A refresh after the deploy counts too, because it also installs the new runner.
   3. Create a new workspace from that image. Send its first message to a Claude model, with no file. Wait until the workspace is ready.
   4. Open the Terminal tab. Run these commands, and check each result:
      - `pwd` prints the repository folder, such as `/home/user/code/<name>`. This item calls it `<repository folder>`.
@@ -71,6 +71,6 @@
 - **Needs:** The merged change, deployed to `conductive.build` by the `Deploy` workflow. The admin of a test org with one repository that has the GitHub App. Claude and Codex logins of that account. A device that can make the test files and compute a SHA-256.
 - **Done when:** Every check of steps 4 and 8 to 15 passes on the deployed app. A failed check gets its own follow-up item, and this item stays open until a rerun of that check passes. Then delete this item.
 - **Related:**
-  - `plans/follow-ups/context-attachments-live-older-runner.md` checks attached files with an older runner. It needs an org image that no build changed since the deploy. So run it before step 2 when both items use the same org.
+  - `plans/follow-ups/context-attachments-live-older-runner.md` checks attached files with an older runner. It needs an org image that no build or refresh changed since the deploy. So run it before step 2 when both items use the same org.
   - `plans/follow-ups/agent-instructions-deployed-smoke-test.md` also checks the agent instructions of new sessions on a new org image. One session can run both items, and each keeps its own checks.
   - `plans/follow-ups/runner-archive-from-deploy-check.md` checks that a new image build installs the runner archive of the deploy. A failure there also fails step 2.

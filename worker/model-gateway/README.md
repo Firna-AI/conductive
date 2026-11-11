@@ -9,7 +9,7 @@ The gateway calls `checkTurnToken` through the trusted workspace runtime before 
 It replaces the token with the starter's real login.
 Runner delivery gives a token in each `turn` command to a runner of protocol version 2.
 A runner of protocol version 1 still gets the real login.
-The packaged runner and new full image builds use version 2.
+The packaged runner and each new image build and refresh use version 2.
 The [model gateway protocol](../../docs/protocol/model-gateway.md) states the requirements.
 
 ## Model requests

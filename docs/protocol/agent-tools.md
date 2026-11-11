@@ -4,7 +4,9 @@ This doc holds the requirements and the decisions in force for the tools
 that the app gives the agents in each sandbox. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. An image job decision number names a decision of the change that
+makes every build and every refresh of the org image clean, as
+[Org image](org-image.md) says.
 
 ## Workspace tools
 
@@ -79,8 +81,11 @@ says.
   snake case", then loses its underscores. A rule that an agent names a
   workspace only when a member names it was rejected, because agents then
   name fewer workspaces.
-- Risk: an agent that ignores the text still adds underscores. A cloud
-  computer gets the new text only from a full build of its org image.
+- Risk: an agent that ignores the text still adds underscores. A new cloud
+  computer gets the new text from each org image that a build or a refresh
+  makes after the change. An existing workspace gets it at its next
+  workspace start, as [Old workspaces](workspace-life.md#old-workspaces)
+  says (image job decisions 8 B and 12 G).
 - The reply to a create call gives the new workspace with its number and
   its link, as
   [Workspace numbers and links](workspaces-and-sandboxes.md#workspace-numbers-and-links)

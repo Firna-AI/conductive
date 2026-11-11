@@ -18,7 +18,7 @@
   - `docs/protocol/agent-runner.md` states how a workspace gets its pin. Each new cloud computer of a workspace takes the runner version of the org image that it starts from, before the runner can connect. A stop and a resume keep the pin. A workspace or an image with no recorded version counts as version 1.
   - `allocateWorkspace` in `worker/lifecycle/start-allocation.ts` writes the pin at each allocation of a new cloud computer, before the provider call. No other code writes it. The resume branch of `worker/lifecycle/start-machine.ts` starts the old cloud computer again, and writes no pin.
   - `prepareRunnerHello` in `worker/chat/runner-handshake.ts` closes each runner connection whose version is below the pin, before the `welcome` and before any command.
-  - Each build of an org image installs the newest runner archive and records the Worker's `RUNNER_PROTOCOL_VERSION`. A refresh keeps the installed runner and its version, as the section "The runner archive" of `docs/deployment.md` says.
+  - Each build and each refresh of an org image installs the newest runner archive, as the section "The runner archive" of `docs/deployment/runner-archive.md` says. Each records the Worker's `RUNNER_PROTOCOL_VERSION`.
   - At each workspace start, a workspace with an older version of the app's own software gets the current runner before the runner starts, as [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says. That update leaves the version pin unchanged.
   - On 9 November 2026 the user chose that a runner of version 1 keeps getting the real login, and that the access doc states the risk. The user also chose that each workspace refuses a runner below the version of its image.
   - So each workspace with a version pin of 1 keeps the old risk for its whole life. Each process and each member's terminal there can read the real login of a running turn.
@@ -26,6 +26,7 @@
   - At each create and each resume, the startup command of the workspace runs. It uses `sudo -n` for its setup, and its last command restarts the runner service (`workspaceStartupCommand` in `worker/lifecycle/image-software.ts`).
   - `image/install.sh` shows the install steps of an image build. It downloads the archive, checks its SHA-256 digest, unpacks it, and replaces the installed runner.
   - The Worker knows the current runner archive from its own variables, through `runnerSoftware` in `worker/configuration.ts`. Each deploy from `main` publishes the archive of the same commit as the Worker, and sets both variables to it.
+  - Since 11 November 2026, a workspace start updates the runner of an older workspace and keeps the version pin. That is the first approach under **Left out**, so this item may be partly obsolete. Plan decision 30 of `plans/software-image.md` answers the root question, and its answer updates or deletes this item.
 - **Problem:** A cloud computer whose workspace has a version pin of 1 can get real agent logins, with no end date. A newer runner in that cloud computer does not change this.
 - **Impact if no action:** The old risk stays in each such workspace until a member archives it. The Worker keeps the version 1 code for as long as one such workspace lives.
 - **Root question:** How does an existing cloud computer stop getting real agent logins?

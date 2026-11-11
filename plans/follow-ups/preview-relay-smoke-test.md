@@ -19,7 +19,7 @@
   2. Start a new workspace. Run `mokly serve` on `127.0.0.1:4173`, and a Vite dev server with its default settings.
   3. Open a preview of each port. Check that the page loads, that live reload works, and that a form POST or a render request of the Mokly controls works.
   4. Run `systemctl is-active conductive-preview-relay.service` in the terminal. It answers `active`.
-  5. In a workspace that started from an image without the relay, open a preview. Check that it shows the refusal message above.
+  5. In the terminal of the same workspace, stop the relay socket with `sudo systemctl stop conductive-preview-relay.socket`. Then open a preview, and check that it shows the refusal message above. This step changed on 11 November 2026, because a workspace start now updates the app's own software. So a workspace that started from an image without the relay now gets the relay at its start, and shows no refusal.
 - **Impact if no action:** If Boat sends another `Host` value to the sandbox, the relay refuses every preview with 403, and nobody notices until a user opens a preview.
-- **Needs:** the deployed change, a test org with Build computer, and a workspace from an older image.
-- **Done when:** both previews work in the new workspace, and the older workspace shows the refusal. Then delete this item. If the relay refuses the real `Host`, record its value and fix the pattern in `runner/src/relay/headers.ts`.
+- **Needs:** the deployed change and a test org with Build computer.
+- **Done when:** both previews work in the new workspace, and a preview after the relay stop of step 5 shows the refusal. Then delete this item. If the relay refuses the real `Host`, record its value and fix the pattern in `runner/src/relay/headers.ts`.
