@@ -50,8 +50,11 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 ## GitHub events
 
-- GitHub sends pull request, check, status, and push webhooks. The Worker
-  routes each event to the workspace whose current branch it names.
+- GitHub sends pull request, review, and push webhooks. The Worker routes
+  each event to the workspace whose current branch it names.
+- The Worker reads nothing for a check or a status webhook. An open tab
+  shows a check change at its next read, as
+  [State of a branch](../protocol/github-banner.md#state-of-a-branch) says.
 - A push to the default branch of a chosen repository can also start a
   refresh of the org image.
 - A pull request event can also start the runs of routines, as
