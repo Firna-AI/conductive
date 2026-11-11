@@ -739,6 +739,15 @@ Main integration notes: `.context/agent-tools-conductor-parity/merge-review1-mai
 
 Workspace marks integration notes: `.context/agent-tools-conductor-parity/merge-workspace-marks-notes.md`.
 
+Gate repair integration notes: `.context/agent-tools-conductor-parity/merge-exports-repair-notes.md`.
+
+Review round 1 found no in-scope review finding. A separate implementation
+finding about the plain stop-source link was confirmed and deferred under
+the fix rule. `plans/follow-ups/chat-text-word-break-default.md` holds its
+shared wrapping fix and related open-message case. The reports are
+`.context/reviews/calummoore/untitled-v3/round-1-review.md` and
+`.context/reviews/calummoore/untitled-v3/round-1-checks.md`.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] In a deployed workspace with a fresh org image, let an agent use
