@@ -1,0 +1,577 @@
+name: Pull request previews
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+  # The relay bundles worker/ code. A path filter can miss an input.
+  push:
+    branches: [main]
+
+permissions: {}
+
+# A close must finish cleanup. Runs queue and never cancel a running run.
+concurrency:
+  group: preview-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'maintenance' }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  skip:
+    name: Skip an unsupported pull request
+    if: >-
+      github.event_name == 'pull_request' &&
+      (github.event.pull_request.head.repo.full_name != github.repository ||
+      github.actor == 'dependabot[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Explain the skip
+        run: |
+          set -euo pipefail
+          echo '::notice::Previews do not run for forks or Dependabot.'
+
+  build:
+    name: Build the preview
+    if: >-
+      github.event_name == 'pull_request' && github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      artifact: ${{ steps.build.outputs.artifact }}
+    steps:
+      - name: Check out the run's commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Build the app and Worker
+        id: build
+        run: |
+          set -euo pipefail
+          npm run build
+          echo "artifact=preview-build-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+
+      - name: Keep the built app and migrations
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.build.outputs.artifact }}
+          path: |
+            dist/
+            migrations/
+          retention-days: 1
+          if-no-files-found: error
+
+  runner:
+    name: Package the runner
+    if: >-
+      github.event_name == 'pull_request' && github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      available: ${{ steps.zone.outputs.available }}
+      url: ${{ steps.archive.outputs.url }}
+      sha256: ${{ steps.archive.outputs.sha256 }}
+      missing: ${{ steps.archive.outputs.missing }}
+      artifact: ${{ steps.archive.outputs.artifact }}
+    steps:
+      - name: Check the public preview zone
+        id: zone
+        env:
+          PREVIEW_ZONE: ${{ vars.PREVIEW_ZONE }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$PREVIEW_ZONE" ]]; then
+            echo '::notice::Runner packaging skipped: PREVIEW_ZONE is not set.'
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo 'available=true' >> "$GITHUB_OUTPUT"
+
+      - name: Check out the run's commit
+        if: steps.zone.outputs.available == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Set up Node
+        if: steps.zone.outputs.available == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            runner/package-lock.json
+
+      - name: Install packaging dependencies
+        if: steps.zone.outputs.available == 'true'
+        run: |
+          set -euo pipefail
+          npm ci
+          npm ci --prefix runner
+
+      - name: Package and check the archive
+        if: steps.zone.outputs.available == 'true'
+        id: archive
+        env:
+          PREVIEW_ZONE: ${{ vars.PREVIEW_ZONE }}
+        run: |
+          set -euo pipefail
+          base_url="https://runner.$PREVIEW_ZONE/"
+          node image/package-runner.mjs --base-url "$base_url"
+          metadata=.context/runner-artifact/runner.tar.gz.json
+          url=$(jq -r '.url' "$metadata")
+          sha256=$(jq -r '.sha256' "$metadata")
+          if [[ ! "$sha256" =~ ^[[:xdigit:]]{64}$ ||
+            "$url" != "${base_url}runner-${sha256}.tar.gz" ]]; then
+            echo '::error::Runner archive metadata has an invalid digest or URL.'
+            exit 1
+          fi
+          status=$(curl --silent --show-error --head --connect-timeout 10 --max-time 30 \
+            --output /dev/null --write-out '%{http_code}' \
+            "${url}?check=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}")
+          case "$status" in
+            200) missing=false ;;
+            404) missing=true ;;
+            *) echo "::error::Public runner archive returned HTTP $status."; exit 1 ;;
+          esac
+          {
+            echo "url=$url"
+            echo "sha256=$sha256"
+            echo "missing=$missing"
+            echo "artifact=preview-runner-$GITHUB_RUN_ATTEMPT"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Keep only a missing runner archive
+        if: steps.archive.outputs.missing == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.archive.outputs.artifact }}
+          path: .context/runner-artifact/runner.tar.gz
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy the preview
+    needs: [build, runner]
+    if: >-
+      always() && github.event_name == 'pull_request' &&
+      github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+    # GitHub creates the environment deployment; the tool calls no deployment API.
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.app_url }}
+    steps:
+      - name: Check out the run's commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Set up Node without the package cache
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Install Wrangler from main
+        id: tools
+        run: |
+          set -euo pipefail
+          umask 077
+          git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main
+          trusted_dir="$RUNNER_TEMP/preview-main"
+          mkdir -p "$trusted_dir"
+          for file in package.json package-lock.json .npmrc; do
+            git show "origin/main:$file" > "$trusted_dir/$file"
+          done
+          (
+            cd "$trusted_dir"
+            npm ci --ignore-scripts
+          )
+          echo "wrangler=$trusted_dir/node_modules/.bin/wrangler" >> "$GITHUB_OUTPUT"
+
+      # Extract artifacts outside the source checkout so Wrangler loads no source .env.
+      - name: Download the build
+        if: needs.build.result == 'success' && needs.runner.result == 'success' && needs.runner.outputs.available == 'true'
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build.outputs.artifact }}
+          path: ${{ runner.temp }}/preview-build
+
+      - name: Download a missing runner archive
+        if: needs.runner.outputs.missing == 'true' && needs.runner.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.runner.outputs.artifact }}
+          path: ${{ runner.temp }}/preview-runner
+
+      - name: Check settings, post deploying, and deploy
+        id: deploy
+        # GitHub reserves GITHUB_ for configuration names. The tool keeps its input names.
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PREVIEW_ZONE: ${{ vars.PREVIEW_ZONE }}
+          GITHUB_CLIENT_ID: ${{ vars.PREVIEW_GITHUB_CLIENT_ID }}
+          GITHUB_APP_SLUG: ${{ vars.PREVIEW_GITHUB_APP_SLUG }}
+          BOAT_ORG_ID: ${{ vars.BOAT_ORG_ID }}
+          OPERATOR_GITHUB_IDS: ${{ vars.OPERATOR_GITHUB_IDS }}
+          CONDUCTIVE_FRAME_SOURCES: ${{ vars.CONDUCTIVE_FRAME_SOURCES }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.PREVIEW_GITHUB_CLIENT_SECRET }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.PREVIEW_GITHUB_APP_PRIVATE_KEY }}
+          GITHUB_WEBHOOK_SECRET: ${{ secrets.PREVIEW_GITHUB_WEBHOOK_SECRET }}
+          SESSION_SIGNING_KEY: ${{ secrets.SESSION_SIGNING_KEY }}
+          BOAT_KEY_ENCRYPTION_KEY: ${{ secrets.BOAT_KEY_ENCRYPTION_KEY }}
+          BOAT_API_KEY: ${{ secrets.BOAT_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          WRANGLER: ${{ steps.tools.outputs.wrangler }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          RUNNER_RESULT: ${{ needs.runner.result }}
+          RUNNER_AVAILABLE: ${{ needs.runner.outputs.available }}
+          ARCHIVE_URL: ${{ needs.runner.outputs.url }}
+          ARCHIVE_SHA256: ${{ needs.runner.outputs.sha256 }}
+          ARCHIVE_MISSING: ${{ needs.runner.outputs.missing }}
+        run: |
+          set -euo pipefail
+          setup=$(node --input-type=module <<'NODE'
+          import { appendFile } from 'node:fs/promises'
+          import { checkSettings } from './tools/pr-previews/settings.ts'
+          const result = checkSettings(process.env)
+          await appendFile(process.env.GITHUB_OUTPUT, `setup=${result.kind}\n`)
+          if (result.kind === 'skip') console.error(`::warning::${result.warning}`)
+          if (result.kind === 'error') {
+            console.error(`::error::${result.message}`)
+            process.exit(1)
+          }
+          process.stdout.write(result.kind)
+          NODE
+          )
+          if [[ "$setup" == skip ]]; then exit 0; fi
+          if [[ "$BUILD_RESULT" != success || "$RUNNER_RESULT" != success || "$RUNNER_AVAILABLE" != true ]]; then
+            echo '::error::The preview build or runner job did not produce deployable artifacts.'
+            exit 1
+          fi
+          node tools/pr-previews/main.ts comment --pr "$PR_NUMBER" --state deploying --sha "$COMMIT_SHA"
+          args=(deploy --pr "$PR_NUMBER" --build-folder "$RUNNER_TEMP/preview-build"
+            --wrangler "$WRANGLER" --sha "$COMMIT_SHA"
+            --runner-url "$ARCHIVE_URL" --runner-sha256 "$ARCHIVE_SHA256")
+          if [[ "$ARCHIVE_MISSING" == true ]]; then
+            args+=(--runner-archive "$RUNNER_TEMP/preview-runner/runner.tar.gz")
+          fi
+          node tools/pr-previews/main.ts "${args[@]}"
+
+      - name: Post the final preview state
+        if: ${{ always() && vars.PREVIEW_ZONE != '' && steps.deploy.outputs.setup != 'skip' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PREVIEW_ZONE: ${{ vars.PREVIEW_ZONE }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          DEPLOY_RESULT: ${{ steps.deploy.outcome }}
+          DATA_RESET: ${{ steps.deploy.outputs.data_reset }}
+        run: |
+          set -euo pipefail
+          state=failed
+          if [[ "$DEPLOY_RESULT" == success ]]; then state=live; fi
+          args=(comment --pr "$PR_NUMBER" --state "$state" --sha "$COMMIT_SHA")
+          if [[ "$DATA_RESET" == true ]]; then args+=(--data-reset); fi
+          node tools/pr-previews/main.ts "${args[@]}"
+
+      - name: Write the preview summary
+        if: always()
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          SETUP: ${{ steps.deploy.outputs.setup }}
+          RESULT: ${{ steps.deploy.outcome }}
+          APP_URL: ${{ steps.deploy.outputs.app_url }}
+          MARKETING_URL: ${{ steps.deploy.outputs.marketing_url }}
+          DATA_RESET: ${{ steps.deploy.outputs.data_reset }}
+        run: |
+          set -euo pipefail
+          {
+            printf '### Preview of PR %s\n\nCommit: %s\n\n' "$PR_NUMBER" "$COMMIT_SHA"
+            if [[ "$SETUP" == skip ]]; then
+              printf 'Skipped: preview settings are absent.\n'
+            else
+              printf 'Deploy result: %s\n\n' "$RESULT"
+              printf 'App: %s\n\nMarketing: %s\n\n' "${APP_URL:-unavailable}" "${MARKETING_URL:-unavailable}"
+              printf 'Data reset: %s\n' "${DATA_RESET:-false}"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  delete:
+    name: Delete the preview
+    if: >-
+      github.event_name == 'pull_request' && github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+    environment:
+      name: preview
+      deployment: false
+    steps:
+      - name: Check out the run's commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Set up Node without the package cache
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Install Wrangler from main
+        id: tools
+        run: |
+          set -euo pipefail
+          umask 077
+          git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main
+          trusted_dir="$RUNNER_TEMP/preview-main"
+          mkdir -p "$trusted_dir"
+          for file in package.json package-lock.json .npmrc; do
+            git show "origin/main:$file" > "$trusted_dir/$file"
+          done
+          (
+            cd "$trusted_dir"
+            npm ci --ignore-scripts
+          )
+          echo "wrangler=$trusted_dir/node_modules/.bin/wrangler" >> "$GITHUB_OUTPUT"
+
+      - name: Check settings and delete
+        id: remove
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PREVIEW_ZONE: ${{ vars.PREVIEW_ZONE }}
+          GITHUB_CLIENT_ID: ${{ vars.PREVIEW_GITHUB_CLIENT_ID }}
+          GITHUB_APP_SLUG: ${{ vars.PREVIEW_GITHUB_APP_SLUG }}
+          BOAT_ORG_ID: ${{ vars.BOAT_ORG_ID }}
+          OPERATOR_GITHUB_IDS: ${{ vars.OPERATOR_GITHUB_IDS }}
+          CONDUCTIVE_FRAME_SOURCES: ${{ vars.CONDUCTIVE_FRAME_SOURCES }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.PREVIEW_GITHUB_CLIENT_SECRET }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.PREVIEW_GITHUB_APP_PRIVATE_KEY }}
+          GITHUB_WEBHOOK_SECRET: ${{ secrets.PREVIEW_GITHUB_WEBHOOK_SECRET }}
+          SESSION_SIGNING_KEY: ${{ secrets.SESSION_SIGNING_KEY }}
+          BOAT_KEY_ENCRYPTION_KEY: ${{ secrets.BOAT_KEY_ENCRYPTION_KEY }}
+          BOAT_API_KEY: ${{ secrets.BOAT_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          WRANGLER: ${{ steps.tools.outputs.wrangler }}
+        run: |
+          set -euo pipefail
+          setup=$(node --input-type=module <<'NODE'
+          import { appendFile } from 'node:fs/promises'
+          import { checkSettings } from './tools/pr-previews/settings.ts'
+          const result = checkSettings(process.env)
+          await appendFile(process.env.GITHUB_OUTPUT, `setup=${result.kind}\n`)
+          if (result.kind === 'skip') console.error(`::warning::${result.warning}`)
+          if (result.kind === 'error') {
+            console.error(`::error::${result.message}`)
+            process.exit(1)
+          }
+          process.stdout.write(result.kind)
+          NODE
+          )
+          if [[ "$setup" == skip ]]; then exit 0; fi
+          node tools/pr-previews/main.ts delete --pr "$PR_NUMBER" --wrangler "$WRANGLER"
+
+      - name: Post the cleanup state
+        if: ${{ always() && vars.PREVIEW_ZONE != '' && steps.remove.outputs.setup != 'skip' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PREVIEW_ZONE: ${{ vars.PREVIEW_ZONE }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          DELETE_RESULT: ${{ steps.remove.outcome }}
+        run: |
+          set -euo pipefail
+          state=failed
+          if [[ "$DELETE_RESULT" == success ]]; then state=deleted; fi
+          node tools/pr-previews/main.ts comment --pr "$PR_NUMBER" --state "$state" --sha "$COMMIT_SHA"
+
+      - name: Write the cleanup summary
+        if: always()
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SETUP: ${{ steps.remove.outputs.setup }}
+          RESULT: ${{ steps.remove.outcome }}
+        run: |
+          set -euo pipefail
+          {
+            printf '### Cleanup of PR %s\n\n' "$PR_NUMBER"
+            if [[ "$SETUP" == skip ]]; then
+              printf 'Skipped: preview settings are absent.\n'
+            else
+              printf 'Cleanup result: %s\n' "$RESULT"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  relay:
+    name: Deploy the relay from main
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    environment: preview
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Set up Node without the package cache
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Install the main toolchain without scripts
+        id: tools
+        run: |
+          set -euo pipefail
+          umask 077
+          git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main
+          trusted_dir="$RUNNER_TEMP/preview-main"
+          mkdir -p "$trusted_dir"
+          for file in package.json package-lock.json .npmrc; do
+            git show "origin/main:$file" > "$trusted_dir/$file"
+          done
+          (
+            cd "$trusted_dir"
+            npm ci --ignore-scripts
+          )
+          echo "wrangler=$trusted_dir/node_modules/.bin/wrangler" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy the relay
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PREVIEW_ZONE: ${{ vars.PREVIEW_ZONE }}
+          GITHUB_CLIENT_ID: ${{ vars.PREVIEW_GITHUB_CLIENT_ID }}
+          GITHUB_APP_SLUG: ${{ vars.PREVIEW_GITHUB_APP_SLUG }}
+          BOAT_ORG_ID: ${{ vars.BOAT_ORG_ID }}
+          OPERATOR_GITHUB_IDS: ${{ vars.OPERATOR_GITHUB_IDS }}
+          CONDUCTIVE_FRAME_SOURCES: ${{ vars.CONDUCTIVE_FRAME_SOURCES }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.PREVIEW_GITHUB_CLIENT_SECRET }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.PREVIEW_GITHUB_APP_PRIVATE_KEY }}
+          GITHUB_WEBHOOK_SECRET: ${{ secrets.PREVIEW_GITHUB_WEBHOOK_SECRET }}
+          SESSION_SIGNING_KEY: ${{ secrets.SESSION_SIGNING_KEY }}
+          BOAT_KEY_ENCRYPTION_KEY: ${{ secrets.BOAT_KEY_ENCRYPTION_KEY }}
+          BOAT_API_KEY: ${{ secrets.BOAT_API_KEY }}
+          WRANGLER: ${{ steps.tools.outputs.wrangler }}
+        run: |
+          set -euo pipefail
+          node tools/pr-previews/main.ts relay --zone "$PREVIEW_ZONE" --wrangler "$WRANGLER"
+          printf '### Preview relay\n\nThe relay command completed. See the log for a setup skip.\n' >> "$GITHUB_STEP_SUMMARY"
+
+  sweep:
+    name: Sweep closed previews from main
+    needs: relay
+    if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: read
+    environment:
+      name: preview
+      deployment: false
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Set up Node without the package cache
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Install the main toolchain without scripts
+        id: tools
+        run: |
+          set -euo pipefail
+          umask 077
+          git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main
+          trusted_dir="$RUNNER_TEMP/preview-main"
+          mkdir -p "$trusted_dir"
+          for file in package.json package-lock.json .npmrc; do
+            git show "origin/main:$file" > "$trusted_dir/$file"
+          done
+          (
+            cd "$trusted_dir"
+            npm ci --ignore-scripts
+          )
+          echo "wrangler=$trusted_dir/node_modules/.bin/wrangler" >> "$GITHUB_OUTPUT"
+
+      - name: Sweep closed previews
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PREVIEW_ZONE: ${{ vars.PREVIEW_ZONE }}
+          GITHUB_CLIENT_ID: ${{ vars.PREVIEW_GITHUB_CLIENT_ID }}
+          GITHUB_APP_SLUG: ${{ vars.PREVIEW_GITHUB_APP_SLUG }}
+          BOAT_ORG_ID: ${{ vars.BOAT_ORG_ID }}
+          OPERATOR_GITHUB_IDS: ${{ vars.OPERATOR_GITHUB_IDS }}
+          CONDUCTIVE_FRAME_SOURCES: ${{ vars.CONDUCTIVE_FRAME_SOURCES }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.PREVIEW_GITHUB_CLIENT_SECRET }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.PREVIEW_GITHUB_APP_PRIVATE_KEY }}
+          GITHUB_WEBHOOK_SECRET: ${{ secrets.PREVIEW_GITHUB_WEBHOOK_SECRET }}
+          SESSION_SIGNING_KEY: ${{ secrets.SESSION_SIGNING_KEY }}
+          BOAT_KEY_ENCRYPTION_KEY: ${{ secrets.BOAT_KEY_ENCRYPTION_KEY }}
+          BOAT_API_KEY: ${{ secrets.BOAT_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          WRANGLER: ${{ steps.tools.outputs.wrangler }}
+        run: |
+          set -euo pipefail
+          node tools/pr-previews/main.ts sweep --wrangler "$WRANGLER"
+          printf '### Preview sweep\n\nThe sweep command completed. See the log for a setup skip.\n' >> "$GITHUB_STEP_SUMMARY"

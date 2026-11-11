@@ -104,7 +104,7 @@ After you make the app, check that it has these settings:
 | Setup URL | `https://<zone>/github/setup`. The relay serves it. |
 | Redirect on update | On, so that a change of an install also returns to the preview. |
 | Webhook URL | `https://<zone>/v1/github/webhooks`. The relay serves it. |
-| Webhook secret | The value of `GITHUB_WEBHOOK_SECRET` |
+| Webhook secret | The value of `PREVIEW_GITHUB_WEBHOOK_SECRET` |
 | Webhook events | `push`, `pull_request`, `pull_request_review`, `pull_request_review_thread`, `check_run`, `check_suite`, and `status`, as [Server integration](../../worker/github/README.md#server-integration) says |
 
 ### Permissions
@@ -175,9 +175,9 @@ Give it these secrets:
 | Secret | Value |
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | The preview token |
-| `GITHUB_CLIENT_SECRET` | A client secret of the preview GitHub App |
-| `GITHUB_APP_PRIVATE_KEY` | A private key of the preview GitHub App, as PEM |
-| `GITHUB_WEBHOOK_SECRET` | The webhook secret of the preview GitHub App, from the reply of the code exchange. The relay and each preview check each delivery with it. |
+| `PREVIEW_GITHUB_CLIENT_SECRET` | A client secret of the preview GitHub App |
+| `PREVIEW_GITHUB_APP_PRIVATE_KEY` | A private key of the preview GitHub App, as PEM |
+| `PREVIEW_GITHUB_WEBHOOK_SECRET` | The webhook secret of the preview GitHub App, from the reply of the code exchange. The relay and each preview check each delivery with it. |
 | `SESSION_SIGNING_KEY` | 32 random bytes, encoded as Base64 |
 | `BOAT_KEY_ENCRYPTION_KEY` | A separate 32 random bytes, encoded as Base64 |
 | `BOAT_API_KEY` | The preview Boat key |
@@ -187,12 +187,16 @@ Give it these variables:
 | Variable | Value |
 | --- | --- |
 | `CLOUDFLARE_ACCOUNT_ID` | The ID of the preview account |
-| `GITHUB_CLIENT_ID` | The client ID of the preview GitHub App |
-| `GITHUB_APP_SLUG` | The slug of the preview GitHub App, as in `https://github.com/apps/<slug>` |
+| `PREVIEW_GITHUB_CLIENT_ID` | The client ID of the preview GitHub App |
+| `PREVIEW_GITHUB_APP_SLUG` | The slug of the preview GitHub App, as in `https://github.com/apps/<slug>` |
 | `BOAT_ORG_ID` | The ID of the Boat organization of the preview Boat key |
 | `OPERATOR_GITHUB_IDS` | The numeric GitHub user IDs of the people who test previews, separated by commas |
 | `CONDUCTIVE_FRAME_SOURCES` | Optional. The origins of the desktop streams, as [Frame sources](../deployment.md#frame-sources) says |
 
+- GitHub refuses a secret or a variable whose name starts with `GITHUB_`.
+  So the five names of the preview GitHub App start with `PREVIEW_`. The
+  workflow gives each one to the preview tool, and to the Worker, under
+  the name without `PREVIEW_`, such as `GITHUB_CLIENT_ID`.
 - Make the session key and the encryption key once, for all previews. Use
   no key of the live app.
 - `OPERATOR_GITHUB_IDS` names each tester. Reason: each preview database

@@ -12,11 +12,13 @@ each subdomain of the zone, as
 
 ## Its deploy
 
-- The relay deploys only from `main`, on each push that changes it and on
-  a manual run of the workflow.
+- The relay deploys only from `main`, on each push to `main` and on a
+  manual run of the workflow. Reason: the relay bundles code from
+  `worker/`, so a filter on paths can miss an input.
 - Its code lives in `tools/pr-previews/relay/`. The `relay` command of the
   preview tool deploys it.
-- It holds the secret `GITHUB_WEBHOOK_SECRET`.
+- It holds the secret `GITHUB_WEBHOOK_SECRET`, from the secret
+  `PREVIEW_GITHUB_WEBHOOK_SECRET` of the GitHub environment `preview`.
 - Risk: the preview token of any pull request run can also deploy over the
   relay, as
   [Shared keys and their risk](../pr-previews.md#shared-keys-and-their-risk)

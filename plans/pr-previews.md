@@ -219,12 +219,16 @@ otherwise. The user can override any of them.
   deployment branch rule, so each pull request run of this repository can
   read it, as decision 3 A says. Runs of forks and of Dependabot get no
   secrets.
-  - Secrets: `CLOUDFLARE_API_TOKEN`, `GITHUB_CLIENT_SECRET`,
-    `GITHUB_APP_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`,
+  - Secrets: `CLOUDFLARE_API_TOKEN`, `PREVIEW_GITHUB_CLIENT_SECRET`,
+    `PREVIEW_GITHUB_APP_PRIVATE_KEY`, `PREVIEW_GITHUB_WEBHOOK_SECRET`,
     `SESSION_SIGNING_KEY`, `BOAT_KEY_ENCRYPTION_KEY`, and `BOAT_API_KEY`.
-  - Variables: `CLOUDFLARE_ACCOUNT_ID`, `GITHUB_CLIENT_ID`,
-    `GITHUB_APP_SLUG`, `BOAT_ORG_ID`, `OPERATOR_GITHUB_IDS`, and the
-    optional `CONDUCTIVE_FRAME_SOURCES`.
+  - Variables: `CLOUDFLARE_ACCOUNT_ID`, `PREVIEW_GITHUB_CLIENT_ID`,
+    `PREVIEW_GITHUB_APP_SLUG`, `BOAT_ORG_ID`, `OPERATOR_GITHUB_IDS`, and
+    the optional `CONDUCTIVE_FRAME_SOURCES`.
+  - GitHub refuses a secret or a variable whose name starts with
+    `GITHUB_`. So the five names of the preview GitHub App start with
+    `PREVIEW_`, and the workflow passes each one on under its Worker
+    name. Changed on 11 November 2026 during Milestone 6.
   - `PREVIEW_ZONE` is a repository variable. Reason: GitHub gives the
     variables of an environment only to a job that names it, and the
     runner job and the comment job need the zone without the
@@ -425,8 +429,9 @@ otherwise. The user can override any of them.
 Added on 10 November 2026 from the answer of the user to decision 3.
 
 - One relay Worker, `conductive-preview-relay`, serves the bare preview
-  zone. It deploys only from `main`, on each push that changes it and on a
-  manual run. Reason: a GitHub App has one webhook URL and one Setup URL,
+  zone. It deploys only from `main`, on each push to `main` and on a
+  manual run. Changed on 11 November 2026 during Milestone 6: a filter on
+  paths can miss an input, because the relay bundles code from `worker/`. Reason: a GitHub App has one webhook URL and one Setup URL,
   so one trusted Worker must hand each event and each install return to
   the right preview.
 - On `POST /v1/github/webhooks`, the relay checks the GitHub signature
@@ -653,16 +658,19 @@ Depends on: 2 and 5
 `.github/workflows/preview.yml` runs the tool for each pull request, and
 deploys the relay from `main`.
 
-- [ ] Add the workflow with its triggers, permissions, concurrency, and
+- [x] Add the workflow with its triggers, permissions, concurrency, and
       jobs: build, runner, deploy, delete, sweep, comment, and relay. The
       deploy, delete, and comment jobs run in the pull request run, as
       decision 3 A says.
-- [ ] Skip forks and Dependabot with a notice. Warn and skip without the
+- [x] Skip forks and Dependabot with a notice. Warn and skip without the
       settings.
-- [ ] Install the packages of `main` for the deploy job in a temporary
+- [x] Install the packages of `main` for the deploy job in a temporary
       folder, and unpack the build there.
-- [ ] Check the workflow once with actionlint. Save the output under
-      `.context/pr-previews/`.
+- [x] Check the workflow once with actionlint. Save the output under
+      `.context/pr-previews/`. Done on 11 November 2026: actionlint 1.7.12
+      with shellcheck 0.11.0 reports nothing. The comment runs as steps of
+      the deploy and delete jobs. Evidence:
+      `.context/pr-previews/proof/m6-actionlint.log`.
 
 ## Milestone 7: Smoke test
 

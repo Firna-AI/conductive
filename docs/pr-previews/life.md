@@ -23,7 +23,8 @@ A deploy run has these jobs:
    archive goes into an artifact for one day.
 3. The deploy job uses the GitHub environment `preview`. It sets the URL
    of that environment to the app hostname. It runs the preview tool, as
-   [The deploy](#the-deploy) says.
+   [The deploy](#the-deploy) says. It also posts the comment, before and
+   after the deploy.
 
 - The runner job asks through the public URL of the bucket, with a query
   string. So its answer never enters the cache of the archive URL.
