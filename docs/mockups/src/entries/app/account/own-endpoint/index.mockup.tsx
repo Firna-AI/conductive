@@ -1,10 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { productName } from '../../../../brand'
-import {
-  AccountScreen,
-  accountGeneral,
-  accountSchema,
-} from '../../../../screens/AccountScreen'
+import { AccountScreen } from '../../../../screens/AccountScreen'
+import { accountGeneral, accountSchema } from '../../../../screens/accountState'
 
 export const ownEndpoint = defineScreen({
   title: 'Own endpoint',

@@ -16,12 +16,12 @@ import {
 } from '../shared/account'
 import type { Agent, AgentChoice } from '../shared/agents'
 import { API_PATHS } from '../shared/api'
+import type { SaveShortcutsRequest } from '../shared/shortcuts'
 import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
 import { AgentLogins } from './agent-logins'
 import { AccountLoginReads } from './account-login-reads'
 import { ignore, nested, record } from './api/parse'
 import {
-  readAccount,
   readChoice,
   readCodexDevicePoll,
   readCodexDeviceStart,
@@ -30,6 +30,7 @@ import {
   readLogin,
   readNewWorkspaceView,
 } from './api/read-core'
+import { readSavedShortcuts } from './api/read-shortcuts'
 import { readWaitlistState } from './api/read-waitlist'
 import type { AppModel } from './app-model'
 import { Refresher } from './refresh'
@@ -39,10 +40,12 @@ import { load, loading, Store, type Loadable, type Readable } from './store'
 
 /**
  * The account of the person signed in: the agent logins, the preferences,
- * and the GitHub App installations. A secret goes to the Worker in a write
- * and never comes back. The Worker keeps ChatGPT tokens. The account shows
- * each login's kind and share setting. Own endpoints also show their host
- * and model list, which the owner's pickers follow.
+ * the shortcut changes, and the GitHub App installations. A secret goes to
+ * the Worker in a write and never comes back. The Worker keeps ChatGPT
+ * tokens. The account shows each login's kind and share setting, which
+ * says whether other members' messages in the person's sessions run on it.
+ * Own endpoints also show their host and model list, which the owner's
+ * pickers follow.
  */
 export class AccountModel {
   readonly account = new Store<AccountResponse | null>(null)
@@ -168,9 +171,9 @@ export class AccountModel {
     )
     this.logins.put(saved)
     if (saved.connected && saved.kind === 'endpoint')
-      await this.readLoginAgain(saved.agent, this.logins.mark()).catch(
-        () => undefined,
-      )
+      await this.loginReads
+        .readAgent(saved.agent, this.logins.mark())
+        .catch(() => undefined)
   }
 
   /**
@@ -212,18 +215,7 @@ export class AccountModel {
       {},
       ignore,
     )
-    await this.readLoginAgain(agent, show)
-  }
-
-  private async readLoginAgain(
-    agent: Agent,
-    show: (logins: readonly AgentLoginStatus[]) => void,
-  ): Promise<void> {
-    const account = await this.services.api.get(
-      ACCOUNT_PATHS.account,
-      readAccount,
-    )
-    show(account.agentLogins.filter((login) => login.agent === agent))
+    await this.loginReads.readAgent(agent, show)
   }
 
   /**
@@ -271,6 +263,27 @@ export class AccountModel {
     )
     const account = this.account.get()
     if (account) this.account.set({ ...account, newWorkspaceView: saved.view })
+  }
+
+  /**
+   * Saves the shortcut changes of one keyboard in one batch: all of them or
+   * none. The reply holds every change of that keyboard, which the keymap
+   * of the keys and of each hint read from the account. A failed save
+   * changes nothing, so the account keeps the saved keys.
+   */
+  async saveShortcuts(request: SaveShortcutsRequest): Promise<void> {
+    const saved = await this.services.api.send(
+      'PUT',
+      ACCOUNT_PATHS.shortcuts,
+      request,
+      readSavedShortcuts,
+    )
+    const account = this.account.get()
+    if (!account) return
+    this.account.set({
+      ...account,
+      shortcuts: { ...account.shortcuts, [saved.keyboard]: saved.changes },
+    })
   }
 
   async signOut(): Promise<void> {

@@ -264,11 +264,12 @@ The package includes only `dist/app/` and `dist/bundle/`.
 
 [RELEASES.md](RELEASES.md) gives the signed release packages and their secrets, the release steps, and the updater.
 
-### Key code
+### Key Code
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
 - [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
 - [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
+  It supplies the Mac keyboard and the fixed Mac app host for shortcuts.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
 - [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.

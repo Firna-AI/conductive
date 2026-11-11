@@ -15,6 +15,8 @@ export function createDesktopServices(
   const address = (path: string) => new URL(path, appOrigin).href
   return {
     ...createLiveServices(target),
+    platform: 'mac',
+    host: { kind: 'mac-app', system: 'mac' },
     api: createApiClient(
       (path, init) =>
         target.fetch(address(path), { ...init, credentials: 'include' }),

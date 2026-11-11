@@ -1,4 +1,9 @@
-import { ACCOUNT_PATHS, type AccountResponse } from '../shared/account'
+import {
+  ACCOUNT_PATHS,
+  type AccountResponse,
+  type AgentLoginStatus,
+} from '../shared/account'
+import type { Agent } from '../shared/agents'
 import type { AgentLogins } from './agent-logins'
 import { readAccount } from './api/read-core'
 import type { AppModel } from './app-model'
@@ -41,6 +46,18 @@ export class AccountLoginReads {
       this.follow()
     })
     return this.running
+  }
+
+  /** Reads one login after its save or model refresh, with the caller's mark. */
+  async readAgent(
+    agent: Agent,
+    show: (logins: readonly AgentLoginStatus[]) => void,
+  ): Promise<void> {
+    const account = await this.app.services.api.get(
+      ACCOUNT_PATHS.account,
+      readAccount,
+    )
+    show(account.agentLogins.filter((login) => login.agent === agent))
   }
 
   private async read(): Promise<void> {

@@ -7,6 +7,7 @@ import { AppModelContext } from './shell/context'
 import { PanelContext } from './shell/layout/panels'
 import { PaletteProvider } from './shell/palette/PaletteProvider'
 import { Shell } from './shell/Shell'
+import { ShortcutProvider } from './shell/shortcuts/ShortcutProvider'
 import { ThemeRoot } from './shell/ui/ThemeRoot'
 import { useViewport, ViewportProvider } from './shell/ui/viewport'
 import {
@@ -36,9 +37,11 @@ export function App(props: {
             <FeaturesContext.Provider value={props.features ?? {}}>
               <ViewportProvider viewport={viewport}>
                 <ThemeRoot>
-                  <PaletteProvider>
-                    <Shell />
-                  </PaletteProvider>
+                  <ShortcutProvider>
+                    <PaletteProvider>
+                      <Shell />
+                    </PaletteProvider>
+                  </ShortcutProvider>
                 </ThemeRoot>
               </ViewportProvider>
             </FeaturesContext.Provider>

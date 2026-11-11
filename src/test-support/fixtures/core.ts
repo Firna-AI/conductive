@@ -59,6 +59,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
     user: role === 'member' ? fakeUsers[1] : fakeUser,
     defaultChoice,
     newWorkspaceView: 'page',
+    shortcuts: { mac: [], other: [] },
     agentLogins: [
       {
         agent: 'claude',

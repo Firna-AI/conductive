@@ -2,15 +2,13 @@ import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { Plus } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import { ScreenLink } from '../components/common/ScreenLink'
+import { SearchField } from '../components/common/SearchField'
 import {
   DisableCodeDialog,
   NewCodeDialog,
 } from '../components/operator/codeDialogs'
 import { codeCell, codeColumns } from '../components/operator/codes'
-import {
-  DirectorySearch,
-  DirectoryTable,
-} from '../components/operator/directory'
+import { DirectoryTable } from '../components/operator/directory'
 import { OperatorPage } from '../components/operator/OperatorPage'
 import { PauseDialog, SignUpsSection } from '../components/operator/pause'
 import { TurnOffWaitlistDialog } from '../components/operator/waitlistSwitch'
@@ -172,7 +170,7 @@ export function OperatorCodesScreen(props: {
       waitlist={waitlist}
     >
       {signUps === 'open' ? <SignUpsSection waitlist={waitlist} /> : null}
-      <DirectorySearch
+      <SearchField
         label="Search codes"
         placeholder="Code, label, or GitHub login"
         query={found.query}

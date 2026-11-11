@@ -70,6 +70,7 @@ for a migration test.
 
 Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
 Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
+The reset deletes account shortcut rows before users.
 The reset also restores the clock, token sequence, and fake services.
 It deletes code uses, approval emails, app access, and codes before users.
 It resets the sign-up pause and the waitlist switch, each with its change

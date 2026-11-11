@@ -151,7 +151,12 @@ export function SessionTabs(props: {
         {drag.status || moves.status}
       </span>
       {props.readOnly ? null : (
-        <IconButton icon={Plus} label="New session" onPress={props.onNew} />
+        <IconButton
+          icon={Plus}
+          label="New session"
+          onPress={props.onNew}
+          shortcut="new-session"
+        />
       )}
       <span className={styles.anchor} ref={anchor}>
         {hasHistory ? (
@@ -161,6 +166,7 @@ export function SessionTabs(props: {
             label="Session history"
             menu
             onPress={() => onShowHistory(!props.historyOpen)}
+            shortcut="session-history"
           />
         ) : null}
         {historyMenu ? (

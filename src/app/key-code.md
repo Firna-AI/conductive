@@ -4,6 +4,14 @@ This page is part of the [web app guide](README.md). It names the files,
 the types, and the functions of the web app that a reader opens first.
 Each path is relative to `src/app/`, the folder of this page.
 
+- [Shortcuts](shortcuts/README.md): the pure command registry, keyboard
+  defaults, browser keys, account keymap, conflicts, and press decision.
+  The [shortcut layer](../shell/shortcuts/README.md) calls it for each key
+  of the page.
+- `services.ts`: `windowHost` detects the web host, and `windowNewTab`
+  opens a page of another site in a new tab, as a link with
+  `target="_blank"` and `rel="noreferrer"` does. `live-services.ts` and
+  `dev/fake-services.ts` supply them with the keyboard and key events.
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.
   `dev/settings-routes.ts` saves settings and repository choices.
@@ -17,6 +25,10 @@ Each path is relative to `src/app/`, the folder of this page.
   app and the Mac app keep their transport. Its `sendFile` sends a raw file
   through the file transport of the services: `api/xhr-files.ts` in the
   browser and in the Mac app. `api/read-*.ts`: the readers.
+  [api/read-shortcuts.ts](api/read-shortcuts.ts) reads both shortcut keyboards and
+  the reply of a shortcut save with the shared reply readers. A malformed
+  account structure remains an `invalid_response` error from the API
+  client.
 - `attachment-upload.ts`: `uploadAttachment`, the one upload of a file for
   both composers. `draft-files.ts`: `DraftFile`, the upload state of each
   file of a draft, and `runFileJob`. `new-workspace-files.ts`:
@@ -87,8 +99,10 @@ Each path is relative to `src/app/`, the folder of this page.
   `../shell/settings/RepositoryChangeNotice.tsx` draws the notice of an
   admin, and `../members/RepositoryNotice.tsx` the notice of a member.
 - `account-model.ts`: the agent logins with their share setting, the
-  default model, the New workspace view, the GitHub App installations,
-  and the repositories that Create org offers. The save of an own endpoint
+  default model, the New workspace view, the shortcut changes of each
+  keyboard, the GitHub App installations, and the repositories that
+  Create org offers. `saveShortcuts` saves one batch of changes for one
+  keyboard and keeps the confirmed changes of the reply. The save of an own endpoint
   login and `refreshModels` read the account again for the model list of
   the endpoint, which only the account holds. A later change of the same
   login makes that read old, so it does not show. A screen watches the

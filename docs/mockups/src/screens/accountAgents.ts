@@ -14,7 +14,7 @@ import {
   type AgentLogin,
 } from '../fixtures/logins'
 import { paths } from '../paths'
-import type { AccountState } from './AccountScreen'
+import type { AccountState } from './accountState'
 
 type FormKey = Exclude<AccountState['form'], 'none'>
 

@@ -3,12 +3,17 @@
 This page belongs to [Screens](screens.md). It describes the account,
 agent login forms, and model lists in the web app.
 
-- The account has two tabs, General and Preferences, as the org settings
-  have. Each tab is a link with its own address. General holds the
+- The account has three tabs, General, Preferences, and Keyboard shortcuts,
+  as the org settings have. Each tab is a link with its own address. General holds the
   sign-in, This Mac, GitHub, and the agents. The `?connect=` address of an
   agent opens its Connect form on General. Preferences holds the New
   workspaces section: Model and effort, and
   [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
+  On a phone, a tab that does not fit moves to a second line.
+- Keyboard shortcuts lists the keys of each command, and saves each change
+  at once through `AccountModel.saveShortcuts`, as
+  [the Keyboard shortcuts tab](../shell/account/shortcuts/README.md) says.
+  The keys and every hint of the app use the saved changes at once.
 - The account of the Mac app shows This Mac after the sign-in section. A
   browser shows none and asks no Mac.
 - Each connected login of the account shows its share switch, "Let other

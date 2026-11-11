@@ -33,6 +33,8 @@ export function AppLink({
   title?: string
   'aria-current'?: AriaAttributes['aria-current']
   'aria-label'?: string
+  /** The key of the command that the link runs, for a screen reader. */
+  'aria-keyshortcuts'?: string
   /** Replaces the current address, as a redirect does. */
   replace?: boolean
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
@@ -54,6 +56,7 @@ export function AppLink({
   return (
     <a
       aria-current={props['aria-current']}
+      aria-keyshortcuts={props['aria-keyshortcuts']}
       aria-label={props['aria-label']}
       className={props.className}
       href={props.to}
@@ -73,4 +76,16 @@ export function AppLink({
 export function useGo(): (to: string) => void {
   const navigation = useNavigation()
   return (to) => navigation.push(to)
+}
+
+/**
+ * The function that a key of a command uses to open a page. It adds no
+ * entry to the history while the page already shows, so the key does
+ * nothing there.
+ */
+export function useOpenPage(): (to: string) => void {
+  const navigation = useNavigation()
+  return (to) => {
+    if (navigation.href() !== to) navigation.push(to)
+  }
 }

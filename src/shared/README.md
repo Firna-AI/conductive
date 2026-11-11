@@ -209,10 +209,28 @@ That JSON reply of `Preview.url` holds an authorizer `url` and the `expiresAt` o
 The `url` carries the preview hostname and a 60-second grant only in its fragment.
 [Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states its access rules.
 Each open of a port preview gets a new preview ID, and the API never gives out
-a revoked ID again (decision 86). The Preview tool hides revoked previews by their ID.
+a revoked ID again. The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.
 [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens) states its rule.
 
-## Key code
+### Key Code
+
+- [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
+  The app and Worker share this list, including Copy link, pull request
+  actions, and both transcript copies. Account reads and saves accept
+  these commands through `isShortcutCommandId`.
+- [Shortcut keys](shortcut-key.ts) parse canonical key text from unknown
+  values. Only keypad digits have keypad names.
+  [Fixed keys](shortcut-fixed.ts) and [text keys](shortcut-text-keys.ts)
+  supply the same rules to the recorder and the Worker.
+  Enter with any modifiers and plain Space are fixed on both keyboards.
+- [Shortcut contracts](shortcuts.ts) define account overrides and batch
+  saves. Empty keys remove all bindings. Null in a save restores defaults.
+  [Shortcut readers](shortcut-read.ts) check each save as a complete batch.
+  Reply readers drop unreadable or fixed keys and keep the other keys in order.
+  A change that loses every key falls back to defaults. An empty stored list
+  still removes every key.
+  `AccountResponse.shortcuts` carries both keyboards.
+  `ACCOUNT_PATHS.shortcuts` names the batch save route.
 
 [Shared contract key code](key-code.md) lists the contracts, readers, and transcript helpers.

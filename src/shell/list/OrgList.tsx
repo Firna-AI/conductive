@@ -84,7 +84,7 @@ function useLocalCollapse(actions: SectionActions) {
  * the menu of the actions that `viewer` can use. `readOnly` shows them
  * without changes or menus, for a suspended org. `offerActions` says that
  * the page shows this list, so it offers New section to the command
- * palette.
+ * palette, and its rows take the keys of the workspaces.
  */
 export function OrgList(props: {
   orgId: string
@@ -155,6 +155,7 @@ export function OrgList(props: {
         menus={menus}
         move={move}
         now={now}
+        offersKeys={props.offerActions ?? false}
         readOnly={readOnly}
         selectedId={props.selectedId}
         variant={props.variant}

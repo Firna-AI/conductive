@@ -34,6 +34,7 @@ import {
   text,
   texts,
 } from './parse'
+import { readShortcuts } from './read-shortcuts'
 
 export const AGENTS = ['claude', 'codex'] as const satisfies readonly Agent[]
 export const EFFORTS = [
@@ -222,6 +223,7 @@ export function readAccount(value: unknown): AccountResponse {
     user: nested(account, 'user', readUser),
     defaultChoice: nested(account, 'defaultChoice', readChoice),
     newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
+    shortcuts: nested(account, 'shortcuts', readShortcuts),
     agentLogins: items(account, 'agentLogins', readLogin),
     operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),

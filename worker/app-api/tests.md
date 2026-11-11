@@ -4,10 +4,16 @@ Run the commands in [Development](README.md#development) from the repository roo
 
 - `boot.test.ts` checks the boot routes, the saved preferences, the
   encrypted logins, and a missing model list. Two users save different
-  defaults, New workspace views, and logins, including a Codex ChatGPT
+  defaults, New workspace views, shortcut changes, and logins, including a Codex ChatGPT
   sign-in. After each save and a delete, each reads only their own account
   and Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
+  `boot-account-isolation.test-support.ts` holds its two-user scenario.
+- `shortcuts.test.ts` checks ordered saves, empty overrides, reset by row
+  deletion, separate keyboards, rejected batches, fixed keys, and retired
+  commands in account and save replies. It saves and reads the shared
+  Create PR command ID. Its stored-data cases also check
+  recovery from unreadable keys and JSON without losing valid keys.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
   It also checks that an older runner gets no ChatGPT login and reports

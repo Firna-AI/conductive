@@ -10,7 +10,7 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
@@ -44,7 +44,7 @@ View writes cannot change this branch.
   `CONDUCTIVE_DEFAULT_CHOICE`, as
   [Deployment inputs](../../docs/deployment.md#models) says. A missing or
   invalid value gives a 503 on its own route only.
-- An account reply reads `user_preferences` and the records of the agent
+- An account reply reads `user_preferences`, `user_shortcuts`, and the records of the agent
   logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
@@ -79,6 +79,23 @@ View writes cannot change this branch.
   For Claude, it also drops a final `/v1`.
   A valid own endpoint can run through the model gateway on protocol 2.
   An invalid saved address or a protocol 1 runner makes it unavailable in chat.
+- `PUT /api/account/shortcuts` takes `SaveShortcutsRequest` and returns
+  `SaveShortcutsResponse` from the shared shortcut contracts. The shared
+  reader checks the whole request before any write. A contract error
+  returns HTTP 400 with `invalid_input` and the reader's message.
+  Enter with any modifiers and plain Space are fixed keys on both keyboards.
+  Only keypad digits can use keypad names in a saved key.
+  `shortcuts-data.ts` batches the changes and the reply's read in one D1
+  transaction. Null keys delete a row. Empty keys keep an empty override.
+  The account's `shortcuts` field carries both keyboards and skips retired
+  commands. The shared reply reader drops unreadable or fixed stored keys.
+  It preserves valid keys in order and keeps empty overrides. A change
+  that loses every key falls back to defaults. Each unreadable stored row,
+  including bad JSON, is skipped without blocking the account or save reply.
+  The Worker logs fixed warning text when it skips unreadable data.
+  The foreign key deletes these rows
+  with their user. [Storage](../../docs/protocol/keyboard-shortcuts.md#storage)
+  gives the requirements.
 - A new login or a change of kind sets `noReuse` to true for a Claude
   subscription token or a Codex ChatGPT sign-in, and false for an API key or an own endpoint.
   The Worker and the dev backend use `defaultAgentLoginNoReuse` in the
@@ -202,6 +219,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [`get-started-data.ts`](get-started-data.ts), and
   [`models.ts`](models.ts): the account, its logins, Get started, and the
   model variables.
+- [`shortcuts-data.ts`](shortcuts-data.ts): account shortcut reads and
+  atomic batch saves, checked with the shared shortcut readers.
 - [`codex-device.ts`](codex-device.ts): the account routes for ChatGPT
   device sign-in, over the [Codex auth service](../codex-auth/README.md).
 - [`get-started-github.ts`](get-started-github.ts):

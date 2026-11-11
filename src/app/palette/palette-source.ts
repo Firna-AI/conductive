@@ -30,18 +30,17 @@ export const paletteReads = ['list', 'repositories'] as const
 
 export type PaletteRead = (typeof paletteReads)[number]
 
-/** What the palette reads from the app. */
-export interface PaletteSource {
+/**
+ * What the actions and the settings of the palette read from the app. The
+ * keys of their commands read it too, while the palette is closed.
+ */
+export interface PaletteBase {
   /** The orgs of the person, in the order of the org rail. */
   orgs: readonly OrgSummary[]
   /** The org of the palette, as `paletteOrg` says, or `null`. */
   org: OrgSummary | null
   /** The operator suspended the org, so it takes no change. */
   suspended: boolean
-  /** The sections and the workspaces of the org, as they load. */
-  list: Loadable<ListData>
-  /** The repositories of the org, with their names, as they load. */
-  repositories: Loadable<readonly Repository[]>
   /** The workspace that the page shows. Recent workspaces leaves it out. */
   openWorkspaceId: string | null
   /** Where Create org leads, as the org rail says. */
@@ -50,6 +49,14 @@ export interface PaletteSource {
   offers: readonly PaletteOffer[]
   /** The window is the Mac app, whose Account page has This Mac. */
   mac: boolean
+}
+
+/** What the palette reads from the app. */
+export interface PaletteSource extends PaletteBase {
+  /** The sections and the workspaces of the org, as they load. */
+  list: Loadable<ListData>
+  /** The repositories of the org, with their names, as they load. */
+  repositories: Loadable<readonly Repository[]>
 }
 
 /** A repository that the filter of the Workspaces tab can choose. */

@@ -11,11 +11,8 @@ import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
-import {
-  openPaletteTab,
-  palette,
-  pressPaletteKey,
-} from '../palette/palette-test-kit'
+import { openPaletteTab, palette } from '../palette/palette-test-kit'
+import { pressCommand } from '../shortcuts/shortcut-test-kit'
 import { click, press, settle } from '../test-mount'
 import {
   focusName,
@@ -157,7 +154,7 @@ describe('the menu of a workspace row', () => {
     }
     // The palette key closes the menu and opens the palette.
     rightClick(rowLink('apple-pay'), { clientX: 120, clientY: 300 })
-    pressPaletteKey('other')
+    pressCommand('command-palette', 'other')
     const paletteKey = {
       menu: menuOf('Apple Pay button'),
       palette: palette() !== null,

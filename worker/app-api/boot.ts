@@ -12,6 +12,9 @@ import {
   readEndpointAddress,
 } from '../../src/shared/endpoint-address'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
+import { ShortcutContractError } from '../../src/shared/shortcut-key'
+import { readSaveShortcutsRequest } from '../../src/shared/shortcut-read'
+import type { SaveShortcutsRequest } from '../../src/shared/shortcuts'
 import { choice, invalidInput } from '../chat/inputs'
 import { agentLoginKind } from '../chat/login-kind'
 import { loginSecret, agentLoginContext } from '../chat/queries'
@@ -35,6 +38,7 @@ import { endpointModelsRoute } from './endpoint-models'
 import { githubInstallUrl } from './feature-github'
 import { getStartedData } from './get-started-data'
 import { configuredDefaultChoice, configuredModels } from './models'
+import { accountShortcuts, saveAccountShortcuts } from './shortcuts-data'
 
 export async function bootRoute(
   request: Request,
@@ -61,6 +65,7 @@ export async function bootRoute(
           configuredModels(env),
         ),
         newWorkspaceView: await accountNewWorkspaceView(env.DB, userId),
+        shortcuts: await accountShortcuts(env.DB, userId),
         githubAppUrl: githubInstallUrl(env),
       } satisfies AccountResponse)
     }
@@ -83,6 +88,17 @@ export async function bootRoute(
     dependencies,
   )
   if (refreshed) return refreshed
+  if (path === ACCOUNT_PATHS.shortcuts && request.method === 'PUT') {
+    let update: SaveShortcutsRequest
+    try {
+      update = readSaveShortcutsRequest(context.body)
+    } catch (error) {
+      if (error instanceof ShortcutContractError)
+        throw new HttpError(400, 'invalid_input', error.message)
+      throw error
+    }
+    return Response.json(await saveAccountShortcuts(env.DB, userId, update))
+  }
   const agent = (['claude', 'codex'] as const).find(
     (agent) => path === agentLoginPath(agent),
   )
