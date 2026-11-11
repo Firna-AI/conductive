@@ -3,16 +3,16 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, from the branch `calummoore/betterstack-implementation-brainstorm`, finding 2 of the report on the Privacy page words for Better Stack error reporting.
-- **Location:** `src/marketing/privacy.ts` (the Resend entry of "Who gets your data"), `src/marketing/privacy-transfers.ts` (the Resend transfer entry), and `src/marketing/legal-pages.md` (the sources for the review).
+- **Location:** `src/marketing/privacy-recipients.ts` (the Resend entry of "Who gets your data"), `src/marketing/privacy-transfers.ts` (the Resend transfer entry), and `src/marketing/legal-pages.md` (the sources for the review).
 - **Reason:** Main now states a Resend transfer safeguard. The source list still has no Resend terms, and this task has not checked that statement against them.
 
 - **Source:** Implementation. **Category:** Docs or spec.
 - **Terms:**
-  - **Privacy page:** the public privacy notice at `conductive.build/privacy`. Its text lives in `src/marketing/privacy.ts`, `src/marketing/privacy-uses.ts`, and `src/marketing/privacy-transfers.ts`. The mockup catalogue shows the same text.
+  - **Privacy page:** the public privacy notice at `conductive.build/privacy`. Its text lives in `src/marketing/privacy.ts`, `src/marketing/privacy-uses.ts`, `src/marketing/privacy-recipients.ts`, and `src/marketing/privacy-transfers.ts`. The mockup catalogue shows the same text.
   - **Resend:** the email service that sends Conductive's invitations, approvals, and feedback from `mail.conductive.build`.
   - **Transfer safeguard:** the legal ground for a transfer of personal data to another country, such as an adequacy regulation, a Data Privacy Framework certification, or standard contractual clauses.
 - **Background:**
-  - "Who gets your data" in `src/marketing/privacy.ts` names Resend. It now describes invitations, approvals, and feedback, including their recipient addresses and content.
+  - "Who gets your data" in `src/marketing/privacy-recipients.ts` names Resend. It now describes invitations, approvals, and feedback, including their recipient addresses and content.
   - An invitation email holds the invited email address, the org name, the name of the member who invited, and the invitation link. The approval email goes to the primary verified email of the GitHub account.
   - "Transfers to other countries" now lives in `src/marketing/privacy-transfers.ts`. Its opening paragraph says that providers can process data abroad, including the United States.
   - Main added a Resend entry in `1da13cc1`. It states that Resend processes email data in the United States and uses standard contractual clauses with the UK Addendum for restricted UK transfers. The same section retains Cloudflare, GitHub, Better Stack, the cloud computer provider, and Anthropic and OpenAI.

@@ -32,10 +32,13 @@ them, and this page lists each protocol doc and what it covers.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
-    session as concise or full Markdown, and its route.
+    session as concise or full Markdown, its route, and the reads of
+    agents.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
+    - [Version pins](../protocol/version-pins.md): the login rules and the
+      risks of each version pin.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
 - [Error reporting](../protocol/error-reporting.md): the reports of unexpected
@@ -47,6 +50,8 @@ them, and this page lists each protocol doc and what it covers.
   events.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox.
+  - [Session calls](../protocol/session-calls.md): the calls that start,
+    list, message, and read the sessions of the org.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the

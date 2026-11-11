@@ -2,6 +2,11 @@ import type { WorkspaceToolClient } from './client.ts'
 import { toolErrorMessage } from './cli.ts'
 import {
   createWorkspaceInput,
+  createSessionInput,
+  sendSessionInput,
+  readSessionInput,
+  sessionWorkspace,
+  text,
   isRecord,
   record,
   ToolInputError,
@@ -122,8 +127,29 @@ export function createWorkspaceMcp(client: WorkspaceToolClient) {
               return client.listSections()
             case 'list_models':
               return client.listModels()
-            default:
+            case 'list_workspaces':
               return client.list()
+            case 'list_sessions':
+              return client.listSessions(sessionWorkspace(args.workspaceId))
+            case 'read_session':
+              return client.readSession(
+                text(args.sessionId),
+                readSessionInput(args),
+                sessionWorkspace(args.workspaceId),
+              )
+            case 'create_session':
+              return client.createSession(
+                createSessionInput(args),
+                sessionWorkspace(args.workspaceId),
+              )
+            case 'send_message':
+              return client.sendMessage(
+                text(args.sessionId),
+                sendSessionInput(args),
+                sessionWorkspace(args.workspaceId),
+              )
+            default:
+              throw new ToolInputError('Unknown workspace tool.')
           }
         }
         const result = await run()

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-10, from the post-merge tasks of the Better Stack error reporting plan, on the branch `calummoore/betterstack-implementation-brainstorm`.
-- **Location:** `docs/protocol/error-reporting.md:113`, `:151`, `:171`, and `:204` (the field lists and the repeat limits), `src/marketing/privacy-uses.ts:82` (the "Error reports" item), and `src/marketing/privacy.ts:55` (the Better Stack entry).
+- **Location:** `docs/protocol/error-reporting.md:113`, `:151`, `:171`, and `:204` (the field lists and the repeat limits), `src/marketing/privacy-uses.ts:82` (the "Error reports" item), and `src/marketing/privacy-recipients.ts` (the Better Stack entry).
 - **Reason:** Only real failures of the deployed app give real reports, and the design adds no production canary.
 
 - **Terms:**
@@ -44,9 +44,9 @@
   - The "Error reports" item of the Privacy page, in `src/marketing/privacy-uses.ts`, describes the reports. A browser report holds "the type of error and the Conductive version", "the place in the Conductive code", "the kind of screen", the user ID while signed in, and the names and versions of the browser and the operating system.
   - It says that a server report holds "the type of error, the place in the code, and the version", "the part of the service that failed, the kind of request, and its result", and "Cloudflare's reference of the request".
   - It says: "No report holds your GitHub login or name, your messages, your files, your code, page addresses, or secrets."
-  - `src/marketing/privacy.ts` says that the browser and Mac app window requests "send your network address to Better Stack, and it can store that address with each of those reports". The wording "can store" waits for this check.
+  - `src/marketing/privacy-recipients.ts` says that the browser and Mac app window requests "send your network address to Better Stack, and it can store that address with each of those reports". The wording "can store" waits for this check.
   - The legal-pages rule is in `AGENTS.md` and `src/marketing/README.md`. A change to a fact of the architecture doc or of a protocol doc reads both legal pages in full. The same change updates each sentence of the legal pages that restates the fact.
-  - The legal pages are the Terms page in `src/marketing/terms.ts`, and the Privacy page in `src/marketing/privacy.ts` and `src/marketing/privacy-uses.ts`. Each page keeps its own effective date. The Privacy page states its date in its introduction.
+  - The legal pages are the Terms page in `src/marketing/terms.ts`, and the Privacy page in `src/marketing/privacy.ts`, `src/marketing/privacy-uses.ts`, `src/marketing/privacy-recipients.ts`, and `src/marketing/privacy-transfers.ts`. Each page keeps its own effective date. The Privacy page states its date in its introduction.
 - **Task:**
   1. Wait for the first real report in each application. Do not add a test route or a deliberate failure in production.
   2. For a Worker report, check the environment `production` and the release of the deployed commit. The Deploy workflow tags each Worker version with its short commit hash, and the Cloudflare dashboard shows that tag.

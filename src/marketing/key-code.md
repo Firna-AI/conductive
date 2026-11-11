@@ -61,11 +61,12 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.
-- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`, `privacy-transfers.ts`, and
-  `legal-text.ts`: legal pages, the "Working in an org" section of the
-  Terms, the "What Conductive uses, and why" section of the Privacy page,
-  its transfers to other countries, and the shared text model, titles, contact addresses, and sign-in
-  agreement.
+- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`,
+  `privacy-recipients.ts`, `privacy-transfers.ts`, and `legal-text.ts`:
+  legal pages, the "Working in an org" section of the Terms, the
+  "What Conductive uses, and why" section of the Privacy page, its data
+  recipients and transfers to other countries, and the shared text model,
+  titles, contact addresses, and sign-in agreement.
 - `request-values.ts`: built-page markers, local Astro preview values,
   the sign-in address, and the links to the sections of the home page.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated

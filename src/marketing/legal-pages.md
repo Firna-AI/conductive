@@ -23,11 +23,13 @@ reports, and their retention, from
 
 The words of the legal pages, of the page for an unknown address, and of
 the sign-in agreement are text without markup. `terms.ts` with
-`terms-org.ts`, `privacy.ts` with `privacy-uses.ts` and `privacy-transfers.ts`, and `legal-text.ts`
+`terms-org.ts`, `privacy.ts` with `privacy-uses.ts`, `privacy-recipients.ts`,
+and `privacy-transfers.ts`, and `legal-text.ts`
 hold them. `terms.ts` takes its "Working in an org" section from
 `terms-org.ts`, and `privacy.ts` takes its "What Conductive uses, and why"
-section from `privacy-uses.ts`. Its "Transfers to other countries" section
-comes from `privacy-transfers.ts`.
+section from `privacy-uses.ts`. Its "Who gets your data" section comes from
+`privacy-recipients.ts`. Its "Transfers to other countries" section comes
+from `privacy-transfers.ts`.
 `layouts/LegalPage.astro` and `components/RunningText.astro` build their
 HTML for the site. The mockups and the sign-in screen of the app render the
 same text with React. So every surface shows the same words.

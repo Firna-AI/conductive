@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-09, decision 216 of `plans/sandbox-provider-groundwork.md`, branch `calummoore/vercel-sandbox-provider`.
-- **Location:** "Computer tools" in `docs/protocol/agent-tools.md:230`, and `runner/src/providers/computer-mcp.ts:31`.
+- **Location:** "Computer tools" in `docs/protocol/agent-tools.md:249`, and `runner/src/providers/computer-mcp.ts:31`.
 - **Reason:** The question applies only after a second sandbox provider is chosen, and `plans/follow-ups/choose-second-sandbox-provider.md` makes that choice after the launch. Boat is the only provider until then.
 
 - **Source:** Design. **Category:** Docs or spec.

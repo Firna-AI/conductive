@@ -21,7 +21,7 @@
   - The content security policy of each app page names the origin of the browser DSN only while that DSN is valid. The Worker and the Mac build make the same policy.
   - The data region of a DSN is every label between `s<id>.` and `.betterstackdata.com`. It can have more than one label.
   - The protocol requires both applications in an EU data region, a retention of 90 days, access for the admins of the operator's team only, and spike protection.
-  - The Privacy page in `src/marketing/privacy.ts` says that Better Stack keeps the reports in the European Union, for 90 days.
+  - The Privacy page in `src/marketing/privacy.ts`, `src/marketing/privacy-recipients.ts`, and `src/marketing/privacy-transfers.ts` says that Better Stack keeps the reports in the European Union, for 90 days.
   - Better Stack's API docs say that a new application uses the default region of the team when nobody chooses one, such as `us-east-9`. They give a default retention of 90 days.
   - Each running copy of the Worker sends at most one report of the same failure in 60 seconds. So repeated requests of the check below give one event.
   - The design has no canary route. The first proofs are one development report and the first real reports.

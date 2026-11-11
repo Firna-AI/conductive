@@ -9,9 +9,8 @@ import {
   readDeviceCommandInput,
   readDeviceRecord,
 } from '../src/shared/device-read.ts'
-import type { WorkspaceToolConfiguration } from './client.ts'
-import { TOOL_TURN_HEADER } from './context.ts'
-import { isRecord, ToolInputError } from './input.ts'
+import type { ToolReplyReader, WorkspaceToolConfiguration } from './client.ts'
+import { ToolInputError } from './input.ts'
 
 export type MacCommandOptions = Omit<DeviceCommandInput, 'requestId'> & {
   requestId?: string
@@ -19,7 +18,7 @@ export type MacCommandOptions = Omit<DeviceCommandInput, 'requestId'> & {
 
 export function createMacCommandClient(
   configuration: WorkspaceToolConfiguration,
-  send: (request: Request) => Promise<Response> = fetch,
+  read: ToolReplyReader,
   wait: () => Promise<void> = () =>
     new Promise((resolve) => setTimeout(resolve, 500)),
 ) {
@@ -34,46 +33,11 @@ export function createMacCommandClient(
       path: string,
       body?: DeviceCommandInput,
     ): Promise<DeviceCommandResponse> => {
-      const headers = new Headers({
-        Authorization: `Bearer ${configuration.workspaceToken}`,
-        [TOOL_TURN_HEADER]: configuration.turnId ?? '',
-      })
-      if (body) headers.set('Content-Type', 'application/json')
-      let response: Response
-      try {
-        response = await send(
-          new Request(new URL(path, configuration.machineOrigin), {
-            method: body ? 'POST' : 'GET',
-            headers,
-            redirect: 'error',
-            ...(body && { body: JSON.stringify(body) }),
-          }),
-        )
-      } catch {
-        throw new ToolInputError('The Mac request failed. Try again.')
-      }
-      if (!response.ok) {
-        const failure: unknown = await response.json().catch(() => null)
-        const turnEnded =
-          response.status === 403 &&
-          isRecord(failure) &&
-          isRecord(failure.error) &&
-          failure.error.code === 'calling_turn_required'
-        throw new ToolInputError(
-          turnEnded
-            ? 'The agent turn ended. The tool cannot read the Mac command result.'
-            : 'The Mac request failed. Check the active turn and try again.',
-        )
-      }
-      try {
-        return {
-          request: readDeviceRecord(
-            deviceObject(await response.json()).request,
-          ),
-        }
-      } catch {
-        throw new ToolInputError('The Mac reply is not valid. Try again.')
-      }
+      return read(
+        path,
+        (value) => ({ request: readDeviceRecord(deviceObject(value).request) }),
+        body,
+      )
     }
     let reply = await request(DEVICE_COMMAND_PATH, input)
     while (

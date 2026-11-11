@@ -3,7 +3,7 @@ import type {
   WorkspaceCompositionEnv,
   WorkspaceChatResolvers,
 } from './chat/workspace-integration'
-import { AttachmentWorkspace } from './chat/attachment-workspace'
+import { AgentSessionWorkspace } from './tools/workspace'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import { WorkspaceFeatures } from './features/workspace'
 import { WorkspaceGitHub } from './features/github'
@@ -24,7 +24,7 @@ import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 
-export class Workspace extends AttachmentWorkspace {
+export class Workspace extends AgentSessionWorkspace {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver
@@ -103,7 +103,14 @@ export class Workspace extends AttachmentWorkspace {
       return null
     return this.chat.runLifecycle(async () => {
       const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
-      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
+      return turn
+        ? {
+            workspaceId,
+            turnId,
+            senderUserId: turn.senderId,
+            sessionId: turn.sessionId,
+          }
+        : null
     })
   }
 

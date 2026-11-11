@@ -124,7 +124,8 @@ such as the ICO guidance on the privacy information to give.
 When you change a fact in the architecture doc or in a protocol doc, read
 both legal pages in full. The legal pages are the Terms page in
 `src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts`,
-`src/marketing/privacy-uses.ts`, and `src/marketing/privacy-transfers.ts`.
+`src/marketing/privacy-uses.ts`, `src/marketing/privacy-recipients.ts`, and
+`src/marketing/privacy-transfers.ts`.
 In the same change, update each
 sentence of the legal pages that restates the fact. A search for the old
 words is not enough, because a legal page can restate a fact in other words.

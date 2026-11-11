@@ -10,6 +10,7 @@ import type { AgentChoice } from '../../src/shared/agents'
 import { HttpError } from '../http'
 import { readImageRepositories } from '../lifecycle/published-image-data'
 import type { AgentToolServices } from './services'
+import { isAgentSessionPath } from './session-routes'
 import {
   type CallingWorkspace,
   orgSections,
@@ -18,12 +19,15 @@ import {
 } from './store'
 
 export function isAgentToolPath(path: string): boolean {
-  return [
-    MACHINE_PATHS.workspaces,
-    MACHINE_PATHS.repositories,
-    MACHINE_PATHS.sections,
-    MACHINE_PATHS.models,
-  ].some((toolPath) => toolPath === path)
+  return (
+    isAgentSessionPath(path) ||
+    [
+      MACHINE_PATHS.workspaces,
+      MACHINE_PATHS.repositories,
+      MACHINE_PATHS.sections,
+      MACHINE_PATHS.models,
+    ].some((toolPath) => toolPath === path)
+  )
 }
 
 function compareText(a: string, b: string): number {

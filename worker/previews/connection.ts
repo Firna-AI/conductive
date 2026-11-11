@@ -1,5 +1,43 @@
 import { HttpError } from '../http'
 
+const FIRST_READ_BYTES = 16 * 1024
+const MAX_READ_BYTES = 256 * 1024
+
+interface BodyReader {
+  read(): Promise<ReadableStreamReadResult<Uint8Array>>
+  cancel(): Promise<void>
+}
+
+function byteReader(
+  body: ReadableStream<Uint8Array>,
+): ReadableStreamBYOBReader | null {
+  try {
+    return body.getReader({ mode: 'byob' })
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Reads all data that waits, up to a limit, so that one access check covers it.
+ * The default reader of a Workers fetch body gives at most 4 KB for each read.
+ * A byte stream fills a larger buffer instead. The buffer doubles after each full read.
+ */
+function batchReader(body: ReadableStream<Uint8Array>): BodyReader {
+  const reader = byteReader(body)
+  if (!reader) return body.getReader()
+  let size = FIRST_READ_BYTES
+  return {
+    read: async () => {
+      const next = await reader.read(new Uint8Array(size))
+      if (next.value?.byteLength === size)
+        size = Math.min(size * 2, MAX_READ_BYTES)
+      return next
+    },
+    cancel: () => reader.cancel(),
+  }
+}
+
 /** One connection owns fetch cancellation and every streaming body in both directions. */
 export class PreviewConnection {
   private readonly abort = new AbortController()
@@ -61,7 +99,7 @@ export class PreviewConnection {
     body: ReadableStream<Uint8Array> | null,
   ): ReadableStream<Uint8Array> | null {
     if (!body) return null
-    const reader = body.getReader()
+    const reader = batchReader(body)
     let controller: ReadableStreamDefaultController<Uint8Array> | null = null
     let finished = false
     this.parts++

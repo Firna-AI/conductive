@@ -99,7 +99,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         computer does not remove this risk. A new image build gives the
         protection to each cloud computer that starts from it.`,
       text`Your work: ${productName} keeps your messages and the answers
-        of the agents as the chat history of each workspace. It also
+        of the agents as the chat history of each workspace.
+        Messages from agent tools end with Sent by: and a link to the
+        sending session. The chat history keeps that link. It also
         keeps the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,
