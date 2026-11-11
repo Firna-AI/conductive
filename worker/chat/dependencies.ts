@@ -19,6 +19,7 @@ import { prepareMessageAttachments } from './attachment-copy'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
+import { refreshEndpointModels } from '../model-gateway/endpoint-model-refresh'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -32,6 +33,17 @@ export function chatDependencies(
   protocolVersion: () => RunnerProtocolVersion | null = () => null,
 ): ChatDependencies {
   return {
+    refreshEndpointModels: (userId, agent) =>
+      refreshEndpointModels(
+        env,
+        userId,
+        agent,
+        {
+          fetch: (request) => fetch(request),
+          now: overrides.now ?? Date.now,
+        },
+        { background: true },
+      ),
     readCommitAuthor: async (userId) => {
       const user = await readUser(env.DB, userId)
       return user ? commitAuthor(user) : null

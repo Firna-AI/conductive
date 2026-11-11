@@ -3,8 +3,9 @@ import type {
   NewWorkspaceView,
   SaveAgentLoginRequest,
 } from '../../src/shared/account'
-import type { Agent, AgentChoice } from '../../src/shared/agents'
+import type { Agent, AgentChoice, AgentModel } from '../../src/shared/agents'
 import { agentLoginKind } from '../chat/login-kind'
+import { endpointModelList } from './account-models'
 
 interface LoginRow {
   agent: Agent
@@ -12,16 +13,20 @@ interface LoginRow {
   endpointOrigin: string | null
   noReuse: number
   updatedAt: number
+  modelIds: string | null
+  modelsReadAt: number | null
 }
 
 export async function accountLogins(
   db: D1Database,
   userId: string,
+  models?: () => readonly AgentModel[],
 ): Promise<AgentLoginStatus[]> {
   const { results } = await db
     .prepare(
       `SELECT agent, kind, endpoint_origin AS endpointOrigin,
-       no_reuse AS noReuse, updated_at AS updatedAt FROM agent_logins
+       no_reuse AS noReuse, updated_at AS updatedAt,
+       endpoint_model_ids AS modelIds, endpoint_models_read_at AS modelsReadAt FROM agent_logins
        WHERE user_id = ? ORDER BY agent`,
     )
     .bind(userId)
@@ -37,10 +42,17 @@ export async function accountLogins(
     }
     if (loginKind.kind === 'endpoint') {
       if (!login.endpointOrigin) return { agent, connected: false }
+      const modelList = endpointModelList(
+        agent,
+        login.modelIds,
+        login.modelsReadAt,
+        models,
+      )
       return {
         ...loginKind,
         ...metadata,
         host: new URL(login.endpointOrigin).host,
+        ...(modelList ? { modelList } : {}),
       }
     }
     return { ...loginKind, ...metadata }
@@ -122,6 +134,8 @@ export async function saveAccountLogin(
        kind = excluded.kind, ciphertext = excluded.ciphertext, endpoint_origin = excluded.endpoint_origin,
        no_reuse = CASE WHEN agent_logins.kind = excluded.kind
          THEN agent_logins.no_reuse ELSE excluded.no_reuse END,
+       endpoint_model_ids = NULL, endpoint_models_read_at = NULL,
+       endpoint_models_attempted_at = NULL, endpoint_models_attempt_id = NULL,
        updated_at = excluded.updated_at RETURNING no_reuse`,
     )
     .bind(

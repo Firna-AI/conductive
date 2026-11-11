@@ -1,6 +1,10 @@
 import { expect, it } from 'vitest'
 
-import { ACCOUNT_PATHS, agentLoginPath } from '../../shared/account'
+import {
+  ACCOUNT_PATHS,
+  agentLoginPath,
+  refreshAgentLoginModelsPath,
+} from '../../shared/account'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
@@ -119,4 +123,35 @@ it('refuses unsafe dev endpoint saves and seeds connected own endpoint statuses'
         'Use a public https:// address, without a user name or a password.',
     },
   })
+})
+
+it('refreshes the dev endpoint list without changing other logins or the secret-save time', async () => {
+  const { fetch } = setup('?login=endpoint')
+  expect(
+    (await fetch(refreshAgentLoginModelsPath('claude'), { method: 'POST' }))
+      .status,
+  ).toBe(204)
+  const account = readAccount(await (await fetch(ACCOUNT_PATHS.account)).json())
+  expect(account.agentLogins[0]).toMatchObject({
+    updatedAt: FAKE_TIME,
+    modelList: { missing: [], checkedAt: FAKE_TIME },
+  })
+  expect(account.agentLogins[1]).not.toHaveProperty('modelList')
+  expect(
+    (
+      await fetch(agentLoginPath('codex'), {
+        method: 'PUT',
+        body: JSON.stringify({
+          agent: 'codex',
+          kind: 'endpoint',
+          endpoint: 'https://proxy.example.test/v1',
+          secret: 'fake-key',
+        }),
+      })
+    ).status,
+  ).toBe(200)
+  expect(
+    readAccount(await (await fetch(ACCOUNT_PATHS.account)).json())
+      .agentLogins[1],
+  ).toMatchObject({ modelList: { missing: [], checkedAt: FAKE_TIME } })
 })

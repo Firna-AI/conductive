@@ -185,6 +185,11 @@ is required only for that kind. The full endpoint stays inside the
 ciphertext with its key. The rebuild copies every existing row, ciphertext,
 timestamp, and `no_reuse` choice. Existing rows get a null origin.
 
+`202611110407_agent_login_models.sql` adds nullable endpoint model IDs,
+the last successful read time, the last attempt time, and an attempt ID to
+`agent_logins`. It alters the table without replacing or deleting rows.
+The attempt ID prevents a late response from overwriting a newer read.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

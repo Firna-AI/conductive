@@ -72,6 +72,8 @@ export interface StoredTurn {
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
   gateway?: TurnTokenState
+  /** The dispatched own endpoint model, without login metadata or secrets. */
+  endpointModel?: string
   loginFailure?: string
 }
 
@@ -150,6 +152,7 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  refreshEndpointModels(userId: string, agent: Agent): Promise<void>
   readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,

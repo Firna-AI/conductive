@@ -300,7 +300,10 @@ covers the command palette, the layers, the frames, New workspace as a
 dialog, and feedback with its screenshots.
 
 - `api/read-core.ts`: `readLogin` reads own endpoint metadata for both agents.
-  It keeps only the host, kind, share choice, and update time.
+  It keeps the host, kind, share choice, update time, and optional `modelList`.
+  The list has missing app model IDs and the last successful read time.
+  `dev/account-routes.ts` simulates save and Refresh as successful lists with no missing models.
+  It changes neither another login nor the secret-save time.
   `dev/account-routes.ts` uses the shared address rule and keeps no secret
   or full endpoint in development state. Its save uses the same public HTTPS
   address builder and agent-specific normalization as the Worker.

@@ -45,3 +45,29 @@ it('requires an endpoint host and still refuses a Codex subscription token', () 
     }),
   ).toThrow(new ParseError('kind is not one of api-key.'))
 })
+
+it('reads model-list metadata and refuses malformed IDs or times', () => {
+  const metadata = {
+    agent: 'claude',
+    connected: true,
+    kind: 'endpoint',
+    host: 'proxy.example.test',
+    noReuse: false,
+    updatedAt: 123,
+  }
+  expect(
+    readLogin({
+      ...metadata,
+      modelList: { missing: ['claude-opus-5-5'], checkedAt: 456 },
+    }),
+  ).toEqual({
+    ...metadata,
+    modelList: { missing: ['claude-opus-5-5'], checkedAt: 456 },
+  })
+  expect(() =>
+    readLogin({ ...metadata, modelList: { missing: [7], checkedAt: 456 } }),
+  ).toThrow(new ParseError('missing holds a value that is not a string.'))
+  expect(() =>
+    readLogin({ ...metadata, modelList: { missing: [], checkedAt: 'bad' } }),
+  ).toThrow(new ParseError('checkedAt is not a number.'))
+})

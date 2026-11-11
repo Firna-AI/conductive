@@ -23,6 +23,16 @@ export function agentLoginPath(agent: Agent): string {
   return `${ACCOUNT_PATHS.agentLogins}/${agent}`
 }
 
+export function refreshAgentLoginModelsPath(agent: Agent): string {
+  return `${agentLoginPath(agent)}/models/refresh`
+}
+
+export interface EndpointModelList {
+  /** App model IDs absent from the last successful endpoint list. */
+  missing: readonly string[]
+  checkedAt: Timestamp
+}
+
 /** Secrets occur only in writes and runner commands, never in account responses. */
 export type SaveAgentLoginRequest =
   | { agent: 'claude'; kind: 'token' | 'api-key'; secret: string }
@@ -50,6 +60,7 @@ export type AgentLoginStatus =
       connected: true
       kind: 'endpoint'
       host: string
+      modelList?: EndpointModelList
       noReuse: boolean
       updatedAt: Timestamp
     }

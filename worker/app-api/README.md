@@ -11,6 +11,7 @@ Each handler returns `null` for a path that it does not own. The
 | Handler | Routes |
 | --- | --- |
 | `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
@@ -50,8 +51,22 @@ View writes cannot change this branch.
   [`endpoint-address.ts`](../../src/shared/endpoint-address.ts). It encrypts
   one JSON value with the normalized endpoint and the whitespace-free key,
   under the same context. Only the endpoint origin stays in plain text.
-  Save, account, and preference replies give only the host, kind, share
-  setting, and last secret-save time. They never give the full address.
+  Save and preference replies give the host, kind, share setting, and last
+  secret-save time. They never give the full address.
+  Save reads the endpoint model list without making a failed read fail the save.
+  Each replacement drops the old model list and its attempt time.
+  [`account-models.ts`](account-models.ts) adds the optional `modelList` to
+  an own endpoint login in the signed-in user's account reply.
+  Its `missing` array holds app model IDs absent from the last successful list.
+  Its `checkedAt` holds that successful read's Unix millisecond time.
+  No successful read means no `modelList`.
+  A list with no matching app model reports all of that agent's app IDs as missing.
+  The browser uses that case to keep every model available.
+  An unavailable model configuration leaves discovery metadata out of the account reply.
+  The model-list route keeps its existing configuration error.
+  Refresh reads only the signed-in user's login and answers 204, also after a failed read.
+  A removed or native login makes Refresh do nothing.
+  Read the account again after Refresh to obtain the last successful result.
   The builder accepts public HTTPS addresses and refuses credentials and non-public hosts.
   It reads the product domain from the shared brand source.
   The save also passes `env.PREVIEW_DOMAIN` to refuse that deployment's preview domain and its subdomains.
@@ -159,6 +174,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   whitespace, and that a read removes the whitespace of an older login.
 - `agent-endpoint-login.test.ts` checks both agents, encrypted addresses
   and keys, safe account metadata, the address rule, and share defaults.
+- `endpoint-models.test.ts` checks discovery at save and Refresh, private
+  account data, failed reads, unmatched lists, and replacement during a read.
 - `agent-login-reuse.test.ts` checks the login-kind defaults, the private
   preference update, and unchanged secret data and timestamps.
 - `feature-github-install.test.ts` checks the install link of the GitHub

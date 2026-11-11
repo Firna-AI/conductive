@@ -30,6 +30,7 @@ import {
   nested,
   record,
   text,
+  texts,
 } from './parse'
 
 export const AGENTS = ['claude', 'codex'] as const satisfies readonly Agent[]
@@ -132,6 +133,17 @@ export function readLogin(value: unknown): AgentLoginStatus {
       connected: true,
       kind: 'endpoint',
       host: text(login, 'host'),
+      ...(login.modelList === undefined
+        ? {}
+        : {
+            modelList: nested(login, 'modelList', (value) => {
+              const list = record(value, 'endpoint model list')
+              return {
+                missing: texts(list, 'missing'),
+                checkedAt: count(list, 'checkedAt'),
+              }
+            }),
+          }),
       noReuse,
       updatedAt,
     }

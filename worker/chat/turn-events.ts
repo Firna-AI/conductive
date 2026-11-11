@@ -27,6 +27,18 @@ export async function prepareAgentEvent(
     )
   }
   const { session, turn } = target
+  if (
+    event.type === 'turn.failed' &&
+    event.error.code === 'agent_model_unavailable' &&
+    turn.endpointModel
+  )
+    event = {
+      ...event,
+      error: {
+        code: event.error.code,
+        message: `The endpoint of this login does not serve ${turn.endpointModel}. Choose another model.`,
+      },
+    }
   let acknowledged: readonly string[] = []
   if (event.type === 'turn.started') {
     sameAgent(session, event.choice)

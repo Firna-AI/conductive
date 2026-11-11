@@ -16,6 +16,7 @@ import { choice, invalidInput } from '../chat/inputs'
 import { agentLoginKind } from '../chat/login-kind'
 import { loginSecret, agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
+import { refreshEndpointModels } from '../model-gateway/endpoint-model-refresh'
 import { HttpError, requiredString } from '../http'
 import { isOperator } from '../operator/access'
 import { encrypt } from '../security/crypto'
@@ -30,6 +31,7 @@ import {
   saveAccountNewWorkspaceView,
   updateAccountLoginReuse,
 } from './account-data'
+import { endpointModelsRoute } from './endpoint-models'
 import { githubInstallUrl } from './feature-github'
 import { getStartedData } from './get-started-data'
 import { configuredDefaultChoice, configuredModels } from './models'
@@ -55,7 +57,9 @@ export async function bootRoute(
         defaultChoice:
           (await accountDefault(env.DB, userId)) ??
           configuredDefaultChoice(env),
-        agentLogins: await accountLogins(env.DB, userId),
+        agentLogins: await accountLogins(env.DB, userId, () =>
+          configuredModels(env),
+        ),
         newWorkspaceView: await accountNewWorkspaceView(env.DB, userId),
         githubAppUrl: githubInstallUrl(env),
       } satisfies AccountResponse)
@@ -72,6 +76,13 @@ export async function bootRoute(
     await saveAccountNewWorkspaceView(env.DB, userId, view, dependencies.now())
     return Response.json({ view } satisfies SetNewWorkspaceViewResponse)
   }
+  const refreshed = await endpointModelsRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (refreshed) return refreshed
   const agent = (['claude', 'codex'] as const).find(
     (agent) => path === agentLoginPath(agent),
   )
@@ -136,5 +147,9 @@ export async function bootRoute(
     noReuse,
     updatedAt,
   }
+  if (address)
+    await refreshEndpointModels(env, userId, agent, dependencies, {
+      ciphertext,
+    })
   return Response.json(login)
 }

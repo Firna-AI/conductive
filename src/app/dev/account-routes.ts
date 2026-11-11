@@ -1,6 +1,7 @@
 import {
   ACCOUNT_PATHS,
   agentLoginPath,
+  refreshAgentLoginModelsPath,
   type AccountResponse,
   type AgentLoginStatus,
   type SaveAgentLoginRequest,
@@ -98,7 +99,15 @@ function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
     const noReuse = noReuseOf(saved, kind)
     login = { agent, connected: true, kind, noReuse, updatedAt }
   }
-  putLogin(backend, login)
+  putLogin(
+    backend,
+    login.connected && login.kind === 'endpoint'
+      ? {
+          ...login,
+          modelList: { missing: [], checkedAt: updatedAt },
+        }
+      : login,
+  )
   completeStep(backend.state, 'agent-login')
   return json(login satisfies SaveAgentLoginResponse)
 }
@@ -125,6 +134,19 @@ function updateLogin(
 
 function loginRoutes(backend: DevBackend, agent: Agent): Route[] {
   return [
+    {
+      method: 'POST',
+      path: refreshAgentLoginModelsPath(agent),
+      answer: () => {
+        const login = savedLogin(backend, agent)
+        if (login.connected && login.kind === 'endpoint')
+          putLogin(backend, {
+            ...login,
+            modelList: { missing: [], checkedAt: backend.now() },
+          })
+        return noContent()
+      },
+    },
     {
       method: 'PUT',
       path: agentLoginPath(agent),

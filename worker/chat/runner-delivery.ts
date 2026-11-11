@@ -45,7 +45,7 @@ export class RunnerDelivery {
     this.dependencies = dependencies
     this.publish = publish
     this.forRunningTurn = forRunningTurn
-    this.dispatch = new DeliveryState(store, publish)
+    this.dispatch = new DeliveryState(store, publish, dependencies)
     this.preparations = new AttachmentPreparation(
       store,
       dependencies,
@@ -163,7 +163,11 @@ export class RunnerDelivery {
         )
       return 'skip'
     }
-    const beganTurn = await this.dispatch.begin(active.workspace.id, command)
+    const beganTurn = await this.dispatch.begin(
+      active.workspace.id,
+      command,
+      outbound,
+    )
     try {
       const outgoing =
         active.protocolVersion === 2

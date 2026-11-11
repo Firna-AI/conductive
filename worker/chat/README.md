@@ -185,6 +185,15 @@ It also marks an endpoint unavailable while the connected runner uses protocol 1
 Its failed-turn cause names the starter and agent and points to the account page.
 Runner delivery maps a valid endpoint to an API-key turn-token credential for protocol 2.
 No endpoint address or key enters a runner command or chat record.
+`delivery-state.ts` schedules an own endpoint model-list read after dispatch.
+The read uses `waitUntil` and does not delay the runner command.
+The private turn record keeps its dispatched endpoint model ID.
+It follows model commands sent to Claude, which applies them during the turn.
+Codex keeps its active turn model when a model change waits for the next turn.
+`turn-events.ts` uses that ID for `agent_model_unavailable` failures.
+The public cause names the missing model and no host.
+Native logins keep their existing cause text.
+`endpoint-models.test.ts` checks background dispatch, owner privacy, and both agents' failure text.
 `endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for invalid addresses and protocol 1.
 
 ## Related docs
