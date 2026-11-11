@@ -56,6 +56,8 @@ the command palette and of the Feedback dialog.
   A share reply that a later save or remove of the same login overtook does
   not show, so a removed login stays removed.
 - The Codex form offers API key, selected first, then ChatGPT plan.
+  For now the app hides ChatGPT plan and the switch, because the model
+  gateway cannot reach chatgpt.com. `chatGptSignInAvailable` turns it on.
   ChatGPT plan asks the Worker for a code. The form shows the code with
   the link to the page of OpenAI. It asks the Worker for the state of the
   sign-in after each wait that the Worker gives. The sign-in ends when it
