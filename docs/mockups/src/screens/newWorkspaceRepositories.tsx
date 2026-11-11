@@ -81,12 +81,12 @@ export function repositoryMenu(
 }
 
 /**
- * The page of the Cloud computer tab for the action of an admin: Try again
- * after a failed build, or Build computer when no build runs.
+ * The page of the Cloud computer tab for the link of an admin: the build
+ * that runs, Try again after a failed build, or Build computer when no
+ * build runs.
  */
-const computerPages: Readonly<
-  Record<Exclude<RepositoryWait, 'building'>, string>
-> = {
+const computerPages: Readonly<Record<RepositoryWait, string>> = {
+  building: paths.repositoriesChanged,
   failed: paths.repositoriesChangedFailed,
   waiting: paths.repositoriesChangedNoBuild,
 }
@@ -106,7 +106,9 @@ export function waitingNotice(props: {
     <WaitingRepositoryNotice
       action={(wait) => (
         <ScreenLink asChild to={computerPages[wait]}>
-          <ActionButton icon={ArrowRight}>{firstBuildCopy.open}</ActionButton>
+          <ActionButton icon={ArrowRight}>
+            {firstBuildCopy.settings}
+          </ActionButton>
         </ScreenLink>
       )}
       admin={props.admin}

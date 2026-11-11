@@ -137,6 +137,14 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     due: null,
   },
   {
+    id: 'session-links',
+    area: 'agents-and-chat',
+    name: 'Session links',
+    status: 'planned',
+    note: 'Links to individual chat sessions are planned.',
+    due: null,
+  },
+  {
     id: 'copy-session-transcripts',
     area: 'agents-and-chat',
     name: 'Copy session transcripts',
