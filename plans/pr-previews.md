@@ -699,13 +699,17 @@ behind.
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      Done on 11 November 2026: the gate passed on `ea9da67b`. Evidence:
+      `.context/pr-previews/gate-2.log`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Done on 11 November 2026: round 1 found 2
+      findings, both fixed in `ea9da67b`. Round 2 found none. The findings
+      file is `.context/reviews/calummoore/pr-previews-setup/findings.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
