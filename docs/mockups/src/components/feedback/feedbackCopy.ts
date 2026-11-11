@@ -60,6 +60,45 @@ export const sendingLabel = 'Sending'
 /** The title of the notice of a failed send, over the message of the server. */
 export const notSentTitle = "The feedback wasn't sent"
 
+/** The feedback messages that one person can send in an hour. */
+const sendsPerHour = 10
+
+/** A whole minute, in milliseconds. */
+const minute = 60_000
+
+const retryDay = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'UTC',
+})
+
+const retryClock = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+  timeZone: 'UTC',
+})
+
+/**
+ * The words of the time when a send can go again, such as "10 November at
+ * 14:52 UTC". They are in UTC, so they need no time zone of the person. The
+ * time rounds up to the next whole minute, so a send at the shown minute
+ * goes.
+ */
+function retryWords(retryAt: number): string {
+  const shown = Math.ceil(retryAt / minute) * minute
+  return `${retryDay.format(shown)} at ${retryClock.format(shown)} UTC`
+}
+
+/**
+ * The body of the notice of a send over the limit of each person, under
+ * the title of a failed send. `retryAt` is the time when a send can go
+ * again, in milliseconds since the Unix epoch.
+ */
+export function sendLimitBody(retryAt: number): string {
+  return `You can send ${sendsPerHour} messages in an hour. Try again after ${retryWords(retryAt)}.`
+}
+
 /** The title of the notice for a file that the dialog did not add. */
 export function notAddedTitle(name: string): string {
   return `${name} wasn't added`

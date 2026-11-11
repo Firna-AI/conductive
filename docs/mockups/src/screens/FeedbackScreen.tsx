@@ -1,7 +1,10 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { offlineMessage } from '../components/common/LoadFailure'
 import { SuccessToast } from '../components/common/SuccessToast'
-import { sentToastTitle } from '../components/feedback/feedbackCopy'
+import {
+  sendLimitBody,
+  sentToastTitle,
+} from '../components/feedback/feedbackCopy'
 import {
   FeedbackDialog,
   type FeedbackProblem,
@@ -10,6 +13,7 @@ import type { FeedbackReply } from '../components/feedback/FeedbackReply'
 import type { Attachment } from '../fixtures/attachments'
 import {
   feedbackMessage,
+  feedbackRetryAt,
   feedbackScreenshot,
   largeCapture,
   longFeedbackMessage,
@@ -38,10 +42,12 @@ export const feedbackSchema = {
      */
     reply: { enum: ['email', 'none', 'loading', 'failed'] },
     /**
-     * The dialog before a send, while the send runs, or after the send
-     * failed. After a send went, the dialog closes and the toast shows.
+     * The dialog before a send, while the send runs, after the send failed,
+     * or after the server refused a send over the limit of each person,
+     * with the time when a send can go again. After a send went, the dialog
+     * closes and the toast shows.
      */
-    send: { enum: ['draft', 'sending', 'failed', 'sent'] },
+    send: { enum: ['draft', 'sending', 'failed', 'limited', 'sent'] },
     /**
      * A file that the dialog did not add: a capture that passes the limit of
      * the screenshots of the message, or a photo of another type.
@@ -86,11 +92,15 @@ const replies: Readonly<Record<FeedbackState['reply'], FeedbackReply>> = {
 
 /**
  * The notice of a state: a failed send gives the message of the server,
- * such as when the app cannot reach it, and a refusal names its file.
+ * such as when the app cannot reach it or when the person passed the send
+ * limit, and a refusal names its file.
  */
 function problemOf(state: FeedbackState): FeedbackProblem | undefined {
   if (state.send === 'failed') {
     return { kind: 'not-sent', message: offlineMessage }
+  }
+  if (state.send === 'limited') {
+    return { kind: 'not-sent', message: sendLimitBody(feedbackRetryAt) }
   }
   switch (state.refusal) {
     case 'none':

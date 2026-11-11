@@ -21,6 +21,13 @@ export const feedbackScreenshot: Attachment = {
 export const replyEmail = 'cal@example.com'
 
 /**
+ * The time when Cal can send feedback again: an hour after the first of the
+ * 10 messages that Cal sent in the last hour, at 13:51:40 UTC. The notice
+ * rounds it up to 14:52.
+ */
+export const feedbackRetryAt = Date.parse('2026-11-10T14:51:40Z')
+
+/**
  * A capture of a whole page. With the pasted screenshot, the two pass the
  * limit of the screenshots of one message, so the dialog does not add it.
  */

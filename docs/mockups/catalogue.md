@@ -19,7 +19,7 @@ how a screen is built, and links to the other pages.
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
-| `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
+| `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the send limit, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |

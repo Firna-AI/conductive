@@ -56,6 +56,10 @@ child pages:
   verified email. Its `sending` variant has a send that runs, and its
   `failed` variant has a send that did not reach the server. Its `sent`
   variant has the toast over the list after a send.
+- `app/feedback/send-limit` has a send over the limit of each person: 10
+  messages in an hour. The draft stays, and the notice of a failed send
+  gives the limit and the time when a send can go again, as a date and a
+  time in UTC. Send stays on, with no countdown.
 - `app/feedback/reply` has the kept draft while the reply address loads,
   with a spinner on the reply line. Its `failed` variant has a read that
   did not reach the server: the notice of a failed read, with Try again,
@@ -80,5 +84,8 @@ under the box names a file that the dialog did not add, or a send that
 failed. `FeedbackReply.tsx` beside it draws the reply line from the read of
 the reply address, and the `LoadFailure` notice of a read that failed.
 `feedbackCopy.ts` holds the words of the row, the dialog, and the toast, so
-the app can share them. `SuccessToast` in `src/components/common/` draws
-the toast after a send, where `FailureToast` draws its own.
+the app can share them. Its `sendLimitBody` gives the words of the send
+limit from the time when a send can go again. It writes that time in UTC,
+with its date, and rounds it up to the next whole minute. `SuccessToast` in
+`src/components/common/` draws the toast after a send, where `FailureToast`
+draws its own.

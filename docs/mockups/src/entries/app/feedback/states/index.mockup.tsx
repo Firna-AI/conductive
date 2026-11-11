@@ -44,7 +44,7 @@ export const feedbackStates = defineScreen({
       description:
         'The send failed, because the app could not reach the server. The dialog keeps the text and the screenshot. The notice under the box names what failed, with the message of the server, and a new press of Send tries again.',
       rationale:
-        'Each error of the send shows its message in the same notice, such as a deployment without a team inbox or an email that the email service refused. The draft stays, so a failure loses nothing.',
+        'Each error of the send shows its message in the same notice, such as a deployment without a team inbox or an email that the email service refused. A send over the limit of each person shows its message there too, as `app/feedback/send-limit` shows. The draft stays, so a failure loses nothing.',
       props: { draft: 'screenshot', send: 'failed' },
     },
     {
