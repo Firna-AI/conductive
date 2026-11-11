@@ -36,15 +36,20 @@
 /*
  * A heading of an answer. Its look comes from MarkdownHeadings.module.css.
  * The gap of the answer sets the space under it, and a heading after
- * another block stands a little further from that block. A heading that
- * starts the answer has no space above it.
+ * another block stands a little further from that block: a level-1 or
+ * level-2 heading 12px more, and a smaller heading 8px more. A heading
+ * that starts the answer has no space above it.
  */
 .agent :is(h1, h2, h3, h4, h5, h6) {
   margin: 0;
 }
 
-.agent > * + :is(h1, h2, h3, h4, h5, h6) {
-  margin-top: 6px;
+.agent > * + :is(h1, h2) {
+  margin-top: 12px;
+}
+
+.agent > * + :is(h3, h4, h5, h6) {
+  margin-top: 8px;
 }
 
 .agent table {

@@ -53,15 +53,24 @@ not have, and the files that the cloud computer could not read.
   level-one heading. Each view sets the space around its headings, as
   `app/chat/headings` and `app/files/markdown` show.
   - A heading shows at the level that the agent wrote, from `h1` to `h6`.
-    Level 1 has the large text size and a 1 px line in the border colour
-    under it. Level 2 has the size between, and levels 3 to 6 have the
-    size of the text of a reply. Each level has the heading weight and the
-    ink colour.
-  - In a reply, a heading after another block stands 6 px further from it
-    than two paragraphs stand from each other. A heading that starts the
-    reply has no space above it, and the gap of the reply sets the space
-    under each heading. The file preview keeps 20 px above a heading and
-    6 px under it.
+    Each level has its own size, as a ratio of the text around it: 1.7143,
+    1.4286, 1.2857, 1.1429, 1, and 0.9286 times the text size. At the
+    13 px text of a reply and of the file preview, the levels are about
+    22.3, 18.6, 16.7, 14.9, 13, and 12.1 px. Each level has the heading
+    weight and the ink colour, and level 1 has a 1 px line in the border
+    colour under it.
+  - Bold text keeps the weight that the browser gives it, which is heavier
+    than the heading weight. The size step sets levels 1 to 4 apart from a
+    bold label.
+  - In a reply, a heading after another block stands further from it than
+    two paragraphs stand from each other: 12 px more for levels 1 and 2,
+    and 8 px more for levels 3 to 6. A heading that starts the reply has
+    no space above it, and the gap of the reply sets the space under each
+    heading.
+  - In the file preview, a heading of level 1 or 2 has 24 px above it, and
+    a smaller heading has 20 px. Level 1 has 10 px under its line, level 2
+    has 8 px under it, and the smaller levels have 6 px. The first block of
+    the file has no space above it.
   - The text of a heading shows inline code, bold text, and workspace
     chips, as a paragraph does. A heading with no text draws nothing.
 - When a turn ends, the work before its answer folds into one line, from
