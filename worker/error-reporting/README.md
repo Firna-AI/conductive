@@ -48,3 +48,8 @@ steps of the operator.
   result.
 
 The other modules of `error-reporting/` support these entry points.
+
+## Key code
+
+- [routes.ts](routes.ts): `workerRouteTemplate`, the safe request label for
+  reports and their repeat-limit keys.
