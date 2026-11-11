@@ -134,7 +134,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Answers show Markdown, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
+    note: 'Answers show Markdown, tables, lists, and code. Headings show as plain text today, and real headings are planned. Diagrams, maths, media, and Run buttons are under consideration.',
   },
   {
     id: 'chat-links',
@@ -148,8 +148,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'session-links',
     area: 'agents-and-chat',
     name: 'Session links',
-    status: 'planned',
-    note: 'Links to individual chat sessions are planned.',
+    status: 'in-progress',
+    note: 'Links that open individual chat sessions, shown as chips in chat, are in progress.',
     due: null,
   },
   {
