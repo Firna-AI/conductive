@@ -40,9 +40,8 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     id: 'routines',
     area: 'automation-and-api',
     name: 'Routines',
-    status: 'in-progress',
-    note: 'Scheduled and pull request routines are in progress. Each run gets a new workspace, with run history and manual runs.',
-    due: null,
+    status: 'available',
+    note: 'Routines run on a schedule or on pull request events. Each run gets a new workspace, with run history and manual runs. Pull request triggers filter by author.',
   },
   {
     id: 'hosted-mcp-server',
@@ -63,7 +62,15 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     area: 'automation-and-api',
     name: 'Agents that delegate',
     status: 'available',
-    note: 'Agents can create workspaces and list workspaces, repositories, sections, and models. Managing existing sessions is under consideration.',
+    note: 'Agents create workspaces and list workspaces, repositories, sections, and models. Listing and reading sessions are in progress. Creating and messaging sessions are planned.',
+  },
+  {
+    id: 'read-session-transcripts',
+    area: 'automation-and-api',
+    name: 'Read session transcripts',
+    status: 'in-progress',
+    note: 'Tools that let agents read concise or full chats from sessions across the org are in progress.',
+    due: null,
   },
   {
     id: 'deep-links',

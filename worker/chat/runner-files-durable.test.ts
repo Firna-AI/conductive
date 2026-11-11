@@ -10,9 +10,14 @@ import {
   WORKSPACE_ID,
   WORKSPACE_TOKEN,
 } from './harness.test-support'
+import { runnerControls } from './runner-native.test-support'
+
 import { snapshot } from './runner-fixtures.test-support'
 it('restores confirmed parts and complete reports larger than one SQLite value after eviction', async () => {
-  const { runtime, headers } = await createAdapterRuntime()
+  const { runtime, headers } = await createAdapterRuntime(
+    'worker/chat/runner-entry.test-support.ts',
+  )
+  const controls = runnerControls(runtime, headers)
   const parts = Array.from({ length: 12 }, (_, index) =>
     snapshot(
       1,
@@ -73,7 +78,7 @@ it('restores confirmed parts and complete reports larger than one SQLite value a
     return { socket, inbox }
   }
   try {
-    let runner = await runnerSocket()
+    const runner = await runnerSocket()
     expect(await runner.inbox.next()).toMatchObject({
       type: 'welcome',
       confirmedThrough: 0,
@@ -100,17 +105,7 @@ it('restores confirmed parts and complete reports larger than one SQLite value a
       type: 'history',
       history: { events: [], throughEventNumber: 0 },
     })
-    await closeSockets(runner.socket, browser.socket)
-    await runtime.unsafeEvictDurableObject('chat-adapter-tests', 'Workspace', {
-      name: WORKSPACE_ID,
-    })
-    runner = await runnerSocket()
-    expect(await runner.inbox.next()).toMatchObject({
-      type: 'welcome',
-      confirmedThrough: 6,
-    })
-    browser = await openBrowser()
-    expect(await browser.inbox.next()).toEqual(pending)
+    await controls.hibernate()
     for (let index = 6; index < parts.length; index++) {
       runner.socket.send(
         JSON.stringify({

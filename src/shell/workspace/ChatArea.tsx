@@ -42,6 +42,7 @@ function KeptChat(props: {
       clock={clock}
       content={props.content}
       controller={props.chat}
+      copy={services}
       host={{ ...props.host, empty: old.empty, importLine: old.line }}
       mentions={files.mentions}
       moreHistory={old.history}

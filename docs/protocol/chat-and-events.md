@@ -4,7 +4,8 @@ This doc holds the requirements and the decisions in force for the chat of
 a workspace. It covers the messages, what the chat shows, the sessions
 from Conductor, and the events that reach the browser. Linked pages cover
 [the agents and the sessions](agents-and-sessions.md),
-[the workspace links in chat](workspace-links.md), and
+[the workspace links in chat](workspace-links.md),
+[the copy of a session transcript](session-transcripts.md), and
 [the agent runner](agent-runner.md) in the sandbox. The terms are those of
 the [architecture doc](../architecture.md#terms). A decision number names
 a dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -113,6 +114,12 @@ says.
   and each message. A click opens a message line to its full text.
 - When the user opens or closes a fold or a run of tool calls, its line
   stays in place. Its list opens or closes below the line.
+
+## Session transcripts
+
+- [Session transcripts](session-transcripts.md) says how a member copies
+  the chat of a session as Markdown, concise or full, and what each copy
+  holds.
 
 ## Sessions from Conductor
 

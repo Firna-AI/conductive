@@ -18,7 +18,6 @@ import { mayArchiveWorkspace } from '../components/workspaces/permissions'
 import { memberViewer, people } from '../fixtures/members'
 import { suspendedOrg } from '../fixtures/orgs'
 import { suspendedOwner } from '../fixtures/startRefusals'
-import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
 import { paths } from '../paths'
 import { importedScreensOf } from './importedScreens'
 import { isImported } from './importedWorkspace'
@@ -33,7 +32,12 @@ import {
   PhoneFilePage,
   ToolContent,
 } from './workspaceParts'
-import { workspaceOverlay, workspaceToast } from './workspaceOverlays'
+import {
+  transcriptToast,
+  workspaceOverlay,
+  workspaceToast,
+} from './workspaceOverlays'
+import { openWorkspace } from './workspaceRun'
 import {
   activityOf,
   archiveRestore,
@@ -70,7 +74,8 @@ export function WorkspaceScreen(props: {
   const { viewport } = props
   const state = drawnState(props.state)
   const suspended = state.org === 'suspended'
-  const record = openableWorkspaceRecords[state.workspace]
+  const open = openWorkspace(state)
+  const record = open.record
   // An owner's refused start belongs to a suspended member, whom an active
   // admin sees. A suspended org refuses the start of every owner.
   const ownerRefused = state.sandbox === 'refused' && !suspended
@@ -109,6 +114,7 @@ export function WorkspaceScreen(props: {
       links={links}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
+      run={open.run}
       rightHidden={rightHidden}
       status={status}
       viewport={viewport}
@@ -129,7 +135,9 @@ export function WorkspaceScreen(props: {
         workspaceOverlay(state, workspace, viewport, {
           tabs,
           menuTab: row.menuTab,
+          readOnly,
         })}
+      {transcriptToast(state, viewport)}
     </ChatWorkspaces>
   )
   const tabRow = (

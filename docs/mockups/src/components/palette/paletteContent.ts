@@ -1,19 +1,20 @@
 import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
+import { helpGroupLabel } from '../feedback/feedbackCopy'
+import { workspaceSections, type WorkspaceRow } from '../workspaces/sections'
 import {
-  workspaceSections,
-  type OpenWorkspace,
-  type WorkspaceRow,
-} from '../workspaces/sections'
+  actionsOf,
+  openActions,
+  orgActionsOf,
+  type PaletteContext,
+} from './paletteActions'
 import {
   accountSettings,
   appActions,
-  macActions,
-  orgActions,
+  helpActions,
   orgSettings,
   orgSettingsLabel,
-  workspaceActions,
   type Command,
 } from './paletteCommands'
 import { matchingRows } from './paletteSearch'
@@ -61,22 +62,6 @@ export type PaletteContent = {
 }
 
 /**
- * Where the palette opens: over an open workspace, whose actions come
- * first, or over a page without one. Only the owner of the workspace and
- * the admins of the org can archive it. Every member of an org that is
- * not suspended can restore an archived workspace while the app keeps its
- * cloud computer. `mac` marks the window of the Mac app, which adds its
- * own actions.
- */
-export type PaletteContext = {
-  open?: OpenWorkspace
-  archivable: boolean
-  restorable?: boolean
-  rightColumn?: boolean
-  mac?: boolean
-}
-
-/**
  * The workspaces with the latest activity, the latest first, as decision
  * 146 chose. The open one is left out.
  */
@@ -104,26 +89,6 @@ function commandRows(
   detail?: string,
 ): PaletteRow[] {
   return commands.map((command) => ({ kind: 'command', command, detail }))
-}
-
-/** The actions of the org, with those of the Mac app in its window. */
-function orgActionsOf(context: PaletteContext): readonly Command[] {
-  return context.mac ? [...orgActions, ...macActions] : orgActions
-}
-
-/** The actions of the open workspace, when the palette has one. */
-function openActions(context: PaletteContext): Command[] {
-  if (!context.open) return []
-  return workspaceActions({
-    archived: context.open.status === 'archived',
-    archivable: context.archivable,
-    restorable: context.restorable ?? false,
-    rightColumn: context.rightColumn ?? true,
-  })
-}
-
-function actionsOf(context: PaletteContext): Command[] {
-  return [...openActions(context), ...orgActionsOf(context), ...appActions]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
@@ -240,6 +205,7 @@ function groupsOf(
         ...own,
         { label: orgs.acme.name, rows: commandRows(orgActionsOf(context)) },
         { label: 'Orgs', rows: commandRows(appActions) },
+        { label: helpGroupLabel, rows: commandRows(helpActions) },
       ]
     }
     case 'settings':
@@ -254,6 +220,7 @@ function groupsOf(
     case 'search-loading':
     case 'search-unavailable':
     case 'search-repositories-unavailable':
+    case 'search-feedback':
       return searchGroups(
         paletteQueries[view] ?? '',
         active,

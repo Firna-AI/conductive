@@ -3,6 +3,7 @@ import type { Viewport } from '@mokly/mokly'
 import { Square } from 'lucide-react'
 import { nameLabel } from '../../../../src/shared/name-label'
 import { ActionButton } from '../components/common/actions'
+import { ToastLayer } from '../components/common/ToastLayer'
 import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
@@ -12,6 +13,7 @@ import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
+import { transcriptToasts } from '../components/workspace/transcriptCopy'
 import { workspaceSessions } from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -51,16 +53,45 @@ function CloseSessionDialog(props: { viewport: Viewport }) {
 }
 
 /**
+ * The toast after a copy of a session transcript from the tab menu, if any.
+ * It lies over the workspace at the place of the toasts of the app.
+ */
+export function transcriptToast(
+  state: WorkspaceState,
+  viewport: Viewport,
+): ReactNode {
+  switch (state.copyTranscript) {
+    case 'none':
+      return null
+    case 'copied':
+      return (
+        <ToastLayer
+          phone={viewport === 'mobile'}
+          toast={{ title: transcriptToasts.copied, tone: 'success' }}
+        />
+      )
+    case 'failed':
+      return (
+        <ToastLayer
+          phone={viewport === 'mobile'}
+          toast={{ title: transcriptToasts.failed, tone: 'error' }}
+        />
+      )
+  }
+}
+
+/**
  * What lies open over a workspace. Desktop draws the menus beside their
  * buttons, and the tab menu below its tab, so only the dialogs lie over the
  * app. A phone draws each one as a sheet. `row` holds the tabs that the
- * viewport shows, and the tab whose menu is open, if any.
+ * viewport shows, the tab whose menu is open, if any, and whether the
+ * workspace is read-only, which leaves items out of that menu.
  */
 export function workspaceOverlay(
   state: WorkspaceState,
   workspace: Workspace,
   viewport: Viewport,
-  row: { tabs: readonly WorkspaceTab[]; menuTab?: string },
+  row: { tabs: readonly WorkspaceTab[]; menuTab?: string; readOnly: boolean },
 ): ReactNode {
   const mobile = viewport === 'mobile'
   switch (state.overlay) {
@@ -105,7 +136,11 @@ export function workspaceOverlay(
       ) : null
     case 'tab-menu':
       return mobile && row.menuTab ? (
-        <TabMenuSheet tab={row.menuTab} tabs={row.tabs} />
+        <TabMenuSheet
+          readOnly={row.readOnly}
+          tab={row.menuTab}
+          tabs={row.tabs}
+        />
       ) : null
   }
 }

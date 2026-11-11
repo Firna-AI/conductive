@@ -27,9 +27,12 @@ const newWorkspaces: ReadonlySet<WorkspaceState['workspace']> = new Set([
   'saved-carts-branch',
 ])
 
-/** A workspace that the create flow made has no edits and one session. */
+/**
+ * A workspace that the create flow or a routine run made has one session,
+ * and no edits of its own.
+ */
 export function isNew(state: WorkspaceState): boolean {
-  return newWorkspaces.has(state.workspace)
+  return newWorkspaces.has(state.workspace) || state.run !== undefined
 }
 
 /**

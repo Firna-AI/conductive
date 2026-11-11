@@ -57,6 +57,8 @@ feature that is not complete yet says so.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
 - Agents can create and list workspaces.
+- Routines run a saved prompt on a schedule or on a pull request event,
+  each time in a new workspace.
 - Each workspace has a number, such as `W-395`. A press on the number in
   the header copies the link of the workspace. A workspace link in chat
   shows as a chip with the number and the name.
@@ -65,6 +67,8 @@ feature that is not complete yet says so.
   workspace.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
+- Send feedback from the command palette, with screenshots. The team gets
+  each message by email, and replies to the primary verified GitHub email.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
   An agent can ask to run a command on the Mac of the person who sent its

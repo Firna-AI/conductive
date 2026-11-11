@@ -15,6 +15,8 @@ import { Sidebar, type ListCurrent } from './list/Sidebar'
 import { ConductorImportScreen } from './import/ConductorImportScreen'
 import { ImportOfferBar } from './import/ImportOfferBar'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
+import { RoutineScreen } from './routines/RoutineScreen'
+import { RoutinesScreen } from './routines/RoutinesScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
 import { ActionButton } from './ui/actions'
 import { useGo } from './ui/AppLink'
@@ -98,6 +100,28 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
       return <OrgSettingsScreen org={org} tab={route.tab} user={user} />
     case 'conductor-import':
       return <ConductorImportScreen key={org.id} org={org} />
+    case 'routines':
+      return <RoutinesScreen org={org} />
+    case 'new-routine':
+      return (
+        <RoutineScreen
+          key={`${org.id}:new-routine`}
+          org={org}
+          routineId={null}
+          tab="routine"
+          user={user}
+        />
+      )
+    case 'routine':
+      return (
+        <RoutineScreen
+          key={`${org.id}:${route.routineId}`}
+          org={org}
+          routineId={route.routineId}
+          tab={route.tab}
+          user={user}
+        />
+      )
   }
 }
 
@@ -113,6 +137,10 @@ function listCurrent(route: OrgRoute): ListCurrent {
       return { screen: 'settings' }
     case 'conductor-import':
       return null
+    case 'routines':
+    case 'new-routine':
+    case 'routine':
+      return { screen: 'routines' }
   }
 }
 

@@ -16,11 +16,11 @@ import {
   resumingLog,
   type StartingLog,
 } from '../fixtures/starting'
-import { openableWorkspaceRecords } from '../fixtures/openableWorkspaces'
-import { idlePrompt, terminalProcesses } from '../fixtures/terminal'
+import { terminalProcesses } from '../fixtures/terminal'
 import { paths } from '../paths'
 import { importedScreensOf } from './importedScreens'
 import { hasFileLists, importedPanel, isImported } from './importedWorkspace'
+import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -98,6 +98,8 @@ export function PhoneFilePage(props: {
  */
 export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
+  const run = runStartingLog(state)
+  if (run) return run
   if (isImported(state)) return activationLog
   if (!isNew(state)) return resumingLog
   if (state.workspace === 'saved-carts-branch') return branchStartLog
@@ -194,14 +196,15 @@ export function ToolContent(props: {
   switch (state.tool) {
     case 'terminal': {
       // The terminal belongs to the open workspace: its own process, or an
-      // idle prompt on its own repository and branch.
-      const lines = terminalProcesses[state.workspace]
-      const workspace = openableWorkspaceRecords[state.workspace]
+      // idle prompt on its own repository and branch. The workspace of a
+      // routine run is new, so it waits at its prompt.
+      const lines =
+        state.run === undefined ? terminalProcesses[state.workspace] : null
       return lines === null ? (
         <TerminalView
           extraKeys={mobile}
           lines={[]}
-          prompt={idlePrompt(workspace)}
+          prompt={freshPromptFor(state)}
         />
       ) : (
         <TerminalView extraKeys={mobile} lines={lines} />

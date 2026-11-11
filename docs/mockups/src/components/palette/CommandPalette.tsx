@@ -10,10 +10,10 @@ import { Menu, type MenuEntry } from '../common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import { Sheet } from '../common/Sheet'
 import { useMacApp } from '../mac/MacApp'
+import type { PaletteContext } from './paletteActions'
 import {
   paletteContent,
   type PaletteContent,
-  type PaletteContext,
   type PaletteFilters,
 } from './paletteContent'
 import { PaletteResults } from './PaletteRows'

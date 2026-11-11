@@ -26,6 +26,10 @@ says.
   fetch of the default branch, and the creation of the branch. On an
   existing branch, the steps show the fetch and the checkout of that
   branch.
+- The run of a pull request fetches that pull request, or its base branch
+  after a merge.
+  [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
+  gives its steps.
 - An activation shows steps such as the copy of the work from Conductor
   and the restore of its sessions, as
   [The activation](imported-workspaces.md#the-activation) says.
@@ -196,7 +200,7 @@ says.
   with its files and its agent sessions (decision 1 of PR #138).
 - The toast after Archive, the bar of the archived workspace, and its row
   in the Archived group offer Restore. The command palette offers Restore
-  workspace, as [Actions](command-palette.md#actions) says.
+  workspace, as [Actions](command-palette-actions.md#actions) says.
 - Restore puts the workspace back in its section, at its place in the
   list.
 - The workspace comes back stopped, also when it had the error state at

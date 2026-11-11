@@ -5,6 +5,7 @@ import { useStore } from '../../app/store'
 import { useMacApp, useNarrowWindow, type MacChrome } from '../mac/mac-app'
 import mac from '../mac/mac.module.css'
 import { WindowControls, WindowStrip } from '../mac/WindowControls'
+import { FeedbackLayer } from '../feedback/FeedbackLayer'
 import { PaletteLayer } from '../palette/PaletteLayer'
 import { OverlayHost } from '../ui/Overlay'
 import { DesktopLayers } from './DesktopLayers'
@@ -151,6 +152,7 @@ export function PhoneFrame(props: { children: ReactNode }) {
         <WindowStrip />
         {props.children}
         <PaletteLayer />
+        <FeedbackLayer />
       </OverlayHost>
     </main>
   )

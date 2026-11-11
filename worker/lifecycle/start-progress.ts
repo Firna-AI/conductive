@@ -6,6 +6,7 @@ import {
   prepareStartTerminal,
 } from './start-command-execution'
 import { stepLabel } from './start-step-label'
+import { creationFetchLabel } from './creation-fetch-label'
 import type { StartJobStorage, WorkspaceStartJob } from './start-types'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceRow } from './workspace-data'
@@ -35,6 +36,10 @@ export async function advanceStartSteps(
     )
     return job.kind !== 'activate'
   }
+  const label =
+    job.phase === 'fetch' && job.baseBranch
+      ? await creationFetchLabel(env.DB, job)
+      : stepLabel(job.phase, job.creation?.branchMode)
   if (
     !(await advanceStartCommand(
       env,
@@ -43,7 +48,7 @@ export async function advanceStartSteps(
       provider,
       row,
       job,
-      stepLabel(job.phase, job.creation?.branchMode),
+      label,
     ))
   )
     return false
@@ -55,11 +60,7 @@ export async function advanceStartSteps(
     )
     return false
   }
-  await endpoint.lifecycleStep(
-    job.phase,
-    stepLabel(job.phase, job.creation?.branchMode),
-    'completed',
-  )
+  await endpoint.lifecycleStep(job.phase, label, 'completed')
   if (job.phase === 'fetch' || job.phase === 'branch') {
     await nextStartCommand(
       storage,

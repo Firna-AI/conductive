@@ -49,11 +49,14 @@
 .starting,
 .stopped,
 .archived,
-.inactive {
+.inactive,
+.queued,
+.skipped {
   color: var(--ui-muted);
 }
 
-.error {
+.error,
+.failed {
   color: var(--ui-rose);
 }
 

@@ -18,13 +18,15 @@ how a screen is built, and links to the other pages.
 | `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list with its toast and Restore, and the menus of each role |
-| `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
+| `app/command-palette` | The command palette over the list: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
+| `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat with the line of its branch, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, an existing branch or pull request, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/imported`      | A workspace from Conductor: the list after the import, its flag and old sessions, the Markdown of an old session, its files, its activation, a failed activation, a disk that is too small, the activated workspace, and its resumed sessions |
+| `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lists in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -37,17 +39,19 @@ how a screen is built, and links to the other pages.
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
+| `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, and the import from Conductor |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, archive one from its row, create an org, run a Mac command, link a workspace, mention a file, import from Conductor |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file, import from Conductor |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
-`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/orgs`,
+`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/file-mentions`, `app/tools`, `app/new-workspace/branch`, `app/imported`, and `mac-app/import` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
+`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/tools`, `app/new-workspace/branch`, `app/imported`, and `mac-app/import` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
@@ -57,8 +61,9 @@ and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`, and
-`app/archive` moved into their own folders and kept their paths, so that
-each of those pages shows only its canonical screen. `app/sign-in/get-started` moved into its own folder and
+`app/archive` and `app/command-palette/search` moved into their own folders
+and kept their paths, so that each of those pages shows only its canonical
+screen. `app/sign-in/get-started` moved into its own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
 the page shows only its canonical screen. Get started is the only first
@@ -169,40 +174,9 @@ chose these four actions on 9 November 2026. Its child pages:
   still offers Restore on hover, and a suspended org, whose rows have no
   menu.
 
-`app/command-palette` shows the All tab of the command palette over the
-list of Acme. Its child pages:
-
-- `app/command-palette/workspaces` has the Workspaces tab. Its
-  `repository` variant has the menu of the repository filter, and its
-  `archived` variant has the archived workspaces. Its `empty` variant has
-  the Archived filter of `acme/marketing-site`, which holds no archived
-  workspace, and the line that says where they show. Its `unavailable`
-  variant has a workspace list that did not load: the notice with Try
-  again fills the tab.
-- `app/command-palette/actions` has the Actions tab over the list. Its
-  `workspace` variant has the tab over an open workspace, whose actions
-  come first. Its `archived` variant has the tab over an archived
-  workspace, as Priya, a member who is not an admin, sees it: Session
-  history and Restore workspace.
-- `app/command-palette/settings` has the Settings tab.
-- `app/command-palette/search` has a search that finds a workspace and an
-  archived one. Its `no-results` variant has a search without results.
-  Its `loading`, `unavailable`, and `repositories-unavailable` variants
-  have a search for "new" while the repository names load, after the
-  workspace list did not load, and after the repository names did not
-  load. A spinner, or a notice with Try again, stands first in place of
-  the workspace groups, and the actions and the setting that match follow.
-  With an empty field, the All tab needs only the list. While the list
-  loads, or after it did not load, the status part stands before Actions,
-  in place of Recent workspaces.
-- `app/command-palette/number-search` has a search that finds a workspace
-  by its label, `W-395`, from decision 212. Its `number-part` variant
-  finds each workspace whose label holds `39`, with the label before the
-  name in each row.
-
-In `search/unavailable` and `workspaces/unavailable`, the list behind the
-palette on desktop shows the same failure, because it reads the same
-workspace list.
+[The command palette and feedback](catalogue-palette.md) gives the
+child pages of `app/command-palette` and of `app/feedback`, and the flow
+that sends feedback.
 
 `app/banner` shows a branch with commits and no pull request. Its child
 pages show the other states of decision 18: `app/banner/checks` has the
@@ -232,40 +206,8 @@ pages:
 - `app/archive/deleted` has the archived workspace after the app deleted
   its cloud computer, with no Restore.
 
-`app/chat` shows a finished turn, whose work folds into one line. Its child
-pages: `app/chat/turns` has the running turn, steer, interrupt, and a
-failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
-`failed` and declare `movedFrom`. `app/chat/work` draws the work of ended
-turns, from decisions 150 and 151: the open work of the finished turn with
-one message open, a turn with a message that the user sent during it, whose
-two parts each fold their own work, a turn whose open work holds a Mac
-command card and a lost line at their place, and a turn whose open work
-holds two messages with tables, one closed and one open. The `fold` state
-opens the folds. `app/chat/tables` draws tables in replies: the resources
-of the cloud computer, a short row whose last cell spans the missing
-columns, a wide table that scrolls sideways inside the reply, and the
-reply while the agent writes it, before its separator row arrives and
-after its table appears. `app/chat/lists` draws a reply with a numbered
-list of choices, each with its options in a list under its text, as the
-user chose on 10 November 2026, and an open message line in the work of a
-turn with a plan whose steps sit under each item. `app/chat/lost-data` draws the data that the
-chat does not have, from decision 76: tool output and turn files that the
-runner left out, and the lines of runner events that the workspace
-refused.
-`app/chat/lost-updates` draws a failed repair, from decision 96. After a
-refused update that belongs to no session, such as a file update, the
-workspace asks for a fresh full report, and nothing shows. Only when that
-report is lost too does a notice name the data that stays unavailable,
-beside that data: under the file lists for a file list, and under the
-header for other data, such as the workspace name. The `failed-repair`
-value of the `lostUpdate` state draws it. The only other notice for a lost
-update is the one of the list of servers, under the port form of the
-Preview tool, as `app/tools/preview-repair` shows.
-`app/chat/unavailable-files` draws the files that the cloud computer
-could not read: a finished turn and a stopped turn
-without their changed files, All files with its saved list under a notice,
-and a new workspace with no list. The `tree` state draws the two states of
-All files.
+[Chat and routines](catalogue-chat-and-routines.md) gives those catalogue
+pages, their child pages, and their related flows.
 
 [Workspace links, file mentions, and tools](catalogue-workspace-tools.md)
 gives those catalogue pages and their related flows.

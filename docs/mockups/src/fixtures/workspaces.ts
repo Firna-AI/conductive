@@ -2,7 +2,7 @@ import { appDomain } from '../brand'
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type PersonKey } from './members'
 import { orgs, type Org } from './orgs'
-import type { RepositoryKey } from './repositories'
+import { repositories, type RepositoryKey } from './repositories'
 import type { SectionKey } from './sections'
 
 /**
@@ -72,6 +72,20 @@ export type Workspace = {
    * activation, or while it runs.
    */
   activated?: true
+  /**
+   * The branch that its work goes to. Changes and each diff compare with
+   * it from the merge base, and the pull request bar names it. Without
+   * one, the default branch of the repository applies. A pull request run
+   * gets the head branch of its pull request (decision 507 G).
+   */
+  baseBranch?: string
+}
+
+/** The branch that the work of a workspace goes to. */
+export function baseBranchOf(workspace: Workspace): string {
+  return (
+    workspace.baseBranch ?? repositories[workspace.repository].defaultBranch
+  )
 }
 
 /** A workspace of the list when the app opens. None of them is inactive. */

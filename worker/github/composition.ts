@@ -6,13 +6,18 @@ import { refreshImagesForPush } from '../lifecycle/image-timers'
 import { handleGitHubWebhook } from './webhook'
 import { installedRepository } from './composition-data'
 import { requireFeatureResult } from '../features/result'
+import { dispatchPullRequestRuns } from '../routines/pull-request-dispatch'
+import { routineRunRuntime } from '../routines/run-runtime'
+import { warnWorker } from '../warnings'
 
-export function productionGitHubWebhook(
+export async function productionGitHubWebhook(
   request: Request,
   env: AppEnv,
   dependencies: AppDependencies,
+  execution?: Pick<ExecutionContext, 'waitUntil'>,
 ) {
-  return handleGitHubWebhook(
+  const background: (() => Promise<void>)[] = []
+  const response = await handleGitHubWebhook(
     request,
     {
       DB: env.DB,
@@ -21,6 +26,13 @@ export function productionGitHubWebhook(
     },
     {
       now: dependencies.now,
+      pullRequest: (event, deliveryId) =>
+        dispatchPullRequestRuns(
+          routineRunRuntime(env, dependencies),
+          event,
+          deliveryId,
+          (work) => background.push(work),
+        ),
       refresh: async (workspace, signal) =>
         requireFeatureResult(
           await workspaceBinding(env)
@@ -39,4 +51,17 @@ export function productionGitHubWebhook(
       },
     },
   )
+  if (execution && background.length)
+    execution.waitUntil(
+      Promise.all(
+        background.map(async (work) => {
+          try {
+            await work()
+          } catch {
+            warnWorker({ kind: 'routine_background_start_failed' })
+          }
+        }),
+      ),
+    )
+  return response
 }

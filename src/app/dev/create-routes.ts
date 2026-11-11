@@ -15,11 +15,11 @@ import {
 } from '../api/parse'
 import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
-import { requireOrg, type DevBackend } from './backend'
+import { requireOrg, requireWorkspace, type DevBackend } from './backend'
 import { ID, json, requiredText, RouteError, type Route } from './router'
 import { routes } from '../router'
 import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
-import { createPlan, runStart } from './start-steps'
+import { createPlan, failFirstStart, runStart } from './start-steps'
 import { slugify, type OrgState } from './state'
 
 /**
@@ -60,6 +60,21 @@ function readFirstMessage(value: unknown): SendMessageRequest {
   }
 }
 
+/** What a new workspace needs: its repository, its section, and its first message. */
+export interface WorkspaceRequest {
+  repositoryId: string
+  /** The section, or null for General. */
+  sectionId: string | null
+  first: SendMessageRequest
+  /**
+   * A first start that fails keeps its workspace in the error state, as
+   * the Worker keeps the workspace of a routine run.
+   */
+  keepFailedStart?: boolean
+  /** The existing branch that the workspace continues, or none for a new one. */
+  existingBranch?: string | null
+}
+
 /** The existing branch that a create continues, or `null` for a new one. */
 function existingBranch(fields: JsonObject): string | null {
   if (fields.branch === undefined) return null
@@ -75,17 +90,16 @@ function existingBranch(fields: JsonObject): string | null {
  * the login of the user, a city, and four random characters. A workspace on
  * an existing branch keeps the name of that branch. A first message that
  * contains `fail` stands for a cloud computer that did not start: the fake
- * makes nothing, and the app keeps the draft.
+ * makes nothing, and the app keeps the draft. With `keepFailedStart`, the
+ * workspace stays in the error state instead.
  */
-function createWorkspace(
+export function startWorkspace(
   backend: DevBackend,
   org: OrgState,
-  body: unknown,
-): Response {
-  const fields = record(body)
-  const first = readFirstMessage(fields.firstMessage)
-  const repositoryId = requiredText(fields, 'repositoryId')
-  const existing = existingBranch(fields)
+  request: WorkspaceRequest,
+): CreateWorkspaceResponse {
+  const { first, repositoryId } = request
+  const existing = request.existingBranch ?? null
   if (org.currentImageBuildId === null)
     throw new RouteError(
       409,
@@ -104,11 +118,11 @@ function createWorkspace(
   }
   // A draft can outlive its section. Its workspace then goes to General,
   // so that Try again does not fail on the same section again.
-  const sectionId = maybeText(fields, 'sectionId')
   const section =
-    org.sections.find((item) => item.id === sectionId) ??
+    org.sections.find((item) => item.id === request.sectionId) ??
     defaultSection(org.sections)
-  if (first.text.includes('fail')) {
+  const fails = first.text.includes('fail')
+  if (fails && !request.keepFailedStart) {
     throw new RouteError(
       502,
       'start_failed',
@@ -146,30 +160,44 @@ function createWorkspace(
   org.workspaces = [workspace, ...org.workspaces]
   org.created.add(id)
   const plan = createPlan(org.org.name, repository, branch, existing !== null)
-  const start = runStart(backend, org, id, 'create', plan)
+  const begun = fails
+    ? failFirstStart(backend, org, id, plan)
+    : { start: runStart(backend, org, id, 'create', plan), error: null }
   const sessionId = backend.newId()
   const attachments = first.attachmentIds.flatMap(
     (attachmentId) => backend.state.attachments.get(attachmentId) ?? [],
   )
-  return json(
-    {
-      workspace,
+  return {
+    workspace: requireWorkspace(org, id),
+    sessionId,
+    firstMessage: {
+      id: first.id,
       sessionId,
-      firstMessage: {
-        id: first.id,
-        sessionId,
-        sender: owner,
-        text: first.text,
-        attachments,
-        choice: workspace.choice,
-        createdAt: at,
-        state: 'queued',
-      },
-      start,
-      error: null,
-    } satisfies CreateWorkspaceResponse,
-    201,
-  )
+      sender: owner,
+      text: first.text,
+      attachments,
+      choice: workspace.choice,
+      createdAt: at,
+      state: 'queued',
+    },
+    ...begun,
+  }
+}
+
+/** Create workspace, from the first message of the user. */
+function createWorkspace(
+  backend: DevBackend,
+  org: OrgState,
+  body: unknown,
+): Response {
+  const fields = record(body)
+  const created = startWorkspace(backend, org, {
+    repositoryId: requiredText(fields, 'repositoryId'),
+    sectionId: maybeText(fields, 'sectionId'),
+    first: readFirstMessage(fields.firstMessage),
+    existingBranch: existingBranch(fields),
+  })
+  return json(created satisfies CreateWorkspaceResponse, 201)
 }
 
 export function createRoutes(backend: DevBackend): Route[] {

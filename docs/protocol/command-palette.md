@@ -3,8 +3,9 @@
 This doc holds the requirements and the decisions in force for the command
 palette. The palette is one search over the app. It finds the workspaces of
 an org, runs the actions of the current page, and opens the settings
-pages. [Command palette: actions and settings](command-palette-actions.md)
-gives its actions and its settings rows. The terms are those of the
+pages. On each page, it also opens the Feedback dialog.
+[Command palette: actions and settings](command-palette-actions.md) gives
+its actions and its settings rows. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
@@ -77,7 +78,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   the org that the person opened last in this tab.
 - When that org is deleted, or the tab opened no org, the palette works on
   the first org that is not deleted.
-- Without such an org, it offers only Create org and the Account settings.
+- Without such an org, it offers only Create org, Send feedback, and the
+  Account settings. [Help](command-palette-actions.md#help) gives the
+  reason for Send feedback.
 - The palette treats a [deleted](orgs-and-members.md#delete-org) org as
   absent. Such an org has no Switch to row, and its settings do not show.
 - On the page of a deleted org, the palette offers nothing of that org.
@@ -177,13 +180,15 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 
 ## Actions
 
-- [Actions](command-palette-actions.md#actions) gives the actions that
-  the palette offers, their order, and their groups.
+- [Actions](command-palette-actions.md#actions) gives the actions that the
+  palette offers, their order, and their groups.
+  [Help](command-palette-actions.md#help) gives Send feedback, the one
+  action that the palette offers on each page.
 
 ## Settings
 
-- [Settings](command-palette-actions.md#settings) gives the settings
-  rows of the palette and the pages that they open.
+- [Settings](command-palette-actions.md#settings) gives the groups and the
+  rows of the Settings tab.
 
 ## Keys inside the palette
 

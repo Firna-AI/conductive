@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Agent } from '../../shared/agents'
+import { modelLabel, type Agent } from '../../shared/agents'
 import type { ImportSessionMetadata } from '../../shared/import-session'
 import type { WorkspaceState } from '../../shared/workspaces'
 import { PendingCommands } from '../device/PendingCommands'
@@ -9,7 +9,6 @@ import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { failedFirstStart } from '../../app/first-start'
-import { modelLabel } from '../state/format'
 import { loginLabelOf, sessionLoginOf } from '../state/session-login'
 import { ChatPane } from './ChatPane'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
@@ -152,7 +151,11 @@ export function SessionChat(props: SessionChatProps) {
   const imported = session?.conductorImport
   const importLine =
     imported && props.host?.importLine
-      ? { key: 'conductor', after: null, node: props.host.importLine(imported) }
+      ? {
+          key: 'conductor',
+          after: null,
+          content: props.host.importLine(imported),
+        }
       : null
   const firsts = [source, importLine].filter((insert) => insert !== null)
   const footer = (

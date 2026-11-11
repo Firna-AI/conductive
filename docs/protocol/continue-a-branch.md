@@ -78,7 +78,9 @@ decision number names a dated record, as
 - Try again keeps the branch of the workspace. A change to a new branch is
   a separate feature.
 - The Changes list and the agent instructions use the default branch as
-  the base, as for each workspace. [The branches](agent-instructions.md#the-branches)
+  the base, as for each workspace that a person or an agent creates.
+  [Base branches](base-branches.md#the-base-branch-of-a-workspace) gives
+  the base of each workspace. [The branches](agent-instructions.md#the-branches)
   states the instructions.
 
 ## Two workspaces on one branch

@@ -17,6 +17,8 @@ number names a dated record, as
   person can use, as [Who sees each action](#who-sees-each-action) says.
   This holds in the sidebar and on the list page, in the desktop layout
   and in the phone layout.
+- This includes routine run workspaces, as
+  [A run is a workspace](routine-runs.md#a-run-is-a-workspace) says.
 - The menu holds Move to section, Reassign to, Rename, and Archive, in
   that order.
 - Copy link and other actions, such as Pin and Mark as unread, were

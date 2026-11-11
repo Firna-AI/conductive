@@ -6,16 +6,14 @@ settings the Worker gives to each workspace sandbox.
 [Architecture](architecture.md) describes the Worker and its hostnames.
 The [Worker README](../worker/README.md#routes) lists the routes that the
 Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
-push to `main` deploys the test deployment.
+push to `main` deploys the test deployment. Three linked pages hold the
+[attachment bucket](deployment/attachment-bucket.md), the
+[model inputs](deployment/models.md), and the
+[runner archive and software image](deployment/runner-archive.md).
 
 Each input names the routes that read it. A route that does not read an
 input works without it. Keep secrets out of the repository and out of
 examples.
-
-[The attachment bucket](deployment/attachment-bucket.md),
-[Models](deployment/models.md), and
-[The runner archive](deployment/runner-archive.md) give three groups of these
-inputs in full.
 
 ## How to set the inputs
 
@@ -95,8 +93,9 @@ inputs in full.
   credential routes refuse every request without it, and a build cannot
   copy a repository.
 - The two runner archive variables are public metadata of the archive. They
-  hold no secret. [The runner archive](deployment/runner-archive.md#the-runner-archive) says how
-  to supply them.
+  hold no secret.
+  [The runner archive](deployment/runner-archive.md#the-runner-archive)
+  says how to supply them.
 
 ## Secrets
 
@@ -110,7 +109,8 @@ inputs in full.
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhooks on the machine hostname | The webhook secret of the GitHub App. The Worker checks each delivery with it. Without it, each delivery gets `503 github_unavailable`. |
 | `CHAT_ATTACHMENTS_ACCESS_KEY_ID` | The upload links of an import from Conductor | The Access Key ID of an R2 API token for the bucket of `CHAT_ATTACHMENTS` only, as [Upload links of an import](deployment/attachment-bucket.md#upload-links-of-an-import) says. |
 | `CHAT_ATTACHMENTS_SECRET_ACCESS_KEY` | The upload links of an import from Conductor | The Secret Access Key of the same token. |
-| `RESEND_API_KEY` | The invitation emails of the member routes, and the approval emails of the operator section | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. The approval emails come from the same sender. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. An approval still gives app access, and the app tries its email again for 24 hours, as [The approval email](protocol/waitlist.md#the-approval-email) says. |
+| `RESEND_API_KEY` | The invitation emails of the member routes, the approval emails of the operator section, and the feedback emails of `POST /api/feedback` | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. The approval emails come from the same sender. The feedback emails come from `feedback@mail.conductive.build`, on the same domain. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link and each feedback email to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. A feedback send gets HTTP 502 too. An approval still gives app access, and the app tries its email again for 24 hours, as [The approval email](protocol/waitlist.md#the-approval-email) says. |
+| `FEEDBACK_EMAIL` | The feedback emails of `POST /api/feedback` | The address of the team inbox, which gets each feedback email, as [The email](protocol/feedback.md#the-email) says. It is a secret, so that a personal address stays out of the repository. Without it, each send gets HTTP 503, also on a local `APP_ORIGIN`. With it, a local `APP_ORIGIN` writes each feedback email to the log of the Worker, and needs no `RESEND_API_KEY`. Elsewhere, the feedback emails also need `RESEND_API_KEY`. |
 
 - `BOAT_KEY_ENCRYPTION_KEY` encrypts the agent logins, the GitHub user
   tokens, the env vars of each org, and the workspace tokens. It also
@@ -148,29 +148,30 @@ above.
 
 ## Models
 
-[Models](deployment/models.md#models) gives `CONDUCTIVE_MODELS` and
-`CONDUCTIVE_DEFAULT_CHOICE`, and the routes that read them.
+[Models](deployment/models.md#models) gives the model list of
+`CONDUCTIVE_MODELS` and the default choice of `CONDUCTIVE_DEFAULT_CHOICE`:
+their shape, and the routes that read them.
 
 ## The title model
 
-[The title model](deployment/models.md#the-title-model) gives
-`CONDUCTIVE_TITLE_MODEL` and the `AI` binding.
+[The title model](deployment/models.md#the-title-model) gives the model
+that `CONDUCTIVE_TITLE_MODEL` names, and what happens without it.
 
 ## The runner archive
 
-[The runner archive](deployment/runner-archive.md#the-runner-archive)
-gives the archive that each image build installs, and how to supply it.
+[The runner archive](deployment/runner-archive.md#the-runner-archive) says
+how each image build gets the runner archive, and how to supply an archive
+by hand.
 
 ### The archive in each deploy
 
 [The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
-gives how each deploy from `main` publishes its archive.
+says how each deploy from `main` publishes the archive of its commit.
 
 ### The software image
 
-[The software image](deployment/runner-archive.md#the-software-image)
-gives how each deploy from `main` asks for the software image of its
-version.
+[The software image](deployment/runner-archive.md#the-software-image) says
+how each deploy from `main` builds the software image of its version.
 
 ## Frame sources
 

@@ -1,8 +1,8 @@
-# Deployment: the runner archive
+# Runner archive and software image
 
-This page belongs to [Deployment inputs](../deployment.md). It gives the
-runner archive of each image build, the archive of each deploy, and the
-software image of each deploy.
+This page belongs to [Deployment inputs](../deployment.md). It says how
+each image build gets the runner archive, and how each deploy from `main`
+publishes the archive and builds the software image.
 
 ## The runner archive
 

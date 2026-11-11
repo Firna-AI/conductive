@@ -744,6 +744,19 @@ They do not reopen a user decision. The earlier dated facts stay as history.
   It adds no action and no policy. An import that never started a computer
   still offers no Restore. The completed mockup milestones keep their words
   as history.
+- Root merge call for the Terms revision, 10 November 2026: the merge of
+  captured main `ce5ca2d1` sets the Terms revision to
+  `2026-11-10-conductor-import-feedback-routines-gateway`. This value
+  differs from both parents: `2026-11-10-conductor-import` of this branch
+  and `2026-11-10-feedback-routines-gateway` of main. Reason: the combined
+  Terms and Privacy text holds the import text of this branch and the
+  routine, feedback, and gateway text of main, so it differs from the text
+  of each parent. Each later sign-in must record it, under the existing
+  consent rule. The integration root made this call as a mechanical merge
+  call, not as a user decision. The backend owner of the merge owns the
+  constant in `src/shared/terms.ts` and its test. For the merged tree, it
+  replaces the revision of the earlier call above. It adds no gate for an
+  existing session.
 
 ### Mockup design calls, 10 November 2026
 
@@ -1443,6 +1456,8 @@ and, for the comparison note, `.context/import-from-conductor/current/m8/package
 ## Milestone 9: Verification, commit, review, and pull request
 
 Depends on: every other milestone
+
+Captured-main integration record: `.context/import-from-conductor/current/next-main-integration/root-integration-audit.md`.
 
 - [ ] Run the targeted tests and the complete gate, `npm run check`.
 - [ ] Smoke-test the import in the Mac app with one transferred Claude

@@ -72,7 +72,11 @@ gives the Worker side.
   prompt. It caps the output at 1 MiB.
 - `prepareImportGit` first checks the origin repository and the object format
   against the snapshot. It fetches the exact branch, or the default branch only
-  when the remote confirms that the branch is absent. It fetches each missing
+  when the remote confirms that the branch is absent. That fetch gets the
+  complete history of the branch, and it unshallows a shallow repository.
+  The file reports and the diffs need that history, because they use the
+  merge base of `HEAD` and the base branch. The `fetch-history` mark records
+  the complete fetch. It fetches each missing
   prerequisite by its OID. Its credential is the activator's, through
   `CONDUCTIVE_ACTIVATION_ID`, as the
   [git credential sender](../worker/lifecycle/routes.md#the-git-credential-sender)

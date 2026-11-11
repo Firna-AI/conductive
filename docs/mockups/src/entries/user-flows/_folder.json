@@ -8,9 +8,11 @@
     "retry-first-start",
     "reopen-stopped-workspace",
     "open-workspace-from-palette",
+    "send-feedback",
     "archive-from-list",
     "create-org",
     "mac-command",
+    "create-routine",
     "link-a-workspace",
     "mention-a-file",
     "import-from-conductor"

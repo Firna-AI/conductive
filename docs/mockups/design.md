@@ -11,7 +11,7 @@ light scheme uses the same cool greys and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, and
+The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 status mark, the name, and the time, and it moves to another section by
 drag and drop. Archive covers the time on hover only, without moving the
@@ -27,7 +27,8 @@ session and each open file or diff, in the order that the user gives them
 by drag, + for a new session, and a clock that opens the session history.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list, and the
+It shows no file content. A phone shows an org switcher at the top of the list,
+then New workspace, Routines, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
 
@@ -49,15 +50,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `--ui-touch-min` variable, which is 0 on desktop.
 - One `ModelPicker` in `src/components/chat/` sets the model and the effort
   in every composer, such as "Opus 5.5 High". It names no agent brand. In a
-  session with messages, each model of the other agent says "New session",
-  because it opens a new session with the draft, from decision 51.
+  session with messages, each model of the other agent ends with the
+  external link icon, because it opens a new session with the draft, from
+  decision 51. A screen reader says "New session" for the icon.
 - A workspace or a session that has no name yet shows "Untitled", in the
   style of a name, from decisions 182 and 185. The list, the header, the
   session tabs, and the session history show it, as
   `app/new-workspace/creating/first-second` and `app/sessions` show.
   "New session" names only the action that opens a session. The label of
-  +, the heading of the empty chat that + opens, and each model of the
-  other agent say it.
+  +, the heading of the empty chat that + opens, and the spoken name of
+  the icon on each model of the other agent say it.
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
   message has no label of its own, because the start steps under the chat
@@ -80,6 +82,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   workspace does. A row can lead to the screen that its choice shows. It
   is then a link with the look of a row, and hidden words name the checked
   choice, because a link of the catalogue takes no menu role.
+  A move that the place of a tab rules out keeps its place, greyed.
+  A read-only workspace leaves out each item that it does not allow,
+  from decision 214.
 - The menu of a workspace row has Move to section, Reassign to, Rename, a
   line, then Archive, as `app/workspace-menu` shows. It lists only the
   actions that the person can use, from `workspaceMenu.ts` in
@@ -99,6 +104,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
+  Transcript copy uses the same layer. A copy that worked shows the
+  success mark. A copy that failed shows the error mark with the words
+  "Try again", as `app/transcripts` shows.
 - `WorkspaceTabs` in `src/components/workspace/` draws the tab row of the
   centre column, from decisions 186 to 188, as `app/tabs` shows. Any tab
   moves to any place in the row by drag, or by a long press on a phone, and
@@ -108,15 +116,20 @@ sessions as tabs above the chat, and four tabs at the bottom.
   stands between two tabs and takes no space. When the tabs do not fit at
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, then Move left
-  and Move right. A file or diff tab has only the moves. The menu is the one
-  way to rename a session, so no tab shows a rename button. Rename session
-  opens a field in place of the title of that tab, also when the tab does
-  not show. The field marks that tab, which takes no fill, so only the shown
-  tab is filled. On a phone, a long press that ends without a move opens the
-  menu as a sheet. `WorkspaceTabs.module.css` styles the row and its tabs.
-  `TabScroll.module.css` styles a full row, `TabDrag.module.css` a drag, and
-  `TabRename.module.css` the rename field. The app shares these modules.
+  tab opens its menu at the pointer: Rename session, a line, Copy concise
+  transcript and Copy full transcript, a line, then Move left and Move
+  right, from decisions 188 and 215. A file or diff tab has only the moves.
+  In a read-only workspace, the menu of a session tab holds only the two
+  copy items, and a file or diff tab opens no menu. A copy keeps the shown
+  tab, and a toast gives its result, as `app/transcripts` shows. The menu
+  is the one way to rename a session, so no tab shows a rename button.
+  Rename session opens a field in place of the title of that tab, also when
+  the tab does not show. The field marks that tab, which takes no fill, so
+  only the shown tab is filled. On a phone, a long press that ends without a
+  move opens the menu as a sheet. `WorkspaceTabs.module.css` styles the row
+  and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
+  a drag, and `TabRename.module.css` the rename field. The app shares these
+  modules.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without
@@ -173,9 +186,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   under the control.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.
-- [Workspace links and file mentions](design-workspace-links.md) gives the
-  number of each workspace and its copy button, the chips of workspace
-  links and of files, and the list of `@`.
+- [Workspace numbers](design-workspace-links.md) gives the number of each
+  workspace and its copy button.
+- [Workspace and file chips](design-chat.md#workspace-and-file-chips) gives
+  the workspace links, file mentions, the list of `@`, and chip removal.
 - `StatusGlyph` in `src/components/workspaces/` draws the state of a
   workspace as a 3 × 3 dot-matrix square. Each state has its own shape, and
   working and starting move with CSS. A finished turn is a full bright green
@@ -187,6 +201,15 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `src/fixtures/workspaces.ts` adds that state to the activity of a
   workspace. `workspaceList` keeps only the states of the app, because the
   tests of the app read it.
+  A routine run takes the mark of its workspace. A run without a
+  workspace shows an hourglass while it waits for one, and a chevron when
+  a rule skipped it. A failed run shows the mark of its failure. It keeps
+  that mark after Try again, because the run keeps its failed outcome.
+  - A run whose first start failed shows the cross, as its workspace in
+    the error state does.
+  - A run that a check failed before it had a workspace, and a run whose
+    first turn failed, show a slash in rose. After a failed turn, the mark
+    of the workspace shows a finished turn, which would hide the failure.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, refused, and inactive. A refused
   start shows "The sandbox can't start" with the words of its cause and no
@@ -209,52 +232,24 @@ sessions as tabs above the chat, and four tabs at the bottom.
     place of the line on the chat history, as the `files` variants of
     `app/shell/refused` and `app/orgs/suspended/workspace` show. A desktop
     keeps its short panels beside the bar.
+- [Routines](design-routines.md) gives the parts of routines, the routine
+  page and its runs, and its failed and unavailable states.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of
-  the list and of each settings tab, and above the bar of an archived
-  workspace. `SuspendedOrgPanel` shows the same words in the main area of
+  the list, of each settings tab, and of each view of a routine page, and
+  above the bar of an archived workspace. A phone shows it above either
+  tab of a routine page, as the `runs` variant of
+  `app/orgs/suspended/routines/routine` shows. `SuspendedOrgPanel` shows the same words in the main area of
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
   a deleted org, at the width of a settings page. A suspended org shows no
   action that it refuses.
 - Copy says cloud computer or sandbox. No screen names Boat, also not the
   marketing site or Get started.
-- A build of the cloud computer runs for at most 60 minutes, and a start of
-  a sandbox for at most 20 minutes. A build that runs names its limit under
-  its log. The start card does not name the limit of a start. A failed
-  build or start shows the message that the app saved for it, so a job that
-  passed its limit names that limit, as
-  `app/org-settings/cloud-computer/build-failed/time-limit`,
-  `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show. A
-  first start on a chosen branch that is gone from GitHub names that branch
-  and says to restore it before Try again, as
-  `app/new-workspace/branch/gone` shows. A first start on a chosen branch
-  that is there fetches it and checks it out with tracking, as
-  `app/new-workspace/branch/start` shows. An activation of a workspace from
-  Conductor first checks that its work fits the free disk, with room to
-  unpack it. When it does not fit, the activation stops before it changes
-  the checkout, and its saved message names both sizes, as
-  `app/imported/failed/disk-space` shows.
-- A new org has no image until its first build succeeds. Until then New
-  workspace keeps Send off under a notice with the state of that build, as
-  `app/new-workspace/first-build` shows. A notice of work that runs, such
-  as that build, shows a spinner in place of its icon: `Notice` in
-  `src/components/common/` takes `busy`.
-- A chosen repository that the cloud computer does not hold yet waits for
-  its build, from decisions 240 and 241. The repository menu of New
-  workspace keeps it in place, off, with the note of when it is ready as
-  the muted detail of its row. A form whose repository waits keeps Send
-  off under a notice. `WaitingRepositoryNotice` in
-  `src/components/new-workspace/waitingRepository.tsx` draws that notice,
-  and `formWait` beside it says what the form waits for. The app shares
-  that module. `RepositoryNotice` in `src/components/settings/`
-  draws the notice of the Repositories and Cloud computer tabs, with a
-  spinner while the build of an added repository runs. An admin gets its
-  Try again or Build computer on the Repositories tab only, because the
-  build card of the Cloud computer tab has the same action.
-  `repositoryChangeCopy.ts` beside it holds the words of both, which the
-  app shares, as `app/new-workspace/waiting-repository` and
-  `app/org-settings/repositories` show.
+- [Builds and starts](design-cloud-computer.md) gives the time limits of
+  builds and starts, a first start on a chosen branch, the disk check of an
+  activation, the first build of a new org, and a repository that waits
+  for its build.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
   `src/components/layout/`, a hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no

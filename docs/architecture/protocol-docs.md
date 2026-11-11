@@ -8,6 +8,9 @@ them, and this page lists each protocol doc and what it covers.
   image and the life of a workspace.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
+  - [New workspace as a dialog](../protocol/new-workspace-dialog.md): the
+    parts of the dialog, its notices, its close, its draft, the create, and
+    its focus.
   - [Continue a branch](../protocol/continue-a-branch.md): a new workspace on
     a branch or an open pull request from GitHub, the pull requests from
     forks, and two workspaces on one branch.
@@ -26,6 +29,9 @@ them, and this page lists each protocol doc and what it covers.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, the sessions from Conductor, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
+    - [Message attachments](../protocol/message-attachments.md): the size
+      limit, the upload, the storage, the copy into the cloud computer, and
+      the deletion of the files of a message.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, and the removal of each chip
     of the composer.
@@ -34,6 +40,8 @@ them, and this page lists each protocol doc and what it covers.
     imported workspace, and the repair of lost workspace updates.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
+  - [Session transcripts](../protocol/session-transcripts.md): copying a
+    session as concise or full Markdown, and its route.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, the isolation of sandboxes and previews, and the
   uploads and the storage of an import.
@@ -69,12 +77,15 @@ them, and this page lists each protocol doc and what it covers.
   operator in the web app, their counts, and their searches.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
-- [Command palette: actions and settings](../protocol/command-palette-actions.md):
-  the actions of the palette, their order and their groups, and its
-  settings rows.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
   what the palette shows while its workspace data loads or did not load,
   and when a tab or a search has no row.
+- [Command palette: actions and settings](../protocol/command-palette-actions.md):
+  the actions that the palette offers, their order and their groups, the
+  Help group with Send feedback, and the rows of the Settings tab.
+- [Feedback](../protocol/feedback.md): the Feedback dialog that Send
+  feedback opens, its screenshots and context, the reply address, the
+  routes, and the email to the team inbox.
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
@@ -98,3 +109,7 @@ them, and this page lists each protocol doc and what it covers.
 - [Conductor comparison](../protocol/conductor-comparison.md): the public
   page for people who move from Conductor, with the status of each
   Conductor feature.
+- [Routines](../protocol/routines.md): routines and their schedules, with the
+  linked pages [Routine runs](../protocol/routine-runs.md),
+  [Pull request runs](../protocol/pull-request-runs.md), and
+  [Base branches](../protocol/base-branches.md).

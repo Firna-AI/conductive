@@ -3,10 +3,7 @@ import { commitAuthor } from '../../src/shared/commit-author'
 import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { randomToken } from '../security/crypto'
-import {
-  readConnectionAccess,
-  scheduleConnectionCheck,
-} from '../security/connection-access'
+import { readConnectionAccess } from '../security/connection-access'
 import { loginResolver } from './login-access'
 import {
   readLoginMetadata,
@@ -43,8 +40,6 @@ export function chatDependencies(
     filterRunnerOutput: (transaction, workspace, input) =>
       filterRunnerOutput(env, transaction, workspace, input),
     now: Date.now,
-    scheduleBrowserCheck: scheduleConnectionCheck,
-    scheduleRunnerCheck: scheduleConnectionCheck,
     readRunnerAccess: (id, tokenHash) =>
       runnerTokenAllowed(env.DB, id, tokenHash),
     readRunnerProtocolVersion: (id) => readRunnerProtocolVersion(env.DB, id),

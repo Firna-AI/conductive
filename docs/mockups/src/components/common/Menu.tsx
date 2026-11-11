@@ -16,6 +16,12 @@ type MenuItem = {
   detail?: string
   /** An icon at the end of the row, such as the arrow that reopens. */
   trailingIcon?: LucideIcon
+  /**
+   * The spoken name of the trailing icon, when the icon says what the label
+   * does not, such as "New session". Without it, a screen reader skips the
+   * icon.
+   */
+  trailingLabel?: string
   /** A choice in a group: the menu marks the current one. */
   checked?: boolean
   tone?: 'danger'
@@ -92,6 +98,9 @@ function Item(props: { entry: MenuItem }) {
       ) : null}
       {Trailing ? (
         <Trailing aria-hidden className={styles.icon} size={14} />
+      ) : null}
+      {entry.trailingLabel ? (
+        <span className={a11y.hidden}>{entry.trailingLabel}</span>
       ) : null}
       {entry.checked ? (
         <Check aria-hidden className={styles.check} size={14} />

@@ -20,6 +20,8 @@ import { workspaceBrowserRoute } from './workspace-browser'
 import { WorkspaceDevices } from './workspace-commands'
 import type { DeviceStateProjection } from './state'
 import { ImportContractError } from '../../src/shared/conductor-import-values.ts'
+import type { WorkspaceSockets } from '../native-sockets'
+import { DeviceSockets } from './native-sockets'
 
 /** The existing Durable Object class composes this feature without a new binding. */
 export class DeviceRuntime {
@@ -27,18 +29,31 @@ export class DeviceRuntime {
   private readonly workspace: WorkspaceDevices
   private readonly env: AppEnv
   private readonly matches: (name: string) => boolean
+  private readonly sockets: DeviceSockets
   constructor(
     env: AppEnv,
     storage: ChatStorage,
     chat: WorkspaceChat,
     matches: (name: string) => boolean,
-    alarm: (when: number) => Promise<void>,
+    native: {
+      context: DurableObjectState
+      sockets: WorkspaceSockets
+      autoResponseAt?: (socket: WebSocket) => number | null
+    },
+    alarm: (when: number | null) => Promise<void>,
     now: () => number = Date.now,
     projection?: DeviceStateProjection,
   ) {
     this.env = env
     this.matches = matches
     this.broker = new DeviceBroker(storage, env, alarm, now)
+    this.sockets = new DeviceSockets(
+      native.context,
+      native.sockets,
+      this.broker,
+      matches,
+      native.autoResponseAt,
+    )
     this.workspace = new WorkspaceDevices(
       chat,
       env,
@@ -99,6 +114,7 @@ export class DeviceRuntime {
           request,
           this.env,
           this.matches,
+          this.sockets,
         )
       return privateResponse(response)
     } catch (error) {

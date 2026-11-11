@@ -9,6 +9,7 @@ import {
   text,
   type LegalDocument,
 } from './legal-text'
+import { privacyClosingSections } from './privacy-closing'
 import { privacyUsesSection } from './privacy-uses'
 
 /**
@@ -18,6 +19,7 @@ import { privacyUsesSection } from './privacy-uses'
  * contact address. The section on what the product uses, and why, is in
  * `privacy-uses.ts`. Its Keys and logins item defines the newer and older
  * cloud computers that the section on who gets the data uses.
+ * The sections from Cookies to the end are in `privacy-closing.ts`.
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
@@ -59,9 +61,15 @@ export const privacyDocument: LegalDocument = {
             that name and address. The Mac app also checks
             GitHub for updates and downloads new versions. These requests
             send your network address to GitHub.`,
-          text`Resend sends the emails of ${productName}: the invitations of
-            an org, and the email when an operator approves your account. It
-            gets the address and the text of each email.`,
+          text`Resend sends the org invitations, approval emails, and feedback
+            emails of ${productName}. An invitation gives it the invited email
+            address, org name, inviter's name, and invitation link. An approval
+            gives it your primary verified email and the email text. For
+            feedback, it gets your message, screenshots, context, and reply
+            address, and sends them to the team inbox.`,
+          text`The email provider of the operator hosts the team inbox and
+            receives your feedback message, screenshots, context, and reply
+            address. The team reads them there.`,
           text`A cloud computer provider runs the cloud computers of every org
             for ${productName}, in the account of ${productName}. Your code,
             your files, and your agent sessions are in them. ${productName}
@@ -78,7 +86,9 @@ export const privacyDocument: LegalDocument = {
             computer, the agents send them directly, with the agent login. In
             both kinds of cloud computer, agent settings in the repository can
             send them to another address instead. Each session uses the
-            login of the member who started it. Your messages in another
+            login of the member who started it. Each run of a routine sends
+            its prompt on the login of the member who owns the routine.
+            Your messages in another
             member's session use that member's login only when that member
             lets other members use it. When that member does not share the
             login, your message starts a new session on your own login. When
@@ -86,8 +96,9 @@ export const privacyDocument: LegalDocument = {
             Conductor, the provider also gets the earlier history of that
             session. The terms of that provider apply.`,
           text`The members of your orgs see the workspaces of the org,
-            their chats, and each Mac command request and result. They also
-            see the documents of the sessions that a member imports from
+            their chats, and each Mac command request and result. They also see
+            the routines of the org, with their prompts and their runs. They
+            also see the documents of the sessions that a member imports from
             Conductor.
             A member with a terminal in a cloud computer can read
             the GitHub token of a turn that runs there. Outside an agent turn,
@@ -118,6 +129,10 @@ export const privacyDocument: LegalDocument = {
             send that login to another address. A commit, the agent, or other
             code can change those settings. The setting that lets other members
             use a login does not change this.`,
+          text`The run of your routine for a pull request reads the comments,
+            reviews, and descriptions of other GitHub accounts. Such text can
+            steer the agent while the run uses your agent login and GitHub
+            token, and the env vars of the org.`,
           text`The members of your orgs also see who started each session,
             whose login it uses, and whether it can use that login. They also
             see whether its starter lets other members use that login.`,
@@ -146,6 +161,10 @@ export const privacyDocument: LegalDocument = {
             certification under the UK Extension and its use of standard
             contractual clauses. UK regulations approve transfers covered
             by the UK Extension certification.`,
+          text`Resend processes email data in the United States. Its data
+            processing terms apply the European Commission's standard
+            contractual clauses with the UK International Data Transfer
+            Addendum to restricted UK transfers.`,
           text`The cloud computer provider is based in the United States.
             It reports that its cloud computers and saved snapshots run in
             Germany, Finland, and France. UK adequacy regulations approve
@@ -194,6 +213,11 @@ export const privacyDocument: LegalDocument = {
           it. Panel widths stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
           terms and privacy notices.`,
+        paragraph`The team keeps each feedback email in its inbox while it
+          helps to improve ${productName}. It deletes the email when it no
+          longer helps, or when the sender asks. ${productName} keeps no copy
+          of feedback in its own storage. The app keeps an unsent feedback
+          draft only in the memory of its open tab.`,
         paragraph`To request deletion of your personal data, write to
           ${mailLink(legalAddress)}. Deletion rights depend on applicable
           law and can have exceptions.`,
@@ -218,7 +242,8 @@ export const privacyDocument: LegalDocument = {
             the next start of a cloud computer.`,
           text`${productName} keeps the real path of each file, because it
             needs that path to open the file. It also keeps the real name of
-            the default branch of each repository. Screens hide each exact copy
+            the default branch of each repository, and of the base branch of
+            each workspace. Screens hide each exact copy
             of a secret value in these paths and names. Your browser still gets
             the real values, so a secret value can show in the data that your
             browser gets and sends (decision 145).`,
@@ -231,54 +256,6 @@ export const privacyDocument: LegalDocument = {
         ),
       ],
     },
-    {
-      title: 'Cookies',
-      blocks: [
-        paragraph`This site sets no cookies. The web app and the Mac app each
-          set their own cookie that keeps you signed in. Only the Mac app's
-          cookie store holds its session cookie. Another cookie protects the
-          GitHub sign-in while it runs. When the web app sends you to GitHub
-          to install the GitHub App or change its access, a third cookie
-          keeps the screen that you left, so that the app can return you
-          there.`,
-        paragraph`Each sign-in cookie lasts for up to 7 days. The GitHub
-          sign-in protection cookie lasts for up to 10 minutes. The GitHub
-          return cookie lasts for up to 1 hour, and the app deletes it when
-          you come back. These cookies support sign-in, security, and the
-          return from GitHub. They use secure connections and cannot be read
-          by page scripts.`,
-      ],
-    },
-    {
-      title: 'Your rights',
-      blocks: [
-        paragraph`Depending on where you live, the law can give you rights
-          over your personal data. You can ask for a copy of it, and ask to
-          correct it, to delete it, to limit its use, or to object to its
-          use. You can also ask to take it to another service.`,
-        paragraph`To exercise these rights, write to
-          ${mailLink(legalAddress)}. Describe your request and the account
-          or org it concerns. The operator may need information to verify
-          your identity before acting on the request.`,
-      ],
-    },
-    {
-      title: 'Complaints',
-      blocks: [
-        paragraph`You can complain to the data protection authority that
-          has jurisdiction over your complaint. You can also raise a
-          privacy concern with the operator at ${mailLink(legalAddress)}.`,
-        paragraph`In the UK, you can contact the Information Commissioner's
-          Office at ico.org.uk/make-a-complaint/ or on 0303 123 1113.`,
-      ],
-    },
-    {
-      title: 'Changes to this notice',
-      blocks: [
-        paragraph`The operator publishes changes on this page and updates
-          its effective date. Check this page for the current notice. Any
-          additional notice required by applicable law still applies.`,
-      ],
-    },
+    ...privacyClosingSections,
   ],
 }

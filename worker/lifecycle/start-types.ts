@@ -19,6 +19,8 @@ interface WorkspaceStartData {
   startupScript: SavedScript
   environmentCiphertext: string | null
   defaultBranch: string
+  baseBranch?: string
+  startSha?: string
   repositoryLocations?: readonly RepositoryLocation[]
   turnId: string | null
   attempt: string

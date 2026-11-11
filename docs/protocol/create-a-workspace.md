@@ -76,48 +76,15 @@ decision number names a dated record, as
 
 ### The dialog
 
-- The dialog holds the parts of the page: the repository picker, the
-  message and its files, and the model picker.
-- The dialog always names the org and the section of the new workspace,
-  also General.
-- The button of the dialog is Create. The button of the page is Send,
-  because the page looks like the chat that it becomes.
-- The dialog shows the notices of the page: the first build, a waiting
-  repository, a missing agent login, a failed create with Try again, and an
-  org without chosen repositories.
-- In an org without chosen repositories, the dialog and the page tell a
-  member who is not an admin that an admin chooses them. An admin gets
-  Choose repositories. Reason: only an admin can choose them.
-- Escape and a press outside close the dialog, except while the create
-  runs.
-- An action of the dialog that opens another page, such as Connect Claude
-  or Choose repositories, closes the dialog first. The dialog also closes
-  when the address changes, such as with Back in the browser, also while
-  the create runs.
-- The dialog and the page of the same org and section share one draft.
-- A close of the dialog keeps the draft, with its message and its files,
-  as a move away from the page does. So no close loses a message.
-- When the page or the dialog shows a kept message again, the cursor
-  starts at the end of the message. After that, each click and key moves
-  the cursor as usual.
-- When the server accepts the create, the dialog closes, and the app opens
-  the new workspace, as after a create from the page. This holds also
-  when the dialog closed while the create ran.
-- A create in the background was rejected, because it needs a new notice
-  for a create that finished.
-- The dialog shows a failed create only when the create request fails.
-  When the sandbox of the new workspace then does not start, the workspace
-  keeps its queued messages and shows Try again, as
-  [A failed first start](#a-failed-first-start) says.
-- When the dialog opens, the message field gets the focus. When the dialog
-  closes and the screen stays, the focus goes back to the control that
-  opened it. When another screen opens, that screen takes the focus.
+[New workspace as a dialog](new-workspace-dialog.md) gives the parts of the
+dialog, its notices, its close, its draft, the create, and its focus.
 
 ### The send key
 
 - On a computer, Enter sends the message from every composer, and
   Shift+Enter adds a line (decision 143 of PR #73). The composers are the
-  chat of a workspace, the New workspace page, and the dialog.
+  chat of a workspace, the New workspace page, and the dialog. The message
+  box of the [Feedback dialog](feedback.md#the-dialog) is a composer too.
 - So Enter creates the workspace from the page and from the dialog.
 - On a phone, and in every window with the phone layout, Enter adds a
   line in every composer.
@@ -214,6 +181,9 @@ decision number names a dated record, as
   an open pull request instead, as [Continue a branch](continue-a-branch.md)
   says (import decision 1). The workspace then continues that branch,
   with the name that the branch has on GitHub.
+- The run of a pull request creates its branch from that pull request, as
+  [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
+  says (decision 505 A).
 - When the GitHub repository has no refs, such as branches or tags, the
   start first pushes an empty first commit to the default branch of the
   repository (decision 89). It then fetches that branch and creates the
@@ -262,6 +232,8 @@ decision number names a dated record, as
   good org image, with the current startup script and env vars.
 - When that sandbox is ready, the agent gets the queued messages, as
   [Messages](messages-and-attachments.md#messages) says.
+- A routine run keeps its failed workspace and its cause, as
+  [Failed runs](routine-runs.md#failed-runs) says (decision 512 B).
 
 ## Imported workspaces
 

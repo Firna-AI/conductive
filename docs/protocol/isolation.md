@@ -117,6 +117,10 @@ decision number names a decision of the change that adds the
 - The GitHub token of a turn and its Mac requests still follow its sender,
   as [GitHub tokens](tokens-and-secrets.md#github-tokens) and
   [Mac commands](agent-tools.md#mac-commands) say.
+- A routine run uses its owner's agent login and GitHub token while no
+  person watches. Its sandbox follows the same version pin rules below.
+  [Risks that stay open](routines.md#risks-that-stay-open) states the
+  risks of routines.
 - With each turn, the agent runner gets a credential of the starter over
   its connection to the Durable Object. Reason: the sandbox gets its
   secrets only at a start, and the sessions of one sandbox can have

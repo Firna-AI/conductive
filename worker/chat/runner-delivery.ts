@@ -94,7 +94,13 @@ export class RunnerDelivery {
     detach: () => void,
     advance: () => void,
   ): Promise<DispatchState> {
-    if (!isCurrent() || active.delivered.has(command.commandId)) return 'skip'
+    if (
+      !isCurrent() ||
+      (await this.store.read(active.workspace.id, (view) =>
+        view.commandDelivered(command.commandId, active.id),
+      ))
+    )
+      return 'skip'
     if (
       (command.type === 'turn' || command.type === 'message') &&
       !(await this.dependencies.runnerPreparationAllowed(active.workspace.id))
@@ -184,8 +190,7 @@ export class RunnerDelivery {
         )
       return 'skip'
     }
-    active.delivered.add(command.commandId)
-    await this.dispatch.sent(active.workspace.id, command)
+    await this.dispatch.sent(active.workspace.id, command, active.id)
     return 'send'
   }
 

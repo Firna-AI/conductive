@@ -1,12 +1,11 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AppEnv } from '../env'
-import { errorResponse, HttpError, privateResponse } from '../http'
-import { authorizeChatBrowser } from './browser-authorization'
+import { errorResponse, privateResponse } from '../http'
 import type { WorkspaceChat } from './backend'
-import { chatRoute } from './http-routes'
+import { browserRequest } from './browser-request'
 import type { ChatOperation } from './operation'
 import { browserUpgrade, runnerUpgrade } from './sockets'
-import type { ChatDependencies } from './types'
+import type { ChatDependencies, ChatStorage } from './types'
 
 export async function fetchWorkspaceChat(
   chat: WorkspaceChat,
@@ -15,6 +14,7 @@ export async function fetchWorkspaceChat(
   dependencies: ChatDependencies,
   operation: (workspaceId: string) => ChatOperation,
   flush: () => Promise<void>,
+  storage: ChatStorage,
 ): Promise<Response> {
   try {
     if (new URL(request.url).pathname === MACHINE_PATHS.runner)
@@ -22,33 +22,16 @@ export async function fetchWorkspaceChat(
     const access = await chat.authorizeBrowser(request)
     if (access.suffix === '/events')
       return await browserUpgrade(chat, request, access)
-    return await chat.store.run(async () => {
-      const write = request.method !== 'GET' && request.method !== 'HEAD'
-      const current = write
-        ? await authorizeChatBrowser(
-            request,
-            env,
-            dependencies.now(),
-            access.context.body,
-          )
-        : access
-      if (write && current.workspace.archivedAt !== null)
-        throw new HttpError(
-          409,
-          'workspace_archived',
-          'The archived chat is read-only.',
-        )
-      const response = await chatRoute(
-        request,
-        current.suffix,
-        current.context,
-        operation(current.workspace.id),
-        dependencies,
-        access.presentation,
-      )
-      if (write) await flush()
-      return privateResponse(response)
-    })
+    return await browserRequest(
+      request,
+      access,
+      chat.store,
+      storage,
+      env,
+      dependencies,
+      operation(access.workspace.id),
+      flush,
+    )
   } catch (error) {
     return privateResponse(errorResponse(error))
   }

@@ -1,3 +1,4 @@
+import { helpGroupLabel } from '../../../docs/mockups/src/components/feedback/feedbackCopy'
 import type { Workspace } from '../../shared/workspaces'
 import { routes } from '../router'
 import { groupWorkspaces } from '../sections'
@@ -7,6 +8,7 @@ import type { OfferedAction, PaletteOffer } from './page-actions'
 import {
   accountLabel,
   accountRows,
+  feedbackRow,
   linkRow,
   offeredRow,
   orgSettingRows,
@@ -65,12 +67,13 @@ function offeredRows(offers: readonly PaletteOffer[]): PaletteRow[] {
 }
 
 /**
- * The actions in their four parts: the open workspace, the org, the orgs,
- * and the window. New workspace shows wherever the org takes changes. Its
- * row links to the page, and it opens as the page or the dialog that the
- * user chose. The Mac app adds Import from Conductor after the actions of
- * the org, because it reads the data of this Mac. A deleted org has no
- * Switch to row.
+ * The actions in their five parts: the open workspace, the org, the orgs,
+ * the window, and help. New workspace shows wherever the org takes
+ * changes. Its row links to the page, and it opens as the page or the
+ * dialog that the user chose. The Mac app adds Import from Conductor after
+ * the actions of the org, because it reads the data of this Mac. A deleted
+ * org has no Switch to row. Send feedback shows on each page, also without
+ * an org and in a suspended org, because feedback changes no org.
  */
 function actionGroups(source: PaletteSource): PaletteGroup[] {
   const { org, offers } = source
@@ -112,6 +115,7 @@ function actionGroups(source: PaletteSource): PaletteGroup[] {
       ],
     },
     { label: 'Window', rows: offeredRows(window) },
+    { label: helpGroupLabel, rows: [feedbackRow()] },
   ]
 }
 

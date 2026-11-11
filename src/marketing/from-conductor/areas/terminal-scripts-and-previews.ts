@@ -63,7 +63,7 @@ export const terminalScriptsAndPreviewsFeatures: readonly ParityFeature[] = [
     area: 'terminal-scripts-and-previews',
     name: 'In-app browser',
     status: 'available',
-    note: 'Port previews open inside the app, with Open in new tab. Sending notes from the page to the agent is under consideration.',
+    note: 'Port previews open inside the app or in a browser tab. Sending notes from the page to the agent is under consideration.',
   },
   {
     id: 'spotlight-testing',

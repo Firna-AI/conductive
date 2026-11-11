@@ -43,6 +43,15 @@ refreshes, and build log streams.
 `handleLifecycleRequest` serves, the options of its caller, and the rules
 of a create.
 
+The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
+Its provider account argument selects the published org image independently of those branch fields.
+The creation claim keeps them in its saved plan.
+The fetch updates `refs/remotes/origin/<base branch>`.
+The branch phase uses the event commit when it exists, or the fetched head otherwise.
+It sets the branch's `gh-merge-base` Git setting to the workspace base.
+Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
+A null stored base uses the repository default branch.
+
 ### Input activity
 
 [Input activity](routes.md#input-activity) gives how one
@@ -112,7 +121,8 @@ A confirmed missing archived disk uses that batch too.
 
 ### Key Code
 
-The [lifecycle code map](code-map.md) lists the lifecycle entry points.
+[Lifecycle key code](key-code.md) names the files, the types, and the
+functions of the lifecycle that a reader opens first.
 
 The trusted [import record writer](../conductor-import/workspace-data.ts)
 publishes a verified imported workspace without a cloud computer or first chat identity.

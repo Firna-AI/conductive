@@ -1,7 +1,7 @@
 # App API
 
-This folder holds the browser routes of the app shell and of the workspace
-lifecycle. `route` in [`routes.ts`](../routes.ts) tries them after the app
+This folder holds the browser routes of the app shell, of the workspace
+lifecycle, and of feedback. `route` in [`routes.ts`](../routes.ts) tries them after the app
 request gate, so each handler gets the parsed body and the signed-in user.
 Each handler returns `null` for a path that it does not own. The
 [Worker routes](../README.md#routes) list every route of the Worker.
@@ -15,6 +15,7 @@ Each handler returns `null` for a path that it does not own. The
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume`, `activity`, and `activate`, and image build, refresh, and log routes |
+| `feedbackRoute` in [`feedback.ts`](feedback.ts) | `GET` and `POST` of `/api/feedback`. [Feedback routes](feedback.md) gives their checks, their errors, and the email |
 
 `featureShellRoute` in [feature-shell.ts](feature-shell.ts) serves account GitHub
 access, org creation with initials and repository choices, shared settings,
@@ -24,6 +25,15 @@ The [archive route](archive.ts) archives and restores a workspace through its wo
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
+The [routine routes](../routines/README.md) serve routine records after the same app gate.
+Section deletion moves routines to General in its workspace-move batch.
+Repository deselection turns matching routines off in its repository-write batch.
+Run now and run history use the same app gate.
+Workspace view replies include `routine`, the run's routine ID and name, or null.
+A join from the run record supplies the routine without a new lifecycle field.
+Deleting the routine removes that link and keeps its normal run workspaces.
+Workspace view replies also include the resolved `baseBranch`.
+View writes cannot change this branch.
 
 ### Import routes
 
@@ -208,6 +218,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - `feature-repository-builds.test.ts` checks the admin's repository build,
   repeated saves, removals, adds after a failed build, and a failed start
   that keeps the choice.
+- `feedback.test.ts`, `feedback-refusals.test.ts`, and
+  `feedback-body.test.ts` check the feedback routes with a fake Resend, as
+  [Feedback routes](feedback.md#development) says.
 
 ### Key code
 
@@ -245,6 +258,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   the org's saved choices with repositories that its reader can access,
   and starts a build after an add.
   Their `*-data.ts` files keep queries and guarded writes.
+- [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
+  [`feedback-data.ts`](feedback-data.ts), and
+  [`feedback-mail.ts`](feedback-mail.ts): the feedback routes, the checked
+  body, the reply email and reachable IDs, and the email.
+  [Feedback routes](feedback.md#key-code) gives each entry point.
 
 ### Related docs
 
@@ -253,4 +271,5 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [Workspace lifecycle](../lifecycle/README.md#browser-routes)
 - [Deployment inputs](../../docs/deployment.md)
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md)
+- [Feedback](../../docs/protocol/feedback.md)
 - [Shared contracts](../../src/shared/README.md)

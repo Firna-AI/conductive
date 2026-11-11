@@ -5,12 +5,14 @@
     "sections",
     "workspace-menu",
     "command-palette",
+    "feedback",
     "orgs",
     "account",
     "operator",
     "banner",
     "new-workspace",
     "imported",
+    "routines",
     "org-settings",
     "chat",
     "mac-commands",
@@ -23,6 +25,7 @@
     "file-mentions",
     "files",
     "tabs",
+    "transcripts",
     "tools",
     "panels"
   ]

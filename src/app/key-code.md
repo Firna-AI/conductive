@@ -48,7 +48,7 @@ Each path is relative to `src/app/`, the folder of this page.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  and computer settings of one org, with `watch` and the wait of each part.
+  routines, and computer settings of one org, with `watch` and the wait of each part.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
@@ -56,6 +56,23 @@ Each path is relative to `src/app/`, the folder of this page.
   workspace show until the org has a good image. `changedScriptNotice`
   gives the words of the notice of a changed install script, which the
   Cloud computer tab of an admin and of a member show.
+- `api/read-routines.ts`: the readers of the routines, each with its newest run, and of one routine. `api/read-routine-runs.ts`: the readers of the runs.
+- `routine-model.ts`: `RoutineModel`, one routine with its reads, its
+  saves, and its runs, and `routineModel`, the model that the org keeps for
+  each routine. Its `client` sends the other requests of the routine page,
+  and a `routine_not_found` from any of them reads the routine again.
+  `routine-actions.ts`: create, update, Turn off, Delete, and Run now,
+  which also update the Routines list.
+- `routine-runs.ts`: `RoutineRuns`, the Runs list of one routine: the
+  pages that it shows, which each read gets again from the newest run
+  while the page shows them, Show older runs, which adds a page, and Run
+  now.
+- `routine-draft.ts`: the draft of the routine page, the equality of each
+  of its fields, its create and update requests, and whether Save can send
+  it. `routine-triggers.ts`: the
+  defaults of a new trigger and the edits of an author filter.
+  `routine-cron.ts`: the rule of a custom cron, which the Worker applies
+  too.
 - `repository-changes.ts`: the saved repository changes that the org
   image lacks, from `BuildsResponse.changes`. `repositoryWaitOf` gives
   their state, `repositoryChangesOf` the changes of the repository
@@ -73,8 +90,9 @@ Each path is relative to `src/app/`, the folder of this page.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
-  its waiting writes. `refresh.ts`: `Refresher`, the shared reads of a part
-  while screens show it.
+  its waiting writes, and the errors that prove that the value no longer
+  exists. `refresh.ts`: `Refresher`, the shared reads of a part while
+  screens show it, and `reread`, a read that starts after a refusal.
 - `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
   writes, their changes, moves, and the Archived group.
 - `workspace-actions.ts`: `OrgModel.workspaceActions`, the Rename write,
@@ -181,10 +199,18 @@ Each path is relative to `src/app/`, the folder of this page.
   click after a drag, the scroll lock of touch, and a new drop place after a
   scroll under a still pointer. A menu event ends the press of a mouse
   and keeps the press of a finger. `ownPress` keeps a press on a control
-  inside a dragged element, such as Close or Archive, for that control.
+  inside a dragged element, such as Close or Archive, for that control,
+  and `isOwnPress` says whether a control kept a press. `longPress` and
+  `touchSlop` are the hold of a finger and how far it moves first.
   `next-click.ts`: `stopNextClick`, which stops the click that ends a drag
   wherever it lands, also the late click of a finger.
   `pointer-drag.test.tsx` mounts the hook in happy-dom.
+- `long-press.ts`: `useLongPress`, the long press of a finger that opens a
+  menu where nothing drags, such as a tab of a read-only row. It holds as
+  long and allows as small a move as the drag. It ignores a press that a
+  control keeps, and stops the click after a hold. A mouse and a pen bind
+  nothing. `../chat/components/TranscriptCopy.dom.test.tsx` checks it
+  through the tab row of a read-only chat.
   `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
   a section, on `usePointerDrag`.
 - `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
@@ -206,60 +232,34 @@ Each path is relative to `src/app/`, the folder of this page.
 - `kept-org.ts`: `keptOrg`, the org of a page without one: the org that
   the tab opened last, from `AppModel.lastOrg`, or else the first org that
   is not deleted.
-- `palette/`: the command palette without React. `palette-results.ts`
-  gives the groups and the empty state of each tab for a query, from
-  `palette-groups.ts` and the rows of `palette-rows.ts`. `palette-status.ts`
-  gives the status part, which stands in place of the workspace groups
-  while the list or the repository names load or after a read failed,
-  and the reads that its Try again does again. `matcher.ts`
-  ranks the matches. `rowTexts` includes the workspace number label, such
-  as `W-395`, in the search texts. `withNumberLabel` adds that label when
-  a query word matches it. `../shell/palette/PaletteList.tsx` draws it
-  before the name. `commands.ts` holds the labels and the search words.
-  `page-actions.ts` gives the offers of the parts of the page and
-  `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
-  `palette-keys.ts` the palette key and what it does, and `controller.ts`
-  the open state and the offers of one tab, with `show`, the one way to
-  open the palette.
-- `../shell/palette/`: the layer of the palette. `PaletteProvider.tsx`
-  hears the key and closes the palette, `PaletteLayer.tsx` draws it in a
-  frame, `palette-context.ts` gives `usePaletteOffer` and
-  `usePaletteTerminal`, and `SearchRow.tsx` is the Search row of the list.
-  `use-palette-source.ts` gives the list and the repositories of the org
-  with their load states, and `PaletteStatus.tsx` draws the status part.
-- `../shell/ui/layers.ts`: `OpenLayers`, the open menus of every UI kit,
-  which say whether they closed, and the modal layers with their owners.
-  The palette reads them before it opens.
+- [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
+  names the entry points of the command palette, the layers of each
+  frame, New workspace as a dialog, and feedback with its screenshots.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
-- `../shell/layout/frames.tsx`: the frames: the desktop frame with the
-  rail, a desktop page alone, such as Create org, and the phone frame.
-  `../shell/layout/DesktopLayers.tsx`: `DesktopLayers`, the layers and the
-  main area that every desktop frame shares: sheets and dialogs, the New
-  workspace dialog, and the command palette.
-- `../shell/ui/Overlay.tsx`: `OverlayHost`, `useLayerFocus`, and
-  `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
-  every sheet and dialog uses. Escape closes only the newest layer. Its
-  optional `returnFocus` names a trigger that a render can replace, such as
-  the row of a phone menu sheet.
-  `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
-  screen after a layer closes with a move, which the main area of a
-  desktop frame takes through `useScreenFocus`.
-- `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the
-  New workspace dialog of a desktop frame, and `useNewWorkspace`, the one
-  way that each place opens New workspace as the dialog or the page.
-  `NewWorkspaceDialog.tsx`: the dialog.
-- `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
-  and the dialog share: the repository, the notices, the readiness, and
-  the send. `parts.tsx`: their repository menu. `waiting.tsx`: the notice
-  of a repository that waits for its build.
-  The model of each form is the `owner` of its chip field. The shared chip
-  field supplies their focus handle. `CaretAtEndPlugin`
-  restores the saved caret position when keyboard focus enters. Without a
-  saved position, it puts the caret at the end. It lives in
-  `../chat/components/chip-field/focus-plugins.tsx`.
-- `../chat/components/send-key.ts`: `useSendKey`, the send key of every
-  composer.
-- `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value.
+- `../shell/routines/RoutinesScreen.tsx`: the Routines page, which the
+  Routines link of the sidebar and of the phone list opens.
+  [Routines](../../docs/protocol/routines.md#the-routine-pages) states what
+  it shows.
+- `../shell/routines/RoutineScreen.tsx`: the routine page and the page of
+  a new routine. `RoutineEditor.tsx` is the form of the owner, and
+  `RoutineReader.tsx` the read-only view of every other member, with Turn
+  off and Delete for an admin. `useRoutineSave.ts` is Save, with the login
+  that a save refused. `RoutineFrame.tsx` puts the Runs list beside the
+  form on desktop, and on the Runs tab of a phone. It alone shows the
+  notice of a suspended org, in every view of the page. `RoutineNote.tsx`
+  is the note above a routine, which reads the saved repository from the
+  repository list of the org.
+- `../shell/routines/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
+  the mark, the state, the trigger, the pull request, and the time of each
+  run, and the link to its workspace. `run-copy.ts`: the mark of a run, the
+  cause of a failed run in words, from the agent and the owner of the run
+  itself, and the reason of a skipped run, with the login of an account
+  outside the org. `RunNow.tsx`: Run now of the owner.
+- `../shell/workspace/RunLine.tsx`: the line under the header of a run
+  workspace, which links to its routine, and to the pull request of a pull
+  request run.
+- `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value,
+  as one value or field by field (`eachField`).
   `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
   A closing row menu gives the focus to the current link of its row through
   it, also after a render replaced the row.

@@ -176,15 +176,17 @@ export async function prepareImportGit(
     }
   }
   if (remoteBranch !== null)
-    await storage.mark('fetch', () =>
-      git([
+    await storage.mark('fetch-history', async () => {
+      const shallow =
+        (await git(['rev-parse', '--is-shallow-repository'])) === 'true'
+      await git([
         'fetch',
         '--no-tags',
-        '--depth=1',
+        ...(shallow ? ['--unshallow'] : []),
         'origin',
         `+refs/heads/${remoteBranch}:refs/remotes/origin/${remoteBranch}`,
-      ]).then(() => undefined),
-    )
+      ])
+    })
   for await (const entry of storage.entries()) {
     if (entry.kind !== 'prerequisite') continue
     await storage.mark(`prerequisite:${entry.oid}`, async () => {

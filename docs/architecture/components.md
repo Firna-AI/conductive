@@ -15,7 +15,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - A React app, built with Vite, that uses the `@firna/ui` components.
 - It lives on `app.conductive.build`, behind the GitHub sign-in.
-- It shows the orgs, the workspaces, the chat, the files, the tools, and
+- It shows the orgs, the workspaces, the routines, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
@@ -60,10 +60,14 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
 
+- Two Cron Triggers run the timed work. One runs every 15 minutes for
+  deleted orgs, lifecycle repairs, and pending approval emails. One runs
+  every minute for due routine runs and runs that stayed queued.
+
 ## D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, settings, the active preview hostnames, and the
+  repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
   the sign-up pause, the state of approval emails, and the reservations of
   imports.
@@ -196,3 +200,9 @@ the rules.
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. Use of the app is free until billing starts, as
   [Pricing](../protocol/pricing.md) says.
+- **Resend:** the email service sends every email of the app, from
+  `mail.conductive.build`. These are the org invitations, the approval
+  emails, and the feedback emails. The Worker sends each feedback email,
+  with its screenshots, to the team inbox. The email provider of the
+  operator hosts that inbox. The app keeps no copy of feedback, as
+  [Feedback](../protocol/feedback.md) says.

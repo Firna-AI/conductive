@@ -26,20 +26,18 @@ export async function browserUpgrade(
   access: BrowserAccess,
 ): Promise<Response> {
   const { client, server } = socketPair(request)
-  server.accept()
   const peer = {
     send: (message: WorkspaceSocketMessage) =>
       server.send(JSON.stringify(message)),
     close: () => server.close(1000, 'Connection closed.'),
   }
   try {
-    const unsubscribe = await chat.subscribe(
+    await chat.subscribe(
       access,
       afterNumber(new URL(request.url)),
       peer,
+      server,
     )
-    server.addEventListener('close', unsubscribe)
-    server.addEventListener('error', unsubscribe)
     return new Response(null, { status: 101, webSocket: client })
   } catch (error) {
     peer.close()
@@ -56,22 +54,6 @@ export async function runnerUpgrade(
     send: (message: WorkspaceToRunner) => server.send(JSON.stringify(message)),
     close: () => server.close(1000, 'Connection closed.'),
   }
-  await chat.connectRunner(request, peer)
-  server.accept()
-  server.addEventListener('message', (event) => {
-    let message: unknown
-    try {
-      if (typeof event.data !== 'string') throw new Error('Expected JSON text.')
-      message = JSON.parse(event.data)
-    } catch {
-      chat.disconnectRunner(peer)
-      return
-    }
-    void chat
-      .receiveRunner(peer, message)
-      .catch(() => chat.disconnectRunner(peer))
-  })
-  server.addEventListener('close', () => chat.disconnectRunner(peer))
-  server.addEventListener('error', () => chat.disconnectRunner(peer))
+  await chat.connectRunner(request, peer, server)
   return new Response(null, { status: 101, webSocket: client })
 }

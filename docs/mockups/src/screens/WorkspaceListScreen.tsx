@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { paletteViews } from '../components/palette/paletteViews'
@@ -136,7 +137,7 @@ function rowMenuView(
   return menuListView(menu, list, viewport)
 }
 
-function MobileList(props: { state: WorkspaceListState }) {
+function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
   const { list, menu, palette } = props.state
   // On a phone the palette is a page in place of the list.
   if (palette !== 'closed') {
@@ -187,7 +188,7 @@ function MobileList(props: { state: WorkspaceListState }) {
         switcherTo={isImportList(list) ? null : undefined}
         viewer={view?.viewer ?? viewer}
       />
-      {view ? view.over : listSheet(menu)}
+      {props.overlay ?? (view ? view.over : listSheet(menu))}
     </MobileFrame>
   )
 }
@@ -197,13 +198,18 @@ function MobileList(props: { state: WorkspaceListState }) {
  * On a phone and in a narrow window it is the home screen. On a wide
  * desktop the list is the sidebar, and the main area waits for a choice.
  * A right click on a row, or the menu keys, opens the menu of the row.
+ * `overlay` lies over the list of Acme in place of the overlay of its
+ * state, such as a dialog that the palette opens over it.
  */
 export function WorkspaceListScreen(props: {
   state: WorkspaceListState
   viewport: Viewport
+  overlay?: ReactNode
 }) {
   const { list, menu, palette } = props.state
-  if (props.viewport === 'mobile') return <MobileList state={props.state} />
+  if (props.viewport === 'mobile') {
+    return <MobileList overlay={props.overlay} state={props.state} />
+  }
   const view = rowMenuView(props.state, props.viewport)
   if (list === 'suspended') {
     return (
@@ -263,7 +269,9 @@ export function WorkspaceListScreen(props: {
   const imported = isImportList(list)
   return (
     <AppFrame
-      overlay={listPalette(palette, props.viewport) ?? view?.over}
+      overlay={
+        props.overlay ?? listPalette(palette, props.viewport) ?? view?.over
+      }
       rail={imported ? { ...rail, currentTo: paths.importedList } : rail}
       sidebar={<Sidebar {...listed} />}
     >

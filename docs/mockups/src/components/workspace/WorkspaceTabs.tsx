@@ -103,6 +103,8 @@ function placeAfterDrop(from: number, index: number): number {
  * Every tab closes, and a right click opens its menu, the one way to rename
  * a session. `drag` draws a tab in the middle of a drag, and `menuTab` the
  * menu of a tab, below it or, on a phone, as a sheet that the screen draws.
+ * In a read-only workspace the menu leaves out each item that changes the
+ * workspace, so a file or diff tab there opens no menu.
  * `renaming` draws the rename field in a tab, after Rename session in its
  * menu. `full` draws a row whose tabs do not fit, scrolled to the tab that
  * it keeps in view: the tab with the rename field, or else the shown tab.
@@ -115,7 +117,10 @@ export function WorkspaceTabs(props: {
   viewport: Viewport
   historyEntries?: readonly MenuEntry[]
   historyOpen?: boolean
-  /** An archived workspace: no new session. */
+  /**
+   * A read-only workspace, such as an archived one: no new session, and a
+   * tab menu with only the items that change nothing.
+   */
   readOnly?: boolean
   drag?: TabDrag
   menuTab?: string
@@ -132,8 +137,10 @@ export function WorkspaceTabs(props: {
   const dragged = tabs[from]
   const kept = props.renaming ?? tabs.find((tab) => tab.selected)?.key
   const endInView = full && kept !== undefined && tabs.at(-1)?.key === kept
+  const menu = menuTab === undefined ? [] : tabMenuOf(tabs, menuTab, readOnly)
+  const menuOpen = menu.length > 0
   // The lifted tab and a menu below a tab hang below the row.
-  const overRow = dragged !== undefined || (menuTab !== undefined && !phone)
+  const overRow = dragged !== undefined || (menuOpen && !phone)
   const dropAt = (index: number) =>
     dragged && drag?.index === index ? (
       <DropPlace
@@ -161,8 +168,8 @@ export function WorkspaceTabs(props: {
             {dropAt(index)}
             <TabItem
               menu={
-                tab.key === menuTab
-                  ? { entries: tabMenuOf(tabs, tab.key), anchored: !phone }
+                menuOpen && tab.key === menuTab
+                  ? { entries: menu, anchored: !phone }
                   : undefined
               }
               placeholder={tab === dragged}

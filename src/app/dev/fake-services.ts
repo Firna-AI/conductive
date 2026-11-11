@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
@@ -18,12 +19,16 @@ import { createBackend, guardScope } from './backend'
 import { branchRoutes } from './branch-routes'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
+import { feedbackRoutes } from './feedback-routes'
 import { importRoutes } from './import-routes'
+import { APP_VERSION } from '../version'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
+import { routineRoutes } from './routine-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
+import { runRoutes } from './run-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
@@ -59,6 +64,7 @@ export function createFakeServices(search: string): AppServices {
   const routes = [
     ...signedOut,
     ...waitlistRoutes(backend),
+    ...feedbackRoutes(backend, options),
     ...accountRoutes(backend),
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
@@ -68,6 +74,8 @@ export function createFakeServices(search: string): AppServices {
     ...branchRoutes(backend, options.branches),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
+    ...routineRoutes(backend),
+    ...runRoutes(backend),
     ...operatorRoutes(backend),
     ...importRoutes(options.importScan, options.importUpload),
   ]
@@ -94,6 +102,7 @@ export function createFakeServices(search: string): AppServices {
     newId,
     leave: (url) => window.location.assign(url),
     appOrigin: window.location.origin,
-    copy: (text) => navigator.clipboard.writeText(text),
+    appVersion: APP_VERSION,
+    copy: (text) => copyText(window, text),
   }
 }

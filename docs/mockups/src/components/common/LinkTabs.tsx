@@ -5,7 +5,7 @@ import styles from './LinkTabs.module.css'
 
 export type LinkTab = {
   label: string
-  /** The screen of the tab. A tab without one stays static. */
+  /** The screen of the tab. A tab whose screen the mockups lack has none. */
   to?: string
   /** A count after the label, such as the number of changed files. */
   count?: number
@@ -55,19 +55,7 @@ export function LinkTabs(props: {
             )}
           </>
         )
-        if (tab.to === undefined) {
-          return (
-            <span
-              aria-current={tab.selected ? 'page' : undefined}
-              className={className}
-              key={tab.label}
-              title={tab.title}
-            >
-              {content}
-            </span>
-          )
-        }
-        return (
+        return tab.to ? (
           <ScreenLink
             aria-current={tab.selected ? 'page' : undefined}
             aria-label={tab.title}
@@ -78,6 +66,16 @@ export function LinkTabs(props: {
           >
             {content}
           </ScreenLink>
+        ) : (
+          <span
+            aria-current={tab.selected ? 'page' : undefined}
+            aria-label={tab.title}
+            className={className}
+            key={tab.label}
+            title={tab.title}
+          >
+            {content}
+          </span>
         )
       })}
     </nav>

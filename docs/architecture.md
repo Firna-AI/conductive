@@ -4,6 +4,7 @@ Conductive is a coding tool at `conductive.build`. Each workspace is one
 task with its own branch and its own cloud computer, a Boat sandbox.
 Agents powered by Claude and Codex work only in the sandbox. The user
 follows them in the browser or in the Mac app, which shows the web app.
+Routines also start agents without a person, each run in a new workspace.
 This doc describes the components, their responsibilities, and the
 boundaries between them. The [protocol docs](architecture/protocol-docs.md)
 hold the requirements of each feature.
@@ -86,6 +87,14 @@ hold the requirements of each feature.
 - **Cloud hour:** one hour of one cloud computer that runs. Each plan
   includes a number of cloud hours each month.
 
+- **Routine:** a saved prompt of an org that runs an agent without a
+  person. A schedule, a GitHub pull request event, or Run now starts each
+  run. Each run creates a new workspace, the run workspace.
+- **Routine owner:** the member whose logins the runs of a routine use. It
+  is the member who created the routine, until that member leaves the org.
+- **Base branch:** the branch that the work of a workspace targets. Changes
+  compares with it, and "Create pull request" opens into it.
+
 ## Components
 
 The [components page](architecture/components.md) describes each
@@ -110,7 +119,8 @@ the app (decision 6).
 
 The [flows page](architecture/flows.md) describes how the components work
 together for a new workspace, chat, the terminal, previews, the desktop,
-GitHub events, stops, and an import from Conductor with its activation.
+GitHub events, routine runs, stops, and an import from Conductor with its
+activation.
 
 ## Where data lives
 
@@ -125,9 +135,10 @@ separate the orgs, the Boat key, the model gateway, and the sandboxes.
 ## Decision numbers
 
 A decision number, such as decision 36, names the dated record of one
-decision. The plan of the change that wrote these docs keeps the records
-while the change is open. The pull request of that change keeps them after
-the merge.
+decision. The plan of the change that made the decision keeps the record
+while that change is open. The pull request of that change keeps the
+record after the merge. The decisions of routines use the numbers from
+501, so that each number names one record.
 
 A decision of a later change carries the short name of that change, such
 as gateway decision 6. The doc that cites it defines the name, or this

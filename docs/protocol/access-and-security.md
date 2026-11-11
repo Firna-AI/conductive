@@ -144,6 +144,11 @@ A lint was rejected because a read through another name escapes it.
   own HTTP 413 answer comes first.
 - A higher limit, such as the 128 MB that Anthropic's API accepts, was
   rejected, because it needs a zone of the Business or Enterprise plan.
+- The limit of `POST /api/feedback` is 10 MB, or 10,000,000 bytes
+  (decision 271). Its JSON body carries the screenshots of the message in
+  base64, as [The routes](feedback.md#the-routes) says.
+- Reason: a larger JSON body holds more memory, and an isolate has 128 MB
+  for all of its requests.
 - The Worker counts the bytes that arrive. It does not rely on the
   `Content-Length` header for the limit.
 - The Worker stops reading a body as soon as the body passes its limit.

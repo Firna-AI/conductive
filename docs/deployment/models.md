@@ -1,7 +1,8 @@
-# Deployment: models
+# Model inputs
 
 This page belongs to [Deployment inputs](../deployment.md). It gives the
-model list, the default choice, and the title model of the Worker.
+variables that choose the models of the app: the model list, the default
+choice, and the title model.
 
 ## Models
 

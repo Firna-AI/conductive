@@ -99,6 +99,11 @@ These docs belong to this doc:
   a workspace from an import of Conductor: its state Not active, its
   activation, and Archive before its activation.
 
+## Base branch
+
+- [Base branches](base-branches.md) states the base branch of each
+  workspace and the branch of a pull request run (decisions 505 A and 507 G).
+
 ## Workspace numbers and links
 
 - The workspace header omits the branch name on desktop and on a phone.

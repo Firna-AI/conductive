@@ -35,6 +35,8 @@ says.
 - [The Mac app](desktop-sign-in.md#github-app-install) has its own return.
 - The GitHub App sends pull request, check, status, and push webhooks to
   the Worker, at `https://api.conductive.build/v1/github/webhooks`.
+- A pull request webhook can also start the runs of routines, as
+  [Pull request runs](pull-request-runs.md) says.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 
 ## State of a branch
@@ -66,7 +68,19 @@ The bar shows one state of the branch of the workspace (decision 18):
 
 Rules for the bar:
 
-- The bar offers "Create pull request" only when the branch has commits.
+- The bar names the branch of the workspace and its base branch, as
+  [Base branches](base-branches.md) says (decision 507 G). A narrow column
+  cuts each name with an ellipsis, and the full name shows as a tooltip.
+- Reason: one layout of the bar serves every workspace, also a pull request
+  run whose base branch is not the default branch.
+- The bar offers "Create pull request" only when the branch has commits
+  that its base branch does not have. It opens a pull request into the base
+  branch.
+- The bar of a pull request run shows the state of its own branch, not the
+  pull request that started it (decision 505 A).
+- A bar that shows that pull request was rejected. The run's own work would
+  then get no "Create pull request", and the header of the run already
+  links to that pull request.
 - Each action of the bar links to GitHub. The app merges nothing and writes
   nothing to GitHub for the bar.
 - A merge from the app was rejected, and so were buttons that send fixed

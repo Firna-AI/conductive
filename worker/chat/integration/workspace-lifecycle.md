@@ -57,6 +57,8 @@ methods of `Workspace`.
   it before. It reports the event to the lifecycle. A runner that is ready
   before the start is prepared gets its turns only after that. Their
   messages and model changes wait behind them.
+- A runner connection that the object restores after a wake gets no
+  `welcome`. So neither `runnerHello` nor `runnerReady` runs again.
 - `runnerEventStored(envelope, publish)` runs after each other stored runner
   event or refusal marker. It reports `turn.started` and `start.updated`,
   with no time. It reports no turn end.
@@ -113,7 +115,7 @@ methods of `Workspace`.
   with visible output, and whether a dispatched turn runs. Its record
   commits with the events and the turns. Queued turns do not count as
   working.
-- Known limit: `Workspace.alarm` holds the queue during one lifecycle
+- Known limit: the regular alarm task holds the queue during one lifecycle
   phase. A phase can make several provider requests. Each can take up to 30
   seconds, 65 for a file read, or 610 for a command. The restore watch runs
   such a command when it writes the restore marker. So a slow phase delays
@@ -121,4 +123,6 @@ methods of `Workspace`.
   The startup script and the terminal setup run detached, so no request
   waits for their whole run, as
   [Creates and resumes](../../lifecycle/workspace-object.md#creates-and-resumes)
+  says. The native alarm handler returns before that task ends, and the
+  access deadlines do not wait for it, as [Alarms](../../README.md#alarms)
   says.

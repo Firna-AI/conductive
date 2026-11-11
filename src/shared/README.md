@@ -1,6 +1,7 @@
 # Shared contracts
 
-These modules define the browser API and the runner protocol.
+These modules define the browser API, the runner protocol, and the pure
+transcript fold that the browser and the Worker share.
 They use JSON values and plain TypeScript types.
 They import no Cloudflare types, provider SDKs, or test fixtures.
 Dates use Unix milliseconds. IDs and model names are opaque strings.
@@ -30,6 +31,12 @@ keeps the stored mark inside each compare-and-swap attempt. A missing or
 deleted name starts secret. An explicit mark changes it with the value.
 Its `classify` change carries only a name and a mark, so it keeps the value.
 `api.ts` keeps the existing sign-in and org paths and common records.
+Its `ApiErrorBody` carries the error code and message.
+The optional `error.details` identifies an unknown routine author login.
+It carries `login`, `triggerIndex`, and `list`.
+`triggerIndex` is zero-based in the routine's complete trigger list.
+`list` uses the author-filter request key, `is` or `isNot`.
+Errors without details keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
@@ -96,6 +103,21 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 `ATTACHMENT_MAX_BYTES` is the decoded file limit.
 `attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
 The browser posts one raw file as `application/octet-stream` with its known byte length.
+
+`feedback.ts` owns `FEEDBACK_PATH`, the request and reply types of the
+feedback routes, and their byte limits. `FEEDBACK_BODY_MAX_BYTES` is the
+JSON body limit of a send. `FEEDBACK_SCREENSHOTS_MAX_BYTES` is the limit of
+the decoded screenshots of one message. `SendFeedbackRequest` carries each
+screenshot as base64 `content` only, with no name and no media type.
+`FeedbackResponse.replyEmail` is the reply address, or null.
+`images.ts` holds the one image signature reader of the browser and the
+Worker. `readImage(bytes)` returns a `CheckedImage` of one `ImageKind`:
+PNG, JPEG, GIF, or WebP. It returns null for other bytes. A symbol that the
+module does not export brands `CheckedImage`, so other code gets one only
+from `readImage`. The [mail sender](../../worker/mail-sender.ts) takes
+attachments only as checked images. It writes each file name and media
+type from the kind. [Feedback](../../docs/protocol/feedback.md) states the
+rules.
 
 `files.ts` defines full trees, tree updates, and branch changes.
 A full tree contains real paths relative to the repository root.
@@ -227,6 +249,11 @@ The git credential payload is not defined yet.
 
 ## Key code
 
+- [Shared transcript code](transcript.md) names the modules of the pure
+  transcript fold that the browser and the Worker share.
+- [Agent words](agents.ts) supply the effort labels, model lookup, and model
+  labels for the chat, the new-workspace picker, and the mockups.
+
 - [Port reports](ports.ts) carry sorted listening ports and their safe labels.
 - [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
@@ -237,6 +264,20 @@ The git credential payload is not defined yet.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
+- [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
+- [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.
+- [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
+  Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
+  Run now takes a page request ID and returns its run after workspace admission.
+  Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
+  Each run carries its own `agent` and `owner`, independent of later routine edits or owner moves.
+  An unknown historical agent or owner is null.
+  Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
+  A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
+  Older runs and skips without an account omit it.
+- [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.
+  The routine's `pullRequest` holds the run's pull request number and URL, or null for scheduled and Run now runs.
+  Replies also carry `baseBranch`, resolved by the Worker. View writes cannot change it.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.
 - [Runner fakes](../../worker/test-support/README.md) use these message types.

@@ -9,7 +9,8 @@ import { encrypt } from '../../security/crypto'
 import { TEST_ORIGIN } from '../../test-support/harness'
 import { array } from '../agent-events'
 import { createAdapterRuntime } from '../adapter-runtime.test-support'
-import { closeSockets, SocketInbox } from '../adapter-sockets.test-support'
+import { SocketInbox } from '../adapter-sockets.test-support'
+import { runnerControls, disposeRunners } from '../runner-native.test-support'
 import {
   CLAUDE,
   MACHINE_ORIGIN,
@@ -21,9 +22,10 @@ import { OuterFakeRunner } from './runner-socket.test-support'
 
 it('restores encrypted held text after native eviction and publishes the hidden continuation once', async () => {
   const { runtime, headers } = await createAdapterRuntime(
-    'worker/chat/integration/runner-output-entry.test-support.ts',
+    'worker/chat/runner-entry.test-support.ts',
   )
   const sockets: WebSocket[] = []
+  const controls = runnerControls(runtime, headers)
   const bindings = await runtime.getBindings<{
     BOAT_KEY_ENCRYPTION_KEY: string
   }>()
@@ -116,7 +118,7 @@ it('restores encrypted held text after native eviction and publishes the hidden 
       },
     )
     expect(accepted.status).toBe(202)
-    let runner = await connect()
+    const runner = await connect()
     runner.emit({ type: 'runner.ready' })
     expect(await runner.inbox.next()).toEqual(confirm(1))
     const turn = record(await runner.inbox.next())
@@ -139,7 +141,8 @@ it('restores encrypted held text after native eviction and publishes the hidden 
     }
     runner.emit(delta)
     expect(await runner.inbox.next()).toEqual(confirm(3))
-    const pending = record(await (await browser()).next())
+    const resumed = await browser()
+    const pending = record(await resumed.next())
     expect(pending.type).toBe('history')
     expect(
       array(record(pending.history).events, record).filter(
@@ -149,13 +152,12 @@ it('restores encrypted held text after native eviction and publishes the hidden 
     const stored = await storedRecords()
     expect(stored.length).toBeGreaterThan(0)
     expect(JSON.stringify(stored)).not.toContain('private-')
-    await closeSockets(...sockets)
-    await runtime.unsafeEvictDurableObject('chat-adapter-tests', 'Workspace', {
-      name: WORKSPACE_ID,
-    })
-    runner = await connect(3)
-    const resumed = await browser()
-    expect(await resumed.next()).toEqual(pending)
+    const woke = await controls.hibernate()
+    expect(woke.hello).toBe(1)
+    expect(woke.ready).toBe(1)
+    expect(
+      runner.received.filter((value) => record(value).type === 'welcome'),
+    ).toHaveLength(1)
     runner.emit({ ...delta, text: 'value' })
     expect(await runner.inbox.next()).toEqual(confirm(4))
     const continuation = await resumed.next()
@@ -173,6 +175,20 @@ it('restores encrypted held text after native eviction and publishes the hidden 
       }),
     )
     expect(await runner.inbox.next()).toEqual(confirm(4))
+    runner.socket.send(
+      JSON.stringify({
+        type: 'event',
+        streamId: 'held-output',
+        eventNumber: 6,
+        occurredAt: 1_800_000_000_006,
+        event: { ...delta, text: 'Skipped' },
+      }),
+    )
+    expect(await runner.inbox.next()).toEqual({
+      type: 'resend',
+      streamId: 'held-output',
+      fromEventNumber: 5,
+    })
     runner.emit({ ...delta, text: '!' })
     expect(await runner.inbox.next()).toEqual(confirm(5))
     const tail = await resumed.next()
@@ -189,7 +205,6 @@ it('restores encrypted held text after native eviction and publishes the hidden 
     ).toEqual([record(continuation).envelope, record(tail).envelope])
     expect(JSON.stringify(await storedRecords())).not.toContain('private-')
   } finally {
-    await closeSockets(...sockets)
-    await runtime.dispose()
+    await disposeRunners(runtime, sockets)
   }
 })

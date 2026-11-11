@@ -19,9 +19,9 @@ import { deviceBrowserGate } from './body'
 import { readJsonObject } from '../http/json-body'
 import { requestBearer } from './access'
 import { deviceBrokerName } from './paths'
-import { deviceFrame, deviceWire } from './socket'
 import type { DeviceOperationValue } from './internal'
 import { importBrokerRoute } from '../conductor-import/broker-route'
+import type { DeviceSockets } from './native-sockets'
 
 export function approvalAction(value: unknown): DeviceApprovalAction {
   switch (value) {
@@ -52,6 +52,7 @@ export async function brokerBrowserRoute(
   request: Request,
   env: AppEnv,
   matches: (name: string) => boolean,
+  sockets: DeviceSockets,
 ): Promise<Response> {
   const context = await deviceBrowserGate(request, env, broker.now())
   if (!matches(deviceBrokerName(context.user.id)))
@@ -88,41 +89,16 @@ export async function brokerBrowserRoute(
       )
     const deviceId = deviceRequired(url.searchParams.get('deviceId'))
     const pair = new WebSocketPair()
-    const server = pair[1]
-    server.accept()
-    const connection = {
-      device: { deviceId, connectionId: crypto.randomUUID() },
-      deviceName: url.searchParams.get('deviceName')?.trim()
-        ? url.searchParams.get('deviceName')
-        : null,
-      userId: context.user.id,
-      sessionId: context.sessionId,
-      lastSeen: broker.now(),
-      send: (message: import('../../src/shared/device').WorkerToDevice) =>
-        server.send(deviceWire(message)),
-      close: (code = 1000, reason = 'The Mac is not available.') =>
-        server.close(code, reason),
-    }
-    await broker.serial(() => broker.attach(connection))
-    server.addEventListener('message', (event) => {
-      let value: unknown
-      try {
-        value = deviceFrame(event.data)
-      } catch {
-        void broker.serial(() =>
-          broker.connection === connection ? broker.drop() : Promise.resolve(),
-        )
-        return
-      }
-      void broker.receive(connection, value)
-    })
-    const close = () => {
-      void broker.serial(() =>
-        broker.connection === connection ? broker.drop() : Promise.resolve(),
-      )
-    }
-    server.addEventListener('close', close)
-    server.addEventListener('error', close)
+    await broker.serial(() =>
+      sockets.accept(pair[1], {
+        device: { deviceId, connectionId: crypto.randomUUID() },
+        deviceName: url.searchParams.get('deviceName')?.trim()
+          ? url.searchParams.get('deviceName')
+          : null,
+        userId: context.user.id,
+        sessionId: context.sessionId,
+      }),
+    )
     return new Response(null, { status: 101, webSocket: pair[0] })
   }
   if (request.headers.has('Upgrade'))

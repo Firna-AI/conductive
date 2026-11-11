@@ -5,7 +5,8 @@ import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { RunnerImportCommand } from '../../src/shared/runner-import'
 import { sendRunnerImport, sendRunnerFile } from './runner-import-controls'
 import { HttpError } from '../http'
-import { AuthenticatedRunner } from './authenticated-runner'
+import { RunnerConnections } from './runner-connections'
+import type { NativeBrowserConnections } from './browser-connections'
 import { RunnerDelivery } from './runner-delivery'
 import { parseRunnerTransport } from './runner-input'
 import type { ChatStore } from './store'
@@ -22,8 +23,7 @@ import type {
 } from './types'
 
 export class RunnerChannel {
-  private connectionId: string | null = null
-  private current: ActiveRunner | null = null
+  readonly connections: RunnerConnections
   private readonly delivery: RunnerDelivery
   private readonly repairs: RepairDelivery
   private readonly store: ChatStore
@@ -35,6 +35,8 @@ export class RunnerChannel {
     dependencies: ChatDependencies,
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
     forRunningTurn: WorkspaceTurnTokens['forRunningTurn'],
+    bind: (id: string) => void,
+    native?: NativeBrowserConnections,
   ) {
     this.store = store
     this.dependencies = dependencies
@@ -47,65 +49,40 @@ export class RunnerChannel {
       forRunningTurn,
     )
     this.repairs = new RepairDelivery(store, publish)
+    this.connections = new RunnerConnections(
+      store,
+      dependencies,
+      publish,
+      bind,
+      (peer, value) => this.receive(peer, value),
+      native,
+    )
   }
 
-  open(workspace: RunnerWorkspaceRecord, peer: RunnerPeer): Promise<void> {
-    return this.store.run(async () => {
-      await this.store.read(workspace.id, async () => undefined)
-      this.close()
-      const active: ActiveRunner = {
-        peer: new AuthenticatedRunner(
-          peer,
-          workspace,
-          this.dependencies,
-          () => {
-            if (this.current !== active) return
-            this.current = null
-            if (this.connectionId)
-              this.dependencies.runnerDetached(this.connectionId)
-            this.connectionId = null
-            this.dependencies.waitUntil(
-              this.store.run(() =>
-                this.dependencies.runnerDisconnected(
-                  active.workspace.id,
-                  this.publisher(active.workspace.id),
-                ),
-              ),
-            )
-          },
-        ),
-        workspace,
-        streamId: null,
-        protocolVersion: null,
-        ready: false,
-        delivered: new Set(),
-      }
-      this.current = active
-      const connectionId = this.dependencies.randomConnectionId()
-      this.connectionId = connectionId
-    })
+  open(
+    workspace: RunnerWorkspaceRecord,
+    peer: RunnerPeer,
+    socket?: WebSocket,
+  ): Promise<void> {
+    return this.connections.open(workspace, peer, socket)
   }
 
   disconnect(peer: RunnerPeer): void {
-    if (this.current?.peer.matches(peer)) this.close()
+    this.connections.disconnect(peer)
   }
-
   close(): void {
-    const active = this.current
-    try {
-      active?.peer.close()
-    } catch {
-      /* The transport is already closed. */
-    }
+    this.connections.close()
   }
 
   receive(peer: RunnerPeer, value: unknown): Promise<void> {
     return this.store.run(async () => {
-      const active = this.current
+      const active = this.connections.current
       if (!active || !active.peer.matches(peer)) return
       if (!(await active.peer.authorize())) return
       try {
-        await this.handle(active, value)
+        const input: unknown =
+          typeof value === 'string' ? JSON.parse(value) : value
+        await this.handle(active, input)
       } catch (error) {
         warnWorker({
           kind: 'runner_message_failed',
@@ -132,7 +109,8 @@ export class RunnerChannel {
       active.streamId = message.streamId
       active.protocolVersion = message.protocolVersion
       active.ready = welcome.ready
-      if (active.ready) this.attachFiles(active)
+      await this.connections.persist(active)
+      if (active.ready) this.connections.attachFiles(active)
       await active.peer.send({
         type: 'welcome',
         protocolVersion: message.protocolVersion,
@@ -152,7 +130,7 @@ export class RunnerChannel {
       void this.store
         .run(() => this.flush())
         .catch(() => {
-          if (this.current === active) this.close()
+          if (this.connections.current === active) this.close()
           active.peer.close()
         })
       return
@@ -164,19 +142,16 @@ export class RunnerChannel {
         'The connection is not ready.',
       )
     if (message.type === 'import.result') {
-      if (this.connectionId && message.connectionId === this.connectionId)
-        await this.dependencies.receiveImportResult(message, this.connectionId)
+      if (message.connectionId === active.id)
+        await this.dependencies.receiveImportResult(message, active.id)
       return
     }
     if (
       message.type === 'file.read.result' ||
       message.type === 'file.diff.result'
     ) {
-      if (this.connectionId)
-        await this.dependencies.receiveFileResult(
-          message.value,
-          this.connectionId,
-        )
+      if (active.id)
+        await this.dependencies.receiveFileResult(message.value, active.id)
       return
     }
     if (message.streamId !== active.streamId)
@@ -225,7 +200,8 @@ export class RunnerChannel {
     const publish = this.publisher(active.workspace.id)
     if (becameReady) {
       active.ready = true
-      this.attachFiles(active)
+      await this.connections.persist(active)
+      this.connections.attachFiles(active)
       await this.dependencies.runnerReady(active.workspace.id, publish)
     }
     for (const envelope of stored)
@@ -234,7 +210,7 @@ export class RunnerChannel {
   }
 
   async flush(): Promise<void> {
-    const active = this.current
+    const active = this.connections.current
     if (active) {
       if (!(await active.peer.authorize())) return
       try {
@@ -245,7 +221,7 @@ export class RunnerChannel {
       }
       await this.delivery.flush(
         active,
-        () => this.current === active,
+        () => this.connections.current === active,
         () => this.close(),
       )
     }
@@ -261,23 +237,11 @@ export class RunnerChannel {
     }
   }
 
-  private attachFiles(active: ActiveRunner): void {
-    const id = this.connectionId
-    if (!id) return
-    this.dependencies.runnerAttached(active.workspace.id, id, (command) =>
-      this.store.run(() =>
-        this.current === active && this.connectionId === id
-          ? this.sendFileCommand(active.workspace.id, command)
-          : Promise.resolve(false),
-      ),
-    )
-  }
-
   async sendFileCommand(
     workspaceId: string,
     command: RunnerFileCommand,
   ): Promise<boolean> {
-    return sendRunnerFile(this.current, workspaceId, command, () =>
+    return sendRunnerFile(this.connections.current, workspaceId, command, () =>
       this.close(),
     )
   }
@@ -287,8 +251,8 @@ export class RunnerChannel {
     command: Omit<RunnerImportCommand, 'connectionId'>,
   ): Promise<string | null> {
     return sendRunnerImport(
-      this.current,
-      this.connectionId,
+      this.connections.current,
+      this.connections.current?.id ?? null,
       workspaceId,
       command,
     )

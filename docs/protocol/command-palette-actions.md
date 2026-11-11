@@ -1,12 +1,15 @@
 # Command palette: actions and settings
 
-This doc holds the requirements and the decisions in force for the
-actions and the settings rows of the command palette. It belongs to
-[Command palette](command-palette.md), which covers the key, the org of
-the palette, its layouts, its tabs, its rows, and its search. The terms
-are those of the [architecture doc](../architecture.md#terms). A decision
-number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+This doc holds the requirements and the decisions in force for the actions
+and the settings that the command palette offers. It also covers the Help
+group, with Send feedback. It belongs to
+[Command palette](command-palette.md), which covers the other parts of the
+palette. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. The [mockup catalogue](../mockups/catalogue-palette.md) draws the
+actions at `app/command-palette/actions`, and the settings at
+`app/command-palette/settings`.
 
 ## Actions
 
@@ -16,7 +19,7 @@ number names a dated record, as
   own mockups and stored state. Layout toggles, a focus mode, and a theme
   choice are view commands.
 - The palette offers only the actions that the current page offers to the
-  person.
+  person. Send feedback is the one exception, as [Help](#help) says.
 - New workspace also shows on each page where the palette has an org that
   takes changes. It uses the
   [saved view of New workspace](create-a-workspace.md#page-or-dialog).
@@ -40,8 +43,10 @@ number names a dated record, as
   4. In the Mac app, "Hide the sidebar" or "Show the sidebar", as the
      sidebar toggle of the window says. This row shows on each page where
      the sidebar can show.
+  5. Send feedback, as [Help](#help) says.
 - The Actions tab shows these parts as groups. Their labels are the name
-  of the open workspace, the name of the org, "Orgs", and "Window".
+  of the open workspace, the name of the org, "Orgs", "Window", and
+  "Help".
 - Archive workspace shows only to the workspace owner and the admins, as
   [Members and roles](orgs-and-members.md#members-and-roles) says.
 - Restore workspace shows to every member until Restore of the archived
@@ -50,13 +55,43 @@ number names a dated record, as
   [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
   states what they can still do.
 - Each action does what the same control does in the app. So New workspace
-  opens New workspace, as the rest of the app does.
+  opens New workspace, as the rest of the app does. Send feedback is the
+  one exception, as [Help](#help) says.
 - The palette does not offer Resume, the owner picker, Sign out, or the
   pull request actions. They stay where they are:
   - Resume shows on the stopped workspace itself.
   - The owner picker acts on a person.
   - Sign out sits on the Account page, which the Sign-in row opens.
   - A pull request action leads to GitHub, from the pull request bar.
+
+## Help
+
+- The Help group holds one action, Send feedback. It opens the
+  [Feedback dialog](feedback.md#the-dialog) over the current page.
+- The search words of Send feedback are "bug", "idea", "support",
+  "contact", "help", and "report".
+- Help is the last group of the Actions tab. Outside the Mac app, no
+  Window group shows, so Help comes after Orgs. On the All tab, Send
+  feedback is the last action.
+- Reason: feedback is about the product, not about a workspace, an org, or
+  the window.
+- Send feedback shows on each page where the palette opens, also without
+  an org and in a suspended org. Reason: feedback changes no org.
+- Send feedback is not a link, because the Feedback dialog has no address.
+- Send feedback is the one exception to three rules of the palette:
+  - Each other action does what the same control does in the app. The app
+    has no other control for feedback.
+  - Each other action shows only where the current page offers it. The
+    app offers Send feedback on each page.
+  - Without an org, the palette offers only Create org, Send feedback, and
+    the Account settings, as
+    [The org of the palette](command-palette.md#the-org-of-the-palette)
+    says.
+- Reason: the palette is the place where a person sends feedback
+  (decision 270), and it opens on each page.
+- The menu bar of the Mac app has no feedback item. Reason: a menu item
+  cannot open a dialog inside the page, because the page has no bridge, as
+  [Permissions](desktop-commands.md#permissions) says.
 
 ## Settings
 

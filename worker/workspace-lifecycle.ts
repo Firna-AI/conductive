@@ -1,16 +1,9 @@
-import { DurableObject } from 'cloudflare:workers'
+import { WorkspaceObjectBase } from './lifecycle/workspace-object-base'
 import type { RunnerLifecycleEvent } from './lifecycle/runner-lifecycle'
 import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
 import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
-import { WorkspaceChat } from './chat/backend'
 import type { DeviceOperationResult } from './devices/internal'
-import {
-  createWorkspaceIntegration,
-  type WorkspaceCompositionEnv,
-  type WorkspaceChatResolvers,
-} from './chat/workspace-integration'
-import { DeviceRuntime } from './devices/runtime'
 import {
   checkWorkspaceTurnToken,
   credentialSender,
@@ -32,67 +25,16 @@ import {
   startResultForTransport,
   type WorkspaceLifecycleTransport,
 } from './lifecycle/workspace-transport'
-import type { WorkspaceController } from './lifecycle/workspace-controller-types'
 import type { WorkspaceStartIntent } from './lifecycle/start-types'
-import {
-  createWorkspaceInputActivity,
-  recordWorkspaceActivity,
-} from './lifecycle/create-input-activity'
-import { lifecycleDependencies } from './lifecycle/runtime'
-import type { ConnectionScheduler } from './security/connection-access'
+import { recordWorkspaceActivity } from './lifecycle/create-input-activity'
 import type { ComputerIdentity } from './lifecycle/computer-ledger'
 import { featureResult } from './features/result'
 import { acceptLifecycleMessage } from './lifecycle/workspace-first-message'
 
 export class WorkspaceLifecycle
-  extends DurableObject<WorkspaceCompositionEnv>
+  extends WorkspaceObjectBase
   implements WorkspaceLifecycleTransport
 {
-  protected readonly chat: WorkspaceChat
-  protected readonly controller: WorkspaceController
-  protected readonly devices: DeviceRuntime
-  protected readonly context: DurableObjectState
-  protected readonly activity: ReturnType<typeof createWorkspaceInputActivity>
-  private readonly activityNow: () => number
-
-  protected readonly integration: ReturnType<typeof createWorkspaceIntegration>
-
-  constructor(
-    context: DurableObjectState,
-    env: WorkspaceCompositionEnv,
-    now: () => number = Date.now,
-    resolvers: WorkspaceChatResolvers = {},
-    activitySchedule?: ConnectionScheduler,
-  ) {
-    super(context, env)
-    this.context = context
-    this.activityNow = now
-    const integration = createWorkspaceIntegration(context, env, now, resolvers)
-    this.integration = integration
-    this.chat = integration.chat
-    this.devices = integration.devices
-    this.controller = integration.controller
-    this.activity = createWorkspaceInputActivity(
-      context,
-      env,
-      { ...lifecycleDependencies(), now },
-      integration,
-      (operation) =>
-        this.chat.runLifecycle(() => integration.withGeneration(operation)),
-      activitySchedule,
-    )
-  }
-
-  protected run<T>(operation: () => Promise<T>): Promise<T> {
-    return this.chat.runLifecycle(() =>
-      this.integration.withGeneration(async () => {
-        const result = await operation()
-        await this.chat.flushRunner()
-        return result
-      }),
-    )
-  }
-
   activateImportedWorkspace(orgId: string, id: string, userId: string) {
     return featureResult(() =>
       this.run(() =>

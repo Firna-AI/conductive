@@ -68,6 +68,16 @@ export class Refresher<T> implements Refreshing {
     return run
   }
 
+  /**
+   * Reads the value with a read that starts after this call, such as after
+   * a refusal that the value may no longer exist. A read that runs already
+   * may have started before that, so the new read starts after its answer.
+   */
+  async reread(): Promise<void> {
+    if (this.running) await this.running
+    return this.refresh()
+  }
+
   /** A change of the value can change the wait, such as a row that starts. */
   private follow(): void {
     if (this.running || this.screens === 0) return

@@ -12,10 +12,13 @@ export function ExternalLink(props: {
   href: string
   children: ReactNode
   className?: string
+  /** The spoken name, when it differs from the visible words. */
+  label?: string
 }) {
   const href = useOutsideHref(props.href)
   return (
     <a
+      aria-label={props.label}
       className={classes(styles.link, props.className)}
       href={href}
       rel="noreferrer"
