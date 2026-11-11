@@ -30,10 +30,43 @@ The user approved this image after the X header design work. It uses:
   [SIL Open Font License](../../docs/mockups/src/fonts/Inter-OFL.txt).
 
 The image gives the app equal 64-pixel side margins and crops it at the
-bottom. The background, brand, and screen are part of the flattened PNG.
-The approved PNG is the published source asset. The original scratch
-render files are not required by the build.
-Make a new card when its brand, headline, or captured workspace changes.
+bottom. Its layout and source inputs are tracked in the repository.
+No scratch file or new AI image is needed to make the card again.
+
+## Refresh the image
+
+Run this command from the repository root with Node 24 and Google Chrome:
+
+```bash
+npm run marketing:pictures
+```
+
+It rebuilds the mockups and refreshes the share card alongside the home
+page pictures. Use it when a captured screen, the brand, or the headline
+changes. To refresh only the share card, run:
+
+```bash
+npm run marketing:preview
+```
+
+Both commands capture the current canonical dark workspace at 1440 × 547
+CSS pixels. The home hero uses that same workspace state. The card
+keeps the approved blue background, logo, bold title, frame, and margins.
+Its title comes from the same text as the home page.
+
+The generator is in
+[`capture-preview.ts`](../../tools/marketing-pictures/capture-preview.ts),
+with its layout in
+[`preview-document.ts`](../../tools/marketing-pictures/preview-document.ts).
+The approved background is
+[`assets/link-preview-background.png`](../../tools/marketing-pictures/assets/link-preview-background.png).
+It reads the current brand master and Inter font directly.
+The [capture tool README](../../tools/marketing-pictures/README.md) gives
+the sources and commands.
+
+Commit the generated `pictures/link-preview.png` with the screen change,
+as with the other marketing pictures. The site build uses that file.
+It does not need Chrome or run the capture command during deployment.
 
 ## Verification
 

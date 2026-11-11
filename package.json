@@ -19,6 +19,7 @@
     "mockups:typecheck": "tsc -p docs/mockups/tsconfig.json",
     "mockups:check": "npm run mockups:typecheck && npm run mockups:build",
     "marketing:pictures": "node tools/marketing-pictures/run.ts",
+    "marketing:preview": "node tools/marketing-pictures/run.ts --preview-only",
     "site:dev": "astro dev",
     "site:build": "astro build",
     "lint": "eslint .",
