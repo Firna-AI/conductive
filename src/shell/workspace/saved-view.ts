@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import type { RunRoutine } from '../../chat/api/read-responses'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { SavedView } from './features'
 
@@ -34,4 +35,13 @@ export function saveView(
   change: (view: WorkspaceView) => WorkspaceView,
 ): void {
   if (viewKnown(saved)) saved.updateView(change)
+}
+
+/**
+ * The routine whose run made the workspace, which the chat reads with the
+ * view. Null for a workspace that a person created, and until the read.
+ */
+export function useRunRoutine(saved: SavedView): RunRoutine | null {
+  const read = () => saved.getSnapshot().routine
+  return useSyncExternalStore(saved.subscribe, read, read)
 }

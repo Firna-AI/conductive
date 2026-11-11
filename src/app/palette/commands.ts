@@ -1,3 +1,7 @@
+import {
+  sendFeedbackLabel,
+  sendFeedbackWords,
+} from '../../../docs/mockups/src/components/feedback/feedbackCopy'
 import type { SettingsTab } from '../router'
 
 /** A command of the palette: an action or a setting that a row runs. */
@@ -29,8 +33,12 @@ export const offeredActionIds = [
 
 export type OfferedActionId = (typeof offeredActionIds)[number]
 
-/** The actions that the palette makes itself, because they open a page. */
-export type OwnActionId = 'new-workspace' | 'create-org' | 'switch-org'
+/**
+ * The actions that the palette makes itself: those that open a page, and
+ * Send feedback, which opens the Feedback dialog over each page.
+ */
+export type OwnActionId =
+  'new-workspace' | 'create-org' | 'switch-org' | 'send-feedback'
 
 export const actionTexts: Readonly<
   Record<OfferedActionId | OwnActionId, CommandText>
@@ -52,6 +60,7 @@ export const actionTexts: Readonly<
   'switch-org': { label: 'Switch to', words: ['org'] },
   'hide-sidebar': { label: 'Hide the sidebar', words: ['toggle'] },
   'show-sidebar': { label: 'Show the sidebar', words: ['toggle'] },
+  'send-feedback': { label: sendFeedbackLabel, words: sendFeedbackWords },
 }
 
 /** The tabs of the org settings, in their order, with their search words. */
@@ -85,7 +94,10 @@ export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =
   {
     'sign-in': { label: 'Sign-in', words: ['sign out', 'account'] },
     github: { label: 'GitHub', words: ['github app', 'install'] },
-    agents: { label: 'Agents', words: ['claude', 'codex', 'login', 'api key'] },
+    agents: {
+      label: 'Agents',
+      words: ['claude', 'codex', 'login', 'api key', 'token'],
+    },
     'new-workspaces': {
       label: 'New workspaces',
       words: ['model', 'effort', 'default'],

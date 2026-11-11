@@ -90,6 +90,14 @@ export class TurnLifecycle {
         : {
             state: 'failed',
             ...(event ? { retryMessageId: event.retryMessageId } : {}),
+            error:
+              event?.type === 'turn.failed'
+                ? event.error
+                : {
+                    code: 'runner_event_refused',
+                    message:
+                      'The agent could not finish. Try again in the workspace.',
+                  },
           },
       occurredAt,
     )
@@ -104,6 +112,7 @@ export class TurnLifecycle {
     turnId: string,
     cause: string,
     randomId: () => string,
+    completion: 'after-runner' | 'immediate' = 'after-runner',
   ): Promise<void> {
     const turn = await this.transaction.turn(turnId)
     if (
@@ -114,8 +123,17 @@ export class TurnLifecycle {
       return
     turn.loginFailure ??= cause
     await this.transaction.saveTurn(turn)
-    if (turn.state === 'queued') await this.finish(turn, { state: 'failed' })
-    else await this.stop(turn.id, randomId())
+    if (turn.state === 'queued' || completion === 'immediate') {
+      const running = turn.state !== 'queued'
+      await this.finish(turn, { state: 'failed' })
+      if (running)
+        await this.transaction.saveCommand({
+          type: 'interrupt',
+          commandId: randomId(),
+          sessionId: this.session.id,
+          turnId,
+        })
+    } else await this.stop(turn.id, randomId())
   }
 
   async stop(turnId: string, commandId: string) {

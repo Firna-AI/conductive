@@ -11,6 +11,7 @@ import { checkBuiltComparison } from './built-comparison.test-support'
 import { checkGuideRoutes, checkScrollRegions } from './built-docs.test-support'
 import { checkPricingPage } from './built-pricing.test-support'
 import { checkMacDownloads } from './built-site-downloads.test-support'
+import { checkSharePreview } from './built-site-sharing.test-support'
 import { buildSiteAssets, expectedPolicy } from './built-site.test-support'
 import { termsConsentResponse } from './consent'
 import { decodeHtml, inlineStyles, links } from './html.test-support'
@@ -64,6 +65,10 @@ it('opens the Terms and Privacy footer links without draft text', async () => {
       /lawyer review|A lawyer reviews|To confirm:|To write:|draft-field/,
     )
   }
+})
+
+it('serves public link cards with page metadata and the approved preview image', async () => {
+  await checkSharePreview(get, SITE, assets)
 })
 
 it('leads the header, action, and footer links of the Mac app to both chip downloads', async () => {

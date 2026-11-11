@@ -6,7 +6,7 @@ import {
 } from '../lifecycle/workspace-runtime'
 import { chatFilesStorage } from './files-storage'
 import { saveHistoryEvent } from './history-storage'
-import { HistoryPages } from './history-pages'
+import { HistoryPages, type SessionPage } from './history-pages'
 import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
@@ -98,6 +98,30 @@ export class ChatTransaction extends ChatRecords {
       )
     )?.command
   }
+  async commandDelivered(
+    commandId: string,
+    connectionId: string,
+  ): Promise<boolean> {
+    return (
+      (await this.data.get<{ deliveredTo?: string }>(key('command', commandId)))
+        ?.deliveredTo === connectionId
+    )
+  }
+  async saveCommandDelivery(
+    commandId: string,
+    connectionId: string,
+  ): Promise<void> {
+    const record = await this.data.get<{
+      command: PendingCommand
+      order: number
+      deliveredTo?: string
+    }>(key('command', commandId))
+    if (record)
+      await this.data.put(key('command', commandId), {
+        ...record,
+        deliveredTo: connectionId,
+      })
+  }
   saveTurn(turn: StoredTurn): Promise<void> {
     return this.summary
       .turn(turn, this.now)
@@ -138,8 +162,8 @@ export class ChatTransaction extends ChatRecords {
   saveCursor(streamId: string, through: number): Promise<void> {
     return this.data.put(key('cursor', streamId), through)
   }
-  history(after: number, through = this.through, sessionId?: string) {
-    return this.pages.read(after, Math.min(through, this.through), sessionId)
+  history(after: number, through = this.through, session?: SessionPage) {
+    return this.pages.read(after, Math.min(through, this.through), session)
   }
 
   async emit(
@@ -176,6 +200,7 @@ export class ChatStore {
   private tail: Promise<unknown> = Promise.resolve()
   private readonly storage: ChatStorage
   private readonly now: () => number
+  private readonly changed: (workspaceId: string) => Promise<void>
   private readonly turnEnds: TurnEndReports
 
   constructor(
@@ -183,10 +208,12 @@ export class ChatStore {
     now: () => number,
     turnEnded: ConstructorParameters<typeof TurnEndReports>[0] = async () =>
       undefined,
+    changed: (workspaceId: string) => Promise<void> = async () => undefined,
   ) {
     this.storage = storage
     this.now = now
     this.turnEnds = new TurnEndReports(turnEnded)
+    this.changed = changed
   }
 
   run<T>(work: () => Promise<T>): Promise<T> {
@@ -264,6 +291,7 @@ export class ChatStore {
     )
     this.turnEnds.committed(workspaceId, endedTurns)
     committed(events)
+    await this.changed(workspaceId)
     return result
   }
 }

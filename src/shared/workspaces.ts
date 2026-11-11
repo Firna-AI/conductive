@@ -1,5 +1,6 @@
 import type { AgentChoice } from './agents'
 import { orgPath, type Timestamp } from './api'
+import type { GitHubSummary } from './github'
 import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
@@ -25,6 +26,10 @@ export const workspacePaths = {
     `${workspacePath(orgId, id)}/activity`,
   read: (orgId: string, id: string) => `${workspacePath(orgId, id)}/read`,
   archive: (orgId: string, id: string) => `${workspacePath(orgId, id)}/archive`,
+  continue: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/continue`,
+  continueResult: (orgId: string, id: string, continueId: string) =>
+    `${workspacePath(orgId, id)}/continue/${encodeURIComponent(continueId)}`,
   restore: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restore`,
 } as const
 
@@ -51,6 +56,7 @@ export interface Workspace {
   branch: string
   choice: AgentChoice
   state: WorkspaceState
+  github: GitHubSummary | null
   createdAt: Timestamp
   updatedAt: Timestamp
   archivedAt: Timestamp | null
@@ -92,3 +98,22 @@ export interface CreateWorkspaceResponse extends WorkspaceResponse {
   sessionId: string
   firstMessage: UserMessage
 }
+export interface LocalWork {
+  uncommittedFiles: readonly string[]
+  unpushedCommits: number
+}
+
+export interface ContinueWorkspaceRequest {
+  expectedBranch: string
+  allowLocalWork?: boolean
+}
+
+export type ContinueWorkspaceResponse =
+  | { state: 'pending'; continueId: string }
+  | {
+      state: 'confirmation-required'
+      branch: string
+      baseBranch: string
+      localWork: LocalWork
+    }
+  | { state: 'continued'; workspace: Workspace; eventNumber: number }

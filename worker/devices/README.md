@@ -70,10 +70,31 @@ Replacement fails old work instead of sending it to the new Mac.
 
 The Mac sends `device.ping` every 10 seconds.
 Its lease lasts 30 seconds.
-A durable alarm checks the lease and the execution watchdog.
-Storing pending work schedules that alarm for the earliest execution deadline or lease end.
+The `devices` alarm source runs at the earliest of the next 10-second session check, the lease end, and each execution deadline.
 Sleep, close, sign-out, or an expired session settles affected work as unavailable.
-A restored broker without its old socket also settles its durable pending work.
+A restart that closed the Mac socket restores no connection, so the next check also settles the durable pending work.
+
+### Sleep and restore
+
+The Mac socket uses the native transport of the shared class, as [Workspace object connections](../README.md#workspace-object-connections) says.
+`brokerBrowserRoute` checks that this object is the broker of the signed-in user, its `deviceBrokerName`.
+Then `DeviceSockets` in `native-sockets.ts` accepts the socket.
+`DeviceConnectionStore` in `connection-store.ts` keeps the current connection in the raw record `native:device:current`, in the chunked value format.
+That record holds the pairing, the device name, the user, the desktop session ID, the last heartbeat, the next session check, and the generation.
+The attachment holds only the connection ID and the generation, so a long device ID or name cannot pass the attachment limit.
+A new connection raises the generation. A retired connection leaves a tombstone, so a closing older socket cannot take back the pairing.
+
+A restore needs the saved connection ID and generation, and the broker name of the saved user.
+It does not call `attach`, so the Mac gets no second `device.connected`.
+The durable broker requests, their execution deadlines, and the pairing stay as they were.
+
+The platform answers the exact `{"type":"device.ping"}` with `{"type":"device.pong"}`.
+`DeviceSockets` sets that automatic response only when it accepts or restores a verified Mac socket.
+`checkBroker` in `broker-lifecycle.ts` takes the lease time from the later of the saved heartbeat and the last automatic response.
+The alarm reads the desktop session at least every 10 seconds while a Mac is connected. A failed read closes the connection.
+An automatic pong grants no command permission.
+A ping that the platform does not match reaches the broker, which checks the session and answers it.
+A settings request waits for its result with its 10-second timer. That request keeps the object active, and a disconnect rejects it.
 
 ## Command authorization and lifecycle
 
@@ -133,6 +154,7 @@ Without it, or without a lifecycle state, the device-only fallback runs in the s
 - The feature restores the prior state only when no request still waits.
 - Metadata changes do not prevent restoration.
 - Restoration changes only a current `input` state, and it preserves newer stopped, archived, or error states.
+- Each fallback workspace event gives the GitHub summary of its D1 workspace row.
 
 ## Permission policy and limits
 
@@ -190,6 +212,20 @@ Sender selection comes from messages stored through that real chat path.
 `DeviceRuntime` takes one clock for lease, watchdog, and command times.
 The fixture moves that clock through a test-only route.
 Its test-only alarm route runs the real Durable Object alarm only for stored alarms that are due on that clock, through `advanceScheduledAlarms`.
+After each alarm, that route awaits the tracked alarm work.
+Its `ManualDeviceClock` restores the fixture time from storage when the object starts again.
+It also maps each automatic response time of the platform to the fixture time.
+Its readiness route reports the instance marker, the native sockets with their attachments, and the automatic response.
+`sendFrame` reads that route after each frame, because an automatic pong does not show that the broker queue is empty.
+`deviceClock(fixture).hibernate()` in `alarm.test-support.ts` keeps the Mac socket through a wake, as [Wake tests](../README.md#wake-tests) says.
+Its restart route aborts the object, so the platform closes the Mac socket.
+`native-close.test.ts` makes a Mac close the first event after a broker wake, with no restored peer.
+The `closed` route of the device test worker uses `NativeCloseProbe`, as [Native close probe](../test-support/README.md#native-close-probe) says.
+A POST of that route prepares the probe before the eviction. A GET waits for the close callback, then reports the result.
+The case checks the new instance, a close as the first event, the omitted connection ID, and one completed callback with no error.
+It reads the settled state right after that callback, before any broker read could reconcile it.
+The case then checks that the pending request is `unavailable`, and that the workspace moves from `input` to `working`.
+It also checks that the saved connection, the pending records, and the alarm are gone, and that the Mac got no second `device.connected`.
 The publication recovery test interrupts real D1 with a temporary trigger and replays through a browser route.
 `worker/chat/integration/workspace-device-projection.test.ts` runs the composed workspace object with a real waiting request.
 D1, the list, and a reopen keep `input` through lifecycle activity, a start-step update, and a heartbeat.
@@ -200,7 +236,9 @@ When the turn ends, the request fails with `turn_ended`, and D1 shows `ready`.
 - `runtime.ts`, `router.ts`: feature dispatch, the RPC operation entry, and Durable Object composition.
 - `access.ts`: `activeStoredTurn`, the shared read of the running stored turn, and `activeDeviceSender` with the current access checks.
 - `workspace-commands.ts`, `workspace-browser.ts`: machine commands and scoped app records/approvals.
-- `broker.ts`, `broker-routes.ts`, `broker-messages.ts`: the authenticated device socket and relays.
+- `broker.ts`, `broker-routes.ts`, `broker-messages.ts`: the broker, its upgrade route, and its relays.
+- `native-sockets.ts`, `connection-store.ts`: `DeviceSockets`, the native acceptance, restore, close, and automatic heartbeat response of the Mac socket, and the durable current connection with its generation.
+- `broker-lifecycle.ts`: the lease and session check, the drop that settles pending work, and the alarm schedule.
 - `records.ts`, `storage.ts`: durable requests and chunked values.
   `record-read.ts` lists their records for device reads and the transcript snapshot.
 - `state.ts`: `publishDeviceState`, the queue-owned call of the shared state writer, and the device-only fallback.

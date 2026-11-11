@@ -4,6 +4,7 @@ import type {
   RunnerEventEnvelope,
   WorkspaceToRunner,
   RunnerProtocolVersion,
+  RunnerLoginKind,
 } from '../../src/shared/runner'
 import type {
   RunnerConnection,
@@ -18,6 +19,7 @@ export interface FakeRunnerOptions {
   now?: () => number
   /** Defaults to protocol version 1 for legacy runner fixtures. */
   protocolVersion?: RunnerProtocolVersion
+  loginKinds?: readonly RunnerLoginKind[]
 }
 
 /**
@@ -56,6 +58,9 @@ export class FakeRunner {
       protocolVersion: this.options.protocolVersion ?? 1,
       workspaceId: this.options.workspaceId,
       streamId: this.streamId,
+      ...(this.options.loginKinds
+        ? { loginKinds: this.options.loginKinds }
+        : {}),
     })
   }
 

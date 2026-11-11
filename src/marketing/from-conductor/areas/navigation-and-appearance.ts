@@ -6,7 +6,7 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Sidebar',
     status: 'available',
-    note: 'The sidebar groups workspaces into sections and shows their state. Branch names and pull request details are under consideration.',
+    note: 'The sidebar groups workspaces into sections and shows GitHub checks and merges. Branch names and pull request details are under consideration.',
   },
   {
     id: 'sidebar-sections',
@@ -63,7 +63,7 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Status indicators',
     status: 'available',
-    note: 'Workspace state marks show activity, unread output, start progress, stopped computers, and errors.',
+    note: 'List colours show GitHub checks and merges, with motion for work or needed input. Bold names mark unread output.',
   },
   {
     id: 'wrapped-and-passport',

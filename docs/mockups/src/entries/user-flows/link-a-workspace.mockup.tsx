@@ -16,7 +16,7 @@ export const linkAWorkspace = defineUseCase({
       screenPath: 'app/workspace-links/messages',
       title: 'Paste it in another workspace',
       description:
-        'In Checkout address autocomplete, the user pastes the link into the message. It becomes a chip at once: the state mark, W-402, and Saved carts.',
+        'In Checkout address autocomplete, the user pastes the link into the message. It becomes a chip at once: the list mark, W-402, and Saved carts.',
     },
     {
       screenPath: 'app/workspace-links/messages/sent',

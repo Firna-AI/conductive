@@ -9,7 +9,7 @@ The [agent runner](README.md) reads these variables when the service starts.
 | `CONDUCTIVE_RUNNER_URL`              | Yes      | The `https:` or `wss:` URL of the runner route.                       |
 | `CONDUCTIVE_REPOSITORY`              | Yes      | The folder of the workspace repository.                               |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | No       | The folder of each repository of the image, with one variable each.   |
-| `CONDUCTIVE_DEFAULT_BRANCH`          | Yes      | The default branch, as a name that Git resolves in that folder.       |
+| `CONDUCTIVE_DEFAULT_BRANCH`          | Yes      | The workspace base branch, as a name that Git resolves in that folder.       |
 | `CONDUCTIVE_WORKSPACE_BRANCH`        | No       | The workspace branch that the app tracks, from the Worker's record.   |
 | `CONDUCTIVE_HOME`                    | No       | The home folder of the agents. The default is the home of the user.   |
 | `CONDUCTIVE_STATE_PATH`              | No       | The state file. The default is `.conductive/runner-state.json` there. |
@@ -26,12 +26,18 @@ The [agent runner](README.md) reads these variables when the service starts.
   folder absolute. `CONDUCTIVE_REPOSITORY_DIR` has no folder part, so it is
   not one of them. The start script maps it to `CONDUCTIVE_REPOSITORY`, as
   [Start in a workspace](../image/README.md#start-in-a-workspace) says.
-- `CONDUCTIVE_DEFAULT_BRANCH` is the base of the file marks, the Changes
-  list, and the changed files of each turn. Each diff request names its own
-  base branch. File reports compare the commit of that branch, the Git ID
-  of each file, and a streamed hash of the bytes that a read returns. That
-  hash uses the same path checks as a read, and a fixed value for a refused
-  or missing target. So an edit, a link into an ignored folder, or a clean
+- `CONDUCTIVE_DEFAULT_BRANCH` names the base branch of the workspace at the
+  start of the runner. It is the base of the file marks, the Changes list,
+  and the changed files of each turn. Each diff request names its own base
+  branch. The `gh-merge-base` Git setting of the current branch comes
+  first, and these names apply only without it, as
+  [The comparison base](file-reports.md#the-comparison-base) says.
+  Changes, file marks, and diffs use the merge base of that base branch
+  with `HEAD`. Resolution prefers `refs/remotes/origin/<base branch>` when
+  that ref exists. File reports compare that merge base, the Git ID of each
+  file, and a streamed hash of the bytes that a read returns. That hash
+  uses the same path checks as a read, and a fixed value for a refused or
+  missing target. So an edit, a link into an ignored folder, or a clean
   filter cannot hide a change from the open files and diffs. The agent
   instructions also name it as the target branch.
 - `CONDUCTIVE_WORKSPACE_BRANCH` is the workspace branch that the

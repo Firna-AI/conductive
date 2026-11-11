@@ -221,7 +221,15 @@ export class NativeWorkspace extends Workspace {
               },
             },
             at,
-            () => [{ storage: context.storage, fire: () => this.alarm() }],
+            () => [
+              {
+                storage: context.storage,
+                fire: async () => {
+                  await this.alarm()
+                  await this.settledAlarms()
+                },
+              },
+            ],
           ),
         settled,
         drain,
@@ -237,7 +245,10 @@ export class NativeWorkspace extends Workspace {
           await context.storage.deleteAll()
         },
         rawRecords: () => context.storage.list({ prefix: '' }),
-        dispatchAlarm: () => this.alarm(),
+        dispatchAlarm: async () => {
+          await this.alarm()
+          await this.settledAlarms()
+        },
         eventNumber: (workspaceId) =>
           this.chat.readWorkspace(
             workspaceId,

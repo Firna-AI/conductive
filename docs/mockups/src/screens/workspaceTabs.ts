@@ -14,9 +14,25 @@ import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 
-/** A workspace that the create flow made has no edits and one session. */
+/**
+ * A workspace that the create flow or a routine run made has one session,
+ * and no edits of its own.
+ */
 export function isNew(state: WorkspaceState): boolean {
-  return state.workspace === 'saved-carts'
+  return state.workspace === 'saved-carts' || state.run !== undefined
+}
+
+/**
+ * The states after the second session sent a message to the first session
+ * and to Saved carts. Each session tab then leads to the chat of its session
+ * at that time.
+ */
+function sessionLinkStates(state: WorkspaceState): boolean {
+  return (
+    state.tab === 'later-session' ||
+    state.conversation === 'sent-by' ||
+    state.composer === 'session-link'
+  )
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
@@ -52,7 +68,8 @@ export function workspaceName(
  * the starter of the first session is not available, that first session
  * leads to its view for the member, beside the linked session. While the
  * starter keeps the login for their own messages, the first session leads
- * to that view.
+ * to that view. After the second session sent its messages, the second
+ * session can show, and each session tab leads to its chat of that time.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -65,8 +82,10 @@ export function tabsFor(
   const [first, second] = workspaceSessions
   const linked =
     state.tab === 'linked-session' || state.composer === 'no-starter-login'
+  const sent = sessionLinkStates(state)
   let firstPath: string = linked ? paths.noStarterLogin : paths.app
   if (state.composer === 'not-shared') firstPath = paths.loginNotShared
+  if (sent) firstPath = paths.sentBy
   const tabs: WorkspaceTab[] = [
     {
       key: first.key,
@@ -79,7 +98,8 @@ export function tabsFor(
       key: second.key,
       kind: 'session',
       title: nameLabel(second.title),
-      selected: false,
+      to: sent ? paths.sessionChips : undefined,
+      selected: state.tab === 'later-session',
     },
     {
       key: codeTabKey,

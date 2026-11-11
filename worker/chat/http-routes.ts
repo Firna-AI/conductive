@@ -1,8 +1,15 @@
 import type { SessionsResponse } from '../../src/shared/sessions'
 import { HttpError, requiredString } from '../http'
 import type { RequestContext } from '../security/gate'
-import { choice, counter, identifier, invalidInput } from './inputs'
+import {
+  choice,
+  counter,
+  identifier,
+  invalidInput,
+  sendMessage,
+} from './inputs'
 import { send, retryMessage } from './send-message'
+import { BROWSER_PAGE_LIMITS } from './history-pages'
 import { changeModel } from './model-changes'
 import type { ChatOperation } from './operation'
 import { sessionFor } from './session-record'
@@ -41,7 +48,7 @@ export async function chatRoute(
       view.history(
         afterNumber(url),
         through === null ? undefined : counter(Number(through)),
-        sessionId,
+        { sessionId, limits: BROWSER_PAGE_LIMITS },
       ),
     )
     return Response.json(presentWorkspaceHistory(history, presentation))
@@ -100,7 +107,13 @@ export async function chatRoute(
             context,
             dependencies,
           )
-        : await send(operation, sessionId, context, dependencies)
+        : await send(
+            operation,
+            sessionId,
+            sendMessage(context.body),
+            context.user,
+            dependencies,
+          )
     return Response.json(reply, { status: 202 })
   }
   const session = await operation.logins.metadata(sessionId)

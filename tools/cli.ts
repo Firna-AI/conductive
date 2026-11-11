@@ -4,6 +4,11 @@ import { WorkspaceToolError, type WorkspaceToolClient } from './client.ts'
 import { createWorkspaceInput, ToolInputError } from './input.ts'
 import { DeviceContractError } from '../src/shared/device-read.ts'
 import { runMacCli } from './device-cli.ts'
+import {
+  SESSION_CLI_HELP,
+  runSessionCli,
+  sessionHelpRequested,
+} from './session-cli.ts'
 
 export const CLI_HELP = `Conductive workspace tools
 
@@ -13,12 +18,15 @@ conductive sections list
 conductive models list
 conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--section ID] [--name TEXT]
+${SESSION_CLI_HELP}
 conductive mcp
 conductive mac run --command TEXT --folder PATH --reason TEXT
   [--timeout-seconds SECONDS] [--longer-timeout-reason TEXT] [--request-id ID]
 
 Create starts a workspace in the calling workspace's org, with its owner.
 Omitted options use the owner's model and effort, and the default section.
+--name: Use plain words separated by spaces.
+Avoid underscores unless the user tells you to add them.
 The lists return the org's workspaces, repositories, sections, or the app's models.
 List returns every workspace in the org, with its number and web link.
 A workspace link in a message names that workspace.
@@ -33,17 +41,30 @@ export interface ToolOutput {
   stderr(text: string): void
 }
 
+export function toolHelpRequested(args: readonly string[]): boolean {
+  return (
+    args.length === 0 ||
+    (args[0] === 'sessions'
+      ? sessionHelpRequested(args)
+      : args.includes('--help'))
+  )
+}
+
 export async function runWorkspaceCli(
   args: readonly string[],
   client: WorkspaceToolClient,
   output: ToolOutput,
 ): Promise<number> {
-  if (args.length === 0 || args.includes('--help')) {
+  if (toolHelpRequested(args)) {
     output.stdout(CLI_HELP)
     return 0
   }
   try {
     if (args[0] === 'mac') return await runMacCli(args, client, output)
+    if (args[0] === 'sessions') {
+      output.stdout(`${JSON.stringify(await runSessionCli(args, client))}\n`)
+      return 0
+    }
     const { values, positionals } = parseArguments(args)
     if (
       positionals.length !== 2 ||
@@ -122,6 +143,8 @@ function parseArguments(args: readonly string[]) {
 }
 
 export function toolErrorMessage(error: unknown): string {
+  if (error instanceof WorkspaceToolError && error.code)
+    return `${error.code}: ${error.message}`
   return error instanceof ToolInputError ||
     error instanceof WorkspaceToolError ||
     error instanceof DeviceContractError

@@ -33,25 +33,44 @@ export async function sessionTranscript(
   const detail = new URL(request.url).searchParams.get('detail')
   if (detail !== 'concise' && detail !== 'full') return invalidInput()
   return Response.json(
-    await buildTranscript(sessionId, detail, access, store, storage, env),
+    await buildSessionTranscript(
+      sessionId,
+      detail,
+      {
+        workspaceId: access.workspace.id,
+        orgId: access.workspace.orgId,
+        number: access.presentation.number,
+        origin: access.presentation.origin,
+      },
+      store,
+      storage,
+      env,
+    ),
   )
 }
 
-async function buildTranscript(
+export interface TranscriptAccess {
+  workspaceId: string
+  orgId: string
+  number: number
+  origin: string
+}
+
+export async function buildSessionTranscript(
   sessionId: string,
   detail: TranscriptDetail,
-  access: BrowserAccess,
+  access: TranscriptAccess,
   store: ChatStore,
   storage: ChatStorage,
   env: AppEnv,
 ): Promise<SessionTranscriptResponse> {
-  const workspaceId = access.workspace.id
+  const workspaceId = access.workspaceId
   const document = await store.run(() =>
     store.read(workspaceId, async (view) => {
       const session = await sessionFor(view, sessionId)
       const [name, members, commands, source] = await Promise.all([
         transcriptWorkspaceName(env.DB, workspaceId),
-        orgMembers(env.DB, access.workspace.orgId),
+        orgMembers(env.DB, access.orgId),
         readDeviceCommands(storage),
         session.sourceSessionId
           ? view.session(session.sourceSessionId)
@@ -62,13 +81,9 @@ async function buildTranscript(
         eventNumber: view.eventNumber,
         copiedAt: view.now,
         workspace: {
-          number: access.presentation.number,
+          number: access.number,
           name: name?.name ?? null,
-          link: workspaceLink(
-            access.presentation.origin,
-            access.workspace.orgId,
-            workspaceId,
-          ),
+          link: workspaceLink(access.origin, access.orgId, workspaceId),
         },
         models: configuredModels(env),
         members: members.map((member) => member.user),
@@ -86,7 +101,7 @@ async function buildTranscript(
   for (;;) {
     const page = await store.run(() =>
       store.read(workspaceId, (view) =>
-        view.history(after, document.eventNumber, sessionId),
+        view.history(after, document.eventNumber, { sessionId }),
       ),
     )
     builder.merge(page.events)

@@ -82,3 +82,51 @@ it('provides a fresh token to the GitHub CLI without requiring a turn or storing
     await launcher.dispose()
   }
 })
+
+it('explains each GitHub access failure with the Worker message or one fixed fallback', async () => {
+  const launcher = await credentialLauncher(
+    `globalThis.fetch = async (url, options) => {
+      const turn = new Request(url, options).headers.get(${JSON.stringify(TOOL_TURN_HEADER)})
+      if (turn === 'offline') throw new TypeError('fetch failed')
+      const message = turn === 'unsafe'
+        ? 'Sign in again\\u001b[2J'
+        : 'Start an agent turn to use GitHub access.'
+      return Response.json(
+        { error: { code: 'current_turn_required', message } },
+        { status: 409 },
+      )
+    }`,
+    {
+      CONDUCTIVE_MACHINE_ORIGIN: 'https://machine.conductive.test',
+      WORKSPACE_TOKEN: 'workspace-token',
+    },
+  )
+  const input = 'protocol=https\nhost=github.com\n\n'
+  try {
+    const cases = [
+      {
+        turn: '',
+        stderr:
+          'Git gets GitHub access in an agent turn. Ask an agent to run this command.\n',
+      },
+      {
+        turn: 'ended-turn',
+        stderr: 'Start an agent turn to use GitHub access.\n',
+      },
+      { turn: 'unsafe', stderr: 'GitHub access failed. Try again.\n' },
+      { turn: 'offline', stderr: 'GitHub access failed. Try again.\n' },
+    ]
+    for (const { turn, stderr } of cases) {
+      const result = await launcher.run(turn, input)
+      expect({ turn, ...result }).toEqual({
+        turn,
+        exitCode: 1,
+        stdout: '',
+        stderr,
+        timedOut: false,
+      })
+    }
+  } finally {
+    await launcher.dispose()
+  }
+})

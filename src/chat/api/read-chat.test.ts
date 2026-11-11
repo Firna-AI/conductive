@@ -41,12 +41,36 @@ function envelope(event: unknown) {
   return { workspaceId: 'workspace-1', eventNumber: 9, occurredAt: 25, event }
 }
 
+it('preserves the complete Continue note in browser history without changing its member or branches', () => {
+  const { workspace } = workspaceFixtures().created
+  const event = {
+    type: 'workspace.continued',
+    sessionId: 'session-1',
+    member: senderSnapshot(workspace.owner),
+    branch: 'owner/next',
+    baseBranch: 'trunk',
+  }
+  expect(readEnvelope(envelope(event))).toEqual({
+    ...envelope(event),
+    late: false,
+  })
+})
+
 it('reads exact positive omission counts from browser event envelopes', () => {
   for (const event of [tool, completed]) {
     expect(readEnvelope(envelope(event))).toEqual({
       ...envelope(event),
       late: false,
     })
+  }
+})
+
+it('keeps a known optional end reason and reads older or unknown reasons without it', () => {
+  const event = { ...completed, state: 'finished' }
+  const ended = { ...event, endReason: 'background_work_limit' }
+  expect(readEnvelope(envelope(ended)).event).toEqual(ended)
+  for (const endReason of [undefined, 'future_reason', null, false]) {
+    expect(readEnvelope(envelope({ ...event, endReason })).event).toEqual(event)
   }
 })
 

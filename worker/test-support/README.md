@@ -10,6 +10,7 @@ The registered object still extends the production `Workspace`.
 `native-warnings.ts` observes native warnings without replacing product warning rules.
 The reverse callback bridge keeps transaction reads on native storage.
 Native peers keep synchronous send faults inside the runtime.
+These peers have no physical socket. So they save no native socket state, and their access checks use the scheduler that the fixture injects.
 The shared scheduled-alarm helper runs only stored due alarms.
 Reset removes the native records, aborts the real object context, and evicts its fresh idle instance.
 Restart saves clock metadata and keeps committed native SQLite records through the same context reset.
@@ -57,12 +58,17 @@ The gateway tests use these factories to observe cancellation on the original st
 Every harness uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
 It applies migrations in filename order with Wrangler's SQL splitter.
 The splitter keeps each trigger body in one statement.
+The optional `before` filename stops before that migration.
+The optional `from` filename starts with that migration.
+`createHarness({ migrationsBefore })` creates a database at an earlier schema
+for a migration test.
 
 Each members test file creates one harness in `beforeAll` and disposes it in `afterAll`.
 Its `beforeEach` calls `reset` to delete all application rows in a fixed child-first order.
 The reset also restores the clock, token sequence, and fake services.
-It deletes code uses, approval emails, app access, and codes before users. It resets the
-sign-up pause and its change record. Tests can make waiting users through
+It deletes code uses, approval emails, app access, and codes before users.
+It resets the sign-up pause and the waitlist switch, each with its change
+record, so the waitlist is on again. Tests can make waiting users through
 sign-in or directly in D1.
 The [operator waitlist fixture](../operator/waitlist.test-support.ts) adds
 fake Resend replies and a scheduled-entry client. Its clock controls
@@ -120,6 +126,7 @@ Set `endpoint.confirmEvents = false` to retain unconfirmed events.
 The endpoint stores each event once and confirms only contiguous event numbers.
 It requests a resend when a number is missing.
 It joins valid runner file parts before it emits a complete browser file event.
+It preserves the current-branch commit count and the raw status count, and the absence of each in older reports.
 Pending parts stay on the endpoint across reconnects.
 Set `refuseEvent` to return `too_large`, `invalid`, or `turn_not_active`.
 The endpoint stores one workspace refusal marker and confirms that event number.
@@ -142,6 +149,24 @@ The child gets only the values that the test gives, and no value of the test pro
 The generated Worker types add the `vars` of `wrangler.jsonc` to `NodeJS.ProcessEnv`.
 So a plain object does not type-check as the environment of a child process.
 
+## Native close probe
+
+`NativeCloseProbe` in [native-close.test-support.ts](native-close.test-support.ts) makes a close the first event after a wake, with no restored peer.
+A native fixture entry builds it before the production constructor runs. It also wraps the `webSocketClose` of that entry.
+Before the eviction, `prepare()` saves a one-time flag.
+The next constructor then gets an empty result from its first `getWebSockets()` call, the restore listing.
+The probe records the count and the attachment IDs of the sockets that it left out of that listing.
+The real sockets, their attachments, the storage, and the native close delivery stay.
+So the close reaches the role owner, which must recover the connection from its saved state.
+
+The pinned runtime can list an open socket during construction, also when the close of that socket causes the wake.
+The control models the documented rule that the listing leaves out a disconnected socket. So the missing-peer path runs every time.
+It does not claim that every close-first wake leaves its socket out.
+`snapshot()` gives the first event, a fetch or a close, and the omitted count and IDs.
+It also counts the completed close callbacks and their errors.
+A callback counts as complete only after the `waitUntil` work that it starts ends.
+`wait()` resolves when a close callback completes.
+
 ## Key code
 
 - [Shared session log](../../src/shared/transcript/session-log.ts) folds
@@ -150,6 +175,8 @@ So a plain object does not type-check as the environment of a child process.
   stored Worker envelopes and parsed browser envelopes.
 
 - `harness.ts` owns D1 setup and the HTTP test app.
+  Its HTTP requests provide a fake execution context for credential task ownership.
+- [native-close.test-support.ts](native-close.test-support.ts): `NativeCloseProbe`, the close-first control of the native browser, runner, and Mac fixture entries.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
 - `native-global-setup.ts` builds and provides the current native bundle before tests and watch reruns.
 - `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
@@ -157,6 +184,7 @@ So a plain object does not type-check as the environment of a child process.
 - `migrations.ts` applies migrations for every test harness.
 - `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
+- Its `accounts` map supplies GitHub user lookups for routine author filters, with 404 for an unknown login.
 - `fake-anthropic.ts` supplies the Messages and token-count upstream.
 - `fake-openai.ts` supplies the Responses upstream.
 - `fake-model-upstream.ts` records model requests and supplies fresh response factories.

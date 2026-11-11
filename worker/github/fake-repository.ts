@@ -7,6 +7,7 @@ import {
   repositoryPull,
   type RepositoryPull,
 } from './fake-pull'
+import { RepositoryMerges } from './fake-merges'
 
 export class RepositoryGitHub {
   requests: Request[] = []
@@ -21,6 +22,7 @@ export class RepositoryGitHub {
   pulls: Record<number, RepositoryPull> = { 2: repositoryPull() }
   checks = new Map<string, unknown[]>([[HEAD_SHA, [passedRun]]])
   pageSize = 100
+  readonly merges = new RepositoryMerges()
   failure: Response | null = null
   onRequest: ((operation: string) => Promise<void>) | null = null
   private readonly signIn: FakeGitHub
@@ -29,9 +31,9 @@ export class RepositoryGitHub {
     this.signIn = signIn
   }
 
-  private page(items: readonly unknown[], after: unknown) {
+  private page(items: readonly unknown[], after: unknown, first = 100) {
     const start = typeof after === 'string' ? Number(after) : 0
-    const end = start + this.pageSize
+    const end = start + Math.min(this.pageSize, first)
     return {
       nodes: items.slice(start, end),
       pageInfo: {
@@ -46,12 +48,50 @@ export class RepositoryGitHub {
     return checks === undefined ? null : { contexts: this.page(checks, after) }
   }
 
+  private pullChecks(
+    pull: RepositoryPull,
+    after: unknown,
+    mergeAfter: unknown,
+  ) {
+    return {
+      headRefOid: pull.headRefOid,
+      statusCheckRollup: this.rollup(pull.headRefOid, after),
+      potentialMergeCommit: pull.potentialMergeCommit && {
+        oid: pull.potentialMergeCommit.oid,
+        statusCheckRollup: this.rollup(
+          pull.potentialMergeCommit.oid,
+          mergeAfter,
+        ),
+      },
+    }
+  }
+
+  private pullPage(pull: RepositoryPull) {
+    return {
+      ...pull,
+      ...this.pullChecks(pull, null, null),
+      latestOpinionatedReviews: this.page(pull.reviews, null),
+    }
+  }
+
   fetch: HttpFetch = async (request) => {
     const url = new URL(request.url)
     if (url.hostname === 'github.com' || url.pathname === '/user')
       return this.signIn.fetch(request)
     this.requests.push(request.clone())
     if (this.failure) return this.failure.clone()
+    const merge = url.pathname.match(
+      /^\/repos\/([^/]+)\/([^/]+)\/pulls\/(\d+)\/merge-async(?:\/([^/]+))?$/,
+    )
+    if (merge) {
+      if (
+        `${decodeURIComponent(merge[1])}/${decodeURIComponent(merge[2])}` !==
+        this.fullName
+      )
+        return Response.json({}, { status: 404 })
+      await this.onRequest?.(merge[4] ? 'MergeResult' : 'MergeStart')
+      return this.merges.fetch(request, this.pulls[Number(merge[3])], merge[4])
+    }
     const body: unknown = await request.json()
     if (
       !isRecord(body) ||
@@ -68,7 +108,14 @@ export class RepositoryGitHub {
     const repository: Record<string, unknown> = {
       databaseId: this.repositoryId,
     }
-    if (operation === 'BannerLookup') {
+    if (operation === 'MergeCapabilities') {
+      Object.assign(
+        repository,
+        this.merges.capabilities(
+          (request.headers.get('Authorization') ?? '').replace(/^Bearer /, ''),
+        ),
+      )
+    } else if (operation === 'BannerLookup') {
       const tip = this.branches.get(String(variables.ref))
       const states = Array.isArray(variables.states) ? variables.states : []
       const pulls = Object.values(this.pulls)
@@ -77,19 +124,14 @@ export class RepositoryGitHub {
             pull.headRefName === variables.head && states.includes(pull.state),
         )
         .sort((a, b) => b.createdAt - a.createdAt)
-        .map((pull) => ({
-          number: pull.number,
-          headRefName: pull.headRefName,
-          headRepository: pull.headRepository,
-          baseRefName: pull.baseRefName,
-        }))
+        .map((pull) => this.pullPage(pull))
       Object.assign(repository, {
         nameWithOwner: this.fullName,
         defaultBranchRef: this.branches.has(`refs/heads/${this.defaultBranch}`)
           ? { name: this.defaultBranch }
           : null,
         ref: tip === undefined ? null : { target: { oid: tip } },
-        pullRequests: this.page(pulls, variables.after),
+        pullRequests: this.page(pulls, variables.after, 5),
       })
     } else if (operation === 'BannerCompare') {
       const base = String(variables.baseRef)
@@ -117,20 +159,14 @@ export class RepositoryGitHub {
         })
       switch (operation) {
         case 'BannerPull':
-          repository.pullRequest = pull
+          repository.pullRequest = this.pullPage(pull)
           break
         case 'BannerChecks':
-          repository.pullRequest = {
-            headRefOid: pull.headRefOid,
-            statusCheckRollup: this.rollup(pull.headRefOid, variables.after),
-            potentialMergeCommit: pull.potentialMergeCommit && {
-              oid: pull.potentialMergeCommit.oid,
-              statusCheckRollup: this.rollup(
-                pull.potentialMergeCommit.oid,
-                variables.mergeAfter,
-              ),
-            },
-          }
+          repository.pullRequest = this.pullChecks(
+            pull,
+            variables.after,
+            variables.mergeAfter,
+          )
           break
         case 'BannerReviews':
           repository.pullRequest = {

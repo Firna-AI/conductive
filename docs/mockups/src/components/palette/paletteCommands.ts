@@ -12,6 +12,7 @@ import {
   History,
   ListChecks,
   LogIn,
+  MessageSquareHeart,
   MessageSquarePlus,
   Plus,
   Server,
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react'
 import { orgList, orgs, type Org } from '../../fixtures/orgs'
 import { checksPaths, paths } from '../../paths'
+import { sendFeedbackLabel, sendFeedbackWords } from '../feedback/feedbackCopy'
 import { orgLinks } from '../orgs/orgLinks'
 
 /** What leads a command row: an icon, the tile of an org, or GitHub. */
@@ -144,6 +146,20 @@ export const appActions: readonly Command[] = [
     })),
 ]
 
+/**
+ * The row that opens the Feedback dialog over the page. It shows on each
+ * page where the palette opens, also without an org and in a suspended org,
+ * because feedback changes no org.
+ */
+export const helpActions: readonly Command[] = [
+  {
+    label: sendFeedbackLabel,
+    lead: icon(MessageSquareHeart),
+    words: sendFeedbackWords,
+    to: paths.feedbackEmpty,
+  },
+]
+
 /** The tabs of the settings of Acme. */
 export const orgSettings: readonly Command[] = [
   {
@@ -189,7 +205,7 @@ export const accountSettings: readonly Command[] = [
   {
     label: 'Agents',
     lead: icon(Bot),
-    words: ['claude', 'codex', 'login', 'api key'],
+    words: ['claude', 'codex', 'login', 'api key', 'token'],
     to: paths.account,
   },
   {

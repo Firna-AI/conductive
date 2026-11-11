@@ -7,6 +7,7 @@ import type {
 } from '../../src/shared/runner'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { array, integer, nullable, object, oneOf, string } from './parse'
+import { parseBranches } from './instruction-state'
 
 export function parseChoice(value: unknown): AgentChoice {
   const input = object(value)
@@ -34,8 +35,21 @@ function parseCredential(value: unknown): RunnerTurnCredential {
       token,
     }
   }
-  if (input.agent === 'codex' && input.kind === 'api-key') {
-    return { agent: 'codex', kind: 'api-key', token }
+  if (input.agent === 'codex') {
+    const kind = oneOf(input.kind, ['token', 'api-key'])
+    if (kind === 'api-key') return { agent: 'codex', kind, token }
+    const account = object(input.account)
+    return {
+      agent: 'codex',
+      kind,
+      token,
+      account: {
+        accountId: string(account.accountId),
+        email: nullable(account.email),
+        planType: nullable(account.planType),
+        userId: nullable(account.userId),
+      },
+    }
   }
   throw new Error('The turn credential type is not supported.')
 }
@@ -163,7 +177,16 @@ export function parseWorkspaceMessage(
         path: string(attachment.path),
       }
     })
-    const command = { commandId, sessionId, turnId, message, attachments }
+    const command = {
+      commandId,
+      sessionId,
+      turnId,
+      message,
+      attachments,
+      ...(input.branches === undefined
+        ? {}
+        : { branches: parseBranches(input.branches) }),
+    }
     if (type === 'message') return { ...command, type }
     const credential = parseCredential(input.credential)
     if (message.choice.agent !== credential.agent)

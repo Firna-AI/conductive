@@ -8,16 +8,63 @@ of the data that the screens read and write.
   reads when its first screen mounts, each time that the user comes back
   to the page, and on a timer while a screen shows it. The last screen
   that leaves stops the timer. Screens that show a part share its reads.
-- The timer is short while a row works, needs input, or starts, or while a
-  build runs. Otherwise it is slow, so that changes from other tabs and
-  other people show. Repositories and the members read at entry and at
-  focus only. The waits are choices of the app, not product
-  limits.
+- The timer is short while a row works, needs input, or starts, or while
+  the checks of its pull request run. It is short too while the last run
+  of a routine waits, starts, works, or needs input, or while a build
+  runs. Otherwise it is slow, so that changes from other tabs, other
+  people, and GitHub show. Repositories and the members read at entry and
+  at focus only. The waits are choices of the app, not product
+  limits. `org-waits.ts` holds them.
+- A row that the list already has takes its GitHub state only from list
+  reads while its branch stays the same. Each other record keeps that row's GitHub state: a read, a
+  Resume reply, a `workspace.updated` event, or a partial change of the
+  open workspace. So the open row shows a newer GitHub state at the
+  next list read, as every other row does.
+- A record for a new branch takes that branch's GitHub state. Continue clears it when it stores the branch, before its refresh.
+- A new row, such as a created workspace, takes the GitHub state of its
+  record. Titles and read marks still change the row at once. The shared
+  record readers still read and give `github`, so no API field goes away.
+  A `github.updated` event of an open workspace changes its pull request
+  bar, not its row.
+  [The list mark](../../docs/protocol/workspace-life.md#the-list-mark)
+  says what the row shows.
 - Each part is a `Resource`. A screen sees the answer of the newest read,
   then the changes that the server confirmed after that read started, such
   as events, then the waiting writes in the order that they went out. A
   read that started before a change keeps the change. A failed read keeps
-  the value that shows.
+  the value that shows. A part can name the errors that prove that its
+  value no longer exists, as the routine page does for `routine_not_found`.
+  Such a read shows its error also over the value.
+- The routine page reads its routine when it mounts and at each return to
+  the page. Each field that the owner did not change takes the field of the
+  newer routine, and an edited field keeps its edit. A save sends only the
+  fields that the owner changed, so it keeps a turn-off that the app made
+  during the edit. Its answer is the whole routine, and the Routines list
+  takes it at once, with the last run that the list has. A delete takes
+  the routine out of the list, and a later visit of its address reads it
+  again.
+- A read of the routine that gets `routine_not_found` shows that the
+  routine is not available, also in place of a routine that shows. Any
+  other failed read keeps the routine. The other requests of the page go
+  through one client of the routine: the reads of the runs, Show older
+  runs, Save, Turn off, Run now, and Delete. When one of them gets
+  `routine_not_found`, the routine reads again, after the read that runs,
+  if any, and that read decides. A write can get that refusal also while
+  the routine exists, so the refusal alone decides nothing.
+- The Runs list of the routine page shows a number of pages of 50 runs:
+  one at first, and one more after each Show older runs. It reads them
+  when it shows, every 10 seconds while it shows, and at each return to
+  the page. Each read gets that many pages from the newest run, one after
+  the other, and replaces the whole list. So the list has no gap, and each
+  row shows the state of the last read. When new runs arrive, the oldest
+  rows move behind Show older runs. Show older runs reads the page after
+  the oldest run that the list shows, and adds it at once. A read that
+  started before keeps that page only while its own pages end at the same
+  run. Run now shows its run first at once, and the Routines list takes it
+  as the last run. A later read of the runs brings its next state.
+- The chat reads the routine of a run workspace, with the pull request of
+  its run, with the saved view, at each load of the chat. The header shows
+  them until the next load.
 - A list write shows its change at once, and a failure takes back that
   change only. An answer confirms only the fields of its write: a move
   answer sets the section of the workspace, not its state. A workspace
@@ -79,6 +126,28 @@ of the data that the screens read and write.
   opens, and Get started reads again. A sign-out, or a sign-in of another
   person, forgets the invitations, and an answer for the person before
   changes nothing.
+- `AppModel.feedback` keeps the feedback draft, the reply read, and the
+  snapshot of a failed send in the memory of the tab, and in no browser
+  storage. A close keeps them. A sign-out, a sign-in of another person,
+  or a move to the waitlist clears them, and an answer for the person
+  before changes nothing.
+- Each open of the Feedback dialog reads the reply address again, and
+  shares a read that still runs. While that read loads or after it failed,
+  the draft stays and `canSend` is false. `readReply` reads again, for Try
+  again. A ready reply without an address still allows a send.
+- The first send of a draft keeps a snapshot: the text, the content of each
+  screenshot, the org, the workspace, the Mac app flag, and the app
+  version. A retry sends that snapshot with the same draft ID, also after a
+  close. An edit of the text or the screenshots drops the snapshot, so the
+  next send takes fresh values. While a send runs, a close or an edit does
+  nothing, and a second send shares the request.
+- `send` gives true only for an accepted send of the current person. It
+  then closes the dialog and clears the draft, and a later edit starts a
+  new draft ID. A failed or stale send gives false.
+- `screenshotIntake(app)` keeps one `ScreenshotIntake` for each app. It
+  holds the files that it still reads, and their notices, in the memory of
+  the tab. A file that it still reads joins the draft after a close. A
+  change of the person drops the waiting files and the notices.
 - The reply of the session says whether the person has app access.
   Without it, the first load reads only the waitlist state, and the boot
   is `waiting`. The waitlist reads the invitations of the person at its
@@ -178,9 +247,9 @@ of the data that the screens read and write.
   the tool store. The store of `WorkspaceScreen` is a view of the kept
   workspace, so its stop keeps the parts, as the
   [workspace integration](../shell/workspace/README.md#integration) shows.
-  The `create` of the Files part finds the store that the tab keeps for the
-  workspace, as the [files integration](../files/README.md#integration)
-  shows.
+  The `create` of the Files connection of the screen finds the store that
+  the tab keeps for the workspace, as the
+  [files integration](../files/README.md#integration) shows.
 - A feature store that reads the raw socket messages itself, as the files
   do, follows the event source of the app through `replaySubscribe`. Each
   message reaches the store unchanged.
@@ -193,3 +262,7 @@ of the data that the screens read and write.
   - After the replay, the newest live event.
 - A live event during an unfinished replay moves no number. The store holds
   that event until the final page.
+- `WorkspaceStream.reconnects` counts the replays that end after a dropped
+  connection or a gap. A part that keeps its own reads, such as the
+  member's GitHub access of the pull request bar, reads again at each new
+  count. A start after a stop counts nothing.

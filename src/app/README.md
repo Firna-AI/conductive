@@ -19,8 +19,11 @@ pull request bar, and the owner picker. A host can give its own parts, as
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
-  `?waiting=1`, `?paused=1`, or
-  `?paths=masked`. `dev/options.ts` lists them. `dev/attachment-routes.ts`
+  `?waiting=1`, `?paused=1`, `?waitlist=off`, or
+  `?paths=masked`. `dev/options.ts` lists them. `?banner=<state>`, such as
+  `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
+  bar, and its list mark shows the GitHub state of that bar. The other rows
+  keep the GitHub states of the mockups. `dev/attachment-routes.ts`
   keeps the uploaded files of both composers. With `?upload=wait` each
   upload keeps running, and with `?upload=fail` the first upload of the
   page fails once, so Try again works. `?sent=<percent>` makes the dev
@@ -31,6 +34,14 @@ pull request bar, and the owner picker. A host can give its own parts, as
   stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- `dev/feedback-routes.ts` serves the two feedback routes. By default, and
+  with `?feedback=ready` or an unknown value, the reply address is
+  `<GitHub login>@example.com`, and each send answers 204.
+  `?feedback=no-email` gives a reply without an address.
+  `?feedback=fail` fails the first send of the page with
+  `502 feedback_email_failed`, so a retry sends. With `?waiting=1`, both
+  routes refuse with `access_required`. The fake sends no email and keeps
+  no copy.
 - `?operator=1` makes the dev user an operator, so the rail and the org
   switcher show Operator. The [operator section](../shell/operator/README.md)
   then shows the sample orgs, users, people who wait, and codes of the
@@ -53,22 +64,58 @@ pull request bar, and the owner picker. A host can give its own parts, as
   sign-ups: each use of a code, and the Accept of a person who waits, get
   `signups_paused`. The Account page shows the pause, and the operator
   section shows its notice.
+  `?waitlist=off` starts with the waitlist off, by the operator of the
+  samples. Unless sign-ups are paused, a person who waits gets app access
+  at the next request, with a new referral code and no use of a code, so
+  Get started opens. The fake does this before each request, as the gate
+  of the Worker does. The operator section shows the switch off, and Zed
+  K, who came back and got in by open sign-up. The Account page names
+  open sign-up.
   `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
   invite code of a user with app access, also on the page of that user in
   the operator section.
-- The waitlist and the operator section share one pause and one set of
-  codes, as they share the database of the Worker. The codes are those of
-  the operator mockups, with a referral code for each sample user with
-  app access. For example, `V7MKC-2QDXH` works, `M4QTX-7HKWD` is the
-  referral code of Mira Santos, `9PTXC-4WHMN` is used up, `HM3PE-7KWQT`
-  is disabled, and a code that the mockups do not list is not found. A
-  code that works counts its use, and gives app access and a new invite
-  code, so Get started opens. With `?operator=1`, a pause or a Disable in
-  the operator section shows on the Account page of the operator.
+- The waitlist and the operator section share one pause, one waitlist
+  switch, and one set of codes, as they share the database of the Worker.
+  The codes are those of the operator mockups, with a referral code for
+  each sample user with app access. For example, `V7MKC-2QDXH` works,
+  `M4QTX-7HKWD` is the referral code of Mira Santos, `9PTXC-4WHMN` is used
+  up, `HM3PE-7KWQT` is disabled, and a code that the mockups do not list is
+  not found. A code that works counts its use, and gives app access and a
+  new invite code, so Get started opens. With `?operator=1`, a pause, a
+  turn-off of the waitlist, or a Disable in the operator section shows on
+  the Account page of the operator.
 - The fake keeps its state in the page. A reload starts again from the
-  options, so Sam waits again, and the codes and the pause are those of
-  the options. An operator never waits, so a pause or a new code of the
-  operator section cannot reach the waitlist screen.
+  options, so Sam waits again, and the codes, the pause, and the switch
+  are those of the options. An operator never waits, so a pause, a change
+  of the switch, or a new code of the operator section cannot reach the
+  waitlist screen.
+- Acme has the
+  routines of the mockups, each with the runs that its page in the mockups
+  lists. `?runs=failed` or `?runs=skipped` gives Review pull requests the
+  failed or the skipped runs of the mockups. A skipped run names the
+  account outside Acme by its login. The fake has no workspaces for these
+  runs, so the workspace list stays as the mockups draw it, and the link
+  of such a run opens no workspace. `?run=pull-request` or `?run=schedule`
+  makes `checkout-autocomplete` the workspace of one run, so its header
+  shows the line of that run, with the pull request of a pull request run.
+  The other orgs have no
+  routines, so their Routines page shows its empty state. A save of a
+  routine checks the prompt, each custom cron, and the time zone, as the
+  Worker does. A removal of a repository on the Repositories tab turns off
+  each routine in it, with the reason that the routine page shows, as the
+  Worker does. Its author filter knows the members of the org and a few
+  bots, such as `dependabot[bot]`. Any other login gets the refusal of a
+  login that names no GitHub account, with its trigger and its list.
+- Run now makes the workspace of the run as Create workspace does, in the
+  section of the routine, and the run takes the state of that workspace.
+  Without the agent login of the routine's model, as with `?login=none`,
+  the run fails with no workspace. A prompt that contains `fail` stands for
+  a cloud computer that did not start: the run fails and keeps its
+  workspace, in the error state with Try again, as the Worker does. The
+  recorded server has no chat for
+  a workspace that the fake made, so its chat does not load, and the line
+  of its routine does not show.
+  The dev backend records each run's agent and owner when Run now starts it.
 - The workspace screen shows the real chat over the dev fake. The fake
   answers each chat write with a recorded reply, changes no state, and
   sends no event. So a sent message stays pending, and a new session adds
@@ -150,20 +197,26 @@ of the org again. Delete org and Restore give their answers to
 [Data lifecycle](data-lifecycle.md) gives the rules of the data that the
 screens read and write. It covers the org parts, the saves, the creates,
 the invitations, the kept workspace models, the build log, the read marks,
-the workspace stores, and the raw event streams of feature stores.
+the workspace stores, the raw event streams of feature stores, and the
+feedback draft.
 
 ## Screens
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the command palette, the focus, saved drafts, New workspace as a page or a dialog,
+layers, the focus, saved drafts, New workspace as a page or a dialog,
 with the send key that every composer shares, and the waitlist.
+[The command palette and Feedback](palette-screens.md) gives the rules of
+the palette and of the Feedback dialog.
 
 ## Rules for this code
 
 - A screen reads data only through a model and `useStore`. A model sends the
   request, parses the answer with the readers in `api/`, and keeps the
   result. An answer of an unknown shape is an `ApiError`, not a guess.
+  One field is the exception. A missing or unknown `github` summary of a
+  workspace reads as null, so an older reply still reads. The
+  [shared contracts](../shared/README.md) give that reader.
 - A screen never sets a value of an org. The stores of `OrgModel` are
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
@@ -193,6 +246,23 @@ with the send key that every composer shares, and the waitlist.
   open, it can schedule the next mark of the new visit.
 - One follower owns the requests and the timer of a build log. After it
   stops, an answer changes nothing and schedules nothing.
+- One ChatGPT sign-in of Codex owns its request for a code, its polls, and
+  its timer. Cancel, the other kind in the switch, and the end of its form
+  stop it. After that, an answer changes nothing and schedules nothing.
+  A connected answer applies the current login status that the Worker returns.
+- One rule, `loginUsable` in `api/read-core.ts`, says whether turns can
+  run on a login. A connected login with an `unusableCause` cannot. The
+  composers and Get started count such a login as missing.
+- Each open of the agent list, on the account and in Get started, reads
+  the logins again through `AccountModel.refreshLogins`. So a login that
+  the Worker stopped after the app opened shows Signed out. The Worker
+  gives the logins only in `GET /api/account`, and the read takes only
+  the logins of that answer.
+  `AgentLogins` in `agent-logins.ts` counts each local change of a login:
+  a save, a remove, a connected sign-in, and a share change, at its start
+  and when its reply shows. A read shows the login of an agent only while
+  that login had no change during the read. An open shares a read that
+  runs already, and a failed read keeps what shows.
 - Timers, the focus, the visibility, the input, and the keys of the page
   come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
   `onKey`), so that no unit test runs a real timer or needs a browser
@@ -201,7 +271,15 @@ with the send key that every composer shares, and the waitlist.
   anywhere on the page as activity, at most once a minute. `onKey` is not
   passive, so the palette key stops the browser's own action.
   `AppServices.platform` says whether the keyboard is a Mac, which
-  chooses the palette key and its hint.
+  chooses the palette key and its hint. It never says whether the page
+  runs in the Mac app: the caller of `FeedbackModel.open` gives that
+  `desktop` flag.
+- `AppServices.appVersion` is the version of the build: the version of the
+  root `package.json` and the short commit, as `<version> (<commit>)`.
+  `build-version.ts` at the repository root makes it for the web and Mac
+  app builds. `version.ts` gives it as `APP_VERSION`, or `development`
+  outside Vite. A host without `appVersion` uses `APP_VERSION`. Each
+  feedback message carries it.
 - An address that people share, such as the invite link, starts with
   `AppServices.appOrigin`: the origin of the page in a browser. The Mac
   app loads the page from its own origin, so it names the app host of the
@@ -215,11 +293,17 @@ with the send key that every composer shares, and the waitlist.
 
 ## Tests
 
+The account routes of the development backend keep device sign-ins in a
+private route closure. Start returns a fixed display code and a new handle.
+The first poll waits. The next poll connects Codex with the normal share
+default. Later polls read the current login without saving it again, until the sign-in expires after 15 minutes.
+The fake uses the shared device response types. It sends no request to OpenAI.
+
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
 fake API, with raw file uploads through its fetch, requests or answers that
 wait for the test (also two at one path), a manual timer with the wait of
-each pending timer, a manual page focus, visibility, input, and keys, and a
-recording event source.
+each pending timer, which can run only the timers of one wait, a manual page
+focus, visibility, input, and keys, and a recording event source.
 `../shell/test-render.tsx` draws a screen with every provider through
 server rendering, after the test loads its data. A test that needs focus
 and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
@@ -238,6 +322,8 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the file uploads, the
-models, the waitlist and its codes, and the workspace list. It also covers
-the event streams, the drag, the operator section, the command palette, the
-layers, the frames, and New workspace.
+models, the waitlist and its codes, the routines, and the workspace list.
+It also covers the event streams, the drag, and the operator section.
+[Key code: the palette, the layers, and the dialogs](key-code-layers.md)
+covers the command palette, the layers, the frames, New workspace as a
+dialog, and feedback with its screenshots.

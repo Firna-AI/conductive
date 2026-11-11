@@ -5,6 +5,7 @@ import {
 } from '../../../docs/mockups/src/fixtures/sessions'
 import { workspaceList } from '../../../docs/mockups/src/fixtures/workspaces'
 import type { User } from '../../shared/api'
+import type { GitHubSummary } from '../../shared/github'
 import type { MessageSender, UserMessage } from '../../shared/messages'
 import type { SessionsResponse } from '../../shared/sessions'
 import type { WorkspaceViewResponse } from '../../shared/workspace-view'
@@ -30,11 +31,19 @@ export function senderSnapshot(person: MessageSender): MessageSender {
 const personNamed = (key: string): User =>
   fakeUsers.find((user) => user.id === key) ?? fakeUser
 
-export function workspaceFixtures(state: WorkspaceState = 'ready') {
+/**
+ * The workspaces of Acme, with `checkout-autocomplete` in `state`. Each
+ * workspace has the GitHub state of its mockup workspace, unless `github`
+ * gives the one of `checkout-autocomplete`, also `null`.
+ */
+export function workspaceFixtures(
+  state: WorkspaceState = 'ready',
+  github?: GitHubSummary | null,
+) {
   const workspaces: WorkspacesResponse = {
     workspaces: workspaceList.map((workspace, index) => {
-      const archived =
-        workspace.key === FAKE_IDS.workspace && state === 'archived'
+      const open = workspace.key === FAKE_IDS.workspace
+      const archived = open && state === 'archived'
       return {
         id: workspace.key,
         number: workspace.number,
@@ -50,7 +59,8 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
         name: workspace.name,
         branch: workspace.branch,
         choice: workspace.choice,
-        state: workspace.key === FAKE_IDS.workspace ? state : workspace.status,
+        state: open ? state : workspace.status,
+        github: open && github !== undefined ? github : workspace.github,
         createdAt: FAKE_TIME - (index + 1) * 86_400_000,
         // Archive raises the time of the record to its own time, as the
         // Worker does, so the archived record is newer than each record of
@@ -155,6 +165,7 @@ export function workspaceFixtures(state: WorkspaceState = 'ready') {
     branch: 'calummoore/lisbon-7k2q',
     sectionId: 'general',
     state: 'starting',
+    github: null,
     createdAt: FAKE_TIME,
     updatedAt: FAKE_TIME,
   }

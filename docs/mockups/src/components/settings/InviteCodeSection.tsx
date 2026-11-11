@@ -1,5 +1,5 @@
 import { InputFrame } from '@firna/ui/input'
-import { CirclePause, Copy } from 'lucide-react'
+import { CirclePause, Copy, DoorOpen } from 'lucide-react'
 import { inviteLimit, joinLink, ownInvite } from '../../fixtures/waitlist'
 import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
@@ -46,17 +46,32 @@ function Share() {
 /**
  * The invite code of the user, at the end of the account: the invite link
  * with Copy, the code, and how many of the invites are left. During the
- * pause the link stays, and a notice says when it works again. A code
- * that is used up or turned off shows no link, because it lets nobody in.
- * A user who just got in has used no invite yet.
+ * pause the link stays, and a notice says when it works again. During open
+ * sign-up the link stays too, and a notice says that anyone can sign up
+ * now. The pause wins, so its notice shows when both are on. A code that
+ * is used up or turned off shows no link, because it lets nobody in. A
+ * user who just got in has used no invite yet.
  */
 export function InviteCodeSection(props: {
   state: InviteState
   fresh: boolean
+  openSignUp: boolean
 }) {
   const left = inviteLimit - (props.fresh ? 0 : ownInvite.used)
   switch (props.state) {
     case 'left':
+      if (props.openSignUp) {
+        return (
+          <Section status={<Count left={left} />} title={copy.title}>
+            <Notice
+              body={copy.open.body}
+              icon={DoorOpen}
+              title={copy.open.title}
+            />
+            <Share />
+          </Section>
+        )
+      }
       return (
         <Section
           description={copy.description}

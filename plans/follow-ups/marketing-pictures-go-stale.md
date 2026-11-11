@@ -15,10 +15,11 @@
     - commit `9ad3d12` after a header change
     - commit `e9827da` after a merge
     - the branch `calummoore/tab-drag-and-drop`, which removed the Rename button of a session tab and left ten pictures with the button
-    - commit `073f71b5` (#130), whose Mac pictures show the header Archive button that commit `c02744f0` (#124) removed, as `plans/follow-ups/mac-pictures-show-header-archive.md` says
+    - commit `073f71b5` (#130), whose Mac pictures show the header Archive button that commit `c02744f0` (#124) removed, as [the historical Mac-picture record](https://github.com/Firna-AI/remote-code/blob/1e6e28b7912bbcf22ff1e096d0c1d9bbd89af87e/plans/follow-ups/mac-pictures-show-header-archive.md) says
     - the branch `calummoore/sandbox-ready-notice-removal`, which removed the chat label "Sends when the sandbox is ready" and left it in the four `starting` pictures until its review on 10 November 2026 found them
     - the branch `calummoore/sandbox-time-limit-removal`, which removed the start-limit note and left it in the four start pictures until its review on 10 November 2026 found them
-  - On the same day, a capture on the branch `calummoore/file-selector-list`, with `main` at `1a9e75a` merged, also found the stale Mac pictures. `mac-light.webp` and `mac-dark.webp` still draw an Archive button in the workspace header, which the current mockup no longer draws. That branch changed no header, so it kept the old files.
+  - On the same day, a capture on the branch `calummoore/file-selector-list`, with `main` at `1a9e75a` merged, also found the stale Mac pictures. `mac-light.webp` and `mac-dark.webp` still drew an Archive button in the workspace header, which the current mockup no longer drew. That branch changed no header, so it kept the old files.
+  - The required pull request action capture refreshed both Mac pictures and removed the header Archive icon. Root and the public auditor checked both current pictures. This closes the duplicate Mac occurrences while preserving all six historical stale sets and the wider deferred gate choice.
   - Two builds of the same tree give byte-identical capture pages and style sheets.
 - **Problem:** Nothing tells a branch that a picture of the public site no longer matches its screen.
 - **Impact if no action:** The public site can show controls that the app no longer has, until someone notices.
@@ -33,7 +34,7 @@
 - **Previous examples:** Commits `9ad3d12` and `e9827da`, the removed session Rename button that remained in ten marketing pictures, the header Archive button in the Mac pictures, the removed chat label in the four `starting` pictures, and the removed start-limit note in the four start pictures.
 - **Related:**
   - `plans/follow-ups/marketing-pictures-unstable-capture.md` records capture noise. A comparison of captures needs stable pixels.
-  - `plans/follow-ups/mac-pictures-show-header-archive.md` records the stale Mac pictures, one case of this class.
+  - [the historical Mac-picture record](https://github.com/Firna-AI/remote-code/blob/1e6e28b7912bbcf22ff1e096d0c1d9bbd89af87e/plans/follow-ups/mac-pictures-show-header-archive.md) records the stale Mac pictures, one case of this class.
 - **Recommendation:** B. It catches every stale picture before the merge, at the cost of one more step in the gate.
 - **Action:** ask the user, because each option other than A adds a gate or a build error.
 - **Answer:** On 9 November 2026, the user chose to keep this work as a follow-up item for a later change, and to merge the change that found it without it. No option is chosen yet, so the item still needs a decision.

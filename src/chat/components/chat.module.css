@@ -13,12 +13,20 @@
 
 /*
  * A message line in an open work fold, beside the mockups' `.message`. The
- * mockups' line draws paragraphs and lists. These rules add the other
- * blocks of an answer: a block after a list, and a code block. Each block
- * after another starts 6px lower, as the mockups' do.
+ * mockups' line draws paragraphs, headings, and lists. These rules add the
+ * other blocks of an answer: a block after a list, and a code block. Each
+ * block after another starts 6px lower, as the mockups' do.
  */
 .message[open] .lineBlock + .lineBlock {
   margin-top: 6px;
+}
+
+/*
+ * A heading after another block starts 10px lower, as in the mockups, also
+ * after a code block. This rule follows the rule above, so it wins.
+ */
+.message[open] .lineBlock + .lineHeading {
+  margin-top: 10px;
 }
 
 /* The look of the block comes from the code block of an answer. */
@@ -53,4 +61,16 @@
 /* A list under the text of its item, as close as the next item. */
 .messageBody li > :is(p, pre, div, ol, ul) + :is(ol, ul) {
   margin-top: 2px;
+}
+
+/*
+ * A heading in a list item stands as far from the block above it as a
+ * heading of the open line, and the block under it as under a paragraph.
+ */
+.messageBody li > * + :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 10px;
+}
+
+.messageBody li > :is(h1, h2, h3, h4, h5, h6) + :is(p, pre, div, ol, ul) {
+  margin-top: 6px;
 }

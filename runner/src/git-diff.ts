@@ -16,6 +16,7 @@ import { updateWorkingIndex, withGitIndex } from './git-index'
 import { changesFromIndex } from './repository-changes'
 import { entryPatch } from './git-patch'
 import { integer } from './parse'
+import { comparisonBase } from './comparison-base'
 
 async function blob(git: Git, entry: GitEntry | null): Promise<Buffer | null> {
   if (!entry) return null
@@ -37,12 +38,13 @@ export async function readGitDiff(
 ): Promise<DiffResponse> {
   safePath(requestedPath)
   const path = posix.normalize(requestedPath)
-  const sha = await source.resolve(branch)
+  const base = await comparisonBase(source, branch)
+  const { sha } = base
   return withGitIndex(
     source,
     async (index) => {
       if (index.unavailable.includes(path)) throw unavailable()
-      const changes = await changesFromIndex(index, branch, sha)
+      const changes = await changesFromIndex(index, base.branch, sha)
       const oldPath =
         changes.files.find((file) => file.path === path)?.previousPath ?? path
       const previousEntry = await treeEntry(index.git, sha, oldPath)
@@ -112,7 +114,7 @@ export async function readGitDiff(
       const newContent = current === null ? null : textContent(current)
       return {
         path: requestedPath,
-        baseBranch: branch,
+        baseBranch: base.branch,
         oldContent,
         newContent,
         patch: patch.toString(),

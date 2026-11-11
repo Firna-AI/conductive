@@ -51,6 +51,45 @@ The workspace keeps accepted messages for the agent.
 The org must have a successful build before you create a new workspace.
 That first build is separate from the start of an existing workspace's computer.
 
+## Use pull request actions in chat
+
+Open the session you want before selecting an agent action in the pull request bar.
+The action sends a fixed message from you to the session you viewed last.
+It uses that session's model, effort, and login rules.
+This also works while you view a file or **Checks**.
+
+Your draft, attached files, and uploads stay as they were.
+The action's message appears in chat as your message.
+During a turn, it follows the same rules as a message you send from the box.
+If it cannot send, the chat opens and shows the cause.
+
+- [Choose a pull request action](/docs/pull-requests#read-the-pull-request-state)
+
+## Delegate work to another session
+
+Ask an agent to create a session, list sessions, send a message, or read a result.
+Its workspace tools reach every workspace of the same org.
+Use a separate workspace when the delegated task needs separate files and a branch.
+
+Messages from agent tools end with a `---` line and **Sent by:** with a link to the sending session.
+This also applies to the first message when an agent creates a workspace or session.
+The link shows the workspace's state, number, a session icon, and the session title in a small box.
+A session without a title shows **Untitled**.
+
+Select the link to open that session.
+A closed or unknown session opens the workspace page without reopening the session.
+If that workspace is already open, its selected tab stays.
+The title of a session in another workspace updates when the chat loads.
+Session links also show as small boxes in agent answers and pasted message drafts.
+A member can type the same **Sent by:** line, so it does not prove who wrote a message.
+
+An agent can read archived workspaces and closed sessions.
+Tool messages cannot change them.
+Use **Stop** in each affected session if agents keep replying to each other without useful work.
+
+- [Get the current workspace tools](/docs/cloud-computer#apply-setup-changes)
+- [Understand what agents can reach](/docs/security#understand-what-agents-can-reach)
+
 ## Choose a model
 
 Each session has its own model and effort picker.
@@ -70,7 +109,19 @@ Send another message to guide the agent while it works.
 When your message uses the session's available login, it joins the running turn.
 A turn is one period of work by the agent.
 
-Select **Stop** to interrupt that turn.
+An agent powered by Claude can leave work running in the background, such as a command that watches pull request checks.
+After its reply, the turn stays open while background tasks or scheduled wake-ups remain.
+The chat shows **Working**, and **Stop** stays available.
+When a task ends or a wake-up arrives, the agent continues in the same turn.
+The turn ends when the agent finishes and no background work remains.
+
+The time limit is 2 hours from the start of the first wait.
+The agent's work after a notification also counts toward that limit.
+A message that joins the turn during a wait starts the count again from that message.
+If the limit passes during a reply, that reply finishes before the turn ends.
+At that limit, the turn ends with **Background work stopped at the time limit** above its duration and changed files.
+
+Select **Stop** to interrupt the turn, including a wait for background work.
 The chat records the stop.
 You can send another message to continue the conversation.
 
@@ -80,11 +131,11 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain paragraphs, lists, code, and tables.
+Agent replies can contain headings, paragraphs, lists, code, and tables.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
 
-While a reply arrives, the chat shows its text and table rows as they arrive.
+While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
 In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs
@@ -105,6 +156,12 @@ Closing a session keeps its conversation in **Session history**.
 If its agent is working, closing asks first because it stops the turn.
 Open **Session history** to reopen the conversation.
 
+After a merge, **Continue** keeps these sessions and their conversation context on the workspace's new branch.
+Each session shows a note with the member who continued, the new branch, and its starting branch.
+With current agent software, later messages tell the agent the current branch names when they change.
+
+- [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+
 ## Copy a transcript
 
 Copy a session's whole conversation as Markdown for another agent or a document.
@@ -115,8 +172,13 @@ Copy a session's whole conversation as Markdown for another agent or a document.
 3. Paste the text where you need it.
 
 **Copy concise transcript** keeps the default folds closed.
-A run of tool calls stays open if any call is not done.
+While the agent works, its newest run of tool calls stays open.
+After a turn ends, a run outside its folded work stays open if one of its calls stopped or failed.
 **Copy full transcript** includes the messages and work inside every fold.
+
+Agents can read the same transcript text through their workspace tools.
+The read uses the concise text by default and can request the full text.
+A long read returns part of the transcript, with its line range and a way to read earlier lines.
 
 You can copy another tab's conversation without changing the selected tab.
 Both options work in archived and other read-only workspaces.
@@ -145,6 +207,11 @@ Mac command requests go to that same person's connected Mac.
 They can differ from the member whose agent login the session uses.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
+
+An agent tool creates a session or sends a message as the sender of its calling turn.
+That sender must still belong to the org.
+A new session uses their login.
+A message to an existing session follows the same login-sharing rules as a message they send themselves.
 
 - [Choose who can use an agent login](/docs/agent-logins#choose-who-can-use-your-login)
 - [Understand account and credential access](/docs/security)

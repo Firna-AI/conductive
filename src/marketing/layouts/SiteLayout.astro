@@ -1,6 +1,7 @@
 ---
 import SiteFooter from '../components/SiteFooter.astro'
 import SiteHeader from '../components/SiteHeader.astro'
+import ShareMetadata from '../components/ShareMetadata.astro'
 import type { SiteSection } from '../links'
 import Document from './Document.astro'
 
@@ -8,12 +9,20 @@ import Document from './Document.astro'
  * A page of the site: the header, the main content, and the footer.
  * `current` is the section of the page, which the header marks.
  */
-type Props = { title: string; description?: string; current?: SiteSection }
+type Props = {
+  title: string
+  description?: string
+  current?: SiteSection
+  sharePreview?: boolean
+}
 
-const { title, description, current } = Astro.props
+const { title, description, current, sharePreview = true } = Astro.props
 ---
 
 <Document title={title} description={description}>
+  {sharePreview ? (
+    <ShareMetadata slot="head" title={title} description={description} />
+  ) : null}
   <SiteHeader current={current} />
   <slot />
   <SiteFooter />

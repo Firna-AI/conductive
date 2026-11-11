@@ -24,7 +24,8 @@ import styles from './AccessSections.module.css'
 
 /**
  * How the user got app access, with a link to the code or its owner. An
- * org invitation links to the org and to the admin who sent it.
+ * org invitation links to the org and to the admin who sent it. An approval
+ * and open sign-up name the operator.
  */
 function WayInText(props: { way: WayIn }) {
   const { way } = props
@@ -54,6 +55,8 @@ function WayInText(props: { way: WayIn }) {
           <InlineLink to={paths.operatorUser}>@{way.by}</InlineLink>
         </>
       )
+    case 'open-sign-up':
+      return <>{wayInWords.openSignUpBy(way.by)}</>
     case 'operator':
       return <>{wayInWords.operator}</>
     case 'existing':

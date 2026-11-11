@@ -8,7 +8,7 @@ import {
   recordDelivery,
   repositoryWorkspaces,
 } from './data'
-import { webhookRoute } from './webhook-routing'
+import { webhookRoute, type GitHubPullRequestEvent } from './webhook-routing'
 
 export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
 
@@ -21,6 +21,10 @@ export interface GitHubWebhookEnv {
 export interface GitHubWebhookDependencies {
   now: () => number
   refresh: GitHubRefreshWorkspace
+  pullRequest?: (
+    event: GitHubPullRequestEvent,
+    deliveryId: string,
+  ) => Promise<void>
   pushed?: (
     repositoryId: number,
     installationId: number,
@@ -115,23 +119,34 @@ export async function handleGitHubWebhook(
     const route = webhookRoute(event, value)
     if (route === null || (await isProcessed(env.DB, deliveryId)))
       return new Response(null, { status: 204 })
+    await recordDelivery(env.DB, deliveryId, dependencies.now())
+    let pullRequestFailure: { error: unknown } | undefined
+    try {
+      if (route.pullRequest)
+        await dependencies.pullRequest?.(route.pullRequest, deliveryId)
+    } catch (error) {
+      pullRequestFailure = { error }
+    }
     const workspaces = await repositoryWorkspaces(
       env.DB,
       route.repositoryId,
       route.installationId,
     )
-    await recordDelivery(env.DB, deliveryId, dependencies.now())
     let failure: { error: unknown } | undefined
+    // A check event that names no branch, such as a status of a test merge
+    // commit, reaches each workspace. Each one reads only an open pull request.
+    const unnamed = route.branches?.length === 0
     for (const workspace of workspaces) {
       const matches =
         route.push ||
-        route.branch === undefined ||
-        route.branch === workspace.branch
+        unnamed ||
+        (route.branches ?? [route.branch]).includes(workspace.branch)
       if (!matches) continue
       try {
         await dependencies.refresh(workspace, {
           deliveryId,
           ...(route.push ? { pushBranch: route.branch } : {}),
+          ...(unnamed ? { openPullRequestOnly: true } : {}),
         })
       } catch (error) {
         if (!route.push) throw error
@@ -146,6 +161,7 @@ export async function handleGitHubWebhook(
         route.installationId,
         route.branch,
       )
+    if (pullRequestFailure) throw pullRequestFailure.error
     if (failure) throw failure.error
     await completeDelivery(env.DB, deliveryId, dependencies.now())
     return new Response(null, { status: 204 })

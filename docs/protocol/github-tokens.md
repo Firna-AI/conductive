@@ -1,8 +1,10 @@
 # GitHub tokens
 
-This doc states how a cloud computer gets GitHub access, and who its
-commits name as their author.
-[Access and security](access-and-security.md) states the shared access rules.
+This doc states how a cloud computer gets GitHub access, who its commits
+name as their author, and how the Worker acts on GitHub as a member.
+[Access and security](access-and-security.md) states the shared access
+rules. A decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Git and the GitHub CLI
 
@@ -21,6 +23,21 @@ commits name as their author.
   The terminal is shared, so this account is the same for each connection.
 - A supplied turn ID must name a current turn. An unknown or ended turn
   never falls back to the workspace owner.
+- A trusted Continue job is the one other case. Its fetch gets the token
+  of the member who pressed Continue, as [Continue](#continue) says.
+- Each command that an agent runs in a turn has the ID of that turn. This
+  holds also in a shell that loads the sandbox's own variables again, such
+  as the login shell in which Codex runs each command.
+- The sandbox's own variables hold no turn ID. An empty turn ID in them was
+  rejected, because a shell that loads them again then removes the turn ID,
+  and Git gets no GitHub access.
+- When Git gets no GitHub access, it shows the reason. Outside an agent
+  turn, it says that Git gets GitHub access in an agent turn. When the
+  Worker refuses, it shows the Worker's message, such as an ended turn or an
+  expired GitHub sign-in. Any other failure shows one fixed message that
+  says to try again.
+- One fixed message for every failure was rejected, because it told the
+  person to sign in again also when a new sign-in cannot help.
 - The helper asks the Worker at `/v1/git/credential` on
   `api.conductive.build`. It proves itself with the workspace token.
 - The Worker checks access before it gets the GitHub token and again
@@ -81,14 +98,26 @@ commits name as their author.
 - The name and the email of the person's own Git settings on their Mac
   were rejected, because a member without the Mac app has none.
 - The committer is the same person as the author.
-- Git gets the author from the four variables `GIT_AUTHOR_NAME`,
-  `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL`.
-- The app's values of these four variables replace an org env var with
-  the same name (decision 233). The app's other own variables do the same,
-  as [Startup script and env vars](workspaces-and-sandboxes.md#startup-script-and-env-vars)
+- In an agent turn, Git gets the author from the four variables
+  `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and
+  `GIT_COMMITTER_EMAIL` of each agent process. This author also wins over
+  an author that a script or an agent writes into the Git settings.
+- Outside an agent turn, Git gets the workspace owner's author from the Git
+  system settings of the sandbox. The app writes them at each start and
+  each resume.
+- Where Git uses the owner's author, it also wins over a `user.name` and a
+  `user.email` that a script or an agent writes into the Git settings. Only
+  an `author` or a `committer` setting of a repository or of the sandbox
+  user wins over it, because Git reads those settings after its system
+  settings. This holds also in an agent turn whose runner gives no turn
+  author.
+- The sandbox's own variables hold none of the four variables. The owner's
+  author in them was rejected. A shell that loads them again, such as a
+  login shell, then replaces the turn sender's author with the owner's.
+- The sandbox gets no org env var with one of these four names
+  (decision 233). The app's author applies in its place, as
+  [Startup script and env vars](workspaces-and-sandboxes.md#startup-script-and-env-vars)
   says.
-- The app's author also wins over an author that a script or an agent
-  writes into the Git settings.
 - Org env vars that win over the app's author were rejected, because the
   commits of that org then stop naming the person of the token.
 - Risk: one Git command can still give its own author, with an option or
@@ -125,3 +154,65 @@ commits name as their author.
   data.
 - A workspace sandbox never gets an installation token. Its Git gets
   GitHub tokens only from the git credential helper.
+
+## The Actions permission
+
+- The GitHub App has Actions write, and each install owner approves it
+  (decision 225).
+- With it, the agent reads the logs of failed GitHub Actions jobs with
+  `gh run view --log-failed`, for Fix checks of the pull request bar.
+- Reason: the logs are the main evidence of a failed Actions job.
+- A check of another service keeps its log outside GitHub. Fix checks then
+  asks the agent to read its details, or to run it locally.
+- Risk: write also lets each member token start, re-run, and cancel
+  workflow runs, turn workflows on and off, and delete runs, logs,
+  artifacts, and caches. This holds on each repository that the token
+  reaches, also outside the org. Read access would be enough for the logs.
+- These ways were rejected (decision 225):
+  - No Actions permission. Fix checks then works only from the check
+    summaries and local runs, and a failure that shows only in a log takes
+    longer.
+  - A Worker that puts the end of each failed log into the prompt. The
+    actions of the bar only send their prompt (decision 222).
+  - A personal token, or a second GitHub App, for the logs. One GitHub App
+    gives the app all of its GitHub access.
+
+## Merge as the member
+
+- The Worker reads, for each member, the access of that member to the
+  repository and the merge method that GitHub gives that member
+  (decision 221). It reads with the member's own GitHub token, and the
+  answer goes only to that member.
+- A member may merge when GitHub gives that member write access or more.
+  GitHub still checks the rules of the branch at the merge.
+- Reason: GitHub reports no single field for the right to merge.
+- The Worker merges with the GitHub token of the member who clicks Merge
+  (decision 220). GitHub then shows that member as the merger, and checks
+  the rights of that member.
+- A merge with a token of the app was rejected. GitHub would then show the
+  app as the merger, and skip the rights of the member.
+- The Worker refuses a merge for a person who is not a member of the org,
+  in a suspended org, and in an archived workspace.
+- No GitHub error text reaches the browser. The Worker gives each refusal
+  of GitHub as an error code of the app.
+
+## Continue
+
+- Continue fetches the latest default branch with the GitHub token of the
+  member who pressed Continue (decision 226). GitHub then checks the read
+  access of that member.
+- The workspace runs this fetch as a trusted Continue job, as it runs the
+  fetch of a create. The credential route gives the token to that job only
+  while its fetch runs.
+- The token reaches only that fetch. No Git setting and no hook of the
+  repository folder runs with it. Reason: agent code can change the Git
+  settings and the hooks of the repository folder.
+- Every member may press Continue (decision 224). So the token of a member
+  who is not the owner reaches the sandbox of the owner for the fetch, as
+  it does for a message of that member.
+- These ways were rejected (decision 226):
+  - The token of the workspace owner, through the mode that `gh` uses
+    outside a turn. It works only in a workspace from a newer org image.
+  - An installation token that reads only the one repository. A workspace
+    sandbox then gets an installation token, and the fetch needs the revoke
+    steps of image builds.

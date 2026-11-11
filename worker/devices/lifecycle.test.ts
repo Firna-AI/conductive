@@ -9,6 +9,7 @@ import { deviceObject } from '../../src/shared/device-read'
 import { sessionPaths } from '../../src/shared/sessions'
 import { workspaceEventsPath } from '../../src/shared/events'
 import { SocketInbox } from '../chat/adapter-sockets.test-support'
+import { deviceClock } from './alarm.test-support'
 import {
   deviceFixture,
   APP,
@@ -137,13 +138,16 @@ it('keeps input for concurrent waits and restores it after a metadata update', a
   await sendFrame(mac, { type: 'command.result', ...ref('first'), result })
 })
 
-it('caps UTF-8 output and preserves timeout and truncation in durable records', async () => {
+it('caps UTF-8 output and completes pending work on the original Mac socket after hibernation', async () => {
   const mac = await connected(fixture)
   const waiting = await command(fixture, mac)
   expect(waiting.startedAt).toBeNull()
   await sendFrame(mac, { type: 'command.approved', ...ref() })
   const running = await stored(fixture)
   expect(running.startedAt).toEqual(expect.any(Number))
+  const restored = await deviceClock(fixture).hibernate()
+  expect(restored.current).toEqual({ ok: true, value: { device: mac.device } })
+  expect(restored.socketCount).toBe(1)
   await sendFrame(mac, {
     type: 'command.result',
     ...ref(),
@@ -174,12 +178,22 @@ it('caps UTF-8 output and preserves timeout and truncation in durable records', 
 it('retires a replaced connection and fails its work without rerouting it', async () => {
   const old = await connected(fixture)
   await command(fixture, old)
+  const oldRestored = await deviceClock(fixture).hibernate()
+  expect(oldRestored.current).toEqual({
+    ok: true,
+    value: { device: old.device },
+  })
   const closed = new Promise<number>((resolve) =>
     old.socket.addEventListener('close', (event) => resolve(event.code), {
       once: true,
     }),
   )
   const next = await connected(fixture, fixture.senderToken, 'new-mac')
+  const replacement = await deviceClock(fixture).hibernate()
+  expect(replacement.current).toEqual({
+    ok: true,
+    value: { device: next.device },
+  })
   expect(await closed).toBe(DEVICE_REPLACED_CLOSE_CODE)
   expect(await stored(fixture)).toMatchObject({
     state: 'unavailable',
@@ -225,6 +239,10 @@ it('cancels work when its turn stops and ignores late approvals and results', as
 })
 
 it('stores and publishes numbered workspace input changes on the real chat stream', async () => {
+  await fixture.db
+    .prepare('UPDATE workspaces SET github_summary = ? WHERE id = ?')
+    .bind('checks-failed', WID)
+    .run()
   const mac = await connected(fixture)
   const response = await fixture.runtime.dispatchFetch(
     APP + workspaceEventsPath('org', WID),
@@ -242,13 +260,19 @@ it('stores and publishes numbered workspace input changes on the real chat strea
   const waiting = deviceObject(deviceObject(await inbox.next()).envelope)
   expect(waiting).toMatchObject({
     eventNumber: Number(through) + 1,
-    event: { type: 'workspace.updated', workspace: { state: 'input' } },
+    event: {
+      type: 'workspace.updated',
+      workspace: { state: 'input', github: 'checks-failed' },
+    },
   })
   await sendFrame(mac, { type: 'command.denied', ...ref() })
   const answered = deviceObject(deviceObject(await inbox.next()).envelope)
   expect(answered).toMatchObject({
     eventNumber: Number(through) + 2,
-    event: { type: 'workspace.updated', workspace: { state: 'working' } },
+    event: {
+      type: 'workspace.updated',
+      workspace: { state: 'working', github: 'checks-failed' },
+    },
   })
   expect(JSON.stringify([waiting, answered])).not.toContain(fixture.senderToken)
 })

@@ -13,7 +13,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Local workspaces',
     status: 'different',
-    note: 'Each workspace runs on its own cloud computer instead of your Mac. Importing local Conductor workspaces through the Mac app is planned.',
+    note: 'Each workspace runs on its own cloud computer instead of your Mac. Importing local Conductor workspaces through the Mac app is in progress.',
   },
   {
     id: 'add-a-project',
@@ -27,7 +27,7 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'New-workspace composer',
     status: 'available',
-    note: 'Pick a repository and model before the first message. New workspace opens as a page or a dialog.',
+    note: 'Choose a repository and model on a page or dialog. Opening chat while the cloud computer builds or resumes is planned.',
   },
   {
     id: 'start-from-a-branch-pr-or-issue',
@@ -98,9 +98,8 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     id: 'continue-after-merge',
     area: 'workspaces-and-branches',
     name: 'Continue after merge',
-    status: 'in-progress',
-    note: 'Continue on a new branch in the same workspace is in progress, with the existing files and chat sessions.',
-    due: null,
+    status: 'available',
+    note: 'After a merge, any org member can start a new branch in the same workspace. The cloud computer and agent sessions stay.',
   },
   {
     id: 'pinned-workspaces-and-manual-order',
@@ -114,14 +113,14 @@ export const workspacesAndBranchesFeatures: readonly ParityFeature[] = [
     area: 'workspaces-and-branches',
     name: 'Unread marks',
     status: 'available',
-    note: 'Bold names and state marks show unread agent output. A Next unread command is under consideration.',
+    note: 'Bold names show unread agent output. A Next unread command is under consideration.',
   },
   {
     id: 'context-folder',
     area: 'workspaces-and-branches',
     name: '.context folder',
     status: 'available',
-    note: 'Attached files arrive in .context/attachments, and Git ignores them. In workspaces from a new computer build, Git also ignores agent notes in .context.',
+    note: 'Git ignores attached files in .context/attachments and, after a new computer build, agent notes in .context. Updating older workspaces is in progress.',
   },
   {
     id: 'monorepo-working-directories',

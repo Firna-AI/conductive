@@ -77,6 +77,13 @@ A late older suspension must therefore fail at its receiver write.
 Payload deletion must preserve its rejection of stale calls while older calls can still arrive.
 Purge reads and deletes small batches. Each batch checks the same generation and preserves the fence.
 The normal storage adapter rejects chat, device, feature, and alarm writes after that fence is purged.
+Native socket records and the `browser`, `runner`, and `devices` alarm sources use raw storage instead. So a suspended or purged fence does not refuse their writes, and the alarm runs them before its fence checks, as [Alarms](../README.md#alarms) says.
+`WorkspaceMembersReceiver.suspend` runs `suspendWorkspaceAlarms` in both of its generation-checked transactions.
+The `draining` stage clears the regular alarm sources, but it keeps the lifecycle run lease `alarm:lifecycle:run` and the deferral.
+The `drained` stage also cancels that lease and that deferral.
+Both stages keep the `browser`, `runner`, and `devices` deadlines, then set the platform alarm from the sources that remain. So no regular retry loop stays after the suspension.
+Between the stages, the suspension closes the current tabs and the runner.
+A tab whose grant read ended before the suspension can still register after that close. It stays open until its kept `browser` deadline runs its next access check, which closes it when its access is gone.
 Late summary reads cannot recreate chat metadata. Suspended stop callbacks can still write their final events.
 The production receiver keeps a stopped create checkpoint after Delete, before or after allocation.
 Restore starts no sandbox. The normal resume route requeues that create when the workspace opens.
@@ -94,51 +101,8 @@ Retention capabilities use that same call ownership.
 Their D1 writes and lifecycle checkpoints also check the generation atomically.
 Cooperative renewal changes no Restore deadline.
 
-Supply the required `MembersHooks` callbacks.
-Production also supplies `deleteOrgState` to remove the image coordinator payload, including an org with no workspaces:
-
-- `readWorkspace` returns the lifecycle backend's current `Workspace` record.
-  It must authorize the viewer. All current org members can read all workspaces.
-- `workspaceOwnerChanged` runs after each workspace that gets a new owner, by a reassignment or by a member who leaves or is removed.
-  `workspaceOwnerChangedHook` in [`ownership-maintenance.ts`](../lifecycle/ownership-maintenance.ts) supplies it.
-  It calls `reconcileLifecycleAccess` of the workspace object, which checks the workspace at once, in every state.
-  The check stops a workspace that must still stop, such as a running workspace with a revoked token, and rearms the lifecycle alarm of a stopped workspace whose new owner is not suspended.
-  [The stop of one workspace](../operator/README.md#the-stop-of-one-workspace) says how.
-- `suspendOrg` stops org access before resource enumeration.
-  It must reject new starts and writes for the deleted org.
-  It must drain pending workspace starts and image builds.
-  It must retain their sandbox IDs and snapshot names in D1, each with its provider account.
-  It must close existing browser and runner access.
-  It must disable normal idle, refresh, and disk keepalive timers.
-  It must handle builds even when the workspace list is empty.
-  It must finish before it returns. Concurrent and repeated writes must honor their generation.
-  Members then owns the deleted-org maintenance schedule through the next hook.
-- `maintainDeletedOrg` gets the real deletion dates and each retained workspace
-  disk's real stop date and next keepalive date.
-  Its input carries the call ownership and renewal capability.
-  It plans the normal decision-43 deadline through `retention.schedule`.
-  It keeps an existing deadline unchanged.
-  A newly stopped disk must receive a deadline.
-  In `retention` mode, it performs only due restarts through `retention.restart`.
-  It then schedules the new stop's next keepalive.
-  In `restore` mode, it only plans dates. It must start no sandbox.
-  Build sandboxes stay outside this hook. Retained archived disks enter until their window ends.
-  The lifecycle keeps its restart policy here, including its margin before day 14.
-  It must await every capability call before it returns.
-  A hook failure keeps the org pending for retry.
-- `restoreOrgMaintenance` receives the Restore request ID, requesting admin,
-  original deletion deadline, and current disk schedules.
-  It also receives the call ownership and the complete workspace ID list.
-  It returns disk and org-refresh timers to the active lifecycle.
-  It must arm these timers before it returns.
-  The timers must check active org state and current disk, settings, and org image records before running.
-  It must keep normal access closed and start no sandbox during the handoff.
-  Replace older timer plans for the same org.
-  Concurrent calls must reject older generations, even when request IDs match.
-  An unopened workspace must get maintenance after activation.
-- `deleteWorkspaceState` removes all workspace Durable Object state and any
-  other external workspace data under its call generation.
-  Its receiver must reject stale concurrent removals and writes.
+[Lifecycle hooks](lifecycle-hooks.md) gives the required `MembersHooks` callbacks,
+and the production `deleteOrgState` callback.
 
 Delete records the deletion date and revokes previews before any hook or provider call.
 It preserves an already-stopped disk's stop and keepalive dates.
@@ -219,6 +183,8 @@ It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remain
   Otherwise it fails with 409 `last_admin`, which asks to make another member whose account is not suspended an admin.
 - A leave gives the workspaces to the earliest active admin, else to the earliest member who is not suspended, else to the earliest admin.
   A removal gives them to the admin who removes the member.
+- The same leave or removal batch moves the member's routines in that org to that recipient.
+  It turns them off with `owner_left`, clears their next time, and keeps the departing member's name.
 - A reassignment checks its recipient in the same write. A suspended recipient gets 409 `owner_suspended`, and nothing changes.
 - `firstOrgAdmin` and the account-deletion guard of `account.ts` do not use the rule. So that guard still counts every admin.
 
@@ -239,7 +205,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 ### Key Code
 
 - [composition.ts](composition.ts) supplies the production lifecycle hooks.
-- [workspace-receiver.ts](workspace-receiver.ts) preserves the receiver fence while it removes workspace payloads.
+- [workspace-receiver.ts](workspace-receiver.ts) preserves the receiver fence while it removes workspace payloads. Its `suspend` clears the regular alarm sources in two stages and keeps the security deadlines.
 - [receiver-fence.ts](receiver-fence.ts) checks generations in storage transactions.
 - [receiver-storage.ts](receiver-storage.ts) prevents normal data and alarm writes after purge.
 - [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access and token checks. A create without a sandbox also needs its image pin, with the same image name and provider account. A create with a retained sandbox takes the account of the workspace record.

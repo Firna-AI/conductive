@@ -2,10 +2,11 @@
 
 This doc holds the requirements and the decisions in force for the copy of
 a session transcript. It covers the copy items of the tab menu, what each
-copy holds, the text of a copy, and the route that gives the text. It
-belongs to [Chat and events](chat-and-events.md), which covers the agents,
-the sessions, what the chat shows, and the events. The terms are those of
-the [architecture doc](../architecture.md#terms). A decision number names a
+copy holds, the text of a copy, and the route that gives the text. A
+linked page covers the reads of the same text by agents. It belongs to
+[Chat and events](chat-and-events.md), which covers the agents, the
+sessions, what the chat shows, and the events. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. The [mockup catalogue](../mockups/catalogue.md) draws these screens
 at `app/tabs` and `app/transcripts`.
@@ -100,9 +101,17 @@ at `app/tabs` and `app/transcripts`.
   [What the chat shows](chat-and-events.md#what-the-chat-shows) states
   these items.
 - Their lines use the words of the chat, such as the fold lines, the tool
-  verbs, and the lines of turn ends, stops, failures, and lost data.
-- As in the chat, a run of tool calls with a call that is not done shows
-  open in the concise copy too.
+  verbs, and the lines of turn ends, end reasons, stops, failures, and lost
+  data.
+- A turn end with an end reason gives the line of that reason before its
+  duration and its files, in the order of the chat. An example is
+  "Background work stopped at the time limit", as
+  [What the chat shows](chat-and-events.md#what-the-chat-shows) says.
+- As in the chat, a run of tool calls shows open in the concise copy when
+  the chat shows it open at first. That is the newest run of a running
+  turn, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
+  says, and a run that stays in view after its turn ends, with a call that
+  is not done.
 - A copy holds no thinking text of the agent, because the chat shows none.
 - A menu with only Copy full transcript was rejected. A member who wants
   only the conversation would then trim each long copy by hand.
@@ -182,9 +191,9 @@ at `app/tabs` and `app/transcripts`.
 - A Copy button on each answer was left out, because it copies one answer,
   not the session.
 - An export of the session log that the agent keeps in the cloud computer
-  was rejected. An archived workspace has no cloud computer, the two
-  agents write different formats, and those logs can hold the secret
-  values that the chat hides.
+  was rejected. An archived workspace offers no cloud computer tools,
+  the two agents write different formats, and those logs can hold the
+  secret values that the chat hides.
 - A transcript that the workspace keeps up to date at each event was
   rejected. It adds work to each event of each session, for a copy that
   members make only now and then.
@@ -214,13 +223,16 @@ at `app/tabs` and `app/transcripts`.
   says.
 - The route is on `app.conductive.build`, behind its gate, as
   [Hostnames and gates](access-and-security.md#hostnames-and-gates) says.
-  No route of `api.conductive.build` gives a transcript. So the workspace
-  token of a sandbox cannot copy a session.
-- Reason: the agent tools make only their six calls. A call that reads the
-  chat of another workspace was left out, as
-  [Workspace tools](agent-tools.md#workspace-tools) says.
+  The workspace token of a sandbox gets the same text from the route of
+  [Transcript reads by agents](transcript-reads.md).
 - The text holds the session as it stood at one event of the workspace:
   each event up to that event, and none after it. Reason: the copy then
   shows one state of the chat, as a load of the history does.
 - A copy of a long session does not hold up the workspace. Messages, Stop,
   and the events of the runner go on while the route reads the history.
+
+## Reads by agents
+
+[Transcript reads by agents](transcript-reads.md) states the route that
+gives the text of a session to the workspace token of a sandbox, for the
+`read_session` call, and the parts of a long text.

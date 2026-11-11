@@ -91,6 +91,7 @@ export async function runnerHarness(
       warnings.push(message)
     },
     disconnected: () => {},
+    restoreMarker: join(repository.home, 'restore-ended'),
   }
   const runner = new Runner(options)
   let cutoff = false

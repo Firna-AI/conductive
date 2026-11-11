@@ -12,24 +12,25 @@
   line-height: var(--ui-leading-chat);
 }
 
+/*
+ * The look of the headings comes from MarkdownHeadings.module.css. A
+ * level-1 or level-2 heading has a little more space above it than a
+ * smaller heading. The first block of the file has no space above it.
+ */
 .doc h1 {
-  margin: 0 0 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--ui-border);
-  color: var(--ui-ink);
-  font-size: var(--ui-text-xl);
-  font-weight: var(--ui-weight-heading);
-  letter-spacing: var(--ui-tracking-heading);
-  line-height: 1.25;
+  margin: 24px 0 10px;
 }
 
 .doc h2 {
+  margin: 24px 0 8px;
+}
+
+.doc :is(h3, h4, h5, h6) {
   margin: 20px 0 6px;
-  color: var(--ui-ink);
-  font-size: var(--ui-text-lg);
-  font-weight: var(--ui-weight-heading);
-  letter-spacing: var(--ui-tracking-heading);
-  line-height: 1.35;
+}
+
+.doc > :first-child {
+  margin-top: 0;
 }
 
 .doc p,

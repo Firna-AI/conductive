@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 10 November 2026.`,
+  accepted it. Effective date: 11 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -48,8 +48,9 @@ export const termsDocument: LegalDocument = {
       title: 'The service',
       blocks: [
         paragraph`${productName} is a coding tool in the browser and in the
-          Mac app. Each workspace is one task with its own branch and its
-          own cloud computer, where agents powered by Claude and Codex work.`,
+          Mac app. Each workspace has its own cloud computer, where agents
+          powered by Claude and Codex work. A workspace can hold one task
+          after another, with one branch at a time.`,
         paragraph`${productName} is free until billing starts. Nobody pays
           until they choose a plan.`,
       ],
@@ -60,13 +61,17 @@ export const termsDocument: LegalDocument = {
         list(
           text`You sign in with GitHub, through the GitHub App of
             ${productName}. The app can reach each repository where you
-            install its GitHub App and have access.`,
+            install its GitHub App and have access. It reads your repository
+            rights and merge method from GitHub. It shows Merge only when
+            your GitHub rights let you merge.`,
           text`${productName} runs the cloud computers of every org in its
             own account with its cloud computer provider. You need no
             account or key of your own for them.`,
           text`The agents run on the Claude or OpenAI login that you connect.
             The model use of each message bills to the account of the member
             who started its session, under the terms of Anthropic or OpenAI.
+            The runs of a routine start their sessions on the login of the
+            member who owns the routine.
             A newer cloud computer starts from an org image that requires
             ${productName} to keep agent logins outside the cloud computer.
             ${productName} enforces this requirement for computers that start
@@ -75,7 +80,8 @@ export const termsDocument: LegalDocument = {
             can hold your messages, files, and code. ${productName} adds the
             login, and sends each request on to Anthropic or OpenAI. An older
             cloud computer starts from an earlier org image. ${productName}
-            still permits older software there that receives the login itself.
+            still permits older software there that receives supported agent
+            logins themselves. A ChatGPT sign-in is never sent there.
             With that older software, the agents send their model requests to
             Anthropic or OpenAI from the cloud computer. Installing newer
             software in that cloud computer does not remove this risk. A new
@@ -150,14 +156,15 @@ export const termsDocument: LegalDocument = {
           notice.`,
         paragraph`A suspension of an account ends its sign-in. It stops the
           cloud computers of the workspaces that the account owns, closes
-          their previews, and blocks new starts.`,
+          their previews, and blocks new starts. Its routines start no
+          runs.`,
         paragraph`A suspension of an org stops each cloud computer of the org,
-          closes its previews and terminals, and blocks each start and
-          build. Its members keep their accounts and their other orgs. They
-          can still open the org and read its chat history. Nothing in the
-          org can change, except that a member can leave it. An admin can
-          leave only while another admin whose account is not suspended
-          remains.`,
+          closes its previews and terminals, and blocks each start, build,
+          and routine run. Its members keep their accounts and their other
+          orgs. They can still open the org and read its chat history.
+          Nothing in the org can change, except that a member can leave it.
+          An admin can leave only while another admin whose account is not
+          suspended remains.`,
         paragraph`A stopped cloud computer gets no restart to keep its disk
           while its workspace owner or org is suspended. So its disk can be
           deleted, with any work that is not pushed to GitHub.`,
@@ -191,11 +198,20 @@ export const termsDocument: LegalDocument = {
           passes on the model requests of a newer cloud computer, it keeps no
           copy of a request or of its answer. It writes no body or header
           value of them to its logs.`,
+        paragraph`Continue starts a new branch from the latest default branch
+          of the repository. It keeps the cloud computer and its sessions.
+          Changed files move to the new branch. Commits that are not pushed
+          stay on their local branches.`,
+        paragraph`The agent actions in the pull request bar send messages as
+          the member who clicks. The chat history keeps these messages and a
+          note that names who used Continue and the branches.`,
         paragraph`You keep any rights that you have in your repositories,
           files, messages, and other content. You give the operator
           permission to store, copy, process, and transmit that content as
           needed to provide the service, including through its providers.
           You must have permission to submit that content.`,
+        paragraph`If you send feedback, you give the operator permission to
+          use it to improve ${productName}, without any obligation to you.`,
         paragraph`The terms and licences of third-party code and services
           still apply. Check agent output before you use or publish it.`,
       ],

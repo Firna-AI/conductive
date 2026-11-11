@@ -172,7 +172,7 @@ it.each(['cli', 'mcp'] as const)(
     expect(await task).toBe(mode === 'cli' ? 1 : 0)
     expect(methods).toEqual(['POST', 'GET'])
     const message =
-      'The agent turn ended. The tool cannot read the Mac command result.'
+      'calling_turn_required: Start this request from an active agent turn. The agent turn ended. The tool cannot read the Mac command result.'
     if (mode === 'cli') {
       expect(output.stdout).toEqual([])
       expect(output.stderr).toEqual([`${message}\n`])

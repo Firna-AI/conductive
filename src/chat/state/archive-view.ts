@@ -66,12 +66,14 @@ export function endedAt(
 
 /**
  * Shows a session of a read-only workspace as a tab and as the shown
- * session, and loads its stored history. It writes nothing.
+ * session, and loads its stored history. It writes nothing. Each call is a
+ * choice of a shown session, which an older address lookup yields to.
  */
 export async function showLocally(
   context: ChatContext,
   sessionId: string,
 ): Promise<void> {
+  context.tabChoices.count += 1
   const snapshot = context.store.get()
   const known = [...snapshot.sessions, ...snapshot.history]
   if (!known.some((item) => item.id === sessionId)) return
@@ -154,11 +156,11 @@ export function afterRestore(snapshot: ChatSnapshot): ChatSnapshot {
  */
 export async function reloadView(context: ChatContext): Promise<void> {
   const before = context.store.get().view
-  const view = await context.api.view().catch(() => null)
-  if (!context.live() || view === null) return
+  const reply = await context.api.view().catch(() => null)
+  if (!context.live() || reply === null) return
   context.store.update((snapshot) =>
     snapshot.view === before && !isArchived(snapshot)
-      ? { ...snapshot, view: withSessionPlaces(view, snapshot.sessions) }
+      ? { ...snapshot, view: withSessionPlaces(reply.view, snapshot.sessions) }
       : snapshot,
   )
 }

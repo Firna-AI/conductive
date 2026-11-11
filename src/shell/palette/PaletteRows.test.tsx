@@ -2,6 +2,7 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import paletteStyles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
 import { workspacePaths } from '../../shared/workspaces'
@@ -142,17 +143,24 @@ describe('the rows of the command palette', () => {
     })
   })
 
-  test('a search finds active and archived workspaces, also by number with the label before the name, the tabs keep the query, the filters choose the repository and the state, and an empty tab says why', async () => {
+  test('a search finds active and archived workspaces, also by number with the label before the name, each row says its GitHub state before its state, the tabs keep the query, the filters choose the repository and the state, and an empty tab says why', async () => {
     const server = new FakeApiServer({ workspaceState: 'archived' })
     await openPaletteTab(routes.org(org), { server })
     pressPaletteKey('other', document.body)
     typeText(searchField(), '39')
-    const number = { groups: groupLabels(), starts: rowStarts() }
+    const number = {
+      groups: groupLabels(),
+      starts: rowStarts(),
+      strong: options().map((row) =>
+        row.classList.contains(paletteStyles.strong),
+      ),
+    }
     typeText(searchField(), 'storefront')
     const search = {
       groups: groupLabels(),
       opens: openedWorkspaces(),
       starts: rowStarts(),
+      names: optionNames(),
     }
     click(byRole('tab', 'Workspaces'))
     const kept = { text: searchField().value, groups: groupLabels() }
@@ -190,6 +198,8 @@ describe('the rows of the command palette', () => {
           ['W-391', 'Move retries to a queue'],
           ['W-395', 'Checkout address autocomplete'],
         ],
+        // Only the unread workspace shows its name in bold.
+        strong: [false, true, false, false, false, false],
       },
       search: {
         groups: ['Workspaces', 'Archived'],
@@ -199,6 +209,14 @@ describe('the rows of the command palette', () => {
           ['Apple Pay button', 'acme/storefront'],
           ['Upgrade to Next.js 16', 'acme/storefront'],
           ['Checkout address autocomplete', 'acme/storefront'],
+        ],
+        // The GitHub state comes before the state, and an archived
+        // workspace says none, as its mark shows no colour.
+        names: [
+          'Fix flaky cart testacme/storefront3m, Checks running, Working',
+          'Apple Pay buttonacme/storefront5m, Checks failed, Ready',
+          'Upgrade to Next.js 16acme/storefront7m, Ready',
+          'Checkout address autocompleteacme/storefrontnow, Archived',
         ],
       },
       kept: { text: 'storefront', groups: ['Checkout', 'Infra'] },
@@ -216,7 +234,7 @@ describe('the rows of the command palette', () => {
     {
       who: 'a member gets no Archive for the workspace of another person',
       server: () => new FakeApiServer({ role: 'member' }),
-      groups: ['Checkout address autocomplete', 'Acme', 'Orgs'],
+      groups: ['Checkout address autocomplete', 'Acme', 'Orgs', 'Help'],
       rows: [
         'New session',
         'Session history',
@@ -224,6 +242,7 @@ describe('the rows of the command palette', () => {
         'New workspace',
         'New section',
         ...otherOrgs,
+        'Send feedback',
       ],
     },
     {
@@ -233,8 +252,8 @@ describe('the rows of the command palette', () => {
         serveSuspendedAcme(server)
         return server
       },
-      groups: ['Checkout address autocomplete', 'Orgs'],
-      rows: ['Session history', ...goTo, ...otherOrgs],
+      groups: ['Checkout address autocomplete', 'Orgs', 'Help'],
+      rows: ['Session history', ...goTo, ...otherOrgs, 'Send feedback'],
     },
   ])('on the Actions tab, $who', async ({ server, groups, rows }) => {
     holdAnimationFrames()

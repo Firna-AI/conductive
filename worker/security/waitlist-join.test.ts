@@ -18,6 +18,7 @@ import {
   addInviteCode,
   sessionState,
   setPaused,
+  setWaitlist,
   uses,
   waitlistFixture,
 } from '../waitlist/waitlist.test-support'
@@ -57,6 +58,25 @@ it('gives a new account app access from its signed join code in the same sign-in
     code,
   })
   expect(await uses(harness, code)).toBe(1)
+})
+
+it('keeps a signed join code unused during open sign-up', async () => {
+  const { admin } = await waitlistFixture(harness)
+  harness.github.profile = { id: 7, login: 'open-person' }
+  const code = await addInviteCode(harness)
+  await setWaitlist(harness, false, admin.user.id)
+  const callback = await joinSignIn(harness, code)
+  expect(callback.status).toBe(302)
+  expect(callback.headers.get('Location')).toBe(TEST_ORIGIN)
+  expect(await uses(harness, code)).toBe(0)
+  const state = await sessionState(
+    harness,
+    responseCookie(callback, SESSION_COOKIE),
+  )
+  expect(state.appAccess).toBe(true)
+  expect(await accessRecord(harness, state.user.id)).toMatchObject({
+    source: 'open_signup',
+  })
 })
 
 it.each(['browser', 'desktop'] as const)(

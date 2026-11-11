@@ -15,9 +15,15 @@
   outline: none;
 }
 
+/*
+ * The box around each chip. It is never wider than the line, or than the
+ * widest chip of `InlineChip.module.css`, 22 times the size of the font,
+ * with its padding. Without that limit the box takes the width of a whole
+ * long name, and a gap follows the chip, which cuts its name short.
+ */
 .field [contenteditable='false'] {
   display: inline-block;
-  max-width: 100%;
+  max-width: min(100%, calc(22em + 4px));
   padding-inline: 2px;
   vertical-align: top;
   box-sizing: border-box;

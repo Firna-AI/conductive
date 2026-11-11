@@ -17,6 +17,7 @@ it('compares Git link, mode, and filter representations without changing stored 
   await h.git('add', 'target.txt', 'other.txt', 'link')
   await h.git('commit', '-m', 'link base')
   await h.git('update-ref', 'refs/heads/main', 'HEAD')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   let saved = await gitStorage(h.root)
   let before = await checkpoint(repository)
   await h.write('target.txt', 'target changed\n')
@@ -60,6 +61,7 @@ it('compares Git link, mode, and filter representations without changing stored 
   await h.git('add', '.gitattributes', 'filtered.txt')
   await h.git('commit', '-m', 'filtered base')
   await h.git('update-ref', 'refs/heads/main', 'HEAD')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   saved = await gitStorage(h.root)
   await h.write('filtered.txt', 'second\n')
   expect(await repository.diff('filtered.txt', 'main')).toMatchObject({
@@ -115,6 +117,7 @@ it('tracks submodule commits and worktree state without changing either index', 
   )
   await h.git('commit', '-m', 'submodule base')
   await h.git('update-ref', 'refs/heads/main', 'HEAD')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   const saved = await gitStorage(h.root)
   let before = await checkpoint(repository)
   await h.git('-C', 'module', 'checkout', original)

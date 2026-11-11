@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test } from 'vitest'
+import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import { AppModel } from '../../app/app-model'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
@@ -23,6 +24,7 @@ import { Shell } from '../Shell'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import { AccountScreen } from './AccountScreen'
+import { chatGptLogin, codexItem, serveAccount } from './sign-in-test-kit'
 import { buttonsOf, listItems } from './test-markup'
 
 const choiceLabel = 'Open New workspace in'
@@ -138,6 +140,23 @@ describe('AccountScreen', () => {
       { label: 'Cancel', disabled: false },
       { label: 'Connect', disabled: false },
     ])
+  })
+
+  test('a Codex login that stopped working after the app opened shows Signed out, its cause, and Sign in again when the account opens', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    serveAccount(server, [chatGptLogin])
+    const app = await startedApp(server)
+    const cause = copy.causes.notRenewed
+    serveAccount(server, [{ ...chatGptLogin, unusableCause: cause }])
+    const view = mountScreen(
+      app,
+      <AccountScreen connect={null} tab="general" user={fakeUser} />,
+    )
+    await settle()
+    expect(codexItem(view)).toBe(
+      `Codex ${copy.signedOut} ChatGPT plan Remove ${cause} ${copy.signInAgain} Let other members use this login Their messages in your sessions start a new session on their own login.`,
+    )
   })
 
   test('General shows no Model and effort, and the Preferences tab shows it with the saved choice', async () => {

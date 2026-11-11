@@ -8,12 +8,14 @@ import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
+  RunRoutine,
 } from '../api/read-responses'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
 import {
   emptyTranscript,
   type Transcript,
 } from '../../shared/transcript/transcript'
+import { startedTurn } from '../../shared/transcript/turn-records'
 
 /**
  * The message that a user writes in a session. Its identity stays when the
@@ -92,6 +94,11 @@ export interface ChatSnapshot {
    */
   archiveTabs: readonly string[] | null
   view: WorkspaceView | null
+  /**
+   * The routine whose run made the workspace, from the read of the view.
+   * Null for a workspace that a person created, and until the view reads.
+   */
+  routine: RunRoutine | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
@@ -135,6 +142,7 @@ export const initialSnapshot: ChatSnapshot = {
   history: [],
   archiveTabs: null,
   view: null,
+  routine: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },
@@ -180,6 +188,20 @@ export function withSession(
  */
 export function isRunning(snapshot: ChatSnapshot, sessionId: string): boolean {
   return sessionState(snapshot, sessionId).transcript.turn !== null
+}
+
+/**
+ * A turn runs or stops in a session of the workspace, open or closed, as
+ * its record or its transcript says. A record names a started turn as
+ * `startedTurn` says, so a message that waits for dispatch runs no turn.
+ * The transcript also shows a turn that started before a record names it.
+ */
+export function anyTurnRuns(snapshot: ChatSnapshot): boolean {
+  const records = [...snapshot.sessions, ...snapshot.history]
+  return (
+    records.some((session) => startedTurn(session) !== null) ||
+    snapshot.sessions.some((session) => isRunning(snapshot, session.id))
+  )
 }
 
 /** Holds the snapshot, and tells React when it changes. */

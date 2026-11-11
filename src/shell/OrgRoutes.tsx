@@ -13,6 +13,8 @@ import { DeletedOrg, OrgHome } from './list/OrgHome'
 import { HomeList, ListHeader } from './list/HomeList'
 import { Sidebar, type ListCurrent } from './list/Sidebar'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
+import { RoutineScreen } from './routines/RoutineScreen'
+import { RoutinesScreen } from './routines/RoutinesScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
 import { ActionButton } from './ui/actions'
 import { useGo } from './ui/AppLink'
@@ -87,6 +89,7 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
         <WorkspaceScreen
           key={`${org.id}:${route.workspaceId}`}
           org={org}
+          session={route.session}
           view={route.view}
           viewer={user}
           workspaceId={route.workspaceId}
@@ -94,6 +97,28 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
       )
     case 'settings':
       return <OrgSettingsScreen org={org} tab={route.tab} user={user} />
+    case 'routines':
+      return <RoutinesScreen org={org} />
+    case 'new-routine':
+      return (
+        <RoutineScreen
+          key={`${org.id}:new-routine`}
+          org={org}
+          routineId={null}
+          tab="routine"
+          user={user}
+        />
+      )
+    case 'routine':
+      return (
+        <RoutineScreen
+          key={`${org.id}:${route.routineId}`}
+          org={org}
+          routineId={route.routineId}
+          tab={route.tab}
+          user={user}
+        />
+      )
   }
 }
 
@@ -107,6 +132,10 @@ function listCurrent(route: OrgRoute): ListCurrent {
       return { screen: 'workspace', workspaceId: route.workspaceId }
     case 'settings':
       return { screen: 'settings' }
+    case 'routines':
+    case 'new-routine':
+    case 'routine':
+      return { screen: 'routines' }
   }
 }
 

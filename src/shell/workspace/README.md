@@ -108,10 +108,11 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
   calls `chat.hide()`. A connect starts nothing for a workspace that the
   tab no longer keeps.
 
-The context of the features gives the kept chat as `savedView`, and the
-tool events as `toolEvents`. The Files part takes the kept files of the tab
-through `useWorkspaceStore`, as
-[the Files screens](../../files/README.md#integration) show.
+The context of the features gives the kept chat as `savedView` and as
+`chat`, and the tool events as `toolEvents`. `KeptFilesConnection`
+connects the kept files of the tab through `useWorkspaceStore`, as
+[the Files screens](../../files/README.md#integration) show, and the parts
+that show files read the same store.
 
 Place `<HeaderNoticeBars notices={notices} />` directly after the
 header. It draws `notices.shown` with the CSS module of the
@@ -148,11 +149,16 @@ fake API, with its address options, its controls, and the test command.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, the open file tabs, and the file page in place
   of the chat of the session, or the shell's own column for the chat slots.
-- `files/files-features.tsx`: the Files part, which connects the kept
-  files, and the file or diff page of the centre.
+- `files/files-features.tsx`: the Files part, which reads the kept files
+  that the screen connects, and the file or diff page of the centre.
 - `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
   sandbox at each visit that opens a file or diff tab, also a second click
   on the tab that shows. The screen draws it in each layout.
+- `session-address.tsx`: `OpenSessionAddress`, which shows the session of a
+  session address once the chat loads, then replaces the address with the
+  workspace address. A move to another address stops its lookup. The
+  screen draws it beside `ResumeOnTabOpen`. `SessionAddress.test.tsx` and
+  `SessionChips.test.tsx` mount the whole app for the address and the chips.
 - `files/chat-files.tsx`: the file tabs of the kept chat, named by the
   labels of the kept files, at their places in the tab row with the props
   that the row gives each tab, the diff links, and the way back to the chat
@@ -184,8 +190,9 @@ fake API, with its address options, its controls, and the test command.
   draws its own tools panel when the host gives no `tools` part.
 - `WorkspaceOwner.tsx` and `WorkspaceMacBar.tsx`: the owner picker of the
   members UI, and the bar of the 15 minutes in the Mac app.
-- `saved-view.ts`: the saved view of the kept chat, and `saveView`, which
-  writes a change only once the chat read the view.
+- `saved-view.ts`: the saved view of the kept chat, `saveView`, which
+  writes a change only once the chat read the view, and `useRunRoutine`,
+  the routine of a run workspace, which the chat reads with the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
   takes the place of the tools inside the tabs, the tool and preview of the
@@ -201,7 +208,19 @@ fake API, with its address options, its controls, and the test command.
   tool that shows later gets them first, in event order.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
-  the ordered stream.
+  the ordered stream. `github/bar-controls.ts` gives the one action state of
+  the bar and its controls, and `github/bar-feed.ts` shows a GitHub state of
+  another branch as loading.
+- `files/kept-files.tsx`: `KeptFilesConnection`, the one connection of the
+  kept files for the whole screen.
+- `ContinueDialog.tsx`: the question of Continue with the local work, which
+  `LocalWorkList` of the mockups lists.
+- `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,
+  `github/BarContinue.test.tsx`, and `files/KeptFiles.test.tsx`: mount the
+  whole app over the fake API. They check Merge and its refusals, the
+  phone Checks top, the prompts from a file and a phone, a prompt that did
+  not send, Continue with its question, a stop, the wait for a turn, the
+  new branch and its note, and the local work of a phone on the chat tab.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped
@@ -237,6 +256,7 @@ fake API, with its address options, its controls, and the test command.
   and the repository fills the `.metas` group. On a phone
   it leads the line under the name. `CopyLink.test.tsx` mounts the whole
   app and presses the button for a copy and for a failed copy.
+- `RunLine.tsx`: the line under the header of a run workspace, which links to its routine and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
 - `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
   states of the cloud computer, their words, and the start steps. The bar
   of an archived workspace offers Restore until its last day, then says

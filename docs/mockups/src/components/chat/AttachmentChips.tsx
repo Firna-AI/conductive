@@ -128,17 +128,19 @@ function Chip(props: { file: Attachment; sent: boolean; pointer: boolean }) {
  * the keyboard focus, and the × takes the file off the message. It also
  * stops an upload that runs. A view has no pointer, so `pointer` names the
  * file that it draws with the pointer over its glyph. Under a sent message
- * the files only show, at the right.
+ * the files only show, at the right. `label` names the list for screen
+ * readers, such as the screenshots of feedback.
  */
 export function AttachmentChips(props: {
   attachments: readonly Attachment[]
   pointer?: string
   sent?: boolean
+  label?: string
 }) {
   const sent = props.sent === true
   return (
     <ul
-      aria-label="Attached files"
+      aria-label={props.label ?? 'Attached files'}
       className={classes(styles.chips, sent && states.sent)}
     >
       {props.attachments.map((file) => (

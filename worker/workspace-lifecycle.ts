@@ -11,6 +11,7 @@ import {
   type WorkspaceChatResolvers,
 } from './chat/workspace-integration'
 import { DeviceRuntime } from './devices/runtime'
+import { activeStoredTurn } from './devices/access'
 import { credentialSender } from './lifecycle/credential-sender'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
@@ -65,6 +66,7 @@ export class WorkspaceLifecycle
     this.chat = integration.chat
     this.devices = integration.devices
     this.controller = integration.controller
+    context.blockConcurrencyWhile(() => integration.sockets.restore())
     this.activity = createWorkspaceInputActivity(
       context,
       env,
@@ -84,6 +86,27 @@ export class WorkspaceLifecycle
         return result
       }),
     )
+  }
+
+  async callingToolTurn(workspaceId: string, turnId: string) {
+    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
+      return null
+    return this.chat.runLifecycle(async () => {
+      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
+      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
+    })
+  }
+
+  webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
+    return this.integration.sockets.message(socket, message)
+  }
+
+  webSocketClose(socket: WebSocket) {
+    return this.integration.sockets.close(socket)
+  }
+
+  webSocketError(socket: WebSocket) {
+    return this.integration.sockets.close(socket)
   }
 
   queueComputerStops(
@@ -225,10 +248,13 @@ export class WorkspaceLifecycle
     return credentialSender(this.chat, this.controller, turnId)
   }
 
-  async checkTurnToken(token: string): Promise<TurnTokenCheck> {
+  async checkTurnToken(
+    token: string,
+    claimCodexRecovery?: true | 'complete',
+  ): Promise<TurnTokenCheck> {
     const workspaceId = await this.chat.store.workspaceId()
     return workspaceId
-      ? this.chat.turnTokens.check(workspaceId, token)
+      ? this.chat.turnTokens.check(workspaceId, token, claimCodexRecovery)
       : { ok: false, reason: 'turn_not_active' }
   }
 

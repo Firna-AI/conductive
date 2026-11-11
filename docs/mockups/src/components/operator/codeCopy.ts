@@ -1,9 +1,10 @@
 /**
  * The words of the Invite codes tab and of the codes on the page of a
  * user: the states and the copy buttons of a code, the dialog of New code,
- * the question before a disable, and the pause of sign-ups with its
- * question and its notice. A login goes in without `@`, and a time as the
- * page writes it. This module imports no fixture, so the app uses it too.
+ * the question before a disable, the pause of sign-ups, and the waitlist
+ * switch, each with its question and its notice. A login goes in without
+ * `@`, and a time as the page writes it. This module imports no fixture, so
+ * the app uses it too.
  */
 import { productName } from '../../brand'
 
@@ -73,13 +74,17 @@ export const disableCodeWords = {
 const blocked =
   'Invite codes, referral codes, and org invitations let nobody in until sign-ups resume.'
 
-/** What still works during the pause. */
-const stillOpen = 'The waitlist stays open, and Approve still works.'
+/**
+ * What the pause leaves as it is. The pause wins over the waitlist switch,
+ * so new people also wait while the waitlist is off. Approve still works.
+ */
+const stillOpen =
+  'New people wait, also while the waitlist is off. Approve still works.'
 
 /**
  * The words of the pause of sign-ups: the Sign-ups box while sign-ups are
- * open, the question before the pause, and the notice at the top of each
- * tab while the pause is on, with Resume sign-ups.
+ * not paused, the question before the pause, and the notice at the top of
+ * each tab while the pause is on, with Resume sign-ups.
  */
 export const pauseWords = {
   box: 'Sign-ups',
@@ -105,4 +110,63 @@ export function pausedTitle(
   return operator === null
     ? `Sign-ups paused on ${when}`
     : `Sign-ups paused on ${when} by @${operator}`
+}
+
+/**
+ * The people who wait when the question before Turn off the waitlist
+ * opens. Each of them gets app access at their next visit. The question
+ * always says that no email goes out, also when nobody waits.
+ */
+function waitingNow(count: number): string {
+  const noEmail = 'No email goes out.'
+  if (count === 0) return `Nobody is waiting now. ${noEmail}`
+  const later = `at their next visit. ${noEmail}`
+  return count === 1
+    ? `1 person waits now. They get app access ${later}`
+    : `${count} people wait now. Each of them gets app access ${later}`
+}
+
+/** What open sign-up gives, which the question and the notice share. */
+const eachSignIn = 'Each new sign-in gets app access at once.'
+
+/** When the people on the waitlist get in during open sign-up. */
+const nextVisit = 'People on the waitlist get it at their next visit.'
+
+/**
+ * The words of the waitlist switch: its state in the Sign-ups box, the
+ * question before Turn off the waitlist, and the notice at the top of each
+ * tab while the waitlist is off, with Turn on the waitlist. Turn on acts at
+ * once, because it brings back the usual state. While the pause is on, the
+ * notice says that open sign-up waits for the end of the pause. The button
+ * of the question says only Turn off, so that it fits beside Cancel in the
+ * sheet of a phone.
+ */
+export const waitlistWords = {
+  on: 'Waitlist on',
+  turnOff: 'Turn off the waitlist',
+  turnOn: 'Turn on the waitlist',
+  question: 'Turn off the waitlist?',
+  confirmOff: 'Turn off',
+  questionText: (waiting: number): readonly string[] => [
+    eachSignIn,
+    waitingNow(waiting),
+    'Nobody loses app access when you turn the waitlist on again.',
+  ],
+  noticeBody: `${eachSignIn} ${nextVisit}`,
+  noticeBodyPaused: `When sign-ups resume, each new sign-in gets app access at once. ${nextVisit}`,
+} as const
+
+/**
+ * The title of the notice of the waitlist switch: when, and by which
+ * operator, the waitlist was turned off. A switch with no time of its last
+ * change says only that the waitlist is off.
+ */
+export function waitlistOffTitle(
+  when: string | null,
+  operator: string | null,
+): string {
+  if (when === null) return 'The waitlist is off'
+  return operator === null
+    ? `Waitlist turned off on ${when}`
+    : `Waitlist turned off on ${when} by @${operator}`
 }

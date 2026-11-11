@@ -6,7 +6,9 @@ import {
   readDeviceRecord,
 } from '../../src/shared/device-read'
 import { deviceCommandsPath } from '../../src/shared/device'
-import { WID, type DeviceFixture } from './runtime.test-support'
+import { APP, WID, type DeviceFixture } from './runtime.test-support'
+import { deviceTestPath } from './clock.test-support'
+import { deviceBrokerName } from './paths'
 
 export async function connected(
   fixture: DeviceFixture,
@@ -22,13 +24,22 @@ export async function connected(
     socket: result.socket,
     inbox: result.inbox,
     device: readDevicePairing(result.device),
+    settle: async () => {
+      const user = token === fixture.ownerToken ? 'owner' : 'sender'
+      const ready = await fixture.runtime.dispatchFetch(
+        APP + deviceTestPath('ready', deviceBrokerName(user)),
+      )
+      expect(ready.status).toBe(200)
+    },
   }
 }
 export type ConnectedMac = Awaited<ReturnType<typeof connected>>
 export async function sendFrame(mac: ConnectedMac, message: DeviceToWorker) {
   mac.socket.send(JSON.stringify(message))
+  await mac.settle()
   mac.socket.send(JSON.stringify({ type: 'device.ping' }))
   expect(await mac.inbox.next()).toEqual({ type: 'device.pong' })
+  await mac.settle()
 }
 export async function command(
   fixture: DeviceFixture,

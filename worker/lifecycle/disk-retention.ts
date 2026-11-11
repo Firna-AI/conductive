@@ -111,7 +111,7 @@ export async function keepWorkspaceDisk(
         workspace: row,
         environment,
         locations,
-        defaultBranch: repository.defaultBranch,
+        defaultBranch: row.baseBranch ?? repository.defaultBranch,
         diskKeepalive: true,
       })
       await requireActiveUser(env.DB, row.ownerUserId, orgId)
@@ -145,6 +145,7 @@ export async function keepWorkspaceDisk(
       sandboxId,
       deadlineAt,
       command,
+      row.ownerUserId,
     )
   }
   return { done: false, error: null }

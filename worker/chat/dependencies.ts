@@ -3,10 +3,7 @@ import { commitAuthor } from '../../src/shared/commit-author'
 import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { randomToken } from '../security/crypto'
-import {
-  readConnectionAccess,
-  scheduleConnectionCheck,
-} from '../security/connection-access'
+import { readConnectionAccess } from '../security/connection-access'
 import { loginResolver } from './login-access'
 import {
   readLoginMetadata,
@@ -21,6 +18,7 @@ import { prepareMessageAttachments } from './attachment-copy'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
+import { readRunnerBranches } from './branch-data'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -33,6 +31,7 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    readBranches: (id) => readRunnerBranches(env.DB, id),
     readCommitAuthor: async (userId) => {
       const user = await readUser(env.DB, userId)
       return user ? commitAuthor(user) : null
@@ -43,8 +42,6 @@ export function chatDependencies(
     filterRunnerOutput: (transaction, workspace, input) =>
       filterRunnerOutput(env, transaction, workspace, input),
     now: Date.now,
-    scheduleBrowserCheck: scheduleConnectionCheck,
-    scheduleRunnerCheck: scheduleConnectionCheck,
     readRunnerAccess: (id, tokenHash) =>
       runnerTokenAllowed(env.DB, id, tokenHash),
     readRunnerProtocolVersion: (id) => readRunnerProtocolVersion(env.DB, id),

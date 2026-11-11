@@ -94,8 +94,9 @@ npm run test -- worker/chat/integration
   the shared base of the journey, preparation, and review entries, starts
   its clock at a fixed test time. `advanceStartAlarm` advances that clock
   to the given time or to the stored alarm. Then it runs only the stored
-  alarms that are due on that clock. All state changes use the production
-  object.
+  alarms that are due on that clock. After each one, it awaits
+  `settledAlarms`, because the native alarm handler returns before its
+  tracked work ends. All state changes use the production object.
   `reviewWorkspaceFixture` in `workspace-review.test-support.ts` starts it
   with a prepared create start, a ready fake runner with a running first
   turn, event sockets, and a Mac connection.

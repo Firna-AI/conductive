@@ -1,6 +1,7 @@
 import type { ToolCall } from '../chat-events'
 import type { DeviceCommandRecord } from '../device'
 import type { ChangedFile } from '../files'
+import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
 import {
   leftOutOfCall,
   leftOutOfRun,
@@ -8,6 +9,7 @@ import {
   moreFiles,
   turnFilesUnavailable,
 } from '../../../docs/mockups/src/components/chat/lostCopy'
+import { continuedNote } from '../../../docs/mockups/src/components/workspace/barCopy'
 import {
   commandCopy,
   commandRan,
@@ -23,10 +25,12 @@ import { codeBlock, inlineCode, plainText } from './markdown-code'
 import { foldLabel, toolEnding, toolVerb } from './tool-words'
 import type { Transcript, TranscriptItem } from './transcript'
 import {
+  continuedBy,
   filesUnread,
   omittedFiles,
   stoppedSummary,
   turnCopy,
+  turnEndReason,
   type ChatReaders,
 } from './turn-words'
 
@@ -82,6 +86,7 @@ export function itemMarkdown(
     case 'tool':
       return toolMarkdown(item.tool)
     case 'turn-end': {
+      const reason = turnEndReason(transcript, item.turnId)
       const omitted = omittedFiles(transcript, item.turnId)
       const files = [
         ...item.files.map(changedFile),
@@ -89,9 +94,13 @@ export function itemMarkdown(
       ]
       const unread =
         item.files.length === 0 && filesUnread(transcript, item.turnId)
-      return note(
+      const summary = note(
         `${turnCopy.finished} ${formatDuration(item.durationMs)}${files.length > 0 ? `. ${turnCopy.changedFiles}: ${files.join(' · ')}` : ''}${unread ? ` · ${turnFilesUnavailable}` : ''}`,
       )
+      return [
+        ...(reason === undefined ? [] : [note(endReasonText(reason))]),
+        summary,
+      ].join('\n\n')
     }
     case 'stopped':
       return note(
@@ -103,6 +112,14 @@ export function itemMarkdown(
       return note(
         lostText(lostData[item.marker.runnerEventType], item.marker.reason),
       )
+    case 'continued': {
+      // The words of the note of the chat, with each branch as code.
+      const words = continuedNote(
+        plainText(continuedBy(item.member, readers)),
+        inlineCode(item.baseBranch),
+      )
+      return note(`${words.before}${inlineCode(item.branch)}${words.after}`)
+    }
   }
 }
 

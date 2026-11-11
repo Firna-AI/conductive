@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the agents
 and the sessions of a workspace. It covers the agents and their logins,
-the names of the agents in the product, the sessions, and the names of
-workspaces and sessions. It belongs to
+the names of the agents in the product, the sessions and their links, and
+the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -32,6 +32,11 @@ says.
   - with the first message of a new workspace
   - with a message that starts a new session, as
     [Messages](messages-and-attachments.md#messages) says
+  - through a call of the agent tools in a turn that the member sent, as
+    [The sender](session-calls.md#the-sender) says
+- A routine run starts the first session of its workspace in the name of
+  the routine owner, as
+  [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
 - While the starter shares the login, the messages of the other members
@@ -44,6 +49,16 @@ says.
 - [Access and security](isolation.md#agent-logins-in-a-sandbox)
   states how a login reaches the sandbox, its share setting, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
+- A Codex session keeps its conversation when its starter changes between
+  an OpenAI API key and a ChatGPT sign-in.
+- When Codex refuses to resume because the saved model provider differs
+  from the current provider or is no longer configured, the session
+  continues in a fork.
+- The fork keeps the earlier messages. The session keeps the same chat.
+- The session saves the fork's conversation ID. Later turns use that ID,
+  also after a restart of the runner.
+- A refused resume for another cause, or a refused fork, fails the turn
+  with that cause.
 
 ## Names in the product
 
@@ -65,6 +80,8 @@ says.
 - A new session has no title, and its tab shows "Untitled".
   [Workspace and session names](#workspace-and-session-names) says when
   the app gives it a title.
+- A `create_session` call of the agent tools can give a new session a
+  title, as [Start a session](session-calls.md#start-a-session) says.
 - When the workspace takes a title as its name, as
   [Messages](messages-and-attachments.md#messages) says, the first session takes the
   title too (decision 181).
@@ -179,6 +196,29 @@ says.
   rejected for a read-only workspace, because these rows never turn on
   there.
 
+### Session links
+
+- Each session has a link: the address of the session at the app origin,
+  such as
+  `https://app.conductive.build/orgs/<org ID>/workspaces/<workspace ID>/sessions/<session ID>`.
+- The link names the org, the workspace, and the session by their IDs, as
+  the link of a workspace does. Reason: the file tabs already have
+  addresses under their workspace.
+- A session link opens its workspace and shows that session. The address
+  then becomes the link of the workspace. Reason: the session tabs keep
+  their behaviour, and the address does not follow the shown tab.
+- A link to a closed or an unknown session opens the page of its
+  workspace, as a workspace link does. When that workspace already shows,
+  its shown tab stays. The link reopens no session.
+- Reason: the members share the sessions of a workspace, so a reopen would
+  show the tab again to every member.
+- A session link in chat text shows as a session chip, as
+  [Session chips](workspace-links.md#session-chips) says.
+- The agent tools give the link of each session that they name, as
+  [The calls](session-calls.md#the-calls) says.
+- For now, Copy link copies only the link of the workspace. No item copies
+  a session link.
+
 ## Workspace and session names
 
 - In this section, a name is the name of a workspace or the title of a
@@ -206,3 +246,9 @@ says.
   the branch was rejected. A member can type the same text and then lose
   that name.
 - Reason: an archived workspace shows its chat read-only (decision 16).
+
+### The title of a new workspace
+
+- [Messages](messages-and-attachments.md#messages) holds how a small model
+  of Workers AI names a new workspace from its first message
+  (decision 184).

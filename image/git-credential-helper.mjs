@@ -16,15 +16,36 @@ if (mode === 'get') {
   if (fields.get('protocol') !== 'https' || fields.get('host') !== 'github.com')
     process.exit(0)
 }
+
+const FAILED = 'GitHub access failed. Try again.'
+
+/** Its message is safe to show to the person or the agent that ran Git. */
+class ShownError extends Error {}
+
+/** The Worker's error message is product text. Show it when it is one plain line. */
+async function refusal(response) {
+  try {
+    const message = (await response.json())?.error?.message
+    if (
+      typeof message === 'string' &&
+      /^[^\p{Cc}\p{Cf}]{1,300}$/u.test(message)
+    )
+      return message
+  } catch {
+    // A body that is not the Worker's error shape gets the fixed message.
+  }
+  return FAILED
+}
+
 const { CONDUCTIVE_MACHINE_ORIGIN, CONDUCTIVE_TURN_ID, WORKSPACE_TOKEN } =
   process.env
 try {
-  if (
-    !CONDUCTIVE_MACHINE_ORIGIN ||
-    !WORKSPACE_TOKEN ||
-    (mode === 'get' && !CONDUCTIVE_TURN_ID)
-  )
+  if (!CONDUCTIVE_MACHINE_ORIGIN || !WORKSPACE_TOKEN)
     throw new Error('Missing credential context')
+  if (mode === 'get' && !CONDUCTIVE_TURN_ID)
+    throw new ShownError(
+      'Git gets GitHub access in an agent turn. Ask an agent to run this command.',
+    )
   const origin = new URL(CONDUCTIVE_MACHINE_ORIGIN)
   if (
     origin.protocol !== 'https:' ||
@@ -46,7 +67,7 @@ try {
         : {}),
     },
   })
-  if (!response.ok) throw new Error('Credential request failed')
+  if (!response.ok) throw new ShownError(await refusal(response))
   const value = await response.json()
   if (
     typeof value !== 'object' ||
@@ -61,9 +82,9 @@ try {
       ? `${value.token}\n`
       : `username=x-access-token\npassword=${value.token}\n\n`,
   )
-} catch {
+} catch (error) {
   process.stderr.write(
-    'GitHub access failed. Check the current turn and sign in again.\n',
+    `${error instanceof ShownError ? error.message : FAILED}\n`,
   )
   process.exitCode = 1
 }

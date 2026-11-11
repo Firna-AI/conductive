@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest'
+import type { GitHubSummary } from '../shared/github'
 import { orgSettingsPaths, type ImageBuild } from '../shared/org-settings'
+import {
+  routinesPath,
+  type RoutineRun,
+  type RoutinesResponse,
+} from '../shared/routines'
 import { workspacesPath, type WorkspaceState } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import {
@@ -7,6 +13,7 @@ import {
   FAKE_IDS,
   FAKE_TIME,
 } from '../test-support/fixtures/core'
+import { routineFixtures } from '../test-support/fixtures/routines'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { latestBuild, OrgModel } from './org-model'
 import { valueOf } from './store'
@@ -25,18 +32,33 @@ const refused = {
   error: { code: 'server_error', message: 'The request failed.' },
 }
 
-/** The list of the server, with new states for some workspaces. */
-function serverList(states: Partial<Record<string, WorkspaceState>>) {
+/** The list of the server, with new states and GitHub states for some workspaces. */
+function serverList(
+  states: Partial<Record<string, WorkspaceState>>,
+  github: Partial<Record<string, GitHubSummary>> = {},
+) {
   return {
     workspaces: fixtures.workspaces.workspaces.map((workspace) => ({
       ...workspace,
       state: states[workspace.id] ?? workspace.state,
+      github: github[workspace.id] ?? workspace.github,
     })),
   }
 }
 
+/** The routines of the server, with a new state of the last run of one. */
+function routinesWith(state: RoutineRun['state']): RoutinesResponse {
+  return {
+    routines: routineFixtures().list.routines.map((routine) =>
+      routine.id === 'review-prs' && routine.lastRun
+        ? { ...routine, lastRun: { ...routine.lastRun, state } }
+        : routine,
+    ),
+  }
+}
+
 describe('OrgModel', () => {
-  test('a shown list reads again at each entry, at focus, and on a timer that is faster while a row is active', async () => {
+  test('a shown list reads again at each entry, at focus, and on a timer that is faster while a row is active or its checks run', async () => {
     const server = new FakeApiServer()
     const delay = new ManualDelay()
     const focus = new ManualFocus()
@@ -66,23 +88,44 @@ describe('OrgModel', () => {
       state: 'ready',
     })
     const active = delay.waits
-    // fix-cart-flake still works, and its turn ends before the timer.
+    // fix-cart-flake still works. Its turn and the running checks of the
+    // list end before the timer.
+    const ended = {
+      'email-dark-mode': 'ready',
+      'fix-cart-flake': 'unread',
+    } as const
+    const passed = {
+      'fix-cart-flake': 'checks-passed',
+      'retry-queue': 'checks-passed',
+    } as const
+    server.json('GET', workspacesPath(org), serverList(ended, passed))
+    await delay.runAll()
+    const idle = delay.waits
+    // The checks of retry-queue run again. Its cloud computer stays stopped,
+    // and no agent works.
     server.json(
       'GET',
       workspacesPath(org),
-      serverList({ 'email-dark-mode': 'ready', 'fix-cart-flake': 'unread' }),
+      serverList(ended, { ...passed, 'retry-queue': 'checks-running' }),
     )
     await delay.runAll()
-    const idle = delay.waits
+    const checking = delay.waits
     expect({
       reads: reads(),
       state: state('fix-cart-flake'),
-      timers: [active.length, idle.length],
+      timers: [active.length, idle.length, checking.length],
       faster: Math.max(...active) < Math.min(...idle),
-    }).toEqual({ reads: 3, state: 'unread', timers: [1, 1], faster: true })
+      checks: Math.max(...checking) < Math.min(...idle),
+    }).toEqual({
+      reads: 4,
+      state: 'unread',
+      timers: [1, 1, 1],
+      faster: true,
+      checks: true,
+    })
     focus.focus()
     await flushMicrotasks()
-    expect(reads()).toBe(4)
+    expect(reads()).toBe(5)
     sidebar()
     expect(delay.pending).toBe(1)
     page()
@@ -157,5 +200,42 @@ describe('OrgModel', () => {
       timers: delay.pending,
     }).toEqual({ latest: 'failed', timers: 1 })
     release()
+  })
+
+  test('shown routines read again on a timer that is faster while a last run is queued or works', async () => {
+    const server = new FakeApiServer()
+    const delay = new ManualDelay()
+    const model = new OrgModel(
+      testServices(server, { delay: delay.delay }),
+      org,
+    )
+    server.json('GET', routinesPath(org), routinesWith('queued'))
+    const release = model.watch('routines')
+    await flushMicrotasks()
+    const queued = delay.waits
+    server.json('GET', routinesPath(org), routinesWith('ready'))
+    await delay.runAll()
+    const idle = delay.waits
+    server.json('GET', routinesPath(org), routinesWith('working'))
+    await delay.runAll()
+    const working = delay.waits
+    release()
+    expect({
+      reads: requestLines(server).filter(
+        (line) => line === `GET ${routinesPath(org)}`,
+      ).length,
+      lastRun: valueOf(model.routines.get())?.find(
+        (routine) => routine.id === 'review-prs',
+      )?.lastRun?.state,
+      timers: [queued.length, idle.length, working.length],
+      faster: Math.max(...queued, ...working) < Math.min(...idle),
+      pending: delay.pending,
+    }).toEqual({
+      reads: 3,
+      lastRun: 'working',
+      timers: [1, 1, 1],
+      faster: true,
+      pending: 0,
+    })
   })
 })
