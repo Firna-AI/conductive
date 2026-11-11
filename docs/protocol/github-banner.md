@@ -34,21 +34,31 @@ number names a dated record, as
 - A return through the sign-in callback was rejected. Reason: the callback
   refuses a GitHub reply that the app's own sign-in did not start.
 - [The Mac app](desktop-sign-in.md#github-app-install) has its own return.
-- The GitHub App sends pull request, check, status, and push webhooks to
-  the Worker, at `https://api.conductive.build/v1/github/webhooks`.
+- The GitHub App sends pull request, review, and push webhooks to the
+  Worker, at `https://api.conductive.build/v1/github/webhooks`.
 - A pull request webhook can also start the runs of routines, as
   [Pull request runs](pull-request-runs.md) says.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 
 ## State of a branch
 
-- The Worker routes each event to the workspace whose branch the event
-  names. A workspace has one branch at a time, so after
-  [Continue](continue.md) the events of its earlier branch no longer reach
-  it.
+- The Worker routes each pull request, review, and push event to the
+  workspace whose branch the event names. A workspace has one branch at a
+  time, so after [Continue](continue.md) the events of its earlier branch
+  no longer reach it.
 - The Worker pushes the new state to every open tab of that workspace.
 - When a tab opens, the Worker reads the current pull request and the
   current checks of the branch from the GitHub API.
+- While a tab stays open, the Worker reads them again for that tab 5
+  minutes after its last read.
+- The Worker reads nothing for a check event or a status event, and no
+  workspace changes for one. The user chose this on 11 November 2026.
+- So a check that starts or ends shows at the next read of its branch:
+  when a tab opens, at the timed read of an open tab, or at the next
+  pull request, review, or push event.
+- A fresh read of each workspace of the repository for each check or
+  status event was rejected. Reason: a run of checks sends many of these
+  events, and those reads used up GitHub's rate limits.
 
 ## Banner states
 

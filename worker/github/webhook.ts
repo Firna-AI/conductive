@@ -134,11 +134,7 @@ export async function handleGitHubWebhook(
     )
     let failure: { error: unknown } | undefined
     for (const workspace of workspaces) {
-      const matches =
-        route.push ||
-        route.branch === undefined ||
-        route.branch === workspace.branch
-      if (!matches) continue
+      if (!route.push && route.branch !== workspace.branch) continue
       try {
         await dependencies.refresh(workspace, {
           deliveryId,
@@ -151,7 +147,7 @@ export async function handleGitHubWebhook(
           failure ??= { error }
       }
     }
-    if (route.push && route.branch !== undefined)
+    if (route.push)
       await dependencies.pushed?.(
         route.repositoryId,
         route.installationId,

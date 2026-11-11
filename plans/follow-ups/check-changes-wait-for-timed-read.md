@@ -1,0 +1,32 @@
+# Check changes wait for the timed read
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from the branch `calummoore/check-webhook-follow-up-removal`.
+- **Location:** `worker/github/webhook-routing.ts` (`ROUTED_EVENTS` and `webhookRoute`), `worker/github/webhook.ts` (`handleGitHubWebhook`), `src/github/githubStore.ts` (`freshReadWait`), `docs/protocol/github-banner.md` (section "State of a branch").
+- **Reason:** The urgent fix stopped the reads that hit GitHub's rate limits at once. A read of only the right workspace needs its own design, tests, and protocol change.
+
+- **Source:** Implementation. **Category:** Product bug.
+- **Terms:**
+  - **Check event:** a GitHub webhook of the type `check_run`, `check_suite`, or `status`. GitHub sends one each time that a check or a commit status starts, changes, or ends.
+  - **Workspace refresh:** one fresh GitHub read of one workspace, in `worker/github/refresh.ts`. It asks for an installation token and sends about five GraphQL queries.
+  - **Timed read:** the fresh read that an open tab asks for 5 minutes after its last read. `freshReadWait` in `src/github/githubStore.ts` sets the wait.
+- **Background:**
+  - The pull request bar and the Checks tab show the checks of the pull request of the workspace branch.
+  - Until 2026-11-11, each check event started a workspace refresh for every workspace of the repository, because the event names no branch.
+  - With 24 workspaces, one check event started 24 workspace refreshes. A run of checks sends many check events, so these reads hit GitHub's rate limits.
+  - On 2026-11-11 the user chose to stop these reads. The Worker now answers each check event with 204, and it reads nothing for it.
+  - A check change now shows when a tab opens, at the timed read, or at the next pull request, review, or push event of the branch.
+  - Only one workspace needs the read: the workspace whose pull request the check is for.
+- **Problem:** A check that starts or ends can take up to 5 minutes to show in an open tab. So "Checks failed" with Fix checks, and "Ready to merge" with Merge, also show late.
+- **Impact if no action:** Members wait or reload the page to see check results. Merge and Fix checks appear up to 5 minutes after GitHub has the result.
+- **Root question:** How does an open workspace learn of a check change soon, without a GitHub read for every workspace of the repository?
+- **Options:**
+  - **A.** Shorten the timed read wait, for example to 60 seconds while a check runs. Each open tab then reads GitHub more often, also when nothing changed. Effort: Small.
+  - **B.** Route each check event to the workspace whose branch the event names, and refresh only that workspace. A `check_run` or `check_suite` payload lists its pull requests with their head branch, and a `check_suite` also has `head_branch`. A `status` payload lists up to 10 branches that hold its commit. An event with no branch, such as a check of a fork pull request, still waits for the timed read. Effort: Medium.
+  - **C.** Do B, and also join the check events of one workspace into one read. The workspace Durable Object waits a few seconds after the first event, then reads once. A run of many checks then costs a few reads, not one read for each event. Effort: Medium.
+- **Left out:** A fresh read of every workspace for each check event, because it fails the goal: it hit GitHub's rate limits. A match of the event commit to the head commit that each workspace stored, because the stored state lives in each Durable Object, so the match needs a new D1 column or a call to each object. B finds the same workspace from the payload alone.
+- **Wider fix:** None. Push events also start a branch lookup for every workspace of the repository, but they need the base branch of each pull request, which only a GitHub read gives. That is a separate problem.
+- **Previous examples:** None found.
+- **Recommendation:** C. It reads GitHub only for the one workspace that needs it, and a run of many checks costs only a few reads.
+- **Action:** ask the user, because C changes the requirement that the user chose on 2026-11-11: the Worker reads nothing for a check event.

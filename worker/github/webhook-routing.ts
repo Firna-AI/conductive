@@ -16,10 +16,23 @@ export interface GitHubPullRequestEvent {
 export interface WebhookRoute {
   repositoryId: number
   installationId: number
-  branch?: string
+  branch: string
   push: boolean
   pullRequest?: GitHubPullRequestEvent
 }
+
+/**
+ * The events that refresh a workspace. Check and status events refresh none.
+ * A run of checks sends many of them, and a read of every workspace of the
+ * repository for each one ran into GitHub's rate limits. The timed fresh reads
+ * of open tabs show check changes instead.
+ */
+const ROUTED_EVENTS = new Set([
+  'push',
+  'pull_request',
+  'pull_request_review',
+  'pull_request_review_thread',
+])
 
 function invalid(): never {
   throw new HttpError(
@@ -55,19 +68,7 @@ export function webhookRoute(
   event: string,
   value: unknown,
 ): WebhookRoute | null {
-  if (
-    ![
-      'push',
-      'pull_request',
-      'pull_request_review',
-      'pull_request_review_thread',
-      'check_run',
-      'check_suite',
-      'status',
-    ].includes(event)
-  ) {
-    return null
-  }
+  if (!ROUTED_EVENTS.has(event)) return null
   if (!isRecord(value)) return invalid()
   const repositoryId = id(value.repository)
   const installationId = id(value.installation)
@@ -78,63 +79,51 @@ export function webhookRoute(
       ? { ...common, branch: ref.slice(11) }
       : null
   }
+  // The rest are pull request events: they name the head branch.
   if (
-    event === 'pull_request' ||
-    event === 'pull_request_review' ||
-    event === 'pull_request_review_thread'
-  ) {
-    if (
-      !isRecord(value.pull_request) ||
-      !isRecord(value.pull_request.head) ||
-      !isRecord(value.pull_request.base)
-    )
-      return invalid()
-    const { head, base } = value.pull_request
-    if (id(head.repo) !== repositoryId || id(base.repo) !== repositoryId)
-      return null
-    const branch = string(head.ref)
-    if (event !== 'pull_request') return { ...common, branch }
-    const action = string(value.action)
-    const merged = value.pull_request.merged
-    const kind =
-      action === 'opened'
-        ? 'opened'
-        : action === 'synchronize'
-          ? 'pushed'
-          : action === 'closed' && merged === true
-            ? 'merged'
-            : null
-    if (kind === null) return { ...common, branch }
-    if (typeof merged !== 'boolean') return invalid()
-    return {
-      ...common,
-      branch,
-      pullRequest: {
-        repositoryId,
-        installationId,
-        action,
-        merged,
-        authorId: id(value.pull_request.user),
-        senderId: id(value.sender),
-        authorLogin: login(value.pull_request.user),
-        senderLogin: login(value.sender),
-        trigger: {
-          kind: 'pull-request',
-          event: kind,
-          number: id({ id: value.number }),
-          url: string(value.pull_request.html_url),
-          headBranch: branch,
-          headSha: string(head.sha),
-          baseBranch: string(base.ref),
-        },
+    !isRecord(value.pull_request) ||
+    !isRecord(value.pull_request.head) ||
+    !isRecord(value.pull_request.base)
+  )
+    return invalid()
+  const { head, base } = value.pull_request
+  if (id(head.repo) !== repositoryId || id(base.repo) !== repositoryId)
+    return null
+  const branch = string(head.ref)
+  if (event !== 'pull_request') return { ...common, branch }
+  const action = string(value.action)
+  const merged = value.pull_request.merged
+  const kind =
+    action === 'opened'
+      ? 'opened'
+      : action === 'synchronize'
+        ? 'pushed'
+        : action === 'closed' && merged === true
+          ? 'merged'
+          : null
+  if (kind === null) return { ...common, branch }
+  if (typeof merged !== 'boolean') return invalid()
+  return {
+    ...common,
+    branch,
+    pullRequest: {
+      repositoryId,
+      installationId,
+      action,
+      merged,
+      authorId: id(value.pull_request.user),
+      senderId: id(value.sender),
+      authorLogin: login(value.pull_request.user),
+      senderLogin: login(value.sender),
+      trigger: {
+        kind: 'pull-request',
+        event: kind,
+        number: id({ id: value.number }),
+        url: string(value.pull_request.html_url),
+        headBranch: branch,
+        headSha: string(head.sha),
+        baseBranch: string(base.ref),
       },
-    }
+    },
   }
-  const check = event === 'check_run' ? value.check_run : value.check_suite
-  // Validate the commit field. A status can refer to a test merge commit.
-  // The workspace always reads its current display state for these events.
-  if (event === 'status') string(value.sha)
-  else if (isRecord(check)) string(check.head_sha)
-  else invalid()
-  return common
 }
