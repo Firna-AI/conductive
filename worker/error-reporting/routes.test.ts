@@ -10,6 +10,7 @@ import { routinePaths } from '../../src/shared/routines'
 import { sessionTranscriptPath } from '../../src/shared/sessions'
 import { joinPath } from '../../src/shared/waitlist'
 import { workspacePaths } from '../../src/shared/workspaces'
+import { codexTokenPaths } from '../model-gateway/paths'
 import { PREVIEW_HANDOFF_PATH } from '../security/preview-launch-path'
 import { workerRouteTemplate } from './routes'
 
@@ -68,6 +69,22 @@ it('keeps code-owned route segments and replaces all parameters', () => {
     [GITHUB_INSTALL_PATH, '/github/install'],
     [joinPath('private-code'), '/join/:param'],
     [`${MACHINE_PATHS.codexGateway}/responses`, '/v1/model/codex/responses'],
+    [
+      `${MACHINE_PATHS.codexGateway}${codexTokenPaths.bundle}`,
+      '/v1/model/codex/backend-api/wham/config/bundle',
+    ],
+    [
+      `${MACHINE_PATHS.codexGateway}${codexTokenPaths.accounts}`,
+      '/v1/model/codex/backend-api/wham/accounts/check',
+    ],
+    [
+      `${MACHINE_PATHS.codexGateway}${codexTokenPaths.models}`,
+      '/v1/model/codex/backend-api/codex/models',
+    ],
+    [
+      `${MACHINE_PATHS.codexGateway}${codexTokenPaths.responses}`,
+      '/v1/model/codex/backend-api/codex/responses',
+    ],
     [
       `${MACHINE_PATHS.claudeGateway}/v1/messages`,
       '/v1/model/claude/v1/messages',

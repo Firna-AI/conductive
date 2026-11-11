@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
+import { MACHINE_PATHS } from '../src/shared/agent-tools'
 import { createApp } from './application'
 import { reportingEnvironment } from './error-reporting/environment.test-support'
 import {
@@ -15,6 +16,7 @@ import {
 import { errorResponse, HttpError } from './http'
 import { requestBodyEntry } from './http/request-body'
 import type { WorkerErrorRuntime } from './error-reporting/runtime'
+import { codexTokenPaths } from './model-gateway/paths'
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -116,6 +118,37 @@ it('waits for the request body override and emits no report for its final 413', 
   expect(response.status).toBe(413)
   await flushReporting(fixture.runtime)
   expect(fixture.envelopes).toEqual([])
+})
+
+it('reports both ChatGPT metadata failures within one repeat window', async () => {
+  const fixture = reportingFixture()
+  const env = reportingEnvironment()
+  const handle = workerFetchEntry(
+    async () => new Response(null, { status: 502 }),
+    {
+      fetch,
+      now: () => 1_000_000,
+      randomToken: () => 'unused',
+      errorReporting: fixture.runtime,
+    },
+  )
+  for (const path of [codexTokenPaths.bundle, codexTokenPaths.accounts]) {
+    const response = await handle(
+      new Request(`${env.MACHINE_ORIGIN}${MACHINE_PATHS.codexGateway}${path}`),
+      env,
+    )
+    expect(response.status).toBe(502)
+  }
+  await flushReporting(fixture.runtime)
+  expect(fixture.envelopes).toHaveLength(2)
+  expect(fixture.envelopes.map((envelope) => envelope[1][0][1])).toMatchObject([
+    {
+      tags: { 'http.route': '/v1/model/codex/backend-api/wham/config/bundle' },
+    },
+    {
+      tags: { 'http.route': '/v1/model/codex/backend-api/wham/accounts/check' },
+    },
+  ])
 })
 
 it('reports failed alarms and cron runs and rethrows the same error', async () => {

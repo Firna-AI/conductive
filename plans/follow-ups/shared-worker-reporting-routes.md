@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-11, from review finding 4 of `calummoore/betterstack-implementation-brainstorm`.
-- **Location:** `worker/error-reporting/routes.ts`, `worker/routes.ts`, `worker/application.ts`, `worker/chat/backend.ts`, `src/shared/`, and `src/app/router.ts`.
+- **Location:** `worker/error-reporting/routes.ts`, `worker/routes.ts`, `worker/application.ts`, `worker/chat/backend.ts`, `worker/model-gateway/paths.ts`, `src/shared/`, and `src/app/router.ts`.
 - **Reason:** A shared source needs changes across about 25 Worker handlers and the workspace object. The direct reporting fix needs two files only.
 
 - **Source:** Review. **Category:** Code structure.
@@ -17,7 +17,7 @@
   - `docs/protocol/error-reporting.md` requires templates to keep names from the app's own route lists. Reports exclude private path values.
   - A template also belongs to the repeat-limit key, with the classification, error type, and first Conductive frame. The key has no HTTP method.
   - `worker/error-reporting/routes.ts` builds a name set from a separate list of shared builders, web page builders, and fixed Worker templates.
-  - The direct fix adds the missing known routes and extends `routes.test.ts`. It preserves normal request behavior and the existing redaction.
+  - The direct fixes add the missing known routes and derive the four ChatGPT routes from `codexTokenPaths`. They extend `routes.test.ts` and the final-entry metadata regression. It preserves normal request behavior and the existing redaction.
   - Dispatch still owns another description of each path. A future route can enter dispatch without entering the reporting list.
   - Keep path ownership in each feature area, as `src/shared/README.md` requires. One declaration source need not mean one large file.
 - **Problem:** Separate dispatch and reporting lists can drift. A hand-written reporting list cannot force a new supported route to supply its fixed names.
@@ -43,14 +43,17 @@
   - Four page names were absent too: `preferences`, `new`, `cloud-computer`, and `codes`.
   - For example, `/api/feedback` became `/api/:param`. A Codex gateway report lost `responses`.
   - Routine `runs` and `run-now` requests shared one generic template. One report could suppress another for 60 seconds when their other key fields matched.
+  - The sixth main integration, `d970f263`, added four ChatGPT suffixes without reporting declarations. The config-bundle and accounts-check paths both became `/v1/model/codex/:param/:param/:param/:param`. They could share a key and suppress one report within a minute.
+  - The correction derives every `codexTokenPaths` value from its gateway base. A real SDK entry regression now keeps both 502 responses and sends two distinct route tags.
   - The browser reporter already gets its screen tag from its router's own match in `src/app/error-reporting-event.ts`.
-- **Related:** `plans/follow-ups/gateway-stream-failure-reports.md` adds late gateway reports to the same request capture. Whichever change ships second must preserve the same route template. Neither waits for the other.
+- **Related:** `plans/follow-ups/gateway-stream-failure-reports.md` adds late gateway reports to the same request capture. Whichever change ships second must preserve the same route template. Neither waits for the other. `plans/follow-ups/codex-credential-failure-reports.md` adds hidden credential reports in the same request scopes. The full ChatGPT templates apply before credential work begins. Neither fix waits.
 - **Recommendation:** B. A shared declaration source prevents missing names without depending on every handler repeating metadata. D is a possible first phase.
-- **Action:** fix after merge, apply B, because the direct fix is complete and the wider change reaches routing code outside the reporting diff.
+- **Action:** fix after merge, apply B, because the direct corrections preserve current labels while the wider change reaches dispatch code outside the reporting diff.
 
 Keep these requirements during the work:
 
 - Every current URL builder gives the same path and query as before.
+- Keep distinct full templates for all four `codexTokenPaths`, including config bundle, accounts check, models, and responses. Their names come from the declarations that gateway dispatch uses.
 - Every method, route match, access check, response, retry, and request lifetime stays the same.
 - Worker and workspace-object routes share the same reporting contract.
 - Claude's messages and token-count routes have explicit declarations. They do not depend on another route contributing the same names.

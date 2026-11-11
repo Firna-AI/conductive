@@ -30,6 +30,7 @@
   - Report only from the snapshot provider operation. It cannot cover failed setup commands and the time limit.
 - **Wider fix:** D. One write operation and its input type prevent an unreported failed-state write. E detects the class but adds a blocked lint.
 - **Previous examples:** Org image builds throw on a failed save in `worker/lifecycle/image-build-steps.ts`. Their catch reports in `worker/lifecycle/image-builds.ts`. Only their failure handler calls `failBuild` in `worker/lifecycle/build-data.ts`.
+- **Related:** `plans/follow-ups/codex-credential-failure-reports.md` has the same hidden-recovery class with a separate owner. Its optional lint alternative is unselected; neither fix waits.
 - **Recommendation:** D. It closes every terminal failure path without changing deploy responses or splitting the guarded state write. The first review recommended B. The independent check found that D also covers the outer time limit and prevents future omitted paths.
 - **Action:** fix after merge, apply D, because the likelihood is Rare, severity is Medium, and the fix does not get harder after merge.
 

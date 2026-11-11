@@ -68,12 +68,16 @@ import { terminalPaths } from '../../src/shared/terminal'
 import { joinPath, WAITLIST_PATHS } from '../../src/shared/waitlist'
 import { workspaceViewPath } from '../../src/shared/workspace-view'
 import { workspacePaths } from '../../src/shared/workspaces'
+import { codexTokenPaths } from '../model-gateway/paths'
 import { PREVIEW_HANDOFF_PATH } from '../security/preview-launch-path'
 
 const templates = [
   ...Object.values(API_PATHS),
   ...Object.values(ACCOUNT_PATHS),
   ...Object.values(MACHINE_PATHS),
+  ...Object.values(codexTokenPaths).map(
+    (path) => `${MACHINE_PATHS.codexGateway}${path}`,
+  ),
   ...Object.values(WAITLIST_PATHS),
   ...Object.values(SITE_ICONS),
   ...Object.values(workspacePaths).map((path) => path('', '', '')),

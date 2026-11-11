@@ -37,6 +37,7 @@
 - **Wider fix:** B. A failure keeps its reporting claim through serialization and conversion. D covers only start results.
 - **Previous examples:** `plans/follow-ups/routine-caught-failure-reports.md` already requires routine recovery to keep failed workspace attempts silent. The rethrown `git_credential_failed` warning also stays silent so final request capture owns it. Neither example carries a claim through a stored result.
 - **Related:**
+  - `plans/follow-ups/codex-credential-failure-reports.md` can reuse the private claim for shared renewal waiters. It can also report only in the one owned task. Neither fix waits.
   - `plans/follow-ups/routine-caught-failure-reports.md`: the same ownership concern. Its recovery helper can read the relayed claim instead of assuming ownership. A user-script marker also does not cross the boundary, so routine recovery keeps its own failed-attempt silence rule.
   - `plans/follow-ups/typed-worker-error-codes.md`: the same trusted relay. When both fixes exist, the new relay uses that code type. Neither fix waits.
   - `plans/follow-ups/workspace-remote-failure-reports.md`: the same scope claim mechanism. Start capture already has an alarm scope. Only an accepted capture may give a claim, so a missing scope leaves the request report available. Neither fix waits.
