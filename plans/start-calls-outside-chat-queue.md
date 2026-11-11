@@ -200,40 +200,40 @@ Depends on: 1
 Add the turn handle and the turn generation. No production code steps
 outside yet, so the behaviour stays.
 
-- [ ] Merge `origin/main` into the branch with the `git-merge` skill.
-- [ ] Keep each changed file under 300 lines. On `origin/main`,
+- [x] Merge `origin/main` into the branch with the `git-merge` skill.
+- [x] Keep each changed file under 300 lines. On `origin/main`,
       `worker/workspace-lifecycle.ts` has 300 lines, `worker/chat/store.ts`
       297, `worker/chat/backend.ts` 296, and
       `worker/chat/workspace-integration.ts` 289. Split before you add.
-- [ ] Add the queue turn handle with `outside(call)` in a new file under
+- [x] Add the queue turn handle with `outside(call)` in a new file under
       `worker/chat/`, as design call 2 says. Make `ChatStore.run` pass it
       to its work.
-- [ ] Make `settled()` and the new `idle()` wait for each turn that is
+- [x] Make `settled()` and the new `idle()` wait for each turn that is
       outside. Keep `settled()` returning the same promise while no turn
       starts or ends, or change the drain of
       `worker/test-support/native-workspace-entry.ts`, which compares
       promise identity.
-- [ ] Pass the handle through `WorkspaceChat.runLifecycle` and
+- [x] Pass the handle through `WorkspaceChat.runLifecycle` and
       `WorkspaceLifecycle.run`.
-- [ ] Keep the receiver generation on the handle, as design call 3 says.
+- [x] Keep the receiver generation on the handle, as design call 3 says.
       Update `withGeneration`, the guarded storage, and the Boat fetch
       check in `worker/chat/workspace-integration.ts`.
-- [ ] Add unit tests of the handle:
-  - [ ] A turn that is queued during an outside call runs before the
+- [x] Add unit tests of the handle:
+  - [x] A turn that is queued during an outside call runs before the
         caller continues.
-  - [ ] The caller continues after the turns that were queued before its
+  - [x] The caller continues after the turns that were queued before its
         call ended, and before later turns.
-  - [ ] An error of the call reaches the caller after its turn holds the
+  - [x] An error of the call reaches the caller after its turn holds the
         queue again.
-  - [ ] `idle()` and `settled()` wait for a turn that is outside.
-  - [ ] Another turn sees no generation of a turn that is outside.
+  - [x] `idle()` and `settled()` wait for a turn that is outside.
+  - [x] Another turn sees no generation of a turn that is outside.
 - [ ] Update the serial queue bullets of `worker/chat/history.md`.
 
 ## Milestone 3: Drains wait for the outside turns
 
 Depends on: 2
 
-- [ ] Call `idle()` in `suspend`, `restore`, and `remove` of
+- [x] Call `idle()` in `suspend`, `restore`, and `remove` of
       `worker/members/workspace-receiver.ts`, as design call 8 says.
 - [ ] Update the drain sentences of `worker/members/README.md`.
 

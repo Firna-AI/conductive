@@ -28,6 +28,7 @@ import {
   observeWorkspaceCallbacks,
   type WorkspaceCallbackObservers,
 } from './workspace-callbacks'
+import { QueueGenerations } from './queue-generation'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
@@ -60,20 +61,24 @@ export function createWorkspaceIntegration(
   resolvers: WorkspaceChatResolvers = {},
 ) {
   const storage = receiverStorage(context.storage)
-  let generation: number | undefined
+  const generations = new QueueGenerations(
+    () => chat.store.currentTurn,
+    async () =>
+      (await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY))?.generation ?? 0,
+  )
   const original = lifecycleDependencies()
   const dependencies = {
     ...original,
     now,
     fetch: async (request: Request) => {
-      await assertReceiverActive(storage, generation)
+      await assertReceiverActive(storage, generations.current())
       const response = await original.fetch(request)
       // An allocated resource must retain its returned ID before a suspension drains the phase.
       if (!(
         request.method === 'POST' &&
         new URL(request.url).pathname === '/api/v1/sandboxes'
       ))
-        await assertReceiverActive(storage, generation)
+        await assertReceiverActive(storage, generations.current())
       return response
     },
   }
@@ -213,7 +218,7 @@ export function createWorkspaceIntegration(
       chat.commitWorkspaceEvent(workspaceId, event, occurredAt),
     nativeWorkspaceStorage(storage, {
       guarded: true,
-      generation: () => generation,
+      generation: generations.current,
     }),
   )
   const controller: WorkspaceController = createWorkspaceController(
@@ -273,16 +278,7 @@ export function createWorkspaceIntegration(
     files,
     alarms,
     sockets,
-    withGeneration: async <T>(operation: () => Promise<T>): Promise<T> => {
-      const prior = generation
-      generation =
-        (await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY))?.generation ?? 0
-      try {
-        return await operation()
-      } finally {
-        generation = prior
-      }
-    },
+    withGeneration: generations.withGeneration,
     reconcileStopped: () => devices.reconcile(),
     onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
   }

@@ -22,6 +22,7 @@ import {
 } from './storage-keys'
 import type { ChatData, ChatStorage, PendingCommand, StoredTurn } from './types'
 import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
+import { ChatQueue, type QueueTurn } from './queue-turn'
 
 interface ChatMetadata {
   workspaceId: string
@@ -197,7 +198,7 @@ export class ChatTransaction extends ChatRecords {
 
 /** Transactions commit each event with its cursor and affected records. */
 export class ChatStore {
-  private tail: Promise<unknown> = Promise.resolve()
+  private readonly queue = new ChatQueue(() => this.reportTurnEnds())
   private readonly storage: ChatStorage
   private readonly now: () => number
   private readonly changed: (workspaceId: string) => Promise<void>
@@ -216,20 +217,20 @@ export class ChatStore {
     this.changed = changed
   }
 
-  run<T>(work: () => Promise<T>): Promise<T> {
-    const result = this.tail.then(async () => {
-      try {
-        return await work()
-      } finally {
-        await this.reportTurnEnds()
-      }
-    })
-    this.tail = result.catch(() => undefined)
-    return result
+  run<T>(work: (turn: QueueTurn) => Promise<T>): Promise<T> {
+    return this.queue.run(work)
   }
 
   settled(): Promise<unknown> {
-    return this.tail
+    return this.queue.settled()
+  }
+
+  idle(): Promise<void> {
+    return this.queue.idle()
+  }
+
+  get currentTurn(): QueueTurn | undefined {
+    return this.queue.currentTurn
   }
 
   reportTurnEnds(): Promise<void> {
