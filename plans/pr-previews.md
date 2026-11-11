@@ -206,7 +206,9 @@ otherwise. The user can override any of them.
 
 - Previews run in a separate Cloudflare account on the Workers Paid plan.
   Reason: decision 1 B. The free plan allows 10 D1 databases and 5 cron
-  triggers, and 16 pull requests were open on 10 November 2026.
+  triggers, and 16 pull requests were open on 10 November 2026. Each
+  preview has the 2 cron triggers of `wrangler.jsonc`, and Workers Paid
+  allows 250, so at most 125 previews run at once.
 - The preview zone is a domain of the user's choice in that account. The
   workflow reads it from the variable `PREVIEW_ZONE`.
 - A response header rule of the zone adds `X-Robots-Tag: noindex` to each
@@ -286,7 +288,7 @@ otherwise. The user can override any of them.
   but 1,000 routes. Three custom domains for each preview would allow only
   33 previews, and each new custom domain waits for its own certificate.
 - The variables set `APP_ORIGIN`, `MARKETING_ORIGIN`, and `MACHINE_ORIGIN`
-  to those origins, and `GITHUB_INSTALL_STATE_PREFIX` to `pr-<n>`.
+  to those origins, and `GITHUB_SETUP_RELAY_DOMAIN` to the preview zone.
   `PREVIEW_DOMAIN` stays unset. The bare zone belongs to the relay. Reason: the Worker reads
   each hostname from its variables, so previews need no product code
   change. Without `PREVIEW_DOMAIN`, a port preview answers
@@ -389,6 +391,16 @@ otherwise. The user can override any of them.
   10 November 2026, with the routes, the attachment bucket, and all 32
   migrations. Evidence: `.context/pr-previews/proof/dry-run.log` and
   `migrations-list.log`.
+- A preview asks for no software image, and it sets no
+  `CONDUCTIVE_DEPLOY_TOKEN_SHA256`. The first build of an org in a preview
+  then installs the app's own software from the base image, which is
+  slower but never fails, as `docs/protocol/org-image.md` says. Reason:
+  each software image is one more Boat build and one more saved snapshot
+  for each push. Added on 11 November 2026, after main added the software
+  image step to the live deploy.
+- Previews set no `FEEDBACK_EMAIL`, so a feedback send from a preview
+  answers 503, as `docs/deployment.md` says. Reason: previews have no
+  Resend key.
 - One bot comment on each pull request holds the links, the commit, and
   the state: deploying, live, failed with a link to the run, or deleted.
   Each run edits that comment. A hidden marker finds it.
@@ -417,22 +429,31 @@ Added on 10 November 2026 from the answer of the user to decision 3.
   deploy creates when it is missing. The deploy adds `pr-<n>`, and the
   delete removes it. The sweep removes each entry with no Worker. Reason:
   the relay then needs no Cloudflare token.
-- The relay sets the compatibility flag `global_fetch_strictly_public`.
-  Reason: a Worker cannot call a Worker on a route of the same zone
-  without it, as the Cloudflare docs on custom domains say.
-- On `GET /github/setup`, the relay reads `state` as `pr-<n>.<source>`.
-  It sends the user to `/github/setup` on the app hostname of `pr-<n>`,
-  with `state` set to `<source>` and the other GitHub values unchanged.
-  It refuses any other `state` with a short page. Reason: only a known
-  preview hostname can be the target, so the relay is no open redirect.
+- The relay sets the compatibility flag `global_fetch_strictly_public`,
+  as `wrangler.jsonc` now does for the app. Reason: a Worker cannot call a
+  Worker on a route of the same zone without it, as the Cloudflare docs on
+  custom domains say.
+- On `GET /github/setup`, the relay reads the relay cookie, which names
+  the app origin of the preview where the install started. It sends the
+  user to `/github/setup` on that origin, and it deletes the cookie. It
+  accepts only an origin of the shape `https://pr-<n>-app.<preview zone>`.
+  Without such a cookie, it shows the list of live previews. Reason: only
+  a known preview hostname can be the target, so the relay is no open
+  redirect.
 - `GET /` on the relay lists the live previews with their links.
 - Product code change: a new optional Worker variable,
-  `GITHUB_INSTALL_STATE_PREFIX`, puts `state=<prefix>` on the install URL
-  of the API. `githubInstallLink` in `src/shared/github-setup.ts` then
-  keeps that value as a prefix: `<prefix>.<source>`. Without the variable,
-  the link stays as today. Each preview sets it to `pr-<n>`. Reason: the
-  `state` of an install is the only value that GitHub gives back to the
-  Setup URL.
+  `GITHUB_SETUP_RELAY_DOMAIN`. When it is set, the start of an install at
+  `/github/install` also sets the relay cookie: the app origin, for that
+  domain, on the path `/github/setup`, for one hour. Without the variable,
+  the app works as today. Each preview sets it to the preview zone.
+  Reason: a browser install already keeps its screen in a cookie of the
+  app host, because GitHub drops `state` when a user changes an install
+  that exists, as `src/shared/github-setup.ts` says. The relay cannot read
+  that cookie, so it needs one for the bare zone.
+- Changed on 11 November 2026: the first design put a prefix on the
+  install `state`. Main has since moved the browser install return from
+  `state` to a cookie, because GitHub drops `state` on a change of an
+  install.
 
 **Delete and sweep.**
 
@@ -524,25 +545,24 @@ The docs state what a preview is, its setup, its relay, and its life.
 - [ ] In the same page, give the relay, the life of a preview, the sweep,
       a recovery by hand, and the costs.
 - [ ] `docs/deployment.md`: add the optional variable
-      `GITHUB_INSTALL_STATE_PREFIX`. Link the new page, and say that a
+      `GITHUB_SETUP_RELAY_DOMAIN`. Link the new page, and say that a
       preview sets the same inputs with its own values.
 - [ ] `README.md`: name previews in the status and in the CI paragraph.
 - [ ] `AGENTS.md`, "CI": add the preview workflow and its link.
 - [ ] Check each relative link of the changed Markdown files.
 
-## Milestone 2: Install state prefix
+## Milestone 2: Relay cookie of an install
 
 Depends on: 1
 
 An install from a preview returns to that preview through the relay. The
 live app keeps its behaviour.
 
-- [ ] Add `GITHUB_INSTALL_STATE_PREFIX` to `worker/env.ts`. Put
-      `state=<prefix>` on the install URL of the API when it is set.
-- [ ] Make `githubInstallLink` keep a `state` of the install URL as the
-      prefix `<prefix>.<source>`.
-- [ ] Add tests for the link with and without a prefix, and for the
-      install URL of the API, and see each fail once.
+- [ ] Add `GITHUB_SETUP_RELAY_DOMAIN` to `worker/env.ts`. When it is set,
+      make the install start at `/github/install` also set the relay
+      cookie, as the design says.
+- [ ] Add tests for the install start with and without the variable, and
+      see each fail once.
 
 ## Milestone 3: Preview configuration
 
@@ -626,8 +646,9 @@ behind.
 - [ ] Check that GitHub accepts the sign-in redirect of the app hostname.
 - [ ] Send a signed test delivery to the relay, and check that the
       preview records it.
-- [ ] Check that the relay sends `state=pr-0.get-started` to
-      `/github/setup` of the preview, and refuses another `state`.
+- [ ] Check that the relay sends an install return with the relay cookie
+      of `pr-0` to `/github/setup` of the preview, and refuses another
+      origin.
 - [ ] Delete the preview. Prove that no Worker, route, D1 database,
       Durable Object storage, attachment, Boat sandbox, saved snapshot, or
       registry entry remains. If a route or Durable Object storage
