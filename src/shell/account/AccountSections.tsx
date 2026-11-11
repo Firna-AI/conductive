@@ -34,18 +34,14 @@ export function SignInSection(props: { user: User }) {
  * The agents that every org uses, Claude and Codex: each connected login
  * with its kind, Remove, and its share setting, or Connect, which opens
  * the form of the agent. `connect` opens the form of that agent at first,
- * as the link of a missing login does.
+ * as the link of a missing login does, and again each time that it changes
+ * on the open page, without the focus. The list stays on the page, so a
+ * form that closes gives the focus back to its Connect.
  */
 export function AgentsSection(props: { connect: Agent | null }) {
   return (
     <Section description="Every org uses these agents." title="Agents">
-      <AgentList
-        closable
-        initial={props.connect}
-        key={props.connect ?? 'none'}
-        removable
-        shares
-      />
+      <AgentList closable initial={props.connect} removable shares />
     </Section>
   )
 }
