@@ -64,7 +64,7 @@ export function waitingNotice(props: {
     <WaitingRepositoryNotice
       action={() => (
         <ActionButton icon={ArrowRight} onPress={() => props.open(computer)}>
-          {firstBuildCopy.open}
+          {firstBuildCopy.settings}
         </ActionButton>
       )}
       admin={props.admin}

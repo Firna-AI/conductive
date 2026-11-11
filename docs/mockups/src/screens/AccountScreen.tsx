@@ -41,6 +41,7 @@ export const accountSchema = {
     'shareChange',
     'invites',
     'ownEndpoint',
+    'openSignUp',
   ],
   properties: {
     /**
@@ -67,6 +68,11 @@ export const accountSchema = {
      * invite used, or turned off by an operator.
      */
     invites: { enum: inviteStates },
+    /**
+     * Open sign-up: an operator turned off the waitlist, and sign-ups are
+     * not paused, so anyone can sign up without an invite.
+     */
+    openSignUp: { enum: ['off', 'on'] },
     /**
      * The last change of a share setting: none, or a change of the Claude
      * login that the app did not save.
@@ -98,6 +104,7 @@ export const accountGeneral: AccountState = {
   shareChange: 'none',
   invites: 'left',
   ownEndpoint: 'none',
+  openSignUp: 'off',
 }
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -170,6 +177,7 @@ function GeneralTab(props: { state: AccountState }) {
       />
       <InviteCodeSection
         fresh={props.state.connections !== 'connected'}
+        openSignUp={props.state.openSignUp === 'on'}
         state={props.state.invites}
       />
     </>

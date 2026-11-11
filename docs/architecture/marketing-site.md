@@ -19,11 +19,15 @@ decision number names a dated record, as
   [agreement to the Terms](../protocol/access-and-security.md#sign-in)
   before the GitHub sign-in. The Worker serves that page on
   `app.conductive.build`.
-- The main action is "Sign up". It starts the GitHub sign-in, and a new
-  account then waits for app access. "Sign up" won over "Join the
-  waitlist", as the user chose on 10 November 2026, so no button of the
-  site names the waitlist. The sentence under the last call to action says
-  that a new account waits for access.
+- The main action is "Sign up". It starts the GitHub sign-in. A new
+  account then waits for app access, except during
+  [open sign-up](../protocol/sign-ups.md#open-sign-up). "Sign up" won over
+  "Join the waitlist", as the user chose on 10 November 2026, so no button
+  of the site names the waitlist. The words stay the same in each state of
+  sign-ups, as
+  [The main action of the site](../protocol/sign-ups.md#the-main-action-of-the-site)
+  says. The sentence under the last call to action says that the app opens
+  when the account gets access, so it is true in each state too.
 - The second action of the hero and of the last call to action is
   "Download for Mac". It leads to the Mac app section of the home page,
   because the site runs no script to pick the chip of the visitor.

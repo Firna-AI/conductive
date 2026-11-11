@@ -16,7 +16,8 @@ and the separate preview domain.
 | Data                                                                         | Home                                     |
 | ---------------------------------------------------------------------------- | ---------------------------------------- |
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
-| App access, the codes and their uses, the pause, and approval email states   | D1                                       |
+| App access, the codes and their uses, and approval email states              | D1                                       |
+| The pause and the waitlist switch                                            | D1                                       |
 | Routines and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |

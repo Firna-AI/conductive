@@ -234,6 +234,8 @@ export const SAMPLE_IDS = {
   activeUser: 52230011,
   /** Sam Okafor, the first person on the waitlist, with a verified email. */
   waitingUser: 91827364,
+  /** Zed K, the newest person on the waitlist, with no name on GitHub. */
+  newestWaiting: 91827677,
   /** Kenji Watanabe, who waits with no verified email on GitHub. */
   waitingNoEmail: 70214398,
   /** The person signed in, whose own page warns before a suspension. */
