@@ -10,6 +10,7 @@ import {
   HeldRequests,
   ManualDelay,
   ManualFocus,
+  ManualVisibility,
   requestLines,
   testServices,
 } from './test-kit'
@@ -29,6 +30,7 @@ async function startedWithEndpoints() {
   const held = new HeldRequests(server)
   const timer = new ManualDelay()
   const focus = new ManualFocus()
+  const visible = new ManualVisibility()
   const logins = endpointLoginFixtures(FAKE_TIME).map((login) => ({
     ...login,
     modelList: { missing: ['new-model'], checkedAt: FAKE_TIME },
@@ -39,10 +41,11 @@ async function startedWithEndpoints() {
       fetch: held.fetch,
       delay: timer.delay,
       onFocus: focus.onFocus,
+      visible,
     }),
   )
   await app.start()
-  return { app, server, held, timer, focus, logins }
+  return { app, server, held, timer, focus, visible, logins }
 }
 
 test('an open tab receives model lists that background discovery saves after the tab loads', async () => {
@@ -59,6 +62,46 @@ test('an open tab receives model lists that background discovery saves after the
       (line) => line === `GET ${ACCOUNT_PATHS.account}`,
     ),
   ).toHaveLength(2)
+})
+
+test('a hidden page stops timed account reads and reads once before polling resumes when shown', async () => {
+  const { app, server, timer, focus, visible, logins } =
+    await startedWithEndpoints()
+  expect(timer.waits).toEqual([60_000])
+  visible.set(false)
+  focus.focus()
+  await timer.run(60_000)
+  expect
+    .soft(
+      requestLines(server).filter(
+        (line) => line === `GET ${ACCOUNT_PATHS.account}`,
+      ),
+    )
+    .toHaveLength(1)
+  expect.soft(timer.waits).toEqual([])
+
+  const discovered = logins.map((login) => ({
+    ...login,
+    modelList: { missing: [], checkedAt: FAKE_TIME + 600_000 },
+  }))
+  serveLogins(server, discovered)
+  visible.set(true)
+  await flushMicrotasks()
+  expect(app.account.account.get()?.agentLogins).toEqual(discovered)
+  expect(
+    requestLines(server).filter(
+      (line) => line === `GET ${ACCOUNT_PATHS.account}`,
+    ),
+  ).toHaveLength(2)
+  expect(timer.waits).toEqual([60_000])
+
+  await timer.run(60_000)
+  expect(
+    requestLines(server).filter(
+      (line) => line === `GET ${ACCOUNT_PATHS.account}`,
+    ),
+  ).toHaveLength(3)
+  expect(timer.waits).toEqual([60_000])
 })
 
 test('page returns share one account read and keep login and preference changes made during the read', async () => {

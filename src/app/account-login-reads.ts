@@ -24,10 +24,13 @@ export class AccountLoginReads {
     this.logins = logins
     app.boot.subscribe(() => this.follow())
     account.subscribe(() => this.follow())
-    app.services.onFocus(() => {
+    const pageChanged = () => {
       if (app.boot.get().state === 'ready' && app.services.visible.get())
         void this.refresh()
-    })
+      else this.clearTimer()
+    }
+    app.services.onFocus(pageChanged)
+    app.services.visible.subscribe(pageChanged)
   }
 
   refresh(): Promise<void> {
@@ -55,7 +58,12 @@ export class AccountLoginReads {
       ?.agentLogins.some(
         (login) => login.connected && login.kind === 'endpoint',
       )
-    if (this.running || this.app.boot.get().state !== 'ready' || !endpoints) {
+    if (
+      this.running ||
+      this.app.boot.get().state !== 'ready' ||
+      !this.app.services.visible.get() ||
+      !endpoints
+    ) {
       this.clearTimer()
       return
     }

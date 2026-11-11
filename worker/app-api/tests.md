@@ -8,10 +8,10 @@ Run the commands in [Development](README.md#development) from the repository roo
   sign-in. After each save and a delete, each reads only their own account
   and Get started step.
   `boot-account.test-support.ts` holds the account helpers of that test.
-  It also checks that an older runner gets no ChatGPT login and reports
-  the next steps for a turn that it cannot run.
 - `agent-login-secret.test.ts` checks that a saved login keeps no
   whitespace, and that a read removes the whitespace of an older login.
+  It also checks that an older runner gets no ChatGPT login and reports
+  the next steps for a turn that it cannot run.
 - `agent-endpoint-login.test.ts` checks both agents, encrypted addresses
   and keys, safe account metadata, the address rule, and share defaults.
 - `endpoint-models.test.ts` checks discovery at save and Refresh, private
@@ -67,5 +67,5 @@ Run the commands in [Development](README.md#development) from the repository roo
 - `feedback.test.ts`, `feedback-refusals.test.ts`, and
   `feedback-body.test.ts` check the feedback routes with a fake Resend, as
   [Feedback routes](feedback.md#development) says.
-
-- `codex-device-endpoint.test.ts` checks a switch from an own endpoint to ChatGPT and back, including metadata cleanup.
+- `codex-device-endpoint.test.ts` checks a switch from an own endpoint to
+  ChatGPT and back, including metadata cleanup.

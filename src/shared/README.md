@@ -102,7 +102,9 @@ address builder for forms, saves, dispatch, and the model gateway.
 It takes the agent and an options object with an optional model route, request query, and extra refused domains.
 It returns the normalized endpoint, origin, host, exact upstream address, and `secretForms`, or null for a refused address.
 `secretForms` owns the address patterns that both gateway output filters use.
-It includes whole and relative addresses and the host name without its port.
+It includes whole addresses and the host name without its port.
+Relative and built request paths join the set only for a saved query or a path beyond the agent's base.
+The base path is empty for Claude. For Codex, it can be empty or `/v1`.
 It also includes saved path segments and query values with at least 12 characters.
 Each form has plain, percent-encoded, and JSON-escaped variants, including escaped slashes.
 Shorter parts match only inside a whole address form.

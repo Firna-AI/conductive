@@ -43,6 +43,9 @@ export function readEndpointAddress(
     url.pathname = path
     const endpoint = `${url.origin}${path}${url.search}`
     const relative = `${path}${url.search}`
+    const hasSavedSuffix =
+      url.search !== '' ||
+      (path !== '' && (agent === 'claude' || path !== '/v1'))
     const parts = [
       ...path.split('/').map(decodePathSegment),
       ...url.searchParams.values(),
@@ -64,8 +67,7 @@ export function readEndpointAddress(
       url.origin,
       url.host,
       url.hostname,
-      relative,
-      `${url.pathname}${url.search}`,
+      ...(hasSavedSuffix ? [relative, `${url.pathname}${url.search}`] : []),
       ...parts,
     ].filter(Boolean)
     return {

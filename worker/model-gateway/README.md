@@ -128,7 +128,9 @@ Response headers use the content type, retry, request ID, and provider rate-limi
 No provider cookie passes.
 Allowed response header values redact the real login.
 For an own endpoint, both filters use the secret forms from the shared address builder.
-These include whole and relative addresses, origin, host, and host name without its port.
+These include whole addresses, origin, host, and host name without its port.
+Relative and built request paths join the set only for a saved query or a path beyond the agent's base.
+The base path is empty for Claude. For Codex, it can be empty or `/v1`.
 The builder also includes each saved path segment and query value with at least 12 characters.
 It lists plain, percent-encoded, and JSON-escaped forms, including escaped slashes.
 Shorter address parts match only inside a whole address form.
@@ -270,6 +272,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
 - [endpoint-login.test.ts](endpoint-login.test.ts): both agents' endpoint routes and authentication, credential-free runner commands, revalidation, redirects, and unreachable endpoints.
 - [endpoint-errors.test.ts](endpoint-errors.test.ts): split endpoint and key redaction in errors and allowed headers.
+- [endpoint-redaction.test.ts](endpoint-redaction.test.ts): unchanged protocol paths and redaction of saved path or query forms in both filters.
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-token.test.ts](codex-token.test.ts): ChatGPT metadata, Worker routing, header filtering, route refusals, and failed discovery.

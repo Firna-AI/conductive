@@ -139,10 +139,12 @@ the palette and of the Feedback dialog.
   runs already, and a failed read keeps what shows.
 - `AccountLoginReads` in `account-login-reads.ts` shares those reads with
   each return to the visible page. While the account has an own endpoint
-  login, it also reads once a minute. Each read merges only the logins,
-  with the same guards against local changes. A read across a new app
-  start or a sign-out changes nothing. Polling stops without an own
-  endpoint login or while the app is not ready.
+  login, it also reads once a minute while the page shows. Each read merges
+  only the logins, with the same guards against local changes. A read across
+  a new app start or a sign-out changes nothing. Polling stops without an
+  own endpoint login or while the app is not ready. A hidden page cancels
+  its timer. When the page shows again, the reader reads once and resumes
+  polling.
 - Timers, the focus, the visibility, the input, and the keys of the page
   come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
   `onKey`), so that no unit test runs a real timer or needs a browser

@@ -17,9 +17,9 @@ decision number names a decision of the change that adds the gateway, as
 ## Requests and answers
 
 - The upstream is Anthropic for a Claude subscription token or an
-  Anthropic API key. It is OpenAI for an OpenAI API key or a ChatGPT sign-in. It is the endpoint
-  of the login for an own endpoint login, as [Own endpoints](#own-endpoints)
-  says.
+  Anthropic API key. It is OpenAI for an OpenAI API key or a ChatGPT sign-in.
+  It is the endpoint of the login for an own endpoint login, as
+  [Own endpoints](#own-endpoints) says.
 - [Agent logins](tokens-and-secrets.md#agent-logins) states which login
   kinds the providers confirmed, and the risks of a ChatGPT sign-in.
 - The gateway forwards only a fixed list of routes for each agent and login kind.
@@ -57,18 +57,18 @@ decision number names a decision of the change that adds the gateway, as
 - Reason: neither key uses the OAuth login mode. No field of the request
   body needs that value.
 - The gateway sends back only allowed response headers.
-- The gateway passes each request body unchanged. It passes each answer
-  body unchanged.
-- In an account-check answer, the gateway removes routed origins and routing
-  constraints. Codex stays on the gateway while the Worker follows real routing.
+- The gateway passes each request body and model answer unchanged.
+- In an account-check answer, it removes the routed origins and routing
+  constraints. Reason: Codex must stay on the gateway while the Worker
+  follows the real routing for each model request.
 - An error body also passes unchanged, unless it holds the real login.
 - For a ChatGPT sign-in, the gateway never passes on an OpenAI 401.
   [How the agents reach the gateway](model-gateway.md#how-the-agents-reach-the-gateway)
   states its recovery and terminal answers.
-- On the route of Codex, the gateway refuses a request whose body is not
-  one JSON object, or is encoded. It also refuses a request whose
-  top-level `background` field holds any value except `false` (gateway
-  decision 9).
+- On a model route of Codex, the gateway refuses a `POST` request whose
+  body is not one JSON object, or is encoded. It also refuses a request
+  whose top-level `background` field holds any value except `false`
+  (gateway decision 9).
 - Reason: OpenAI keeps a background response running after its connection
   closes. So the end of the turn could not stop it.
 - The gateway refuses such a request before the upstream gets the last
@@ -94,7 +94,6 @@ decision number names a decision of the change that adds the gateway, as
   upstream's API, with a stable error code. A body above its limit gets
   the answer that [Request bodies](access-and-security.md#request-bodies)
   gives.
-
 - An invalid turn token gets HTTP 403 on a ChatGPT route, with the same
   code and cause. Claude and API-key routes keep HTTP 401.
 - Reason: a ChatGPT 401 would make Codex try to renew its placeholder.
@@ -151,7 +150,7 @@ decision number names a decision of the change that adds the gateway, as
 - When the agent program closes its connection, the gateway cancels the
   request to the upstream.
 - The gateway can replay a body-less ChatGPT metadata request once after
-  renewal. It never copies or replays a model upload. The agent decides its resend.
+  renewal. It never copies or replays a model upload. Codex decides its resend.
 - The gateway adds no model filter, no rate limit, and no time or byte
   limit on an answer. The limits of the provider and of the agent program
   apply.
