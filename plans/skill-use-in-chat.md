@@ -313,7 +313,13 @@ user can override each one.
    plans". It takes the names from the `skills` field of its calls. It
    names no skill of a failed or stopped call. Reason: such a call loaded
    no skill. The transcript copy uses the same words, as its protocol doc
-   requires.
+   requires. When the line wraps, these rules from the mockups apply:
+   - The text wraps beside the chevron, which stays at the first line.
+   - The line breaks only after the dot, after "Skills:", or between two
+     names. A name keeps its comma and never breaks at its hyphen.
+   - The icons of the tool kinds stay with the last name.
+   - In the chat, a no-break space holds the dot to the counts. The
+     transcript copy keeps a plain space.
 10. Events stored before the change keep the line "Used Skill". Reason:
     they hold no skill name.
 11. The runner sends no running event for a Claude `Skill` call until its
@@ -343,8 +349,24 @@ user can override each one.
     line already uses "Skills:" for two or more names. The options check
     of decision 279 proposed it as option F.
 17. On a narrow screen, the detail of a skill line shrinks before the
-    skill names. Reason: a long Codex command must not hide the names,
-    which are the point of the line.
+    skill names. The names and the detail form one text, which an
+    ellipsis cuts at its end. The other call lines keep their layout.
+    Reason: a long Codex command must not hide the names, which are the
+    point of the line.
+18. The skill icon is `BookOpen` from `lucide-react`, on the skill line
+    and among the icons of a fold line. Reason: an open book reads as
+    instructions that the agent opens, and its shape differs from the
+    icons of the other tool kinds. The mockup agent chose it.
+19. Each mockup screen with a skill line shows a state that the app can
+    produce. A Claude session shows only Claude skill lines, and a Codex
+    session shows only Codex skill lines. Reason: a session runs one
+    agent, as `docs/protocol/agents-and-sessions.md` says, and the
+    mockups are the visual spec. The mockup agent found the first
+    version, which mixed the two, and it recommended a note on the
+    screen. I chose a true Codex screen instead.
+20. The `history` chat of the mockups gets no skill line, so `app/chat`
+    shows its turn without skills. Reason: the marketing pictures also
+    use that chat, and they stay the same.
 
 ## Milestone 1: Mockups
 
@@ -358,30 +380,35 @@ skills, at phone and desktop sizes. Read the `mockups` and `product-ui`
 skills first. The skill line reads "Using skill" or "Used skill", then
 the skill names and the detail, as decision 279 says.
 
-- [ ] Add an optional list of skill names to the tool item of the mockup
+- [x] Add an optional list of skill names to the tool item of the mockup
       fixtures in `docs/mockups/src/fixtures/conversations.ts`.
-- [ ] Draw the skill line in the mockup `ToolGroup` in
+- [x] Draw the skill line in the mockup `ToolGroup` in
       `docs/mockups/src/components/chat/`. It shows a skill icon from
       `lucide-react`, the words of decision 279, the skill names, and the
       detail. Record the chosen icon in the design calls of
       this plan.
-- [ ] Name the skills on the mockup `FoldLine`, as design call 9 says.
+- [x] Name the skills on the mockup `FoldLine`, as design call 9 says.
       Show the skill icon among the icons of the tool kinds.
-- [ ] Show the states:
-  - [ ] `app/chat/turns`: the running turn has a skill line in its open
+- [x] Show the states:
+  - [x] `app/chat/turns`: the running turn has a skill line in its open
         run, and a folded run whose line names a skill.
-  - [ ] `app/chat/work`: the work fold of the finished turn names its
-        skills. Its open list shows one skill line with arguments and one
-        with a command as its detail.
-  - [ ] A new variant of `app/chat/work` with a fold line that names five
-        skills, to check how the line wraps on a phone. The page then has
-        five screens, the limit.
-- [ ] Update `docs/mockups/design-chat.md` with the skill line and the
+  - [x] `app/chat/work`: the work fold of the finished Claude turn names
+        its skills. Its open list shows one skill line with arguments and
+        one with no detail.
+  - [x] A new variant of `app/chat/work`, a Codex session, with a fold
+        line that names five skills, to check how the line wraps on a
+        phone. Its open list shows Codex skill lines with their commands,
+        and one line names two skills. The page then has five screens, the
+        limit.
+- [x] Update `docs/mockups/design-chat.md` with the skill line and the
       skill names on fold lines.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at phone
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at phone
       and desktop sizes with `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/skill-use-in-chat/m1/`, with the screenshots and the
+baseline comparison of the other states.
 
 ## Milestone 2: Documentation and protocol
 
@@ -505,9 +532,9 @@ request #167 also changes `ToolGroup.tsx`. When it has merged, merge
 
 - [ ] Draw the skill line in `CallLine` of
       `src/chat/components/ToolGroup.tsx`, with the icon, the words, and
-      the CSS of the mockups.
+      the CSS of the mockups, as design calls 16 to 18 say.
 - [ ] Show the skill icon and the skill names on `FoldLine`, for runs and
-      for the work fold.
+      for the work fold, with the wrap rules of design call 9.
 - [ ] Add a skill call to the development page in `src/chat/dev/`, so
       that the page shows a skill line.
 - [ ] Test the rendered skill line, the line of a folded run, and the line

@@ -2,6 +2,7 @@ import type { RunSource } from '../components/workspace/RunLinks'
 import { conversations, type ChatItem } from '../fixtures/conversations'
 import { freshSessionPrompt } from '../fixtures/terminal'
 import { runWorkspaces, type RunWorkspaceKey } from '../fixtures/runWorkspaces'
+import { sessionChoices } from '../fixtures/sessionChoices'
 import type { StartingLog } from '../fixtures/starting'
 import {
   openableWorkspaceRecords,
@@ -31,12 +32,16 @@ export type OpenWorkspace = {
 /**
  * The workspace that the screen opens. A run workspace shows the chat of
  * its run at the stage of the conversation: its first message, which waits
- * while the sandbox starts, or its first turn.
+ * while the sandbox starts, or its first turn. A chat whose session runs
+ * another agent gives the workspace the choice of that session, because the
+ * choice of a workspace is the one of its last message.
  */
 export function openWorkspace(state: WorkspaceState): OpenWorkspace {
   if (state.run === undefined) {
+    const record = openableWorkspaceRecords[state.workspace]
+    const choice = sessionChoices[state.conversation]
     return {
-      record: openableWorkspaceRecords[state.workspace],
+      record: choice ? { ...record, choice } : record,
       items: conversations[state.conversation],
     }
   }

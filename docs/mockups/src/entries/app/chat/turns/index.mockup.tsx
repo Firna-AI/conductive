@@ -8,13 +8,13 @@ import {
 export const chatTurns = defineScreen({
   title: 'Running turn',
   description:
-    'The agent works: the current run of tool calls shows each call, and the elapsed time shows. Stop sits beside Send, and the composer steers the turn.',
+    'The agent works: the current run of tool calls shows each call, and the elapsed time shows. Stop sits beside Send, and the composer steers the turn. The agent loaded a skill in the current run, so a skill line, "Used skill testing", shows at its place among the calls. The earlier run folded, and its line names the skill that it loaded: "4 tool calls · Skill: brainstorming".',
   rationale:
-    'A turn runs, takes guidance, stops, or fails. Its work folds only when it ends, so the user sees each step while the agent works. Moved here from the chat page, which now shows only its canonical screen beside its child pages.',
+    'A turn runs, takes guidance, stops, or fails. Its work folds only when it ends, so the user sees each step while the agent works. The user chose B of decision 277 on 11 November 2026: each skill that the agent loads shows as a skill line among the tool calls, with a book icon and the skill name. Each fold line names the skills of its calls, so the name stays in view when a run folds. The words "Used skill" come from A of decision 279. Moved here from the chat page, which now shows only its canonical screen beside its child pages.',
   relatedDocs: [],
   movedFrom: 'app/chat/running',
   propSchema: workspaceStateSchema,
-  props: { ...readyWorkspace, conversation: 'running', banner: 'none' },
+  props: { ...readyWorkspace, conversation: 'skills-running', banner: 'none' },
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),

@@ -22,6 +22,7 @@ import {
   newWorkspaceConversations,
   savedCartsMessage,
 } from './newWorkspaceConversations'
+import { skillConversations } from './skillConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
@@ -29,7 +30,11 @@ import { conversationKeys } from './conversationKeys'
 import { fileMentionConversations } from './fileMentions'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
-export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
+/**
+ * The kind of a tool call, as the app gives it. A tool with no kind of its
+ * own, such as the `Skill` tool of Claude, is `other`.
+ */
+export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run' | 'other'
 
 type ToolCallStatus = 'done' | 'running' | 'stopped'
 
@@ -65,6 +70,11 @@ export type ChatItem =
       detail?: string
       /** The size of output that the runner left out of `detail`. */
       omittedDetailBytes?: number
+      /**
+       * The skills that the call loads, in order, with no repeats. The call
+       * keeps its kind, and `target` holds the names, joined by ", ".
+       */
+      skills?: readonly string[]
       status: ToolCallStatus
     }
   | {
@@ -266,4 +276,10 @@ export const conversations: Readonly<
   }),
   ...tableConversations,
   ...listConversations,
+  ...skillConversations({
+    start: autocompleteStart,
+    tests: autocompleteTests,
+    end: autocompleteEnd,
+    running: e2eRunning,
+  }),
 }

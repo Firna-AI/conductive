@@ -43,4 +43,7 @@ export const conversationKeys = [
   'tables-in-work',
   'nested-lists',
   'nested-lists-in-work',
+  'skills-running',
+  'skills-in-work',
+  'five-skills-in-work',
 ] as const

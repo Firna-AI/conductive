@@ -20,6 +20,7 @@ import type { WorkspaceState } from './workspaceState'
 const runningConversations = new Set([
   'running',
   'steer',
+  'skills-running',
   'first-turn',
   'output-left-out-running',
   'linked',
