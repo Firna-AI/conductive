@@ -1,8 +1,8 @@
 /**
  * The invite codes that operators make, the referral codes that a search
- * finds, and the pause of every way in, as the Invite codes tab shows
- * them. Each code has 10 characters without look-alike characters, in two
- * groups of five.
+ * finds, the pause of every way in, and the waitlist switch, as the Invite
+ * codes tab shows them. Each code has 10 characters without look-alike
+ * characters, in two groups of five.
  */
 import { danaReferral } from './operatorAccess'
 import { account } from './orgs'
@@ -101,5 +101,15 @@ export const codeSearches = {
 /** When and by whom an operator paused sign-ups. */
 export const signUpPause = {
   since: '8 Nov at 14:20',
+  by: account.login,
+} as const
+
+/**
+ * When and by whom an operator turned off the waitlist. It comes before the
+ * pause, because the Sign-ups box offers Turn off the waitlist only while
+ * sign-ups are not paused.
+ */
+export const waitlistSwitch = {
+  since: '8 Nov at 11:30',
   by: account.login,
 } as const

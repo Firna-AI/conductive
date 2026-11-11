@@ -1,8 +1,7 @@
-# Key code
+# Marketing site key code
 
-This page is part of the [marketing site README](README.md#key-code). It
-names the files of the marketing site that a reader opens first. A path
-without a link is relative to `src/marketing/`, the folder of this page.
+This page belongs to the [marketing site README](README.md#key-code).
+Each path is relative to `src/marketing/` unless the link names another folder.
 
 - [`worker/marketing/site.ts`](../../worker/marketing/site.ts): public
   page paths, site files, the favicon, and the unknown-address page.
@@ -54,17 +53,18 @@ without a link is relative to `src/marketing/`, the folder of this page.
   one feature of the home page, and the downloads of the Mac app section,
   with one link for each chip and the oldest macOS version.
 - `access-copy.ts`: the words of the two actions of the site, and the
-  sentence under the last call to action.
+  sentence under the last call to action, which fits each state of
+  sign-ups.
 - `pricing.ts` and `pages/pricing.astro`: the one source of the plans and
   words of the pricing page and its mockup, and the page. Its
   [key code](pricing-page.md#key-code) names each part.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.
-- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`, and
+- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`, `privacy-transfers.ts`, and
   `legal-text.ts`: legal pages, the "Working in an org" section of the
   Terms, the "What Conductive uses, and why" section of the Privacy page,
-  and the shared text model, titles, contact addresses, and sign-in
+  its transfers to other countries, and the shared text model, titles, contact addresses, and sign-in
   agreement.
 - `request-values.ts`: built-page markers, local Astro preview values,
   the sign-in address, and the links to the sections of the home page.

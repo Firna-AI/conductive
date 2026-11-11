@@ -21,7 +21,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
   suspends or lifts it. It also approves people who wait, makes and
-  disables codes, and pauses sign-ups.
+  disables codes, pauses sign-ups, and turns the waitlist off and on.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
@@ -64,7 +64,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - D1 holds the records of the app: users, orgs, members, sections,
   repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
-  the sign-up pause, and the state of approval emails.
+  the sign-up pause, the waitlist switch, and the state of approval emails.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -183,8 +183,12 @@ the rules.
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. Use of the app is free until billing starts, as
   [Pricing](../protocol/pricing.md) says.
-- **Resend:** sends the org invitations and the approval emails, from
-  `invites@mail.conductive.build`.
+- **Resend:** the email service sends every email of the app, from
+  `mail.conductive.build`. These are the org invitations, the approval
+  emails, and the feedback emails. The Worker sends each feedback email,
+  with its screenshots, to the team inbox. The email provider of the
+  operator hosts that inbox. The app keeps no copy of feedback, as
+  [Feedback](../protocol/feedback.md) says.
 - **Better Stack Errors:** takes the reports of unexpected failures, in two
   applications in the EU. The Worker sends its own reports. The web app and
   the Mac app window send theirs directly from the page, as

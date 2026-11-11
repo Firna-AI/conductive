@@ -23,14 +23,17 @@ host gives to the workspace screen, and the members UI of the org settings.
 [Data lifecycle](data-lifecycle.md) gives the rules of the data that the
 screens read and write. It covers the org parts, the saves, the creates,
 the invitations, the kept workspace models, the build log, the read marks,
-the workspace stores, and the raw event streams of feature stores.
+the workspace stores, the raw event streams of feature stores, and the
+feedback draft.
 
 ## Screens
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the command palette, the focus, saved drafts, New workspace as a page or a dialog,
+layers, the focus, saved drafts, New workspace as a page or a dialog,
 with the send key that every composer shares, and the waitlist.
+[The command palette and Feedback](palette-screens.md) gives the rules of
+the palette and of the Feedback dialog.
 
 ## Error reporting
 
@@ -80,7 +83,15 @@ two privacy rebuilds, its entry points, and its focused checks.
   anywhere on the page as activity, at most once a minute. `onKey` is not
   passive, so the palette key stops the browser's own action.
   `AppServices.platform` says whether the keyboard is a Mac, which
-  chooses the palette key and its hint.
+  chooses the palette key and its hint. It never says whether the page
+  runs in the Mac app: the caller of `FeedbackModel.open` gives that
+  `desktop` flag.
+- `AppServices.appVersion` is the version of the build: the version of the
+  root `package.json` and the short commit, as `<version> (<commit>)`.
+  `build-version.ts` at the repository root makes it for the web and Mac
+  app builds. `version.ts` gives it as `APP_VERSION`, or `development`
+  outside Vite. A host without `appVersion` uses `APP_VERSION`. Each
+  feedback message carries it.
 - An address that people share, such as the invite link, starts with
   `AppServices.appOrigin`: the origin of the page in a browser. The Mac
   app loads the page from its own origin, so it names the app host of the
@@ -117,6 +128,8 @@ for the tests of New workspace as a page or a dialog, and of its send key.
 
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the file uploads, the
-models, the error reporter, the waitlist and its codes, the routines, and
-the workspace list. It also covers the event streams, the drag, the operator section, the
-command palette, the layers, the frames, and New workspace.
+models, the error reporter, the waitlist and its codes, the routines, and the workspace list.
+It also covers the event streams, the drag, and the operator section.
+[Key code: the palette, the layers, and the dialogs](key-code-layers.md)
+covers the command palette, the layers, the frames, New workspace as a
+dialog, and feedback with its screenshots.

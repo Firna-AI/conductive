@@ -28,17 +28,26 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
       text`Your GitHub emails: at each sign-in, ${productName} keeps the
         verified email addresses of your GitHub account, and which one is
         primary. An org invitation reaches you through one of them. The
-        approval email goes to the primary one.`,
+        approval email goes to the primary one. The team uses the same
+        address to reply to your feedback.`,
       text`Your GitHub token: the sign-in gives ${productName} a GitHub
         token for your account. ${productName} stores it encrypted, for
         every account, also while you wait for app access. It uses the
         token to read GitHub for you, and for the git calls of your
         turns.`,
-      text`The waitlist: a new account waits for app access, and sees only
-        the waitlist until then. ${productName} records when and how you
-        got app access. The record names the operator who approved you,
+      text`The waitlist: a new account without app access waits while the
+        waitlist is on or sign-ups are paused. It sees only the waitlist.
+        When the waitlist is off and sign-ups are not paused, open sign-up
+        gives you app access at sign-in. If you already wait, you get
+        access at your next request. You keep that access when the
+        waitlist turns on again.`,
+      text`App access records: ${productName} records when and how you got
+        app access. The record names the operator who approved you,
         the invite code that you used, or the org invitation that you
-        accepted, with its org and the admin who sent it. It lets the
+        accepted, with its org and the admin who sent it. For open
+        sign-up, it names that method and the operator who turned the
+        waitlist off. ${productName} also keeps the time and operator of
+        the last change to the waitlist setting. These records let the
         operator trace misuse back to a code or a person.`,
       text`Invite codes: each account with app access has an invite code
         with 5 invites. ${productName} keeps who used each code, and when.
@@ -48,7 +57,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         ${productName} sends one email to the primary verified email of
         your GitHub account, and keeps whether it went. A failed send
         goes again for up to 24 hours. An account without a verified
-        email gets no email.`,
+        email gets no email. ${productName} sends no email when the
+        waitlist turns off or when you get app access through open
+        sign-up.`,
       text`Your agreement: you accept the current version of the terms at
         each sign-in. ${productName} keeps the latest version that you
         accepted, and the time when you first accepted it. They show that
@@ -62,10 +73,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
       text`Your session: a cookie of the app keeps you signed in. A
         second cookie protects the GitHub sign-in while it runs. A third
         cookie keeps the screen that you left for GitHub, for up to 1 hour.`,
-      text`Your orgs: the orgs, members, roles, invitations, sections,
+      text`Your orgs: the orgs, members, roles, invites, sections,
         repositories, workspaces, routines, scripts, and settings that you and your
-        team make. They run the service. Each org invitation keeps the
-        email address that the admin invited.`,
+        team make. Each invite includes the invited email address. They
+        run the service.`,
       text`Routines: the prompt, the triggers, and the author filters of
         each routine, with the GitHub accounts that a filter names. Each
         run keeps its owner, its agent, its trigger, its state, and its pull
@@ -119,6 +130,16 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of your branches, which GitHub sends to ${productName}. A routine
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,
+      text`Feedback: your message and any screenshots help the team answer
+        questions, find problems, and improve ${productName}. Each message
+        includes your ${productName} user ID, GitHub user ID and login, the
+        time, the app version, and your browser. It also says whether you
+        use the Mac app. It includes the IDs of the current org and open
+        workspace when you can reach them. The added context includes no
+        page address, org name, or workspace name. The app removes image
+        metadata, such as a photo's location, from selected screenshots
+        before sending. The reply address is your primary verified email
+        on GitHub, when available.`,
       text`Error reports: when ${productName} fails in a way that it does
         not expect, it makes an error report. A report from the app in
         your browser or the Mac app window holds the type of error and
@@ -138,8 +159,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
     ),
     paragraph`Where data protection law requires a lawful basis, the
       operator relies on performance of a contract to provide the
-      service to you. It relies on legitimate interests to operate and
-      secure the service and prevent abuse. It also uses personal data
-      when necessary to comply with a legal obligation.`,
+      service to you. It relies on legitimate interests to operate,
+      improve, and secure the service and prevent abuse. It also uses
+      personal data when necessary to comply with a legal obligation.`,
   ],
 }

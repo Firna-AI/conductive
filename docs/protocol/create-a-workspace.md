@@ -116,7 +116,8 @@ decision number names a dated record, as
 
 - On a computer, Enter sends the message from every composer, and
   Shift+Enter adds a line (decision 143 of PR #73). The composers are the
-  chat of a workspace, the New workspace page, and the dialog.
+  chat of a workspace, the New workspace page, and the dialog. The message
+  box of the [Feedback dialog](feedback.md#the-dialog) is a composer too.
 - So Enter creates the workspace from the page and from the dialog.
 - On a phone, and in every window with the phone layout, Enter adds a
   line in every composer.
@@ -140,10 +141,16 @@ decision number names a dated record, as
     with the time since the build began.
   - After a failed build, it says that the cloud computer did not build.
   - With no build, it says that the cloud computer needs a build.
-- After a failed build or with no build, an admin gets a link to the Cloud
-  computer tab, which offers Try again or Build computer. A member who is
-  not an admin gets no link, and the notice says that an admin can build.
-  Reason: only an admin builds (decision 57).
+- In each state, an admin gets a link to the Cloud computer tab. After a
+  failed build or with no build, the tab offers Try again or Build
+  computer.
+- While a build runs, the admin can set up the cloud computer on that tab,
+  such as its install script. Such a change needs no Build computer, as
+  [The first build](org-image.md#the-first-build) says. A link only after a
+  failed build or with no build was rejected for that reason.
+- A member who is not an admin gets no link. After a failed build or with
+  no build, the notice says that an admin can build. Reason: only an admin
+  builds and changes the settings of the cloud computer (decision 57).
 - When a build succeeds, the notice goes, and Send and Create turn on.
 - Once the org has a good image, New workspace shows no such notice, also
   during a later build or after a failed later build. New workspaces then
@@ -172,10 +179,16 @@ decision number names a dated record, as
 - While the repository of the form waits, Send and Create stay off. A
   notice over the composer says when the repository is ready, and whether
   the person can choose another repository that is ready.
-- When no build runs, an admin gets a link in that notice to the Cloud
-  computer tab, which offers Try again or Build computer. While a build
-  runs, the notice shows that build with no link, because the admin has
-  nothing to do on that tab.
+- In each state, an admin gets a link in that notice to the Cloud computer
+  tab, as in the notice of the first build. When no build runs, the tab
+  offers Try again or Build computer.
+- While a build runs, the notice shows that build, and the admin can
+  follow it on that tab. Such a build adds a repository, or an admin
+  started it. A refresh never counts as a build that runs, as
+  [The repository notice](org-image.md#the-repository-notice) says. While
+  only a refresh runs, the notice follows its other states.
+- Reason: the link then follows one rule in both notices. A notice with no
+  link during a build was rejected for that reason.
 - A member who is not an admin gets no link. When an admin can act, the
   notice tells the member so. Reason: only an admin builds (decision 57).
 - When a build that holds the repository succeeds, the repository turns

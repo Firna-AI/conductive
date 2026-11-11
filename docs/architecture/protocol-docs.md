@@ -20,6 +20,9 @@ them, and this page lists each protocol doc and what it covers.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
+    - [Message attachments](../protocol/message-attachments.md): the size
+      limit, the upload, the storage, the copy into the cloud computer, and
+      the deletion of the files of a message.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, and the removal of each chip
     of the composer.
@@ -64,6 +67,12 @@ them, and this page lists each protocol doc and what it covers.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
   what the palette shows while its workspace data loads or did not load,
   and when a tab or a search has no row.
+- [Command palette: actions and settings](../protocol/command-palette-actions.md):
+  the actions that the palette offers, their order and their groups, the
+  Help group with Send feedback, and the rows of the Settings tab.
+- [Feedback](../protocol/feedback.md): the Feedback dialog that Send
+  feedback opens, its screenshots and context, the reply address, the
+  routes, and the email to the team inbox.
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
@@ -78,9 +87,11 @@ them, and this page lists each protocol doc and what it covers.
   agent session gets, the sender line of each message, and the base
   prompt of Claude agents.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
-  ways in, the pause, and the approval email.
+  ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of
   the waitlist, the join link, and the use of a code.
+- [Sign-ups](../protocol/sign-ups.md): the pause, the waitlist switch, open
+  sign-up, and the main action of the marketing site.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.

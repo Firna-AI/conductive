@@ -38,12 +38,17 @@ export function launchWindow(profile: string) {
   })
 }
 
+/**
+ * Answers the requests of the app at `appOrigin` from a fake API server,
+ * and its workspace events from the history of that server. A test that
+ * needs its own answers gives its server, which the result gives back.
+ */
 export async function installWindowApi(
   page: Page,
   appOrigin: string,
   desktopSession: boolean,
-) {
-  const server = new FakeApiServer()
+  server = new FakeApiServer(),
+): Promise<FakeApiServer> {
   await page.clock.setFixedTime(FAKE_TIME)
   await page.context().route(appOrigin + '/api/**', async (route) => {
     const request = route.request()
@@ -91,6 +96,7 @@ export async function installWindowApi(
       url.pathname === socketAddress.pathname,
     (socket) => socket.send(JSON.stringify(server.events.history(0))),
   )
+  return server
 }
 
 export async function openWindowWorkspace(electron: ElectronApplication) {

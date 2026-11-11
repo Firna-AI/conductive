@@ -35,6 +35,7 @@ export interface AppEnv {
   SANDBOX_PROVIDER_ACCOUNTS?: ProviderAccountConfigurations
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
+  FEEDBACK_EMAIL?: string
   OPERATOR_GITHUB_IDS?: string
 }
 

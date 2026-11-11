@@ -12,6 +12,7 @@ import { ignore, nested, record } from './api/parse'
 import { readGetStarted, readOrg } from './api/read-core'
 import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
+import { FeedbackModel } from './feedback-model'
 import { failedBoot, readShared, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
 import { OrgModel } from './org-model'
@@ -52,6 +53,7 @@ export class AppModel {
    */
   readonly getStarted: Readable<GetStartedResponse | null>
   readonly account: AccountModel
+  readonly feedback: FeedbackModel
   /** The invitations that wait for the user, which Home shows first. */
   readonly invitations: InvitationsModel
   /** The waitlist screen of a person without app access. */
@@ -69,6 +71,7 @@ export class AppModel {
   constructor(services: AppServices) {
     this.services = services
     this.account = new AccountModel(services, this)
+    this.feedback = new FeedbackModel(this)
     this.getStarted = setupSteps({
       server: this.setupReply,
       orgs: this.orgs,

@@ -10,6 +10,7 @@ import {
   type LegalDocument,
 } from './legal-text'
 import { privacyUsesSection } from './privacy-uses'
+import { privacyTransfersSection } from './privacy-transfers'
 
 /**
  * The privacy notice follows the list of privacy information in the ICO
@@ -59,9 +60,15 @@ export const privacyDocument: LegalDocument = {
             that name and address. The Mac app also checks
             GitHub for updates and downloads new versions. These requests
             send your network address to GitHub.`,
-          text`Resend sends the emails of ${productName}: the invitations of
-            an org, and the email when an operator approves your account. It
-            gets the address and the text of each email.`,
+          text`Resend sends the org invitations, approval emails, and feedback
+            emails of ${productName}. An invitation gives it the invited email
+            address, org name, inviter's name, and invitation link. An approval
+            gives it your primary verified email and the email text. For
+            feedback, it gets your message, screenshots, context, and reply
+            address, and sends them to the team inbox.`,
+          text`The email provider of the operator hosts the team inbox and
+            receives your feedback message, screenshots, context, and reply
+            address. The team reads them there.`,
           text`Better Stack gets the error reports described above, and keeps
             them in the European Union. The app in your browser and the Mac
             app window send their reports straight to Better Stack. These
@@ -136,48 +143,7 @@ export const privacyDocument: LegalDocument = {
         ),
       ],
     },
-    {
-      title: 'Transfers to other countries',
-      blocks: [
-        paragraph`The providers above can process your data in countries
-          other than the country where you live, including the United
-          States. Their data protection laws can differ from yours.`,
-        list(
-          text`Cloudflare's standard data processing terms use its
-            certification under the UK Extension to the EU-US Data Privacy
-            Framework for covered transfers. For other restricted UK
-            transfers, those terms apply the European Commission's standard
-            contractual clauses with the UK International Data Transfer
-            Addendum. These contract terms protect personal data sent abroad.`,
-          text`GitHub processes data in several countries, including the
-            United States. Its published privacy statement describes its
-            certification under the UK Extension and its use of standard
-            contractual clauses. UK regulations approve transfers covered
-            by the UK Extension certification.`,
-          text`Better Stack keeps the error reports in the European Union. UK
-            adequacy regulations approve transfers to countries in the
-            European Economic Area. Better Stack's published data processing
-            terms also let it and its subprocessors process personal data in
-            the United States and other countries. For covered transfers,
-            those terms use its certification under the UK Extension to the
-            EU-US Data Privacy Framework. Otherwise, they apply the European
-            Commission's standard contractual clauses with the UK
-            International Data Transfer Addendum.`,
-          text`The cloud computer provider is based in the United States.
-            It reports that its cloud computers and saved snapshots run in
-            Germany, Finland, and France. UK adequacy regulations approve
-            transfers to countries in the European Economic Area. Other
-            provider operations can involve processing outside that area.`,
-          text`Anthropic and OpenAI process agent requests under the
-            agreement for the connected account that the session uses.
-            Their published privacy and data processing terms describe
-            adequacy approvals, standard contractual clauses, and the UK
-            Addendum where they apply.`,
-        ),
-        paragraph`For copies of the published safeguards named above,
-          contact ${mailLink(legalAddress)}.`,
-      ],
-    },
+    privacyTransfersSection,
     {
       title: `How long ${productName} keeps data`,
       blocks: [
@@ -205,6 +171,11 @@ export const privacyDocument: LegalDocument = {
           it. Panel widths stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
           terms and privacy notices.`,
+        paragraph`The team keeps each feedback email in its inbox while it
+          helps to improve ${productName}. It deletes the email when it no
+          longer helps, or when the sender asks. ${productName} keeps no copy
+          of feedback in its own storage. The app keeps an unsent feedback
+          draft only in the memory of its open tab.`,
         paragraph`To request deletion of your personal data, write to
           ${mailLink(legalAddress)}. Deletion rights depend on applicable
           law and can have exceptions.`,

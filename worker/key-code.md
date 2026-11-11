@@ -42,7 +42,9 @@ Its links are relative to the Worker folder.
 - [routines/pull-request-dispatch.ts](routines/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
 - [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due routines and retries up to 50 old queued runs each minute.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
-- [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between approval and invitation emails.
+- [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between the approval, invitation, and feedback emails.
+  It writes the sender address, and the name and the media type of each attachment from a `CheckedImage`.
+- [app-api/feedback.ts](app-api/feedback.ts): `feedbackRoute`, the feedback routes. [Feedback routes](app-api/feedback.md) gives their checks and their email.
 - [security/gate.ts](security/gate.ts) checks access before it reads JSON request bodies.
 - [http/request-body.ts](http/request-body.ts) applies the default and declared request body limits.
 - [http/json-body.ts](http/json-body.ts) owns the shared JSON object parsing policy.

@@ -41,6 +41,7 @@ it('reads the waiting session and its approval address while the app gate refuse
   expect(await response.json()).toEqual({
     appAccess: false,
     signupsPaused: true,
+    waitlistOn: true,
     approvalEmail: 'member@example.com',
     referralCode: null,
   })
@@ -69,6 +70,7 @@ it('grants access and one referral code once and keeps the original source on re
   expect(before).toEqual({
     appAccess: true,
     signupsPaused: false,
+    waitlistOn: true,
     approvalEmail: null,
     referralCode: {
       code: expect.stringMatching(

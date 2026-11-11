@@ -1,9 +1,10 @@
-# The runner archive
+# Runner archive and software image
 
-This page is part of [Deployment inputs](../deployment.md). It says how to
-supply `CONDUCTIVE_RUNNER_ARCHIVE_URL` and
-`CONDUCTIVE_RUNNER_ARCHIVE_SHA256`, and how each deploy publishes the
-archive.
+This page belongs to [Deployment inputs](../deployment.md). It says how
+each image build gets the runner archive, and how each deploy from `main`
+publishes the archive and builds the software image.
+
+## The runner archive
 
 Each new image build installs the runner archive into the org image. A
 refresh keeps the installed runner and updates the repositories.
@@ -41,7 +42,7 @@ More facts:
   [The private Node runtime](../../image/runtime.md) says. That download needs
   no deployment input.
 
-## The archive in each deploy
+### The archive in each deploy
 
 The archives live in the R2 bucket `conductive-runner`. R2 is the file
 storage of Cloudflare. The bucket serves each archive under
@@ -73,3 +74,31 @@ steps for the archive:
 - A new archive reaches the next build of each org image. A refresh keeps
   the installed runner. So an existing image keeps its runner until its
   next build.
+
+### The software image
+
+Each deploy from `main` asks the Worker for the
+[software image](../protocol/org-image.md#the-software-image) of its new
+version. The software image holds the base image, the runner archive, and
+the rest of the app's own sandbox software.
+
+1. Before the Worker upload, the deploy makes 32 random bytes as its
+   deploy token. It keeps the token in a file of the deploy job only, and
+   masks it in the log.
+2. It sets `CONDUCTIVE_DEPLOY_TOKEN_SHA256` to the SHA-256 digest of the
+   token, with `--var`.
+3. After the health check, it calls `POST /v1/deploy/software-image` on
+   the machine hostname every 10 seconds, for up to 15 minutes. Each call
+   sends the token and its digest. Each call moves the build on, and
+   answers with its state and its new output.
+4. A later job fails the run unless the last answer says that the image
+   is ready.
+
+- The Worker accepts the token only for 30 minutes after the creation time
+  of its version, which `CF_VERSION_METADATA` gives.
+- An older Worker version answers 409 to the digest of a newer deploy. The
+  deploy then asks again.
+- A deploy by hand sets no new token, so it builds no software image. Builds
+  of an org without an org image then install the app's own software.
+- After the wait ends, the 15-minute Cron Trigger moves an unfinished
+  build on, until it ends or reaches its time limit of 60 minutes.

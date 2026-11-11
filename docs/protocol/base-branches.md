@@ -63,8 +63,8 @@ says.
   pull request #482 of storefront".
 - For a merged pull request, the start step names the fetch of the base
   branch of the pull request.
-- The archive check counts no commit of the pull request as unpushed.
-  Reason: those commits are already on GitHub.
+- Archive runs no check for unpushed commits, as
+  [Archive](workspace-life.md#archive) says.
 - Work on the branch of the pull request itself was rejected, both in a
   new workspace and in a workspace that already has that branch.
 - Reason: two workspaces would then share one branch, or the run would

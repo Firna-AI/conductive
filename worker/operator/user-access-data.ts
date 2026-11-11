@@ -42,8 +42,9 @@ interface ReferralUseRow {
 function accessSource(row: AccessRow): OperatorAccessSource {
   switch (row.source) {
     case 'approval':
+    case 'open_signup':
       return {
-        kind: 'approval',
+        kind: row.source,
         operator:
           row.actorGithubId !== null && row.actorLogin !== null
             ? { githubId: row.actorGithubId, login: row.actorLogin }

@@ -1,0 +1,9 @@
+{
+  "order": [
+    "no-results",
+    "loading",
+    "unavailable",
+    "repositories-unavailable",
+    "feedback"
+  ]
+}

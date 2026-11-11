@@ -6,6 +6,7 @@ import {
   type Plugin,
   type UserConfig,
 } from 'vite'
+import { buildVersion } from './build-version.ts'
 import { errorReportingBuild } from './tools/build/error-reporting.ts'
 import { readBuildRelease } from './tools/build/release.ts'
 
@@ -56,7 +57,10 @@ export function developmentScripts() {
 }
 
 export default defineConfig({
-  define: { __CONDUCTIVE_RELEASE__: JSON.stringify(release) ?? 'undefined' },
+  define: {
+    __CONDUCTIVE_RELEASE__: JSON.stringify(release) ?? 'undefined',
+    __CONDUCTIVE_APP_VERSION__: JSON.stringify(buildVersion()),
+  },
   build: { sourcemap: 'hidden' },
   environments: {
     conductive: {

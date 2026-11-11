@@ -21,7 +21,7 @@ import {
 export const operatorSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['numbers', 'signUps'],
+  required: ['numbers', 'signUps', 'waitlist'],
   properties: {
     /**
      * The numbers of the page: shown, loading when the page opens, or
@@ -30,6 +30,8 @@ export const operatorSchema = {
     numbers: { enum: ['ready', 'loading', 'error'] },
     /** Sign-ups are open, or an operator paused them. */
     signUps: { enum: ['open', 'paused'] },
+    /** The waitlist is on, or an operator turned it off. */
+    waitlist: { enum: ['on', 'off'] },
   },
 } as const
 
@@ -91,6 +93,7 @@ export function OperatorScreen(props: {
       tab="overview"
       title="Operator"
       viewport={props.viewport}
+      waitlist={props.state.waitlist}
     >
       <OperatorBody state={props.state} viewport={props.viewport} />
     </OperatorPage>

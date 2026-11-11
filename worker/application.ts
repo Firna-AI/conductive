@@ -188,7 +188,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await finishDesktopSignIn(request, env, dependencies))
         }
         if (isDeviceAppPath(path))
-          return respond(await routeDevice(request, env))
+          return respond(await routeDevice(request, env, dependencies.now()))
         const chatResponse = await routeChat(
           request,
           env,

@@ -6,7 +6,7 @@ interface OperatorIdentity {
 }
 
 export type OperatorAccessSource =
-  | { kind: 'approval'; operator: OperatorIdentity | null }
+  | { kind: 'approval' | 'open_signup'; operator: OperatorIdentity | null }
   | { kind: 'invite_code'; code: string; label: string | null }
   | { kind: 'referral_code'; code: string; owner: OperatorIdentity | null }
   | {
@@ -94,6 +94,13 @@ export interface OperatorSignupPause {
   operator: OperatorIdentity | null
 }
 
+export interface OperatorWaitlistSwitch {
+  waitlistOn: boolean
+  updatedAt: number | null
+  operator: OperatorIdentity | null
+  waiting: number
+}
+
 function listPath(kind: string, query: OperatorDirectoryQuery): string {
   const params = new URLSearchParams()
   if (query.q !== undefined) params.set('q', query.q)
@@ -121,4 +128,8 @@ export function operatorCodeDisablePath(code: string): string {
 
 export function operatorSignupPausePath(): string {
   return '/api/operator/signup-pause'
+}
+
+export function operatorWaitlistSwitchPath(): string {
+  return '/api/operator/waitlist-switch'
 }
