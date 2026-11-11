@@ -1,28 +1,19 @@
 import { expect, it } from 'vitest'
 
-import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 import { startImageBuild } from './image-builds'
 
 const fixtureForTest = setupBackendTests()
 
+// Each job records the runner version of the Worker, 2, whatever its source
+// image holds. Version 3 is an image that a newer Worker made before a
+// rollback. The literal values keep each case from passing for code that
+// records the source version, also after a change of the constant.
 it.each([
-  {
-    kind: 'refresh',
-    sourceVersion: 1,
-    expectedVersion: RUNNER_PROTOCOL_VERSION,
-  },
-  {
-    kind: 'refresh',
-    sourceVersion: 2,
-    expectedVersion: RUNNER_PROTOCOL_VERSION,
-  },
-  {
-    kind: 'build',
-    sourceVersion: 1,
-    expectedVersion: RUNNER_PROTOCOL_VERSION,
-  },
+  { kind: 'refresh', sourceVersion: 1, expectedVersion: 2 },
+  { kind: 'refresh', sourceVersion: 3, expectedVersion: 2 },
+  { kind: 'build', sourceVersion: 1, expectedVersion: 2 },
 ] as const)(
   'records runner version $expectedVersion for a $kind from a version $sourceVersion image',
   async ({ kind, sourceVersion, expectedVersion }) => {
