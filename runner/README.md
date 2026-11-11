@@ -33,6 +33,8 @@ These facts belong to this implementation, not to the protocol docs.
   API keys use its private login request. ChatGPT sign-ins use a temporary
   login file with a turn token and public account identity.
   [Agent logins](agent-logins.md#codex) gives both routes through the gateway.
+  [Conversation continuation](codex-logins.md#conversation-continuation)
+  gives the resume and fork sequence after a login kind change.
 - Both agents request no approvals and the service user's rights. ChatGPT
   workspace rules can replace these Codex settings on a ChatGPT turn.
 - The runner configures the sandbox's `computer` and `conductive` MCP
@@ -281,6 +283,8 @@ tools that time the first agent start after a resume.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
   `message.ts` puts the sender line before the text of each message.
+  `codex-thread.ts` resumes saved Codex conversations and forks after a
+  saved provider refusal. `rpc.ts` keeps structured JSON-RPC error data.
   `lifetime.ts` owns each agent process until it exits, with its kill delay.
   `attachment-description.ts` describes each attached file to both agents.
   The [tool entry points](agent-tools.md#key-code) cover both MCP servers,

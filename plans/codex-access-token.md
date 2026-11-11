@@ -318,8 +318,8 @@ conversation. Each line gives the question, the choice, and the date.
 - The live test: B, a new sign-in with another ChatGPT account.
   11 November 2026.
 - A link to the ChatGPT setting: B, a link "Open ChatGPT settings" to
-  `https://chatgpt.com/settings/security`. 11 November 2026. The user has
-  not confirmed the address yet.
+  `https://chatgpt.com/settings/security`. 11 November 2026. The user
+  confirmed the address on the same day.
 - What the form shows when a poll fails: A, keep it as built, and record
   it as the requirement. 11 November 2026.
 - "Sign in again" differs from the mockup: A, draw the app in the mockup.
@@ -334,6 +334,12 @@ conversation. Each line gives the question, the choice, and the date.
 - The focus when a Connect form opens or closes: A in this branch. The
   user started the shared focus helper, option C, in another workspace.
   11 November 2026.
+- A switch of the Codex login kind broke a running conversation, from the
+  live check: B, the runner forks the conversation under the new provider.
+  11 November 2026.
+- Ask OpenAI in writing whether a hosted product may store and use
+  members' ChatGPT sign-ins, the open option D of decision 170: the user
+  is in contact with OpenAI, and parked the item. 11 November 2026.
 
 ## Design
 
@@ -812,7 +818,7 @@ Depends on: every other milestone
 The live check proves the token route with the real Codex program. The gate
 and the review prove the change.
 
-- [ ] Run the live check with a real ChatGPT sign-in, since decision 175
+- [x] Run the live check with a real ChatGPT sign-in, since decision 175
       in place of a Codex access token. It needs a sign-in from the user.
       Run it on a development machine with the pinned Codex, the runner's
       Codex adapter, and the gateway modules. Keep the tokens out of every
@@ -828,9 +834,12 @@ and the review prove the change.
         keeps the approval policy `never`, the sandbox mode
         `danger-full-access`, and the MCP servers `conductive` and
         `codex_apps`, which Codex adds in its ChatGPT mode.
-  - [ ] A conversation that started on an API key resumes on the sign-in.
-        Record a failure as a finding. Not run on 11 November 2026: no
-        OpenAI API key was available.
+  - [x] A conversation that started on an API key resumes on the sign-in.
+        Record a failure as a finding. It failed on 11 November 2026:
+        Codex saves the model provider with each conversation, and the
+        runner uses `conductive` for an API key and `openai` for the
+        sign-in, so `thread/resume` answers -32600. Evidence:
+        `.context/codex-access-token/live/resume-cause.md`.
   - [x] Save the evidence under `.context/codex-access-token/`. Evidence:
         `.context/codex-access-token/live/report.md`.
   - [x] Update the line of

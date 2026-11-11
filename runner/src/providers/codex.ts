@@ -9,6 +9,7 @@ import { codexBinary } from './binaries'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
 import { checkCodexGateway, codexSettings } from './codex-settings'
+import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
@@ -182,23 +183,11 @@ export function createCodexFactory(
               ? options.credential.token
               : options.credential.login.secret,
         })
-      const response = object(
-        await rpc.request(
-          options.conversationId ? 'thread/resume' : 'thread/start',
-          {
-            ...(options.conversationId
-              ? { threadId: options.conversationId }
-              : {}),
-            model: choice.model,
-            modelProvider: settings.modelProvider,
-            cwd: options.cwd,
-            developerInstructions: options.instructions,
-            approvalPolicy: 'never',
-            sandbox: 'danger-full-access',
-          },
-        ),
+      const threadId = await openCodexThread(
+        rpc,
+        options,
+        settings.modelProvider,
       )
-      const threadId = string(object(response.thread).id)
       options.event({ type: 'conversation', id: threadId })
       return {
         send: async (command) => {

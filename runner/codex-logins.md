@@ -9,6 +9,22 @@ The runner starts `codex app-server` from the `@openai/codex` package that
 `@openai/codex-sdk` installs. `package.json` pins version 0.167.0.
 Check both routes again at each update of the pinned program.
 
+## Conversation continuation
+
+Both login kinds use the shared conversation storage. The runner first sends
+`thread/resume` for a saved conversation. If its JSON-RPC error has
+`data.type=modelProviderMismatch` or `data.type=modelProviderNotConfigured`,
+the runner sends one `thread/fork` for the same thread ID.
+The fork uses the current provider, model, working folder, developer
+instructions, approval policy, and sandbox. It uses no rollout path or
+supplied history. Every other resume error keeps its failure.
+
+The runner sends the fork's ID through its existing `conversation` event.
+Its session store replaces the old ID, so later turns resume the fork,
+also after a runner restart. A refused fork closes the App Server and fails
+the turn. [Agents and sessions](../docs/protocol/agents-and-sessions.md#agents)
+states the conversation continuity requirement.
+
 ## API key
 
 - The App Server gets no login or turn token in its environment or arguments.
@@ -46,7 +62,7 @@ Check both routes again at each update of the pinned program.
   `features.enable_request_compression=false`.
 - The session home's `sessions` and `archived_sessions` directories link to
   the existing shared Codex storage. `sqlite_home` selects that storage too.
-  Thus a conversation can resume after its login kind changes.
+  Either login kind can read a saved conversation for a resume or a fork.
 - After initialization, `account/read` loads the workspace identity and routing.
   Then `configRequirements/read` checks `requirements.chatgptBaseUrl`.
 - A required address outside the gateway closes the App Server and fails
@@ -71,6 +87,11 @@ Check both routes again at each update of the pinned program.
 
 ## Tests
 
+- `src/providers/codex-resume.test.ts` checks the two provider refusals,
+  the fork's settings and thread ID, and the errors that still fail.
+- `src/providers/rpc.test.ts` checks the JSON-RPC error data and message.
+- `src/engine-conversation.test.ts` checks replacement and restart of a
+  session's saved conversation ID.
 - `src/providers/codex-login.test.ts` checks private login order and failures,
   the API key gateway settings, and the native measurement route.
 - `src/commands.test.ts` checks the public ChatGPT account fields.
