@@ -22,7 +22,8 @@ C. Milestones 1, 2, 3, and 9 apply them. On 2026-11-11 the user asked
 whether the defaults are Conductor's keys. Two keys differed by mistake,
 and Milestone 12 fixes them. The user also chose decision 199 C: the
 features that `main` added after the plan get keys in this pull request.
-Milestones 13 to 15 apply it.
+Milestones 13 to 15 apply it. Decisions 200 to 203 wait for the user: the
+review of that work and the key research raised them.
 
 On 2026-11-09 this plan's decisions moved from 180 to 184 to 190 to 194,
 because `main` uses 181, 182, 184, and 185 for the workspace titles of PR
@@ -672,6 +673,167 @@ Replaced ways:
     `.context/keyboard-shortcuts/key-table-newer.md`. Where a check fails,
     the key is chosen by hand under decisions 191 G and 194 A, and "Commands
     and default keys" records the call and its reason.
+
+### Decision 200: A clipboard recorder for every copy test
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review, round 5, the wider fix of finding 16 and its check.
+- **Category:** Test.
+- **Location:** `src/shell/shortcuts/shortcut-test-kit.tsx`, the shared test
+  kits in `src/test-support/`, and the `copy` fakes of
+  `src/shell/workspace/WorkspaceKeys.test.tsx:183`,
+  `src/shell/workspace/CopyLink.test.tsx:45` and `:100`, and
+  `src/chat/components/TranscriptCopy.dom.test.tsx:47`.
+- **Background:** Copy link, the two copy commands, and their buttons and
+  menu items must start the clipboard write during the press. Reason, from
+  `docs/protocol/session-transcripts.md`: a browser such as Safari can
+  refuse a write that comes long after its press. The copy fakes of the
+  tests keep only the resolved text, in six test files.
+- **Problem:** No test sees when a write starts. A copy that starts after
+  the press passes every copy test. Finding 16 is this gap in the two key
+  tests of this branch. The tab menu and label button tests on `main`
+  have it too.
+- **Impact if no action:** A later change can delay a write. Safari then
+  refuses the copy, and no test fails.
+- **Root question:** How does each copy key and copy control keep starting
+  its clipboard write during its press, also after later changes?
+- **Options:**
+  - **A.** After the merge, fix only the two key tests, finding 16 A: a
+    recorder in the shortcut test kit that tells whether the write started
+    during the press. Effort: Small.
+  - **B.** A, and the shared test kits get one clipboard recorder in place
+    of the free `copy` fakes. Every copy test moves to it, also those on
+    `main`. It is a test for the class. Effort: Medium.
+  - **C.** B in this pull request, as a third fix round. Effort: Medium.
+- **Left out:** A copy kind of offer in the shortcut layer, option D of the
+  check: it protects only the keys, not the buttons and menu items, and it
+  adds a second way to run a command. A browser test: the gate has no
+  browser harness for the web app.
+- **Wider fix:** B.
+- **Related:** Finding 16 is A. Decision 203 decides where the record of A
+  lives.
+- **Recommendation:** B. It catches a late start in every copy test, also
+  in the next copy feature, and it keeps this pull request from growing.
+- **Action:** ask the user, because B and C add a test for the class,
+  which needs the user's approval, and C starts a third fix round.
+
+### Decision 201: Firefox's text direction keys can be recorded
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation, the key research of decision 199.
+- **Category:** Product bug.
+- **Location:** `src/shared/shortcut-text-keys.ts` (the `mac` and `other`
+  lists) and `docs/protocol/keyboard-shortcuts-fixed-keys.md` ("Text
+  keys").
+- **Background:** Each listed text key is a fixed key: the recorder refuses
+  it, the Worker rejects it, and in a text field no command runs on it.
+  Firefox switches the text direction of the focused text field on ⇧⌘X on a
+  Mac and on Ctrl+Shift+X on Windows and Linux (`key_switchTextDirection`
+  in Firefox's `browser-sets.inc.xhtml`, and a live check on Linux).
+  Decision 199 gave Fix checks ⌥⌘X in place of Conductor's ⇧⌘X for this
+  reason.
+- **Problem:** The text key lists do not name ⇧⌘X and Ctrl+Shift+X, so a
+  person can record them. A recorded ⇧⌘X then runs its command in a
+  Firefox text field, in place of the switch. The user's requirement of
+  2026-11-10 says that the shortcuts never take the keys of a text field.
+- **Impact if no action:** A person who records one of these keys loses
+  Firefox's direction switch in the message field.
+- **Root question:** How does a text field keep Firefox's text direction
+  keys, also after a person records them?
+- **Options:**
+  - **A.** Add ⇧⌘X to the Mac text keys and Ctrl+Shift+X to the Windows
+    and Linux text keys, with the protocol list and tests. This adds a
+    rejection. Effort: Small.
+  - **B.** Change nothing. Only the default keys avoid the two keys.
+    Effort: Small.
+  - **C.** Count the two keys as text keys only in a Firefox text field, as
+    Ctrl+U counts only in a single-line field on Linux. They stay
+    recordable. Effort: Medium.
+- **Left out:** A text key rule for each browser and each key, because no
+  other browser key edits text today.
+- **Wider fix:** None. The text key lists are the structural fix in force.
+- **Previous examples:** Ctrl+/ of Firefox on Linux and ⌥⇧⌘V of the Mac
+  app joined the text key lists.
+- **Recommendation:** A. It applies the text field requirement with the
+  existing lists, which already hold keys of one browser or host.
+- **Action:** ask the user, because A adds a new rejection.
+
+### Decision 202: A stored key can equal a new default
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation, the mockups of decision 199.
+- **Category:** Docs or spec.
+- **Location:** `src/app/shortcuts/keymap.ts` (`buildShortcutKeymap`),
+  `src/app/shortcuts/decision.ts` (`decideShortcut`), and
+  `docs/protocol/keyboard-shortcuts-tab.md` ("Conflicts" and "Reset").
+- **Background:** The keymap starts with the default keys, and each stored
+  change replaces the keys of its command. The recorder's Replace moves a
+  key, so the recorder never leaves one key on two commands. A release can
+  give a command a new default, as decision 199 gave Create PR ⇧⌘P. For a
+  press, `decideShortcut` runs the first matching command in the list that
+  the page offers. No account holds such a key today.
+- **Problem:** When a stored change holds a key that a later release gives
+  another command as its default, both commands hold the key. The
+  protocol does not say which one runs. Today the first in the list runs,
+  and the tab shows the key on both rows with no conflict line.
+- **Impact if no action:** After a release, a key can run a command that
+  the person does not expect, or the new default never runs.
+- **Root question:** When a key that a person chose becomes the default key
+  of another command, which command gets the key?
+- **Options:**
+  - **A.** Write today's behaviour into the protocol. Effort: Small.
+  - **B.** The new default wins, and the keymap drops the key from the
+    person's change. Effort: Small.
+  - **C.** The person's key wins, and the keymap drops the key from the
+    defaults of the other command. Its Reset then shows the conflict line,
+    as Reset does for a taken default today. Effort: Small.
+- **Left out:** A notice that lists moved keys after a release, because
+  the app has no release notes, and B and C already give each key one
+  owner. A check at release time, because a release cannot read the
+  stored keys.
+- **Wider fix:** C. The keymap then keeps one owner for each key.
+- **Previous examples:** None found.
+- **Recommendation:** C, because a key that the person chose should not
+  lose to a default that the person never chose.
+- **Action:** ask the user, because the answer sets which of two keys wins,
+  and no protocol rule or decision says it.
+
+### Decision 203: Follow-up records after the launch cleanup
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Process.
+- **Location:** `plans/follow-ups/` (the 12 records that this branch adds)
+  and this plan.
+- **Background:** The `plans` skill says that a pull request turns each
+  deferred finding, post-merge task, and open item into a follow-up record
+  under `plans/follow-ups/`, and then deletes its plan. On 2026-11-11, pull
+  request #256 started to remove both plans and all 267 follow-up records
+  of `main` before launch, at the user's request, with Git history as the
+  restore source. It is not merged yet.
+- **Problem:** #256 removes only the records that `main` holds. The records
+  of this branch reach `main` when #216 merges, after the cleanup. Four
+  more wait: finding 16 A, decisions 200 to 202 if they stay open, and the
+  new post-merge checks.
+- **Impact if no action:** `plans/follow-ups/` holds records again after
+  the launch cleanup.
+- **Root question:** Where does this branch keep its deferred findings,
+  post-merge checks, and open decisions after the launch cleanup?
+- **Options:**
+  - **A.** Keep them under `plans/follow-ups/`, as the `plans` skill says.
+    Effort: Small.
+  - **B.** Remove this branch's records, and keep each one in full in the
+    description of #216. Git history keeps the files. Effort: Small.
+  - **C.** Move each record to a GitHub issue, linked from the
+    description. This publishes the text on GitHub. Effort: Medium.
+- **Left out:** Only the git-ignored `.context/`, because no other machine
+  sees it.
+- **Wider fix:** None. The `plans` skill, which the user owns, sets the
+  rule.
+- **Recommendation:** B, because it follows the cleanup of #256, and the
+  description keeps every fact.
+- **Action:** ask the user, because the `plans` skill and the request of
+  #256 point two ways.
 
 ## Design
 
@@ -1664,12 +1826,18 @@ Depends on: every other milestone
       and the follow-up items that the change adds. Pull request #216.
 - [ ] After Milestones 12 to 15: merge `origin/main` again, run the
       targeted tests and `npm run check`, and push.
-- [ ] Review the commits since `684c78a4` with the `implementation-review`
-      skill after the push, then apply the fix rule.
+- [x] Review the commits since `684c78a4` with the `implementation-review`
+      skill after the push, then apply the fix rule. Round 5 found 3:
+      finding 15 (AltGr) and finding 17 (lookup hooks) were removed by
+      their checks, and finding 16 (copy timing tests) is deferred, apply
+      A, because both fix rounds are used. Its wider fix is decision 200.
+      Findings file:
+      `.context/reviews/calummoore/keyboard-shortcuts-settings/findings.md`.
 - [ ] Update the description of pull request #216 with decision 199, the
       correction of 2026-11-11, the new keys, and the new follow-up items.
 - [ ] Delete this plan again when the `plans` skill says, under "Deleting
-      the plan".
+      the plan". It waits for decision 203, which says where the open
+      items go. Drafts: `.context/keyboard-shortcuts/follow-up-drafts/`.
 
 ## Post-merge follow-up (non-blocking)
 
@@ -1681,6 +1849,16 @@ Depends on: every other milestone
       rejection. From the finding check of review round 3.
 - [ ] Check an installed app window in Chrome, and a browser tab in
       Chrome, Firefox, and Safari, on the deployed app.
+- [ ] Check the keys of decision 199 where the key research could not:
+      in Chrome and Firefox on a Mac, Safari, Edge, Windows, and the Mac
+      app, that the page gets ⇧⌘C, ⌥⌘C, ⇧⌘M, ⇧⌘G, ⇧⌘Y, ⌥⌘X, ⌥⇧⌘P, and
+      ⌥⌘F, and their Windows and Linux keys. Check that a selected text
+      does not let a macOS Service take ⇧⌘Y or ⇧⌘M, that Open PR on GitHub
+      opens a tab from a key press in Safari and Firefox, and that the
+      clipboard write of each copy key works in Safari, Firefox, and the
+      Mac app. Merge PR merges at once, so check it only on a test
+      repository. The claims are in
+      `.context/keyboard-shortcuts/key-table-newer.md`, section 9.
 - [ ] On Linux with the Alt+Shift layout switch, check in Firefox that
       Alt+Shift+1 opens workspace 1, in either order of the modifiers, and
       that Firefox reports the switch key as GroupNext. Chrome passed this
