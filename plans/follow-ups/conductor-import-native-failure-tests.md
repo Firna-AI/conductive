@@ -1,0 +1,100 @@
+# Native failure adapters lack regression coverage
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, the supplementary review of round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 30. It includes the independent finding check, its two new observations, and the root outcome of the same day.
+- **Location:** `runner/src/providers/native-history.ts:7-38`, the recognizers. `runner/src/providers/claude.ts:86-92`, the mapped `failed` event, and `:158-164`, the thrown stream error. `runner/src/providers/codex.ts:168-186`, the `thread/start` and `thread/resume` error. `runner/src/providers/failure.ts:39-44`, the mapping to `native_history_unavailable`. `runner/src/providers/rpc.ts:89-105`, the `code` and `data` reads of `AgentRpcError`. `runner/src/engine-runtime.ts:212-222`, the start-rejection fallback, and `:226-237`, the event fallback. `runner/src/engine-import.test.ts:42-46` and `:141-145`, the fake failures. The first review cited `runner/src/providers/native-history.ts:7-37`, `runner/src/providers/claude.ts:85-91`, `runner/src/providers/codex.ts:160-176`, `runner/import.md:136-145`, and `runner/src/engine-import.test.ts:44`.
+- **Reason:** The import review used both of its source fix rounds, and this coverage gap is not critical.
+
+- **History:** 2026-11-11, root integration record. The Location field now points to `16a4f76c`. The detailed static trace keeps its reviewed source citations. The reviewed Location field was:
+
+> `runner/src/providers/native-history.ts:7-38`, the recognizers. `runner/src/providers/claude.ts:86-92`, the mapped `failed` event, and `:158-164`, the thrown stream error. `runner/src/providers/codex.ts:158-176`, the `thread/start` and `thread/resume` error. `runner/src/providers/failure.ts:39-44`, the mapping to `native_history_unavailable`. `runner/src/providers/rpc.ts:89-105`, the `code` and `data` reads of `AgentRpcError`. `runner/src/engine-runtime.ts:212-222`, the start-rejection fallback, and `:226-237`, the event fallback. `runner/src/engine-import.test.ts:42-46` and `:141-145`, the fake failures. The first review cited `runner/src/providers/native-history.ts:7-37`, `runner/src/providers/claude.ts:85-91`, `runner/src/providers/codex.ts:160-176`, `runner/import.md:136-145`, and `runner/src/engine-import.test.ts:44`.
+
+- **Source:** Review. **Category:** Test. A test finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Medium. A silent regression stops each imported session that cannot resume from continuing. The member keeps a workaround: a new session whose message names the old document.
+  - Confidence is High. File reads, a tracked-file search, and the diff show that no test gives a native-history input to a real adapter, and that no test rejects a provider start with `NativeHistoryError`.
+  - Harder later is No. The tests can land at any time with the same cost.
+- **Terms:**
+  - **Native history:** the agent's own saved session file, copied from Conductor into the cloud computer.
+  - **Fallback:** a fresh agent session that reads the old Markdown document after a definite native-history failure.
+  - **Provider adapter:** the runner module that talks to one agent program: `runner/src/providers/claude.ts` for the Claude SDK, and `runner/src/providers/codex.ts` for the Codex App Server.
+- **Background:**
+  - Conductive imports local Conductor workspaces into cloud workspaces. Activation copies each agent's saved session file into the cloud computer. The runner then resumes that agent session from the native history.
+  - When the agent cannot resume it, the runner starts a fresh session that reads the old Markdown document.
+  - Claude and Codex return different errors when native history cannot resume. Their provider adapters classify those errors. The engine then permits fallback only for that classified failure.
+  - `runner/import.md:136-143` says that only a definite native-history failure gives the document fallback, once. A generic login, network, process, or abort failure keeps the native preparation.
+  - `docs/protocol/chat-and-events.md:162-166` states the requirement for the person: a session that cannot resume starts fresh and links to its document.
+  - The testing rules ask for a test of each error path that a requirement states or that a caller handles, at the lowest public boundary.
+- **Problem:**
+  - `native-history.ts:7-12` recognizes two Claude texts. Lines 24-38 recognize three Codex RPC errors.
+  - `claude.ts:86-92` checks a mapped `failed` event. Lines 158-164 check an error that the SDK stream throws. Both Claude calls convert a match to `NativeHistoryError` only when `options.importedHistory` is true.
+  - `codex.ts:158-176` converts a matching `thread/start` or `thread/resume` RPC error to `NativeHistoryError`. The provider start then rejects.
+  - `failure.ts:39-44` maps `NativeHistoryError` to the code `native_history_unavailable`. `runner/src/engine-import.ts:16-24` permits fallback only for that code.
+  - No provider test supplies a recognized native-history error. The engine tests emit `native_history_unavailable` directly through `FakeProvider.emit`, at `engine-import.test.ts:42-46` and `:141-145`. `runner/test-support/engine.ts:17` and `:30` give the engine only fake providers.
+  - The Codex failure does not reach the engine as an event. `engine-runtime.ts:212-222` catches the start rejection, calls `failureCause`, then calls `fallbackImportedHistory`. No test makes a provider start reject with `NativeHistoryError`. The engine tests cover only the event route at `engine-runtime.ts:226-237`.
+  - So each of these changes passes every current test:
+    - a recognizer that always returns false
+    - a removed `importedHistory` gate
+    - a removed `failure.ts` branch
+    - a removed fallback call in the start-rejection catch, which disables every Codex fallback
+- **Impact if no action:** A later adapter edit can disable the promised fallback without a test failure. The same gap can miss an overbroad match that changes a generic failure into fallback.
+- **Evidence:**
+  - A tracked search found the recognizer texts, `importedHistory`, `NativeHistoryError`, `claudeHistoryFailure`, `codexHistoryFailure`, and `AgentRpcError` in no test file.
+  - The rejecting factories at `runner/src/engine-runtime.test.ts:29` and `:133`, and at `runner/src/engine-shutdown.test.ts:59`, guard against an unexpected Codex start. They assert no fallback.
+  - The import change adds `native-history.ts`, both Claude calls, the Codex call, the `failure.ts` branch, the `code` and `data` fields of `AgentRpcError`, `engine-import.ts`, its tests, and both fallback calls in `engine-runtime.ts`. It changes no provider test file and no provider fixture.
+  - Fixture facts:
+    - `FakeClaudeQuery` in `runner/test-support/claude-query.ts` can deliver a raw result, but its stream cannot throw. So the Claude thrown route needs a small fixture extension or a test-local query.
+    - `FakeAppServer.write` in `runner/test-support/app-server.ts:16-29` always answers `thread/resume` with success.
+    - `runner/src/providers/codex-login.test.ts:23-80` shows a test-local wrapper that answers one method with a JSON-RPC error.
+    - A Codex input that arrives as a raw JSON-RPC error reply also covers the `code` and `data` reads in `rpc.ts:89-105`. An `AgentRpcError` that a test builds directly skips those reads.
+    - For Codex, the adapter result is a typed rejection. The failure code appears only after the engine calls `failureCause`.
+  - The current provider failure tests already use the adapter boundary, at `runner/test-support/claude-failures.ts:12-199` and `runner/src/providers/codex.test.ts:208-240`.
+  - No test, build, or probe ran. This is a read of the source and the tests.
+- **Root question:** How do tests prove that each provider's definite native-history failure, and no other failure, reaches one document fallback?
+  - The first review asked how tests must protect the provider errors that select native-history fallback. The finding check replaced it on 2026-11-11. Those words stop at the provider errors, so the options missed the Codex route through the engine's start-rejection branch.
+- **Options:**
+  - **A.** Extend the public Claude and Codex adapter tests with their native-history failure inputs. Assert the exact failure code. Keep a generic failure and a non-imported session distinct. Use the existing SDK and RPC fixtures. Effort: Small.
+  - **B.** Add an engine integration case that uses each real provider adapter and the existing SDK or RPC fixture. Assert one fallback and a completed result. This tests a larger boundary with more setup. Effort: Medium.
+  - **C.** Apply A. Also add one case to `engine-import.test.ts`, with the provider override of `engineFixture`. In it, the start of a prepared imported session rejects with `NativeHistoryError`. Assert one fallback start with the document and one `import.preparation` event. This covers each route at its lowest boundary. It adds one more case to keep in step with [conductor-import-fallback-later-input.md](conductor-import-fallback-later-input.md). Effort: Small.
+  - **D.** Apply C. Before that, capture once the real failure output of the pinned Claude SDK and Codex App Server. Effort: Medium.
+    - Use a local fake model server, as `runner/scripts/codex-capabilities.mjs` does.
+    - Save the output under the ignored `.context/` directory, and use its exact texts and routes as the fixture inputs. This also proves the current recognizers.
+    - The thinking-signature failure of the API needs a real login or a cited upstream text, so that part can need the user.
+  - **Codex inputs in A, C, and D:** send each input as a raw JSON-RPC error reply, and assert the typed rejection `NativeHistoryError` at the adapter.
+- **Shared assumptions checked:**
+  - A definite native-history failure gives one fallback, and a generic failure does not. Source: `runner/import.md:136-143`, `docs/protocol/chat-and-events.md:162-166`, and the import design for sessions that cannot continue. Kept.
+  - The existing engine tests protect the engine side for both providers. Source: the first review and `runner/import.md:163-164`. It holds only for the event route. The Codex start-rejection branch has no test. B and C drop it.
+  - The fixture texts and routes match the real output of the pinned agents. Source: the code, because the regular expressions in `native-history.ts` are the only record of the texts. No record of a check against the pinned versions was found. D drops it.
+  - The tests use fakes and start no real agent program. Source: `runner/tests.md:22-25` and the testing rule on third-party behaviour. Kept. D keeps it, because its capture runs once, outside the suite.
+- **Left out:**
+  - Change nothing. It fails the goal.
+  - Recognizer-only tests. They bypass the public adapter calls, and the testing rules forbid tests of a private helper. A reaches the same code through the public adapter.
+  - A test that reads source patterns. It checks implementation text.
+  - A repeat of the fake engine failure. It cannot catch the missing classification.
+  - A test at the Runner level with the endpoint. B is lower and gives the same coverage.
+  - A real agent program in the gate. `runner/tests.md:22-25` excludes it, and the testing rules make third-party behaviour a one-time proof. D is its allowed one-time form.
+  - The Worker. It only receives `import.preparation` and classifies no error.
+  - A shared classification helper in product code. Each adapter still needs its own input test.
+- **Wider fix:** None. The testing rule for error paths that a caller handles is already in force. The upstream formatted errors still need adapter classification. No class-wide test gate is proposed.
+- **Previous examples:** No separate earlier failure was found. The fake-engine tests show this gap, but they are not another defect.
+- **Related:**
+  - [conductor-import-fallback-later-input.md](conductor-import-fallback-later-input.md): the same code. Both use the fallback in `runner/src/engine-import.ts`, its restart callbacks in `runner/src/engine-runtime.ts`, and cases in `runner/src/engine-import.test.ts`. That item's B moves restart ownership into a provider segment. Write the start-rejection case of C against the restart owner that it leaves. The options do not conflict, and neither waits. One runner fallback branch can hold both.
+- **Investigation notes, not part of the recommended fix:**
+  - **Mapped event text after a rewrite.** Confidence: medium, source trace only.
+    - `claude.ts:86-92` reads the message of a mapped `failed` event after `failureCause` at `failure.ts:45-71` rewrites generic failures.
+    - The trace suggests that a session ID that contains `401` or `429` can match a login or rate-limit rule first. Then the native-history recognizer never sees the original text, and no fallback runs.
+    - Nobody reproduced it, and no production failure is known. Check it with an adapter test of C that uses such an ID. Change the code only after that test fails.
+  - **Pinned provider output.** Confidence: low for any specific text.
+    - No record shows that the Claude recognizer texts at `native-history.ts:7-12` match the output of the pinned SDK version. The import design requires a check of the exact fallback point.
+    - The one-time capture of D gives that proof. The smoke tests of the import with a real transferred Claude workspace and a real transferred Codex workspace can collect the same output. Run D in the same session when such a smoke test runs, after the user agrees.
+    - A remembered upstream example that quotes `signature` and `thinking` in backticks is not established evidence. Do not change a recognizer because of it.
+- **Recommendation:** C. It protects the adapter classification and the Codex start-rejection route, each at its lowest public boundary, with Small effort.
+  - The first review recommended A, which leaves the Codex route through the engine untested. The finding check of 2026-11-11 changed the recommendation to C. The root kept C the same day.
+  - D best protects the codebase, because it also proves the inputs, but one of its captures needs a real login.
+- **Action:** fix after merge, apply C, because the import review used both of its source fix rounds, and this coverage gap is not critical.
+  - The first review's Action was: "fix after merge, apply A, because both source fix rounds are used and this coverage gap is not critical."
+  - C is not blocked. It adds regression tests only. It adds no gate, no test for the class, and no change to an assertion or a guard.
+- **Validation of the fix:**
+  - Make each change of the Problem list in turn, and see at least one new test fail for each. Undo each change.
+  - Keep every current assertion, guard, and time limit.

@@ -1,0 +1,154 @@
+# Imported mockup links lose the import state
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. Review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2` raised finding 21, the org tile. Its supplementary review raised finding 33, the native rows and their links. It includes both independent finding checks and the root outcomes of the same day, which joined both findings in one context owner. The check of finding 38, at the merge commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7` on 2026-11-11, added the bar controls and the phone row of every imported state.
+- **Location:**
+  - `docs/mockups/src/screens/WorkspaceListScreen.tsx:266-275`, where every list after an import gets `currentTo: paths.importedList`.
+  - `docs/mockups/src/screens/importedListViews.tsx:25-37`, the four import lists, and `:66-126`, `importListView`, with the shared `base = { viewer, rail: acmeRail }` at `:70` and the list sections at `:71-76`.
+  - `docs/mockups/src/components/workspaces/importSections.ts:85`, the static Archive of an undrawn imported row, `:88`, where `sectionsWithImport` appends `workspaceSections(open)`, and `:92-121`, `archivedWithImport`.
+  - `docs/mockups/src/components/workspaces/sections.ts:75-79`, `linkFor`, and `:88-114`, `rowFor`, which sets each native row's `to` at `:112` and no `archiveTo`.
+  - `docs/mockups/src/components/workspaces/WorkspaceRow.tsx:83-87`, the default Archive destination, and `:150-160`, the live or static row.
+  - `docs/mockups/src/components/workspaces/SidebarLinks.tsx:23`, `:73`, `:93`, and `:111`, the native defaults of Settings, New workspace, Routines, and Search.
+  - `docs/mockups/src/screens/workspaceSidebar.tsx:69-73` and `:113-118`, the sidebars of an imported workspace on desktop. `docs/mockups/src/screens/ConductorImportScreen.tsx:80-85`, the Mac import pages that show imported rows.
+  - `docs/mockups/catalogue-import.md:54-60`, the tile rule of the catalogue, and `:121-141`, the controls that keep the state.
+  - The supplementary review cited `docs/mockups/src/components/workspaces/sections.ts:63-66` for `linkFor`, which is at `:67-71`.
+  - The bar lines are at commit `16a4f76c`. `docs/mockups/src/components/workspace/BarActions.tsx:48`, which links each agent action to `barPaths.sent`. `docs/mockups/src/components/workspace/PullRequestBar.tsx:92-95`, which links the phone row to `checksPaths.none` or `barPaths.noCommitsLocalWork`. `docs/mockups/src/screens/WorkspaceScreen.tsx:166-169`, the bar actions on a phone, `:208`, the phone row, and `:280`, the desktop bar, with no imported destinations. `docs/mockups/src/paths.ts:264-277`, the native bar destinations. `docs/mockups/catalogue-import.md:121-127`, the rule for the controls of an imported workspace.
+- **Reason:** The primary review used both of its mockup fix rounds, and these mockup defects change no product data.
+
+- **History:** 2026-11-11, root integration record. The Location field now points to `16a4f76c`. The detailed static trace keeps its reviewed source citations. The reviewed Location field was:
+
+> - `docs/mockups/src/screens/WorkspaceListScreen.tsx:266-275`, where every list after an import gets `currentTo: paths.importedList`.
+>   - `docs/mockups/src/screens/importedListViews.tsx:25-37`, the four import lists, and `:66-126`, `importListView`, with the shared `base = { viewer, rail: acmeRail }` at `:70` and the list sections at `:71-76`.
+>   - `docs/mockups/src/components/workspaces/importSections.ts:85`, the static Archive of an undrawn imported row, `:88`, where `sectionsWithImport` appends `workspaceSections(open)`, and `:92-121`, `archivedWithImport`.
+>   - `docs/mockups/src/components/workspaces/sections.ts:67-71`, `linkFor`, and `:80-105`, `rowFor`, which sets each native row's `to` at `:103` and no `archiveTo`.
+>   - `docs/mockups/src/components/workspaces/WorkspaceRow.tsx:83-87`, the default Archive destination, and `:150-160`, the live or static row.
+>   - `docs/mockups/src/components/workspaces/SidebarLinks.tsx:23`, `:73`, `:93`, and `:111`, the native defaults of Settings, New workspace, Routines, and Search.
+>   - `docs/mockups/src/screens/workspaceSidebar.tsx:68-72` and `:112-117`, the sidebars of an imported workspace on desktop. `docs/mockups/src/screens/ConductorImportScreen.tsx:80-85`, the Mac import pages that show imported rows.
+>   - `docs/mockups/catalogue-import.md:54-60`, the tile rule of the catalogue, and `:121-141`, the controls that keep the state.
+>   - The supplementary review cited `docs/mockups/src/components/workspaces/sections.ts:63-66` for `linkFor`, which is at `:67-71`.
+>   - The bar lines are at commit `16a4f76c`. `docs/mockups/src/components/workspace/BarActions.tsx:48`, which links each agent action to `barPaths.sent`. `docs/mockups/src/components/workspace/PullRequestBar.tsx:92-95`, which links the phone row to `checksPaths.none` or `barPaths.noCommitsLocalWork`. `docs/mockups/src/screens/WorkspaceScreen.tsx:166-169`, the bar actions on a phone, `:208`, the phone row, and `:280`, the desktop bar, with no imported destinations. `docs/mockups/src/paths.ts:264-277`, the native bar destinations. `docs/mockups/catalogue-import.md:121-127`, the rule for the controls of an imported workspace.
+
+- **Source:** Review. **Category:** Mockup. A mockup finding has no likelihood grade.
+- **History:**
+  - Before the joint update on 2026-11-11, the tile-only record had Effort Small. Its Harder later reason was: "The fix stays in two mockup files and one catalogue page."
+  - 2026-11-11, root extension after the finding check of the bar offer before an activation: the scope now also covers the bar controls and the phone row of every imported state. K stays the joint fix. The question of which actions the bar offers before an activation stays open in its own item.
+- **Grade reasons:**
+  - Severity is Medium. The defects show in saved examples of the visual spec, and they break a recorded design rule of the catalogue. Earlier fixed defects of the same class also carried Medium.
+  - Confidence is High. Static source traces show each step. No catalogue, browser, or mockup build ran.
+  - Harder later is No. The fix stays in mockup files and one catalogue page.
+  - Effort is Medium, the grade of the joint option K.
+- **Terms:**
+  - **Org rail:** the narrow column at the left edge of the app that lists the orgs of the person. The tile of Acme in it opens a list of Acme.
+  - **List after an import:** one of the four mockup lists of Acme in `importLists`: `imported`, `imported-archive`, `imported-archived`, and `imported-activated-archived`.
+  - **Imported frame:** a mockup screen that draws the Import from Conductor section: a list after an import, an imported workspace, or a Mac import page with imported rows.
+  - **Native row:** an example workspace row that predates the Conductor import mockups, such as Checkout address autocomplete or Saved carts.
+  - **Mokly catalogue:** the mockup catalogue under `docs/mockups/`, which serves each saved example at its path, such as `app/imported/list/archived`.
+- **Background:**
+  - The mockups in `docs/mockups/` are the visual spec of the product. The catalogue has separate lists after the import, after the Archive of a never-started import, and for an activated workspace in the Archived group.
+  - Imported frames show an added Import from Conductor section, and they append the existing workspace sections below it. Those sections still give their original catalogue destinations.
+  - The mockup design call of 10 November 2026 says that the imported header and the org rail use matching list destinations, or keep an undrawn control static. Its reason: a catalogue link must not hide the imported section or change the shown state. A branch control also stays static when no matching destination is drawn.
+  - `docs/mockups/catalogue-import.md:121-136` says that the controls of an imported workspace, with the tile of Acme, open only screens of the same workspace in the same state. `docs/mockups/catalogue-import.md:54-56` says that the tile of `app/imported/list` opens the same list.
+  - `docs/mockups/design-import.md:69-74` says that a shared part keeps the native screen when its caller names none. Lines 77-84 keep the chip, the imported sidebar row, and the tile static where the sidebar does not match.
+  - `docs/mockups/README.md:117-121` documents `LinkedControl`, which keeps a control static where no entry draws a matching screen.
+  - On 10 November 2026, the root call on the phone org switcher chose a static switcher over a new view, because existing requirements settle the behaviour.
+  - Native lists and native examples keep their defaults. A change of them would override examples that are on `main`. [native-mockup-links-change-state.md](native-mockup-links-change-state.md) records the native frames.
+  - `docs/protocol/conductor-import.md:60-63` makes the imported section an ordinary org section. The defects are in the mockups only.
+  - Each imported workspace screen draws the pull request bar of `main`. On desktop the bar shows one main action, such as Create PR. On a phone the bar actions sit at the top of the Checks tab, and one row above the body links to that tab.
+  - `docs/mockups/catalogue-import.md:121-127` already says that the controls of an imported workspace open only screens of the same workspace in the same state, and that a state that no entry draws keeps each control static. `docs/mockups/README.md:122` and `docs/mockups/src/screens/importedScreens.ts:8-9` say the same for a null screen. So the existing rule settles where each bar control leads.
+- **Problem:**
+  - **The org tile of the archived lists:**
+    - `importListView` spreads `base`, whose rail is `acmeRail`, into every case. `WorkspaceListScreen.tsx:269` sets `imported` for every list after an import, and `:275` gives the rail `currentTo: paths.importedList`.
+    - `docs/mockups/src/components/layout/OrgRail.tsx:177` gives `currentTo` to the tile of the current org, and `:109` and `:119-122` draw it as a link.
+    - So from `app/imported/list/archived` and from `app/imported/archived-activated/group`, the tile opens `app/imported/list`. That list shows Coupon totals at checkout as Not active in Import from Conductor, with no Archived group.
+    - Commit `8be4ac2a` set this tile only for the list `imported`. Commit `1edc9d72` widened the condition to every list after an import when it added the two archived lists, and kept the one destination.
+  - **The native rows and their Archive:**
+    - `importSections.ts:88` returns the Import from Conductor section, then `workspaceSections(open)`. `rowFor` gives each native row the result of `linkFor`, at `sections.ts:103` and `:67-71`.
+    - So Checkout address autocomplete opens `app/shell/starting`, and Saved carts opens `app/new-workspace/first-turn`. Both destination sidebars come from `workspaceSections`, so they have no Import from Conductor.
+    - `rowFor` sets no `archiveTo`. So `WorkspaceRow.tsx:83-87` links the Archive of each native row to `paths.justArchived`, which is `app/archive/just-archived`. That example also lacks the imported section. An admin sees that Archive on each native row, at `docs/mockups/src/components/workspaces/SectionList.tsx:171-175`.
+    - `importSections.ts:85` already keeps the Archive of an undrawn imported row static, but line 88 leaves each native row live.
+  - **The sidebar links:** in each sidebar of an imported frame, Settings, New workspace, Routines, and Search open native examples without Import from Conductor, at `SidebarLinks.tsx:23`, `:73`, `:93`, and `:111`.
+  - **The bar controls and the phone row:**
+    - `BarActions.tsx:48` links each agent action to `barPaths.sent`. Create PR, for example, opens the native `app/banner/sent/create-pull-request`, at `paths.ts:267`.
+    - `PullRequestBar.tsx:92-95` links the phone row of a branch without a pull request to `checksPaths.none`, which is the native `app/banner`, at `paths.ts:276`.
+    - `WorkspaceScreen.tsx:208` and `:280` pass no imported destinations to the bar, and `:166-169` does the same for the bar actions on a phone.
+    - Every imported state inherits these native destinations: Not active, activating, ready, and failed. `docs/mockups/src/entries/app/imported/ready/index.mockup.tsx:16` uses the same imported state with `sandbox: 'ready'`.
+  - A row with `to` renders a `ScreenLink`, and a row without `to` renders a `div` with the same class, at `WorkspaceRow.tsx:150-160`. So a static row looks the same as a live row.
+  - The callers are `importedListViews.tsx:71-76`, `workspaceSidebar.tsx:68-72` and `:112-117`, and `ConductorImportScreen.tsx:80-85`. `WorkspaceListScreen.tsx:133`, `:155`, and `:263` use the lists on desktop and on a phone. These three files are the only users of `sectionsWithImport` and `archivedWithImport` in `docs/mockups/src`.
+- **Impact if no action:**
+  - In the desktop views of the two archived examples, at every window width, the tile changes the workspace state without Archive or Restore. Reviewers see the wrong lifecycle result.
+  - A reviewer who follows a native row, its Archive, or a sidebar link from a list after an import, an imported workspace, or a Mac import page sees Acme without the import. The catalogue cannot show stable org state through that navigation.
+  - The phone frame draws no org rail, so the tile defect does not reach the phone. On a phone, the list after an import shows the same native rows, and their native way back opens the native list.
+  - From each imported workspace screen, in every state, a bar action or the phone row opens a native example of another workspace. The reviewer leaves the imported example.
+- **Root question:** How does every control of a mockup frame after an import keep the state that the frame shows, or stay static?
+  - The tile: the first review asked how each imported-list control keeps the state of its list. The finding check of 2026-11-11 replaced it with "How does the org tile of each list after an import keep the lifecycle state that the list shows?", because the other controls of these lists already keep the state.
+  - The native rows: the supplementary review asked how a native workspace row should navigate while its org contains the drawn imported workspaces. Its finding check of 2026-11-11 replaced it with "How do the rows of the other workspaces in a sidebar after an import, with their Archive, keep the import in view, or stay static?", because the Archive of the same rows has the same fallback.
+  - The root joined both questions on 2026-11-11, with the sidebar links, because one context owner answers all of them.
+  - The root extension of 2026-11-11 adds the bar controls and the phone row, which the same question covers.
+- **Options:** A to D keep the letters that the review gave the tile question. E to J are the native-row options of the supplementary review, because its letters A to F were taken. K joins B and H in one owner.
+  - Letter map of the native-row options: its A is E here, its B is F, its C is G, its D is H, its E is I, and its F is J.
+  - **A.** Choose the destination of the current list by list state in `WorkspaceListScreen`. Effort: Small.
+  - **B.** Let each `importListView` record own its rail destination, with no common override in the screen. Effort: Small.
+    - B is structural only when it removes the shared `base.rail` default. Each list names its tile in one exhaustive record, so a new list fails the typecheck until it names one.
+    - Use the list itself for `imported-archived` and `imported-activated-archived`. Keep `app/imported/list` for `imported` and `imported-archive`. On the question variant, the tile equals Cancel and changes no state.
+    - Keep the common static org switcher at `WorkspaceListScreen.tsx:286`, which stays right for all four lists.
+  - **C.** Keep the tile of Acme static on the archived list variants. It removes the wrong transitions, but it loses a working list link. Effort: Small.
+  - **D.** Apply B, and add the first permanent catalogue browser check, which opens the two archived lists on desktop and asserts the destination of the tile. It needs a new catalogue browser harness and a new job in the complete gate. A new gate needs the user's approval. Effort: Medium.
+  - **E.** Keep the native rows and their Archive static in imported frames, unless a matching destination already exists. This adds no screen. Effort: Small.
+  - **F.** Draw native workspace destinations that keep the same imported sections and viewer. Link the rows and their Archive to those examples, and keep other frames static. This gives the catalogue a complete route. Effort: Medium when it draws destinations for the inactive admin list only. Destinations for each imported state and viewer make it Large.
+  - **G.** Make the sidebar context own every row destination, with the Archive of each row. Name matching screens explicitly, and keep unmatched rows static. Reuse that owner across the lists after an import, the imported workspace views, and the Mac import pages. Effort: Medium.
+  - **H.** Let the imported context own every sidebar destination: the rows, their Archive, New workspace, Routines, Search, and Settings. Native callers keep their defaults. A destination that the context does not name stays static. It changes shared sidebar parts, but no native output. Effort: Medium.
+  - **I.** Set a marker in each imported frame, which `ScreenLink` and `LinkedControl` honour. Inside the marker, a link stays static unless the imported record names its destination. Effort: Medium.
+    - It covers each present and future control. It hides behaviour in a shared part.
+    - It needs allowed destinations, such as the tiles of other orgs, and a smoke of each imported page.
+  - **J.** Change nothing. Keep each native row as a link to its usual example, as the native Archived lists on `main` do. Record that exception in `docs/mockups/catalogue-import.md`. The import then disappears after ordinary row navigation, against the design call and the fixes of the same class. Effort: Small.
+  - **K.** Apply B and H in one imported context record for each imported frame. The record names the org tile, each row, each row Archive, and each sidebar link. Effort: Medium.
+    - The record has no shared default, so a new list or frame fails the typecheck until it names its destinations.
+    - A destination that the record does not name stays static. Native callers keep their defaults.
+    - Name every row destination, also a row that carries its own destination.
+    - Name the destination of each bar control and of the phone row in every imported state. A control that the bar offers opens a screen of the same workspace in the same state, or stays static where no entry draws one, as `docs/mockups/catalogue-import.md:121-127` says.
+    - K does not decide which actions the bar offers before an activation. Each control that the chosen bar offers follows the same catalogue rule.
+- **Shared assumptions checked:**
+  - Native callers keep their row links, their Archive, and their tile. Source: the rule against overriding functionality on `main`, and the earlier fixes of this class. Kept. Dropping it is blocked.
+  - A link in an imported frame keeps the import in view, or stays static. This holds also for the bar controls and the phone row. Source: the mockup design call of 10 November 2026, `docs/mockups/design-import.md:77-84`, and `docs/mockups/catalogue-import.md:121-141`. It is an agent design call, not a user requirement. Its reason holds, because the catalogue is the visual spec. J drops it.
+  - Only the row link needs a fix. Source: the first text of the native-row finding. It does not hold, because the Archive of the same rows and the sidebar links have the same fallback. E, F, and G name the Archive in place.
+  - The defect is in the mockups only. Source: the code and `docs/protocol/conductor-import.md:60-63`. Kept.
+  - More native example screens are optional. Source: the native-row finding. Kept. A, B, C, E, G, H, I, J, and K add no screen.
+- **Left out:**
+  - A common destination of the inactive list. It fails the goal.
+  - Draw another list. Matching archived list entries already exist.
+  - One shared record in `docs/mockups/src/screens/importedScreens.ts` for workspace and list destinations. B is better on every point. That record keys states by session origin, which a list does not have.
+  - A generic "this same screen" marker in the rail or the link. A screen render gets only `viewport` and `colorScheme`, so the marker needs a context for the whole renderer, and the native default must not change. B is better on every point.
+  - A unit test of the destination values. It asserts a copied constant, which protects nothing.
+  - A tile prop in the saved props of each entry. The `list` prop already selects the list, and a second prop lets the serve controls pair any list with any tile.
+  - An automatic rewrite of a catalogue address. No rewrite makes the destination draw the missing section, so it fails the goal.
+  - Static native rows in every list. That overrides navigation on `main`, and E or G is better on every point.
+  - A check or a test over every catalogue link. A structural fix exists, and such a check is a test for the class or a new gate, which the user reserves.
+  - A change of `linkFor` in native contexts. It overrides navigation on `main`, which is blocked, and it gains nothing here.
+  - A product change. The app draws one live list, and the imported section is an ordinary section in it.
+  - A choice of the bar offer before an activation. It is a separate open question with its own item, and the destination rule does not depend on its answer.
+- **Wider fix:** K. One context record names every destination of an imported frame, with no shared default, so a new control or a new list cannot fall back to a native example.
+  - B alone is the structural fix of the tile class, with no shared default. With a default, B is a direct fix, because a new list can inherit a wrong destination again.
+  - H alone is the structural fix of the sidebar class. I is a marker form with hidden behaviour.
+- **Previous examples:**
+  - Commit `8be4ac2a` fixed two earlier cases of this class on the same screens: the phone header that returned to the native list, and the phone org switcher that dropped the import. Both fixes gave each control a matching destination or kept it static. Native callers stayed unchanged.
+  - Commit `76c1ce3` made each lifecycle state of the imported workspace name its own destinations, with no fallback.
+  - The cause commit of the tile case is `1edc9d72`.
+  - The approved imported entry says that the pull request bar reads the branch from GitHub, at `docs/mockups/src/entries/app/imported/index.mockup.tsx:11`. When it was approved, the bar of a branch without a pull request had an outside link to GitHub, at `PullRequestBar.tsx:92-98` of the primary parent `51bbebd0`. The bar of `main` replaced that link with agent actions, which bring the native destinations into the imported screens.
+  - On `main`, the native Archived sidebars show the same row pattern. [native-mockup-links-change-state.md](native-mockup-links-change-state.md) records it.
+- **Related:**
+  - [native-mockup-links-change-state.md](native-mockup-links-change-state.md): a shared wider fix. The same context owner can serve the native frames of `main`, but a change there overrides saved native navigation, so it waits for the user's approval. This item does not wait for it.
+  - [conductor-import-unstarted-archive.md](conductor-import-unstarted-archive.md): the same code. Two of its options add Restore to the archived import row of `archivedWithImport`, at `importSections.ts:92-119`, and redraw the archived import lists in `importedListViews.tsx:56-65`. The context record of K can also carry that Restore destination. Under those options, Restore becomes a valid path back to the inactive list, and the tile destinations of B stay valid.
+  - [conductor-import-bar-before-activation.md](conductor-import-bar-before-activation.md): the same bar. That item decides which actions the bar offers before an activation, an open user question. This item owns only where each offered control leads, in every imported state. Neither waits for the other.
+- **Recommendation:** K. One context owner keeps every destination beside the frame that owns it, as `importedScreensOf` does for workspace screens. No condition of the decision test holds: K applies the recorded design call, adds no boundary behaviour, and is not blocked.
+  - The tile: the first review recommended B. The finding check of 2026-11-11 kept B, with no shared default. The root kept B the same day. This is not a repeat of a wrong earlier fix, because the archived lists came after the earlier fixes.
+  - The native rows: the supplementary review recommended its C, which is G here. Its finding check of 2026-11-11 kept G, and named H in its place if the sidebar links joined. The root joined the sidebar links and chose H on 2026-11-11, to build with B in one later context owner. K is that owner.
+  - The root extension of 2026-11-11 adds the bar controls and the phone row to K. It adds no user question.
+  - The supplementary review proposed to ask the user, because it saw a spec gap. Its finding check and the root found that the recorded design calls settle the side: an undrawn control stays static, and native callers keep their defaults. So no user question remains.
+- **Action:** fix after merge, apply K, because the primary review used both of its mockup fix rounds, and these noncritical mockup defects change no product data.
+  - The tile finding's first Action was: "fix after merge, apply B, because the two historical primary fix rounds are used and this mockup defect changes no product data."
+  - The native-row finding's first Action was: "ask the user, because the new native-row navigation needs a mockup choice that the current recorded calls do not settle."
+- **Validation of the fix:**
+  - State the tile of the two archived variants in `docs/mockups/catalogue-import.md`, near line 55. State the static native rows and sidebar links of imported frames in the same page, near lines 121-141. Add the bar actions and the phone row to the controls that the rule there names.
+  - Run the mockup check, `npm run mockups:check`.
+  - Do a one-time browser navigation check of both archived list examples on desktop, and of each other imported frame on desktop and on a phone. In each imported state, check that each bar control and the phone row open a screen of the same workspace in the same state, or stay static. Save the evidence under the ignored `.context/` directory. Add no permanent test or gate.

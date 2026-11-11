@@ -1,0 +1,94 @@
+# Consent mockup omits the server transfer
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 22. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `docs/mockups/src/components/conductor-import/ConsentAlert.tsx:52-56`, the alert text, and `:26-33`, its doc comment. `docs/mockups/src/entries/mac-app/import/consent/index.mockup.tsx:12-15`, the entry description and rationale. `desktop/src/main.ts:130-139`, the native alert. Shared words scope: `docs/mockups/src/components/conductor-import/ConsentAlert.tsx`, `docs/mockups/src/components/conductor-import/ImportList.tsx`, `docs/mockups/src/components/conductor-import/ImportOffer.tsx`, `docs/mockups/src/components/conductor-import/ImportProgress.tsx`, `docs/mockups/src/components/conductor-import/ImportReport.tsx`, `docs/mockups/src/components/conductor-import/ImportRows.tsx`, `docs/mockups/src/components/conductor-import/ImportSection.tsx`, `docs/mockups/src/components/conductor-import/ImportedParts.tsx`, `docs/mockups/src/screens/ConductorImportScreen.tsx`, `docs/mockups/src/screens/conductorImportParts.tsx`, `src/shell/import/ConductorImportScreen.tsx`, `src/shell/import/ImportListView.tsx`, `src/shell/import/ImportOfferBar.tsx`, `src/shell/import/ImportProgressView.tsx`, `src/shell/import/ImportReport.tsx`, `src/shell/import/ImportRowParts.tsx`, `src/shell/import/ImportSection.tsx`.
+- **Reason:** The primary review used both of its mockup fix rounds, and the native alert already gives the required disclosure.
+
+- **Source:** Review. **Category:** Mockup. A mockup finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Medium. A saved example of the visual spec omits a required consent fact. No product user gets wrong output, because the shipped alert has the sentence.
+  - Confidence is High. A read of both texts and of the requirement shows the difference.
+  - Harder later is Yes. Each new import word that the app and the mockups copy separately adds one more move to the shared words fix.
+- **Terms:**
+  - **Consent alert:** the native macOS alert in which the Mac app asks before its first read of the Conductor data.
+  - **Shared words module:** a TypeScript module under `docs/mockups/src/` that holds user-facing words, which the mockups, the app, and the Mac app all import.
+- **Background:**
+  - Conductive's Mac app can import local Conductor workspaces. Before its first read of the Conductor data, the Mac app shows a native alert. The page then gets the workspace list through the Worker, because the page has no bridge to the Mac app, at `docs/protocol/conductor-import.md:103-105`.
+  - `docs/protocol/desktop-import.md:42-43` says: "The alert says what the Mac app reads. It also says that the Mac app sends the list of workspaces to Conductive, to show it in the app." `docs/protocol/desktop-import.md:44` says that the alert never says that the list stays on the Mac.
+  - The mockups under `docs/mockups/` are the visual spec, and the `mockups` skill keeps them aligned with the implementation.
+  - The repository already shares words between the mockups and the app: `feedbackCopy.ts`, `repositoryChangeCopy.ts`, `attachmentCopy.ts`, `envVarCopy.ts`, and `waitlistCopy.ts`. `desktop/src/main.ts`, `menu.ts`, `updates.ts`, and `window.ts` import `brand.ts` from the mockups.
+- **Problem:**
+  - The mockup alert draws two sentences: "Conductive reads your local Conductor workspaces, with their chats and changed files, to list them. It imports only the workspaces that you choose."
+  - The native alert at `desktop/src/main.ts:134` has three. Its middle sentence is "It sends the workspace list to Conductive to show it in the app."
+  - The titles and the buttons match. Only the transfer sentence differs.
+  - The entry description at `index.mockup.tsx:13` restates only the two mockup sentences. The entry rationale at line 15 says that the list reaches the page through the server, but the drawn alert does not tell the person.
+  - The mockup alert came first, in commit `3f2cc613`. Commit `2a83761e` then added the transfer rule to the protocol, and commit `0829e853` built the native alert with the sentence. Nobody updated the mockup.
+- **Impact if no action:** Each reader of the saved example `mac-app/import/consent` sees a consent alert without a required fact. The visual spec contradicts the protocol and the shipped alert. No workflow publishes the catalogue, and no marketing picture captures this screen.
+- **Root question:** How should the consent example disclose where the workspace list goes?
+- **Options:**
+  - **A.** Add the transfer sentence of the native alert to the mockup. Effort: Small.
+  - **B.** Give the native alert and the mockup one pure source for their consent words. Keep the native behaviour and disclosure. Effort: Small.
+  - **C.** Add one shared words module for the import flow under `docs/mockups/src/components/conductor-import/`, as `feedbackCopy.ts` and `repositoryChangeCopy.ts` do for their features. Effort: Medium.
+    - Put the consent words in it, with the native text byte for byte.
+    - Move into it only the words that the import pages and their mockups already show the same. A static count on 11 November 2026 found these 25 literals, where `{x}` stands for an inserted value:
+      - "Add {x} to {x} first."
+      - "Allow access to list your workspaces"
+      - "An admin of {x} can add {x}."
+      - "Ask again"
+      - "Conductor workspaces"
+      - "Dismiss the offer"
+      - "Import 1 workspace"
+      - "Import from Conductor"
+      - "Import progress"
+      - "Import your local Conductor workspaces, with their chats, into {x}."
+      - "Import {x}"
+      - "Import {x} workspaces"
+      - "Imported {x}"
+      - "Imported · {x}"
+      - "Nothing to import yet"
+      - "Reading your Conductor workspaces"
+      - "Select all"
+      - "Sessions not imported"
+      - "Stayed on this Mac"
+      - "The workspaces that are open in Conductor on this Mac show here."
+      - "Their session files are no longer on this Mac."
+      - "These files are over 100 MiB, so they stay on this Mac."
+      - "They wait in Import from Conductor. Open one to activate it."
+      - "Try again"
+      - "Workspaces of the import"
+    - Those literals are in 17 files: `docs/mockups/src/components/conductor-import/ConsentAlert.tsx`, `ImportList.tsx`, `ImportOffer.tsx`, `ImportProgress.tsx`, `ImportReport.tsx`, `ImportRows.tsx`, `ImportSection.tsx`, and `ImportedParts.tsx`. `docs/mockups/src/screens/ConductorImportScreen.tsx` and `conductorImportParts.tsx`. `src/shell/import/ConductorImportScreen.tsx`, `ImportListView.tsx`, `ImportOfferBar.tsx`, `ImportProgressView.tsx`, `ImportReport.tsx`, `ImportRowParts.tsx`, and `ImportSection.tsx`. Count again in the fix branch, because a later change can move a word.
+    - The mockups, the pages under `src/shell/import/`, and `desktop/src/main.ts` read the module. No page text changes.
+    - A word that differs today joins the module only after a separate decision settles its side. Two such differences are known and stay out: the mockup page behind the alert says "Waiting for your answer" while the app shows "Reading your Conductor workspaces", and the app shows sizes as estimates with "about" and bytes "on the way" while the mockups draw exact sizes.
+    - The desktop build compiles imported mockup modules, because `desktop/tsconfig.build.json` sets `rootDir` to the repository root, as it does for `brand.ts`. `desktop/electron-builder.yml` packages `dist/app/**`. Both TypeScript configs accept a `.ts` import, as `docs/mockups/src/screens/marketingPictureCaptures.ts:19` already uses.
+- **Shared assumptions checked:**
+  - The native words are the right side, and the mockup follows them. The protocol settles the side, so the rule that blocks a choice between a mockup and the product does not apply. Kept.
+  - The consent stays a native alert that the main process draws. Kept.
+  - The native words stay as they are. A new wording is a choice between two correct texts. Kept.
+  - Each option changes only words that are already settled. Kept, because the two known differences need their own choice of side.
+- **Left out:**
+  - Omit the transfer. It breaks the requirement and removes a fact that the person needs before Allow.
+  - Remove consent. It breaks the approved scan rule.
+  - Change nothing. The visual spec must match the implementation.
+  - A words module that the Mac app owns. B is better on every point, because the repository keeps shared words under `docs/mockups/src/`, and no mockup imports Mac app source.
+  - A test that compares the two copies. B and C leave no second copy to compare.
+  - One component for both alerts. The Mac app draws its alert with `dialog.showMessageBox`, so it cannot render a React component.
+- **Wider fix:** C. The class recurs in the import flow, and C removes the separate copies of the whole flow, so a later word change reaches every side. B is the same structural fix at the scope of one alert.
+- **Previous examples:** No earlier case of this defect class was found. The fix pattern is on `main`: `feedbackCopy.ts` says "The mockups choose them, and the app can share them." `repositoryChangeCopy.ts` says "The mockups and the app share them."
+- **History:** 2026-11-11, before the supplementary links: "None. The button destinations `allowTo` and `denyTo` of `ConsentAlert`, through `AlertButton`, come from commit `8be4ac2a`. Each option keeps them, because a words module holds no destination."
+- **Related:**
+  - [conductor-import-consent-wait-state.md](conductor-import-consent-wait-state.md): work that waits for an answer, and the same files for its A. C adds a word that differs today only after its side is settled, so the consent-wait words join the module only after the user answers that item. One branch can apply both.
+  - [conductor-import-size-progress-contract.md](conductor-import-size-progress-contract.md): a shared wider fix, and work that waits for an answer. The size and progress words join the module only after the user answers that item. This item does not wait for it. Its F can read the module.
+  - The button destinations `allowTo` and `denyTo` of `ConsentAlert`, through `AlertButton`, come from commit `8be4ac2a`. Each option keeps them, because a words module holds no destination.
+- **Recommendation:** C. It gives each settled import word one home. No condition of the decision test holds: C changes no requirement, adds no boundary behaviour, and is not blocked. The choice between B and C is an agent call.
+  - The first review recommended B. The finding check of 2026-11-11 changed the recommendation to C. B stays a sound Small choice if the class is scoped to this alert.
+  - The root chose C on 2026-11-11, and kept the two known differences out of this refactor.
+- **Action:** fix after merge, apply C, because the primary review used both of its mockup fix rounds and the native alert already gives the required disclosure.
+  - The first review's Action was: "fix after merge, apply B, because the two historical primary fix rounds are used and the native alert already gives the required disclosure."
+- **Validation of the fix:**
+  - Update the entry description, the entry rationale, and the doc comment of `ConsentAlert` to the three sentences.
+  - Add one line about the shared words to `desktop/src/import/README.md` and to `docs/mockups/mac-app.md`, as `docs/mockups/README.md:81` does for `attachmentCopy.ts`.
+  - The refactor keeps the native text byte for byte, so it needs no new test.
+  - Run `npm run mockups:check`, the desktop typecheck and build, and the app tests of the import pages.
+  - Do a one-time visual check of `mac-app/import/consent` and of each import page, and save the evidence under the ignored `.context/` directory.

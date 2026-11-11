@@ -1,0 +1,88 @@
+# Ignore checks drop tracked nested files
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 8. It includes the independent finding check and the root outcome of the same day. It also records the open observation about `desktop/src/import/candidate-paths.ts:23` that the child review of head `d6bd4fbf` left for this review.
+- **Location:** `desktop/src/import/candidate-paths.ts:16-35`, the walk callback: the root ignore call at `:18`, the nested ignore call at `:23`, and the drops at `:30-32`. `desktop/src/import/git.ts:166-189`, `ignoredSourcePaths`, which runs `check-ignore --no-index` with `GIT_INDEX_FILE` set to the absent `walk-ignore-index` of `desktop/src/import/git.ts:237`. `desktop/src/import/source-walk.ts:53-55`, which drops each returned path. `desktop/src/import/inventory.ts:78-100`, the candidate lists, and `:104-154`, the records. `desktop/src/import/README.md:43`, the nested rule.
+- **Reason:** This High finding can lose data, and the import review used both of its fix rounds, so only the user can release the third source fix round that the fix needs.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Likelihood is Rare. It needs an untracked or newly staged nested repository that the outer rules do not hide. No usage data says how often Conductor workspaces hold one.
+  - Confidence is High. The drop follows from Git's documented `--no-index` behaviour, and from a passing Linux assertion about the root call. No run reproduced a dropped tracked file.
+  - Harder later is Yes. Each workspace that a released Mac app imports before the fix lacks those files without notice. A later fix cannot reach those imported workspaces.
+- **Terms:**
+  - **Nested repository:** a folder in the workspace with its own `.git` entry. The outer Git lists it once: as `nested/` when untracked, or as `nested` when newly staged.
+  - **Tracked file:** a file that the index of a repository holds. Git never applies an ignore rule to a tracked file.
+  - **Walk callback:** the `ignored` function at `desktop/src/import/candidate-paths.ts:16-35`. The walker gives it every walked path and each nested repository.
+  - **Ignore calls:** the two `check-ignore` runs of the walk callback. The root call runs from the workspace root, at `:18`. The nested call runs from each nested repository, at `:23`.
+- **Background:**
+  - Conductive's Mac app imports local Conductor workspaces into cloud workspaces. For each workspace, the Mac builds an inventory of the changed, untracked, and `.context` files, and uploads them with a Git bundle. At activation, a cloud computer restores them over a checkout of the imported HEAD.
+  - `desktop/src/import/inventory.ts:84-92` lists untracked paths, where Git lists an untracked nested repository once, as `nested/`. `:78-83` adds index paths that HEAD lacks, so a newly staged nested repository arrives as `nested`.
+  - For a folder candidate, `desktop/src/import/source-walk.ts:22-51` records every walked path. It skips each `.git` entry and records its folder as a repository.
+  - The root call of 11 November 2026 keeps the outer workspace's ignore inputs and the applicable nested local exclusions, and adds no Git process for an ordinary workspace. Under Git's rules, an exclusion applies only to an untracked file.
+  - The gitignore manual says: "A gitignore file specifies intentionally untracked files that Git should ignore. Files already tracked by Git are not affected". The `check-ignore` manual says that tracked files "are not subject to exclude rules; but see --no-index", and that `--no-index` means "Don't look in the index when undertaking the checks".
+  - `docs/protocol/conductor-import.md:126` stores "the changed and untracked files that Git sees". `docs/protocol/conductor-import.md:197-199` says that the activation must restore the work exactly.
+- **Problem:**
+  - Both ignore calls run `check-ignore --no-index` against an absent index. So both report a tracked nested file that an ignore pattern matches.
+  - The root call also reads the `.gitignore` files inside the nested repository. `desktop/src/import/inventory-nested.test.ts:112-117` expects `nested/inner.env` in its result, and only `nested/.gitignore` names that file. That test passes on Linux.
+  - The callback never reads the tracked paths of any repository. It drops each path that either call returns.
+  - The inventory builds records only from the kept paths. `desktop/src/import/package.ts:56-63` puts only files over 100 MiB into the result list. So a dropped tracked file gets no package record and no result entry. The scan and the upload both omit it.
+  - Ordinary inputs are enough, once a nested repository exists:
+    - an outer build-output pattern, such as `lib/`, `bin/`, `build/`, or `dist/`, over a folder that the nested repository tracks, because an unanchored pattern matches at any depth
+    - a nested file from `git add -f`, or a file that a later `.gitignore` line names
+    - a user pattern, such as `.vscode/`, over a file that the nested repository tracks
+    - a nested folder staged with `git add -f` under an outer pattern, which loses every tracked file
+- **Impact if no action:** The imported workspace lacks committed files of the nested repository. The import reports success, and its result names no omitted file. The outer bundle cannot restore them, because the outer commits do not hold the nested blobs. The Mac copy stays unchanged, so the loss becomes final when the person removes the Mac copy and has no other copy.
+- **Root question:** How should an import keep tracked nested work while respecting exclusions for untracked files?
+- **Options:**
+  - **A.** Read the tracked paths of each nested repository that the walk meets. Exempt those paths from the ignore checks, and add a regression with a matching ignore rule. Effort: Small.
+    - The exemption must apply to the combined result of both ignore calls. An exemption only at the nested call at `:23` leaves the drops of the root call.
+  - **B.** Give each expanded path a source classification that records its owner repository and its tracked state. Apply ignore rules only to untracked paths. Use that classification for the walk, the inventory, and the result. Effort: Medium.
+    - The innermost repository owns each path, because a middle repository can stage a deeper one as one entry.
+    - Keep `--no-index` and the absent index for both calls. The root call needs them for the staged form, and the nested call needs them when it stages a deeper repository.
+    - Read each nested index through that repository's own Git directory. A copied split index fails without its shared index file.
+    - The inventory re-adds the parent folders of kept files, at `inventory.ts:109-111`. So a tracked file below an ignored folder keeps its folder record.
+    - The result clause has no effect for this item. So B does not wait for the submodule decision, which can reuse the record later.
+  - **C.** Save nested repositories as separate Git packages with their own tracked and untracked overlays. This also needs a restore contract for those repositories. Effort: Large.
+- **Shared assumptions checked:**
+  - A file that a nested repository tracks must import, also when an ignore rule matches it. Source: Git's manuals, `docs/protocol/conductor-import.md:126` and `:197-199`, and the root call of 11 November 2026. Kept.
+  - Untracked files of a nested repository still follow the outer rules and the nested rules. Kept, because it keeps files such as an untracked `.env` on the Mac.
+  - Only a nested repository that the walk meets gets an extra Git read. `inventory-nested.test.ts:20` asserts no ignore call for an ordinary workspace. Kept.
+  - A and B import the nested repository as plain working files, without its `.git` data, and need no result entry or contract change. Kept for the bounded import. C drops both.
+- **Left out:**
+  - Apply no ignore rule to nested files. It uploads excluded untracked files, against the root call of 11 November 2026.
+  - Keep the current check. It drops tracked work.
+  - Let Git list each nested repository with `ls-files --cached --others --exclude-standard`. B is better on every point. B keeps the no-follow walker and its change check. A Git list also needs the parent classification of [conductor-import-replacement-files.md](conductor-import-replacement-files.md), and extra work to keep empty folders.
+  - Name each such file in the result as staying on the Mac. It fails the goal, because these files can restore as plain files.
+  - Exempt tracked nested files only from the nested rules. It still drops committed files, such as a tracked `lib/` folder under an outer `lib/` rule, against the exact restore. No requirement makes an outer pattern a secret filter for committed files.
+  - Refuse the import, or warn in the scan row. A refusal is a new rejection, and neither keeps the work.
+  - Remove `--no-index` from the nested call only. The root call still drops the same files. A nested index that stages a deeper repository also makes `check-ignore` stop with an error.
+  - A README note that tracked nested files can drop. It breaks the exact-restore rule, which stays.
+  - A guard that stops the import, or a test for the class. B is structural, and both need the user.
+- **Wider fix:** B. No ignore result can then drop a tracked path. Its tracked-state classification can also serve the submodule decision.
+- **Previous examples:** No earlier source occurrence was found. `desktop/src/import/inventory-nested.test.ts:47-56` commits only `nested/plain.txt`, and no rule matches it. A search of `desktop/src` and `desktop/tests` finds no other nested repository case and no forced add.
+- **Related:**
+  - [conductor-import-replacement-files.md](conductor-import-replacement-files.md): the same code and a shared wider fix. One record for each walked path can hold the parent kind of that item and the owner and tracked state of this item. Apply both in one unit, so that the walker changes once. No conflict.
+  - [conductor-import-submodule-working-content.md](conductor-import-submodule-working-content.md): a shared wider fix, not a wait. Each answer that copies or reports submodule files through the walker needs the same tracked-state rule. One repository-restore contract would serve C here and repository restoration there. No conflict.
+  - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md): a possible shared wider fix. The classification of B can feed its per-file dispositions. No shared cause, no conflict, and no wait.
+  - [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md): the same code, for B only. Both change `inventory()`. Keep the walk inside its cleanup scope. No conflict.
+  - [conductor-import-split-index-scan.md](conductor-import-split-index-scan.md): the same code, minor. That fix changes the private index copy in `controlledWorktree`. It must keep the absent ignore index of `desktop/src/import/git.ts:237`, which both ignore calls use. No conflict.
+  - [conductor-import-fixture-permissions.md](conductor-import-fixture-permissions.md): the same code, and work that waits. The regression of this item belongs in `desktop/src/import/inventory-nested.test.ts`, which fails on both Mac CI jobs at its first tuple. Land it with that fixture fix, or the new case gives no Mac result.
+  - [conductor-import-sparse-checkout-deletions.md](conductor-import-sparse-checkout-deletions.md): a shared wider fix. B here gives each expanded path its tracked state, and that item needs one classification of each outer index path. One owner can hold both.
+- **Recommendation:** B. Each walked path then carries its owner repository and its tracked state, so no ignore result can drop a tracked path.
+  - No condition of the decision test holds for B. The stored-work rule, Git's manuals, and the root call of 11 November 2026 settle that tracked files import. B adds no boundary behaviour, rejection, gate, lint, or test for the class, and it weakens no test.
+  - The first review recommended B, and the finding check of 2026-11-11 kept it. The root kept B the same day.
+- **Action:** ask the user, because this High finding can lose data and the import review used both of its fix rounds, so only the user can release a third source fix round. The options hold no product-policy choice.
+  - The root recorded this Action on 2026-11-11. The import reports success with no warning, and the removal of the old Mac copy can remove the only changed bytes.
+  - Without the round limit, the fix rule gives `fix now, apply B`, because the severity is High.
+  - The first review's Action was: "ask the user, because silent omission can lose imported work and the two authorized fix rounds are used. The review owner must decide whether to request another fix round."
+- **Validation of the fix:**
+  - Name the break that each file of the regression catches:
+    - a tracked nested file that only the root call drops, such as a tracked `lib/index.js` under an outer `lib/` rule
+    - a file from `git add -f` that only the nested call drops, through `nested/.git/info/exclude`
+    - one untracked file under each rule, which stays excluded
+  - Assert the exact inventory records. See the new case fail on an assertion first.
+  - Land it with the fixture fix of `inventory-nested.test.ts`, or put it in its own focused test.
+  - Update `desktop/src/import/README.md:43`. No protocol doc, public guide, or legal page restates this behaviour.
+  - Keep every current assertion, guard, and time limit. Record pass counts on Linux, Apple silicon, and Intel.

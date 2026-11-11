@@ -1,0 +1,124 @@
+# Import sizes have two display contracts
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, the supplementary review of round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 35. It includes the independent finding check, its two new observations, and the root outcome of the same day.
+- **Location:**
+  - Mockups: `docs/mockups/src/components/conductor-import/ImportList.tsx:70`, `:139`, and `:151`, the exact sizes. `ImportRows.tsx:44-45`, the unfinished line. `ImportProgress.tsx:35-37`, the completion helper, `:39-61`, the rows, `:58`, the running row, and `:77-94`, the head and the bar. `docs/mockups/src/entries/mac-app/import/progress/index.mockup.tsx:13` and `docs/mockups/src/entries/mac-app/import/unfinished/index.mockup.tsx:11`, `:23`, and `:30`. `docs/mockups/src/fixtures/conductorImport.ts:41-42`.
+  - App: `src/shell/import/ImportRowParts.tsx:24-26` and `:103-104`. `src/shell/import/ImportListView.tsx:24-31`. `src/shell/import/ImportProgressView.tsx:30-42`, the amounts, `:57` and `:64`, Finishing and the imported row, `:68-83`, a failed row, and `:99-101` and `:122`, the bar with no share. `src/app/import/import-uploads.ts:118-127`, the end of a row.
+  - Mac and Worker: `desktop/src/import/upload-part.ts:47-57`, the in-flight bytes. `worker/conductor-import/broker-events.ts:122-127`, the relay. `docs/protocol/desktop-import.md:93-94`, the stored-bytes sentence.
+  - The first review cited `upload-part.ts:56-69`, but that file has 58 lines. It cited `desktop-import.md:69-73` for the estimate rule, which is at `:69-71`.
+- **Reason:** Each option decides which side of a mockup and page mismatch is right, and no requirement or user decision chooses the size mark, the bar, or the byte states.
+
+- **Source:** Review. **Category:** Mockup. A mockup finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Medium. The visual spec has a visible defect and a spec gap. The product works, and no data is at risk.
+  - Confidence is High. Each cited line was read at head `cfbf916c`. Nobody ran the mockups or the app, so nobody saw the drawn pages.
+  - Harder later is No. No stored format or public field changes under the recommended option.
+  - Effort is Medium, the grade of A after the finding check.
+- **Terms:**
+  - **Stored bytes:** the bytes of the parts that the Worker has verified for one reservation.
+  - **In-flight bytes:** one part that the Mac sent with a PUT and that the Worker has not verified yet. The page calls them "on the way".
+  - **Reservation:** the Worker record that owns the upload of one workspace until the Worker creates the workspace.
+  - **Complete and done events:** `complete` names the new workspace. `done` ends the operation after the result pages.
+- **Background:**
+  - Conductive's Mac app imports local Conductor workspaces into an org. Before Import, the import list shows the upload size of each row and of the selection. The Mac estimates these sizes from Git metadata, because the scan builds no package.
+  - During the upload, the page shows the progress of each row.
+  - The mockups under `docs/mockups/` are the visual spec. The import mockups came first. Commit `1edc9d72` later built the app views with another model, and it changed no mockup component.
+  - `docs/protocol/desktop-import.md:69-71` says that the scan builds no bundle before Import: "So the size of the commits can be an estimate."
+  - `docs/protocol/conductor-import.md:73-74` and `:97-99` require the row size and the selection size before Import. `:183-184` has the Worker check each stored part against its size and SHA-256, and a part that does not match counts as missing. `:185-187` creates the workspace when every part is stored and checked. `:194-196` requires the progress of each row. It requires no whole-import bar and no share.
+  - No user decision chooses the size mark, the bar, or the byte states. The import mockup calls and the build of the app views are agent records.
+- **Problem:**
+  - The mockups draw exact amounts:
+    - `ImportList.tsx:70` shows the size of each row as `formatSize(row.upload)`. `:139` and `:151` show the size of the selection as an exact sum.
+    - `ImportRows.tsx:44-45` says "Unfinished: {stored} of {row size} uploaded".
+    - `ImportProgress.tsx:58` shows "{sent} of {row size}" for a running row. `:77-78` and `:85-93` show "{sent} of {total}" and a bar with `value={sent / total}`, where the total is the sum of the row sizes.
+    - The entry `progress/index.mockup.tsx:13` says: "The bar counts the bytes of the whole import." The entry `unfinished/index.mockup.tsx:11`, `:23`, and `:30` states exact amounts, such as "uploads all 6.2 MB".
+    - The fixture type at `conductorImport.ts:41-42` gives each row a numeric size, so no mockup draws a row without a size.
+  - The mockup completion helper at `ImportProgress.tsx:35-37` marks a row complete when its sent bytes reach its row size. `:43-50` then shows the chip and "Imported · {row size}".
+  - The app draws another model:
+    - `ImportRowParts.tsx:24-26` writes the size of a row as "About {size}". A row without an estimate shows no size.
+    - `ImportListView.tsx:24-31` writes the selection as "· about {size}". It hides the size when a selected row has no estimate.
+    - `ImportRowParts.tsx:103-104` writes the unfinished line as "{stored} of about {size} uploaded".
+    - `ImportProgressView.tsx:30-40` writes "{stored} of about {size} uploaded, {in-flight} on the way".
+    - `ImportProgressView.tsx:122` draws the bar with no value. The comment at `:99-101` says that the bar "shows that the import runs, and no share".
+    - `ImportProgressView.tsx:57` shows "Finishing" after `complete` and before `done`. `:64` then shows "Imported · {stored bytes}".
+    - `import-uploads.ts:118-127` ends a row from the end of its operation, not from a byte count.
+  - The mockups have no separate in-flight state.
+- **Impact if no action:**
+  - A reader of the visual spec sees exact sizes, a byte total, and a bar share. The shipped page shows "about", a bar without a share, an extra amount, and a Finishing phase.
+  - So the spec cannot guide a later change of these pages. A change that follows the mockup can bring back a false share or a completion by byte count.
+  - The words "on the way" also name bytes that already reached storage and wait for verification. This small copy defect of the page belongs to the same question.
+- **Evidence:**
+  - `desktop/src/import/upload-part.ts:47-51` sends the part size as in-flight bytes after a PUT succeeds. `:52-57` then asks the Worker to verify the part, and after the reply it sends zero in-flight bytes.
+  - `worker/conductor-import/broker-events.ts:122-127` relays the verified stored bytes of the reservation and the in-flight bytes of the Mac to the page.
+  - `desktop/src/import/upload-session.ts:66-67` uploads the parts one at a time. Each part holds at most 1,000,000 bytes, from `src/shared/conductor-import-pages.ts:4` and `src/shared/device.ts:7`.
+  - So "on the way" shows at most one part, and only while the Mac waits for the verify reply. It never shows during the network send.
+  - The page runs one upload operation for each row, in turn, at `src/app/import/import-model.ts:207`. So an exact total of a row exists only after its own packing.
+  - No mockup or app run checked these pages. The source of the `@firna/ui` ProgressBar was not read. The code comment says that the bar shows no share.
+- **Root question:** What sizes and progress should the import pages show in both the mockups and the app, when the size before Import is an estimate?
+  - The first review asked how the import should show progress when its initial total is estimated and sent parts still need verification. The finding check replaced it on 2026-11-11. The first words name the verification step of the current mechanism, and they leave out the list sizes, the unfinished line, a missing size, and the completed rows.
+- **Options:**
+  - **A.** Show the estimated selection size and verified stored bytes only. Use an indeterminate bar until completion. Remove the extra unverified-byte display. Update both versions to that model. Effort: Medium.
+    - The first review graded A Small. The finding check corrected it to Medium on 2026-11-11. A changes three mockup components, the mockup step data in `conductorImportParts.tsx`, two entries, and the app helper. It also draws a missing size and the Finishing phase, which can need new mockup variants, a mockup build, and a smoke test of the list, progress, and unfinished pages.
+  - **B.** Keep an estimated total, and distinguish verified bytes from bytes awaiting verification. Use an indeterminate bar and an explicit completion state. Draw those facts in the mockups. Give their shared formatting one owner. Settle accurate words for the second amount. Effort: Medium.
+    - B adds a public fact that `docs/protocol/desktop-import.md:93-94` does not state, so it adds a protocol sentence. Under the repository rule, it then needs a full read of both legal pages and of each public guide.
+  - **C.** Show an estimate before Import, then publish the exact sealed package total during packing. Use that total for determinate progress afterward. This needs a public total field, an initial packing state, and matching mockups. Effort: Large.
+    - The first review graded C Medium. The finding check corrected it to Large on 2026-11-11. C adds a public field through the Worker relay and the public event reader, a packing state in the page, mockup states, and protocol text with the legal-page read. Its exact total exists for one row at a time.
+  - **D.** Keep the drawn visual spec, and change the page to it. Effort: Medium.
+    - Show each size and the selection size without "about".
+    - Draw a whole-import bar of stored bytes over the summed scan sizes. Hold the bar below full until the last row ends. Show no share when a selected row has no size.
+    - Remove the in-flight amount. Keep completion from the operation events, and give the mockup helper an explicit completed state.
+    - Cost: the page states an estimate as an exact amount. The final stored size can differ from the listed size. The bar can stall near the end, or jump to done.
+  - **E.** Count the whole import in workspaces. Effort: Medium.
+    - The head and a determinate bar show the selected workspaces that ended, from the operation events.
+    - Each row shows its stored bytes of about its estimate, with no in-flight amount. Update both versions.
+    - Cost: for one or two workspaces, the bar moves in large steps, and it stays still during one long upload.
+  - **F.** Draw the import rows, the unfinished line, and the upload rows with shared pure parts under `docs/mockups/src/components/conductor-import/`, together with the chosen side. Effort: Medium.
+    - The parts take display values and injected controls, as `WorkspaceChip` takes its `opener`. The mockup screens and `src/shell/import/` render the same parts.
+    - Their words come from the words module of [conductor-import-shared-words.md](conductor-import-shared-words.md) when it exists.
+    - Cost: a refactor of three mockup components and three app views. A refactor keeps the behaviour, so it adds no test. It needs a mockup build, the app tests, and a smoke test of each import page in both versions.
+- **Work for every side:** the chosen side also aligns these states in both versions. No option leaves them out.
+  - A row without a size: the page shows no size for it and hides the selection size. No mockup draws this row.
+  - The completed row: the page shows Finishing between `complete` and `done`, then "Imported · {stored bytes}". The mockup shows "Imported · {row size}" at once.
+  - A row that fails during the visit: the page shows it with its cause and Try again, at `ImportProgressView.tsx:68-83`. No mockup draws that row on the upload page, at `ImportProgress.tsx:39-61`.
+  - Keep completion from the operation events, and keep Try again.
+- **Adjacent fact drift, to correct with the chosen contract:**
+  - `docs/protocol/desktop-import.md:93-94` says that, while it uploads, the Mac app reports the stored bytes of each reservation, and the Worker relays them to the page.
+  - The Mac reports only in-flight bytes. The Worker counts the verified parts, as `worker/conductor-import/reservations.md:48` and `worker/conductor-import/operations.md:47` say.
+  - The person still sees the stored bytes, so the visible requirement holds. The sentence names the wrong producer.
+  - Correct the sentence in the change that applies the chosen side. Change no requirement before the answer.
+- **Shared assumptions checked:**
+  - The size before Import carries the estimate mark "about". Source: `desktop-import.md:69-71` makes the size an estimate. The mark comes from the code and the build of the app views, not from a requirement or a user decision. The mark is a copy choice. D drops it.
+  - A whole-import measure counts bytes. Source: the mockup entry `progress/index.mockup.tsx:13` and the code of both versions. No requirement asks for it, because `conductor-import.md:194-196` asks only for the progress of each row. E drops it.
+  - A row completes from the publication event of the Worker. Source: `conductor-import.md:185-187` and the user's choice of 10 November 2026 on when an imported workspace appears. Kept.
+  - The scan builds no package before Import. Source: `desktop-import.md:69-71`. Kept.
+  - Stored bytes count only verified parts. Source: `conductor-import.md:183-184`. Kept.
+  - The mockups and the app keep separate views. Source: the code. `src/app/README.md:170-172` lets the app reuse pure mockup parts, and `docs/mockups/README.md:139-141` shows such shared parts for env vars. It is not a requirement. F drops it.
+  - `desktop-import.md:93-94` names only stored bytes. Only the Worker area docs at `worker/conductor-import/operations.md:47` and `reservations.md:48` describe the in-flight amount. Kept as a fact.
+- **Left out:**
+  - Build a bundle before Import. It breaks the scan rule at `desktop-import.md:69-71`.
+  - Treat an estimate as an exact completion threshold. It can end a row too early, or leave a row open when the estimate is too high. It contradicts `conductor-import.md:185-187`.
+  - Count unverified bytes as stored. It breaks `conductor-import.md:183-184`.
+  - Change nothing. The `mockups` skill requires the visual spec to match the implementation, so it fails the goal.
+  - Remove the sizes. It breaks `conductor-import.md:73-74` and `:97-99`.
+  - Live progress inside each PUT. It is a detail of the second amount of B, not a separate approach. Stored bytes already move with each part of at most 1,000,000 bytes.
+  - Pack every selected row before the first upload. It is a form of C. It gives an exact whole-import total, but every workspace then waits until the last row is packed.
+- **Wider fix:** F, together with the chosen side. F gives both versions one drawing, so the words, the bar mode, and the row phases cannot drift again. The first review named B, whose formatting owner covers only the formats and the words.
+- **Previous examples:** The missing transfer sentence of the consent mockup is the other import copy drift. The shared words module of [conductor-import-shared-words.md](conductor-import-shared-words.md) removes duplicate agreed text, but it cannot choose byte accounting.
+- **Related:**
+  - [conductor-import-report-after-publication.md](conductor-import-report-after-publication.md): the same code. Its report loss happens between `complete` and `done`, and the page shows that phase as Finishing, which no mockup draws. Every option here keeps completion from the operation events and draws that phase. No option compares sizes, so no option conflicts with its B.
+  - [conductor-import-shared-words.md](conductor-import-shared-words.md): a shared wider fix, and work that waits for this answer. That module takes a word only after its side is settled, so the size and progress words join it only after the user answers here. That item does not wait for this one. F can read the module.
+  - [conductor-import-consent-wait-state.md](conductor-import-consent-wait-state.md): a shared wider fix. Both items are mismatches between the mockup and the page states of the same import page. A shared drawing such as F can also hold its waiting states. Each item keeps its own side choice, and the user can answer both in one message.
+- **Recommendation:** A, with F as its implementation. A shows only facts that the protocol states, keeps an honest estimate and an honest bar, and needs no new public field or requirement.
+  - The first review recommended B. The finding check of 2026-11-11 changed the recommendation to A, and the wider fix to F. B keeps an amount of at most one part, which shows only during verification and never during the network send, and it adds an unstated public fact.
+  - On 2026-11-11 the root chose A with F as the simplest honest facts, as a recommendation for the user. F is the implementation after the side choice, not a separate policy question.
+  - Choose E for a true share without a new field, or C for an exact byte share.
+- **Action:** ask the user, because each option decides which side of a mockup and page mismatch is right, and no requirement or user call chooses the size mark, the bar, or the byte states.
+  - A, B, C, D, and E also have real trade-offs.
+  - Make no interim change of either side before the answer.
+  - The first review's Action was: "ask the user, because the progress model and its mockup differ and the current requirements do not choose the displayed byte states."
+- **Validation of the fix, after the answer:**
+  - Draw the chosen states in the mockups, with a row without a size, Finishing, the completed row, and a failed row with Try again. Run `npm run mockups:check`.
+  - Update the app views and their tests to the same states. See each changed test fail first.
+  - Smoke-test the list, progress, and unfinished pages in both versions, and save the evidence under the ignored `.context/` directory.

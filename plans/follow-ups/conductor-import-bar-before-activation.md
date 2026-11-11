@@ -1,0 +1,108 @@
+# Bar offers actions before an activation
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. The third integration of `main` at `23628f77b7f0dc8ecb8740a7242e666da53e799f` into the primary parent `51bbebd064463071049595c7ecfd3ce5309d6925` found it at the merge commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7`, finding 38. It includes the independent finding check and the root outcome of the same day.
+- **Location:** The lines are at the merge commit `16a4f76c`, tree `f810e562a0f18ce5725a507d19e2b5de6aa08a10`.
+  - `docs/mockups/src/components/workspace/barModel.ts:166`, which hides the bar actions only when `readOnly` holds, and `:117`, which gives Create PR for a branch with no pull request.
+  - `src/shell/workspace/WorkspaceScreen.tsx:150`, which sets `readOnly` only for a suspended org or an archived workspace.
+  - `docs/mockups/src/screens/workspaceBar.ts:23`, the same `readOnly` rule in the mockups.
+  - `docs/protocol/github-banner.md:96` and `:127-128`, the bar rules in force, and `:206-218`, the bar after the merge.
+  - `docs/protocol/imported-workspaces.md:37-52`, the rules before the activation.
+- **Reason:** The recommended option changes a bar rule and the visible offer of the bar, which no recorded user decision covers.
+
+- **Source:** Implementation. **Category:** Docs or spec. A docs finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Medium. A member sees actions that cannot act, and one wrong next step. A workaround exists: the member activates first.
+  - Confidence is High. A static trace of the merged source reads each step. Nobody rendered the page, and no test or probe ran.
+  - Harder later is No. The fix adds no stored format, and the project is not in production.
+- **Terms:**
+  - **Not active import:** an imported workspace whose first activation has not started. Its record has the state `inactive`, and the app shows it as Not active.
+  - **Agent action:** a bar button that sends a fixed prompt as a message of the member who clicks, such as Create PR.
+  - **Early session:** the session that an Activate opens. It exists also after a failed activation.
+  - **Awaits activation:** the check `awaitsActivation` at `src/app/first-start.ts:14-18`. It holds for an import until its first successful activation.
+  - **Message capability:** one fact of the workspace that says whether it takes a message or a new session now. It does not exist yet. One option adds it.
+- **Background:**
+  - Conductive imports local Conductor workspaces into cloud workspaces. An imported workspace has no cloud computer until a member presses Activate. Its chat shows the Activate question in place of the composer, at `docs/protocol/imported-workspaces.md:43-46`.
+  - The import rules say that the workspace "has no first message and no session until its activation", at `imported-workspaces.md:24-25`. They say that no message goes before the activation, because the person chooses when the cloud computer starts.
+  - After the first activation starts, the app accepts messages that wait for the sandbox. This holds during an activation and after a failed one, at `docs/protocol/messages-and-attachments.md:75-83` and `imported-workspaces.md:114-115`.
+  - A failed activation keeps the workspace and its stored work, deletes the cloud computer of the failed start, and offers Try again, at `imported-workspaces.md:121-128`.
+  - The pull request bar shows one main action for each state, at `docs/protocol/github-banner.md:96`. An agent action sends its fixed prompt as a message of the member who clicks, at `github-banner.md:145-148`. It follows each rule of a message from the composer, at `messages-and-attachments.md:198-200`.
+  - The bar hides its actions only for an archived workspace and a workspace of a suspended org, at `github-banner.md:127-128`. Those keep only the links to GitHub. After the merge, the bar offers Continue and Archive, at `github-banner.md:206-218`.
+  - These bar rules cover every workspace, also an import. They were written before imports existed. No sentence names the bar of a workspace from Conductor before a successful activation.
+  - A branch without a pull request has no link to GitHub. Create pull request asks the agent to open the pull request. The user chose this on 10 November 2026, at `github-banner.md:124-126`.
+  - The bar files are byte-equal to `main`. The import change adds the waiting state and the imported mockup screens, so the composed product shows the bar of `main` in them.
+- **Problem:**
+  - Before a successful activation, the bar offers agent actions, such as Create PR for a branch with no pull request. They also show for failed checks with named checks, a conflict, and changes requested, at `barModel.ts:122-123` and `src/github/barView.ts:224-228`.
+  - Before the first activation starts, a press sends no request. `src/chat/state/prompt-actions.ts:29-32` returns `unavailable` without a request when the chat has no open session, and the import has none. The press only shows the chat. On desktop the chat already shows, so the press shows no change.
+  - During and after a failed activation, the early session exists. A press posts a message, at `prompt-actions.ts:42`. The send route stores it and answers 202, at `worker/chat/http-routes.ts:109-116`. `turnDispatching` at `worker/chat/workspace-lifecycle-hooks.ts:81-91` dispatches no turn while the import is unfinished or its state is not ready. So the message waits, and the rules allow it.
+  - After a merge, every member sees Continue, at `barModel.ts:150-160`. Continue refuses each workspace without a cloud computer with HTTP 409 `sandbox_unavailable` and "Open the workspace and try Continue again.", at `worker/lifecycle/continue-admission.ts:64-69`. Opening an import starts nothing, so the words name a wrong next step.
+  - On the imported mockup screens, the bar links Create PR to the native screen `app/banner/sent/create-pull-request`, at `docs/mockups/src/components/workspace/BarActions.tsx:48` and `docs/mockups/src/paths.ts:267`. The phone row links to the native `app/banner`, at `PullRequestBar.tsx:92-95`.
+- **Impact if no action:** A member of a Not active import sees actions whose press only shows the chat with its Activate question. After a merge, a press of Continue names a step that does nothing. The imported mockups leave the import through the bar.
+- **Evidence:**
+  - The offer path is `src/shell/workspace/WorkspaceScreen.tsx:150`, `src/shell/workspace/github/bar-controls.ts:84`, `src/github/useBarControls.ts:89-98`, `src/github/barView.ts:209-223`, and `barModel.ts:163-174`.
+  - Commit and push and Merge do not show before a successful activation. The kept files never connect then, at `src/shell/workspace/files/workspace-files.ts:53-54`. So `localWorkOf` gives `unknown` at `barView.ts:107`, and `barView.ts:217` gives no merge method.
+  - `useBarControls.ts:69-77` shows the chat for each result other than `sent`. `bar-controls.ts:71-78` opens the workspace route when no session is active. The main design for this path is: "Without an open session, the chat shows, where the member can start one", at `bar-controls.ts:50-56` and `src/github/actions.md:83-85`.
+  - No bar path calls Activate or a resume. Continue resumes through `resumeWorkspace`, at `worker/lifecycle/continue-composition.ts:38-45`, which returns without a start for an import that waits for its activation, at `worker/lifecycle/workspace-resume.ts:31-32`.
+  - The mockup imported state has `sandbox: 'inactive'`, `banner: 'none'`, and the default `access: 'write'`, at `docs/mockups/src/screens/workspaceState.ts:252-258` and `docs/mockups/src/screens/barState.ts:43`. So it shows Create PR.
+  - The approved imported mockup hides the write controls of the tab row in the state Not active, at `docs/mockups/src/screens/WorkspaceScreen.tsx:159`, since commit `3f2cc613`. At the approval of the imported entry, the bar of a branch without a pull request had an outside link to GitHub. It is at `PullRequestBar.tsx:92-98` of the primary parent `51bbebd0`.
+  - No test asserts the bar of an import. `src/shell/workspace/imported/ImportedWorkspace.test.tsx:85-146` covers Activate, an old document, and the Archive question, but not the bar.
+  - Limits: this is a static reading. Nobody traced whether a workspace has a cloud computer ID during an activation, so what Continue does then is not proved. If admission passes, `worker/lifecycle/continue-progress.ts:52-70` waits while the state is starting. Nobody traced the delivery of a held message after Try again. The message is stored before the 202 reply, so no loss is inferred.
+- **Root question:** What does the pull request bar of a workspace from Conductor offer before an activation succeeds, so that each action either works or names the real next step?
+  - The first words asked what the bar offers before the activation, so that each press keeps the rule that only Activate starts it. The finding check replaced the question on 2026-11-11, because that rule already holds in the code. The defects are actions that cannot act and a wrong next step, and the period has two parts with different message rules.
+- **Options:**
+  - **A.** Change nothing. In the product, a press shows the chat, and the server refuses a chat write before the first activation. The mockups keep their links to native screens. Effort: Small.
+  - **B.** Change only the mockups. On the imported screens, the bar actions lead to the imported chat with its Activate question. The product stays as it is. Effort: Small.
+  - **C.** Before an activation, the bar offers no agent action and no Continue. The GitHub links and Archive stay. One awaits-activation fact in the shared bar facts gives the product and the mockups one rule. Add the requirement to `docs/protocol/github-banner.md` and `docs/protocol/imported-workspaces.md`, with a test. Effort: Medium.
+  - **D.** Keep the actions. A press before an activation opens the Activate question. Add the requirement and a test for that path. Effort: Medium.
+  - **E.** The bar shows Activate as its one main action until a successful activation. Cost: a new bar action that repeats Activate and Try again of the chat. It also hides the bar messages that the rules accept after a failed activation. It needs docs, product, mockups, and a test. Effort: Medium.
+  - **F.** Hide Continue until a successful activation. Keep the agent actions under the message rules. Cost: before the first activation starts, a press of an agent action still only shows the chat. It needs rules in `github-banner.md` and `continue.md`, a bar fact, the mockups, and a test. Effort: Medium.
+  - **G.** Show no action before a successful activation, only the links to GitHub, as for an archived workspace. Add the rule beside the archived rule and to `imported-workspaces.md`. Cost: it also hides Archive, which works with its question. It also hides the bar messages that the rules accept after a failed activation. Effort: Medium.
+  - **H.** Change no rule. In the mockups, each imported screen gives the bar its destinations from `importedScreensOf`. Before the first activation starts, an agent action opens the imported chat with its Activate question, as the product press does. Each other control stays static where no entry draws its result, as `docs/mockups/catalogue-import.md:120-127` says. In the Worker, the existing Continue refusal names Activate for an import that waits for its activation, in place of "Open the workspace". It keeps its 409 status and its code, so it adds no rejection. Add a route test of the words. Cost: before the first activation starts, a press still only shows the chat. Effort: Medium.
+  - **I.** C, with the agent actions keyed to the message rules. Effort: Medium.
+    - The bar offers no agent action in the state Not active, before the first activation starts, because the workspace then takes no message.
+    - During and after a failed activation, it keeps them, because the composer then takes messages that wait.
+    - Continue stays off until a successful activation, as in C. The links and Archive stay.
+    - The bar fact for the agent actions comes from the workspace state, not from awaits activation. The mockups read the same facts.
+    - The rules go beside the archived rule at `github-banner.md:127-128`, to "After the merge", and to `imported-workspaces.md`. Add a regression test at the bar view.
+    - Cost: a protocol change, and the read of the legal pages and the guides that `AGENTS.md` asks for.
+  - **J.** One message capability of the workspace, beside awaits activation and in `WorkspaceContext`. Every control that sends a message or opens a session honours it. These are the agent actions of the bar, New session of the tabs, and New session of the palette. It does not gate Archive or the GitHub links. The mockups read the same fact. One rule in "Before the activation" of `imported-workspaces.md` names each such control. Cost: a wider change in the product and the mockups, and a new rule. It also settles the New session difference below, and it pairs with the refusal of the agent tool writes on the server. Effort: Large.
+  - **K.** Show Continue as not available until a successful activation. One line under the bar names Activate, as the bar does while a turn runs. Cost: a new bar message and its words, product, mockups, rules in `github-banner.md` and `continue.md`, and a test. It can replace the Continue part of C, F, G, or I. Effort: Medium.
+  - **L.** Before a successful activation, a branch without a pull request offers the link to GitHub that creates one, in place of Create PR. The approved imported bar did this. Cost: it reverses the user's choice of 10 November 2026 for imports. It covers only the state without a pull request. It needs product, mockups, a rule, and a test. Effort: Medium.
+- **Shared assumptions checked:**
+  - "Before an activation" is one period with one rule. Source: the first words, and awaits activation, which holds until a success. The reason is gone, because the message rules accept and hold messages during an activation and after a failed one. F, H, and I drop it.
+  - No bar press may start the workspace. Source: `imported-workspaces.md:45-46` and `:56`, and `src/app/first-start.ts:10-11`. It holds. Kept.
+  - No requirement covers the bar of an import. It is partly wrong. `github-banner.md:96` and `:127-128` cover every workspace, and each press follows the message rules. So a change of the offer changes a requirement. A and H keep the written rule.
+  - A bar control of an imported mockup screen must be a live link. It is not a requirement. `docs/mockups/catalogue-import.md:120-127` keeps a control static where no entry draws its screen. H drops it.
+  - Continue is hidden, or it stays as now. It is not a requirement. `github-banner.md:214-215` and `docs/protocol/continue.md:57-59` show Continue as not available, with a line, while a turn runs. K drops it.
+  - A branch without a pull request offers no link to GitHub. Source: the user's choice of 10 November 2026. It holds as a user decision, but that choice did not consider a workspace without a cloud computer. L drops it, so L needs the user.
+- **Left out:**
+  - A press that activates the workspace. It breaks the rule that the person chooses when the cloud computer starts, at `imported-workspaces.md:56` and `src/app/first-start.ts:10-11`.
+  - Hiding the whole bar. It also hides the GitHub links, which archived workspaces and suspended orgs keep. G is better on every point.
+  - A new error code for the Continue refusal, such as `workspace_not_active`. H gives the same words with no change of the API, so H is better on every point.
+  - A server change. The browser guard already refuses each chat write in the state Not active, at `worker/chat/browser-authorization.ts:45-53`. Continue already refuses a workspace without a cloud computer. The agent tool path has its own item.
+- **Wider fix:** J. One message capability covers every control of the workspace that sends a message or opens a session, but not Archive or the GitHub links. J is blocked, because it changes user-visible behaviour and a rule. C is a direct fix for the bar only, because its fact lives in the bar and must know the import state.
+- **Previous examples:**
+  - The agent tool writes reach a Not active import. [conductor-import-inactive-tool-writes.md](conductor-import-inactive-tool-writes.md) records the deferred fix that applies the existing inactive-only refusal to them. Its outcome is settled, with no user answer pending, and the fix has not shipped.
+  - The sidebar destinations of an imported frame open native screens. [conductor-import-mockup-destinations.md](conductor-import-mockup-destinations.md) gives each imported frame one context record.
+  - The product offers New session in the tabs and the palette of a Not active import, at `src/chat/components/SessionTabs.tsx:153-155` and `src/app/palette/page-actions.ts:83`. The approved mockup hides it at `docs/mockups/src/screens/WorkspaceScreen.tsx:159`. The server refuses the press with "Activate this workspace to start a session." It is a symptom and the scope of J, not a separate question.
+- **Related:**
+  - [conductor-import-mockup-destinations.md](conductor-import-mockup-destinations.md): the same bar. That item owns where each offered bar control and the phone row lead, in every imported state, under `docs/mockups/catalogue-import.md:120-127`. This includes the activated, activating, and failed screens, at `docs/mockups/src/screens/WorkspaceScreen.tsx:208` and `:280`. This item decides which actions the bar offers. Neither waits for the other.
+  - [conductor-import-inactive-tool-writes.md](conductor-import-inactive-tool-writes.md): the same class, and a shared wider fix. That item records the deferred fix that refuses the agent tool writes in a Not active import with the existing `workspace_not_active` refusal. I uses the same boundary for the agent actions of the bar. C and G use a later boundary, so the bar would hide messages that the server accepts. J and that item together cover every write path of the class.
+  - [conductor-import-continue-recovery-copy.md](conductor-import-continue-recovery-copy.md): the same refusal. That item corrects the recovery words of the Continue refusal for an import. It is right under each answer here, because an old tab can still reach the refusal. Neither waits for the other.
+  - [conductor-import-unstarted-archive.md](conductor-import-unstarted-archive.md): the same code. After a merge, the Archive of the bar opens the Archive question that that item discusses. G hides that entry. No option here changes what Archive does, so no option conflicts.
+  - [conductor-import-terms-message-state.md](conductor-import-terms-message-state.md): the same boundary. That item says in the Terms that a workspace from Conductor takes messages after its activation starts. I uses that boundary. No conflict.
+- **Recommendation:** I. It is C with one change: the agent actions follow the message rules. It hides them only before the first activation starts, and it keeps each bar message that the composer takes during and after a failed activation. J best protects the codebase.
+  - The first words recommended C, which hides the agent actions until a successful activation. The finding check of 2026-11-11 changed the recommendation to I. The root kept I the same day.
+- **Decision test:**
+  - I changes a requirement in force. `github-banner.md:96` gives one main action for each state, `:127-128` names only archived workspaces and suspended orgs, and `:208` offers Continue and Archive after a merge.
+  - No recorded user decision covers the bar of an import. The import's user decision of 9 November 2026 covers the start. The user's choice of 10 November 2026 covers the link of a branch without a pull request.
+  - C, E, F, G, I, J, and K refuse no request, so they add no rejection, but they change a rule and the visible offer. A and H follow the written bar rules, and I follows the approved Not active screen. Each has a cost.
+- **Action:** ask the user, because the recommended option changes the bar rule at `docs/protocol/github-banner.md:127-128` and the offer of the bar contract. No recorded user decision covers the bar of a workspace from Conductor. Keeping and hiding the actions also have real trade-offs.
+  - The first words' Action said that the bar before an activation is behaviour at a boundary that no requirement covers. The finding check found that the bar rules cover every workspace, so the root corrected the reason on 2026-11-11.
+  - Change nothing that the answer affects before the user answers.
+- **Validation of the fix:**
+  - For I: a regression test at the bar view. A Not active import shows no agent action and no Continue. During and after a failed activation, the agent actions show, and Continue stays off until a successful activation. Archive and the GitHub links stay.
+  - Make the mockups read the same facts, then rebuild the catalogue and smoke-test the imported pages.
+  - Update the bar rules and the import rules in the same change. Read both legal pages and every public guide in full, as `AGENTS.md` asks for a change of a protocol fact.
+  - See each new case fail first with the current code.

@@ -1,13 +1,17 @@
-# Failed excludes query leaks private Git storage
+# Import copies on the Mac outlive their use
 
-- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-11, from pull request #204, branch `conductor/import-from-conductor-mac-scan-and-upload`, review round 3 of head `d6bd4fbf03c167ab0232fc29442d7c8800653cce`, finding 8. It includes the independent finding check and the review owner's outcome of the same day. The review owner corrected the severity from Medium to Low.
-- **Location:** `desktop/src/import/inventory.ts:55-63`, which creates the storage. `desktop/src/import/inventory.ts:64`, the excludes query before the cleanup scope. `desktop/src/import/inventory.ts:66-103`, the `try` and the `finally` that calls `controlled.dispose()`. `desktop/src/import/git.ts:133-163`, `userExcludesFile`. `desktop/src/import/git.ts:192-244`, `controlledWorktree`, with its `mkdtemp` at line 201 and its own catch at lines 240-243. `desktop/src/import/git.ts:229`, the scan's index copy.
-- **Reason:** This Rare, Low cleanup defect costs the same later and changes no stored format or public contract.
+- **Added:** 2026-11-11, from pull request #204, branch `conductor/import-from-conductor-mac-scan-and-upload`, review round 3 of head `d6bd4fbf03c167ab0232fc29442d7c8800653cce`, finding 8. It includes the independent finding check and the review owner's outcome of the same day. The review owner corrected the severity from Medium to Low. Extended on 2026-11-11 to the whole class of private import copies on the Mac, with finding 15 of pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, its independent finding check, and the root outcome of the same day. After the supplementary review of the same day, the root folded the retention of completed and expired stage payloads into option G.
+- **Location:** `desktop/src/import/inventory.ts:55-63`, which creates the storage. `desktop/src/import/inventory.ts:64`, the excludes query before the cleanup scope. `desktop/src/import/inventory.ts:66-103`, the `try` and the `finally` that calls `controlled.dispose()`. `desktop/src/import/git.ts:133-163`, `userExcludesFile`. `desktop/src/import/git.ts:192-244`, `controlledWorktree`, with its `mkdtemp` at line 201 and its own catch at lines 240-243. `desktop/src/import/git.ts:229`, the scan's index copy. The stage code: `desktop/src/import/stage.ts:47-69`, `prepareStage`, with no `catch` and no `finally`. `desktop/src/import/stage.ts:90-108`, a new output for each build. `desktop/src/import/stage.ts:152-161`, the binding that `sealStage` writes last. `desktop/src/import/stage.ts:165-200`, `reuseStage`. `desktop/src/import/stage-capture.ts:37-94`, the copies of a prepare. `desktop/src/import/upload-package.ts:22-116`, the steps between the prepare and the seal. `desktop/src/import/stage-content.ts:105-119`, `stageResults`. `desktop/src/import/stage-state.ts:34-56`, the stage root, the stage folders, and the bindings.
+- **Reason:** The import review used both of its fix rounds, and this Medium product bug is not critical: it gives no wrong output, loses no data, and exposes nothing.
 
 - **Source:** Review. **Category:** Product bug.
 - **Grade reasons:**
+  - Severity is Medium, likelihood Common, and effort Medium for the whole class, from the review of head `cfbf916c` on 2026-11-11. Normal use leaves unreachable private copies after a live source edit, a stop, a failed step before the seal, or a retry under a new reservation. The effort is the grade of G. The category changed from Performance to Product bug, because the harm is a wrong lifetime that grows with normal use.
+  - Confidence is High for the class too. A read of the code shows that no code lists or removes a stage or an output. No run reproduced a leftover, and no run measured a size.
+  - Harder later is No for the class. G removes the leftovers of earlier builds at the next app start, so the fix costs the same later.
+  - History of the comparison sub-case, which this item held alone until 2026-11-11, with the grades Low, Rare, and Small, and the reason "This Rare, Low cleanup defect costs the same later and changes no stored format or public contract.":
   - Severity is Low. The first review graded Medium. The finding check corrected it to Low on 2026-11-11, and the review owner confirmed Low. One occurrence leaves one small private folder, with no visible effect, wrong output, lost data, or exposure.
   - Confidence is High. A read of the code shows the rejection path. The storage builder's own catch cannot cover an await that runs after it returns. No test or run reproduced it.
   - Harder later is No. The fix stays in two files, and it changes no stored format, message, or public contract.
@@ -24,6 +28,12 @@
   - A stop is normal use. Quit stops every job, at `desktop/src/device/main.ts:98-108`. Sleep, sign-out, and a lost connection also stop the import work.
   - The job runner keeps the worker alive after a stop until the job settles. So `finally` code is the cleanup path for a stop. At quit, `stopImportJobs` cancels each job, and the app waits until each worker and its Git process groups stop.
   - The ignore-rule fix of commit `55f9407f` added the excludes query. It is the only import Git call that reads user config. Every other import Git call sets `GIT_CONFIG_GLOBAL=/dev/null`, at `desktop/src/import/git.ts:28`.
+  - A stage is the private folder `conductor-import/<uuid>` under the user-data folder of the Mac app. An upload copies the source into it, and the package comes only from it. A binding is the file `conductor-import/bindings/<digest>` that `sealStage` writes. It names the sealed stage of one scope, local workspace, and reservation. An output is the folder of one build inside a stage.
+  - An upload first prepares a stage. `stage-capture.ts:37-62` copies each selected working file of up to 100 MiB into `files/` and each session file into `native/`. `stage-capture.ts:75-81` writes every object that HEAD reaches into `captured.pack`, then copies that pack again into `repository.git`.
+  - Then the main process runs the steps at `upload-package.ts:64-116`: the row check, the facts exchange, the LFS exchange, one or more builds, the proofs, and the seal. Unproven exclusions can need several builds. Each build makes a new output, and `current.json` names the newest.
+  - Only `sealStage` writes the binding, as its last step. `reuseStage` finds a stage only through the binding of the exact reservation. In a sealed stage, a later operation reads only `source.json`, `current.json`, and the `parts`, `membership`, and `sealed.ndjson` of the current output, through `reuseStage`, `readStagePage`, and `readStagePart`. `stageResults` reads the result from `current.json` and `source.json`.
+  - Try again of a sealed package must keep working: "Try again uploads only the missing parts", at `docs/protocol/conductor-import.md:208-209`, and `desktop/src/import/README.md:57-59`. No protocol doc, README, or plan says when the Mac removes a stage.
+  - The page of the import shows the result only after the final event. A replay of the result after publication, in [conductor-import-report-after-publication.md](conductor-import-report-after-publication.md), needs the original result of the stage.
 - **Problem:**
   - `inventory.ts:55-63` creates the controlled storage. `git.ts:201` makes its folder.
   - `inventory.ts:64` awaits the excludes query. The cleanup scope starts only at `inventory.ts:66`.
@@ -33,37 +43,81 @@
   - A scan has one more window. It copies the source index with `readSourceFile` at `git.ts:229`. That reader checks the stop signal only at its start and for each chunk, at `desktop/src/import/safe-files.ts:49` and `:74`. A stop during its final checks returns normally. The query then throws at `git.ts:64`, outside the cleanup scope.
   - The nested-repository fix caused it. At commit `55f9407f`, the query ran inside the cleanup scope. Commit `d6bd4fbf` moved it to line 64, before the `try`.
   - No test catches it. The real-worker stop test blocks the first Git read at `.git/config`, at `desktop/src/import/worker-cancel.test.ts:47-49`, before the storage exists. No test asserts that the controlled storage is removed, on any path. The only spy on the excludes query counts calls, at `desktop/src/import/inventory-nested.test.ts:13` and `:21`.
-- **Impact if no action:** Failed or stopped inventories leave private folders in the OS temporary folder. Each folder holds a bare repository skeleton and one index file. The index holds paths, modes, blob IDs, and file metadata, but no file contents. In a scan, a failing query leaks one folder for each workspace, because `scanSource` catches each workspace's error and continues. Repeated attempts can add more folders.
-- **Root question:** How must each failed or stopped inventory release its private Git storage? The first review asked this question, and the finding check kept it, because it covers both a failure and a stop.
+  - The stage copies, from the review of head `cfbf916c` on 2026-11-11:
+    - A prepare that fails or stops leaves its new stage with no binding. `prepareStage` has no `catch` and no `finally`, and a changed file throws `source_changed` during the copy.
+    - A step that fails or stops between the prepare and the seal leaves the whole stage with no binding. A stop rejects the running step, and the job runner refuses a new job on the aborted signal, at `desktop/src/import/worker-client.ts:51`.
+    - A later build replaces an earlier output. Nothing removes the earlier output, also after the seal and the completion.
+    - A retry under a new reservation leaves the binding of the old reservation and its sealed stage. After an expiry or a changed source, `reserve` returns a new reservation, so the old stage is unreachable.
+    - No code removes a bound stage. So each completed import, and each sealed stage whose reservation expires without a retry, keeps its full private copy forever, at `desktop/src/import/stage.ts:152-161` and `desktop/src/import/upload-session.ts:72-87`. The root folded this case into this item after the supplementary review of 2026-11-11.
+    - A sealed stage also keeps dead copies of the same bytes after their use, such as `captured.pack` beside `repository.git`, and up to three bundle files with `bundle.pack` and `completed.git` beside the bundle parts.
+    - No code lists the stage root. The `readdir` and `rm` calls of `desktop/src/import` read or remove other folders. No test asserts a removal.
+- **Impact if no action:** Failed or stopped inventories leave private folders in the OS temporary folder. Each folder holds a bare repository skeleton and one index file. The index holds paths, modes, blob IDs, and file metadata, but no file contents. In a scan, a failing query leaks one folder for each workspace, because `scanSource` catches each workspace's error and continues. Repeated attempts can add more folders. For the whole class: each stage leftover stays under the user-data folder across app runs, and each new attempt adds one more copy. A prepare leftover holds the selected files, the session files, and two copies of the history that HEAD reaches. A build leftover holds about one package. Each completed import keeps a full package and its capture copies. The copies also keep private session text and `.context` files after the person deletes the originals. They stay in a private folder of this Mac user, so no other party gets them. No run measured these sizes.
+- **Root question:** How is each private copy that an import makes on the Mac released once no later operation can use it, while each sealed stage of an open reservation stays for Try again?
+  - Until 2026-11-11, this item asked: "How must each failed or stopped inventory release its private Git storage? The first review asked this question, and the finding check kept it, because it covers both a failure and a stop."
+  - The finding check of the review of head `cfbf916c` widened the question on 2026-11-11 to every private copy of an import, also a retry under a new reservation and dead copies inside a sealed stage.
+  - The supplementary fold of the same day keeps the question. The original result of an import is a later use, so it stays.
 - **Options:**
   - **A.** Move the excludes lookup inside the current `try/finally`. Add a rejection regression that checks storage removal and unchanged source files. Effort: Small.
     - From the first review. The order stays a call-site convention.
+    - Widened form, from the review of head `cfbf916c` on 2026-11-11: add cleanup at each allocation site. Remove failed prepares, failed builds, and superseded unsealed outputs, and put the excludes lookup inside the comparison cleanup scope. The job runner refuses an aborted signal, so this form also needs a new discard job and a quit wait. Effort: Medium.
   - **B.** Replace the returned disposable resource with a callback-owned helper. Run all dependent awaits inside its cleanup scope, including the excludes query. Add the same rejection regression. Effort: Small.
     - From the first review, and the review owner's choice.
     - The controlled Git helper owns the callback, and it removes the private storage around every dependent await. Its cleanup covers a success, a failure, and a stop.
     - Keep exactly one excludes query for each repository. Its path must reach both the untracked list and `candidatePaths`.
     - A failed query must fail the inventory, with no fallback to a default path.
     - Keep the typed `ImportLocations` input, and keep the private ignore index inside the storage's lifetime.
+    - Widened form, from the review of head `cfbf916c`: use callback-owned allocation scopes with an explicit retain step for comparisons, prepares, and build outputs. Keep an allocation only after its reusable state is published. One stage lives across several jobs, so the prepare scope must sit in the main-process upload. It cannot remove the leftovers of earlier builds. Effort: Medium.
   - **C.** Give each worker job one temporary-storage owner that removes every registered Git resource before it returns its result. Adapt direct callers to that owner. Effort: Medium.
     - From the first review.
+    - Widened form, from the review of head `cfbf916c`: give the main process an allocation journal, and reclaim unpublished allocations after worker exit and at the next app start. A stage stays unpublished until the seal, so the journal must cover the whole upload, not one job. Effort: Large.
   - **D.** Run the excludes query before `controlledWorktree` creates the storage. Then the cleanup scope starts directly after creation. Keep one query for both users of its path. Add the regression below. Effort: Small.
     - From the finding check. A failed or stopped query then creates no storage. The order stays a call-site convention, so a later await before the `try` brings the leak back.
+    - D answers only the comparison sub-case.
   - **E.** Give the controlled storage an async disposer, `Symbol.asyncDispose`. Declare it with `await using` in a block around the Git work in `inventory`. Every exit from that block then removes the storage. Effort: Medium.
     - From the finding check. No desktop code uses `await using` yet, and the desktop `lib` is `ES2023`. So the change must check the types, Vitest, the compiled worker, Electron, ESLint, and Prettier.
     - A caller can still declare the storage with `const` and leak it.
+    - E answers only the comparison sub-case.
   - **F.** Let the job runner own one private temporary root for each job, under the app's user-data folder. Effort: Medium.
     - From the finding check. Pass the root in the typed locations.
     - Make both owners that now use the OS temporary folder create their folders in it, at `git.ts:201` and `desktop/src/import/inventory-lfs.ts:26`.
     - Remove the root after the worker exits, for every result. At app start, before the first job, remove leftover roots. The single-instance lock at `desktop/src/lifecycle.ts:35` keeps a second instance away from them.
     - F covers a failure, a stop, a worker crash, and, at the next start, a forced quit.
     - It changes the job runner, the worker entry, `ImportLocations`, two owners, and app start. It adds no source location.
+    - H carries F into the whole class.
   - The review owner approved only B. D, E, and F are checked alternatives, not approved implementation.
+  - **G.** Release stage storage by reachability, with the binding as the only retain mark. Effort: Medium.
+    - From the finding check of the review of head `cfbf916c`, as its D, and the root's choice of 11 November 2026, with the root fold of the same day.
+    - A later operation can reach only a stage that a binding names. A running upload also reaches its own stage.
+    - Keep every package byte that an open reservation needs: `source.json`, `current.json`, and the `parts`, `membership`, and `sealed.ndjson` of the current output.
+    - Keep the original result of each sealed stage in a small report record of its own: the lists that `stageResults` returns today, from the omitted files of `current.json` and the session titles of `source.json`. Write it at the seal, and make the result step read it.
+    - After a known publication, release the capture and package payloads of that stage, because no upload can use them. Keep the binding and the report record. The Mac knows of a publication when it gets the `complete` reply, or when the Worker returns the reservation as published.
+    - A lost publication reply does not count as never published. So the Mac keeps the package while publication is unknown and the reservation can still take uploads, and it always keeps the report record.
+    - After the reservation can no longer take uploads, release the payloads and keep the report record, so that report recovery stays possible.
+    - Add no report expiry, no manual clear action, and no server store. This keeps the current retry and report recovery, so it needs no new retention policy.
+    - Every other entry under `conductor-import/` is garbage: unbound stages, earlier outputs, the prepare copies and build scratch of a sealed stage, such as `files/`, `native/`, `repository.git`, and `captured.pack`, the `read-*` folders, and leftover state temporaries.
+    - Remove the garbage in one worker job while no import upload and no import job runs. Run that job at app start before the first upload, and when the last running upload ends. A new upload waits for a running sweep.
+    - When a retry continues under another reservation than the one that it names, remove the binding of the named reservation. Its stage then becomes garbage.
+    - Keep B for the comparison storage: one callback-owned helper, one excludes query for each repository, a failed query that fails the inventory with no default path, and its separate rejection regression.
+    - It covers a failure, a stop between jobs, a quit, a crash, and a forced quit. It also removes the leftovers of builds that ran before the fix. It adds no journal and no release code on each exit path.
+    - Risk: the rule for a running upload must be exact. A wrong rule fails that upload with `read_failed`. Try again then recovers, because the source stays on the Mac and the sweep never removes the package of an open reservation.
+    - It needs no protocol change, because it removes only storage that no requirement keeps. `desktop/src/import/README.md` states the lifetime rule in the same change.
+  - **H.** Do G, and also move the comparison storage and the LFS pointer scratch from the OS temporary folder into a private root under the user-data folder that the same sweep clears. Effort: Large.
+    - From the finding check of the review of head `cfbf916c`, as its E. It carries F into the whole class.
+    - A crash or a forced quit during an inventory then leaves nothing outside the folder of the app.
+    - It also changes the job runner, the worker entry, `ImportLocations`, and the scratch owners at `desktop/src/import/git.ts:201` and `desktop/src/import/inventory-lfs.ts:26`.
+  - On 2026-11-11, after the review of head `cfbf916c`, the root chose G for the whole class. B stays inside G for the comparison storage.
+- **Letter map to the review of head `cfbf916c`:** that review lettered the whole class A to E on 2026-11-11. Its A is the widened form of A here. Its B is the widened form of B here. Its C is close to the widened form of C here, with a journal. Its D is G here, and B here stays inside it for the comparison storage. Its E is H here. D and E here stay checked alternatives of the comparison sub-case.
 - **Shared assumptions checked:**
   - Each inventory keeps its own private storage, because a private index compares working files without source filters. Kept.
   - One excludes query runs for each repository, and its failure fails the inventory, because a default path is unsafe output. Kept.
   - The storage lives in the OS temporary folder. This is code, not a requirement. Other processes use that folder too, so a sweep there by name can remove a folder in use. F drops it.
   - Cleanup runs in the worker, in `finally` code. No worker code can run after a worker crash or a forced quit. F drops it.
   - The regression forces the query to reject. A real input can do it: a malformed config file in the fixture home, which only the excludes query reads. Kept.
+  - Each sealed stage of an open reservation stays for Try again, by `docs/protocol/conductor-import.md:208-209` and `desktop/src/import/README.md:58`. Kept.
+  - The app releases the storage with no action of the person. Kept, because no requirement asks the person to clear import data.
+  - Each exit path or each allocation needs its own release code or journal entry. Source: the text of A, B, and C. It is not a requirement, because the binding is already the only way that a later operation reaches a stage. G drops it.
+  - A fix prevents only new leftovers. It is not a requirement, and released builds can leave stages before the fix. G drops it.
+  - A sealed stage keeps every copy that its prepare and its builds made. It is not a requirement: `desktop/src/import/README.md:57` says that a stage keeps the snapshot, the Git disk facts, the manifest, the parts, and the source fingerprint. G drops it.
 - **Left out:**
   - Rely on eventual OS cleanup. It fails the goal, because the storage outlives the operation.
   - Reuse failed storage. It adds lifetime and retry state and gives the storage no owner. B is better on every point.
@@ -74,10 +128,23 @@
   - A garbage-collection finalizer. It fails the goal, because it may never run before a short-lived worker exits.
   - Sweep the OS temporary folder by name, alone. It fails the goal, because the storage stays until the next sweep. As a crash fallback, F does the same in a root that no other process uses.
   - Brought back: none. The first review left out nothing for a weak reason.
-- **Wider fix:** B. The helper's API owns its callback and the temporary resource, so a later await cannot escape the cleanup by a call-site convention. For this class, a failed or stopped step after creation, B, C, and F each prevent every case. F's extra cover is a different trigger, a crash, so it does not rank F above B here.
-- **Previous examples:** `withGitIndex` at `runner/src/git-index.ts:20-133` wraps every await after `mkdtemp` in one `try`, with `rm` in `finally`. Commit `66ad57da5c4f4441421cc6b80f66586aa445915b` introduced that pattern.
+  - Delete every stage on connection loss. It breaks Try again of a sealed package.
+  - An arbitrary age limit. It does not release unreachable work promptly, and G needs no age. The end of the reservation in G is not an age limit: after it, no upload can use the package.
+  - Remove only the dead copies at the seal, or stream the pack straight into `index-pack`. An unsealed stage still leaks. G includes it.
+  - Keep the stage in the OS temporary folder. The OS gives no prompt release, and it can remove a live stage during its 7-day retry window.
+  - Build the package from the objects of the source. It breaks the rule that the package comes only from the stage, at `desktop/src/import/README.md:50`.
+  - Resume a failed stage at the next attempt. A changed source makes the partial copy useless, and G is better on every point.
+  - A control that lets the person clear import data. The release then needs the person, and it adds a boundary behaviour.
+  - A size limit or a free-space refusal before a prepare. It is a new rejection, and it releases nothing.
+- **Wider fix:** G. The binding becomes the only retain mark, and one owner removes everything else, so a new allocation or a new exit path cannot leak.
+  - Until 2026-11-11, this item said: "B. The helper's API owns its callback and the temporary resource, so a later await cannot escape the cleanup by a call-site convention. For this class, a failed or stopped step after creation, B, C, and F each prevent every case. F's extra cover is a different trigger, a crash, so it does not rank F above B here."
+- **Previous examples:** `withGitIndex` at `runner/src/git-index.ts:20-133` wraps every await after `mkdtemp` in one `try`, with `rm` in `finally`. Commit `66ad57da5c4f4441421cc6b80f66586aa445915b` introduced that pattern. `desktop/src/import/native-chain.ts:80` and `:85`, `desktop/src/import/inventory-lfs.ts:59-60`, and `desktop/src/import/stage-content.ts:100-101` release their own scratch. `worker/conductor-import/cleanup.md` releases the Worker copies of an import by reservation state through one owner, for an expiry, a changed source, an activation, and an org purge. It is the server-side model for G.
 - **Related:**
   - [conductor-import-submodule-working-content.md](conductor-import-submodule-working-content.md): the same code. Its options change the candidate collection at `inventory.ts:67-100`, inside the same cleanup scope. Its options C and E add one private comparison repository for each initialized submodule, and each one needs this cleanup. B makes that automatic. When one later branch changes these lines, apply both fixes in one unit.
+    - The same holds for its G. Its D would also keep captured submodule history in the stage, which G covers.
+  - [conductor-import-report-after-publication.md](conductor-import-report-after-publication.md): the same code, and a shared fold. Its B replays the original result of a published reservation from the report record of G. Build the record before or with the release, so that no release removes a result that the replay still needs.
+  - [conductor-import-replacement-files.md](conductor-import-replacement-files.md): the same code. Both fixes edit the `try` and `finally` at `desktop/src/import/inventory.ts:64-103`. Keep `candidatePaths` inside the cleanup scope.
+  - [conductor-import-tracked-nested-files.md](conductor-import-tracked-nested-files.md): the same code, for its B. Both change `inventory()`. No conflict.
   - [conductor-import-fixture-permissions.md](conductor-import-fixture-permissions.md): the same test file only, if this regression went into `inventory-nested.test.ts`. Keep this regression a separate small case, so that the failing tuple assertion cannot hide its Mac result.
   - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md): no link.
   - [temporary-folders-of-test-helpers.md](temporary-folders-of-test-helpers.md): the same class, a temporary folder whose removal is not tied to its creation, in Worker test helpers. Its option uses `fsPromises.mkdtempDisposable()` with `await using`, the mechanism of E here. The two items share no code.
@@ -85,11 +152,17 @@
   - The typed `ImportLocations` of `desktop/src/import/locations.ts`: every option keeps that input. F must keep the rule that only the home and user-data prefixes resolve.
   - The resolved fixture root `importTemporaryDirectory` of `desktop/tests/import-temporary.ts`: build any fixture-owned temporary root with it.
   - A separate open review observation, not part of this item: the scan's copy at `git.ts:229` copies a split index without its shared index file. The Git manual puts that file at `$GIT_DIR/sharedindex.<SHA-1>`, and the private repository has its own `$GIT_DIR`. So a scan row may lose its size. Runtime behaviour is unverified.
-- **Recommendation:** B. Callback ownership encloses every dependent await and removes the controlled storage on a success, a failure, or a stop. It follows the runner's `withGitIndex` pattern and stays in the two changed files. C and F also prevent this class, but they add a job-wide mechanism at Medium cost.
+    - It is now recorded in [conductor-import-split-index-scan.md](conductor-import-split-index-scan.md). The same code: that fix changes the index copy of `controlledWorktree`, and each new step must stay inside the same cleanup scope.
+  - [conductor-import-sparse-checkout-deletions.md](conductor-import-sparse-checkout-deletions.md): the same code. `userExcludesFile` at `inventory.ts:64` already runs outside the cleanup of the private repository. A new source flag read of that item must run before `controlledWorktree` or inside its cleanup.
+  - [conductor-import-failed-estimate-branch.md](conductor-import-failed-estimate-branch.md): the same code. Each failed upload there runs a full prepare and stops before any build, so it leaves one more unbound stage, which G releases. Its B removes this repeated cause. No conflict.
+- **Recommendation:** G, with the fold of 11 November 2026. One reachability owner releases each unreachable copy on each exit path, also after a stop between jobs, a quit, or a crash, and it removes the leftovers of earlier builds. B stays inside G for the comparison storage. H adds crash cover only for small scratch, at Large cost.
+  - Until 2026-11-11, this item recommended: "B. Callback ownership encloses every dependent await and removes the controlled storage on a success, a failure, or a stop. It follows the runner's `withGitIndex` pattern and stays in the two changed files. C and F also prevent this class, but they add a job-wide mechanism at Medium cost."
   - The first review recommended B. The finding check of 2026-11-11 kept B and corrected the severity to Low.
   - The review owner kept B on 2026-11-11.
-- **Action:** fix after merge, apply B, because this Rare, Low cleanup defect costs the same later and changes no stored format or public contract.
-  - The two-round limit of the branch also applies, but it is not the only reason. The fix rule gives a Rare product bug that is not High `fix after merge`, also when the fix is Small.
+  - The review of head `cfbf916c` first recommended its B, callback-owned allocation scopes. Its finding check of 2026-11-11 changed the recommendation to its D, which is G here, because B needs an owner in the main process across several jobs and cannot remove earlier leftovers. The root chose G the same day.
+- **Action:** fix after merge, apply G, because the import review used both of its fix rounds and this Medium product bug is not critical.
+  - Until 2026-11-11, this item's Action was: "fix after merge, apply B, because this Rare, Low cleanup defect costs the same later and changes no stored format or public contract."
+  - History of the comparison sub-case, recorded on 2026-11-11: "The two-round limit of the branch also applies, but it is not the only reason. The fix rule gives a Rare product bug that is not High `fix after merge`, also when the fix is Small."
   - The first review's Action was: "fix after merge, apply B, because the two fix rounds are used and this cleanup defect is noncritical."
 - **Validation of the fix:**
   - Add one separate small rejection or cancellation case. Do not add it to the existing timed package cases, or to the failing nested test.
@@ -98,6 +171,13 @@
   - Assert that the inventory rejects. This keeps the ignore-rule protection.
   - Assert that no controlled storage remains. Find its folder through a fixture-owned temporary root, or through the existing spy seam on the Git helpers at `desktop/src/import/inventory-nested.test.ts:12-13`. Confirm the chosen seam in the change.
   - Assert that the source files stay exactly unchanged, with `sourceHashes`.
+  - For G, from the review of head `cfbf916c`:
+    - Extend `desktop/src/import/stage-integrity.test.ts:219-262`: after the capture rejection and a sweep, the stage root holds no stage folder.
+    - Build twice, seal, and sweep with the real stage code. Only `source.json`, `current.json`, the report record, and the `parts`, `membership`, and `sealed.ndjson` of the current output stay. `reuseStage` still returns the stage, and `readStagePart` still reads a part.
+    - After a known publication and a sweep, only the binding and the report record stay, and the result step still returns the original result.
+    - A retry under a new reservation removes the binding and the stage of the old reservation.
+    - A sweep while an upload runs keeps the unbound stage of that upload.
+    - Read each internal path through `stageRoot` and `stageDirectory`.
   - The finding check did not verify these at runtime:
     - a fixture-owned temporary root with `os.tmpdir()`
     - `await using` support in the toolchain

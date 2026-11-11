@@ -2,7 +2,7 @@
 
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-11, from pull request #204, branch `conductor/import-from-conductor-mac-scan-and-upload`, review round 3 of head `d6bd4fbf03c167ab0232fc29442d7c8800653cce`, finding 6. It includes the independent finding check and the review owner's outcome of the same day. The check's new problem about changed and mode-changed LFS files is folded into this item.
+- **Added:** 2026-11-11, from pull request #204, branch `conductor/import-from-conductor-mac-scan-and-upload`, review round 3 of head `d6bd4fbf03c167ab0232fc29442d7c8800653cce`, finding 6. It includes the independent finding check and the review owner's outcome of the same day. The check's new problem about changed and mode-changed LFS files is folded into this item. The review of pull request #223, branch `calummoore/conductor-import-option`, round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, found the same defect again on 2026-11-11, as finding 12. Its independent finding check and the root outcome of the same day kept D, so that finding is a repeat of this item.
 - **Location:** `desktop/src/import/package.ts:56-63`, the omission list, and `desktop/src/import/package.ts:79`, the skip that writes no record. `desktop/src/import/package-lfs.ts:55-65`, the files that GitHub advertises. `desktop/src/import/stage-lfs.ts:39`, which asks about unchanged files only. `desktop/src/import/inventory-lfs.ts:89-100`, the LFS facts of HEAD paths. The affected consumer is `runner/src/import-lfs.ts:100-122`, with `runner/src/import-lfs-transport.ts:55` and `:112-123`.
 - **Reason:** Both child fix rounds are used, and this Rare failure is not critical, because the Mac keeps the source and the stored work stays.
 
@@ -21,7 +21,7 @@
   - `docs/protocol/conductor-import.md:140-144` states three rules. A file that GitHub holds in Git LFS comes from GitHub at activation. A changed Git LFS file goes as a changed file. A changed or untracked file over 100 MiB, or 104,857,600 bytes, stays on the Mac, also in `.context`, and the import result lists it.
   - The user chose that file rule on 10 November 2026. The same choice rejected a bound that refuses a whole workspace, "because one large file then keeps the code out too". It also rejected a fetch from the Mac at activation, because the Mac can be off.
   - The Mac uploads each other local LFS payload as a changed file, under the 100 MiB rule. It leaves out an unchanged LFS file only when its pointer matches the source and GitHub advertises its payload, at `desktop/src/import/package-lfs.ts:55-65`.
-  - At activation, `runner/src/import-lfs.ts` downloads each HEAD LFS payload that no manifest record replaces, as `runner/import.md:84-86` says. Only `file`, `symlink`, and `delete` records, and a `directory` record at the same path, count as replacements, at `runner/src/import-lfs.ts:32-51`.
+  - At activation, `runner/src/import-lfs.ts` downloads each HEAD LFS payload that no manifest record replaces, as `runner/import.md:88-91` says. Only `file`, `symlink`, and `delete` records, and a `directory` record at the same path, count as replacements, at `runner/src/import-lfs.ts:32-51`.
   - Other omitted paths get no record. A tracked path keeps the HEAD blob that the raw cloud checkout writes, with `runner/src/import-checkout.ts:20`. An untracked path stays absent. Git in the cloud computer sees no change at the path.
 - **Problem:**
   - `desktop/src/import/inventory-lfs.ts:89-100` adds each HEAD path whose blob is an LFS pointer to the inventory, with its LFS facts.
@@ -72,8 +72,9 @@
   - **E.** Let activation keep the pointer, in the receiver. When GitHub reports a payload as missing for a path with no record, keep the raw-checkout pointer and continue. Tell a missing object, a 404 or 410 for that object, apart from authentication, rate-limit, and network errors. Effort: Medium, or Large with a notice.
     - From the finding check. It covers every case, and also a payload that GitHub drops after the import. It hides that loss unless activation reports it.
     - It adds activation behaviour that no requirement states, and it changes the runner, so it needs the user.
+- **Letter map to the review of head `cfbf916c`:** that review lettered the same question differently on 2026-11-11. Its A, a raw pointer overlay with no availability condition, is C here when limited to unchanged files. Its B, an omission marker in the manifest, is the left-out "new manifest record". Its C, a rejection, is the left-out rejection. Its D and E are D and E here.
 - **Shared assumptions checked:**
-  - Activation downloads each HEAD LFS payload that no record replaces, and fails when GitHub does not hold one. Source: `runner/src/import-lfs.ts:100-122` and `runner/import.md:84-86`. It holds for the paths that the Mac judged available. E drops it.
+  - Activation downloads each HEAD LFS payload that no record replaces, and fails when GitHub does not hold one. Source: `runner/src/import-lfs.ts:100-122` and `runner/import.md:88-91`. It holds for the paths that the Mac judged available. E drops it.
   - The payload over 100 MiB stays on the Mac, and the result lists the path. Source: the user's choice of 10 November 2026 and `docs/protocol/conductor-import.md:142-144`. Kept.
   - The fix leaves the shared manifest, the Worker, and the runner unchanged. It is a limit of the branch, not a product rule, so it limits only the timing. E drops it.
   - Activation restores an omitted LFS path as absent. Source: the text of A and B. No rule deletes an omitted tracked file in the cloud, and the existing rule keeps its HEAD content. C and D drop it.
@@ -89,27 +90,37 @@
   - Fetch from the Mac at activation, which the same choice rejected because the Mac can be off. A retry, which does not meet the goal.
   - The test level is not a separate option. The lowest level that fails without the fix is the sealed manifest that the existing package LFS case already builds.
 - **Wider fix:** D. One private disposition for each file is the only source of the manifest records and of the omission result, including the exact pointer records. So a skipped file always gets its restoration record, also when a later change adds a new reason to skip a file.
-- **Previous examples:** The case from `desktop/src/import/package-lfs.test.ts:104` already builds the unadvertised 104,857,601-byte package. It checks the omission result, but it does not restore that package. `runner/src/import-lfs.test.ts:89` shows that manifest overrides suppress downloads. History: commit `1edc9d72` added import activation, and commit `09660bba` added the private availability check.
+- **Previous examples:** The case from `desktop/src/import/package-lfs.test.ts:104` already builds the unadvertised 104,857,601-byte package. It checks the omission result, but it does not restore that package. `runner/src/import-lfs.test.ts:89` shows that manifest overrides suppress downloads. History: commit `1edc9d72` added import activation, and commit `09660bba` added the private availability check. The review of head `cfbf916c` confirmed the defect again at the same lines on 2026-11-11.
 - **Related:**
   - [conductor-import-submodule-working-content.md](conductor-import-submodule-working-content.md): a shared wider fix is possible, but not required. The two items share no cause and have no conflict, and neither waits for the other. One per-path classification could feed both, if one later unit does both. D treats expanded submodule files as plain working files, because the outer HEAD has a gitlink there, not a pointer.
   - [conductor-import-fixture-permissions.md](conductor-import-fixture-permissions.md) and [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md): no link. They change other code.
+  - [conductor-import-tracked-nested-files.md](conductor-import-tracked-nested-files.md): a possible shared wider fix. Its classification of owner and tracked state can feed the dispositions of D. No shared cause, no conflict, and no wait.
+  - [conductor-import-report-after-publication.md](conductor-import-report-after-publication.md): the same code, the result. Its replay sends the whole stored result, also the omission entries of this item. No conflict.
   - The resolved fixture root of `desktop/tests/import-temporary.ts`: the regression reuses `packageFixture`, which already has it.
   - A separate open review observation, not part of this item: the desktop LFS facts accept only the strict Git LFS pointer form, at `desktop/src/import/disk.ts:80`.
     - The receiver also reads a blob as a pointer when it has the legacy `hawser.github.com` version line. It also accepts the `oid` and `size` lines in another order, or with other lines, at `runner/src/import-lfs.ts:11-22`.
     - A HEAD blob below 1024 bytes that only the receiver reads as a pointer makes the counts differ. Activation then fails at `runner/src/import-lfs.ts:92-98`.
     - It was read, not reproduced.
+    - It is now recorded in [conductor-import-git-tree-facts.md](conductor-import-git-tree-facts.md), the same code. That item makes the normal download of D agree with the receiver for every pointer form. D works with each of its options. If that item ever declares every LFS path in the manifest, the dispositions of D should feed that declaration.
+  - [conductor-import-sparse-checkout-deletions.md](conductor-import-sparse-checkout-deletions.md): a shared wider fix, and one sub-case that D does not cover. After a fix of that item, a sparse-absent LFS pointer path gets no entry, so activation downloads its HEAD payload, and the download fails when GitHub lacks it. D gives the HEAD pointer record only to files that the 100 MiB rule leaves on the Mac, so D does not fix that sub-case by itself. That item adopts no restore policy for it.
+  - [conductor-import-small-blob-reads.md](conductor-import-small-blob-reads.md): the same code. Its B changes how `runner/src/import-lfs.ts:57-70` reads blobs, and D changes which paths download. Keep one tree pass. No conflict, and neither waits.
+  - [conductor-import-intel-guard-expiries.md](conductor-import-intel-guard-expiries.md): the same code. D changes expected values inside the expiring `package-lfs.test.ts` case. Its D needs the same explicit decision about the scope of these cases.
 - **Recommendation:** D. It keeps the exact HEAD pointer content and mode when an omitted local payload has an unavailable HEAD payload. It keeps normal downloads when GitHub advertises that HEAD payload. It covers the changed case and needs no contract or runner change.
   - The first review recommended B, with tombstones. The finding check of 2026-11-11 changed the recommendation to D, because a tombstone shows a deletion in the cloud that the Mac does not have.
   - The review owner adopted D on 2026-11-11. Do not promise a tombstone for an omitted LFS path.
+  - The review of head `cfbf916c` first recommended its B, a manifest omission marker. Its finding check of 2026-11-11 changed the recommendation to D, and the root kept D the same day.
 - **Action:** fix after merge, apply D, because both child source fix rounds are used and this Rare activation failure is not critical.
   - Existing omission behaviour keeps the HEAD checkout content of tracked paths. Exact pointer records keep that baseline without a new contract or runner behaviour.
   - The first review's Action was: "fix after merge, apply B, because both fix rounds are used and this Rare activation failure is noncritical under the review-cycle rule."
+  - The root kept this Action on 2026-11-11 for the repeat at head `cfbf916c`. The existing omission and exact-HEAD rules settle the restored state, with no new user policy or wire change.
 - **Validation of the fix:**
   - Keep every assertion and every guard. Do not raise a time limit.
   - The package cases that already meet the Intel 5,000 ms guard must not grow, as the review owner instructed on 11 November 2026. Any change to the scope of those cases needs an explicit decision.
   - The existing case is "omits only advertised unchanged LFS and retains local or changed payloads across proof rebuilds".
   - At head `d6bd4fbf`, Intel job `130281538307` observed its 5,000 ms guard expiry at 5,014 ms. That is an expiry observation, not a completion cost, and it shows no cause.
+  - At head `cfbf916c`, Intel job `130379421968` of run `42977355161` observed the same guard expiry at 5,015 ms. That is also an expiry observation only.
   - So update only the expected values that the behaviour changes in that case. Put the new pointer-byte, mode, and changed-file assertions in a separate small case.
   - Assert an exact HEAD pointer `file` record, with the HEAD mode, in the sealed manifest. Do this for an omitted unchanged file and for an omitted changed file. In both cases, GitHub does not advertise the HEAD payload.
   - Assert no record for an omitted file whose HEAD payload GitHub advertises, so that activation still downloads it.
   - Record repeated pass counts on Linux, Apple silicon, and Intel.
+  - The facts of this item were checked again at head `cfbf916c` on 2026-11-11. Only the guide citation moved, to `runner/import.md:88-91`.

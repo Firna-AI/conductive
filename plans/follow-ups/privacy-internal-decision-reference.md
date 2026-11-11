@@ -19,5 +19,6 @@
 - **Left out:** A new test or lint for internal decision references, because it adds a gate that no user requested. No third approach is needed for this wording removal.
 - **Wider fix:** None. The existing product copy rules already keep internal details out of public text.
 - **Previous examples:** The reference exists in the Privacy source on main at `039e087`.
+- **Related:** [privacy-branch-name-rule.md](privacy-branch-name-rule.md): the same Privacy page. One docs-only branch can carry both corrections, preserving every personal-data fact.
 - **Recommendation:** B. The reference is outside the changed facts of the agent instructions feature.
 - **Action:** fix after merge, apply B, because the unmodified sentence belongs to a separate wording change.

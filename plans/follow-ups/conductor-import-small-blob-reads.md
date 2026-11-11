@@ -1,0 +1,94 @@
+# Tiny blobs start separate Git processes
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, the supplementary review of round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 29. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `desktop/src/import/disk.ts:58-95`, the Mac loop, with the per-blob `cat-file blob` at `:76-87`. `desktop/src/import/git.ts:65`, one `spawn` for each call. `runner/src/import-lfs.ts:57-70`, the runner loop. `runner/src/import-git.ts:23`, `:49`, and `:65`: the `spawn`, the ignored stdin, and the trimmed output. `desktop/src/import/inventory-lfs.ts:24-63`, the existing bounded batch reader.
+- **Reason:** The import review used both of its source fix rounds, and nobody has measured a blocking cost.
+
+- **Source:** Review. **Category:** Performance. A performance finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Medium. Packing and activation take longer on trees with many small files, on two hosts. No evidence shows blocked work. A measurement that shows a real tree near the start limit would make it High. That measurement does not exist.
+  - Confidence is High. The process counts come straight from the code.
+  - Harder later is No. The fix changes internal work only.
+- **Terms:**
+  - **Blob:** a Git object that holds the bytes of one file.
+  - **Git LFS pointer:** a small blob that names a Git LFS payload by its SHA-256 and size.
+  - **Package build:** one `build` job of the Mac app. It runs `packageStage` and `measureGitDisk`.
+  - **Prove loop:** the Mac loop that builds a package, asks the Worker to prove its commits, and builds again with the proven commits left out.
+  - **Start limit:** the 20-minute time limit of each workspace start. The activation of an imported workspace is such a start.
+- **Background:**
+  - Conductive imports local Conductor workspaces into cloud workspaces through its Mac app. The Mac measures the Git disk facts of the HEAD tree for the snapshot. The runner in the cloud computer measures the same facts again at activation and compares them.
+  - Packing and activation inspect small HEAD blobs to find Git LFS pointers. Ordinary small text files pass through the same check. Both Git helpers start an operating-system process for each call.
+  - The inventory reader already reads small blobs with `cat-file --batch`, 256 IDs for each process, at `desktop/src/import/inventory-lfs.ts:29-35`.
+- **Problem:**
+  - Mac: `desktop/src/import/disk.ts:58-95` loops over the HEAD tree rows. Line 76 skips blobs of 1,024 bytes or more, as the comment at line 75 says. Lines 77-78 start one awaited `git cat-file blob` for each blob that is not yet in the `pointers` map. So the Mac starts one process for each distinct small blob.
+  - The Mac helper calls `spawn` for each call at `desktop/src/import/git.ts:65`. It also starts a new process group at line 69, and posts two process messages at lines 71-80.
+  - Runner: `runner/src/import-lfs.ts:57-70` loops over the tree entries. Each regular file under 1,024 bytes gets one awaited `importGit` call with `cat-file blob`. No map skips a repeated blob. The runner helper calls `spawn` for each call at `runner/src/import-git.ts:23`.
+  - Both loops await each call before the next read.
+- **Impact if no action:**
+  - A tree with N small files can need up to N serial Git process starts in each Mac package build, and N at activation. This overhead applies even when the tree has no LFS payload.
+  - The activation loop runs inside the 20-minute start limit, at `docs/protocol/imported-workspaces.md:58-60`, `worker/lifecycle/job-time-limit.ts:4`, `worker/lifecycle/import-activation.ts:154`, and `runner/src/import-receiver.ts:82-87`. No measurement shows a real tree near that limit.
+- **Evidence:**
+  - The Mac reads every small HEAD blob twice in one upload. The prepare job runs inventory with `hashFiles` true, at `desktop/src/import/stage.ts:56` and `inventory.ts:192-203`. That inventory reads all small HEAD blobs in batches, at `inventory.ts:106-108` and `inventory-lfs.ts:74-89`. The build job then reads the same blobs again, one process each, at `stage.ts:93`, `package.ts:43-49`, and `disk.ts:76-87`.
+  - Each build of the prove loop repeats the per-blob reads. The loop at `desktop/src/import/upload-package.ts:84-116` runs a new build when the Worker proves only some candidates.
+  - The scan reads no small blob. `scan.ts:26` calls inventory with `hashFiles` false, so `inventory.ts:106-108` skips the reader. The fast-scan reason at `docs/protocol/desktop-import.md:72` is not at stake.
+  - The same code already batches object reads on both hosts. `measureGitDisk` calls `reconstructedObjects` at `disk.ts:101`, which runs one `cat-file --batch-check` at `desktop/src/import/disk-objects.ts:75-80`. The runner runs one live `cat-file --batch-check` with stdin backpressure, at `runner/src/import-git-pack-facts.ts:53-57` and line 101.
+  - The runner helper cannot carry batch output now. `importGit` ignores stdin at `runner/src/import-git.ts:49`, and it trims its UTF-8 output at line 65.
+  - No existing test counts `cat-file` processes, so no test fails on the per-file pattern. `desktop/src/import/disk.test.ts:15` and `runner/src/import-lfs.test.ts:89` check only the facts.
+  - The harnesses can count processes already. `disk.test.ts:108-113` spies on the Mac Git helper. `import-lfs.test.ts:13-16` and `:118-120` wrap and filter `spawn` calls.
+  - Commits `0829e853` and `1edc9d72` added the Mac loop and the runner loop.
+  - Nobody measured the elapsed cost of each process. No test, benchmark, or probe ran.
+- **Root question:** How should packing and activation learn the LFS pointer facts of the HEAD tree without one Git process for each file?
+  - The first review asked how small-blob inspection avoids a separate Git process for each file. The finding check replaced it on 2026-11-11, because that question presumes that each step inspects the blobs itself. It hides the reuse of the blobs that the inventory already reads in the same upload.
+- **Options:**
+  - **A.** Batch IDs in each disk reader separately. Deduplicate the runner's blobs and keep bounded output. Add focused result and batch-count regressions. Effort: Medium.
+  - **B.** Give all three consumers one bounded raw-blob reader and decoder. Keep host-specific process transports and the current pointer parsers separate. Reuse it in inventory, Mac measurement, and activation. Add the same regressions. Effort: Medium.
+  - **C.** Give each import step one live `cat-file` batch process. Stream requests and replies with cancellation and backpressure. This removes batch restarts but adds process lifetime management. Effort: Large.
+  - **D.** Read each small HEAD blob once for each stage on the Mac. Effort: Medium.
+    - Save in the stage record the whole HEAD pointer table that the inventory already reads in batches.
+    - Include the HEAD pointer paths that are no longer regular files. Today the inventory attaches pointer facts only to regular files, at `inventory.ts:138-143`.
+    - Derive the LFS facts of `measureGitDisk` from that table in every build. Batch the runner reads as B does.
+    - Cost: the measurement then uses the inventory's grammar, which changes the facts for CR LF pointer forms. So D waits for the grammar answer of [conductor-import-git-tree-facts.md](conductor-import-git-tree-facts.md), or comes after one shared pointer reader. It also changes the private stage record. Compared with B, it saves one batched pass for each build.
+  - **E.** Read the small blobs with an in-process Git object reader in the Mac app and in the runner. Effort: Large.
+    - Cost: a new dependency on two hosts. It must match Git for packs, deltas, and both object formats of `src/shared/conductor-import.md:44`.
+    - It removes only the bounded batch starts that B keeps.
+  - **Cost of A and B:** the runner needs a raw Git transport that writes stdin and does not trim the output, because `importGit` ignores stdin and trims its output. A decoder that both hosts share lives in `src/shared/` and must stay portable, because `tsconfig.app.json:9` and `tsconfig.worker.json:7` check `src/shared` without Node types. The effort stays Medium.
+- **Shared assumptions checked:**
+  - Raw small blobs must still be inspected. Source: the code and `docs/protocol/conductor-import.md:140`. It holds for one reader on each host. It is not a requirement that each consumer reads them. D drops it on the Mac. The manifest declaration of LFS paths, option C of [conductor-import-git-tree-facts.md](conductor-import-git-tree-facts.md), would drop it on the runner.
+  - Each package build computes the tree facts again. Source: `upload-package.ts:84-116` and `package.ts:43-49`. It is not a requirement. The checkout and LFS facts depend only on HEAD, and a stage fixes HEAD. D drops it.
+  - This item does not choose the pointer grammar. Source: the first review. [conductor-import-git-tree-facts.md](conductor-import-git-tree-facts.md) owns that question. D drops this assumption, so D waits for it.
+  - Every reader goes through the Git program. Source: the code. Its reason holds, because Git owns the pack and object formats. E drops it.
+  - The runner recomputes the LFS facts and compares them with the Mac facts. Source: `runner/src/import-lfs.ts:87-98` and `runner/import.md:88`. Kept, because the tree-facts item owns that check.
+- **Left out:**
+  - A blob cache alone. It still launches one process for each distinct ordinary file.
+  - Parallel individual processes. They keep the same process count.
+  - Classification by the `filter=lfs` attribute, to skip reads. It breaks `conductor-import.md:140` for a pointer that an attribute rule outside HEAD wrote. It also changes the pointer classification that the tree-facts item owns.
+  - A size filter that reads only blobs long enough to be pointers. Each remaining blob still starts one process, so it fails the goal.
+  - A lint against per-file `cat-file` calls. B already removes the case structurally, and a lint is a new gate that needs the user.
+  - A time assertion. It would not establish correctness, and the testing rules forbid elapsed-time assertions.
+  - The Worker. It runs no Git and handles the bytes of one part at a time, as `docs/protocol/conductor-import.md:225-228` says.
+  - Another one-process Git command, such as a grep or an archive of the tree. It is a detail of A and B. `cat-file --batch` reads only the selected small blobs and applies no attributes.
+- **Wider fix:** B. It puts batching and reply framing under one owner, so a consumer that reads through its API cannot select a per-file transport. It cannot stop a new direct loop of `cat-file blob` calls. A lint for that would be a new gate, so this item proposes none.
+- **Previous examples:** History and plans show no earlier per-file process defect. `runner/src/git-diff.ts:25-28` on `main` reads one requested path, so it is not an example. `inventory-lfs.ts:24-63` gives the existing bounded read pattern.
+- **Related:**
+  - [conductor-import-git-tree-facts.md](conductor-import-git-tree-facts.md): the same code, and a shared implementation. `measureGitDisk` classifies the tree rows and reads the small blobs in one loop, at `disk.ts:58-95`. That item puts one shared tree-facts calculator and one pointer reader on both hosts. Build B in the same unit, as one tree pass with the batched reader inside it.
+    - B keeps the current parsers, so B does not wait for the grammar answer there. D waits for it.
+    - If that item takes its C, the restore stops reading pointer blobs, and the runner part of B loses its purpose. Apply the runner part after that answer.
+  - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md): the same code. Its D changes which paths of `prepareImportLfs` download, at `runner/src/import-lfs.ts:34` and `:113`. This item changes how `:57-70` reads blobs. Keep one tree pass. No conflict, and neither waits.
+  - [conductor-import-sparse-checkout-deletions.md](conductor-import-sparse-checkout-deletions.md): the same code. Its B filters the HEAD paths that `selectedLfsPointers` adds, at `inventory-lfs.ts:90-100`. B here changes the reader below it, at `:24-63` and `:89`. No conflict, and neither waits.
+  - [conductor-import-intel-guard-expiries.md](conductor-import-intel-guard-expiries.md): the same code only. Every one of the six expiring Intel cases builds a stage and runs `measureGitDisk`. No evidence links this process count to those expiries. Do not treat this item as their cause or as their fix. Keep its count regressions in separate cases.
+- **Adjacent measurement lead, not part of this fix:**
+  - `runner/src/import-lfs.ts:100-122` and `:132-152` make two more passes over the tree. Each pass opens one saved record path for each tree entry, also for folders and large files.
+  - These passes cost file opens, not processes. Nobody measured them. No harm is established, and nothing links them to the Intel expiries.
+  - The unit that applies B can count these opens in the same one-time measurement, and decide from the numbers.
+- **Recommendation:** B. It removes the per-file processes from all three consumers, with no grammar choice and no stored-format change.
+  - The first review recommended B. The finding check of 2026-11-11 kept B. The root kept B the same day, and asked to build it with the shared tree-facts fix.
+  - D saves one batched pass for each build, but it waits for the grammar answer. C and E add process-lifetime or dependency cost for gains that B already bounds.
+- **Action:** fix after merge, apply B, because the import review used both of its source fix rounds, and nobody has measured a blocking cost. Build it in one later unit with the shared tree-facts calculator.
+  - The first review's Action was the same: "fix after merge, apply B, because the two source fix rounds are used and no measured blocking cost has been established."
+  - B changes no requirement and adds no boundary behaviour. Its count regression tests this defect, so it is not a test for the class.
+- **Validation of the fix:**
+  - On each host, add a regression that counts the `cat-file` processes of one package build or one activation, through the existing helper spy and `spawn` wrapper. The count must stay at most one batch process per configured batch of selected IDs, plus the fixed fact-read processes.
+  - Keep the fact assertions of `disk.test.ts:15` and `import-lfs.test.ts:89`.
+  - A one-time timing of a large tree can be evidence under the ignored `.context/` directory. Add no speed test and no time limit.

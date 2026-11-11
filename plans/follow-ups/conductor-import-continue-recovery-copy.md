@@ -1,0 +1,52 @@
+# Continue refusal names a wrong step for imports
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. The finding check of finding 38 found it at the merge commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7`, as an adjacent problem, not as a numbered finding. The root outcome of the same day gave it this item.
+- **Location:** `worker/lifecycle/continue-admission.ts:64-69`, at the merge commit `16a4f76c`. The bar shows the words through `src/github/barRuns.ts:93-98` and `src/github/barView.ts:173-177`.
+- **Reason:** Both review fix rounds are used, and this Low copy defect is not critical, because the refusal keeps its status and no data is lost.
+
+- **Source:** Review. **Category:** UX wording. A wording defect has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Low. A refusal names a step that does nothing, and the member can still find Activate or Try again.
+  - Confidence is High. A static trace reads each step of the refusal and of the open. Nobody rendered the page, and no test or probe ran.
+  - Harder later is No. The words cost the same to change later.
+- **Terms:**
+  - **Not active import:** an imported workspace whose first activation has not started. Its record has the state `inactive`, and the app shows it as Not active.
+  - **Failed activation:** an activation of an import that ended with an error. The app deletes its cloud computer and offers Try again.
+- **Background:**
+  - Conductive imports local Conductor workspaces into cloud workspaces. An imported workspace has no cloud computer until a member presses Activate, at `docs/protocol/imported-workspaces.md:18-20` and `:43-46`.
+  - After a failed activation, the app deletes the cloud computer of the failed start, and Try again starts a new activation, at `imported-workspaces.md:121-128`. `worker/lifecycle/failed-workspace-data.ts:11` clears its ID.
+  - After the merge of its pull request, the bar of a workspace offers Continue. Continue starts the next task on a new branch, at `docs/protocol/github-banner.md:206-213` and `docs/protocol/continue.md:53-63`. A Continue that stopped names its reason in a message under the bar, at `github-banner.md:218`.
+  - Continue refuses each workspace without a cloud computer with HTTP 409 `sandbox_unavailable` and the words "Open the workspace and try Continue again.", at `worker/lifecycle/continue-admission.ts:64-69`. The file is byte-equal to `main`, blob `855492ddb9` on `main` at `23628f77` and at `16a4f76c`.
+  - The bar shows the words of the Worker as a danger line, at `src/github/barRuns.ts:93-98` and `src/github/barView.ts:173-177`.
+  - The browser guard already names the right step for a Not active import: "Activate this workspace to start a session.", at `worker/chat/browser-authorization.ts:45-53`.
+- **Problem:** For an import before a successful activation, opening the workspace starts nothing, at `worker/lifecycle/workspace-resume.ts:31-32` and `src/app/first-start.ts:53-56`. So "Open the workspace" names a step that does not help. The step that works before the first activation is Activate. After a failed or stopped first activation, it is Try again, as the import rules and `failedFirstStart` at `src/app/first-start.ts:20-39` already say.
+- **Impact if no action:** A member who presses Continue in a merged import before a successful activation reads a step that does nothing. The member must find Activate or Try again alone.
+- **Evidence:**
+  - Continue resumes through `resumeWorkspace`, at `worker/lifecycle/continue-composition.ts:38-45`. That function returns without a start for an import that waits for its activation, at `workspace-resume.ts:31-32`.
+  - After a merge, every member sees Continue, at `docs/mockups/src/components/workspace/barModel.ts:150-160`.
+  - Limit: nobody traced whether a workspace has a cloud computer ID during an activation. So what Continue does during an activation is not proved. If admission passes, `worker/lifecycle/continue-progress.ts:52-70` waits while the state is starting. Check this case before the fix, and keep its result.
+- **Root question:** What recovery step does the Continue refusal give an import that has no cloud computer, so that the step works?
+- **Options:**
+  - **A.** Change nothing. The words keep naming a step that does nothing for an import. Effort: Small.
+  - **B.** For an import that waits for a successful activation, the Worker names the start or retry action that the chat already offers. Before the first activation, the words name Activate. After a failed or stopped first activation, they name Try again. `failedFirstStart` at `src/app/first-start.ts:20-39` already treats both as a failed first start. This is an existing UI rule, not a new start policy. Keep the 409 status, the code `sandbox_unavailable`, the admission, and the starts. Each other workspace keeps the current words. Add a route test of the words. Effort: Small.
+  - **C.** The bar replaces the refusal words for an import that waits for a successful activation, from the awaits-activation fact of the app at `src/app/first-start.ts:14-18`. The Worker words stay. Cost: two owners of one message, and the words of the Worker stay wrong for each other reader of the reply. Effort: Small.
+- **Shared assumptions checked:**
+  - The refusal stays, with its status and its code. Source: the code of `main` and the copy rule. Kept. No option changes the admission.
+  - The words come from the Worker. Source: the bar shows the words of the Worker. It is not a requirement. C drops it.
+- **Left out:**
+  - Hide or disable Continue before a successful activation. That is a choice of [conductor-import-bar-before-activation.md](conductor-import-bar-before-activation.md), an open user question. This item stays right under each answer there, because an old tab can still reach the refusal.
+  - A new error code for this refusal, such as `workspace_not_active`. B gives the same words with no change of the API, so B is better on every point.
+  - Let Continue start the activation. It breaks the rule that only Activate starts the import, because the person chooses when the cloud computer starts, at `imported-workspaces.md:45-46` and `:56`.
+- **Wider fix:** None. The copy rule of the product, which asks an error to give one recovery action that works, is already in force. This is one message.
+- **Previous examples:** The browser guard refusal for a Not active import, "Activate this workspace to start a session.", at `worker/chat/browser-authorization.ts:45-53`, already names the right step.
+- **Related:**
+  - [conductor-import-bar-before-activation.md](conductor-import-bar-before-activation.md): the same refusal. That item decides whether the bar offers Continue before a successful activation, an open user question. One of its options also names Activate in these words. This item is right under each answer there. Neither waits for the other.
+- **Recommendation:** B. One message names the step that works, with no change of status, code, admission, or starts.
+- **Action:** fix after merge, apply B, because both review fix rounds are used and this Low copy defect is not critical. B changes no requirement and adds no rejection. An import is a new caller of an existing refusal. The words name Activate and Try again, which the import rules already require. No user question remains.
+- **Validation of the fix:**
+  - A route test: Continue for a merged import before its first activation answers 409 `sandbox_unavailable` with words that name Activate.
+  - A route test: after a failed activation, and after an activation that stopped, the words name Try again.
+  - A route test: a workspace that is not an import and has no cloud computer keeps the current words.
+  - See each new case fail first with the current code.

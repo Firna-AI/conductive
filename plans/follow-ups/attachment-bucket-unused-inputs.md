@@ -1,0 +1,52 @@
+# Deployment guide says upload inputs are unused
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 26. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `docs/deployment/attachment-bucket.md:47-48`, the sentence "No route reads these three inputs yet." The signer reads the three inputs at `worker/conductor-import/r2-signing.ts:41-47`.
+- **Reason:** The primary review used both of its fix rounds, and this Low docs finding is not critical.
+
+- **Source:** Review. **Category:** Docs or spec. A docs finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Low. Line 47, the setup steps, lines 66-67, and the table of `docs/deployment.md:88`, `:110`, and `:111` state the need correctly. A missing input fails with a specific error, and three settings repair it.
+  - Confidence is High. A trace of the live route reaches the signer.
+  - Harder later is No.
+- **Terms:**
+  - **Upload link:** a short-lived address that lets the Mac app upload one import part directly to private cloud storage.
+  - **The three inputs:** `CHAT_ATTACHMENTS_S3_BUCKET_URL`, `CHAT_ATTACHMENTS_ACCESS_KEY_ID`, and `CHAT_ATTACHMENTS_SECRET_ACCESS_KEY`. The Worker needs them to sign an upload link.
+- **Background:**
+  - Conductive's Mac app sends each part of an import straight to a private R2 bucket, with an upload link that the Worker signs. `docs/protocol/import-uploads.md:14-34` requires a Worker-signed link for each part.
+  - The deployment guide `docs/deployment/attachment-bucket.md` tells a deployer how to set the three inputs.
+  - The live import route reaches the signer: the page calls `POST /api/orgs/:orgId/conductor-import/operations`, the device broker starts the operation, and each `target` event of the Mac reaches `importPartOperation`. Its storage adapter calls `signR2Upload`, which reads the three inputs and throws `not_configured` when one is missing. The runtime turns that into 503 `import_storage_unavailable`, with "Import storage is not available. Try again.", at `worker/conductor-import/runtime.ts:120-125`. No feature flag turns the import off.
+- **Problem:** The guide says that no route reads the three inputs yet. The live import route reads all three. The sentence also contradicts lines 66-67 of the same section: "Without these inputs, an import cannot upload." The `documentation` skill forbids conflicting statements in one doc.
+- **Impact if no action:** A deployer can treat required import settings as unused. Each import then fails at its first part link.
+- **Root question:** How should the deployment guide state when the upload settings are required?
+- **Options:**
+  - **A.** Remove the sentence about unused inputs. Keep the setup steps and the missing-input consequence. Effort: Small.
+  - **B.** Replace that sentence with a link to the current import route and the storage entry points in the Worker guide. The link adds upkeep and no deployment fact, because `docs/deployment.md:7-8` and `worker/conductor-import/storage.md:37` already link the two areas. Effort: Small.
+- **Shared assumptions checked:**
+  - The code is right, and only the doc changes. The requirement and the user's design decisions for the import uploads need a Worker-signed link. Kept.
+  - Only `docs/deployment/attachment-bucket.md` changes, because the two other pages already state the need. Kept.
+  - Only import uploads need the three inputs. Only `createUploadTarget` calls the signer, so lines 66-67 stay true. Kept.
+- **Left out:**
+  - Disable the live route. It breaks the requirement for a Worker-signed link for each part.
+  - Change nothing. The guide keeps a false sentence that contradicts line 47 and lines 66-67.
+  - Rewrite the sentence with the correct fact. A is better on every point, because line 47 and lines 66-67 already state the need.
+  - A caveat about the live proof. A is better on every point, because `worker/conductor-import/storage.md` holds the proof status.
+  - A deploy-time check or a startup warning for missing inputs. The false sentence stays, a deploy-time check is a new gate, and it would stop deploys that `docs/deployment.md:14-15` lets work without these inputs.
+  - A prose test. Doc prose never gets a test.
+  - Fewer than three approaches: the code follows the requirement and the other pages are correct, so the only real choice is inside this one sentence.
+- **Wider fix:** None. The `documentation` skill is in force, and it already covers a "yet" sentence that a wiring change makes false.
+- **Previous examples:** On `main`, commit `1ecffeac` of 7 November 2026 added the section "Inputs that no route reads yet" to `docs/deployment.md`, and commit `b1d03858` of 8 November 2026 removed it when it wired those routes. On this branch, commit `2a83761e` wrote this sentence while it was true, and commit `afed9072` wired the route without removing it.
+- **Related:**
+  - [workspaces-guide-archive-claims.md](workspaces-guide-archive-claims.md) and [privacy-branch-name-rule.md](privacy-branch-name-rule.md): a shared wider fix that is already in force, the `documentation` skill. One docs-only branch can carry all three items. No shared cause or code, and no conflict.
+  - [deployment-docs-assign-setup-tasks.md](deployment-docs-assign-setup-tasks.md): the same file, `docs/deployment/attachment-bucket.md`. One docs-only branch can carry both items. No conflict.
+  - [conductor-import-terms-message-state.md](conductor-import-terms-message-state.md) and [conductor-import-comparison-base-docs.md](conductor-import-comparison-base-docs.md): a shared wider fix that is already in force, the `documentation` skill. The same docs-only branch can carry them. No shared cause or code, and no conflict.
+
+
+- **Recommendation:** A. It removes the only false sentence and keeps each correct statement of the need. The first review recommended A, and the finding check of 2026-11-11 kept it. The root kept A the same day.
+- **Action:** fix after merge, apply A, because the primary review used both of its fix rounds and this Low finding is not critical. Without that limit, the fix rule gives fix now, because a doc contradicts the changed code.
+  - The first review's Action was: "fix after merge, apply A, because the two historical primary fix rounds are used and the fix changes only internal documentation." The root replaced that reason on 2026-11-11: the round limit is the reason, not that internal docs are harmless.
+- **Validation of the fix:**
+  - Read the whole section after the edit, and check that line 47, the setup steps, and lines 66-67 still state the need.
+  - Check each relative link of the changed file by hand. Add no prose test and no gate.

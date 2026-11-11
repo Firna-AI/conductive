@@ -1,0 +1,71 @@
+# Trusted jobs list omits import activation
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. The third integration of `main` at `23628f77b7f0dc8ecb8740a7242e666da53e799f` into the primary parent `51bbebd064463071049595c7ecfd3ce5309d6925` found it at the merge commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7`, finding 40. It includes the independent finding check, its new problem in the token protocol, and the root outcome of the same day.
+- **Location:** The lines are at the merge commit `16a4f76c`.
+  - `docs/architecture/components.md:92-93`: "It runs the trusted jobs of its sandbox: the fetch of a create, and the branch change of Continue."
+  - `docs/protocol/github-tokens.md:26-27`: "A trusted Continue job is the one other case." The next sentence says that its fetch gets the token of the member who pressed Continue.
+- **Reason:** Both review fix rounds are used, and this Low docs defect changes no behaviour, because other docs already state the grant.
+
+- **Source:** Implementation. **Category:** Docs or spec. A docs finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Low. Two docs state a closed set that misses one case. The import rules and the lifecycle guides state the case.
+  - Confidence is High. A read of both docs, the code, and the import rules shows the false claims.
+  - Harder later is No. The edit costs the same later.
+- **Terms:**
+  - **Activation:** the first start of a workspace that the Mac app imported from Conductor. A member presses Activate, and the Workspace Durable Object runs it as its third kind of start.
+  - **Restore:** the `import-restore` phase of the activation. The runner, the agent program in the cloud computer, fetches the branch from GitHub and puts the stored work in place.
+  - **Trusted job:** a job that the workspace runs in its sandbox, and that the git credential route trusts with a member's GitHub token while the job runs.
+- **Background:**
+  - The Workspace Durable Object is one object for each workspace. `docs/architecture/components.md:92-93` says that it runs two trusted jobs: the fetch of a create, and the branch change of Continue. Commit `d7a8a0c9` of `main`, pull request #176, wrote that bullet.
+  - In an agent turn, Git uses the token of the member who sent the turn. `docs/protocol/github-tokens.md:26-27` says that a trusted Continue job is "the one other case". `github-tokens.md:179-181` says that the workspace runs the fetch of Continue as a trusted job, "as it runs the fetch of a create".
+  - The import adds the activation. The object runs it as its third kind of start, at `worker/lifecycle/workspace-controller.ts:84` and `worker/lifecycle/workspace-object.md:130`. Its phases are the import software, the runner launch, and the startup, at `worker/lifecycle/start-command.ts:25-31`.
+  - The activation has its own credential grant. `worker/lifecycle/import-activation.ts:218-233` gives the activator's token only in `import-restore`. The grant holds only for the current attempt and epoch, and only before the deadline. It also needs current users and a workspace that is not archived.
+  - `docs/protocol/imported-workspaces.md:80` says: "These fetches use the GitHub user token of the member who activates." The import's user decision of 9 November 2026 chose the activation. A design call of 10 November 2026 chose the activator's token, because each credential keeps its existing owner.
+  - The merge extended the other grant lists of `main` with the activation: `worker/lifecycle/README.md:34-36`, `worker/lifecycle/workspace-object.md:232-236`, `worker/lifecycle/routes.md:164-169`, and `worker/lifecycle/git-credentials.md:22-25`. Only the two sentences above keep the closed set.
+  - The `documentation` skill says to update an architecture doc when a component, a responsibility, or a boundary changes. It calls a doc stale when it contradicts the code, and it asks docs to be consistent with themselves.
+- **Problem:**
+  - The architecture bullet names "the trusted jobs" with a colon list and no "such as". So it is a closed claim, not silence, and the merged code has three such jobs.
+  - The protocol sentence "A trusted Continue job is the one other case" is false in the merged tree. The restore of an import activation also gets a member's GitHub token outside an agent turn. That sentence contradicts `imported-workspaces.md:80`.
+- **Impact if no action:** A reader of the architecture doc or the token protocol does not learn that the activation restore also gets a member's token. A review of secrets is one example. No behaviour changes.
+- **Evidence:**
+  - `worker/lifecycle/machine.ts:49` and `:96` read the `X-Conductive-Activation-Id` header. `runner/src/import-git.ts:42-48` sets `CONDUCTIVE_ACTIVATION_ID` for each restore Git process. `runner/src/import-git.ts:136-203` runs `ls-remote` and `fetch` against `origin`.
+  - `worker/lifecycle/import-activation-delivery.ts:59-73` and `:141-174` send one `import.command` to the runner for each runner phase, with `restore` for `import-restore`.
+  - The activation files exist at the primary parent `51bbebd0` and at `16a4f76c`, not on `main` or at the common base `89ff2747`. So the merge kept two closed sets that the import makes false.
+  - The legal sentences at `src/marketing/terms-org.ts:51-56`, `src/marketing/privacy-recipients.ts:68-74`, and `src/marketing/privacy-uses.ts:33-40` list their cases with no "only". The finding check read them as silence, not as a false claim. This is a static reading.
+- **Root question:** How does the architecture doc state which trusted jobs the Workspace Durable Object runs in its sandbox, so that the statement stays true after the import activation adds one?
+  - The first words asked how the architecture doc names the trusted jobs of a sandbox. The finding check replaced the question on 2026-11-11, because the defect is a closed statement of a responsibility that the merged code outgrew.
+  - The root added the same closed set in `github-tokens.md:26` to this problem on 2026-11-11. D answers the question for both docs.
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Add "the restore of an import activation" to the list of the architecture doc. Effort: Small.
+    - The first words proposed "the steps of an import activation". The finding check corrected the words, because only `import-restore` gets the activator's token. "The steps" also include the startup script, at `worker/lifecycle/start-command.ts:29`, and `main` does not call the startup script of a create a trusted job.
+    - The merged lifecycle docs already use "the restore of an import activation", at `worker/lifecycle/routes.md:164`, and "the restore of an activation", at `worker/lifecycle/README.md:36`.
+  - **C.** Replace the list with a pointer to the guides of each job. Effort: Small.
+    - C is blocked as written. It replaces the two named jobs of `main`, and docs on `main` are functionality, so a deletion or an override of them needs the user. C also moves a component responsibility out of its home, the architecture doc.
+  - **D.** Apply B. In the same docs change, correct `github-tokens.md:26` so that it names both cases outside an agent turn. Effort: Small.
+    - The fetch of a Continue job gets the token of the member who pressed Continue.
+    - The restore of an import activation gets the token of the member who activates, as [The activation](../../docs/protocol/imported-workspaces.md#the-activation) says.
+    - In `github-tokens.md`, the link to that section is `imported-workspaces.md#the-activation`.
+    - Cost: it also changes a protocol doc sentence. The import's user decision of 9 November 2026 and a design call of 10 November 2026 chose the activator's token. They cover that sentence, so D adds no requirement.
+- **Shared assumptions checked:**
+  - The code is right and the doc is wrong. Source: `imported-workspaces.md:78-84`, the import's user decision of 9 November 2026, and the design call on the activator's token. The reason holds. Kept.
+  - The defect lives only in `components.md:92-93`. Source: the location of the first words. The reason does not hold, because `github-tokens.md:26` states the same closed set. D drops it.
+- **Left out:**
+  - Change the code so that the restore gets no member token outside an agent turn. It breaks `imported-workspaces.md:80` and the activation design, and both stay.
+  - A rule with no list of jobs. It removes the two named jobs of `main`, so it needs the user. For docs drift, no other wider fix applies, because the `documentation` skill already covers the class.
+  - A test or a lint that ties the list to the credential grants. Doc prose gets no test, and a new check needs the user.
+- **Wider fix:** None. The `documentation` skill already asks for an update when a responsibility changes.
+- **Previous examples:** The merge's own extensions of the grant lists of `main`, at `worker/lifecycle/README.md:34-36`, `worker/lifecycle/workspace-object.md:232-236`, and `worker/lifecycle/routes.md:164-169`.
+- **Related:**
+  - [conductor-import-terms-message-state.md](conductor-import-terms-message-state.md) and [conductor-import-comparison-base-docs.md](conductor-import-comparison-base-docs.md): the same cause. The merge kept a sentence of `main` that states a closed set or a scope, and the import adds a case. One docs-only branch can carry all three. No option conflicts, and no fix waits for another answer.
+  - Not linked: [conductor-import-activation-grant-tests.md](conductor-import-activation-grant-tests.md) and [conductor-import-activation-refusal-error.md](conductor-import-activation-refusal-error.md) change the code and the tests of the same grant. Their fixes change no sentence here, and this fix does not wait for them.
+- **Recommendation:** D. It applies B to the architecture doc, and it corrects the same closed set in the token protocol, which the merged grant already makes false.
+  - The first words recommended B. The finding check of 2026-11-11 kept B with the restore words. It said that D is better only when the new problem joins the same follow-up. The root joined it and chose D the same day.
+- **Action:** fix after merge, apply D, because both review fix rounds are used and this Low finding is not critical. Without that limit, a doc that contradicts the changed code would get fix now. D changes no requirement and no behaviour: it aligns two docs with code that `imported-workspaces.md:80` and the recorded activation decision already cover. No user question remains.
+  - The first words' Action named only that the integration fixed no observation. The root corrected the reason on 2026-11-11.
+- **Validation of the fix:**
+  - The fix changes a fact in the architecture doc and in a protocol doc. So read both legal pages and every public guide in full, as the repository rule requires. Correct each sentence that restates the trusted jobs or the token cases. The effort stays Small, near its top.
+  - Keep each word of the two named jobs of `main`.
+  - Check each relative link of the changed files by hand. Add no prose test.

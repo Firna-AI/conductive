@@ -1,0 +1,84 @@
+# Terms message sentence omits unactivated imports
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. The third integration of `main` at `23628f77b7f0dc8ecb8740a7242e666da53e799f` into the primary parent `51bbebd064463071049595c7ecfd3ce5309d6925` found it at the merge commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7`, finding 39. It includes the independent finding check and the root outcome of the same day.
+- **Location:** The lines are at the merge commit `16a4f76c`.
+  - `src/marketing/terms-org.ts:16-17`, the message sentence in the first bullet of "Working in an org", at `:15-19`.
+  - `src/shared/terms.ts:4-5`, the Terms revision.
+  - `src/marketing/terms.ts:33`, the effective date of the Terms.
+  - `worker/security/terms.test.ts:85`, the expected Terms revision of the test.
+- **Reason:** Both review fix rounds are used, and this Low wording defect is not critical, because only the developers can import before a Mac app release.
+
+- **Source:** Implementation. **Category:** Docs or spec. A docs finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Low. The Terms omit one step, and each member who can send messages in the workspace can activate it.
+  - Confidence is High. A read of the Terms, the protocol, and the browser guard shows the false claim.
+  - Harder later is No. The edit costs the same later.
+- **Terms:**
+  - **Not active import:** an imported workspace whose first activation has not started. Its state is `inactive`, and the app shows Not active.
+  - **Terms revision:** the value `TERMS_VERSION` in `src/shared/terms.ts`. Each sign-in records the agreement to the current value.
+- **Background:**
+  - Conductive imports local Conductor workspaces into cloud workspaces. An imported workspace has no cloud computer until a member presses Activate.
+  - The Terms sentence at `src/marketing/terms-org.ts:16-17` says: "In an active org, members can send messages in workspaces that are not archived."
+  - Commit `d7a8a0c9` of `main`, pull request #176, wrote that sentence. It replaced the older words "and can send messages in each workspace" with the two limits.
+  - Each limit matches a refusal of `main`. A suspended org refuses each change with `org_suspended`, at `docs/protocol/operator-actions.md:160-164`. An archived chat refuses each write with HTTP 409 `workspace_archived`, at `worker/chat/browser-request.ts:42-48`.
+  - The import adds a third refusal state. `docs/protocol/messages-and-attachments.md:78-80` says: "An imported workspace accepts no message before its activation starts". `docs/protocol/imported-workspaces.md:43-46` says that the chat asks Activate in place of the composer, so that no message goes before the activation.
+  - The browser guard refuses each chat request other than `GET` and `HEAD` in a Not active import, with HTTP 409 `workspace_not_active` and "Activate this workspace to start a session.", at `worker/chat/browser-authorization.ts:45-53`.
+  - After a failed activation, the import takes messages, which wait for Try again, at `messages-and-attachments.md:75-77`. So only the Not active state lacks messages.
+  - The agent tool writes follow the same message rules, at `messages-and-attachments.md:73-74`. [conductor-import-inactive-tool-writes.md](conductor-import-inactive-tool-writes.md) records the deferred fix that applies the inactive-only refusal to them. That outcome is settled, so no user answer is pending, and the words of this fix wait for no answer. The code fix has not shipped.
+  - The Terms already describe the import, in the paragraph of "Your work" at `src/marketing/terms.ts:200-205`. It says that the work goes to the cloud computer "when a member activates the workspace".
+  - `AGENTS.md`, under Repository rules, and `src/marketing/README.md:130-135` give the legal-page rule. In the same change, update each legal sentence that restates a changed fact, after a full read of both legal pages. A search for the old words is not enough.
+  - Each sign-in starts after an agreement to the current Terms revision. A changed revision applies at the user's next sign-in, at `docs/protocol/access-and-security.md:45-57`.
+  - Today only the developers can import. The import entry shows only in the Mac app, and a Mac app release with the import is still open after the merge.
+- **Problem:** The Terms sentence states two limits for messages, but the merged product has a third. The sentence has no exception for a Not active import. It is a claim with limits, not silence on a detail, so it contradicts the product.
+- **Impact if no action:** The Terms omit a step. A Not active import takes no message until a member starts its activation. Each member who can send messages there can activate it, at `imported-workspaces.md:56-57`.
+- **Evidence:**
+  - At commit `16a4f76c`, `terms-org.ts` has the same blob as on `main`. The import rule at `messages-and-attachments.md:78-80` exists at the primary parent `51bbebd0` and at `16a4f76c`, not on `main` or at the common base `89ff2747`. So the merge made the sentence of `main` false.
+  - `docs/protocol/orgs-and-members.md:165` says that every member can send messages in every workspace of the org, with no state list. But `main` chose state limits in the Terms, and it excluded an archived workspace, which each member of an active org can restore. The same reading excludes a Not active import, which each such member can activate.
+  - This is a static reading. Nobody ran the chat or the server.
+- **Root question:** How do the Terms say which workspaces take messages, so that each Terms statement is true for a Not active import?
+  - The first words asked how the Terms say which workspaces take messages, so that the sentence is true for imports. The finding check replaced the question on 2026-11-11, because two options put the words in other places, and only the Not active state lacks messages.
+- **Options:**
+  - **A.** Change nothing until the Mac app release ships the import. The Terms already describe the import, and the release task names no Terms change, so A has no owner. Effort: Small.
+  - **B.** Add one sentence after it: "A workspace from Conductor takes messages after its activation starts." Effort: Small.
+    - It needs a new Terms revision at `src/shared/terms.ts:4-5`, a new effective date at `src/marketing/terms.ts:33`, and the new expected literal at `worker/security/terms.test.ts:85`.
+    - Each user then accepts the Terms again at the next sign-in, as `access-and-security.md:55-57` says.
+    - Optional words: "only after its activation starts", so that the exception is explicit.
+  - **C.** Say that members can send messages where the workspace can take them, with no list of states. It removes the only Terms statement that an archived workspace takes no message. It also needs a new Terms revision. Effort: Small.
+  - **D.** Add the exception to the import paragraph of "Your work", at `src/marketing/terms.ts:200-205`. Example: "Before a member activates it, an imported workspace takes no message." The sentence of `main` stays word for word. The org sentence then has no exception where a reader looks for the rule. It needs a new Terms revision. Effort: Small.
+  - **E.** Define one Terms phrase for a workspace that takes messages. It covers an active org, a workspace that is not archived, and a workspace from Conductor after its activation starts. The member sentence and the tools sentence at `terms-org.ts:20-21` both use it. The next such state then needs one edit. It rewrites two sentences of `main`. It needs a new Terms revision. Effort: Small.
+- **Shared assumptions checked:**
+  - No message goes before the activation. Source: `imported-workspaces.md:24-25` and `:43-46`, `messages-and-attachments.md:78-80`, and the import's user decision of 9 November 2026, which chose that opening the workspace asks to activate it. The reason holds: the person chooses when the cloud computer starts. Kept.
+  - The Terms restate the protocol, not the current code. Source: the comment at `terms-org.ts:4-10` and `src/marketing/legal-pages.md:13-15`. The reason holds. Kept.
+  - The Terms describe the import before the Mac app release. Source: `terms.ts:200-205`. The reason holds. Kept. A drops it.
+  - The two limits of `main` stay: an active org, and a workspace that is not archived. Source: commit `d7a8a0c9` and the two refusals of `main`. The reason holds. Kept. C drops it.
+- **Left out:**
+  - Let a Not active import take messages. A message that waits starts no cloud computer. But the change breaks two requirements that stay. The workspace has no first message and no session until the activation, at `imported-workspaces.md:24-25`. Its chat shows Activate in place of the composer, at `:43-46`. The change also alters the product to fix one sentence.
+  - Remove the message sentence. C is better on every point, because C keeps the fact that members can send messages.
+  - A test of the Terms prose. Doc prose never gets a test.
+- **Wider fix:** None. The legal-page rule of `AGENTS.md` and the `documentation` skill are in force. For docs drift, no other wider fix applies.
+- **Previous examples:**
+  - [workspaces-guide-archive-claims.md](workspaces-guide-archive-claims.md): a public guide claim that is false for a never-started import.
+  - [privacy-branch-name-rule.md](privacy-branch-name-rule.md): a Privacy claim that is false for an existing branch.
+- **Related:**
+  - [legal-agent-message-state.md](legal-agent-message-state.md): the same section of the Terms and the same cause. The tools sentence omits the same Not active state, and also the archived state. One Terms revision can cover both fixes. E here defines one phrase for both sentences.
+  - [conductor-import-inactive-tool-writes.md](conductor-import-inactive-tool-writes.md): the same cause. The write paths of `main` know two no-write states, and the import adds a third. That item records the deferred fix that applies the inactive-only refusal to the agent tool writes. The Terms restate the protocol, so the words of B stay true before and after that fix. Its outcome is settled, so this item waits for nothing.
+  - [conductor-import-bar-before-activation.md](conductor-import-bar-before-activation.md): the same cause. The bar of `main` hides its actions only for an archived workspace and a suspended org. Its answer does not change B, because a bar action is a message, and the message rule stays.
+  - [workspaces-guide-archive-claims.md](workspaces-guide-archive-claims.md): the same class, and a shared follow-up branch. The current-product rule keeps import words out of the guides, but it does not reach the Terms, which already describe the import. No conflict.
+  - [privacy-branch-name-rule.md](privacy-branch-name-rule.md): the same class, and a shared follow-up branch. One full read of both legal pages can fix both. A Privacy correction alone needs no new Terms revision, but B changes the Terms. When both ship together, one Terms revision covers the change.
+  - [conductor-import-trusted-jobs-docs.md](conductor-import-trusted-jobs-docs.md) and [conductor-import-comparison-base-docs.md](conductor-import-comparison-base-docs.md): the same cause. A sentence of `main` omits a fact of the import change. One docs-only branch can carry all three. No conflict and no dependency.
+  - [attachment-bucket-unused-inputs.md](attachment-bucket-unused-inputs.md): a shared wider fix that is already in force, the `documentation` skill. The same docs-only branch can carry it.
+  - [conductor-import-public-guide-access.md](conductor-import-public-guide-access.md): the guide line `src/marketing/docs/overview.md:88` repeats the sentence. It is older than the Terms sentence of `main`. The change that publishes the Mac app release adds the exception there.
+- **Recommendation:** B. It puts the exception next to the rule, keeps both limits of `main`, and adds one fact of the protocol.
+  - D leaves the org sentence false where a reader looks for the rule. E rewrites two sentences of `main`. C removes the only Terms statement that an archived workspace takes no message. A has no owner.
+  - The first words recommended B. The finding check of 2026-11-11 kept B. The root kept B the same day. It removed the check's proposed wait for the tool-write answer, because that outcome is settled and no user answer is pending.
+- **Action:** fix after merge, apply B, because both review fix rounds are used and this Low finding is not critical. Without that limit, a doc that contradicts the changed code would get fix now. B changes no requirement: it restates `imported-workspaces.md:43-46` and `messages-and-attachments.md:78-80`, and its new Terms revision follows the existing consent rule. No user question remains.
+  - The first words' Action named only the used fix rounds and that the integration fixed no observation. The root corrected the reason on 2026-11-11.
+- **Validation of the fix:**
+  - Read both legal pages and every public guide in full, as the repository rule requires. Correct each legal sentence that restates the message rule.
+  - Set a new value of `TERMS_VERSION` at `src/shared/terms.ts:4-5`. At commit `16a4f76c` it is `2026-11-11-conductor-import-gateway-actions-sessions-archive-restore-routines-feedback`.
+  - Set the effective date at `src/marketing/terms.ts:33` to the day that the fix ships. At commit `16a4f76c` it is "11 November 2026".
+  - Change the expected literal at `worker/security/terms.test.ts:85` to the new value. See the test fail first on the old literal, then pass, with each other assertion unchanged.
+  - When the fix ships with the Privacy correction or with the tools sentence fix, use one new Terms revision for the change.
+  - Check each relative link of the changed files by hand. Add no prose test.

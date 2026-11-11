@@ -1565,21 +1565,56 @@ Depends on: every other milestone
 Captured-main integration record: `.context/import-from-conductor/current/next-main-integration/root-integration-audit.md`.
 Desktop integration record: `.context/import-from-conductor/current/next-m6-integration/root-integration-audit.md`.
 PR main integration record: `.context/import-from-conductor/current/pr-main-integration/root-integration-audit.md`.
+Second PR main integration record: `.context/import-from-conductor/current/pr-main-integration-2/root-integration-audit.md`.
+Third PR main integration record: `.context/import-from-conductor/current/pr-main-integration-3/root-integration-audit.md`.
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Run the targeted tests and the complete gate, `npm run check`.
 - [ ] Smoke-test the import in the Mac app with one transferred Claude
       workspace and one transferred Codex workspace, after the user agrees.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
+- [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Full review summary, 11 November 2026: three fresh first passes covered
+all 699 changed paths of `cfbf916c`. A supplementary pass and the second
+and third main integrations added findings. One fresh check for each of
+findings 7 to 41 confirmed 34 findings and removed finding 23. Both child source fix rounds
+and both primary mockup fix rounds are used. No source fix ran for findings 7 to 41 in this review. Each
+confirmed finding has an item in [the follow-up folder](follow-ups/).
+
+- Findings 8, 9, 31, 34, 35, 36, and 38 wait for the user. Findings 8 and
+  9 also need a third source fix round, which only the user can release.
+- Finding 9 amends the root recommendation E of the Milestone 6 summary
+  to G, in [Submodule working content](follow-ups/conductor-import-submodule-working-content.md).
+  G keeps the report of E and gives each entry one disposition.
+- The three unnumbered focus observations of the Milestone 6 summary are
+  now findings 8, 11, and 16:
+  [tracked nested files](follow-ups/conductor-import-tracked-nested-files.md),
+  [Git tree facts](follow-ups/conductor-import-git-tree-facts.md), and
+  [split index scan](follow-ups/conductor-import-split-index-scan.md).
+- Finding 38 asks which actions the pull request bar of an import offers
+  before a successful activation, in
+  [Bar offers actions before an activation](follow-ups/conductor-import-bar-before-activation.md).
+
+Root merge calls of the third main integration, 11 November 2026: merge
+`16a4f76c` of `51bbebd0` and captured main `23628f77` sets the Terms
+revision to
+`2026-11-11-conductor-import-gateway-actions-sessions-archive-restore-routines-feedback`,
+for the import text and main's text together. An absent optional
+activation capability becomes null, with the existing refusal. Both copies
+of `callingToolTurn` stay. These are mechanical merge calls, not user
+decisions, and the merge fixes no finding.
+
+Review record: `.context/reviews/calummoore/conductor-import-option/findings.md`.
+Gate record: `.context/import-from-conductor/current/pr-main-integration-3/combined-gate/gate-receipt.json`.
 
 ## Post-merge follow-up (non-blocking)
 

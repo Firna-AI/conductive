@@ -3,23 +3,35 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-11, from branch `calummoore/untitled-v4`, the full read of the legal pages for its protocol doc change.
-- **Location:** `src/marketing/legal-pages.md`, the paragraph that names the files of the legal pages, and the legal pages rule in `AGENTS.md`.
+- **History:**
+  - 2026-11-11, the import review of pull request #223, branch `calummoore/conductor-import-option`, found the same omission in `src/marketing/legal-pages.md`, and the parallel missing entry in `src/marketing/key-code.md`.
+  - 2026-11-11, its duplicate proposal was merged into this record. The Added line, options A to C with their meanings, recommendation B, wider fix B, and the Action stay. The proposal's two other alternatives became D and E.
+- **Location:** `src/marketing/legal-pages.md`, the paragraph that names the files of the legal pages, and the legal pages rule in `AGENTS.md`. Also `src/marketing/key-code.md:66-70`, the legal-page entry points. At commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7`, the paragraph is at `legal-pages.md:21-28`, and the rule is at `AGENTS.md:131-136`.
 - **Reason:** the branch did not change the legal pages or their docs.
 
 - **Source:** Implementation. **Category:** Docs or spec.
 - **Background:**
   - `AGENTS.md` says: when a change touches a fact in the architecture doc or a protocol doc, read both legal pages in full. It names them as `src/marketing/terms.ts` and `src/marketing/privacy.ts`.
-  - `src/marketing/legal-pages.md` says that `terms.ts` with `terms-org.ts`, `privacy.ts` with `privacy-uses.ts`, and `legal-text.ts` hold the words of the legal pages.
+  - `src/marketing/legal-pages.md` says that `terms.ts` with `terms-org.ts`, `privacy.ts` with `privacy-uses.ts`, and `legal-text.ts` hold the words of the legal pages. At commit `16a4f76c`, the same list also names `privacy-closing.ts`.
   - `privacy.ts` also imports `privacyRecipientsSection` from `src/marketing/privacy-recipients.ts`. That file holds the recipients section of the Privacy page.
-- **Problem:** Neither doc names `privacy-recipients.ts`, and `AGENTS.md` names none of the section files.
+  - `src/marketing/key-code.md:66-70` names the same legal page modules, with the section that each section module holds. It names `privacy-uses.ts` and `privacy-closing.ts`, but not `privacy-recipients.ts`.
+  - The documentation skill makes the Key Code list the home of the entry points of an area, and it asks to update that list when an entry point moves. The recipients section moved out of `privacy.ts` into its own module.
+- **Problem:** Neither doc names `privacy-recipients.ts`, and `AGENTS.md` names none of the section files. The marketing code map also omits the recipients module. The marketing lists are silent, not stale, because they do not claim completeness. The moved entry point still needs a code-map entry.
 - **Impact if no action:** An agent that reads only the named files can miss a sentence of the Privacy page that restates a changed fact.
 - **Root question:** How does an agent find every file that holds the words of the legal pages?
 - **Options:**
   - **A.** Add `privacy-recipients.ts` to the file list in `legal-pages.md`. Effort: Small.
+    - Also add the recipients entry to `src/marketing/key-code.md`, beside the parallel privacy section modules.
   - **B.** Do A, and make the `AGENTS.md` rule link to that list instead of naming two files. Effort: Small.
   - **C.** Keep each legal page in one file. It undoes the split that keeps each file under the length limit. Effort: Medium.
-- **Left out:** None.
+  - **D.** Replace the file lists of `legal-pages.md` and `key-code.md` with one rule: the words live in the `terms` and `privacy` modules and in `legal-text.ts`, so a new section module needs no doc change. Cost: Key Code then names no entry point, against its role. Effort: Small.
+  - **E.** Change nothing. Effort: Small.
+- **Letter map to the import review:** its A, which named the module in both docs, is A here with the Key Code detail. Its B, the generic rule, is D here. Its C, change nothing, is E here. The import review had no counterpart of B or C here.
+- **Left out:** A check that each legal module is named in the docs. It is a new gate, which the user decides. Before the merge, this field said "None."
 - **Wider fix:** B, because one list then names every file, and the rule points to it.
 - **Previous examples:** None found.
+- **Related:**
+  - [privacy-branch-name-rule.md](privacy-branch-name-rule.md): the same recipients module. The branch-name sentence that it corrects lives in `src/marketing/privacy-recipients.ts`. One docs branch can carry both corrections.
+  - [pricing-shared-component-reference.md](pricing-shared-component-reference.md): the same marketing code map, with a different missing entry. One docs-only branch can carry both.
 - **Recommendation:** B. One list stays the single place that names the files.
 - **Action:** fix after merge, apply B, because the files are outside the branch that found the gap.

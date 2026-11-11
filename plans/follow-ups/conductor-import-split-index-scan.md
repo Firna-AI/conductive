@@ -1,0 +1,78 @@
+# Split indexes lose scan size estimates
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 16. It includes the independent finding check and the root outcome of the same day. After the supplementary review of the same day, the root folded in the concurrent index replacement that the check found. It also records the open observation about `desktop/src/import/git.ts:229` that the child review of head `d6bd4fbf` left for this review.
+- **Location:** `desktop/src/import/git.ts:192-244`, `controlledWorktree`, with the index copy at `:227-234` and its fallback only for an absent index at `:230-233`. `desktop/src/import/safe-files.ts:51-84`, the identity check of `readSourceFile`. `desktop/src/import/inventory.ts:51-63`, which passes the index path and `preserveStatCache`. `desktop/src/import/scan.ts:21-48`, with the catch at `:43-46`. `desktop/src/import/source.ts:117-119`, a row with the database branch and no size. `desktop/src/import/upload-session.ts:16-24`, which reserves with that row.
+- **Reason:** The import review used both of its fix rounds, and this Rare Medium product bug gets fix after merge under the fix rule.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Likelihood is Rare. `core.splitIndex` is false by default, and the Git manual describes split mode for very large indexes. Neither `feature.manyFiles` nor the Git default turns it on. A concurrent index write during the scan copy needs another Git process at that moment.
+  - Confidence is High for the split-index failure. Git's index format and `read_index_from` in `read-cache.c` show the fatal error. The safety of the recommended fix comes from Git's source and is unverified at runtime, so its regression is the first proof.
+  - Harder later is No. The fix stays in one helper and changes no stored format.
+- **Terms:**
+  - **Split index:** a Git index whose main file depends on a `sharedindex.<hash>` file in its Git directory.
+  - **Stat cache:** the cached file metadata of an index, which lets Git skip unchanged files.
+  - **Private comparison repository:** the temporary Git directory that `controlledWorktree` makes, so that no filter or config of the source runs.
+- **Background:**
+  - Conductive's Mac app scans the Conductor workspaces of a Mac and shows each one as a row with its upload size. `docs/protocol/conductor-import.md:73-74` and `:98-99` require the size of each row and of the selection before Import.
+  - For each workspace, the scan copies the source index into a private comparison repository, and compares the working files there. The agent call of 10 November 2026 chose this checked copy of the source index for scan estimates. Reason: a source index can hide a clean materialized LFS payload through its cached metadata.
+  - The stage inventory of an upload builds a fresh index from HEAD. The single-row scan at the start of each upload copies the index as a scan does, at `desktop/src/import/upload-session.ts:16-19` and `desktop/src/import/worker.ts:36-39`.
+  - The scan must change nothing in the source and run no source filter, at `docs/protocol/desktop-import.md:55-56`. It must stay fast for many workspaces, at `docs/protocol/desktop-import.md:72-73`.
+- **Problem:**
+  - With `preserveStatCache`, `controlledWorktree` copies only the index file to the private `index`. Each private command sets `--git-dir` to the private folder.
+  - Git's index format says that the `link` extension names `$GIT_DIR/sharedindex.<hash>`, and a reader cannot skip it. `read_index_from` tries that file in the Git directory and then beside the index file. A missing file ends in `die_errno("%s: index file open failed")`.
+  - In the private repository, both places are the private folder, and neither holds the shared file. So the first private read, `git diff` at `inventory.ts:67-77`, fails.
+  - The catch at `scan.ts:43-45` keeps `workspace.row`, which has `uploadBytes: null` and the database branch.
+  - Concurrent replacement: `readSourceFile` compares the file identity before and after the copy. Git replaces an index by rename, so another Git process that writes the index during the copy makes the copy throw `source_changed`. `controlledWorktree` falls back only for an absent index, so this row also loses its size until the next scan.
+- **Impact if no action:**
+  - The row shows no size, because `estimatedSize(null)` returns null at `src/shell/import/ImportRowParts.tsx:24-26`. The selection line drops its size when one selected row has none, at `src/shell/import/ImportListView.tsx:24-31`. The upload progress shows no total, at `src/shell/import/ImportProgressView.tsx:31-34`.
+  - The single-row scan of an upload fails in the same way. So `reserve` gets no size and the Conductor database branch, not the checked-out branch.
+  - When those two branches differ, `desktop/src/import/upload-package.ts:64-70` stops the upload with `source_changed`. An empty database branch makes the row unavailable, at `worker/conductor-import/scan-state.ts:22`. This stopped upload needs that second condition, and nobody measured how often the two branches differ.
+- **Root question:** How should a scan measure each valid workspace's upload size, for every Git index layout, fast and without a change to the source?
+  - The first review asked how scanning keeps a usable private index for every supported source index. The finding check replaced it on 2026-11-11, because one option uses no private index, and the goal is the size that each row must show.
+  - The fold of 2026-11-11 keeps this question. An index that another Git process replaces during the copy is one more case of it.
+- **Options:**
+  - **A.** Always build the scan's index from HEAD, as uploads already do. It removes the split dependency, but it drops the stat cache. The private repository disables all filters, so each materialized LFS payload then counts as changed, and it reverses the agent call of 10 November 2026. Effort: Small.
+  - **B.** Make a self-contained private index: copy the split dependency safely, and normalize the private index before the comparison. Add a split-index scan regression. Effort: Medium.
+    - B must know the split-index file, so it is a direct fix. Find the file through Git, with `git rev-parse --path-format=absolute --shared-index-path` and `GIT_INDEX_FILE` set to the private copy, so that it also works in a linked worktree. Copy it without the time check of `readSourceFile`, because Git refreshes the shared file's time on each read, and Git's checksum check rejects a torn copy. Normalize only in the private repository, and keep the copied stat data.
+  - **C.** Calculate estimates without a copied index, with a dedicated Git selection pass and a metadata walk of changed candidates. It replaces the comparison design of the scan. Effort: Large.
+  - **D.** Fall back to a fresh private index from HEAD when the copy cannot be made or read, after one private read such as `update-index --no-split-index` checks the copy. A stop still ends the job. Cost: such a workspace hashes every tracked file, so one large workspace delays the whole list, because the scan returns all rows together. Each materialized LFS payload also counts as changed, so the size can be far too high. Effort: Small.
+  - **E.** Let Git make the copy self-contained while it resolves the split dependency in the source Git directory. Effort: Small.
+    - After the copy, run `git update-index --no-split-index` with `GIT_INDEX_FILE` set to the private copy and `--git-dir` set to the source Git directory.
+    - Use an empty private folder as the work tree and as the working folder of that command.
+    - Git then reads the shared file where it lives, checks its checksum, and writes only the private copy.
+    - Git's racy-entry check runs `lstat` on each entry path and stops when that fails, in `ce_smudge_racily_clean_entry` of `read-cache.c`. With an empty work tree, no working file is reachable and no clean filter can run.
+    - The comparison stays in the private repository, with the copied stat cache. Keep the absent ignore index at `git.ts:237`.
+    - Cost: one more Git command reads the local config of the source, and Git refreshes the shared file's time. The existing source reads at `inventory.ts:79-92` already do both.
+    - When the copy throws `source_changed` because Git replaced the source index during the copy, `controlledWorktree` copies the new index again, a small fixed number of times.
+    - `readSourceFile` keeps its identity check unchanged. A stop still ends the job.
+    - A copy that still changes after the last retry keeps today's result: the row with no size.
+  - **F.** E and D together. Cost: the slow scan and the too high LFS sizes of D in rare cases. A retry of the copy is the better fix for a concurrent replacement. Effort: Medium.
+- **Left out:**
+  - Change nothing. Each row and the selection must show the upload size.
+  - Rewrite the source index. It breaks the read-only scan rule.
+  - Read the live source index in place. `git diff` takes the index lock and can rewrite the index that it reads, in `refresh_index_quietly` of Git's `builtin/diff.c`.
+  - The runner's way: Git in the source repository with the real work tree, as `runner/src/git-index.ts:65` does. E is better on every point. Its index write can hash racy entries through the clean filters of the source, and its stat clearing at `runner/src/git-index.ts:71-83` costs what A costs.
+  - A size from Conductor's database. The scan may read only the records at `docs/protocol/desktop-import.md:57-66`.
+  - Relax the identity check of `readSourceFile` for the index. The root fold keeps it, because a copy that changes during the read can be torn.
+- **Wider fix:** None. B, E, and the E part of F depend on the split-index detail, so they are direct fixes. D needs no index detail, but its fallback can show a far too high size, so it moves the defect. Git's index format names a separate file only in the split-index extension, so E covers every current index layout.
+- **Previous examples:** `runner/src/git-index.ts:65` normalizes a copied index while Git still uses the source Git directory, from commit `66ad57da`. The child review of head `d6bd4fbf` left this observation unnumbered, and [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md) named it. Neither is another occurrence.
+- **Related:**
+  - [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md): the same code. That item changes the storage lifetime of `controlledWorktree`. Apply both in one change of the helper, so that each new step stays inside its cleanup scope.
+  - [conductor-import-submodule-working-content.md](conductor-import-submodule-working-content.md): the same code. This link applies to the submodule check during the scan, option H. A submodule can use a split index, so use the same helper. Upload comparisons rebuild the index and avoid this copy.
+  - [conductor-import-tracked-nested-files.md](conductor-import-tracked-nested-files.md): the same code, minor. The helper returns the absent ignore index that both ignore calls of that item use. This fix keeps it absent.
+  - [conductor-import-sparse-checkout-deletions.md](conductor-import-sparse-checkout-deletions.md): the same code, and a shared wider fix. This fix changes the same private index builder. A fresh scan index, as A would make, would list the false deletions of that item in the scan. Its D and this fix can share one builder.
+  - [conductor-import-failed-estimate-branch.md](conductor-import-failed-estimate-branch.md): the same code and the same trigger. A split index is the only persistent estimate failure that item found. E removes that trigger, but not its class. Its regression must not use a split index after E lands.
+- **Recommendation:** E. E fixes the only index layout that needs a separate file, and Git does the work. It keeps the fast stat cache, needs no copy of the shared file, and needs no index parser. The bounded retry covers a concurrent replacement and keeps the identity check.
+  - The first review recommended B. The finding check of 2026-11-11 recommended E, and the root chose E the same day. The root's fold of the concurrent replacement, also on 2026-11-11, keeps E. The bounded copy retry is an internal detail of E.
+- **Action:** fix after merge, apply E, because this Rare Medium product bug gets fix after merge, and the import review used both of its fix rounds.
+  - The first review's Action was: "fix after merge, apply B, because this Rare visible defect has an upload workaround and the source fix rounds are used. The review owner makes the final outcome call." The check found that the upload has no such workaround, because its single-row scan fails too.
+- **Validation of the fix:**
+  - Put the split-index regression in `desktop/src/import/scan.test.ts`, through the real worker job. Make the fixture with `git update-index --split-index`. Assert the exact size and unchanged source hashes.
+  - Keep the unsafe filter of that fixture, so that the test also proves that no source filter runs.
+  - Add one case where the index changes between two copies, through a seam on the copy, and assert the retried size.
+  - Keep both cases out of `desktop/src/import/inventory-nested.test.ts`, which fails on the Mac CI jobs for another reason.
+  - The fixture at `desktop/tests/import-fixture.ts:52` is a plain repository, and Conductor uses linked worktrees. E resolves both layouts through Git, so add one linked-worktree case.
+  - Keep every current assertion, guard, and time limit.

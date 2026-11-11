@@ -1,0 +1,74 @@
+# Activation credential grants lack test coverage
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 18. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `worker/lifecycle/machine.ts:49`, the read of `X-Conductive-Activation-Id`. `worker/lifecycle/machine.ts:53-81`, the authorization before and after `freshGitHubUserToken`. `worker/lifecycle/machine.ts:91-101`, the refusal of both headers and the call of the resolver. `worker/lifecycle/import-activation.ts:218-233`, `activationCredentialSender`. `image/git-credential-helper.mjs:22`, `:29`, and `:51-53`. `image/git-credential-helper.sh:4` and `:12`. `runner/src/import-git.ts:42-48`, the restore Git environment. `worker/lifecycle/import-activation.test-support.ts:176-188`, the synthetic acknowledgements.
+- **Reason:** The import review used both of its fix rounds, and this test gap is not critical: the current guard is correct.
+
+- **History:** 2026-11-11, root integration record. The Location field now points to `16a4f76c`. The detailed static trace keeps its reviewed source citations. The reviewed Location field was:
+
+> `worker/lifecycle/machine.ts:39`, the read of `X-Conductive-Activation-Id`. `worker/lifecycle/machine.ts:43-71`, the authorization before and after `freshGitHubUserToken`. `worker/lifecycle/machine.ts:81-91`, the refusal of both headers and the call of the resolver. `worker/lifecycle/import-activation.ts:218-233`, `activationCredentialSender`. `image/git-credential-helper.mjs:22`, `:29`, and `:51-53`. `image/git-credential-helper.sh:4` and `:12`. `runner/src/import-git.ts:42-48`, the restore Git environment. `worker/lifecycle/import-activation.test-support.ts:176-188`, the synthetic acknowledgements.
+
+- **Source:** Review. **Category:** Test. A test finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Medium: a gap in the gate with no current defect.
+  - Confidence is High. Test searches and reads show that no test exercises the grant. No test, build, or probe ran to confirm each source change below.
+  - Harder later is No. The tests can land at any time with the same cost.
+- **Terms:**
+  - **Activation grant:** permission for the current import restore to receive the activator's GitHub user token.
+  - **Epoch:** the workspace counter that invalidates an older lifecycle attempt.
+  - **Helper:** `image/git-credential-helper.mjs`, the shipped program that asks the Worker for a GitHub token in Git `get` mode or in `token` mode.
+  - **Wrapper:** `image/git-credential-helper.sh`, the shipped launcher. It loads the saved sandbox variables and keeps the caller's turn ID and attempt ID.
+  - **Hop:** one step of the restore token request: the runner, the wrapper, the helper, the Worker route, or the resolver.
+- **Background:**
+  - Import restore needs GitHub access before any agent turn exists. So the runner sets `CONDUCTIVE_ACTIVATION_ID` for its restore Git and LFS processes, and the helper sends it in the `X-Conductive-Activation-Id` header in place of a turn ID.
+  - The resolver gives the activator only for the current attempt in the `import-restore` phase, with no cancel, no failure, no passed deadline, and the current epoch. Then `requireActiveStartUsers` checks the users, and an archived workspace gets null.
+  - The route refuses a request with both headers. It authorizes before and after the token refresh, and it refuses when the two authorizations select different people.
+  - `docs/protocol/imported-workspaces.md:80` says: "These fetches use the GitHub user token of the member who activates." The importer owns the imported workspace, at `docs/protocol/imported-workspaces.md:26`. `worker/lifecycle/routes.md:174-179` and `:214-217` give the header and the grant limits.
+  - The `testing` skill requires a test for each requirement that a change adds, and for an error path that a requirement states.
+- **Problem:** No test requests the credential route with the activation header. Activation tests acknowledge restore commands with a synthetic `import.result`, so no Git process and no credential request runs. The runner LFS test replaces the helper process. Each of these source changes passes every current test:
+  - The resolver returns null. Each restore of a private repository then fails at its Git fetch.
+  - The resolver returns `job.activation.importerUserId`. The restore then uses the importer's token.
+  - `machine.ts:39` reads a wrong header name. The request takes the path with no header, and `worker/lifecycle/machine-credential-data.ts:22` selects the owner, who is the importer.
+  - The helper loses lines 51-53. Its `get` check at line 29 still passes, so Git and LFS get the importer's token.
+  - The wrapper loses line 12. The saved empty value from `worker/lifecycle/sandbox-environment.ts:44` replaces the caller's attempt ID. Git gets no credential, and the LFS `token` request gets the importer's token.
+  - `runner/src/import-git.ts:45` loses the attempt ID. Each restore Git credential request fails. The runner restore tests map GitHub to a local remote at `runner/test-support/import.ts:94`, so Git asks for no credential.
+  - The phase check at `import-activation.ts:223` goes away. The grant then stays open after the restore.
+- **Impact if no action:** A later change can give the restore another member's token with no error, or block each activation of a private repository, and still pass the full gate. Both results touch the isolation and secrets rules of the repository.
+- **Evidence:** Test searches for `Activation-Id`, `activationCredentialSender`, and `CONDUCTIVE_ACTIVATION_ID` find only `runner/src/import-lfs.test.ts:96` and `:125`. The machine credential tests send a turn header or no header. `worker/lifecycle/git-credential-helper.test.ts` sets only `CONDUCTIVE_TURN_ID` through `worker/lifecycle/credential-launcher-test-support.ts:138`. The full gate passed at head `cfbf916c` with no proof of the grant. This is a coverage finding, not a claim that the current guard is wrong.
+- **Root question:** How does the gate prove that an import restore gets the activator's GitHub token, and only for the current restore attempt?
+  - The first review asked how tests protect the activation's GitHub credential boundary. The finding check replaced it on 2026-11-11, because the requirement covers each hop, not only the Worker route.
+- **Options:**
+  - **A.** Extend the public machine credential tests with a real saved activation. Use different importer and activator tokens. Assert the activator token during the restore, and a refusal after an invalidation, also while the token refresh waits. Effort: Small.
+  - **B.** Run the shipped helper against the production Worker path in one controlled integration fixture, with the same grant and refusal cases. It also checks the header transport, with more fixture work. It misses the runner Git environment. Effort: Medium.
+  - **C.** Prove each hop at its own level, in three existing harnesses. Effort: Medium.
+    - Route and resolver: add the route test of A. Make one refusal case a phase after `import-restore`. Add the refusal of a request with both headers. Add the refusal when the grant becomes invalid while `freshGitHubUserToken` waits.
+    - Helper and wrapper: add an activation case to `worker/lifecycle/git-credential-helper.test.ts`. Save the empty `CONDUCTIVE_ACTIVATION_ID`, as the sandbox does, and pass an attempt ID with an empty turn ID. Run it in `get` mode and in `token` mode. Assert the activation header, no turn header, and the returned token. Give `credentialLauncher.run` an optional environment, as `runGitHub` already has.
+    - Runner: extend the restore test that already records `spawn` calls at `runner/src/import-lfs.test.ts:98`. Assert that each restore Git process gets the attempt ID and an empty turn ID.
+    - Read the header name from one shared constant in `machine.ts` and in the tests, as `TOOL_TURN_HEADER` does for the turn header. The behaviour stays the same.
+- **Shared assumptions checked:**
+  - The protection is tests, not a behaviour change. Kept, because the source trace finds the current grant correct.
+  - No live GitHub, cloud computer, or Mac is needed. Kept, by `worker/lifecycle/tests.md:123`.
+  - Only the Worker route and the resolver need new proof. It does not hold, because three of the changes above fail outside the route. C drops it.
+- **Left out:**
+  - Change nothing. Each source change above stays undetected.
+  - A resolver-only fake. It misses the route and its second authorization read.
+  - Live GitHub credentials. They need credentials and add no proof.
+  - One test across the runner, the helper, the route, and a fake GitHub. It breaks the rule to test at the lowest level that fails, and it needs a new harness across packages.
+  - A restore-only `token` mode that refuses with no attempt ID. It proves nothing and still needs the tests of C.
+  - A registry of all credential grants with one table test. The testing rule already covers this class.
+  - A token delivery with no helper call. The current design meets the requirement.
+- **Wider fix:** None. The testing rule that each new requirement gets a test is in force. A test of all grants for the class needs the user.
+- **Previous examples:** `worker/chat/integration/machine-credentials.test.ts:37` checks the native turn sender through the public route. `worker/chat/integration/workspace-preparation-credentials.test.ts:43` proves the creation grant there. `worker/lifecycle/machine-authorization-race.test.ts:161` checks the refusal after a turn ends during the token refresh. `worker/lifecycle/default-branch-command.test.ts:11` proves the sender token with real Git and the real route. `worker/lifecycle/git-credential-helper.test.ts:7` proves the turn header through the installed launcher. The activation grant is the only grant with none of these proofs.
+- **History:** 2026-11-11, before the supplementary links: "None. The runner case of C can share `runner/src/import-lfs.test.ts` with other fixes of the import restore, with no conflict. That is not a link of shared cause, code, or fix."
+- **Related:**
+  - [conductor-import-activation-refusal-error.md](conductor-import-activation-refusal-error.md): the same code and a shared route fixture. The route test of C asserts a refusal after invalidation. For a removed or suspended activator, that case is the regression of that item, so it waits for its fix. Do both in one branch with one fixture. The test must not assert `internal_error`. Under its C, it asserts the route's existing `404 org_not_found` and `403 user_suspended`. Neither item covers all of the other. The runner case of C can still share `runner/src/import-lfs.test.ts` with other fixes of the import restore.
+- **Recommendation:** C. Only C catches every source change above, at the lowest level of each hop, for about one more hour of work than A.
+  - The first review recommended A. The finding check of 2026-11-11 changed the recommendation to C. A misses the helper, wrapper, and runner changes, and two of them return another member's token with no error.
+  - The root chose C on 2026-11-11.
+- **Action:** fix after merge, apply C, because the import review used both of its fix rounds and this test gap is not critical.
+  - The first review's Action was: "fix after merge, apply A, because the two historical source fix rounds remain used. The root owns the final outcome and follow-up record."
+- **Validation of the fix:**
+  - Make each source change above in turn, and see at least one new test fail for each. Undo each change.
+  - Keep every current assertion, guard, and time limit.

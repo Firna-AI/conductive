@@ -1,0 +1,72 @@
+# Comparison base sentence omits existing branches
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. The third integration of `main` at `23628f77b7f0dc8ecb8740a7242e666da53e799f` into the primary parent `51bbebd064463071049595c7ecfd3ce5309d6925` found it at the merge commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7`, finding 41. It includes the independent finding check and the root outcome of the same day.
+- **Location:** The lines are at the merge commit `16a4f76c`.
+  - `runner/file-reports.md:17-19`: "The `branch.<name>.gh-merge-base` local Git setting of the current branch. The branch step of a create sets it to the base branch of the workspace. Continue sets it on the new branch."
+  - `runner/file-reports.md:49-50`: "The trusted commands of the Worker write the setting: the branch step of a create", with the move of Continue at `:51-53`.
+- **Reason:** Both review fix rounds are used, and this Low guide defect changes no behaviour, because the runner fallback gives the required base.
+
+- **Source:** Implementation. **Category:** Docs or spec. A docs finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Low. A developer guide states a false scope. No output is wrong.
+  - Confidence is High. A search of the merged source finds each writer of the setting.
+  - Harder later is No. The edit costs the same later.
+- **Terms:**
+  - **Comparison setting:** the `branch.<name>.gh-merge-base` local Git setting of the current branch. The runner reads it first for the base of each comparison.
+  - **Existing-branch create:** a New workspace choice that starts a workspace on a branch that already exists on GitHub, in place of a new branch.
+- **Background:**
+  - The runner is the agent program in the cloud computer. It compares the workspace branch with a base for each scan, each Changes list, and each file diff. `runner/src/comparison-base.ts:19-33` takes the base branch from the comparison setting first, and from the configured base without it.
+  - The configured base is `CONDUCTIVE_DEFAULT_BRANCH`: the workspace base branch, with the repository default as a fallback, at `image/workspace-start.md:13`.
+  - `main` created `runner/file-reports.md`. Its section on the comparison base is byte-identical on `main` and at `16a4f76c`. On `main`, each create made a new branch, and its branch step wrote the setting. So the sentence was true there.
+  - The import change adds two ways to start a workspace on a kept branch: the existing-branch create and the import of a Conductor workspace.
+  - The new-branch create writes the setting, at `worker/lifecycle/start-command.ts:64`. Continue writes it, at `worker/lifecycle/continue-commands.ts:49` and `:65`. A search of all files other than Markdown at `16a4f76c` for `gh-merge-base` found no other writer.
+  - The existing-branch create has a branch step, labelled "Checking out your branch" at `worker/lifecycle/start-step-label.ts:9-10`. It runs `existingBranchCheckout`, at `worker/lifecycle/start-command.ts:38-41`. That command, at `worker/lifecycle/existing-branch-command.ts:31-40`, runs only `git checkout -B <branch> --track refs/remotes/origin/<branch>`.
+  - The import writes no setting. The runner restore sets only the upstream branch, at `runner/src/import-restore.ts:72-77`. An import file path cannot hold a `.git` segment, at `src/shared/conductor-import-values.ts:73`, so no Git setting from the Mac reaches the cloud copy.
+  - `image/workspace-start.md:44-46` already says that an existing-branch create checks the branch out with tracking, and "writes no `gh-merge-base` setting".
+- **Problem:**
+  - For an existing-branch create, the guide is false. The sentence says that the branch step of a create writes the setting, and this create has a branch step that writes none.
+  - For an import, the guide is silent, not false. An activation has no branch step. Its phases are the import software, the runner launch, and the startup, at `worker/lifecycle/start-command.ts:25-31`.
+  - The writer bullet at `:49-50` repeats "the branch step of a create". The composed guides now disagree with `image/workspace-start.md:44-46`.
+- **Impact if no action:** A reader can expect the setting where it is absent. The runner then uses the configured base, so Changes stays right. No behaviour is wrong. A browser create on an existing branch and an import row store no base. A null base reads as the repository default, at `worker/lifecycle/workspace-data.ts:48` and `worker/files/data.ts:19`. The requirements give the default branch as the base of both kinds, at `docs/protocol/continue-a-branch.md:80-84` and `docs/protocol/base-branches.md:15-18`.
+- **Evidence:**
+  - `worker/lifecycle/create-request.ts:22` passes the optional base, and `worker/lifecycle/creation-plan-statements.ts:38` stores null without one. The import insert at `worker/conductor-import/workspace-data.ts:63-66` has no `base_branch` column.
+  - Other docs that state the rule are true: `runner/configuration.md:29-34`, `worker/files/README.md:145-148`, `worker/lifecycle/README.md:49-56` and `:145-155`, `worker/lifecycle/default-branch.md:40-42`, and `runner/file-reports.md:95-128`.
+  - This is a static reading. No runner or create ran.
+- **Root question:** How does the runner guide explain where the comparison base comes from, so that each sentence is true for each way that a workspace starts?
+  - The first words asked how the guide says which branches carry the comparison setting. The finding check replaced the question on 2026-11-11, because a link to the Worker pages also meets the goal.
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Say that a create on a new branch sets it. Say that an existing branch and an imported workspace use the configured base until Continue. Apply the same scope to the second writer clause at `:49-50`. Effort: Small.
+    - The import words are true and useful, but the fix does not need them, because the guide is silent on an import.
+  - **C.** Also write the setting in the existing-branch checkout and in the import restore. This changes code and adds behaviour. Effort: Medium.
+    - It changes two starts and their tests, with no change in result, because the fallback names the same base.
+    - It also adds a stored branch target that can drift from the workspace base after a rename of the default branch. [retained-diff-base-after-default-rename.md](retained-diff-base-after-default-rename.md) records that kind of drift.
+  - **D.** Replace the writer clauses at `:18-19` and `:49-53` with one link to the pages that own the writes: `image/workspace-start.md` and the move in `worker/lifecycle/continue.md`. Keep the runner rule: the setting comes first, and the configured base applies without it. Effort: Small.
+    - Cost: a runner reader must follow a link to learn which starts write the setting.
+    - D also removes true sentences of a doc on `main`. Each fact stays in its home, but the deletion rule can need the user's approval.
+- **Shared assumptions checked:**
+  - The setting comes first, and the configured base applies without it. Source: `runner/src/comparison-base.ts:19-33`. Continue needs it to change the base while the runner stays up. Kept.
+  - An existing-branch workspace and an import use the default branch as base. Source: `docs/protocol/continue-a-branch.md:80-84` and `docs/protocol/base-branches.md:15-18`. Kept.
+  - The runner guide names the starts that write the setting. Source: the text of the guide on `main`. It is not a requirement, because the runner only reads the setting. D drops it.
+- **Left out:**
+  - The Worker pages. `image/workspace-start.md:37-46` already states the write and its absence for the existing-branch create.
+  - The protocol docs. No protocol doc names the setting, and the base requirements already match the code.
+  - A runner change. Its fallback already gives the required base, so a runner change fixes no defect.
+  - A test of the guide prose. Doc prose never gets a test.
+- **Wider fix:** None. The doc rule of the `documentation` skill is already in force.
+- **Previous examples:** [privacy-branch-name-rule.md](privacy-branch-name-rule.md): a Privacy claim that was written when each create made a new branch.
+- **Related:**
+  - [privacy-branch-name-rule.md](privacy-branch-name-rule.md): the same cause. A claim that was written when each create made a new branch is false for an existing branch. One docs-only branch can carry both. No conflict.
+  - [conductor-import-terms-message-state.md](conductor-import-terms-message-state.md) and [conductor-import-trusted-jobs-docs.md](conductor-import-trusted-jobs-docs.md): the same cause. A sentence of `main` predates the features of the import change. One docs-only branch can carry all three. No shared code and no conflict.
+  - [workspaces-guide-archive-claims.md](workspaces-guide-archive-claims.md) and [attachment-bucket-unused-inputs.md](attachment-bucket-unused-inputs.md): a shared wider fix that is already in force, the `documentation` skill. The same docs-only branch can carry them.
+  - [retained-diff-base-after-default-rename.md](retained-diff-base-after-default-rename.md): the same code. C here would add two more stored bases that can drift after a rename of the default branch, as that item describes. Neither item waits for the other.
+  - No work waits for another answer. [conductor-import-bar-before-activation.md](conductor-import-bar-before-activation.md) can hide Continue only before a successful activation, so the words "until Continue" of B stay true under each answer there.
+- **Recommendation:** B. It corrects the false scope, keeps each true sentence of `main`, and costs the same as D.
+  - The first words recommended B. The finding check of 2026-11-11 kept B and applied it to both writer clauses. The root kept B the same day.
+- **Action:** fix after merge, apply B, because both review fix rounds are used and this Low finding is not critical. Without that limit, a doc that contradicts the changed code would get fix now. B changes no requirement, because the guide is a developer guide and the protocol docs already state the base that the code gives. No user question remains.
+  - The first words' Action named only that the integration fixed no observation. The root corrected the reason on 2026-11-11.
+- **Validation of the fix:**
+  - Correct both writer clauses, at `runner/file-reports.md:17-19` and `:49-50`. Keep the runner rule and each true sentence of `main`.
+  - Check each relative link of the changed files by hand. Add no prose test.

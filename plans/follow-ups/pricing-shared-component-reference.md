@@ -21,6 +21,7 @@
 - **Left out:** Only two useful approaches remain because the component exists and its behavior needs no change. Change nothing retains the incorrect promise. Remove the component mention gives no route to the shared part.
 - **Wider fix:** None. The documentation skill already places code entry points in the area README or its linked code map.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/legal-pages-doc-misses-recipients-file.md`: the same file, `src/marketing/key-code.md`. Both add a missing entry to the marketing code map. One docs-only branch can carry both. No conflict.
 - **Recommendation:** B. It keeps the promised entry in the canonical code map and avoids another source list in the pricing guide.
 - **Action:** fix after merge, apply B, because this unchanged main claim belongs in a separate documentation change.
 

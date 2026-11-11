@@ -1,0 +1,81 @@
+# Replacement files stop valid imports
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 7. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `desktop/src/import/source-walk.ts:22-51`, the walker, with its first `lstat` at `:25-30`. `desktop/src/import/safe-files.ts:16-17`, `missing`, which accepts only `ENOENT`. `desktop/src/import/candidate-paths.ts:37-49`, the walk of each Git candidate. `desktop/src/import/inventory.ts:109-153`, the parent step at `:109-111` and the record loop, with the leaf rule at `:114`.
+- **Reason:** The import review used both of its fix rounds, and this Rare failure is not critical: it stops the import, but no outside bytes leave the Mac and the source stays.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Likelihood is Rare. Only an unusual working tree triggers it: uncommitted work that replaced a tracked folder with a file or a link of the same name. A case collision between a tracked file and a tracked folder on a case-insensitive Mac disk is another trigger. Ordinary refactors give the new file another name. No usage data exists.
+  - Confidence is High. A read of the code shows each step, with the POSIX `lstat` rule and Git's documented diff behaviour. No run reproduced it. The variant through a link to a folder comes from Git's source and tests.
+  - Harder later is No. The fix changes no stored format or contract. The failure stops the import before a package exists, so no stored package needs a repair.
+- **Terms:**
+  - **Inventory:** the Mac record of the changed, untracked, and `.context` paths of one workspace, from `inventory` in `desktop/src/import/inventory.ts`.
+  - **Candidate:** one path from the Git lists that the Mac walks on disk, in `desktop/src/import/candidate-paths.ts`.
+  - **Replacement:** a file or a link that uncommitted work put in place of a tracked folder with the same name.
+  - **Leaf rule:** the step at `desktop/src/import/inventory.ts:114` that skips each path below a kept file or link.
+- **Background:**
+  - Conductive's Mac app imports local Conductor workspaces into cloud workspaces. For each workspace, the Mac asks Git for the changed and untracked paths. It walks those paths on disk, copies them into a private stage, and uploads a package. A cloud computer restores the package at activation, the first start of the imported workspace.
+  - `docs/protocol/conductor-import.md:126` stores "the changed and untracked files that Git sees". `docs/protocol/conductor-import.md:137` says that the import copies a link as a link and never follows one.
+  - The root design call of 11 November 2026 keeps the no-follow policy for every source descendant of an import.
+  - `inventory.ts:67-77` runs `git diff --name-only <HEAD> --` in a private comparison repository. When a tracked folder `entry` became a file, Git reports `entry/old.txt` as deleted. Git's `check_removed` in `diff-lib.c` counts a missing-file error as a removal, and `is_missing_file_error` in `git-compat-util.h` treats `ENOENT` and `ENOTDIR` as missing.
+  - `inventory.ts:81-92` adds the new `entry` file from `ls-files --others`, or from the staged list when the person staged it. `inventory.ts:93-100` passes both lists to `candidatePaths`.
+- **Problem:**
+  - `candidatePaths` calls `walkSourceTree` for `entry/old.txt`. `importPath` at `src/shared/conductor-import-values.ts:65` accepts that path.
+  - The walker runs `lstat` on `<root>/entry/old.txt`. POSIX `lstat` fails with `ENOTDIR` when a prefix of the path is not a folder.
+  - `missing` accepts only `ENOENT`, so the walker throws. `prepareStage` at `desktop/src/import/stage.ts:56` gets the error before `captureSource` saves any file.
+  - `desktop/src/import/worker.ts:89-93` maps the plain error to `read_failed`. The app shows "This Mac couldn't read the workspace. Try again.", from `src/app/import/import-uploads.ts:41`. Each retry calls the inventory again at `stage.ts:192` and fails in the same way.
+  - The scan catches the same error at `desktop/src/import/scan.ts:43`, so the row stays in the list with no upload size.
+  - A replacement link to a file gives `ENOTDIR` and fails in the same way.
+  - A replacement link to a folder that lacks the path gives `ENOENT` and works. A link to a folder that holds a file at the path also works, but the first lookup reads metadata outside the worktree. `desktop/src/import/stage.test.ts:30` and `:82-86` build that case.
+  - A link to a folder that holds a folder at the path makes the walker list that outside folder. `git check-ignore` then gets a path beyond a link and stops with exit 128, as the `beyond a symlink` case of Git's `t/t0008-ignores.sh` expects. `runGit` at `desktop/src/import/git.ts:124` accepts only exit 1, so the import fails with `read_failed`. Nobody ran this case.
+  - The parent step at `inventory.ts:109-111` keeps every non-folder parent, also a replacement that Git ignores. So an ignored replacement file or link would upload, although an ignored file stays on the Mac.
+- **Impact if no action:** Each import attempt of that workspace fails, and the message names no cause. The person must change valid local work before the import can continue. No data is lost, because the worktree stays on the Mac.
+- **Root question:** How should the import record a tracked folder that became a file or a link, as Git sees that change, without looking below the replacement?
+  - The first review asked how an import keeps replacement files without reading obsolete children. The finding check replaced that question on 2026-11-11, because Git can ignore a replacement, and an ignored file stays on the Mac.
+- **Options:**
+  - **A.** Treat `ENOTDIR` as an absent child, and add a folder-to-file regression. Effort: Small.
+    - From the first review. It fixes the ordinary-file failure. It keeps the lookup through a link, and it uploads a replacement that Git ignores.
+  - **B.** Classify the ancestors of each candidate once, before the walk. Stop at files and links, and use the same classifications in the inventory. Add focused replacement-file and replacement-link regressions. Effort: Medium.
+    - From the first review. It does not say what happens to a replacement that Git ignores.
+  - **C.** Build the candidate tree from the worktree root. Match Git's selected paths against that tree after the safe walk. This changes the traversal and the cost of the scan. Effort: Medium.
+    - From the first review.
+  - **D.** B, plus one selection rule in the inventory. Effort: Medium.
+    - From the finding check, and the root's choice of 11 November 2026.
+    - Classify each ancestor of each candidate from the root down, once, before the walk: folder, file, link, special file, or absent. Cache each result, as `GitPathClassifier` does at `runner/src/git-paths.ts:55-82`.
+    - In `walkSourceTree`, stop at the first ancestor that is not a folder. Do not `lstat` any path below it.
+    - In the record loop of `inventory`, a non-folder parent imports only when Git lists it as a candidate. Otherwise each Git path below it imports as a `delete` record, and the parent stays on the Mac.
+    - Keep the leaf rule. No deletion record goes below a replacement that imports, because the cloud restore removes the replaced folder: `runner/src/import-paths.ts:101` before it writes a file, and `:159` before it writes a link. A deletion below a restored file would fail, because the restore opens each parent as a folder at `runner/src/import-paths.ts:45`.
+    - Add regressions for a replacement file, a link to a folder that holds a folder at the tracked path, and a replacement that Git ignores. Put them in a focused test file, because `desktop/src/import/stage.test.ts` already holds 268 of the 300 allowed lines.
+    - Cost: one rule and one test case more than B.
+  - **E.** D, with its classifier in a shared module. Effort: Medium.
+    - From the finding check. Move the ancestor-first core of `GitPathClassifier` into `src/shared/`, with an injected inspector. The runner, the Mac walker, and the Mac inventory then use it.
+    - Cost: it changes runner code that is already on `main`. The module must not import Node, because the browser and Worker typechecks include `src/shared`. The runner and the Mac need not agree with each other, so the gain is one tested copy of the Git rule.
+- **Left out:**
+  - Change nothing. It fails the rule to import the files that Git sees.
+  - Ignore every child error. It hides real permission and read errors.
+  - Use Git's deleted status as the absence check. D is better on every point. Git then needs one more query for staged additions below a replaced folder, and the walk still fails with `read_failed` when a folder becomes a file during the walk.
+  - A new error code or a clearer message. Every attempt still fails.
+  - C stays an option, but D is better on every point. C walks the whole worktree, also large ignored folders, against the fast-scan reason at `docs/protocol/desktop-import.md:72`.
+  - A change of the cloud restore. It already handles a replacement, as D says.
+  - Where A puts its errno rule is not a real choice. Neither place stops the lookup through a link.
+- **Wider fix:** D. It stops each lookup at any non-folder ancestor: a file, a link, a link to a file, or a special file. So it needs no errno detail. E gives the same protection in a module that the runner shares, at a cross-package cost.
+- **Previous examples:** `runner/src/git-paths.ts:55-82` already stops below non-folder ancestors, and `runner/src/git-paths.test.ts:12` covers replacement files and links. Commits `66ad57da` and `5a22dd56` added that handling. In the Mac import, `desktop/src/import/native.ts:21` treats `ENOTDIR` as absent, and `desktop/src/import/safe-files.ts:19-28` refuses a non-folder ancestor before a read. The walker uses neither rule.
+- **Related:**
+  - [conductor-import-tracked-nested-files.md](conductor-import-tracked-nested-files.md): the same code and a shared wider fix. Both change `candidate-paths.ts` and `source-walk.ts`. One record for each walked path can hold the ancestor kind of this item and the owner repository and tracked state of that item. Build both in one branch, or build this classifier so that it can extend it. The causes differ. No conflict, and neither waits for the other.
+  - [conductor-import-submodule-working-content.md](conductor-import-submodule-working-content.md): the same code. If its answer adds submodule paths to the walk, this classifier must stop at a submodule folder, as `runner/src/git-paths.ts:68` does. No conflict, and no wait.
+  - [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md): the same code. Both fixes edit the `try` and `finally` at `desktop/src/import/inventory.ts:64-103`. Keep its cleanup scope when this fix moves code there.
+  - [conductor-import-fixture-permissions.md](conductor-import-fixture-permissions.md): the same test area. A regression with a link must not assert the host link mode, because macOS and Linux give links different modes. Create its links with the fixture builders of that item.
+  - [conductor-import-sparse-checkout-deletions.md](conductor-import-sparse-checkout-deletions.md): the same code, interacting options, and a shared wider fix. D here makes each Git path below a non-folder parent a deletion when Git does not list that parent. When that path is also a skip-worktree path, the source Git records no deletion, so the sparse rule of that item must also apply to each deletion that D adds. One owner for both rules settles this order.
+- **Recommendation:** D. It keeps the structural classifier of B and adds the selection rule that the ignore rules need.
+  - No condition of the decision test holds. Existing requirements settle each behaviour: files that Git sees import, ignored files stay on the Mac, links are not followed, and deleted paths import.
+  - The first review recommended B. The finding check of 2026-11-11 changed the recommendation to D. The root adopted D the same day.
+- **Action:** fix after merge, apply D, because the import review used both of its fix rounds and this High product bug is Rare, so it is not critical.
+  - The first review graded the likelihood Common, and its Action was: "ask the user, because this is a High product bug with likelihood Common after the two authorized fix rounds. The review owner must obtain any authorization for another fix round." The finding check corrected the likelihood to Rare.
+- **Validation of the fix:**
+  - See each new regression fail on an assertion before the fix.
+  - Assert the exact inventory records: the replacement, and deletion records only where Git does not list the replacement.
+  - In the link case, assert that the walk reads no path outside the worktree and that `git check-ignore` gets no path beyond a link.
+  - Keep every current assertion, guard, and time limit. Record pass counts on Linux, Apple silicon, and Intel.

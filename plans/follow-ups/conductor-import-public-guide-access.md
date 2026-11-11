@@ -1,0 +1,34 @@
+# Public guides need import limits at release
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Post-merge task.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. The finding check of finding 39 found it at the merge commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7`, as a new problem outside the review scope, not as a numbered finding. The root outcome of the same day gave it this item.
+- **Location:** `src/marketing/docs/overview.md:88` and `src/marketing/docs/security.md:11`, at the merge commit `16a4f76c`.
+- **Reason:** A guide describes only the current product, and users other than the developers can import only after a Mac app release.
+
+- **Terms:**
+  - **Public guide:** a Markdown page of the product docs on the marketing site, under `src/marketing/docs/`. Each guide is for the users of the product.
+  - **Not active import:** an imported workspace whose first activation has not started. Its record has the state `inactive`, and the app shows it as Not active.
+  - **Mac app release:** a published release of the Mac app that lets users other than the developers import their Conductor workspaces.
+- **Background:**
+  - Conductive imports local Conductor workspaces into cloud workspaces. The import entry shows only in the Mac app, at `src/shell/import/ImportSection.tsx:10-16`. A Mac app release with the import is still open after the merge, so today only the developers can import.
+  - `docs/protocol/website-docs.md:145-147` says: "A guide describes only what the current product offers. A requirement in a protocol doc alone does not show that a feature is available." No public guide mentions an import, an activation, or Not active today.
+  - `src/marketing/docs/overview.md:88` says: "In an active org, every member can send messages in workspaces that are not archived." The line is older than the matching Terms sentence. It was at `:83` at commits `89ff2747` and `51bbebd0`, and at `:79` at commit `cfbf916c`.
+  - `src/marketing/docs/security.md:11` says: "Members can use the files and tools of workspaces that are not archived."
+  - The import rules: an imported workspace accepts no message before its activation starts, at `docs/protocol/messages-and-attachments.md:78-80` and `docs/protocol/imported-workspaces.md:43-46`. During an activation and after a failed one, it takes messages, which wait, at `messages-and-attachments.md:75-77`.
+  - The files and the tools of a Not active import show Not active, with Activate. Changes shows no count, and All files lists no file. After a failed activation, they say that the activation failed and that the work is kept, with Try again, at `imported-workspaces.md:47-49`.
+  - The legal pages already describe the import, so their sentences change now, in [conductor-import-terms-message-state.md](conductor-import-terms-message-state.md) and [legal-agent-message-state.md](legal-agent-message-state.md). The guides wait for the release.
+  - [workspaces-guide-archive-claims.md](workspaces-guide-archive-claims.md) corrects the Archive claims of the workspace guide now, without import words. It leaves the import Archive question to the release change. This task is separate. It covers the message, file, and tool words.
+- **Task:**
+  - In the change that publishes the Mac app release with the import, add the import limits to `overview.md:88` and `security.md:11`.
+  - The message line must say that a workspace from Conductor takes messages after its activation starts.
+  - The files and tools line must say that a workspace from Conductor shows its files and tools after a successful activation. Before it, they show Activate. After a failed activation, they show Try again.
+  - Read every public guide in full in that change. Update each sentence that states where members or agents can send messages, or use files and tools. One sentence to check is the reach of the workspace tools, at `src/marketing/docs/sessions-and-chat.md:70-71`.
+  - Write the words under the rules of `docs/protocol/website-docs.md`. This task chooses no new product rule. It restates the import rules that are in force at the release.
+- **Impact if no action:** After the release, two guide sentences would promise messages, files, and tools in a workspace from Conductor before its activation. Readers would expect actions that the product refuses.
+- **Needs:** The change that publishes the Mac app release with the import.
+- **Done when:** The release change states the import limits in `overview.md:88` and `security.md:11`. A full read of the public guides finds no other sentence that the import makes false.
+- **Related:**
+  - [workspaces-guide-archive-claims.md](workspaces-guide-archive-claims.md): the same current-product rule. That item corrects the Archive claims now. This task adds the message, file, and tool limits at the release. Keep the two apart.
+  - [conductor-import-terms-message-state.md](conductor-import-terms-message-state.md): `overview.md:88` repeats the Terms member sentence. That item corrects the Terms now, because the Terms already describe the import.
+  - [legal-agent-message-state.md](legal-agent-message-state.md): the Terms tools sentence. That item corrects the Terms now. The guide sentences about the tools wait for this task.

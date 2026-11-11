@@ -1,0 +1,51 @@
+# Deployment docs assign setup tasks to an agent
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. The finding check of a deployment guide finding, and the supplementary review of the same day, found both sentences outside the scope.
+- **Location:** `docs/deployment/attachment-bucket.md:19`, "The primary orchestrator does this at the next deployment." `docs/deployment.md:246-247`, "The primary orchestrator supplies that action at the next deployment."
+- **Reason:** Both sentences come from `main`, and the import change only moved the first one with the attachment bucket section.
+
+- **Source:** Review. **Category:** Docs or spec.
+- **Grade reasons:**
+  - Severity is Low. The setup steps stay correct. Only the task assignment is plan content, and its status is unknown.
+  - Confidence is High. A read of both docs and of their history shows the sentences and their origin.
+  - Harder later is No. The fix is the same later.
+- **Terms:**
+  - **Primary orchestrator:** the agent session that managed the workspace of an earlier change. The docs name it as the doer of two setup tasks.
+  - **Post-merge task:** a follow-up item that records work that needs a merged or deployed change, or credentials, with a "Done when" result.
+- **Background:**
+  - `docs/deployment.md` and the pages under `docs/deployment/` give the setup steps of the deployment, for developers.
+  - `docs/deployment/attachment-bucket.md:16-18` tells the deployer to create the private bucket once, before the first deploy that declares the binding, with `npx wrangler r2 bucket create conductive-chat-attachments --location weur`. Line 19 adds the assignment. Lines 20-24 explain the location hint, and they say to create the bucket first.
+  - `docs/deployment.md:245-247` says that the key must also allow the `file.write` action, which the Worker uses to copy each attached file into a sandbox. It then adds the assignment.
+  - Commit `0de3bc9a` of 8 November 2026 on `main` added both sentences with the chat attachments. Commit `2a83761e` of the import change moved the bucket section, with its sentence, to `docs/deployment/attachment-bucket.md`.
+  - The documentation skill keeps plans and history out of developer docs. Work that waits belongs in a follow-up item.
+- **Problem:**
+  - Each sentence assigns a future task to an agent role, at "the next deployment". That is plan content in a developer doc.
+  - No record says whether either task is done. Nobody checked the bucket or the key for this item, so this item does not say that either one is missing.
+- **Impact if no action:**
+  - A deployer cannot tell whether the bucket and the `file.write` action already exist, or who does them.
+  - If a task is still open, nothing outside these sentences tracks it. If it is done, the sentences are stale.
+- **Evidence:**
+  - `git log -S` finds commit `0de3bc9a` for both sentences, and commit `2a83761e` for the move of the bucket sentence. `0de3bc9a` is on `main`.
+  - No follow-up item names either task.
+- **Root question:** How should the deployment docs keep their setup steps while each pending deployment task has its own home?
+- **Options:**
+  - **A.** Remove only the two assignment sentences. Keep every setup step. Effort: Small. Cost: an open task loses its only reminder.
+  - **B.** A, and record one post-merge task item that asks the deployment owner to confirm two facts, and to complete each missing step. Effort: Small.
+    - The bucket `conductive-chat-attachments` exists, with the Western Europe location hint.
+    - The Boat key of the Worker allows the `file.write` action.
+    - The task item needs the Cloudflare and Boat access of the deployment. So only the deployment owner can complete it, but anyone can record it.
+  - **C.** Change nothing. Effort: Small.
+- **Left out:**
+  - Rewrite each sentence as a status, such as done or not done. Nobody knows the status, so it would state an unknown fact.
+  - Check the bucket or the key inside this item. It needs credentials that only the deployment owner holds.
+- **Wider fix:** None. The documentation skill is in force.
+- **Previous examples:** None found.
+- **Related:**
+  - [attachment-bucket-unused-inputs.md](attachment-bucket-unused-inputs.md): the same file. One docs-only branch can carry both items. No conflict.
+- **Recommendation:** B. It removes the plan content, and it keeps each open task in a home that a later reader finds.
+- **Action:** fix after merge, apply B, because both sentences come from `main`, and the import change only moved one of them.
+- **Validation of the fix:**
+  - Check each relative link of the changed Markdown files by hand.
+  - Commit the post-merge task item in the same branch.

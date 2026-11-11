@@ -24,6 +24,9 @@
 - **Left out:** Keeping the current code rejects a valid result. Reporting the request name while comparing another branch gives a false base label. Updating every computer adds credentialed work and misses stopped copies. The existing workspace-base column isolates explicit bases but does not remove the shared fallback of null rows. Browser retries cannot repair the Worker request context.
 - **Wider fix:** B. Each workspace's report supplies its request context, so another workspace cannot change that context through the shared repository row. D also closes the short same-workspace window at a larger scope.
 - **Previous examples:** The shared comparison resolver and selected-base reply entered with commit `f3cfe87c`. The existing `worker/files/runner.test.ts` mismatch case requests `trunk`, receives `main`, and expects HTTP 502. Earlier repository-selection writes could also leave old copies unable to resolve a new default name.
+- **Related:**
+  - [conductor-import-comparison-base-docs.md](conductor-import-comparison-base-docs.md): the same code. One option there, not recommended, would write the comparison setting in two more starts. Each such stored base can drift after a rename of the default branch, as this item describes. Neither item waits for the other.
+
 - **Recommendation:** B. It fixes the retained workspace on both old and current runner images without a runner contract change.
 - **Action:** fix after merge, apply B, because this rare Worker-only fix is independent and does not get harder after merge.
 

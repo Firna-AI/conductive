@@ -1,0 +1,80 @@
+# Final import reports cannot recover after publication
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 20. It includes the independent finding check and the root outcome of the same day. After the supplementary review of the same day, the root folded the retention of completed and expired stage payloads into this item and into [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md).
+- **Location:** `src/app/import/import-model.ts:162-185`, `retry`, which changes only the state and the failure and keeps the earlier result pages. `src/app/import/import-uploads.ts:78-83`, `actionOf`, `:91-112`, `withEvent`, and `:118-127`, `withEnd`. `desktop/src/import/upload-session.ts:11-87`, the only upload path, which sends `snapshot` before the results. `desktop/src/import/upload-package.ts:22-54`, the reuse and the replacement reserve. `desktop/src/import/stage-content.ts:105-119`, `stageResults`. `worker/conductor-import/service.ts:183` and `:197`, the refusals.
+- **Reason:** The import review used both of its fix rounds, and this Rare Medium product bug is not critical: the workspace imports correctly, and no stored work is lost.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Likelihood is Rare. The window runs from `complete` to `done`, which is a few Mac round trips. Normal use does not stop the operation there. Nobody measured the window.
+  - Confidence is High. The trace comes from source reads at each step. No runtime reproduction ran.
+  - Harder later is No. The fix changes the Mac and the page, and it changes no stored format.
+- **Terms:**
+  - **Publication:** the step where the Worker creates the imported workspace and marks the reservation `complete`.
+  - **Complete event:** the stream event that names the published workspace.
+  - **Done event:** the final stream event, after the file and session result pages.
+  - **Result:** the final import report: each file over 100 MiB that stayed on the Mac, and each session that did not import.
+  - **Stage:** the private prepared copy of one import on the Mac, with its package and its binding to one reservation.
+- **Background:**
+  - The page in the Mac app starts each import operation through the Worker, which relays it to the Mac app.
+  - The Mac app copies the source into a stage, uploads the parts, and asks the Worker to publish the workspace. After publication, it sends the result, then `done`, as `desktop/src/import/README.md:24` says.
+  - The page ends a row well only after `done`, at `src/app/import/import-operation.ts:116` and `src/app/import/import-uploads.ts:114-127`.
+  - The Worker keeps no copy of the result, as `docs/protocol/conductor-import.md:116-119` and `docs/protocol/import-uploads.md:58` say. The Privacy page promises this too.
+  - The result must reach the person, because the person must know which files and sessions did not transfer, as `docs/protocol/desktop-import.md:95-96` requires.
+  - The Worker already supports a replay. `completeReservation` returns at once for a published reservation, at `worker/conductor-import/publication.ts:19`, and `worker/conductor-import/service.test.ts:76-89` shows two `complete` calls that return the same workspace. Result pages pass through the broker for any reservation, at `worker/conductor-import/broker-events.ts:51-56`.
+- **Problem:**
+  - A connection loss after the complete event makes `runImportOperation` return `disconnected`. `withEnd` marks the row failed and keeps `workspaceId`. The progress view shows the chip, the failure, and Try again. `src/app/import/import-model.test.ts:136-155` asserts this state.
+  - Try again sends `retry` with the reservation ID. The Mac runs the only upload path, which sends `reserve`. `createReservation` inserts nothing, because a workspace with this local ID exists, and it returns the existing completed reservation. Neither the Mac nor the page reads that phase.
+  - With an unchanged source, the Mac reuses the sealed stage and sends `snapshot`. The service refuses it at `service.ts:197`, because the reservation is not open.
+  - With a changed source, `reuseStage` returns null, and the replacement `reserve` fails first, at `service.ts:183`, because the returned reservation is the published one.
+  - The broker sends the failure to the page as an `error` event, with "The import is not available. Scan again." from `worker/conductor-import/access.ts:72-77`.
+  - The page can also miss the complete event itself, when its stream ends while the Worker publishes. The row then fails with no chip, and Try again meets the same refusal.
+  - `retry` keeps the earlier `files` and `sessions`, so a successful replay would add the earlier pages twice.
+- **Impact if no action:** Each Try again fails, and the report never shows. A new scan marks the row imported, at `worker/conductor-import/scan-state.ts:15-21`, and the list shows the chip with no Try again. No other path shows the report. The large files stay on the Mac, so no stored data is lost, but the person loses the list of what did not transfer.
+- **Root question:** How does the importer always get the complete final report of a workspace that the import published, also when the operation stops after publication?
+  - The first review asked how an importer recovers the final report after the workspace already exists. The finding check replaced it on 2026-11-11, because that question hides the approach that sends the report before publication.
+- **Options:**
+  - **A.** Add a branch for a completed reservation that replays the original local result without upload controls. Reset the result pages before that retry. Add a full-operation regression. Effort: Medium.
+  - **B.** Let the returned reservation phase choose the next step in one operation owner. Effort: Medium.
+    - An open reservation uploads. A published reservation replays the original local result, with no source rescan and no snapshot. It repeats `complete`, which the Worker answers for a published reservation, then sends the result pages and `done`.
+    - The page resets the result pages of each attempt, so each attempt shows one copy of each result row.
+    - The phase that the Worker returns decides the path. So a lost publication reply is never taken as never published.
+    - The replay reads the original report from its own small record. Under the root fold of 11 November 2026, [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md) keeps that record after it releases the capture and package payloads of the stage. The record stays also after the reservation could no longer take uploads.
+    - The fold adds no report expiry, no manual clear action, and no server store. When the Mac no longer has the record, the page shows that the report is not available. The implementer records that text as a design call.
+    - No Worker change and no protocol change. Update `desktop/src/import/README.md:24` and `:57-59`.
+  - **C.** Add a dedicated Mac operation for result recovery and a kept result record, with matching page states and protocol text. It makes a larger boundary. Effort: Large.
+  - **D.** B, plus send the report before publication. The page then ends a row well when the complete event arrives, also when the connection ends before `done`. Cost: it changes the event order of the device operation. An older Mac app still sends the results after `complete`, so the page needs an explicit marker of the new order, which changes a shared event type. It also changes the area README, two doc comments, and the expected state of `src/app/import/import-model.test.ts:136`. Effort: Large.
+  - **E.** Keep the report at the Worker, with the reservation and the workspace, and show it for an imported row, also after a reload and on another device. Cost: it stores file paths and session titles that the protocol and the Privacy page say Conductive does not keep. So it changes a requirement and a legal promise, and it needs the user, a migration, a retention rule, page states, a mockup, and protocol and legal text. Effort: Large.
+- **Shared assumptions checked:**
+  - Only the Mac holds the report, and Conductive keeps no copy. Kept, because it limits stored personal data and the Privacy page promises it. E drops it.
+  - Publication comes before the result pages. Not a requirement: the protocol says only that the result comes at the end of each reservation. D drops it.
+  - The Mac keeps the result of a published reservation until the page gets it. Today no code deletes a stage, so it holds, but no rule protects it. The root fold of 11 November 2026 now protects it with the report record.
+  - An explicit Try again starts the recovery. Its reason, "Nothing tries again by itself" at `docs/protocol/conductor-import.md:210-212`, is about uploads that the person stopped. A replay of the report uploads nothing. Kept for B.
+  - The report describes the published package, not a new read of the source. Kept.
+- **Left out:**
+  - Allow snapshot writes after publication. It breaks the rule that published work comes from one fixed state of the Conductor workspace.
+  - Rebuild from a changed source. It can report a different import.
+  - Change nothing. Each Try again fails, and the report never shows.
+  - Hide Try again for a published row and say that the report did not arrive. The importer still never gets the report.
+  - A broker that holds the events after the page leaves. No page reads the stream, and a held event is a server copy, which E covers.
+  - An automatic replay without Try again. It changes only the trigger of B.
+- **Wider fix:** B. Its phase owner keeps a published reservation out of the upload path, also for a later step after publication. D cannot replace B, because a page can still miss the complete event.
+- **Previous examples:** No earlier case of this split between publication and result was found. `src/app/import/import-model.test.ts:136` describes this interruption, but it stops before the retry, and its next retry test replaces the server with successful canned events.
+- **Related:**
+  - [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md): the same code and a shared fold. Its option G releases stage payloads and keeps the original report record that B reads. Build the record before or with the release, so that no release removes a report that B still needs.
+  - [conductor-import-submodule-working-content.md](conductor-import-submodule-working-content.md): the same result path. Its report options reach the person only through result pages after publication, so their protection depends on this fix.
+  - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md): the same code, the result. The replay sends the whole result, also its omission entries. No conflict.
+  - [conductor-import-failed-estimate-branch.md](conductor-import-failed-estimate-branch.md): the same files, minor. Its B changes the row owner that `reserve` uses, and B here changes the path after `reserve`. No conflict.
+  - [conductor-import-size-progress-contract.md](conductor-import-size-progress-contract.md): the same code. The report loss here happens between `complete` and `done`, which the page shows as Finishing and no mockup draws. Every option there keeps completion from the operation events and draws that phase, so no option conflicts with B.
+- **Recommendation:** B. B serves every variant, also a published reservation whose complete event the page never got. It changes only the Mac and the page, because the Worker already returns the phase and repeats `complete`. D adds a device-order change with a risk across versions, for a smoother Rare case. E breaks a stated privacy promise.
+  - The first review recommended B, and the finding check of 2026-11-11 kept it. The root kept B the same day, and added the report-record fold after the supplementary review.
+- **Action:** fix after merge, apply B with the fold, because the import review used both of its fix rounds and this Rare Medium product bug is not critical.
+  - The first review's Action was: "fix after merge, apply B, because this Rare report-recovery defect has no stored-format change, and the historical primary fix rounds remain used."
+- **Validation of the fix:**
+  - A Mac upload-session case: a retry of a published reservation sends `complete`, then the result pages, and no `snapshot`. It also passes after a source change.
+  - A page model case: Try again after the complete event and a lost connection ends the row with one copy of each result row.
+  - A case after the stage payloads are gone: the replay still sends the original result from the report record.
+  - The existing Worker test already covers a repeated `complete`.
+  - Keep every current assertion, guard, and time limit.

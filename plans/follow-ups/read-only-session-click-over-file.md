@@ -1,26 +1,73 @@
-# Read-only session click leaves a file shown
+# Read-only session choice leaves a page shown
 
-- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Outside the scope.
-- **Added:** 2026-11-08, from the options check of the plan `plans/move-tabs-by-drag.md`, branch `calummoore/tab-drag-and-drop`.
-- **Location:** `src/chat/state/archive-view.ts:70`, `showLocally`. `src/chat/state/controller.ts:208`, `select`. `src/shell/workspace/files/files-navigation.ts:78`, `useLeaveForSession`. `src/shell/workspace/files/chat-files.tsx:74`, `useChatFiles`.
-- **Reason:** The defect needs a read-only workspace that is not archived, such as one in a suspended org, and the change that found it does not touch this path.
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-08, from the options check of the plan `plans/move-tabs-by-drag.md`, branch `calummoore/tab-drag-and-drop`. Extended on 2026-11-11 with finding 19 of pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, with its independent finding check and the root outcome of the same day. That change reaches the defect, so the item is no longer outside the scope.
+- **Location:** `src/chat/state/archive-view.ts:72-101`, `showLocally`, which never sets `view.activeTab`. `src/chat/state/controller.ts:180-185`, `select`, and `:216-221`, `reopen`. `src/shell/workspace/files/files-navigation.ts:78-94`, `useLeaveForSession`. `src/shell/workspace/files/chat-files.tsx:173-181`, `useChatFiles` and its call of `useLeaveForSession`. `src/shell/workspace/ChatArea.tsx:135-141`, the old document as the desktop chat content. `src/shell/workspace/documents/DocumentPage.tsx:36-45`, which makes the document the active tab. On 2026-11-08, this item named `src/chat/state/archive-view.ts:70`, `src/chat/state/controller.ts:208`, `src/shell/workspace/files/files-navigation.ts:78`, and `src/shell/workspace/files/chat-files.tsx:74`.
+- **Reason:** The import review used both of its fix rounds, and this Medium visible defect is not critical: Close of the page tab, Back, and the workspace address still work.
 
+- **History:** 2026-11-11, root integration record. The Location field now points to `16a4f76c`. The detailed static trace keeps its reviewed source citations. The reviewed Location field was:
+
+> `src/chat/state/archive-view.ts:71-99`, `showLocally`, which never sets `view.activeTab`. `src/chat/state/controller.ts:181-186`, `select`, and `:205-210`, `reopen`. `src/shell/workspace/files/files-navigation.ts:78-94`, `useLeaveForSession`. `src/shell/workspace/files/chat-files.tsx:169-177`, `useChatFiles` and its call of `useLeaveForSession`. `src/shell/workspace/ChatArea.tsx:135-141`, the old document as the desktop chat content. `src/shell/workspace/documents/DocumentPage.tsx:36-45`, which makes the document the active tab. On 2026-11-08, this item named `src/chat/state/archive-view.ts:70`, `src/chat/state/controller.ts:208`, `src/shell/workspace/files/files-navigation.ts:78`, and `src/shell/workspace/files/chat-files.tsx:74`.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Severity is Medium and likelihood is Common, from the review of head `cfbf916c` on 2026-11-11. A member who reads an archived activated import meets it in normal use, and the mockup `app/imported/archived-activated/document` draws that state.
+  - Confidence is High. Each step of the trace is a direct read, and the writable return uses the same effect under a mounted test. No runtime reproduction ran.
+  - Effort is Medium, the grade of E.
+  - Until 2026-11-11, this item was Low, Rare, Small, with Confidence Medium and Kind Outside the scope. Its reason was: "The defect needs a read-only workspace that is not archived, such as one in a suspended org, and the change that found it does not touch this path."
 - **Terms:**
   - **Read-only workspace:** a workspace that takes no write: an archived workspace, or one whose org is suspended. Its chat changes the tabs in the browser only.
+  - **Old document:** a Markdown copy of one session imported from Conductor. It opens as a file opens, and it stays readable after Archive.
+  - **Session selection:** `activeSessionId`, the chat session that the controller has selected.
+  - **Tab selection:** `view.activeTab`, the selected session, file, or old-document tab of the browser copy of the saved view.
 - **Background:**
   - On desktop, the chat shows a file or diff tab in place of the chat of a session while the address names that file. `useChatFiles` in `src/shell/workspace/files/chat-files.tsx` gives file tabs to every workspace that is not archived. So a workspace of a suspended org shows file tabs.
   - A click on a session tab calls `select` of the controller in `src/chat/state/controller.ts`. In a read-only workspace, `select` runs `showLocally` in `src/chat/state/archive-view.ts`. It changes `archiveTabs` and `activeSessionId`, but not `view.activeTab`.
   - `useLeaveForSession` in `src/shell/workspace/files/files-navigation.ts` sends the address back to the chat only when `view.activeTab` becomes a session while a file shows.
   - Evidence: a read of the code on 8 November 2026. Nobody ran the case in a browser yet.
-- **Problem:** In a read-only workspace that is not archived, a click on a session tab while a file shows does nothing that the user sees. The file stays, and no session tab becomes the current one.
-- **Impact if no action:** In a suspended org, a member who opens a file cannot go back to a chat with its tab. Back and the other links still work.
-- **Root question:** How does a click on a session tab in a read-only workspace leave a shown file?
+  - Since the import change, an old document of an imported workspace opens as a page in place of the chat too, also in an archived workspace. `ChatArea.tsx:135-141` makes it the desktop chat content, because `filesCenter` returns null for an archived workspace. `DocumentPage.tsx:36-45` makes it the active tab of the view, and in a read-only workspace that change stays in the browser.
+  - `useChatFiles` calls `useLeaveForSession` when a file or an old document shows, at `chat-files.tsx:177`. `useLeaveForSession` pushes the chat address only when the active tab becomes a session after another kind of tab, at `files-navigation.ts:89-90`.
+  - The writable path works. `selectSession` at `src/chat/state/session-actions.ts:21-40` calls `viewShowing`, which sets the active tab. `src/shell/workspace/files/FilesWiring.test.tsx:63` shows that return for a file.
+  - Old documents stay readable after Archive, at `docs/protocol/chat-and-events.md:141`. A chosen tab is the shown tab, at `docs/protocol/agents-and-sessions.md:111` and `:132`.
+- **Problem:**
+  - In a read-only workspace that is not archived, a click on a session tab while a file shows does nothing that the user sees. The file stays, and no session tab becomes the current one.
+  - Open an old document in an archived imported workspace, then press a session tab. `showLocally` changes the session selection but never the tab selection. So the document stays, and its tab stays the shown tab.
+  - A reopen from the session history takes the same path. It adds the session tab at the end of the row, but the document stays.
+  - `closeLocally` at `src/chat/state/archive-view.ts:105-127` also leaves `view.activeTab` on a closed session. No visible effect is known. It is more evidence for the class, not a separate defect.
+- **Impact if no action:** In a suspended org, a member who opens a file cannot go back to a chat with its tab. Back and the other links still work. In an archived imported workspace, a press on a session tab over an old document shows nothing new. Close of the document tab, Back, and the workspace address still work.
+- **Root question:** In a read-only workspace, how does each choice of a session show that session, also over an old document or a file?
+  - Until 2026-11-11, this item asked: "How does a click on a session tab in a read-only workspace leave a shown file?" The finding check of 2026-11-11 widened it to the old document and the session history.
 - **Options:**
   - **A.** Make `showLocally` also set `view.activeTab` to the session, in the browser copy of the view. `useLeaveForSession` then sends the address back to the chat. Add a mounted test in a suspended org. Effort: Small.
+    - Add the archived old-document case and the history reopen to its regression.
   - **B.** Make `useLeaveForSession` also follow `activeSessionId` of the chat. Add the same test. Effort: Small.
-- **Left out:** Hide the file tabs in every read-only workspace, because a member of a suspended org can still read the files.
-- **Wider fix:** A, because the browser copy of the view then names the shown tab in both modes, and every reader of `view.activeTab` follows it.
-- **Previous examples:** None found.
-- **Recommendation:** A. The view then shows the same active tab in a read-only workspace as in a workspace that takes writes.
-- **Action:** fix after merge, apply A, because the change that found it does not touch this path, and the defect needs a read-only workspace that is not archived.
+    - Checked on 2026-11-11: B fails the goal for an old document. Opening a document changes no session ID, so a press on the session that showed before the document changes nothing that B sees.
+  - **C.** Use the existing `viewShowing` helper in the read-only path too. Keep the local tab reopen and its no-write rule. Add the same regression. Effort: Small.
+    - It must keep a view that did not load as null. `viewShowing(null, id)` at `src/chat/state/sessions.ts:44-62` builds a default view, which would make the saved view look known.
+  - **D.** Give the activation of a session tab a host-navigation callback that leaves document pages directly. It adds another owner of page selection, misses a history reopen, and leaves the tab selection on the document. Effort: Medium.
+  - **E.** Apply option B of [read-only-tabs-have-two-owners.md](read-only-tabs-have-two-owners.md). The browser copy of the view becomes the one owner of the read-only tab order and selection, and `archiveTabs` goes. The row and Close both read the view. A tab press and a reopen set the active tab of the view. `placeSession` adds no place while the workspace is read-only. The tabs stay when the view did not load. Add the archived-document regression. Effort: Medium.
+    - It changes shared chat state, also for suspended orgs. It keeps each read-only behaviour and assertion and sends no server write.
+  - **F.** Let the address name the shown session too, and make each session tab a link. It needs a new address shape, router and protocol text, and a Back step for each session switch. It changes user-visible behaviour beyond the contract, so it needs the user. Effort: Large.
+- **Letter map to the review of head `cfbf916c`:** that review lettered the same question A to E on 2026-11-11. Its A is A here, its B is C here, its C is D here, its D is E here, and its E is F here. B here is the session-ID rule that the review left out.
+- **Left out:**
+  - Hide the file tabs in every read-only workspace, because a member of a suspended org can still read the files.
+  - Remove readable documents after Archive. It breaks their lifetime rule.
+  - A desktop document without the tab row, as on a phone. It breaks the rule that a document opens as a file opens, and it contradicts the drawn tab of `app/imported/archived-activated/document`.
+  - Save the read-only view on the server. A read-only workspace sends no write.
+- **Wider fix:** E, which is option B of [read-only-tabs-have-two-owners.md](read-only-tabs-have-two-owners.md). One owner of the read-only tab state removes the class.
+  - Until 2026-11-11, this item said: "A, because the browser copy of the view then names the shown tab in both modes, and every reader of `view.activeTab` follows it."
+- **Previous examples:** Commit `623dbe51` of 9 November 2026 fixed one missed step of the split between `archiveTabs` and the browser view directly. The old-document case is a second missed step. Until 2026-11-11, this item found none.
+- **Related:** [read-only-tabs-have-two-owners.md](read-only-tabs-have-two-owners.md): the same cause and a shared wider fix. E here is B there, and one later branch closes both items. A branch that must stay Small applies C here, deletes this item, and keeps that item open.
+- **Recommendation:** E. Today each read-only action keeps `archiveTabs`, the browser view, and the shown session in step by hand, and one owner removes the class. E removes the internal `archiveTabs` list, keeps each read-only behaviour, also for a view that did not load, and removes no assertion, so it removes no functionality.
+  - Until 2026-11-11, this item recommended: "A. The view then shows the same active tab in a read-only workspace as in a workspace that takes writes."
+  - The review of head `cfbf916c` first recommended its B, which is C here. Its finding check of 2026-11-11 changed the recommendation to its D, which is E here. The root chose it the same day.
+- **Action:** fix after merge, apply E, because the import review used both of its fix rounds and this Medium product bug is not critical.
+  - Until 2026-11-11, this item's Action was: "fix after merge, apply A, because the change that found it does not touch this path, and the defect needs a read-only workspace that is not archived."
+  - The review's Action was: "fix after merge, apply B, because the two historical primary fix rounds are used and this visible defect has a workaround."
+- **Validation of the fix:**
+  - In the mounted app, archive an activated import, open an old document from the session history, and press a session tab. Expect the workspace address, that session as the shown tab, the document tab still in the row, and no write of the view.
+  - Repeat with a reopen from the session history, and with a file page in a suspended org.
+  - The fake routes have no archived activated import, so the test overrides the workspace record.
+  - Only the mounted level also catches a revert of the change at `src/shell/workspace/files/files-navigation.ts:89` to file tabs only.
+  - Keep every current assertion, guard, and time limit.

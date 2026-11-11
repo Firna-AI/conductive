@@ -1,0 +1,80 @@
+# Lifecycle RPC calls lose typed refusals
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, the supplementary review of round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 32. It is the wider fix D that the finding check proposed and the root split off the same day. It also records the unchanged turn-path sender, which the same check reported outside the scope.
+- **Location:** `worker/lifecycle/workspace-transport.ts:70-95` and the rest of `workspaceLifecycleEndpoint`, where only `activateImportedWorkspace` unwraps a `FeatureResult`. `worker/workspace-lifecycle.ts:35-57` and the other methods of `WorkspaceLifecycle`. `worker/lifecycle/credential-sender.ts:20-38`, `creationCredentialSender`, which calls `requireWorkspaceOrg` at `:29`. `worker/lifecycle/import-activation.ts:218-233`, the activation resolver. `worker/features/result.ts`, the envelope. `worker/http.ts:21-43`, `errorResponse`.
+- **Reason:** The fix changes the types of every lifecycle RPC method, and it reaches about ten production files and at least 50 test call sites outside the import change.
+
+- **History:** 2026-11-11, root integration record. The Location field now points to `16a4f76c`. The detailed static trace keeps its reviewed source citations. The reviewed Location field was:
+
+> `worker/lifecycle/workspace-transport.ts:70-95` and the rest of `workspaceLifecycleEndpoint`, where only `activateImportedWorkspace` unwraps a `FeatureResult`. `worker/workspace-lifecycle.ts:34-56` and the other methods of `WorkspaceLifecycle`. `worker/lifecycle/credential-sender.ts:20-38`, `creationCredentialSender`, which calls `requireWorkspaceOrg` at `:29`. `worker/lifecycle/import-activation.ts:218-233`, the activation resolver. `worker/features/result.ts`, the envelope. `worker/http.ts:21-43`, `errorResponse`.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Severity is Medium. A typed refusal becomes a false server error with no cause. In the two known cases the token stays refused, so the harm falls on operators.
+  - Likelihood is Rare. Each known case needs a short race: an access loss or an org deletion between the route's token check and the object call.
+  - Confidence is High. Reads of the transport, the object, and the error handler, with the Cloudflare runtime page, show the class. No runtime reproduction ran.
+  - Harder later is Yes. Each new lifecycle method adds one more call to wrap, and each new raw object-stub caller adds one more call site to change.
+- **Terms:**
+  - **RPC:** the Cloudflare call between a Worker route and a workspace Durable Object.
+  - **HttpError:** the typed application error in `worker/http.ts`, with a status, a code, and a message.
+  - **FeatureResult:** the plain success-or-error envelope in `worker/features/result.ts`. `featureResult` wraps an operation in the object, and `requireFeatureResult` rebuilds the `HttpError` at the caller.
+  - **Lifecycle transport:** `WorkspaceLifecycleTransport`, the methods that `WorkspaceLifecycle` in `worker/workspace-lifecycle.ts` offers over RPC. `workspaceLifecycleEndpoint` in `worker/lifecycle/workspace-transport.ts` adapts them for routes.
+- **Background:**
+  - Expected access failures use typed `HttpError` refusals. `errorResponse` turns an `HttpError` into its status and code, and any other error into `500 internal_error`, at `worker/http.ts:21-43`.
+  - Cloudflare RPC gives the caller a new error object without the custom prototype, so `instanceof HttpError` is false after the call. Enhanced error serialization, on by default from 2026-04-21, keeps `status` and `code` as fields, but not the class. `wrangler.jsonc:5` sets the compatibility date 2026-11-06.
+  - The envelope is opt-in today. `activateImportedWorkspace` wraps its result at `worker/workspace-lifecycle.ts:38-44`, and the adapter unwraps it at `workspace-transport.ts:75-78`. The other methods pass their promise through, at `workspace-transport.ts:79-95`.
+  - `worker/lifecycle/routes.md:131` describes another plain refusal across RPC. Browser activity returns `LifecycleActivityResult`, from `worker/lifecycle/workspace-runtime.ts:26-28`, for the route's 403 reply.
+  - `worker/lifecycle/tests.md:71` says that the namespace hop of the tests discards extra error fields, so tests use a focused entry for expected RPC errors.
+  - `docs/deployment.md:37-50` says that Cloudflare Issues groups each `5xx` reply and shows no cause for a caught error. [issues-caught-error-cause.md](issues-caught-error-cause.md) records that cost.
+- **Problem:**
+  - Any lifecycle method that throws an expected `HttpError` without the envelope turns that refusal into `500 internal_error` at the route.
+  - Two cases are known:
+    - The activation credential resolver throws access refusals across `activationCredentialSender`, at `worker/workspace-lifecycle.ts:46-50`. [conductor-import-activation-refusal-error.md](conductor-import-activation-refusal-error.md) gives its direct fix.
+    - The turn-path credential sender can throw the `HttpError` of `requireWorkspaceOrg` across the un-enveloped `credentialSender` call. `creationCredentialSender` calls `requireWorkspaceOrg` at `worker/lifecycle/credential-sender.ts:29`. It throws `404 workspace_not_found` when the org of the workspace is deleted. This happens when an org deletion races the route's token check. The code moved from `worker/lifecycle/workspace-controller.ts:220` of `main` without a behaviour change.
+  - Nothing in the types stops a new method from throwing a refusal across the call. The envelope depends on each author remembering to opt in.
+- **Impact if no action:**
+  - Each such refusal becomes a `500 internal_error` reply and a Cloudflare Issue with no cause. The intended status and code are lost.
+  - In the two known cases, the token stays refused, so no access leaks. The end user sees the same message as for any refusal, because the credential helper discards the status.
+  - Each new lifecycle method adds one more place to wrap.
+- **Evidence:**
+  - The counts of about ten production files and at least 50 test call sites come from a search of raw object-stub calls. Multi-line calls are not in the count.
+  - The other lifecycle methods were not audited one by one for a throw of an expected refusal.
+  - This is a source trace. No runtime reproduction ran.
+- **Root question:** How must every lifecycle RPC call keep the typed refusal of an expected access failure?
+- **Options:** The letters are the letters that the review gave the activation case. A and C are direct fixes of that case only, in [conductor-import-activation-refusal-error.md](conductor-import-activation-refusal-error.md). They are not options of the class.
+  - **B.** Wrap each lifecycle method that can throw an expected refusal in FeatureResult, and unwrap it in the adapter, one method at a time. Keep the existing statuses and codes. Add a regression for each serialized refusal. Cost: it stays opt-in, so a new method can miss it again. Effort: Medium.
+  - **D.** Make the typed envelope mandatory for the whole lifecycle transport. Effort: Large.
+    - Give `WorkspaceLifecycleTransport` one mapped type in which each method returns `FeatureResult`.
+    - Wrap each `WorkspaceLifecycle` method once, and unwrap each once in `workspaceLifecycleEndpoint`.
+    - This also covers the turn-path sender.
+    - Cost: about ten production files and at least 50 test call sites call lifecycle methods on raw object stubs, outside the import change.
+  - **E.** Rebuild `HttpError` from the fields that enhanced error serialization keeps. Effort: Medium.
+    - Give `HttpError` a unique name marker. Rebuild it after each lifecycle call in the transport adapter, or in `errorResponse`.
+    - Cost: it depends on a runtime default that has an opt-out flag. The native test hop discards the fields, so its regression needs a path that stays inside the runtime. A check in `errorResponse` also lets a foreign error with the marker choose the reply.
+  - **F.** Change nothing. Each refusal across an un-enveloped call stays a 500 reply and an Issue with no cause. Effort: Small.
+- **Shared assumptions checked:**
+  - Expected refusals stay typed `HttpError` values inside the object. Source: the code convention of `worker/http.ts` and `worker/features/result.ts`. Kept.
+  - Unexpected errors stay `500 internal_error`. Source: `errorResponse`. Kept by every option.
+  - The RPC error channel cannot carry the typed fields. Source: the Cloudflare page and `worker/lifecycle/tests.md:71`. In production the reason is partly gone, because enhanced serialization keeps `status` and `code`. E drops it.
+- **Left out:**
+  - Trust `instanceof` across RPC. It fails the goal, as the Cloudflare page says.
+  - Catch every exception in the object as a refusal. It hides storage and programming failures.
+  - A lint or a test that finds un-enveloped methods. D removes the case structurally. A lint or a test for the class is a new gate that needs the user.
+  - Remove the throws from every object method, as C does for the activation case. Each method needs its own owner of the access check, and most routes have no final read that replaces it. D is better on every point for the class.
+- **Wider fix:** D. A type in which each method returns `FeatureResult` cannot hold an un-enveloped method. E is a narrower runtime rule, and B stays opt-in.
+- **Previous examples:**
+  - `activationCredentialSender` in `worker/workspace-lifecycle.ts:46-50`, added by the import change.
+  - `credentialSender`, with the `requireWorkspaceOrg` throw at `worker/lifecycle/credential-sender.ts:29`, from `main`.
+  - `LifecycleActivityResult` in `worker/lifecycle/workspace-runtime.ts:26-28`, which returns a plain refusal across RPC by design.
+- **Related:**
+  - [conductor-import-activation-refusal-error.md](conductor-import-activation-refusal-error.md): the direct fix of one case of this class. Its C removes that throw without the envelope, so it does not wait for this item. D here also covers that method.
+- **Recommendation:** D. One mapped type makes every lifecycle method carry its typed refusals, also each later method.
+  - The first review named B as the wider fix of the activation case. The finding check of 2026-11-11 named D. The root kept D the same day, as a separate item that includes the turn-path sender.
+- **Action:** fix after merge, apply D, because it reaches lifecycle callers and tests outside the import change. The known cases keep their tokens refused and lose no data, so the class is not critical.
+  - This item covers the turn-path sender case. No other item records it.
+- **Validation of the fix:**
+  - Make one lifecycle method throw a typed refusal in a test that stays inside the runtime. Assert the typed reply at the route.
+  - Assert the turn-path case: when an org deletion races the token check, the route answers `404 workspace_not_found`, not `500 internal_error`.
+  - Keep every current assertion and guard.

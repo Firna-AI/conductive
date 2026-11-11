@@ -1,31 +1,48 @@
 # Read-only tabs have two owners of their order
 
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-09, from round 1 finding 3 of the review of branch `calummoore/tab-drag-and-drop`.
-- **Location:** `src/chat/state/archive-view.ts`, `showLocally` and `closeLocally`. `src/chat/state/sessions.ts:117`, the place that `placeSession` gives an arriving session. `src/chat/WorkspaceChat.tsx`, the `rowOf` call that draws the tab row.
-- **Reason:** The branch that found it fixed the wrong order directly. This wider fix changes who owns the tab state of a read-only workspace, which reaches beyond that feature.
+- **Added:** 2026-11-09, from round 1 finding 3 of the review of branch `calummoore/tab-drag-and-drop`. Extended on 2026-11-11 with finding 19 of pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, whose root outcome of the same day chose B of this item.
+- **Location:** `src/chat/state/archive-view.ts`, `showLocally` and `closeLocally`. `src/chat/state/sessions.ts:117`, the place that `placeSession` gives an arriving session. `src/chat/WorkspaceChat.tsx`, the `rowOf` call that draws the tab row. At head `cfbf916c`: `showLocally` at `src/chat/state/archive-view.ts:71-99`, `closeLocally` at `:105-127`, `placeSession` at `src/chat/state/sessions.ts:103-117`, and the read-only `select` and `reopen` at `src/chat/state/controller.ts:181-186` and `:205-210`.
+- **Reason:** The branch that found it fixed the wrong order directly. This wider fix changes who owns the tab state of a read-only workspace, which reaches beyond that feature. The import review of 11 November 2026 also used both of its fix rounds.
 
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Likelihood is Common, from the review of head `cfbf916c` on 2026-11-11. The split now also shows in normal use: a session tab of an archived imported workspace cannot leave an old document. Until then, this item was Rare.
+  - Confidence is High. A read of the code shows each missed step.
 - **Terms:**
   - **Read-only workspace:** an archived workspace, or one whose org is suspended. Its tabs change in the browser only, and it sends no write.
   - **`archiveTabs`:** the list of the session tabs that a read-only workspace shows, kept in the chat snapshot in the browser.
   - **Saved view:** the open tabs in one order, the active tab, the list, and the tool of one user in one workspace. In a read-only workspace, the chat changes its browser copy only.
+  - **Old document:** a Markdown copy of one session imported from Conductor. It opens as a file opens, and it stays readable after Archive.
 - **Background:**
   - The tab row draws the tabs in the order of the saved view, through `rowTabs` in `src/chat/state/tab-order.ts`. A tab opens at the end of the row, as "The tab row" in `docs/protocol/agents-and-sessions.md` says.
   - In a read-only workspace, Close and Reopen of a session change `archiveTabs` in the browser. Close shows the next session of `archiveTabs`.
   - So two lists hold the order of the read-only tabs: the browser copy of the view, which the row draws, and `archiveTabs`, which Close uses. The direct fix keeps them in step at each local Close and Reopen.
   - `placeSession` gives an arriving open session a place in the view. In a suspended org, an update from the stream can then put back a place that the reader closed.
   - The follow-up item `plans/follow-ups/read-only-session-click-over-file.md` records a second symptom of the same split: a session click in a suspended org does not change the active tab of the view.
-- **Problem:** Each new read-only action must keep two lists in step by hand. A missed step makes the row and Close disagree.
-- **Impact if no action:** A later change can again show a reopened tab at its old place, or make Close show a session that is not next to the closed tab.
+  - Since the import change, an old document of an imported workspace opens as a page in place of the chat, also in an archived workspace, and it becomes the active tab of the browser view. A press on a session tab then runs `showLocally`, which changes `archiveTabs` and `activeSessionId` but not the active tab of the view, so the document stays. A reopen from the session history takes the same path.
+  - `archiveTabs` came with commit `6343ac4f` of 6 November 2026. Since commit `623dbe51` of 9 November 2026, the view holds one order for every tab, so no requirement needs the second list.
+- **Problem:** Each new read-only action must keep two lists in step by hand. A missed step makes the row and Close disagree. The old-document case of the import is a further missed step: the shown session and the active tab of the view disagree.
+- **Impact if no action:** A later change can again show a reopened tab at its old place, or make Close show a session that is not next to the closed tab. Today a session tab of an archived imported workspace cannot leave an old document.
 - **Root question:** How does a read-only workspace keep one order and one selection for its tabs?
 - **Options:**
   - **A.** Keep the direct fix: each local Close and Reopen updates both lists. Effort: Small.
   - **B.** Make the browser copy of the view the one owner of the read-only tab order and selection. `archiveTabs` goes, the row and Close both read the view, a local Reopen moves the place to the end, and `showLocally` sets the active tab. `placeSession` skips its place step while the workspace is read-only, and the tabs stay when the view did not load. Effort: Medium.
+    - The review of head `cfbf916c` chose B on 2026-11-11, as its option D. Keep each read-only behaviour and assertion, send no server write, and keep the tabs when the view did not load. Removing the internal `archiveTabs` list removes no functionality.
   - **C.** Make each session Close take its neighbour from the order of the row, in every mode, through one helper on `rowTabs`. A local Reopen moves its place to the end. It also changes the Close of a workspace that takes writes. Effort: Medium.
 - **Left out:** Save the read-only tabs to the server, because a read-only workspace sends no write. Keep the old place on a reopen, because a reopened tab opens at the end.
 - **Wider fix:** B, because one owner removes the class.
-- **Previous examples:** `plans/follow-ups/read-only-session-click-over-file.md`.
-- **Related:** `plans/follow-ups/read-only-session-click-over-file.md`, a shared wider fix: B also fixes that item.
+- **Previous examples:** `plans/follow-ups/read-only-session-click-over-file.md`. Commit `623dbe51` of 9 November 2026 fixed one missed step directly. The old-document case of the review of head `cfbf916c` is another one.
+- **Related:** `plans/follow-ups/read-only-session-click-over-file.md`, a shared wider fix: B also fixes that item. That item now also covers the old documents of imported workspaces and the session history. Its option E is B here.
 - **Recommendation:** B. One store of the read-only tabs makes both rules follow, also for a later read-only action.
+  - The review of head `cfbf916c` first recommended a direct fix through `viewShowing`. Its finding check of 2026-11-11 recommended B, and the root chose B the same day.
 - **Action:** fix after merge, apply B, because it changes who owns the read-only tab state, beyond the feature that found it.
+  - The root kept this Action on 2026-11-11. A branch that applies B deletes this item and `plans/follow-ups/read-only-session-click-over-file.md`.
+- **Validation of the fix:**
+  - Keep every current read-only test, such as `src/chat/state/archive-view.test.ts:14`, with every assertion.
+  - In the mounted app, archive an activated import, open an old document from the session history, and press a session tab. Expect the workspace address, that session as the shown tab, the document tab still in the row, and no write of the view.
+  - Repeat with a reopen from the session history, and with a file page in a suspended org.
+  - The fake routes have no archived activated import, so the test overrides the workspace record.
+  - Only the mounted level also catches a revert of the change at `src/shell/workspace/files/files-navigation.ts:89` to file tabs only.
+  - Assert no write of the view in a read-only workspace, and the kept tabs when the view did not load.

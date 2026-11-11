@@ -1,0 +1,62 @@
+# Terms tools sentence omits message limits
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. The finding check of finding 39 found it at the merge commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7`, as a new problem, not as a numbered finding. The root outcome of the same day gave it this item. Its import part is inside the review scope. Its archived part predates the import change and is outside the review scope.
+- **Location:** `src/marketing/terms-org.ts:20-21`, at the merge commit `16a4f76c`: "The workspace tools let agents create and list sessions, send messages, and read chats in every workspace of the org."
+- **Reason:** Both review fix rounds are used, and this Low wording defect is not critical, because a refused tool write loses no data.
+
+- **Source:** Review. **Category:** Docs or spec. A docs finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Low. The Terms promise tool writes in two states where the protocol refuses them. A refused write loses no data.
+  - Confidence is High. A read of the Terms and the protocol shows the false claim.
+  - Harder later is No. The edit costs the same later.
+- **Terms:**
+  - **Not active import:** an imported workspace whose first activation has not started. Its record has the state `inactive`, and the app shows it as Not active.
+  - **Tool write:** a `create_session` or `send_message` call of the workspace tools that agents use.
+  - **Terms revision:** the value `TERMS_VERSION` in `src/shared/terms.ts`. Each sign-in records the agreement to the current value.
+- **Background:**
+  - The agent tools let an agent in one workspace create sessions, list sessions, send messages, and read chats in the workspaces of its org.
+  - The Terms tools sentence at `src/marketing/terms-org.ts:20-21` says that the tools work "in every workspace of the org". It names no state.
+  - The two reads also reach an archived workspace. The two writes refuse an archived workspace with HTTP 409 `workspace_archived`, at `docs/protocol/session-calls.md:43-46`.
+  - A message from the agent tools follows the message rules, at `docs/protocol/messages-and-attachments.md:73-74`. One rule says: "An imported workspace accepts no message before its activation starts", at `messages-and-attachments.md:78-80`.
+  - [conductor-import-inactive-tool-writes.md](conductor-import-inactive-tool-writes.md) records the deferred code fix that applies that inactive-only refusal to the tool writes. Its outcome is settled, so no user answer is pending, but the fix has not shipped. At the merge commit `16a4f76c`, a tool write to a Not active import still passes.
+  - The Terms restate the protocol. The comment at `terms-org.ts:4-10` says that the facts come from the architecture and the protocol docs, and `src/marketing/legal-pages.md:13-15` says the same.
+  - Each sign-in starts after an agreement to the current Terms revision, and a changed revision applies at the user's next sign-in, at `docs/protocol/access-and-security.md:45-57`.
+- **Problem:** The tools sentence says that agents send messages in every workspace of the org. The protocol refuses the tool writes in an archived workspace and in a Not active import. So the sentence is false in two states.
+- **Scope:**
+  - The Not active part is inside the review scope. The import change adds that state and its message rule. On `main` at `23628f77`, the import rule does not exist.
+  - The archived part is outside the review scope. On `main` at `23628f77` and at the common base `89ff2747`, the same tools sentence and the archived refusal of the two writes already exist. Commit `80401a06` of `main`, pull request #215, added the refusal.
+  - One sentence fix corrects both parts, so one item records both.
+- **Impact if no action:** The Terms say that agents can send messages in each workspace of the org, but the protocol requires two limits. The product refuses tool writes in an archived workspace today. In a Not active import, tool writes still pass until the deferred tool-write fix ships. A reader of the Terms gets a wrong limit of the agent tools.
+- **Evidence:** This is a static reading of the Terms, the protocol, and the commits. Nobody ran the tools.
+- **Root question:** How do the Terms say where the agent tools can write, so that the tools sentence is true for each workspace state?
+- **Options:**
+  - **A.** Change nothing. The sentence stays false in two states. Effort: Small.
+  - **B.** Restate the refusals in the tools sentence. Agents can read chats in every workspace of the org. They can create sessions and send messages in each workspace that takes messages. Such a workspace is not archived. A workspace from Conductor takes messages after its activation starts. It needs a new Terms revision. Effort: Small.
+  - **C.** Define one Terms phrase for a workspace that takes messages, and use it in the member sentence at `terms-org.ts:16-17` and in the tools sentence. The next such state then needs one edit. It rewrites two sentences of `main`. It needs a new Terms revision. Effort: Small.
+  - **D.** Say that a tool message follows the limits of a member's message, in place of a list of states. It depends on the member sentence, which [conductor-import-terms-message-state.md](conductor-import-terms-message-state.md) corrects. It needs a new Terms revision. Effort: Small.
+- **Shared assumptions checked:**
+  - The Terms restate the protocol, not the current code. Source: the comment at `terms-org.ts:4-10` and `legal-pages.md:13-15`. Kept.
+  - The reads keep reaching each workspace, also an archived one. Source: `session-calls.md:43-46`. Kept.
+  - The protocol refuses tool writes in a Not active import. Source: the message rules at `messages-and-attachments.md:73-80`, and the settled outcome of the tool-write item. Kept. The code does not refuse them yet. The deferred tool-write item makes the code meet the rule.
+- **Left out:**
+  - Remove the tools sentence. The same bullet holds the reach of the tools and the facts about the workspace token. Without it, the Terms lose facts that the reader needs.
+  - Change the product so that the tool writes reach every workspace. It breaks the archived refusal and the import message rule, which stay.
+  - A test of the Terms prose. Doc prose never gets a test.
+- **Wider fix:** None. The legal-page rule of `AGENTS.md` and the `documentation` skill are in force. For docs drift, no other wider fix applies.
+- **Previous examples:** The member sentence of the same section omits the same Not active state. [conductor-import-terms-message-state.md](conductor-import-terms-message-state.md) records it.
+- **Related:**
+  - [conductor-import-terms-message-state.md](conductor-import-terms-message-state.md): the same section of the Terms and the same cause. One Terms revision can cover both fixes. Its option E is C here.
+  - [conductor-import-inactive-tool-writes.md](conductor-import-inactive-tool-writes.md): the same rule in the code. That item records the deferred fix that applies the inactive-only refusal to the tool writes. The Terms restate the protocol, so neither item waits for the other.
+  - [privacy-branch-name-rule.md](privacy-branch-name-rule.md): the same full read of both legal pages. A Privacy correction alone needs no new Terms revision. When both ship together, the Terms revision of this item covers the change.
+  - [conductor-import-public-guide-access.md](conductor-import-public-guide-access.md): the same message limits in the release guides. This record covers the Terms before the Mac release. That task covers the guides when the release makes the import available.
+
+
+- **Recommendation:** B. It restates the required refusals where a reader looks for the tool limits, keeps the read reach, and keeps the other words of `main`.
+- **Action:** fix after merge, apply B, because both review fix rounds are used and this Low wording defect is not critical. B changes no requirement: it restates `session-calls.md:43-46` and `messages-and-attachments.md:73-80`, and its new Terms revision follows the existing consent rule. No user question remains. The archived part is outside the review scope, but the same sentence fix covers it.
+- **Validation of the fix:**
+  - Read both legal pages and every public guide in full, as the repository rule requires. Correct each sentence that restates where the tool writes work.
+  - Set a new Terms revision at `src/shared/terms.ts:4-5`, the effective date at `src/marketing/terms.ts:33`, and the expected literal at `worker/security/terms.test.ts:85`. When this fix ships with the member sentence fix or the Privacy correction, use one new Terms revision for the change.
+  - See the Terms test fail first on the old literal, then pass, with each other assertion unchanged.
+  - Check each relative link of the changed files by hand. Add no prose test.

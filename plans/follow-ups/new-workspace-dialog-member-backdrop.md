@@ -20,6 +20,7 @@
 - **Left out:** Change nothing keeps the mismatch. A second workspace renderer for members would duplicate the existing renderer. A fixes the same view with less code and no extra renderer.
 - **Wider fix:** B gives both parts one source for the viewer.
 - **Previous examples:** None found in the focused review.
+- **Related:** `plans/follow-ups/native-mockup-links-change-state.md`: the same class of a member example that shows admin state. That item fixes the shared links of native frames, and this item fixes the backdrop. One mockup branch can carry both, with no conflict.
 - **Recommendation:** B. One viewer input prevents the dialog and backdrop from choosing different roles.
 - **Action:** fix after merge, apply B. The existing backdrop mismatch is outside the archive-control change.
 

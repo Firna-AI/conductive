@@ -1,0 +1,101 @@
+# Failed estimates restore stale branch facts
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, the supplementary review of round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 28. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `desktop/src/import/source.ts:117-119`, the database row with `uploadBytes: null`. `desktop/src/import/scan.ts:24-46`, the measured row and its catch. `desktop/src/import/inventory.ts:41-47`, the Git-first branch rule. `desktop/src/import/worker.ts:36-39`, the one-row scan of the upload. `desktop/src/import/upload-session.ts:16-24`, the reserve. `desktop/src/import/stage.ts:68`, the copied branch. `desktop/src/import/upload-package.ts:64-70`, the branch refusal on the Mac. `worker/conductor-import/service.ts:170`, the refusal of a row with no branch. `worker/conductor-import/scan-state.ts:22`, the unavailable row.
+- **Reason:** The import review used both of its source fix rounds, and this Rare blocked import loses no stored data and is not a security problem.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Severity is High. The import of a valid workspace stays blocked, and the page names a source change that did not happen. The person cannot see the real cause, so the product offers no workaround.
+  - Likelihood is Rare. Two unusual conditions must meet: an estimate failure that the copy does not share, and a database branch that differs from the Git branch or is empty.
+  - Confidence is High. A read of each step of the source shows the path. No reproduction ran.
+  - Harder later is No. The fix needs no migration, no stored format, and no public message.
+- **Terms:**
+  - **Database branch:** the `branch` value that Conductor's database holds for a workspace. It can differ from the worktree, or be empty.
+  - **Git branch:** the branch that the worktree has checked out, as `git symbolic-ref` reports it.
+  - **Estimate:** the upload size that the scan computes from Git metadata. A row can show no estimate.
+  - **Reservation:** the Worker record of one upload. It saves the row's branch before the Mac copies the source.
+  - **Split index:** a Git index whose main file depends on a separate shared file in the source Git directory.
+- **Background:**
+  - Conductive imports local Conductor workspaces into cloud workspaces through its Mac app. A scan shows each Conductor workspace as a row with its name, repository, branch, session count, and upload size.
+  - When the person selects Import, the Mac reads that row again and reserves an upload at the Worker with it. The Mac then copies the source into a private stage and compares the copied branch with the reserved branch.
+  - The Mac and the Worker both refuse the upload when the two branches differ.
+  - `docs/protocol/conductor-import.md:34-35` and `docs/protocol/imported-workspaces.md:21-22` say that the import keeps the branch of its Conductor workspace. `docs/protocol/conductor-import.md:22-24` defines that workspace as a Git worktree with its branch.
+  - `desktop/src/import/README.md:40` says that a workspace that the scan cannot measure still appears in the list with no upload size.
+  - `docs/protocol/conductor-import.md:84-85` says that a row with a chosen repository can import.
+- **Problem:**
+  - `readSource` builds each row with `branch: text(workspace.branch)` and `uploadBytes: null`, at `desktop/src/import/source.ts:117-119`.
+  - `scanSource` starts each row from that database row, at `desktop/src/import/scan.ts:24`. One try block runs `inventory`, the memory sizes, and `count-objects`, at `:26-41`.
+  - Only after all three succeed does `scanSource` set `branch: state.branch` and the size, at `scan.ts:42`. The catch keeps the database row, at `:43-46`.
+  - `inventory` reads the Git branch with `symbolic-ref --quiet --short HEAD`, at `desktop/src/import/inventory.ts:41-47`. It falls back to the database branch only when that read is empty. So a later failure in `inventory` also loses a branch that it already read.
+  - The row job of the upload is a one-row `scanSource`, at `desktop/src/import/worker.ts:36-39`. `runImportUpload` sends that row in `reserve`, at `desktop/src/import/upload-session.ts:16-24`. A retry without a reusable stage reads the row again, and it reserves with `replace`, at `desktop/src/import/upload-package.ts:37-53`.
+  - `createReservation` saves the row's branch and no size, at `worker/conductor-import/reservation-data.ts:124-126`.
+  - The Worker refuses a `reserve` row without a branch, at `worker/conductor-import/service.ts:170`. It marks such a scan row unavailable, at `worker/conductor-import/scan-state.ts:22`, through `broker-events.ts:37-41`.
+  - `prepareStage` copies through `sourceInventory`, at `desktop/src/import/stage-capture.ts:16-27`. It returns the Git branch, at `desktop/src/import/stage.ts:68`.
+  - `packageImportStage` throws `source_changed` when that branch differs from the reserved branch, at `upload-package.ts:64-70`. The Worker also refuses a snapshot with another branch, at `worker/conductor-import/service.ts:221-228`.
+- **Impact if no action:**
+  - With a stale database branch, each upload and each Try again fails with `source_changed`. The page shows "This workspace changed in Conductor. Try again.", from `src/app/import/import-uploads.ts:40`. The message is false.
+  - With an empty database branch, the row shows as unavailable, although the Git branch exists and the org chose the repository.
+  - The list row also shows the database branch, at `src/shell/import/ImportRowParts.tsx:36-38`.
+  - Each failed attempt runs a full prepare at `desktop/src/import/stage.ts:47-69`, then stops with `source_changed` before any build. Reuse needs a sealed and bound stage, at `stage.ts:185-191`. So each Try again leaves one more private copy on the Mac.
+  - No stored data is lost. The Mac source stays.
+- **Evidence:**
+  - A split index is the only persistent trigger found at head `cfbf916c`. The scan passes `!hashFiles` as `preserveStatCache`, at `inventory.ts:55-63`, so it copies the source index at `desktop/src/import/git.ts:227-233`. Git's split-index format names a shared file in the Git directory, and the private repository does not hold it. So only the scan's comparison fails.
+  - The upload copy runs `read-tree` for a fresh index, at `git.ts:234`. Its `ls-files` at `inventory.ts:81` runs in the source repository, which holds the shared file. So the copy for the upload still works.
+  - The documented Git setting `core.splitIndex`, or a short read race, can give the first condition. A database branch that differs or is empty gives the second.
+  - `desktop/tests/import-fixture.ts:52` and `:169` give the same branch, `feature`, to Git and to the database. `desktop/src/import/upload-source-change.test.ts` replaces the row job with a canned row. So no test reaches a failed estimate with a branch that differs.
+  - Commit `0829e853` added the scan's branch line and the inventory branch rule. Later commits did not change either line.
+  - This is a source trace. The split-index failure is an inference from Git's documented index format. No reproduction ran. How often the database branch differs from the worktree, or is empty, is unknown.
+- **Root question:** How must an optional size failure leave the source's usable branch facts intact?
+- **Options:**
+  - **A.** Recover the current Git branch separately when measurement fails. Return that branch with an unknown size. Use this row for reserve. Add a stale database branch regression. Effort: Small.
+    - A copies the rule of `inventory.ts:41-47` into the scan's catch. The reserved branch and the copied branch then come from two rules that can drift.
+  - **B.** Separate required source identity from optional measurement. Build one current row independently of the estimate. Make both scan and upload use that row owner. An estimate failure then clears only the estimate. Add the same regression and the missing database branch case. Effort: Medium.
+    - The copy's inventory takes its branch from the same owner. Without this, B can leave two branch rules, and the false `source_changed` can return.
+    - The upload row job reads identity only, and no estimate, because the Worker stores no size from it.
+    - Keep the branch inside the digested inventory value at `inventory.ts:174-189`, so that a branch switch still changes the source fingerprint.
+  - **C.** Reserve a branch-neutral upload slot and bind its branch from the captured source. Change scan eligibility to allow that flow. This changes the reservation boundary and its validation. Effort: Large.
+- **Shared assumptions checked:**
+  - An unmeasured source keeps a visible row with no size. Source: `desktop/src/import/README.md:40` and the catch at `scan.ts:43-46`. The reason is that the person sees each workspace, at `docs/protocol/conductor-import.md:93-94`. Kept.
+  - The imported workspace takes the branch of its Conductor workspace. The Git branch comes first, and the database branch is only a fallback for a detached HEAD. Source: `conductor-import.md:22-24` and `:34-35`, `imported-workspaces.md:21-22`, and `inventory.ts:41-47`. The snapshot binds the exact branch, at `src/shared/conductor-import.md:41`. Kept.
+  - The Mac reads the row again at upload time, and the page does not supply it. Source: `upload-session.ts:16-19`, and `conductor-import.md:109-110`, because the Worker keeps no copy of the list. Kept.
+  - Both branch checks stay. The Mac checks at `upload-package.ts:64-70`, and the Worker checks the snapshot at `service.ts:221-228`. Source: `worker/conductor-import/reservations.md:31`. They stop a publication under a wrong branch. Kept.
+  - The reservation needs its branch before the copy. Source: `reservations.md:19` and `service.ts:170`. This is an implementation choice. C drops it.
+  - The upload's row job computes an estimate. Source: `worker.ts:36-39`. No consumer reads that size, so the reason is gone. A keeps it. B drops it.
+- **Left out:**
+  - Remove the branch comparison. It can publish work under the wrong branch.
+  - Use only the database branch. It publishes the work under a branch that the worktree no longer has. That breaks `imported-workspaces.md:21-22` and the exact snapshot branch.
+  - Treat an unknown size as zero. It misstates the selection total.
+  - Change nothing. The valid source stays blocked, and its error names a change that did not happen.
+  - An identity-only row job alone. It fixes the reservation, but the list keeps the database branch, and a row with an empty database branch stays unavailable. B includes this change.
+  - Copy first, then reserve with the copied row. It still needs A or B for the scan row. It spends a full copy before the Worker can refuse the reservation, and it changes the stage's reservation binding. B is better on every point.
+  - Hide or refuse a row that the scan cannot measure. It breaks the unknown-size row at `desktop/src/import/README.md:40`, and it adds a rejection.
+- **Wider fix:** B. It gives the required row facts one owner outside the fallible size computation, when the copy's inventory uses the same owner. A must know which fact the catch drops, so A is the direct fix.
+- **Previous examples:** No separate earlier occurrence was found.
+  - The split-index failure of [conductor-import-split-index-scan.md](conductor-import-split-index-scan.md) is the current persistent trigger where the upload copy still works. It is a trigger, not an earlier example.
+  - The replacement-path failure of [conductor-import-replacement-files.md](conductor-import-replacement-files.md) also reaches the scan catch. It also stops the copy for the upload, so that upload fails with `read_failed` whatever the branch. It changes only which refusal shows.
+- **Related:**
+  - [conductor-import-split-index-scan.md](conductor-import-split-index-scan.md): the same code and the same trigger. A fix of that item removes the only persistent trigger found, but not this class. The fixes do not conflict.
+    - A regression here that uses a split index stops failing after that fix lands. Use a trigger that its fix keeps, or land this fix first.
+  - [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md): the same code. Each failed attempt here leaves one more private copy on the Mac, and that item owns the release. This fix removes this repeated cause. The fixes do not conflict.
+  - [conductor-import-report-after-publication.md](conductor-import-report-after-publication.md): the same files, minor. Its B changes the path after `reserve` in `upload-session.ts` and `upload-package.ts`. No conflict.
+  - [conductor-import-sparse-checkout-deletions.md](conductor-import-sparse-checkout-deletions.md): the same file, minor. Its B changes candidate selection in `inventory.ts`. Keep the branch rule in the identity owner of B here. No conflict.
+  - Not linked: [conductor-import-replacement-files.md](conductor-import-replacement-files.md). Its failure reaches the same scan catch, but no option here fixes it, and it is not a cause of the false `source_changed`.
+- **Adjacent wording observation, not part of this fix:**
+  - `src/shell/import/ImportRowParts.tsx:73-77` gives the text of an unavailable row. When the row has a repository, it says "Add <repository> to <org> first." to an admin, or "An admin of <org> can add <repository>." to a member.
+  - A row with no branch is also unavailable. So a row with an empty database branch and a chosen repository names a missing repository, which is false.
+  - B removes the main trigger, because the row keeps its Git branch. A workspace with no Git branch and no database branch can still show this text.
+  - This item adopts no new message and no new rejection for that case. A change of the text needs its own wording decision.
+- **Recommendation:** B. Required source facts must survive an optional estimate failure, and one identity owner gives the reservation and the copy one branch rule.
+  - The first review recommended B, the finding check of 2026-11-11 kept B, and the root kept B the same day.
+- **Action:** fix after merge, apply B, because the import review used both of its source fix rounds. This Rare blocked-import case is not a security problem and loses no stored data.
+  - The first review's Action was the same: "fix after merge, apply B, because both source fix rounds are used. This Rare blocked-import case is not a security problem and loses no stored data."
+  - B changes no requirement and adds no boundary behaviour. It makes the code meet `docs/protocol/conductor-import.md:84-85` for a row with a chosen repository. It adds no rejection.
+  - B may also update `desktop/src/import/README.md:40`.
+- **Validation of the fix:**
+  - Add a regression with a stale database branch and an estimate step that fails without a split index. Assert the scan row branch, the reserved branch, and an upload with no `source_changed`.
+  - Add the case with an empty database branch. Assert an available row with its Git branch.
+  - See each new case fail first, with the current code.
+  - Keep every current assertion and guard.

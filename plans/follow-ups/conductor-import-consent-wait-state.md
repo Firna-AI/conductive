@@ -1,0 +1,97 @@
+# Import page claims a read before consent
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, the supplementary review of round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 34. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `docs/mockups/src/screens/conductorImportParts.tsx:155-159`, the two drawn states. `docs/mockups/src/entries/mac-app/import/consent/index.mockup.tsx:13` and `:26`, the entry descriptions. `src/shell/import/ConductorImportScreen.tsx:31-39`, the `Waiting` part, and `:70-72`, the one reading state. `src/app/import/import-model.ts:17-25`, `ScanState`, and `:93-121`, `scan()`. `desktop/src/import/controller.ts:64-81`, the consent wait before the scan job. `desktop/src/import/preferences.ts:47-61`, the prompt. `desktop/src/main.ts:130-144`, the native alert. The first review cited `src/app/import/import-model.ts:100-115` and `desktop/src/import/controller.ts:67-80`, which leave out the reading assignment at `:97` and the consent wait at `:65`.
+- **Reason:** No requirement or user decision chooses between one general wait and the drawn two phases, and the recommended option adds a scan message to the device protocol.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Severity is Medium. The page shows a visible wrong state at the consent step. No data is wrong or lost, and nothing is read early, so it is not High.
+  - Likelihood is Common. The person who imports meets it at the first scan on each Mac, and at each scan after Don't Allow.
+  - Confidence is High. The source trace is short and direct. Nobody ran the Mac app, so that the page stays visible behind the alert is an inference from the code and the mockup.
+  - Harder later is No. The fix costs the same later.
+- **Terms:**
+  - **Scan:** the import operation in which the Mac asks for consent when needed, then reads the Conductor workspace list for the page.
+  - **Consent alert:** the native macOS alert of the Mac app that asks "Allow Conductive to read your Conductor data?".
+  - **Device operation:** one import request that the page sends through the Worker to its paired Mac, with the stream of events that answers it.
+  - **Status operation:** the existing device operation that returns whether the Conductor database exists, the offer dismissal, and the saved consent.
+  - **Phase message:** a new device event that tells the page which step of the scan runs now. Option B adds it.
+- **Background:**
+  - Conductive imports local Conductor workspaces into cloud workspaces. Only the Mac app imports.
+  - `docs/protocol/desktop-import.md:38-39` says that the Mac app asks in an alert of its own before its first read. Lines 40-41 say that the page cannot answer the alert, because the page has no bridge to the Mac app. Lines 48-51 say that Allow lets the Mac app read, and that Don't Allow reads nothing.
+  - The page starts each import operation through the Worker, and it gets the answers back as a stream of events.
+  - The mockups under `docs/mockups/` are the visual spec. The mockup draws "Waiting for your answer" with no spinner during the alert, and "Reading your Conductor workspaces" with a spinner after consent.
+  - No protocol doc, architecture doc, or public guide names the page state during the alert.
+- **Problem:**
+  - The mockup draws two states. `conductorImportParts.tsx:156-157` draws "Waiting for your answer" with no spinner for the step `consent`. Lines 158-159 draw "Reading your Conductor workspaces" with a spinner for the step `reading`.
+  - In the step `consent`, the mockup screen draws the consent alert over an inactive window, at `docs/mockups/src/screens/ConductorImportScreen.tsx:144` and `:149-151`. The consent entry says "The window waits behind the alert", at `index.mockup.tsx:13`. Its `reading` variant says "while the page shows a spinner", at line 26.
+  - The page draws one state. `src/shell/import/ConductorImportScreen.tsx:70-72` draws "Reading your Conductor workspaces" for both `idle` and `reading`. Its `Waiting` part at lines 31-39 always draws a spinner.
+  - The page model has no consent state. `ScanState` at `import-model.ts:17-25` has idle, reading, denied, unavailable, failed, and ready.
+  - `scan()` sets reading at `import-model.ts:97`, before the pairing lookup at line 98 and before `runImportOperation` at line 102. The state changes again only at the end of the operation, at lines 111-120. The scan callback at line 107 takes only scan rows.
+  - The Mac waits for consent first. `controller.ts:65` awaits `preferences.allow()`. The existence check at line 78 and the scan job at line 81 come after it.
+  - `preferences.ts:47-61` returns at once only when the saved consent is `allowed`. Otherwise it calls the prompt.
+  - The prompt is the native alert. `desktop/src/main.ts:130-144` calls `dialog.showMessageBox(active, options)`, so the alert attaches to the app window, and the page stays behind it.
+  - No event marks the end of the wait. In a scan, the Mac sends only scan pages and then `done`, or `failed`, at `controller.ts:64-96`. `desktop/src/import/README.md:21` says the same.
+- **Impact if no action:**
+  - Behind the consent alert, the page says "Reading your Conductor workspaces" with a spinner. The alert asks whether Conductive may read that data. So the page claims a read that has not started.
+  - The person meets this at the first scan on each Mac, and again at each scan after Don't Allow, because a `denied` consent prompts again.
+  - The visual spec and the page show different states at the permission step.
+  - No read happens before Allow, at `controller.ts:64-77`. So this is a false status, not a privacy breach.
+- **Evidence:**
+  - The `idle` state and the pairing lookup also show the reading claim, at `src/shell/import/ConductorImportScreen.tsx:70-72` and `import-model.ts:97-98`.
+  - None of these files exists on `main`. The import change adds `conductorImportParts.tsx`, the consent entry, the page screen, the page model, the controller, the preferences, and `docs/protocol/desktop-import.md`. It also adds the whole `requestImportConsent` callback in `desktop/src/main.ts`.
+  - Commit `30312cdd` changed only the wait markup on both sides, from `p` to `div`. It did not change the state model.
+  - No user decision chooses this state. The consent design call names the native alert and Ask again, not the page wait. The mockup wait came from agent mockup work, and the build step of the page says only to build it from the mockups.
+- **Root question:** What should the page show while the native consent alert waits?
+- **Options:**
+  - **A.** Use one honest general waiting state throughout the operation. Update the page and both mockup steps to that state. This avoids a new event but loses the two distinct phases. Effort: Small.
+  - **B.** Keep the mockup's separate waiting and reading states. Relay an explicit phase through the existing authenticated device operation. Show the spinner only in the reading phase. Update the event contract and tests. Effort: Medium.
+    - Use the generic scan-phase event. Keep an honest pending display until an explicit reading phase arrives.
+    - Send the consent phase only when the native alert really opens. After Allow, keep the existing source existence check and read.
+    - Show the drawn reading label and spinner only from the explicit reading phase.
+    - Keep the native alert boundary and the existing public status operation unchanged. No new pending copy is chosen by this record.
+    - B also updates `desktop/src/import/controller.test.ts:36-38`, `desktop/src/import/README.md:21`, `docs/protocol/desktop-import.md:85-87`, and the dev fake at `src/app/dev/import-routes.ts:133-146`. A new event kind also updates `src/shared/conductor-import.md:34` and both readers.
+  - **C.** Keep the drawn two states, and change only the page model and screen. Effort: Medium.
+    - While a scan runs, the page also runs the existing status operation at once, then at a fixed interval. It stops when the status reports `allowed` or the scan ends.
+    - A running scan with `unknown` or `denied` consent shows "Waiting for your answer" without a spinner. `allowed` shows the reading state with the spinner.
+    - It needs no Mac app, contract, Worker, or protocol change.
+    - Cost: each poll is a Worker request, a device frame, and a new Mac worker thread for the existence check, at `desktop/src/import/worker-client.ts:41-64`. Reading shows up to one interval late. A long-open alert needs a stop rule. The exact request list in `src/app/import/import-model.test.ts:58-70` changes with the new behaviour.
+- **Shared assumptions checked:**
+  - Consent comes before the first read. Source: `desktop-import.md:38-39`. Kept.
+  - The alert stays native in the main process, with no renderer bridge. Source: `desktop-import.md:40-41`, which records the decision against a bridge. Kept.
+  - The scan itself asks for consent, and Ask again sends a new scan. Source: `desktop-import.md:50-51`, `desktop/src/import/README.md:15-16`, and `import-model.ts:88-93`. Kept.
+  - The page must stop claiming a read during the alert. Source: the root question and the consent rules. Kept, because keeping the claim fails the goal.
+  - The page needs a new Mac message to learn the answer. Source: the text of B. It is not a requirement. The existing status operation already returns the saved consent, at `src/shared/conductor-import-operation.ts:71-76` and `controller.ts:56-62`. C drops it.
+  - The page shows two phases. Source: the agent mockup work and the build step of the page. No user decision chose it. A drops it.
+- **Left out:**
+  - Keep the current reading claim. It does not describe pending consent accurately, so it fails the goal.
+  - Read first. It breaks the consent requirement.
+  - A new renderer bridge. It breaks the existing boundary of `desktop-import.md:40-41`.
+  - A mockup-only change that draws reading behind the alert. It draws a read before consent, so it fails the goal.
+  - A separate consent operation before the scan. B is better on every point. B uses the same contract surface, needs one operation instead of two, and keeps the rule that Ask again sends a scan.
+  - One status read before the scan, alone. It shows "Waiting for your answer" during the read after Allow, so it fails the goal. With a general text, it is A plus a second operation.
+  - Ask for consent when the Mac finds the database. Ask again still meets a pending alert, so it fails the goal. It also asks people who did not choose to import.
+  - A timing or focus guess in the page. It guesses the phase, so it fails the goal.
+  - A shared drawing of the wait alone. A shared pure part cannot tell the page the phase. It is a detail of A, B, or C.
+- **Wider fix:** B, when its message names a general scan phase that the page maps to its state. A consent-only flag is a direct fix.
+- **Previous examples:** No earlier separate consent-phase mismatch was found. The missing transfer sentence of the consent mockup concerns the words of the alert, which an existing requirement already settles.
+- **Related:**
+  - [conductor-import-shared-words.md](conductor-import-shared-words.md): work that waits for the answer, and the same files for A. That item puts shared import words in one module, and it adds a word that differs today only after its side is settled. So the consent-wait words join that module only after this item has an answer. A also edits the consent entry descriptions at `index.mockup.tsx:13` and `:26`, which that item edits too. One branch can apply both without conflict.
+  - [conductor-import-size-progress-contract.md](conductor-import-size-progress-contract.md): the same class of drift between the import page and its mockups. The answers are independent, and one later alignment branch can apply both. If that item takes its packing state, it is another phase that the Mac reports, so a general phase message of B can carry it. A shared drawing of the import states can also hold the waiting states here. Each item keeps its own side choice.
+- **Adjacent behaviour question, not part of this item:**
+  - When the Worker cancels a scan while its native alert is open, the Mac app cannot close the alert. `controller.ts:65` awaits `preferences.allow()`, and `preferences.ts:47-61` waits for the person's answer. So the alert stays until the person answers.
+  - This is a static trace only. Nobody ran it.
+  - This item approves no automatic close of the alert. A change of that behaviour needs its own decision.
+- **Recommendation:** B. One Mac message at the exact moment keeps the drawn states, with no polling traffic and no lag.
+  - The first review recommended B. The finding check of 2026-11-11 kept B, corrected the category from Mockup to Product bug, and added the likelihood Common. The root kept B and the corrections the same day.
+  - C fits if the user rejects every device protocol change. A fits if the user prefers one general state.
+- **Action:** ask the user, because no requirement or user decision chooses between one general wait and the drawn two phases, and B adds a scan message that `docs/protocol/desktop-import.md:85-87` does not list.
+  - Each option decides which side of a mockup and page mismatch is right. A changes the visual spec, and it needs new general words, with a choice between two correct texts. C keeps the protocol, but it adds polling traffic and lag.
+  - Make no interim message, polling, or alert change before the answer.
+  - The first review's Action was: "ask the user, because the product and mockup use different consent states and no requirement settles which state model to implement."
+- **Validation of the fix, after the answer:**
+  - Update the page model test and the controller test for the chosen state model. See each new case fail first.
+  - Update the mockups and their entries to the same states, and run `npm run mockups:check`.
+  - Under B, a saved `allowed` consent stays unprompted. Preserve the scan pages and done result, with the specified phase events.

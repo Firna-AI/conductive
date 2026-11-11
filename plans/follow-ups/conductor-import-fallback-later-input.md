@@ -1,0 +1,72 @@
+# Native fallback drops later delivered input
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, review round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 14. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `runner/src/engine-runtime.ts:226-239`, the event path that restarts `turn.first`, and `:212-223`, the start path. `runner/src/engine-import.ts:6-44`, `fallbackImportedHistory`. `runner/src/engine-session.ts:24-41`, `ActiveTurn`, which keeps no sent command, and `:164-187`, `deliverInput`, which adds the later ID at `:182`. `runner/src/engine-events.ts:55-70`, `continueResult`.
+- **Reason:** The import review used both of its fix rounds, and this Rare product bug is not critical: the Worker keeps each message, its attachments, and its place in the chat.
+
+- **History:** 2026-11-11, root integration record. The Location field now points to `16a4f76c`. The detailed static trace keeps its reviewed source citations. The reviewed Location field was:
+
+> `runner/src/engine-runtime.ts:226-239`, the event path that restarts `turn.first`, and `:212-223`, the start path. `runner/src/engine-import.ts:6-44`, `fallbackImportedHistory`. `runner/src/engine-session.ts:22-39`, `ActiveTurn`, which keeps no sent command, and `:159-182`, `deliverInput`, which adds the later ID at `:177`. `runner/src/engine-events.ts:55-70`, `continueResult`.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Severity is High. The agent acts without an accepted instruction, which is wrong output, and the turn can stay blocked until Stop.
+  - Likelihood is Rare. The rare part is the setup: an imported Claude session whose native history Claude rejects at its first turn. Two waiting messages are normal. Codex sessions are not affected. The repository holds no evidence of how often Claude rejects imported history.
+  - Confidence is Medium. The trace comes from source reads. The Claude timing comes from the adapter code, not from a live SDK or CLI run.
+  - Harder later is No. The fix stays in the runner engine and changes no stored format or message.
+- **Terms:**
+  - **Native history:** the agent's own saved session memory, copied from Conductor into the cloud computer.
+  - **Fallback:** a fresh agent session that reads the imported Markdown document after a definite native history failure.
+  - **Provider segment:** one agent process of a turn, with the inputs that it received.
+  - **Later input:** a member message that `deliverInput` sends to the running turn after its first message.
+  - **Continuation:** the Worker step `continueUnanswered` in `worker/chat/continuation.ts`. It sends the unacknowledged messages of a finished turn again, as a new turn.
+- **Background:**
+  - Conductive imports Conductor sessions with their native history where it can, and falls back to the old document when a session cannot continue, as `docs/protocol/chat-and-events.md:159-169` and the Fallback section of `runner/import.md` say. The fallback stays in the same turn, before any agent output.
+  - A member can send more messages during a running turn. Each joins the turn and goes to the agent at once, and the agent reads it at its next tool call, at `docs/protocol/messages-and-attachments.md:92-96`. Each agent gets the messages in the order that the workspace accepted them, at `docs/protocol/messages-and-attachments.md:79-81`.
+  - Claude reports a native rejection only through its event stream, at `runner/src/providers/claude.ts:84-93` and `:155-165`. Its `send` at `:190-210` only puts the input into the input window and returns.
+  - The Worker adds a new message to the active turn, also while that turn waits to start, at `worker/chat/turn-lifecycle.ts:18-23` and `worker/chat/messages.ts:104-110`. The runner sends `turn.started` before the provider start, at `runner/src/engine-input.ts:108-119`. So two messages that wait for a start reach the native process together, before any model reply.
+  - Codex rejects native history at `thread/resume` inside the provider start, at `runner/src/providers/codex.ts:158-176`. The later message still waits in the engine queue then, so Codex sessions do not meet this defect.
+- **Problem:**
+  - The event path calls `fallbackImportedHistory` with `() => this.start(first)`, where `first` is `session.active.first`, the first command of the turn.
+  - `deliverInput` added the ID of the later input to `turn.messageIds` and sent its command. `ActiveTurn` keeps no copy of a sent command, and `waiting` holds only deferred inputs.
+  - The fallback closes the native process and restarts only the first command. So the fallback process never gets the later input, while its ID stays in the turn.
+  - `continueResult` resolves the IDs that a result lists, and it returns while an ID of `turn.messageIds` stays unresolved.
+- **Impact if no action:**
+  - The agent omits an accepted instruction.
+  - A Claude result normally lists the answered IDs, through `runner/src/providers/claude-events.ts:39-48` and `:96-100`. The fallback answers only the first input, so the turn never ends until the member presses Stop. A running turn also blocks the 30-minute automatic stop, so the cloud computer keeps running and using org hours.
+  - A Claude result can list no ID, as `runner/src/providers/claude-completion.test.ts:52` models. The runner then treats every delivered input as answered. The turn ends and reports the later message as answered. The Worker removes a command when an event acknowledges its message, so nothing sends it again.
+- **Root question:** How can fallback preserve every input that the workspace accepted?
+- **Options:**
+  - **A.** Keep the exact commands of the active process. Replay its unresolved commands in order after fallback. Add the two-input regression. This repairs the fallback path directly. Effort: Small.
+  - **B.** Give each provider segment ownership of its commands and its result IDs. Use that owner for the fallback and for deferred process restarts. Add the same regression. Effort: Medium.
+    - A fallback or a later process replacement then sends each unanswered input of the segment again, in order.
+    - The inputs of the new process keep the login, the turn token, and the commit author of the turn, as `runner/src/engine-session.ts:121-122` does today.
+  - **C.** Make the Worker coordinate the fallback redelivery from its saved messages, through a private restart handshake. It moves the replay ownership across the runner protocol and needs more integration work. Effort: Large.
+- **Shared assumptions checked:**
+  - The fallback stays inside the same turn, before any agent output. Kept, because the member gets an answer from the old document with no failed turn.
+  - A second send is safe, because the native process gave no output and so ran no tool, at `runner/src/engine-runtime.ts:189-193` and `runner/src/engine-import.test.ts:118`. Kept.
+  - Each later input goes to the agent at once. It is a requirement. Kept.
+- **Left out:**
+  - Refuse later messages during the whole turn. It breaks the rule that a message during a turn joins it.
+  - Always start from the old document. It drops native continuation, which the import keeps where possible.
+  - Clear the later ID without replaying its command. The Worker keeps the unacknowledged command, and the continuation sends it later as a new turn. It still breaks two requirements: the fallback agent cannot read the input at its next tool call, and a later message that reaches the fallback agent gets its answer first, against the accepted order.
+  - Hold later inputs until the first agent output. It breaks the rule that a message goes to the agent at once.
+  - A model request that tests the native history before the first member input. It costs a paid request with the full history for each imported session, and it adds a hidden exchange to the agent memory.
+  - Fail the turn when the native process got two or more inputs. The later input then never runs.
+  - The provider adapters are not a real choice. Each adapter would repeat the lifetime, credential, and store work of the engine.
+- **Wider fix:** B. One segment owner keeps commands and result IDs together across every process replacement. B also removes a second case of the same cause: the event path restarts `turn.first` also when the native process started for a deferred input in `continueResult`. That case needs a first answer with no output, so it is speculative.
+- **Previous examples:** No earlier native-fallback input loss was found. `runner/src/engine-events.ts:66` already handles ordered deferred inputs. Commit `b81e55a24de05d5d18fc2cf32ec7b680f06753ce` moved provider lifetime ownership into the active turn. Commit `057a9046` made the runner follow the turn ownership of the Worker and is the base of the continuation. Neither is an earlier case of this defect.
+- **History:** 2026-11-11, before the supplementary links: "None."
+- **Related:**
+  - [conductor-import-native-failure-tests.md](conductor-import-native-failure-tests.md): the same code. Its C adds an engine case for the start-rejection fallback at `runner/src/engine-runtime.ts:212-222`. Write that case against the restart owner that B here leaves. No conflict, and neither waits. One runner fallback branch can hold both.
+- **Recommendation:** B. One owner for each segment keeps its commands and its answered IDs together. A fixes only the fallback path.
+  - The first review recommended B, and the finding check of 2026-11-11 kept it. The root kept B the same day.
+- **Action:** fix after merge, apply B, because the import review used both of its fix rounds and this Rare High product bug is not critical. The same change updates the Fallback section of `runner/import.md`.
+  - The first review's Action was: "fix after merge, apply B, because the two historical source fix rounds remain used. The root owns the final outcome and follow-up record."
+- **Validation of the fix:**
+  - In `runner/src/engine-import.test.ts`, send a `message` command to the native process, then emit `native_history_unavailable`.
+  - Check that the fallback process gets both commands, in order.
+  - Check one finished turn end with both IDs, for a result that lists the IDs and for a result that lists none.
+  - Keep every current assertion, guard, and time limit.

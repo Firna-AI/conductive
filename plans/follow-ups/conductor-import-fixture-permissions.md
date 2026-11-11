@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-11, from pull request #204, branch `conductor/import-from-conductor-mac-scan-and-upload`, review round 3 of head `d6bd4fbf03c167ab0232fc29442d7c8800653cce`, finding 7. It includes the independent finding check and the review owner's outcome of the same day. The check's two new problems about umask-decided folder modes are folded into this item.
+- **Added:** 2026-11-11, from pull request #204, branch `conductor/import-from-conductor-mac-scan-and-upload`, review round 3 of head `d6bd4fbf03c167ab0232fc29442d7c8800653cce`, finding 7. It includes the independent finding check and the review owner's outcome of the same day. The check's two new problems about umask-decided folder modes are folded into this item. The review of pull request #223, branch `calummoore/conductor-import-option`, round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, found the same defect again on 2026-11-11, as finding 17. Its independent finding check and the root outcome of the same day kept C here, so that finding is a repeat of this item.
 - **Location:** `desktop/src/import/inventory-nested.test.ts:45-46`, two links with no set mode. `desktop/src/import/inventory-nested.test.ts:77`, the tuple assertion that CI reports. `desktop/src/import/inventory-nested.test.ts:84` and `:86`, the expected link modes `0o777`. `desktop/src/import/inventory-nested.test.ts:78`, `:82`, and `:85`, folder modes that the umask decides, with `desktop/src/import/inventory-nested.test.ts:42` and `desktop/src/import/package-test-support.ts:60`. `desktop/tests/import.spec.ts:41`, mode 493 for `.context/empty`, with `desktop/tests/import-fixture.ts:73`.
 - **Reason:** Both child fix rounds are used, and this test defect is not critical: the product is right, and the required Linux gate passes.
 
@@ -43,6 +43,13 @@
   - Both expect mode 511, which is 0777, and receive 493, which is 0755, for `nested/dir-link` and `nested/file-link`. The phase is the untracked form. Both sides hold 12 entries, and those two modes are the only differences.
   - Apple had no guard expiry. Its trusted-parent alias case passed at 2,628 ms.
   - The nested test's partial Intel run displayed 2,746 ms when it stopped at the first tuple. Its full Intel duration is unknown.
+- **Exact Mac failure at head `cfbf916c`:**
+  - Desktop run `42977355161`. Apple silicon job `130379422459`: 155 passed and 1 failed of 156 tests, across 54 files, in 14.56 seconds.
+  - Intel job `130379421968` of the same run: 149 passed and 7 failed of 156 tests, across 54 files, in 26.19 seconds.
+  - Both jobs report `AssertionError: untracked: expected [ …(12) ] to deeply equal [ …(12) ]` at `inventory-nested.test.ts:77:9`.
+  - Both expect mode 511, which is 0777, and receive 493, which is 0755, for `nested/dir-link` and `nested/file-link`. Those two modes are the only differences. The folder tuples match, so both runners use umask 022.
+  - The nested case ran 1,159 ms on Apple and 2,254 ms on Intel before it stopped at the first tuple.
+  - Both jobs skipped the build, source Electron, package, and packaged Electron steps. The Linux gate runs this test and passes.
 - **Impact if no action:**
   - Both Mac logic steps fail. So the build, source Electron, package, and packaged Electron steps of `.github/workflows/desktop-mac-checks.yml` did not run at `d6bd4fbf` on either Mac architecture. No source or packaged Mac proof exists for that head.
   - Each Mac release from `main` waits, because `.github/workflows/release.yml:64` signs only after the `mac` job succeeds.
@@ -51,6 +58,7 @@
   - The required Linux gate passed. Linux run `42946831155`, job `130281538958`, passed all 13 phases. It ran 2,441 root cases across 837 files, 199 runner cases across 72 files, and 6,247 CI Mokly files.
   - A local run counts 6,197 Mokly files, which is a separate count. This test runs on Linux through the root Vitest include at `vitest.config.ts:10`.
 - **Root question:** How must the test check exact source metadata across supported hosts? The first review asked this question, and the finding check kept it. It also covers the umask-decided folder modes of the same tuple.
+  - The finding check of the review of head `cfbf916c` asked it on 2026-11-11 in a narrower form: "How must the nested-repository test check the exact source modes that the inventory records, on Linux and on both Mac architectures?" Both forms have the same answer.
 - **Options:**
   - **A.** Capture each link's mode with native `lstat` immediately after fixture creation. Use those input facts in the exact expected tuples. Keep all path, kind, target, preservation, and ignore assertions. Effort: Small.
     - From the first review. It fixes the macOS link failure. It leaves the umask-decided folder modes as they are.
@@ -66,6 +74,9 @@
     - `fsPromises.lchmod` could replace the child shell. But Node documents it as deprecated and implemented only on macOS, so Linux would need a branch.
   - **D.** Do B, and also make the package fixture set each folder mode that it creates with `chmod`. Link modes come from B's native capture. File and folder expectations stay literal. Effort: Small.
     - From the finding check. Cost and risk: a later test can still write a literal link mode that is wrong on macOS. One tuple mixes literal and captured values.
+  - **E.** Do C, and add a lint rule for the import test files that bans direct `symlink` and folder `mkdir` calls outside the fixture builders. Move the existing direct calls to the builders. Effort: Medium.
+    - From the finding check of the review of head `cfbf916c`, 2026-11-11. It adds a new lint, which the user decides, and it changes tests that assert no mode.
+- **Letter map to the review of head `cfbf916c`:** that review lettered the same defect differently on 2026-11-11. Its A, the inline capture, is A here. Its B, a known link mode through `fsPromises.lchmod` where the host allows it, with folder modes and the literal tuple, is a variant of C here with a deprecated API and a platform branch. Its C, builders that set file and folder modes and build the expected tuples from the inputs with native link modes, is closest to D here, with computed expectations. Its D is C here. Its E is E here.
 - **Comparison on the merits:**
 
   | Point | A: inline capture | B: capture builder | C: controlled modes | D: B plus folder modes |
@@ -98,6 +109,9 @@
   - Soft assertions, or one test case for each form. They let later checks run after a failure, but the macOS expectation stays wrong.
   - Product code and the matcher are not real choices. The product is right, and a broader matcher weakens the assertion.
   - The repository-local fixture is not a place for the link part of this item, because no test of `desktop/tests/import-fixture.ts` asserts a link mode. Its folder `.context/empty` is part of C, as above.
+  - Remove the mode from link records in the product inventory type. The product is right, and no product change is part of this test fix.
+  - A declarative fixture table that builds each entry and also gives the expected tuples. It replaces the literal tuple list, which every option keeps.
+  - A required Mac check before the merge. It detects the failure but does not correct the expectation, and it is a separate gate question for the user.
 - **Wider fix:** C. Fixture builders set link and folder modes locally, so literal exact assertions hold on every supported host. It still prevents the class when the host detail changes shape, from the macOS link mode to a non-022 umask.
 - **Previous examples:** The resolved fixture root fix of commit `55f9407f`: a macOS host fact broke these fixtures on Mac CI. Commit `cec554eb` fixed the runner archive's entry modes against the install umask. `desktop/src/import/stage.test.ts:73` already uses C's folder technique. The `sourceHashes` helper of `desktop/tests/import-fixture.ts` compares native source facts for preservation.
 - **Related:**
@@ -106,13 +120,18 @@
   - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md): no link.
   - The nested-repository fix of commit `d6bd4fbf`: this test is its regression. This fix gives it its first full macOS evidence. It does not reopen that fix, because the product output is right.
   - The resolved fixture root `importTemporaryDirectory` of `desktop/tests/import-temporary.ts`: B, C, and D extend the package fixture, which uses it. Keep it.
+  - [conductor-import-tracked-nested-files.md](conductor-import-tracked-nested-files.md): the same code, and work that waits. Its regression belongs in this nested test, which stops at its first tuple on macOS. Land this fix first, or in the same unit.
+  - [conductor-import-replacement-files.md](conductor-import-replacement-files.md): a shared wider fix, when it applies. A replacement-link regression there that asserts an inventory link mode must create its link with the builder of C.
+  - [conductor-import-intel-guard-expiries.md](conductor-import-intel-guard-expiries.md): the same code. It owns the six Intel guard expiries. All six cases build fixtures with `write` at `package-test-support.ts:54-64`, and C here adds fixture builders that they can use. The later Mac steps run only when both items pass.
 - **Recommendation:** C. It makes every literal right on every host, for links and for umask-decided folders. Fixture-owned creation sets the link and folder modes explicitly and keeps every literal expectation and assertion. A child-shell umask 0 belongs only to link creation, not to the whole process, the runner, or CI.
   - The first review recommended B. The finding check of 2026-11-11 changed the recommendation to C. It named D as the best option if the test should keep each host's own link mode.
   - The review owner adopted C on 2026-11-11 and confirmed that the product modes are right.
+  - The review of head `cfbf916c` first recommended its C, with computed expectations. Its finding check of 2026-11-11 changed the recommendation to its D, which is C here. The root kept C the same day: every literal tuple, assertion, and guard stays, with no computed expectation, global umask, product, configuration, timer, or fixture reduction.
 - **Action:** fix after merge, apply C, because both child source fix rounds are used and this test defect is not critical.
   - Keep all assertions and all guards. Do not normalize modes for the whole process, the runner, CI, a timer, or the product.
   - The first review's Action was: "fix after merge, apply B, because the two fix rounds are used."
   - Without the round limit, the fix rule gives `fix now`, because the problem breaks a test.
+  - The root kept this Action on 2026-11-11 for the repeat at head `cfbf916c`.
 - **Guard boundary:** This fix alone cannot make the Intel logic step pass.
   - The same Intel job recorded six unchanged 5,000 ms guard expiries. These are expiry observations, not completion costs, and they establish no cause:
     - `objects.test.ts`, "includes the 100 MiB boundary, omits larger work files and makes independent bounded parts": 5,015 ms.
@@ -124,6 +143,8 @@
   - The timing cause is unknown. The stopped observer attempts gave no valid product-flow telemetry, so do not use them as a cause.
   - This item adds no source change, performance work, test split, fixture reduction, timer change, or configuration change.
   - This is history, not proof for `d6bd4fbf`: at commit `55f9407f`, Apple job `130232132304` passed 154 logic tests across 52 files. It also passed 12 source Electron tests and 12 packaged Electron tests.
+  - At head `cfbf916c`, Intel job `130379421968` of run `42977355161` recorded the same six guard expiries: the stage case at 5,011 ms, the disk case at 5,016 ms, the package LFS case at 5,015 ms, the stage-integrity reuse case at 5,008 ms, the locations alias case at 5,009 ms, and the objects case at 5,009 ms.
+  - [conductor-import-intel-guard-expiries.md](conductor-import-intel-guard-expiries.md) owns them. Their cause stays unknown. This item does not promise to fix them, and it gives no cause, completion cost, hang, or flakiness for them.
 - **Validation of the fix:**
   - The nested test passes on Linux, Apple silicon, and Intel, with every assertion. On macOS, its staged form and its later checks now run.
   - `import.spec.ts` keeps its exact mode for `.context/empty`, from a fixture-set mode.

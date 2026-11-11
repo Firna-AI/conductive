@@ -1,0 +1,69 @@
+# Banner misses pull requests into another repository
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`. The fork check of the import plan's mockup work reported it outside the scope on 10 November 2026, and the review findings file kept it.
+- **History:**
+  - 2026-11-11, preservation audit: the question was narrowed to a pull request from the workspace's own branch. The record now uses the Create PR wording of the merged `main`, and it keeps the fork rule of Continue a branch as history.
+  - Before that update, the record cited `worker/github/client.ts:86-91` and `docs/protocol/github-banner.md:43-80` at head `cfbf916c`, and the words "Create pull request".
+  - Before that update, the Recommendation said that A states the one-repository model that the fork rule kept. The fork rule now stays history, so the reason names the model that the bar follows.
+- **Location:** The lines are at commit `16a4f76c4555fbb46bed1921f03dfb6d20974cf7`. `worker/github/queries.ts:26-37`, `LOOKUP`, which lists the pull requests of the workspace repository by head branch name. `worker/github/client.ts:94-99`, the lookup call of the bar. `worker/github/banner.ts:39-49`, `parsePull`, which refuses a pull request whose head repository is not the workspace repository. `docs/protocol/github-banner.md:43-53`, the state of a branch, `:79-86`, the Create PR rule and the rule for a pull request run, and `:96-126`, the actions.
+- **Reason:** The banner code is unchanged by the import change, and no requirement states what the bar shows for a pull request from the workspace's own branch into another repository.
+
+- **Source:** Review. **Category:** Docs or spec. A docs or spec finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Medium. It is a spec gap with a workaround: the person can open the pull request on GitHub.
+  - Confidence is High. A read of the lookup, the call, and the parser shows the behaviour. Nobody ran it against GitHub.
+  - Harder later is No.
+  - Effort is Small, the grade of A.
+- **Terms:**
+  - **Banner:** the pull request bar of a workspace. It shows one state of the workspace branch, such as no pull request, checks running, or ready to merge.
+  - **Fork:** a copy of a GitHub repository under another account.
+  - **Base repository:** the repository that receives a pull request. The head repository holds its branch.
+  - **Pull request run:** a run of a routine that a pull request event starts, as `docs/protocol/pull-request-runs.md` says.
+- **Scope:**
+  - This record concerns a pull request from the workspace's own branch into another repository.
+  - It does not concern the pull request that starts a pull request run. `docs/protocol/github-banner.md:82-86` settles that case: the bar of a run shows the state of its own branch, and the header of the run links to the pull request that started it.
+  - The lookup of the merged `main` still queries one repository. No runtime GitHub proof was added.
+- **Background:**
+  - `docs/protocol/github-banner.md:43-53` says that the Worker routes each event to each workspace whose branch the event names. When a tab opens, the Worker reads the current pull request and the current checks of the branch from the GitHub API.
+  - `:55-70` lists the states of the bar. `:79-81` say that the bar offers Create PR for commits of the branch that its base branch does not have, and for local work. Create PR opens a pull request into the base branch.
+  - The action table at `:102` gives Create PR for "No pull request, with commits on GitHub or local work". `:112-113` count as local work the changed files, also untracked files, and the commits that no remote branch holds. `:124-126` say that a branch without a pull request has no link to GitHub, and that Create PR asks the agent to open the pull request. The user chose this on 10 November 2026.
+  - No rule names a pull request from the workspace's own branch whose base is another repository.
+  - History, not a current rule for every pull request workflow: on 10 November 2026 the user chose a fork rule for Continue a branch. Only a pull request whose head repository matches the chosen repository can continue, and the others show as unavailable, with a reason. `docs/protocol/continue-a-branch.md:40-54` states it. Its reason says that the workspace, the bar, and the GitHub events follow one repository and one branch. The rule governs the branch picker, not the bar.
+- **Problem:**
+  - `LOOKUP` asks the workspace repository for its pull requests with the head branch name, at `queries.ts:26-37` and `client.ts:94-99`. A pull request that lives in another repository, such as the upstream repository of a fork, is not in that list.
+  - `parsePull` refuses a pull request whose head repository is not the workspace repository, at `banner.ts:44-49`.
+  - So when the workspace repository is a fork, and the person opens a pull request from the workspace's own branch into the upstream repository, the bar shows no pull request.
+- **Impact if no action:**
+  - The bar shows "no pull request" while an open pull request of the same branch exists upstream.
+  - When the branch has commits on GitHub or local work, the bar offers Create PR. It asks the agent to open a pull request into the base branch of the fork, so a second pull request can follow.
+  - The checks and the review state of the upstream pull request do not show.
+- **Evidence:**
+  - `worker/github/queries.ts`, `worker/github/client.ts`, and `worker/github/banner.ts` have no change between `main` at `31d7b3300c505983b7a1d8baad2785c6fe1f3035` and the import head `cfbf916c`.
+  - A read of the merged `main` at `23628f77b7f0dc8ecb8740a7242e666da53e799f`, and of commit `16a4f76c`, shows the same one-repository lookup.
+  - The import plan's fork decision lists, as a reason to leave out a fork as a chosen repository: "Adding the fork as a chosen repository still does not make the banner follow the original pull request in its other repository."
+  - This is a static read. No request to GitHub ran.
+- **Root question:** What should the bar show when the workspace's own branch has a pull request into another repository?
+  - Before the preservation audit of 2026-11-11, the question read: "What should the bar show for a workspace branch whose pull request targets another repository?"
+- **Options:**
+  - **A.** State the current limit in `docs/protocol/github-banner.md`: the bar follows only the pull requests of the workspace repository, and a pull request from the workspace's own branch into another repository shows as no pull request. Effort: Small. Cost: a protocol change, so read both legal pages and each public guide in full.
+  - **B.** When the bar finds no pull request, look once for an open pull request of the workspace's own branch in another repository. Show a notice with Open on GitHub in place of Create PR. Effort: Medium. Cost: a new bar state, a mockup, a protocol sentence, and one more GitHub read for each such workspace.
+  - **C.** Follow a pull request in another repository fully: its state, its checks, and its reviews, through the GitHub search API and polling. Effort: Large. Cost: the GitHub App may have no access to, and no webhooks from, the other repository.
+  - **D.** Change nothing. Effort: Small.
+- **Shared assumptions checked:**
+  - The bar shows one pull request state for the workspace branch. Source: `docs/protocol/github-banner.md:57`. Kept.
+  - The bar of a pull request run shows its own branch. Source: `github-banner.md:82-86`. Kept by every option.
+  - The GitHub App reaches only the repositories that the org connected. Source: the GitHub integration. C drops it, and it needs access to the other repository.
+- **Left out:**
+  - Track both repositories through pushes, checks, and webhooks, as the fork rule left out for Continue a branch. It changes the repository model, and it needs push and webhook access to the other repository. C is its read-only form.
+  - Refuse a fork as a workspace repository. It adds a new rejection, and it fails the goal.
+  - Show the pull request that started a pull request run. The rule at `github-banner.md:82-86` already rejects it.
+- **Wider fix:** None. The class has one lookup.
+- **Previous examples:** The fork rule of 10 November 2026 for Continue a branch, which shows pull requests from forks as unavailable with a reason.
+- **Related:** None.
+- **Recommendation:** A. It states the one-repository model that the bar already follows, at the smallest cost, and it makes the current behaviour checkable against the doc. B fits if the user wants the bar to warn about the other pull request.
+- **Action:** ask the user, because every option except D changes or adds a requirement of the bar that no user decision covers.
+- **Validation of the fix, after the answer:**
+  - Under A, check the relative links of the changed Markdown by hand.
+  - Under B or C, add a test with a fake GitHub reply that holds a pull request of the workspace's own branch in another repository, and see it fail first.

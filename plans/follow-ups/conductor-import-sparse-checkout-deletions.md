@@ -1,0 +1,110 @@
+# Sparse checkouts create false deletions
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, the supplementary review of round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 27. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `desktop/src/import/git.ts:227-234`, the scan's index copy at `:227-233` and the upload's fresh `read-tree` at `:234`. `desktop/src/import/inventory.ts:55-77`, the comparison, and `:109-122`, the parent step and the delete entries. `desktop/src/import/inventory-lfs.ts:94`, which adds a HEAD pointer path also when its file is absent. `desktop/src/import/source-walk.ts:31-33`, which returns a missing path as itself. `desktop/src/import/package.ts:106`, the manifest `delete` entry. `runner/src/import-restore.ts:96-103`, the removal at activation. `runner/src/import-lfs.ts:34-40`, which treats a `delete` entry as an override. The first review cited `desktop/src/import/package.ts:107`, which closes the loop, and `runner/src/import-restore.ts:98-103`.
+- **Reason:** The import review used both of its source fix rounds, and this Rare product bug loses no stored data.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Severity is High. Activation writes deletions that the person never made, which is wrong output.
+  - Likelihood is Rare. A sparse checkout is an unusual setup for a Conductor workspace. Nobody measured how often users have one.
+  - Confidence is High. A read of each step of the source and of the Git manuals shows the path. No reproduction ran.
+  - Harder later is Yes. Each import that a Mac app without the fix publishes stores the false delete entries. A later fix cannot remove them from stored packages.
+- **Terms:**
+  - **Sparse checkout:** a Git checkout that leaves some tracked paths off disk on purpose.
+  - **Skip-worktree bit:** the index flag that tells Git to treat an absent sparse path as unchanged.
+  - **Private comparison repository:** the temporary Git directory that `controlledWorktree` in `desktop/src/import/git.ts` makes, so that no source filter or config runs.
+  - **Inventory:** the Mac record of the changed, untracked, and `.context` paths of one workspace, from `inventory` in `desktop/src/import/inventory.ts`.
+  - **Tombstone:** a manifest `delete` entry. Activation removes its path from the cloud checkout.
+- **Background:**
+  - Conductive imports local Conductor workspaces into cloud workspaces through its Mac app. The Mac copies the changed and untracked files that Git sees into a private stage, and it uploads a package.
+  - Activation is the first cloud start of an imported workspace. It checks out the whole HEAD, then applies the package.
+  - `docs/protocol/conductor-import.md:123-127` stores "the changed and untracked files that Git sees". `docs/protocol/conductor-import.md:197-199` says that "the activation must restore the work exactly".
+  - The Git manual of `git update-index`, section "Skip-worktree bit", says that Git treats an absent skip-worktree file as unchanged. `git add -u` and `git commit -a` do not record its deletion.
+  - The Git manual of `git read-tree`, section "Sparse checkout", says that sparse support stays off until `core.sparseCheckout` is on.
+- **Problem:**
+  - Each upload reads the source through `currentSource` at `desktop/src/import/stage-capture.ts:16-27`. `sourceInventory` calls `inventory` with `hashFiles` true, at `desktop/src/import/inventory.ts:197-203`. So `preserveStatCache` is false, at `inventory.ts:55-63`.
+  - `controlledWorktree` makes a new bare repository with an empty template, at `desktop/src/import/git.ts:201-207`. Each Git call sets the global and system config to `/dev/null`, at `git.ts:28-30`.
+  - With `preserveStatCache` false, `git.ts:234` runs `read-tree <head>`. It copies no source index, no sparse pattern, and no skip-worktree bit. So no private index entry has the bit.
+  - `inventory.ts:67-77` runs `git diff --name-only <head> --` against the source working tree with that index. Git lists each tracked path that has no file and no bit as deleted.
+  - `selectedLfsPointers` adds the path of each small HEAD blob that is an LFS pointer, at `desktop/src/import/inventory-lfs.ts:74-95`. Line 94 adds the path also when its file is absent. This is a second producer of false deletions.
+  - The walk returns a missing path as itself, at `desktop/src/import/source-walk.ts:31-33`. The parent step at `inventory.ts:109-111` adds the folders of each path, so an absent folder above a sparse path becomes a candidate too.
+  - `lstat` fails with ENOENT. So `inventory.ts:116-122` adds a `delete` entry for each absent file and folder.
+  - `packageStage` writes each such entry as a manifest `delete`, at `desktop/src/import/package.ts:106`.
+  - Activation checks out all of HEAD with `checkout --force` and `checkout-index --all --force`, at `runner/src/import-checkout.ts:119-147`. Then `runner/src/import-restore.ts:96-103` removes each `delete` path with `rm`, with the options `force` and `recursive`.
+  - `runner/src/import-lfs.ts:34-40` treats a `delete` entry as an override. So the runner also downloads no LFS payload for a falsely deleted pointer path.
+  - The scan is different. It calls `inventory` with `hashFiles` false, at `desktop/src/import/scan.ts:26`. Then `git.ts:227-233` copies the source index with its bits. So only the upload makes the false deletions. The sizes do not change, because the scan counts only files.
+- **Impact if no action:**
+  - A valid sparse source becomes a cloud checkout with deletions that the person never made. The cloud Changes view shows these deletions.
+  - An ordinary commit of the shown changes removes the files from the branch. Git history still holds them.
+  - No stored data is lost. The capture only reads the Mac source, which keeps every file. Each falsely deleted file stays in HEAD of the cloud clone, and `git restore` brings it back.
+  - No product action commits or pushes the work by itself. Archive runs no check of the work, at `docs/protocol/workspace-life.md:149`.
+- **Evidence:**
+  - `git grep -i` for `sparse`, `skip-worktree`, and `assume-unchanged` found only an unrelated Markdown table test. No code, test, or doc of the import handles a sparse checkout.
+  - The deletion assertion at `desktop/src/import/stage.test.ts:139-141` expects only the real deletion `gone.txt`. No test covers a skip-worktree source.
+  - This is a source trace with the Git 2.50.1 manuals. No reproduction ran. That a fresh index lists an absent tracked path as deleted is ordinary `git diff` behaviour, but nobody ran it here.
+  - The Git 2.50.1 manual says that a sparse checkout clears the bit of a present file. Older Git versions that a Mac can run were not checked.
+- **Root question:** How must the import record exactly the deletions that the source Git records?
+  - The first review asked how the import must preserve real deletions without treating sparse absence as deleted work. The finding check replaced it on 2026-11-11. The stored-work rule takes the changes that Git sees, so the source index, not a new importer rule, decides which absence is a deletion. The new words also cover both producers of false deletions.
+- **Options:**
+  - **A.** Read the source skip-worktree paths. Exclude only their absent files after all candidate additions and before parent expansion. Keep real deletions and materialized changes. Add a focused package regression. Effort: Small.
+  - **B.** Give inventory one source-selection classification. Distinguish present work, real deletion, and sparse absence. Apply it to comparison candidates, LFS additions, parent expansion, and the source fingerprint. Keep the private comparison free of source filters. Add the same regression. Effort: Medium.
+    - The fingerprint step needs no separate code, because `digest(value)` at `inventory.ts:174-188` covers `files`.
+    - Build B as one owner with the selection rule of `conductor-import-replacement-files.md` and the tracked state of `conductor-import-tracked-nested-files.md`. Apply the sparse rule also to each deletion that the replacement rule adds.
+  - **C.** Preserve sparse checkout configuration as part of the imported workspace. Restore its selected checkout shape in the cloud. This adds a saved format and a public restore requirement. It also needs sparse-aware file and change views. Effort: Large.
+  - **D.** Carry the source skip-worktree bits into the fresh private index. Effort: Medium.
+    - Read the bits with `git ls-files -t` in the source, which reads no file content and runs no filter.
+    - Set them on the private index with `git update-index --skip-worktree` before the comparison. Git's own diff then skips each such path.
+    - Gate the LFS pointer additions with the same set. Keep the fresh file metadata and the filter-free attributes.
+    - Cost: the LFS gate stays a second rule. Outside a sparse checkout, Git also hides the local edits of a present skip-worktree file, so those edits stay on the Mac.
+- **Sparse LFS sub-case:**
+  - Under A, B, or D, an absent sparse LFS pointer path gets no entry. Activation then downloads its HEAD payload from GitHub at `runner/src/import-lfs.ts:99-121`, as for any unchanged LFS path.
+  - When GitHub lacks that payload, `downloadImportLfs` at `runner/src/import-lfs-transport.ts:76-101` throws. The activation of the whole workspace fails, and the error names no file.
+  - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md) gives an unavailable HEAD payload the exact HEAD pointer record. Its recommended D covers only the files that the 100 MiB rule leaves on the Mac. It does not name a sparse-absent path, so it does not fix this sub-case by itself.
+  - A HEAD pointer record at a sparse path with no report would look like a complete restore, while neither the Mac nor GitHub holds the payload. So the fix must classify such a path, and keep it reportable, before any change gives it a restored state.
+  - This item adopts no restore policy for this sub-case. The fix keeps the current download and its loud failure for such a path. A change of its restored state, or of its report, needs a separate user decision.
+- **Shared assumptions checked:**
+  - An absent skip-worktree path is not a deletion. Source: the `git update-index` manual and `docs/protocol/conductor-import.md:126`. Kept.
+  - Activation restores the work over a full HEAD checkout. Source: `docs/protocol/imported-workspaces.md:94-99` and `runner/src/import-checkout.ts:119-147`. It holds for ordinary files. An LFS path also needs its payload from GitHub, which can lack it. C drops this assumption.
+  - No filter, hook, or file monitor of the source config runs. Source: `desktop/src/import/README.md:41` and `:45`. No protocol doc states it. Its reason holds, because a source config can name any filter program. A read of the index flags runs no such program. Kept.
+  - The capture compares content with fresh file metadata. Source: the import design. Cached metadata can hide a materialized LFS payload. Kept.
+  - Only the skip-worktree bit hides an absence. Source: the text of A and B. Git also skips its check of an assume-unchanged file, but that bit is a promise of the person that the file does not change. An absent assume-unchanged file breaks that promise. Kept.
+  - The edits of a present skip-worktree file upload as work. Source: the text of A and B, as "materialized changes" and "present work". In a sparse checkout, Git clears the bit of a present file, so Git sees its edits. Outside a sparse checkout, Git hides such edits, and the stored-work rule takes only the changes that Git sees. D drops this assumption.
+- **Left out:**
+  - Change nothing. It restores wrong changes.
+  - Ignore every missing tracked file. It loses real deletions.
+  - Filter only the diff. It is incomplete, because `selectedLfsPointers` also adds HEAD paths at `inventory-lfs.ts:94`.
+  - Reject sparse sources. It adds a new rejection. It also breaks the scope rule at `docs/protocol/conductor-import.md:36`, which covers each Conductor workspace that is not archived. The row states at `docs/protocol/conductor-import.md:83-92` give no refusal for a sparse checkout. A is also better on every point.
+  - Copy the source index for the capture, as the scan does. It fails the goal. Its cached metadata can hide a materialized LFS payload, and a copied split index cannot be read.
+  - Ask the source Git for its status. It can run the filter programs that the source config names. A gets the same deletion facts from the index flags alone, with a smaller change.
+  - An importer-owned comparison of each tracked path in place of the private diff. It re-implements the tracked-change rules of Git. B gives the same classification with the diff of Git.
+  - A rule in the runner, the Worker, or the manifest reader. Only the Mac has the source index that tells sparse absence from a deletion. A cloud rule needs a new manifest fact.
+  - A change of the scan. The scan saves no file list for the upload, and the upload must read one current state, as `docs/protocol/conductor-import.md:197-199` requires.
+- **Wider fix:** B. It makes the source meaning of each path the input of every inventory consumer, so no current or later candidate producer can make a false tombstone. D lets Git apply the bit in the diff, but the LFS additions still need a second rule, and D changes what uploads for a present skip-worktree file.
+- **Previous examples:** None found. Searches found no sparse handling in the desktop importer or in the runner index helper. Two finding checks of the same review reported this one case.
+- **Related:**
+  - [conductor-import-replacement-files.md](conductor-import-replacement-files.md): the same code, interacting options, and a shared wider fix. Its D makes each Git path below a non-folder parent a deletion when Git does not list that parent. When such a path is also a skip-worktree path, the source Git records no deletion for it. So the sparse rule must also apply to each deletion that its rule adds. When Git lists the parent, `replaceImportFile` and `restoreImportLink` in `runner/src/import-paths.ts` already remove the cloud folder. One owner for both rules settles this order.
+  - [conductor-import-tracked-nested-files.md](conductor-import-tracked-nested-files.md): a shared wider fix. Its B gives each expanded path a source classification with its tracked state. B here needs one classification of each outer index path. One owner can hold both, so that the inventory does not classify the same paths twice.
+  - [conductor-import-submodule-working-content.md](conductor-import-submodule-working-content.md): the same code. A producer of submodule work at the diff step, `inventory.ts:67-77`, must run before the sparse filter of A. B covers it by construction.
+  - [conductor-import-git-tree-facts.md](conductor-import-git-tree-facts.md): the same code, with no conflict. That item changes how `inventory-lfs.ts:11-21` reads a pointer. This item changes which pointer paths can become deletions, at `inventory-lfs.ts:94`.
+  - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md): a shared wider fix, and the sparse LFS sub-case above. Its D covers only its oversized-omission trigger. The rest of this item does not wait for it.
+  - [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md): the same code. `userExcludesFile` at `inventory.ts:64` already runs outside the cleanup of the private repository. A new source flag read for A or D must run before `controlledWorktree` or inside its cleanup. Otherwise the leak of that item grows.
+  - [conductor-import-split-index-scan.md](conductor-import-split-index-scan.md): the same code, and a shared wider fix. That item changes the same private index builder at `git.ts:227-234`. A fresh scan index, as its option A would make, would list the same false deletions in the scan. A fix in the inventory covers both paths. D here and that item can share one private index builder.
+  - [conductor-import-intel-guard-expiries.md](conductor-import-intel-guard-expiries.md): the same code, in the tests. The case at `desktop/src/import/stage.test.ts:27` holds the only deletion assertion, and it is one of the six cases that expire on the Intel Mac runner. Put this regression in its own focused case.
+  - [conductor-import-failed-estimate-branch.md](conductor-import-failed-estimate-branch.md): the same file, minor. Its B keeps the branch rule in one identity owner inside `inventory.ts`. No conflict.
+  - [conductor-import-small-blob-reads.md](conductor-import-small-blob-reads.md): the same code. Its B changes the raw reader below `selectedLfsPointers`. This B changes candidate selection above it. No conflict, and neither waits.
+- **Recommendation:** B. One selection classification keeps the distinction through every path producer.
+  - The first review recommended B, and the finding check of 2026-11-11 kept B. The root kept B the same day.
+  - D lets Git apply the bit, but it keeps a second rule for the LFS additions and changes what uploads for a present skip-worktree file.
+- **Action:** fix after merge, apply B, because the import review used both of its source fix rounds, and this Rare High product bug is not critical. The false deletions lose no stored data, because the Mac source and HEAD in the cloud clone keep every file.
+  - The first review's Action was: "ask the user, because this can create data loss and the two source fix rounds are used. A critical third fix round needs explicit authorization."
+  - The root corrected it on 2026-11-11. Each falsely deleted file is recoverable from HEAD and from the untouched Mac source, and no product action commits the deletions by itself. Unlike the omission of tracked nested files or of submodule work, the import omits no unique local bytes here.
+  - Land the fix before the first Mac app release that imports. A fixed Mac cannot remove false delete entries from packages that are already stored.
+- **Validation of the fix:**
+  - Add a sparse-checkout regression in its own focused test, outside the case at `desktop/src/import/stage.test.ts:27`.
+  - Use a source with a sparse pattern, one absent skip-worktree file, one absent skip-worktree LFS pointer, one real deletion, and one present edited file.
+  - Assert the exact inventory records: no `delete` entry for a sparse path or its absent folders, the real deletion, and the edited file.
+  - See the new case fail on an assertion first, with the current code.
+  - Keep every current assertion, guard, and time limit.

@@ -42,6 +42,9 @@
     - 151 became 212, "Workspaces have no short number": the workspace numbers and their search. The user chose option D on 9 November 2026.
     - At commit `e75a4e5`, `docs/protocol/workspace-links.md` cites decision 150 four times and decision 151 twice. `docs/protocol/workspaces-and-sandboxes.md` cites 151 for the numbers.
     - At commit `dfc2723`, the same places cite 211 and 212. The choices and their dates stay the same.
+  - Captured main `23628f77`, inspected on 11 November 2026, also reuses 220 and 221. `docs/protocol/github-banner.md:96` and `:131` use 220 for the bar actions, and `:174` uses 221 for merge permission. `docs/protocol/listening-ports.md:4` and `:19`, and `docs/protocol/port-previews.md:10` and `:29`, use the same numbers for the port reports and their names. The existing numbering question and A to C remain unchanged.
+
+
 - **Impact if no action:** Citations such as "decision 147" name two decisions, and each branch renumbers by hand before its merge. Agents and reviewers can then cite the wrong reason for a requirement.
 - **Root question:** How does each decision get a number that no other plan uses?
 - **Options:**

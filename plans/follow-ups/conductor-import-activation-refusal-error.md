@@ -1,0 +1,92 @@
+# Activation refusals lose their typed error
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, the supplementary review of round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 32. It includes the independent finding check and the root outcome of the same day. The wider fix of the class is a separate item.
+- **Location:** `worker/lifecycle/import-activation.ts:218-233`, `activationCredentialSender`, with the access reads at `:230-232`. `worker/lifecycle/start-access.ts:31-54`, `requireActiveStartUsers`, with the activation checks at `:36-45`. `worker/workspace-lifecycle.ts:47-51`, the object method with no `featureResult`. `worker/lifecycle/workspace-transport.ts:79-80`, the adapter line with no `requireFeatureResult`. `worker/lifecycle/machine.ts:53-112`, the authorization before and after the token refresh, with its final read at `:102-110`. `worker/http.ts:21-43`, `errorResponse`. `worker/lifecycle/git-credentials.md:22-25`, the grant sentence. The first review cited `worker/lifecycle/import-activation.ts:218-232` and `worker/http.ts:22-42`.
+- **Reason:** The import review used both of its source fix rounds, and this Rare refusal keeps the token refused and loses no data.
+
+- **History:** 2026-11-11, root integration record. The Location field now points to `16a4f76c`. The detailed static trace keeps its reviewed source citations. The reviewed Location field was:
+
+> `worker/lifecycle/import-activation.ts:218-233`, `activationCredentialSender`, with the access reads at `:230-232`. `worker/lifecycle/start-access.ts:31-54`, `requireActiveStartUsers`, with the activation checks at `:36-45`. `worker/workspace-lifecycle.ts:46-50`, the object method with no `featureResult`. `worker/lifecycle/workspace-transport.ts:79-80`, the adapter line with no `requireFeatureResult`. `worker/lifecycle/machine.ts:43-102`, the authorization before and after the token refresh, with its final read at `:92-100`. `worker/http.ts:21-43`, `errorResponse`. `worker/lifecycle/routes.md:214-217`, the grant sentence. The first review cited `worker/lifecycle/import-activation.ts:218-232` and `worker/http.ts:22-42`.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Severity is Medium. Operators see a false server error with no cause, and the intended status and code are lost. The end user sees the same message as for any refusal.
+  - Likelihood is Rare. It needs a non-owner activator who is removed or suspended during the few minutes of the restore.
+  - Confidence is High. Every cited line was read, and the Cloudflare runtime page states the error rule. No runtime reproduction ran.
+  - Harder later is No. The fix changes no stored format and no public message.
+- **Terms:**
+  - **RPC:** the Cloudflare call between the Worker route and its workspace Durable Object.
+  - **FeatureResult:** the plain success-or-error envelope in `worker/features/result.ts`, which carries a typed refusal across that call.
+  - **Activation:** the first cloud start of an imported workspace. Its restore phase is `import-restore`.
+  - **Activator:** the member who starts the activation. Any member who can send messages can activate, at `docs/protocol/imported-workspaces.md:56-57`. So the activator is often not the owner.
+  - **Credential route:** the machine route in `worker/lifecycle/machine.ts` that gives Git and Git LFS in the cloud computer a fresh GitHub token.
+- **Background:**
+  - During the `import-restore` phase, Git and Git LFS in the cloud computer ask the credential route for the activator's GitHub token. The helper sends the attempt ID in the `X-Conductive-Activation-Id` header, at `image/git-credential-helper.mjs:42-55`.
+  - The route first checks the workspace token, at `machine.ts:80`. That rule checks the token, Archive, the org, and the owner, through `worker/data/workspace-token-access.ts:3-9` and `worker/data/sandbox-access.ts:4-8`. It does not check the activator.
+  - The route then awaits the resolver over RPC, at `machine.ts:82-86`. The resolver checks the attempt fence: the current attempt, the `import-restore` phase, no cancel, no failure, no passed deadline, and the current epoch, at `import-activation.ts:219-229`.
+  - After the fence, the resolver calls `requireActiveStartUsers` and reads the workspace for Archive, at `import-activation.ts:230-232`.
+  - The route then runs its final D1 read, `readMachineCredentialAccess`, at `machine.ts:92-100` and `worker/lifecycle/machine-credential-data.ts:9-27`. It checks the shared workspace token rule, sender membership, and sender suspension together. It answers a removed sender with `404 org_not_found`, and a suspended sender with `403 user_suspended`.
+  - `authenticatedCredentialResponse` runs the whole authorization before `freshGitHubUserToken` and again after it, at `machine.ts:43-71`. It refuses when the two authorizations selected different people.
+- **Problem:**
+  - For an activation job, `requireActiveStartUsers` throws typed `HttpError` values, at `start-access.ts:31-54`. A removed activator gets `404 org_not_found` from `requireOrgMember`. A suspended activator gets `403 user_suspended`. Archive, org suspension, owner suspension, and org deletion also throw. The token check refuses those first, except in a short race.
+  - `WorkspaceLifecycle.activationCredentialSender` runs the resolver without `featureResult`, at `worker/workspace-lifecycle.ts:46-50`. The adapter passes the call through without `requireFeatureResult`, at `workspace-transport.ts:79-80`.
+  - Cloudflare RPC gives the caller a new error object without the custom prototype. `errorResponse` checks only `instanceof HttpError`, at `worker/http.ts:21-43`. So the reply is `500 internal_error`.
+  - `wrangler.jsonc:5` sets the compatibility date 2026-11-06. Enhanced error serialization is on by default from 2026-04-21. It keeps `status` and `code` as fields, but `instanceof HttpError` stays false.
+  - The trigger is a non-owner activator who is removed or suspended during the restore. That activator passes the owner-based token check, and nothing before the resolver refuses. The resolver throws before the route's final read can give its typed refusal.
+- **Impact if no action:**
+  - The request still refuses the token, so no access leaks.
+  - The end user sees no difference. The helper treats each non-OK reply alike and prints one fixed message, at `image/git-credential-helper.mjs:56` and `:71-75`. The runner LFS transport turns each helper failure into one error, at `runner/src/import-lfs-transport.ts:45-48`.
+  - Operators see a false server error. `docs/deployment.md:37-50` says that Cloudflare Issues groups each `5xx` reply. It shows no cause for a caught error, and the Worker logs no line. [issues-caught-error-cause.md](issues-caught-error-cause.md) records that cost for every caught error.
+- **Evidence:**
+  - A search of the Worker, runner, and app tests finds no `X-Conductive-Activation-Id` and no `activationCredentialSender`. The turn-path route tests assert typed refusals, at `worker/lifecycle/machine.test.ts:136`, `:147`, and `:151`, and at `worker/lifecycle/machine-authorization-race.test.ts:173-180`.
+  - `worker/lifecycle/tests.md:71` says that the namespace hop of the tests discards extra error fields.
+  - The Cloudflare page "Workers RPC error handling", read on 2026-11-11, says that the caller gets a new error object. It keeps no custom prototype and no `instanceof` result. It also gives the kept fields and the default of 2026-04-21.
+  - The import change adds the resolver, its object method, its adapter line, the activation branch of the route, and the activation checks in `requireActiveStartUsers`. None exists on `main`.
+  - This is a source trace. No runtime reproduction ran.
+- **Root question:** How must the credential route answer an activator who lost access during restore with a typed refusal, not a server error?
+  - The first review asked how an activation access refusal must keep its application status across the workspace call. The finding check replaced it on 2026-11-11, because C meets the goal without any refusal crossing that call.
+- **Options:**
+  - **A.** Catch the known access refusals in the resolver and return null. Let the route return its existing `current_turn_required` refusal. This simplifies the result but merges distinct causes. Effort: Small.
+  - **B.** Wrap this RPC in FeatureResult and reconstruct HttpError in the transport adapter. Keep the existing refusal statuses and codes. Add a regression for the serialized refusal through the public route or transport boundary. Effort: Small.
+    - B keeps the duplicate reads, and it adds codes that this route never returned before: `409 workspace_archived` and `403 org_suspended`.
+  - **C.** Move these access checks into the route's authorization owner. Return only the fenced activation identity from the workspace object. Effort: Small.
+    - The route already runs its authorization before and after token resolution, at `machine.ts:43-71`. So C needs no new route check.
+    - C deletes the access reads at `import-activation.ts:230-232`. It keeps every fence of the resolver: the attempt, the phase, cancel, failure, the deadline, and the epoch.
+    - C updates the grant sentence at `worker/lifecycle/routes.md:214-217`, because the route's final read now checks the users and Archive.
+    - C adds the route regression that it shares with [conductor-import-activation-grant-tests.md](conductor-import-activation-grant-tests.md).
+    - The first review graded C Medium, because it expected a careful new authorization check after token resolution. The finding check corrected the grade to Small on 2026-11-11.
+  - **D.** Make the typed envelope mandatory for the whole lifecycle transport. This is the wider fix of the class. [lifecycle-rpc-typed-refusals.md](lifecycle-rpc-typed-refusals.md) gives it in full. Effort: Large.
+  - **E.** Rebuild HttpError from the fields that enhanced error serialization keeps, with a unique name marker. [lifecycle-rpc-typed-refusals.md](lifecycle-rpc-typed-refusals.md) gives it in full. Effort: Medium.
+  - **F.** Change nothing. The token stays refused, and the helper shows the same message. Each occurrence stays a 500 reply and a Cloudflare Issue with no cause. Effort: Small.
+- **Shared assumptions checked:**
+  - A removed or suspended activator gets no token. Source: `docs/protocol/operator-actions.md:67-77`, `docs/protocol/imported-workspaces.md:58-62`, and the grant rule at `worker/lifecycle/routes.md:214-217`. Kept by every option, also F.
+  - The route answers such a refusal with a typed 4xx, not 500. Source: the convention of `worker/http.ts` and the turn-path route tests. No protocol doc states the refusal codes of this route. Each 500 becomes a Cloudflare Issue with no cause. F drops it.
+  - The RPC error channel cannot carry the typed fields. Source: the Cloudflare page and `worker/lifecycle/tests.md:71`. In production the reason is partly gone, because enhanced serialization keeps `status` and `code`. E drops it.
+  - The workspace object must recheck the users and Archive. Source: the new resolver code. The route's final read already checks the same conditions before and after token resolution. In each new or retained activation, the requester is the activator, at `import-activation.ts:149` and `:161`, and at `worker/lifecycle/import-activation-recovery.ts:45` and `:52`. C drops it.
+- **Left out:**
+  - Trust `instanceof` across RPC. It fails the goal, as the Cloudflare page says.
+  - Catch every exception as a refusal. It hides storage and programming failures. B and C keep real failures as 500, so they are better on every point.
+  - A new authorization gate. It adds a rejection that the user must approve. C gives the same refusals through the route's existing reads, so C is better on every point.
+  - A change to the helper or the runner. They already discard the status, so they cannot restore a status that the Worker does not send.
+- **Wider fix:** D, in its own item [lifecycle-rpc-typed-refusals.md](lifecycle-rpc-typed-refusals.md). The first review named B. B is a direct fix with the existing opt-in helper, which this change skipped on the method directly below one that uses it.
+- **Previous examples:**
+  - `activateImportedWorkspace`, the method directly above at `worker/workspace-lifecycle.ts:38-44`, already uses `featureResult`. The adapter unwraps it with `requireFeatureResult`, at `workspace-transport.ts:75-78`.
+  - The unchanged turn-path sender has the same class of error. [lifecycle-rpc-typed-refusals.md](lifecycle-rpc-typed-refusals.md) records it.
+- **Related:**
+  - [conductor-import-activation-grant-tests.md](conductor-import-activation-grant-tests.md): the same code and a shared route fixture. Its route test asserts a refusal after invalidation through the real route. For a removed or suspended activator, that case is the regression of this item, so it waits for this fix. Do both in one branch with one fixture.
+    - That item must not assert `internal_error`. Under C, it asserts the route's existing `404 org_not_found` and `403 user_suspended`.
+    - Neither item covers all of the other. That item proves every hop of the grant. This item removes the typed-refusal defect.
+  - [lifecycle-rpc-typed-refusals.md](lifecycle-rpc-typed-refusals.md): the wider fix of the class. C removes this throw without the envelope, so C does not wait for it. Its D would also cover this method.
+- **Recommendation:** C. The route's final read already gives typed refusals for a removed or suspended activator. So C removes the throw without an envelope and without new refusal codes.
+  - The first review recommended B. The finding check of 2026-11-11 changed the recommendation to C.
+  - The root read the route, the resolver, and the access code on 2026-11-11. The route owns every credential-access read before and after the token refresh. The root kept C, with the attempt, phase, and epoch fences of the resolver.
+  - D, in its own item, best protects the codebase.
+- **Action:** fix after merge, apply C, because the import review used both of its source fix rounds. This Rare Medium product bug keeps the token refused and loses no data, so it is not critical. The wider fix D has its own item, because it reaches lifecycle callers outside the import change.
+  - The first review's Action was: "fix after merge, apply B, because both source fix rounds are used. The token remains refused, so this is not a security release request."
+  - C keeps the token rule and the grant rule true through the route's final read. It adds no rejection, no envelope, and no new refusal code. It deletes no functionality of `main`, because the resolver and its checks are new in the import change.
+- **Validation of the fix:**
+  - Through the real route, request a token during the restore phase for a removed activator and for a suspended activator, both non-owners. Assert `404 org_not_found` and `403 user_suspended`.
+  - See both cases fail first with the current code.
+  - Keep every current assertion and guard.

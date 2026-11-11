@@ -1,0 +1,115 @@
+# Six Intel import tests stop at the guard
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from pull request #223, branch `calummoore/conductor-import-option`, the supplementary review of round 3 of head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2`, finding 31. It includes the independent finding check and the root outcome of the same day.
+- **Location:** `desktop/vitest.config.ts:4-11`, which sets no `testTimeout`. The six cases: `desktop/src/import/disk.test.ts:54`, `desktop/src/import/locations.test.ts:14`, `desktop/src/import/objects.test.ts:13`, `desktop/src/import/package-lfs.test.ts:23`, `desktop/src/import/stage-integrity.test.ts:25`, and `desktop/src/import/stage.test.ts:27`. `vitest.config.ts:16-20`, the root hang guard. `.github/workflows/desktop-mac-checks.yml:19` and `:37-43`, the two Mac runners and the order of the steps. `.github/workflows/release.yml:63-64`, the signing condition.
+- **Reason:** The recommended option raises a time limit, which needs the user's approval, and no cause or completion cost of the six expiries is known.
+
+- **Source:** Review. **Category:** Test. A test finding has no likelihood grade.
+- **Grade reasons:**
+  - Severity is Medium. The Intel logic step fails, so the later Mac steps do not run, and no Mac release can be signed. The same release wait gives the separate link-mode item Medium.
+  - Confidence is High. The CI logs of two Intel runs show the six guard expiries. The cause is not known.
+  - Harder later is No. The investigation costs the same later.
+- **Terms:**
+  - **Guard:** the test runner's time limit that stops a test that has not finished. The testing rules call it a hang guard.
+  - **Expiry:** a guard that stopped a test. It shows that the test did not finish in time. It does not show why.
+  - **Logic step:** the `npm --prefix desktop run test:logic` step of the Mac workflow. The build, Electron, package, and packaged steps run only after it passes.
+- **Background:**
+  - Conductive's Mac app imports local Conductor workspaces. The import code and its tests live in `desktop/src/import/`. Every one of the six cases runs real Git processes in temporary repositories.
+  - The Desktop workflow runs the Mac logic tests on an Apple silicon runner, `macos-15`, and on an Intel runner, `macos-15-intel`, at `.github/workflows/desktop-mac-checks.yml:19`. `desktop/README.md:4` says that the app targets macOS arm64 and x64.
+  - The logic step at `:37` runs before the build at `:38`, Electron at `:41`, the package at `:42`, and packaged Electron at `:43`. `.github/workflows/desktop-ci.yml:6` allows a manual run.
+  - `desktop/vitest.config.ts:4-11` sets no `testTimeout`, and no desktop test passes its own limit. So the Vitest default of 5,000 ms applies on the Mac runners.
+  - The root config runs the same files on Linux. `vitest.config.ts:10` includes `desktop/src/**/*.test.ts`, and `vitest.config.ts:16-20` sets 15,000 ms, with the comment "A hang guard, not a speed limit (decision 113 B)".
+  - That comment names the user's choice of 7 November 2026: one 15-second setting for each test of the root config now, and faster tests as a later follow-up. The choice covers the root config only. It replaced the 5-second limit of 6 November 2026.
+  - The shared testing rules keep a test-runner timeout at least three times the typical duration of the test. It is a hang guard, not a speed contract. The same rules need the user's approval to raise a time limit, or to change a runner configuration only to make a test pass.
+  - `.github/workflows/release.yml:63-64` signs a Mac release only when the Mac job succeeds, so both Mac runners must pass.
+- **Problem:**
+  - Six import cases stop at their 5,000 ms guard on the Intel runner. Each report says `Error: Test timed out in 5000ms.` and names only the declaration line of the case, such as `src/import/disk.test.ts:54:1`.
+  - No other item owns these expiries. [conductor-import-fixture-permissions.md](conductor-import-fixture-permissions.md) lists them as a boundary, and it says that it does not address them.
+  - The reports do not show which operation was in progress at expiry, or why.
+  - The passing durations of the same cases are above one-third of the 5,000 ms guard on both Mac hosts. The hang-guard rule does not allow that.
+- **Affected cases:**
+  - `disk.test.ts`: "rebuilds unproven exclusions and seals only the exact final prerequisite set".
+  - `locations.test.ts`: "resolves trusted parent aliases at job entry and preserves native bytes and sealed retry".
+  - `objects.test.ts`: "includes the 100 MiB boundary, omits larger work files and makes independent bounded parts".
+  - `package-lfs.test.ts`: "omits only advertised unchanged LFS and retains local or changed payloads across proof rebuilds".
+  - `stage-integrity.test.ts`: "reuses a sealed inventory only for its exact unchanged source and reservation".
+  - `stage.test.ts`: "packages working bytes, modes, tombstones, links, context and native session recipes".
+- **Impact if no action:**
+  - A fix of the separate link-mode assertion does not address these six cases. The Intel logic step can still fail on them.
+  - Then the Intel build, Electron, package, and packaged Electron steps do not run, and no Mac release can be signed.
+- **Evidence:**
+  - Desktop CI run `42977355161` tested head `cfbf916c6a4c4da3c953f0df368ea858fa2a8fb2` with base `31d7b3300c505983b7a1d8baad2785c6fe1f3035`. Both Mac jobs checked out the pull request merge commit `832133f6`.
+    - Intel job `130379421968`: 7 of 54 files and 7 of 156 tests failed, in 26.19 seconds. The seventh failure is the separate link-mode assertion.
+    - The six cases stopped at 5,008 to 5,016 ms:
+      - the stage case at 5,011 ms
+      - the disk case at 5,016 ms
+      - the package LFS case at 5,015 ms
+      - the stage-integrity case at 5,008 ms
+      - the locations case at 5,009 ms
+      - the objects case at 5,009 ms
+    - Apple silicon job `130379422459`: 155 of 156 tests passed. The six cases passed with every assertion, in 1,933 to 3,623 ms, under the same 5,000 ms guard. They were the six longest cases of that job. The next case took 1,159 ms and stopped at the link-mode assertion.
+    - Four Intel import cases that passed in the same job took 4,016, 3,156, 2,514, and 2,351 ms.
+  - Linux gate run `42977354412` checked out the same merge commit. All 908 files and 2,641 root tests passed. The six cases took 832 to 3,324 ms under the 15,000 ms guard.
+  - Desktop run `42946831132` at head `d6bd4fbf`, Intel job `130281538307`, recorded the same six expiries at 5,010 to 5,053 ms. Between the two heads, `desktop/src/import/`, the import contracts in `src/shared/`, the import fixtures in `desktop/tests/`, `desktop/vitest.config.ts`, and the Mac workflow did not change.
+  - These facts come from one run on each host, plus one earlier Intel run. They are not typical values from repeated runs. They give no Intel completion cost and no cause.
+  - That the six Intel expiries are the six longest Apple cases is a correlation, not a cause.
+  - Every one of the six cases builds a stage. `stage.ts:93` calls `packageStage`, `package.ts:43` calls `measureGitDisk`, and `disk.ts:76-87` starts one awaited `git cat-file` process for each distinct small blob. This is a fact about the call path, not an established cause.
+  - No test, probe, or diagnostic ran for this item. No new telemetry exists.
+- **Root question:** How should these six import cases fail on the supported Intel Mac only for a real defect?
+  - The first review asked how the team should diagnose and resolve these six unexplained Intel failures while preserving every check. The finding check replaced it on 2026-11-11. The words "while preserving every check" keep the current guard, and the hang-guard rule does not require that guard.
+- **Options:**
+  - **A.** Give the six cases one investigation owner. Reproduce them one at a time on the supported Intel host. Identify where each case stops or spends its time before proposing a fix. Keep every assertion and guard. The full work has unknown causes and six cases. Effort: Large.
+    - The first review wrote "Identify each blocked step". The finding check changed the words, because nothing establishes a hang.
+  - **B.** Give the same owner the complete Intel logic run. Collect temporary phase and operation evidence in that existing run. Compare each failing path with its passing path before changing it. This preserves suite interactions, but creates more evidence to inspect. Effort: Large.
+  - **C.** Measure completion first, then size the desktop hang guard by the testing rule. Effort: Medium. It becomes Large when a case still does not finish.
+    - Run the Intel logic step once on a scratch branch with a temporary larger guard. Keep every assertion.
+    - When each case finishes, set an explicit desktop guard of at least three times the slowest measured case. Comment it as the root config does.
+    - Investigate each case that still does not finish, as A says.
+    - Cost or risk: the committed change raises a time limit, so it needs the user's approval. It assigns no cause. A slow Intel step stays unexplained when its case finishes.
+  - **D.** Keep the 5,000 ms guard, and make each case fit it. Effort: Large.
+    - Measure where each case spends its time on Intel.
+    - Split each scenario by requirement, or reduce its real Git work, until each case finishes within one-third of the guard on Intel. Keep every assertion.
+    - Cost or risk: six scenario tests of 95 to 268 lines change, and each split case repeats fixture setup. A change of their scope needs an explicit decision, as [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md) already says.
+  - **E.** Keep one shared failure trace in the desktop test setup. Effort: Medium.
+    - When a case fails or expires, the trace prints the resource kinds that Node still holds and the last fixture step, as text only. It decides no result.
+    - Use it for this investigation and for later expiries.
+    - Cost or risk: more harness code to keep, and longer failure output. It finds no cause alone.
+- **Shared assumptions checked:**
+  - The 5,000 ms guard stays. Source: the text of A, the first root question, and the rule that a raised time limit needs the user's approval. It is not a requirement. The hang-guard rule keeps a guard at three times the typical duration or more, and the passing durations already break it. C drops it.
+  - Each case has a blocked step. Source: the first words of A. Nothing establishes a hang. C drops it, because C measures completion first.
+  - The six cases keep their current scope. Source: the code, and the review owner's instruction of 11 November 2026 that these package cases must not grow. It is a process rule, not a product requirement. D drops it, with the explicit decision that the instruction asks for.
+  - The expiry evidence is temporary. Source: the text of B. It is not a requirement. E drops it.
+  - The investigation uses the hosted `macos-15-intel` runner. Source: `.github/workflows/desktop-mac-checks.yml:19`. Kept.
+  - One cause affects every case. It is unproved. Kept as unproved.
+- **Left out:**
+  - Change nothing. It leaves the failures unowned and the release blocked.
+  - Skips and retries. They fail the goal, and they are blocked.
+  - Blind fixture reduction before any measurement. It cannot tell a defect from cost, so it fails the goal. D brings back the measured form.
+  - Remove the Intel logic run. It deletes a check on `main`, and `desktop/README.md:4` names x64 as a target.
+  - A committed worker limit for the Intel run. It has no rule basis, it slows every case, and it keeps the guard below the rule. C is better on each point. A worker limit can still be a temporary probe inside B.
+  - A product code change now. No product step is named. The per-blob Git process count on these paths has its own item, [conductor-import-small-blob-reads.md](conductor-import-small-blob-reads.md).
+- **Wider fix:** C. An explicit, rule-sized desktop guard replaces the implicit 5,000 ms Vitest default for every real-process desktop test. It is blocked, because it raises a time limit, so it waits for the user.
+- **Previous examples:**
+  - [conductor-import-fixture-permissions.md](conductor-import-fixture-permissions.md) records the same six expiries at head `d6bd4fbf`. That is repeated history, not proof of a common cause.
+  - On 6 November 2026, Worker members tests failed the gate at about 5.1 seconds under a 5-second limit. On 7 November 2026 the user chose the one 15-second setting of the root config, and faster tests later. `plans/boat-native-remote-workspaces.md` records both choices.
+  - [tests-time-out-under-machine-load.md](tests-time-out-under-machine-load.md) concerns other Worker and runner tests. It has no evidence for these Intel failures.
+- **Related:**
+  - [conductor-import-fixture-permissions.md](conductor-import-fixture-permissions.md): the same code. All six cases build fixtures with `write` at `desktop/src/import/package-test-support.ts:54-64`, and that item's fix adds fixture builders that these cases can use. The later Mac steps run only when both items pass. The measurement here must name the commit that it measures.
+  - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md): the same code. Its fix changes expected values inside the expiring `package-lfs.test.ts` case, at `:111`, `:160`, and `:169-175`. That item says that these cases must not grow without an explicit decision, and its Intel proof waits until that case passes. D here needs the same explicit decision.
+  - [conductor-import-git-tree-facts.md](conductor-import-git-tree-facts.md) and [conductor-import-small-blob-reads.md](conductor-import-small-blob-reads.md): the same code. Their recommended options change `measureGitDisk` in `desktop/src/import/disk.ts`, which every one of the six cases runs. A fix of either can change these Intel results. No evidence links them to the expiries. Keep their new regressions in separate cases.
+  - [conductor-import-submodule-working-content.md](conductor-import-submodule-working-content.md): the same code area only. That item already keeps its new case out of these six cases.
+  - [conductor-import-sparse-checkout-deletions.md](conductor-import-sparse-checkout-deletions.md): the same code. The case at `stage.test.ts:27` holds the only deletion assertion of the package. That item puts its regression in its own case.
+- **Recommendation:** C. It applies the existing hang-guard rule, which the passing Apple silicon and Intel durations already break, and it measures before any committed change. A then covers only a case that still does not finish.
+  - The first review recommended A. The finding check of 2026-11-11 changed the recommendation to C. The root kept C the same day.
+- **Action:** ask the user, because the recommended option raises a time limit, which needs the user's approval, and no cause or completion cost is established.
+  - The approval covers two steps: a temporary larger guard for one measurement run on a scratch branch, and the measured desktop guard that follows.
+  - Until the user answers, change no guard, assertion, fixture, configuration, timer, or source.
+  - Do not call the tests flaky, and do not assign a performance cause.
+  - The first review's Action was: "ask the user, because the failure source is unknown and the next investigation needs work outside this read-only review. Do not call the tests flaky or assign a performance cause."
+- **Validation of the fix, after the answer:**
+  - Record the measured duration of each of the six cases on Intel, Apple silicon, and Linux, with the commit.
+  - With the approved committed guard, these six cases pass with every assertion.
+  - The full Intel logic step and its later steps pass only when the separate fixture-mode fix also passes.
+  - Keep every assertion.
