@@ -7,7 +7,7 @@ import type { ActivityStatus } from '../../fixtures/workspaces'
 type RowEmphasis = 'strong' | 'active' | 'normal' | 'dim'
 
 export type StatusPresentation = {
-  /** The state in words: the header shows it, and screen readers hear it. */
+  /** The state in words: a phone header shows it, and screen readers hear it. */
   label: string
   emphasis: RowEmphasis
 }

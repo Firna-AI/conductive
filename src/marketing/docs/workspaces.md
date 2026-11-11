@@ -67,7 +67,9 @@ Closing the dialog keeps that draft.
 
 ## Follow the task
 
-The header shows the repository, owner, and state.
+The header shows the repository and owner.
+The list shows the state of each workspace.
+On a phone, the header also shows the state.
 The workspace can show **Untitled** before it receives an automatic name.
 The name comes from the first message.
 
