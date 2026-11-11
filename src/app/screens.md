@@ -63,6 +63,20 @@ the Help row of the command palette opens.
   the switch until the next change, and the switch shows the saved value.
   A share reply that a later save or remove of the same login overtook does
   not show, so a removed login stays removed.
+- The Codex form offers API key, selected first, then ChatGPT plan.
+  ChatGPT plan asks the Worker for a code. The form shows the code with
+  the link to the page of OpenAI. It asks the Worker for the state of the
+  sign-in after each wait that the Worker gives. The sign-in ends when it
+  connects, when the code expires, or when the Worker refuses it. An
+  expired code and a refused sign-in offer a new code.
+- Cancel, the other kind in the switch, and leaving the page stop the
+  sign-in. A poll that gets no answer, or a failure of the server, waits
+  and asks again while the code works.
+- A login that the app can no longer use, such as a ChatGPT sign-in that
+  OpenAI did not renew, shows Signed out, its cause, and Sign in again.
+  Sign in again and the `?connect=` address open its form with its kind.
+  The composers and Get started count such a login as missing, so their
+  Connect notice leads to that form.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the

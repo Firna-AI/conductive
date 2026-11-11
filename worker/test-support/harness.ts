@@ -2,6 +2,7 @@ import { API_PATHS, type Org } from '../../src/shared/api'
 import type { SessionResponse } from '../../src/shared/account'
 import { acceptedTermsSignInPath } from '../../src/shared/terms'
 import { createApp } from '../application'
+import { fakeCodexTasks } from '../codex-auth/tasks.test-support'
 import type { AppEnv } from '../env'
 import { OAUTH_COOKIE, SESSION_COOKIE } from '../security/cookies'
 import { FakeBoat } from './fake-boat'
@@ -15,7 +16,9 @@ import { NATIVE_TEST_TIME } from './native-workspace-api'
 export const TEST_ORIGIN = 'https://app.conductive.test'
 export const TEST_TIME = NATIVE_TEST_TIME
 
-export async function createHarness() {
+export async function createHarness(
+  options: { migrationsBefore?: string } = {},
+) {
   const github = new FakeGitHub()
   const boat = new FakeBoat()
   let send = (request: Request) =>
@@ -37,7 +40,7 @@ export async function createHarness() {
   )
   const db = native.bindings.DB
   const attachments = native.bindings.CHAT_ATTACHMENTS
-  await applyMigrations(db)
+  await applyMigrations(db, { before: options.migrationsBefore })
   const env: AppEnv = {
     DB: db,
     CHAT_ATTACHMENTS: attachments,
@@ -55,7 +58,11 @@ export async function createHarness() {
         : github.fetch(request),
   })
   const fetch = (path: string, init?: RequestInit) =>
-    app.fetch(new Request(`${TEST_ORIGIN}${path}`, init), env)
+    app.fetch(
+      new Request(`${TEST_ORIGIN}${path}`, init),
+      env,
+      fakeCodexTasks().execution,
+    )
   const request = (path: string, session: string, init: RequestInit = {}) => {
     const headers = new Headers(init.headers)
     headers.set('Cookie', session)

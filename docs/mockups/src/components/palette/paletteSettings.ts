@@ -64,7 +64,7 @@ const generalSettings: readonly Command[] = [
   {
     label: 'Agents',
     lead: icon(Bot),
-    words: ['claude', 'codex', 'login', 'api key'],
+    words: ['claude', 'codex', 'login', 'api key', 'token'],
     to: paths.account,
   },
 ]

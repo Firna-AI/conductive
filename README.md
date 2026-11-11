@@ -45,7 +45,8 @@ feature that is not complete yet says so.
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
 - Attach files of up to 25 MB each to a message.
-- Each user connects their own Claude subscription token or API keys.
+- Each user connects their own Claude subscription token, ChatGPT plan
+  through device code sign-in, or API keys.
 - Files and Changes, a terminal, and port previews. The live desktop is
   hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
   says.
@@ -78,8 +79,9 @@ feature that is not complete yet says so.
 ## What a user needs
 
 - a GitHub account
-- a Claude subscription token or an Anthropic API key, or an OpenAI API key
-  for Codex
+- a login for Claude, Codex, or both:
+  - Claude: a Claude subscription token or an Anthropic API key
+  - Codex: a ChatGPT plan with device code sign-in enabled, or an OpenAI API key
 
 ## Get started
 

@@ -248,6 +248,23 @@ the Help row of the palette opens.
   open, it can schedule the next mark of the new visit.
 - One follower owns the requests and the timer of a build log. After it
   stops, an answer changes nothing and schedules nothing.
+- One ChatGPT sign-in of Codex owns its request for a code, its polls, and
+  its timer. Cancel, the other kind in the switch, and the end of its form
+  stop it. After that, an answer changes nothing and schedules nothing.
+  A connected answer applies the current login status that the Worker returns.
+- One rule, `loginUsable` in `api/read-core.ts`, says whether turns can
+  run on a login. A connected login with an `unusableCause` cannot. The
+  composers and Get started count such a login as missing.
+- Each open of the agent list, on the account and in Get started, reads
+  the logins again through `AccountModel.refreshLogins`. So a login that
+  the Worker stopped after the app opened shows Signed out. The Worker
+  gives the logins only in `GET /api/account`, and the read takes only
+  the logins of that answer.
+  `AgentLogins` in `agent-logins.ts` counts each local change of a login:
+  a save, a remove, a connected sign-in, and a share change, at its start
+  and when its reply shows. A read shows the login of an agent only while
+  that login had no change during the read. An open shares a read that
+  runs already, and a failed read keeps what shows.
 - Timers, the focus, the visibility, the input, and the keys of the page
   come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
   `onKey`), so that no unit test runs a real timer or needs a browser
@@ -286,6 +303,12 @@ the Help row of the palette opens.
   helpers of a menu, a sheet, and a dialog look only inside their own layer.
 
 ## Tests
+
+The account routes of the development backend keep device sign-ins in a
+private route closure. Start returns a fixed display code and a new handle.
+The first poll waits. The next poll connects Codex with the normal share
+default. Later polls read the current login without saving it again, until the sign-in expires after 15 minutes.
+The fake uses the shared device response types. It sends no request to OpenAI.
 
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
 fake API, with raw file uploads through its fetch, requests or answers that

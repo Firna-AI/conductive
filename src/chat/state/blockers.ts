@@ -1,3 +1,4 @@
+import { loginUsable } from '../../app/api/read-core'
 import type { Agent } from '../../shared/agents'
 import type { ChatSnapshot } from './chat-snapshot'
 import { sessionLoginOf } from './session-login'
@@ -9,9 +10,9 @@ import { sessionLoginOf } from './session-login'
  * A message in the reader's own session needs that session's login, and the
  * session record says whether it works, because the account can be older.
  * A message in the session of another member, whose login works, needs no
- * login of the reader. A message that starts a linked session needs the
- * reader's own login, which the account names. A loaded account without an
- * entry for the agent has no login for it.
+ * login of the reader. A message that starts a linked session needs a login
+ * of the reader that the account names and that the app can still use. A
+ * loaded account without an entry for the agent has no login for it.
  */
 export interface SendBlock {
   /** The agent of the chosen model, which has no login. */
@@ -31,5 +32,5 @@ export function sendBlock(
   const login = snapshot.account.agentLogins.find(
     (item) => item.agent === agent,
   )
-  return login?.connected ? null : { agent }
+  return loginUsable(login) ? null : { agent }
 }

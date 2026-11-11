@@ -107,7 +107,8 @@ export async function bootRoute(
   const body = context.body
   if (
     body?.agent !== agent ||
-    (body.kind !== 'api-key' && !(agent === 'claude' && body.kind === 'token'))
+    (body.kind !== 'api-key' && body.kind !== 'token') ||
+    (agent === 'codex' && body.kind === 'token')
   )
     return invalidInput()
   const kind: SaveAgentLoginRequest['kind'] = body.kind
@@ -125,9 +126,12 @@ export async function bootRoute(
     ciphertext,
     updatedAt,
   )
-  const login: SaveAgentLoginResponse =
-    agent === 'claude'
-      ? { agent, connected: true, kind, noReuse, updatedAt }
-      : { agent, connected: true, kind: 'api-key', noReuse, updatedAt }
+  const login: SaveAgentLoginResponse = {
+    agent,
+    connected: true,
+    kind,
+    noReuse,
+    updatedAt,
+  }
   return Response.json(login)
 }

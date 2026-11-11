@@ -5,6 +5,7 @@ import type { AgentChoice } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { readShortcutKeyText } from '../../src/shared/shortcut-key'
 import type { TestHarness } from '../test-support/harness'
+import { connectCodexDevice } from './codex-device.test-support'
 import {
   expectAccountState,
   isolationAccountStates,
@@ -92,11 +93,8 @@ export async function expectAccountIsolation(
     secret: 'other-claude-key',
   })
   await expectBoth(firstSaved, otherConnected)
-  await putAccountValue(harness, other, agentLoginPath('codex'), {
-    agent: 'codex',
-    kind: 'api-key',
-    secret: 'other-codex-key',
-  })
+  const codexConnected = await connectCodexDevice(harness, other)
+  expect(codexConnected.status).toBe(200)
   await expectBoth(firstSaved, otherSaved)
   await putAccountValue(harness, other, ACCOUNT_PATHS.defaultModel, { choice })
   await expectBoth(firstSaved, otherSaved)

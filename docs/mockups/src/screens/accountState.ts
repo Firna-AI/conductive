@@ -1,4 +1,6 @@
 import type { SchemaProps } from '@mokly/mokly'
+import { signInSteps } from '../components/settings/chatGptSignInCopy'
+import { accountLogins, loginKinds } from '../fixtures/logins'
 import { inviteStates } from '../components/settings/inviteCodeCopy'
 import { shortcutSearches } from '../components/settings/shortcutSearch'
 import { keyChanges } from '../components/settings/ShortcutsSections'
@@ -10,6 +12,9 @@ export const accountSchema = {
   required: [
     'tab',
     'connections',
+    'codexLogin',
+    'codexUse',
+    'codexSignIn',
     'form',
     'view',
     'save',
@@ -29,11 +34,29 @@ export const accountSchema = {
     tab: { enum: ['general', 'preferences', 'shortcuts'] },
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
+    /** The kind of the Codex login while Codex is connected. */
+    codexLogin: { enum: loginKinds },
     /**
-     * The Connect form that is open. Its agent is not connected yet, and the
+     * Whether the app can still use the Codex login while Codex is
+     * connected. A ChatGPT sign-in that OpenAI did not renew is not usable,
+     * and its row shows the cause with Sign in again.
+     */
+    codexUse: { enum: ['usable', 'not-usable'] },
+    /**
+     * The Connect form that is open, and the kind that its switch selects:
+     * the subscription token or the API key of Claude, or the API key or
+     * the ChatGPT plan of Codex. Its agent is not connected yet, and the
      * other agent is.
      */
-    form: { enum: ['none', 'claude', 'codex'] },
+    form: {
+      enum: ['none', 'claude', 'claude-api-key', 'codex', 'codex-token'],
+    },
+    /**
+     * The step of the ChatGPT sign-in while the form of Codex has ChatGPT
+     * plan selected: before the start, the code while the page waits for
+     * the sign-in, the code expired, or the sign-in refused.
+     */
+    codexSignIn: { enum: signInSteps },
     /** How New workspace opens on a computer: as the page, or as a dialog. */
     view: { enum: ['page', 'dialog'] },
     /**
@@ -93,6 +116,9 @@ export type AccountState = SchemaProps<typeof accountSchema>
 export const accountGeneral: AccountState = {
   tab: 'general',
   connections: 'connected',
+  codexLogin: accountLogins.codex,
+  codexUse: 'usable',
+  codexSignIn: 'start',
   form: 'none',
   view: 'page',
   save: 'saved',

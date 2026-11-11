@@ -77,8 +77,8 @@ export function isolationAccountStates(
     {
       agent: 'codex',
       connected: true,
-      kind: 'api-key',
-      noReuse: false,
+      kind: 'token',
+      noReuse: true,
       updatedAt: TEST_TIME,
     },
   ]
