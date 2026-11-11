@@ -36,7 +36,9 @@ export class GatewayRequestLifetime {
     this.upload = gatewayUpload(
       request.body,
       (reason) => this.cancel(reason),
-      options.agent === 'codex' ? new CodexBodyScanner() : undefined,
+      options.agent === 'codex' && request.method === 'POST'
+        ? new CodexBodyScanner()
+        : undefined,
     )
     request.signal.addEventListener('abort', this.disconnected, { once: true })
     if (request.signal.aborted) this.disconnected()
@@ -47,7 +49,7 @@ export class GatewayRequestLifetime {
     this.scheduleExpiry()
     try {
       const checked = await this.check()
-      if (this.options.agent === 'codex') {
+      if (this.options.agent === 'codex' && this.request.method === 'POST') {
         const encoding = this.request.headers.get('content-encoding')
         if (
           !this.request.body ||

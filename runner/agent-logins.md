@@ -7,8 +7,8 @@ states the requirements.
 [A sandbox with a version pin of 2 or later](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
 states the accepted risks.
 
-An agent login is the Claude subscription token, the Anthropic API key, or
-the OpenAI API key of the member who started a session. This runner speaks
+An agent login is the Claude subscription token, ChatGPT sign-in, or
+API key of the member who started a session. This runner speaks
 runner protocol version 2, so no runner command gives it an agent login.
 Each `turn` command carries a turn token in place of the login. The
 [model gateway](../worker/model-gateway/README.md) of the Worker adds the
@@ -16,15 +16,23 @@ login to each model request. Only the [measure tool](#the-measure-tool)
 uses a real login, which a developer gives it.
 
 An older org image can hold a runner of protocol version 1. Such a runner
-gets the agent login itself with each turn, as
+gets a supported agent login itself with each turn, as
 [A sandbox with a version pin of 1](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-1)
 says.
+
+The runner's `hello.loginKinds` lists Claude tokens, Claude API keys,
+Codex API keys, and Codex ChatGPT sign-ins. An older `hello` without this
+list supports the first three kinds only. Version 1 cannot add ChatGPT
+support through that list. The Worker checks each turn and later message
+before it builds a command. An unsupported login ends the turn with a
+cause. Reconnect cannot send that turn again.
 
 ## The turn token
 
 - The `credential` of a `turn` command holds the turn token, the agent, and
   the login kind. Its agent must be the agent of the message. A `message`
-  command carries no credential.
+  command carries no credential. A Codex `token` credential also holds
+  public account identity: the account ID, email, plan type, and user ID.
 - The runner closes its connection with code 1002 when a command lacks a
   field that it needs, or has an invalid one. An example is a version 1
   `turn` command, which has a `login` and no `credential`. A `welcome` of
@@ -51,9 +59,9 @@ says.
 - The output filter keeps the token of each `turn` command, so that it can
   replace that token with `[redacted]` in displayed text. It keeps the
   tokens in memory until the runner process ends.
-- The state file holds no turn token. The runner puts no token in the
-  environment or the arguments of an agent program. It writes the token
-  only to the credentials file of Claude, as [Claude](#claude) says.
+- The state file holds no turn token. No token goes in an agent's arguments.
+  Claude reads its token from a credentials file, as [Claude](#claude) says.
+  A Codex ChatGPT turn reads its token from a temporary login file.
 
 ## The agent environment
 
@@ -72,8 +80,8 @@ says.
 - The Claude adapter adds the two profile variables that [Claude](#claude)
   names. For a subscription turn, it also adds the variable that
   [The prompt cache of Claude](#the-prompt-cache-of-claude) names.
-- A tool process inherits the environment of its agent program. The runner
-  adds no login, no turn token, and no gateway address to that environment.
+- A Codex ChatGPT turn sets `CODEX_HOME` to its private session home.
+  That value holds no token. The real ChatGPT sign-in stays in the Worker.
 - Each other variable of the runner passes unchanged. Examples are the
   proxy and certificate settings in the env vars of the org.
 
@@ -162,20 +170,11 @@ says.
 
 ## Codex
 
-- The runner starts `codex app-server` with no login and no token in its
-  environment or its arguments.
-- The model provider of the runner has the gateway address of Codex as
-  `base_url`. It has `requires_openai_auth=true` and no `env_key`. The
-  credential store is `ephemeral`, so Codex keeps the token in the memory
-  of its process.
-- After `initialize`, the runner sends `account/login/start` with the type
-  `apiKey` and the turn token, on the standard input of the App Server.
-  When that request succeeds, the runner sends `thread/start`, or
-  `thread/resume` for a saved conversation.
-- A refused or canceled login request closes the App Server, and no thread
-  opens.
-- Codex 0.167.0 supports this request. `package.json` pins that version of
-  `@openai/codex-sdk`. Check the request again at each update.
+An API key uses a private login request and an ephemeral credential store.
+A ChatGPT turn uses a temporary `auth.json` file in a private session home.
+It holds only the turn token and synthetic identity data.
+Both modes use the gateway.
+[Codex logins](codex-logins.md) gives their settings, start sequence, and tests.
 
 ## The measure tool
 
@@ -211,9 +210,8 @@ because no runner command carries a login.
 
 ## What these routes do not stop
 
-- The runner adds no gateway address to the environment of the tool
-  processes. This does not stop a process of the same sandbox user that
-  reads the credentials file of a running turn on purpose.
+- A process of the sandbox user can read the credentials file of a running
+  Claude or Codex ChatGPT turn. Each file holds only a turn token.
 - A copy of a turn token works only as
   [The turn token](../docs/protocol/model-gateway.md#the-turn-token) says.
   [A sandbox with a version pin of 2 or later](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
@@ -281,8 +279,12 @@ because no runner command carries a login.
   of the credentials file after the children of the agent exit.
 - `src/providers/codex.ts`: the Codex adapter, its model provider settings,
   and the login request.
+- `src/providers/codex-settings.ts`: API key and ChatGPT settings,
+  the gateway addresses, and the workspace address check.
+- `src/providers/codex-credentials.ts`: the temporary ChatGPT login file,
+  private session homes, shared conversation storage, and startup removal.
 - `src/runner.ts`: `Runner`, which gives each turn token to the output
-  filter, and calls `clearClaudeCredentials` before its first connection.
+  filter, and removes stale Claude and Codex credentials before connecting.
 - `src/measure.ts`: the measure tool, with the native mode and the
   provider addresses.
 - [`output-sanitizer.ts`](../src/shared/output-sanitizer.ts):

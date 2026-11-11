@@ -37,6 +37,21 @@ const noLogin: AccountResponse = {
     { agent: 'codex', connected: false },
   ],
 }
+/** Codex is connected, but the app can no longer use its ChatGPT sign-in. */
+const signedOut: AccountResponse = {
+  ...connected,
+  agentLogins: [
+    { agent: 'claude', connected: false },
+    {
+      agent: 'codex',
+      connected: true,
+      kind: 'token',
+      noReuse: true,
+      updatedAt: FAKE_TIME,
+      unusableCause: 'ChatGPT access expired.',
+    },
+  ],
+}
 
 /** The steps that the app shows for these sources. */
 function shown(
@@ -52,7 +67,7 @@ function shown(
 }
 
 describe('setupSteps', () => {
-  test('the org step follows the org list, also a deleted org, the agent step follows the logins, only the GitHub App step comes from the API, and nothing shows before the account loads', () => {
+  test('the org step follows the org list, also a deleted org, the agent step follows the logins that can run turns, only the GitHub App step comes from the API, and nothing shows before the account loads', () => {
     expect({
       inUse: shown(reply('acme', true, true, true), [acme], connected),
       leftLastOrg: shown(reply('acme', true, true, true), [], connected),
@@ -72,6 +87,7 @@ describe('setupSteps', () => {
         connected,
       ),
       noLogin: shown(reply('acme', true, true, true), [acme], noLogin),
+      signedOut: shown(reply('acme', true, true, true), [acme], signedOut),
       noApp: shown(reply('acme', false, true, true), [acme], connected),
       loading: shown(null, [acme], connected),
       accountLoading: shown(reply('acme', true, true, true), [acme], null),
@@ -82,6 +98,7 @@ describe('setupSteps', () => {
       deletedOnly: reply('labs', true, true, true),
       connectedElsewhere: reply('acme', true, true, true),
       noLogin: reply('acme', true, true, false),
+      signedOut: reply('acme', true, true, false),
       noApp: reply('acme', false, true, true),
       loading: null,
       accountLoading: null,

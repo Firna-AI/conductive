@@ -1,5 +1,9 @@
+import {
+  RUNNER_SUPPORTED_LOGIN_KINDS,
+  type RunnerLoginKind,
+  type RunnerProtocolVersion,
+} from '../../src/shared/runner'
 import { isRecord } from '../http'
-import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import type { ChatData, ChatStorage, RunnerWorkspaceRecord } from './types'
 
 const KEY = 'native:runner:current'
@@ -11,6 +15,7 @@ export interface StoredRunnerConnection {
   workspace: RunnerWorkspaceRecord
   streamId: string | null
   protocolVersion: RunnerProtocolVersion | null
+  loginKinds?: readonly RunnerLoginKind[]
   ready: boolean
   checkAt: number
 }
@@ -18,6 +23,19 @@ export interface StoredRunnerConnection {
 interface RunnerState {
   generation: number
   connection: StoredRunnerConnection | null
+}
+
+function readLoginKinds(value: unknown): readonly RunnerLoginKind[] {
+  if (!Array.isArray(value))
+    throw new Error('The saved runner connection is invalid.')
+  return value.flatMap((item: unknown) => {
+    if (!isRecord(item))
+      throw new Error('The saved runner connection is invalid.')
+    const kind = RUNNER_SUPPORTED_LOGIN_KINDS.find(
+      (kind) => kind.agent === item.agent && kind.kind === item.kind,
+    )
+    return kind ? [kind] : []
+  })
 }
 
 function readConnection(value: unknown): StoredRunnerConnection {
@@ -63,6 +81,9 @@ function readConnection(value: unknown): StoredRunnerConnection {
           ? null
           : 1
         : value.protocolVersion,
+    ...(value.loginKinds === undefined
+      ? {}
+      : { loginKinds: readLoginKinds(value.loginKinds) }),
     ready: value.ready,
     checkAt: value.checkAt,
   }

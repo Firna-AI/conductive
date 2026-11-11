@@ -6,7 +6,11 @@ import { AppModel } from '../../app/app-model'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { requestLines, testServices } from '../../app/test-kit'
-import { ACCOUNT_PATHS } from '../../shared/account'
+import {
+  ACCOUNT_PATHS,
+  agentLoginPath,
+  type AgentLoginStatus,
+} from '../../shared/account'
 import { API_PATHS } from '../../shared/api'
 import { GET_STARTED_PATH } from '../../shared/onboarding'
 import { orgSettingsPaths, type ImageBuild } from '../../shared/org-settings'
@@ -180,13 +184,20 @@ describe('the steps of Get started', () => {
         { step: 'agent-login', complete: false },
       ],
     })
-    server.json('GET', ACCOUNT_PATHS.account, {
-      ...coreFixtures().account,
-      agentLogins: [
-        { agent: 'claude', connected: false },
-        { agent: 'codex', connected: false },
-      ],
-    })
+    const saved: AgentLoginStatus = {
+      agent: 'claude',
+      connected: true,
+      kind: 'token',
+      noReuse: true,
+      updatedAt: FAKE_TIME,
+    }
+    const serveClaude = (claude: AgentLoginStatus) =>
+      server.json('GET', ACCOUNT_PATHS.account, {
+        ...coreFixtures().account,
+        agentLogins: [claude, { agent: 'codex', connected: false }],
+      })
+    serveClaude({ agent: 'claude', connected: false })
+    server.json('PUT', agentLoginPath('claude'), saved)
     const { view, navigation } = await mountApp(
       server,
       routes.account('claude'),
@@ -195,6 +206,8 @@ describe('the steps of Get started', () => {
     typeText(fieldNamed(view, 'Subscription token'), 'token-from-claude')
     click(byRole('button', 'Connect', view))
     await settle()
+    // As in the Worker, each later read of the account gives the saved login.
+    serveClaude(saved)
     act(() => navigation.push(routes.getStarted()))
     await settle()
     expect({

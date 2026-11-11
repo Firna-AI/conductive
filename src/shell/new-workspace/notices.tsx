@@ -3,6 +3,7 @@ import { ArrowRight, CircleAlert, FolderGit2, Hammer, Plug } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { firstBuildCopy as buildCopy } from '../../../docs/mockups/src/screens/firstBuildCopy'
 import type { ApiError } from '../../app/api/client'
+import { loginUsable } from '../../app/api/read-core'
 import { firstBuildOf } from '../../app/first-build'
 import { mayChangeSettings } from '../../app/permissions'
 import type { CreateState } from '../../app/new-workspace-model'
@@ -97,8 +98,9 @@ export function useFirstBuildNotice(
 
 /**
  * The notice over the composer when a message cannot go yet: the agent of
- * the chosen model is not connected. A notice turns Send off. Its Connect
- * goes to the account through `open`.
+ * the chosen model has no login that can run turns. A login that the app
+ * can no longer use counts as none. A notice turns Send off. Its Connect
+ * goes to the account through `open`, where the form of the agent opens.
  */
 export function useBlockingNotice(
   choice: AgentChoice | undefined,
@@ -110,7 +112,7 @@ export function useBlockingNotice(
   const login = account?.agentLogins.find(
     (item) => item.agent === choice?.agent,
   )
-  if (choice && account && !login?.connected) {
+  if (choice && account && !loginUsable(login)) {
     const agent = agentNames[choice.agent]
     return (
       <Notice

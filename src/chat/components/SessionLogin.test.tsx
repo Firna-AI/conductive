@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import composerStyles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { ACCOUNT_PATHS } from '../../shared/account'
+import type { AgentChoice } from '../../shared/agents'
 import type { OrgRole } from '../../shared/api'
 import { membersPath } from '../../shared/members'
-import { coreFixtures, FAKE_IDS } from '../../test-support/fixtures/core'
+import {
+  coreFixtures,
+  FAKE_IDS,
+  FAKE_TIME,
+} from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { loginGone, loginPrivate, withSessions } from '../state/linked-kit'
 import { renderChat, textOf } from './render-kit'
@@ -174,5 +179,52 @@ describe('the login of a session', () => {
     expect(privateNoLogin.text()).not.toContain(loginLabel)
     expect(composerText(privateNoLogin.markup())).not.toMatch(anyLogin)
     expect(privateNoLogin.markup()).toMatch(sendOff)
+  })
+
+  it("asks for the reader's own Codex login before a new session while the app can no longer use it", async () => {
+    const codex: AgentChoice = {
+      agent: 'codex',
+      model: 'GPT-6.1 Sol',
+      effort: 'medium',
+    }
+    const login = {
+      agent: 'codex',
+      connected: true,
+      kind: 'token',
+      noReuse: true,
+      updatedAt: FAKE_TIME,
+    } as const
+    const cases = [
+      ['signed out', { ...login, unusableCause: 'ChatGPT access expired.' }],
+      ['usable', login],
+    ] as const
+    const shown = []
+    for (const [name, own] of cases) {
+      const member = await renderChat({
+        role: 'member',
+        setup: (server) => {
+          withSessions(server, (session) => ({
+            ...loginGone(session),
+            choice: codex,
+          }))
+          server.json('GET', ACCOUNT_PATHS.account, {
+            ...noLogins('member'),
+            agentLogins: [own],
+          })
+        },
+      })
+      member.chat.controller.setDraft(id, 'Add tests.')
+      const text = member.text()
+      shown.push({
+        case: name,
+        connect: text.includes('Connect Codex to use GPT-6.1 Sol'),
+        linked: text.includes('Your message starts a new session'),
+        sendOff: sendOff.test(member.markup()),
+      })
+    }
+    expect(shown).toEqual([
+      { case: 'signed out', connect: true, linked: false, sendOff: true },
+      { case: 'usable', connect: false, linked: true, sendOff: false },
+    ])
   })
 })

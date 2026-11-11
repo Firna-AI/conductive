@@ -1,4 +1,7 @@
-import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
+import {
+  RUNNER_PROTOCOL_VERSION,
+  RUNNER_SUPPORTED_LOGIN_KINDS,
+} from '../../src/shared/runner'
 import type {
   RunnerCommandV2 as RunnerCommand,
   RunnerEvent,
@@ -61,6 +64,7 @@ export class RunnerLink {
       protocolVersion: RUNNER_PROTOCOL_VERSION,
       workspaceId: this.options.workspaceId,
       streamId: this.store.snapshot.streamId,
+      loginKinds: RUNNER_SUPPORTED_LOGIN_KINDS,
     })
     await this.idle()
     await this.initializing
