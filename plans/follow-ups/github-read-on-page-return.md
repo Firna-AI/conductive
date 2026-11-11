@@ -1,0 +1,37 @@
+# Choose when a returning page reads GitHub
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from branch `calummoore/manual-browser-check-purpose`, review finding 1.
+- **Location:** `src/github/backupReads.ts:66`, `src/github/freshReads.test.ts:89`, `src/github/README.md` under "Backup reads", and `docs/protocol/github-banner.md` under "State of a branch".
+- **Reason:** The current rule for a returning page changes the text of the user's choice of 11 November 2026, so only the user can settle it.
+
+- **Terms:**
+  - **GitHub store:** the browser object in `src/github/githubStore.ts` that gives the pull request bar and the Checks tab the GitHub state of the open workspace's branch.
+  - **Backup read:** a read of the GitHub state that the GitHub store starts 5 minutes after its last read ended, to catch a change that no webhook reported.
+  - **`BackupReads`:** the class in `src/github/backupReads.ts` that runs the timer of the backup reads of one GitHub store and follows the visibility of the page.
+  - **Hidden page:** a page whose `document.visibilityState` is `hidden`, such as a background browser tab or a minimized window, which the app reads through `AppServices.visible`.
+- **Background:**
+  - Each backup read sends two requests to the Worker, one for the bar and one for the Checks tab. Each request runs a GitHub GraphQL read with the token of the GitHub App installation.
+  - A read of an open pull request costs one query, and a read of a merged or closed one costs two. All users of one GitHub org share the installation's limit of 5,000 points an hour.
+  - On 11 November 2026, the user chose: "Stop the timer while the page is hidden. Read once when the page shows again. Hidden tabs then cost nothing." Before that choice, hidden tabs read every 5 minutes all day.
+  - The code keeps the timer running while the page is hidden. When the wait ends while the page is hidden, no read runs, and the read is due. When the page shows again, the store reads at once only if a read is due. Otherwise the wait goes on.
+  - The first read of a connection runs also while the page is hidden, because `docs/protocol/github-banner.md` requires a read when a tab opens. GitHub webhooks keep the state live between reads.
+  - `docs/protocol/github-banner.md` does not state the hidden-page rule yet. Each option below records its rule there, with the reason, in the same way as the doc records the archived-workspace choice of the same day.
+- **Problem:** A page that shows again before the 5-minute wait ends does not read GitHub at once, but the text of the user's choice says "Read once when the page shows again". The test `reads at connect while the page is hidden, holds a timed read that falls due until the page shows again, and adds no read when the page shows with no read due` in `src/github/freshReads.test.ts` expects the current rule.
+- **Impact if no action:** After a change that no webhook reports, a returning page can show a state up to 5 minutes old. A page that stayed visible can show the same.
+- **Root question:** When a page shows again, how fresh must its GitHub state be, and how many GitHub reads may that cost?
+- **Options:**
+  - **A.** Read once on each return. Stop the wait when the page hides, and read when it shows again, unless a read runs. Update the test, the README, and the protocol doc. The text of the 11 November choice then holds. Each return costs one read of two requests, so a person who switches tabs often can cost more reads than the timer did. Effort: Small.
+  - **B.** Do A, and move the visibility rule from `BackupReads` into `GitHubStore`, so that one class owns the reads, the timer, and the visibility. `src/github/githubStore.ts` is close to the limit of 300 lines. Effort: Medium.
+  - **C.** Keep the current rule: a return reads at once only when a backup read fell due while the page was hidden. Record the rule, the rejected read on each return, and the reason in the protocol doc. The code, the test, and the README stay. A returning page gets the same freshness as a page that stayed visible. Effort: Small.
+  - **D.** Read on each return, but skip the read when the last read ended less than 1 minute ago. Put the rule in `BackupReads`. Update the test, the README, and the protocol doc. Rapid tab switches then cost at most one read a minute. It adds a new constant. Effort: Small.
+  - **E.** Do A, and let the Worker answer a backup read or a return read from its stored state when it read GitHub for that workspace in the last few minutes. The first read of a tab still reads GitHub. All tabs and users of one workspace then share the reads. It changes the browser, the Worker, and the protocol doc. Effort: Medium.
+- **Left out:**
+  - Resume the rest of the wait on return, with no due read: after a long hidden time, the page shows a state of that age for up to 5 more minutes.
+  - A refresh button or an age label in the bar: the tab must stay correct with no action from the user.
+  - Read on each focus of the window: the focus changes more often than the visibility, so it costs more reads for the same goal.
+- **Wider fix:** None. `BackupReads` already owns the visibility rule for every GitHub store, and the backup reads are already the wider fix for state that goes stale after a missed webhook.
+- **Previous examples:** Commit `10f7a075` added the backup reads, after the banner went stale when webhooks were lost.
+- **Recommendation:** C. A backup read is only a safety net for changes that no webhook reports, and C gives a returning page the same freshness as a page that stayed visible, at no extra cost. A follows the text of the 11 November choice, and D limits the cost of A.
+- **Action:** ask the user, because C changes the text of the 11 November choice, and no option is clearly best: A and D give a fresher state on return but cost more reads when people switch tabs often.
