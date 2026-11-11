@@ -123,9 +123,21 @@ tests focus, type, paste, clear, and read the field through
 mention, and leaves a folder mention and other mentions alone. It puts the
 original names in place of those mentions, and checks for words outside
 them.
-`links/chat-parts-mentions.test.ts` reads mentions in a sent message, and
-`links/FileLink.dom.test.tsx` opens a file and a folder from its chip, and
-copies messages with file chips, without hidden text.
+`links/chat-parts-mentions.test.ts` reads mentions in a sent message. A
+mention of a file of the message is its chip, also when the tree holds
+that path, and also without a tree. A folder mention of that path stays
+text, and a mention in code stays code. `links/FileLink.dom.test.tsx`
+opens a file and a folder from its chip, and copies messages with file
+chips, without hidden text. `components/SentFileChips.dom.test.tsx`
+mounts sent messages with files. It checks the chip of each file of the
+message at its place. Under the message, only the files without a chip
+show, such as a file whose mention stands in code. A press on a chip
+opens the file tab of the copy that its link names. While a message
+waits, and in a chat without the files of its workspace, the chip shows
+and opens nothing. A copy of the messages gives the mention of each
+chip, also of a chip that opens nothing.
+`links/mention-copy-test-kit.tsx` holds the copy helpers of both DOM
+tests.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`

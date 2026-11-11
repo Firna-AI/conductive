@@ -154,13 +154,24 @@ check in the Mac app.
   gives its rules and its files.
 - `state/load.ts`: the order of the first reads and the stream start.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
-  links of a message field, and `linkTarget`, `chat-parts.ts`, the one
-  tokenizer of sent messages and answers, `LinksContext.tsx`, the
-  workspaces that chips find and the open of a chip, and `LinkedText.tsx`,
-  which draws the parts of a message or an answer, with its file chips,
-  and `mention-copy.ts`, the copy of chat text that gives the mention of
-  each file chip in it, and leaves out text that the browser leaves out of
-  a copy.
+  links of a message field, and `linkTarget`. `chat-parts.ts` is the one
+  tokenizer of sent messages and answers. In it, each mention of a file of
+  the message is an `AttachmentPart`, also when the tree holds that path,
+  and also without a tree. Its `filesWithoutChip` gives the files of a
+  message that no part shows as a chip. `LinksContext.tsx` gives the
+  workspaces that chips find and the open of a chip. `LinkedText.tsx`
+  holds `useChatParts` and `ChatText`. `useChatParts` reads the parts of a
+  text with the workspaces and the tree of the chat, and the files of a
+  sent message. `ChatText` draws the parts with their chips, and each
+  `AttachmentPart` as the mockups' `SentFileChip`.
+  [Chips of attached files](../../docs/protocol/file-mentions.md#chips-of-attached-files)
+  states the rules of that chip. The chip opens the file tab of its copy
+  through `openFile` and `href` of `ChatMentions`. It opens nothing when
+  `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
+  `LinkedText` reads and draws a text in one step. `mention-copy.ts` gives
+  the copy of chat text with the mention of each chip that has a
+  `data-mention` mark: each file chip and each `SentFileChip`. It leaves
+  out text that the browser leaves out of a copy.
 - `mentions/`: `mention-rows.ts` gives the entries that the list offers and
   their order. `MentionsContext.tsx` gives the files that the chat gets and
   the tree that the list and the chips find, with one value for each tree.
@@ -196,10 +207,11 @@ check in the Mac app.
   of a draft. Each upload goes through the app's `uploadAttachment`, ends
   on its draft after a move, and stops with Remove and with the chat.
 - `components/AttachmentChips.tsx`: the file chips of both composers, with
-  the measured share of an upload, the sent files, and the notice for files
-  over the size limit, from the mockups' `attachmentCopy.ts`. The cell of
-  the icon of each draft file removes it, as `ChipIconCell` of the mockups
-  draws it.
+  the measured share of an upload and the notice for files over the size
+  limit, from the mockups' `attachmentCopy.ts`. The cell of the icon of
+  each draft file removes it, as `ChipIconCell` of the mockups draws it.
+  `SentFiles` lists under a sent message the files without a chip in its
+  text.
 - `state/archive-view.ts`: the tabs and the session history of a
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
@@ -219,7 +231,10 @@ check in the Mac app.
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
-  event from the mockups' `lostCopy.ts`.
+  event from the mockups' `lostCopy.ts`. `UserBubble` reads the parts of a
+  sent message once, with `useChatParts`. It draws them with `ChatText`,
+  and it lists under the message only the files that no part shows as a
+  chip. It sets `opens` only when the message state is `sent`.
 - [`turn-work.ts`](../shared/transcript/turn-work.ts) and
   [`transcript-entries.ts`](../shared/transcript/transcript-entries.ts):
   `foldedWork` finds the work of each ended turn that folds, as the

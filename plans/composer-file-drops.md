@@ -829,18 +829,18 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Add a part for a mention of a file of the message to
+- [x] Add a part for a mention of a file of the message to
       `src/chat/links/chat-parts.ts`.
-- [ ] Draw that part in `src/chat/links/LinkedText.tsx` with the mockup
+- [x] Draw that part in `src/chat/links/LinkedText.tsx` with the mockup
       part of the sent chip. Give it the mention for a copy, as
       `mention-copy.ts` reads it.
-- [ ] Make a press on a sent chip open the file tab of its path, through
+- [x] Make a press on a sent chip open the file tab of its path, through
       the `openFile` and the `href` of the chat files. Open nothing while
       its message waits, or without the files of the workspace.
-- [ ] Make `UserBubble` give the files to the text, and make `SentFiles`
+- [x] Make `UserBubble` give the files to the text, and make `SentFiles`
       list only the files without a chip.
-- [ ] Update the key code of `src/chat/README.md`.
-- [ ] Add the tests of the sent chip, its press, the shorter list, and
+- [x] Update the key code of `src/chat/README.md`.
+- [x] Add the tests of the sent chip, its press, the shorter list, and
       the copy.
 
 ## Milestone 5: Images in the file tab

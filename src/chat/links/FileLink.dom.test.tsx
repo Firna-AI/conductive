@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 
-import type { ReactNode } from 'react'
 import { describe, expect, test } from 'vitest'
 import type { FileEntry } from '../../shared/files'
 import { accessibleName } from '../../test-support/dom-queries'
@@ -11,31 +10,13 @@ import {
   type ChatMentions,
 } from '../mentions/MentionsContext'
 import { LinkedText } from './LinkedText'
-import { useMentionCopy } from './mention-copy'
+import { Copying, copyAll } from './mention-copy-test-kit'
 import { LinksProvider } from './LinksContext'
 
 const entries: FileEntry[] = [
   { path: 'src/lib', name: 'lib', kind: 'directory', change: null },
   { path: 'README.md', name: 'README.md', kind: 'file', change: null },
 ]
-
-function Copying(props: { children: ReactNode }) {
-  useMentionCopy()
-  return props.children
-}
-
-/** Copies the whole content of `root`, as Ctrl+A and Ctrl+C do. */
-function copyAll(root: Element) {
-  document.getSelection()?.selectAllChildren(root)
-  const data = new DataTransfer()
-  const event = new ClipboardEvent('copy', {
-    bubbles: true,
-    cancelable: true,
-    clipboardData: data,
-  })
-  document.dispatchEvent(event)
-  return { kept: event.defaultPrevented, text: data.getData('text/plain') }
-}
 
 async function mountText(text: string | string[], mentions: boolean) {
   const opened: string[] = []

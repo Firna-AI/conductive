@@ -155,7 +155,11 @@ export function DraftFiles(props: {
   )
 }
 
-/** The files that a sent message carries, under its bubble, at the right. */
+/**
+ * The files of a sent message without a chip in its text, under its
+ * bubble, at the right. A message from before files had a place in the
+ * text holds no mention of its files, so they all show here.
+ */
 export function SentFiles(props: { attachments: readonly Attachment[] }) {
   return (
     <ul
