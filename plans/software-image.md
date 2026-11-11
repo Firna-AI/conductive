@@ -91,7 +91,11 @@ Each item marked "my call" is a design call of the planning agent, made on
    does. The Cloud computer tab shows each refresh with its log. My call,
    from finding 19 of Milestone 1: each refresh records what started it,
    a push, the daily refresh, or a request to the refresh route, so the tab
-   can name it.
+   can name it. My call, from the options check of decisions 28 and 29: a
+   good refresh never hides a failed build that no newer build replaced.
+   The card head, its log, Try again, and the mark of the Settings link keep
+   that failed build, because the org image rule says that a failed build
+   shows its log, Try again, and the mark.
 3. **Empty install script.** A build or a refresh skips the install step
    when the install script is empty, and its build log shows no install
    step. The user's design of 10 November 2026: "user scripts (if they
@@ -180,7 +184,7 @@ keeps both.
 The options check of the `implementation-review` skill ran over decisions
 4, 5, and 6 on 9 November 2026, over decisions 1, 12, and 13 on 10
 November 2026, over decision 14 on 10 November 2026, and over decisions
-15, 17, 22, 23, 24, and 25 on 11 November 2026. Its reports are
+15, 17, 22, 23, 24, 25, 28, and 29 on 11 November 2026. Its reports are
 in `.context/software-image/`. Each decision below has the user's answer.
 
 ### 1. First and later builds: confusing software step label
@@ -571,7 +575,7 @@ Open. From finding 11 of Milestone 1.
 ### 28. Refresh: the logs of clean refreshes pile up
 
 Open. From the options check of 11 November 2026. Its own options check
-waits.
+ran on 11 November 2026.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Review.
@@ -587,7 +591,10 @@ waits.
   refreshes that nobody opens.
 - **Impact if no action:** One busy org can add up to about 200 MiB of logs
   a day to the shared database.
-- **Root question:** How long does the app keep the log of each job?
+- **Root question:** Which job logs does the app keep, so that each log
+  that a screen shows stays and one org cannot fill the shared database?
+  The options check replaced "How long does the app keep the log of each
+  job?", because a count, a kind, or another store can also give a limit.
 - **Options:**
   - **A.** Keep every log, as today. Effort: Small.
   - **B.** Keep the logs of builds and of failed refreshes, and the log of
@@ -595,23 +602,35 @@ waits.
     keep their job records. Effort: Small.
   - **C.** Keep each log for 30 days, then delete it, and keep the job
     record. Effort: Small.
-  - **D.** Move the logs out of D1 into file storage. Effort: Medium.
-- **Left out:** None.
-- **Wider fix:** C. One age limit covers every kind of job.
-- **Previous examples:** None found.
+  - **D.** Move the logs out of D1 into file storage. It sets no limit by
+    itself. Effort: Medium.
+  - **E.** Keep the logs of the newest 10 jobs of each org and the log of
+    its newest build. At each new job, delete each other log of the org,
+    and keep the job records. Each org then holds at most 11 logs. Support
+    gets no older log. Effort: Small.
+- **Left out:** A smaller log budget for refreshes, or compressed logs,
+  because each slows the growth but sets no limit. Fewer refreshes after a
+  push, because it sets no limit and breaks the limit of one push refresh
+  in 30 minutes.
+- **Wider fix:** E. A count for each org keeps its limit when the refresh
+  rate, the log size, or the kinds of job change.
+- **Previous examples:** The budget of 4 MiB for one log in
+  `worker/lifecycle/build-log-retention.ts`.
 - **Related:** Decision 22: its option D shows the same jobs whose logs B
   keeps.
-- **Recommendation:** B. It keeps each log that the history can show, and
-  it drops only logs that nobody can open.
+- **Recommendation:** E. The first recommendation was B. No history row
+  opens a log, and B keeps the log of every failed refresh, which a broken
+  script can make 49 times a day. E sets a limit for each org at the same
+  cost, and D1 has one size limit that all orgs share.
 - **Action:** ask the user, because a deletion of stored logs is a new rule
   that no requirement covers.
 
 ### 29. Old org setup: an agent turn during the run
 
 Open. From the options check of 11 November 2026. Its own options check
-waits.
+ran on 11 November 2026.
 
-- **Severity:** Low. **Effort:** Medium.
+- **Severity:** Low. **Effort:** Small.
 - **Source:** Review.
 - **Category:** Docs or spec.
 - **Location:** the design call of Milestone 1 that keeps the composer
@@ -624,20 +643,41 @@ waits.
 - **Problem:** Two writers can break installed packages or build output.
 - **Impact if no action:** A run or a turn can fail in a way that is hard
   to explain.
-- **Root question:** May an agent turn change the workspace while the
-  install script runs?
+- **Root question:** How do the install script run and the other work in
+  the workspace share the same files without failures that nobody can
+  explain? The options check replaced "May an agent turn change the
+  workspace while the install script runs?", because terminal commands and
+  running servers use the same files too.
 - **Options:**
   - **A.** Yes, as the mockup shows. The member decides. Effort: Small.
   - **B.** The composer holds new messages until the run ends, and the
     notice says why. Effort: Medium.
   - **C.** The run starts only when no agent turn runs, and the notice warns
     that a turn during the run can change the same files. Effort: Medium.
-- **Left out:** A stop of the terminal during the run, because the terminal
-  is the member's own tool, and a stop loses its state.
-- **Wider fix:** None.
+  - **D.** As A, and the notice, or the dialog of decision 24, says that
+    agent turns, terminal commands, and running servers can change the same
+    files while the script runs. No gate. Effort: Small.
+  - **E.** B and C together, for every session and every member. The
+    workspace keeps each new message until the run ends, and every tab
+    shows why. This needs the shared run of decision 31 A. Effort: Large.
+  - **F.** Run the script at a workspace start, before the runner and the
+    terminal start, at the next start or through a restart that the member
+    confirms. Nothing else runs at the same time, but a restart ends each
+    turn, terminal command, and server. Effort: Large.
+  - **G.** The runner holds each command and each file edit of an agent
+    while the run goes on. Codex needs a new approval path for it. Effort:
+    Large.
+- **Left out:** A stop of the terminal during the run, because it breaks
+  the terminal rules of `docs/protocol/workspace-tools.md` (decisions 118,
+  147, and 149). A message from the app that tells each agent to wait,
+  because the app cannot make an agent wait. A move of the work to a new
+  workspace, because it breaks decision 11 C.
+- **Wider fix:** F. Nothing else runs before the runner and the terminal
+  start, so it removes every overlap. Its cost does not fit a Low item.
 - **Previous examples:** None found.
-- **Recommendation:** C. A run then never starts in the middle of a turn,
-  and the member keeps the composer.
+- **Recommendation:** D. The first recommendation was C. One sentence
+  explains the risk when the member chooses the run, at a small cost and
+  with no gate. C stops only the runs that start during a turn.
 - **Action:** ask the user, because B and C change how the composer and the
   run work together, and no requirement covers it.
 
@@ -792,8 +832,10 @@ tab, and the updates of an old workspace.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show. Findings 16, 18, 19, 20, 21, 26, and 27 changed the
       design. Decisions 15, 17, 22, 23, 24, and 25 wait for the user.
-- [ ] Apply the answers to decisions 17, 22, and 24 to the mockups, when
-      they add a mockup state.
+- [ ] Apply the answers to decisions 17, 22, 24, 29, 31, and 32 to the
+      mockups, when they add a mockup state.
+- [ ] Keep a failed build on the card head and the Settings mark after a
+      good refresh, as design item 2 says.
 
 ## Milestone 2: Documentation and protocol
 
