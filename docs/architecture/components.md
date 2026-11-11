@@ -69,6 +69,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
   the sign-up pause, the waitlist switch, and the state of approval emails.
+- The record of each workspace holds a copy of its
+  [GitHub state](../protocol/github-banner.md#the-github-state).
+  A list read takes this copy from D1. The GitHub summary adds no Durable
+  Object read or GitHub call.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -83,6 +87,11 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   uses.
 - It also holds the start steps, the stop timer, the delete timer of an
   archived workspace, and the banner state.
+- After each GitHub refresh, it copies the GitHub state from its banner
+  state into the workspace record in D1. It copies in the order of its
+  refreshes, from the banner state that it holds at that moment. So a
+  replay of an older GitHub delivery cannot write an older state.
+- A failed copy fails the refresh, so that a retry copies it again.
 - It runs the trusted jobs of its sandbox: the fetch of a create, and the
   branch change of Continue.
 - For each start, it keeps the provider account with the org image and the

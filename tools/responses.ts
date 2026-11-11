@@ -11,6 +11,7 @@ import type {
   AgentWorkspaceListEntry,
 } from '../src/shared/agent-workspaces.ts'
 import type { MessageSender } from '../src/shared/messages.ts'
+import { readGitHubSummary } from '../src/shared/github-read.ts'
 import type { Workspace, WorkspaceState } from '../src/shared/workspaces.ts'
 import { agent, choice, effort, record, text, ToolInputError } from './input.ts'
 
@@ -65,6 +66,7 @@ function workspace(value: unknown): Workspace {
     branch: text(fields.branch),
     choice: choice(fields.choice),
     state: workspaceState(fields.state),
+    github: readGitHubSummary(fields.github),
     createdAt: timestamp(fields.createdAt),
     updatedAt: timestamp(fields.updatedAt),
     archivedAt:

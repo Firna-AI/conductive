@@ -20,7 +20,10 @@ pull request bar, and the owner picker. A host can give its own parts, as
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
   `?waiting=1`, `?paused=1`, `?waitlist=off`, or
-  `?paths=masked`. `dev/options.ts` lists them. `dev/attachment-routes.ts`
+  `?paths=masked`. `dev/options.ts` lists them. `?banner=<state>`, such as
+  `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
+  bar, and its list mark shows the GitHub state of that bar. The other rows
+  keep the GitHub states of the mockups. `dev/attachment-routes.ts`
   keeps the uploaded files of both composers. With `?upload=wait` each
   upload keeps running, and with `?upload=fail` the first upload of the
   page fails once, so Try again works. `?sent=<percent>` makes the dev
@@ -211,6 +214,9 @@ the palette and of the Feedback dialog.
 - A screen reads data only through a model and `useStore`. A model sends the
   request, parses the answer with the readers in `api/`, and keeps the
   result. An answer of an unknown shape is an `ApiError`, not a guess.
+  One field is the exception. A missing or unknown `github` summary of a
+  workspace reads as null, so an older reply still reads. The
+  [shared contracts](../shared/README.md) give that reader.
 - A screen never sets a value of an org. The stores of `OrgModel` are
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after

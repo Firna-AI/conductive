@@ -2,7 +2,7 @@
 
 This doc holds the requirements and the decisions in force for the pull
 request bar of a workspace and its actions. It also covers the Checks tab
-and the GitHub events behind them. [Continue](continue.md) states the
+and the GitHub state and events behind them. [Continue](continue.md) states the
 action that moves a workspace to its next task after a merge. The terms
 are those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
@@ -227,6 +227,16 @@ continues, and archives.
 - A finished check shows how long it ran.
 - While the branch has no pull request, the Checks tab shows that it waits
   for one.
+- For the bar and the GitHub state, a failed, cancelled, timed-out, or
+  action-required check is a failure. A queued or running check runs. Each
+  other check counts as passed.
+- The list mark of the workspace shows its
+  [GitHub state](#the-github-state) in one colour, as
+  [The list mark](workspace-life.md#the-list-mark) says.
+
+## The GitHub state
+
+[The GitHub state](github-summary.md) gives the requirements and their reasons.
 
 ## Layouts
 

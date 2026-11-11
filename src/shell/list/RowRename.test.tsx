@@ -140,7 +140,7 @@ describe('Rename of a workspace row', () => {
       cancels: [],
       unnamed: '',
       writes: [{ name: 'Apple Pay on checkout' }],
-      row: 'Apple Pay on checkout5m, Ready',
+      row: 'Apple Pay on checkout5m, Checks failed, Ready',
       focus: true,
       history: [open],
       open: [],
@@ -185,7 +185,7 @@ describe('Rename of a workspace row', () => {
         { name: 'Apple Pay on checkout' },
       ],
       field: null,
-      row: 'Apple Pay on checkout5m, Ready',
+      row: 'Apple Pay on checkout5m, Checks failed, Ready',
     })
   })
 })

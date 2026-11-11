@@ -27,6 +27,7 @@ points of each part.
 - [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
 - [`workspace-data.ts`](workspace-data.ts): the D1 reads and writes of the
   workspace record. `workspaceRecord` gives an origin-free saved snapshot.
+  The snapshot holds the stored GitHub summary of the row.
   `workspaceView` adds the canonical web link for an explicit app origin.
   In the `records` phase of a create, `insertWorkspace`
   writes the new row and its runtime record in one D1 batch. The new row
@@ -44,6 +45,7 @@ points of each part.
   [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
 - [`restore-workspace.ts`](restore-workspace.ts): the member Restore route action with an explicit app origin and the fixed expiry check.
 - [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
+  An older admission without a GitHub summary gives null.
 - [`workspace-resume.ts`](workspace-resume.ts): `resumeWorkspace`, which
   answers once the start is queued.
 - [`workspace-state-projection.ts`](workspace-state-projection.ts):

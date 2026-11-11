@@ -133,10 +133,13 @@ The Mac command route is mounted in the real Worker.
 The [Worker asset module](../worker/tools/image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
 Vite embeds the allowed sources as text through static `?raw` imports.
 The asset module uses the source contract in [image-manifest.ts](image-manifest.ts).
-The manifest lists 40 sources: 32 modules of this folder and 8 shared contract modules from `src/shared/`.
+The manifest lists 41 sources: 32 modules of this folder and 9 shared modules from `src/shared/`.
 The installer writes only the listed sources.
 It throws before any command runs when a listed source has no asset.
-The asset module needs no filesystem at runtime and reads no environment values or secret files.
+A listed module can import types from any module, because Node removes type imports.
+Its runtime imports must name only listed modules.
+[The summary reader](../src/shared/github-read.ts) has no runtime import, so the tools can embed it.
+It needs no filesystem at runtime and reads no environment values or secret files.
 The image builder passes these assets to `installWorkspaceTools` from [the installer](../worker/tools/image.ts).
 
 The installer places the sources under `/opt/conductive/agent-tools`.

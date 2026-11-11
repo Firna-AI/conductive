@@ -25,6 +25,8 @@ type AppColors = {
   warning: string
   /** The outline of a mark on a warning fill, such as `amberSoft`. */
   warningBorder: string
+  /** A merged workspace list mark, in GitHub's purple. */
+  listMerged: string
   /**
    * The tint of a merged pull request: its words and icon, the fill of its
    * bar, and the outline of its number. The words keep a contrast of 4.5:1
@@ -107,6 +109,7 @@ export const darkPalette: Palette = {
   dangerBorder: '#4d1f22',
   warning: '#f2b84b',
   warningBorder: '#4d3a12',
+  listMerged: '#a371f7',
   merged: '#b794f6',
   mergedSoft: '#221836',
   mergedBorder: '#3f2d6b',
@@ -173,6 +176,7 @@ export const lightPalette: Palette = {
   dangerBorder: '#f2c9cb',
   warning: '#b7860b',
   warningBorder: '#ecd49a',
+  listMerged: '#8250df',
   merged: '#7345d1',
   mergedSoft: '#f3eefc',
   mergedBorder: '#dacdf5',

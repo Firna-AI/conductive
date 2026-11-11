@@ -71,13 +71,18 @@ requirements.
   and bold, as before. `links/workspace-links.ts` reads each link with the
   URL parser and `parseRoute`. A link is a chip only when it has the
   origin of the links of the list, and the router reads a page of a
-  workspace of the org in that list. The chip shows the current name and
-  state, and it opens the page that the router read, with its tab path,
+  workspace of the org in that list. The chip shows the current name, in
+  bold while the workspace has unread output, as the list does. Its
+  list mark shows the state and the GitHub state, from `chipOf` in
+  `links/LinksContext.tsx`, as
+  [The list mark](../../docs/protocol/workspace-life.md#the-list-mark)
+  says. The chip opens the page that the router read, with its tab path,
   query, and hash. A link whose path names a session that the reader knows
   shows as the session chip of the mockups instead: `useLinkedSession` in
   `links/session-links.ts` finds a live session of the chat's workspace, or
   a session from the one read of another workspace for the load of the
-  chat. While that read runs, after it fails, and for a session that the
+  chat. Its mark follows the workspace list, as a workspace chip does.
+  While that read runs, after it fails, and for a session that the
   workspace does not hold, the link keeps the chip of its workspace. Every
   other link stays as the text has it. The message
   field reads its text with `textParts`, which reads no code. A message line of

@@ -53,7 +53,8 @@ Each path is relative to `src/app/`, the folder of this page.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  routines, and computer settings of one org, with `watch` and the wait of each part.
+  routines, and computer settings of one org, with `watch`. `org-waits.ts`
+  gives the wait of each part, such as `workspacesWait`.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
@@ -121,7 +122,8 @@ Each path is relative to `src/app/`, the folder of this page.
   the timers of `AppServices`.
 - `../shell/list/`: the workspace list. `WorkspaceRow.tsx` draws a row,
   with its Archive shortcut over the time on hover, and the Rename field
-  of `WorkspaceNameField.tsx`. A right click or the menu keys open the menu
+  of `WorkspaceNameField.tsx`. Its list mark is the mockups' `WorkspaceMark`,
+  with the words of `listMarkLabel`. A right click or the menu keys open the menu
   of a row. `useRowMenus.tsx` gives each row the actions that the person
   can use, from `workspaceMenuItems` of the mockups, and draws the open
   `RowMenu.tsx`. The Archive shortcut and Archive in the menu share one

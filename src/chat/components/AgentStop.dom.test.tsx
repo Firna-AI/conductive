@@ -114,8 +114,8 @@ describe('the line of a stop by an agent', () => {
       () => stopLines(container).length === 4,
       'the lines of the four stopped turns',
     )
-    const ownChip = `W-${listed(own).number} Session Debounce the address lookups to 250 ms, Ready`
-    const otherChip = `W-${other.number} ${other.name}, Working`
+    const ownChip = `W-${listed(own).number} Session Debounce the address lookups to 250 ms, Checks passed, Ready`
+    const otherChip = `W-${other.number} ${other.name}, Checks running, Working`
     const unknown = sessionLink(FAKE_ORIGIN, org, 'gone', 'old')
     // The read of the other workspace waits, so its sessions keep the chip
     // of their workspace, and the two stops ask for the one read.
@@ -152,7 +152,7 @@ describe('the line of a stop by an agent', () => {
     }).toEqual({
       lines: [
         `Stopped from ${ownChip} · 5 changed files not listed`,
-        `Stopped from W-${other.number} Session Plan saved carts, Working`,
+        `Stopped from W-${other.number} Session Plan saved carts, Checks running, Working`,
         `Stopped from ${otherChip}`,
         `Stopped from ${unknown}`,
       ],

@@ -737,6 +737,8 @@ and `.context/agent-tools-conductor-parity/m8-screens/smoke-results.json`.
 
 Main integration notes: `.context/agent-tools-conductor-parity/merge-review1-main-notes.md`.
 
+Workspace marks integration notes: `.context/agent-tools-conductor-parity/merge-workspace-marks-notes.md`.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] In a deployed workspace with a fresh org image, let an agent use

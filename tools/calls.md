@@ -97,6 +97,7 @@ So keep and pass the same ID to retry without a second workspace.
 
 `workspaces list` without options returns every workspace in the org, including archived workspaces.
 Each list item gives its number, canonical web link, name, branch, and state.
+It also gives `github`, the GitHub summary of the workspace, or null.
 Its owner gives the member ID, GitHub login, and display name, with no avatar.
 The filters combine, and each filter is optional:
 

@@ -35,6 +35,7 @@ export const WORKSPACE_TOOL_SOURCE_PATHS = [
   'src/shared/agent-previews.ts',
   'src/shared/device.ts',
   'src/shared/device-read.ts',
+  'src/shared/github-read.ts',
   'src/shared/agent-tools.ts',
   'src/shared/agent-session-paths.ts',
   'src/shared/agent-sessions.ts',

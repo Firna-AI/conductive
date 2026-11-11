@@ -2,7 +2,12 @@ import { workspaceLabel } from '../components/workspaces/label'
 import { postcodeLookup } from './archivedWorkspaces'
 import type { ChatItem } from './conversations'
 import { orgs } from './orgs'
-import { checkoutAutocomplete, savedCarts, workspaceLink } from './workspaces'
+import {
+  checkoutAutocomplete,
+  savedCarts,
+  webhookRetries,
+  workspaceLink,
+} from './workspaces'
 
 /**
  * The message that links Saved carts from Checkout address autocomplete.
@@ -26,11 +31,16 @@ const futexLink = workspaceLink(
 /** The agent looks for the branch of Saved carts, which has no commits yet. */
 const findSavedCarts = `git ls-remote origin ${savedCarts.branch}`
 
-/** The answer of the agent, which links two workspaces of Acme. */
+/**
+ * The answer of the agent, which links three workspaces of Acme. Retry
+ * failed webhooks has output that Cal has not read, so its chip shows the
+ * name in bold.
+ */
 const linkAnswer: readonly string[] = [
   `[${workspaceLabel(savedCarts.number)}](${savedCarts.link}) has no commits yet, so I checked the address form here. A restored address fills the fields with \`setAddress\`, which skips the lookup. So the suggestions stay closed.`,
   `I added a test for a restored address. It reuses the test of ${postcodeLookup.link}, which covered the same case for the old lookup.`,
   `The description of #482 now ends with \`Related: ${savedCarts.link}\`.`,
+  `${webhookRetries.link} finished its turn while I worked, and its checks passed.`,
 ]
 
 /**

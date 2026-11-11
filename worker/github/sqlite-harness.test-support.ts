@@ -21,6 +21,7 @@ export async function createGitHubSQLiteHarness() {
         : { method: 'POST', body: JSON.stringify(body) }),
     })
   return {
+    db: await runtime.getD1Database('DB'),
     request,
     async inspect() {
       return record(await (await request('/inspect')).json())
