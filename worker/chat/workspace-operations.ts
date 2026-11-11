@@ -9,6 +9,9 @@ import {
 import type { ChatStore } from './store'
 import type { ChatDependencies } from './types'
 import { stopDispatchedTurns } from './workspace-stop'
+import type { ToolSessionAccess, ToolSessionWrite } from '../tools/services'
+import { acceptToolSessionWrite } from './tool-session-write'
+import { ChatOperation } from './operation'
 
 interface WorkspaceOperationOptions {
   env: AppEnv
@@ -18,12 +21,34 @@ interface WorkspaceOperationOptions {
   bind(id: string): void
   publish(events: readonly WorkspaceEventEnvelope[]): void
   closeRunner(): void
+  flushRunner(): Promise<void>
 }
 
 export class WorkspaceOperations {
   private readonly options: WorkspaceOperationOptions
   constructor(options: WorkspaceOperationOptions) {
     this.options = options
+  }
+
+  writeTool(
+    input: ToolSessionWrite,
+    authorize: () => Promise<ToolSessionAccess>,
+  ) {
+    const { store, bind, publish, dependencies, env, flushRunner } =
+      this.options
+    bind(input.workspaceId)
+    return store.run(async () => {
+      const { user, workspace } = await authorize()
+      const result = await acceptToolSessionWrite(
+        new ChatOperation(store, input.workspaceId, dependencies, publish),
+        input,
+        user,
+        env,
+        dependencies,
+      )
+      await flushRunner()
+      return { ...result, workspace }
+    })
   }
 
   summary(workspaceId?: string) {
@@ -68,7 +93,14 @@ export class WorkspaceOperations {
     const { store, bind, publish, closeRunner } = this.options
     bind(workspaceId)
     closeRunner()
-    await store.change(workspaceId, stopDispatchedTurns, publish)
+    await store.change(
+      workspaceId,
+      async (transaction) => {
+        await transaction.emit({ type: 'ports.updated', ports: null })
+        await stopDispatchedTurns(transaction)
+      },
+      publish,
+    )
   }
 
   async commit(

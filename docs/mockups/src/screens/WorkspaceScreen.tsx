@@ -9,6 +9,7 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { CommandPalette } from '../components/palette/CommandPalette'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { ChecksActions } from '../components/workspace/BarActions'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
   PullRequestBar,
@@ -19,27 +20,37 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { mayArchiveWorkspace } from '../components/workspaces/permissions'
-import { conversations } from '../fixtures/conversations'
 import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { suspendedOwner } from '../fixtures/startRefusals'
-import { openableWorkspaceRecords } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
-import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
+import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
+import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
+  filesPlaceholder,
   openFile,
   startingLogFor,
   ToolContent,
   workspaceSidebar,
 } from './workspaceParts'
-import { workspaceOverlay } from './workspaceOverlays'
-import { activityOf, drawnState, sandboxNotice } from './workspaceSandbox'
+import {
+  transcriptToast,
+  workspaceOverlay,
+  workspaceToast,
+} from './workspaceOverlays'
+import { openWorkspace } from './workspaceRun'
+import {
+  activityOf,
+  archiveRestore,
+  drawnState,
+  sandboxNotice,
+} from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
 import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
@@ -53,10 +64,11 @@ const widenedRight = 560
  * request, the file lists, and the tools. Desktop shows them side by side; a
  * phone shows one at a time, with tabs to switch. In a suspended org the
  * chat history stays, and nothing in the workspace can change: no message,
- * no new session, no rename, no owner change, and no Archive. `overlay`
- * lies over the workspace in place of the overlay of its state, such as a
- * dialog that another screen opens over it. The chat and the overlay find
- * the workspaces of their chips in the list of the screen.
+ * no new session, no rename, no owner change, no Archive, and no Restore.
+ * `overlay` lies over the workspace in place of the overlay of its state,
+ * such as a dialog that another screen opens over it. The chat and the
+ * overlay find the workspaces of their chips in the list of the screen.
+ * The toast of the state lies over everything.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
@@ -66,12 +78,18 @@ export function WorkspaceScreen(props: {
   const { viewport } = props
   const state = drawnState(props.state)
   const suspended = state.org === 'suspended'
-  const record = openableWorkspaceRecords[state.workspace]
+  const open = openWorkspace(state)
+  const record = open.record
   // An owner's refused start belongs to a suspended member, whom an active
   // admin sees. A suspended org refuses the start of every owner.
   const ownerRefused = state.sandbox === 'refused' && !suspended
   const owner = ownerRefused ? suspendedOwner : record.owner
-  const workspace = { ...record, owner, name: workspaceName(state, record) }
+  const workspace = {
+    ...record,
+    owner,
+    name: workspaceName(state, record),
+    branch: branchOf(state, record),
+  }
   const status = activityOf(state)
   const archived = state.sandbox === 'archived'
   const readOnly = archived || suspended
@@ -81,6 +99,9 @@ export function WorkspaceScreen(props: {
   // Decision 42: the workspace's owner and the org's admins archive it.
   const archivable =
     !readOnly && mayArchiveWorkspace(membership, workspace.owner)
+  // Every member restores it while the app keeps its cloud computer.
+  const restorable = archiveRestore(state) === 'available'
+  const bar = barOf(state, { archivable, readOnly })
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
@@ -97,11 +118,7 @@ export function WorkspaceScreen(props: {
           />
         }
         fold={state.fold}
-        items={
-          fresh
-            ? []
-            : chatItemsFor(conversations[state.conversation], state.paths)
-        }
+        items={fresh ? [] : chatItemsFor(open.items, state.paths)}
         notice={
           // An archived workspace keeps its archived bar, so the notice of a
           // suspended org shows above it.
@@ -125,6 +142,7 @@ export function WorkspaceScreen(props: {
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
+      run={open.run}
       rightHidden={rightHidden}
       status={status}
       viewport={viewport}
@@ -142,7 +160,9 @@ export function WorkspaceScreen(props: {
         workspaceOverlay(state, workspace, viewport, {
           tabs,
           menuTab: row.menuTab,
+          readOnly,
         })}
+      {transcriptToast(state, viewport)}
     </ChatWorkspaces>
   )
   const tabRow = (
@@ -158,11 +178,19 @@ export function WorkspaceScreen(props: {
       viewport={viewport}
     />
   )
+  // A phone shows the actions of the bar at the top of the Checks tab.
+  const checksTop =
+    viewport === 'mobile' ? (
+      <ChecksActions bar={bar} workspace={workspace} />
+    ) : undefined
   const { header, files } = placeLostUpdate(state, {
     header: workspaceHeader,
-    files: <FilesContent state={state} viewport={viewport} />,
+    files: (
+      <FilesContent checksTop={checksTop} state={state} viewport={viewport} />
+    ),
   })
   const tool = <ToolContent state={state} viewport={viewport} />
+  const toast = workspaceToast(state, workspace, viewport)
   if (viewport === 'mobile') {
     if (state.palette !== 'closed') {
       // A phone opens the palette from the list, so it offers no actions
@@ -190,9 +218,7 @@ export function WorkspaceScreen(props: {
     return (
       <MobileFrame>
         {header}
-        {archived ? null : (
-          <PullRequestRow state={state.banner} workspace={workspace} />
-        )}
+        {archived ? null : <PullRequestRow bar={bar} />}
         <div className={styles.mobileBody}>
           {archived ? body.chat : body[state.focus]}
         </div>
@@ -202,6 +228,7 @@ export function WorkspaceScreen(props: {
           />
         )}
         {overlay}
+        {toast}
       </MobileFrame>
     )
   }
@@ -212,6 +239,7 @@ export function WorkspaceScreen(props: {
         context={{
           open: { workspace, status },
           archivable,
+          restorable,
           rightColumn: !rightHidden,
         }}
         view={state.palette}
@@ -220,31 +248,41 @@ export function WorkspaceScreen(props: {
     )
   return (
     <AppFrame
-      overlay={palette ?? overlay}
+      overlay={
+        <>
+          {palette ?? overlay}
+          {toast}
+        </>
+      }
       rail={{
         ...acmeRail,
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
-      sidebar={workspaceSidebar(
-        workspace,
+      sidebar={workspaceSidebar({
+        // The toast of an Archive shows at once, so the row shows that Archive.
+        workspace:
+          state.toast === 'archived'
+            ? { ...workspace, updated: 'now' }
+            : workspace,
         status,
         suspended,
-        membership,
-        createdWorkspaces(state),
-      )}
+        viewer: membership,
+        changed: changedWorkspaces(state),
+        restoreOpen: state.archive === 'kept',
+      })}
     >
       <WorkspaceBody
-        center={file ? <FilePage view={file} /> : chat}
+        center={
+          file ? (
+            <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
+          ) : (
+            chat
+          )
+        }
         files={files}
         header={header}
-        pullRequest={
-          <PullRequestBar
-            archivable={archivable}
-            state={state.banner}
-            workspace={workspace}
-          />
-        }
+        pullRequest={<PullRequestBar bar={bar} workspace={workspace} />}
         rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
         tabs={tabRow}

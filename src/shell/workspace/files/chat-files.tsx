@@ -1,9 +1,22 @@
-import { useSyncExternalStore, type ReactNode } from 'react'
+import {
+  useContext,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import type { RenderTab, TabDraw } from '../../../chat/components/tab-row'
+import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
 import { listLabel } from '../../../files/model/file-labels'
-import type { FilesNavigation, FilesTab } from '../../../files/navigation'
+import type { WorkspaceFiles } from '../../../files/model/files-store'
+import type {
+  FilesNavigation,
+  FilesTab,
+  FilesTarget,
+} from '../../../files/navigation'
+import type { FileEntry } from '../../../shared/files'
+import { PanelContext } from '../../layout/panels'
 import {
   FileTabItem,
   fileTabName,
@@ -100,6 +113,42 @@ function FileTab(props: {
 export interface ChatFiles {
   renderTab?: RenderTab
   onOpenDiff?: (path: string) => void
+  mentions?: ChatMentions
+}
+
+/** The page of a chip: the file, or All files for a folder. */
+function chipTarget(entry: FileEntry): FilesTarget {
+  return entry.kind === 'directory'
+    ? { kind: 'list', list: 'all' }
+    : { kind: 'file', path: entry.path, mode: 'preview' }
+}
+
+/**
+ * The files that the composer lists after `@`, and the pages of the chips.
+ * A file opens as a press in All files opens it. A folder shows All files
+ * with the folder open, in the right column on desktop, which then shows.
+ */
+function useMentions(
+  context: WorkspaceContext,
+  files: WorkspaceFiles | null,
+  navigation: FilesNavigation,
+): ChatMentions | undefined {
+  const panels = useContext(PanelContext)
+  const phone = context.viewport === 'phone'
+  return useMemo(() => {
+    if (!files) return undefined
+    return {
+      files,
+      openFile: (path) =>
+        navigation.navigate({ kind: 'file', path, mode: 'preview' }),
+      showFolder: (path) => {
+        files.revealFolder(path)
+        if (!phone) panels?.rightShown.set(true)
+        navigation.navigate({ kind: 'list', list: 'all' })
+      },
+      href: (entry) => navigation.href(chipTarget(entry)),
+    }
+  }, [files, navigation, panels, phone])
 }
 
 /**
@@ -108,8 +157,10 @@ export interface ChatFiles {
  * diff that a file of a finished turn opens. Each tab takes the label of
  * its path from the kept files, for its title and its drawing, so each name
  * of the tab hides each secret value. When the chat makes a session active
- * while `content` shows a file, the address goes back to the chat. An
- * archived workspace has no files.
+ * while `content` shows a file, the address goes back to the chat. The
+ * chat reads the kept files for the list of `@` and the file chips, also
+ * on a phone before a visit to Files: `KeptFilesConnection` of the screen
+ * keeps them connected. An archived workspace has no files.
  */
 export function useChatFiles(
   context: WorkspaceContext,
@@ -121,6 +172,8 @@ export function useChatFiles(
   const archived = context.sandbox === 'archived'
   const tabs = !archived && context.viewport !== 'phone'
   const labelOf = useTabLabels(context, tabs)
+  const files = useKeptFilesWhile(context, !archived)
+  const mentions = useMentions(context, files, navigation)
   if (archived) return {}
   const renderTab: RenderTab = (tab) => {
     const label = labelOf(tab)
@@ -144,5 +197,6 @@ export function useChatFiles(
   return {
     renderTab: tabs ? renderTab : undefined,
     onOpenDiff: (path) => navigation.navigate({ kind: 'diff', path }),
+    mentions,
   }
 }

@@ -12,6 +12,7 @@ import { branchChanges, changesFromIndex } from './repository-changes'
 import { Git } from './git'
 import { withGitIndex } from './git-index'
 import { readIdentity } from './read-identity'
+import { comparisonBase } from './comparison-base'
 
 export interface RepositorySnapshot {
   entries: FileEntry[]
@@ -34,16 +35,11 @@ export class Repository {
   }
 
   async snapshot(defaultBranch: string): Promise<RepositorySnapshot> {
-    const sha = await this.git.resolve(defaultBranch)
+    const { branch, sha } = await comparisonBase(this.git, defaultBranch)
     return withGitIndex(
       this.git,
       async (index) => {
-        const changes = await changesFromIndex(
-          index,
-          defaultBranch,
-          sha,
-          this.warn,
-        )
+        const changes = await changesFromIndex(index, branch, sha, this.warn)
         const marks = new Map(
           changes.files.map((file) => [file.path, file.change]),
         )

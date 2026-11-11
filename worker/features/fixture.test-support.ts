@@ -10,7 +10,7 @@ import { insertBuild } from '../lifecycle/build-admission-data'
 import { readSavedScript } from '../lifecycle/saved-script'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { array } from '../chat/agent-events'
-import { string } from '../chat/inputs'
+import { number, record, string } from '../chat/inputs'
 
 export function featureState(value: unknown): Map<string, unknown> {
   return new Map(
@@ -33,9 +33,49 @@ export async function featureFixture(
   const bindings = await fixture.runtime.getBindings<{
     WORKSPACES: DurableObjectNamespace<Workspace>
   }>()
+  const actor = (id = OUTER_WORKSPACE) => bindings.WORKSPACES.getByName(id)
+  const control = async (
+    action:
+      | 'connections'
+      | 'state'
+      | 'summary'
+      | 'initialize'
+      | 'stopped'
+      | 'seed'
+      | 'advance',
+    fields: Record<string, unknown> = {},
+    id = OUTER_WORKSPACE,
+  ): Promise<unknown> => {
+    const response = await fixture.request(
+      `/__test/features?workspace=${encodeURIComponent(id)}`,
+      { method: 'POST', body: JSON.stringify({ action, ...fields }) },
+    )
+    if (response.status !== 200)
+      throw new Error(
+        `Feature control returned ${response.status}: ${await response.text()}`,
+      )
+    return response.json()
+  }
   return {
     ...fixture,
-    actor: (id = OUTER_WORKSPACE) => bindings.WORKSPACES.getByName(id),
+    actor,
+    control,
+    hibernate: async (id = OUTER_WORKSPACE) => {
+      const inspect = async () => {
+        const result = record(await control('connections', {}, id))
+        return {
+          instance: string(result.instance),
+          sockets: array(result.sockets, number),
+        }
+      }
+      const before = await inspect()
+      await fixture.runtime.unsafeEvictDurableObject(
+        'outer-chat-tests',
+        'Workspace',
+        { name: id, webSockets: 'hibernate' },
+      )
+      return { before, after: await inspect() }
+    },
   }
 }
 
@@ -60,6 +100,7 @@ export async function seedFeatureBuild(
     previousRepositoryLocations: [],
     software: OUTER_SOFTWARE,
     previousImageName: 'outer-image',
+    previousRunnerProtocolVersion: null,
     now: await fixture.actor(`org-image:${OUTER_ORG}`).testAlarmTime(),
   })
   await fixture.env.DB.batch([

@@ -1,17 +1,18 @@
 # Conductive
 
 Conductive is a coding tool at `conductive.build`, in the browser and in a
-Mac app. Each workspace is one task with its own branch and its own cloud
-computer, where agents powered by Claude and Codex work. The agents run
-only in the cloud. It replaces Conductor Cloud, which shuts down on
-20 November 2026.
+Mac app. Each workspace has its own cloud computer, where agents powered by
+Claude and Codex work, and one branch at a time. It can hold one task after
+another. The agents run only in the cloud. It replaces Conductor Cloud,
+which shuts down on 20 November 2026.
 
 ## Status
 
 Today the repository holds:
 
-- the [architecture doc](docs/architecture.md) and the protocol docs, which
-  state the requirements
+- the [architecture doc](docs/architecture.md) and the
+  [protocol docs](docs/architecture/protocol-docs.md), which state the
+  requirements
 - the [mockup catalogue](docs/mockups/README.md), which draws every screen
   at phone and desktop sizes
 - the app package, with tests against fake GitHub and Boat servers and
@@ -29,9 +30,13 @@ deployment needs.
 Conductive has these features. The protocol docs state each one. A
 feature that is not complete yet says so.
 
-- Sign in with GitHub. The product is free.
+- Sign in with GitHub. The product is free until billing starts.
+  [Pricing](docs/protocol/pricing.md) states the coming plans, which the
+  pricing page of the marketing site shows. Billing is not built yet.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
+  An operator can turn the waitlist off. Each new person then gets in at
+  once, unless sign-ups are paused.
 - Every cloud computer runs in the app's own Boat account, so users need no
   Boat account.
 - A new workspace starts as an empty chat. The first message creates it,
@@ -45,9 +50,15 @@ feature that is not complete yet says so.
   hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
   says.
 - A pull request bar with the GitHub state of the branch and its checks.
+  It sends the agent fixed requests, such as Create PR and Fix
+  checks, and merges as the member. After the merge, Continue moves the
+  workspace to a new branch, with the same cloud computer and sessions.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
-- Agents can create and list workspaces.
+- Agents can create workspaces and sessions. They can read chats and
+  message sessions across the org.
+- Routines run a saved prompt on a schedule or on a pull request event,
+  each time in a new workspace.
 - Each workspace has a number, such as `W-395`. A press on the number in
   the header copies the link of the workspace. A workspace link in chat
   shows as a chip with the number and the name.
@@ -56,6 +67,8 @@ feature that is not complete yet says so.
   workspace.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
+- Send feedback from the command palette, with screenshots. The team gets
+  each message by email, and replies to the primary verified GitHub email.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
   An agent can ask to run a command on the Mac of the person who sent its
@@ -234,9 +247,10 @@ features:
 - `worker/marketing/`: built marketing pages, the agreement page before
   GitHub, the file list, request markers, and the site's security headers.
 - `src/marketing/`: Astro pages, layouts, parts, styles, pictures, shared
-  legal text, the public guides, and the shared rows and words of the
-  Conductor Cloud comparison page. Its [README](src/marketing/README.md)
-  gives the build and preview steps.
+  legal text, the public guides, the shared rows and words of the
+  Conductor comparison page, and the shared plans and words of the pricing
+  page. Its [README](src/marketing/README.md) gives the build and preview
+  steps.
 - `src/shared/site-build.ts`: names and types shared by the Astro build
   and the Worker.
 - `worker/security/`: GitHub sign-in, signed sessions, the request gate,

@@ -23,14 +23,27 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).
-- Changes lists the files that the branch changes against the default
-  branch. Its summary gives the number of changed files and the lines that
+- Changes lists the files that the branch changes against its base branch,
+  from the merge base of the two, as [Base branches](base-branches.md)
+  says. Its summary gives the number of changed files and the lines that
   they add and remove.
-- A changed file opens its diff against the default branch as a tab.
+- A changed file opens its diff against the base branch as a tab.
 - Each new file or diff tab opens at the end of the tab row of the centre
   column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
+- The report of the branch changes also gives the number of commits of
+  the current branch that no remote branch holds. The pull request bar
+  counts them as local work, as [Actions](github-banner.md#actions) says.
+- After a start from a saved snapshot, the runner watches the live
+  repository folder again when the app sees the end of the restore, and it
+  scans the repository once. It uses the same signal as the terminal below.
+- Reason: a watch made before the restore ends stays on the old view of the
+  disk, so the lists stop updating. A file that the provider writes inside
+  the sandbox at the end of its restore was rejected, because the provider
+  does not document it and can change it. A timer that compares the
+  identity of the folder was rejected, because the app already has a
+  documented signal for the end of the restore.
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
   This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
 - The complete runner envelope also meets the
@@ -78,6 +91,13 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   still show them while the sandbox sleeps.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
+- While the sandbox does not run, a file or diff tab reads nothing. While
+  the sandbox is stopped, or after its later start failed, a tab keeps the
+  file that it already shows, as the lists keep their copy.
+- Otherwise the tab shows the state of the sandbox in place of the file,
+  with the Resume or Try again of that state.
+- Opening a file or diff tab resumes a stopped sandbox, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says.
 - When the runner cannot read the repository, it sends `files.unavailable`
   (decision 109). The event holds no other data. A failed scan after a
   connect does not stop `runner.ready`, as
@@ -128,6 +148,19 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   the path in its prompt was rejected, because it also moves a shell
   outside a restore. A check of the provider's path of the old view was
   rejected, because the provider does not document that path.
+- A plain drag selects text on the screen, and the user can copy it, such
+  as with Cmd+C on a Mac. This also holds while a program in the shell,
+  such as tmux, uses the mouse (decision 246).
+- The wheel, the right button, and the middle button still reach such a
+  program, so the wheel scrolls the output history. A held Cmd on a Mac,
+  or Ctrl on Windows and Linux, gives a click or a drag to the program.
+- Reason: the user expects to select and copy as in the rest of the page.
+  A copy through the clipboard writes of the program was rejected, because
+  any process in the sandbox could then write the user's clipboard.
+- When the connection ends, the user can still select and copy the text
+  that stays on the screen (decision 245).
+- Reason: the screen keeps its output so that the user can still use it,
+  such as an error message.
 - When the user ends the shell, such as with `exit`, the next connection
   opens a new shell.
 - A stop of the sandbox ends the shell and its commands, as
@@ -137,11 +170,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 
 ## Port previews
 
-- The user opens a port preview by typing its port. The app does not
-  discover ports.
-- A preview shows in a frame inside the app, with an "Open in new tab"
-  link. Reason: Safari blocks the cookies of the previewed app inside a
-  frame.
+The [port-preview requirements](port-previews.md) give the detected-server
+list, manual opening, preview tabs, and the relay requirement.
 
 ## Desktop
 

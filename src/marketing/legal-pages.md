@@ -19,8 +19,11 @@ which sends the emails, from
 [The record of app access](../../docs/protocol/waitlist.md#the-record-of-app-access).
 
 The words of the legal pages, of the page for an unknown address, and of
-the sign-in agreement are text without markup. `terms.ts`, `privacy.ts`
-with `privacy-uses.ts`, and `legal-text.ts` hold them.
+the sign-in agreement are text without markup. `terms.ts` with
+`terms-org.ts`, `privacy.ts` with `privacy-uses.ts`, and `legal-text.ts`
+hold them. `terms.ts` takes its "Working in an org" section from
+`terms-org.ts`, and `privacy.ts` takes its "What Conductive uses, and why"
+section from `privacy-uses.ts`.
 `layouts/LegalPage.astro` and `components/RunningText.astro` build their
 HTML for the site. The mockups and the sign-in screen of the app render the
 same text with React. So every surface shows the same words.

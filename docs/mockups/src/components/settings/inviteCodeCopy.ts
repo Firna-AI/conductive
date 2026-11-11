@@ -27,6 +27,14 @@ export const inviteCodeCopy = {
     title: 'Sign-ups are paused',
     body: 'Your link works again when sign-ups resume.',
   },
+  /**
+   * During open sign-up, anyone can sign up without an invite, so the
+   * invites stay for later. The words never name the waitlist switch.
+   */
+  open: {
+    title: 'Anyone can sign up now',
+    body: 'Your invites stay for later.',
+  },
   usedUp: (limit: number) =>
     `Your invites let ${limit} people skip the waitlist.`,
   off: 'Off',

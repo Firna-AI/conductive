@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { runnerHarness, turn } from '../test-support/harness'
+import { duringTurn, runnerHarness, turn } from '../test-support/harness'
 
 it('combines partial text, steers a turn, and reports actual touched files', async () => {
   const h = await runnerHarness()
@@ -13,7 +13,7 @@ it('combines partial text, steers a turn, and reports actual touched files', asy
   provider.emit({ type: 'delta', messageId: 'answer', text: 'Hello ' })
   provider.emit({ type: 'delta', messageId: 'answer', text: 'secret-alice' })
   const message = turn('2')
-  h.endpoint.send({ ...message, type: 'message', turnId: 'turn-1' })
+  h.endpoint.send({ ...duringTurn(message), type: 'message', turnId: 'turn-1' })
   h.endpoint.send({
     type: 'model',
     commandId: 'model-1',
@@ -112,12 +112,16 @@ it('combines partial text, steers a turn, and reports actual touched files', asy
   expect(h.warnings).toEqual([])
 })
 
-it('stops a turn without an error and keeps the session on its original agent', async () => {
+it('stops a turn without an error, lists its changed files, and keeps the session on its original agent', async () => {
   const h = await runnerHarness()
   h.endpoint.send(turn())
   await h.runner.idle()
   const provider = h.providers.latest
-  h.endpoint.send({ ...turn('queued'), type: 'message', turnId: 'turn-1' })
+  h.endpoint.send({
+    ...duringTurn(turn('queued')),
+    type: 'message',
+    turnId: 'turn-1',
+  })
   provider.emit({ type: 'delta', messageId: 'stop-tail', text: 'tail sec' })
   await h.runner.idle()
   provider.emit({
@@ -131,6 +135,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
       state: 'running',
     },
   })
+  await h.write('README.md', 'first\nedited\n')
   h.endpoint.send({
     type: 'interrupt',
     commandId: 'stop-1',
@@ -153,8 +158,7 @@ it('stops a turn without an error and keeps the session on its original agent', 
     turnId: 'turn-1',
     state: 'stopped',
     durationMs: 0,
-    files: [],
-    filesUnavailable: true,
+    files: [{ path: 'README.md', change: 'modified', added: 1, removed: 1 }],
     omittedFileCount: 0,
     userMessageIds: ['message-1', 'message-queued'],
   })

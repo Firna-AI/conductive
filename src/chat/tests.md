@@ -4,6 +4,12 @@ This guide belongs to [the chat](README.md). It says what each test file of
 the chat checks. [Tests](README.md#tests) gives the command and the shared
 helpers.
 
+`state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
+checks the request and the unchanged draft, a send during a turn, a missing
+login, a linked session, and the client ID of a second try in the same and
+in another session. `components/ContinuedNote.test.tsx` folds the note of
+Continue once at its place, also after a repeat and in a new tab, in the
+history of a closed session, and draws "You" or the name of the member.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
@@ -58,6 +64,16 @@ showed. A second drag scrolls by the same step, so the first drag left no
 frame loop running. `components/TabMenu.dom.test.tsx` opens the tab menu
 with Shift and F10 and with a right click, moves a file tab with Move
 left, and opens the rename field in a tab that does not show.
+`components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
+that never showed, through the real controller, client, and menu, with
+the copy of the app's test services. Copy full transcript asks for the
+full text, copies the reply, says "Transcript copied", and keeps the shown
+tab, the view, and the loaded history. A failed request says "The
+transcript didn't copy. Try again." and copies nothing. In an archived
+workspace on a phone, a finger that moves first opens nothing, and a long
+press lifts no tab, keeps the menu of the browser shut, and opens a sheet
+with only the copy items. The late click of the finger selects nothing,
+and Copy concise transcript copies the concise text.
 `components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
 its fades. It also scrolls a full row over the browser layout of
 `components/row-layout-test-kit.ts`, which gives the row and its tabs
@@ -86,9 +102,28 @@ owner that keeps the draft of each session, as the chat does.
 `components/ComposerDrafts.dom.test.tsx` switches the sessions of the
 chat after a delete, and moves the draft of a composer with its identity.
 Undo stays with its draft in both.
-`components/chip-field/field-text.test.ts` checks the separator rule. The
-DOM tests focus, type, paste, clear, and read the field through
+`components/chip-field/field-text.test.ts` checks the separator rule, for
+links and for mentions. `components/chip-field/MentionList.dom.test.tsx`
+opens the list of `@`, moves its highlight, picks with Enter and Tab,
+closes it with Esc and a space, starts each query at the top, continues
+a restored query, shows its one-line states, also with the real store of
+the files, and checks that Enter then sends nothing.
+`components/chip-field/FileChips.dom.test.tsx` restores file chips from a
+draft, opens a file and a folder, removes a chip with its ×, also as the
+first change, pastes a mention, and follows the tree.
+`components/chip-field/mention-field-test-kit.tsx` mounts the field with the
+files of a chat: a fake with two plain states, no tree and a tree of
+entries, or the real store of the Files screens over the fake API for the
+states that the cloud computer marks. `components/AttachmentChips.dom.test.tsx`
+removes an attached file with the cell of its icon, also a failed upload
+that keeps its Try again, and on a phone with its × at the end. The DOM
+tests focus, type, paste, clear, and read the field through
 `src/test-support/message-field.ts`.
+`mentions/mention-text.test.ts` reads and writes mentions, and
+`mentions/mention-rows.test.ts` orders the rows of the list.
+`links/chat-parts-mentions.test.ts` reads mentions in a sent message, and
+`links/FileLink.dom.test.tsx` opens a file and a folder from its chip, and
+copies messages with file chips, without hidden text.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
@@ -96,9 +131,13 @@ mounts an answer with chips: in bold, in a list, with a bold or a code
 label, and a link in inline code and in a code block.
 `state/workspace-list.test.ts` checks that a chat without sources reads the
 list while it shows, and not while it is hidden. The workspace screen's
-`LinkChips.test.tsx` checks the chips of a kept chat on a phone.
+`LinkChips.test.tsx` checks the chips of a kept chat on a phone, and its
+`FileMentions.test.tsx` lists the files on a phone before a visit to
+Files, and opens a file and a folder from their chips, also into a hidden
+right column.
 
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
+A right click and Shift and F10 open a tab menu with only the copy items, with no line.
 It changes `readOnly` during a rename and archives a kept chat during a close question.
 Each edit hides, the old tab name stays, and no write goes out.
 The session history remains available after Archive.

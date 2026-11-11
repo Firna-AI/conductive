@@ -12,6 +12,7 @@ import type {
   UserMessage,
 } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
+import { readContinued } from './read-continued'
 import {
   count,
   flag,
@@ -67,6 +68,7 @@ const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'files.unavailable': true,
   'files.changed': true,
   'changes.updated': true,
+  'ports.updated': true,
   'runner.ready': true,
   'start.updated': true,
   'workspace.title': true,
@@ -201,6 +203,8 @@ function readError(value: unknown): { code: string; message: string } {
 /** Reads one chat event. A type that this app does not know yet throws. */
 export function readChatEvent(source: Record<string, unknown>): ChatEvent {
   switch (source.type) {
+    case 'workspace.continued':
+      return readContinued(source)
     case 'message.accepted':
       return { type: source.type, message: readUserMessage(source.message) }
     case 'message.sent':

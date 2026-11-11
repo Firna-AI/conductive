@@ -4,6 +4,7 @@ import type {
   OperatorApprovalResponse,
   OperatorSignupPause,
   OperatorWaitlistEntry,
+  OperatorWaitlistSwitch,
 } from '../../shared/operator-waitlist'
 import {
   choice,
@@ -108,5 +109,19 @@ export function readSignupPause(value: unknown): OperatorSignupPause {
     paused: flag(pause, 'paused'),
     updatedAt: maybeCount(pause, 'updatedAt'),
     operator: maybeNested(pause, 'operator', readIdentity),
+  }
+}
+
+/**
+ * The waitlist switch, with the time and the operator of its last change,
+ * and the number of people who wait, as the Waitlist tab counts them.
+ */
+export function readWaitlistSwitch(value: unknown): OperatorWaitlistSwitch {
+  const reply = record(value, 'waitlist switch')
+  return {
+    waitlistOn: flag(reply, 'waitlistOn'),
+    updatedAt: maybeCount(reply, 'updatedAt'),
+    operator: maybeNested(reply, 'operator', readIdentity),
+    waiting: count(reply, 'waiting'),
   }
 }

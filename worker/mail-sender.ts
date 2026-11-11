@@ -1,8 +1,12 @@
 import { productDomain, productName } from '../docs/mockups/src/brand'
+import type { CheckedImage, ImageKind } from '../src/shared/images'
 import type { AppEnv, HttpFetch } from './env'
 
 interface MailMessage {
+  sender?: { name: string; mailbox: 'invites' | 'feedback' }
   recipient: string
+  replyTo?: string
+  attachments?: readonly CheckedImage[]
   subject: string
   text: string
   deliveryKey: (body: string) => Promise<string>
@@ -23,11 +27,18 @@ export function createMailSender(
         return
       }
       if (!env.RESEND_API_KEY) throw new Error('Mail sender is not configured')
+      const sender = message.sender ?? { name: productName, mailbox: 'invites' }
       const body = JSON.stringify({
-        from: `${productName} <invites@mail.${productDomain}>`,
+        from: `${sender.name} <${sender.mailbox}@mail.${productDomain}>`,
         to: [message.recipient],
         subject: message.subject,
         text: message.text,
+        reply_to: message.replyTo,
+        attachments: message.attachments?.map((image, index) => ({
+          filename: `screenshot-${index + 1}.${imageFormats[image.kind].extension}`,
+          content_type: imageFormats[image.kind].mediaType,
+          content: imageBase64(image.bytes),
+        })),
       })
       const response = await fetch(
         new Request('https://api.resend.com/emails', {
@@ -51,4 +62,21 @@ export function createMailSender(
       if (!accepted) throw new Error('Email was refused')
     },
   }
+}
+
+const imageFormats: Record<
+  ImageKind,
+  { extension: string; mediaType: string }
+> = {
+  png: { extension: 'png', mediaType: 'image/png' },
+  jpeg: { extension: 'jpg', mediaType: 'image/jpeg' },
+  gif: { extension: 'gif', mediaType: 'image/gif' },
+  webp: { extension: 'webp', mediaType: 'image/webp' },
+}
+
+function imageBase64(bytes: Uint8Array): string {
+  const chunks: string[] = []
+  for (let offset = 0; offset < bytes.length; offset += 8_192)
+    chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + 8_192)))
+  return btoa(chunks.join(''))
 }

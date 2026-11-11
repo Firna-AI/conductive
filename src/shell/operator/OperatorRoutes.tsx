@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { OperatorPause } from '../../app/operator-pause'
+import { OperatorSwitch } from '../../app/operator-switch'
 import type { OperatorView } from '../../app/router'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
@@ -12,6 +13,7 @@ import { OrgPage } from './OrgPage'
 import { OrgsTab } from './OrgsTab'
 import { OverviewTab } from './OverviewTab'
 import { PauseContext } from './pause-context'
+import { SwitchContext } from './switch-context'
 import { UserPage } from './UserPage'
 import { UsersTab } from './UsersTab'
 import { WaitlistTab } from './WaitlistTab'
@@ -42,7 +44,10 @@ function OperatorBody(props: { view: OperatorView; user: User }) {
   }
 }
 
-/** The page of a view: a new page reads the pause again, a new search does not. */
+/**
+ * The page of a view: a new page reads the pause and the switch again, a
+ * new search does not.
+ */
 function pageOf(view: OperatorView): string {
   switch (view.page) {
     case 'org':
@@ -55,17 +60,23 @@ function pageOf(view: OperatorView): string {
 }
 
 /**
- * The pages of an operator. Each page reads the pause of sign-ups when it
- * opens, as it reads its own data, so that its notice is up to date.
+ * The pages of an operator. Each page reads the pause of sign-ups and the
+ * waitlist switch when it opens, as it reads its own data, so that its
+ * notices are up to date. Each read keeps its own state, so a failure of
+ * one leaves the other in place.
  */
 function OperatorScreen(props: { view: OperatorView; user: User }) {
   const app = useApp()
   const [pause] = useState(() => new OperatorPause(app))
+  const [waitlist] = useState(() => new OperatorSwitch(app))
   const page = pageOf(props.view)
   useEffect(() => pause.state.watch(), [pause, page])
+  useEffect(() => waitlist.state.watch(), [waitlist, page])
   return (
     <PauseContext.Provider value={pause}>
-      <OperatorBody user={props.user} view={props.view} />
+      <SwitchContext.Provider value={waitlist}>
+        <OperatorBody user={props.user} view={props.view} />
+      </SwitchContext.Provider>
     </PauseContext.Provider>
   )
 }

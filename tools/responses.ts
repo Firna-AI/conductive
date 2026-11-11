@@ -64,6 +64,8 @@ function workspace(value: unknown): Workspace {
     updatedAt: timestamp(fields.updatedAt),
     archivedAt:
       fields.archivedAt === null ? null : timestamp(fields.archivedAt),
+    restoreUntil:
+      fields.restoreUntil === null ? null : timestamp(fields.restoreUntil),
   }
 }
 
@@ -72,6 +74,7 @@ export function createdWorkspace(value: unknown): AgentCreateWorkspaceResponse {
   return {
     workspace: workspace(fields.workspace),
     sessionId: text(fields.sessionId),
+    sessionLink: text(fields.sessionLink),
   }
 }
 

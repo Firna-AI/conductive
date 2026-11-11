@@ -13,13 +13,15 @@ export function barrier<T>() {
   return { promise, resolve }
 }
 
+/** A byte stream, like a fetch body, that sends text only when a test asks. */
 export function bodySource() {
-  let controller: ReadableStreamDefaultController<Uint8Array> | null = null
+  let controller: ReadableByteStreamController | null = null
   let cancelled = false
   let pulls = 0
   let onPull: (() => void) | null = null
-  const stream = new ReadableStream<Uint8Array>(
+  const stream = new ReadableStream(
     {
+      type: 'bytes',
       start(value) {
         controller = value
       },
@@ -47,6 +49,52 @@ export function bodySource() {
       new Promise<void>((resolve) => {
         onPull = resolve
       }),
+  }
+}
+
+/** Counts preview access reads. The first read waits until the test releases it. */
+export function holdFirstAccessRead(harness: ToolsHarness) {
+  const started = barrier<void>()
+  const release = barrier<void>()
+  let reads = 0
+  const database = harness.env.DB
+  const prepare = database.prepare.bind(database)
+  const wrap = (statement: D1PreparedStatement): D1PreparedStatement =>
+    new Proxy(statement, {
+      get(target, name) {
+        if (name === 'bind')
+          return (...values: unknown[]) => wrap(target.bind(...values))
+        if (name !== 'all') return Reflect.get(target, name)
+        return async () => {
+          const result = await target.all()
+          reads++
+          if (reads === 1) {
+            started.resolve()
+            await release.promise
+          }
+          return result
+        }
+      },
+    })
+  harness.env.DB = new Proxy(database, {
+    get(target, name) {
+      return name === 'prepare'
+        ? (query: string) =>
+            query.includes('WITH requested')
+              ? wrap(prepare(query))
+              : prepare(query)
+        : Reflect.get(target, name)
+    },
+  })
+  return {
+    started: started.promise,
+    release: () => release.resolve(),
+    get reads() {
+      return reads
+    },
+    restore: () => {
+      harness.env.DB = database
+    },
   }
 }
 

@@ -159,7 +159,6 @@ describe('createMembersApi', () => {
           { name: 'LEGACY_TOKEN' },
         ],
         updatedAt: 1,
-        needsBuild: false,
       },
     })
     const settings = await createMembersApi(server.fetch).settings(org)

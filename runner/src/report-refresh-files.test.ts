@@ -11,11 +11,14 @@ it('accepts every report refresh kind without a session or login', () => {
     refresh('changes.updated'),
     refresh('start.updated'),
     refresh('workspace.title'),
+    refresh('ports.updated'),
   ]
   const parsed: unknown[] = []
   expect(() => {
     for (const command of commands)
-      parsed.push(parseWorkspaceMessage(JSON.parse(JSON.stringify(command))))
+      parsed.push(
+        parseWorkspaceMessage(JSON.parse(JSON.stringify(command)), () => {}),
+      )
   }).not.toThrow()
   expect(parsed).toEqual(commands)
 })
@@ -47,6 +50,8 @@ it('refreshes only the requested file kind without hiding later monitor updates'
       partNumber: 1,
       partCount: 1,
       baseBranch: 'main',
+      unpushedCommits: 0,
+      uncommittedFileCount: 1,
       files: [
         {
           path: 'first',
@@ -73,6 +78,8 @@ it('refreshes only the requested file kind without hiding later monitor updates'
         partNumber: 1,
         partCount: 1,
         baseBranch: 'main',
+        unpushedCommits: 0,
+        uncommittedFileCount: 1,
         files: [
           {
             path: 'second',

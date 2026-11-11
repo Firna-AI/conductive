@@ -9,19 +9,22 @@ import {
   text,
   type LegalDocument,
 } from './legal-text'
+import { privacyRecipientsSection } from './privacy-recipients'
 import { privacyUsesSection } from './privacy-uses'
 
 /**
  * The privacy notice follows the list of privacy information in the ICO
  * guidance that the README names. The facts come from the architecture
  * and the protocol docs. Both legal pages share the operator details and
- * contact address.
+ * contact address. The section on what the product uses, and why, is in
+ * `privacy-uses.ts`. Its Keys and logins item defines the newer and older
+ * cloud computers described in `privacy-recipients.ts`.
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 10 November 2026.`,
+  it uses it, and who gets it. Effective date: 11 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -38,55 +41,7 @@ export const privacyDocument: LegalDocument = {
       ],
     },
     privacyUsesSection,
-    {
-      title: 'Who gets your data',
-      blocks: [
-        list(
-          text`Cloudflare runs ${productName} and stores its data.
-            If a workspace has no name, Cloudflare's AI model service can
-            write a short name from the text of its first message.`,
-          text`GitHub signs you in, and gives ${productName} access to your
-            repositories through its GitHub App. The Mac app also checks
-            GitHub for updates and downloads new versions. These requests
-            send your network address to GitHub.`,
-          text`Resend sends the emails of ${productName}: the invitations of
-            an org, and the email when an operator approves your account. It
-            gets the address and the text of each email.`,
-          text`A cloud computer provider runs the cloud computers of every org
-            for ${productName}, in the account of ${productName}. Your code,
-            your files, and your agent sessions are in them. ${productName}
-            sends the provider the requests that start, stop, and use them.`,
-          text`Anthropic and OpenAI get your messages, your files, and your
-            code when an agent works on them. Each Mac command request and its
-            result also go to the agent and to Anthropic or OpenAI.
-            With each message, they also get
-            the GitHub login and the display name of its sender. They also get
-            the name of the workspace branch, which starts with the GitHub
-            login of the first owner of the workspace. Each session uses the
-            login of the member who started it. Your messages in another
-            member's session use that member's login only when that member
-            lets other members use it. When that member does not share the
-            login, your message starts a new session on your own login. The
-            terms of that provider apply.`,
-          text`The members of your orgs see the workspaces of the org,
-            their chats, and each Mac command request and result.
-            A member with a terminal in a cloud computer can read
-            the agent login and the GitHub token of a turn that runs there. A
-            program that a tool of the agent starts, such as a dev server, can
-            keep the agent login after the turn ends. A member with a terminal
-            can read it there too. Outside an agent turn, the GitHub CLI uses
-            the workspace owner's account. Each member with a terminal can
-            get that owner's GitHub token without a running turn.`,
-          text`The members of your orgs also see who started each session,
-            whose login it uses, and whether it can use that login. They also
-            see whether its starter lets other members use that login.`,
-          text`If the operator suspends your account, the members of your orgs
-            learn that it is suspended. A workspace that you own then says
-            that its owner is suspended, until an operator lifts the
-            suspension.`,
-        ),
-      ],
-    },
+    privacyRecipientsSection,
     {
       title: 'Transfers to other countries',
       blocks: [
@@ -105,6 +60,10 @@ export const privacyDocument: LegalDocument = {
             certification under the UK Extension and its use of standard
             contractual clauses. UK regulations approve transfers covered
             by the UK Extension certification.`,
+          text`Resend processes email data in the United States. Its data
+            processing terms apply the European Commission's standard
+            contractual clauses with the UK International Data Transfer
+            Addendum to restricted UK transfers.`,
           text`The cloud computer provider is based in the United States.
             It reports that its cloud computers and saved snapshots run in
             Germany, Finland, and France. UK adequacy regulations approve
@@ -125,6 +84,12 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         paragraph`When an admin deletes an org, ${productName} deletes the data
           of the org after 7 days, unless an admin restores it.`,
+        paragraph`When the owner or an admin archives a workspace,
+          ${productName} stops its cloud computer and keeps it for 14 days.
+          Its disk keeps your code, your files, your agent sessions, and each
+          secret value that a script or an agent wrote there. ${productName}
+          then deletes the cloud computer, unless a member restores the
+          workspace before then.`,
         paragraph`${productName} keeps each file that you send with a message
           until it deletes the workspace of the message. It deletes an unsent
           file 7 days after you upload it.`,
@@ -134,11 +99,17 @@ export const privacyDocument: LegalDocument = {
           suspension records do not automatically expire when you stop
           using ${productName}. Workspace chat history and Mac command records
           stay while their org exists, including while a cloud computer is
-          stopped.`,
+          stopped. When ${productName} passes on model requests and their
+          answers, it keeps no copy of them.`,
         paragraph`A connected agent login stays until you remove or replace
           it. Panel widths stay in your browser until you clear its saved
           data. The providers above can keep their own records under their
           terms and privacy notices.`,
+        paragraph`The team keeps each feedback email in its inbox while it
+          helps to improve ${productName}. It deletes the email when it no
+          longer helps, or when the sender asks. ${productName} keeps no copy
+          of feedback in its own storage. The app keeps an unsent feedback
+          draft only in the memory of its open tab.`,
         paragraph`To request deletion of your personal data, write to
           ${mailLink(legalAddress)}. Deletion rights depend on applicable
           law and can have exceptions.`,
@@ -157,18 +128,20 @@ export const privacyDocument: LegalDocument = {
           text`An env var is secret until an admin clears its mark. Before
             ${productName} puts agent output in the chat history or on a
             screen, it hides each exact copy of a secret value in it. It also
-            hides such a copy in each start log that it shows. It does not
-            hide a changed or encoded value. A change of the mark applies at
+            hides such a copy in each start log that it shows, and in the
+            names and folders of the servers that it lists. It does not hide
+            a changed or encoded value. A change of the mark applies at
             the next start of a cloud computer.`,
           text`${productName} keeps the real path of each file, because it
             needs that path to open the file. It also keeps the real name of
-            the default branch of each repository. Screens hide each exact copy
+            the default branch of each repository, and of the base branch of
+            each workspace. Screens hide each exact copy
             of a secret value in these paths and names. Your browser still gets
             the real values, so a secret value can show in the data that your
             browser gets and sends (decision 145).`,
-          text`Agent output and start logs can show the value of an env var
-            that is not secret. Each member who reads them then sees that
-            value. The agents and each member with a terminal can read every
+          text`Agent output, start logs, and the lists of servers can show
+            the value of an env var that is not secret. Each member who reads
+            them then sees that value. The agents and each member with a terminal can read every
             env var value in the cloud computers. Secret values can also stay
             on the disk of a cloud computer, for example in its agent sessions
             and its agent output.`,
@@ -181,11 +154,16 @@ export const privacyDocument: LegalDocument = {
         paragraph`This site sets no cookies. The web app and the Mac app each
           set their own cookie that keeps you signed in. Only the Mac app's
           cookie store holds its session cookie. Another cookie protects the
-          GitHub sign-in while it runs.`,
+          GitHub sign-in while it runs. When the web app sends you to GitHub
+          to install the GitHub App or change its access, a third cookie
+          keeps the screen that you left, so that the app can return you
+          there.`,
         paragraph`Each sign-in cookie lasts for up to 7 days. The GitHub
-          sign-in protection cookie lasts for up to 10 minutes. These
-          cookies support sign-in and security. They use secure connections
-          and cannot be read by page scripts.`,
+          sign-in protection cookie lasts for up to 10 minutes. The GitHub
+          return cookie lasts for up to 1 hour, and the app deletes it when
+          you come back. These cookies support sign-in, security, and the
+          return from GitHub. They use secure connections and cannot be read
+          by page scripts.`,
       ],
     },
     {

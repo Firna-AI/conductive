@@ -36,6 +36,7 @@ The list needs access from both your GitHub account and the app.
 
 Admins can later change the selection in **Settings**, under **Repositories**.
 A build applies that changed selection to new workspaces.
+Adding a repository starts a build automatically.
 
 - [Manage the shared cloud computer setup](/docs/cloud-computer)
 
@@ -64,6 +65,11 @@ Your **Account** page has an **Invite code** section.
 Use **Copy** to share its invite link while it has uses left.
 The section shows how many invites remain.
 
+An active code with invites left shows **Anyone can sign up now** during open sign-up.
+Its invites stay for later.
+An invite link uses no invite during this time.
+The pause notice shows instead while sign-ups are paused.
+
 An invite code gives access to Conductive.
 An org invitation also gives membership of the org that sent it.
 Use an org invitation when you want someone to join your team.
@@ -79,12 +85,28 @@ An org has two roles: **Admin** and **Member**.
 | --- | --- | --- |
 | Read workspaces and chats | All workspaces in the org | All workspaces in the org |
 | Send messages | Under the session's login rules | Under the session's login rules |
+| Continue after a merge | All workspaces in the org | All workspaces in the org |
+| Merge from the pull request bar | With GitHub write access or more | With GitHub write access or more |
 | Manage members and org settings | Yes | Read-only |
 | Reassign a workspace | Yes | No |
 | Archive a workspace | Any workspace | Their own workspaces |
+| Restore a workspace within its 14 days | Any workspace | Any workspace |
 
 Use a person's role control in **Members** to change their role.
 An org can have several admins.
+Every member of an active org can restore another member's archived workspace within 14 days of Archive while its computer is kept.
+Restore ends after 14 days, even while Conductive retries deleting the computer.
+Archived chats stay read-only until Restore.
+
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
+
+Continue uses the GitHub account of the member who selects it to fetch the latest default branch.
+That account needs read access to the repository.
+Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.
+An org role does not add GitHub access.
+
+- [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+- [Merge a pull request](/docs/pull-requests#merge-the-pull-request)
 
 To reassign a workspace, select its owner in the workspace header.
 Choose the member who will take responsibility for it.
@@ -131,9 +153,14 @@ Admins can restore it for seven days before deletion completes.
 Open the faded org in the org list to find its restore action.
 The action says **Restore** followed by the org name.
 Restoring brings back its workspaces, chats, and settings.
-Computers start again when their workspaces open.
+Archived workspaces stay archived after the org returns.
+Their existing Restore deadlines continue to apply.
+Deleting the org does not extend a workspace's 14 days of Restore.
+Other stopped workspaces start their computers when you open them.
 
-After the restore window, deletion removes the org's data and computers.
+After the org's restore window, deletion removes its remaining data and computers.
+An archived workspace's computer can be deleted earlier when its own Restore window ends.
+
 Keep important work in GitHub before you delete an org.
 
 - [Understand workspace archives](/docs/workspaces#archive-a-workspace)

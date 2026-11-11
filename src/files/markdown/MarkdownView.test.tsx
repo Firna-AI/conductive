@@ -31,6 +31,27 @@ it('renders headings, a numbered list, and inline code', () => {
   )
 })
 
+it('ends a list item at an unindented line after a code block or a table, as CommonMark does', () => {
+  const html = render(
+    [
+      '1. Run this:',
+      '',
+      '   ```sh',
+      '   npm ci',
+      '   ```',
+      'Done.',
+      '- Sizes:',
+      '',
+      '  | Bundle | Size |',
+      '  | --- | --- |',
+      '  | checkout | 182 KB |',
+      'That is all.',
+    ].join('\n'),
+  )
+  expect(html).toContain('npm ci</pre></li></ol><p>Done.</p>')
+  expect(html).toMatch(/<\/table><\/div><\/li><\/ul><p>That is all\.<\/p>/)
+})
+
 it('keeps a fence with an info string as one code block', () => {
   const html = render(
     '```bash\nnpm test\n# not a heading\n```\n\nAfter the tests.',

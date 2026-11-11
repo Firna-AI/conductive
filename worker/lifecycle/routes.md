@@ -1,7 +1,8 @@
 # Routes and input activity
 
 This page is part of the [workspace lifecycle](README.md) guide. It gives the browser
-routes, the input activity, and the machine route of this folder.
+routes, the input activity, and the machine route of this folder, and their
+entry points.
 
 ## Browser routes
 
@@ -145,12 +146,15 @@ workspace token as a bearer token, and the current turn ID in the
 `X-Conductive-Turn-Id` header. The handler reads no request body and needs
 no content type. `Workspace.credentialSender` maps that turn to a sender,
 in the chat queue, as
-[The git credential sender](workspace-object.md#the-git-credential-sender)
+[The git credential sender](#the-git-credential-sender)
 says, with its tests.
 
 For the GitHub CLI outside an agent turn, the helper omits the turn header.
 The handler then selects the workspace owner in its authorized D1 read.
 A present but invalid turn header still fails, without an owner fallback.
+The fetch of a Continue job sends the fetch ID of the job in the same
+header, so the handler gives the token of the member who pressed Continue,
+as [Continue](git-credentials.md#continue) says.
 
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
@@ -168,3 +172,27 @@ It also checks that both authorizations selected the same person.
 [`image-sources/credential.ts`](image-sources/credential.ts). It does this
 on the machine hostname only, after the Mac command route and before the
 runner socket, with the private error response wrapper.
+
+### The git credential sender
+
+[The git credential sender](git-credentials.md) gives how
+`Workspace.credentialSender` maps the turn ID of a git credential request
+to a sender: the grant of a create, the grant of a Continue fetch, and the
+running chat turn. It also names the tests of the route.
+
+## Key code
+
+- [`browser.ts`](browser.ts): `handleLifecycleRequest`, the browser routes.
+- [`machine.ts`](machine.ts): `handleGitCredential`, the git credential
+  route.
+- [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
+  the one input owner of a workspace object, with its minute updates and
+  retries. [`create-input-activity.ts`](create-input-activity.ts) connects
+  it to the lifecycle hooks, the member fence, and `warnWorker`.
+- [`input-activity-local.ts`](input-activity-local.ts): `LifecycleInputState`,
+  the fenced input time in the durable lifecycle state, with its capture
+  and its reconciliation.
+- [`input-activity-update.ts`](input-activity-update.ts) and
+  [`input-activity-data.ts`](input-activity-data.ts): one D1 and provider
+  update. `writeWorkspaceActivity` moves `last_activity_at` forward with
+  `MAX`.

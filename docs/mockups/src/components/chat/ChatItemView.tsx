@@ -1,6 +1,6 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert, CircleStop, Clock } from 'lucide-react'
+import { CircleAlert, CircleStop } from 'lucide-react'
 import type { ChatItem } from '../../fixtures/conversations'
 import { people, type PersonKey } from '../../fixtures/members'
 import { paths } from '../../paths'
@@ -9,6 +9,7 @@ import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
 import { AttachmentChips } from './AttachmentChips'
+import { ContinuedLine } from './ContinuedLine'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
@@ -41,23 +42,17 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
       return (
         <div className={styles.user}>
           <div className={styles.bubble}>
-            <MessageText text={item.text} />
+            <MessageText mentions text={item.text} />
           </div>
           {item.attachments ? (
             <AttachmentChips attachments={item.attachments} sent />
-          ) : null}
-          {item.queued ? (
-            <span className={styles.queued}>
-              <Clock size={12} />
-              Sends when the sandbox is ready
-            </span>
           ) : null}
         </div>
       )
     case 'agent':
       return (
         <div className={styles.agent}>
-          <AgentBlocks blocks={item.blocks} bullets={item.bullets} />
+          <AgentBlocks blocks={item.blocks} />
         </div>
       )
     case 'tool':
@@ -81,6 +76,14 @@ export function ChatItemView(props: { item: ChatItem; viewer: PersonKey }) {
       return (
         <LinkedLine
           link={<ScreenLink to={paths.noStarterLogin}>{item.from}</ScreenLink>}
+        />
+      )
+    case 'continued':
+      return (
+        <ContinuedLine
+          base={item.base}
+          branch={item.branch}
+          who={item.by === viewer ? 'You' : people[item.by].name}
         />
       )
     case 'stopped':

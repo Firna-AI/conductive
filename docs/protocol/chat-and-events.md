@@ -4,7 +4,8 @@ This doc holds the requirements and the decisions in force for the chat of
 a workspace. It covers the messages, what the chat shows, and the events
 that reach the browser. Linked pages cover
 [the agents and the sessions](agents-and-sessions.md),
-[the workspace links in chat](workspace-links.md), and
+[the workspace links in chat](workspace-links.md),
+[the copy of a session transcript](session-transcripts.md), and
 [the agent runner](agent-runner.md) in the sandbox. The terms are those of
 the [architecture doc](../architecture.md#terms). A decision number names
 a dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -42,10 +43,21 @@ says.
 
 [Messages and attachments](messages-and-attachments.md) holds the composer, turns, retries, titles, and attached files.
 
+### Messages from the bar
+
+[Messages from the bar](messages-and-attachments.md#messages-from-the-bar)
+holds how an agent action of the pull request bar sends its fixed prompt.
+
 ## Workspace links
 
 - [Workspace links](workspace-links.md) says how chat text and the message
   field of each composer show a link to a workspace of the org, as a chip.
+
+## File mentions
+
+- [File mentions](file-mentions.md) says how the composer of a workspace
+  chat lists the files and folders of the workspace after `@`, and how a
+  message shows them as chips.
 
 ## What the chat shows
 
@@ -72,6 +84,9 @@ says.
 - A refused runner event shows one chat line that names the lost data, unless
   it is a [lost workspace update](agent-runner.md#lost-workspace-updates).
   Such a line among the work of a turn folds with that work (decision 151).
+- After [Continue](continue.md), each session shows one note at its place,
+  with the member who pressed Continue, the new branch, and its base. To
+  that member it says "You". The note reaches no agent.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
@@ -107,6 +122,12 @@ says.
   and each message. A click opens a message line to its full text.
 - When the user opens or closes a fold or a run of tool calls, its line
   stays in place. Its list opens or closes below the line.
+
+## Session transcripts
+
+- [Session transcripts](session-transcripts.md) says how a member copies
+  the chat of a session as Markdown, concise or full, and what each copy
+  holds.
 
 ## Events
 

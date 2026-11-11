@@ -17,18 +17,41 @@ app shell mounts them, as
 development pages and the tests run them against the fake API of
 [the browser fakes](../test-support/README.md).
 
+The files store keeps `ChangesResponse.unpushedCommits` and
+`ChangesResponse.uncommittedFileCount` from HTTP replies and events,
+including updates that change only a count. `parseChanges` refuses a reply
+whose count is present but is not a whole number. An older runner can omit
+either count. The store keeps it absent, so callers can distinguish an
+unknown count from zero.
+
 ## Integration
 
-The tab keeps one `WorkspaceFiles` store for each workspace whose Files
-part showed, beside its kept chat. The Files part connects it through
-`useWorkspaceStore` of [the web app](../app/README.md). A stable `create`
-finds the kept store, or makes it. It starts nothing. A stable `connect`
-starts the store and returns its stop:
+The tab keeps one `WorkspaceFiles` store for each workspace that it showed,
+beside its kept chat. The workspace screen connects it once, for the whole
+screen, through `useWorkspaceStore` of [the web app](../app/README.md), so
+the pull request bar knows the local work on every tab. The Files part and
+the other parts that show files only read it. The chat of the shell reads
+it for the list of `@` and the file chips, also on a phone before a visit
+to Files. A stable `create` finds the kept store, or makes it. It starts
+nothing. A stable `connect` starts the store and returns its stop. A second
+connect of the same store, such as the second run of an effect, shares its
+one connection, which stops after the last connect stops:
 
 ```ts
+const connections = new WeakMap<WorkspaceFiles, number>()
+
 function startFiles(files: WorkspaceFiles): () => void {
-  files.start()
-  return () => files.stop()
+  const count = connections.get(files) ?? 0
+  connections.set(files, count + 1)
+  if (count === 0) files.start()
+  let stopped = false
+  return () => {
+    if (stopped) return
+    stopped = true
+    const left = (connections.get(files) ?? 1) - 1
+    connections.set(files, left)
+    if (left === 0) files.stop()
+  }
 }
 
 const create = useCallback(
@@ -54,6 +77,11 @@ complete point. Give `files` to the screens.
 [Store rules](store.md) gives the rules of the stream of the store, the
 open pages, the failed repairs of the lists, and a tree that the cloud
 computer could not read.
+
+A press on a folder chip in the chat calls `revealFolder(path)`. It opens
+the folder and each folder that holds it, and All files scrolls the row of
+the folder into view, as
+[File mentions](../../docs/protocol/file-mentions.md) says.
 
 The workspace view on the Worker holds the open tabs, the active tab, and
 the list. The kept chat loads it and saves it, and the shell changes it
@@ -81,6 +109,12 @@ The screens:
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode.
 - `DiffPage` shows the diff of one changed file.
+- The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
+  of the page, for example with a sandbox state. The page then reads
+  nothing, and its header offers no Download. A diff keeps its changed
+  lines from Changes. With `keepShown`, a page that already shows its file
+  keeps it, with Copy, and the placeholder shows only in place of a page
+  with nothing to show. When the placeholder goes, the page reads at once.
 - `FileTabItem` is the closable tab of a file or a diff, as a list item
   for the tab row of the centre column on desktop. `onClose` asks the shell
   to close the tab. It takes the tab styles of the mockups' `WorkspaceTabs`,
@@ -206,6 +240,11 @@ tests keep their static markup checks in Node.
   block. `pairRuns` in `markdown/markdown-delimiters.ts` pairs its `*` and
   `_` markers by the CommonMark rules. `nestParts` in
   `markdown/markdown-nesting.ts` builds the nested content from the pairs.
+- `markdown/markdown-blocks.ts`: `parseBlocks`, the blocks of a file. It
+  reads each list with `readList` of `../markdown/list-items.ts`, the list
+  reader that the chat shares, and the line tests of
+  `../markdown/lines.ts`. [List parts](../chat/agent-text.md#list-parts)
+  gives the rules of the shared list code.
 - `markdown/markdown-tables.ts`: `parseTable`, which reads one table of a
   file and fills its short rows, and `TableBudget`, the empty cells that
   the tables of one file may add. It reads each row with
@@ -218,7 +257,12 @@ tests keep their static markup checks in Node.
   `parser` replaces the worker for a static render. It draws each table
   through the shared `MarkdownTable` of the mockups, with the margin of
   its `.table` class.
-- `code/`: the syntax colours and the code view.
+- `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
+  `fileKind`, the kind of a file by its name: Markdown, code, or another
+  file. A file is code when the code view gives it syntax colours.
+  `panel/file-icons.tsx` draws the icon of each kind through `EntryIcon` of
+  the mockups, the one icon map of All files, the tabs, the list of `@`,
+  and the file chips.
 - `diff/`: the unified diff parser and view.
 - `dev/`: the development page, its Vite config, its fixtures, its Copy
   and Download targets, `RepairControls`, the controls of the failed

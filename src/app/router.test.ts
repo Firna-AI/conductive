@@ -43,12 +43,64 @@ describe('routes', () => {
         routes.settings('acme', tab),
         { screen: 'settings', orgId: 'acme', tab },
       ]),
+      [routes.routines('acme'), { screen: 'routines', orgId: 'acme' }],
+      [routes.newRoutine('acme'), { screen: 'new-routine', orgId: 'acme' }],
+      [
+        routes.routine('acme', 'review prs'),
+        {
+          screen: 'routine',
+          orgId: 'acme',
+          routineId: 'review prs',
+          tab: 'routine',
+        },
+      ],
+      [
+        routes.routine('acme', 'review prs', 'runs'),
+        {
+          screen: 'routine',
+          orgId: 'acme',
+          routineId: 'review prs',
+          tab: 'runs',
+        },
+      ],
     ]
     for (const [path, route] of cases) {
       expect(parse(path), path).toEqual(route)
     }
     expect(parse('/orgs/acme/settings/billing')).toEqual({
       screen: 'not-found',
+    })
+    expect(parse('/orgs/acme/routines/review-prs/runs/older')).toEqual({
+      screen: 'not-found',
+    })
+  })
+
+  test('a session address names its workspace and session, and a longer path stays a page of the workspace', () => {
+    const session = routes.session('acme', 'saved carts', 'debounce/2')
+    expect({
+      session: parse(session),
+      deeper: parse(`${session}/more`),
+      bare: parse(`${routes.workspace('acme', 'saved carts')}/sessions`),
+    }).toEqual({
+      session: {
+        screen: 'workspace',
+        orgId: 'acme',
+        workspaceId: 'saved carts',
+        view: [],
+        session: 'debounce/2',
+      },
+      deeper: {
+        screen: 'workspace',
+        orgId: 'acme',
+        workspaceId: 'saved carts',
+        view: ['sessions', 'debounce/2', 'more'],
+      },
+      bare: {
+        screen: 'workspace',
+        orgId: 'acme',
+        workspaceId: 'saved carts',
+        view: ['sessions'],
+      },
     })
   })
 

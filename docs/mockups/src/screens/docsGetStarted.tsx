@@ -78,8 +78,9 @@ function GetStartedBody() {
       </ul>
       <h2 id={sections.access.id}>{sections.access.title}</h2>
       <p>
-        A new account starts on the waitlist. Until you have access, the app
-        shows only the waitlist screen. One of these gives you access:
+        During open sign-up, signing in gives you access at once. If your
+        account still waits, the app shows only the waitlist screen. One of
+        these gives you access:
       </p>
       <ul>
         <li>
@@ -98,8 +99,8 @@ function GetStartedBody() {
         </li>
       </ul>
       <p>
-        After an invite code or an approval, Get started opens with three steps.
-        An accepted invitation opens its org instead.
+        Open sign-up, an invite code, or an approval opens Get started with
+        three steps. An accepted invitation opens its org instead.
       </p>
       <h2 id={sections.steps.id}>{sections.steps.title}</h2>
       <ol>

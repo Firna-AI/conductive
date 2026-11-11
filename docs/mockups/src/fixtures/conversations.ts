@@ -6,8 +6,17 @@ import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
-import { changedFiles, type ChangedFile } from './files'
+import {
+  autocompleteStart,
+  autocompleteTests,
+  cutOffTurn,
+  e2eRunning,
+  history,
+} from './autocompleteTurn'
+import { barConversations, type ContinuedItem } from './barConversations'
+import type { ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
+import { listConversations, type MessageList } from './listConversations'
 import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
@@ -20,6 +29,9 @@ import {
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
+import { conversationKeys } from './conversationKeys'
+import { fileMentionConversations } from './fileMentions'
+import { sessionLinkConversations } from './sessionLinkConversations'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -29,8 +41,8 @@ type ToolCallStatus = 'done' | 'running' | 'stopped'
 /** A table in a message of the agent. A short row keeps only its own cells. */
 export type MessageTable = { kind: 'table' } & TableCells<string>
 
-/** A block of a message of the agent: a paragraph, or a table. */
-export type AgentBlock = string | MessageTable
+/** A block of a message of the agent: a paragraph, a table, or a list. */
+export type AgentBlock = string | MessageTable | MessageList
 
 export type ChatItem =
   | {
@@ -39,6 +51,7 @@ export type ChatItem =
       text: string
       /** The files of the message, which show under it. */
       attachments?: readonly Attachment[]
+      /** Waits in the queue of the workspace until the sandbox is ready. */
       queued?: boolean
       /** Sent while a turn runs: it joins that turn as a new part. */
       during?: true
@@ -46,10 +59,8 @@ export type ChatItem =
   | {
       kind: 'agent'
       id: string
-      /** The paragraphs and the tables of the message, in order. */
+      /** The paragraphs, the tables, and the lists of the message, in order. */
       blocks: readonly AgentBlock[]
-      /** A list after the blocks. */
-      bullets?: readonly string[]
     }
   | {
       kind: 'tool'
@@ -112,138 +123,12 @@ export type ChatItem =
       id: string
       from: string
     }
+  | ContinuedItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
 
-export const conversationKeys = [
-  'history',
-  'running',
-  'steer',
-  'interrupted',
-  'sandbox-stopped',
-  'failed',
-  'queued',
-  'queued-follow-up',
-  'queued-retry',
-  'first-turn',
-  'mac-waiting',
-  'mac-waiting-many',
-  'mac-waiting-suite',
-  'mac-denied',
-  'mac-done',
-  'mac-unavailable',
-  'output-left-out',
-  'output-left-out-running',
-  'files-left-out',
-  'lost-lines',
-  'lost-turn-end',
-  'files-unavailable',
-  'stopped-files-unavailable',
-  'linked',
-  'sent-files',
-  'queued-files',
-  'link-sent',
-  'link-answer',
-  'other-org-link',
-  'steered',
-  'mac-in-work',
-  'table-resources',
-  'table-header',
-  'table-rows',
-  'table-short-row',
-  'table-wide',
-  'tables-in-work',
-] as const
-
 export type ConversationKey = (typeof conversationKeys)[number]
-
-function tool(
-  id: string,
-  kind: ToolKind,
-  target: string,
-  detail?: string,
-): ChatItem {
-  return { kind: 'tool', id, tool: kind, target, detail, status: 'done' }
-}
-
-const autocompleteStart: readonly ChatItem[] = [
-  {
-    kind: 'user',
-    id: 'ask',
-    text: 'Add address autocomplete to the checkout form. Use the places proxy at `/api/places`, and keep the manual fields as a fallback.',
-  },
-  {
-    kind: 'agent',
-    id: 'plan',
-    blocks: ["I'll start with the checkout form and the places proxy."],
-  },
-  tool('read-form', 'read', 'src/app/checkout/AddressForm.tsx'),
-  tool('read-proxy', 'read', 'src/app/api/places/route.ts'),
-  tool('search-places', 'search', 'usePlaces', '2 results'),
-  {
-    kind: 'agent',
-    id: 'approach',
-    blocks: [
-      "The proxy already returns predictions, so the work is in the form. I'll add a `useAddressAutocomplete` hook, show suggestions under the first address line, and fill the other fields when one is chosen.",
-    ],
-  },
-  tool(
-    'create-hook',
-    'create',
-    'src/app/checkout/useAddressAutocomplete.ts',
-    '+64',
-  ),
-  tool('edit-form', 'edit', 'src/app/checkout/AddressForm.tsx', '+38 −6'),
-  tool('remove-lookup', 'run', 'git rm src/app/checkout/postcodeLookup.ts'),
-]
-
-const autocompleteTests: readonly ChatItem[] = [
-  tool('create-test', 'create', 'tests/checkout/address.test.ts', '+52'),
-  tool('unit', 'run', 'npm test -- checkout', '14 passed'),
-]
-
-const e2eTarget = 'npx playwright test checkout.spec.ts'
-
-const autocompleteEnd: readonly ChatItem[] = [
-  tool('e2e', 'run', e2eTarget, '3 passed'),
-  tool('readme', 'edit', 'README.md', '+4 −1'),
-  tool('pr', 'run', 'gh pr create --fill', '#482'),
-  {
-    kind: 'agent',
-    id: 'done',
-    blocks: ['Done. Checkout now suggests addresses as you type.'],
-    bullets: [
-      'Choosing a suggestion fills the street, city, and postcode.',
-      'Manual entry still works when there is no match.',
-      'Removed the old postcode lookup, which the suggestions replace.',
-      'Unit tests cover `useAddressAutocomplete`, and the checkout end-to-end tests pass.',
-      'Opened pull request #482.',
-    ],
-  },
-  { kind: 'turn-end', id: 'turn-end', duration: '4m 12s', files: changedFiles },
-]
-
-const e2eRunning: ChatItem = {
-  kind: 'tool',
-  id: 'e2e',
-  tool: 'run',
-  target: e2eTarget,
-  status: 'running',
-}
-
-const history: readonly ChatItem[] = [
-  ...autocompleteStart,
-  ...autocompleteTests,
-  ...autocompleteEnd,
-]
-
-/** The turn up to its end-to-end run, which a stop cut off. */
-const cutOffTurn: readonly ChatItem[] = [
-  ...autocompleteStart,
-  ...autocompleteTests,
-  { ...e2eRunning, status: 'stopped' },
-]
 
 /**
  * The next message that a user writes after the turn ends. When the login
@@ -290,10 +175,14 @@ export const conversations: Readonly<
   ...linkedConversations,
   ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
   ...workspaceLinkConversations(history),
+  ...sessionLinkConversations(history),
+  ...fileMentionConversations(history),
   ...workConversations({
     start: autocompleteStart,
     tests: autocompleteTests,
     steer: steerDraft,
   }),
   ...tableConversations,
+  ...barConversations({ history, cutOff: cutOffTurn }),
+  ...listConversations,
 }

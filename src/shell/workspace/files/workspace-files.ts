@@ -25,24 +25,36 @@ function useKeptLookup(context: WorkspaceContext) {
   )
 }
 
+/** The connect of a store that stays stopped, as in an archived workspace. */
+function stayStopped(): () => void {
+  return () => undefined
+}
+
 /**
- * The files of the open workspace, and their connection. The tab keeps one
- * store for each shown workspace, so a return shows the lists at once and
- * reads only the events after the last one. The hook connects the store
- * after the render and stops it at unmount. Only the Files part calls it.
+ * The files of the open workspace, and their one connection. The tab keeps
+ * one store for each shown workspace, so a return shows the lists at once
+ * and reads only the events after the last one. While `connects` holds, the
+ * hook connects the store after the render, and it stops it at unmount or
+ * when `connects` ends. Only `KeptFilesConnection` calls it. The parts that
+ * show files only read the store: the Files part, the file pages, the list
+ * of `@` and the file chips of the chat, and the pull request bar.
  */
-export function useWorkspaceFiles(context: WorkspaceContext): WorkspaceFiles {
+export function useWorkspaceFiles(
+  context: WorkspaceContext,
+  connects: boolean,
+): WorkspaceFiles {
   const create = useKeptLookup(context)
   const { store } = useWorkspaceStore(
     { orgId: context.org.id, workspaceId: context.workspace.id },
-    { create, connect: startFiles },
+    { create, connect: connects ? startFiles : stayStopped },
   )
   return store
 }
 
 /**
- * The same kept store for a part that shows files beside the Files part,
- * such as the file page of the centre. It connects nothing.
+ * The same kept store for a part that shows files, such as the Files part,
+ * the file page of the centre, and the local work of the pull request bar.
+ * It connects nothing: the workspace screen connects the store.
  */
 export function useKeptFiles(context: WorkspaceContext): WorkspaceFiles {
   const lookup = useKeptLookup(context)

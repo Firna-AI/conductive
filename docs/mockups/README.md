@@ -38,27 +38,39 @@ The catalogue shows the desktop view beside the phone, in a frame narrower
 than a laptop screen. The desktop layout narrows with its app frame, which
 fills the window: below 1280 px the sidebar and the right column get
 narrower, and below 900 px the sidebar hides. The org rail stays, and the current org opens its list as its
-own page. A narrow right column hides the detail of the pull request bar and
-the label of its GitHub link. Use the expand control of the frame to see the
-full desktop layout.
+own page. The number of a pull request in the bar opens it on GitHub, with
+an arrow. A narrow right column hides the detail of the pull request bar.
+When the bar shows an action, a column narrower than 520 px does the same.
+Use the expand control of the frame to see the full desktop layout.
 
 ## The design
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
-share. Its linked pages give the parts of [the chat](design-chat.md) and
-of [the operator section](design-operator.md).
+share. Its linked pages give the parts of
+[the workspace](design-workspace.md), of [the chat](design-chat.md),
+of [the operator section](design-operator.md), and of
+[the pull request bar](design-bar.md).
 
 ## The catalogue
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
-moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/banner`, `app/chat`, `app/workspace-menu`, and `app/workspace-links`,
-and the New workspace dialog. Its linked page,
+moved. It gives the child pages of `marketing/docs`, `app/account`, and
+`app/workspace-menu`, the New workspace dialog, and the repositories that
+wait for a build. Its linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
-operator section.
+operator section. Its linked page
+[the pull request bar](catalogue-bar.md) gives `app/banner` and its child
+pages. The [chat and routines](catalogue-chat-and-routines.md) page gives
+the child pages and flows of `app/chat` and `app/routines`. The
+[workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+page gives the child pages and flows of `app/workspace-links`,
+`app/file-mentions`, and `app/tools`.
+The [command palette and feedback](catalogue-palette.md) page gives the child
+pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
+and the flow that sends feedback.
 
 `app/attachments` shows uploads, failed uploads with Try again, files over
 25 MB, sent files, and the files of a queued first message. Its shared
@@ -90,7 +102,9 @@ shows them in the New workspace dialog.
 - An entry module in `src/entries/` exports one `defineScreen` with a named
   export. Its props and saved states (`variants`) choose the state. The
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
-  `mockups:serve` offers a control for each part of the state.
+  `mockups:serve` offers a control for each part of the state. The routine
+  screen declares its states in `src/screens/routineState.ts` in the same
+  way.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
@@ -107,8 +121,8 @@ shows them in the New workspace dialog.
 
 [Orgs and members](orgs-and-logins.md#orgs-and-members) gives what the
 screens show of orgs and members: the roles, the logins of the sessions,
-the owners of the workspaces, the menu of a workspace row, Archive, and
-Delete org.
+the owners of the workspaces, the menu of a workspace row, Archive and
+Restore, and Delete org.
 
 No screen shows the value of an env var. Each env var of an org has a
 Secret mark: an admin switches it in the row, and a new variable starts
@@ -134,8 +148,8 @@ connected.
 ## The waitlist
 
 [The waitlist](orgs-and-logins.md#the-waitlist) gives the screen of a
-person without app access, the invite codes and invite links, and the
-invite code on the Account page.
+person without app access, the invite codes and invite links, the invite
+code on the Account page, and open sign-up.
 
 ## The Mac app
 
@@ -145,16 +159,19 @@ waitlist, the commands that an agent runs on the Mac, and This Mac.
 ## The marketing site
 
 [The marketing site](marketing-site.md) gives the home page and its
-pictures, the header and the footer, and [the docs pages](marketing-site.md#the-docs).
+pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs),
+and [the pricing page](marketing-site.md#the-pricing-page).
 It also gives the Terms, Privacy, and not-found pages, the comparison page,
 and the page before GitHub. The comparison page is the chosen design at
 `marketing/from-conductor/one-table`.
-[Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md)
+[Conductor comparison](../protocol/conductor-comparison.md)
 states its requirements. It draws the real rows: its rows, statuses, dates,
 and words come from `src/marketing/from-conductor/`, the modules that the
 site also reads, as
 [the marketing site README](../../src/marketing/README.md#the-comparison-page)
-says. The pictures are captures of real screens, such as the workspace
+says. The pricing page reads its plans, its prices, and its words from
+`src/marketing/pricing.ts` in the same way. The pictures are captures of
+real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part
 that a picture shows needs a new capture, with the
 [capture steps](../../src/marketing/README.md#pictures).

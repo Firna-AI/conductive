@@ -1,4 +1,5 @@
-import { Plus, Search } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { Plus, Repeat, Search } from 'lucide-react'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
@@ -30,28 +31,68 @@ export function SettingsLink(props: {
   )
 }
 
-/**
- * The row at the top of the workspace list that starts a new workspace.
- * `to` is the New workspace page of the org, such as that of a new org.
- */
-export function NewWorkspaceLink(props: {
+/** Where a link of the org sits: the desktop sidebar, or the list page. */
+type LinkVariant = 'sidebar' | 'page'
+
+/** A row at the top of the workspace list that opens a page of the org. */
+function OrgPageLink(props: {
+  to: string
+  icon: LucideIcon
+  label: string
   current?: boolean
-  variant: 'sidebar' | 'page'
-  to?: string
+  variant: LinkVariant
 }) {
+  const Icon = props.icon
   return (
     <ScreenLink
       aria-current={props.current ? 'page' : undefined}
       className={classes(
-        styles.newWorkspace,
+        styles.row,
         props.variant === 'page' && styles.page,
         props.current && styles.selected,
       )}
-      to={props.to ?? paths.newWorkspace}
+      to={props.to}
     >
-      <Plus aria-hidden className={styles.plus} size={14} />
-      New workspace
+      <Icon aria-hidden className={styles.icon} size={14} />
+      {props.label}
     </ScreenLink>
+  )
+}
+
+/** The row at the top of the workspace list that starts a new workspace. */
+export function NewWorkspaceLink(props: {
+  current?: boolean
+  variant: LinkVariant
+  to?: string
+}) {
+  return (
+    <OrgPageLink
+      current={props.current}
+      icon={Plus}
+      label="New workspace"
+      to={props.to ?? paths.newWorkspace}
+      variant={props.variant}
+    />
+  )
+}
+
+/**
+ * The row below New workspace that opens the routines of the org. `to` is
+ * the page of the routines, such as those of a suspended org.
+ */
+export function RoutinesLink(props: {
+  current?: boolean
+  variant: LinkVariant
+  to?: string
+}) {
+  return (
+    <OrgPageLink
+      current={props.current}
+      icon={Repeat}
+      label="Routines"
+      to={props.to ?? paths.routines}
+      variant={props.variant}
+    />
   )
 }
 
@@ -66,13 +107,10 @@ export function SearchLink(props: {
 }) {
   return (
     <ScreenLink
-      className={classes(
-        styles.newWorkspace,
-        props.variant === 'page' && styles.page,
-      )}
+      className={classes(styles.row, props.variant === 'page' && styles.page)}
       to={paths.palette}
     >
-      <Search aria-hidden className={styles.plus} size={14} />
+      <Search aria-hidden className={styles.icon} size={14} />
       Search
       {props.keys ? <kbd className={styles.keys}>⌘K</kbd> : null}
     </ScreenLink>

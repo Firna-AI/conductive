@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import { sessionLink } from '../../src/shared/session-link'
 
 import { TOOL_TURN_HEADER } from '../../tools/context'
 import { runToolProcess } from '../../tools/main'
 import { MCP_PROTOCOL_VERSION } from '../../tools/mcp'
 import { createHarness, type TestHarness } from '../test-support/harness'
+import { publishToolImage } from './list-test-support'
 import {
   MCP_INITIALIZE as initialize,
   MCP_INITIALIZED as initialized,
@@ -35,6 +37,7 @@ afterAll(async () => {
 })
 
 it('serves MCP discovery, create, and list over JSON lines with the calling turn and negotiated version', async () => {
+  await publishToolImage(fixture.db)
   await fixture.db
     .prepare("UPDATE workspaces SET name = '' WHERE id = 'teammate-workspace'")
     .run()
@@ -89,6 +92,10 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
           { name: 'list_repositories' },
           { name: 'list_sections' },
           { name: 'list_models' },
+          { name: 'list_sessions' },
+          { name: 'read_session' },
+          { name: 'create_session' },
+          { name: 'send_message' },
         ],
       },
     },
@@ -132,7 +139,7 @@ it('serves MCP discovery, create, and list over JSON lines with the calling turn
   expect(fixture.services.createWorkspace).toHaveBeenCalledTimes(1)
   expect(fixture.services.createWorkspace).toHaveBeenCalledWith(
     expect.objectContaining({
-      firstMessage: 'Delegate this task.',
+      firstMessage: `Delegate this task.\n\n---\nSent by: ${sessionLink(harness.env.APP_ORIGIN, 'org-a', 'calling-workspace', 'calling-session')}`,
       name: 'MCP workspace',
       sender: expect.objectContaining({ id: 'teammate' }),
     }),
@@ -192,7 +199,7 @@ it('separates MCP parse, protocol, and tool failures while ignoring notification
         content: [
           {
             type: 'text',
-            text: 'The workspace login is not valid. Start the workspace again.',
+            text: 'workspace_token_invalid: The workspace login is not valid. Start the workspace again.',
           },
         ],
       },

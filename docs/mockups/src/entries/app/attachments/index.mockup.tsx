@@ -49,7 +49,7 @@ export const attachments = defineScreen({
       slug: 'queued',
       title: 'Files of a first message',
       description:
-        'The first message of a new workspace carries a sketch and some notes. Its files show under it, and the message says that it sends when the sandbox is ready. The sandbox starts for the first time.',
+        'The first message of a new workspace carries a sketch and some notes. Its files show under it. The sandbox starts for the first time, and the message waits until the sandbox is ready.',
       rationale:
         'A new workspace has no cloud computer when the user uploads, so the app stores the files. When the turn of the message starts, the app copies them into the cloud computer.',
       props: {

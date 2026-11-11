@@ -61,6 +61,16 @@ streams, and the order of the runner commands.
 - After the login checks, delivery commits the turn state before sending.
   If sending a newly dispatched turn throws, delivery restores its queued
   state. `message.sent` follows a successful send.
+- Each `turn` and `message` command carries the current workspace branch
+  and target branch in `branches`. Delivery reads them from D1 each time
+  that it builds the command, also for a retry, a queued send, and a resend
+  after a reconnect. No connection or pending command keeps an older pair.
+- While a Continue of the workspace runs, `turnDispatching` holds each turn
+  in the queue, and its commands wait. When Continue ends, the waiting
+  commands go out with the new branches, as
+  [Continue](../lifecycle/continue.md#the-reservation) says.
+- A `workspace.continued` note names its session, so the history of that
+  session holds it, also after the session closes and reopens.
 - The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
 - The interrupt route stores and pushes `turn.stop-requested` with the
   authenticated member's ID before it interrupts the runner. Runner events
@@ -71,6 +81,9 @@ streams, and the order of the runner commands.
   work. Closing a session records its waiting turns as stopped in history.
 - A command stays pending until the Durable Object removes it. A new runner
   connection gets each pending command again, with the same command ID.
+- A sent pending command records the ID of its connection in `deliveredTo`.
+  A wake keeps that connection ID, so the command does not go out again.
+  Older records without the field stay readable.
 - An active agent event that lists a message ID removes that message's
   command. The first end of a turn removes each command of that turn. When
   a failed file copy ends a running turn, it then saves one `interrupt` for

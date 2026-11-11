@@ -78,8 +78,9 @@ export interface AppServices {
    * address that people share, such as an invite link, starts with it.
    */
   appOrigin: string
+  appVersion?: string
   /** Copies text, such as a command to paste elsewhere. */
-  copy: (text: string) => Promise<void>
+  copy: (text: string | Promise<string>) => Promise<void>
 }
 
 export const ServicesContext = createContext<AppServices | null>(null)

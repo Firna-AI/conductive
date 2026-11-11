@@ -103,6 +103,16 @@ export class ManualDelay {
     this.timers.clear()
     await Promise.all(due.map((timer) => timer.run()))
   }
+
+  /**
+   * Runs only the timers that wait `ms`, such as the reads of a pending
+   * job, and leaves the others, such as a slow backup read, waiting.
+   */
+  async run(ms: number): Promise<void> {
+    const due = [...this.timers].filter((timer) => timer.ms === ms)
+    for (const timer of due) this.timers.delete(timer)
+    await Promise.all(due.map((timer) => timer.run()))
+  }
 }
 
 /** The focus of the page, which comes back only when the test says so. */
@@ -250,7 +260,9 @@ export function testServices(
     newId: () => `client-${++id}`,
     leave: () => undefined,
     appOrigin: FAKE_ORIGIN,
-    copy: async () => undefined,
+    copy: async (text) => {
+      await text
+    },
     delay: new ManualDelay().delay,
     onFocus: new ManualFocus().onFocus,
     onInput: new ManualInput().onInput,

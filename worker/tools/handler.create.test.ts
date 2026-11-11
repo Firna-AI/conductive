@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { TOOL_TURN_HEADER } from '../../tools/context'
+import { sessionLink } from '../../src/shared/session-link'
 import { configuredDefaultChoice } from '../app-api/models'
 import { HttpError } from '../http'
 import { createHarness, type TestHarness } from '../test-support/harness'
+import { publishToolImage } from './list-test-support'
 import {
   OWNER_CHOICE,
   toolFixture,
@@ -20,6 +22,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await harness.reset()
   fixture = await toolFixture(harness)
+  await publishToolImage(fixture.db)
 })
 afterAll(async () => {
   await harness.dispose()
@@ -50,7 +53,7 @@ it('inherits the org, owner, and owner defaults while the calling sender starts 
     repositoryId: 'repo-a',
     sectionId: 'general-a',
     choice: OWNER_CHOICE,
-    firstMessage: '  Keep this text.\nThen continue.  ',
+    firstMessage: `  Keep this text.\nThen continue.  \n\n---\nSent by: ${sessionLink(harness.env.APP_ORIGIN, 'org-a', 'calling-workspace', 'calling-session')}`,
     sender: {
       id: 'teammate',
       githubLogin: 'teammate-login',
@@ -117,6 +120,42 @@ it('blocks repositories and sections outside the calling org', async () => {
   expect(fixture.services.createWorkspace).not.toHaveBeenCalled()
 })
 
+it('refuses a waiting repository with build guidance and an unchosen repository as unavailable', async () => {
+  await fixture.db
+    .prepare(
+      `INSERT INTO repositories
+    (id, org_id, github_repository_id, full_name, default_branch, selected)
+    VALUES ('waiting', 'org-a', 3, 'example/waiting', 'main', 1)`,
+    )
+    .run()
+  const waiting = await fixture.create({
+    repositoryId: 'waiting',
+    firstMessage: 'Task',
+  })
+  expect(waiting.status).toBe(404)
+  expect(await waiting.json()).toEqual({
+    error: {
+      code: 'repository_not_found',
+      message: 'The repository is ready after the next build.',
+    },
+  })
+  await fixture.db
+    .prepare("UPDATE repositories SET selected = 0 WHERE id = 'waiting'")
+    .run()
+  const removed = await fixture.create({
+    repositoryId: 'waiting',
+    firstMessage: 'Task',
+  })
+  expect(removed.status).toBe(404)
+  expect(await removed.json()).toEqual({
+    error: {
+      code: 'repository_not_found',
+      message: 'The repository is not available.',
+    },
+  })
+  expect(fixture.services.createWorkspace).not.toHaveBeenCalled()
+})
+
 it('rejects absent or stale turn context, mismatched workspaces, and senders outside the org', async () => {
   const missing = await fixture.create(
     { repositoryId: 'repo-a', firstMessage: 'Task' },
@@ -127,18 +166,21 @@ it('rejects absent or stale turn context, mismatched workspaces, and senders out
     null,
     {
       workspaceId: 'outside-workspace',
+      sessionId: 'calling-session',
       turnId: TOOL_TEST_TURN,
       senderUserId: 'teammate',
     },
     {
       workspaceId: 'calling-workspace',
       turnId: 'old-turn',
+      sessionId: 'calling-session',
       senderUserId: 'teammate',
     },
     {
       workspaceId: 'calling-workspace',
       turnId: TOOL_TEST_TURN,
       senderUserId: 'outsider',
+      sessionId: 'calling-session',
     },
   ]) {
     fixture.services.callingTurn.mockResolvedValue(turn)

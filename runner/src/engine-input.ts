@@ -8,6 +8,7 @@ import {
 } from './engine-session'
 import type { ProviderInput } from './providers/types'
 import { TurnOutput } from './turn-output'
+import { legacyInstructionBranches } from './instruction-state'
 
 export interface InputActions {
   created: (session: SessionRuntime) => void
@@ -48,14 +49,23 @@ export async function inputCommand(
     return
   }
   if (!session) {
+    const built =
+      saved?.instructions === undefined
+        ? options.instructions(command.branches)
+        : null
+    const instructions =
+      saved?.instructions ?? built?.text[command.message.choice.agent] ?? ''
     session = {
       id: command.sessionId,
       agent: command.message.choice.agent,
       choice: command.message.choice,
       conversationId: saved?.providerSessionId ?? null,
-      instructions:
-        saved?.instructions ??
-        options.instructions[command.message.choice.agent],
+      instructions,
+      instructionBranches:
+        saved?.instructions === undefined
+          ? (built?.branches ?? null)
+          : (saved.instructionBranches ??
+            legacyInstructionBranches(instructions)),
       generation: 0,
       active: null,
     }
@@ -82,6 +92,7 @@ export async function inputCommand(
       session.active?.waiting.push(command)
     return
   }
+  if (command.type !== 'turn') return
   session.choice = command.message.choice
   const context = { sessionId: command.sessionId, turnId: command.turnId }
   const { controller } = actions
@@ -93,7 +104,6 @@ export async function inputCommand(
     resolvedMessageIds: new Set(),
     waiting: [],
     stopped: controller.signal.aborted,
-    shutdown: false,
     provider: null,
     lifetime: null,
     closing: Promise.resolve(),

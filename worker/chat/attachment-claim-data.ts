@@ -4,6 +4,7 @@ import type { AttachmentRecord } from './attachment-record'
 export interface AttachmentWorkspace {
   id: string
   orgId: string
+  repositoryId: string
   sandboxId: string | null
   providerAccount: string
   firstMessageId: string | null
@@ -17,7 +18,7 @@ export function attachmentWorkspace(
 ) {
   return db
     .prepare(
-      `SELECT w.id, w.org_id AS orgId, w.sandbox_id AS sandboxId,
+      `SELECT w.id, w.org_id AS orgId, w.repository_id AS repositoryId, w.sandbox_id AS sandboxId,
     w.provider_account AS providerAccount,
     r.first_message_id AS firstMessageId, r.created_by_user_id AS creatorId
     FROM workspaces w LEFT JOIN workspace_runtime r ON r.workspace_id = w.id

@@ -11,6 +11,7 @@ import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import { CopyLinkButton, type CopyResult } from './CopyLinkButton'
 import { OwnerPicker } from './OwnerPicker'
+import { RunLinks, type RunSource } from './RunLinks'
 import styles from './WorkspaceHeader.module.css'
 
 function State(props: { status: ActivityStatus }) {
@@ -30,7 +31,7 @@ function State(props: { status: ActivityStatus }) {
  * the name, before the repository. For an admin of the org,
  * the owner opens the menu that reassigns the workspace. On desktop the
  * header ends with the toggle that hides the right column and shows it
- * again.
+ * again. A run workspace also links to its routine and its pull request.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
@@ -48,6 +49,8 @@ export function WorkspaceHeader(props: {
   copy?: CopyResult
   /** The user hid the right column of the desktop with the toggle. */
   rightHidden?: boolean
+  /** The routine of a run workspace and the pull request of its run. */
+  run?: RunSource
 }) {
   const { workspace, name } = props
   const repository = repositories[workspace.repository].name
@@ -66,8 +69,8 @@ export function WorkspaceHeader(props: {
       result={props.copy}
     />
   )
-  if (props.viewport === 'mobile') {
-    return (
+  const header =
+    props.viewport === 'mobile' ? (
       <header className={styles.mobile}>
         <ScreenLink asChild to={props.back ?? paths.shell}>
           <IconButton icon={ChevronLeft} label="All workspaces" />
@@ -82,26 +85,33 @@ export function WorkspaceHeader(props: {
         {owner}
         <State status={props.status} />
       </header>
-    )
-  }
-  return (
-    <header className={styles.bar}>
-      <h1 className={styles.title}>{name}</h1>
-      {copyLink}
-      <span className={styles.metas}>
-        <span className={styles.meta}>
-          <FolderGit2 aria-hidden className={styles.icon} size={13} />
-          <span className={styles.branch}>{repository}</span>
+    ) : (
+      <header className={styles.bar}>
+        <h1 className={styles.title}>{name}</h1>
+        {copyLink}
+        <span className={styles.metas}>
+          <span className={styles.meta}>
+            <FolderGit2 aria-hidden className={styles.icon} size={13} />
+            <span className={styles.branch}>{repository}</span>
+          </span>
         </span>
-      </span>
-      {owner}
-      <State status={props.status} />
-      <IconButton
-        icon={PanelRight}
-        label={
-          props.rightHidden ? 'Show the right column' : 'Hide the right column'
-        }
-      />
-    </header>
+        {owner}
+        <State status={props.status} />
+        <IconButton
+          icon={PanelRight}
+          label={
+            props.rightHidden
+              ? 'Show the right column'
+              : 'Hide the right column'
+          }
+        />
+      </header>
+    )
+  if (!props.run) return header
+  return (
+    <>
+      {header}
+      <RunLinks run={props.run} />
+    </>
   )
 }

@@ -13,6 +13,7 @@ import type {
   Repository,
 } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
+import type { Routine, RoutineRun } from '../../shared/routines'
 import type { Section } from '../../shared/sections'
 import type { Workspace, WorkspaceResponse } from '../../shared/workspaces'
 import { coreFixtures } from '../../test-support/fixtures/core'
@@ -37,11 +38,21 @@ export interface OrgState {
   repositories: readonly Repository[]
   settings: OrgSettings
   settingsRevision: number
-  buildRevisions: Map<string, number>
+  buildInputs: Map<
+    string,
+    {
+      installScript: string
+      repositories: readonly Pick<Repository, 'id' | 'fullName'>[]
+    }
+  >
   /** Each build with its log, the newest first. */
   builds: readonly BuildResponse[]
   currentImageBuildId: string | null
   members: MembersResponse
+  /** Newest first, as the Worker lists them. */
+  routines: readonly Routine[]
+  /** The runs of every routine of the org. */
+  runs: readonly RoutineRun[]
 }
 
 /**
@@ -108,7 +119,7 @@ function catalogueOf(
 /**
  * A new org: the default section, no workspaces, the repositories of the
  * catalogue with the chosen ones added, empty scripts with the base image,
- * no builds, and the user as its only member.
+ * no builds, the user as its only member, and no routines.
  */
 export function freshOrg(
   org: OrgSummary,
@@ -135,28 +146,17 @@ export function freshOrg(
       startupScript: '',
       envVars: [],
       updatedAt: now,
-      needsBuild: false,
     },
     builds: [],
     settingsRevision: 1,
-    buildRevisions: new Map(),
+    buildInputs: new Map(),
     currentImageBuildId: null,
     members: {
       members: [{ user, role: org.role, joinedAt: now }],
       invites: [],
     },
-  }
-}
-
-export function updateNeedsBuild(org: OrgState): void {
-  const baseline =
-    org.currentImageBuildId ??
-    org.builds.find((item) => item.build.kind === 'build')?.build.id
-  const revision =
-    baseline === undefined ? undefined : org.buildRevisions.get(baseline)
-  org.settings = {
-    ...org.settings,
-    needsBuild: revision !== undefined && revision !== org.settingsRevision,
+    routines: [],
+    runs: [],
   }
 }
 

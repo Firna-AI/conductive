@@ -15,7 +15,7 @@ import {
 } from './results-test-kit'
 
 describe('the Actions and Settings tabs of the palette', () => {
-  test('the Actions tab puts the actions of the open workspace first, then those of the org, the orgs, and the window, each under its label', () => {
+  test('the Actions tab puts the actions of the open workspace first, then those of the org, the orgs, the window, and Help with Send feedback, each under its label', () => {
     const run = () => undefined
     const offers: PaletteOffer[] = [
       { scope: { kind: 'window' }, actions: [{ id: 'hide-sidebar', run }] },
@@ -48,10 +48,11 @@ describe('the Actions and Settings tabs of the palette', () => {
       ['Acme', ['New workspace', 'New section']],
       ['Orgs', ['Create org', 'Switch to Futex', 'Switch to Firna']],
       ['Window', ['Hide the sidebar']],
+      ['Help', ['Send feedback']],
     ])
   })
 
-  test('a suspended org offers no New workspace, a deleted org has no Switch to row, and without an org only Create org and the Account settings show', () => {
+  test('a suspended org offers no New workspace, a deleted org has no Switch to row, and without an org only Create org, Send feedback, and the Account settings show', () => {
     const deleted = {
       ...futex,
       deletion: { deletedAt: FAKE_TIME, deletesAt: FAKE_TIME + 1 },
@@ -65,15 +66,40 @@ describe('the Actions and Settings tabs of the palette', () => {
     }).toEqual({
       suspended: [
         ['Orgs', ['Create org', 'Switch to Futex', 'Switch to Firna']],
+        ['Help', ['Send feedback']],
       ],
       deleted: [
         ['Acme', ['New workspace']],
         ['Orgs', ['Create org', 'Switch to Firna']],
+        ['Help', ['Send feedback']],
       ],
       none: [
-        ['Actions', ['Create org']],
+        ['Actions', ['Create org', 'Send feedback']],
         ['Settings', accountRows.map((row) => `${row} · Account`)],
       ],
+    })
+  })
+
+  test('a search by the label of Send feedback, or by each of its search words, finds it alone among the actions of the All tab', () => {
+    const found = (text: string) =>
+      shown(paletteResults(query({ text }), source()))
+    const feedback = [['Actions', ['Send feedback']]]
+    expect({
+      feedback: found('feedback'),
+      bug: found('bug'),
+      idea: found('idea'),
+      support: found('support'),
+      contact: found('contact'),
+      help: found('help'),
+      report: found('report'),
+    }).toEqual({
+      feedback,
+      bug: feedback,
+      idea: feedback,
+      support: feedback,
+      contact: feedback,
+      help: feedback,
+      report: feedback,
     })
   })
 

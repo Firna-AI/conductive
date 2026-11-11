@@ -16,6 +16,8 @@ does not wait for CI. So a commit on `main` goes live also when its CI run
 fails. [CI](../AGENTS.md#ci) says how a commit reaches `main`.
 
 - Deploys run one at a time. A new push never cancels a running deploy.
+- A run that waits for a new software image keeps the next run waiting,
+  for up to 15 minutes more, as [Steps of a run](#steps-of-a-run) says.
 - GitHub keeps only the newest waiting run. So a burst of merges deploys
   the newest commit.
 - Each run first checks that its commit is still the head of `main`.
@@ -27,7 +29,7 @@ fails. [CI](../AGENTS.md#ci) says how a commit reaches `main`.
 - A re-run of only some jobs, such as Re-run failed jobs, also deploys
   nothing. It starts a new run on `main`, because a re-run keeps the
   outputs of the jobs that passed. Re-run all jobs retries the deploy in
-  the same run.
+  the same run. Both also retry a software image that was not ready.
 - GitHub sends a failure alert to the person who starts a run. A run that
   the workflow starts has no such person. So after a re-run, look at the
   new run in GitHub Actions.
@@ -90,7 +92,7 @@ through the API. Give it the same permissions, with two changes:
   `conductive-runner`.
 
 The S3 key pair of the upload then reaches only that bucket.
-[The archive in each deploy](deployment.md#the-archive-in-each-deploy)
+[The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
 describes that upload. The API names each Edit permission with Write, as
 in `D1 Write`.
 
@@ -102,31 +104,40 @@ Each run takes these steps, in this order:
 2. It builds the app with `npm run build`, which also runs the typecheck.
 3. It packages the runner archive.
 4. It publishes the archive when the archive is new, as
-   [The archive in each deploy](deployment.md#the-archive-in-each-deploy)
+   [The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
    says.
 5. It applies the D1 migrations with
    `npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc`.
-6. It deploys the Worker with `npx wrangler deploy`. Two `--var` options
-   set the runner variables to the archive. The deploy also publishes the
-   model list and app default from `wrangler.jsonc`.
+6. It makes a new random deploy token, and deploys the Worker with
+   `npx wrangler deploy`. Two `--var` options set the runner variables to
+   the archive. A third sets the SHA-256 digest of the token. The deploy
+   also publishes the model list and app default from `wrangler.jsonc`.
 7. It checks that `https://app.conductive.build/api/health` answers
    `{"status":"ok"}`. When that answer does not come within about a
    minute, the run fails.
+8. It asks the Worker for the
+   [software image](protocol/org-image.md#the-software-image) of the new
+   version, with the deploy token, and waits for it for up to 15 minutes.
+   The log of the run shows the output of the build. When the image of
+   that version is already ready, the step ends at once. When the image is
+   not ready at the end of the step, a later job fails the run, and the
+   summary names the cause.
 
-A failed step stops the run. So a build error stops the run before it
+A failed step stops the run. An app build error stops the run before it
 changes anything live.
 
-- The `--var` options set only `CONDUCTIVE_RUNNER_ARCHIVE_URL` and
-  `CONDUCTIVE_RUNNER_ARCHIVE_SHA256`. The values in `wrangler.jsonc`
+- The `--var` options set only `CONDUCTIVE_RUNNER_ARCHIVE_URL`,
+  `CONDUCTIVE_RUNNER_ARCHIVE_SHA256`, and `CONDUCTIVE_DEPLOY_TOKEN_SHA256`.
+  The token itself stays in the deploy job. The values in `wrangler.jsonc`
   replace the corresponding Worker variables. This includes
   `CONDUCTIVE_MODELS` and `CONDUCTIVE_DEFAULT_CHOICE`, as
-  [Models](deployment.md#models) says. Other dashboard variables stay on
+  [Models](deployment/models.md#models) says. Other dashboard variables stay on
   the Worker, because `wrangler.jsonc` sets `keep_vars`. The deploy changes
   no secret.
 - The deploy tags the new Worker version with the short commit hash. So
   the Cloudflare dashboard shows which commit is live.
-- The summary of each run names the commit, the archive URL, and whether
-  the run uploaded the archive.
+- The summary of each run names the commit, the archive URL, whether the
+  run uploaded the archive, and the result of the software image.
 - The health route reads no D1 data and gives no version. So the check
   proves only that the Worker answers. Wrangler names the deployed version
   in the log of the run.
@@ -135,6 +146,11 @@ changes anything live.
 
 A failed run does not roll back.
 
+- A run can fail after the new Worker is live, when its software image is
+  not ready at the end of the wait. The Worker stays live. Builds of an
+  org without an org image then install the app's own software, until a
+  later run makes the software image. Re-run all jobs or Re-run failed
+  jobs tries again with a new deploy. The next push also tries again.
 - Between the migrations and the Worker upload, the old Worker runs on the
   new schema. A failed upload leaves the old Worker on the new schema until
   the next deploy.

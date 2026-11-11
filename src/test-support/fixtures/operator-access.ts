@@ -1,4 +1,3 @@
-import type { OperatorSuspension } from '../../shared/operator'
 import type {
   OperatorAccessCode,
   OperatorAccessSource,
@@ -6,12 +5,11 @@ import type {
   OperatorSignupPause,
   OperatorUserAccess,
   OperatorWaitlistEntry,
+  OperatorWaitlistSwitch,
 } from '../../shared/operator-waitlist'
 import {
   noVerifiedEmail,
   sampleGitHubAges,
-  sampleInviteCodes,
-  sampleReferralCodes,
   sampleWays,
   type SampleIdentity,
   type SampleWayIn,
@@ -27,22 +25,34 @@ const MINUTE = 60_000
 const DAY = 24 * 60 * MINUTE
 
 /** The approval of a person who waited: when, by whom, and its email. */
-interface SampleApproval {
+export interface SampleApproval {
   approvedAt: number
   operator: SampleIdentity | null
   email: OperatorApprovalEmail
 }
 
+/** The app access that open sign-up gave a person who waited: when, and by whose switch. */
+interface SampleOpenSignup {
+  grantedAt: number
+  operator: SampleIdentity | null
+}
+
 /** A code as the records keep it. Its state comes from its uses and its disable. */
 export type CodeRecord = Omit<OperatorAccessCode, 'state'>
+
+/** The waitlist switch as the records keep it. Its reply adds the people who wait. */
+type SwitchRecord = Omit<OperatorWaitlistSwitch, 'waiting'>
 
 /** The records of the waitlist that an operator changes. */
 export interface AccessRecords {
   /** The approvals of people who waited, by GitHub ID. */
   approvals: Map<number, SampleApproval>
+  /** The people who waited and got in by open sign-up, by GitHub ID. */
+  openSignups: Map<number, SampleOpenSignup>
   /** Each code by its text: the invite codes and the referral codes. */
   codes: Map<string, CodeRecord>
   pause: OperatorSignupPause
+  waitlistSwitch: SwitchRecord
 }
 
 function identityOf(login: string): SampleIdentity {
@@ -51,12 +61,12 @@ function identityOf(login: string): SampleIdentity {
   return { githubId: user.githubId, login }
 }
 
-function wayOf(user: SampleUser): SampleWayIn {
+export function wayOf(user: SampleUser): SampleWayIn {
   return sampleWays[user.login] ?? { kind: 'existing' }
 }
 
 /** When a sample user got app access, or `null` while they wait. */
-function grantTime(
+export function grantTime(
   user: SampleUser,
   records: AccessRecords,
   now: number,
@@ -64,6 +74,8 @@ function grantTime(
   const joinedAt = daysBefore(now, user.joinedDaysAgo)
   const approval = records.approvals.get(user.githubId)
   if (approval) return approval.approvedAt
+  const opened = records.openSignups.get(user.githubId)
+  if (opened) return opened.grantedAt
   switch (wayOf(user).kind) {
     case 'waiting':
       return null
@@ -106,74 +118,12 @@ export function disabledCode(
   })
 }
 
-/**
- * The records of the samples at `now`: the approvals of Ana Pereira, whose
- * email went, and of Joe Quinn, whose email never went; the invite codes
- * of the mockups; a referral code for each user with app access, which the
- * suspension of its owner disabled; and sign-ups open.
- */
-export function sampleAccessRecords(
-  now: number,
-  operator: SampleIdentity,
-  userSuspensions: ReadonlyMap<number, OperatorSuspension>,
-): AccessRecords {
-  const approvals = new Map<number, SampleApproval>()
-  for (const user of sampleUsers) {
-    const way = wayOf(user)
-    if (way.kind !== 'approval') continue
-    const approvedAt = daysBefore(now, user.joinedDaysAgo) + DAY
-    const sent = way.email === 'sent'
-    approvals.set(user.githubId, {
-      approvedAt,
-      operator,
-      email: {
-        state: way.email,
-        updatedAt: approvedAt + (sent ? MINUTE : DAY),
-      },
-    })
-  }
-  const records: AccessRecords = {
-    approvals,
-    codes: new Map(),
-    pause: { paused: false, updatedAt: null, operator: null },
-  }
-  for (const code of sampleInviteCodes) {
-    records.codes.set(code.code, {
-      code: code.code,
-      kind: code.kind,
-      label: code.label,
-      owner: null,
-      createdBy: code.createdBy,
-      createdAt: now - code.madeDaysAgo * DAY - 3 * 60 * MINUTE,
-      useLimit: code.useLimit,
-      uses: code.uses,
-      disabledAt: code.disabled ? now - 2 * DAY : null,
-      disabledBy: code.disabled ? operator : null,
-    })
-  }
-  for (const user of sampleUsers) {
-    const code = sampleReferralCodes[user.login]
-    const grantedAt = grantTime(user, records, now)
-    if (code === undefined || grantedAt === null) continue
-    const suspension = userSuspensions.get(user.githubId)
-    records.codes.set(code, {
-      code,
-      kind: 'referral',
-      label: null,
-      owner: { githubId: user.githubId, login: user.login },
-      createdBy: null,
-      createdAt: grantedAt,
-      useLimit: 5,
-      uses: recipientsOf(code, records, now).length,
-      disabledAt: suspension?.suspendedAt ?? null,
-      disabledBy: suspension ? suspension.operator : null,
-    })
-  }
-  return records
-}
-
 /** The users who came in with a referral code, with their names and the time of each use. */
-function recipientsOf(code: string, records: AccessRecords, now: number) {
+export function recipientsOf(
+  code: string,
+  records: AccessRecords,
+  now: number,
+) {
   return sampleUsers.flatMap((user) => {
     const way = wayOf(user)
     const usedAt = grantTime(user, records, now)
@@ -226,13 +176,18 @@ function gitHubOf(user: SampleUser, now: number) {
   }
 }
 
-/** The app access of a sample user, their approval email, and their referral code. */
+/**
+ * The app access of a sample user, their approval email, and their referral
+ * code. An approval or an open sign-up of a person who waited names its
+ * operator.
+ */
 export function sampleUserAccess(
   user: SampleUser,
   records: AccessRecords,
   now: number,
 ): OperatorUserAccess {
   const approval = records.approvals.get(user.githubId)
+  const opened = records.openSignups.get(user.githubId)
   const grantedAt = grantTime(user, records, now)
   const referral = [...records.codes.values()].find(
     (code) =>
@@ -250,7 +205,9 @@ export function sampleUserAccess(
             grantedAt,
             source: approval
               ? { kind: 'approval', operator: approval.operator }
-              : sourceOf(wayOf(user), records),
+              : opened
+                ? { kind: 'open_signup', operator: opened.operator }
+                : sourceOf(wayOf(user), records),
           },
     approvalEmail: approval?.email ?? { state: 'none', updatedAt: null },
     ...gitHubOf(user, now),

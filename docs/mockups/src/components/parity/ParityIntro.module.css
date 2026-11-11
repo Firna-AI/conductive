@@ -32,37 +32,10 @@
   text-wrap: pretty;
 }
 
-/* The scope note is a quiet box with a full outline and no coloured edge. */
-.scope {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--ui-border2);
-  border-radius: var(--ui-radius-xxl);
-  background: var(--ui-sidebar);
-}
-
-.scopeIcon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--ui-primary);
-}
-
-.scopeText {
-  margin: 0;
-  color: var(--ui-ink2);
-  font-size: 14px;
-  line-height: 1.55;
-  text-wrap: pretty;
-}
-
-.scopeTitle {
-  color: var(--ui-ink);
-  font-weight: var(--ui-weight-heading);
-}
-
+/*
+ * The days of the cloud workspaces of Conductor, and the line of the last
+ * check under them.
+ */
 .facts {
   margin: 0;
   color: var(--ui-muted);
@@ -70,7 +43,7 @@
   line-height: 1.55;
 }
 
-/* A day never breaks across two lines. */
+/* A day or the time of the check never breaks across two lines. */
 .facts time {
   white-space: nowrap;
 }

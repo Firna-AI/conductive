@@ -1,4 +1,8 @@
 import type { User } from '../../src/shared/api'
+import {
+  commitAuthor,
+  commitAuthorEnvironment,
+} from '../../src/shared/commit-author'
 import { shellQuote } from './commands'
 
 export function defaultBranchCommand(input: {
@@ -7,14 +11,11 @@ export function defaultBranchCommand(input: {
   turnId: string
   sender: Pick<User, 'githubId' | 'githubLogin' | 'displayName'>
 }): string {
-  const name = input.sender.displayName ?? input.sender.githubLogin
-  const email = `${input.sender.githubId}+${input.sender.githubLogin}@users.noreply.github.com`
-  const identity = [
-    `GIT_AUTHOR_NAME=${shellQuote(name)}`,
-    `GIT_COMMITTER_NAME=${shellQuote(name)}`,
-    `GIT_AUTHOR_EMAIL=${shellQuote(email)}`,
-    `GIT_COMMITTER_EMAIL=${shellQuote(email)}`,
-  ].join(' ')
+  const identity = Object.entries(
+    commitAuthorEnvironment(commitAuthor(input.sender)),
+  )
+    .map(([name, value]) => `${name}=${shellQuote(value)}`)
+    .join(' ')
   return `set -eu
 export CONDUCTIVE_TURN_ID=${shellQuote(input.turnId)}
 cd ${shellQuote(input.directory)}
@@ -32,5 +33,6 @@ if [ -z "$conductive_remote_refs" ]; then
     fi
   fi
 fi
-git fetch origin ${shellQuote(input.defaultBranch)}`
+git fetch origin ${shellQuote(`+refs/heads/${input.defaultBranch}:refs/remotes/origin/${input.defaultBranch}`)}
+git symbolic-ref refs/remotes/origin/HEAD ${shellQuote(`refs/remotes/origin/${input.defaultBranch}`)}`
 }

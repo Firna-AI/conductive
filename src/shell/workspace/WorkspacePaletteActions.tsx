@@ -20,8 +20,8 @@ import { nameLabel } from '../../shared/name-label'
  * Offers the actions of the open workspace to the command palette while
  * the screen shows it, as `workspaceActionIds` chooses them. Each action
  * does what its control on the screen does: + for New session, the clock
- * for Session history, a tab of the right column for a Go to row, and the
- * Archive button. It draws nothing.
+ * for Session history, a tab of the right column for a Go to row, the
+ * Archive button, and Restore on the archived bar. It draws nothing.
  */
 export function WorkspacePaletteActions(props: {
   context: WorkspaceContext
@@ -41,6 +41,7 @@ export function WorkspacePaletteActions(props: {
     rightColumn: !phone && rightShown,
     chat: !phone || archived || phoneView(context.view) === 'chat',
     desktopTool: toolOffered('desktop'),
+    offersRestore: context.restore !== null,
   })
   const list = (id: WorkspaceActionId, kind: FileListKind): OfferedAction => {
     const target: FilesTarget = { kind: 'list', list: kind }
@@ -71,6 +72,8 @@ export function WorkspacePaletteActions(props: {
         return toolTab(id, 'desktop')
       case 'archive-workspace':
         return { id, run: () => context.archive?.() }
+      case 'restore-workspace':
+        return { id, run: () => context.restore?.() }
     }
   }
   usePaletteOffer({

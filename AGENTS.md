@@ -1,9 +1,9 @@
 # A guide for agents
 
 This repository builds Conductive, a coding tool at
-`conductive.build`. Each workspace is one task with its own branch and its own
-cloud computer, a Boat sandbox, where agents powered by Claude and Codex
-work. The requirements live in
+`conductive.build`. Each workspace has its own cloud computer, a Boat
+sandbox, where agents powered by Claude and Codex work, and one branch at a
+time. It can hold one task after another. The requirements live in
 `docs/architecture.md` and `docs/protocol/`, and the Mokly mockup catalogue
 lives in `docs/mockups/`, in TypeScript and React with `@firna/ui`. The root
 npm package holds the React and Vite web app under `src/` and the Cloudflare
@@ -144,11 +144,11 @@ deployment at `conductive.build`. It does not wait for CI, as
   [Website docs](docs/protocol/website-docs.md) gives the rules for the
   words of a guide.
 - The comparison page at `conductive.build/from-conductor` gives each
-  listed Conductor Cloud feature a status. Its rows live in
+  listed Conductor feature a status. Its rows live in
   `src/marketing/from-conductor/`. When a change ships, starts, or drops a
   listed feature, update the status of its row in the same change. The
   claim rules are in
-  [Conductor Cloud comparison](docs/protocol/conductor-cloud-comparison.md#statuses).
+  [Conductor comparison](docs/protocol/conductor-comparison.md#statuses).
 
 ## Product
 

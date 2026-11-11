@@ -7,30 +7,39 @@ users enter, and the agent logins that users connect. It belongs to
 gates of the Worker, the request bodies, and the content security policy.
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A gateway
+decision number names a decision of the change that adds the
+[model gateway](model-gateway.md), as that doc says.
 
 ## The workspace token
 
 - Each workspace has its own workspace token.
-- With the token, the sandbox of the workspace can do five things:
+- With the token, the sandbox of the workspace can do seven things:
   - connect its agent runner to the Durable Object of its own workspace
   - get a GitHub token for its own workspace
   - create and list workspaces through the agent tools
   - list the repositories of its org image, the sections of its org, and
     the models of the app, through the agent tools
+  - list the sessions of each workspace of its org, and read the chat of
+    each session, through the agent tools (decision 257)
+  - start sessions and send messages in the workspaces of its org that are
+    not archived, while a turn runs, through the agent tools
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
 - The token allows nothing else. It can never answer a request for a Mac
   command, and it can never choose the Mac that gets the request.
-- The Worker reads the sender of each Mac command request from its own
-  record of the turn that runs now. It never takes a sender from the
-  sandbox, and it never uses the workspace owner in place of the sender.
+- Some requests act for a sender: a create call, a new session, a message,
+  and a Mac command request. The Worker reads the sender of each such
+  request from its own record of the turn that runs now.
+- It never takes a sender from the sandbox, and it never uses the
+  workspace owner in place of the sender.
 - Reason: agent code runs in the sandbox, so a sender that the sandbox
   names can be false.
-- At each Mac command request, the Worker checks that the sender is still
-  a member of the org of the workspace.
+- At each such request, the Worker checks that the sender is still a
+  member of the org of the workspace.
 - [Agent tools](agent-tools.md#mac-commands) states the Mac command
-  requests.
+  requests. [The sender](session-calls.md#the-sender) states the sender of
+  the session calls.
 
 ## GitHub tokens
 
@@ -58,9 +67,10 @@ decision number names a dated record, as
 - Reason: an org image or a saved disk can hold an older runner. A filter
   of secret values in the runner was rejected, because an older runner
   does not have it.
-- The app keeps the real path of each file and the real name of the
-  default branch. Reads, diffs, and the file lists use them. The browser
-  gets these real values, so a secret value can show in the data that the
+- The app keeps the real path of each file, the real name of the default
+  branch of each repository, and the real name of the base branch of each
+  workspace. Reads, diffs, and the file lists use them. The browser gets
+  these real values, so a secret value can show in the data that the
   browser gets and sends (decision 145).
 - Screens show a separate label of each path and branch name. The label
   hides each exact copy of a secret value.
@@ -81,7 +91,7 @@ decision number names a dated record, as
   value still shows. File content, diff content, and the terminal hide no
   value.
   The mark does not keep a value from the agent or from a member with a
-  terminal, because each sandbox gets every env var.
+  terminal, because each sandbox gets the env vars of its org.
 - Risk: the runner does not hide secret values. So its saved events on the
   disk of the sandbox can hold them, as the agent sessions there do.
 
@@ -94,12 +104,18 @@ decision number names a dated record, as
   waitlist.
 - Anthropic gave the operator permission to use `claude setup-token`
   tokens (decision 37).
+- Anthropic confirmed to the operator on 9 November 2026 that the
+  [model gateway](model-gateway.md) can carry subscription tokens (gateway
+  decision 1). OpenAI confirmed to the operator on the same day that the
+  gateway can carry OpenAI API keys.
 - Risk: Anthropic plans to make bare mode the default, and bare mode reads
   no subscription login. A later release of the agent program can then
   stop the tokens.
 - A sign-in inside a sandbox was rejected, because the login would stay on
   the disk of one workspace.
 - A user's agent logins serve all of that user's orgs (decision 21).
-- The app gives a user's agent login to a sandbox only for a turn of a
-  session that the user started. The GitHub token of a turn still belongs
-  to its sender, as [GitHub tokens](#github-tokens) says.
+- The app uses a user's agent login only for a turn of a session that the
+  user started. Only an older runner gets the login itself, as
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
+  says. The GitHub token of a turn still belongs to its sender, as
+  [GitHub tokens](#github-tokens) says.

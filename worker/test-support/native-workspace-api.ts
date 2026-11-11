@@ -19,6 +19,7 @@ import type { AttachmentStorageInput } from '../chat/attachment-storage'
 import type { NativeByteChunk } from './native-attachment-controls'
 import type { NativeQuery } from './native-d1'
 import type { NativeLifecycleControls } from './native-lifecycle-controls'
+import type { TurnTokenCheck } from '../model-gateway/types'
 import type { ProviderAccountConfigurations } from '../sandbox/accounts'
 
 export const NATIVE_TEST_TIME = 1_800_000_000_000
@@ -51,6 +52,10 @@ interface NativeWorkspaceSnapshot {
 }
 
 interface NativeWorkspaceControls {
+  checkTurnTokens(
+    workspaceId: string,
+    tokens: readonly string[],
+  ): Promise<TurnTokenCheck[]>
   instanceId(): Promise<string>
   abortFixture(): Promise<void>
   initialize(options: NativeWorkspaceOptions, at: number): Promise<void>
@@ -59,6 +64,7 @@ interface NativeWorkspaceControls {
   nextIds(ids: string[]): Promise<void>
   setTime(at: number): Promise<void>
   advance(at: number): Promise<number>
+  settled(): Promise<void>
   drain(): Promise<void>
   drainBackground(): Promise<void>
   reset(): Promise<void>
@@ -106,6 +112,9 @@ export interface NativeWorkspaceApi {
     Pick<
       Workspace,
       | 'scheduleImage'
+      | 'archiveWorkspace'
+      | 'restoreWorkspace'
+      | 'resumeMemberCreation'
       | 'reportRunnerLifecycle'
       | 'registerLifecycleTurn'
       | 'finishLifecycleTurn'

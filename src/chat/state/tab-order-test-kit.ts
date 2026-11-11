@@ -74,7 +74,7 @@ export function tabChat(
     ...chat,
     savedView: async () => {
       await Promise.all(saving)
-      return api.view()
+      return (await api.view()).view
     },
     writes: () => chat.server.requests.filter((item) => item.method !== 'GET'),
     row: (files = true) => {

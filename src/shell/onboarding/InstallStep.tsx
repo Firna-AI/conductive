@@ -66,7 +66,7 @@ function InstalledText(props: {
 export function InstallStep(props: { state: StepState }) {
   const app = useApp()
   const installations = useStore(app.account.installations)
-  const openInstall = useGitHubInstall('get-started')
+  const openInstall = useGitHubInstall()
   useEffect(() => app.account.watchInstallations(), [app])
   const response = valueOf(installations)
   const install = () => {

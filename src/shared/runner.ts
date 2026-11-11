@@ -1,13 +1,15 @@
 import type { AgentChoice } from './agents'
 import type { Timestamp } from './api'
 import type { AgentChatEvent } from './chat-events'
+import type { CommitAuthor } from './commit-author'
 import type { RunnerFileEvent } from './files'
 import type { UserMessage } from './messages'
+import type { RunnerPortsUpdated } from './ports'
 import type { RunnerFileCommand, RunnerFileResponse } from './runner-files'
 import type { WorkspaceStart } from './workspaces'
 
-export const RUNNER_PROTOCOL_VERSION = 1 as const
-type RunnerProtocolVersion = typeof RUNNER_PROTOCOL_VERSION
+export const RUNNER_PROTOCOL_VERSION = 2 as const
+export type RunnerProtocolVersion = 1 | 2
 
 /**
  * Maximum UTF-8 bytes of JSON.stringify(the complete RunnerEventEnvelope).
@@ -46,6 +48,7 @@ export interface RunnerEventEnvelope {
 export type RunnerEvent =
   | AgentChatEvent
   | RunnerFileEvent
+  | RunnerPortsUpdated
   | { type: 'runner.ready' }
   | { type: 'start.updated'; start: WorkspaceStart }
   | { type: 'workspace.title'; name: string }
@@ -75,9 +78,11 @@ interface RunnerConfirm {
  * A refused turn.completed or turn.failed still ends its active turn.
  * A storage or network failure is not a refusal. Close without confirming.
  */
-interface RunnerWelcome {
+interface RunnerWelcome<
+  Version extends RunnerProtocolVersion = RunnerProtocolVersion,
+> {
   type: 'welcome'
-  protocolVersion: RunnerProtocolVersion
+  protocolVersion: Version
   streamId: string
   confirmedThrough: number
 }
@@ -88,36 +93,69 @@ interface RunnerResend {
 }
 
 /** This type is server-only. The runner keeps the login in memory for this turn. */
-export type RunnerLogin =
-  | { agent: 'claude'; kind: 'token' | 'api-key'; secret: string }
-  | { agent: 'codex'; kind: 'api-key'; secret: string }
+export type RunnerLoginKind =
+  | { agent: 'claude'; kind: 'token' | 'api-key' }
+  | { agent: 'codex'; kind: 'api-key' }
+
+export type RunnerLogin = RunnerLoginKind & { secret: string }
+export type RunnerTurnCredential = RunnerLoginKind & { token: string }
 
 export interface RunnerAttachment {
   attachmentId: string
-  /** The backend puts the attachment here before it sends the message. */
+  /** Absolute path in the workspace repository, after the backend copies the file. */
   path: string
 }
 
-export interface RunnerTurn {
+export interface RunnerBranches {
+  workspaceBranch: string
+  targetBranch: string
+}
+
+interface RunnerTurnV1 {
   type: 'turn'
   commandId: string
   sessionId: string
   turnId: string
   message: UserMessage
+  /** Current Worker branches. Older command producers can omit them. */
+  branches?: RunnerBranches
   attachments: readonly RunnerAttachment[]
   /** The session starter owns this login, whoever sent the message. */
   login: RunnerLogin
+  credential?: never
+  commitAuthor: CommitAuthor | null
 }
 
-export interface RunnerMessageDuringTurn {
+interface RunnerMessageDuringTurnV1 {
   type: 'message'
   commandId: string
   sessionId: string
   turnId: string
   message: UserMessage
+  branches?: RunnerBranches
   attachments: readonly RunnerAttachment[]
   login: RunnerLogin
+  credential?: never
 }
+
+export interface RunnerTurnV2 extends Omit<
+  RunnerTurnV1,
+  'login' | 'credential'
+> {
+  login?: never
+  credential: RunnerTurnCredential
+}
+
+export interface RunnerMessageDuringTurnV2 extends Omit<
+  RunnerMessageDuringTurnV1,
+  'login'
+> {
+  login?: never
+  credential?: never
+}
+export type RunnerTurn = RunnerTurnV1 | RunnerTurnV2
+export type RunnerMessageDuringTurn =
+  RunnerMessageDuringTurnV1 | RunnerMessageDuringTurnV2
 
 export interface RunnerInterrupt {
   type: 'interrupt'
@@ -134,7 +172,11 @@ export interface RunnerChangeModel {
 }
 
 export type RunnerReportKind =
-  'files.snapshot' | 'changes.updated' | 'start.updated' | 'workspace.title'
+  | 'files.snapshot'
+  | 'changes.updated'
+  | 'start.updated'
+  | 'workspace.title'
+  | 'ports.updated'
 
 /** Request a complete current report. Transport redelivery keeps the command ID. */
 export interface RunnerReportRefresh {
@@ -143,13 +185,17 @@ export interface RunnerReportRefresh {
   kind: RunnerReportKind
 }
 
-export type RunnerCommand =
-  | RunnerTurn
-  | RunnerMessageDuringTurn
-  | RunnerInterrupt
-  | RunnerChangeModel
-  | RunnerFileCommand
-  | RunnerReportRefresh
+type RunnerControlCommand =
+  RunnerInterrupt | RunnerChangeModel | RunnerFileCommand | RunnerReportRefresh
 
-export type WorkspaceToRunner =
-  RunnerWelcome | RunnerConfirm | RunnerResend | RunnerCommand
+export type RunnerCommandV1 =
+  RunnerTurnV1 | RunnerMessageDuringTurnV1 | RunnerControlCommand
+export type RunnerCommandV2 =
+  RunnerTurnV2 | RunnerMessageDuringTurnV2 | RunnerControlCommand
+export type RunnerCommand = RunnerCommandV1 | RunnerCommandV2
+
+export type WorkspaceToRunnerV1 =
+  RunnerWelcome<1> | RunnerConfirm | RunnerResend | RunnerCommandV1
+export type WorkspaceToRunnerV2 =
+  RunnerWelcome<2> | RunnerConfirm | RunnerResend | RunnerCommandV2
+export type WorkspaceToRunner = WorkspaceToRunnerV1 | WorkspaceToRunnerV2

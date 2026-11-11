@@ -1,0 +1,1 @@
+export const BROWSER_TEST_NOW = 3_000_000_000_000

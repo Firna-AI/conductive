@@ -1,51 +1,62 @@
-# Confirm that tool processes get no agent login
+# Confirm no login in version 1 tool processes
 
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
-- **Added:** 2026-11-07, from PR #30, branch `conductor/boat-native-remote-workspaces-milestone-7u`, a problem outside the scope that the check of round 1 finding 2 found. The user sees it as item 114. Updated on 2026-11-08 by branch `conductor/boat-native-remote-workspaces-milestone-7x`, which implements option C.
-- **Location:** `spawnClaudeProcess` in `runner/src/providers/claude-process.ts:12`, the login request in `runner/src/providers/codex.ts:117`, `providerEnvironment` in `runner/src/providers/environment.ts:13`, `runner/agent-logins.md`, and the section "Agent logins in a sandbox" of `docs/protocol/access-and-security.md`.
-- **Reason:** the code of option C is complete, but its proof needs real logins of three kinds in a real sandbox, and only the primary workspace holds those logins and the real-sandbox settings.
+- **Added:** 2026-11-07, from PR #30, branch `conductor/boat-native-remote-workspaces-milestone-7u`, a problem outside the scope that the check of round 1 finding 2 found. The user sees it as item 114. Updated on 2026-11-08 by branch `conductor/boat-native-remote-workspaces-milestone-7x`, which implements option C. Updated on 2026-11-10 by branch `conductor/model-gateway-m7-runner-on-the-gateway`, which moves the runner of this repository to runner protocol version 2. Since then this item covers only version 1 runners.
+- **Location:** version 1 runners in older org images. Their code is `runner/src/providers/claude-process.ts`, `runner/src/providers/codex.ts`, and `runner/src/providers/environment.ts` at commit `59ae89c`, or at a later commit where `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts` is 1. The requirement is the section "A sandbox with a version pin of 1" of `docs/protocol/version-pins.md`.
+- **Reason:** the proof needs a real sandbox with a version 1 runner and real logins of three kinds, and only the primary workspace holds those logins and the real-sandbox settings.
 
 - **Terms:**
   - **Agent login:** the Claude subscription token from `claude setup-token`, the Anthropic API key, or the OpenAI API key of the member who started a session. Every turn of that session uses it.
   - **Tool process:** a program that the agent starts for a tool, such as a shell command or a dev server.
-  - **Runner:** the program of Conductive in each cloud computer that runs the agents. `runner/README.md` describes it.
+  - **Version 1 runner:** the program in a cloud computer from an older org image that runs the agents and gets the real login with each turn.
   - **Probe server:** a small HTTP server that the agent starts with its shell tool in this check. Each answer holds only its process ID and two true or false values.
   - **Gate:** a named pipe. The shell tool of the agent waits on it, so the turn stays open until the checker writes one line to it.
 - **Background:**
-  - With each turn, the workspace Durable Object sends the agent login of the session starter to the runner. The runner starts a new agent process for each turn and closes it at the end of the turn.
-  - Before option C, the runner put the login in the environment of the agent program. Each tool process inherited that environment. So a server that a tool started kept the login after the turn, and each member with a terminal in the sandbox could read it.
+  - With each turn, the workspace Durable Object sends a credential of the session starter to the runner. The runner starts a new agent process for each turn and closes it at the end of the turn.
+  - A version 1 runner gets the agent login itself. A runner of protocol version 2 gets a turn token in its place. The model gateway of the Worker then adds the login to each model request.
+  - On 9 November 2026 the user chose that a version 1 runner keeps getting the real login, and that the access doc states the risk. The user also chose that each workspace refuses a runner below the version of its image.
+  - A sandbox keeps the runner of the org image that it starts from, also after a stop and a resume. So a version 1 runner stays in each sandbox from an older org image.
+  - A full image build records the `RUNNER_PROTOCOL_VERSION` of the Worker in `image_builds.runner_protocol_version` of the D1 database. A refresh keeps the version of its image. A missing value counts as 1.
+  - Each new cloud computer of a workspace copies the version of its image to `workspaces.runner_protocol_version`, the version pin of the workspace. The workspace refuses a runner below its pin before the welcome.
+  - In this repository, `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts` is now 2. The runner of this repository uses a turn token, as `runner/agent-logins.md` says. Only its measure tool still uses the Claude pipe and the Codex login request below, with a developer login.
+  - Before option C, the runner put the login in the environment of the agent program. Each tool process inherited that environment. So a server that a tool started kept the login after the turn, and each member with a terminal in the sandbox could read it. A version 1 runner from a commit before `59ae89c` of 2026-11-08 still does so.
   - Decision 114 of 7 November 2026 had four options:
     - **A.** Accept the risk, and state it in the access doc. Effort: Small.
     - **B.** Turn on the Claude program's setting that removes the login from its tool processes. That setting needs bubblewrap and runs each tool command in isolation, so tool commands behave differently. Effort: Medium.
     - **C.** Give the agent its login through a private channel, not the environment, so that no tool process inherits it. Codex needs its own check. Effort: Large.
     - **D.** Start each agent in its own process group, and end the whole group at the end of each turn. This also stops each server that the agent started, such as a dev server behind a port preview, which changes the product. A process can leave its group. Effort: Large.
-  - The user chose A for the time before the fix, and C as the fix. A proxy that keeps every login out of the sandbox was left out, because the user rejected it as a much larger build. `plans/follow-ups/agent-logins-readable-in-sandbox.md` records it for a later decision.
-  - The code of option C is complete. The agent environment holds no login, because `providerEnvironment` removes each inherited variable that starts with `ANTHROPIC_`, `CLAUDE_`, `OPENAI_`, or `CODEX_`, and `CLAUDECODE`.
+  - The user chose A for the time before the fix, and C as the fix. A proxy that keeps every login out of the sandbox was left out, because the user rejected it as a much larger build.
+  - On 8 November 2026 the user chose such a proxy after all: the model gateway in the Worker. `docs/protocol/model-gateway.md` states it. It keeps the login out of a sandbox with a version pin of 2 or later only.
+  - Commit `59ae89c` of 2026-11-08 added the code of option C. In a version 1 runner with that code, the agent environment holds no login. `providerEnvironment` removes each inherited variable that starts with `ANTHROPIC_`, `CLAUDE_`, `OPENAI_`, or `CODEX_`, and `CLAUDECODE`.
   - Claude: `spawnClaudeProcess` gives the `claude` program a pipe on file descriptor 3. Its environment holds only `CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=3` for a token, or `CLAUDE_CODE_API_KEY_FILE_DESCRIPTOR=3` for an API key. The runner writes the login and a newline, and then closes its end of the pipe.
   - The pinned `claude` program 2.1.318 of Claude Agent SDK 0.3.318 reads that pipe until the newline or the end, and closes it. Then it removes the descriptor variable. It writes a copy of the login to disk only when `CLAUDE_CODE_REMOTE` is set, and the runner removes that variable.
   - Codex: the runner starts `codex app-server` 0.167.0 with no login in its environment or its arguments. After `initialize`, it sends `account/login/start` with the type `apiKey` on the standard input of the App Server. When that request succeeds, the runner sends `thread/start` or `thread/resume`.
-  - The Codex model provider has `requires_openai_auth=true` and no `env_key`. The credential store is `ephemeral`, so Codex keeps the key in memory.
-  - The section "Agent logins in a sandbox" of the access doc now requires that no process that the agent starts inherits the login, and that no agent program writes a copy to disk. `runner/agent-logins.md` gives the code facts.
-  - The runner tests use fake logins. The Claude login tests run the pinned SDK with a fake child process. No test starts a real agent program. So no run has shown that the real programs take these routes, or that a real tool server gets no login.
+  - The Codex model provider of a version 1 runner has `base_url` set to `https://api.openai.com/v1`, `requires_openai_auth=true`, and no `env_key`. The credential store is `ephemeral`, so Codex keeps the key in memory.
+  - The section "A sandbox with a version pin of 1" of `docs/protocol/version-pins.md` requires that no process that the agent starts inherits the login, and that no agent program writes a copy to disk.
+  - The runner tests use fake logins. `runner/src/providers/claude-native.test.ts` still runs the pinned SDK with a fake child process, and checks the same Claude pipe for the measure tool. No test starts a real agent program. So no run has shown that the real programs take these routes, or that a real tool server gets no login.
   - The accepted risk stays: a member with a terminal, or another process of the same sandbox user, can read the login of a running turn on purpose and keep a copy. This check does not test that risk.
   - Earlier cases of a login that outlived its turn: the idle agent process that kept the login between turns, fixed in PR #30, and an agent that ran after its turn ended, round 1 finding 2 of PR #30.
-- **Task:** Run the live check below once for each login kind: a Claude subscription token, an Anthropic API key, and an OpenAI API key for Codex. It checks a tool server before and after the end of a turn, after a resumed conversation, and after Stop.
-- **Impact if no action:** The access doc states a requirement that no real run has confirmed. If a pinned program does not take its login through its route in a real sandbox, every turn on that login kind fails. If a login still reaches a tool process, a dev server can keep it for days.
+- **Task:** Run the live check below in a sandbox with a version 1 runner that holds option C. Run it once for each login kind: a Claude subscription token, an Anthropic API key, and an OpenAI API key for Codex. It checks a tool server before and after the end of a turn, after a resumed conversation, and after Stop.
+- **Impact if no action:** The access doc states a requirement for a sandbox with a version pin of 1 that no real run has confirmed. If a pinned program of a version 1 runner does not take its login through its route in a real sandbox, every turn on that login kind fails there. If a login still reaches a tool process, a dev server can keep it for days.
 - **Needs:**
-  - A runner build that holds option C in the org image of a test org. `runner/src/providers/claude-process.ts` must exist in that build. `runner/service/README.md` and `image/developer-scripts.md` give the build and image steps.
+  - An org image of a test org that holds a version 1 runner with option C, and that records runner protocol version 1. In the commit of that runner, `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts` is 1, and `runner/src/providers/claude-process.ts` exists.
+  - `git log --reverse --format=%h -S 'RUNNER_PROTOCOL_VERSION = 2' -- src/shared/runner.ts` prints the first commit of version 2 on its first line. The parent of that commit holds a version 1 runner with option C.
+  - A full build on a test Worker of version 2 records version 2, and its workspaces then refuse a version 1 runner. So use an image that a full build made while the test Worker had version 1, or a refresh of such an image.
+  - If no such image exists, build one on a test Worker that runs a commit of version 1. Then deploy the current commit again. The image keeps version 1, and a Worker of this repository still serves version 1 runners.
+  - `image/developer-scripts.md` says how to package a runner archive. `image/README.md` and `runner/service/README.md` give the build and image steps.
   - The test Worker, the signed-in test account, the test org, and its repository that "What a real check needs" in `image/developer-scripts.md` lists. The primary workspace holds these settings as `LIVE_*` variables.
   - The three logins in a secret store, and a model of each agent that the test account can use.
-  - The terminal of a test workspace on that repository.
+  - The terminal of a test workspace on that repository, in the test org of the version 1 image.
 - **Done when:** every step below gives its expected result for all three login kinds, and the evidence holds only the values that the evidence rules allow. Then delete this item. When a step fails, keep this item, record the failure as the evidence rules say, and report it to the user.
-- **Related:** `plans/follow-ups/agent-logins-readable-in-sandbox.md` has the same cause: the real login is in the sandbox while a turn runs. Its options keep the real login out of the sandbox. If one of them lands before this check runs, drop this item.
+- **Related:** `plans/follow-ups/runner-update-at-start.md` records how version 1 runners could end, for example an update of the runner at each start with a version pin that the Worker raises. When no sandbox can run a version 1 runner any more, drop this item.
 
 ## Live check
 
 ### Prepare
 
 1. Keep each login in the secret store. Never put a login in a prompt, a command argument, a file, a log, or a screenshot.
-2. Create a test workspace with the first message "Reply with only READY. Do not run tools." Wait for the end of that turn, so that its sandbox runs.
+2. In the test org of the version 1 image, create a test workspace with the first message "Reply with only READY. Do not run tools." Wait for the end of that turn, so that its sandbox runs.
 3. Open the terminal of the workspace, and go to the repository folder of the workspace. That folder is also the working folder of the agents. Run each terminal command below from it.
 4. Create the scratch folder `.context/7x/live-login-probes/` there. Save this script in it as `probe.mjs`:
 
@@ -178,5 +189,6 @@ If the probe server stops when the tool command ends, record that, and start the
 ### Limits of the check
 
 - It does not test the accepted risk: a member with a terminal, or another process of the same sandbox user, can still read the login of a running turn on purpose.
-- It covers only the pinned versions: the `claude` program 2.1.318 of Claude Agent SDK 0.3.318, and Codex 0.167.0. Run it again after an update of either version.
+- It covers only the versions that the version 1 runner pins. The runner of `59ae89c` pins the `claude` program 2.1.318 of Claude Agent SDK 0.3.318, and Codex 0.167.0. Run it again for a version 1 runner with other pins.
 - `image/live-check.mjs` checks real chat and resume. But it starts no server through a tool, and its measurement forks get `LIVE_AGENT_LOGIN` in their resume env. So that script alone does not show this requirement.
+- It does not cover a runner of protocol version 2, which holds no login. The section "A sandbox with a version pin of 2 or later" of `docs/protocol/version-pins.md` states the risks of its turn token.

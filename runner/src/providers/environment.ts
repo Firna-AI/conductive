@@ -2,6 +2,10 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { TOOL_ENV } from '../../../tools/context'
+import {
+  commitAuthorEnvironment,
+  type CommitAuthor,
+} from '../../../src/shared/commit-author'
 import type { WorkspaceToolContext } from './workspace-tools'
 
 export async function prepareProviderHome(home: string): Promise<void> {
@@ -12,12 +16,14 @@ export async function prepareProviderHome(home: string): Promise<void> {
   )
 }
 
-/** Provider logins travel through private process input, never the environment. */
+/** Provider credentials never enter the inherited environment. */
 export function providerEnvironment(
   home: string,
   tools: WorkspaceToolContext,
+  author: CommitAuthor | null,
 ): Record<string, string | undefined> {
   const env = { ...process.env }
+  delete env.CONDUCTIVE_MEASURE_LOGIN
   for (const key of Object.keys(env)) {
     if (/^(ANTHROPIC_|CLAUDE_|CLAUDECODE$|OPENAI_|CODEX_)/.test(key))
       delete env[key]
@@ -30,5 +36,6 @@ export function providerEnvironment(
   env[TOOL_ENV.machineOrigin] = tools.machineOrigin
   env[TOOL_ENV.workspaceToken] = tools.workspaceToken
   env[TOOL_ENV.turnId] = tools.turnId
+  if (author) Object.assign(env, commitAuthorEnvironment(author))
   return env
 }

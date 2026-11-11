@@ -10,9 +10,10 @@ import type {
 import { DiffPage } from '../../../files/page/DiffPage'
 import { FilePage } from '../../../files/page/FilePage'
 import { FilesPanel } from '../../../files/panel/FilesPanel'
+import { ChecksActions } from '../../../github/BarButtons'
 import { ChecksList } from '../../../github/ChecksList'
 import type { WorkspaceContext, WorkspaceFeatures } from '../features'
-import { useGitHubFeed } from '../github/WorkspaceGitHub'
+import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { useSavedView } from '../saved-view'
 import { filesPlace, tabOf } from './files-address'
@@ -21,13 +22,33 @@ import {
   useFilesNavigation,
   useOpenTab,
 } from './files-navigation'
-import {
-  useFileTargets,
-  useKeptFiles,
-  useWorkspaceFiles,
-} from './workspace-files'
+import { useFileTargets, useKeptFiles } from './workspace-files'
 
-/** A file tab or a diff tab as a page, which keeps its tab in the saved view. */
+/**
+ * The state of a sandbox that does not run, in place of the content of a
+ * file or diff page. The page hides the bar of the chat, so the state shows
+ * the action of the bar, Resume or Try again, and the words of a refusal.
+ */
+function pagePlaceholder(context: WorkspaceContext): ReactNode {
+  const { panel } = context
+  if (!panel) return undefined
+  return (
+    <SandboxPanel
+      phone
+      resume={context.resume}
+      state={panel}
+      workspace={context.workspace}
+    />
+  )
+}
+
+/**
+ * A file tab or a diff tab as a page, which keeps its tab in the saved view.
+ * While the sandbox does not run, the page reads nothing. A stopped sandbox,
+ * and one whose later start failed, keep the file that the page shows, as
+ * they keep the lists. Otherwise the state of the sandbox takes the place of
+ * the content.
+ */
 function TabPage(props: {
   context: WorkspaceContext
   files: WorkspaceFiles
@@ -35,13 +56,15 @@ function TabPage(props: {
   navigation: FilesNavigation
   layout: FilesLayout
 }) {
-  const { tab } = props
-  useOpenTab(props.context.savedView, tab)
-  const targets = useFileTargets(props.context.org.id)
+  const { tab, context } = props
+  useOpenTab(context.savedView, tab)
+  const targets = useFileTargets(context.org.id)
   const common = {
     files: props.files,
     layout: props.layout,
     navigation: props.navigation,
+    placeholder: pagePlaceholder(context),
+    keepShown: context.panel !== null && !replacesLists(context.panel),
     targets,
   }
   return tab.kind === 'file' ? (
@@ -74,14 +97,16 @@ function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
 /**
  * All files, Changes, and Checks, in the right column on desktop and in the
  * Files tab of a phone, where a file or a diff shows as a page. This part
- * connects the kept files of the workspace. Checks shows the GitHub state of
- * the workspace screen, also while the sandbox shows in place of the lists.
+ * reads the kept files that the workspace screen connects. Checks shows the
+ * GitHub state of the workspace screen, also while the sandbox shows in
+ * place of the lists. On a phone, the actions of the bar top the Checks tab.
  */
 function FilesPart(props: { context: WorkspaceContext }) {
   const { context } = props
-  const files = useWorkspaceFiles(context)
+  const files = useKeptFiles(context)
   const navigation = useFilesNavigation(context)
   const github = useGitHubFeed()
+  const bar = useScreenBar()
   const { now } = useServices()
   const saved = useSavedView(context.savedView)
   const place = filesPlace(context.view)
@@ -99,10 +124,18 @@ function FilesPart(props: { context: WorkspaceContext }) {
       />
     )
   }
+  const checks = github ? (
+    <>
+      {layout === 'phone' ? (
+        <ChecksActions controls={bar?.controls ?? null} />
+      ) : null}
+      <ChecksList github={github} />
+    </>
+  ) : undefined
   return (
     <FilesPanel
       activeTab={tab}
-      checks={github ? <ChecksList github={github} /> : undefined}
+      checks={checks}
       files={files}
       layout={layout}
       list={place?.kind === 'list' ? place.list : (saved?.fileList ?? 'all')}

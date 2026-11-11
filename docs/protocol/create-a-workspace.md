@@ -81,9 +81,9 @@ decision number names a dated record, as
   also General.
 - The button of the dialog is Create. The button of the page is Send,
   because the page looks like the chat that it becomes.
-- The dialog shows the notices of the page: the first build, a missing
-  agent login, a failed create with Try again, and an org without chosen
-  repositories.
+- The dialog shows the notices of the page: the first build, a waiting
+  repository, a missing agent login, a failed create with Try again, and an
+  org without chosen repositories.
 - In an org without chosen repositories, the dialog and the page tell a
   member who is not an admin that an admin chooses them. An admin gets
   Choose repositories. Reason: only an admin can choose them.
@@ -116,7 +116,8 @@ decision number names a dated record, as
 
 - On a computer, Enter sends the message from every composer, and
   Shift+Enter adds a line (decision 143 of PR #73). The composers are the
-  chat of a workspace, the New workspace page, and the dialog.
+  chat of a workspace, the New workspace page, and the dialog. The message
+  box of the [Feedback dialog](feedback.md#the-dialog) is a composer too.
 - So Enter creates the workspace from the page and from the dialog.
 - On a phone, and in every window with the phone layout, Enter adds a
   line in every composer.
@@ -140,10 +141,16 @@ decision number names a dated record, as
     with the time since the build began.
   - After a failed build, it says that the cloud computer did not build.
   - With no build, it says that the cloud computer needs a build.
-- After a failed build or with no build, an admin gets a link to the Cloud
-  computer tab, which offers Try again or Build computer. A member who is
-  not an admin gets no link, and the notice says that an admin can build.
-  Reason: only an admin builds (decision 57).
+- In each state, an admin gets a link to the Cloud computer tab. After a
+  failed build or with no build, the tab offers Try again or Build
+  computer.
+- While a build runs, the admin can set up the cloud computer on that tab,
+  such as its install script. Such a change needs no Build computer, as
+  [The first build](org-image.md#the-first-build) says. A link only after a
+  failed build or with no build was rejected for that reason.
+- A member who is not an admin gets no link. After a failed build or with
+  no build, the notice says that an admin can build. Reason: only an admin
+  builds and changes the settings of the cloud computer (decision 57).
 - When a build succeeds, the notice goes, and Send and Create turn on.
 - Once the org has a good image, New workspace shows no such notice, also
   during a later build or after a failed later build. New workspaces then
@@ -156,6 +163,48 @@ decision number names a dated record, as
   create. A create that waits for the first build was left out for now
   (decision 152 of PR #92). Such a wait changes the start limit and the path that
   creates every workspace.
+
+### Waiting repositories
+
+- The repository picker lists each chosen repository, on the page and in
+  the dialog (decision 240). A removed repository is not in the list.
+- A [waiting repository](org-image.md#repository-changes) is off in the
+  list, with a note that says when it is ready. The note follows the
+  states of [The repository notice](org-image.md#the-repository-notice).
+- Reason: the person learns of the wait before the send. A change of only
+  the words of the refusal was rejected for that reason.
+- The form picks the first ready repository. A kept draft keeps its
+  repository, also when it waits. Reason: the form keeps the choice of the
+  person.
+- While the repository of the form waits, Send and Create stay off. A
+  notice over the composer says when the repository is ready, and whether
+  the person can choose another repository that is ready.
+- In each state, an admin gets a link in that notice to the Cloud computer
+  tab, as in the notice of the first build. When no build runs, the tab
+  offers Try again or Build computer.
+- While a build runs, the notice shows that build, and the admin can
+  follow it on that tab. Such a build adds a repository, or an admin
+  started it. A refresh never counts as a build that runs, as
+  [The repository notice](org-image.md#the-repository-notice) says. While
+  only a refresh runs, the notice follows its other states.
+- Reason: the link then follows one rule in both notices. A notice with no
+  link during a build was rejected for that reason.
+- A member who is not an admin gets no link. When an admin can act, the
+  notice tells the member so. Reason: only an admin builds (decision 57).
+- When a build that holds the repository succeeds, the repository turns
+  on in the picker. Its notice goes, and Send and Create turn on.
+- A create in a waiting repository, such as from an old tab, gets a
+  refusal that says that the repository is ready after the next build. A
+  create in another repository that the org image lacks gets a refusal
+  that says that the repository is not available.
+- Both refusals have HTTP 404 and the code `repository_not_found`. The
+  composer keeps the message.
+- A create that waits for the build of its repository was rejected.
+  Reason: such a wait changes the start limit and the path that creates
+  every workspace, as for decision 152.
+- A start that clones a waiting repository after the start from the org
+  image was rejected, because the install script never prepares that
+  repository.
 
 ## The create
 
@@ -173,6 +222,9 @@ decision number names a dated record, as
 
 - A new workspace starts from the newest good org image. It then creates
   its branch in the folder of its repository.
+- The run of a pull request creates its branch from that pull request, as
+  [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
+  says (decision 505 A).
 - When the GitHub repository has no refs, such as branches or tags, the
   start first pushes an empty first commit to the default branch of the
   repository (decision 89). It then fetches that branch and creates the
@@ -196,6 +248,9 @@ decision number names a dated record, as
   workspace gets a name.
 - Reason: a GitHub login is unique, so the branches of each person stay
   together. A first name was rejected, because two people can share one.
+- The new branch of [Continue](continue.md#the-base-and-the-new-branch)
+  follows the same rule, with the GitHub login that the workspace owner has
+  at the Continue.
 - A new workspace has no name, and the app shows "Untitled" in its place,
   as [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says (decision 182).
@@ -221,3 +276,5 @@ decision number names a dated record, as
   good org image, with the current startup script and env vars.
 - When that sandbox is ready, the agent gets the queued messages, as
   [Messages](messages-and-attachments.md#messages) says.
+- A routine run keeps its failed workspace and its cause, as
+  [Failed runs](routine-runs.md#failed-runs) says (decision 512 B).

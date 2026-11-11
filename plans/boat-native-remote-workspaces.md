@@ -616,6 +616,9 @@ Added on 5 November 2026 from the mockups of Milestone 1.
 - **Action:** ask the user, because the option adds a message queue that
   no requirement covers.
 - **Chosen:** A, by the user on 5 November 2026.
+- **Changed on 10 November 2026:** the user removed the label "Sends when
+  the sandbox is ready" under each waiting message. The queue of option A
+  stays.
 
 ### 15. Make the web app work on phones
 
@@ -3786,7 +3789,8 @@ Conductor's sandbox worker.
   - **D.** Run the agent programs outside the sandbox.
 - **Recommendation:** A.
 - **Chosen:** A, as a later follow-up, by the user on 8 November 2026:
-  `plans/follow-ups/agent-logins-readable-in-sandbox.md`. It reverses the
+  [the agent-login follow-up item](https://github.com/Firna-AI/remote-code/blob/60b5b8d7fe1fa394687bdc125636c4eabd155c57/plans/follow-ups/agent-logins-readable-in-sandbox.md). The model gateway change fixed it
+  on 10 November 2026 and deleted the item. It reverses the
   earlier rejection of a login proxy when it lands. Before it covers
   Claude subscription tokens, check that the permission of decision 37
   covers a proxy.
@@ -3931,6 +3935,9 @@ Added on 8 November 2026 from the check of finding 2 of PR #47
 - **Recommendation:** C.
 - **Chosen:** C, by the user on 8 November 2026, who also asked that the
   app tell the user of the limit. Milestone 5d applies it.
+- **Changed on 10 November 2026:** the user asked to remove the note of the
+  start limit from the chat. The start steps no longer name the limit. A
+  start that passes it still names it in its error.
 - **Design call of the orchestrator, 8 November 2026:** the start limit
   also covers the disk restart near day 14 (decision 43 D), because the
   protocol counts that restart as a start, and an unfinished restart
@@ -4714,7 +4721,7 @@ of a product that runs Claude Code. The mockups change after Milestone 1d.
 - The preview proxy sets `Referrer-Policy: no-referrer` on each response.
   Reason: the default policy sends the preview origin, which is the
   credential, to other sites.
-- Each preview has an "Open in new tab" link. Reason: Safari blocks the
+- Each preview has an "Open" link to a new tab. Reason: Safari blocks the
   preview app's own cookies inside a frame.
 - The Worker asks Boat for a new desktop URL on each page load. The URL
   works for 10 minutes and carries its token in the fragment.
@@ -7352,7 +7359,7 @@ requirements in force, so they add no numbered decision.
   tabs. The chat takes content that replaces the session chat but keeps
   the tab row. While that content shows, no session tab is selected. File
   tabs change the saved view through the chat's existing writer, so no
-  write is lost. Reason: [Sessions](../docs/protocol/chat-and-events.md#sessions)
+  write is lost. Reason: [Sessions](https://github.com/Firna-AI/remote-code/blob/b1d03858bccdc1fdfcd506a986c6230b6a292cb2/docs/protocol/chat-and-events.md?plain=1#L55)
   puts the session tabs beside the open files and diffs.
 - This milestone also owns a `will-download` policy that lets a trusted
   Download in the Mac app save its file. It also owns the desktop tests
@@ -8250,8 +8257,26 @@ Depends on: 15u. It changes lifecycle tests on the native harness.
 Make the tests that fail now and then under the load of the full gate
 reliable. Added on 10 November 2026.
 
-- [ ] Apply option B of `plans/follow-ups/tests-fail-under-load.md`, and
-      delete that item.
+Design calls by the implementor on 10 November 2026:
+
+- Flush batched input and track transport work across each outbox read.
+  A completed receive can leave output after an empty read.
+- Advance automatic start work only while a start job exists.
+  A response in transit must not advance a later maintenance alarm.
+- Wait for the admission queue before choosing a manual alarm target.
+  Share that advance path and keep background error observation unchanged.
+- Use the existing queue completion signal for the provisioning item's readiness wait.
+  It gives the required signal without adding a fixture API.
+- Check the original org test path and its moved build case.
+  The current case lives in `worker/operator/org-native-build-suspension.test.ts`.
+  Also check the later suspension case that the follow-up item records.
+
+- [x] Apply option B of `plans/follow-ups/tests-fail-under-load.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5g`.
+- [x] Apply option B of `plans/follow-ups/provisioning-alarm-admission-order.md`, and
+      delete that item. Branch: `conductor/boat-native-remote-workspaces-milestone-5g`.
+
+Evidence: `.context/milestone-5g/`.
 
 ## Milestone 15d: Marketing site
 

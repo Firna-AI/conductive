@@ -1,15 +1,20 @@
 import type { ReactNode } from 'react'
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
   $create,
+  $getNodeByKey,
   $getState,
   $setState,
   createState,
   DecoratorNode,
   TextNode,
   type LexicalNode,
+  type NodeKey,
 } from 'lexical'
+import { SessionChip } from '../../../../docs/mockups/src/components/chat/SessionChip'
 import { WorkspaceChip } from '../../../../docs/mockups/src/components/chat/WorkspaceChip'
 import { chipOf, useChatLinks } from '../../links/LinksContext'
+import { sessionChipOf, useLinkedSession } from '../../links/session-links'
 import { linkTarget } from '../../links/workspace-links'
 
 /** The link as the text has it, such as a bare address or a Markdown link. */
@@ -29,14 +34,40 @@ const linkStates = [
 
 /**
  * The chip in the field: the pure chip of the mockups, with the current
- * name and state of its workspace. It opens nothing. Until the field turns
- * a chip whose workspace left the list into text, it shows the link.
+ * name and state of its workspace, or the session chip of a known session.
+ * It opens nothing. The × of its state mark removes it as one step of
+ * undo, while the field takes changes. Until the field turns a chip whose
+ * workspace left the list into text, it shows the link.
  */
-function FieldChip(props: { source: string; href: string }) {
+function FieldChip(props: { source: string; href: string; nodeKey: NodeKey }) {
+  const [editor] = useLexicalComposerContext()
   const { links } = useChatLinks()
   const target = linkTarget(props.href, links)
+  const session = useLinkedSession(target)
   if (!target) return props.source
-  return <WorkspaceChip workspace={chipOf(target.workspace)} />
+  const remove = () => {
+    if (!editor.isEditable()) return
+    editor.update(() => $getNodeByKey(props.nodeKey)?.remove())
+  }
+  if (session) {
+    const chip = sessionChipOf(target.workspace, session)
+    return (
+      <SessionChip
+        removal={{
+          name: `${chip.workspace.label} ${chip.title}`,
+          onRemove: remove,
+        }}
+        session={chip}
+      />
+    )
+  }
+  const chip = chipOf(target.workspace)
+  return (
+    <WorkspaceChip
+      removal={{ name: `${chip.label} ${chip.name}`, onRemove: remove }}
+      workspace={chip}
+    />
+  )
 }
 
 /**
@@ -80,6 +111,7 @@ export class WorkspaceChipNode extends DecoratorNode<ReactNode> {
     return (
       <FieldChip
         href={$getState(this, hrefState)}
+        nodeKey={this.getKey()}
         source={$getState(this, sourceState)}
       />
     )

@@ -102,7 +102,7 @@ export function createPreviewHandler(
             )
           }
           const domain = previewDomain(env)
-          const descriptor = await ports.open(target, port, context.user.id)
+          await ports.open(target, context.user.id)
           const label = Array.from(
             crypto.getRandomValues(new Uint8Array(16)),
             (byte) => byte.toString(16).padStart(2, '0'),
@@ -113,7 +113,6 @@ export function createPreviewHandler(
             hostname: `${label}.${domain}`,
             port,
             expiresAt: now + 86_400_000,
-            listenerMode: descriptor.mode,
           }
           if (
             !(await insertPreview(env.DB, target, row, context.user.id, now))

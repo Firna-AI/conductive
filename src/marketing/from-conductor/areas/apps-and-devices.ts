@@ -6,7 +6,7 @@ export const appsAndDevicesFeatures: readonly ParityFeature[] = [
     area: 'apps-and-devices',
     name: 'Mac app',
     status: 'available',
-    note: 'Mac downloads support Apple silicon and Intel. Join the waitlist and open private port previews in the Mac app.',
+    note: 'Mac downloads support Apple silicon and Intel. Open private port previews in the Mac app.',
   },
   {
     id: 'app-updates',
@@ -23,6 +23,13 @@ export const appsAndDevicesFeatures: readonly ParityFeature[] = [
     note: 'Use Conductive in your phone browser for chat, files, the terminal, previews, and pull request status.',
   },
   {
+    id: 'remote-control',
+    area: 'apps-and-devices',
+    name: 'Remote control',
+    status: 'different',
+    note: 'Agents run on cloud computers, so you can control them from your phone browser. Your Mac can stay asleep or off.',
+  },
+  {
     id: 'notifications',
     area: 'apps-and-devices',
     name: 'Notifications',
@@ -37,11 +44,18 @@ export const appsAndDevicesFeatures: readonly ParityFeature[] = [
     note: 'Completion sounds are under consideration.',
   },
   {
+    id: 'keep-the-mac-awake',
+    area: 'apps-and-devices',
+    name: 'Keep the Mac awake',
+    status: 'different',
+    note: 'Agents run on cloud computers and keep working while your Mac sleeps.',
+  },
+  {
     id: 'help-and-feedback',
     area: 'apps-and-devices',
     name: 'Help and feedback',
-    status: 'considering',
-    note: 'An in app feedback form is under consideration. Contact details are on the Terms and Privacy pages.',
+    status: 'available',
+    note: 'Use Send feedback in the command palette to send messages and screenshots. Replies use your primary verified GitHub email when available.',
   },
   {
     id: 'product-documentation',

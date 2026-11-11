@@ -59,6 +59,11 @@ export class DevStream {
     this.events.emit(this.sent)
   }
 
+  /** The stored events at the copy's snapshot. */
+  history() {
+    return this.events.history()
+  }
+
   /** Sends the last event again, as the runner does after a lost confirm. */
   resendLast(): void {
     if (this.sent) this.events.emit(this.sent)

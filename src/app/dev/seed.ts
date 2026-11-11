@@ -2,22 +2,29 @@ import { waitingEmail } from '../../../docs/mockups/src/fixtures/waitlist'
 import type { AgentLoginStatus } from '../../shared/account'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
+import type { RoutineRun } from '../../shared/routines'
 import type { Workspace } from '../../shared/workspaces'
 import {
   coreFixtures,
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
+import { listRuns } from '../../test-support/fixtures/routine-runs'
+import { routineFixtures } from '../../test-support/fixtures/routines'
 import {
   sampleOperator,
   sampleRecords,
   type OperatorRecords,
 } from '../../test-support/fixtures/operator'
+import {
+  SAMPLE_IDS,
+  sampleUsers,
+} from '../../test-support/fixtures/operator-samples'
 import { waitingUser } from '../../test-support/fixtures/waitlist'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { AGENTS } from '../api/read-core'
 import { getStartedOrder } from '../get-started'
-import { referralCodeOf } from './access-codes'
+import { addReferralCode, referralCodeOf } from './access-codes'
 import type { DevOptions } from './options'
 import {
   freshOrg,
@@ -29,13 +36,75 @@ import {
 
 type CoreFixtures = ReturnType<typeof coreFixtures>
 
+const MINUTE = 60_000
+
+/**
+ * The waitlist of `waitlist=off`: the operator of the samples turned it off
+ * 90 minutes ago. Zed K, who waited, came back half an hour later, so open
+ * sign-up gave them app access with a new referral code, as the gate of the
+ * Worker does. The other people still wait until their next visit.
+ */
+function turnOffWaitlist(records: OperatorRecords): void {
+  records.waitlistSwitch = {
+    waitlistOn: false,
+    updatedAt: FAKE_TIME - 90 * MINUTE,
+    operator: sampleOperator,
+  }
+  const zed = sampleUsers.find(
+    (item) => item.githubId === SAMPLE_IDS.newestWaiting,
+  )
+  if (!zed) throw new Error('The operator samples have no Zed K.')
+  const grantedAt = FAKE_TIME - 60 * MINUTE
+  records.openSignups.set(zed.githubId, {
+    grantedAt,
+    operator: sampleOperator,
+  })
+  addReferralCode(
+    records,
+    { githubId: zed.githubId, login: zed.login },
+    grantedAt,
+  )
+}
+
 /** A deleted org stays for 7 days. */
 const DELETE_AFTER = 604_800_000
 
+/** The run that `run=` makes the run of `checkout-autocomplete`. */
+const runOfWorkspace = {
+  'pull-request': 'run-review-prs-opened-482',
+  schedule: 'run-error-triage-hourly-3',
+} as const
+
 /**
- * Acme with the recorded sections, workspaces, settings, build, and
- * members. A starting workspace has the recorded resume step, and a
- * workspace in the error state has the recorded start error.
+ * The runs of the routines. Review pull requests can list the failed or
+ * the skipped runs of the mockups in place of its newest runs. After the
+ * suspension of Acme, it lists its runs as the suspension left them. One
+ * run can have `checkout-autocomplete` as its workspace, which has a chat.
+ */
+function seedRuns(
+  fixtures: ReturnType<typeof routineFixtures>,
+  options: DevOptions,
+): RoutineRun[] {
+  const list = options.reviewRuns ?? (options.suspended ? 'suspended' : null)
+  const review = fixtures.routines.find((item) => item.id === 'review-prs')
+  const runs =
+    list === null || !review
+      ? fixtures.runs
+      : [
+          ...listRuns(review, list),
+          ...fixtures.runs.filter((run) => run.routineId !== review.id),
+        ]
+  const linked = options.runWorkspace && runOfWorkspace[options.runWorkspace]
+  return runs.map((run) =>
+    run.id === linked ? { ...run, workspaceId: FAKE_IDS.workspace } : run,
+  )
+}
+
+/**
+ * Acme with the recorded sections, workspaces, settings, build, members,
+ * and routines with their runs. A starting workspace has the recorded
+ * resume step, and a workspace in the error state has the recorded start
+ * error.
  */
 function acme(
   summary: OrgSummary,
@@ -43,6 +112,7 @@ function acme(
   options: DevOptions,
 ): OrgState {
   const { workspaces } = workspaceFixtures(options.server.workspaceState)
+  const fixtures = routineFixtures(summary.id)
   const starting = workspaceFixtures('starting').detail.start
   const failed = workspaceFixtures('error').detail.error
   const startOf = (workspace: Workspace): [string, StartRecord] => [
@@ -74,18 +144,30 @@ function acme(
     repositories: core.repositories.repositories,
     settings: core.settings.settings,
     builds: [core.build],
-    settingsRevision: core.settings.settings.needsBuild ? 2 : 1,
-    buildRevisions: new Map([[core.build.build.id, 1]]),
+    settingsRevision: 1,
+    buildInputs: new Map([
+      [
+        core.build.build.id,
+        {
+          installScript: core.settings.settings.installScript,
+          repositories: core.repositories.repositories
+            .filter((repository) => repository.selected)
+            .map(({ id, fullName }) => ({ id, fullName })),
+        },
+      ],
+    ]),
     currentImageBuildId: core.builds.currentImageBuildId,
     members: core.members,
+    routines: fixtures.routines,
+    runs: seedRuns(fixtures, options),
   }
 }
 
 /**
  * The records of the operator samples. Acme of the options is deleted or
  * suspended there too, so the operator sees it as its members do. The
- * pause of the options, and the state of the referral code of `user`, are
- * those that the waitlist routes read too.
+ * pause and the switch of the options, and the state of the referral code
+ * of `user`, are those that the waitlist routes read too.
  */
 function operatorRecords(options: DevOptions, user: User): OperatorRecords {
   const records = sampleRecords(FAKE_TIME)
@@ -108,6 +190,7 @@ function operatorRecords(options: DevOptions, user: User): OperatorRecords {
       operator: sampleOperator,
     }
   }
+  if (options.waitlistOff) turnOffWaitlist(records)
   const own = referralCodeOf(records, user.githubId)
   if (own && options.inviteCode === 'used-up') own.uses = own.useLimit
   if (own && options.inviteCode === 'disabled') {

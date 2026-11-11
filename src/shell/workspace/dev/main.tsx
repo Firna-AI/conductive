@@ -1,3 +1,4 @@
+import { copyText } from '../../../app/clipboard'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createApiClient } from '../../../app/api/client'
@@ -10,14 +11,17 @@ import {
   windowPlatform,
   windowVisibility,
 } from '../../../app/services'
-import type { WorkspaceIdentity } from '../../../app/workspace-store'
-import { createFilesClient } from '../../../files/api/files-client'
-import { WorkspaceFiles } from '../../../files/model/files-store'
 import type { WorkspaceSocketMessage } from '../../../shared/events'
 import { FakeApiServer } from '../../../test-support/fake-api'
+import { scenarioFetch } from '../../../test-support/fake-bar-dev'
 import { fetchFiles } from '../../../test-support/fake-files'
-import { FAKE_TIME } from '../../../test-support/fixtures/core'
-import { FAKE_IDS } from '../../../test-support/fixtures/core'
+import {
+  FAKE_IDS,
+  FAKE_TIME,
+  fakeUser,
+  fakeUsers,
+} from '../../../test-support/fixtures/core'
+import { senderSnapshot } from '../../../test-support/fixtures/workspaces'
 import { storeFailedRepairs } from '../../../test-support/recorded-repairs'
 import { seedFirstStart } from './dev-first-start'
 import { readDevOptions } from './dev-options'
@@ -31,8 +35,28 @@ import { DevPage } from './DevPage'
 const options = readDevOptions(location.search)
 /** The time of the page. It stands still, so each age stays as drawn. */
 const now = () => FAKE_TIME
-const server = new FakeApiServer()
+const { bar } = options
+// With the bar, `viewer=member` is a member of the org who may not archive.
+const server = new FakeApiServer(
+  bar
+    ? {
+        banner: bar.state,
+        ...(bar.turn ? { conversation: 'running' } : {}),
+        ...(options.member ? { role: 'member' } : {}),
+      }
+    : {},
+)
 storeFailedRepairs(server.events, options.repair, now())
+if (bar && options.member) server.signIn(fakeUsers[1])
+// The actions of the bar answer as the Worker does, with its state.
+const fetch = bar
+  ? scenarioFetch(
+      server,
+      bar.scenario,
+      senderSnapshot(options.member ? fakeUsers[1] : fakeUser),
+      now,
+    )
+  : server.fetch
 // A first-start state opens the new workspace of the create flow instead.
 const workspaceId = options.start
   ? seedFirstStart(server, options.start, options.member)
@@ -59,7 +83,7 @@ function ofWorkspace(
 }
 
 const app = new AppModel({
-  api: createApiClient(server.fetch, fetchFiles(server.fetch)),
+  api: createApiClient(fetch, fetchFiles(fetch)),
   events: {
     open: (target, handlers) =>
       server.events.subscribe(
@@ -78,19 +102,8 @@ const app = new AppModel({
   newId: () => crypto.randomUUID(),
   leave: () => undefined,
   appOrigin: window.location.origin,
-  copy: (text) => navigator.clipboard.writeText(text),
+  copy: (text) => copyText(window, text),
 })
-
-/** Makes the store of the Files panel over the fake API. It starts nothing. */
-function createFiles({
-  orgId,
-  workspaceId,
-}: WorkspaceIdentity): WorkspaceFiles {
-  return new WorkspaceFiles({
-    client: createFilesClient({ fetch: server.fetch, orgId, workspaceId }),
-    subscribe: (after, listener) => server.events.subscribe(after, listener),
-  })
-}
 
 const root = document.getElementById('root')
 if (root) {
@@ -98,7 +111,6 @@ if (root) {
     <StrictMode>
       <DevPage
         app={app}
-        createFiles={createFiles}
         now={now}
         options={options}
         server={server}

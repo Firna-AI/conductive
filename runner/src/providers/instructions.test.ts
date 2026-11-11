@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 
 import { mockComputerServer } from '../../test-support/computer-mcp'
-import { turn } from '../../test-support/harness'
+import { duringTurn, turn } from '../../test-support/harness'
 import { instructionProviders } from '../../test-support/instructions'
 import { wireFixture } from '../../test-support/wire'
 import { configuration } from '../config'
@@ -89,6 +89,17 @@ it.each(['claude', 'codex'] as const)(
     expect(provider.prompt()).toEqual(expect.any(String))
     const initialPrompt = string(provider.prompt())
     expect(initialPrompt).toContain('Conductive')
+    for (const tool of [
+      'create_session',
+      'list_sessions',
+      'send_message',
+      'read_session',
+    ])
+      expect(initialPrompt).toContain(tool)
+    expect(initialPrompt).toContain(
+      'A Sent by: line names the session that sent the message.',
+    )
+    expect(initialPrompt).toContain('Do not reply only to confirm it.')
     expect(initialPrompt).toContain(
       'Workspace repository folder: "/cloud/workspace"',
     )
@@ -103,6 +114,12 @@ it.each(['claude', 'codex'] as const)(
     expect(initialPrompt).toContain(
       'CONDUCTIVE_REPOSITORY_ZETA_DIR: "/cloud/zeta"',
     )
+    expect(initialPrompt).toContain(
+      'Context folder: "/cloud/workspace/.context"',
+    )
+    expect(initialPrompt).toContain(
+      'Git ignores the context folder. Keep notes, screenshots, and files for other sessions of this workspace there. Attached files arrive in its attachments folder.',
+    )
     expect(initialPrompt).not.toMatch(/do-not-copy|Boat|Claude Code/)
     expect(savedBeforeStart[0]).toEqual([
       {
@@ -110,6 +127,10 @@ it.each(['claude', 'codex'] as const)(
         agent,
         providerSessionId: 'legacy-conversation',
         instructions: initialPrompt,
+        instructionBranches: {
+          workspaceBranch: 'alice/tracked-task',
+          targetBranch: 'target-main',
+        },
       },
     ])
     expect(provider.conversationId()).toBe('legacy-conversation')
@@ -119,7 +140,7 @@ it.each(['claude', 'codex'] as const)(
         ? {
             role: 'user',
             content:
-              'Sender: Alice Example Member (@alice)\n\n  Keep this text.\n\nAnd this line.  \nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png"}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt"}',
+              'Sender: Alice Example Member (@alice)\n\n  Keep this text.\n\nAnd this line.  \nThe sender attached these files. Read each file before you answer.\nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
           }
         : {
             input: [
@@ -130,20 +151,25 @@ it.each(['claude', 'codex'] as const)(
               },
               {
                 type: 'text',
-                text: 'Attached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png"}',
+                text: 'The sender attached these files. Read each file before you answer. Each image is also in this message.',
+                text_elements: [],
+              },
+              {
+                type: 'text',
+                text: 'Attached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}',
                 text_elements: [],
               },
               { type: 'localImage', path: '/uploads/image.png' },
               {
                 type: 'text',
-                text: 'Attached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt"}',
+                text: 'Attached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
                 text_elements: [],
               },
             ],
           },
     )
     const during = {
-      ...turn('during', 'bob', agent),
+      ...duringTurn(turn('during', 'bob', agent)),
       type: 'message' as const,
       turnId: first.turnId,
     }
@@ -210,6 +236,9 @@ it.each(['claude', 'codex'] as const)(
     expect(currentPrompt).toContain(
       'Workspace repository folder: "/cloud/new-workspace"',
     )
+    expect(currentPrompt).toContain(
+      'Context folder: "/cloud/new-workspace/.context"',
+    )
     expect(currentPrompt).toContain('Workspace branch: "bob/new-task"')
     expect(currentPrompt).toContain('Target branch: "new-target"')
     expect(currentPrompt).toContain(
@@ -223,6 +252,10 @@ it.each(['claude', 'codex'] as const)(
       agent,
       providerSessionId: null,
       instructions: currentPrompt,
+      instructionBranches: {
+        workspaceBranch: 'bob/new-task',
+        targetBranch: 'new-target',
+      },
     })
     expect(h.warnings).toEqual([])
   },

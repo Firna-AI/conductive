@@ -15,6 +15,7 @@ export interface GitHubWorkspace {
   repositoryId: number
   fullName: string
   defaultBranch: string
+  baseBranch?: string | null
   installationId: number
 }
 
@@ -38,6 +39,7 @@ export interface GitHubRefresh {
   userId?: string
   pushBranch?: string
   retryAttempt?: number
+  requireWritable?: true
 }
 
 export interface GitHubRefreshRequest {

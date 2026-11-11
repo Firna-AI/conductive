@@ -132,6 +132,8 @@ export async function createHarness() {
           'terminal_credentials',
           'workspace_tokens',
           'section_preferences',
+          'routine_runs',
+          'routines',
           'workspaces',
           'sections',
           'repositories',
@@ -139,6 +141,7 @@ export async function createHarness() {
           'org_images',
           'image_build_logs',
           'image_builds',
+          'software_images',
           'org_members',
           'orgs',
           'sessions',
@@ -152,7 +155,8 @@ export async function createHarness() {
       )
       await db
         .prepare(
-          'UPDATE signup_settings SET paused = 0, updated_at = NULL, updated_by_user_id = NULL WHERE id = 1',
+          `UPDATE signup_settings SET paused = 0, updated_at = NULL, updated_by_user_id = NULL,
+           waitlist_on = 1, waitlist_updated_at = NULL, waitlist_updated_by_user_id = NULL WHERE id = 1`,
         )
         .run()
       let cursor: string | undefined

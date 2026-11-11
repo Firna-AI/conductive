@@ -196,36 +196,9 @@ The migration rewrites no snapshot path and no user file.
 
 ## The default branch at a create
 
-The fetch step of a create runs `defaultBranchCommand` from
-[`default-branch-command.ts`](default-branch-command.ts).
-`workspacePhaseCommand` in [`start-command.ts`](start-command.ts) gives it
-the repository folder of the workspace map, the captured default branch,
-the ID of the first turn, and the trusted sender of the create. Without
-that sender, the step fails.
-
-The command exports the turn ID as `CONDUCTIVE_TURN_ID`. So the
-[git credential route](README.md#machine-route) gives each Git request a
-fresh GitHub user token of that sender. The command holds no token, and
-it writes no token to a Git config or a file. It needs the `origin` remote
-and the credential helper of the image.
-
-1. `git ls-remote origin` reads every ref of the remote. A failed read
-   fails the step.
-2. When the remote has no ref, the command makes an empty root commit with
-   `git mktree` and `git commit-tree`. It does not read the index, so no
-   file of the folder goes into the commit. The author and the committer
-   are the sender: the display name, or else the GitHub login, with the
-   email `<GitHub ID>+<GitHub login>@users.noreply.github.com`. The message
-   is `Initialize empty repository`.
-3. It pushes that commit to the default branch without force. When the
-   push fails, it reads the remote refs again. When the remote is still
-   empty, the step fails with the status of the push. Otherwise another
-   push came first, and the step continues.
-4. Each successful path ends with a fetch of the default branch. The
-   branch step then creates the workspace branch from `FETCH_HEAD`.
-
-A remote with any ref gets no commit, also when it has no default branch.
-The fetch then fails, and the start fails.
+[The default branch at a create](default-branch.md) gives the fetch step of
+a create: its empty first commit, the `origin/HEAD` that it sets, and its
+tests.
 
 ## Development
 
@@ -264,10 +237,6 @@ each token.
 - `repository-capture.test.ts` keeps the workspace map at a resume and a
   disk retention restart, after a later choice of repositories changes the
   name collisions.
-- `default-branch-command.test.ts` runs the default branch step with native
-  Git. `FakeGitHubGit` serves a local bare repository through
-  `git-http-backend`, and the production git credential route gives the
-  token. No test uses a real GitHub account.
 
 ### Key Code
 
@@ -294,7 +263,3 @@ each token.
   and `readSourceRepository`, the builder and repository checks.
 - [`image-sources/layout-command.ts`](image-sources/layout-command.ts):
   `sourceLayoutCommand`, the folder moves of a build.
-- [`default-branch-command.ts`](default-branch-command.ts):
-  `defaultBranchCommand`, the fetch step with the empty first commit.
-- [`start-command.ts`](start-command.ts): `workspacePhaseCommand`, the
-  fetch and branch commands of a create.
