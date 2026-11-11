@@ -10,8 +10,9 @@ files of the image code.
 
 ## Build sandboxes
 
-- A build sandbox starts from the current org image, or as a new default
-  sandbox for the first build. Its env holds only the folder variables.
+- A build sandbox starts from the current org image. A first build uses a
+  matching ready software image, or a new default sandbox without one.
+  Its env holds only the folder variables.
 - Risk: a program with root access that an earlier install left in that
   image can read the clone token of a later copy. That token can only read
   its own repository, which the image already holds. The Worker revokes it

@@ -12,12 +12,15 @@ people who move from Conductor.
 
 The hero and the last call to action show the two actions of the site. The
 main action, "Sign up", has the GitHub mark and leads to `app/sign-in`,
-where a new person gets an account that waits for app access. The second
-action, "Download for Mac", has the download icon and leads to the Mac app
-section, because the site runs no script to pick the chip of the visitor.
-No button of the site names the waitlist, as the user chose on 10 November
-2026. The sentence under the last call to action says that a new account
-waits for access, so the page promises no use at once. The title of the
+where a new person gets an account that waits for app access, except
+during open sign-up. The second action, "Download for Mac", has the
+download icon and leads to the Mac app section, because the site runs no
+script to pick the chip of the visitor. No button of the site names the
+waitlist, as the user chose on 10 November 2026. The words stay the same
+in each state of sign-ups, as `marketing/open-sign-up` shows. The sentence
+under the last call to action says that the app opens when the account
+gets access, so the page promises no use at once, and the sentence fits
+each state. The title of the
 last call to action, "Give your next task its own cloud computer.",
 promises no use at once either. `siteActionCopy` in
 [`access-copy.ts`](../../src/marketing/access-copy.ts) holds the words of

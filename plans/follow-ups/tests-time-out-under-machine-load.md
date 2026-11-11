@@ -15,6 +15,7 @@
   - `worker/lifecycle/runner-environment.test.ts`: `Test timed out in 15000ms`, then its worker ran out of memory and stopped with SIGABRT.
   - Two existing Git tests of the runner: `Test timed out in 5000ms`.
   Each test passed alone, and the complete gate passed twice on the same machine with no other load.
+- On 10 November 2026, the main merge into `calummoore/waitlist-global-toggle-brainstorm` ran selected tests beside type, lint, format, file-length, app-build, and mockup checks. `worker/lifecycle/disk-retention.test.ts > keeps a stopped disk through startup and stop failures without a stale stop after user open` failed with `Error: Test timed out in 15000ms.` The other 170 tests passed. Both tests of that file then passed alone with no assertion or timeout change. This branch changes neither that test nor its lifecycle implementation. The suspected source is machine load during the native fixture work.
 
   On 10 November 2026, CI run `42780530781`, attempt 1, ran the complete gate on commit `3503d628` of the branch `calummoore/workspace-open-error`. Its app and Worker suite ran 704 files: 2,016 tests passed, 2 failed, and none was skipped. One failure was this timeout:
   - `worker/operator/suspension-race.test.ts:20`, "cancels an in-flight allocation and cleans its delayed computer after actor recovery": `Error: Test timed out in 15000ms.`

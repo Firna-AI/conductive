@@ -311,7 +311,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   frame of a picture on the marketing site.
 - [The operator section](design-operator.md) gives its tabs, its tables,
   the Waitlist tab, the codes, and the approval email. It also gives
-  Suspend, Lift, and Approve, the daily chart, and the notice of a pause.
+  Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
+  the waitlist switch.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
