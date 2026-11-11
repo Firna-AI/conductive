@@ -19,12 +19,17 @@ import {
   FAKE_TIME,
   fakeUser,
 } from '../../test-support/fixtures/core'
-import { holdAnimationFrames } from '../../test-support/mount'
+import { holdAnimationFrames, press } from '../../test-support/mount'
 import { Shell } from '../Shell'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import { AccountScreen } from './AccountScreen'
-import { chatGptLogin, codexItem, serveAccount } from './sign-in-test-kit'
+import {
+  chatGptLogin,
+  codexItem,
+  openAccount,
+  serveAccount,
+} from './sign-in-test-kit'
 import { buttonsOf, listItems } from './test-markup'
 
 const choiceLabel = 'Open New workspace in'
@@ -157,6 +162,18 @@ describe('AccountScreen', () => {
     expect(codexItem(view)).toBe(
       `Codex ${copy.signedOut} ChatGPT plan Remove ${cause} ${copy.signInAgain} Let other members use this login Their messages in your sessions start a new session on their own login.`,
     )
+  })
+
+  test('the Codex form offers only an API key while the ChatGPT plan is hidden, also after Sign in again', async () => {
+    const server = new FakeApiServer()
+    const cause = copy.causes.notRenewed
+    serveAccount(server, [{ ...chatGptLogin, unusableCause: cause }])
+    const { view } = await openAccount(server, {}, null)
+    await press(byRole('button', copy.signInAgain, view))
+    expect(queryByRole('radiogroup', 'Connect with', view)).toBeNull()
+    expect(codexItem(view)).toContain('OpenAI API key')
+    expect(codexItem(view)).not.toContain(copy.getCode)
+    expect(view.querySelector('input[type="password"]')).not.toBeNull()
   })
 
   test('General shows no Model and effort, and the Preferences tab shows it with the saved choice', async () => {

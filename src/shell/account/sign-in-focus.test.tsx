@@ -23,6 +23,9 @@ import {
   startedSignIn,
 } from './sign-in-test-kit'
 
+// These tests cover the ChatGPT plan, which the app hides for now.
+vi.mock('./chatgpt-availability', () => ({ chatGptSignInAvailable: true }))
+
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const started = startedSignIn('device-1', 'HZQW-7KMT')

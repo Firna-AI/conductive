@@ -13,6 +13,7 @@ import type { Agent } from '../../shared/agents'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { ExternalLink } from '../ui/links'
+import { chatGptSignInAvailable } from './chatgpt-availability'
 import { ChatGptSignIn } from './ChatGptSignIn'
 import { agentNames, loginLabels, type LoginKind } from './labels'
 
@@ -29,13 +30,14 @@ const keepHint = `${productName} keeps it encrypted, and never shows it again.`
  * The kinds of each agent in the order of the switch of its form. The first
  * kind starts selected. An OpenAI API key needs no step before it, and the
  * ChatGPT sign-in needs a setting of ChatGPT first, so the API key comes
- * first for Codex.
+ * first for Codex. Codex offers only the API key while the ChatGPT plan is
+ * hidden.
  */
 const connectKinds: Readonly<
   Record<Agent, readonly [LoginKind, ...LoginKind[]]>
 > = {
   claude: ['token', 'api-key'],
-  codex: ['api-key', 'token'],
+  codex: chatGptSignInAvailable ? ['api-key', 'token'] : ['api-key'],
 }
 
 /** The agent and the kind that the save of a secret sends, as one pair. */
@@ -190,8 +192,9 @@ function SecretFields(props: {
  * and an API key or the ChatGPT plan for Codex. `kind` starts selected, by
  * default the first kind of the agent. A secret has its field and Connect.
  * The ChatGPT plan has the steps of its sign-in, which another kind stops.
- * Cancel shows when `close` is set. `connected` runs after a save or a
- * sign-in.
+ * A form with one kind shows no switch, and a `kind` that the form does not
+ * offer starts on the first kind. Cancel shows when `close` is set.
+ * `connected` runs after a save or a sign-in.
  */
 export function AgentConnectForm(props: {
   agent: Agent
@@ -202,22 +205,28 @@ export function AgentConnectForm(props: {
   const { field } = useControlSizes()
   const [form] = useState(() => new SecretForm())
   const kinds = connectKinds[props.agent]
-  const [kind, setKind] = useState<LoginKind>(props.kind ?? kinds[0])
+  const [kind, setKind] = useState<LoginKind>(
+    props.kind !== undefined && kinds.includes(props.kind)
+      ? props.kind
+      : kinds[0],
+  )
   const state = useStore(form.state)
   const ask = asks[props.agent][kind]
   return (
     <div className={styles.form}>
-      <SegmentedControl
-        accessibilityLabel="Connect with"
-        disabled={state.saving}
-        onChange={setKind}
-        options={kinds.map((item) => ({
-          label: loginLabels[props.agent][item],
-          value: item,
-        }))}
-        size={field}
-        value={kind}
-      />
+      {kinds.length > 1 ? (
+        <SegmentedControl
+          accessibilityLabel="Connect with"
+          disabled={state.saving}
+          onChange={setKind}
+          options={kinds.map((item) => ({
+            label: loginLabels[props.agent][item],
+            value: item,
+          }))}
+          size={field}
+          value={kind}
+        />
+      ) : null}
       {ask.type === 'secret' ? (
         <SecretFields
           ask={ask}
