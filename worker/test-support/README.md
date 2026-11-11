@@ -16,6 +16,8 @@ Restart saves clock metadata and keeps committed native SQLite records through t
 A call that runs while a reset or a restart aborts the object fails, as on the platform.
 So a test awaits each restart and reset before it calls the object again.
 A host call that gets a text reply from the local Workers runtime fails with the call name, the reply status, and that text.
+Each call through `api` crosses the bridge and returns a promise. Its type, `NativeRemote`, says so, also for a method that returns a plain value in the Worker.
+So the lint finds a host call that a test does not await.
 Instance identity checks prove that reconstruction creates a fresh object.
 Production request timeouts stay unchanged.
 

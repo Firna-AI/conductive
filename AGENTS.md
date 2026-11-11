@@ -75,7 +75,8 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
 - Early check: `npm run format:check` and `npm run lint`. The lint rejects
   JavaScript, TypeScript, and Astro files over 300 lines, including
   comments and blank lines. With type information, it also rejects each
-  promise that the code does not await or handle. It runs ESLint in one
+  promise that the code does not await or handle, and each `await` of a
+  value that is not a promise. It runs ESLint in one
   process for each group of TypeScript projects, because one process for
   all files runs out of the default Node heap. `npm run file-length:check`
   runs the same lint.

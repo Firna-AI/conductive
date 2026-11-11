@@ -54,7 +54,8 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
-  // A promise that the code does not await races the code after it.
+  // A promise that the code does not await races the code after it, and an
+  // await of a value that is not a promise waits for nothing.
   ...TYPE_PROJECTS.map(({ folders, project }) => ({
     // The Mac app lint runs this file from `desktop/`. The base path keeps
     // each pattern relative to the repository root there too.
@@ -69,6 +70,7 @@ export default defineConfig([
       parserOptions: { project, tsconfigRootDir: import.meta.dirname },
     },
     rules: {
+      '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
     },
