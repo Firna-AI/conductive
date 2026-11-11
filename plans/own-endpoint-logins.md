@@ -740,6 +740,10 @@ Added on 11 November 2026 from the Milestone 5b report.
 - **Previous examples:** Gateway decision 13, which chose 1 hour for subscription tokens.
 - **Recommendation:** C. It gives a subscription pool such as Cal's the 1-hour cache, and it changes the cost and the support of no other endpoint.
 - **Action:** ask the user, because the options trade the limits of a pool against the cost and the failures of other endpoints, and no option is clearly best.
+- **Chosen:** B, by Cal on 11 November 2026: "B - C later (can we add as
+  advanced menu)". Milestone 5d asks for the 1-hour cache on every Claude
+  own endpoint. C follows after the merge, as an advanced part of the own
+  endpoint form, in `plans/follow-ups/own-endpoint-prompt-cache-choice.md`.
 
 ### 13. Choose whether the address rule accepts an IP address
 
@@ -768,6 +772,12 @@ Added on 11 November 2026 from the orchestrator's check of Milestone 5b.
 - **Related:** Decision 9 E. Option A changes its rule and its refusal text.
 - **Recommendation:** A. A name for an IP address is free and quick to get, so the refusal costs little and prevents a login that fails each turn.
 - **Action:** ask the user, because option A adds a refusal and changes the address rule of the protocol.
+- **Asked:** on 11 November 2026, Cal asked: "could we use something like
+  https://136.115.241.64.sslip.io ?" Such a name works with every option:
+  the rule accepts it, and a Worker fetch reaches it. The app does not
+  turn an IP address into such a name by itself. Reason: the certificate
+  of the server must name the host, and the app would trust a DNS service
+  that the user did not choose. The decision stays open.
 
 ## Design
 
@@ -1278,6 +1288,28 @@ The Worker reads the model list of each own endpoint since 11 November
 model IDs and the time of the last read that worked. Evidence:
 `.context/own-endpoint-logins/m5c/` and
 `.context/own-endpoint-logins/m5c-pagination/`.
+
+## Milestone 5d: Ask for the 1-hour prompt cache on a Claude own endpoint
+
+Depends on: 5b
+
+Claude asks for a prompt cache of 1 hour on every turn on a Claude own
+endpoint login, as decision 12 B says.
+
+- [ ] Add an optional field to the turn credential of a runner of protocol
+      2, in `src/shared/runner.ts`, that asks for the 1-hour prompt cache.
+      The Worker sets it for a Claude turn on an own endpoint login only.
+- [ ] Make the runner ask for the 1-hour cache when the field asks for it,
+      as it does for a subscription token. An older runner ignores the
+      field and keeps the default cache.
+- [ ] State the rule next to gateway decision 13 in "How the agents reach
+      the gateway" of `docs/protocol/model-gateway.md`, and in
+      `docs/protocol/agent-runner.md` if it names the fields of the turn
+      credential.
+- [ ] Add tests: the Worker sets the field only for a Claude own endpoint
+      turn, the runner then asks for the 1-hour cache, and a credential
+      without the field keeps the default.
+- [ ] Update the READMEs of the changed areas.
 
 ## Milestone 6: Account and Get started
 
