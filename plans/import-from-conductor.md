@@ -1324,6 +1324,33 @@ Root design call, 11 November 2026:
   typed form. It changes no protocol, legal page, public guide, Electron
   profile path, or descendant link policy.
 
+Review round 3 summary, 11 November 2026: the review of `d6bd4fbf` and
+four independent finding checks gave four follow-up items. Both child fix
+rounds are used, so no source fix is released.
+
+- [Submodule working content](follow-ups/conductor-import-submodule-working-content.md):
+  needs the user's decision. Root recommends E, which names the work as
+  staying on the Mac. Root has not asked the question yet.
+- [Omitted LFS HEAD pointer](follow-ups/conductor-import-omitted-lfs-head-pointer.md),
+  [fixture permissions](follow-ups/conductor-import-fixture-permissions.md),
+  and [Git storage lifetime](follow-ups/conductor-import-git-storage-lifetime.md):
+  fix after merge.
+- Focus for the full primary review. These stay open, are not fixed, and
+  have no finding number:
+  - `desktop/src/import/candidate-paths.ts:23`: the no-index nested check
+    can drop a tracked file of a nested repository that matches that
+    repository's own ignore pattern.
+  - The desktop LFS facts accept a stricter pointer form than the
+    receiver. The receiver also reads the legacy `hawser` version line and
+    other `oid` and `size` orders, so the count comparison can fail.
+  - `desktop/src/import/git.ts:229`: the scan's copied split index lacks
+    its shared index file, so a row size can be unknown. Runtime
+    behaviour is unverified.
+  - If no full primary review runs, record each one as an explicit open
+    follow-up item, so that it is not lost.
+
+Review record: `.context/reviews/conductor/import-from-conductor-mac-scan-and-upload/findings.md`.
+
 Implementation and verification evidence:
 `.context/import-from-conductor/current/m6-final-report.md`.
 

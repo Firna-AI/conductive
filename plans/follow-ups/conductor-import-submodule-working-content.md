@@ -1,0 +1,115 @@
+# Imports silently drop work inside initialized submodules
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from pull request #204, branch `conductor/import-from-conductor-mac-scan-and-upload`, review round 3 of head `d6bd4fbf03c167ab0232fc29442d7c8800653cce`, finding 5. It includes the independent finding check and the review owner's outcome of the same day. This item also stands for the earlier re-review observation "Committed submodule content", which is not fixed.
+- **Location:** `desktop/src/import/inventory.ts:67-100`. The comparison with `--ignore-submodules=all` is at line 72, and the added-path filter is at lines 78-83. The untracked list is at lines 84-92, and the `candidatePaths` call is at lines 93-100. `desktop/src/import/package.ts:75-107` is the package loop over `source.files`. `desktop/src/import/stage.ts:192-193` is the retry reuse check. The cloud side is `runner/src/import-checkout.ts:119-147`.
+- **Reason:** No requirement says how an imported workspace holds the work of a submodule that no cloud computer fetches, and the user has not chosen.
+
+- **Source:** Review. **Category:** Product bug.
+- **Grade reasons:**
+  - Confidence is High. The review and its fresh finding check traced the loss through the code and through Git's documented listing rules. No step depends on timing. No run reproduced it.
+  - Harder later is Yes. Each workspace that a released Mac app imports before the fix lacks the submodule work without notice. A later fix cannot reach those imported workspaces.
+- **Terms:**
+  - **Gitlink:** a Git tree or index entry with mode `160000`. It records one commit of another repository, not its files.
+  - **Initialized submodule:** a gitlink folder that holds a `.git` entry. It has its own working files and its own commits.
+  - **Inventory:** the desktop record of the selected source state, built by `inventory` in `desktop/src/import/inventory.ts`. It also controls capture and retry.
+  - **Stored work:** the bundle, working files, `.context`, and session files that an import keeps for activation.
+  - **Candidate walker:** the no-follow folder walk in `desktop/src/import/source-walk.ts` and `desktop/src/import/candidate-paths.ts`. It turns an untracked or newly staged nested repository into its working files.
+- **Background:**
+  - Conductive's Mac app imports local Conductor workspaces into cloud workspaces. For each workspace, the inventory lists the changed, untracked, and `.context` files. The Mac app uploads them with a Git bundle of the branch.
+  - The stored-work rule is an agent call of 9 November 2026. It keeps a bundle of the commits that GitHub lacks, the changed and untracked files that Git sees, `.context`, and each session's memory file. `docs/protocol/conductor-import.md:123-128` states it.
+  - Activation must restore that work exactly, as `docs/protocol/conductor-import.md:197-199` says. The import moves only the work that GitHub does not hold, as `docs/protocol/conductor-import.md:224` says.
+  - The import result names each file that stayed on the Mac, with its path and its size, at `docs/protocol/conductor-import.md:116-119`. Today only the 100 MiB file rule puts a file there.
+  - At activation, the runner checks out the imported HEAD in the cloud computer, at `runner/src/import-checkout.ts:119-147`. Then it copies the stored files over the checkout. This step is the cloud checkout.
+  - No product code fetches or initializes a submodule. The org image clones each repository "with no checkout, hook, filter, or submodule", at `worker/lifecycle/repository-layout.md:105-107`.
+  - The inventory compares working files with HEAD in a private comparison repository: a temporary Git directory, so that no source filter runs.
+  - Commit `d6bd4fbf` added the candidate walker. Its test, `desktop/src/import/inventory-nested.test.ts:62`, covers only the untracked and the staged forms. A search of `desktop/` finds no committed gitlink case.
+- **Problem:**
+  - A committed gitlink never reaches the candidate walker.
+  - The comparison at `inventory.ts:67-77` runs `git diff --ignore-submodules=all`. The `git diff` documentation says that `all` "hides all changes to submodules". So a gitlink never enters the changed list.
+  - The added list at `inventory.ts:78-83` takes index paths that HEAD does not hold. `ls-tree -r HEAD` lists each gitlink path, so a committed gitlink never enters the added list.
+  - The untracked list at `inventory.ts:84-92` runs `ls-files --others`. Git's `treat_directory` in `dir.c` returns `path_none` for an index gitlink. So Git lists no file below a committed submodule.
+  - `candidatePaths` at `inventory.ts:93-100` gets only these lists. So the walker never opens the submodule folder.
+  - The package loop at `package.ts:75-107` packs only `source.files`. The bundle holds the outer commits, which record only the gitlink's commit ID.
+  - So an edited tracked file, an untracked file, or a commit that the submodule's remote lacks enters neither the inventory nor the bundle.
+  - Retry reuse at `stage.ts:192-193` keeps a sealed stage while the inventory digest is unchanged. That digest holds no submodule file, so later edits inside the submodule do not change it.
+  - The rules cover this loss by their purpose. The outer Git sees an edited submodule as one changed path, not as files. The rules do not say how a cloud computer holds submodule work.
+- **Impact if no action:** An import completes, its result names nothing, and the submodule folder in the cloud stays empty. A user who then removes the local workspace loses that work. One condition is enough: an initialized committed submodule with an edited file, an untracked file, or a commit that its remote lacks. The `git worktree` documentation says that "the support for submodules is incomplete", which makes the case rare.
+- **Root question:** How does an import keep, or clearly report, the work inside an initialized submodule, which no cloud computer fetches?
+  - The first review asked: "How must the import preserve workspace working content across its Git classifications?"
+  - The finding check replaced that question on 2026-11-11, and the review owner adopted the new one. The first question presumed that the work travels as working files. It hid the restore, size, and Git-visibility choices that separate the options.
+- **Options:**
+  - **A.** Add committed gitlink directories to the existing candidate walker. Keep its current ignore rules, link handling, and `.git` omission. Add a committed-gitlink regression to the existing inventory test. Effort: Small.
+    - From the first review. As written, A copies every initialized submodule in full, also one without local work.
+    - Its current ignore check drops each tracked submodule file that matches an outer or a submodule ignore pattern. So A is Small as written, but incomplete.
+  - **B.** Give one candidate builder the HEAD, index, and untracked classifications, including entry modes. Route every on-disk directory through the existing walker. Move the existing collection into that builder and add the same regression. Effort: Medium.
+    - From the first review. B keeps the copy policy of A and moves it into one builder.
+    - Its claim "It adds no new submodule policy" is not accurate. B decides that imported workspaces hold full plain copies of submodules. No requirement covers that, and new workspaces never get it.
+    - The review owner did not approve B on 2026-11-11. Plain bytes below a retained gitlink are hidden from Git and from the app's listings. They cannot be added as ordinary files. They drop the submodule's local commits. The ignore check can drop tracked files.
+  - **C.** Build on the single candidate builder of B. Compare each initialized committed submodule with its own HEAD, in its own private comparison repository, and recurse into nested submodules. Copy only a submodule with local work: every tracked file, and each untracked file that the outer and the submodule's rules keep. Add a focused `sourceInventory` regression and a runner restore case. Effort: Medium.
+    - From the finding check. Cost: one private comparison for each initialized submodule.
+    - It still uploads the unchanged files of a changed submodule. The cloud Git cannot see or add them. It needs a protocol update.
+  - **D.** Restore each initialized submodule as a repository at activation. The Mac sends a bundle of the submodule commits that GitHub lacks, the submodule HEAD, and its changed and untracked files. The runner fetches the recorded commit with the activating member's token, applies the bundle, and checks out the submodule before it copies the files. Effort: Large.
+    - From the finding check. Cost: new manifest records, Worker and runner work, a protocol section, and a fetch rule for remotes that are not on GitHub.
+    - Imported workspaces then get submodules that new workspaces lack.
+  - **E.** Build on the single candidate builder of B, and detect local work in each initialized submodule as C does. Upload none of that work. Name each changed and untracked submodule file in the import result as staying on the Mac. Name the submodule folder when its HEAD differs from the commit that the outer HEAD records. Effort: Medium.
+    - From the finding check. Change the report reason, which now names only the 100 MiB rule. Change the mockup and the protocol. Add a focused regression for those result entries.
+    - Cost: the cloud workspace still lacks the work, and the user learns of it only after the import.
+    - It becomes Large if the report needs its own reason field in the shared result contract.
+  - **F.** Stop the import of a workspace whose initialized submodule has local work. The scan row gives the reason and asks the user to commit and push that work first. Effort: Large.
+    - From the finding check. Cost: a new rejection, a new row state in the shared scan contract, Worker and page work, a mockup, and a protocol change.
+    - It blocks the rest of that workspace, and pushed submodule work still does not reach the cloud computer.
+- **Restore facts for A, B, and C:** After the cloud checkout, the gitlink stays in the index, and the folder has no `.git`.
+  - `ce_compare_gitlink` in Git's `read-cache.c` then says "we consider it always to match".
+  - `treat_directory` in `dir.c` returns `path_none`, so Git shows no untracked file there.
+  - `die_path_inside_submodule` in `submodule.c` refuses `git add` of any path below an index gitlink.
+  - The runner's file list builds on the same Git listings. `runner/src/git-paths.ts:66-70` marks the children of a submodule as absent.
+  - So copied bytes reach the disk, but neither Git nor the app shows them. The agent can still read them with file tools.
+  - The walker's ignore check at `desktop/src/import/git.ts:166-189` runs `check-ignore --no-index` against an absent index. So a tracked file that matches an outer or a submodule pattern drops. Git never applies ignore rules to tracked files, and never applies outer rules inside a submodule.
+- **Scope and behaviour of each choice:**
+  - D restores repositories: new manifest records, Worker and runner work, and fetch rules. It best protects the work.
+  - E reports the work as staying on the Mac: a visible result entry, with protocol and mockup changes. It moves no file that GitHub can hold.
+  - F rejects the whole workspace until the user pushes the work.
+  - C makes plain copies that the cloud Git cannot see or add. A and B make full plain copies, and the review owner did not approve them.
+  - Severity High gives `fix now` before the merge into `main`, whichever option the user picks.
+  - The branch has used both permitted child fix rounds. So the fix needs an explicit further release: a third scoped round, or a later branch on the primary branch before `main`.
+- **Shared assumptions checked:**
+  - "Submodule work travels as plain working files under the gitlink path" comes from the text of A and B. It does not hold, because the cloud checkout keeps the gitlink in the index. D, E, and F drop it.
+  - "A copy takes each initialized submodule in full" comes from A and B. For a submodule without local work, it moves files that GitHub can hold. C limits it, and D and E drop it.
+  - "The walker's current ignore check fits submodule content" comes from A. It does not hold for tracked files, as the restore facts above say. C drops it.
+  - "The Git state of the submodule stays on the Mac without notice" comes from both first options. The result rule at `docs/protocol/conductor-import.md:116-119` points the other way. D and E drop it.
+  - "The fix stays in the Mac inventory, inside the frozen contracts" was a limit of the branch, not a requirement. It sets the timing, not the merit. D, E, and F drop it.
+- **Left out:**
+  - Change nothing, or keep ignoring committed gitlinks. It fails the goal, because the work still drops without notice.
+  - Copy the whole worktree. It breaks the stored-work rule of 9 November 2026, which stays.
+  - Drop `--ignore-submodules=all`, or read `git status`, for submodule state. To see file changes, Git runs status inside each submodule with that submodule's config. That breaks the rule that no filter from the source config runs. It also gives only the gitlink path, not files.
+  - Remove the gitlink from the cloud index, so that the copied files show as untracked. It fails exact restoration, because Git then shows a deletion that the user never made.
+  - A guide or README note only. It fails the goal, because nothing tells the user during the import.
+  - The Git listing flags are not a real choice. With `none` or `untracked`, Git runs `git status --porcelain=2` inside each submodule with that submodule's config, in `is_submodule_modified` of `submodule.c`. With `dirty`, Git reports only a moved submodule HEAD. Every value gives only the gitlink path. `ls-files --recurse-submodules` supports only `--cached` and `--stage`.
+  - The Worker relay and the shared path check are not a real choice for A, B, C, and E. `importPath` and the runner already accept a path below a gitlink. D needs them.
+- **Wider fix:** E, which includes the single candidate builder of B. It separates a visible report of work that stays on the Mac from plain cloud copies that Git cannot see. C and D need the same builder. B alone moves the copy policy of A into that builder, so it is not the wider fix of this class. D is the broader repository restoration, if the user chooses it.
+- **Previous examples:** Commit `66ad57da5c4f4441421cc6b80f66586aa445915b` added working-content tracking for gitlinks in the runner. The current example is `runner/src/checkpoint.ts:32`. The stored-work rule of 9 November 2026 requires exact restoration.
+- **Related:**
+  - [conductor-import-fixture-permissions.md](conductor-import-fixture-permissions.md): work that waits. Its exact tuples in `desktop/src/import/inventory-nested.test.ts` fail on both Mac CI jobs at the first tuple. So a committed-gitlink case in that test cannot run on macOS before that fix. Put the new case in its own focused `sourceInventory` test, or fix those fixture modes in the same unit.
+  - [conductor-import-git-storage-lifetime.md](conductor-import-git-storage-lifetime.md): the same code and a shared wider fix. C and E add one private comparison repository for each initialized submodule. Each one needs the callback-owned cleanup of that item. When one later branch changes these lines, apply both in one unit.
+  - [conductor-import-omitted-lfs-head-pointer.md](conductor-import-omitted-lfs-head-pointer.md): a shared wider fix for E only. Its chosen option gives each file one explicit disposition, also an intentional omission. The "stays on the Mac" entries of E fit that model. No option conflicts.
+  - The nested-repository fix of commit `d6bd4fbf`: the same code and the same class. Its walker and its ignore check fit the untracked files of a nested repository. They do not fit the tracked files of a committed submodule, because a committed gitlink stays in the cloud index.
+  - The ignore-rule fix of commit `55f9407f`: each copied or named untracked submodule file keeps the outer and the user exclusions. C and E use the submodule's own effective `core.excludesFile` path.
+  - The typed `ImportLocations` of `desktop/src/import/locations.ts`: each submodule query takes the typed locations.
+  - The resolved fixture root `importTemporaryDirectory` of `desktop/tests/import-temporary.ts`: each new regression uses it.
+  - A separate open review observation, not part of this item: the nested check at `desktop/src/import/candidate-paths.ts:23` runs `check-ignore --no-index` against an absent index. It can drop a file that a nested repository tracks when that file matches the repository's own ignore pattern, such as a force-added file. It was read, not reproduced.
+- **Recommendation:** E for the bounded import. It turns the silent loss into the visible rule that already covers files over 100 MiB. It moves no file that GitHub can hold, and it adds no restore behaviour that cloud computers lack. D best protects the work, if the user wants initialized submodules and their commits restored as repositories.
+  - The first review recommended B. The finding check of 2026-11-11 changed the recommendation to E, with D as the option that best protects the work.
+  - The review owner kept E on 2026-11-11 and did not approve B. The user has not answered, and the review owner has not asked the final question yet.
+- **Action:** ask the user, because no requirement defines the restored state of initialized submodule work, and restoring repositories or naming work as staying on the Mac has real scope and behaviour trade-offs.
+  - The review owner recorded this Action on 2026-11-11. A rejection of the whole workspace, option F, has the same kind of trade-off.
+  - Implement no option before the answer. This covers E, D, plain copies, a new rejection, a fetch rule, and an omission policy.
+  - The first review's Action was: "ask the user, because this can lose imported working content and both permitted fix rounds are used." The round limit sets the timing, not the decision.
+- **Validation of the fix:**
+  - Use an initialized committed submodule with an edited tracked file, an untracked file, and a commit that its remote lacks.
+  - Put the case in its own focused `sourceInventory` test. Keep it out of the failing nested test. Also keep it out of the package cases that already meet the Intel 5,000 ms guard.
+  - For E, assert one result entry for each changed and untracked file.
+  - Also assert one entry for the folder when its HEAD differs from the gitlink commit.
+  - For C or D, also add a runner restore case.
+  - Keep every assertion and every guard. Record repeated pass counts on Linux, Apple silicon, and Intel.
