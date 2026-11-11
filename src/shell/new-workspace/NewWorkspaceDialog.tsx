@@ -7,11 +7,13 @@ import { useNavigation } from '../../app/navigation'
 import { defaultSection } from '../../app/sections'
 import { useStore, valueOf } from '../../app/store'
 import {
-  DraftFiles,
+  FolderNotice,
+  noticedFolder,
   OversizeNotice,
 } from '../../chat/components/AttachmentChips'
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
+import { useComposerDrop } from '../../chat/components/composer-drop'
 import { useSendKey } from '../../chat/components/send-key'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
@@ -73,8 +75,11 @@ function CreateButton(props: {
  * kept message. As it closes, the focus goes back to the control that
  * opened it. When another screen opened, the main area of that screen
  * takes the focus. In a suspended org, the refused bar takes the place of
- * the composer. The files upload before the workspace exists, with the
- * chips and the notice of the workspace chat, as on the page.
+ * the composer. The files of a pick go into the text at the caret, and they
+ * upload before the workspace exists, with the chips and the notices of the
+ * workspace chat, as on the page. The card is the message box of the
+ * dialog, so the whole card takes a drop of files, as `useComposerDrop`
+ * says, and its full border shows the drop state.
  */
 function DialogCard(props: {
   org: OrgSummary
@@ -98,9 +103,9 @@ function DialogCard(props: {
   const card = useRef<HTMLElement>(null)
   const message = useRef<FieldHandle>(null)
   // The file picker opens from the attach button and from the notice of a
-  // file over the size limit.
-  const files = useRef<HTMLInputElement>(null)
-  const pick = () => files.current?.click()
+  // file over the size limit. Its files go into the text at the caret.
+  const picker = useRef<HTMLInputElement>(null)
+  const pick = () => picker.current?.click()
   useModalLayer(
     card,
     () => {
@@ -109,23 +114,32 @@ function DialogCard(props: {
     { initial: message, moved: () => navigation.href() !== openedAt },
   )
   const sendKey = useSendKey(form.ready, form.send)
+  const drop = useComposerDrop({
+    field: message,
+    // A suspended org shows no composer, so its card takes no drop.
+    editable: !sending && !suspended,
+    attach: (files, folders) => model.attach(files, folders),
+  })
   const unchosen = form.repositories?.length === 0
   const oversize = form.draft.refused.length > 0
+  const folder = noticedFolder(form.draft)
   const notices =
     form.failure !== null ||
     form.buildNotice !== null ||
     form.notice !== null ||
     oversize ||
+    folder !== null ||
     unchosen
   return (
     <section
       aria-label="New workspace"
       aria-modal
-      className={styles.dialog}
+      className={classes(styles.dialog, drop.dropping && styles.dropping)}
       onKeyDownCapture={trapTab}
       ref={card}
       role="dialog"
       tabIndex={-1}
+      {...drop.handlers}
     >
       <div className={styles.header}>
         {form.repository && !suspended ? (
@@ -148,17 +162,11 @@ function DialogCard(props: {
       ) : (
         <>
           <div className={styles.body}>
-            {form.draft.files.length > 0 ? (
-              <DraftFiles
-                files={form.draft.files}
-                onRemove={(id) => model.removeFile(id)}
-                onRetry={(id) => void model.retryFile(id)}
-              />
-            ) : null}
             <OrgLinks orgId={org.id}>
               <ChipTextField
                 caretAtEnd
                 editable={!sending}
+                files={model.filesSource}
                 handle={message}
                 label="Message"
                 lines={7}
@@ -177,6 +185,7 @@ function DialogCard(props: {
               {form.buildNotice}
               {form.notice}
               <OversizeNotice onAttach={pick} refused={form.draft.refused} />
+              <FolderNotice folder={folder} onAttach={pick} />
               {unchosen ? (
                 <ChooseRepositoriesNotice open={leave} org={org} />
               ) : null}
@@ -203,9 +212,10 @@ function DialogCard(props: {
               onChange={(event) => {
                 const chosen = Array.from(event.currentTarget.files ?? [])
                 event.currentTarget.value = ''
-                if (chosen.length > 0) void model.attach(chosen)
+                if (chosen.length === 0) return
+                message.current?.insertFiles(model.attach(chosen))
               }}
-              ref={files}
+              ref={picker}
               tabIndex={-1}
               type="file"
             />

@@ -1,8 +1,9 @@
 /*
  * The parts of the chip text field that the mockup part has no need for:
  * the frame that holds the placeholder over the first line, the paragraph
- * of the editor without its margins, and the placeholder in the type and
- * the colour of the placeholder of a plain text field.
+ * of the editor without its margins, the placeholder in the type and the
+ * colour of the placeholder of a plain text field, and the layer of the
+ * drop caret.
  */
 .frame {
   position: relative;
@@ -32,4 +33,19 @@
 .touch {
   font-size: 16px;
   line-height: 22px;
+}
+
+/*
+ * The layer of the drop caret over the text of the field. It takes no
+ * pointer, so the place under the pointer stays that of the text below it.
+ */
+.dropLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The drop caret at its place in the layer, with the look of the mockups. */
+.dropCaret {
+  position: absolute;
 }

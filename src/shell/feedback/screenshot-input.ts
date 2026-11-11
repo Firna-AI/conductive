@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { carriesFiles } from '../../app/file-drags'
 
 /**
  * The files of a paste when it holds files and no plain text, such as a
@@ -9,18 +10,6 @@ import { useEffect, useRef } from 'react'
 export function pastedFiles(data: DataTransfer | null): File[] {
   if (data === null || data.getData('text/plain') !== '') return []
   return Array.from(data.files)
-}
-
-/**
- * Whether a drag carries files. Until the drop, the browser shows only the
- * kinds of the items, not the files.
- */
-function carriesFiles(data: DataTransfer | null): boolean {
-  if (data === null) return false
-  return (
-    data.types.includes('Files') ||
-    Array.from(data.items).some((item) => item.kind === 'file')
-  )
 }
 
 /**

@@ -45,6 +45,11 @@ confirmations, reports, and credentials.
 `ATTACHMENT_MAX_BYTES` is the decoded file limit.
 `attachmentUploadUrl` appends the filename, media type, and first-message target as URL data.
 The browser posts one raw file as `application/octet-stream` with its known byte length.
+`Attachment.path` is the copy path of the file, relative to the workspace repository.
+The upload reply gives it, so each upload has its path before Send.
+Each file of an accepted message gives it too, and the browser builds no path.
+A file of a message stored before this field has no path.
+The browser and runner readers give null for it, and no mention matches it.
 
 `endpoint-address.ts` owns `readEndpointAddress`, the shared endpoint
 address builder for forms, saves, dispatch, and the model gateway.
@@ -233,4 +238,11 @@ The git credential payload is not defined yet.
   `AccountResponse.shortcuts` carries both keyboards.
   `ACCOUNT_PATHS.shortcuts` names the batch save route.
 
-[Shared contract key code](key-code.md) lists the contracts, readers, and transcript helpers.
+[Shared contracts key code](key-code.md) names the files, the types, and
+the functions of the shared contracts that a reader opens first. It covers
+the session addresses, the Markdown transcripts, and the shared words and
+parts of a transcript. It also covers the mentions, the attachment paths,
+and the session titles. Then it gives the contracts of the other areas,
+such as ports, orgs, members, the waitlist, workspaces, GitHub, feedback,
+and routines. It ends with links to the browser fakes, the runner fakes,
+and the migrations.

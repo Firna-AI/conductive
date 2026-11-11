@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppModel } from './app/app-model'
+import { useFileDropGuard } from './app/file-drags'
 import { NavigationContext, type Navigation } from './app/navigation'
 import { PanelLayout } from './app/panels'
 import { ServicesContext, type AppServices } from './app/services'
@@ -19,7 +20,9 @@ import {
  * The web app. `services` gives the API, the events, the clock, and the
  * storage: the live Worker in production, the fake API in development.
  * `features` gives the parts of a workspace that later milestones build,
- * such as the chat, the files, and the tools.
+ * such as the chat, the files, and the tools. A drop of files outside each
+ * message box does nothing, as `useFileDropGuard` says, so the browser
+ * never opens a file in place of the app.
  */
 export function App(props: {
   services: AppServices
@@ -29,6 +32,7 @@ export function App(props: {
   const [app] = useState(() => new AppModel(props.services))
   const [panels] = useState(() => new PanelLayout(props.services.storage))
   const viewport = useViewport()
+  useFileDropGuard()
   return (
     <ServicesContext.Provider value={props.services}>
       <AppModelContext.Provider value={app}>

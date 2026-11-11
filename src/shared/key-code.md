@@ -1,11 +1,19 @@
-# Shared contract key code
+# Shared contracts key code
+
+This page is part of [the shared contracts](README.md). It names the
+files, the types, and the functions of the shared contracts that a reader
+opens first. Each path is relative to `src/shared/`, the folder of this
+page.
 
 - [Session addresses](session-link.ts) builds app session paths and absolute session links for the Worker and the app.
 - [Session Markdown](transcript/session-markdown.ts) folds session pages and
   builds concise or full transcripts. [Markdown items](transcript/markdown-items.ts)
-  format the shared chat words, paths, and commands. A Continue note copies
-  as one note with the words of the chat, the name of the member, and both
-  branches as code, under no heading. [Markdown code](transcript/markdown-code.ts)
+  format the shared chat words, paths, and commands. In a member's message,
+  they put the escaped name of each attached file in place of its mention.
+  The attachments line then lists only the other files. A Continue note
+  copies as one note with the words of the chat, the name of the member,
+  and both branches as code, under no heading.
+  [Markdown code](transcript/markdown-code.ts)
   keeps inline and block fences longer than their content's backticks.
 - [Lost data](transcript/lost-data.ts) maps refusal event types to the same
   product names for the browser line and the copied transcript.
@@ -36,13 +44,28 @@
   The browser and the concise copy share that state. Browser callers use
   React nodes as the insert content.
 
+- [Mention text](mention-text.ts) reads and writes the mention of a file or
+  a folder, for the chat field, sent messages, and the attachment mentions.
+- [Attachment paths](attachment-paths.ts): `attachmentPath` builds the copy
+  path of a file: `ATTACHMENTS_DIRECTORY`, a digest of the file ID alone,
+  and the safe file name. The Worker and the development and test fakes
+  call it.
+- [Attachment mentions](attachment-mentions.ts): `attachmentForMention`
+  finds the attached file that a file mention of the message names.
+  `textWithAttachmentNames` puts the original name of each such file in
+  place of its mention. `hasOwnWords` says whether the text holds more than
+  spaces and those mentions.
+- [Session title](session-title.ts): `sessionTitleFrom` puts in those names
+  before it takes the first line and cuts it to 60 code points. It gives
+  null when the text holds nothing but those mentions. `modelTitleFrom`
+  first changes each underscore of a model answer to a space.
 - [Port reports](ports.ts) carry sorted listening ports and their safe labels.
 - [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
 - [Restore marker](restore-marker.ts) names the file that the Worker writes at the end of the disk restore. The terminal and the agent runner read it.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
-- [Account contracts](account.ts) include the repository list available before an org exists. An own endpoint write carries its endpoint and key. Its status carries the host and normal login metadata. The owner's account can also carry `modelList`, with missing app model IDs in `missing` and the last successful read time in `checkedAt`. No successful read means no field. `refreshAgentLoginModelsPath` names the POST route that answers 204 before the browser reads the account again. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret. Stored statuses also include a Codex ChatGPT sign-in as `token`. A Codex save accepts `api-key` or `endpoint`; ChatGPT uses the device flow. `defaultAgentLoginNoReuse` gives the typed default for each agent and kind.
+- [Account contracts](account.ts) include the repository list available before an org exists. An own endpoint write carries its endpoint and key. Its status carries the host and normal login metadata. The owner's account can also carry `modelList`, with missing app model IDs in `missing` and the last successful read time in `checkedAt`. No successful read means no field. `refreshAgentLoginModelsPath` names the POST route that answers 204 before the browser reads the account again. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret. Stored statuses also include a Codex ChatGPT sign-in as `token`. A Codex save accepts `api-key` or `endpoint`; ChatGPT uses the device flow. `defaultAgentLoginNoReuse` gives the typed default for each agent and kind. The Worker and the dev backend use these defaults.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the required `waitlistOn` flag of the waitlist switch, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause and switch changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.

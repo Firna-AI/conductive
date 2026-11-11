@@ -2,30 +2,68 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives workspace,
-session, and file chips with the list of `@`, attached files, the Markdown
-tables and headings of a reply and of a file preview, and the work fold of
-a turn. It also gives the data that the chat does not have, the files that
-the cloud computer could not read, and the end of a turn at the time limit
-of background work.
+session, and file chips with the list of `@`, and attached files with their
+drops. It gives the picture of an image file, the Markdown tables and
+headings of a reply and of a file preview, and the work fold of a turn. It
+also gives the data that the chat does not have, the files that the cloud
+computer could not read, and the end of a turn at the time limit of
+background work.
 
-- `AttachmentChips` in `src/components/chat/` draws each attached file as a
-  chip: a glyph, the name, a label, and its actions. While a file uploads,
-  a ring takes the place of its icon, and the share of the file that the
-  browser sent, such as "64%", the place of its size. Before the first
-  measurement, the spinner of a working agent and "Uploading" show, so no
-  chip shows a made-up share. A failed upload tints the whole chip
-  rose and offers Try again and Remove. Send waits for both states. In the
-  composer the glyph sits in the cell of its icon, so the × that takes its
-  place under a pointer is Remove, in each state.
-  `AttachmentStates.module.css` holds the styles of the states, and
-  `attachmentCopy.ts` holds their words. A file over 25 MB never becomes a
-  chip: a notice over the composer names it, gives the limit, and offers
-  "Attach a smaller file", as `app/attachments/too-large` shows. The files
-  of a sent message show under it, at the right, without Remove. The New
-  workspace page and dialog use the same chips before the workspace exists,
-  as `app/new-workspace/files` and `app/new-workspace/dialog/files` show.
-  In the dialog, the notice of a file over 25 MB sits with its other
-  notices, under the message.
+- `DraftFileChip` in `src/components/chat/` draws each attached file of a
+  draft as a chip at its place in the text of the message box. It is one
+  unit of the text, as a file chip is, with the size of a file chip, from
+  decisions 262 and 263.
+  - Its icon cell shows the kind of the file, or its upload: a ring with the
+    share of the file that the browser sent, such as "64%". Before the first
+    measurement, the spinner of a working agent and "Uploading" show, so no
+    chip shows a made-up share. A failed upload tints the whole chip rose
+    and shows an alert.
+  - The name and a muted label follow: the share, "Uploading", the size, or
+    "Failed". A failed chip ends with Try again, which takes the keyboard
+    focus. A press on the name opens nothing.
+  - The × of the icon cell removes the chip under a pointer, and the × at
+    the end removes it where no pointer hovers, as for each chip of the
+    text. Backspace and Delete remove it whole.
+  - `AttachedFileChip.module.css` holds the styles of its parts and states,
+    and `attachmentCopy.ts` holds their words. The draft text holds a mark
+    at the place of each file, and its other text is escaped, as
+    [`draft-marks.ts`](../../src/app/draft-marks.ts) of the app says. The
+    mockups and the app share that module. Send waits for each upload.
+- A file over 25 MB never becomes a chip: a notice over the composer names
+  it, gives the limit, and offers "Attach a smaller file", as
+  `app/attachments/too-large` shows. A dropped folder is not attached
+  either: its notice names it, says to attach the files in it, and offers
+  "Attach files", as `app/attachments/drop/folder` shows.
+- The whole message box takes a drop of files. While files hover over it,
+  the box shows the drop state, a full border in the accent colour, from
+  `dropping` in `Composer.module.css`. In the New workspace dialog, the
+  whole card is the message box, and `dropping` in
+  `NewWorkspaceDialog.module.css` gives the card the same border, as the
+  `drop` variant of `app/new-workspace/dialog/files` shows.
+- During a file drag over the text, `DraftText` draws the drop caret where
+  a drop puts the files: 2 px wide, as high as the line, in the accent
+  colour. The real caret moves only at the drop, so a cancelled drag
+  leaves the selection as it was, as `app/attachments/drop` shows. A phone
+  shows a pick at the caret in place of the drag.
+- `SentFileChip` draws each attached file of a sent message as a chip at
+  the place of its mention: the icon of its kind, its name, and its size in
+  a muted colour. A sent message holds `@` and the copy path of each file,
+  and the chip finds its file by that path. A press opens the file tab of
+  the copy, as `app/attachments/open` shows. The chip of a message that
+  waits for the cloud computer opens nothing. `SentFiles` lists the files
+  that the text does not show under the message, at the right, with
+  `AttachmentChips.module.css` and `AttachmentStates.module.css`.
+- Both chips of an attached file take no fixtures, so the app can use them.
+  The New workspace page and dialog use the same chips before the
+  workspace exists, as `app/new-workspace/files` and
+  `app/new-workspace/dialog/files` show. In the dialog, the notice of a
+  file over 25 MB sits with its other notices, under the message.
+- `ImageView` in `src/components/files/` draws the picture of a PNG, JPEG,
+  GIF, or WebP file in its tab, from decision 265 B. The picture keeps its
+  proportions, in the middle of the tab, at its own size or smaller, so
+  that it fits the width and the height of the tab. The header keeps
+  Download, and Copy is off. An image that the browser cannot draw shows
+  "Download this file to open it", as `app/files/image/cannot-draw` shows.
 - `MarkdownTable` in `src/components/common/` draws each Markdown table of
   a reply and of the Markdown preview of a file as a native table. It
   imports no fixture, so the app can use it too. Each caller draws the
@@ -194,8 +232,8 @@ of background work.
     `ChipIconCell` in `ChipRemove.tsx`. While a pointer is over the cell, a
     × takes the place of the icon, and a press removes the chip. Where no
     pointer hovers, as on a phone, the icon stays, and `ChipEndRemove`
-    puts a × at the end of the chip. Attached files follow the same rule,
-    and on a phone they keep their × button of touch size.
+    puts a × at the end of the chip. Attached files are chips of the text
+    too, so they follow the same rule.
   - The bubble of a sent message is never wider than its column, and in a
     message box the box around a chip is never wider than the chip. So a
     chip with a long name is cut short in place, with no gap after it, and

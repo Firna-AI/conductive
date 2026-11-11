@@ -1,7 +1,4 @@
 import {
-  $createLineBreakNode,
-  $createParagraphNode,
-  $createTabNode,
   $createTextNode,
   $getRoot,
   $getSelection,
@@ -12,105 +9,35 @@ import {
   type LexicalNode,
   type RangeSelection,
 } from 'lexical'
+import { fileMark, literalText } from '../../../app/draft-marks'
+import { linkTarget, type WorkspaceLinks } from '../../links/workspace-links'
+import { $isAttachedFileNode } from './attached-file-node'
+import { copyPartOf, heldFile, type FieldFiles } from './attached-files'
 import {
-  linkTarget,
-  namesOrgWorkspace,
-  textParts,
-  type WorkspaceLinks,
-} from '../../links/workspace-links'
-import { mentionParts, type Mention } from '../../mentions/mention-text'
-import { findMentioned, type MentionTree } from '../../mentions/MentionsContext'
-import {
-  $createLinkTextNode,
   $createWorkspaceChipNode,
   $isLinkTextNode,
   $isWorkspaceChipNode,
 } from './chip-nodes'
 import { joinFieldParts, type FieldPart } from './field-text'
-import {
-  $createFileMentionNode,
-  $createMentionTextNode,
-  $isFileMentionNode,
-} from './file-mention-nodes'
+import { $isFileMentionNode } from './file-mention-nodes'
+
+/** The part of a node for the text of the field, or null for an element. */
+type PartOf = (
+  node: LexicalNode,
+  from?: number,
+  to?: number,
+) => FieldPart | null
 
 /**
- * What the field finds its chips in: the workspaces of the org, and the
- * file tree of the workspace. `tree` is null in a field that takes no
- * mentions, such as the message of New workspace.
+ * The part of a node in the public text of the field, as a member reads and
+ * copies it: the text as typed, the exact link of a workspace chip, and the
+ * mention of a file chip. An attached file and an element give nothing.
  */
-export interface FieldSources {
-  links: WorkspaceLinks
-  tree: MentionTree | null
-}
-
-/** Text as the nodes of a plain text field: text, line breaks, and tabs. */
-function $rawNodes(text: string): LexicalNode[] {
-  return text
-    .split(/(\r\n|\r|\n|\t)/)
-    .filter((piece) => piece !== '')
-    .map((piece) =>
-      piece === '\t'
-        ? $createTabNode()
-        : /^[\r\n]+$/.test(piece)
-          ? $createLineBreakNode()
-          : $createTextNode(piece),
-    )
-}
-
-/** The nodes of plain text, where each workspace link can be a chip. */
-function $linkNodes(text: string, links: WorkspaceLinks): LexicalNode[] {
-  return textParts(text).flatMap((part): LexicalNode[] => {
-    if (part.kind !== 'link') return $rawNodes(part.text)
-    if (linkTarget(part.href, links)) {
-      return [$createWorkspaceChipNode(part.source, part.href)]
-    }
-    if (namesOrgWorkspace(part.href, links.orgId)) {
-      return [$createLinkTextNode(part.source, part.href)]
-    }
-    return $rawNodes(part.source)
-  })
-}
-
-/**
- * The node of a mention: a chip when the tree holds its entry, else text
- * that can become a chip when the tree holds it later.
- */
-function $mentionNode(mention: Mention, tree: MentionTree): LexicalNode {
-  return findMentioned(tree, mention.path, mention.folder)
-    ? $createFileMentionNode(mention.source)
-    : $createMentionTextNode(mention.source)
-}
-
-/**
- * The nodes of a plain text from a paste or a draft. A link to a workspace
- * of the list becomes a chip. A link to a page of a workspace of the org
- * that the list does not hold yet stays text that can become a chip later.
- * Every other link stays text. Where the field takes mentions, a mention of
- * an entry of the tree becomes a chip, and every other mention stays text
- * that can become a chip later.
- */
-export function $fieldNodes(
-  text: string,
-  sources: FieldSources,
-): LexicalNode[] {
-  const { tree } = sources
-  if (!tree) return $linkNodes(text, sources.links)
-  return mentionParts(text).flatMap((part): LexicalNode[] =>
-    part.kind === 'text'
-      ? $linkNodes(part.text, sources.links)
-      : [$mentionNode(part, tree)],
-  )
-}
-
-/** Puts a plain text in the field, with its chips, in place of its content. */
-export function $setFieldText(text: string, sources: FieldSources): void {
-  const paragraph = $createParagraphNode()
-  paragraph.append(...$fieldNodes(text, sources))
-  $getRoot().clear().append(paragraph)
-}
-
-/** The part of a node for the plain text, or null for an element. */
-function partOf(node: LexicalNode, from = 0, to?: number): FieldPart | null {
+function $publicPart(
+  node: LexicalNode,
+  from = 0,
+  to?: number,
+): FieldPart | null {
   if ($isWorkspaceChipNode(node)) {
     return { kind: 'chip', source: node.getTextContent() }
   }
@@ -124,8 +51,37 @@ function partOf(node: LexicalNode, from = 0, to?: number): FieldPart | null {
   return null
 }
 
-/** The plain text of the whole field, with the exact link of each chip. */
-export function $fieldText(): string {
+/**
+ * The part of each node for the draft text of the field. An attached file
+ * gives its mark, with the spaces of a mention. In a field that takes
+ * attached files, the chip of a file that its draft no longer holds gives
+ * nothing, so the text never names such a file. There, each other part is
+ * literal text, which `literalText` escapes, so neither typed or pasted text
+ * nor the source of a chip can make a mark. Without `files`, the text stays
+ * as the field holds it.
+ */
+function draftPartOf(files: FieldFiles | null): PartOf {
+  return (node, from, to) => {
+    if ($isAttachedFileNode(node)) {
+      const id = node.getFileId()
+      if (files && !heldFile(files, id)) return null
+      return { kind: 'chip', source: fileMark(id), mention: true }
+    }
+    const part = $publicPart(node, from, to)
+    if (files === null || part === null) return part
+    return part.kind === 'text'
+      ? { kind: 'text', text: literalText(part.text) }
+      : { ...part, source: literalText(part.source) }
+  }
+}
+
+/**
+ * The text of the whole field, as the draft keeps it: the exact link of each
+ * chip, the mention of each file chip, and the mark of each attached file.
+ * `files` are the attached files of the field, as `draftPartOf` says.
+ */
+export function $fieldText(files: FieldFiles | null = null): string {
+  const part = draftPartOf(files)
   const parts: FieldPart[] = []
   $getRoot()
     .getChildren()
@@ -133,15 +89,15 @@ export function $fieldText(): string {
       if (index > 0) parts.push({ kind: 'text', text: '\n' })
       const children = $isElementNode(block) ? block.getChildren() : [block]
       for (const node of children) {
-        const part = partOf(node)
-        if (part) parts.push(part)
+        const piece = part(node)
+        if (piece) parts.push(piece)
       }
     })
   return joinFieldParts(parts)
 }
 
-/** The plain text of a selection, as a copy gives it. */
-export function $selectedFieldText(selection: RangeSelection): string {
+/** The text of a selection, with the part of each node as `part` gives it. */
+function $selectionText(selection: RangeSelection, part: PartOf): string {
   const [start, end] = selection.isBackward()
     ? [selection.focus, selection.anchor]
     : [selection.anchor, selection.focus]
@@ -149,14 +105,42 @@ export function $selectedFieldText(selection: RangeSelection): string {
   for (const node of selection.getNodes()) {
     const from = start.type === 'text' && start.key === node.getKey()
     const to = end.type === 'text' && end.key === node.getKey()
-    const part = partOf(
+    const piece = part(
       node,
       from ? start.offset : 0,
       to ? end.offset : undefined,
     )
-    if (part) parts.push(part)
+    if (piece) parts.push(piece)
   }
   return joinFieldParts(parts)
+}
+
+/**
+ * The text of a selection as the draft keeps it, with the mark of each
+ * attached file. The field keeps it for a paste or a drop in its draft.
+ */
+export function $selectedFieldText(
+  selection: RangeSelection,
+  files: FieldFiles | null,
+): string {
+  return $selectionText(selection, draftPartOf(files))
+}
+
+/**
+ * The plain text of a selection, as a copy, a cut, or a drag gives it: the
+ * text as typed, the exact link of each chip, the mention of each file chip
+ * and of each ready attached file, and the name of each other attached
+ * file. It holds no mark and no escape, also in a field with attached files.
+ */
+export function $selectedCopyText(
+  selection: RangeSelection,
+  files: FieldFiles | null,
+): string {
+  return $selectionText(selection, (node, from, to) =>
+    $isAttachedFileNode(node)
+      ? copyPartOf(heldFile(files, node.getFileId()))
+      : $publicPart(node, from, to),
+  )
 }
 
 /**

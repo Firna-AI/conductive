@@ -17,6 +17,8 @@ import {
 } from '../services'
 import { accountRoutes } from './account-routes'
 import { attachmentRoutes } from './attachment-routes'
+import { attachmentFileRoutes } from './attachment-files'
+import { attachmentMessageFetch } from './attachment-message-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
@@ -71,6 +73,7 @@ export function createFakeServices(search: string): AppServices {
     ...workspaceRoutes(backend),
     ...createRoutes(backend),
     ...attachmentRoutes(backend, options.upload),
+    ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
     ...routineRoutes(backend),
@@ -83,7 +86,7 @@ export function createFakeServices(search: string): AppServices {
       admitOpenSignup(backend)
       guardScope(backend.state, path, method)
     },
-    server.fetch,
+    attachmentMessageFetch(backend, server.fetch),
   )
   const events: WorkspaceEventSource = {
     open: (target, handlers) =>

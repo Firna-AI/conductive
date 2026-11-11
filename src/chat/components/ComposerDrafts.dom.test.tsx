@@ -13,6 +13,7 @@ import {
 } from '../../test-support/message-field'
 import { mount, MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
 import { blankDraft, type Draft } from '../state/chat-snapshot'
+import type { FieldFiles } from './chip-field/attached-files'
 import { Composer } from './Composer'
 import {
   debounce,
@@ -23,6 +24,13 @@ import {
 } from './tab-drag-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
+
+/** The files of a draft that holds none. */
+const noFiles: FieldFiles = {
+  files: () => [],
+  retry: () => undefined,
+  subscribe: () => () => undefined,
+}
 
 /** A text that the composer gave, and the session that took it. */
 interface Change {
@@ -54,15 +62,14 @@ async function mountComposer() {
         blocked={false}
         choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
         draft={shown.draft}
+        files={noFiles}
         models={[]}
-        onAttach={() => {}}
+        onAttach={() => []}
         onChangeText={(text) => {
           changes.push({ session: shown.session, text })
           setShown((now) => ({ ...now, draft: { ...now.draft, text } }))
         }}
         onChooseModel={() => {}}
-        onRemoveFile={() => {}}
-        onRetryFile={() => {}}
         onSend={() => {}}
         onStop={() => {}}
         running={false}

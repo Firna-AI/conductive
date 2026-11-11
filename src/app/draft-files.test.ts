@@ -7,6 +7,7 @@ const file = new File(['png'], 'overlap.png', { type: 'image/png' })
 const attachment: Attachment = {
   id: 'attachment-1',
   name: 'overlap.png',
+  path: null,
   kind: 'image',
   mediaType: 'image/png',
   sizeBytes: 3,

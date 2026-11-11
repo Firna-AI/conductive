@@ -10,15 +10,34 @@ pull request bar, and the owner picker. A host can give its own parts, as
 
 ## Run it
 
-Run `npm run dev` from the repository root with Node 24.
-The [development backend](dev/README.md) describes its fake API and preview options.
-The [Get started steps](../../README.md#get-started) give the local Worker setup.
-
-The development fake saves shortcut batches through `dev/shortcut-routes.ts`.
-It checks the whole batch with the shared reader before it changes state.
-It keeps each keyboard separate, preserves empty key lists, and removes
-an override when the request sends null keys.
-The next account read returns both keyboards.
+- `npm run dev` serves the app at `http://127.0.0.1:5173` with the fake API
+  of `src/test-support/`. Development only: `main.tsx` loads it behind
+  `import.meta.env.DEV`, so the production build never bundles it.
+- The local Worker serves the page. The
+  [Get started steps](../../README.md#get-started) give its local setup.
+- [The development fake](dev-fake.md) gives the query options of the dev
+  wiring in `dev/`, such as `?operator=1`. It also covers its fake routes:
+  the uploads and their copies, Create org, feedback, the operator
+  section, the waitlist, the routines, and the workspace numbers.
+- The workspace screen shows the real chat over the dev fake. The fake
+  sends no chat event, so a sent message stays pending, and a new session
+  adds no tab. It answers each chat write with a recorded reply and
+  changes no state, except a send of uploaded files. That reply gives the
+  message its own text and files. In a workspace that runs, the sent chips
+  of those files open copies of their bytes in the file tab, as
+  [The development fake](dev-fake.md) says.
+- One counter numbers the events of all workspaces of the dev fake, and its
+  event source ignores the workspace. So an event of another workspace
+  leaves a gap in the event numbers of the chat. At the next event of the
+  open workspace, the chat opens its stream again, and the history fills
+  the gap. Each such event costs one more connection, and the chat still
+  applies the later events. Use `npm run dev` for the chat load and the
+  kept chat. The
+  [chat development page](../chat/dev/README.md) has a fake with state for
+  live events and writes.
+- The production build uses `live-services.ts`: the Worker on the origin of
+  the page, its event socket, and an `XMLHttpRequest` for each raw file
+  upload, which measures the bytes that the browser sent.
 
 ## Composition
 
@@ -29,6 +48,13 @@ The next account read returns both keyboards.
 | `services`   | `AppServices` from `services.ts`: the API, the events, the clock, the storage  |
 | `navigation` | The address bar: `browserNavigation(window)`, or `memoryNavigation` in tests   |
 | `features`   | `WorkspaceFeatures` from `../shell/workspace/features.ts`: the workspace parts |
+
+`App` also mounts `useFileDropGuard` of `file-drags.ts`, so a drop of files
+outside each message box does nothing, as
+[Drops](../../docs/protocol/message-attachments.md#drops) says. The guard
+hears each drag last, on the window. It leaves each drag that a part took,
+such as a message box or the Feedback dialog, and it never stops an event.
+A drag of text or of a link keeps the action of the browser.
 
 The workspace screen draws the frame, the header, the start steps, and the
 states of the sandbox, with Restore on the bar of an archived workspace
@@ -88,7 +114,8 @@ feedback draft.
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
 layers, the focus, saved drafts, New workspace as a page or a dialog,
-with the send key that every composer shares, and the waitlist.
+with its attached files and the send key that every composer shares, and
+the waitlist.
 [Command palette and keys](palette-and-keys.md) gives the rules of the
 command palette and of the keyboard shortcuts.
 [Feedback](palette-screens.md) gives the rules of the Feedback dialog that
@@ -215,19 +242,32 @@ mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
 clicks, types, and lets the answers of the fake API settle.
 `../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
 for the tests of New workspace as a page or a dialog, and of its send key.
+Its `markOf` gives the mark of a file of the draft by the name of the file.
+
+`../shell/new-workspace/NewWorkspaceDrops.test.tsx` drops files on the
+page and on the dialog card. A drop on the text of the page puts the files
+at the point. While a create runs, the box shows no drop state or drop
+caret, also for files that hovered as it began, and takes no drop. Files
+over the card show its drop state, and a dropped folder gets its notice in
+the dialog. `../App.dom.test.tsx` mounts `App` and checks the guard
+outside each box, the browser's own drag of text and links, and the copy
+offer of a box. It also checks that the Feedback dialog still takes a
+dropped screenshot.
+
+Run `npm run test -- src/app/dev/attachment-files.test.ts src/chat/dev/dev-attachment-files.test.ts`
+for the API tests of the uploaded bytes and their copies in both
+development fakes. `dev/attachment-test-kit.ts` gives them a stub
+`window`, fake timers, a sample image, and a check of the exact bytes.
 
 ## Key code
 
-- `clipboard.ts`: `copyText`, the clipboard write for plain or pending text.
-  It starts a pending `ClipboardItem` write during the user press when the
-  browser supports it. The fallback waits for the text and calls `writeText`.
-  Both paths propagate failures. `AppServices.copy` accepts a string or a
-  promise of a string. Live services and development hosts use this owner.
-
 [Key code](key-code.md) names the files, the types, and the functions to
-open first. It covers the dev fake, the API client, the file uploads, the
+open first. It covers the dev fake, the API client, the clipboard, the
 models, the waitlist and its codes, the routines, and the workspace list.
 It also covers the event streams, the drag, and the operator section.
+[Key code: drafts and attached files](key-code-drafts.md) covers the draft
+text, the attached files, and their uploads, which the chat and New
+workspace share.
 [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
 covers the command palette, the layers, the frames, New workspace as a
 dialog, and feedback with its screenshots.
