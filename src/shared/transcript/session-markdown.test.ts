@@ -71,7 +71,7 @@ it('copies the concise chat with default folds and the historical model choices'
   )
 })
 
-it('keeps a growing run open in a concise copy between calls and folds it when its turn ends', () => {
+it('keeps the newest run of a running turn open in a concise copy, and folds it when its turn ends', () => {
   const { builder, document } = markdownFixture()
   const context = { sessionId: document.session.id, turnId: 'live' }
   builder.merge([

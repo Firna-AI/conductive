@@ -239,9 +239,9 @@ The git credential payload is not defined yet.
   command after the items that began before it.
 - [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
   [Transcript entries](transcript/transcript-entries.ts) group the items and
-  generic inserts, and mark each run that can still grow. The browser and
-  concise copy share its default open state. Browser callers use React
-  nodes as the insert content.
+  generic inserts, and give each run of tool calls its default open state.
+  The browser and the concise copy share that state. Browser callers use
+  React nodes as the insert content.
 
 - [Port reports](ports.ts) carry sorted listening ports and their safe labels.
 - [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.

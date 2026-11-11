@@ -16,7 +16,6 @@ import type { ToolCall } from '../../shared/chat-events'
 import {
   foldLabel,
   toolEnding,
-  toolRunOpen,
   toolVerb,
 } from '../../shared/transcript/tool-words'
 import { LeftOut } from '../../../docs/mockups/src/components/chat/LeftOut'
@@ -103,20 +102,19 @@ export function FoldLine(props: {
 }
 
 /**
- * A run of consecutive tool calls as one line that folds them. A run shows
- * each call while it grows, also between two calls, and while a call is in
- * progress or not done. Otherwise it stays folded. Once the user opens or
- * folds it, it keeps that choice, and its line keeps its place.
+ * A run of consecutive tool calls as one line that folds them. `open` says
+ * whether the run shows each call, as `groupEntries` decides: while a turn
+ * runs, only its newest run does. Once the user opens or folds the run, it
+ * keeps that choice, and its line keeps its place.
  */
 export function ToolGroup(props: {
   calls: readonly ToolCall[]
-  /** The agent can still add calls to the run: the running turn ends with it. */
-  growing: boolean
+  /** The run shows its calls until the user folds it. */
+  open: boolean
 }) {
   const { calls } = props
-  const live = toolRunOpen(calls, props.growing)
   const [chosen, setChosen] = useState<boolean | null>(null)
-  const fold = useFold(chosen ?? live, setChosen)
+  const fold = useFold(chosen ?? props.open, setChosen)
   return (
     <details className={styles.group} {...fold.details}>
       <FoldLine calls={calls} line={fold.line} />

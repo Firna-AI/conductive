@@ -26,12 +26,9 @@ export function toolEnding(call: ToolCall): string | undefined {
   return endings[call.state]
 }
 
-/** A run starts open while it grows or has a call that is not done. */
-export function toolRunOpen(
-  calls: readonly ToolCall[],
-  growing: boolean,
-): boolean {
-  return growing || calls.some((call) => call.state !== 'done')
+/** A run with a call in progress or not done starts open. */
+export function toolRunOpen(calls: readonly ToolCall[]): boolean {
+  return calls.some((call) => call.state !== 'done')
 }
 
 /** A count for the line of a fold, such as "1 tool call": none for zero. */

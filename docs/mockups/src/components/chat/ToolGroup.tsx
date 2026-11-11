@@ -98,20 +98,19 @@ export function FoldLine(props: {
 }
 
 /**
- * A run of tool calls as one line that folds them. A run shows each call
- * while it grows, also between two calls, and while a call is in progress
- * or stopped. Otherwise it stays folded. When the runner left out output of
- * a call, the folded line gives the total, and the call gives its own part.
+ * A run of tool calls as one line that folds them. `open` says whether the
+ * run shows each call: while a turn runs, only its newest run does. When
+ * the runner left out output of a call, the folded line gives the total,
+ * and the call gives its own part.
  */
 export function ToolGroup(props: {
   calls: readonly ToolCallItem[]
-  /** The agent can still add calls to the run: the working line follows it. */
-  growing: boolean
+  /** The run shows its calls. */
+  open: boolean
 }) {
   const { calls } = props
-  const live = props.growing || calls.some((call) => call.status !== 'done')
   return (
-    <details className={styles.group} open={live}>
+    <details className={styles.group} open={props.open}>
       <FoldLine calls={calls} />
       <ul className={styles.calls}>
         {calls.map((call) => (

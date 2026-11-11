@@ -83,7 +83,7 @@ export function ChatPane(props: {
                   return (
                     <ToolGroup
                       calls={entry.calls}
-                      growing={entry.growing}
+                      open={entry.open}
                       key={entry.id}
                     />
                   )

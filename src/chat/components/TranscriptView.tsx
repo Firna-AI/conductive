@@ -65,11 +65,7 @@ export function TranscriptView(props: {
             )
           case 'tools':
             return (
-              <ToolGroup
-                calls={entry.calls}
-                growing={entry.growing}
-                key={entry.id}
-              />
+              <ToolGroup calls={entry.calls} open={entry.open} key={entry.id} />
             )
           case 'work':
             return <WorkFold key={entry.id} steps={entry.steps} />

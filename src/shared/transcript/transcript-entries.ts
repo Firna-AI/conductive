@@ -1,5 +1,5 @@
 import type { ToolCall } from '../chat-events'
-import { turnOf } from './known-turns'
+import { toolRunOpen } from './tool-words'
 import type { Transcript, TranscriptItem } from './transcript'
 import { foldedWork, type WorkItem } from './turn-work'
 
@@ -25,8 +25,8 @@ export type Entry<Content> =
       kind: 'tools'
       id: string
       calls: ToolCall[]
-      /** The agent can still add calls to the run, as `groupEntries` says. */
-      growing: boolean
+      /** The run shows its calls until the user folds it, as `groupEntries` says. */
+      open: boolean
     }
   | { kind: 'insert'; insert: TranscriptInsert<Content> }
   | { kind: 'work'; id: string; steps: WorkStep<Content>[] }
@@ -45,17 +45,12 @@ export function workSummary<Content>(steps: readonly WorkStep<Content>[]): {
   }
 }
 
-/**
- * The ID of the newest item of the running turn, or null when no turn runs.
- * A new item of the turn goes after it, also before a message that waits.
- */
-function newestOfRunningTurn(transcript: Transcript): string | null {
-  const running = transcript.turn?.turnId
-  if (running === undefined) return null
-  const newest = transcript.items.findLast(
-    (item) => turnOf(transcript, item) === running,
+/** The ID of the newest tool call of a turn, or null when it has none. */
+function newestCall(transcript: Transcript, turnId: string): string | null {
+  const call = transcript.items.findLast(
+    (item) => item.kind === 'tool' && item.turnId === turnId,
   )
-  return newest?.id ?? null
+  return call?.id ?? null
 }
 
 /**
@@ -64,9 +59,10 @@ function newestOfRunningTurn(transcript: Transcript): string | null {
  * work before an answer becomes one work fold, as `foldedWork` says. An
  * insert that follows a folded item joins its fold, and an insert never
  * starts one. Each other run of consecutive tool calls is one entry, so the
- * chat can fold it. An insert ends such a run. The run that holds the newest
- * item of the running turn is growing, because the next call of the turn
- * joins it, until an insert follows that item.
+ * chat can fold it. An insert ends such a run. While a turn runs, only the
+ * run that holds its newest tool call starts open, also after a message that
+ * follows it, and each earlier run of the turn starts folded. Each other run
+ * starts open while one of its calls is not done.
  */
 export function groupEntries<Content>(
   transcript: Transcript,
@@ -78,7 +74,8 @@ export function groupEntries<Content>(
   const runs = foldedWork(transcript, followed)
   const starts = new Set(runs.map((run) => run[0].id))
   const folded = new Map(runs.flat().map((item) => [item.id, item] as const))
-  const newest = newestOfRunningTurn(transcript)
+  const running = transcript.turn?.turnId ?? null
+  const newest = running === null ? null : newestCall(transcript, running)
   const insertsAfter = (id: string | null) =>
     inserts.filter((insert) => insert.after === id)
   const entries: Entry<Content>[] = insertsAfter(null).map((insert) => ({
@@ -106,10 +103,11 @@ export function groupEntries<Content>(
       const run: Extract<Entry<Content>, { kind: 'tools' }> = last?.kind ===
       'tools'
         ? last
-        : { kind: 'tools', id: item.id, calls: [], growing: false }
+        : { kind: 'tools', id: item.id, calls: [], open: false }
       if (run !== last) entries.push(run)
       run.calls.push(item.tool)
-      run.growing = item.id === newest && !followed.has(item.id)
+      run.open =
+        item.turnId === running ? item.id === newest : toolRunOpen(run.calls)
     }
     for (const insert of insertsAfter(item.id)) {
       entries.push({ kind: 'insert', insert })

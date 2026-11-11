@@ -22,6 +22,5 @@
 - **Left out:** None. The three options cover a move of the lost line, a move of the waiting message, and no move.
 - **Wider fix:** A. One placement rule then holds for every item of a running turn.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/tool-run-growth-after-refusal.md`, the same order of events. Its option C is this option A.
 - **Recommendation:** A. A lost line then stays with the work that it belongs to.
 - **Action:** fix after merge, apply A, because the branch that found it did not change how a lost line is placed.
