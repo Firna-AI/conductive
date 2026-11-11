@@ -205,7 +205,6 @@ it.each(['Stop', 'shutdown'])(
           state: 'stopped',
           durationMs: 0,
           files: [],
-          ...(ending === 'Stop' ? { filesUnavailable: true } : {}),
           omittedFileCount: 0,
           userMessageIds: ['message-1'],
         },

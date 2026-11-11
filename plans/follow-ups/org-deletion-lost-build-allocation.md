@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, a problem outside the scope of the check of finding 8, branch `conductor/boat-native-remote-workspaces-milestone-5d`, round 1. The same day, the item grew to cover the workspace cleanup owners.
-- **Location:** `worker/members/deletion-data.ts:120-129` (`recordSuspendedResources`), `worker/members/deletion.ts:62-81` (`stopDeletedOrg`), `worker/members/cleanup.ts:58-110` (the purge), `worker/members/purge-data.ts:11-37`, `worker/lifecycle/settings-data.ts:150-160` (`firstOrgAdmin`), `worker/lifecycle/start-allocation-cleanup.ts:16-25` (`retryAllocationCleanup`), `worker/lifecycle/cleanup.ts:25-37` (`retrySandboxCleanup`), and `worker/members/README.md:82-85` (the `suspendOrg` contract).
+- **Location:** `worker/members/deletion-data.ts:120-129` (`recordSuspendedResources`), `worker/members/deletion.ts:62-81` (`stopDeletedOrg`), `worker/members/cleanup.ts:58-110` (the purge), `worker/members/purge-data.ts:11-37`, `worker/lifecycle/settings-data.ts:150-160` (`firstOrgAdmin`), `worker/lifecycle/start-allocation-cleanup.ts:16-25` (`retryAllocationCleanup`), `worker/lifecycle/cleanup.ts:25-37` (`retrySandboxCleanup`), and `worker/members/lifecycle-hooks.md:17-20` (the `suspendOrg` contract).
 - **Reason:** Delete org had this gap before the time-limit work that found it, and the production hooks now drain starts and builds.
 
 - **Source:** Review. **Category:** Product bug.
@@ -16,7 +16,7 @@
 - **Background:**
   - The protocol says that Delete org stops every sandbox of the org at once. It also says that the app deletes everything of the org after 7 days, unless an admin restores the org. See the "Delete org" section of `docs/protocol/orgs-and-members.md`.
   - `stopDeletedOrg` runs the `suspendOrg` hook, then fills the deletion list with `recordSuspendedResources`, then stops each listed sandbox. It fills the list only once, before it marks the org suspended.
-  - The `suspendOrg` contract in `worker/members/README.md` says that the hook must drain pending workspace starts and image builds, and keep their sandbox IDs in D1. It does not say what the drain does with a cleanup owner.
+  - The `suspendOrg` contract in `worker/members/lifecycle-hooks.md` says that the hook must drain pending workspace starts and image builds, and keep their sandbox IDs in D1. It does not say what the drain does with a cleanup owner.
   - `productionMembersHooks` in `worker/members/composition.ts` implements `suspendOrg`. It suspends the lifecycle of the org image and of each workspace of the org, which drains their starts and builds. The main Worker dispatches the Members routes with these hooks, through `worker/routes.ts`. Its Cron Trigger runs the purge with the same hooks.
   - An image build prepares the org's cloud computer image in its own build sandbox. It saves its create request in `image_build_jobs`, as phase `allocating`, before it calls the provider.
   - After a failed build, `cleanupBuild` in `worker/lifecycle/build-execution.ts` replays that saved request and deletes the returned sandbox. So the build row is the cleanup owner of a build.
@@ -64,3 +64,13 @@
   - `cleanupBuild` in `worker/lifecycle/build-execution.ts` keeps the saved request of a failed build through every failure exit, for the same class at the build's own exits.
 - **Recommendation:** B. It keeps Delete org right whatever the hook implementation does, and the other sandboxes still stop at once. A is smaller, if the branch that writes the hook keeps the members code as it is.
 - **Action:** fix after merge, apply B, because the gap is in Delete org code that predates the time-limit work.
+- **Evidence update, 2026-11-10:** the computer ledger now exists. It is the D1 table `computer_ledger`, from `migrations/202611100900_computer_ledger.sql`.
+  - It has a row for each create request. The row holds the allocation key, the provider account, the org, the owner, the purpose, and the computer ID once the app knows it. It holds no saved request body.
+  - So the claims above that no D1 record names an unresolved workspace allocation predate the ledger. A replay still needs the saved request, which only its owner keeps.
+  - Delete org now lists the live ledger rows that hold a computer ID, at `worker/members/deletion-data.ts:130-131`. The other line anchors above also predate the ledger. Recheck each claim and anchor against the current hooks before the work starts.
+  - This note changes no option and no recommendation. It does not claim that the gap still reproduces.
+  - `plans/follow-ups/unresolved-computer-request-ownership.md` holds the wider question: one owner for unresolved create requests across every owner. Its option D would also close this gap.
+- **Evidence update, 2026-11-10, build jobs:** `stopOrgLifecycleRecords` in `worker/members/composition-data.ts:17-37` sets each running build job of the deleted org to the phase `done`, at lines 33-37.
+  - Then `cleanupBuild` in `worker/lifecycle/build-execution.ts` does not replay the saved build request. So Delete org ends the build replay before the purge, in addition to the gaps above.
+  - Recheck this against the current hooks before the work starts. This note changes no option and no recommendation. It does not claim that the gap still reproduces.
+  - `plans/follow-ups/pre-purge-step-failure-blocks-others.md` puts the stop step of Delete org into a default step runner. It touches the same code, and neither item waits for the other.

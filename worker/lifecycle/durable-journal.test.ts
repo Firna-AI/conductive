@@ -35,6 +35,7 @@ it.each([{ kind: 'resume' }, { kind: 'create' }] as const)(
         createdAt: TEST_TIME - 1_200_000,
         updatedAt: TEST_TIME,
         archivedAt: null,
+        restoreUntil: null,
       },
       start: {
         kind,

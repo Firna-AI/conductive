@@ -9,13 +9,11 @@ import { MemberComputerView } from './MemberComputerView'
 
 const now = Date.UTC(2026, 10, 9, 12)
 
-/** An admin saved the install script after the newest build started. */
 const settings: OrgSettings = {
   installScript: 'npm ci',
   startupScript: '',
   envVars: [],
   updatedAt: 0,
-  needsBuild: true,
 }
 
 function build(id: string, state: ImageBuild['state']): ImageBuild {
@@ -32,6 +30,7 @@ function build(id: string, state: ImageBuild['state']): ImageBuild {
   }
 }
 
+/** The tab of a member with the saved changes from `builds`. */
 function view(builds: BuildsResponse) {
   return (
     <MemberComputerView
@@ -54,13 +53,29 @@ describe('the notice of a changed install script for a member', () => {
     const cases = [
       {
         name: 'first build runs',
-        builds: { builds: [build('b1', 'running')], currentImageBuildId: null },
+        builds: {
+          builds: [build('b1', 'running')],
+          currentImageBuildId: null,
+          changes: {
+            installScript: true,
+            addedRepositories: [],
+            removedRepositories: [],
+          },
+        },
         present: [`The install script changed ${oneMoreBuild}`],
         absent: [keepsBuild, 'Build computer'],
       },
       {
         name: 'no good build, and none runs',
-        builds: { builds: [build('b1', 'failed')], currentImageBuildId: null },
+        builds: {
+          builds: [build('b1', 'failed')],
+          currentImageBuildId: null,
+          changes: {
+            installScript: true,
+            addedRepositories: [],
+            removedRepositories: [],
+          },
+        },
         present: ['The install script changed It runs at the next build.'],
         absent: [keepsBuild, oneMoreBuild, 'Build computer'],
       },
@@ -69,6 +84,11 @@ describe('the notice of a changed install script for a member', () => {
         builds: {
           builds: [build('b1', 'succeeded')],
           currentImageBuildId: 'b1',
+          changes: {
+            installScript: true,
+            addedRepositories: [],
+            removedRepositories: [],
+          },
         },
         present: [`It runs at the next build. ${keepsBuild}`],
         absent: [oneMoreBuild, 'Build computer'],
@@ -80,5 +100,20 @@ describe('the notice of a changed install script for a member', () => {
         ...check(view(item.builds), item.present, item.absent),
       }).toEqual({ case: item.name, missing: [], unwanted: [] })
     }
+  })
+
+  it('does_not_show_for_a_change_of_the_repositories_alone', () => {
+    const repositoryChange: BuildsResponse = {
+      builds: [build('b1', 'succeeded')],
+      currentImageBuildId: 'b1',
+      changes: {
+        installScript: false,
+        addedRepositories: [{ id: 'icons', fullName: 'firna/icons' }],
+        removedRepositories: [],
+      },
+    }
+    expect(
+      check(view(repositoryChange), [], ['The install script changed']),
+    ).toEqual({ missing: [], unwanted: [] })
   })
 })

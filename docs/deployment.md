@@ -6,7 +6,9 @@ settings the Worker gives to each workspace sandbox.
 [Architecture](architecture.md) describes the Worker and its hostnames.
 The [Worker README](../worker/README.md#routes) lists the routes that the
 Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
-push to `main` deploys the test deployment.
+push to `main` deploys the test deployment. Two linked pages hold the
+[model inputs](deployment/models.md) and the
+[runner archive and software image](deployment/runner-archive.md).
 
 Each input names the routes that read it. A route that does not read an
 input works without it. Keep secrets out of the repository and out of
@@ -31,6 +33,20 @@ examples.
   Worker and of its Durable Objects. It removes the query string of each
   request URL from the logs, because a query string can hold a sign-in
   code, a preview credential, or the name of an attached file.
+- `wrangler.jsonc` also turns on Issues, the error tracking of Workers,
+  which is in open beta. Issues groups each uncaught exception, each
+  `5xx` reply, and each error log line of the Worker into issues. The
+  Worker page of the Cloudflare dashboard lists them under Issues.
+  - Each deploy sets Issues from `wrangler.jsonc`. A switch in the
+    dashboard alone ends at the next deploy.
+  - Cloudflare keeps the details of each occurrence for 7 days.
+  - The preview proxy passes each `5xx` reply of a preview through, so
+    the failures of the programs in the sandboxes become issues too.
+  - Issues sends no alert by itself. An automation in the dashboard sends
+    an issue to a chat, an incident tool, a webhook, or a coding agent.
+  - Issues shows no cause for an unexpected error that the Worker
+    catches. The reply is then `500 internal_error`, and the Worker logs
+    no error line.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
@@ -47,7 +63,8 @@ examples.
 | `ASSETS` | Static assets | The pages of the web app | The client build of `npm run build`. |
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
 | `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion | The bucket `conductive-chat-attachments`, as [The attachment bucket](#the-attachment-bucket) says. |
-| `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](#the-title-model) says. |
+| `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](deployment/models.md#the-title-model) says. |
+| `CF_VERSION_METADATA` | Version metadata | The software image route of the deploy run | The ID, the tag, and the creation time of the running Worker version. `wrangler.jsonc` sets it. Without it, the route answers 404, as [The software image](deployment/runner-archive.md#the-software-image) says. |
 
 ## Public variables
 
@@ -60,11 +77,12 @@ examples.
 | `GITHUB_CLIENT_ID` | GitHub sign-in, each refresh of a stored GitHub user token, the GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds that copy a repository | The client ID of the GitHub App. |
 | `GITHUB_APP_SLUG` | The links to the GitHub App: Install in Get started, Manage on GitHub in the account, and Manage access of the repository lists | Optional. The slug of the GitHub App, as in `https://github.com/apps/<slug>`. Without it, or with a value that is not a slug, the links use `conductive`, and the Worker logs a warning for a wrong value. It is not a secret. |
 | `BOAT_ORG_ID` | Each call to Boat | The ID of the app's Boat organization, as [The app's Boat account](#the-apps-boat-account) says. It is not a secret. |
-| `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](#models) says. |
-| `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](#models) says. |
-| `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
+| `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](deployment/models.md#models) says. |
+| `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](deployment/models.md#models) says. |
+| `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
 | `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
+| `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](deployment/runner-archive.md#the-software-image) says. It is not a secret. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
 | `OPERATOR_GITHUB_IDS` | The operator section and the suspension of users and orgs | Optional. The numeric GitHub user IDs of the operators, separated by commas. It is not a secret. Without it, each operator request gets `403 operator_required`, as the [operator area](../worker/operator/README.md#overview) says. |
 
@@ -73,8 +91,9 @@ examples.
   credential routes refuse every request without it, and a build cannot
   copy a repository.
 - The two runner archive variables are public metadata of the archive. They
-  hold no secret. [The runner archive](#the-runner-archive) below says how
-  to supply them.
+  hold no secret.
+  [The runner archive](deployment/runner-archive.md#the-runner-archive)
+  says how to supply them.
 
 ## Secrets
 
@@ -86,7 +105,8 @@ examples.
 | `BOAT_KEY_ENCRYPTION_KEY` | Every route that stores or reads a stored secret | A separate 32 random bytes, encoded as Base64. |
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. A PKCS#8 PEM works too. |
 | `GITHUB_WEBHOOK_SECRET` | GitHub webhooks on the machine hostname | The webhook secret of the GitHub App. The Worker checks each delivery with it. Without it, each delivery gets `503 github_unavailable`. |
-| `RESEND_API_KEY` | The invitation emails of the member routes, and the approval emails of the operator section | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. The approval emails come from the same sender. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. An approval still gives app access, and the app tries its email again for 24 hours, as [The approval email](protocol/waitlist.md#the-approval-email) says. |
+| `RESEND_API_KEY` | The invitation emails of the member routes, the approval emails of the operator section, and the feedback emails of `POST /api/feedback` | An API key of Resend that can send from `mail.conductive.build`. The invitations come from `invites@mail.conductive.build`, so Resend must verify that domain. The approval emails come from the same sender. The feedback emails come from `feedback@mail.conductive.build`, on the same domain. A key with sending access only is enough. An `APP_ORIGIN` on `localhost`, `127.0.0.1`, or `[::1]` needs no key. The Worker then writes each invitation link and each feedback email to its log. Without the key, an invite gets `502 invite_email_failed`. The invitation stays pending. A feedback send gets HTTP 502 too. An approval still gives app access, and the app tries its email again for 24 hours, as [The approval email](protocol/waitlist.md#the-approval-email) says. |
+| `FEEDBACK_EMAIL` | The feedback emails of `POST /api/feedback` | The address of the team inbox, which gets each feedback email, as [The email](protocol/feedback.md#the-email) says. It is a secret, so that a personal address stays out of the repository. Without it, each send gets HTTP 503, also on a local `APP_ORIGIN`. With it, a local `APP_ORIGIN` writes each feedback email to the log of the Worker, and needs no `RESEND_API_KEY`. Elsewhere, the feedback emails also need `RESEND_API_KEY`. |
 
 - `BOAT_KEY_ENCRYPTION_KEY` encrypts the agent logins, the GitHub user
   tokens, the env vars of each org, and the workspace tokens. It also
@@ -145,146 +165,30 @@ above.
 
 ## Models
 
-`CONDUCTIVE_MODELS` holds the models that the app offers.
-The `vars` of [`wrangler.jsonc`](../wrangler.jsonc) hold this list and
-`CONDUCTIVE_DEFAULT_CHOICE`, the app default. Edit them in the repository.
-Each deploy publishes these values through the existing deploy workflow.
-The Worker has no built-in list and no fallback model.
-
-Keep both settings as JSON encoded in strings, because the model readers
-expect text bindings. A `.dev.vars` value replaces its repository value
-for local development.
-
-- The value is a non-empty JSON array. Each entry is an object with these
-  fields:
-  - `agent`: `claude` or `codex`.
-  - `model`: the model ID that the agent gets, as a non-empty string.
-  - `label`: the name that the app shows, as a non-empty string.
-  - `efforts`: a non-empty array. Each effort is `none`, `low`, `medium`,
-    `high`, `xhigh`, or `max`.
-- `CONDUCTIVE_DEFAULT_CHOICE` is one JSON object with `agent`, `model`, and
-  `effort`. The saved default of a user comes before it.
-- These routes read the two variables:
-  - `GET /api/models` of the app reads `CONDUCTIVE_MODELS`. A missing or
-    invalid value gives `503 models_unavailable`.
-  - `GET /api/account` of the app reads `CONDUCTIVE_DEFAULT_CHOICE` for a
-    user with no saved default. A missing or invalid value then gives
-    `503 default_model_unavailable`.
-  - The tool create route `POST /v1/tools/workspaces` reads
-    `CONDUCTIVE_DEFAULT_CHOICE` when the call names no model or no effort
-    and the owner of the calling workspace has no saved default. A missing
-    or invalid value then gives `503 default_model_unavailable`.
-  - The tool model list `GET /v1/tools/models` reads both variables. A
-    missing or invalid `CONDUCTIVE_MODELS` gives `503 models_unavailable`.
-    When the owner of the calling workspace has no saved default, a
-    missing or invalid `CONDUCTIVE_DEFAULT_CHOICE` gives an empty default
-    choice, not an error.
-    [Agent tools](protocol/agent-tools.md#models) states the list.
-- No other route reads these two variables.
-- The web app reads `GET /api/models` and `GET /api/account` when it
-  starts. So it does not start without a valid model list. A user with no
-  saved default also needs a valid default choice.
-
-The shape of the two values, with placeholders in place of real values:
-
-```json
-[{ "agent": "claude", "model": "<model ID>", "label": "<label>", "efforts": ["low", "medium", "high"] }]
-```
-
-```json
-{ "agent": "claude", "model": "<model ID>", "effort": "medium" }
-```
+[Models](deployment/models.md#models) gives the model list of
+`CONDUCTIVE_MODELS` and the default choice of `CONDUCTIVE_DEFAULT_CHOICE`:
+their shape, and the routes that read them.
 
 ## The title model
 
-`CONDUCTIVE_TITLE_MODEL` names the model that writes a title for a workspace
-that has no name, as [Messages](protocol/messages-and-attachments.md#messages)
-says. It is operator data. The Worker has no built-in title model.
-
-- The value is the model ID of a text generation model of Workers AI, the
-  model service of Cloudflare. The
-  [Workers AI models](https://developers.cloudflare.com/workers-ai/models/)
-  catalogue lists them. Choose a small, fast model.
-- The Worker calls the model through the `AI` binding, on the Cloudflare
-  account of the Worker. Each request counts toward the Workers AI use of
-  that account.
-- Without the binding or the variable, no automatic title is written.
-  The Worker logs a warning when it would request a title.
-  The Worker also logs a warning for a failed request.
-  No route fails for a missing title.
-- Workers AI runs only on the network of Cloudflare. `npm run dev` and
-  `npm run preview` do not reach it. So they need no Cloudflare login, and
-  no automatic title is written locally.
+[The title model](deployment/models.md#the-title-model) gives the model
+that `CONDUCTIVE_TITLE_MODEL` names, and what happens without it.
 
 ## The runner archive
 
-Each new image build installs the runner archive into the org image. A
-refresh keeps the installed runner and updates the repositories.
-[The runner archive](../image/README.md#the-runner-archive) says how to make
-and publish it.
-
-Each deploy from `main` publishes the archive of its commit when the
-archive is new. It sets both variables to that archive, as
-[The archive in each deploy](#the-archive-in-each-deploy) says. To supply
-an archive by hand:
-
-1. Package the archive, as
-   [Developer scripts](../image/developer-scripts.md#package-the-archive)
-   says.
-2. Publish the exact archive at its public HTTPS URL. For R2, upload it
-   through the S3 API, because `wrangler r2 object put` refuses files over
-   300 MiB.
-3. Set `CONDUCTIVE_RUNNER_ARCHIVE_URL` to that URL. It can hold no user
-   name, password, query, or fragment.
-4. Set `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` to the digest of the same file.
-   The Worker accepts upper or lower case.
-
-More facts:
-
-- `runnerSoftware` in `worker/configuration.ts` reads and checks both
-  values, as the `software` option of a build or a refresh. For a missing
-  or invalid value, it gives `503 runner_software_unavailable`.
-- Only a build or a refresh needs the two values. A workspace read, a
-  history read, and the start of the app need no archive setting.
-- Image builds and refreshes run through the Worker routes that the
-  [Worker README](../worker/README.md#routes) lists.
-- The archive holds no Node. Each build downloads one pinned Node release
-  from `nodejs.org` into the image, as
-  [The private Node runtime](../image/runtime.md) says. That download needs
-  no deployment input.
+[The runner archive](deployment/runner-archive.md#the-runner-archive) says
+how each image build gets the runner archive, and how to supply an archive
+by hand.
 
 ### The archive in each deploy
 
-The archives live in the R2 bucket `conductive-runner`. R2 is the file
-storage of Cloudflare. The bucket serves each archive under
-`https://runner.conductive.build/`. Each deploy from `main` takes these
-steps for the archive:
+[The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
+says how each deploy from `main` publishes the archive of its commit.
 
-1. It packages the archive with
-   `--base-url https://runner.conductive.build/`. The archive URL is then
-   `https://runner.conductive.build/runner-<sha256>.tar.gz`, where
-   `<sha256>` is the SHA-256 digest of the archive.
-2. It asks R2's S3 API whether the bucket holds an archive of that name. It
-   uploads the archive only when the name is new.
-3. It checks the size of the file at the public URL, also when the
-   archive already existed. A missing file or a wrong size stops the run
-   before the migrations.
-4. It deploys the Worker with both variables set to that archive.
+### The software image
 
-- The same source and packages give the same digest. So an unchanged
-  runner makes no new upload.
-- Old archives stay in the bucket.
-- The upload uses R2's S3 API with the AWS CLI, because
-  `wrangler r2 object put` refuses files over 300 MiB. The archive is about
-  320 MiB.
-- The S3 key pair comes from the deploy token, as
-  [Cloudflare documents](https://developers.cloudflare.com/r2/api/tokens/).
-  The key ID is the ID of the token. The secret key is the SHA-256 digest
-  of the token value.
-- The run masks that secret key in its log.
-- A new archive reaches the next build of each org image. A refresh keeps
-  the installed runner. So an existing image keeps its runner until its
-  next build.
+[The software image](deployment/runner-archive.md#the-software-image) says
+how each deploy from `main` builds the software image of its version.
 
 ## Frame sources
 

@@ -1,6 +1,6 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert, CircleStop, Clock } from 'lucide-react'
+import { CircleAlert, CircleStop } from 'lucide-react'
 import { people, type PersonKey } from '../../fixtures/members'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
@@ -40,23 +40,17 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       return (
         <div className={styles.user}>
           <div className={styles.bubble}>
-            <MessageText text={item.text} />
+            <MessageText mentions text={item.text} />
           </div>
           {item.attachments ? (
             <AttachmentChips attachments={item.attachments} sent />
-          ) : null}
-          {item.queued ? (
-            <span className={styles.queued}>
-              <Clock size={12} />
-              Sends when the sandbox is ready
-            </span>
           ) : null}
         </div>
       )
     case 'agent':
       return (
         <div className={styles.agent}>
-          <AgentBlocks blocks={item.blocks} bullets={item.bullets} />
+          <AgentBlocks blocks={item.blocks} />
         </div>
       )
     case 'mac-command':

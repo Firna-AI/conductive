@@ -80,7 +80,15 @@ export function endTurn(
         const session = await transaction.session(turn.sessionId)
         const stored = await transaction.turn(turn.turnId)
         if (!session || !stored) throw new Error('The turn is missing.')
-        await new TurnLifecycle(transaction, session).finish(stored, { state })
+        const lifecycle = new TurnLifecycle(transaction, session)
+        if (state === 'stopped') await lifecycle.workspaceStopped(stored)
+        else
+          await lifecycle.runnerEnded(
+            stored,
+            null,
+            transaction.now,
+            () => 'unused',
+          )
       },
       () => undefined,
     ),

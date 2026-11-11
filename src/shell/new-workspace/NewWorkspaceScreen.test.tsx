@@ -43,6 +43,11 @@ async function screenText(role: OrgRole, builtAt?: number): Promise<string> {
         },
       ],
       currentImageBuildId: 'image',
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
   }
   const app = await startedApp(server)

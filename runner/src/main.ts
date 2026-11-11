@@ -5,12 +5,17 @@ import { warmClaude } from './providers/binaries'
 import { Runner } from './runner'
 import { connectWebSocket } from './socket'
 import { DiskStorage, EventStore } from './state'
+import { ProcPortScanner } from './proc-ports'
 
 const warn = (message: string) => process.stderr.write(`${message}\n`)
 
 async function main(): Promise<void> {
   const config = configuration(process.env)
   const store = await EventStore.open(new DiskStorage(config.statePath))
+  const ports = new ProcPortScanner({
+    ...config,
+    uid: process.getuid?.() ?? -1,
+  })
   let timer: ReturnType<typeof setTimeout> | undefined
   let stopped = false
   const reconnect = () => {
@@ -26,12 +31,21 @@ async function main(): Promise<void> {
   const runner = new Runner({
     ...config,
     store,
-    connect: connectWebSocket,
+    connect: (request) => connectWebSocket(request, warn),
     providers: { claude: createClaudeFactory(), codex: createCodexFactory() },
     warm: warmClaude,
     now: Date.now,
     warn,
     disconnected: reconnect,
+    ports: {
+      scan: () => ports.scan(),
+      schedule: (scan, interval) => {
+        const timer = setInterval(() => {
+          void scan()
+        }, interval)
+        return () => clearInterval(timer)
+      },
+    },
   })
   for (const signal of ['SIGTERM', 'SIGINT'] as const)
     process.once(signal, () => {

@@ -18,19 +18,18 @@ import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
 import { activeStoredTurn } from './devices/access'
 import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
-import { readArchiveCheck } from './app-api/archive'
 import { featureResult } from './features/result'
 import { archiveWorkspace } from './lifecycle/archive-workspace'
-import { orgLifecycleActive } from './members/composition-data'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
-import { expireWorkspacePreviews, runWorkspaceAlarms } from './workspace-alarms'
 import type { ConnectionScheduler } from './security/connection-access'
+import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 
 export class Workspace extends AttachmentWorkspace {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver
   private readonly now: () => number
+  private readonly alarmRunner: WorkspaceAlarmRunner
 
   constructor(
     context: DurableObjectState,
@@ -80,6 +79,20 @@ export class Workspace extends AttachmentWorkspace {
       this.features,
       now,
     )
+    this.alarmRunner = new WorkspaceAlarmRunner({
+      context,
+      env,
+      now,
+      alarms: this.integration.alarms,
+      storage: this.integration.storage,
+      browsers: this.chat.browsers,
+      runner: this.chat.runner.connections,
+      devices: this.devices,
+      members: this.members,
+      github: this.github,
+      features: this.features,
+      lifecycle: () => this.alarmLifecycle(),
+    })
   }
 
   async callingToolTurn(workspaceId: string, turnId: string) {
@@ -166,34 +179,12 @@ export class Workspace extends AttachmentWorkspace {
     })
   }
 
-  async alarm(): Promise<void> {
-    if (!(await this.members.active())) return
-    const fence = await this.members.readFence()
-    if (
-      fence &&
-      !(await orgLifecycleActive(this.env.DB, fence.orgId, fence.generation))
-    ) {
-      await this.integration.alarms.defer(this.now(), this.now() + 30_000)
-      await this.integration.alarms.set('lifecycle:access', this.now() + 30_000)
-      return
-    }
-    await runWorkspaceAlarms(this.integration.alarms, this.now, {
-      lifecycle: () => this.alarmLifecycle(),
-      github: () => this.github.alarm(),
-      previews: () =>
-        expireWorkspacePreviews(
-          this.integration.storage,
-          this.integration.alarms,
-          this.features.previews,
-        ),
-      devices: () => this.devices.alarm(),
-      publishRevocations: async () => {
-        const workspaceId = await this.integration.storage.get<string>(
-          'previews:workspace-id',
-        )
-        if (workspaceId) await this.features.publishRevocations(workspaceId)
-      },
-    })
+  alarm(): Promise<void> {
+    return this.alarmRunner.alarm()
+  }
+
+  protected settledAlarms(): Promise<void> {
+    return this.alarmRunner.settled()
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -209,25 +200,10 @@ export class Workspace extends AttachmentWorkspace {
     return this.fetchChat(request)
   }
 
-  checkWorkspaceArchive(orgId: string, workspaceId: string, userId: string) {
-    return featureResult(() =>
-      this.run(() =>
-        readArchiveCheck(
-          this.env,
-          { ...lifecycleDependencies(), now: this.now },
-          orgId,
-          workspaceId,
-          userId,
-        ),
-      ),
-    )
-  }
-
   archiveWorkspace(
     orgId: string,
     workspaceId: string,
     userId: string,
-    discard: boolean,
     origin: string,
   ) {
     return featureResult(() =>
@@ -238,27 +214,26 @@ export class Workspace extends AttachmentWorkspace {
           orgId,
           workspaceId,
           userId,
-          discard,
           origin,
           {
-            revokePreviews: () =>
-              this.features.revokeWorkspace(workspaceId, true),
-            stopChat: () => this.chat.stopWorkspace(workspaceId),
-            clearLifecycle: async () => {
-              await this.integration.storage.delete([
-                'lifecycle:start-job',
-                'lifecycle:create-publication',
-              ])
-              this.controller.cancelLifecycleWaiters()
-              await this.controller.clearLifecycle()
-            },
-            publish: (workspace) =>
-              this.chat.commitWorkspaceEvent(workspaceId, {
-                type: 'workspace.updated',
-                workspace,
-              }),
+            archiveLifecycle: () =>
+              this.controller.archiveLifecycle(workspaceId),
+            reserveArchive: () => this.controller.reserveArchive(workspaceId),
           },
         ),
+      ),
+    )
+  }
+
+  restoreWorkspace(
+    orgId: string,
+    workspaceId: string,
+    userId: string,
+    origin: string,
+  ) {
+    return featureResult(() =>
+      this.run(() =>
+        this.controller.restoreWorkspace(orgId, workspaceId, userId, origin),
       ),
     )
   }

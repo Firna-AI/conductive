@@ -24,6 +24,14 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'workspace_archive_failed':
+      return {
+        kind: warning.kind,
+        message: 'Workspace archive maintenance will retry.',
+        workspaceId: warning.workspaceId.text,
+        phase: warning.phase,
+        error: errorFields(warning.error),
+      }
     case 'workspace_title_request_failed':
       return {
         kind: warning.kind,
@@ -82,6 +90,13 @@ function warningFields(warning: WorkerWarning) {
         message: 'The runner of a workspace closes after a failed message.',
         workspaceId: warning.workspaceId.text,
         error: errorFields(warning.error),
+      }
+    case 'runner_protocol_version_mismatch':
+      return {
+        kind: warning.kind,
+        message:
+          'The runner closes because its protocol version does not meet the workspace version pin.',
+        workspaceId: warning.workspaceId.text,
       }
     case 'lifecycle_repair_limited':
       return {

@@ -1,17 +1,4 @@
-/** Line tests that the block parser and the list parser share. */
-
-export function isBlank(line: string): boolean {
-  return line.trim() === ''
-}
-
-export function indentOf(line: string): number {
-  return line.length - line.trimStart().length
-}
-
-/** A thematic break, such as `---`, `***`, or `_ _ _`. */
-export function isRule(line: string): boolean {
-  return /^ {0,3}([-*_])(?:[ ]*\1){2,}[ ]*$/.test(line)
-}
+/** The fences of the code blocks of the file preview. */
 
 /** The opening fence of a code block, such as ```` ```ts ```` or `~~~`. */
 export function openingFence(
@@ -31,14 +18,4 @@ export function closesFence(line: string, marker: string): boolean {
     match[1][0] === marker[0] &&
     match[1].length >= marker.length
   )
-}
-
-/** Replaces each tab with the spaces up to the next stop of four columns. */
-export function expandTabs(line: string): string {
-  if (!line.includes('\t')) return line
-  let expanded = ''
-  for (const char of line) {
-    expanded += char === '\t' ? ' '.repeat(4 - (expanded.length % 4)) : char
-  }
-  return expanded
 }

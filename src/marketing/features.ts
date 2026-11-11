@@ -150,6 +150,6 @@ export const smallerFeatures: readonly FeatureItem[] = [
   {
     icon: 'archive',
     title: 'Archive without losing work',
-    text: 'Archive a finished workspace. The app checks first for work that is not pushed.',
+    text: 'Archive a workspace at once. Restore it within 14 days.',
   },
 ]

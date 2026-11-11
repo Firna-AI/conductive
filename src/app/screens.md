@@ -2,11 +2,11 @@
 
 This guide belongs to [Web app: data and composition](README.md). It
 gives the rules of the screens of the app shell: the account and Get
-started, sign-in, invitations, orgs, panels and layers, the command
-palette, the focus, saved drafts, New workspace as a page or a dialog, and
-[the waitlist](#the-waitlist). The
-[command palette protocol](../../docs/protocol/command-palette.md) states
-what the palette does.
+started, sign-in, invitations, orgs, panels and layers, the focus, saved
+drafts, New workspace as a page or a dialog, and
+[the waitlist](#the-waitlist).
+[The command palette and Feedback](palette-screens.md) gives the rules of
+the command palette and of the Feedback dialog.
 
 - The app runs every cloud computer in its own Boat account, so no org has
   a Boat key. The app has no key screen, tab, notice, or Get started step,
@@ -69,13 +69,24 @@ what the palette does.
   [Operator section](../shell/operator/README.md) says.
 - The Cloud computer tab names the software of the base image from the
   settings reply. An older reply without it names no software.
-- The notice of a changed install script has the same words for an admin
-  and a member, from `changedScriptNotice`. Until the org has a good build,
-  it says that one more build runs the script while the first build runs,
-  and else that the next build runs it. Until the builds load, it says
-  only that the next build runs it. An admin gets Build computer in the
-  notice only once the org has a good build, because before that the head
-  of the builds offers Try again or Build computer. A member never gets it.
+- The notice of a changed install script shows only while
+  `BuildsResponse.changes.installScript` is true. It has the same words
+  for an admin and a member, from `changedScriptNotice`. Until the org
+  has a good build, it says that one more build runs the script while the
+  first build runs, and else that the next build runs it. An admin gets
+  Build computer in it only once the org has a good build, because before
+  that the head of the builds offers Try again or Build computer.
+- The repository notice of the Repositories and Cloud computer tabs reads
+  `BuildsResponse.changes`, as
+  [The repository notice](../../docs/protocol/org-image.md#the-repository-notice)
+  says, so each of these tabs reads the builds while it shows. Its state
+  comes from `repositoryWaitOf`, and its words and its look from
+  `repositoryChangeCopy.ts` and `RepositoryNotice.tsx` of the mockups. In
+  a suspended org it names no admin who can act. The build history stays
+  closed while a change of the install script or of the repositories
+  waits for a build.
+- A save of the install script and each repository save read the builds
+  again, so the notices and the build that an add starts show at once.
 - A step of a panel, by a key or a drag, starts from the width that the
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
@@ -84,6 +95,9 @@ what the palette does.
   right column and shows it again. The choice holds for every workspace
   of the tab until the page closes. A hidden column stays mounted, so its
   file lists keep their connection and the terminal keeps its session.
+- A menu item that is off keeps its place and fades each of its parts,
+  except its note, so that the reader can read why it is off. The arrow
+  keys and the first focus of the menu skip it.
 - A sheet or a dialog makes the rest of its frame inert through
   `OverlayHost`. It keeps Tab and Shift+Tab inside, also from the layer
   itself and from a text field. When it closes, the frame is active again
@@ -92,49 +106,15 @@ what the palette does.
 - Each sheet and dialog is a modal layer through `useModalLayer`. A press
   outside it does not move the focus, so the focus goes back to the
   trigger also after a press outside.
+- A sheet stops below the top of a phone screen, at 88% of its height, as
+  the mockup sheet does. Its handle and title stay, and its body scrolls
+  when the content is longer. So the last controls of a long sheet, such
+  as Send after a long feedback draft, stay within a swipe.
 - Escape closes only the newest open layer, such as a menu in a dialog.
   A press outside closes each layer that it misses.
-- The command palette is a layer of each frame: `PaletteLayer` sits in
-  the `OverlayHost` of the frame, and the open palette holds the frame
-  inert, as a sheet or a dialog does. Its search field takes the focus,
-  and `trapTab` keeps Tab inside. When a control that has the focus goes
-  away, such as a filter after a change of the tab, the field takes the
-  lost focus back. When the palette closes, the frame is active again
-  before the focus goes back.
-- Escape closes the palette from its own element, in the capture phase
-  of React. An open menu of a filter hears Escape first, on the document,
-  and stops it, so Escape closes only that menu. A press outside closes
-  the desktop dialog, and Cancel closes the phone page. A change of the
-  address and a sign-out close the palette too.
-- The palette key comes from `AppServices.onKey`, which hears each key in
-  the capture phase and not as a passive listener, so the palette can
-  stop the browser's own action. Every UI kit of the app notes its open
-  menus and modal layers through `useMenuLayer` and `useModalLayer` of
-  `../shell/ui/layers.ts`: the shell, the chat, and the members UI. A
-  menu says whether it closed, and a menu whose change runs refuses. A
-  modal layer has an owner: the dialog of the palette has the palette.
-  The owner of the terminal marks its element with `usePaletteTerminal`,
-  where Ctrl+K stays with the terminal.
-- `PaletteController.show` is the one way to open the palette, for the
-  key and for the Search row. It opens only when no dialog or sheet of
-  another owner holds the input, and when every open menu closed. The
-  key closes an open palette, and does nothing while a dialog or a sheet
-  of another owner is open over it, such as the sheet of a filter.
-- A part of the page offers its actions to the palette while it shows,
-  through `usePaletteOffer`: the workspace screen, the workspace list
-  that the page shows, and the sidebar toggle of the Mac app. A row
-  closes the palette first. Its action runs once the palette has left
-  the page, so a field that the action opens can take the focus, and a
-  question shows alone.
-- The palette reads the list and the repositories of its org through
-  `OrgModel.watch` while it is open, and shares those reads with the list
-  of the page. So the list and the palette show the same failure, and Try
-  again in either one reads the list again. The palette has no copy of
-  its own. Its Try again reads again each part that failed, through
-  `OrgModel.reload`.
-- `AppModel.lastOrg` keeps the org that the tab opened last, in memory
-  only. The Account sidebar of the Mac app and the palette on a page
-  without an org read it through `keptOrg`.
+- [The command palette and Feedback](palette-screens.md) gives the rules
+  of the palette layer, its key, its offers, and its reads, and of the
+  Feedback dialog that its Help row opens, with its screenshots.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the
@@ -147,6 +127,17 @@ what the palette does.
   changes, a draft that the user did not change takes the new value, and
   an edited draft stays. A draft that equals the one that went out for a
   save takes the value of the answer. A failed save keeps the draft.
+- A form with several fields, such as the routine page, applies these
+  rules to each field on its own (`eachField`). A field that the user did
+  not change takes the field of the newer saved value, and an edited field
+  keeps its edit. So a save sends only the fields that the user changed,
+  and a field that changed elsewhere, such as Active after a turn-off,
+  shows its new value.
+- In such a form, a field that went out for a save keeps its value while
+  the save waits, also when a newer saved value arrives in that time, so
+  no read acts as the answer of the save. When the save succeeds, each
+  field that still equals what went out takes the field of the latest
+  saved value. When the save fails, the draft stays.
 - Save keeps the focus when a save leaves nothing to save
   (`ActionButton` with `keepFocus`). A browser takes the focus from a
   natively disabled button, so Save stays a native button while it has
@@ -165,8 +156,9 @@ what the palette does.
 - Every desktop frame hosts the dialog, over the whole frame
   (`NewWorkspaceHost`). The frame with the rail and a page alone, such as
   Create org, get it from `DesktopLayers`, with the layer of sheets and
-  dialogs, the command palette, and the main area. The dialog has no
-  address: it closes in the same render as a change of the address, also
+  dialogs, the command palette, the Feedback dialog, and the main area.
+  The dialog has no address: it closes in the same render as a change of
+  the address, also
   while its create runs. A phone frame has no dialog.
 - Escape and a press outside close the dialog, except while the create
   runs. An action of the dialog that opens another page, such as Connect
@@ -194,9 +186,9 @@ what the palette does.
 - New workspace sends and uploads one at a time: the create waits for the
   files, and the paperclip is off while the create runs. Send, Create, Try
   again, and Enter read one readiness: the text, the files, the agent
-  login, the image of the org, the repository, the model, and an org that
-  is not suspended. In a suspended org, the refused bar takes the place of
-  the composer of the dialog, as on the page.
+  login, the image of the org, the repository and its build, the model,
+  and an org that is not suspended. In a suspended org, the refused bar
+  takes the place of the composer of the dialog, as on the page.
 - While the builds of the org show no good image, New workspace shows the
   notice of the first build on the page and in the dialog, as
   [Create a workspace](../../docs/protocol/create-a-workspace.md#before-the-first-good-build)
@@ -205,8 +197,22 @@ what the palette does.
   `firstBuildCopy.ts` of the mockups. While the builds load or after a
   failed load, no notice shows, and the Worker refuses a create of an org
   with no good image.
+- The shared form shows the
+  [waiting repositories](../../docs/protocol/create-a-workspace.md#waiting-repositories)
+  that `BuildsResponse.changes` lists as added: off in the repository
+  menu, with the note of `menuNotes`, and in the notice over the
+  composer while the repository of the form waits, with the words of
+  `waitingFormText`. The note of the cloud computer under the picker then
+  gives way. The Worker lists no waiting repository before the first good
+  build, so this notice and the notice of the first build never show
+  together. The builds read again while a build runs, so a waiting
+  repository turns on when a build that holds it succeeds. A draft keeps
+  the repository that the form showed at its first text or file
+  (`NewWorkspaceModel`), so a repository that turns on moves no written
+  draft.
 - Every composer reads its send key through `useSendKey`: the chat, the
-  page, and the dialog. On a computer, Enter sends and Shift+Enter adds a
+  page and the dialog of New workspace, and the Feedback dialog. On a
+  computer, Enter sends and Shift+Enter adds a
   line, as [The send key](../../docs/protocol/create-a-workspace.md#the-send-key)
   says. Enter does nothing while the message cannot go, and it belongs to
   an input method that composes a word. In the phone layout, Enter adds a

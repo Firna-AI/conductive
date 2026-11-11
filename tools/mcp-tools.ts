@@ -44,7 +44,7 @@ export const WORKSPACE_MCP_TOOLS = [
         name: {
           type: 'string',
           description:
-            'An optional workspace name. The app keeps its first line, without a final full stop, cut to 60 characters at a word.',
+            'An optional workspace name. Use plain words separated by spaces. Avoid underscores unless the user tells you to add them. The app keeps its first line, without a final full stop, cut to 60 characters at a word.',
         },
         model: {
           type: 'object',

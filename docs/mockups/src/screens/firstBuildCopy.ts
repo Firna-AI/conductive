@@ -19,5 +19,9 @@ export const firstBuildCopy = {
     admin: 'Build it to send your message.',
     member: 'An admin can build it.',
   },
-  open: 'Open Cloud computer',
+  /**
+   * The link of an admin to the Cloud computer tab of the org settings,
+   * also in the notice of a waiting repository.
+   */
+  settings: 'Cloud computer settings',
 } as const

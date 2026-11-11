@@ -9,11 +9,12 @@ import {
   workspaceKey,
   type ToolWorkspace,
 } from '../terminal/tool-parts/workspace'
+import { PortsNotice } from './PortsNotice'
 import { PreviewFrame } from './PreviewFrame'
 import { PreviewOpenForm } from './PreviewOpenForm'
 import { PreviewToolbar } from './PreviewToolbar'
 import { closePreview, openPreview } from './previewsApi'
-import { selectedPreview, visiblePreviews } from './previewsState'
+import { portFormList, selectedPreview, visiblePreviews } from './previewsState'
 import { createPreviewsStore, type PreviewsStore } from './previewsStore'
 import styles from './PreviewTool.module.css'
 
@@ -35,11 +36,17 @@ export interface PreviewToolProps {
   route: PreviewRoute
   /** A phone layout: touch sizes. */
   touch: boolean
+  /**
+   * The time now, for the age of the notice of a failed repair of the list.
+   * Give a stable function. The default is the clock of the browser.
+   */
+  now?: () => number
 }
 
 /**
  * The Preview tool: the web servers of the sandbox, each in a frame with an
- * "Open in new tab" link. The user opens a preview by its port.
+ * "Open" link to a new tab. The user opens a preview by its port, or by a
+ * click on a server that the runner reports.
  */
 export function PreviewTool(props: PreviewToolProps) {
   return <PreviewToolBody key={workspaceKey(props.workspace)} {...props} />
@@ -133,12 +140,20 @@ function PreviewToolBody(props: PreviewToolProps) {
       />
     )
   } else {
+    // The notice of a failed repair stands beside the list, so it shows
+    // only with the form, and never over a preview in its frame.
     const form = (
-      <PreviewOpenForm
-        error={state.openError}
-        onOpen={open}
-        opening={state.opening}
-      />
+      <>
+        <PreviewOpenForm
+          error={state.openError}
+          list={portFormList(state, visible)}
+          onOpen={open}
+          opening={state.opening}
+        />
+        {state.portsFailedAt === null ? null : (
+          <PortsNotice at={state.portsFailedAt} now={props.now ?? Date.now} />
+        )}
+      </>
     )
     const closeError =
       selected && state.closeError?.previewId === selected.id
@@ -156,6 +171,7 @@ function PreviewToolBody(props: PreviewToolProps) {
             onClose={close}
             onFollow={follow}
             onReload={() => dispatch({ type: 'reload' })}
+            ports={state.ports}
             previews={visible}
             selected={selected}
           />

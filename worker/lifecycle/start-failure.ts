@@ -18,6 +18,7 @@ import {
 } from './cleanup'
 import { deleteProvisionalWorkspace } from './workspace-data'
 import { markCreationFailed } from './creation-attempt-data'
+import { failRoutineWorkspaceStart } from '../routines/run-outcome-data'
 import { startTimeLimitReached } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { WorkspaceStartError } from './workspace-start'
@@ -155,7 +156,13 @@ export async function finishFailedStart(
     sandboxId ?? null,
     providerAccount,
   )
-  await markCreationFailed(env.DB, job.workspaceId)
+  await markCreationFailed(env.DB, job.workspaceId, failure)
+  await failRoutineWorkspaceStart(
+    env.DB,
+    job.workspaceId,
+    failure,
+    dependencies.now(),
+  )
   if (accepted)
     await endpoint.lifecycleFailed({
       code: failure.code,
@@ -170,8 +177,10 @@ export async function finishFailedStart(
     try {
       if (!provider) throw new Error('Provider unavailable')
       await deleteSandboxIfPresent(
+        env.DB,
         providerForAccount(env, dependencies.fetch, providerAccount),
-        sandboxId,
+        { sandboxId, providerAccount },
+        dependencies.now(),
       )
       await clearSandboxCleanup(
         env.DB,

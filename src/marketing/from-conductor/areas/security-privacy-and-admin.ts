@@ -2,6 +2,13 @@ import type { ParityFeature } from '../model'
 
 export const securityPrivacyAndAdminFeatures: readonly ParityFeature[] = [
   {
+    id: 'local-agent-permissions',
+    area: 'security-privacy-and-admin',
+    name: 'Local agent permissions',
+    status: 'different',
+    note: 'Agents run in a cloud computer, not as your Mac user. They run Mac commands only through requests that you allow.',
+  },
+  {
     id: 'cloud-data-storage',
     area: 'security-privacy-and-admin',
     name: 'Cloud data storage',
@@ -16,6 +23,20 @@ export const securityPrivacyAndAdminFeatures: readonly ParityFeature[] = [
     note: 'Each workspace runs in a separate cloud computer with its own repository copies.',
   },
   {
+    id: 'enterprise-data-privacy',
+    area: 'security-privacy-and-admin',
+    name: 'Enterprise data privacy',
+    status: 'considering',
+    note: 'Only automatic workspace names use an AI model outside your agent login. A switch that turns them off is under consideration.',
+  },
+  {
+    id: 'managed-settings',
+    area: 'security-privacy-and-admin',
+    name: 'Managed settings',
+    status: 'considering',
+    note: 'Admins control org scripts, environment variables, and repositories. Locking member preferences, such as default models, is under consideration.',
+  },
+  {
     id: 'sso-and-scim',
     area: 'security-privacy-and-admin',
     name: 'SSO and SCIM',
@@ -28,6 +49,20 @@ export const securityPrivacyAndAdminFeatures: readonly ParityFeature[] = [
     name: 'Admin roles',
     status: 'available',
     note: 'Each org has admins and members. Several people can be admins.',
+  },
+  {
+    id: 'keychain-storage',
+    area: 'security-privacy-and-admin',
+    name: 'Keychain storage',
+    status: 'different',
+    note: 'Agent logins and environment values are stored encrypted on the service. Settings never return saved logins or values to your browser.',
+  },
+  {
+    id: 'proxy-support',
+    area: 'security-privacy-and-admin',
+    name: 'Proxy support',
+    status: 'considering',
+    note: 'Proxy support in the Mac app is under consideration. The web app uses the proxy settings of your browser.',
   },
   {
     id: 'product-analytics',

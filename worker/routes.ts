@@ -13,8 +13,11 @@ import { invitationsRoute } from './app-api/invitations'
 import { membersRoute } from './members/route'
 import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
+import { routinesRoute } from './routines/route'
+import { routineRunsRoute } from './routines/run-route'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
+import { feedbackRoute } from './app-api/feedback'
 
 export { routeDevice } from './devices/router'
 
@@ -25,6 +28,8 @@ export async function route(
   dependencies: AppDependencies,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const feedback = await feedbackRoute(request, env, context, dependencies)
+  if (feedback) return feedback
   const waitlist = await waitlistRoute(request, env, context, dependencies)
   if (waitlist) return waitlist
   const operator = await handleOperatorRequest(
@@ -49,6 +54,10 @@ export async function route(
     productionMembersHooks(env, dependencies),
   )
   if (members) return members
+  const runs = await routineRunsRoute(request, env, context, dependencies)
+  if (runs) return runs
+  const routines = await routinesRoute(request, env, context, dependencies)
+  if (routines) return routines
   const featureShell = await featureShellRoute(
     request,
     env,

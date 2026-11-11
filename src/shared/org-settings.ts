@@ -41,7 +41,6 @@ export interface OrgSettings {
   /** A stored value never goes back to the browser. */
   envVars: readonly { name: string; secret: boolean }[]
   updatedAt: Timestamp
-  needsBuild: boolean
 }
 export interface OrgSettingsResponse {
   settings: OrgSettings
@@ -74,6 +73,11 @@ export interface BuildLogEvent {
 export interface BuildsResponse {
   builds: readonly ImageBuild[]
   currentImageBuildId: string | null
+  changes: {
+    installScript: boolean
+    addedRepositories: readonly { id: string; fullName: string }[]
+    removedRepositories: readonly { id: string; fullName: string }[]
+  }
 }
 export interface BuildResponse {
   build: ImageBuild

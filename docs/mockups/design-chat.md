@@ -1,9 +1,8 @@
 # The design of the chat
 
 This page belongs to [the design](design.md), which gives the style, the
-layouts, the design tokens, and the shared parts. This page gives the chips
-of attached files, the Markdown tables of a reply and of a file preview, and
-the fold of the work of a turn. It also gives the data that the chat does
+layouts, the design tokens, and the shared parts. This page gives workspace and file chips,
+attached files, Markdown tables, and the work fold of a turn. It also gives the data that the chat does
 not have, and the files that the cloud computer could not read.
 
 - `AttachmentChips` in `src/components/chat/` draws each attached file as a
@@ -12,7 +11,9 @@ not have, and the files that the cloud computer could not read.
   browser sent, such as "64%", the place of its size. Before the first
   measurement, the spinner of a working agent and "Uploading" show, so no
   chip shows a made-up share. A failed upload tints the whole chip
-  rose and offers Try again and Remove. Send waits for both states.
+  rose and offers Try again and Remove. Send waits for both states. In the
+  composer the glyph sits in the cell of its icon, so the × that takes its
+  place under a pointer is Remove, in each state.
   `AttachmentStates.module.css` holds the styles of the states, and
   `attachmentCopy.ts` holds their words. A file over 25 MB never becomes a
   chip: a notice over the composer names it, gives the limit, and offers
@@ -87,6 +88,9 @@ not have, and the files that the cloud computer could not read.
   list with plain text, such as "47 more files". A stopped turn shows no
   file list, so its line ends with the count, such as
   "You stopped the agent · 5 changed files not listed".
+  The user kept this rule on 10 November 2026: Changes shows the changed
+  files of the branch. A file row above the stopped line was rejected, and so
+  was a count that opens the list.
   `LostLine` draws a refused runner event as one centred, muted line at its
   place, which names the lost data and why, such as "A tool update was lost
   because it was too large". It never shows the lost data, and a phone wraps
@@ -99,3 +103,55 @@ not have, and the files that the cloud computer could not read.
   under the notice "The latest list of all files is unavailable", which has
   no time. With no saved list, All files says "The list of all files is
   unavailable" in place of the tree. `lostCopy.ts` holds these words too.
+
+## Workspace and file chips
+
+- `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
+  the org as a chip in a line of text: a small rounded pill with the
+  `StatusGlyph` of the workspace, its label in a muted colour, and its
+  current name. Its height is the height of the line less 2 px, so a line
+  with a chip keeps its height. A chip is never wider than its line or
+  than 22 times the size of its font, and a long name is cut short. It
+  takes no fixtures, so the app can use it too.
+  - `MessageText` shows the chips in sent messages and in answers, as
+    links to the screens of the workspaces. A Markdown link to a
+    workspace shows as the chip alone, and a link in code stays code. A
+    link to another org, or to a workspace that the list does not hold,
+    stays plain text, and a long link breaks to fit the line.
+  - The chat finds each workspace in the list of the org, with the
+    archived ones and with the states of the list, through
+    `ChatWorkspaces`. A phone finds the same workspaces with no list on
+    the screen. An archived workspace keeps its chip, with the archived
+    mark.
+  - A pasted link becomes a chip in the message box at once: in the chat,
+    and in New workspace as a page or a dialog. `MessageField` gives each
+    box its field. A draft with a workspace link or a file mention shows
+    in `ChipTextField`: plain text with each chip as one unit, with the
+    sizes and the line limits of the plain text field. The draft keeps the
+    plain link.
+  - `InlineChip.module.css` beside it holds the pill of every chip in a
+    line of text, so a workspace chip and a file chip have the same size.
+  - In a message box each chip starts with the cell of its icon, from
+    `ChipIconCell` in `ChipRemove.tsx`. While a pointer is over the cell, a
+    × takes the place of the icon, and a press removes the chip. Where no
+    pointer hovers, as on a phone, the icon stays, and `ChipEndRemove`
+    puts a × at the end of the chip. Attached files follow the same rule,
+    and on a phone they keep their × button of touch size.
+- `FileChip` in `src/components/chat/` draws a file or a folder of the
+  workspace as a chip of the same size: the icon that All files gives it,
+  and its name. Its title is the whole path. `EntryIcon` in
+  `src/components/files/` gives the icon to All files, the chips, and the
+  list. It is the one icon map of the mockups and the app: a folder, a
+  Markdown file, a code file, or another file. A file is code when the
+  code view of the app gives it syntax colours, as `fileKind` in
+  `src/files/code/file-kind.ts` of the app says, so one list of languages
+  sets both. The user chose this on 10 November 2026. A sent message shows
+  each file chip as a link to the tab of the
+  file, and an answer shows none. It takes no fixtures, so the app can use
+  it too.
+- `FileMentionList` in `src/components/chat/` draws the list of `@` above
+  the message box: the icon, the name, and the folder of each entry that
+  matches the query, with the first row highlighted. One line takes the
+  place of the rows while the tree loads, when no tree is available, and
+  when nothing matches. `fileMentions.ts` beside it reads the mentions of
+  a text and orders the rows.

@@ -22,8 +22,10 @@ import { record } from '../inputs'
 import { readChatHistoryPages } from './history-pages.test-support'
 import {
   expireAndReadFirstStartFile,
+  expectFirstStartCopies,
   FIRST_START_FILE_BYTES,
   firstStartAttachmentTransfer,
+  REPAIRED_REPOSITORY_LOCATIONS,
   uploadFirstStartFile,
 } from './first-start-attachments.test-support'
 import type { Workspace } from './journey-entry.test-support'
@@ -188,6 +190,7 @@ it('retries the same failed workspace with a fresh token and dispatches every st
     orgId: OUTER_ORG,
     buildId: 'repaired-image-build',
     imageName: 'repaired-image',
+    runnerProtocolVersion: 1,
     repositories: [
       {
         id: OUTER_REPOSITORY,
@@ -197,6 +200,7 @@ it('retries the same failed workspace with a fresh token and dispatches every st
       },
     ],
     software: OUTER_SOFTWARE,
+    locations: REPAIRED_REPOSITORY_LOCATIONS,
     now: Date.now(),
   })
   await saveSetup('echo repaired-startup', 'repaired-value')
@@ -283,7 +287,7 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   })
   expect(final.firstMessage.id).toBe('kept-first')
   expect(final.firstMessage.attachments).toEqual([attachment])
-  expect(transfer.copies).toEqual([FIRST_START_FILE_BYTES])
+  await expectFirstStartCopies(active, transfer, commands[0], attachment.id)
   expect(
     await expireAndReadFirstStartFile(active, id, attachment.id),
   ).toMatchObject({

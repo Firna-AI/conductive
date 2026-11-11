@@ -26,7 +26,7 @@
   5. Send a first message from New workspace. Check that the start steps finish and the workspace becomes ready.
   6. Check that the agent answers with the test account's agent login. Send a second message, and check that it answers too.
   7. Open the Terminal tab. Run `pwd` and `ls`, and check that they show the repository folder.
-  8. In the terminal, start a web server on port 3000, for example `python3 -m http.server 3000`. Open a port preview by typing `3000`. Check that the page shows in the frame, and that "Open in new tab" opens it on a `*.conductive.page` hostname.
+  8. In the terminal, start a web server on port 3000, for example `python3 -m http.server 3000`. Open a port preview by typing `3000`. Check that the page shows in the frame, and that the "Open" link opens it on a `*.conductive.page` hostname.
   9. Stop the server. Leave the workspace with no input and no running turn for 30 minutes. Check that the tab shows the stopped state with Resume.
   10. Press Resume. Check that the workspace becomes ready, that the chat and the files stay, that an agent answers a new message, and that the terminal opens again.
   11. Archive the workspace from its row in the workspace list. Check that its chat still shows.

@@ -13,6 +13,12 @@ import {
   Wrench,
 } from 'lucide-react'
 import type { ToolCall } from '../../shared/chat-events'
+import {
+  foldLabel,
+  toolEnding,
+  toolRunOpen,
+  toolVerb,
+} from '../../shared/transcript/tool-words'
 import { LeftOut } from '../../../docs/mockups/src/components/chat/LeftOut'
 import {
   leftOutOfCall,
@@ -22,36 +28,26 @@ import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.c
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useFold, type Fold } from './useFold'
 
-const tools: Readonly<
-  Record<ToolCall['kind'], { icon: LucideIcon; done: string; running: string }>
-> = {
-  read: { icon: FileText, done: 'Read', running: 'Reading' },
-  search: { icon: Search, done: 'Searched', running: 'Searching' },
-  create: { icon: FilePlus, done: 'Created', running: 'Creating' },
-  edit: { icon: FilePen, done: 'Edited', running: 'Editing' },
-  run: { icon: SquareTerminal, done: 'Ran', running: 'Running' },
-  computer: { icon: Monitor, done: 'Used', running: 'Using' },
-  other: { icon: Wrench, done: 'Used', running: 'Using' },
-}
-
-const endings: Readonly<Partial<Record<ToolCall['state'], string>>> = {
-  stopped: 'Stopped',
-  failed: 'Failed',
+const icons: Readonly<Record<ToolCall['kind'], LucideIcon>> = {
+  read: FileText,
+  search: Search,
+  create: FilePlus,
+  edit: FilePen,
+  run: SquareTerminal,
+  computer: Monitor,
+  other: Wrench,
 }
 
 /** One tool call in an open list: its icon, its verb, its target, and its result. */
 export function CallLine(props: { call: ToolCall }) {
   const theme = useSharedUiTheme()
   const { call } = props
-  const tool = tools[call.kind]
-  const Icon = tool.icon
-  const ending = endings[call.state]
+  const Icon = icons[call.kind]
+  const ending = toolEnding(call)
   return (
     <>
       <Icon className={styles.icon} size={13} />
-      <span className={styles.verb}>
-        {call.state === 'running' ? tool.running : tool.done}
-      </span>
+      <span className={styles.verb}>{toolVerb(call)}</span>
       <span className={styles.target}>{call.target}</span>
       {call.detail ? (
         <span className={styles.detail}>{call.detail}</span>
@@ -65,11 +61,6 @@ export function CallLine(props: { call: ToolCall }) {
       {ending ? <span className={styles.detail}>{ending}</span> : null}
     </>
   )
-}
-
-/** A count for the line of a fold, such as "1 tool call": none for zero. */
-function counted(count: number, noun: string): string[] {
-  return count === 0 ? [] : [`${count} ${noun}${count === 1 ? '' : 's'}`]
 }
 
 /**
@@ -90,10 +81,7 @@ export function FoldLine(props: {
     (total, call) => total + call.omittedDetailBytes,
     0,
   )
-  const label = [
-    ...counted(calls.length, 'tool call'),
-    ...counted(props.messages ?? 0, 'message'),
-  ].join(', ')
+  const label = foldLabel(calls.length, props.messages)
   return (
     <summary
       className={classes(styles.summary, leftOut > 0 && styles.wraps)}
@@ -104,7 +92,7 @@ export function FoldLine(props: {
       {kinds.length > 0 ? (
         <span aria-hidden className={styles.kinds}>
           {kinds.map((kind) => {
-            const Icon = tools[kind].icon
+            const Icon = icons[kind]
             return <Icon key={kind} size={13} />
           })}
         </span>
@@ -126,7 +114,7 @@ export function ToolGroup(props: {
   growing: boolean
 }) {
   const { calls } = props
-  const live = props.growing || calls.some((call) => call.state !== 'done')
+  const live = toolRunOpen(calls, props.growing)
   const [chosen, setChosen] = useState<boolean | null>(null)
   const fold = useFold(chosen ?? live, setChosen)
   return (

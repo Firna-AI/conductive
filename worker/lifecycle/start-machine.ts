@@ -9,14 +9,10 @@ import {
   recordRunningEnvironment,
   runningEnvironment,
 } from './start-environment'
-import {
-  repositoryEnvironment,
-  repositoryLocation,
-} from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceEnvironmentSettings } from './settings-data'
-import { environmentValues } from './org-environment'
-import { ensureWorkspaceToken, readWorkspaceToken } from './tokens'
+import { sandboxEnvironment } from './sandbox-environment'
+import { ensureWorkspaceToken } from './tokens'
 import { WorkspaceStartError } from './workspace-start'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import type {
@@ -49,26 +45,17 @@ export async function advanceStartMachine(
       job.orgId,
       job.environmentCiphertext,
     )
-    const token = await readWorkspaceToken(env, job.workspaceId)
     const locations =
       job.repositoryLocations ??
       (await workspaceRepositoryLocations(env.DB, job.workspaceId))
     job.repositoryLocations = locations
-    const runtimeEnv = {
-      ...environmentValues(environment),
-      ...repositoryEnvironment(locations),
-      WORKSPACE_TOKEN: token,
-      CONDUCTIVE_WORKSPACE_ID: job.workspaceId,
-      CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
-      CONDUCTIVE_DEFAULT_BRANCH: job.defaultBranch,
-      CONDUCTIVE_WORKSPACE_BRANCH: row.branch,
-      CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
-        locations,
-        row.repositoryId,
-      ),
-      CONDUCTIVE_TURN_ID: '',
-      CONDUCTIVE_DISK_KEEPALIVE: '0',
-    }
+    const runtimeEnv = await sandboxEnvironment(env, {
+      workspace: row,
+      environment,
+      locations,
+      defaultBranch: job.baseBranch ?? job.defaultBranch,
+      diskKeepalive: false,
+    })
     await endpoint.lifecycleStep(
       job.kind === 'create' ? 'image' : 'disk',
       job.kind === 'create'

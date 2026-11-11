@@ -29,7 +29,9 @@ deployment needs.
 Conductive has these features. The protocol docs state each one. A
 feature that is not complete yet says so.
 
-- Sign in with GitHub. The product is free.
+- Sign in with GitHub. The product is free until billing starts.
+  [Pricing](docs/protocol/pricing.md) states the coming plans, which the
+  pricing page of the marketing site shows. Billing is not built yet.
 - A waitlist. A new account waits until an operator approves it, or an
   invite code, a referral code, or an org invitation lets the person in.
 - Every cloud computer runs in the app's own Boat account, so users need no
@@ -48,6 +50,8 @@ feature that is not complete yet says so.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
 - Agents can create and list workspaces.
+- Routines run a saved prompt on a schedule or on a pull request event,
+  each time in a new workspace.
 - Each workspace has a number, such as `W-395`. A press on the number in
   the header copies the link of the workspace. A workspace link in chat
   shows as a chip with the number and the name.
@@ -56,6 +60,8 @@ feature that is not complete yet says so.
   workspace.
 - A command palette, on ⌘K or Ctrl+K, finds the workspaces of the org,
   runs the actions of the page, and opens the settings.
+- Send feedback from the command palette, with screenshots. The team gets
+  each message by email, and replies to the primary verified GitHub email.
 - The web app works on phones and on desktops.
 - A Mac app for macOS, with the native window buttons in its own top bar.
   An agent can ask to run a command on the Mac of the person who sent its
@@ -234,9 +240,10 @@ features:
 - `worker/marketing/`: built marketing pages, the agreement page before
   GitHub, the file list, request markers, and the site's security headers.
 - `src/marketing/`: Astro pages, layouts, parts, styles, pictures, shared
-  legal text, the public guides, and the shared rows and words of the
-  Conductor Cloud comparison page. Its [README](src/marketing/README.md)
-  gives the build and preview steps.
+  legal text, the public guides, the shared rows and words of the
+  Conductor comparison page, and the shared plans and words of the pricing
+  page. Its [README](src/marketing/README.md) gives the build and preview
+  steps.
 - `src/shared/site-build.ts`: names and types shared by the Astro build
   and the Worker.
 - `worker/security/`: GitHub sign-in, signed sessions, the request gate,

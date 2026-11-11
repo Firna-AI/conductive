@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest'
 
 import { engineFixture } from '../test-support/engine'
-import { turn } from '../test-support/harness'
+import { duringTurn, turn } from '../test-support/harness'
 import { deferred, stop } from '../test-support/runtime'
 import type { ProviderProcess } from './providers/types'
 
@@ -20,7 +20,7 @@ it('waits for a deferred model close before Stop or shutdown ends the turn', asy
       effort: 'max',
     }
     await h.engine.command({
-      ...next,
+      ...duringTurn(next),
       type: 'message',
       turnId: 'turn-1',
     })
@@ -86,7 +86,6 @@ it('waits for a deferred model close before Stop or shutdown ends the turn', asy
         state: 'stopped',
         durationMs: 0,
         files: [],
-        ...(action === 'Stop' ? { filesUnavailable: true } : {}),
         omittedFileCount: 0,
         userMessageIds: ['message-1'],
       },

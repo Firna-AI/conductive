@@ -45,10 +45,13 @@ it('copies attachments through the stored provider account', async () => {
     await fixture.drainAttachments()
     expect(
       copy.requests.map((request) => request.headers.get('X-Boat-Org')),
-    ).toEqual(['attachment-provider-org'])
+    ).toEqual(['attachment-provider-org', 'attachment-provider-org'])
     expect(
       copy.requests.map((request) => request.headers.get('Authorization')),
-    ).toEqual(['Bearer attachment-provider-key'])
+    ).toEqual([
+      'Bearer attachment-provider-key',
+      'Bearer attachment-provider-key',
+    ])
     expect(messageCommands(runner, 'account-file')).toHaveLength(1)
   } finally {
     copy.release.resolve()

@@ -9,28 +9,46 @@ them, and this page lists each protocol doc and what it covers.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
-    shell variable of each repository in a sandbox.
+    shell variable of each repository in a sandbox, and the context folder
+    of each workspace.
   - [Life of a workspace](../protocol/workspace-life.md)
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
+    - [Port previews](../protocol/port-previews.md): detected servers, manual
+      opening, preview tabs, and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
+    - [Message attachments](../protocol/message-attachments.md): the size
+      limit, the upload, the storage, the copy into the cloud computer, and
+      the deletion of the files of a message.
+  - [File mentions](../protocol/file-mentions.md): the list of `@` in the
+    composer, the chips of files and folders, and the removal of each chip
+    of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, and the repair of lost workspace
-    updates.
+    its events and their limits, its turns, its port reports, and the repair
+    of lost workspace updates.
+    - [Listening ports](../protocol/listening-ports.md): the scanner's
+      eligibility, labels, limits, and full reports.
+  - [Session transcripts](../protocol/session-transcripts.md): copying a
+    session as concise or full Markdown, and its route.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+- [Model gateway](../protocol/model-gateway.md): the turn token, and the
+  Worker routes that add the agent login to each model request.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar and its
   events.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
+- [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
+  extra hours, the seller and the tax, the pricing page, and the planned
+  billing changes. Use is free until billing starts.
 - [Mac app](../protocol/desktop-app.md): the shell for macOS, its sign-in, and
   Mac commands.
   - [Mac packages and updates](../protocol/desktop-packages-and-updates.md)
@@ -46,6 +64,12 @@ them, and this page lists each protocol doc and what it covers.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
   what the palette shows while its workspace data loads or did not load,
   and when a tab or a search has no row.
+- [Command palette: actions and settings](../protocol/command-palette-actions.md):
+  the actions that the palette offers, their order and their groups, the
+  Help group with Send feedback, and the rows of the Settings tab.
+- [Feedback](../protocol/feedback.md): the Feedback dialog that Send
+  feedback opens, its screenshots and context, the reply address, the
+  routes, and the email to the team inbox.
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
@@ -54,7 +78,8 @@ them, and this page lists each protocol doc and what it covers.
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
   messages in the chat, with their tables.
-- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope.
+- [GitHub tokens](../protocol/github-tokens.md): git and CLI account scope,
+  and the author of each commit in a sandbox.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, the sender line of each message, and the base
   prompt of Claude agents.
@@ -65,6 +90,10 @@ them, and this page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Conductor Cloud comparison](../protocol/conductor-cloud-comparison.md): the
-  public page for people who move from Conductor Cloud, with the status of
-  each Conductor Cloud feature.
+- [Conductor comparison](../protocol/conductor-comparison.md): the public
+  page for people who move from Conductor, with the status of each
+  Conductor feature.
+- [Routines](../protocol/routines.md): routines and their schedules, with the
+  linked pages [Routine runs](../protocol/routine-runs.md),
+  [Pull request runs](../protocol/pull-request-runs.md), and
+  [Base branches](../protocol/base-branches.md).

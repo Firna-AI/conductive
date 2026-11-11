@@ -2,7 +2,7 @@
  * Terminal sessions. Each line is a list of coloured segments.
  */
 
-import { timedOutBuild } from './computer'
+import { failedBuild, timedOutBuild } from './computer'
 import { checkoutAutocomplete, savedCarts } from './workspaces'
 
 export type TerminalTone =
@@ -55,18 +55,48 @@ function error(text: string): TerminalLine {
   return [{ text, tone: 'error' }]
 }
 
+/** The start of the install script of a build of Acme, after its clones. */
+const acmeInstallStart: readonly TerminalLine[] = [
+  muted('Running the install script'),
+  prompt('build', 'sudo apt-get install -y postgresql-client-16 redis-server'),
+  plain('Setting up redis-server (5:7.0.15-1build2) ...'),
+]
+
 /** A build of the cloud computer while it runs: the newest lines. */
 export const buildLog: readonly TerminalLine[] = [
   muted('Cloning 3 repositories into ~/code'),
   success(' ✓ acme/storefront at 4f2c9a1'),
   success(' ✓ acme/billing-service at b81d0e4'),
   success(' ✓ acme/marketing-site at 07ac5f2'),
-  muted('Running the install script'),
-  prompt('build', 'sudo apt-get install -y postgresql-client-16 redis-server'),
-  plain('Setting up redis-server (5:7.0.15-1build2) ...'),
+  ...acmeInstallStart,
   prompt('build', 'cd ~/code/storefront && npm ci && npx prisma generate'),
   plain('added 1184 packages in 41s'),
 ]
+
+/** The repositories of Acme, with the commit that a build clones. */
+const acmeCommits = [
+  ['acme/storefront', '4f2c9a1'],
+  ['acme/billing-service', 'b81d0e4'],
+  ['acme/marketing-site', '07ac5f2'],
+  ['acme/admin-dashboard', '5d19e3b'],
+] as const
+
+/**
+ * The log of a build of Acme that clones the chosen repositories, such as
+ * the build that an added repository starts, at the start of its install
+ * script. The log box shows the first lines of a log, so this log is no
+ * longer than the log of other builds.
+ */
+export function acmeBuildLog(
+  chosen: readonly string[],
+): readonly TerminalLine[] {
+  const cloned = acmeCommits.filter(([name]) => chosen.includes(name))
+  return [
+    muted(`Cloning ${cloned.length} repositories into ~/code`),
+    ...cloned.map(([name, commit]) => success(` ✓ ${name} at ${commit}`)),
+    ...acmeInstallStart,
+  ]
+}
 
 /** The end of a failed build. */
 export const failedBuildLog: readonly TerminalLine[] = [
@@ -96,34 +126,38 @@ export const timedOutBuildLog: readonly TerminalLine[] = [
 ]
 
 /**
- * The start of the first build of Firna, the new org of the sign-up: it
- * loads the two repositories, then installs the software of the cloud
- * computer. The install script of a new org is empty.
+ * The start of the first build of Firna, the new org of the sign-up. The
+ * build starts from the software image, which already holds the software
+ * of the cloud computer. So it loads the two repositories, then runs the
+ * install script, which is empty in a new org.
  */
 const firstBuildStart: readonly TerminalLine[] = [
   muted('Cloning 2 repositories into ~/code'),
   success(' ✓ firna/components at 3e9d2b7'),
-  success(' ✓ firna/docs at c41a8f0'),
-  muted('Installing the cloud computer software'),
 ]
 
 /** The first build of Firna while it runs. */
 export const firstBuildLog: readonly TerminalLine[] = [
   ...firstBuildStart,
-  plain('Setting up nodejs (24.11.0-1nodesource1) ...'),
+  success(' ✓ firna/docs at c41a8f0'),
+  muted('Running the install script'),
 ]
 
-/** The first build of Firna, which failed at a short network fault. */
+/**
+ * The first build of Firna, which failed when the app saved its image. The
+ * app adds the saved message of the build as the last line.
+ */
 export const failedFirstBuildLog: readonly TerminalLine[] = [
-  ...firstBuildStart,
-  error('E: Temporary failure resolving archive.ubuntu.com'),
-  muted('The software install stopped with exit code 100.'),
+  ...firstBuildLog,
+  muted(failedBuild.error),
 ]
 
-/** The first build of Firna, which the app stopped at its 60-minute limit. */
+/**
+ * The first build of Firna, which the app stopped at its 60-minute limit
+ * while it still loaded a large repository.
+ */
 export const timedOutFirstBuildLog: readonly TerminalLine[] = [
   ...firstBuildStart,
-  plain('Setting up nodejs (24.11.0-1nodesource1) ...'),
   muted(timedOutBuild.error),
 ]
 

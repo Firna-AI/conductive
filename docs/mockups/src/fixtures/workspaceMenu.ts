@@ -3,8 +3,6 @@
  * and Archive. These are the rows and the words of its states.
  */
 
-import type { UnpushedWork } from './archive'
-
 /**
  * The row whose menu most states open: Apple Pay button, a ready
  * workspace of Cal in Checkout, which no screen shows open.
@@ -18,26 +16,13 @@ export const memberTarget = 'pricing-copy'
 export const archivedTarget = 'checkout-redesign'
 
 /**
- * The stopped workspace whose Archive check does not finish, because its
- * stopped cloud computer refuses the command that checks the work.
+ * The stopped workspace that Archive in its menu archives at once, as any
+ * other workspace, with no start of its cloud computer.
  */
 export const stoppedTarget = 'checkout-autocomplete'
 
 /** The new name that the user typed in the field of the row. */
 export const renameDraft = 'Apple Pay on checkout'
-
-/** The work of Apple Pay button that is not on GitHub yet. */
-export const menuTargetWork: UnpushedWork = {
-  files: ['src/app/checkout/ApplePayButton.tsx'],
-  commits: 2,
-}
-
-/**
- * The message of the server when a stopped cloud computer refuses the
- * check of Archive.
- */
-export const checkRefused =
-  'Open the workspace to check its saved work. Then try again.'
 
 /** The message of the app when it can't reach the server. */
 export const offline =

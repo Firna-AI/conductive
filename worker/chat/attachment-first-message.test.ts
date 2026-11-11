@@ -72,7 +72,7 @@ async function firstMessage(
   }
 }
 it('admits a first-message file before a computer exists and replays acceptance before another claim', async () => {
-  const fixture = await attachmentFixture(harness)
+  const fixture = await attachmentFixture(harness, { captureRepository: false })
   const file = await fixture.upload(FILE_BYTES, {
     type: 'new-workspace',
     messageId: 'stable-first-message',
@@ -111,7 +111,7 @@ it('admits a first-message file before a computer exists and replays acceptance 
   )
 })
 it('retains a removed workspace file for a new attempt and fences cleanup of the old claim', async () => {
-  const fixture = await attachmentFixture(harness)
+  const fixture = await attachmentFixture(harness, { captureRepository: false })
   const file = await fixture.upload(FILE_BYTES, {
     type: 'new-workspace',
     messageId: 'stable-first-message',
@@ -177,7 +177,7 @@ it('retains a removed workspace file for a new attempt and fences cleanup of the
   expect(await fixture.bytes(file.id)).toEqual(FILE_BYTES)
 })
 it('expires a removed workspace draft at its original upload deadline', async () => {
-  const fixture = await attachmentFixture(harness)
+  const fixture = await attachmentFixture(harness, { captureRepository: false })
   const file = await fixture.upload(FILE_BYTES, {
     type: 'new-workspace',
     messageId: 'stable-first-message',

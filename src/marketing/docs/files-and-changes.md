@@ -9,16 +9,22 @@ order: 30
 
 Open a workspace that belongs to one of your orgs.
 Its file tools use the workspace's selected repository.
-If its computer is stopped, select **Resume** before you use the tools.
+If its computer is stopped, the file lists show their last saved copy.
+Opening a file or a change starts the computer again.
 
 On a computer, the file lists sit beside the chat.
 On a phone, open the workspace's **Files** view.
 
 - **All files** shows the repository as a tree.
-- **Changes** lists changes against its default branch.
+- **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 
-An archived workspace keeps its chat without the computer or file tools.
+An archived workspace keeps read-only chat, with no file lists or tools.
+Its computer and files can stay available for Restore for 14 days after Archive.
+Restore the workspace while **Restore** is available.
+Then select **Resume** before you use the file tools.
+
+- [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 ## Read a file
 
@@ -41,14 +47,21 @@ Ask the agent to change a file, or use **Terminal**.
 
 1. Open **Changes**.
 2. Select a changed file.
-3. Review its diff against the default branch.
+3. Review its diff against the workspace's base branch.
+
+The base branch is the branch that the workspace's work targets.
+A workspace you create uses the repository's default branch.
+A run for an opened or pushed pull request uses that pull request's head branch.
+A run for a merged pull request uses that pull request's base branch.
+The comparison starts at the common commit of the workspace branch and its base branch.
+Newer commits on the base branch therefore stay out of **Changes**.
 
 The list includes the branch's committed changes, uncommitted changes, and untracked files.
 It covers the workspace branch's work, including work from other sessions.
 It is broader than the changed-file summary of one agent turn.
 
 Use the list to check the agent's result before you commit or open a pull request.
-A committed file can remain in **Changes** while the branch differs from the default branch.
+A committed file can remain in **Changes** while the branch differs from its base branch.
 
 ## Copy or download content
 
@@ -71,7 +84,8 @@ Before the first successful list, the view can show an unavailable state.
 
 An unavailable list does not prove that the repository is empty.
 Use **Try again** when a file read fails.
-Check that the workspace's computer has started if the tools still wait.
+An open file or change waits while the workspace's computer starts.
+It opens when the computer is ready.
 
 If a turn says **Changed files unavailable**, open **Changes** to inspect the branch.
 That notice describes a missing turn summary.

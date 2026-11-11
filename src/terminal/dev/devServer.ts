@@ -6,6 +6,11 @@ import { terminalPaths } from '../../shared/terminal'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import {
+  fullReport,
+  nextEnvelope,
+  storeFailedRepairs,
+} from '../../test-support/recorded-repairs'
 import { isRecord, type ApiFetch } from '../tool-parts/request'
 import type { SubscribeWorkspaceEvents } from '../tool-parts/workspace'
 import type { DevHold } from './devTerminal'
@@ -18,6 +23,26 @@ export const devStates: Readonly<Record<DevTool, readonly string[]>> = {
   terminal: ['ready', 'starting', 'stopped', 'error', 'malformed', 'late'],
   preview: ['open', 'none', 'error'],
   desktop: ['ready', 'error'],
+}
+
+/**
+ * The report of the listening ports that the page stores before the tools
+ * show: the sample servers, a report with no server, no report, or the
+ * sample servers with a failed repair of the list 3 minutes ago.
+ */
+export const devPortReports = ['servers', 'empty', 'unknown', 'failed'] as const
+export type DevPortReport = (typeof devPortReports)[number]
+
+function storePortReport(server: FakeApiServer, report: DevPortReport): void {
+  if (report === 'unknown') return
+  const event: WorkspaceEvent =
+    report === 'empty'
+      ? { type: 'ports.updated', ports: [] }
+      : fullReport('ports.updated')
+  server.events.emit(nextEnvelope(server.events, event, FAKE_TIME - 600_000))
+  if (report === 'failed') {
+    storeFailedRepairs(server.events, ['ports.updated'], FAKE_TIME)
+  }
 }
 
 export interface DevRequest {
@@ -56,8 +81,13 @@ function devPreview(id: string, port: number): Preview {
 }
 
 /** The fake API with the replies of one state of one tool. */
-export function createDevServer(tool: DevTool, state: string): FakeApiServer {
+export function createDevServer(
+  tool: DevTool,
+  state: string,
+  ports: DevPortReport,
+): FakeApiServer {
   const server = new FakeApiServer({ conversation: 'running' })
+  storePortReport(server, ports)
   const org = FAKE_IDS.org
   const id = FAKE_IDS.workspace
   server.json('GET', previewsPath(org, id), {

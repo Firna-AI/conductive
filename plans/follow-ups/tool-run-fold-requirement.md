@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-10, from the branch `calummoore/tool-calls-collapsing-issue`, which fixed the open and close cycle of a run of tool calls, review finding 2 of that branch.
-- **Location:** `docs/protocol/chat-and-events.md`, section "The work of a turn", and `src/chat/components/transcript-entries.ts`, which marks the run that grows.
+- **Location:** `docs/protocol/chat-and-events.md`, section "The work of a turn", and `src/shared/transcript/transcript-entries.ts`, which marks the run that grows.
 - **Reason:** Each option adds a requirement to a protocol doc, and only the user chooses a requirement.
 
 - **Source:** Review. **Category:** Docs or spec.
@@ -23,9 +23,9 @@
 - **Root question:** While the agent works, which of its tool calls stay in view, and what may fold them before the turn ends?
 - **Options:**
   - **A.** The newest run shows its calls while the agent can still add calls to it, also between two calls. A run folds on its own when other work follows it, such as a message, or when the turn ends. The code does this now. Add the requirement to the protocol doc. Also apply the fix in `plans/follow-ups/tool-run-growth-after-refusal.md`. Effort: Small.
-  - **B.** Every run of a running turn shows its calls until the turn ends. Nothing folds on its own while the agent works. Change the code in `src/chat/components/transcript-entries.ts`, the mockup rule in `docs/mockups/src/components/chat/groupItems.ts`, the first test in `src/chat/components/WorkFold.dom.test.tsx`, and the docs. A long turn takes more space while it runs. Effort: Small.
+  - **B.** Every run of a running turn shows its calls until the turn ends. Nothing folds on its own while the agent works. Change the code in `src/shared/transcript/transcript-entries.ts`, the mockup rule in `docs/mockups/src/components/chat/groupItems.ts`, the first test in `src/chat/components/WorkFold.dom.test.tsx`, and the docs. A long turn takes more space while it runs. Effort: Small.
   - **C.** Show each call on its own line while the turn runs, with no run line. The work fold takes the calls when the turn ends. Change the presentation, the mockups, the tests, and the protocol. The user can no longer fold a run while the agent works. Effort: Medium.
-  - **D.** As A, but only the start of a newer run folds an earlier run. A message, a Mac command card, or a lost line after the newest run does not fold it. Change the search in `src/chat/components/transcript-entries.ts` and the mockup rule, which also opens the run of the mockups `app/chat/tables/header` and `app/chat/tables/rows`. Earlier runs still fold before the turn ends. Effort: Small.
+  - **D.** As A, but only the start of a newer run folds an earlier run. A message, a Mac command card, or a lost line after the newest run does not fold it. Change the search in `src/shared/transcript/transcript-entries.ts` and the mockup rule, which also opens the run of the mockups `app/chat/tables/header` and `app/chat/tables/rows`. Earlier runs still fold before the turn ends. Effort: Small.
   - **E.** As B, but a run folds on its own after it leaves the part of the chat that the reader sees. It needs a watch of the visible area for each run and a stand-in for that area in the tests. The open state then depends on where each reader scrolled, so the rule is harder to state and to test. Effort: Medium.
 - **Left out:** A fold after a short pause fails the goal, because a longer pause still folds the run. A run that never opens on its own hides the work that the user watches, which the user rejected on 8 November 2026 when they chose the work fold. One fold for all the work of a running turn breaks that same choice. A run that shows only its newest calls folds calls of the growing run. A return to the old rule is the reported cycle. No requirement at all breaks the rule that a protocol doc states what a user sees.
 - **Wider fix:** None. The repository rules already send each new requirement to the user.

@@ -17,20 +17,18 @@ import { BuildButton } from './BuildParts'
 import { EnvVarsSection } from './EnvVarsSection'
 import { Loaded } from './LoadState'
 import { MemberComputer } from './MemberComputer'
+import { AdminRepositoryNotice } from './RepositoryChangeNotice'
 import { ScriptSection } from './ScriptSection'
 
 /**
- * The notice under an install script that an admin saved after the newest
- * build started, with the words of `changedScriptNotice`. Once the org has
+ * The notice under an install script that differs from the script that the
+ * org image ran, with the words of `changedScriptNotice`. Once the org has
  * a good build, it offers Build computer, which waits while a build runs.
  */
-function ChangedScript(props: {
-  builds: BuildsResponse | undefined
-  build: Action<[]>
-}) {
+function ChangedScript(props: { builds: BuildsResponse; build: Action<[]> }) {
   const { builds } = props
   const notice = changedScriptNotice(builds)
-  const running = builds ? latestBuild(builds)?.state === 'running' : false
+  const running = latestBuild(builds)?.state === 'running'
   return (
     <Notice
       action={
@@ -50,7 +48,9 @@ function ChangedScript(props: {
  * the scripts, and the env vars, which only an admin builds and changes
  * (decision 57), and nobody in a suspended org. Build computer in the head
  * of the builds and in the notice of a changed install script is one
- * action, so one press starts one build.
+ * action, so one press starts one build. The repository notice under the
+ * intro has no action, because the build card under it has the same one.
+ * The notice of the install script shows only for a change of the script.
  */
 export function ComputerSettings(props: {
   org: OrgSummary
@@ -64,24 +64,23 @@ export function ComputerSettings(props: {
     () => computer.startBuild(),
     'The build did not start',
   )
-  const changed = <ChangedScript build={build} builds={valueOf(builds)} />
+  const shown = valueOf(builds)
+  const changed = shown?.changes.installScript ? (
+    <ChangedScript build={build} builds={shown} />
+  ) : undefined
   return (
     <>
       <TabIntro title="Cloud computer">
         {`The shared cloud computer of ${org.name}. Every workspace starts from it, with every repository of the org.`}
       </TabIntro>
+      <AdminRepositoryNotice builds={shown} />
       <Loaded
         failure="The builds did not load"
         retry={() => model.reload('builds')}
         value={builds}
       >
         {(value) => (
-          <BuildCard
-            build={build}
-            builds={value}
-            computer={computer}
-            needsBuild={settings.state === 'ready' && settings.value.needsBuild}
-          />
+          <BuildCard build={build} builds={value} computer={computer} />
         )}
       </Loaded>
       <Loaded
@@ -100,7 +99,7 @@ export function ComputerSettings(props: {
                 .filter((sentence) => sentence !== null)
                 .join(' ')}
               kind="installScript"
-              notice={value.needsBuild ? changed : undefined}
+              notice={changed}
               script={value.installScript}
               title="Install software"
             />

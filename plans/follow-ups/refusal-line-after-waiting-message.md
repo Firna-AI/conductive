@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, from the branch `calummoore/tool-calls-collapsing-issue`, a new problem that the check of review finding 1 found.
-- **Location:** `src/chat/state/refused-events.ts`, `foldRefused`, which appends the lost line at the end of the items.
+- **Location:** `src/shared/transcript/refused-events.ts`, `foldRefused`, which appends the lost line at the end of the items.
 - **Reason:** The branch did not change how a lost line is placed, and `origin/main` places it the same way.
 
 - **Source:** Review. **Category:** Product bug.
@@ -11,7 +11,7 @@
   - **Lost line:** the line that reports a runner event that the workspace refused, such as a tool update that was too large.
   - **Waiting message:** a message of a member that no turn has taken yet. A new item of the running turn goes before it, because the agent reads it at its next tool call.
   - **Part of a turn:** the items of a turn between two of its messages. When the turn ends, the work before the answer of each part folds into one line.
-- **Background:** `src/chat/transcript.md` says that each item stays with its turn, before a message that no turn has taken yet. `placeOf` in `src/chat/state/placement.ts` places each new agent message and tool call of a running turn that way. `foldRefused` in `src/chat/state/refused-events.ts` instead appends each lost line at the end of the items, also when it names the running turn. A refused end of the running turn goes there too.
+- **Background:** `src/chat/transcript.md` says that each item stays with its turn, before a message that no turn has taken yet. `placeOf` in `src/shared/transcript/item-placement.ts` places each new agent message and tool call of a running turn that way. `foldRefused` in `src/shared/transcript/refused-events.ts` instead appends each lost line at the end of the items, also when it names the running turn. A refused end of the running turn goes there too.
 - **Problem:** A lost line of the running turn that arrives while a message waits goes after that message. The later calls of the turn go before the message. So the lost line shows after later items of its own turn. When the turn later takes the message, the lost line falls into the next part of the turn and can fold with the wrong work. A read-only replay showed this order.
 - **Impact if no action:** In this rare order of events, a lost line shows below the message and the later calls, away from the work that it belongs to.
 - **Root question:** Where does a lost line of the running turn go while a message waits?

@@ -2,9 +2,10 @@
 
 This doc holds the requirements and the decisions in force for the life of a
 workspace. It covers the create, the start steps, the time limits, the
-states, the stop and resume, and the archive of a workspace. It belongs to
-[Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
-provider, the org image, and the startup script. The terms are those of the
+states, the stop and resume, the archive, and the restore of a workspace.
+It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
+which covers the provider, the org image, and the startup script. The
+terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -23,6 +24,10 @@ says.
 - The steps are product steps, not the raw output of the provider.
 - A new workspace shows steps such as the start from the org image, the
   fetch of the default branch, and the creation of the branch.
+- The run of a pull request fetches that pull request, or its base branch
+  after a merge.
+  [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
+  gives its steps.
 - A resume shows that the files come back as the user left them.
 - The chat history shows at once while a sandbox starts. The files and the
   tools wait until the sandbox is ready.
@@ -40,7 +45,10 @@ says.
   rejected, because it does not end a wait for a cloud computer that never
   becomes ready.
 - While a build runs, the Cloud computer tab shows its time limit. The
-  start steps show the time limit of the start.
+  start steps do not show the time limit of the start.
+- Reason: the user needs the start limit only when a start passes it, and
+  that failed start names the limit. A note of the limit under the steps of
+  each start was rejected, because it does not change what the user does.
 - A build or a refresh that passes its time limit fails in the same way as
   after any other error. So the last good image stays, as
   [The org image](org-image.md#the-org-image) says.
@@ -49,7 +57,8 @@ says.
   as [Create a workspace](create-a-workspace.md#a-failed-first-start) says.
   A failed resume shows the error state, as
   [Stop and resume](#stop-and-resume) says. After a failed restart near day
-  14, the app stops the sandbox again. The workspace stays stopped.
+  14, the app stops the sandbox again. The workspace stays stopped, or
+  stays archived.
 - Each such failed build, create, or resume says that it passed its time
   limit.
 
@@ -84,6 +93,14 @@ says.
   stopped state with Resume (decision 11).
 - A resume at once when the tab shows again was rejected. Resume avoids a
   start that the user did not ask for.
+- Opening a file tab or a diff tab also resumes the sandbox, in the same
+  cases as opening the workspace (decision 247). A click on a file, on its
+  tab, or on a link to it opens the tab. A move back or forward to its
+  address opens it too.
+- Reason: the tab can show its file only from a running sandbox, so the
+  open asks for the start. A tab that showed the stopped state, or an error
+  with Try again, until a member pressed Resume was rejected, because the
+  open of the tab already asks for the file.
 - While the sandbox is stopped, the chat history shows, and the stopped
   state takes the place of the composer.
 - A start that fails shows the error state with Try again. The chat history
@@ -97,23 +114,60 @@ says.
   than 14 days, and a resume then fails.
 - Each such restart uses a start and some minutes of the app's Boat
   account.
-- An archive near day 14 was rejected, because it loses unpushed work. A
-  copy of the disk in the app's own storage was rejected, because the app
-  would then hold a copy of each user's code.
+- An archived workspace gets this restart only when Boat's 14 days end
+  before the app deletes its sandbox, as [Archive](#archive) says. So a
+  sandbox that Archive stopped gets none.
+- The restart of an archived sandbox gets none of the secrets of its
+  workspace and its org, and it runs no startup script. It only resumes the
+  sandbox and stops it again.
+- Reason: Archive revokes the workspace token, and an archived workspace
+  has no tools.
+- After a [Restore](#restore), the workspace gets this restart again, near
+  day 14 of its last stop. When that time has passed, the restart runs at
+  once.
+- An automatic Archive near day 14 was rejected, because the delete 14 days
+  after an Archive loses unpushed work. A copy of the disk in the app's own
+  storage was rejected, because the app would then hold a copy of each
+  user's code.
 
 ## Archive
 
-- Archive deletes the sandbox of a workspace, and keeps its chat read-only
-  in the Archived group (decision 16).
-- Before it archives, the app checks the sandbox for changed files that
-  are not committed and for commits that are not pushed.
-- When the check finds such work, the question lists it. The user can then
-  archive anyway or cancel.
-- When the check does not finish, the question says so and names the
-  failure. It offers Try again and Cancel.
-- The app archives nothing without a finished check.
-- Reason: an archive without the check can delete work that was never
-  pushed.
+- Archive keeps the sandbox of a workspace for 14 days, and stops it at
+  once when it runs (decision 1 of PR #138). The chat stays read-only in
+  the Archived group (decision 16).
+- Archive runs no check of the work in the sandbox and asks no question.
+  It works in each state of the workspace. It ends a start that runs.
+- Archive revokes the workspace token. After a Restore, the next resume
+  gives the sandbox a new token, as
+  [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)
+  says.
+- Reason: [Restore](#restore) brings an archived workspace back for 14
+  days, so an Archive by mistake loses no work.
+- A check for work that is not committed or not pushed was rejected,
+  because it needs a running sandbox. The Archive of a stopped workspace
+  would then wait for a start.
+- After Archive, a toast names the workspace and offers Restore.
+- The bar of an archived workspace gives the day of the Archive. Until
+  Restore ends, the bar also gives the last day of Restore, with Restore.
+- Restore ends 14 days after the Archive. The app then deletes the
+  sandbox, with its files and its agent sessions. The chat stays read-only
+  in the Archived group.
+- The end of Restore does not wait for the delete. While the delete still
+  retries, the sandbox can still exist, but the workspace offers no
+  Restore. Reason: the last day of Restore on the bar stays true.
+- The bar says that the cloud computer is deleted only after the delete.
+  Before that, it gives the day when Restore ended.
+- A sandbox that the app never deletes was rejected, because each archived
+  workspace then uses about two starts a month for its restarts.
+- A saved snapshot at Archive was rejected, because the stopped sandbox
+  keeps the same files for 14 days at no cost. Past the included count, a
+  saved snapshot costs a fee for each day.
+- A check of the work before the delete, which keeps the sandbox when it
+  finds work, was rejected. It misses the agent sessions and the ignored
+  files. Each sandbox that it keeps also needs restarts with no end.
+- A push of the work to a backup branch before the delete was rejected.
+  The push shows as a push of the owner, and it can start the CI of the
+  repository. It can also put files with secret values on GitHub.
 - The pull request bar offers Archive after the merge, as
   [GitHub banner](github-banner.md#banner-states) says. The menu of a
   workspace row offers it too, as [Archive](workspace-menu.md#archive)
@@ -122,3 +176,34 @@ says.
   its chat.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may
   archive a workspace.
+
+## Restore
+
+- For 14 days after the Archive, Restore brings an archived workspace back
+  with its files and its agent sessions (decision 1 of PR #138).
+- The toast after Archive, the bar of the archived workspace, and its row
+  in the Archived group offer Restore. The command palette offers Restore
+  workspace, as [Actions](command-palette-actions.md#actions) says.
+- Restore puts the workspace back in its section, at its place in the
+  list.
+- The workspace comes back stopped, also when it had the error state at
+  the Archive. Restore starts no sandbox.
+- Reason: a resume already gives a new workspace token and fresh env vars,
+  and it avoids a start that the user did not ask for. When that start
+  fails, the workspace shows the error state with Try again.
+- After a Restore from the open workspace, the tab shows the stopped state
+  with Resume. A later open of the workspace resumes its sandbox, as for
+  each stopped workspace.
+- A repeat of a Restore changes nothing.
+- After its 14 days, an archived workspace offers no Restore, as
+  [Archive](#archive) says.
+- An archived workspace without a kept sandbox offers no Restore either.
+  Reason: nothing is left to bring back.
+- The app refuses a Restore after the 14 days, or without a kept sandbox,
+  with HTTP 409. Its message says why.
+- In a suspended org, nobody can restore a workspace, as
+  [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
+  says. The bar of an archived workspace then promises only its chat
+  history.
+- [Orgs and members](orgs-and-members.md#members-and-roles) says who may
+  restore a workspace.

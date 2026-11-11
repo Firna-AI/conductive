@@ -72,7 +72,6 @@ export function readSettings(value: unknown): OrgSettings {
     startupScript: text(settings, 'startupScript'),
     envVars: items(settings, 'envVars', readEnvVar),
     updatedAt: count(settings, 'updatedAt'),
-    needsBuild: flag(settings, 'needsBuild'),
   }
 }
 
@@ -99,11 +98,34 @@ function readLogEvent(value: unknown): BuildLogEvent {
   }
 }
 
+function readChangedRepository(value: unknown) {
+  const repository = record(value, 'changed repository')
+  return { id: text(repository, 'id'), fullName: text(repository, 'fullName') }
+}
+
+function readBuildChanges(value: unknown): BuildsResponse['changes'] {
+  const changes = record(value, 'build changes')
+  return {
+    installScript: flag(changes, 'installScript'),
+    addedRepositories: items(
+      changes,
+      'addedRepositories',
+      readChangedRepository,
+    ),
+    removedRepositories: items(
+      changes,
+      'removedRepositories',
+      readChangedRepository,
+    ),
+  }
+}
+
 export function readBuilds(value: unknown): BuildsResponse {
   const body = record(value, 'builds')
   return {
     builds: items(body, 'builds', readBuild),
     currentImageBuildId: maybeText(body, 'currentImageBuildId'),
+    changes: nested(body, 'changes', readBuildChanges),
   }
 }
 

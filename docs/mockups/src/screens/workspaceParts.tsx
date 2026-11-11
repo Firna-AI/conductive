@@ -4,7 +4,7 @@ import { FilePage } from '../components/files/FilePage'
 import { FilesPanel, type FileTabView } from '../components/files/FilesPanel'
 import type { BackLink } from '../components/layout/Page'
 import { DesktopView } from '../components/tools/DesktopView'
-import { PortPreview, PreviewEmpty } from '../components/tools/PortPreview'
+import { PreviewTool } from '../components/tools/PortPreview'
 import { TerminalView } from '../components/tools/TerminalView'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import { replacesLists } from '../components/workspace/sandboxNoticeState'
@@ -23,9 +23,10 @@ import {
 } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
-import { freshSessionPrompt, workspaceSession } from '../fixtures/terminal'
+import { workspaceSession } from '../fixtures/terminal'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -71,16 +72,37 @@ function backFrom(open: FileTabView): BackLink {
  */
 export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
+  const run = runStartingLog(state)
+  if (run) return run
   if (!isNew(state)) return resumingLog
   return state.name === 'untitled' ? firstSecondLog : creatingLog
+}
+
+/**
+ * The sandbox state in place of All files, Changes, and the content of an
+ * open file: while the sandbox starts, while its start is refused, and
+ * after a failed first start. A stopped sandbox, and one whose later start
+ * failed, keep them. `withAction` adds the action and the words of a
+ * refusal, as a phone shows them, and as a file page shows them on desktop,
+ * where the page hides the bar of the chat.
+ */
+export function filesPlaceholder(
+  state: WorkspaceState,
+  withAction: boolean,
+): ReactNode {
+  const panel = panelState(state)
+  return panel && replacesLists(panel) ? (
+    <SandboxPanel phone={withAction} state={panel} />
+  ) : undefined
 }
 
 /**
  * The files panel. After a stop or a failed resume, All files and Changes
  * keep the lists that the workspace saved. Otherwise, while the sandbox is
  * not running, the sandbox state takes the place of the lists. On a phone,
- * an open file shows as a page of the Files tab. An archived workspace has
- * no file lists: its files went with the cloud computer.
+ * an open file shows as a page of the Files tab, with the same sandbox
+ * state in place of its content. An archived workspace has no file lists:
+ * its files went with the cloud computer.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -93,13 +115,12 @@ export function FilesContent(props: {
     return <SandboxPanel phone={phone} state={panel} />
   }
   const open = openFile(state)
+  const placeholder = filesPlaceholder(state, phone)
   if (phone && open) {
-    return <FilePage back={backFrom(open)} view={open} />
+    return (
+      <FilePage back={backFrom(open)} placeholder={placeholder} view={open} />
+    )
   }
-  const placeholder =
-    panel && replacesLists(panel) ? (
-      <SandboxPanel phone={phone} state={panel} />
-    ) : undefined
   return (
     <FilesPanel
       banner={state.banner}
@@ -128,13 +149,13 @@ export function ToolContent(props: {
         <TerminalView
           extraKeys={mobile}
           lines={[]}
-          prompt={freshSessionPrompt}
+          prompt={freshPromptFor(state)}
         />
       ) : (
         <TerminalView extraKeys={mobile} lines={workspaceSession} />
       )
     case 'preview':
-      return state.ports === 'open' ? <PortPreview /> : <PreviewEmpty />
+      return <PreviewTool state={state.ports} />
     case 'desktop':
       return <DesktopView />
   }
@@ -144,15 +165,18 @@ export function ToolContent(props: {
  * The sidebar beside an open workspace, which shows its current status. An
  * archived workspace sits in the open Archived group. In a suspended org
  * every row shows stopped, and nothing in the sidebar changes the org.
- * `created` adds the workspaces that the create flow made by then.
  */
-export function workspaceSidebar(
-  workspace: Workspace,
-  status: ActivityStatus,
-  suspended: boolean,
-  viewer: Membership,
-  created: readonly OpenWorkspace[] = [],
-): ReactNode {
+export function workspaceSidebar(props: {
+  workspace: Workspace
+  status: ActivityStatus
+  suspended: boolean
+  viewer: Membership
+  /** The workspaces that the create flow made by then. */
+  created: readonly OpenWorkspace[]
+  /** The last day of Restore of the archived workspace has not passed. */
+  restoreOpen: boolean
+}): ReactNode {
+  const { workspace, status, suspended, viewer, created } = props
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
@@ -166,7 +190,7 @@ export function workspaceSidebar(
       />
     )
   }
-  const list = archivedSections(workspace, suspended)
+  const list = archivedSections(workspace, suspended, props.restoreOpen)
   return (
     <Sidebar
       archived={list.archived}

@@ -1,0 +1,35 @@
+# A closed session copies only after a reopen
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-10, from branch `calummoore/session-transcript-copy`, decision 216 of the plan `plans/copy-session-transcripts.md`. On 10 November 2026 the user chose option A for that change: no copy from the session history in it.
+- **Location:** `src/chat/components/ChatOverlays.tsx:16`, the entries of the session history.
+- **Reason:** The user left the copy of a closed session out of the change that added the transcript copies, so that change stays smaller.
+
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **Session history:** the list of the closed sessions of a workspace. The clock button at the right end of the tab row opens it, and `historyEntries` in `src/chat/components/ChatOverlays.tsx` builds its entries.
+  - **Transcript copy:** the items Copy concise transcript and Copy full transcript in the tab menu of a session tab. Each one copies the conversation of the session as Markdown, from a route of the Worker that gives the Markdown of one session.
+- **Background:**
+  - The tab menu of a session tab copies its transcript. A closed session has no tab, so no tab menu copies it.
+  - Each entry of the session history reopens its session. A reopen opens the tab again for every member, because the members share the sessions of a workspace. The reopen route clears `closedAt` and sends `session.updated` to each open browser tab.
+  - In a read-only workspace, such as an archived one, an entry shows its session as a tab for the member alone. So the copy items there reach every session.
+  - The transcript route checks the session with `sessionFor` in `worker/chat/session-record.ts`, which accepts a closed session. So the route can already give the Markdown of a closed session.
+  - A close sets a new `closedAt`, so a session that closes again moves to the top of the session history.
+- **Problem:** In a workspace that accepts changes, a member must reopen a closed session for everyone before they can copy its transcript.
+- **Impact if no action:** A member who wants an old transcript reopens the session, copies it, and closes it again. The other members see the tab come and go, and the session moves to the top of the session history of each member.
+- **Root question:** How does a member copy the transcript of a closed session?
+- **Options:**
+  - **A.** Keep the current state. A member reopens the session to copy it. Effort: Small.
+  - **B.** Each entry of the session history gets the two copy items, in a menu that a right click, Shift and F10, the Menu key, or a long press opens. A press on the entry still reopens the session. Cost: a menu that opens from a row of the history, with its own rules for a press outside and for the focus in a phone sheet, a long press with no drag, its mockups, and its tests. Effort: Medium.
+  - **C.** An entry of the session history shows its closed session as a tab for the member alone, as a read-only workspace does. Its tab menu then copies it. Cost: a new local view in a workspace that accepts changes, with its own rules for messages, a close, and a reload. It changes the requirement that an entry reopens its session. Effort: Large.
+  - **D.** Each entry of the session history gets a visible control at the end of its row, such as a More button, that opens the two copy items. A press on the entry still reopens the session. Cost: a new kind of menu row with its own arrow-key and focus rules, its mockups, and its tests. Each row gets busier. Effort: Medium.
+- **Left out:**
+  - A copy that reopens the session, copies it, and closes it again on its own. The other members still see the tab come and go, so B is better on every point.
+  - A submenu on each entry, with Reopen session and the two copy items. It breaks the requirement in `docs/protocol/agents-and-sessions.md` that an entry reopens its session, and D shows the copy as clearly with no extra press.
+  - A dialog or a page that shows the text of a closed session, with a Copy button. On 9 November 2026 the user chose a copy from the tab menu over a dialog with a preview.
+- **Wider fix:** B, built from the item list of the session tab menu. Each item also says whether it needs a tab, as Rename session and the moves do. An entry of the history then shows each item that needs no tab and that a read-only workspace allows. A later item that needs no tab then reaches a closed session with no new decision.
+- **Previous examples:** The source line of a session reaches a closed source session only through a reopen for every member, in `src/chat/components/SessionChat.tsx:136`.
+- **Recommendation:** B. The route already gives the Markdown of a closed session, so only the menu is new, and no other member sees a change.
+- **Action:** ask the user, because option B adds behaviour that no requirement covers.

@@ -1,8 +1,19 @@
 import type { WorkspaceEvent } from '../shared/events'
+import type { ListeningPort } from '../shared/ports'
 import type { Preview } from '../shared/previews'
 import type { ToolError } from '../terminal/tool-parts/request'
 
 export interface PreviewsState {
+  /**
+   * The latest list of the servers that listen in the sandbox, or null while
+   * the workspace has no report, such as for an older runner or after a stop.
+   */
+  ports: readonly ListeningPort[] | null
+  /**
+   * When the repair of the list failed, in Unix milliseconds, until a newer
+   * full report. Then the form keeps its last list under a notice.
+   */
+  portsFailedAt: number | null
   load: { state: 'loading' } | { state: 'failed'; error: ToolError } | null
   /** The list read that counts. Try again starts a new read. */
   read: number
@@ -28,8 +39,12 @@ export type PreviewsAction =
   | { type: 'closed'; previewId: string }
   | { type: 'close-failed'; previewId: string; error: ToolError }
   | { type: 'reload' }
+  /** The workspace refused the fresh report of the list too, at `at`. */
+  | { type: 'ports-repair-failed'; at: number }
 
 export const initialPreviews: PreviewsState = {
+  ports: null,
+  portsFailedAt: null,
   load: { state: 'loading' },
   read: 1,
   previews: [],
@@ -55,6 +70,27 @@ export function selectedPreview(
   routeId: string | null,
 ): Preview | null {
   return visible.find((preview) => preview.id === routeId) ?? visible[0] ?? null
+}
+
+/** What the port form shows above its field. */
+export type PortFormList =
+  /** No report, or every server already has a tab: the field alone. */
+  | { kind: 'field' }
+  /** The runner reports no server: the form asks the user to start one. */
+  | { kind: 'empty' }
+  /** The servers that have no preview yet, in the order of their ports. */
+  | { kind: 'servers'; servers: readonly ListeningPort[] }
+
+/** The list of the port form. A port with an open preview leaves it. */
+export function portFormList(
+  state: PreviewsState,
+  visible: readonly Preview[],
+): PortFormList {
+  if (state.ports === null) return { kind: 'field' }
+  if (state.ports.length === 0) return { kind: 'empty' }
+  const open = new Set(visible.map((preview) => preview.port))
+  const servers = state.ports.filter((server) => !open.has(server.port))
+  return servers.length === 0 ? { kind: 'field' } : { kind: 'servers', servers }
 }
 
 function without<T>(set: ReadonlySet<T>, value: T): ReadonlySet<T> {
@@ -118,6 +154,14 @@ export function previewsReducer(
       }
     case 'reload':
       return { ...state, reloads: state.reloads + 1 }
+    case 'ports.updated':
+      // Each report is the full list. It ends a failed repair, also a null
+      // list after a stop.
+      return { ...state, ports: action.ports, portsFailedAt: null }
+    case 'ports-repair-failed':
+      // A further failure keeps the time of the first one.
+      if (state.portsFailedAt !== null) return state
+      return { ...state, portsFailedAt: action.at }
     default:
       // The other events of the workspace leave the previews as they are.
       return state

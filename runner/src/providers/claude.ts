@@ -3,11 +3,15 @@ import { randomUUID } from 'node:crypto'
 import { query } from '@anthropic-ai/claude-agent-sdk'
 
 import { WORKSPACE_TOOLS_MCP } from '../../../src/shared/agent-tools'
-import { attachmentDescription } from './attachment-description'
+import {
+  attachmentDescription,
+  attachmentReadInstruction,
+} from './attachment-description'
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeInputWindow } from './claude-input-window'
 import { spawnClaudeProcess } from './claude-process'
+import { writeClaudeProfile } from './claude-profile'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
@@ -32,6 +36,7 @@ export type ClaudeQueryFactory = (
 export function createClaudeFactory(
   start: ClaudeQueryFactory = query,
   binary = claudeBinary,
+  profile = writeClaudeProfile,
 ): ProviderFactory {
   return async (options) => {
     options.signal?.throwIfAborted()
@@ -40,6 +45,36 @@ export function createClaudeFactory(
     options.signal?.throwIfAborted()
     const computer = await readComputerServer(options.warn)
     options.signal?.throwIfAborted()
+    const preparation =
+      options.credential.type === 'gateway'
+        ? profile(
+            options.home,
+            options.sessionId,
+            options.endpoint,
+            options.credential.token,
+          )
+        : Promise.resolve(null)
+    lifetime.registerCleanup(() =>
+      preparation.then(
+        (value) => value?.remove(),
+        () => {},
+      ),
+    )
+    const credentials = await preparation
+    const env = providerEnvironment(
+      options.home,
+      options.tools,
+      options.commitAuthor,
+    )
+    if (
+      options.credential.type === 'gateway' &&
+      options.credential.kind === 'token'
+    )
+      env.CLAUDE_CODE_PROMPT_CACHE_TTL = '1h'
+    if (credentials) {
+      env.ANTHROPIC_CONFIG_DIR = credentials.directory
+      env.ANTHROPIC_PROFILE = credentials.name
+    } else env.ANTHROPIC_BASE_URL = options.endpoint
     const input = new ClaudeInputWindow()
     let resultReceived = false
     const mapper = new ClaudeEvents(
@@ -53,12 +88,13 @@ export function createClaudeFactory(
     let closed = false
     let stream: ClaudeQuery
     try {
+      options.signal?.throwIfAborted()
       stream = start({
         prompt: input,
         options: {
           cwd: options.cwd,
           systemPrompt: options.instructions,
-          env: providerEnvironment(options.home, options.tools),
+          env,
           pathToClaudeCodeExecutable: binary(),
           model: options.choice.model,
           ...(options.choice.effort === 'none'
@@ -79,7 +115,13 @@ export function createClaudeFactory(
           },
           spawnClaudeCodeProcess: (request) => {
             options.signal?.throwIfAborted()
-            return spawnClaudeProcess(request, options.login, lifetime)
+            return spawnClaudeProcess(
+              request,
+              options.credential.type === 'native'
+                ? options.credential.login
+                : null,
+              lifetime,
+            )
           },
         },
       })
@@ -130,9 +172,11 @@ export function createClaudeFactory(
     return {
       send: async (command) => {
         const uuid = randomUUID()
-        const attached = command.attachments
-          .map((item) => `\n${attachmentDescription(command, item)}`)
-          .join('')
+        const attached = command.attachments.length
+          ? `\n${attachmentReadInstruction}\n${command.attachments
+              .map((item) => attachmentDescription(command, item))
+              .join('\n')}`
+          : ''
         input.push(command.message.id, {
           type: 'user',
           uuid,

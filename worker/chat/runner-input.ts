@@ -1,5 +1,4 @@
 import {
-  RUNNER_PROTOCOL_VERSION,
   type RunnerEventEnvelope,
   type RunnerHello,
 } from '../../src/shared/runner'
@@ -10,6 +9,7 @@ import {
   checkRunnerEnvelopeBytes,
   checkRunnerEventLimits,
 } from './runner-event-limits'
+import { checkDisplayedPortReport } from './port-reports'
 
 export interface IncomingRunnerEnvelope {
   type: 'event'
@@ -30,7 +30,8 @@ export function parseRunnerTransport(
   | { type: 'file.diff.result'; value: unknown } {
   const input = record(value)
   if (input.type === 'hello') {
-    if (input.protocolVersion !== RUNNER_PROTOCOL_VERSION) return invalidInput()
+    if (input.protocolVersion !== 1 && input.protocolVersion !== 2)
+      return invalidInput()
     return {
       type: input.type,
       protocolVersion: input.protocolVersion,
@@ -66,6 +67,8 @@ export function parseRunnerOutputEnvelope(
   input: RunnerEventEnvelope,
 ): RunnerEventEnvelope {
   const parsed = parseRunnerPayload(input)
+  if (parsed.event.type === 'ports.updated')
+    checkDisplayedPortReport(parsed.event)
   if (
     parsed.event.type !== 'files.snapshot' &&
     parsed.event.type !== 'files.changed' &&

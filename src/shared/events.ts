@@ -2,6 +2,7 @@ import type { Timestamp } from './api'
 import type { ChatEvent } from './chat-events'
 import type { FileEvent } from './files'
 import type { GitHubBanner, GitHubChecksResponse } from './github'
+import type { PortsUpdated } from './ports'
 import {
   workspacePath,
   type Workspace,
@@ -35,6 +36,7 @@ export function chatHistoryPath(
 export type WorkspaceEvent =
   | ChatEvent
   | FileEvent
+  | PortsUpdated
   | {
       type: 'workspace.updated'
       workspace: Workspace

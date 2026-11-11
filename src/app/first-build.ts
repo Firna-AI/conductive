@@ -45,17 +45,16 @@ export interface ChangedScriptNotice {
 
 /**
  * The words of the notice of a changed install script, which every viewer
- * of the Cloud computer tab reads, from the builds of the org or from
- * `undefined` while they load. Until the org has a good build, the notice
- * asks for no build: while the first build runs, one more build runs the
- * script when that build succeeds, and else the head of the builds offers
- * the next build. While the builds load, the words hold in each state.
+ * of the Cloud computer tab reads, from the builds of the org. Until the
+ * org has a good build, the notice asks for no build: while the first build
+ * runs, one more build runs the script when that build succeeds, and else
+ * the head of the builds offers the next build.
  */
 export function changedScriptNotice(
-  builds: BuildsResponse | undefined,
+  builds: BuildsResponse,
 ): ChangedScriptNotice {
   const title = 'The install script changed'
-  switch (builds ? firstBuildOf(builds).state : null) {
+  switch (firstBuildOf(builds).state) {
     case 'succeeded':
       return {
         title,
@@ -70,7 +69,6 @@ export function changedScriptNotice(
       }
     case 'failed':
     case 'none':
-    case null:
       return { title, body: 'It runs at the next build.', offersBuild: false }
   }
 }

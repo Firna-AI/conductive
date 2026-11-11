@@ -28,7 +28,9 @@ export const workspaceMenuRoles = defineScreen({
       slug: 'archived',
       title: 'Archived rows of a member',
       description:
-        "Priya opens the Archived group. She has no action on an archived row, so a right click on Checkout page redesign opens the browser's own menu. Under the pointer the row shows only the fill of a hover.",
+        "Priya opens the Archived group. She has no action in the menu of an archived row, so a right click on Checkout page redesign opens the browser's own menu. Under the pointer the row shows Restore over its time, because every member can restore a workspace until its last day of Restore.",
+      rationale:
+        'The user chose option B of decision 2 of PR #138 on 10 November 2026: every member of an org that is not suspended may restore. Restore stays on the row, so the menu keeps its own actions.',
       props: { menu: 'workspace-archived-member' },
     },
     {

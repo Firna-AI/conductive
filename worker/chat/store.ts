@@ -21,6 +21,7 @@ import {
   chatEventKey as eventKey,
 } from './storage-keys'
 import type { ChatData, ChatStorage, PendingCommand, StoredTurn } from './types'
+import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
 
 interface ChatMetadata {
   workspaceId: string
@@ -32,6 +33,7 @@ export class ChatTransaction extends ChatRecords {
   readonly workspaceId: string
   readonly now: number
   readonly emitted: WorkspaceEventEnvelope[] = []
+  readonly endedTurns: TurnEndReport[] = []
   readonly files: FilesStorage
   readonly github: GitHubStateTransaction
   readonly repairs: ReportRepairs
@@ -95,6 +97,30 @@ export class ChatTransaction extends ChatRecords {
         key('command', commandId),
       )
     )?.command
+  }
+  async commandDelivered(
+    commandId: string,
+    connectionId: string,
+  ): Promise<boolean> {
+    return (
+      (await this.data.get<{ deliveredTo?: string }>(key('command', commandId)))
+        ?.deliveredTo === connectionId
+    )
+  }
+  async saveCommandDelivery(
+    commandId: string,
+    connectionId: string,
+  ): Promise<void> {
+    const record = await this.data.get<{
+      command: PendingCommand
+      order: number
+      deliveredTo?: string
+    }>(key('command', commandId))
+    if (record)
+      await this.data.put(key('command', commandId), {
+        ...record,
+        deliveredTo: connectionId,
+      })
   }
   saveTurn(turn: StoredTurn): Promise<void> {
     return this.summary
@@ -174,20 +200,40 @@ export class ChatStore {
   private tail: Promise<unknown> = Promise.resolve()
   private readonly storage: ChatStorage
   private readonly now: () => number
+  private readonly changed: (workspaceId: string) => Promise<void>
+  private readonly turnEnds: TurnEndReports
 
-  constructor(storage: ChatStorage, now: () => number) {
+  constructor(
+    storage: ChatStorage,
+    now: () => number,
+    turnEnded: ConstructorParameters<typeof TurnEndReports>[0] = async () =>
+      undefined,
+    changed: (workspaceId: string) => Promise<void> = async () => undefined,
+  ) {
     this.storage = storage
     this.now = now
+    this.turnEnds = new TurnEndReports(turnEnded)
+    this.changed = changed
   }
 
   run<T>(work: () => Promise<T>): Promise<T> {
-    const result = this.tail.then(work)
+    const result = this.tail.then(async () => {
+      try {
+        return await work()
+      } finally {
+        await this.reportTurnEnds()
+      }
+    })
     this.tail = result.catch(() => undefined)
     return result
   }
 
   settled(): Promise<unknown> {
     return this.tail
+  }
+
+  reportTurnEnds(): Promise<void> {
+    return this.turnEnds.flush()
   }
 
   async workspaceId(): Promise<string | undefined> {
@@ -227,17 +273,25 @@ export class ChatStore {
     work: (transaction: ChatTransaction) => Promise<T>,
     committed: (events: readonly WorkspaceEventEnvelope[]) => void,
   ): Promise<T> {
-    const { result, events } = await this.storage.transaction(async (data) => {
-      const transaction = new ChatTransaction(
-        data,
-        await this.metadata(data, workspaceId),
-        this.now(),
-      )
-      const result = await work(transaction)
-      await transaction.finish()
-      return { result, events: transaction.emitted }
-    })
+    const { result, events, endedTurns } = await this.storage.transaction(
+      async (data) => {
+        const transaction = new ChatTransaction(
+          data,
+          await this.metadata(data, workspaceId),
+          this.now(),
+        )
+        const result = await work(transaction)
+        await transaction.finish()
+        return {
+          result,
+          events: transaction.emitted,
+          endedTurns: transaction.endedTurns,
+        }
+      },
+    )
+    this.turnEnds.committed(workspaceId, endedTurns)
     committed(events)
+    await this.changed(workspaceId)
     return result
   }
 }

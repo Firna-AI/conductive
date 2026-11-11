@@ -32,7 +32,8 @@ mount the chat.
   `src/shared/name-label.ts`, as
   [Workspace and session names](../../docs/protocol/agents-and-sessions.md#workspace-and-session-names)
   says. "New session" names only the action of +: its label, the heading
-  of the empty chat, and the detail in the model picker.
+  of the empty chat, and the spoken name of the icon that marks each model
+  of the other agent in the model picker.
 - Each tab shows the `title` of its session record. The backend provides
   the titles that the mockups show. The title from the first message names
   the workspace and its first session, as
@@ -63,6 +64,15 @@ mount the chat.
   chip of the file shows the label of its path, `displayPath`, which hides
   each secret value, as [Labels of paths](../files/labels.md)
   says.
+- `mentions` gives the composer the files and folders of the workspace for
+  the list of `@`, and the open of a file chip, as `ChatMentions` in
+  `mentions/MentionsContext.tsx` says. `files` is a store of the kept file
+  tree: the `WorkspaceFiles` of the Files screens fits it. `openFile`
+  opens a file as a press in All files does, `showFolder` shows All files
+  with a folder open, and `href` gives the address of the page of a chip.
+  Without `mentions`, the composer has no list, and a message shows each
+  mention as text, as
+  [File mentions](../../docs/protocol/file-mentions.md) says.
 - `onOpenPage` gets the page of a workspace chip in a sent message or an
   answer, such as `/orgs/acme/workspaces/<id>/files`, after a plain click.
   The app opens it in the same window. A click with a modifier key stays
@@ -87,12 +97,22 @@ mount the chat.
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar
   takes the place of the composer.
+- `copy` gives the clipboard, the clock, and the timers of a copy of a
+  transcript from the tab menu. The app gives its `AppServices`, so a copy
+  writes through `AppServices.copy`. It must be stable, because it keeps
+  the text of a copy that the clipboard refused for one minute, as
+  `copyTranscript` in `transcript-copy.ts` says. Without it, the chat uses
+  `browserCopy`: the clipboard of the browser, `Date.now`, and its timers.
+- The chat shows the result of a copy in a toast of `@firna/ui`: through
+  the `ToastProvider` of the host, such as the one of the app's
+  `ThemeRoot`, else through its own, at the bottom right of the window.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
-- The chat sets no CSS position. A dialog or a sheet covers the nearest
-  positioned frame: the app frame. The lifted tab of a drag, and the tab
-  menu on desktop, draw on `document.body` with a fixed position, because
-  the row clips what it holds.
+- The chat sets no CSS position, except on the message box of a composer,
+  so the list of `@` lies just above the box. A dialog or a sheet covers
+  the nearest positioned frame: the app frame. The lifted tab of a drag,
+  and the tab menu on desktop, draw on `document.body` with a fixed
+  position, because the row clips what it holds.
 - The menus, the dialogs, and the sheets of the chat note themselves in
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while
@@ -105,7 +125,8 @@ mount the chat.
   takes the tabs from `rowOf` with the sessions of `tabSessions` and the
   shown tab of `shownTab`, and the session history from `historySessions`
   with the times of `endedAt`, so an archived workspace navigates without a
-  write.
+  write. It gives `SessionTabs` its `onCopy` from `useTranscriptCopy`, which
+  needs a toast provider above it, such as `ChatToasts`.
 - `useChatController` makes the controller through the shared
   `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
   starts the controller after the render. It stops the controller at

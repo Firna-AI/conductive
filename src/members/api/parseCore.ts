@@ -135,6 +135,7 @@ export function parseWorkspace(value: unknown): Workspace {
     createdAt: count(source, 'createdAt'),
     updatedAt: count(source, 'updatedAt'),
     archivedAt: countOrNull(source, 'archivedAt'),
+    restoreUntil: countOrNull(source, 'restoreUntil'),
   }
 }
 

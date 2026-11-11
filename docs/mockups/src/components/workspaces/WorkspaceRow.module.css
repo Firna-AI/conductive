@@ -66,6 +66,7 @@
   text-align: right;
 }
 
+/* The one action of an `.archivable` row: Archive, or Restore when archived. */
 .archive {
   position: absolute;
   top: 50%;
@@ -86,11 +87,22 @@
   pointer-events: auto;
 }
 
+/* A row whose Archive or Restore runs keeps its busy action over its time. */
+.acting .time {
+  visibility: hidden;
+}
+
+.acting .archive {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
 /*
  * A view runs no script, so it draws a hover with `.hovered`, such as on
  * the row of a menu that a right click opened: the fill of a hover, and
- * Archive over the time on a row that the person can archive. `.held`
- * keeps the row of a menu in a sheet marked with the same fill.
+ * the action of the row over its time, Archive or Restore. `.held` keeps
+ * the row of a menu in a sheet marked with the same fill.
  */
 .hovered .row,
 .held .row {
