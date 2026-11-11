@@ -155,17 +155,19 @@ function PreviewToolBody(props: PreviewToolProps) {
         )}
       </>
     )
-    const closeError =
-      selected && state.closeError?.previewId === selected.id
-        ? state.closeError.error
-        : null
+    // A tab closes its preview also when it is not the shown tab, so the
+    // error names the port of the preview that stays open.
+    const failedClose = state.closeError
+    const unclosed = failedClose
+      ? visible.find((preview) => preview.id === failedClose.previewId)
+      : undefined
     content =
       visible.length === 0 ? (
         form
       ) : (
         <>
           <PreviewToolbar
-            closing={selected !== null && state.closing.has(selected.id)}
+            closing={state.closing}
             href={route.href}
             onAdd={() => setAdding({ routeId: route.previewId })}
             onClose={close}
@@ -175,9 +177,10 @@ function PreviewToolBody(props: PreviewToolProps) {
             previews={visible}
             selected={selected}
           />
-          {closeError ? (
+          {failedClose && unclosed ? (
             <p className={styles.error} role="alert">
-              The preview couldn&apos;t close. {closeError.message}
+              The preview of port {unclosed.port} couldn&apos;t close.{' '}
+              {failedClose.error.message}
             </p>
           ) : null}
           {selected ? (

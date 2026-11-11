@@ -2,3 +2,8 @@
   flex-shrink: 0;
   color: var(--ui-muted);
 }
+
+.quiet {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+}

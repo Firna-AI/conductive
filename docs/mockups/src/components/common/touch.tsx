@@ -8,9 +8,14 @@ export function TouchScreen(props: { children: ReactNode }) {
   return <TouchContext.Provider value>{props.children}</TouchContext.Provider>
 }
 
+/** True on a phone screen. */
+export function useTouch(): boolean {
+  return useContext(TouchContext)
+}
+
 /** The sizes of the controls: dense on desktop, touch sizes on a phone. */
 export function useControlSizes(): ControlSizes {
-  return useContext(TouchContext) ? touchControl : control
+  return useTouch() ? touchControl : control
 }
 
 /** Whether the screen is a phone, whose controls show no key hints. */
