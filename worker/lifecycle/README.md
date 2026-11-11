@@ -192,6 +192,9 @@ functions of the lifecycle that a reader opens first.
 - [workspace-response.ts](workspace-response.ts):
   `presentProvisionedWorkspace` reads the current mark for a repeated
   create, because the saved create reply can hold an older value.
+- [durable-journal.ts](durable-journal.ts): `WorkspaceEventJournal` compares
+  public event data, so a warning change reaches open tabs even when the
+  workspace state stays unchanged. Timestamp-only polls remain suppressed.
 - [disk-retention.ts](disk-retention.ts): `keepWorkspaceDisk` clears the
   failed update mark when a restart near day 14 of a stop begins. After
   Boat reports the sandbox ready, it pins the same update before the
