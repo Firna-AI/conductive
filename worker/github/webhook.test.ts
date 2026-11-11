@@ -164,6 +164,32 @@ it('routes SHA-only events without pull request hints and publishes only changed
   ).toEqual(['github.updated', 'github.updated'])
 })
 
+it('sends no event to an archived workspace on the same branch', async () => {
+  const { orgId, workspace } = await harness.seed()
+  await harness.seed('changes', 'archived-at', orgId)
+  await harness.seed('changes', 'archived-state', orgId)
+  await harness.env.DB.batch([
+    harness.env.DB.prepare(
+      "UPDATE workspaces SET archived_at = 1 WHERE id = 'archived-at'",
+    ),
+    harness.env.DB.prepare(
+      "UPDATE workspaces SET state = 'archived' WHERE id = 'archived-state'",
+    ),
+  ])
+  for (const [event, body] of [
+    ['pull_request', recordedPullRequest],
+    ['check_run', recordedCheckRun],
+    ['push', { ...recordedPush, ref: 'refs/heads/main' }],
+  ] as const) {
+    expect(
+      (await harness.webhook(event, body, `archived-${event}`)).status,
+    ).toBe(204)
+  }
+  expect(harness.memory(workspace.id).events).toHaveLength(1)
+  expect(harness.states.has('archived-at')).toBe(false)
+  expect(harness.states.has('archived-state')).toBe(false)
+})
+
 it('refreshes current review decisions after submission and dismissal webhooks', async () => {
   const { workspace } = await harness.seed()
   harness.api.pulls[2].reviewDecision = 'CHANGES_REQUESTED'
