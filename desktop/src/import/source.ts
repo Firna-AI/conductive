@@ -1,16 +1,14 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
-import type {
-  ImportLocations,
-  SourceSession,
-  SourceWorkspace,
-} from './types.ts'
+import type { SourceSession, SourceWorkspace } from './types.ts'
+import type { ImportLocations } from './locations.ts'
+import type { ImportLocationsInput } from './types.ts'
 
-export const conductorDatabasePath = ({ home }: ImportLocations) =>
+export const conductorDatabasePath = ({ home }: ImportLocationsInput) =>
   join(home, 'Library/Application Support/com.conductor.app/conductor.db')
 
-export const sourceExists = (locations: ImportLocations) =>
+export const sourceExists = (locations: ImportLocationsInput) =>
   existsSync(conductorDatabasePath(locations))
 
 const columns = {

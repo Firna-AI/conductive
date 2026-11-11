@@ -9,7 +9,8 @@ import { convertNative, inspectNative } from './native.ts'
 import { digest, FILE_LIMIT_BYTES } from './safe-files.ts'
 import { capturedFile, capturedNative } from './stage-state.ts'
 import type { StageSource } from './stage-state.ts'
-import type { ImportLocations, ImportStage } from './types.ts'
+import type { ImportStage } from './types.ts'
+import type { ImportLocations } from './locations.ts'
 import { LocalImportError } from './types.ts'
 
 export async function packageStage(

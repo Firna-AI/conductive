@@ -17,7 +17,7 @@ import {
   stageDirectory,
   stageRoot,
 } from './stage-state.ts'
-import type { ImportLocations } from './types.ts'
+import type { ImportLocations } from './locations.ts'
 import { LocalImportError } from './types.ts'
 
 export async function loadBuild(locations: ImportLocations, id: string) {

@@ -1,8 +1,9 @@
 import { parentPort, workerData } from 'node:worker_threads'
-import type { ImportJob, ImportLocations } from './types.ts'
+import type { ImportJob, ImportLocationsInput } from './types.ts'
 import { LocalImportError } from './types.ts'
 import { sourceExists } from './source.ts'
 import { scanSource } from './scan.ts'
+import { ImportLocations } from './locations.ts'
 import {
   buildStage,
   prepareStage,
@@ -16,20 +17,20 @@ import {
 } from './stage.ts'
 
 interface Input {
-  locations: ImportLocations
+  locations: ImportLocationsInput
   job: ImportJob
 }
 const input: Input = workerData
 const abort = new AbortController()
 parentPort?.on('message', () => abort.abort())
 parentPort?.postMessage({ kind: 'ready' })
-const { job, locations } = input
+const { job } = input
 const signal = abort.signal
 
 async function run() {
+  if (job.action === 'exists') return sourceExists(input.locations)
+  const locations = await ImportLocations.create(input.locations)
   switch (job.action) {
-    case 'exists':
-      return sourceExists(locations)
     case 'scan':
       return scanSource(locations, signal)
     case 'row':

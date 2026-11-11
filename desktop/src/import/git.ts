@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { parentPort } from 'node:worker_threads'
 import { missing, readSourceFile } from './safe-files.ts'
-import type { ImportLocations } from './types.ts'
+import type { ImportLocations } from './locations.ts'
 
 const settings = [
   '--no-pager',
@@ -162,6 +162,32 @@ export async function userExcludesFile(
     : value.slice(0, -1)
 }
 
+/** The source rules read an absent private index, never the staged gitlinks. */
+export async function ignoredSourcePaths(
+  cwd: string,
+  paths: string[],
+  excludesFile: string,
+  indexFile: string,
+  signal: AbortSignal,
+): Promise<Set<string>> {
+  if (!paths.length) return new Set()
+  const output = await runGit(
+    cwd,
+    [
+      '-c',
+      `core.excludesFile=${excludesFile}`,
+      'check-ignore',
+      '--no-index',
+      '--stdin',
+      '-z',
+    ],
+    signal,
+    { input: paths.join('\0') + '\0', allowFailure: true },
+    { ...environment(), GIT_INDEX_FILE: indexFile },
+  )
+  return new Set(output.split('\0').filter(Boolean))
+}
+
 /** Worktree conversions use only our config, even if source config changes. */
 export async function controlledWorktree(
   root: string,
@@ -208,6 +234,7 @@ export async function controlledWorktree(
     } else await run(['read-tree', head])
     return {
       run,
+      ignoreIndex: join(directory, 'walk-ignore-index'),
       dispose: () => rm(directory, { recursive: true, force: true }),
     }
   } catch (error) {

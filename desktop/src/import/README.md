@@ -32,13 +32,15 @@ The [desktop README](../../README.md) gives the package, the window, and the dev
 
 - The main process runs its database, Git, file, and session-file work as jobs, each in its own worker thread. A cancellation also stops the Git process groups of the job.
 - App exit cancels each job and waits until its worker thread and Git process groups stop.
+- Each job except the existence check resolves the trusted home and user-data folders once, at its start. Every path below them keeps the no-follow checks.
 - The worker opens the live Conductor database in read-only mode and never copies it. The read leaves the database and its write-ahead log unchanged.
 - Each read takes only the allowed columns of `workspaces`, `repos`, and `sessions`, in one short transaction. These columns give the local Conductor ID and the native session IDs.
 - No read touches a message table, a script, an env value, or a credential store.
 - A scan estimates each upload size from metadata only. It builds no bundle and decodes no session file.
 - A workspace that the scan cannot measure still appears in the list, with no upload size.
 - Each acting Git command keeps fixed private settings: no global or system config, hook, file monitor, prompt, or lazy fetch.
-- One read-only config query reads only the effective `core.excludesFile` path, as data. The untracked list follows that file, as Git resolves it, and the repository's own ignore rules.
+- For each repository, one read-only config query reads only the effective `core.excludesFile` path, as data. The untracked list follows that file, as Git resolves it, and the repository's own ignore rules.
+- A folder that Git lists as one candidate, such as an untracked or newly staged nested repository, imports as its working files. They omit `.git` data and follow the outer ignore rules and the nested repository's own rules.
 - Ignore rules never drop the `.context` folder.
 - Tracked worktree comparisons run in a private repository with its own index, so no filter from the source config runs.
 
@@ -77,7 +79,7 @@ npm --prefix desktop run test:logic -- src/import
 npm --prefix desktop run test:electron -- tests/import.spec.ts
 ```
 
-The import code takes the home and user-data folders as inputs, and the tests pass temporary folders.
+The import code takes raw home and user-data folders as inputs, and the tests pass temporary folders. A test that calls the code below the worker builds its locations with `ImportLocations.create`.
 Build the desktop app before the Electron check, with the build command in [Development](../../README.md#development).
 The [import Electron test](../../tests/import.spec.ts) runs the compiled import code in Electron, with the real device session and worker thread.
 It uses a fixture source, an automatic consent answer, and local stand-ins for the Worker and the bucket.
@@ -98,9 +100,11 @@ The package keeps this code outside the ASAR archive, as [Checks and packages](.
 - [Import scheduler](scheduler.ts) gives all import operations of one controller a shared turn.
 - [Import preferences](preferences.ts) keep the consent and the offer dismissal of this Mac.
 - [Import job runner](worker-client.ts) runs each job in the [import worker](worker.ts) thread and stops its Git process groups at cancellation and app exit.
+- [Trusted locations](locations.ts) give the resolved home and user-data folders. Only `ImportLocations.create` builds them, so raw locations do not fit the import code.
 - [Conductor source](source.ts) reads the allowed database columns. [Scan](scan.ts) builds each row and its size estimate.
 - [Inventory](inventory.ts) lists the changed, deleted, untracked, and `.context` paths and the memory files of one workspace.
-- [Safe files](safe-files.ts) read source files without links and refuse a file that changes. [Git](git.ts) runs Git with fixed settings and makes the private comparison repository.
+- [Source walk](source-walk.ts) walks a candidate or `.context` without following links, with an explicit ignore policy. [Candidate paths](candidate-paths.ts) expand each folder candidate on disk and apply the outer and nested ignore rules.
+- [Safe files](safe-files.ts) read source files without links and refuse a file that changes. [Git](git.ts) runs Git with fixed settings, checks ignore rules, and makes the private comparison repository.
 - [Stage](stage.ts) prepares, builds, seals, and reuses the private stage of one reservation. [Capture](stage-capture.ts) copies the source into it.
 - [Package](package.ts) builds the snapshot and the manifest from the [bundle](package-git.ts), the [Git disk facts](disk.ts), and the [parts](objects.ts).
 - [Native sessions](native.ts) find each session file and write its old document with the [line reader](native-lines.ts), the [Claude chain](native-chain.ts), and the [message filter](native-messages.ts).

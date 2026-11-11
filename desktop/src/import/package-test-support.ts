@@ -17,18 +17,21 @@ import {
   readStagePart,
   sealStage,
 } from './stage.ts'
-import type { ImportLocations, ImportStage } from './types.ts'
+import type { ImportStage } from './types.ts'
+import { ImportLocations } from './locations.ts'
 import { importTemporaryDirectory } from '../../tests/import-temporary.ts'
 
 export const signal = () => new AbortController().signal
 
 export async function packageFixture(base = true) {
   const root = await importTemporaryDirectory(tmpdir(), 'conductive-package-')
-  const locations = {
+  const input = {
     home: join(root, 'home'),
     userData: join(root, 'private'),
     xdgConfigHome: join(root, 'home/.config'),
   }
+  await mkdir(input.home, { recursive: true })
+  const locations = await ImportLocations.create(input)
   const workspace = join(locations.home, 'conductor/workspaces/example/work')
   await mkdir(workspace, { recursive: true })
   const run = promisify(execFile)

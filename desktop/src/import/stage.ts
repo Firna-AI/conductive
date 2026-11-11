@@ -34,7 +34,8 @@ import {
   stageRoot,
   writeState,
 } from './stage-state.ts'
-import type { ImportLocations, ImportStage } from './types.ts'
+import type { ImportStage } from './types.ts'
+import type { ImportLocations } from './locations.ts'
 import { LocalImportError } from './types.ts'
 import {
   loadBuild,

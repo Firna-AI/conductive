@@ -2,7 +2,11 @@ import { existsSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { Worker } from 'node:worker_threads'
 import type { WorkerOptions } from 'node:worker_threads'
-import type { ImportJob, ImportJobResults, ImportLocations } from './types.ts'
+import type {
+  ImportJob,
+  ImportJobResults,
+  ImportLocationsInput,
+} from './types.ts'
 import { LocalImportError } from './types.ts'
 
 interface WorkerReply<Value> {
@@ -35,7 +39,7 @@ export function stopImportJobs(): Promise<void> | undefined {
 
 /** A task owns its worker and Git process groups. A connection owns its signal. */
 export async function runImportJob<A extends ImportJob['action']>(
-  locations: ImportLocations,
+  locations: ImportLocationsInput,
   job: Extract<ImportJob, { action: A }>,
   signal: AbortSignal,
   createWorker: (

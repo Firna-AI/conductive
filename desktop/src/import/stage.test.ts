@@ -14,6 +14,7 @@ import { expect, it } from 'vitest'
 import { readStageResults } from './stage.ts'
 import { sourceInventory } from './inventory.ts'
 import { readSource } from './source.ts'
+import { ImportLocations } from './locations.ts'
 import {
   claudeMemory,
   content,
@@ -251,7 +252,7 @@ it('packages working bytes, modes, tombstones, links, context and native session
     )
     await writeFile(userConfig, '')
     const homeDefault = await sourceInventory(
-      { ...fixture.locations, xdgConfigHome: '' },
+      await ImportLocations.create({ ...fixture.locations, xdgConfigHome: '' }),
       readSource(fixture.locations)[0],
       signal(),
     )

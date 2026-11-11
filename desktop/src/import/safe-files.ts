@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { constants } from 'node:fs'
 import type { BigIntStats } from 'node:fs'
-import { lstat, open, readlink, readdir, realpath } from 'node:fs/promises'
+import { lstat, open, readlink, realpath } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { importPath } from '../../../src/shared/conductor-import-values.ts'
 import { LocalImportError } from './types.ts'
@@ -117,25 +117,4 @@ export async function sourceRoot(path: string): Promise<string> {
   const stat = await lstat(canonical)
   if (!stat.isDirectory()) throw new LocalImportError('source_missing')
   return canonical
-}
-
-export async function walkContext(
-  root: string,
-  signal: AbortSignal,
-  path = '.context',
-): Promise<string[]> {
-  signal.throwIfAborted()
-  const full = sourcePath(root, path)
-  const stat = await lstat(full).catch((error: unknown) => {
-    if (missing(error)) return null
-    throw error
-  })
-  if (!stat) return []
-  if (!stat.isDirectory() || stat.isSymbolicLink()) return [path]
-  const result = [path]
-  for (const entry of await readdir(full)) {
-    if (/^\.git$/i.test(entry)) continue
-    result.push(...(await walkContext(root, signal, `${path}/${entry}`)))
-  }
-  return result
 }

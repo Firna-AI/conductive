@@ -1294,6 +1294,14 @@ Depends on: 4, 7c
 - [x] Add the device operations of the scan and the upload. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
 - [x] Add the tests of the Mac app, as the `testing` skill says. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
 - [x] Update `desktop/README.md`. Branch: `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Keep the working files of a nested repository, untracked or
+      staged, under the outer and nested local ignore rules. This applies
+      review finding 3, option C. Branch:
+      `conductor/import-from-conductor-mac-scan-and-upload`.
+- [x] Resolve only the trusted home and user-data prefixes, once at the
+      worker entry, through one typed constructor. This applies review
+      finding 4, option B in typed form. Branch:
+      `conductor/import-from-conductor-mac-scan-and-upload`.
 - [ ] Check the real native consent alert on the user's Mac. Branch:
       `conductor/import-from-conductor-mac-scan-and-upload`.
 - [ ] Run the controlled source pack, restore and unchanged/changed retry
@@ -1302,6 +1310,19 @@ Depends on: 4, 7c
 - [ ] Check the production source-worker import flow in source and
       packaged Electron on both supported Mac architectures. Branch:
       `conductor/import-from-conductor-mac-scan-and-upload`.
+
+Root design call, 11 November 2026:
+
+- Resolve only the trusted home and app user-data prefixes, once at the
+  worker entry, through one typed constructor. Keep the `exists` job on
+  its single pre-consent check of the database file. Keep the no-follow
+  policy of every descendant: source children, `.claude`, `.codex`, their
+  collection roots, stage folders, and staged parts. Reason: an alias in
+  a trusted prefix must not hide present memory files or block staged
+  parts. The existing discovery and upload requirements settle this
+  detail. This records the root outcome of review finding 4, option B in
+  typed form. It changes no protocol, legal page, public guide, Electron
+  profile path, or descendant link policy.
 
 Implementation and verification evidence:
 `.context/import-from-conductor/current/m6-final-report.md`.

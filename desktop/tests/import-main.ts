@@ -1,10 +1,10 @@
 import { resolve } from 'node:path'
 import type { ElectronApplication } from '@playwright/test'
-import type { ImportLocations } from '../src/import/types.ts'
+import type { ImportLocationsInput } from '../src/import/types.ts'
 
 export async function importThroughMain(
   electron: ElectronApplication,
-  locations: ImportLocations,
+  locations: ImportLocationsInput,
 ) {
   return electron.evaluate(
     async ({ app }, input) => {

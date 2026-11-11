@@ -9,7 +9,8 @@ import {
   privateTree,
 } from './stage-state.ts'
 import { FILE_LIMIT_BYTES, readSourceFile, sourcePath } from './safe-files.ts'
-import type { ImportLocations, SourceInventory } from './types.ts'
+import type { SourceInventory } from './types.ts'
+import type { ImportLocations } from './locations.ts'
 import { LocalImportError } from './types.ts'
 
 export async function currentSource(

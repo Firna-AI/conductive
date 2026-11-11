@@ -12,7 +12,7 @@ import type {
 import type { ImportPart } from '../../../src/shared/conductor-import-storage.ts'
 import type { ImportLfsObject } from '../../../src/shared/conductor-import-lfs.ts'
 
-export interface ImportLocations {
+export interface ImportLocationsInput {
   home: string
   userData: string
   xdgConfigHome?: string

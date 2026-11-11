@@ -8,14 +8,14 @@ import type {
 } from '../../src/shared/conductor-import-manifest.ts'
 import type { ImportPart } from '../../src/shared/conductor-import-storage.ts'
 import type { DeviceToWorker } from '../../src/shared/device.ts'
-import type { ImportLocations } from '../src/import/types.ts'
+import type { ImportLocationsInput } from '../src/import/types.ts'
 
 import { deferredImport } from './import-wait.ts'
 
 /** @public Electron evaluate loads this entry through createRequire. */
 export async function runImportMainFixture(
   appPath: string,
-  input: ImportLocations,
+  input: ImportLocationsInput,
 ) {
   const { resolve } = process.getBuiltinModule('node:path')
   const { createRequire } = process.getBuiltinModule('node:module')

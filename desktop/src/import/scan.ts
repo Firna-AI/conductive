@@ -1,5 +1,5 @@
 import { lstat } from 'node:fs/promises'
-import type { ImportLocations } from './types.ts'
+import type { ImportLocations } from './locations.ts'
 import { readSource } from './source.ts'
 import { sourceGit } from './git.ts'
 import { inventory, nativeRoots } from './inventory.ts'

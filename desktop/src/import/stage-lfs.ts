@@ -22,7 +22,8 @@ import {
   stageDirectory,
   writeState,
 } from './stage-state.ts'
-import type { ImportLocations, SourceInventory } from './types.ts'
+import type { SourceInventory } from './types.ts'
+import type { ImportLocations } from './locations.ts'
 import { LocalImportError } from './types.ts'
 
 const pageSize = 256

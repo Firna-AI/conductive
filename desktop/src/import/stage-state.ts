@@ -10,7 +10,8 @@ import {
 } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { ImportRepositoryFacts } from '../../../src/shared/conductor-import-operation.ts'
-import type { ImportLocations, ImportStage, SourceInventory } from './types.ts'
+import type { ImportStage, SourceInventory } from './types.ts'
+import type { ImportLocations } from './locations.ts'
 import { LocalImportError } from './types.ts'
 import { digest } from './safe-files.ts'
 

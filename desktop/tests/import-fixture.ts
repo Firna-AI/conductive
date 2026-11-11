@@ -14,7 +14,7 @@ import { join, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { zstdCompressSync } from 'node:zlib'
 import { conductorDatabasePath } from '../src/import/source.ts'
-import type { ImportLocations } from '../src/import/types.ts'
+import { ImportLocations } from '../src/import/locations.ts'
 import { importTemporaryDirectory } from './import-temporary.ts'
 
 const claudeNativeId = '11111111-1111-4111-8111-111111111111'
@@ -27,11 +27,13 @@ export async function importFixture() {
   )
   await mkdir(evidence, { recursive: true })
   const directory = await importTemporaryDirectory(evidence, 'source-fixture-')
-  const locations: ImportLocations = {
+  const input = {
     home: join(directory, 'home'),
     userData: join(directory, 'profile'),
     xdgConfigHome: join(directory, 'home/.config'),
   }
+  await mkdir(input.home, { recursive: true })
+  const locations = await ImportLocations.create(input)
   const workspace = join(locations.home, 'conductor/workspaces/repository/work')
   await mkdir(workspace, { recursive: true })
   const git = (...args: string[]) =>

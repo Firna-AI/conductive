@@ -1,16 +1,13 @@
 import { lstat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
-import type {
-  ImportLocations,
-  SourceFile,
-  SourceInventory,
-  SourceWorkspace,
-} from './types.ts'
+import type { SourceFile, SourceInventory, SourceWorkspace } from './types.ts'
+import type { ImportLocations } from './locations.ts'
 import { LocalImportError } from './types.ts'
 import { controlledWorktree, sourceGit, userExcludesFile } from './git.ts'
 import { indexNativeFiles } from './native.ts'
 import { selectedLfsPointers } from './inventory-lfs.ts'
 import { localPrerequisiteCandidates } from './inventory-prerequisites.ts'
+import { candidatePaths } from './candidate-paths.ts'
 import {
   digest,
   fileIdentity,
@@ -20,7 +17,6 @@ import {
   readSourceLink,
   sourcePath,
   sourceRoot,
-  walkContext,
 } from './safe-files.ts'
 
 export const nativeRoots = ({ home }: ImportLocations) => [
@@ -65,10 +61,10 @@ export async function inventory(
     signal,
     !hashFiles,
   )
-  let changed: string
-  let untracked: string
+  const excludes = await userExcludesFile(root, locations, signal)
+  let paths: Set<string>
   try {
-    changed = await controlled.run([
+    const changed = await controlled.run([
       'diff',
       '--no-ext-diff',
       '--no-textconv',
@@ -85,25 +81,26 @@ export async function inventory(
     const added = (await git(['ls-files', '-z']))
       .split('\0')
       .filter((path) => path && !known.has(path))
-    untracked =
+    const untracked =
       (await git([
         '-c',
-        `core.excludesFile=${await userExcludesFile(root, locations, signal)}`,
+        `core.excludesFile=${excludes}`,
         'ls-files',
         '--others',
         '--exclude-standard',
         '-z',
       ])) + added.join('\0')
+    paths = await candidatePaths(
+      root,
+      [...changed.split('\0'), ...untracked.split('\0')],
+      excludes,
+      controlled.ignoreIndex,
+      locations,
+      signal,
+    )
   } finally {
     await controlled.dispose()
   }
-  const paths = new Set(
-    [
-      ...changed.split('\0'),
-      ...untracked.split('\0'),
-      ...(await walkContext(root, signal)),
-    ].filter(Boolean),
-  )
   const files: SourceFile[] = []
   const leaves: string[] = []
   const lfs = hashFiles
