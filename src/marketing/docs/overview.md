@@ -115,11 +115,12 @@ A failed send keeps the draft so you can try again.
 To start with a new org:
 
 1. Select **Sign in** in the site header.
-2. Get access through approval, an invite code, or an org invitation.
+2. If your account waits, get access through approval, an invite code, or an org invitation.
 3. Follow **Get started** to install the GitHub App and create your org.
 4. Connect at least one agent login while Conductive prepares the org's cloud computer.
 5. After the first build succeeds, send a message in **New workspace**.
 
+During open sign-up, sign-in gives access at once.
 If you join an existing org, use its repositories and shared setup.
 
 The first message creates your workspace and its first session.

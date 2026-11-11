@@ -14,7 +14,7 @@ export const operatorCodesNew = defineScreen({
     'The operator chooses the label and the limit. The app makes the code itself, at random, so that nobody can guess it, and a code check needs no limit on attempts. A code has no end date.',
   relatedDocs: [],
   propSchema: operatorCodesSchema,
-  props: { list: 'newest', dialog: 'new', signUps: 'open' },
+  props: { list: 'newest', dialog: 'new', signUps: 'open', waitlist: 'on' },
   render: (props, context) => (
     <OperatorCodesScreen state={props} viewport={context.viewport} />
   ),

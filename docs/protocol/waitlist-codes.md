@@ -3,7 +3,7 @@
 This doc holds the requirements and the decisions in force for the codes
 of the [waitlist](waitlist.md). An invite code or a referral code gives
 app access to a person who waits (decision 160). The doc also covers the
-join link and the use of a code. [The pause](waitlist.md#the-pause) states
+join link and the use of a code. [The pause](sign-ups.md#the-pause) states
 when no code works. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
@@ -68,6 +68,13 @@ says.
 - While the pause is on, a notice on the Account page says that the code
   works again after the pause. A code that is used up or disabled shows no
   join link.
+- During [open sign-up](sign-ups.md#open-sign-up), a notice on the Account
+  page says that anyone can sign up now, and that the invites stay for
+  later (decision 230). It shows only for a code with uses left. Reason:
+  the invites stay for later only while some are left.
+- While the pause is on, the Account page shows the notice of the pause,
+  also while the waitlist is off. Reason: the pause wins over the waitlist
+  switch.
 - An operator can disable a referral code. A disabled referral code stays
   disabled, and the user gets no new code. Reason: an operator can give a
   good user an invite code instead.
@@ -88,6 +95,8 @@ says.
   callback counts for nothing.
 - The sign-in uses the code only for an account without app access. A code
   that works gives app access in the same sign-in.
+- During open sign-up, a join link signs the person in with no use of its
+  code, as [Open sign-up](sign-ups.md#open-sign-up) says.
 - For a signed-in person who waits, the join link uses its code at once.
 - When a person with app access opens a join link, the app uses no code.
   The app opens as usual, with no notice. Reason: that person needs no

@@ -123,7 +123,7 @@ Each run takes these steps, in this order:
    not ready at the end of the step, a later job fails the run, and the
    summary names the cause.
 
-A failed step stops the run. So a build error stops the run before it
+A failed step stops the run. An app build error stops the run before it
 changes anything live.
 
 - The `--var` options set only `CONDUCTIVE_RUNNER_ARCHIVE_URL`,

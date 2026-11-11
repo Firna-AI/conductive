@@ -80,10 +80,12 @@ export const accessTerms = {
 /**
  * The words of each way in. A link goes after the words of an invite code,
  * a referral code, and an org invitation, and an org invitation puts the
- * admin who sent it after `from`.
+ * admin who sent it after `from`. Open sign-up names the operator who last
+ * turned off the waitlist.
  */
 export const wayInWords = {
   approvedBy: (operator: string) => `Approved by @${operator}`,
+  openSignUpBy: (operator: string) => `Open sign-up by @${operator}`,
   inviteCode: 'Invite code',
   referralCodeOf: 'Referral code of',
   orgInvitationTo: 'Org invitation to',
