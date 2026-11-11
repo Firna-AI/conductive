@@ -8,8 +8,9 @@ the agent runner keeps only the tool name. A Codex skill use shows only as
 a command that reads a `SKILL.md` file. Conductor shows a row such as
 "Brainstorming · Skill activated". This change shows each skill use of
 both agents as a skill line with the skill name. Each fold line that holds
-a skill line also names the skill (decisions 277 and 278). Decision 279,
-the words of the skill line, waits for the user.
+a skill line also names the skill (decisions 277 and 278). The skill line
+reads "Using skill" while its call runs, and "Used skill" after it
+(decision 279).
 
 The change does not cover these parts:
 
@@ -254,13 +255,12 @@ kept B for both. Its report and the checks of its claims are in
 - **Wider fix:** None. This is a choice of words, not a class of defects.
 - **Previous examples:** The verbs of the other tools in
   `src/shared/transcript/tool-words.ts`.
-- **Related:** Decision 277 chose the skill line. The words of the skill
-  line in Milestones 1, 3, and 6 wait for this answer.
+- **Related:** Decision 277 chose the skill line. Milestones 1, 3, and 6
+  use these words.
 - **Recommendation:** B. It keeps one shape for every call line. "Loaded"
   is also true for both agents: Claude loads the instructions through its
   `Skill` tool, and Codex reads the file.
-- **Action:** ask the user, because the options are correct texts, and no
-  copy rule settles the choice.
+- **Chosen:** A, by the user on 11 November 2026.
 
 ## Design calls
 
@@ -293,8 +293,8 @@ user can override each one.
    never sends the field, and an older Worker drops it.
 7. Each skill name shows as the agent gives it, such as
    `conductor:conductor`. Reason: a changed name can hide the real name of
-   a plugin skill. Decision 279 chooses the words and the order of the
-   line. The mockup milestone chooses the icon.
+   a plugin skill. Decision 279 sets the words and the order of the line.
+   The mockup milestone chooses the icon.
 8. Only the skill uses of the agent of the session show, as far as the
    runner can tell. For Claude, the runner drops each event of a subagent.
    For Codex, the runner checks the thread of no event today, and Codex
@@ -342,14 +342,15 @@ Depends on: none
 The chat mockups show the skill line in a running turn, a folded run whose
 line names its skill, and the work fold of an ended turn that names its
 skills, at phone and desktop sizes. Read the `mockups` and `product-ui`
-skills first. The words of the skill line wait for decision 279.
+skills first. The skill line reads "Using skill" or "Used skill", then
+the skill names and the detail, as decision 279 says.
 
 - [ ] Add an optional list of skill names to the tool item of the mockup
       fixtures in `docs/mockups/src/fixtures/conversations.ts`.
 - [ ] Draw the skill line in the mockup `ToolGroup` in
       `docs/mockups/src/components/chat/`. It shows a skill icon from
-      `lucide-react`, the words that decision 279 chooses, the skill
-      names, and the detail. Record the chosen icon in the design calls of
+      `lucide-react`, the words of decision 279, the skill names, and the
+      detail. Record the chosen icon in the design calls of
       this plan.
 - [ ] Name the skills on the mockup `FoldLine`, as design call 9 says.
       Show the skill icon among the icons of the tool kinds.
@@ -387,7 +388,8 @@ what counts as a Codex skill use. Read the `documentation` skill first.
         skill in the Codex skill list, compared by real path. A second
         read of that skill in the same turn is a plain command
         (decision 278). Give the rejected options and their reasons.
-  - [ ] The words of the skill line, as decision 279 chooses.
+  - [ ] The words of the skill line, "Using skill" and "Used skill"
+        (decision 279). Give the rejected options and their reasons.
 - [ ] Update `docs/protocol/session-transcripts.md`: in the full copy, a
       skill line gives the words of the chat, the skill names as code, and
       the detail.
@@ -414,7 +416,7 @@ the `typescript` and `testing` skills first.
       malformed value.
 - [ ] Read the field in `readTool` of `src/chat/api/read-chat.ts`, as
       design call 3 says. Test both cases in `read-chat.test.ts`.
-- [ ] Add the words of a skill line, as decision 279 chooses, and the
+- [ ] Add the words of a skill line, as decision 279 says, and the
       skill names of a fold, as design call 9 says, to
       `src/shared/transcript/tool-words.ts`. Test them with literal
       expected values.
