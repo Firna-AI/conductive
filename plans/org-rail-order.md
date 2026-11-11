@@ -13,8 +13,10 @@ The chosen approach is decision 515 C. Each person keeps their own order of
 their orgs, saved with their memberships, so it is the same on every device
 and in the Mac app. The person changes it on the rail by drag or by a tile
 menu with Move up and Move down. On a phone, a long press lifts an org in
-the org sheet. This change does not add keys that move an org, an automatic
-order, pins, or folders of orgs. The brainstorm notes are in
+the org sheet. Every tile moves, also the tile of a suspended or deleted
+org (decision 516 A). Alt and Up or Down also move a focused tile (decision
+517 B). This change does not add an automatic order, pins, or folders of
+orgs. The brainstorm notes are in
 `.context/org-rail-order/brainstorm.md`.
 
 Contract owners:
@@ -45,7 +47,8 @@ Contract owners:
   `worker/app-api/feature-sections-data.ts` does. So two overlapping moves
   give the same order as the two moves one after the other. A move of an
   org that the person cannot see in the rail gets `404 org_not_found`.
-  Decision 516 says whether the route also checks the state of the org.
+  The route does not check the state of the org, so a suspended or
+  deleted org that the person sees moves too (decision 516 A).
 - Client. A move shows at once. It is a change over the org list that the
   server confirmed, as the writes of the workspace list in
   `src/app/section-actions.ts` are. A failure takes back only that move,
@@ -63,8 +66,10 @@ Contract owners:
   tile, Move up is off. On the last tile, Move down is off. After a move
   from the menu, a screen reader hears the org name and its new place, and
   the focus goes back to the tile. Create org, Operator, and the account
-  get no menu and do not move. Decision 517 says whether keys also move a
-  focused tile.
+  get no menu and do not move.
+- Keys. Alt and Up or Down, with no other modifier, move a focused tile one
+  place, as on a workspace row (decision 517 B). A screen reader hears the
+  org name and its new place, and the focus stays on the tile.
 - Phone. A long press in the org sheet lifts the org, and a move of the
   finger drops it at a new place.
 
@@ -92,8 +97,8 @@ Each call is the agent's call of 11 November 2026, under the decision test.
   the top. Those keys follow the person's order, and this change needs no
   work for them. Reason: that plan ties each key to a place of the rail,
   not to an org. When both branches merge, the list of fixed keys of that
-  branch must also name the keys that open the tile menu, and the keys of
-  decision 517 when its answer is B.
+  branch must also name the keys that open the tile menu, and Alt with Up
+  or Down of decision 517 B.
 - On a phone, a long press only lifts the org and opens no menu. Reason:
   the org sheet is already a sheet, and a long press on a workspace row
   also only lifts it.
@@ -207,7 +212,7 @@ Each call is the agent's call of 11 November 2026, under the decision test.
   stay frozen.
 - **Action:** Ask the user, because the recommended option changes the
   rule that no member can change anything in a suspended org.
-- **Outcome:** Open.
+- **Outcome:** The user chose A on 11 November 2026.
 
 ### 517. Choose if keys move a focused tile
 
@@ -254,7 +259,7 @@ Each call is the agent's call of 11 November 2026, under the decision test.
   lists, at a small cost.
 - **Action:** Ask the user, because the recommended option adds keys that
   decision 515 C did not name.
-- **Outcome:** Open.
+- **Outcome:** The user chose B on 11 November 2026.
 
 ## Milestone 1: Mockups
 
@@ -262,8 +267,7 @@ Tags: mockup
 
 Depends on: none
 
-Draw the reorder on the rail and in the phone org sheet. Decisions 516 and
-517 block only the TODOs that name them.
+Draw the reorder on the rail and in the phone org sheet.
 
 - [ ] Add a mockup page under `docs/mockups/src/entries/app/orgs/` for the
       reorder. Draw these states on desktop and on a phone:
@@ -273,8 +277,8 @@ Draw the reorder on the rail and in the phone org sheet. Decisions 516 and
   - [ ] The tile menu with Move up and Move down, with Move up off on the
         first tile.
   - [ ] A long press that lifts an org in the phone org sheet.
-  - [ ] The tile menu of a suspended or deleted org, as decision 516
-        says.
+  - [ ] The tile menu of a suspended or deleted org, which moves like any
+        tile (decision 516 A).
 - [ ] Give each state a description and a rationale that cite decision 515
       C and the design calls of this plan.
 - [ ] Run `npm run mockups:check`. Smoke-test the new pages with
@@ -292,9 +296,11 @@ public guide.
 - [ ] Add an "Org rail order" section to
       `docs/protocol/orgs-and-members.md`: an order for each person, saved
       on the server, drag, the tile menu, the phone long press, a new org
-      at the end, and the rule of decision 516 for a suspended or deleted
-      org. Cite decisions 515, 516, and 517. When decision 516 is A, also
-      add the exception to `docs/protocol/operator-actions.md`.
+      at the end, a suspended or deleted org that moves too, and the keys
+      Alt and Up or Down. Cite decisions 515, 516, and 517.
+- [ ] Add the exception of decision 516 A to
+      `docs/protocol/operator-actions.md`: the person's own rail order is
+      not a change in a suspended org.
 - [ ] Check that `docs/protocol/command-palette.md` and
       `docs/protocol/command-palette-actions.md` still state the right
       order. Change them only when they are wrong.
@@ -327,7 +333,7 @@ Save and read the order of each person.
   - [ ] A move of an org that the person cannot see gets
         `404 org_not_found`. This includes an org of another person and a
         deleted org of a person who is not its admin.
-  - [ ] A suspended org and a deleted org follow decision 516.
+  - [ ] A member moves a suspended org. An admin moves a deleted org.
   - [ ] Two overlapping moves give the order of the two moves one after
         the other.
   - [ ] A new membership goes at the end, after the placed orgs.
@@ -349,8 +355,10 @@ Let the person reorder the orgs on the rail and in the phone org sheet.
       menu into their own files.
 - [ ] Add the tile menu with Move up and Move down, the screen reader
       message, and the focus return.
-- [ ] Add the keys of decision 517, when its answer is B.
-- [ ] Follow decision 516 for the tile of a suspended or deleted org.
+- [ ] Add Alt and Up or Down on a focused tile (decision 517 B), with the
+      screen reader message.
+- [ ] Let the tile of a suspended or deleted org move like any tile
+      (decision 516 A).
 - [ ] Add the long press drag to the org sheet in
       `src/shell/list/HomeList.tsx`.
 - [ ] Tests:
@@ -358,6 +366,7 @@ Let the person reorder the orgs on the rail and in the phone org sheet.
   - [ ] Escape cancels a drag. A click without a move opens the org.
   - [ ] Move up is off on the first tile, and Move down is off on the
         last tile.
+  - [ ] Alt and Up or Down move a focused tile, and the focus stays on it.
   - [ ] A failed move takes back only that move.
 - [ ] Check the rail in a browser with `npm run dev`: drag, menu, Escape,
       reload, and the phone layout.
