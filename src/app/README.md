@@ -19,7 +19,7 @@ pull request bar, and the owner picker. A host can give its own parts, as
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
   `?login=none`, `?deleted=1`, `?suspended=1`, `?operator=1`,
-  `?waiting=1`, `?paused=1`, or
+  `?waiting=1`, `?paused=1`, `?waitlist=off`, or
   `?paths=masked`. `dev/options.ts` lists them. `?banner=<state>`, such as
   `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
   bar, and its list mark shows the GitHub state of that bar. The other rows
@@ -64,22 +64,31 @@ pull request bar, and the owner picker. A host can give its own parts, as
   sign-ups: each use of a code, and the Accept of a person who waits, get
   `signups_paused`. The Account page shows the pause, and the operator
   section shows its notice.
+  `?waitlist=off` starts with the waitlist off, by the operator of the
+  samples. Unless sign-ups are paused, a person who waits gets app access
+  at the next request, with a new referral code and no use of a code, so
+  Get started opens. The fake does this before each request, as the gate
+  of the Worker does. The operator section shows the switch off, and Zed
+  K, who came back and got in by open sign-up. The Account page names
+  open sign-up.
   `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
   invite code of a user with app access, also on the page of that user in
   the operator section.
-- The waitlist and the operator section share one pause and one set of
-  codes, as they share the database of the Worker. The codes are those of
-  the operator mockups, with a referral code for each sample user with
-  app access. For example, `V7MKC-2QDXH` works, `M4QTX-7HKWD` is the
-  referral code of Mira Santos, `9PTXC-4WHMN` is used up, `HM3PE-7KWQT`
-  is disabled, and a code that the mockups do not list is not found. A
-  code that works counts its use, and gives app access and a new invite
-  code, so Get started opens. With `?operator=1`, a pause or a Disable in
-  the operator section shows on the Account page of the operator.
+- The waitlist and the operator section share one pause, one waitlist
+  switch, and one set of codes, as they share the database of the Worker.
+  The codes are those of the operator mockups, with a referral code for
+  each sample user with app access. For example, `V7MKC-2QDXH` works,
+  `M4QTX-7HKWD` is the referral code of Mira Santos, `9PTXC-4WHMN` is used
+  up, `HM3PE-7KWQT` is disabled, and a code that the mockups do not list is
+  not found. A code that works counts its use, and gives app access and a
+  new invite code, so Get started opens. With `?operator=1`, a pause, a
+  turn-off of the waitlist, or a Disable in the operator section shows on
+  the Account page of the operator.
 - The fake keeps its state in the page. A reload starts again from the
-  options, so Sam waits again, and the codes and the pause are those of
-  the options. An operator never waits, so a pause or a new code of the
-  operator section cannot reach the waitlist screen.
+  options, so Sam waits again, and the codes, the pause, and the switch
+  are those of the options. An operator never waits, so a pause, a change
+  of the switch, or a new code of the operator section cannot reach the
+  waitlist screen.
 - Acme has the
   routines of the mockups, each with the runs that its page in the mockups
   lists. `?runs=failed` or `?runs=skipped` gives Review pull requests the

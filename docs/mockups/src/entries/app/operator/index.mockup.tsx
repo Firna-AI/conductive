@@ -9,7 +9,7 @@ export const operator = defineScreen({
     'The user chose an operator section in the web app on 8 November 2026, in decision 142, and asked for the layout and some numbers first. The numbers are live counts across every org, as decision 144 chose for now, so the page shows no history that the app does not keep. It shows counts and org names only, never a chat, a file, or a secret of an org. The user asked for the Orgs and Users tabs on the same day, in decision 147, and found a suspended user or org there, so the overview lists none, as decision 148 says. The users stay every account by join day, as decision 144 chose, and the line of the waitlist shows how many of them still wait for app access, from decision 160.',
   relatedDocs: [],
   propSchema: operatorSchema,
-  props: { numbers: 'ready', signUps: 'open' },
+  props: { numbers: 'ready', signUps: 'open', waitlist: 'on' },
   render: (props, context) => (
     <OperatorScreen state={props} viewport={context.viewport} />
   ),

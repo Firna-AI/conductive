@@ -93,6 +93,11 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `paused=1`: sign-ups are paused. A use of a code and the Accept of a
  *   person who waits get `signups_paused`, and nothing is used up. The
  *   operator section shows the same pause, by the operator of the samples.
+ * - `waitlist=off`: the operator of the samples turned the waitlist off.
+ *   Unless sign-ups are paused, a person who waits gets app access at the
+ *   next request, with no use of a code, so Get started opens. The operator
+ *   section shows the switch off, and Zed K as a person who came back and
+ *   got in by open sign-up. The Account page names open sign-up.
  * - `inviteCode=used-up|disabled`: every invite of the code of the user is
  *   used, or an operator turned the code off. The operator section shows
  *   the same code.
@@ -121,6 +126,7 @@ export interface DevOptions {
   waiting: 'verified' | 'none' | null
   invited: boolean
   paused: boolean
+  waitlistOff: boolean
   inviteCode: DevInviteCode
 }
 
@@ -169,6 +175,7 @@ export function readDevOptions(search: string): DevOptions {
     waiting,
     invited: params.get('invited') === '1',
     paused: params.get('paused') === '1',
+    waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
   }
 }
