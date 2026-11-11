@@ -1,6 +1,15 @@
 {
   "$schema": "./node_modules/@mokly/mokly/config.schema.json",
   "colorSchemes": ["light", "dark"],
-  "roots": [{ "dir": "docs/mockups/src/entries" }],
-  "renderer": "docs/mockups/src/render.tsx"
+  "roots": [
+    {
+      "dir": "docs/mockups/src/entries"
+    }
+  ],
+  "renderer": "docs/mockups/src/render.tsx",
+  "moduleResolution": {
+    "loaders": {
+      ".png": "dataurl"
+    }
+  }
 }

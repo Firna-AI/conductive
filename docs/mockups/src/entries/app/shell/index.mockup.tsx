@@ -14,6 +14,7 @@ export const appShell = defineScreen({
   propSchema: workspaceListSchema,
   props: { list: 'workspaces', menu: 'none', palette: 'closed' },
   useCasePaths: [
+    'user-flows/accept-invitation',
     'user-flows/create-workspace',
     'user-flows/reopen-stopped-workspace',
     'user-flows/open-workspace-from-palette',

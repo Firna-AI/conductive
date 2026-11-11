@@ -51,9 +51,9 @@ Replaced ways:
   invitation text goes in Milestone 3. `approvalEmailContent` goes in
   Milestone 4.
 - Approval email rows that save only parts of the request → rows that save
-  what each retry needs. Consumer: each row that the old Worker saves
-  before or during the deploy. This is stored data, so decision 4 asks the
-  user what happens to it.
+  the whole request. Consumer: each row that the old Worker saves before or
+  during the deploy. With decision 4, such a row sends the request of the
+  old code. A follow-up item removes that path 24 hours after the deploy.
 
 Sources: [Resend send API](https://resend.com/docs/api-reference/emails/send-email),
 [Resend Templates](https://resend.com/blog/introducing-templates),
@@ -139,6 +139,7 @@ decision 4. It changed the recommendations of decisions 3 and 4.
 
 ### 3. Invitation emails can carry phishing text
 
+- **Answer:** The user chose A on 11 November 2026.
 - **Severity:** High. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Security.
@@ -171,12 +172,12 @@ decision 4. It changed the recommendations of decisions 3 and 4.
   - A rule that only some admins may invite. It breaks the rule of `docs/protocol/orgs-and-members.md` that an admin invites.
 - **Wider fix:** E. It makes the shared builder unable to carry free text, so no later email can carry a message either.
 - **Previous examples:** None found.
-- **Related:** The invitation words of Milestone 1 wait for this answer, because E and G change them.
 - **Recommendation:** E. It is the only option that stops the message in every field, for existing orgs and later emails, with no refusal of a name. The first recommendation was C. G is the choice if the email must name the org, and D can cap the volume on top of it.
-- **Action:** ask the user, because the options trade the trust that the org name gives against the protection of the email, and each option except A changes what the email shows or adds a limit.
+- **Action:** apply A, as the user chose. The email keeps the org name, the inviter's name, and the initials.
 
 ### 4. Approval emails that wait for a retry at the deploy
 
+- **Answer:** The user chose F on 11 November 2026.
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Product bug.
@@ -204,9 +205,9 @@ decision 4. It changed the recommendations of decisions 3 and 4.
   - Fill in the saved request of each pending row in the migration. It misses the rows that the old Worker saves during the deploy, so D's path is needed anyway.
 - **Wider fix:** F. Each later change to the From line or the reply address causes the same case, and F keeps every pending retry unchanged.
 - **Previous examples:** `migrations/202611072100_email_invitations.sql` discarded the pending invitations of the old shape. `migrations/202611072201_image_allocation_intent.sql` moved image build jobs that were in progress to a new phase.
-- **Related:** Decisions 1 and 2 change the request. Milestone 4 waits for this answer.
+- **Related:** Decisions 1 and 2 change the request.
 - **Recommendation:** F. No email is lost, and no later change to the sender can break a pending retry. The first recommendation was A, which sends a new body under the old key. D is the smallest safe option.
-- **Action:** ask the user, because a path for data saved before the change is a converter for stored data, and the options trade code size against a rare lost email.
+- **Action:** apply F, as the user chose.
 
 ## Design
 
@@ -247,7 +248,7 @@ and a problem that the mockups show changes this section.
   that query, and some invert colours on their own. A light base inverts
   more predictably.
 - The logo is the app icon tile, `icon-192.png` of the app host, shown at
-  32 px. The product name stands beside it as text. Reason: the lockup PNG
+  28 px. The product name stands beside it as text. Reason: the lockup PNG
   has dark text on a clear background, which vanishes when a client
   darkens the email. The tile stays visible in both modes, and live text
   follows the colours of the client.
@@ -258,9 +259,8 @@ and a problem that the mockups show changes this section.
 
 The mockup review settles the final words. These are the proposal. They
 follow the copy rules of the `product-ui` skill and the naming rules of
-the product. The invitation words wait for decision 3, because options E
-and G change them. The words below assume that the email keeps the org
-name.
+the product. With decision 3, the invitation keeps the org name, the
+inviter's name, and the initials.
 
 - The org invitation:
   - Subject: "Join Acme on Conductive", as today.
@@ -275,9 +275,9 @@ name.
     home page.
   - Button: "Accept invitation".
   - Under the button: "Sign in with a GitHub account that has
-    mira@example.com as a verified email." Reason: the app shows an
+    sam@example.com as a verified email." Reason: the app shows an
     invitation only to an account with that verified email.
-  - Footer: "This invitation went to mira@example.com. If you did not
+  - Footer: "This invitation went to sam@example.com. If you did not
     expect it, you can ignore this email. Questions? Reply to this email."
 - The approval email:
   - Subject: "Your Conductive account is ready", as today.
@@ -307,7 +307,7 @@ name.
   tests.
 - React escapes each user-written name in the HTML, so no name becomes
   markup. A mail client can still turn a web address in a name into a
-  link. Decision 3 covers that.
+  link. The user chose to keep this, in decision 3.
 - One builder module in the Worker returns the subject, the HTML, and the
   text of an email, for the app address of the deployment. It loads
   React Email and the templates with a dynamic import when it builds an
@@ -322,11 +322,12 @@ name.
 - The invitation keeps its delivery key: its ID and a hash of the full
   request body, which now includes the HTML. Reason: a repeated invitation
   with the same content still sends one email within 24 hours.
-- The approval email saves what each retry needs, so that a retry sends
-  the same request under the same key. Reason: Resend refuses a reused
-  idempotency key with a different body. Decision 4 settles the shape:
-  with F, a new column saves the whole request, and otherwise a new
-  nullable `approval_emails.html` column saves the HTML.
+- The approval email saves its whole request, the JSON body that goes to
+  Resend, in a new nullable `approval_emails.request` column, from
+  decision 4. Each send and retry posts that body as it is. A row without
+  a saved request, which the old Worker saved, sends the exact request of
+  the old code: the From line, the recipient, the subject, and the text.
+  Reason: Resend refuses a reused idempotency key with a different body.
 - The approval email uses the app address of the request that approved
   it. This is option B of
   `plans/follow-ups/approval-email-deployment-origin.md`, so this change
@@ -362,30 +363,31 @@ Depends on: none
 
 The catalogue gets the two emails, at phone and desktop size, in the light
 and dark schemes. The templates that it shows are the ones that the Worker
-renders later. The approval email can start at once. The invitation words
-wait for decision 3.
+renders later.
 
-- [ ] Add React Email with `npm install react-email` in the root package,
+- [x] Add React Email with `npm install react-email` in the root package,
       at the current 6.x release. Do not use `@react-email/components`,
       which npm marks as deprecated.
-- [ ] Create `docs/mockups/src/emails/` with the shared layout, the org
-      invitation, the approval email, and the words module, as the design
-      says.
-- [ ] Create `EmailFrame` in `docs/mockups/src/components/emails/`. Make
+- [x] Create `docs/mockups/src/emails/` with the shared layout, its styles,
+      the org invitation, the approval email, and the words module, as the
+      design says.
+- [x] Create `EmailFrame` in `docs/mockups/src/components/emails/`. Make
       the dark scheme of the catalogue show the dark colours of the email.
       If the strict build refuses an iframe, stop and report it.
-- [ ] Add the catalogue pages. `emails` shows the org invitation from Cal
-      to `mira@example.com` for Acme. `emails/approval` shows the approval
-      email for Sam Okafor. Use the existing fixtures. Add a variant with a
-      long org name and a GitHub account without a name, unless decision 3
-      removes those values from the email.
-- [ ] Add the approval email as a step of the Sign up flow. Add a flow for
+- [x] Add the catalogue pages. `emails` is a folder without a screen of its
+      own, because Mokly gives a folder with its own screen no title.
+      `emails/invitation` shows the org invitation from Cal to
+      `sam@example.com` for Acme, so that the flow goes on to Sam's
+      waitlist screen. `emails/approval` shows the approval email for Sam
+      Okafor. Use the existing fixtures. Add a variant with a long org name
+      and a GitHub account without a name.
+- [x] Add the approval email as a step of the Sign up flow. Add a flow for
       an org invitation that starts at the invitation email and uses the
-      existing sign-in and invitations screens.
-- [ ] Update `docs/mockups/README.md`, `docs/mockups/catalogue.md`, and
+      existing sign-in and waitlist screens.
+- [x] Update `docs/mockups/README.md`, `docs/mockups/catalogue.md`, and
       `docs/mockups/design.md` for the emails.
-- [ ] Run `npm run mockups:check`. Smoke-test the new pages at both sizes
-      and in both schemes.
+- [x] Run `npm run mockups:check`. Smoke-test the new pages at both sizes
+      and in both schemes. Screenshots: `.context/branded-emails/shots/`.
 - [ ] Show the pages to the user, and apply the review.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
@@ -400,8 +402,8 @@ The protocol docs state the rules of the emails before the Worker changes.
       address, the parts of each email, the text part, the light design
       with dark colours, the escaped names, the app address of the
       deployment in each link, and no tracking. State the subject and the
-      content of the org invitation and of the approval email, with the
-      answer to decision 3, and link to the `emails` mockups. Give each
+      content of the org invitation and of the approval email, and link
+      to the `emails` mockups. Give each
       decision in force with its rejected option and its reason.
 - [ ] In `docs/protocol/waitlist.md`, replace the subject and the words of
       the approval email with a link to the new page. Keep when it goes,
@@ -434,10 +436,8 @@ Milestone 4.
 - [ ] Make the mail sender send `html` when a message has it, the text,
       and `reply_to`.
 - [ ] Move the invitation mailer to the builder, and delete its inline
-      text. Pass the values that the answer to decision 3 keeps, such as
-      the inviter's GitHub login and the org's initials.
-- [ ] Apply the answer to decision 3 outside the email too, when it adds a
-      limit at org creation and rename.
+      text. The invitation route also passes the inviter's GitHub login
+      and the org's initials.
 - [ ] Extend `worker/invitation-mailer.test.ts`. Check the exact text
       part and reply address, each name escaped in the HTML, and the
       invitation link in the button and in the plain link. Keep the
@@ -450,24 +450,26 @@ Milestone 4.
 
 ## Milestone 4: Approval email
 
-Depends on: 3, and the answer to decision 4
+Depends on: 3
 
-The approval email uses the templates, saves what each retry needs, and
-links to the app address of the deployment that approved the person.
+The approval email uses the templates, saves its whole request, and links
+to the app address of the deployment that approved the person.
 
-- [ ] Add the migration that decision 4 needs. Reserve a range for this
-      plan in `migrations/README.md`, and describe the migration there.
+- [ ] Add a migration that adds the nullable `approval_emails.request`
+      column. Reserve a range for this plan in `migrations/README.md`, and
+      describe the migration there.
 - [ ] Build the approval email with the builder, from the app address of
-      the approving request. Save it in the grant batch, in the shape that
-      decision 4 gives. Delete `approvalEmailContent`.
-- [ ] Send the saved request on each retry. Apply the answer to decision 4
-      to a row of the old shape. With A, D, or F, add the follow-up item
-      that removes the path for old rows 24 hours after the deploy.
+      the approving request. Save its whole request in the grant batch.
+      Delete `approvalEmailContent`.
+- [ ] Let the mail sender post a saved request body as it is. Send the
+      saved request on each retry. Send a row without a saved request with
+      the exact request of the old code. Add the follow-up item that
+      removes that path 24 hours after the deploy.
 - [ ] Extend `worker/operator/waitlist-approval.test.ts`,
       `worker/operator/approval-retry.test.ts`, and
-      `worker/operator/approval-local.test.ts`. Check the saved email, the
-      link with the approving app address, the same request on a retry,
-      and the case of decision 4.
+      `worker/operator/approval-local.test.ts`. Check the saved request,
+      the link with the approving app address, the same request on a
+      retry, and the exact old request for a row without a saved request.
 - [ ] Delete `plans/follow-ups/approval-email-deployment-origin.md`, and
       name it in the commit.
 - [ ] Update the approval email delivery section of

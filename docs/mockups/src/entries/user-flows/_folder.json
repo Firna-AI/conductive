@@ -3,6 +3,7 @@
   "order": [
     "sign-up",
     "join",
+    "accept-invitation",
     "create-workspace",
     "create-workspace-dialog",
     "retry-first-start",

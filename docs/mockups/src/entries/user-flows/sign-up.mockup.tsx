@@ -22,7 +22,13 @@ export const signUp = defineUseCase({
       screenPath: 'app/sign-in/waitlist',
       title: 'Wait for app access',
       description:
-        'Sam is on the waitlist. An invite code or an org invitation lets Sam in at once. An approval sends an email, and the app then opens Get started, whose steps the Join with an invite link flow shows.',
+        'Sam is on the waitlist. An invite code or an org invitation lets Sam in at once. An operator can also approve Sam.',
+    },
+    {
+      screenPath: 'emails/approval',
+      title: 'The approval email',
+      description:
+        'An operator approved Sam, and the email went to the primary verified email of the GitHub account. Open Conductive opens the app, and Get started opens, whose steps the Join with an invite link flow shows.',
     },
   ],
 })

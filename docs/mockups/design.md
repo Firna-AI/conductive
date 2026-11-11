@@ -92,6 +92,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the wider card, for its invitations and its code field. In the Mac app
   its header is the top bar of the window, as [the Mac app](mac-app.md)
   gives.
+- The emails in `src/emails/` share one layout: the app icon tile with the
+  product name as text, one heading, short paragraphs, one button, the
+  address of the button as a plain link, and a footer that says why the
+  person got the email and that a reply reaches a person. A card of
+  480 px at most sits on the page colour. The email is light, with the
+  light accent on its button. It gives the dark palette to the email
+  clients that read `prefers-color-scheme`, as the dark views show. The
+  invitation puts the initials tile of the org before its heading, as the
+  org rail draws it. The name of the product is live text, because the
+  dark text of the lockup would vanish in a client that darkens the email.
 - `CommandPalette` in `src/components/palette/` draws the command palette:
   a dialog near the top of the window over a light dim on desktop, and a
   page in place of the list on a phone. It has the search field, the tabs

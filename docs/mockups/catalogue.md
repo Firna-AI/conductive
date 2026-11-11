@@ -34,7 +34,8 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, a port preview, no preview, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace |
+| `emails`            | The org invitation and the approval email, as a mail client shows them        |
+| `user-flows`        | Sign up, join with an invite link, accept an org invitation, create a workspace, create one in the dialog, reopen it, open one from the palette, create an org, run a Mac command, link a workspace |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `app`,
@@ -42,7 +43,8 @@ with child folders shows only its canonical screen, as `marketing`, `app`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, and `app/workspace-links` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
-one screen. `marketing/from-conductor` has no screen of its own either. Its
+one screen. `emails` has no screen of its own: `emails/invitation` and
+`emails/approval` each show one email. `marketing/from-conductor` has no screen of its own either. Its
 index document, `index.md`, gives the notes of the page and where its
 content comes from, and links to `marketing/from-conductor/one-table`,
 which links back to it. `app/org-settings/cloud-computer` and its building
@@ -114,6 +116,16 @@ always opens the page, so each phone view shows the New workspace page in
 the same state. `user-flows/create-workspace-dialog` goes from Preferences
 through the dialog to the new workspace. The `first-build` variant shows
 Firna before its first good build, with the notice and Create off.
+
+The emails share one layout. Their pages:
+
+- `emails/invitation` has the org invitation that Cal, an admin of Acme,
+  sent to sam@example.com. Its `long-name` variant has an org with a long
+  name, from an admin whose GitHub account has no name.
+- `emails/approval` has the approval email of Sam.
+- `user-flows/accept-invitation` goes from the invitation email through the
+  sign-in and the waitlist with the invitation to Acme. `user-flows/sign-up`
+  ends with the approval email.
 
 The waitlist comes from decisions 160 to 163. A new GitHub sign-in creates
 an account without app access, and the person waits until an operator

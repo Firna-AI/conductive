@@ -63,13 +63,14 @@ the child pages of `app/account`, `app/orgs/suspended`, `app/banner`,
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files      |
+| `src/emails/`             | The email templates, which the catalogue shows and the Worker renders |
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
 | `src/brand.ts`            | The product name "Conductive", its domains, and the Mac DMG names   |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
-| `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
+| `../../mokly.config.json` | The Mokly configuration: the root, the renderer, the schemes, and the PNG loader |
 
 ## How a screen is built
 
@@ -128,6 +129,18 @@ invite code on the Account page.
 
 [The Mac app](mac-app.md) gives the screens of the Mac app: its window, the
 waitlist, the commands that an agent runs on the Mac, and This Mac.
+
+## The emails
+
+The `emails` pages show the org invitation and the approval email, as a
+mail client shows them. `EmailFrame` in `src/components/emails/` draws the
+subject, the sender, and the email in a frame of its own, so no style of
+the catalogue reaches it. The templates in `src/emails/` are the emails
+that the Worker sends. They use React Email components, inline styles,
+and the tokens of `src/design/`, and no `@firna/ui`, CSS Module, or
+fixture, because the Worker imports them. The catalogue embeds the app
+icon as a data URL, through the PNG loader of the Mokly configuration.
+[The design](design.md) gives their layout.
 
 ## The marketing site
 

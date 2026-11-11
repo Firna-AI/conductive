@@ -11,6 +11,6 @@ export const signIn = defineScreen({
   relatedDocs: [],
   address: appDomain,
   props: {},
-  useCasePaths: ['user-flows/sign-up'],
+  useCasePaths: ['user-flows/accept-invitation', 'user-flows/sign-up'],
   render: (_props, context) => <SignInScreen viewport={context.viewport} />,
 })

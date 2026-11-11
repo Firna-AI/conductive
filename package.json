@@ -38,7 +38,8 @@
     "lexical": "0.53.0",
     "lucide-react": "^0.577.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "react-email": "^6.11.11"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",

@@ -1,0 +1,71 @@
+/*
+ * A mail client that shows one email: the header with the subject and the
+ * sender, and the email below it, which fills the rest of the screen and
+ * scrolls on its own.
+ */
+.frame {
+  display: flex;
+  flex-direction: column;
+  height: var(--ui-screen-height);
+  overflow: hidden;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+}
+
+.header {
+  flex-shrink: 0;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+}
+
+.subject {
+  margin: 0 0 14px;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-xl);
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: var(--ui-tracking-heading);
+}
+
+.sender {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.senderText {
+  min-width: 0;
+}
+
+.from {
+  margin: 0;
+  font-size: var(--ui-text-md);
+  overflow-wrap: anywhere;
+}
+
+.name {
+  font-weight: var(--ui-weight-strong);
+}
+
+.muted {
+  color: var(--ui-muted);
+}
+
+.meta {
+  margin: 2px 0 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  overflow-wrap: anywhere;
+}
+
+.email {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+}
+
+.mobile .header {
+  padding: 14px 16px 12px;
+}

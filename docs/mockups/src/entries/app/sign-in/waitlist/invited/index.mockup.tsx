@@ -14,6 +14,7 @@ export const signInWaitlistInvited = defineScreen({
   relatedDocs: [],
   address: appDomain,
   propSchema: waitlistSchema,
+  useCasePaths: ['user-flows/accept-invitation'],
   props: {
     email: 'verified',
     code: 'none',
