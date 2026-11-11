@@ -94,6 +94,7 @@ async function prepareWorkspaceRecords(
     workspaceId: job.workspaceId,
     orgId: job.orgId,
     firstMessage: creation.request,
+    firstSessionTitle: creation.firstSessionTitle,
     firstTurn: {
       turnId: job.turnId,
       sessionId: creation.sessionId,

@@ -44,6 +44,7 @@ it('lists every workspace of the authenticated org, including other owners and a
   const expected = {
     workspaces: [
       {
+        owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'calling-workspace',
         number: 1,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'calling-workspace')}`,
@@ -52,6 +53,11 @@ it('lists every workspace of the authenticated org, including other owners and a
         state: 'working',
       },
       {
+        owner: {
+          id: 'teammate',
+          githubLogin: 'teammate-login',
+          displayName: null,
+        },
         id: 'teammate-workspace',
         number: 2,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'teammate-workspace')}`,
@@ -60,6 +66,7 @@ it('lists every workspace of the authenticated org, including other owners and a
         state: 'input',
       },
       {
+        owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'archived-workspace',
         number: 3,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'archived-workspace')}`,

@@ -1,9 +1,9 @@
 import type {
-  AgentCreateWorkspaceRequest,
   AgentCreateSessionRequest,
   AgentSendMessageRequest,
   AgentReadSessionRequest,
 } from '../src/shared/agent-tools.ts'
+import type { AgentCreateWorkspaceRequest } from '../src/shared/agent-workspaces.ts'
 import type { Agent, AgentChoice, Effort } from '../src/shared/agents.ts'
 
 export const TOOL_AGENTS = [
@@ -72,7 +72,18 @@ export function createWorkspaceInput(
 ): AgentCreateWorkspaceRequest {
   const fields = record(value)
   const model = fields.model === undefined ? undefined : record(fields.model)
+  if (
+    fields.requestId !== undefined &&
+    (typeof fields.requestId !== 'string' || fields.requestId.length === 0)
+  )
+    throw new ToolInputError('Use a nonempty request ID.')
   return {
+    ...(typeof fields.requestId === 'string' && {
+      requestId: fields.requestId,
+    }),
+    ...(typeof fields.firstSessionTitle === 'string' && {
+      firstSessionTitle: fields.firstSessionTitle,
+    }),
     repositoryId: text(fields.repositoryId),
     firstMessage: text(fields.firstMessage),
     ...(typeof fields.name === 'string' && { name: fields.name }),

@@ -16,6 +16,7 @@ it('drops unknown response fields and rejects malformed workspace data', async (
       secret: TOOL_TEST_TOKEN,
       workspaces: [
         {
+          owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
           id: 'one',
           number: 1,
           link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
@@ -30,6 +31,7 @@ it('drops unknown response fields and rejects malformed workspace data', async (
   await expect(client.list()).resolves.toEqual({
     workspaces: [
       {
+        owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'one',
         number: 1,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,
@@ -43,6 +45,7 @@ it('drops unknown response fields and rejects malformed workspace data', async (
     Response.json({
       workspaces: [
         {
+          owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
           id: 'one',
           number: 1,
           link: `${TEST_ORIGIN}${routes.workspace('org-a', 'one')}`,

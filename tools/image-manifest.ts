@@ -16,6 +16,7 @@ export const WORKSPACE_TOOL_SOURCE_PATHS = [
   'src/shared/device.ts',
   'src/shared/device-read.ts',
   'src/shared/agent-tools.ts',
+  'src/shared/agent-workspaces.ts',
 ] as const
 
 export interface WorkspaceToolSource {

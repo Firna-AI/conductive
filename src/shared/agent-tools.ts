@@ -22,19 +22,6 @@ export const WORKSPACE_TOOLS_MCP = {
   args: ['mcp'],
 } as const
 
-export interface AgentCreateWorkspaceRequest {
-  repositoryId: string
-  firstMessage: string
-  model?: { agent: Agent; model: string }
-  effort?: Effort
-  sectionId?: string
-  name?: string
-}
-export interface AgentCreateWorkspaceResponse {
-  workspace: Workspace
-  sessionId: string
-  sessionLink: string
-}
 export interface AgentWorkspaceSummary {
   id: string
   number: number
@@ -42,9 +29,6 @@ export interface AgentWorkspaceSummary {
   name: Workspace['name']
   branch: string
   state: WorkspaceState
-}
-export interface AgentListWorkspacesResponse {
-  workspaces: readonly AgentWorkspaceSummary[]
 }
 export interface AgentListRepositoriesResponse {
   repositories: readonly {

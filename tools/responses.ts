@@ -1,10 +1,12 @@
 import type {
-  AgentCreateWorkspaceResponse,
   AgentListModelsResponse,
   AgentListRepositoriesResponse,
   AgentListSectionsResponse,
-  AgentListWorkspacesResponse,
 } from '../src/shared/agent-tools.ts'
+import type {
+  AgentCreateWorkspaceResponse,
+  AgentListWorkspacesResponse,
+} from '../src/shared/agent-workspaces.ts'
 import type { MessageSender } from '../src/shared/messages.ts'
 import type { Workspace, WorkspaceState } from '../src/shared/workspaces.ts'
 import { agent, choice, effort, record, text, ToolInputError } from './input.ts'
@@ -84,9 +86,16 @@ export function listedWorkspaces(value: unknown): AgentListWorkspacesResponse {
     throw new ToolInputError('The workspace list is not valid.')
   }
   return {
+    ...(fields.hasMore !== undefined && { hasMore: flag(fields.hasMore) }),
     workspaces: fields.workspaces.map((value: unknown) => {
       const item = record(value)
+      const owner = record(item.owner)
       return {
+        owner: {
+          id: text(owner.id),
+          githubLogin: text(owner.githubLogin),
+          displayName: nullableText(owner.displayName),
+        },
         id: text(item.id),
         number: timestamp(item.number),
         link: text(item.link),

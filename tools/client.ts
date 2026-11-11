@@ -10,13 +10,15 @@ import {
   type AgentReadSessionRequest,
   type AgentReadSessionResponse,
   type AgentListSessionsResponse,
-  type AgentCreateWorkspaceRequest,
-  type AgentCreateWorkspaceResponse,
   type AgentListModelsResponse,
   type AgentListRepositoriesResponse,
   type AgentListSectionsResponse,
-  type AgentListWorkspacesResponse,
 } from '../src/shared/agent-tools.ts'
+import type {
+  AgentCreateWorkspaceRequest,
+  AgentCreateWorkspaceResponse,
+  AgentListWorkspacesResponse,
+} from '../src/shared/agent-workspaces.ts'
 import { TOOL_TURN_HEADER } from './context.ts'
 import {
   createWorkspaceInput,

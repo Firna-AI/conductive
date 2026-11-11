@@ -255,6 +255,7 @@ export function createWorkspaceIntegration(
           sessionId: input.firstTurn.sessionId,
           turnId: input.firstTurn.turnId,
           request: input.firstMessage,
+          firstSessionTitle: input.firstSessionTitle,
           sender: identity,
         })
       },

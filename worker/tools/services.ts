@@ -1,5 +1,4 @@
 import type {
-  AgentCreateWorkspaceResponse,
   AgentListSessionsResponse,
   AgentReadSessionRequest,
   AgentReadSessionResponse,
@@ -8,6 +7,11 @@ import type {
   AgentSessionWriteResponse,
   AgentWorkspaceSummary,
 } from '../../src/shared/agent-tools'
+import type {
+  AgentCreateWorkspaceResponse,
+  AgentRenameWorkspaceRequest,
+  AgentMoveWorkspaceRequest,
+} from '../../src/shared/agent-workspaces'
 import type { AgentChoice, AgentModel } from '../../src/shared/agents'
 import type { MessageSender } from '../../src/shared/messages'
 import type { User } from '../../src/shared/api'
@@ -19,8 +23,17 @@ export interface ToolWorkspaceCreation {
   sectionId: string
   choice: AgentChoice
   firstMessage: string
+  firstMessageId: string
+  firstSessionTitle?: string
   name?: string
   sender: MessageSender
+  createdByWorkspaceId: string
+}
+
+export interface ToolWorkspaceReplay {
+  orgId: string
+  senderUserId: string
+  firstMessageId: string
   createdByWorkspaceId: string
 }
 
@@ -43,6 +56,16 @@ export type ToolSessionWrite = {
   | { kind: 'send'; sessionId: string; input: AgentSendMessageRequest }
 )
 
+export type ToolWorkspaceWrite = {
+  orgId: string
+  workspaceId: string
+  senderUserId: string
+} & (
+  | ({ kind: 'rename' } & AgentRenameWorkspaceRequest)
+  | ({ kind: 'move' } & AgentMoveWorkspaceRequest)
+  | { kind: 'archive' }
+)
+
 export interface ToolSessionAccess {
   user: User
   workspace: AgentWorkspaceSummary
@@ -50,6 +73,10 @@ export interface ToolSessionAccess {
 
 /** The composition root supplies the lifecycle and the workspace's turn store. */
 export interface AgentToolServices {
+  replayWorkspaceCreation(
+    input: ToolWorkspaceReplay,
+  ): Promise<AgentCreateWorkspaceResponse | null>
+  writeWorkspace(input: ToolWorkspaceWrite): Promise<void>
   models(): Promise<readonly AgentModel[]>
   writeSession(input: ToolSessionWrite): Promise<AgentSessionWriteResponse>
   listSessions(

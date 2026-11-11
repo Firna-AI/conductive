@@ -30,6 +30,7 @@ export interface WorkspaceLifecycleEndpoint {
     workspaceId: string
     orgId: string
     firstMessage: SendMessageRequest
+    firstSessionTitle?: string
     firstTurn: PendingTurn
   }): Promise<void>
   readLifecycle(): Promise<DurableLifecycleState | undefined>
@@ -74,4 +75,5 @@ export interface FirstWorkspaceMessage {
   turnId: string
   sender: User
   request: SendMessageRequest
+  firstSessionTitle?: string
 }

@@ -557,24 +557,28 @@ Add the workspace calls and the options of `list_workspaces` and
 `create_workspace` to the Worker. Read the `typescript` and `testing`
 skills first.
 
-- [ ] Add the routes and the request and reply types to
+- [x] Add the routes and the request and reply types to
       `src/shared/agent-tools.ts`, in new files where a file would pass 200
       lines.
-- [ ] Add `get_workspace`, `rename_workspace`, `move_workspace`, and
+- [x] Add `get_workspace`, `rename_workspace`, `move_workspace`, and
       `archive_workspace` to `worker/tools/`. Reuse the app's rename,
       move, and archive code with the sender as the user. Give
       `archive_workspace` the reach of the org (decision 277 A).
-- [ ] Add the filters and the paging of `list_workspaces`, with no change
+- [x] Add the filters and the paging of `list_workspaces`, with no change
       to a call without options.
-- [ ] Apply decision 283 to the owner filter and list-row owner fields.
+- [x] Apply decision 283 to the owner filter and list-row owner fields.
       Add only the fields that the chosen option needs.
-- [ ] Add the first session title and the optional request ID to
+- [x] Add the first session title and the optional request ID to
       `create_workspace`.
-- [ ] Add tests beside the code: the archive rights of the sender, an
+- [x] Add tests beside the code: the archive rights of the sender, an
       archive of the calling workspace, a rename that no automatic name
       replaces, a move to the top of a section, each filter, the paging
       edges, a first session title, and a repeat with a request ID.
 - [ ] Update `worker/tools/README.md`.
+
+
+Evidence: `.context/agent-tools-conductor-parity/reports/m3-workspaces.md`
+and `.context/agent-tools-conductor-parity/checks/m3-orchestrator-tests.log`.
 
 ## Milestone 4: Session and message calls
 

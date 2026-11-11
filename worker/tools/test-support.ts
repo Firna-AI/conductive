@@ -178,6 +178,10 @@ export async function toolFixture(harness: TestHarness) {
     ),
   }))
   const services = {
+    replayWorkspaceCreation: vi
+      .fn<AgentToolServices['replayWorkspaceCreation']>()
+      .mockResolvedValue(null),
+    writeWorkspace: vi.fn<AgentToolServices['writeWorkspace']>(),
     callingTurn,
     ownerDefaultChoice,
     createWorkspace,

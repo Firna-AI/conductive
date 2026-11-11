@@ -83,6 +83,7 @@ interface WorkspaceCreation {
   sectionId?: string
   city: string
   name?: string
+  firstSessionTitle?: string
   branch: string
   sessionId: string
   request: SendMessageRequest
