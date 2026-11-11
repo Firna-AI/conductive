@@ -1,5 +1,5 @@
 import type { Session } from '../../src/shared/sessions'
-import type { RunnerLoginKind } from '../../src/shared/runner'
+import type { AgentLoginKind } from '../chat/login-kind'
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatOperation } from '../chat/operation'
 import { unavailableLoginMessage } from '../chat/session-login'
@@ -39,7 +39,7 @@ export class WorkspaceTurnTokens {
   async forRunningTurn(
     workspaceId: string,
     turnId: string,
-    expectedKind?: RunnerLoginKind,
+    expectedKind?: AgentLoginKind,
   ): Promise<string | null> {
     const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
     if (!turn) return null
@@ -125,7 +125,10 @@ export class WorkspaceTurnTokens {
       }
       if (!turnTokenMatchesKind(token, login.loginKind))
         return { ok: false, reason: 'turn_token_invalid' }
-      return { ok: true, login: await decryptGatewayLogin(this.env, login) }
+      const decrypted = await decryptGatewayLogin(this.env, login)
+      return decrypted
+        ? { ok: true, login: decrypted }
+        : { ok: false, reason: 'agent_login_unavailable' }
     })
   }
 

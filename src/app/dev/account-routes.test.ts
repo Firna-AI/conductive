@@ -35,7 +35,7 @@ it('saves only endpoint metadata with shared defaults and keeps the share choice
           kind: 'endpoint',
           secret: 'private-key',
           endpoint:
-            ' https://user:password@proxy.example.test:8443/private/v1?key=value#part ',
+            ' https://proxy.example.test:8443/private/v1?key=value#part ',
         }),
       })
     const saved = await save()
@@ -116,7 +116,7 @@ it('refuses unsafe dev endpoint saves and seeds connected own endpoint statuses'
     error: {
       code: 'invalid_endpoint',
       message:
-        'Use an https:// address. Only localhost, 127.0.0.1, and [::1] can use http://.',
+        'Use a public https:// address, without a user name or a password.',
     },
   })
 })

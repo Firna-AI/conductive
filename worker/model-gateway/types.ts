@@ -1,7 +1,7 @@
-import type { RunnerLogin } from '../../src/shared/runner'
+import type { AgentLogin } from '../chat/login-kind'
 
 export type TurnTokenCheck =
-  | { ok: true; login: RunnerLogin }
+  | { ok: true; login: AgentLogin }
   | {
       ok: false
       reason:

@@ -10,6 +10,7 @@ export type GatewayRefusal =
   | 'model_gateway_unavailable'
   | 'model_upstream_unavailable'
   | 'model_request_refused'
+  | 'model_endpoint_unreachable'
 
 export class GatewayRequestError extends Error {
   readonly code: GatewayRefusal
@@ -48,6 +49,10 @@ const refusals = {
   model_upstream_unavailable: [
     502,
     'The model service is not available. Try again.',
+  ],
+  model_endpoint_unreachable: [
+    502,
+    'The endpoint of this login is unreachable. Try again.',
   ],
   model_request_refused: [
     400,

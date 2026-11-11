@@ -74,7 +74,7 @@ export function nativeChatResolvers(
       ...args: Parameters<ChatDependencies['readLoginMetadata']>
     ) =>
       callbacks.readLoginMetadata?.(...args) ??
-      readLoginMetadata(env.DB, workspaceId() ?? '', ...args),
+      readLoginMetadata(env, workspaceId() ?? '', ...args),
     resolveLogin: (...args: Parameters<ChatDependencies['resolveLogin']>) =>
       callbacks.resolveLogin?.(...args) ??
       (args[0] === null

@@ -98,7 +98,11 @@ export async function bootRoute(
   const loginKind = agentLoginKind(agent, body.kind)
   if (!loginKind) return invalidInput()
   const address =
-    loginKind.kind === 'endpoint' ? readEndpointAddress(body.endpoint) : null
+    loginKind.kind === 'endpoint'
+      ? readEndpointAddress(body.endpoint, agent, {
+          refusedDomains: env.PREVIEW_DOMAIN ? [env.PREVIEW_DOMAIN] : [],
+        })
+      : null
   const publicLogin = (() => {
     if (loginKind.kind !== 'endpoint') return loginKind
     if (!address) {

@@ -302,5 +302,9 @@ dialog, and feedback with its screenshots.
 - `api/read-core.ts`: `readLogin` reads own endpoint metadata for both agents.
   It keeps only the host, kind, share choice, and update time.
   `dev/account-routes.ts` uses the shared address rule and keeps no secret
-  or full endpoint in development state. `?login=endpoint` seeds shared
+  or full endpoint in development state. Its save uses the same public HTTPS
+  address builder and agent-specific normalization as the Worker.
+  The builder reads the product domain from the shared brand source.
+  The fake needs no preview domain configuration.
+  `?login=endpoint` seeds shared
   own endpoint logins for both agents.

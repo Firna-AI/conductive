@@ -1,3 +1,4 @@
+import { agentLoginPath } from '../../src/shared/account'
 import type { AgentChoice } from '../../src/shared/agents'
 import type { ChatHistoryResponse } from '../chat/workspace-events'
 import type { RunnerProtocolVersion } from '../../src/shared/runner'
@@ -17,7 +18,8 @@ export async function runningGatewayTurn(
   choice: AgentChoice = CLAUDE,
   options: {
     protocolVersion?: RunnerProtocolVersion
-    kind?: 'api-key' | 'token'
+    kind?: 'api-key' | 'token' | 'endpoint'
+    secret?: string
   } = {},
 ) {
   const fixture = await createChatFixture(harness)
@@ -27,6 +29,24 @@ export async function runningGatewayTurn(
     )
       .bind(options.kind, fixture.member.id, choice.agent)
       .run()
+  if (options.kind === 'endpoint') {
+    const saved = await harness.request(
+      agentLoginPath(choice.agent),
+      fixture.memberCookie,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          agent: choice.agent,
+          kind: 'endpoint',
+          endpoint: gatewayOwnEndpoint,
+          secret:
+            options.secret ?? `secret-${fixture.member.id}-${choice.agent}`,
+        }),
+      },
+    )
+    if (saved.status !== 200)
+      throw new Error('The endpoint login was not saved.')
+  }
   const session = await fixture.createSession(choice, fixture.memberCookie)
   const runner = await fixture.connect(
     new FakeRunner({
@@ -87,3 +107,6 @@ export function turnEnds(history: ChatHistoryResponse) {
       (event.type === 'turn.failed' || event.type === 'turn.completed'),
   )
 }
+
+export const gatewayOwnEndpoint =
+  'https://proxy.example.test:8443/private/v1?key=value'

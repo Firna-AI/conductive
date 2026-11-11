@@ -1,5 +1,5 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
-import type { RunnerCommandV1, RunnerLogin } from '../../src/shared/runner'
+import type { AgentLogin } from './login-kind'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { DeliveryState } from './delivery-state'
 import { RunnerAccessDenied, SenderAccessDenied } from './login-access'
@@ -11,11 +11,15 @@ import {
   type DispatchResult,
   type DispatchState,
 } from './ordered-dispatch'
-import { gatewayRunnerCommand } from './runner-gateway-command'
+import {
+  gatewayRunnerCommand,
+  nativeRunnerCommand,
+} from './runner-gateway-command'
 import type { ChatStore } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type {
   ActiveRunner,
+  AgentCommand,
   ChatDependencies,
   PendingCommand,
   PreparedCommand,
@@ -116,7 +120,7 @@ export class RunnerDelivery {
       if (state !== 'send') return state
     }
     await this.store.reportTurnEnds()
-    const outbound: RunnerCommandV1 =
+    const outbound: AgentCommand =
       checked.type === 'turn' || checked.type === 'message'
         ? {
             ...checked,
@@ -168,7 +172,7 @@ export class RunnerDelivery {
               active.workspace.id,
               this.forRunningTurn,
             )
-          : outbound
+          : nativeRunnerCommand(outbound)
       if (!outgoing) {
         advance()
         return 'skip'
@@ -203,7 +207,7 @@ export class RunnerDelivery {
       view.message(command.messageId),
     )
     if (!message) return { state: 'skip' }
-    let login: RunnerLogin | null
+    let login: AgentLogin | null
     try {
       const operation = new ChatOperation(
         this.store,
@@ -215,8 +219,13 @@ export class RunnerDelivery {
         command.sessionId,
         active.workspace.tokenHash,
         message.sender.id,
+        active.protocolVersion ?? 1,
       )
       login = observed.login
+      if (!login && observed.reason) {
+        await this.failLogin(active.workspace.id, command, observed.reason)
+        return this.unavailable(active.workspace.id, command)
+      }
     } catch (error) {
       if (!(error instanceof SenderAccessDenied)) throw error
       await this.failLogin(active.workspace.id, command, error.message)

@@ -81,8 +81,15 @@ An uploaded attachment reaches the runner as a path, after the backend puts it t
 The browser posts one raw file as `application/octet-stream` with its known byte length.
 
 `endpoint-address.ts` owns `readEndpointAddress`, the shared endpoint
-address rule for saves and forms. It returns the trimmed address, its
-origin, and its host, or null for a refused address.
+address builder for forms, saves, dispatch, and the model gateway.
+It takes the agent and an options object with an optional model route, request query, and extra refused domains.
+It returns the normalized endpoint, origin, host, and exact upstream address, or null for a refused address.
+`endpoint-host.ts` owns its public host check.
+It reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
+Worker callers also pass `env.PREVIEW_DOMAIN` as an extra refused domain.
+The form and fake API use the same builder without preview configuration.
+The builder preserves queries, removes fragments and trailing slashes, and removes a final `/v1` for Claude.
+It can build model-list addresses without exposing a model-list gateway route.
 `ENDPOINT_ADDRESS_ERROR` gives the one refusal code and field message.
 Own endpoint logins stay outside the runner protocol.
 `feedback.ts` owns `FEEDBACK_PATH`, the request and reply types of the

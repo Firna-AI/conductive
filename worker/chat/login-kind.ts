@@ -1,9 +1,9 @@
 import type { Agent } from '../../src/shared/agents'
+import type { RunnerLogin, RunnerLoginKind } from '../../src/shared/runner'
+import { readEndpointAddress } from '../../src/shared/endpoint-address'
 
-type AgentLoginKind =
-  | { agent: 'claude'; kind: 'token' | 'api-key' }
-  | { agent: 'codex'; kind: 'api-key' }
-  | { agent: Agent; kind: 'endpoint' }
+export type AgentLoginKind =
+  RunnerLoginKind | { agent: Agent; kind: 'endpoint' }
 
 export function agentLoginKind(
   agent: Agent,
@@ -16,7 +16,18 @@ export function agentLoginKind(
   return null
 }
 
-export function nativeAgentLoginKind(agent: Agent, kind: string) {
-  const login = agentLoginKind(agent, kind)
-  return login?.kind === 'endpoint' ? null : login
+export type AgentLogin =
+  | RunnerLogin
+  | { agent: Agent; kind: 'endpoint'; endpoint: string; secret: string }
+
+export function usableAgentLogin(
+  login: AgentLogin | null,
+  refusedDomains: readonly string[] = [],
+): boolean {
+  return (
+    login !== null &&
+    (login.kind !== 'endpoint' ||
+      readEndpointAddress(login.endpoint, login.agent, { refusedDomains }) !==
+        null)
+  )
 }

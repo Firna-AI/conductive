@@ -25,8 +25,7 @@ beforeEach(async () => {
 })
 afterAll(async () => harness.dispose())
 
-const endpoint =
-  'https://user:password@proxy.example.test:8443/private/v1?key=value#part'
+const endpoint = 'https://proxy.example.test:8443/private/v1/?key=value#part'
 
 function save(cookie: string, agent: Agent, address = endpoint) {
   return harness.request(agentLoginPath(agent), cookie, {
@@ -90,25 +89,36 @@ it.each(['claude', 'codex'] as const)(
           harness.env.BOAT_KEY_ENCRYPTION_KEY,
         ),
       ),
-    ).toEqual({ endpoint, secret: 'wrappedkey' })
+    ).toEqual({
+      endpoint:
+        agent === 'claude'
+          ? 'https://proxy.example.test:8443/private?key=value'
+          : 'https://proxy.example.test:8443/private/v1?key=value',
+      secret: 'wrappedkey',
+    })
   },
 )
 
-it('accepts a loopback endpoint and refuses unsafe or malformed replacements with one field error', async () => {
+it('preserves the saved login when a non-public or malformed replacement is refused', async () => {
   const cookie = await harness.login()
-  const accepted = await save(cookie, 'codex', 'http://localhost:8787/v1')
+  const accepted = await save(cookie, 'codex')
   expect(accepted.status).toBe(200)
   const metadata = {
     agent: 'codex',
     connected: true,
     kind: 'endpoint',
-    host: 'localhost:8787',
+    host: 'proxy.example.test:8443',
     noReuse: false,
     updatedAt: TEST_TIME,
   }
   expect(await accepted.json()).toEqual(metadata)
   for (const address of [
     'http://proxy.example.test/v1',
+    'http://localhost:8787/v1',
+    'https://192.168.1.1',
+    'https://metadata.google.internal',
+    'https://api.conductive.build',
+    'https://user:password@proxy.example.test',
     'not a URL',
     'ftp://localhost/v1',
   ]) {
@@ -118,7 +128,7 @@ it('accepts a loopback endpoint and refuses unsafe or malformed replacements wit
       error: {
         code: 'invalid_endpoint',
         message:
-          'Use an https:// address. Only localhost, 127.0.0.1, and [::1] can use http://.',
+          'Use a public https:// address, without a user name or a password.',
       },
     })
   }
@@ -173,4 +183,28 @@ it('preserves endpoint sharing on rotation and takes the new kind default on a k
     noReuse: false,
   })
   expect(await (await put('token')).json()).toMatchObject({ noReuse: true })
+})
+
+it('refuses the configured preview domain and its subdomains at save', async () => {
+  const cookie = await harness.login()
+  const previous = harness.env.PREVIEW_DOMAIN
+  harness.env.PREVIEW_DOMAIN = 'custom-previews.example.test'
+  try {
+    for (const address of [
+      'https://custom-previews.example.test',
+      'https://port.custom-previews.example.test:8443/v1',
+    ]) {
+      const response = await save(cookie, 'claude', address)
+      expect(response.status, address).toBe(400)
+      expect(await response.json()).toEqual({
+        error: {
+          code: 'invalid_endpoint',
+          message:
+            'Use a public https:// address, without a user name or a password.',
+        },
+      })
+    }
+  } finally {
+    harness.env.PREVIEW_DOMAIN = previous
+  }
 })

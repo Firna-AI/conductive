@@ -48,12 +48,17 @@ View writes cannot change this branch.
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
 - An own endpoint save uses `readEndpointAddress` from
   [`endpoint-address.ts`](../../src/shared/endpoint-address.ts). It encrypts
-  one JSON value with the trimmed endpoint and the whitespace-free key,
+  one JSON value with the normalized endpoint and the whitespace-free key,
   under the same context. Only the endpoint origin stays in plain text.
   Save, account, and preference replies give only the host, kind, share
   setting, and last secret-save time. They never give the full address.
-  A saved own endpoint is connected in the account metadata, but chat
-  marks it unavailable until the gateway supports forwarding to it.
+  The builder accepts public HTTPS addresses and refuses credentials and non-public hosts.
+  It reads the product domain from the shared brand source.
+  The save also passes `env.PREVIEW_DOMAIN` to refuse that deployment's preview domain and its subdomains.
+  It preserves the query and drops the fragment and trailing slash.
+  For Claude, it also drops a final `/v1`.
+  A valid own endpoint can run through the model gateway on protocol 2.
+  An invalid saved address or a protocol 1 runner makes it unavailable in chat.
 - A new login or a change of kind sets `noReuse` to true for a Claude
   subscription token and false for an API key or an own endpoint. Replacing a secret of the
   same kind keeps its preference. A `PATCH` changes only that login's

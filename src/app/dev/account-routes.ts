@@ -74,7 +74,7 @@ function saveLogin(backend: DevBackend, agent: Agent, body: unknown): Response {
   const saved = savedLogin(backend, agent)
   let login: AgentLoginStatus
   if (fields.kind === 'endpoint') {
-    const address = readEndpointAddress(fields.endpoint)
+    const address = readEndpointAddress(fields.endpoint, agent)
     if (!address)
       throw new RouteError(
         400,

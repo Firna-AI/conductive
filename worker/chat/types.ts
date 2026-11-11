@@ -8,7 +8,6 @@ import type {
   RunnerChangeModel,
   RunnerCommandV1,
   RunnerInterrupt,
-  RunnerLogin,
   WorkspaceToRunnerV1,
   WorkspaceToRunnerV2,
   RunnerEventEnvelope,
@@ -29,6 +28,7 @@ import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
 import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
+import type { AgentLogin } from './login-kind'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -89,9 +89,19 @@ export interface StoredAttachment {
 }
 
 export type PreparedMessageCommand = (
-  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments'>
-  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments'>
-) & { attachments: readonly StoredAttachment[] }
+  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments' | 'login'>
+  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments' | 'login'>
+) & { attachments: readonly StoredAttachment[]; login: AgentLogin }
+
+export type AgentCommand =
+  | (Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'login'> & {
+      login: AgentLogin
+    })
+  | (Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'login'> & {
+      login: AgentLogin
+    })
+  | RunnerInterrupt
+  | RunnerChangeModel
 
 export type PreparedCommand =
   PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
@@ -194,15 +204,19 @@ export interface ChatDependencies {
   ) => Promise<readonly ConnectionGrant[]>
   randomId: () => string
   randomConnectionId: () => string
+  currentRunnerProtocolVersion: () => RunnerProtocolVersion | null
+  refusedEndpointDomains: () => readonly string[]
   readLoginMetadata: (
     targets: readonly SessionLoginTarget[],
+    protocolVersion?: RunnerProtocolVersion | null,
   ) => Promise<ReadonlyMap<string, SessionLoginMetadata>>
   resolveLogin: (
     userId: string | null,
     agent: Agent,
     runnerTokenHash?: string,
     senderId?: string,
-  ) => Promise<RunnerLogin | null>
+    protocolVersion?: RunnerProtocolVersion,
+  ) => Promise<AgentLogin | null>
   resolveAttachments: (
     userId: string,
     workspaceId: string,

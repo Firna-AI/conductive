@@ -1,4 +1,5 @@
 import type { AppEnv } from '../env'
+import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import { commitAuthor } from '../../src/shared/commit-author'
 import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
@@ -28,6 +29,7 @@ export function chatDependencies(
   env: AppEnv,
   workspaceId: () => string | null,
   overrides: Partial<ChatDependencies> = {},
+  protocolVersion: () => RunnerProtocolVersion | null = () => null,
 ): ChatDependencies {
   return {
     readCommitAuthor: async (userId) => {
@@ -47,11 +49,14 @@ export function chatDependencies(
       readConnectionAccess(env.DB, tabs, now),
     randomId: randomToken,
     randomConnectionId: randomToken,
-    readLoginMetadata: (targets) => {
+    currentRunnerProtocolVersion: protocolVersion,
+    refusedEndpointDomains: () =>
+      env.PREVIEW_DOMAIN ? [env.PREVIEW_DOMAIN] : [],
+    readLoginMetadata: (targets, version) => {
       const id = workspaceId()
       return id === null
         ? Promise.resolve(new Map<string, SessionLoginMetadata>())
-        : readLoginMetadata(env.DB, id, targets)
+        : readLoginMetadata(env, id, targets, version)
     },
     resolveAttachments: (userId, id, ids, messageId, usedIds) =>
       resolveMessageAttachments(

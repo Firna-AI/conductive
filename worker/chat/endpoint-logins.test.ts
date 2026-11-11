@@ -11,6 +11,8 @@ import {
   WORKSPACE_ID,
 } from './harness.test-support'
 import { sessionRecord } from './retry.test-support'
+import { agentLoginContext } from './queries'
+import { encrypt } from '../security/crypto'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -31,7 +33,7 @@ const cases = ([1, 2] as const).flatMap((protocolVersion) =>
 )
 
 it.each(cases)(
-  'blocks $agent endpoint commands on protocol $protocolVersion with noReuse=$noReuse',
+  'blocks $agent endpoints on protocol $protocolVersion when private or unsupported, with noReuse=$noReuse',
   async ({ choice, protocolVersion, noReuse }) => {
     const fixture = await createChatFixture(harness)
     try {
@@ -43,8 +45,7 @@ it.each(cases)(
         choice,
       )
       await fixture.send(session.id, 'next', fixture.memberCookie, choice)
-      const endpoint =
-        'https://user:password@proxy.example.test/private/v1?key=value#part'
+      const endpoint = 'https://proxy.example.test/private/v1?key=value'
       const path = agentLoginPath(choice.agent)
       const saved = await harness.request(path, fixture.ownerCookie, {
         method: 'PUT',
@@ -56,6 +57,24 @@ it.each(cases)(
         }),
       })
       expect(saved.status).toBe(200)
+      if (protocolVersion === 2) {
+        await fixture.env.DB.prepare(
+          "UPDATE agent_logins SET ciphertext = ?, endpoint_origin = 'https://192.168.1.1' WHERE user_id = ? AND agent = ?",
+        )
+          .bind(
+            await encrypt(
+              JSON.stringify({
+                endpoint: 'https://192.168.1.1/private',
+                secret: 'endpoint-key',
+              }),
+              agentLoginContext(fixture.owner.id, choice.agent),
+              fixture.env.BOAT_KEY_ENCRYPTION_KEY,
+            ),
+            fixture.owner.id,
+            choice.agent,
+          )
+          .run()
+      }
       const sharing = await harness.request(path, fixture.ownerCookie, {
         method: 'PATCH',
         body: JSON.stringify({ noReuse }),
@@ -75,7 +94,10 @@ it.each(cases)(
         turnId: first.session.activeTurnId,
         error: {
           code: 'agent_login_required',
-          message: `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login is not available. Try again or send a new message.`,
+          message:
+            protocolVersion === 1
+              ? `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login is not available. Try again or send a new message.`
+              : `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login needs a public https:// endpoint. Update the login on the account page.`,
         },
         retryMessageId: 'first',
         durationMs: 0,
@@ -109,3 +131,64 @@ it.each(cases)(
     }
   },
 )
+
+it('moves another member to a linked session when the starter endpoint is refused', async () => {
+  const fixture = await createChatFixture(harness)
+  try {
+    const session = await fixture.createSession(CLAUDE)
+    await fixture.env.DB.prepare(
+      "UPDATE agent_logins SET kind = ?, ciphertext = ?, endpoint_origin = 'https://127.0.0.1' WHERE user_id = ? AND agent = ?",
+    )
+      .bind(
+        'endpoint',
+        await encrypt(
+          JSON.stringify({
+            endpoint: 'https://127.0.0.1/private',
+            secret: 'endpoint-key',
+          }),
+          agentLoginContext(fixture.owner.id, 'claude'),
+          fixture.env.BOAT_KEY_ENCRYPTION_KEY,
+        ),
+        fixture.owner.id,
+        'claude',
+      )
+      .run()
+    const runner = new FakeRunner({
+      workspaceId: WORKSPACE_ID,
+      protocolVersion: 2,
+    })
+    runner.emit({ type: 'runner.ready' })
+    await fixture.connect(runner)
+    const accepted = await fixture.send(
+      session.id,
+      'linked',
+      fixture.memberCookie,
+      CLAUDE,
+    )
+    expect(accepted.session).toMatchObject({
+      sourceSessionId: session.id,
+      startedBy: { id: fixture.member.id },
+      loginAvailable: true,
+    })
+    expect(await sessionRecord(fixture, session.id)).toMatchObject({
+      loginAvailable: false,
+      loginShared: false,
+    })
+    expect(runner.commands).toContainEqual(
+      expect.objectContaining({
+        type: 'turn',
+        sessionId: accepted.session.id,
+        credential: {
+          agent: 'claude',
+          kind: 'api-key',
+          token: expect.any(String),
+        },
+      }),
+    )
+    expect(JSON.stringify(runner.received)).not.toMatch(
+      /endpoint-key|127\.0\.0\.1\/private/,
+    )
+  } finally {
+    await fixture.chat.closeConnections()
+  }
+})

@@ -48,6 +48,9 @@ the `primary` flag beside `verified`.
 They accept only the fixed model POST routes on their provider origins.
 Tests inject their `fetch` methods through the Worker's fetch dependency.
 They open no external connection and need no provider account.
+The gateway HTTP fixture also configures `FakeModelUpstream` for an own endpoint.
+It keeps the same request capture and response factories on that origin.
+`native-chat-resolvers.ts` passes the connected runner version into login metadata checks.
 Each fake records requests without cloning or teeing their bodies.
 Its default reply reads the upload once and records its text in `bodies`.
 Set `response` to supply a fresh response after that read.

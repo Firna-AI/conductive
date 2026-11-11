@@ -19,15 +19,18 @@ state the rules.
   [The first message](README.md#the-first-message) says.
 - `SessionLogins` in `session-login.ts` holds every login lookup of the chat
   backend. It has a metadata path and a credential path.
-- The metadata path reads only the org membership of each starter, the
-  kind of the stored login, and its share setting. It reads no ciphertext
-  and decrypts nothing. `readLoginMetadata` in `login-availability.ts` makes
-  one D1 query for all requested sessions, with a JSON input. It returns a
-  map of `SessionLoginMetadata` by session ID: the `loginAvailable` and the
-  `loginShared` of each session. A session with no valid login gets false
-  for both. `nativeAgentLoginKind` in `login-kind.ts` gives this path and
-  `readAgentLogin` one rule for a usable native-provider login kind.
-  Own endpoint logins are unavailable until the gateway can forward them.
+- The metadata path reads the org membership of each starter, the login
+  kind, and its share setting in one D1 query for all requested sessions.
+  For an own endpoint, the same query reads its plain `endpoint_origin`.
+  The shared builder checks that origin, including the product domain and
+  `env.PREVIEW_DOMAIN`. This path selects no ciphertext and decrypts nothing.
+  The credential path still decrypts and checks the full saved address.
+  It returns a map of `SessionLoginMetadata` by session ID, with
+  `loginAvailable` and `loginShared`. A session with no usable login gets
+  false for both. A refused endpoint or a connected protocol 1 runner
+  makes an own endpoint login unavailable.
+- `agentLoginKind` in `login-kind.ts` gives the metadata and credential
+  paths one rule for the saved login kinds.
 - `SessionLogins.refresh` runs the metadata path for the starters of all open
   sessions when a new tab subscribes. An archived workspace skips it.
 - `SessionLogins.metadata` runs the metadata path for one session before

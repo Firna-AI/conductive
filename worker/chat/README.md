@@ -174,13 +174,18 @@ tests through the production Worker entry.
 [Chat backend key code](key-code.md) names the files, the types, and the
 functions of the chat backend that a reader opens first.
 
-`queries.ts` reads native-provider logins for runner dispatch.
-It refuses own endpoint logins before decryption.
-`login-availability.ts` also marks those logins as unavailable in session records.
-Runner delivery uses the existing unavailable-login failure for both protocol versions.
-`login-kind.ts` keeps saved login kinds separate from native-provider kinds that can run.
-The reuse check excludes own endpoints, so a private endpoint stays unavailable too.
-`endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for both agents and runner protocols.
+`queries.ts` decrypts native-provider and own endpoint logins inside the Worker.
+`login-kind.ts` owns the trusted `AgentLogin` union, separate from the native runner login types.
+`login-availability.ts` checks the plain `endpoint_origin` in its one metadata query.
+It selects no ciphertext and decrypts no login.
+The shared builder refuses the product domain and the configured `PREVIEW_DOMAIN`.
+Dispatch still decrypts and checks the full saved address before it sends a turn.
+It also marks an endpoint unavailable while the connected runner uses protocol 1.
+`session-login.ts` treats a refused endpoint as an unusable login for linked-session admission and dispatch.
+Its failed-turn cause names the starter and agent and points to the account page.
+Runner delivery maps a valid endpoint to an API-key turn-token credential for protocol 2.
+No endpoint address or key enters a runner command or chat record.
+`endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for invalid addresses and protocol 1.
 
 ## Related docs
 

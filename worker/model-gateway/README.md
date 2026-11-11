@@ -9,9 +9,10 @@ The gateway calls `checkTurnToken` through the trusted workspace runtime before 
 It replaces the token with the starter's real login.
 Runner delivery gives a token in each `turn` command to a runner of protocol version 2.
 A runner of protocol version 1 still gets the real login.
-Both runner protocols refuse own endpoint logins before dispatch.
-The gateway login reader also refuses them before decryption.
-The account API can save and read their metadata while gateway forwarding remains unavailable.
+Own endpoint turns require protocol 2.
+Their runner commands use the existing API-key credential mode with a turn token.
+Their real address and key stay in Worker-only `AgentLogin` values.
+Protocol 1 uses the existing unusable-login failure before dispatch.
 The packaged runner and new full image builds use version 2.
 The [model gateway protocol](../../docs/protocol/model-gateway.md) states the requirements.
 
@@ -21,6 +22,23 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 | --- | --- | --- |
 | `/v1/model/claude` | `POST /v1/messages`, `POST /v1/messages/count_tokens` | `https://api.anthropic.com` |
 | `/v1/model/codex` | `POST /responses` | `https://api.openai.com/v1` |
+
+An own endpoint login replaces the native upstream base in this table.
+[`readEndpointAddress`](../../src/shared/endpoint-address.ts) validates and builds that address at save, dispatch, and fetch time.
+It accepts public HTTPS hosts, refuses credentials, private addresses, internal names, and the app and preview domains, and normalizes the base path.
+The host check reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
+The gateway runtime supplies `env.PREVIEW_DOMAIN` as an extra refused domain before each fetch.
+It preserves the endpoint query and appends the model request query.
+Claude drops a final `/v1` from the base before its route is added.
+Codex keeps its API base, including `/v1` when present.
+The builder also supports model-list addresses, but this gateway exposes no model-list route.
+
+Each fetch uses manual redirects.
+A connection failure returns `model_endpoint_unreachable` without the host.
+`wrangler.jsonc` enables `global_fetch_strictly_public` for public same-zone routing.
+The runtime's public network also filters the IP addresses returned by DNS.
+Cloudflare documents custom ports for non-proxied hosts in its [compatibility flags](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#allow-specifying-a-custom-port-when-making-a-subrequest-with-the-fetch-api).
+The compatibility date enables that behavior without another flag.
 
 The gateway preserves the query and the request body.
 It refuses every other suffix and method locally, including the connection probe and model discovery.
@@ -44,6 +62,8 @@ In profile mode, Claude sends each token as a bearer token, also for an API key.
 | --- | --- | --- | --- |
 | Claude API key | `sk-ant-api-` | `x-api-key` or `Authorization: Bearer` | `x-api-key` |
 | Claude subscription token | `sk-ant-oat01-` | `Authorization: Bearer` | `Authorization: Bearer` |
+| Own endpoint, Claude | `sk-ant-api-` | `x-api-key` or `Authorization: Bearer` | `x-api-key` |
+| Own endpoint, Codex | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 | OpenAI API key | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 
 The signature covers the prefix.
@@ -51,13 +71,15 @@ A token whose prefix does not match the login kind of its turn gets `turn_token_
 A token in a header that the table does not give for its login kind gets the same refusal.
 The upstream gets the real login in the header of the last column.
 
-For a Claude API key, the gateway removes only the `oauth-2025-04-20` value from the `anthropic-beta` list.
+For a Claude API key or own endpoint, the gateway removes only the `oauth-2025-04-20` value from the `anthropic-beta` list.
 It keeps each other value.
 Claude sends two of these values only in profile mode: `prompt-caching-scope-2026-01-05` and `cache-diagnosis-2026-04-07`.
 They stay because the body of a profile request uses their features.
 That body uses a `cache_control` scope of `global` and a top-level `diagnostics` field.
 Do not remove them to match the normal API-key mode of Claude.
-The other login kinds keep `anthropic-beta` unchanged.
+A Claude subscription token keeps `anthropic-beta` unchanged.
+Only a subscription token requests the one-hour prompt cache in the runner.
+An own endpoint uses the existing API-key cache default.
 
 The Codex upload reader checks for one valid JSON object as bytes arrive.
 It checks each top-level `background` key after JSON string unescaping, including repeated keys.
@@ -75,7 +97,8 @@ The gateway removes incoming authentication, cookies, proxy metadata, private ap
 Response headers use the content type, retry, request ID, and provider rate-limit rules.
 No provider cookie passes.
 Allowed response header values redact the real login.
-Error bodies redact both plain and JSON-escaped login bytes across chunk boundaries.
+For an own endpoint, redaction covers the key, saved base, built request address, origin, and host.
+Error bodies redact plain and JSON-escaped values across chunk boundaries.
 Success body chunks pass directly, with no text decoding or copy.
 
 The upload reads through the entry's 100,000,000-byte budget.
@@ -112,7 +135,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
   `hasClaudeMarkers` checks the markers of the `claude` program.
-  For a Claude API key, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.
+  For a Claude API key or endpoint, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.
 - [upload.ts](upload.ts): streaming upload and draining after an early reply.
 - [codex-body.ts](codex-body.ts): `CodexBodyScanner` checks the streamed JSON grammar and top-level `background` fields.
 - [json-tokens.ts](json-tokens.ts): `JsonTokens` reads JSON tokens and unescapes keys without keeping token text.
@@ -135,7 +158,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   Web Crypto verifies the signature in constant time.
   The turn keeps only a random nonce and the login version for this derivation.
 - [login.ts](login.ts): `gatewayLogin` checks starter access and reads the login row with its `updated_at` version.
-  It accepts only native-provider login kinds.
+  It accepts native-provider and own endpoint login kinds.
   `decryptGatewayLogin` releases the login only after the turn check accepts that version.
 - [types.ts](types.ts): `TurnTokenCheck` and `TurnTokenEndpoint` define the trusted check result and RPC method.
 - [../workspace-lifecycle.ts](../workspace-lifecycle.ts): `checkTurnToken` selects the workspace from stored chat metadata.
@@ -149,7 +172,8 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [delivery-runtime.test.ts](delivery-runtime.test.ts): the same version 2 `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
 - [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed version 2 send keeps the token state, so the resend carries the same token before the waiting message.
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
-- [endpoint-login.test.ts](endpoint-login.test.ts): refusal of a saved own endpoint login without a request to either native provider.
+- [endpoint-login.test.ts](endpoint-login.test.ts): both agents' endpoint routes and authentication, credential-free runner commands, revalidation, redirects, and unreachable endpoints.
+- [endpoint-errors.test.ts](endpoint-errors.test.ts): split endpoint and key redaction in errors and allowed headers.
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-stream.test.ts](codex-stream.test.ts): a 100,000,000-byte object, the shared 413, and refusal after an early answer.

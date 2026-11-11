@@ -1,3 +1,4 @@
+import { readEndpointAddress } from '../../src/shared/endpoint-address'
 import type { AppDependencies } from '../env'
 import { scheduleConnectionCheck } from '../security/connection-access'
 import { gatewayError, GatewayRequestError } from './errors'
@@ -11,6 +12,7 @@ import type { TurnTokenEndpoint } from './types'
 
 export interface GatewayRuntime {
   dependencies: AppDependencies
+  previewDomain: string | undefined
   workspaceAllowed(id: string): Promise<boolean>
   workspace(id: string): TurnTokenEndpoint
 }
@@ -49,8 +51,10 @@ export async function routeModelGateway(
       schedule:
         runtime.dependencies.scheduleGatewayCheck ?? scheduleConnectionCheck,
     })
-    let failure: 'model_gateway_unavailable' | 'model_upstream_unavailable' =
-      'model_gateway_unavailable'
+    let failure:
+      | 'model_gateway_unavailable'
+      | 'model_upstream_unavailable'
+      | 'model_endpoint_unreachable' = 'model_gateway_unavailable'
     try {
       const { login } = await lifetime.start()
       if (login.agent !== agent)
@@ -60,7 +64,7 @@ export async function routeModelGateway(
         )
       if (
         token !==
-        (agent === 'claude' && login.kind === 'api-key'
+        (agent === 'claude' && login.kind !== 'token'
           ? apiKey || bearer
           : bearer)
       )
@@ -69,10 +73,36 @@ export async function routeModelGateway(
           'The turn token is not valid.',
         )
       failure = 'model_upstream_unavailable'
-      const origin =
-        agent === 'claude'
-          ? 'https://api.anthropic.com'
-          : 'https://api.openai.com/v1'
+      const address =
+        login.kind === 'endpoint'
+          ? readEndpointAddress(login.endpoint, agent, {
+              route: suffix,
+              search: url.search,
+              refusedDomains: runtime.previewDomain
+                ? [runtime.previewDomain]
+                : [],
+            })
+          : null
+      if (login.kind === 'endpoint' && !address)
+        throw new GatewayRequestError(
+          'agent_login_unavailable',
+          'The endpoint address is not public HTTPS.',
+        )
+      if (address) failure = 'model_endpoint_unreachable'
+      const upstreamUrl =
+        address?.upstream ??
+        `${agent === 'claude' ? 'https://api.anthropic.com' : 'https://api.openai.com/v1'}${suffix}${url.search}`
+      const secrets =
+        login.kind === 'endpoint' && address
+          ? [
+              login.secret,
+              login.endpoint,
+              address.endpoint,
+              address.upstream,
+              address.origin,
+              address.host,
+            ]
+          : [login.secret]
       const init = {
         method: 'POST',
         headers: upstreamHeaders(request.headers, login),
@@ -83,19 +113,19 @@ export async function routeModelGateway(
       }
       const upstream = await lifetime.wait(
         runtime.dependencies
-          .fetch(new Request(`${origin}${suffix}${url.search}`, init))
+          .fetch(new Request(upstreamUrl, init))
           .then((response) => lifetime.received(response)),
       )
       await lifetime.wait(lifetime.upload.finish())
       lifetime.signal.throwIfAborted()
-      const headers = downstreamHeaders(upstream.headers, login.secret)
+      const headers = downstreamHeaders(upstream.headers, ...secrets)
       if (!upstream.body) {
         lifetime.complete()
         return new Response(null, { status: upstream.status, headers })
       }
       const body = upstream.ok
         ? upstream.body
-        : redactErrorBody(upstream.body, login.secret)
+        : redactErrorBody(upstream.body, ...secrets)
       return new Response(gatewayStream(body, lifetime), {
         status: upstream.status,
         headers,

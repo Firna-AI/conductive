@@ -107,9 +107,10 @@ credential route, the image source credential route, the
 tools, GitHub webhooks, the model gateway, and the runner socket.
 These handlers use their own machine credentials and skip the browser gate.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
-It adds the starter's login to allowed Anthropic and OpenAI requests.
+It adds the starter's login to allowed Anthropic, OpenAI, or own endpoint requests.
 Its request upload and model answer both stream.
-The chat backend gives a turn token to a runner of protocol version 2, and the real login to a runner of version 1.
+The chat backend gives a turn token to a runner of protocol version 2.
+Version 1 gets a real native-provider login and refuses own endpoint turns.
 The [tools composition](tools/composition.ts) reads the active stored turn.
 It keeps the inherited owner separate from the sender of the first message.
 

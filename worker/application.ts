@@ -160,6 +160,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           const gatewayEnv = env
           const gatewayResponse = await routeModelGateway(request, {
             ...workspaceRuntime(gatewayEnv, dependencies),
+            previewDomain: gatewayEnv.PREVIEW_DOMAIN,
             workspaceAllowed: (id) =>
               gatewayWorkspaceAllowed(gatewayEnv.DB, id),
           })

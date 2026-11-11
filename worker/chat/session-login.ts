@@ -1,6 +1,7 @@
 import type { Agent } from '../../src/shared/agents'
 import type { Session } from '../../src/shared/sessions'
-import type { RunnerLogin } from '../../src/shared/runner'
+import type { RunnerProtocolVersion } from '../../src/shared/runner'
+import { usableAgentLogin, type AgentLogin } from './login-kind'
 import { LoginReuseDenied, readLogin } from './login-access'
 import type { SessionLoginMetadata } from './login-availability'
 import type { ChatOperation } from './operation'
@@ -27,25 +28,36 @@ export class SessionLogins {
     userId: string,
     agent: Agent,
   ): Promise<SessionLoginMetadata> {
-    const metadata = await dependencies.readLoginMetadata([
-      { sessionId, userId, agent },
-    ])
+    const metadata = await dependencies.readLoginMetadata(
+      [{ sessionId, userId, agent }],
+      dependencies.currentRunnerProtocolVersion(),
+    )
     return metadata.get(sessionId) ?? unavailableMetadata
   }
 
-  forMember(userId: string, agent: Agent) {
-    return readLogin(this.dependencies, userId, agent, undefined, userId)
+  async forMember(userId: string, agent: Agent) {
+    const login = await readLogin(
+      this.dependencies,
+      userId,
+      agent,
+      undefined,
+      userId,
+    )
+    return usableAgentLogin(login, this.dependencies.refusedEndpointDomains())
+      ? login
+      : null
   }
 
   async observe(
     sessionId: string,
     runnerTokenHash?: string,
     senderId?: string,
+    protocolVersion?: RunnerProtocolVersion,
   ) {
     const session = await this.operation.read((view) =>
       sessionFor(view, sessionId),
     )
-    let login: RunnerLogin | null
+    let login: AgentLogin | null
     try {
       login = await readLogin(
         this.dependencies,
@@ -53,14 +65,20 @@ export class SessionLogins {
         session.choice.agent,
         runnerTokenHash,
         senderId,
+        protocolVersion,
       )
     } catch (error) {
       if (!(error instanceof LoginReuseDenied)) throw error
       await this.save(session, { loginAvailable: true, loginShared: false })
-      return { session, login: null }
+      return { session, login: null, reason: undefined }
     }
+    const invalidEndpoint =
+      login?.kind === 'endpoint' &&
+      !usableAgentLogin(login, this.dependencies.refusedEndpointDomains())
+    const unusable =
+      invalidEndpoint || (login?.kind === 'endpoint' && protocolVersion === 1)
     const metadata =
-      login && session.startedBy
+      login && session.startedBy && !unusable
         ? await SessionLogins.initial(
             this.dependencies,
             session.id,
@@ -74,7 +92,11 @@ export class SessionLogins {
       (metadata.loginShared ||
         senderId === undefined ||
         senderId === session.startedBy?.id)
-    return { session, login: mayUseLogin ? login : null }
+    return {
+      session,
+      login: mayUseLogin ? login : null,
+      reason: invalidEndpoint ? invalidEndpointMessage(session) : undefined,
+    }
   }
 
   async metadata(sessionId: string): Promise<Session> {
@@ -102,7 +124,10 @@ export class SessionLogins {
           ],
     )
     const metadata = targets.length
-      ? await this.dependencies.readLoginMetadata(targets)
+      ? await this.dependencies.readLoginMetadata(
+          targets,
+          this.dependencies.currentRunnerProtocolVersion(),
+        )
       : new Map<string, SessionLoginMetadata>()
     for (const session of open)
       await this.save(session, metadata.get(session.id) ?? unavailableMetadata)
@@ -135,4 +160,13 @@ export function unavailableLoginMessage(session: Session): string {
   if (session.loginAvailable && !session.loginShared)
     return `${owner} ${agent} login is for ${owner} messages only. Try again or send a new message.`
   return `${owner} ${agent} login is not available. Try again or send a new message.`
+}
+
+function invalidEndpointMessage(session: Session): string {
+  const starter = session.startedBy
+  const owner = starter
+    ? `${starter.displayName ?? starter.githubLogin}'s`
+    : "The session's"
+  const agent = session.choice.agent === 'claude' ? 'Claude' : 'Codex'
+  return `${owner} ${agent} login needs a public https:// endpoint. Update the login on the account page.`
 }

@@ -1,5 +1,4 @@
 import type { Agent } from '../../src/shared/agents'
-import type { RunnerLogin } from '../../src/shared/runner'
 import type { AppEnv } from '../env'
 import {
   workspaceTokenAccessPredicate,
@@ -7,7 +6,11 @@ import {
 } from '../data/workspace-token-access'
 import { decrypt, hash } from '../security/crypto'
 import { workspaceNameColumn } from '../data/workspace-name'
-import { nativeAgentLoginKind } from './login-kind'
+import {
+  agentLoginKind,
+  type AgentLogin,
+  type AgentLoginKind,
+} from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
 const workspaceColumns = `w.id, w.org_id AS orgId, w.archived_at AS archivedAt`
@@ -89,20 +92,45 @@ export async function readAgentLogin(
   env: AppEnv,
   userId: string,
   agent: Agent,
-): Promise<RunnerLogin | null> {
+): Promise<AgentLogin | null> {
   const row = await env.DB.prepare(
     'SELECT kind, ciphertext FROM agent_logins WHERE user_id = ? AND agent = ?',
   )
     .bind(userId, agent)
     .first<{ kind: string; ciphertext: string }>()
-  const loginKind = row ? nativeAgentLoginKind(agent, row.kind) : null
+  const loginKind = row ? agentLoginKind(agent, row.kind) : null
   if (!row || !loginKind) return null
+  return decryptAgentLogin(env, userId, loginKind, row.ciphertext)
+}
+
+export async function decryptAgentLogin(
+  env: AppEnv,
+  userId: string,
+  kind: AgentLoginKind,
+  ciphertext: string,
+): Promise<AgentLogin | null> {
   const plaintext = await decrypt(
-    row.ciphertext,
-    agentLoginContext(userId, agent),
+    ciphertext,
+    agentLoginContext(userId, kind.agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
-  return { ...loginKind, secret: loginSecret(plaintext) }
+  if (kind.kind !== 'endpoint')
+    return { ...kind, secret: loginSecret(plaintext) }
+  const value: unknown = JSON.parse(plaintext)
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    !('endpoint' in value) ||
+    typeof value.endpoint !== 'string' ||
+    !('secret' in value) ||
+    typeof value.secret !== 'string'
+  )
+    return null
+  return {
+    ...kind,
+    endpoint: value.endpoint,
+    secret: loginSecret(value.secret),
+  }
 }
 
 export async function senderLoginAccess(
