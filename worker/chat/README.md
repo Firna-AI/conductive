@@ -91,6 +91,8 @@ The shared `SessionMarkdown` folds pages and renders both kinds of copy.
 It uses the same grouping, command placement, and words as browser chat.
 The route gives it the app origin and the org as `TranscriptDocument.linkContext`.
 So the copy of a tool stop writes "Stopped from" and the session link, in angle brackets.
+It puts the line of a turn's end reason before the duration and the changed
+files of that turn.
 The route keeps no generated transcript in storage.
 
 `buildSessionTranscript` also serves the workspace tools through trusted workspace RPCs.

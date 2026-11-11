@@ -3,6 +3,7 @@
  */
 
 import type { TableCells } from '../../../../src/markdown/table-rows'
+import type { TurnEndReason } from '../../../../src/shared/chat-events'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
@@ -14,6 +15,7 @@ import {
   e2eRunning,
   history,
 } from './autocompleteTurn'
+import { backgroundConversations } from './backgroundConversations'
 import { barConversations, type ContinuedItem } from './barConversations'
 import type { ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
@@ -111,6 +113,8 @@ export type ChatItem =
       omittedFiles?: number
       /** The cloud computer could not read the changed files: none listed. */
       filesUnavailable?: true
+      /** A cause other than the end of the reply ended the turn. */
+      endReason?: TurnEndReason
     }
   | {
       /** A runner event that the workspace refused (decision 76). */
@@ -180,6 +184,7 @@ export const conversations: Readonly<
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...agentStopConversations(cutOffTurn),
+  ...backgroundConversations,
   ...linkedConversations,
   ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
   ...workspaceLinkConversations(history),

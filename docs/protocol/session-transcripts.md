@@ -4,7 +4,8 @@ This doc holds the requirements and the decisions in force for the copy of
 a session transcript. It covers the copy items of the tab menu, what each
 copy holds, the text of a copy, and where the text comes from.
 [Transcript routes](transcript-routes.md) states the route that gives the
-text, and the reads of the same text by agents. It belongs to
+text. [Transcript reads by agents](transcript-reads.md) states the reads
+of the same text by agents. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -102,7 +103,12 @@ at `app/tabs` and `app/transcripts`.
   [What the chat shows](chat-and-events.md#what-the-chat-shows) states
   these items.
 - Their lines use the words of the chat, such as the fold lines, the tool
-  verbs, and the lines of turn ends, stops, failures, and lost data.
+  verbs, and the lines of turn ends, end reasons, stops, failures, and lost
+  data.
+- A turn end with an end reason gives the line of that reason before its
+  duration and its files, in the order of the chat. An example is
+  "Background work stopped at the time limit", as
+  [What the chat shows](chat-and-events.md#what-the-chat-shows) says.
 - As in the chat, a run of tool calls shows open in the concise copy when
   the chat shows it open at first. That is the newest run of a running
   turn, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
@@ -205,5 +211,10 @@ at `app/tabs` and `app/transcripts`.
 
 ## The routes
 
-[Transcript routes](transcript-routes.md) states the route of a copy and
-the route of the reads by agents.
+[Transcript routes](transcript-routes.md) states the route of a copy.
+
+## Reads by agents
+
+[Transcript reads by agents](transcript-reads.md) states the route that
+gives the text of a session to the workspace token of a sandbox, for the
+`read_session` call, and the parts of a long text.

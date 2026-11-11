@@ -54,6 +54,9 @@ says.
     the workspace.
   - The computer tools do browser work on the desktop of the cloud
     computer, when the agent has them.
+  - No person uses that desktop. So the agent may bring a window to the
+    front and use foreground input without asking.
+  - Other sessions of the workspace share that desktop.
   - A member opens a port preview in the app by its port number.
   - The workspace tools create, list, get, rename, move, and archive the
     workspaces of the org. In each workspace of the org, they also start,
@@ -69,6 +72,12 @@ says.
     workspace list, for the workspaces of that member. Member IDs are for
     the arguments of the tools. An answer to a member names a member by
     name, not by member ID.
+- Reason for the desktop guidance: the computer tools follow the rules of
+  a person's own computer, and these rules ask the user before foreground
+  input. No member watches this desktop, because the app hides Desktop.
+  Agents that decide from each refusal of a tool were rejected, because
+  they spend calls on background input or ask a member. A guide that names
+  each computer tool was rejected, because the provider can change them.
 - The instructions never tell the agent to send a member to a tool that
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.

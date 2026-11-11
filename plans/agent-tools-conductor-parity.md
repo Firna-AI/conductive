@@ -664,6 +664,8 @@ Depends on: 3, 4, 5
 Evidence: `.context/agent-tools-conductor-parity/reports/m6-tools.md`
 and `.context/agent-tools-conductor-parity/checks/m6-final-orchestrator-tests.log`.
 
+Main integration notes: `.context/agent-tools-conductor-parity/merge-m6-docs-notes.md`.
+
 ## Milestone 7: The stop line in the app
 
 Tags: ui

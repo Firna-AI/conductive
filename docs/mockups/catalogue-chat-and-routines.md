@@ -41,6 +41,12 @@ could not read: a finished turn and a stopped turn
 without their changed files, All files with its saved list under a notice,
 and a new workspace with no list. The `tree` state draws the two states of
 All files.
+`app/chat/background-limit` draws a turn that waited for the background
+work of its agent, a watch of the checks of pull request #482. The checks
+still ran at the time limit, so the turn ends as finished, with
+"Background work stopped at the time limit" above its duration and its
+files. Its `waiting` variant draws the same turn before the limit, which
+shows as any running turn.
 
 `app/routines` lists the routines of Acme, which the Routines link below
 New workspace opens. Its child pages:

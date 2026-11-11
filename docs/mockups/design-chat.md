@@ -5,7 +5,8 @@ layouts, the design tokens, and the shared parts. This page gives workspace,
 session, and file chips with the list of `@`, attached files, and Markdown
 tables in replies and file previews. It gives the work fold of a turn and
 the line of a stopped turn. It also gives the data that the chat does not
-have, and the files that the cloud computer could not read.
+have, the files that the cloud computer could not read, and the end of a turn at the time limit of
+background work.
 
 - `AttachmentChips` in `src/components/chat/` draws each attached file as a
   chip: a glyph, the name, a label, and its actions. While a file uploads,
@@ -122,6 +123,20 @@ have, and the files that the cloud computer could not read.
   - The line is centred and muted, as `LostLine` is. A narrow chat wraps
     it into balanced lines, and the chip moves to the next line whole. It
     takes no fixtures, so the app can use it too.
+- A turn that waits for the background work of its agent shows as any
+  running turn, as `app/chat/background-limit/waiting` shows. When the
+  time limit stops that work, the turn still ends as finished, with its
+  duration and its files. One line above that row names the cause:
+  "Background work stopped at the time limit".
+  - `EndReasonLine` in `src/components/chat/` draws the line, centred and
+    muted as the other event lines, with a timer icon. `endReasonCopy.ts`
+    beside it holds the words of each end reason. The line takes no
+    fixtures, so the app can use it too.
+  - `TurnEnd` puts the line 8 px above the row, closer than two items of
+    the chat, so the two read as one end. The row keeps its own marks,
+    such as "Changed files unavailable".
+  - The words name what stopped, not the number of the limit, because the
+    member cannot change it.
 
 ## Workspace, session, and file chips
 

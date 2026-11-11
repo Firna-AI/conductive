@@ -116,7 +116,7 @@ it('rechecks revoked access after capability reads and before post-merge publica
   if (!job) throw new Error('Missing fake job.')
   job.state = 'merged'
   fixture.harness.api.onRequest = async (operation) => {
-    if (operation === 'BannerReviews')
+    if (operation === 'BannerLookup')
       await fixture.env.DB.prepare(
         'UPDATE workspaces SET archived_at = 1',
       ).run()

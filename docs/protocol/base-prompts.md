@@ -1,7 +1,8 @@
 # Base prompts
 
 This doc holds the requirements and the decisions in force for the base
-prompts of the agents. A base prompt holds the general rules for work that
+prompt of Claude agents and the base instructions of Codex agents.
+A base prompt holds the general rules for work that
 an agent gets before the agent instructions. It belongs to
 [Agent instructions](agent-instructions.md), which states the agent
 instructions, and how long a session keeps them. The terms are those of
@@ -9,7 +10,9 @@ the [architecture doc](../architecture.md#terms). A decision number names
 a dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
 
-## The base prompt of Claude agents
+## Base prompts
+
+### The base prompt of Claude agents
 
 - A Claude agent gets a short base prompt of the app, then the agent
   instructions, as one text of system instructions.
