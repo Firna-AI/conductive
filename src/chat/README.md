@@ -271,7 +271,9 @@ check in the Mac app.
   it with the chat API of the controller.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
-  responses.
+  responses. `api/read-chat.ts` copies a known `endReason` of a turn end,
+  and drops an unknown value. `api/read-changed-file.ts` reads the changed
+  files of a turn end, with their real paths and display labels.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer

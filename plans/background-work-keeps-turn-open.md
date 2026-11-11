@@ -189,6 +189,19 @@ Design calls:
   the last task already ended. Reason: agent work after a wake-up counts,
   and the approved design applies an elapsed limit at the reply end.
 
+- 11 November 2026, the non-UI implementor's call: the shared chat event
+  contract owns `TurnEndReason`. The mockup imports that type. Reason:
+  one contract serves the runner, Worker, browser, and mockup.
+- 11 November 2026, the non-UI implementor's call: unknown optional reasons
+  are omitted, as `filesUnavailable` is. Reason: adding a reason must not
+  make older or unrecognized optional data reject an otherwise valid end.
+- 11 November 2026, the non-UI implementor's call: transcript text reads
+  the reason from the existing full completion record. Reason: a second
+  value on each transcript item would duplicate that state.
+- 11 November 2026, the non-UI implementor's call: the unchanged browser
+  changed-file reader moves into its own module. Reason: `read-chat.ts`
+  stays below the 300-line limit.
+
 Risks:
 
 - While a turn waits, each process in the sandbox can still read its turn
@@ -247,12 +260,17 @@ Milestone 7 adds the new behavior to the chat guide.
 
 Depends on: 2
 
-- [ ] Add optional `endReason: background_work_limit` to `turn.completed` in
+- [x] Add optional `endReason: background_work_limit` to `turn.completed` in
       `src/shared/chat-events.ts` and in the runner contract.
-- [ ] Accept and store it in the Worker, in `worker/chat/agent-events.ts`
+- [x] Keep the reason through runner event persistence and redelivery, in
+      `runner/src/stored-events.ts`, with a focused persistence test.
+- [x] Accept and store it in the Worker, in `worker/chat/agent-events.ts`
       and its neighbours. Keep it in session transcripts and in
       `read_session` output.
-- [ ] Add Worker and shared tests for a turn end with and without it.
+- [x] Add Worker and shared tests for a turn end with and without it.
+
+Evidence: `.context/background-work-keeps-turn-open/milestone-3-report.md`.
+README check: `.context/background-work-keeps-turn-open/m3-readmes-report.md`.
 
 ## Milestone 4: Hold the turn while background work runs
 

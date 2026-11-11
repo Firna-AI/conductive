@@ -1,5 +1,6 @@
 import { TimerOff, type LucideIcon } from 'lucide-react'
-import { endReasonText, type TurnEndReason } from './endReasonCopy'
+import type { TurnEndReason } from '../../../../../src/shared/chat-events'
+import { endReasonText } from './endReasonCopy'
 import styles from './LinkedLine.module.css'
 
 const icons: Readonly<Record<TurnEndReason, LucideIcon>> = {

@@ -79,6 +79,8 @@ through that cutoff in a separate `ChatStore.run` task. Runner events and
 writes can proceed between pages. The captured session record stays fixed.
 The shared `SessionMarkdown` folds pages and renders both kinds of copy.
 It uses the same grouping, command placement, and words as browser chat.
+It puts the line of a turn's end reason before the duration and the changed
+files of that turn.
 The route keeps no generated transcript in storage.
 
 `buildSessionTranscript` also serves the workspace tools through trusted workspace RPCs.

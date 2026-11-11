@@ -3,7 +3,7 @@
  */
 
 import type { TableCells } from '../../../../src/markdown/table-rows'
-import type { TurnEndReason } from '../components/chat/endReasonCopy'
+import type { TurnEndReason } from '../../../../src/shared/chat-events'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
