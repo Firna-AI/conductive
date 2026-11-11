@@ -19,7 +19,7 @@ import {
 } from '../../fixtures/pullRequests'
 import type { ButtonTint } from '../common/tint'
 
-type PrTone = 'neutral' | 'success' | 'warning' | 'danger'
+type PrTone = 'neutral' | 'success' | 'warning' | 'danger' | 'merged'
 
 export type PrStatus = {
   /** A spinner shows while checks run. */
@@ -81,7 +81,7 @@ export function prStatus(state: PullRequestState): PrStatus {
         icon: GitMerge,
         text: `Merged into ${mergedInto.branch}`,
         detail: mergedInto.when,
-        tone: 'neutral',
+        tone: 'merged',
       }
     case 'conflict':
       return {

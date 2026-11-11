@@ -11,7 +11,7 @@ of a workspace number with Copy link.
   workspace chips show. It is a 3 × 3 dot-matrix square in one colour for
   the GitHub state of the pull request: rose when checks failed, amber
   while checks run, the success green when checks passed, and the
-  `merged` purple after the merge. Without a GitHub state, every cell is
+  `listMerged` purple after the merge. Without a GitHub state, every cell is
   dim grey. An archived workspace keeps faint grey cells, whatever its
   GitHub state. A light runs around the ring while the agent works, and the
   centre cell stays dim. The whole square pulses while the agent waits for

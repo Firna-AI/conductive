@@ -21,7 +21,7 @@ export type PullRequestBanner = Extract<
 >
 
 /** A state tints the whole bar. Its edges stay neutral. */
-type BannerTone = 'neutral' | 'success' | 'warning' | 'danger'
+type BannerTone = 'neutral' | 'success' | 'warning' | 'danger' | 'merged'
 
 export interface BannerStatus {
   /** A spinner stands in place of the icon while checks run. */
@@ -84,7 +84,7 @@ export function bannerStatus(
     case 'ready-to-merge':
       return still(CircleCheck, 'Ready to merge', 'success')
     case 'merged':
-      return still(GitMerge, `Merged into ${banner.baseBranch}`, 'neutral')
+      return still(GitMerge, `Merged into ${banner.baseBranch}`, 'merged')
     case 'conflict':
       return still(GitMergeConflict, 'Merge conflict', 'warning')
     case 'changes-requested':
