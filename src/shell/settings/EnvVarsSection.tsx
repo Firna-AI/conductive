@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { secretNote } from '../../../docs/mockups/src/components/settings/envVarCopy'
@@ -16,6 +16,7 @@ import { mayChangeSettings } from '../../app/permissions'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess } from '../context'
 import { ActionButton, IconButton } from '../ui/actions'
+import { useInlineForms, type FocusRef } from '../ui/inline-form'
 import { useAction } from '../ui/useAction'
 import { AddVariableForm, ChangeValueRow } from './EnvVarForms'
 import { MarkSwitch, useMark, type EnvVar } from './EnvVarMark'
@@ -46,12 +47,14 @@ function ReadOnlyEnvVarRow(props: { item: EnvVar }) {
 
 /**
  * The row of a variable with its Secret switch, Change, and Delete. While
- * a write of the row runs, the other controls of the row wait.
+ * a write of the row runs, the other controls of the row wait. `changeRef`
+ * gets Change, which the form of a new value gives the focus back to.
  */
 function EditableEnvVarRow(props: {
   item: EnvVar
   computer: ComputerModel
   change: () => void
+  changeRef: FocusRef
 }) {
   const { item, computer } = props
   const mark = useMark(computer, item)
@@ -67,6 +70,7 @@ function EditableEnvVarRow(props: {
       <ValueDots />
       <span className={styles.actions}>
         <IconButton
+          buttonRef={props.changeRef}
           disabled={busy}
           icon={Pencil}
           label={`Change the value of ${item.name}`}
@@ -104,20 +108,30 @@ function SecretNote() {
   return <SectionText muted>{secretNote}</SectionText>
 }
 
+/** The key of the one form that adds a variable. */
+const newVariable = 'new'
+
 /**
  * The variables for a person who may change them: Add variable, and the
  * Secret switch, Change, and Delete in each row. The open forms live in
  * this part, so they close when the permission ends, as after a save that
- * the API refuses because the org is suspended.
+ * the API refuses because the org is suspended. Each form is an inline form
+ * of `useInlineForms`: Add variable and Change give it the focus, and it
+ * gives the focus back to them.
  */
 function EnvVarsEditor(props: EnvVarsProps) {
-  const [changing, setChanging] = useState<string | null>(null)
-  const [adding, setAdding] = useState(false)
+  const changing = useInlineForms<string>()
+  const adding = useInlineForms<typeof newVariable>()
+  const addOpen = adding.open === newVariable
   return (
     <Section
       actions={
-        adding ? undefined : (
-          <ActionButton icon={Plus} onPress={() => setAdding(true)}>
+        addOpen ? undefined : (
+          <ActionButton
+            buttonRef={adding.button(newVariable)}
+            icon={Plus}
+            onPress={() => adding.show(newVariable)}
+          >
             Add variable
           </ActionButton>
         )
@@ -127,16 +141,18 @@ function EnvVarsEditor(props: EnvVarsProps) {
     >
       <EnvVarList
         row={(item) =>
-          changing === item.name ? (
+          changing.open === item.name ? (
             <ChangeValueRow
-              close={() => setChanging(null)}
+              close={changing.close}
               computer={props.computer}
+              focus={changing.focus(item.name)}
               item={item}
               key={item.name}
             />
           ) : (
             <EditableEnvVarRow
-              change={() => setChanging(item.name)}
+              change={() => changing.show(item.name)}
+              changeRef={changing.button(item.name)}
               computer={props.computer}
               item={item}
               key={item.name}
@@ -145,11 +161,12 @@ function EnvVarsEditor(props: EnvVarsProps) {
         }
         vars={props.vars}
       />
-      {props.vars.length > 0 || adding ? <SecretNote /> : null}
-      {adding ? (
+      {props.vars.length > 0 || addOpen ? <SecretNote /> : null}
+      {addOpen ? (
         <AddVariableForm
-          close={() => setAdding(false)}
+          close={adding.close}
           computer={props.computer}
+          focus={adding.focus(newVariable)}
         />
       ) : null}
     </Section>

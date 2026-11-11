@@ -152,9 +152,10 @@ the command palette and of the Feedback dialog.
   no read acts as the answer of the save. When the save succeeds, each
   field that still equals what went out takes the field of the latest
   saved value. When the save fails, the draft stays.
-- An inline form takes the place of the button that opens it, such as the
-  Connect form of an agent (`useInlineForms`). A press of the button gives
-  the form the focus, on its first control. A part that takes the
+- An inline form takes the place of the button that opens it: the Connect
+  form of an agent, and Add variable and Change of the env vars
+  (`useInlineForms`). A press of the button gives the form the focus, on
+  its first control or on the field of a new value. A part that takes the
   focus as the form shows keeps it, such as the first line of the ChatGPT
   sign-in. When the form closes, the focus goes back to the button. When
   the button is gone, as after a connect, the name of the agent takes it.

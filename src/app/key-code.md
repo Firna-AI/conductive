@@ -258,6 +258,6 @@ Each path is relative to `src/app/`, the folder of this page.
 - `../shell/ui/inline-form.ts`: `useInlineForms`, the open form of one
   part, with the refs of the buttons that open its forms and of their
   fallbacks, and `useInlineFormFocus`, which each inline form calls on its
-  root. The Connect forms of the agents use them.
+  root. The Connect forms of the agents and the env var forms use them.
 - `../shell/orgs/`: Create org and the name and initials fields.
   `../shell/settings/RepositorySearch.tsx`: the searchable repository list.
