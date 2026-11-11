@@ -28,7 +28,12 @@ import { advanceBuildStep } from './image-build-steps'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import type { SourceCommandPort } from './image-sources/source-commands'
 import { requireOrgMember } from './access'
-import { jobSoftware, readBuildJob, runningBuild } from './build-data'
+import {
+  jobSoftware,
+  readBuildJob,
+  readLatestGoodBuild,
+  runningBuild,
+} from './build-data'
 import { cleanupBuild } from './build-execution'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { IMAGE_DAY_MS } from './image-schedule'
@@ -109,15 +114,18 @@ export async function startImageBuild(
   }
   const settings = await readImageSettings(env.DB, input.orgId)
   const image = await readOrgImage(env.DB, input.orgId, providerAccount)
-  if (input.kind === 'refresh' && !image?.imageName)
+  const previous =
+    input.kind === 'refresh'
+      ? await readLatestGoodBuild(env.DB, input.orgId, providerAccount)
+      : image?.imageBuildId
+        ? await readBuildJob(env.DB, input.orgId, image.imageBuildId)
+        : null
+  if (input.kind === 'refresh' && (!image?.imageName || !previous))
     throw new HttpError(
       409,
       'image_required',
       'Build the cloud computer image first.',
     )
-  const previous = image?.imageBuildId
-    ? await readBuildJob(env.DB, input.orgId, image.imageBuildId)
-    : null
   const previousRepositories = previous
     ? readRepositories(JSON.parse(previous.repositoriesJson))
     : []
@@ -155,13 +163,9 @@ export async function startImageBuild(
           : settings.installScript,
       repositories,
       repositoryLocations: locations,
-      previousRepositoryLocations:
-        input.kind === 'build' ? [] : previousLocations,
+      previousRepositoryLocations: [],
       software,
-      softwareVersion:
-        input.kind === 'build'
-          ? await softwareVersion(software)
-          : (previous?.softwareVersion ?? undefined),
+      softwareVersion: await softwareVersion(software),
       installScriptRevision:
         input.kind === 'refresh' ? previous?.installScriptRevision : undefined,
       refreshCause:

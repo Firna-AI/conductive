@@ -17,9 +17,9 @@ import { repositoryShellFixture } from './repository-shell-test-support'
 
 const fixtureForTest = setupBackendTests()
 
-it('runs the sample install script in named image repositories and keeps installed dependencies through refresh', async () => {
+it('runs the sample install script in named repositories and reinstalls dependencies on a clean refresh', async () => {
   const fixture = fixtureForTest()
-  const local = await repositoryShellFixture()
+  let local = await repositoryShellFixture()
   try {
     const { runtime, org, user, images, boat } = fixture
     await runtime.env.DB.batch([
@@ -129,6 +129,8 @@ it('runs the sample install script in named image repositories and keeps install
       'CONDUCTIVE_REPOSITORY_MARKETING_SITE_DIR',
       'CONDUCTIVE_REPOSITORY_STOREFRONT_DIR',
     ])
+    await local.dispose()
+    local = await repositoryShellFixture()
     await runtime.env.DB.prepare('UPDATE repositories SET selected = 0').run()
     const refresh = await startImageBuild(images, {
       orgId: org.id,
@@ -139,9 +141,7 @@ it('runs the sample install script in named image repositories and keeps install
     await finishImageBuild(fixture, refresh)
     const refreshed = await readBuildJob(runtime.env.DB, org.id, refresh)
     expect(refreshed.repositoryLocationsJson).toBe(job.repositoryLocationsJson)
-    expect(refreshed.previousRepositoryLocationsJson).toBe(
-      job.repositoryLocationsJson,
-    )
+    expect(refreshed.previousRepositoryLocationsJson).toBe('[]')
     expect(prepared).toEqual([
       [
         '/home/user/code/billing-service',
@@ -154,7 +154,7 @@ it('runs the sample install script in named image repositories and keeps install
         '/home/user/code/storefront',
       ],
     ])
-    expect(installs).toEqual([0])
+    expect(installs).toEqual([0, 0])
     expect(
       await local.read('/home/user/code/storefront/node_modules/installed'),
     ).toBe('installed')

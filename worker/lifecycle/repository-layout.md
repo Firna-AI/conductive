@@ -35,7 +35,7 @@ the folder map:
 | Column | Value |
 | --- | --- |
 | `image_build_jobs.repository_locations_json` | The map of the image that the job makes. |
-| `image_build_jobs.previous_repository_locations_json` | For a refresh, the map of the published image when the job started. A build stores an empty map. |
+| `image_build_jobs.previous_repository_locations_json` | An empty map for each new build and refresh, because both start on a clean machine. |
 | `workspace_creation_plans.repositories_json` | The repositories of the published image that a creation claim captures. |
 | `workspace_creation_plans.repository_locations_json` | The map of that published image. |
 | `workspace_runtime.repository_locations_json` | The map of the workspace. |
@@ -44,7 +44,8 @@ the folder map:
 
 - A build makes a new map with `repositoryLocations` in `startImageBuild`,
   and an empty previous map, because it starts on a clean machine. A
-  refresh copies the map of the published image as both maps.
+  refresh copies the map of the newest successful build and stores an
+  empty previous map too.
 - The plan statement of `claimCreation` copies the repositories and the
   map of the published image. It runs in the same D1 batch as the claim.
   So a later build or a later change of the chosen repositories cannot
@@ -239,8 +240,9 @@ the GitHub token mint and revoke, and it tracks the scope and the life of
 each token.
 
 - `image-sources/local-materialize.test.ts` clones default history and tags,
-  refreshes captured folders, and clones an empty repository. A refresh
-  keeps installed dependencies and local Git settings. The test fails when
+  reloads captured folders, and clones an empty repository. The source
+  loader can keep dependencies and local Git settings in an existing
+  folder. Image jobs give it fresh folders. The test fails when
   a checkout starts while a token is active.
 - `image-sources/credential.test.ts` checks the one-repository read token,
   a replayed or concurrent grant claim, the current owner, and the private
@@ -258,8 +260,8 @@ each token.
   and their collisions.
 - `repository-layout.test.ts` loads token-free sources with the native
   finalization command. It runs the sample install script of the mockups
-  in the named folders, and keeps installed dependencies through a
-  refresh. The folder variables reach the install command only through a
+  in the named folders, and reinstalls dependencies on a clean refresh.
+  The folder variables reach the install command only through a
   private `env.sh` file, as in a real build sandbox.
 - `repository-capture.test.ts` keeps the workspace map at a resume and a
   disk retention restart, after a later choice of repositories changes the

@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { orgSettingsPaths } from '../../src/shared/org-settings'
+import { buildPath, orgSettingsPaths } from '../../src/shared/org-settings'
 import { seedReadySoftwareImage } from '../software-image/test-support'
 import { softwareVersion } from '../software-image/version'
 import { TEST_TIME } from '../test-support/harness'
@@ -60,58 +60,75 @@ it.each(['software image', 'software step'] as const)(
   },
 )
 
-it('publishes the software and script revisions that a refresh inherits', async () => {
-  const fixture = fixtureForTest()
-  const { images, org, user } = fixture
-  const db = images.env.DB
-  await db.batch([
-    db
-      .prepare(
-        `UPDATE image_builds SET software_version = 'inherited-software',
+it.each(['software image', 'software step'] as const)(
+  'publishes the current software version and built script revision after a refresh from the %s',
+  async (source) => {
+    const fixture = fixtureForTest()
+    const { images, org, user } = fixture
+    const db = images.env.DB
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE image_builds SET software_version = 'inherited-software',
        install_script_revision = ? WHERE id = 'published-image'`,
-      )
-      .bind(firstScriptRevision),
-    db
-      .prepare(
-        `UPDATE image_build_jobs SET software_version = 'inherited-software',
+        )
+        .bind(firstScriptRevision),
+      db
+        .prepare(
+          `UPDATE image_build_jobs SET software_version = 'inherited-software',
        install_script_revision = ?, install_script = ? WHERE build_id = 'published-image'`,
-      )
-      .bind(firstScriptRevision, 'echo first-install\n'),
-    db
-      .prepare('UPDATE settings SET install_script = ? WHERE org_id = ?')
-      .bind('echo next-install\n', org.id),
-  ])
-  const id = await startImageBuild(images, {
-    orgId: org.id,
-    userId: user.id,
-    kind: 'refresh',
-    software: { ...SOFTWARE, sha256: 'b'.repeat(64) },
-  })
-  await finishImageBuild(fixture, id)
-  expect(
-    await db
-      .prepare(
-        `SELECT software_version AS softwareVersion,
+        )
+        .bind(firstScriptRevision, 'echo first-install\n'),
+      db
+        .prepare('UPDATE settings SET install_script = ? WHERE org_id = ?')
+        .bind('echo next-install\n', org.id),
+    ])
+    const software = { ...SOFTWARE, sha256: 'b'.repeat(64) }
+    const version = await softwareVersion(software)
+    const name =
+      source === 'software image'
+        ? await seedReadySoftwareImage(db, 'refresh-software', { version })
+        : undefined
+    const id = await startImageBuild(images, {
+      orgId: org.id,
+      userId: user.id,
+      kind: 'refresh',
+      software,
+    })
+    await finishImageBuild(fixture, id)
+    expect(fixture.boat.starts[0].from).toBe(name)
+    expect(
+      fixture.boat.commandRequests.filter((command) => command.detached),
+    ).toHaveLength(source === 'software image' ? 1 : 2)
+    expect(
+      await db
+        .prepare(
+          `SELECT software_version AS softwareVersion,
          install_script_revision AS installScriptRevision FROM image_builds WHERE id = ?`,
-      )
-      .bind(id)
-      .first(),
-  ).toEqual({
-    softwareVersion: 'inherited-software',
-    installScriptRevision: firstScriptRevision,
-  })
-  expect(await readOrgImage(db, org.id)).toMatchObject({
-    imageBuildId: id,
-    softwareVersion: 'inherited-software',
-    installScriptRevision: firstScriptRevision,
-  })
-})
+        )
+        .bind(id)
+        .first(),
+    ).toEqual({
+      softwareVersion: version,
+      installScriptRevision: firstScriptRevision,
+    })
+    expect(await readOrgImage(db, org.id)).toMatchObject({
+      imageBuildId: id,
+      softwareVersion: version,
+      installScriptRevision: firstScriptRevision,
+    })
+  },
+)
 
 it.each(['request', 'push', 'daily', 'pending push'] as const)(
   'records the %s refresh cause at admission and sends it with the history',
   async (cause) => {
     const fixture = fixtureForTest()
     const { images, org, user } = fixture
+    await seedReadySoftwareImage(images.env.DB)
+    await images.env.DB.prepare(
+      "UPDATE image_build_jobs SET install_script = 'echo built-install' WHERE build_id = 'published-image'",
+    ).run()
     if (cause === 'request') {
       const response = await handleLifecycleRequest(
         new Request(
@@ -177,5 +194,51 @@ it.each(['request', 'push', 'daily', 'pending push'] as const)(
         .bind(build.id)
         .first('refresh_cause'),
     ).toBe(refreshCause)
+    await finishImageBuild(fixture, build.id)
+    const historyResponse = await handleLifecycleRequest(
+      new Request(
+        `https://app.conductive.test${orgSettingsPaths.builds(org.id)}`,
+      ),
+      { org, user, sessionId: 'test-session', body: {} },
+      { ...fixture.runtime, images },
+      {
+        software: SOFTWARE,
+        acceptFirstMessage: async () => {
+          throw new Error('This request creates no workspace')
+        },
+        waitUntil: () => {},
+      },
+    )
+    expect(await historyResponse?.json()).toMatchObject({
+      builds: [
+        {
+          id: build.id,
+          kind: 'refresh',
+          refreshCause,
+          state: 'succeeded',
+          error: null,
+        },
+        { id: 'published-image', kind: 'build' },
+      ],
+      currentImageBuildId: build.id,
+    })
+    const detail = await handleLifecycleRequest(
+      new Request(`https://app.conductive.test${buildPath(org.id, build.id)}`),
+      { org, user, sessionId: 'test-session', body: {} },
+      { ...fixture.runtime, images },
+      {
+        software: SOFTWARE,
+        acceptFirstMessage: async () => {
+          throw new Error('This request creates no workspace')
+        },
+        waitUntil: () => {},
+      },
+    )
+    expect(await detail?.json()).toMatchObject({
+      build: { kind: 'refresh', refreshCause, state: 'succeeded' },
+      log: expect.arrayContaining([
+        expect.objectContaining({ text: 'Running the install script.\n' }),
+      ]),
+    })
   },
 )

@@ -1,10 +1,11 @@
 # Sandbox software
 
 This folder holds the app's own sandbox software. A software image build
-installs it once for each app software version. Each org build from that
-image skips the software step. Without a matching ready software image, an
-org build installs it itself, after the repository copy and before the
-org's install script. The org image is the saved snapshot that every new
+installs it once for each app software version. Each org build or refresh
+from that image skips the software step. Without a matching ready software
+image, an org build or refresh installs it itself, after the repository copy and
+before the org's install script. An empty install script skips the install
+step and its log entry. The org image is the saved snapshot that every new
 sandbox of an org starts from.
 In a workspace sandbox, this software starts the agent runner and the
 preview relay. It also
@@ -32,8 +33,9 @@ archive packager and the live check.
 The [terminal backend](../worker/terminal/README.md) owns ttyd, tmux, their
 services, the terminal launcher, and the local password. It also owns the
 shell server, which keeps the workspace shell in tmux. The software step of
-each software image build and each org build that needs it runs that area's `terminalInstallCommand()` after
-`install.sh`. The build log shows the output of both. The terminal
+each software image build and each org build or refresh that needs it runs
+that area's `terminalInstallCommand()` after `install.sh`.
+The build log shows the output of both. The terminal
 installer installs the `ttyd` and `tmux` packages with `apt-get`. It
 enables the terminal service and starts nothing.
 
@@ -92,7 +94,8 @@ paths, and its update steps.
 
 [Install in a build](install.md) describes the software step of an image
 build: the staged scripts, the private Node, and the steps of `install.sh`.
-A refresh and each build from a software image skip that step.
+Each build or refresh from a software image skips that step.
+Without that image, both run the software step after the repository copy.
 The [software image backend](../worker/software-image/README.md) builds the shared image.
 A workspace gets the relay only from a new image build.
 An existing workspace keeps the software of its image, also after a resume.

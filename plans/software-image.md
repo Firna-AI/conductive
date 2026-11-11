@@ -965,30 +965,31 @@ Depends on: 3
 - [x] Pin the ready software image for a later build, as for a first
       build, and copy each repository fresh. Branch:
       `conductor/later-builds-from-software-image`, PR #194.
-- [ ] Skip the install step when the install script is empty.
+- [x] Skip the install step when the install script is empty.
 - [x] Tests: a later build with a ready software image starts from it and
       runs no software command. A later build without one runs the
       software step after the copy. Branch:
       `conductor/later-builds-from-software-image`, PR #194.
-- [ ] Test: a build with an empty script runs no install command.
+- [x] Test: a build with an empty script runs no install command.
 - [x] Update `image/install.md`, `worker/lifecycle/README.md`, and
       `worker/lifecycle/image-builds.md` for the later build. Branch:
       `conductor/later-builds-from-software-image`, PR #194.
-- [ ] Update the same docs for the skip of an empty install script.
+- [x] Update the same docs for the skip of an empty install script.
 
 ## Milestone 5: Clean refreshes
 
 Depends on: 4
 
-- [ ] Run each refresh as a clean build with the install script and the
+- [x] Run each refresh as a clean build with the install script and the
       repositories of the newest good build.
-- [ ] Delete the start from the last org image for image jobs.
-- [ ] Return refreshes to the Cloud computer tab with their log and their
+- [x] Delete the start from the last org image for image jobs.
+- [x] Return refreshes to the Cloud computer tab with their log and their
       result.
-- [ ] Tests: a refresh after a push and a daily refresh start from the
+- [x] Tests: a refresh after a push and a daily refresh start from the
       software image and run the install script of the newest good build.
       A saved script change does not reach a refresh. A failed refresh
       keeps the last good image.
+      Evidence: `.context/software-image/clean-refresh/report.md`.
 
 ## Milestone 6: Parallel copies
 

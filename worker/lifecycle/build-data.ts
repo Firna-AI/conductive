@@ -109,6 +109,22 @@ export async function runningBuild(
   return row?.id ?? null
 }
 
+export async function readLatestGoodBuild(
+  db: D1Database,
+  orgId: string,
+  providerAccount: string,
+): Promise<BuildJob | null> {
+  const row = await db
+    .prepare(
+      `SELECT id FROM image_builds WHERE org_id = ? AND provider_account = ?
+       AND kind = 'build' AND state = 'succeeded'
+       ORDER BY started_at DESC, id DESC LIMIT 1`,
+    )
+    .bind(orgId, providerAccount)
+    .first<{ id: string }>()
+  return row ? readBuildJob(db, orgId, row.id) : null
+}
+
 export async function updateBuildJob(
   db: D1Database,
   buildId: string,

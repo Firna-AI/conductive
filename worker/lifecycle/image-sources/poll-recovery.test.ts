@@ -33,6 +33,12 @@ afterAll(async () => {
 
 it('keeps a native source fetch after a temporary status error and resumes without repeating commands', async () => {
   const fixture = await localSourceFixture(harness, privateKey)
+  // An empty install script skips the install step, so give this build one.
+  await fixture.env.DB.prepare(
+    "UPDATE image_build_jobs SET install_script = 'true' WHERE build_id = ?",
+  )
+    .bind(fixture.input.buildId)
+    .run()
   const claim = heldOperation()
   try {
     const { runtime, boat } = await nativeImageRuntime(fixture)

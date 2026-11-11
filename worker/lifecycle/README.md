@@ -73,7 +73,11 @@ turn repair from the committed chat and the one writer of the shown state.
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
 The [software image area](../software-image/README.md) builds the shared
-image that each build uses when a matching version is ready.
+image that each build and refresh uses when a matching version is ready.
+Each job copies its repositories into fresh folders and runs its install
+script. An empty script skips the install step and its log entry.
+Refreshes keep the repositories, folders, and install script of the newest
+successful build. Saved script changes wait for a build.
 
 ## Settings
 
@@ -115,7 +119,8 @@ functions of the lifecycle that a reader opens first.
 - [build-admission-data.ts](build-admission-data.ts): `insertBuild` pins the
   software version and install script revision in the job. `publishBuild`
   copies them to the published build in the same D1 batch as the org image
-  pointer. A refresh that starts from an org image inherits its records.
+  pointer. Builds and refreshes record the current software and runner
+  versions. A refresh keeps the script revision of the newest good build.
 - [image-records.ts](image-records.ts): `installScriptRevision` hashes the
   exact saved script text. Its types add `refreshCause` to build history
   and build responses. New refreshes record `push`, `daily`, or `request`
