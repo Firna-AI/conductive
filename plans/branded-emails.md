@@ -21,6 +21,9 @@ The change does not cover these:
 - A DMARC record for `conductive.build`. BIMI needs one, and the domain
   has none.
 - New kinds of email.
+- The feedback email to the team inbox. Only the team reads it, and
+  `docs/protocol/feedback.md` states it. It keeps its plain text and the
+  reply address of the person who sent the feedback.
 - The log of failed sends, in `plans/follow-ups/mail-failure-reason-not-logged.md`.
 - The shared helper for outside requests, in
   `plans/follow-ups/worker-outbound-request-helper.md`.
@@ -131,7 +134,7 @@ decision 4. It changed the recommendations of decisions 3 and 4.
   - Receiving mail on `mail.conductive.build` through Resend. It adds a new system for a rare case, and B gets the same result with the Google mail that the domain already has.
   - An MX record that sends mail for `mail.conductive.build` to Google. B gets the same result with one header.
   - A sender on the main domain. It breaks the sender rule of `docs/protocol/waitlist.md`.
-- **Wider fix:** B. The shared mail sender sets the reply address on every message, so each later email gets it by default.
+- **Wider fix:** B. The shared message builder sets the reply address of every branded email, so each later branded email gets it by default. The feedback email to the team keeps the reply address of the person.
 - **Previous examples:** None found.
 - **Related:** Decision 1 changes the same code. Decision 4 exists also because `reply_to` changes the request of each pending approval email.
 - **Recommendation:** B. A person reads each question, and the address uses the Google mail that the domain already has.
@@ -297,7 +300,8 @@ inviter's name, and the initials.
   never goes into the From line. Reason: users write their GitHub name, so
   it could pretend to be someone else.
 - Both emails set Reply-To to `hello@conductive.build`, from decision 2.
-  The address comes from `productDomain` in `docs/mockups/src/brand.ts`.
+  The message builder passes `replyAddress` of the words module to the
+  mail sender, which already takes a reply address for each message.
 - No email tracks the reader. Resend's open and click tracking stay off
   for `mail.conductive.build`, and no link or image holds an ID of the
   reader. Reason: the Privacy page does not cover tracking, and click
@@ -398,7 +402,9 @@ Depends on: 1
 
 The protocol docs state the rules of the emails before the Worker changes.
 
-- [ ] Create `docs/protocol/emails.md`. State the sender, the reply
+- [ ] Create `docs/protocol/emails.md` for the emails to people: the org
+      invitation and the approval email. Link to `docs/protocol/feedback.md`
+      for the feedback email to the team. State the sender, the reply
       address, the parts of each email, the text part, the light design
       with dark colours, the escaped names, the app address of the
       deployment in each link, and no tracking. State the subject and the
@@ -433,8 +439,8 @@ Milestone 4.
       Run `npm run typecheck` and `npm run build`.
 - [ ] Add the builder module beside `worker/mail-sender.ts`, as the design
       says.
-- [ ] Make the mail sender send `html` when a message has it, the text,
-      and `reply_to`.
+- [ ] Make the mail sender send `html` when a message has it. Keep its
+      sender, reply address, and attachments for the feedback email.
 - [ ] Move the invitation mailer to the builder, and delete its inline
       text. The invitation route also passes the inviter's GitHub login
       and the org's initials.
