@@ -169,7 +169,7 @@ describe('workspace chat event delivery', () => {
     expect(history.throughEventNumber).toBe(all.throughEventNumber)
     expect(history.events.at(-1)?.event.type).not.toBe('workspace.title')
   })
-  it('sends every history page before a concurrent live event and pages empty session projections', async () => {
+  it('sends every history page before a concurrent live event and reads a session through its cutoff in one page', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
     await fixture.changeWorkspace(WORKSPACE_ID, async (transaction) => {
@@ -208,29 +208,19 @@ describe('workspace chat event delivery', () => {
     const first = await fixture.fetch(
       chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id),
     )
-    expect(await first.json()).toMatchObject({
+    const page: unknown = await first.json()
+    expect(page).toEqual({
       throughEventNumber: 72,
-      hasMore: true,
-      nextAfterEventNumber: 32,
       events: [expect.objectContaining({ eventNumber: 1 })],
     })
     await fixture.appendWorkspaceEvent(WORKSPACE_ID, {
       type: 'workspace.title',
       name: 'After the snapshot',
     })
-    const second = await fixture.fetch(
-      chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, 32, 72),
+    const again = await fixture.fetch(
+      chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, 0, 72),
     )
-    expect(await second.json()).toEqual({
-      throughEventNumber: 72,
-      hasMore: true,
-      nextAfterEventNumber: 64,
-      events: [],
-    })
-    const final = await fixture.fetch(
-      chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, 64, 72),
-    )
-    expect(await final.json()).toEqual({ throughEventNumber: 72, events: [] })
+    expect(await again.json()).toEqual(page)
     await tab.close()
   })
 })

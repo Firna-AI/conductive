@@ -1,0 +1,32 @@
+# Chat requests wait behind the sandbox start
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, from branch `calummoore/chat-loading-issue`, item 2, after the user waited a long time for the chat during a sandbox start.
+- **Location:** the browser request at `worker/chat/browser-request.ts:32`, the lifecycle alarm at `worker/workspace-lifecycle.ts:279`, and the alarm interval of a start at `worker/lifecycle/workspace-alarm.ts:118`.
+- **Reason:** No option is clearly best until a measurement shows how long chat requests wait during a start, now that a session needs few history requests.
+
+- **Terms:**
+  - **Chat queue:** `ChatStore.run` in `worker/chat/store.ts`, the one serial queue of the workspace's Durable Object. It runs one task at a time.
+  - **Lifecycle alarm:** the timer of the workspace's Durable Object that moves a sandbox start forward by one step.
+  - **History request:** the browser request for the stored events of one session, at `chatHistoryPath` of `src/shared/events.ts`.
+- **Background:**
+  - Every chat request from the browser runs in the chat queue: the session list, each history request, and each send.
+  - The lifecycle alarm runs in the same queue, through `alarmLifecycle` of `worker/workspace-lifecycle.ts`.
+  - During a start, the alarm runs again about one second after each step. Each run reads the database and calls the sandbox provider, such as a state read or a command status read.
+  - When a tab opens a workspace, the chat first reads the session list and the workspace record, and shows "Loading the chat" until they arrive. Then the open session shows "Loading the session" until the first page of its history arrives, and the later pages follow.
+  - Since 11 November 2026, one history request of the browser reads up to 2,048 stored events. Before, it read 32, so a long history needed hundreds of requests, and each of them could wait for an alarm run.
+- **Problem:** While the cloud computer starts, each chat request can wait until the running alarm step ends. The chat and the history of a workspace that opens during a start therefore load more slowly than after the start.
+- **Impact if no action:** Each request of the chat load can wait for one alarm run. With few history requests, the extra wait is likely a few alarm runs, but nobody has measured it.
+- **Root question:** How do chat reads stay fast while a start runs for the same workspace?
+- **Options:**
+  - **A.** Change nothing now. Measure the time of a chat load during a start on the deployed app, and then decide. Effort: Small.
+  - **B.** Run the lifecycle alarm less often during a start, for example every 3 seconds. Each start then ends a few seconds later. Effort: Small.
+  - **C.** Let read-only chat requests run outside the chat queue. Today the queue makes sure that a read never sees a half-written change, so this option must prove the same. Effort: Medium.
+  - **D.** Make the start call the sandbox provider and the database outside the chat queue. The start then uses the queue only to write its state. This is a deep change to the lifecycle code. Effort: Large.
+- **Left out:** None.
+- **Wider fix:** D. It keeps every slow provider call out of the chat queue, for each lifecycle step and each chat request.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/session-history-index.md` would make each history request shorter in the chat queue.
+- **Recommendation:** A. The waits can now be too short to be worth a change to the queue, and a measurement shows it. D best protects the codebase if the measurement shows long waits.
+- **Action:** ask the user, because no option is clearly best until a measurement shows how long the waits are.
