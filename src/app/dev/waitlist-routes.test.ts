@@ -8,6 +8,7 @@ import { operatorUserPath } from '../../shared/operator'
 import {
   operatorCodeDisablePath,
   operatorSignupPausePath,
+  operatorWaitlistSwitchPath,
 } from '../../shared/operator-waitlist'
 import { WAITLIST_PATHS } from '../../shared/waitlist'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -22,12 +23,12 @@ import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { routeFetch } from './router'
 import { seedState } from './seed'
-import { waitlistRoutes } from './waitlist-routes'
+import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 
 /**
  * The fetch of the dev fake with the options of a query string. It serves
- * the waitlist and the operator section over one state, as the dev fake
- * of the app does.
+ * the waitlist and the operator section over one state, and lets a person
+ * who waits in during open sign-up, as the dev fake of the app does.
  */
 function devFetch(search: string) {
   const backend = createBackend(
@@ -38,7 +39,10 @@ function devFetch(search: string) {
   )
   const fetch = routeFetch(
     [...waitlistRoutes(backend), ...operatorRoutes(backend)],
-    (path, method) => guardScope(backend.state, path, method),
+    (path, method) => {
+      admitOpenSignup(backend)
+      guardScope(backend.state, path, method)
+    },
     new FakeApiServer().fetch,
   )
   /** The status, and the error code of a refusal, or `ok`. */
@@ -104,6 +108,7 @@ describe('the waitlist of the dev fake', () => {
       works: {
         appAccess: true,
         signupsPaused: false,
+        waitlistOn: true,
         approvalEmail: 'sam@example.com',
         referralCode: { code: made, useLimit: 5, uses: 0, disabled: false },
       },
@@ -174,7 +179,7 @@ describe('the waitlist of the dev fake', () => {
     })
   })
 
-  test('a pause, a disable, and a resume in the operator section show in the waitlist state of the operator, which the Account page reads', async () => {
+  test('a pause, a disable, a resume, and the waitlist switch in the operator section show in the waitlist state of the operator, which the Account page reads', async () => {
     const { send } = devFetch('?operator=1')
     const state = async () => (await send('GET', WAITLIST_PATHS.state)).reply
     const before = await state()
@@ -184,18 +189,65 @@ describe('the waitlist of the dev fake', () => {
     const disabled = await state()
     await send('DELETE', operatorSignupPausePath())
     const resumed = await state()
+    await send('DELETE', operatorWaitlistSwitchPath())
+    const off = await state()
+    await send('POST', operatorWaitlistSwitchPath())
+    const on = await state()
     const code = { code: 'K7QHM-3XP2R', useLimit: 5, uses: 0 }
-    const of = (signupsPaused: boolean, disabled: boolean) => ({
+    const of = (
+      signupsPaused: boolean,
+      disabled: boolean,
+      waitlistOn = true,
+    ) => ({
       appAccess: true,
       signupsPaused,
+      waitlistOn,
       approvalEmail: null,
       referralCode: { ...code, disabled },
     })
-    expect({ before, paused, disabled, resumed }).toEqual({
+    expect({ before, paused, disabled, resumed, off, on }).toEqual({
       before: of(false, false),
       paused: of(true, false),
       disabled: of(true, true),
       resumed: of(false, true),
+      off: of(false, true, false),
+      on: of(false, true),
+    })
+  })
+
+  test('waitlist=off lets a person who waits in at the next request with a new referral code and no use of a code, and the pause keeps them waiting until it ends', async () => {
+    const { backend, send } = devFetch('?waiting=1&waitlist=off&paused=1')
+    const records = backend.state.operator
+    const uses = () =>
+      [...records.codes.values()].map((code) => `${code.code} ${code.uses}`)
+    const usesBefore = uses()
+    const paused = await send('GET', WAITLIST_PATHS.state)
+    // An operator resumes sign-ups in the operator section.
+    records.pause = {
+      paused: false,
+      updatedAt: FAKE_TIME,
+      operator: sampleOperator,
+    }
+    const session = await send('GET', API_PATHS.session)
+    const own = [...records.codes.values()].filter(
+      (code) => code.owner?.githubId === waitingUser.githubId,
+    )
+    expect({
+      paused: paused.reply,
+      access: session.reply.appAccess,
+      own: own.map((code) => `${code.kind} ${code.uses} of ${code.useLimit}`),
+      uses: uses().filter((line) => !line.startsWith(own[0]?.code ?? '-')),
+    }).toEqual({
+      paused: {
+        appAccess: false,
+        signupsPaused: true,
+        waitlistOn: false,
+        approvalEmail: 'sam@example.com',
+        referralCode: null,
+      },
+      access: true,
+      own: ['referral 0 of 5'],
+      uses: usesBefore,
     })
   })
 
@@ -217,6 +269,7 @@ describe('the waitlist of the dev fake', () => {
         page: { referralCode: { code: 'K7QHM-3XP2R', useLimit: 5, ...code } },
         state: {
           signupsPaused: true,
+          waitlistOn: true,
           referralCode: { code: 'K7QHM-3XP2R', uses: code.uses, disabled },
         },
       })

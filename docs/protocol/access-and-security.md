@@ -27,8 +27,9 @@ These docs belong to this doc:
   app then gives both the identity and the repository access.
 - Cloudflare Access was rejected. Users sign in with GitHub, and Access
   cannot sign in inside a frame.
-- A new GitHub sign-in creates an account without app access, and the
-  person waits on the waitlist (decision 160).
+- Except during [open sign-up](sign-ups.md#open-sign-up), a new GitHub
+  sign-in creates an account without app access, and the person waits on
+  the waitlist (decisions 160 and 230).
   [Waitlist](waitlist.md) states what the person can reach and the ways in.
   A suspended account cannot sign in, as
   [Operator actions](operator-actions.md#sessions-and-sign-in) says.

@@ -30,7 +30,7 @@ import { codeName, CodeStateText, CopyableCode } from './CodeParts'
 import { DirectoryList, type DirectoryKind } from './DirectoryList'
 import { counted, formatShortDay } from './format'
 import { OperatorPage } from './OperatorPage'
-import { SignUpsBox } from './PauseParts'
+import { SignUpsBox } from './SignUpsBox'
 import { SearchField } from './SearchField'
 import { InlineLink, Joined } from './TargetParts'
 
@@ -125,10 +125,11 @@ function LabelCell(props: { code: Code; phone: boolean }) {
 
 /**
  * The Invite codes tab of the operator: the Sign-ups box with Pause
- * sign-ups, a search, and the invite codes, newest first, with their uses
- * and states. The search finds a code by its text, an invite code by its
- * label, and a referral code by the GitHub login of its owner. New code in
- * the header makes a code, which then leads the list. Disable asks first.
+ * sign-ups and the waitlist switch, a search, and the invite codes, newest
+ * first, with their uses and states. The search finds a code by its text,
+ * an invite code by its label, and a referral code by the GitHub login of
+ * its owner. New code in the header makes a code, which then leads the
+ * list. Disable asks first.
  */
 export function CodesTab(props: { search: string }) {
   const app = useApp()

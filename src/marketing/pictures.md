@@ -40,7 +40,8 @@ Each picture has a file for each layout and each colour scheme, in
 the Mac picture each show the same screen in both layouts. So each has one
 file for each scheme, such as `phone-<scheme>.webp`, which both layouts
 share. That gives 14 captures and 28 files, and each file keeps its name
-on each run.
+on each run. The Mac picture uses a desktop screen in both layouts, because
+the Mac app has no phone layout.
 
 When a screen of the app or a picture of the list changes, capture the
 pictures again with `npm run marketing:pictures` from the repository root.
