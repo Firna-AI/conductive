@@ -3,6 +3,7 @@ import type { WorkspaceEventEnvelope } from '../shared/events'
 import { sessionLink } from '../shared/session-link'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './fixtures/core'
 import { workspaceFixtures } from './fixtures/workspaces'
+import { skillChat } from './recorded-skills'
 
 export type RecordedChatScenario =
   | 'history'
@@ -15,6 +16,7 @@ export type RecordedChatScenario =
   | 'omitted-data'
   | 'refused-events'
   | 'sent-by'
+  | 'skills'
 
 const { message } = workspaceFixtures()
 const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
@@ -166,6 +168,7 @@ const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
     { type: 'message.accepted', message: { ...message, state: 'queued' } },
   ],
   'first-turn': beginning.slice(0, 6),
+  skills: skillChat,
   'omitted-data': [
     accepted,
     started,

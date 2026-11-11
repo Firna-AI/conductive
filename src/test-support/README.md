@@ -29,6 +29,11 @@ The marker can have no turn context when the event is invalid.
 The `sent-by` conversation ends with a message from an agent tool.
 It links a closed session with a long title, and its `Sent by:` line links a session of another workspace.
 The dev app shows it with `?conversation=sent-by`, because the fake answers a send with its recorded message.
+The `skills` conversation in `recorded-skills.ts` is a Claude session whose agent uses skills.
+Its first turn finished, and used `brainstorming` with the arguments `high` and `testing` with none.
+Its second turn still runs: a folded run used `brainstorming`, and the call of `plans` runs.
+Its session records name no active turn, because they hold the state before the events.
+A record that named the second turn would put that turn before the first one.
 Each fake session record sets `retryMessageId`.
 In the `failed` conversation, each open session names the failed request `ask`, which the recorded failure names too.
 All other session records hold null.

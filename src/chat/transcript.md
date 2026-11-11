@@ -2,7 +2,8 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 stream cursor, the session logs, the transcript items and their counts,
-the lost lines, the turns, the work fold of each ended turn, and Try again.
+the skill lines and the skill names of a fold line, the lost lines, the
+turns, the work fold of each ended turn, and Try again.
 
 - The stream cursor spans the whole workspace: every session, file, and
   workspace event. It drops a resent event, holds an event after a gap until
@@ -16,6 +17,18 @@ the lost lines, the turns, the work fold of each ended turn, and Try again.
   `Transcript.turnCompletions` keeps each completion event by turn ID, including stopped completions and `omittedFileCount`.
 - A tool call shows the size of output that the runner left out, such as "1.2 MB left out".
   A folded run of calls shows the total of its calls' current counts, so a finished run still names it. The work fold of an ended turn shows the total of its calls too.
+- A tool call with a name in `skills` shows as a skill line, as
+  [Skill lines](../../docs/protocol/chat-and-events.md#skill-lines) says. The call keeps its kind.
+  The line shows the open book, the verb of `toolVerb`, such as "Used skill" or "Using skills", then the skill names of its target and its detail as one text.
+  An ellipsis cuts the end of that text, so a narrow chat cuts a long detail, such as a command, before the names.
+  A failed or stopped skill line ends as every call line ends. The other call lines keep their layout.
+- The line of a run of calls and the line of a work fold name the skills of their calls after the counts, such as "4 tool calls · Skill: brainstorming".
+  The names come from `foldSkills`: each name once, in the order of first use, and no name of a failed or stopped call.
+  "Skill:" or "Skills:" comes from `foldSkillHeading`, which the transcript copy shares.
+  Among the icons of the tool kinds, the open book takes the place of the icon of the kind of a skill call.
+- A fold line that names skills wraps beside its chevron, which stays at the first line. A no-break space holds the dot to the counts.
+  Each name keeps its comma in one box that never breaks at its hyphen. The icons and the left-out output stay with the last name.
+  A fold line with no skill keeps its one row.
 - A finished turn ends its file list with the files that the runner left out, such as "47 more files".
   A stopped line adds the count of its stopped completion: "You stopped the agent · 5 changed files not listed".
   The counts come from `turnCompletions`. A zero count shows nothing.

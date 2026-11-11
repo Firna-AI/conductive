@@ -55,9 +55,14 @@ export function foldSkills(calls: readonly ToolCall[]): readonly string[] {
   return [...new Set(loaded.flatMap((call) => call.skills ?? []))]
 }
 
+/** The words before the skill names of a fold: "Skill:" for one, else "Skills:". */
+export function foldSkillHeading(count: number): string {
+  return count === 1 ? 'Skill:' : 'Skills:'
+}
+
 /** The skill text after a fold's counts, without a separator. */
 export function foldSkillLabel(calls: readonly ToolCall[]): string {
   const names = foldSkills(calls)
   if (names.length === 0) return ''
-  return `${names.length === 1 ? 'Skill' : 'Skills'}: ${names.join(', ')}`
+  return `${foldSkillHeading(names.length)} ${names.join(', ')}`
 }

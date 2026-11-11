@@ -2,9 +2,10 @@
 
 The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded runs
-of tool calls, the folded work of each ended turn above its answer, the
-running turn, steer, Stop, failures with Try again, the start steps of the
-sandbox, the Mac commands of each turn, and the bar that takes the
+of tool calls, a skill line for each skill that the agent uses, the folded
+work of each ended turn above its answer, the running turn, steer, Stop,
+failures with Try again, the start steps of the sandbox, the Mac commands
+of each turn, and the bar that takes the
 composer's place while the sandbox does not run. After a failed first start
 of a new workspace, that bar sits above the composer, which stays. The workspace screen
 of the app shell mounts it by default, as
@@ -58,12 +59,16 @@ chips.
 - [The tab row](tab-row.md) gives the rules of the one order of the
   tabs, the drag, the tab menu, and the scroll of the row.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
-  the session logs, the transcript items and their counts, the changed
-  files that the cloud computer could not read, the lost lines, the turns,
-  the work fold of each ended turn, and Try again.
+  the session logs, the transcript items and their counts, the skill lines
+  and the skill names of a fold line, the changed files that the cloud
+  computer could not read, the lost lines, the turns, the work fold of
+  each ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
   stays in place when the user opens or closes it, also for a run of calls.
+- [Skill lines](../../docs/protocol/chat-and-events.md#skill-lines) say
+  which call shows as a skill line, its words, and how each fold line names
+  the skills of its calls.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
   formatting and the tables of agent messages.
   [Workspace links](../../docs/protocol/workspace-links.md) states the
@@ -246,7 +251,9 @@ check in the Mac app.
   `AgentBlocks`, which the message line shares. Their text draws through
   `LinkedText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
-  `CallLine`, which the work fold shares.
+  `CallLine`, which the work fold shares. `CallLine` draws a call that
+  loads skills as a skill line, and `FoldLine` names the skills of its
+  calls, as the [transcript rules](transcript.md) say.
 - `components/reading-place.ts`: the keeper of the reader's place, which
   `ChatPane` gives through `ChatKeeper`. While the reader is scrolled up, it
   keeps the top row in view in place for every change of size of the

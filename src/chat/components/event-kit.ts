@@ -31,6 +31,28 @@ export function update(
   return { ...turn, type: 'tool.updated', tool }
 }
 
+/**
+ * A call of the `Skill` tool of Claude in the turn, as the runner gives it:
+ * it loads one skill, its target holds the name, and its detail holds the
+ * arguments.
+ */
+export function skillUse(
+  name: string,
+  args: string | null,
+  state: ToolCall['state'] = 'done',
+): AgentChatEvent {
+  const tool: ToolCall = {
+    id: `skill-${name}`,
+    kind: 'other',
+    skills: [name],
+    target: name,
+    detail: args,
+    omittedDetailBytes: 0,
+    state,
+  }
+  return { ...turn, type: 'tool.updated', tool }
+}
+
 /** A whole message of the agent, in the turn unless `turnId` names another. */
 export function said(
   messageId: string,
