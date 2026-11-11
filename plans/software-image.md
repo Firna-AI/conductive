@@ -641,6 +641,133 @@ waits.
 - **Action:** ask the user, because B and C change how the composer and the
   run work together, and no requirement covers it.
 
+### 30. Old workspace: the update leaves the version pin unchanged
+
+Open. From finding 1 of Milestone 2. Its options check waits.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Security.
+- **Location:** the pin rules in `docs/protocol/agent-runner.md`, and "A
+  sandbox with a version pin of 1" in `docs/protocol/isolation.md`.
+- **Terms:**
+  - **Version pin:** the lowest runner protocol version that a workspace
+    accepts. A runner of version 1 gets the agent login itself.
+- **Background:** Moment: the workspace start of an old workspace. The docs
+  already accept this risk: a workspace with pin 1 accepts a runner that
+  claims version 1, and that runner gets the agent login. Decision 8 B
+  installs the newest runner at the next start. The rule "A stop and a
+  resume keep the pin" stays, so the pin stays at 1.
+- **Problem:** After a good update, any process with the workspace token
+  can still claim version 1 and get the agent login.
+- **Impact if no action:** Old workspaces keep the agent-login risk. Only a
+  new workspace removes it.
+- **Root question:** How does an old workspace get the protection of the
+  gateway?
+- **Options:**
+  - **A.** Keep the pin. The docs stay as written. Effort: Small.
+  - **B.** After a good update, raise the pin to the new runner's version
+    before the runner connects. A failed update keeps the pin. This changes
+    `agent-runner.md`, `isolation.md`, `data-and-trust.md`, two guides, and
+    both legal pages. Effort: Medium.
+  - **C.** Refuse runner version 1 in every workspace. A workspace whose
+    update fails loses its agent turns. Effort: Medium.
+- **Left out:** A new cloud computer at each start, because it loses the
+  files.
+- **Wider fix:** B.
+- **Previous examples:** Gateway decisions 2 and 5.
+- **Recommendation:** B. The update already installs the runner, so a
+  raised pin removes the risk at no extra start.
+- **Action:** ask the user, because B changes the pin rule of gateway
+  decisions 2 and 5 and the risk text of the legal pages.
+
+### 31. Old org setup: two runs of the install script at once
+
+Open. From finding 2 of Milestone 2. Its options check waits.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** "Old workspaces" in `docs/protocol/workspace-life.md`.
+- **Background:** Moment: a workspace that runs. The notice shows in each
+  open tab, and every member can use each workspace.
+- **Problem:** No requirement says whether a second run can start during a
+  run, or what the other tabs show.
+- **Impact if no action:** Two runs at once can break the setup, such as
+  two package installs into one folder.
+- **Root question:** How do the open tabs of a workspace share one run?
+- **Options:**
+  - **A.** One run at a time. Every open tab shows the run, its output, and
+    its result, as the start steps do. Effort: Medium.
+  - **B.** One run at a time. A second press gets a refusal, and only the
+    starting tab shows the output. Effort: Small.
+  - **C.** No rule. Effort: Small.
+- **Left out:** A queue, because a second run of the same script adds
+  nothing.
+- **Wider fix:** A.
+- **Previous examples:** One job at a time in each org. The start steps
+  reach every tab.
+- **Related:** Decision 15 decides what the kept output can hold.
+- **Recommendation:** A. No tab then shows a stale notice.
+- **Action:** ask the user, because A adds behaviour at a boundary that no
+  requirement covers.
+
+### 32. Refresh: no name for a refresh from the route
+
+Open. From finding 3 of Milestone 2. Its options check waits.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `jobLabels` in `docs/mockups/src/components/settings/buildCopy.ts`.
+- **Background:** Moment: a refresh. The plan records "a request to the
+  refresh route" as a cause. Only an admin may call that route, and no
+  screen calls it. The mockups name only Build, Refresh after a push, and
+  Daily refresh.
+- **Problem:** The mockups give no name for a refresh from the route.
+- **Impact if no action:** Milestone 9 must guess the name.
+- **Root question:** How does the history name a refresh that an admin
+  asked for?
+- **Options:**
+  - **A.** "Refresh", with a mockup variant. Effort: Small.
+  - **B.** "Refresh on request", with a mockup variant. Effort: Small.
+  - **C.** Delete the route. This removes an API route on `main`. Effort:
+    Small.
+- **Left out:** Showing it as a build, because it does not run the saved
+  script.
+- **Wider fix:** None, because this is one label.
+- **Previous examples:** None found.
+- **Recommendation:** B. It names the cause, as the other refresh names do.
+- **Action:** ask the user, because B adds a name that no requirement or
+  mockup covers, and C deletes a route on `main`.
+
+### 33. Two names for the app's own software
+
+Open. From finding 4 of Milestone 2. Its options check waits.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** UX wording.
+- **Location:** the public guides, `src/marketing/privacy-uses.ts`, and the
+  comparison row `managed-git-identity`.
+- **Background:** Decision 1 E names the software "the agent and terminal
+  software" in the build log and the start step. The guides, the Privacy
+  page, and one comparison row say "cloud computer software".
+- **Problem:** Readers meet one name in the guides and another in the app.
+- **Impact if no action:** A member may not link the start step to the
+  guide text.
+- **Root question:** Which name do the public texts use?
+- **Options:**
+  - **A.** Keep "cloud computer software". Effort: Small.
+  - **B.** Use "the agent and terminal software" everywhere, also on the
+    Privacy page. Effort: Small.
+- **Left out:** A third name, because it adds a third word for one thing.
+- **Wider fix:** None.
+- **Previous examples:** None found.
+- **Recommendation:** B. It extends the reason of decision 1 E.
+- **Action:** ask the user, because both texts are correct, and B changes
+  a legal page.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -674,36 +801,44 @@ Depends on: 1
 
 The docs state the requirements of each moment that this plan changes.
 
-- [ ] In `docs/protocol/org-image.md`, state that a refresh starts from the
+- [x] In `docs/protocol/org-image.md`, state that a refresh starts from the
       software image too, the clean refresh of decision 12 G, the skip of an
       empty install script, and that the tab shows refreshes. PR #194
       already states the later build.
-- [ ] In `docs/protocol/repository-folders.md`, state that a refresh keeps
+- [x] In `docs/protocol/repository-folders.md`, state that a refresh keeps
       the folders and the variables of the newest good build.
-- [ ] In `docs/protocol/workspace-life.md` and
+- [x] In `docs/protocol/workspace-life.md` and
       `docs/protocol/agent-runner.md`, state the update of an old workspace
       at its workspace start, and the notice of an old org setup.
-- [ ] In `docs/protocol/github-tokens.md`, state that the copies of an
+- [x] In `docs/protocol/github-tokens.md`, state that the copies of an
       image job run in parallel, each with its own token, and that no
       checkout starts before GitHub confirms the revocation of every token.
       Remove the risk of a refresh that starts from the last org image,
       because no image job does so after this plan.
-- [ ] In `docs/architecture.md`, change the term "Refresh", and add an old
+- [x] In `docs/architecture.md`, change the term "Refresh", and add an old
       workspace. PR #194 already changed the term "Build".
-- [ ] Change the sentence of `docs/protocol/org-image.md` that says that the
+- [x] Change the sentence of `docs/protocol/org-image.md` that says that the
       install script runs only in a build.
-- [ ] Update the reason of "The repository notice" in
+- [x] Update the reason of "The repository notice" in
       `docs/protocol/org-image.md`, which says that the card shows no
       refresh.
-- [ ] Read each public guide in `src/marketing/docs/` in full, and update
+- [x] Read each public guide in `src/marketing/docs/` in full, and update
       each sentence that restates the old refresh, such as the refresh and
       history sentences of `cloud-computer.md`.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
-- [ ] Check the rows of `src/marketing/from-conductor/` for a feature that
+- [x] Check the rows of `src/marketing/from-conductor/` for a feature that
       this plan ships, as `AGENTS.md` says.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+- [ ] Fix the sentences of `docs/protocol/port-previews.md`,
+      `docs/protocol/isolation.md`, `docs/architecture/components.md`, and
+      `docs/protocol/message-attachments.md` that contradict decision 8 B,
+      and add "Old workspaces" to the doc lists of
+      `docs/protocol/workspaces-and-sandboxes.md` and
+      `docs/architecture/protocol-docs.md`.
+- [ ] Apply the answers to decisions 15, 17, 22, 23, 24, 25, 28, 29, 30,
+      31, 32, and 33 to the protocol docs.
 
 ## Milestone 3: Records
 
@@ -715,7 +850,8 @@ Depends on: 2
       image, the install script revision, and the failed update mark of
       each workspace.
 - [ ] Write the records at each build, refresh, workspace start, and
-      update of an old workspace.
+      update of an old workspace. A workspace with no recorded version
+      counts as older than the current version.
 - [ ] Tests: a build from a software image and a build with the software
       step each record the right version. A first workspace start records
       the version and the org image of its image.
@@ -782,6 +918,8 @@ Depends on: 3
       older than the current one, run the software step before the runner
       starts, and record the new version. Show it as its own start step.
 - [ ] When the update fails, go on with the old app software, and warn.
+      The update runs inside the 20-minute limit of the start, so a hung
+      update fails the start.
 - [ ] Tests: an old workspace gets the current version and starts its
       runner. A current workspace runs no software step. A failed update
       still starts the runner.
