@@ -307,7 +307,7 @@ Depends on: none
 
 The protocol states the new order of the history and the live events.
 
-- [ ] In `docs/protocol/chat-and-events.md`, under "Events", replace "A tab
+- [x] In `docs/protocol/chat-and-events.md`, under "Events", replace "A tab
       that opens gets the stored history first, then the live events." with
       these lines:
   - "A tab that shows a session gets the newest part of its stored
@@ -321,16 +321,16 @@ The protocol states the new order of the history and the live events.
     when earlier history arrives after newer events."
   - "While the earlier history loads, the chat says so above the messages
     that it shows."
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates the order of the history and the live events.
-- [ ] Read each public guide under `src/marketing/docs/` in full. Update
+- [x] Read each public guide under `src/marketing/docs/` in full. Update
       each sentence that restates that order, under the rules of
       `docs/protocol/website-docs.md`.
-- [ ] Read the rows of the Conductor comparison under
+- [x] Read the rows of the Conductor comparison under
       `src/marketing/from-conductor/`. Change a status only when this
       change ships, starts, or drops a listed feature.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 
 ## Milestone 2: Newest-first session pages in the Worker
 
