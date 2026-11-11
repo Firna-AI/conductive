@@ -158,9 +158,12 @@ Each item marked "my call" is a design call of the planning agent, made on
      estimate passes the budget runs alone. At most 8 Git commands run at
      once, so that the polls stay within the provider's request limit.
    - At the start of each image job, the Worker reads the size of each
-     repository from GitHub with one installation token that can read only
-     the metadata of those repositories. It revokes that token before the
-     first copy starts. A repository with no size gets the least estimate.
+     repository from GitHub with metadata-only installation tokens: one for
+     each installation of the job's repositories, each named for at most 500
+     of them, because GitHub limits a token to one installation and 500
+     repositories. It revokes every metadata token before the first copy
+     starts. A repository with no size gets the least estimate. My call of 11
+     November 2026, from finding 2 of the Milestone 6 workspace.
 9. **One name for our software.** Decision 1 E. One name in the Worker
    names our software in the build log and in the start step, such as
    "Installing the agent and terminal software" and "Updating the agent
