@@ -24,7 +24,7 @@ export const chatLists = defineScreen({
       description:
         'The user opened the folded work of a finished turn, and its last message. The message holds a numbered plan with steps under each item. The open line shows each list under the text of its item, as an answer does, and the closed line shows the plan as one line of text.',
       rationale:
-        'A message in the work of a turn keeps the formatting of an answer when it opens, so a plan reads the same in both places. The open line draws its lists as spans, because a summary holds only phrasing content.',
+        'A message in the work of a turn keeps the formatting of an answer when it opens, so a plan reads the same in both places. The open line draws its lists as spans, because HTML allows no list in a summary.',
       props: { conversation: 'nested-lists-in-work', fold: 'open-message' },
     },
   ],

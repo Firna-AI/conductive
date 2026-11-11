@@ -4,6 +4,16 @@
   gap: 10px;
 }
 
+/*
+ * A turn with an end reason: its line above the row of the duration and the
+ * files. They sit closer than two items of the chat, so they read as one end.
+ */
+.ended {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .duration {
   flex-shrink: 0;
   padding-top: 3px;

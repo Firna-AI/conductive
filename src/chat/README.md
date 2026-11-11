@@ -59,18 +59,20 @@ chips.
   tabs, the drag, the tab menu, and the scroll of the row.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
-  files that the cloud computer could not read, the lost lines, the turns,
-  the open run of tool calls of a running turn, the work fold of each
-  ended turn, and Try again.
+  files that the cloud computer could not read, the end reason of a
+  finished turn, the lost lines, the turns, the open run of tool calls of
+  a running turn, the work fold of each ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
   stays in place when the user opens or closes it, also for a run of calls.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
-  formatting and the tables of agent messages.
+  formatting of agent messages, with their headings and lists.
+  [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
   [Workspace links](../../docs/protocol/workspace-links.md) states the
   chips of sent messages and answers. [Agent text](agent-text.md) gives the
-  rules of the code that formats them: the chips, and the table parts that
-  the chat shares with the file preview and the mockups.
+  rules of the code that formats them: the chips, and the heading, list,
+  and table parts that the chat shares with the file preview and the
+  mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
   sends, the fixed prompts of the pull request bar, the message field of
@@ -166,6 +168,7 @@ check in the Mac app.
   answer, with its file chips and session chips, and `mention-copy.ts`,
   the copy of chat text that gives the mention of each file chip in it,
   and leaves out text that the browser leaves out of a copy.
+  `chipOf` in `LinksContext.tsx` gives what a chip shows of its workspace.
 - `links/session-links.ts`: `useLinkedSession`, the session that a chip
   finds: a live session of the chat's workspace, or one of the one read of
   another workspace in `session-reads.ts`, made again for each load of a
@@ -179,24 +182,11 @@ check in the Mac app.
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
   follows in place of its own reads.
-- [`transcript.ts`](../shared/transcript/transcript.ts): how chat events become the parts of a transcript.
+- [Transcript key code](transcript.md#key-code): the shared transcript
+  modules, the turn words with the end reason of a turn, the work folds,
+  and the workspace stream.
 - [`agents.ts`](../shared/agents.ts): the shared effort words and model
   labels of the pickers.
-- [`duration.ts`](../shared/transcript/duration.ts),
-  [`tool-words.ts`](../shared/transcript/tool-words.ts), and
-  [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
-  tool words, fold counts, and turn lines that the browser and Worker share.
-- [`session-events.ts`](../shared/transcript/session-events.ts): the session
-  events from stored Worker envelopes or parsed browser envelopes.
-- [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
-  in event order and its newest record. The record owner keeps the logs private.
-- [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
-  `retryItemId`, the one failed item that offers Try again.
-- [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
-- [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
-- [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.
-- [`refused-events.ts`](../shared/transcript/refused-events.ts): how a refusal marker becomes a line, and how a
-  refused end ends its turn.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
@@ -232,22 +222,19 @@ check in the Mac app.
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
-  event from the mockups' `lostCopy.ts`.
-- [`turn-work.ts`](../shared/transcript/turn-work.ts) and
-  [`transcript-entries.ts`](../shared/transcript/transcript-entries.ts):
-  `foldedWork` finds the work of each ended turn that folds, as the
-  [transcript rules](transcript.md) say. `groupEntries` makes the entries
-  that the chat draws, and puts each insert at its place, also in a fold.
-  It gives each run of tool calls its open state: while a turn runs, only
-  the run with its newest call is open.
+  event from the mockups' `lostCopy.ts`. `components/TurnEnd.tsx` draws the
+  end of a finished turn: the line of its end reason, from the mockups'
+  `EndReasonLine.tsx`, above its duration and its files.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.
-- `components/agent-text.ts`: `textBlocks`, the paragraphs, lists, code
-  blocks, and tables of an agent message, with `TextTable`.
-  `components/AgentText.tsx`: `AgentText`, which draws them, and
-  `AgentBlocks`, which the message line shares. Their text draws through
-  `LinkedText` of `links/`.
+- `components/agent-text.ts`: `textBlocks`, the paragraphs, headings,
+  lists, code blocks, and tables of an agent message, with `TextTable`.
+  `components/agent-paragraph.ts`: `Paragraph`, the lines of a paragraph,
+  with the text that an underline turns into a heading.
+  `components/AgentText.tsx`: `AgentText`, which draws them, with the
+  heading style that the file preview shares, and `AgentBlocks`, which the
+  message line shares. Their text draws through `LinkedText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which
@@ -260,8 +247,6 @@ check in the Mac app.
   chat, so the line keeps its place.
 - `components/SessionStatus.tsx`: the empty views and the history status of
   a session.
-- `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
-  the reconnect, and the `hold` and `release` of the workspace stream.
 - `transcript-copy.ts`: `copyTranscript`, the pending copy for a workspace,
   session, and detail. It retains resolved text for one minute after a
   clipboard failure. The next press consumes it at once. The cache uses the
@@ -271,7 +256,9 @@ check in the Mac app.
   it with the chat API of the controller.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
-  responses.
+  responses. `api/read-chat.ts` copies a known `endReason` of a turn end,
+  and drops an unknown value. `api/read-changed-file.ts` reads the changed
+  files of a turn end, with their real paths and display labels.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer
@@ -280,15 +267,17 @@ check in the Mac app.
   their key code.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
-  in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the answers of the
-  scripted agent, which the `answer` option chooses.
+  in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the plans and the
+  answers of the scripted agent, which the `answer` option chooses.
 
 
 ### Related docs
 
 - [Chat and events](../../docs/protocol/chat-and-events.md)
 - [Chat Markdown](../../docs/protocol/chat-markdown.md): the formatting of
-  agent messages, with their tables.
+  agent messages, with their headings and lists.
+- [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent
+  messages.
 - [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
   runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):

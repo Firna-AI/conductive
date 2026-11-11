@@ -1,4 +1,4 @@
-import { workspacesWait } from '../../app/org-model'
+import { workspacesWait } from '../../app/org-waits'
 import { Refresher } from '../../app/refresh'
 import { Resource } from '../../app/resource'
 import { valueOf, type Readable } from '../../app/store'

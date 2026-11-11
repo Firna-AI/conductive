@@ -3,9 +3,10 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives workspace,
 session, and file chips with the list of `@`, attached files, the Markdown
-tables of a reply and of a file preview, and the work fold of a turn. It
-also gives the data that the chat does not have, and the files that the
-cloud computer could not read.
+tables and headings of a reply and of a file preview, and the work fold of
+a turn. It also gives the data that the chat does not have, the files that
+the cloud computer could not read, and the end of a turn at the time limit
+of background work.
 
 - `AttachmentChips` in `src/components/chat/` draws each attached file as a
   chip: a glyph, the name, a label, and its actions. While a file uploads,
@@ -48,6 +49,35 @@ cloud computer could not read.
     pipes, until a separator row with as many cells follows it. Then the
     table shows the rows that have arrived, as `app/chat/tables/header`
     and `app/chat/tables/rows` show.
+- `MarkdownHeadings.module.css` in `src/components/common/` gives the
+  Markdown headings of a reply and of the Markdown preview of a file one
+  look, under its `headings` class. It sets the size, the weight, the
+  colour, and the letter spacing of each level, and the line under a
+  level-one heading. Each view sets the space around its headings, as
+  `app/chat/headings` and `app/files/markdown` show.
+  - A heading shows at the level that the agent wrote, from `h1` to `h6`.
+    Each level has its own size, as a ratio of the text around it: 1.7143,
+    1.4286, 1.2857, 1.1429, 1, and 0.9286 times the text size. At the
+    13 px text of a reply and of the file preview, the levels are about
+    22.3, 18.6, 16.7, 14.9, 13, and 12.1 px. Each level has the heading
+    weight and the ink colour, and level 1 has a 1 px line in the border
+    colour under it.
+  - Bold text keeps the weight that the browser gives it, which is heavier
+    than the heading weight. The size step sets levels 1 to 4 apart from a
+    bold label.
+  - In a reply, a heading after another block stands further from it than
+    two paragraphs stand from each other: 12 px more for levels 1 and 2,
+    and 8 px more for levels 3 to 6. A heading that starts the reply has
+    no space above it, and the gap of the reply sets the space under each
+    heading. A heading inside a list item stands as far from the block
+    above it as a heading in a reply does. The mockups do not draw this
+    case.
+  - In the file preview, a heading of level 1 or 2 has 24 px above it, and
+    a smaller heading has 20 px. Level 1 has 10 px under its line, level 2
+    has 8 px under it, and the smaller levels have 6 px. The first block of
+    the file has no space above it.
+  - The text of a heading shows inline code, bold text, and workspace
+    chips, as a paragraph does. A heading with no text draws nothing.
 - When a turn ends, the work before its answer folds into one line, from
   decision 150. The work is the agent messages and the tool calls, with
   the Mac command cards and the lost lines among them. The answer is the
@@ -74,13 +104,22 @@ cloud computer could not read.
     open run of tool calls: the call line that `ToolGroup` shares, a
     message as its first words on one line, the Mac command card, and the
     lost line, which starts at the left edge. A click on a message line
-    grows it to the full text, with its paragraphs and bullets.
-  - A message line holds no table, because a summary holds only phrasing
-    content. Closed, the line shows a table as its cells, row by row, with
+    grows it to the full text, with its paragraphs, headings, and bullets.
+  - A message line holds no table, because HTML allows no table in a
+    summary. Closed, the line shows a table as its cells, row by row, with
     a dot between two cells. Open, the line keeps the paragraphs before
     the first table, and the table and the rest of the message show under
     the line, at the left edge of its text, as `app/chat/work/table`
     shows.
+  - A message line holds no heading element either. A summary may hold a
+    heading, but its button role hides the heading from the heading list
+    of a screen reader. Each heading of the line has the heading weight
+    and the size of the text of the line. Closed, the line shows the text
+    of a heading in the line, so the line stays one line, and the weight
+    shows where the heading ends. Open, the line shows each heading on its
+    own line, 10 px under the block above it, as
+    `app/chat/headings/work` shows. A heading after the first table shows
+    under the line as a heading element, in the same look.
   - The `fold` state of the workspace opens the folds, and `open-message`
     also opens the last message line of each. A view runs no script, so a
     chat with open folds starts at its top.
@@ -106,18 +145,35 @@ cloud computer could not read.
   under the notice "The latest list of all files is unavailable", which has
   no time. With no saved list, All files says "The list of all files is
   unavailable" in place of the tree. `lostCopy.ts` holds these words too.
+- A turn that waits for the background work of its agent shows as any
+  running turn, as `app/chat/background-limit/waiting` shows. When the
+  time limit stops that work, the turn still ends as finished, with its
+  duration and its files. One line above that row names the cause:
+  "Background work stopped at the time limit".
+  - `EndReasonLine` in `src/components/chat/` draws the line, centred and
+    muted as the other event lines, with a timer icon. `endReasonCopy.ts`
+    beside it holds the words of each end reason. The line takes no
+    fixtures, so the app can use it too.
+  - `TurnEnd` puts the line 8 px above the row, closer than two items of
+    the chat, so the two read as one end. The row keeps its own marks,
+    such as "Changed files unavailable".
+  - The words name what stopped, not the number of the limit, because the
+    member cannot change it.
 
 ## Workspace, session, and file chips
 
 - `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
-  the org as a chip in a line of text: a small rounded pill with the
-  `StatusGlyph` of the workspace, its label in a muted colour, and its
-  current name. Its height is the height of the line less 2 px, so a line
-  with a chip keeps its height. A chip is never wider than its line or
-  than 22 times the size of its font, and a long name is cut short. It
-  takes no fixtures, so the app can use it too.
+  the org as a chip in a line of text: a small rounded pill with the list
+  mark of the workspace, `WorkspaceMark`, its label in a muted colour, and
+  its current name. The name of a workspace with unread output takes the
+  strong weight of 600, as in the list, in place of the chip's 500. Its
+  height is the height of the line less 2 px, so a line with a chip keeps
+  its height. A chip is never wider than its line or than 22 times the
+  size of its font, and a long name is cut short. It takes no fixtures, so
+  the app can use it too.
   - `MessageText` shows the chips in sent messages and in answers, as
-    links to the screens of the workspaces. A Markdown link to a
+    links to the screens of the workspaces. In an answer, `**` marks bold
+    text, and a chip inside it is bold too. A Markdown link to a
     workspace shows as the chip alone, and a link in code stays code. A
     link to another org, or to a workspace that the list does not hold,
     stays plain text, and a long link breaks to fit the line.
@@ -145,12 +201,14 @@ cloud computer could not read.
     chip with a long name is cut short in place, with no gap after it, and
     it never pushes a bubble past the edge of the chat.
 - `SessionChip` in `src/components/chat/` draws a link to a session as a
-  chip of the same size: the `StatusGlyph` and the label of the workspace
+  chip of the same size: the list mark, `WorkspaceMark`, and the label of the workspace
   of the session, the icon of a session tab, and the title of the session,
   or Untitled. The icon tells it from a workspace chip, whose name takes
   the same place. Its title is the whole title of the session, and screen
   readers hear "Session" before it. It takes no fixtures, so the app can
   use it too.
+  It renders through `WorkspaceChip`, so both chip forms share the mark,
+  state words, removal cells, and bold unread title.
   - `MessageText` shows a session chip for a link to the address of a
     session that the chat read. `ChatWorkspaces` gives each linked
     workspace the sessions that the chat read when it loaded, open and

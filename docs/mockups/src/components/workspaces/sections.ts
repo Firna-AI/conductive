@@ -9,6 +9,7 @@ import {
   archivedWorkspaceList,
   keptArchives,
 } from '../../fixtures/archivedWorkspaces'
+import type { GitHubSummary } from '../../fixtures/pullRequests'
 import {
   checkoutAutocomplete,
   workspaceList,
@@ -20,6 +21,8 @@ import { paths } from '../../paths'
 export type WorkspaceRow = {
   workspace: Workspace
   status: ActivityStatus
+  /** The GitHub state of its pull request, which its mark shows in colour. */
+  github: GitHubSummary | null
   selected: boolean
   /** The screen that opening this workspace shows, when the mockups draw it. */
   to?: string
@@ -35,7 +38,11 @@ export type SidebarSection = {
   rows: readonly WorkspaceRow[]
 }
 
-/** The workspace that the main area shows, with its current status. */
+/**
+ * The workspace that the main area shows, with its current status. A
+ * workspace screen gives its `workspace.github` the GitHub state of its
+ * pull request bar, so that its row and its bar agree.
+ */
 export type OpenWorkspace = { workspace: Workspace; status: ActivityStatus }
 
 /**
@@ -84,6 +91,7 @@ function rowFor(
     return {
       workspace: { ...workspace, updated: 'now' },
       status: 'input',
+      github: workspace.github,
       selected: false,
       to: paths.macPrompt,
     }
@@ -94,6 +102,9 @@ function rowFor(
   return {
     workspace: busy ? { ...workspace, updated: 'now' } : workspace,
     status,
+    github: isOpen
+      ? open.workspace.github
+      : (later?.workspace ?? workspace).github,
     selected: isOpen,
     to: (isOpen ? undefined : later?.to) ?? linkFor(workspace.key, isOpen),
   }
@@ -101,7 +112,8 @@ function rowFor(
 
 /**
  * The sections of the org, each with its workspaces. The open workspace
- * shows its current status, and a new one joins the top of its section.
+ * shows its current status and the GitHub state of its pull request bar,
+ * and a new one joins the top of its section.
  * `needsInput` marks a workspace whose agent waits for the user while the
  * main area shows another page. `changed` gives the rows that differ by the
  * time of the screen, with their states. A workspace that the create flow
@@ -140,13 +152,16 @@ export function newOrgSections(): SidebarSection[] {
  * The row of a workspace in a suspended org. The suspension a minute ago
  * stops every cloud computer of the org and refuses every start, so the row
  * shows stopped, as a refused start does, and a row that had activity shows
- * that minute. The row opens the workspace in the suspended org.
+ * that minute. The GitHub state stays, and the open workspace shows the
+ * state of its pull request bar. The row opens the workspace in the
+ * suspended org.
  */
 function suspendedRow(workspace: Workspace, open?: Workspace): WorkspaceRow {
   return {
     workspace:
       workspace.updated === 'now' ? { ...workspace, updated: '1m' } : workspace,
     status: 'stopped',
+    github: open?.key === workspace.key ? open.github : workspace.github,
     selected: workspace.key === open?.key,
     to:
       workspace.key === 'checkout-autocomplete'
@@ -200,6 +215,7 @@ export function archivedSections(
   const archived: WorkspaceRow = {
     workspace: open,
     status: 'archived',
+    github: open.github,
     selected: true,
     restoreOpen,
   }
@@ -218,6 +234,7 @@ export function archivedGroup(): ArchivedList {
   const last: WorkspaceRow = {
     workspace: checkoutAutocomplete,
     status: 'archived',
+    github: checkoutAutocomplete.github,
     selected: false,
     to: paths.archive,
     restoreOpen: true,
@@ -225,6 +242,7 @@ export function archivedGroup(): ArchivedList {
   const older = archivedWorkspaceList.map((workspace): WorkspaceRow => ({
     workspace,
     status: 'archived',
+    github: workspace.github,
     selected: false,
     restoreOpen: keptArchives.has(workspace.key),
   }))

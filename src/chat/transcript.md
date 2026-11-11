@@ -2,8 +2,9 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 stream cursor, the session logs, the transcript items and their counts,
-the lost lines, the turns, the open run of tool calls of a running turn,
-the work fold of each ended turn, and Try again.
+the end reason of a finished turn, the lost lines, the turns, the open run
+of tool calls of a running turn, the work fold of each ended turn, and Try
+again. Its [key code](#key-code) names the shared transcript modules.
 
 - The stream cursor spans the whole workspace: every session, file, and
   workspace event. It drops a resent event, holds an event after a gap until
@@ -25,6 +26,10 @@ the work fold of each ended turn, and Try again.
   A finished turn then ends with its duration and "Changed files unavailable" in place of its files.
   A stopped line ends with " · Changed files unavailable". The turn stays finished or stopped, with no failure and no Try again.
   A late end shows the mark in its file row, or on the stopped line when its turn has no file row. A row that lists files shows no mark.
+- A completion can name its end reason in `endReason`. Its one value is `background_work_limit`, the end at the time limit of [background work](../../docs/protocol/agent-runner.md#background-work).
+  The reader keeps only a known value and drops an unknown one, so it refuses nothing new. `turnCompletions` keeps the reason with the completion.
+  `turnEndReason` gives the reason to the chat and to the copied transcript, so both show its line for the same turns.
+  A finished turn then shows the line, "Background work stopped at the time limit", above its duration and its files. A stopped line does not change.
 - Each refusal marker of a session becomes one `lost` item at its place among the events, which shows one line.
   The transcript keeps the marker only in that item. A repeat of the same marker replaces its item.
   The line names the lost data and the reason in plain words, and never the stream, number, or event type.
@@ -74,3 +79,32 @@ the work fold of each ended turn, and Try again.
   The item takes its ID from the new branch, so a repeat of the note replaces it. It belongs to no turn, so it never folds into work.
   A closed session gets the note in its stored history, so a session that opens later shows it.
 - Ordered history folding preserves these fields and lines across completion and failure events.
+
+## Key code
+
+- [`transcript.ts`](../shared/transcript/transcript.ts): how chat events become the parts of a transcript.
+- [`duration.ts`](../shared/transcript/duration.ts),
+  [`tool-words.ts`](../shared/transcript/tool-words.ts), and
+  [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
+  tool words, fold counts, and turn lines that the browser and Worker share.
+  `turnEndReason` gives the end reason of a turn from `turnCompletions`.
+- [`session-events.ts`](../shared/transcript/session-events.ts): the session
+  events from stored Worker envelopes or parsed browser envelopes.
+- [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
+  in event order and its newest record. The record owner keeps the logs private.
+- [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
+  `retryItemId`, the one failed item that offers Try again.
+- [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
+- [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
+- [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.
+- [`refused-events.ts`](../shared/transcript/refused-events.ts): how a refusal marker becomes a line, and how a
+  refused end ends its turn.
+- [`turn-work.ts`](../shared/transcript/turn-work.ts) and
+  [`transcript-entries.ts`](../shared/transcript/transcript-entries.ts):
+  `foldedWork` finds the work of each ended turn that folds, as the rules
+  above say. `groupEntries` makes the entries that the chat draws, and puts
+  each insert at its place, also in a fold. It gives each run of tool calls
+  its open state: while a turn runs, only the run with its newest call is
+  open.
+- `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
+  the reconnect, and the `hold` and `release` of the workspace stream.

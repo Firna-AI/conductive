@@ -1,5 +1,6 @@
 import type { ChatEvent } from '../../shared/chat-events'
 import type { WorkspaceEvent } from '../../shared/events'
+import { readGitHubSummary } from '../../shared/github-read'
 import type {
   OrderedWorkspaceResponse,
   StartStep,
@@ -72,6 +73,7 @@ function readWorkspace(value: unknown): Workspace {
     branch: text(source.branch),
     choice: readChoice(source.choice),
     state: readState(source.state),
+    github: readGitHubSummary(source.github),
     createdAt: count(source.createdAt),
     updatedAt: count(source.updatedAt),
     archivedAt: nullable(count)(source.archivedAt),

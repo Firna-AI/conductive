@@ -1,0 +1,33 @@
+# A heading after a quote stays text
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from branch `calummoore/markdown-heading-support`, review round 1, finding 2.
+- **Location:** `src/chat/components/agent-paragraph.ts` (`Paragraph.add` and its `quoted` flag), `src/chat/components/agent-text.ts` (`parseLines`).
+- **Reason:** the quote layouts are rare, and the fix costs the same after the merge.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Agent message:** one message of an agent in a turn, which the chat formats with its own small Markdown parser, `textBlocks`.
+  - **Lazy line:** an unindented line that CommonMark adds to the open paragraph of a quote or a list item.
+  - **Underline:** a line of `=` or `-` under a paragraph, which makes the paragraph a level 1 or a level 2 heading.
+- **Background:**
+  - The chat shows a quote as text, not as a quote block, as the section "Formatting" of `docs/protocol/chat-markdown.md` says.
+  - The same doc says that the chat reads headings by the heading rules of CommonMark, and that an underline turns only the text of a paragraph into a heading, never a quote line.
+  - The class `Paragraph` in `src/chat/components/agent-paragraph.ts` tracks the open paragraph of an answer. After a quote line, its flag `quoted` keeps each later line in the quote as a lazy line, until a rule or the end of the paragraph.
+- **Problem:** The chat never ends a quote at a quote line that closes the quote's paragraph. So `> Note`, `>`, `Next section`, `===` shows as one paragraph. CommonMark ends the quote at the empty quote line, and reads `Next section` as a level-1 heading. The same holds after a quote line with a heading, a rule, a fence, or indented code, and after an underline under the quote's text, such as `> # Title`, `Next`, `===`. Also, `> Note`, `>`, `2. item` shows as one paragraph, where CommonMark starts a numbered list at 2. That last case is the same on `origin/main` before the heading branch.
+- **Impact if no action:** A section heading after such a quote shows as body text, with its underline.
+- **Root question:** How does the chat find where a quote ends, so that the text after it can become a heading, as CommonMark reads it?
+- **Options:**
+  - **A.** End the quoted state at an empty quote line, and add the reported case to the underline test. It covers only the empty quote line. Effort: Small.
+  - **D.** In `Paragraph.add`, remove the `>` marks of a quote line, and keep the quote open for lazy lines only when the rest is paragraph text. An empty rest, a heading, a rule, a fence, indented code that starts no text, or an underline under the quote's text closes it. It repeats the block tests of `parseLines` for the quote, so a later block rule can split them again. Effort: Small.
+  - **E.** Read a quote as a container in `parseLines`, as `readList` reads a list item. Collect the quote lines and the lines that can be lazy, remove the `>` marks, and parse that content with `parseLines` and its lazy lines. The quote ends where that parse stops, and the `quoted` flag goes away. The quote lines still show as text. A line of indented code that starts no text must then close the paragraph. Quotes need the nesting limit `maxNesting`, as in the file preview. A list such as `2. item` after an empty quote line then starts, as CommonMark says. Effort: Medium.
+  - **F.** E, with the collection of quote lines in a shared quote reader in `src/markdown/`, which the `quote` method of the file preview's parser also uses. It passes the lazy lines to `nested`, as option A of `plans/follow-ups/preview-quote-keeps-line-after-fence.md` says, and so closes that item too. It changes the file preview. Effort: Medium.
+  - **B.** Share the file preview's block parser with the chat, with separate display rules. It reverses the user's choice of 10 November 2026, which rejected the full parser of the file preview for the chat. Effort: Large.
+  - **C.** Read both views with a maintained Markdown library. It reverses the rejection of a library in `docs/protocol/chat-markdown.md`, and it needs a safety review and a speed check for live text. Effort: Large.
+- **Left out:** A rule that asks for a blank line after a quote, because it fails the goal and breaks the CommonMark heading rules. Changing nothing, because the protocol doc requires the CommonMark heading rules in the chat.
+- **Wider fix:** E. The quote's own parse decides where the quote ends, so the class stays fixed when a quote line changes shape. F extends it to the file preview. C is the widest, but it reverses a recorded decision.
+- **Previous examples:** Commit `39b09416` fixed where the paragraph of a list item ends. `plans/follow-ups/preview-quote-keeps-line-after-fence.md` records the same class in the quotes of the file preview.
+- **Related:** `plans/follow-ups/markdown-line-endings.md` changes the same parser and test file, so one branch can apply both. `plans/follow-ups/preview-quote-keeps-line-after-fence.md` holds the file preview side, which F also fixes.
+- **Recommendation:** E. It is a structural fix in the chat's reader, and it covers each quote shape, while A covers only the empty quote line. The review first recommended A. C best protects the codebase, but it needs the user.
+- **Action:** fix after merge, apply E, because a Rare product bug of Medium severity waits for a later branch under the fix rule.

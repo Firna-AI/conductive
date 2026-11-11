@@ -81,6 +81,33 @@ export interface GitHubCheck {
   completedAt: Timestamp | null
   durationMs: number | null
 }
+
+export type GitHubSummary =
+  'checks-running' | 'checks-failed' | 'checks-passed' | 'merged'
+
+export function githubSummary(
+  banner: GitHubBanner,
+  checks: readonly GitHubCheck[],
+): GitHubSummary | null {
+  if (banner.state === 'merged') return 'merged'
+  if (banner.pullRequest === null || banner.state === 'closed') return null
+  if (
+    checks.some((check) =>
+      ['failed', 'cancelled', 'timed-out', 'action-required'].includes(
+        check.state,
+      ),
+    )
+  )
+    return 'checks-failed'
+  if (
+    checks.some(
+      (check) => check.state === 'queued' || check.state === 'running',
+    )
+  )
+    return 'checks-running'
+  return checks.length > 0 ? 'checks-passed' : null
+}
+
 export interface GitHubBannerResponse {
   banner: GitHubBanner
 }

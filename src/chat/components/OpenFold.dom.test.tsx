@@ -76,7 +76,10 @@ describe('an open fold', () => {
     expect({
       open: foldOf(message).open,
       blocks: blocks.map((block) => queryByText(block, message)?.tagName),
-      // A summary holds only phrasing content, so each block is a span.
+      // A summary holds no paragraph, list, or table, so each block is a
+      // span. A heading is a span too: the closed line stays one line, and
+      // the button role of a summary hides a heading from the heading list
+      // of a screen reader.
       flow: message.querySelectorAll('p, ul, ol, li, pre, div').length,
     }).toEqual({ open: true, blocks: blocks.map(() => 'SPAN'), flow: 0 })
 
@@ -134,7 +137,7 @@ describe('an open fold', () => {
       closed,
       ...opened,
       name: accessibleName(line),
-      // A summary holds only phrasing content.
+      // A summary holds no paragraph, list, or table.
       flow: line.querySelectorAll('p, ul, ol, li, pre, div, table').length,
       body: bodyOf(line),
     }).toEqual({

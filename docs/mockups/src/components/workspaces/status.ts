@@ -1,3 +1,4 @@
+import type { GitHubSummary } from '../../fixtures/pullRequests'
 import type { ActivityStatus } from '../../fixtures/workspaces'
 
 /**
@@ -23,4 +24,28 @@ export const activityPresentation: Readonly<
   stopped: { label: 'Stopped', emphasis: 'dim' },
   error: { label: "Couldn't start", emphasis: 'normal' },
   archived: { label: 'Archived', emphasis: 'dim' },
+}
+
+/** The GitHub state in words, which only the colour of the list mark shows. */
+const githubLabels: Readonly<Record<GitHubSummary, string>> = {
+  'checks-failed': 'Checks failed',
+  'checks-running': 'Checks running',
+  'checks-passed': 'Checks passed',
+  merged: 'Merged',
+}
+
+/**
+ * What screen readers hear for the list mark of a row, a palette row, or a
+ * chip: the GitHub state, then the state of the workspace, such as
+ * "Checks failed, Working". A workspace without a GitHub state gives only
+ * its state. The mark of an archived workspace shows no colour, so its
+ * words leave out the GitHub state too.
+ */
+export function listMarkLabel(
+  github: GitHubSummary | null,
+  status: ActivityStatus,
+): string {
+  const state = activityPresentation[status].label
+  if (github === null || status === 'archived') return state
+  return `${githubLabels[github]}, ${state}`
 }

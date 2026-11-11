@@ -1,6 +1,6 @@
 # GitHub tests bypass the native workspace store
 
-- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-09, the wider fix of finding 1 of PR #95, review round 1, option E of its check.
 - **Location:** `worker/github/test-harness.ts`, `worker/github/memory-workspace.ts`, their test consumers, and `worker/features/github-routes.test.ts`.
@@ -37,7 +37,7 @@
   - Another handwritten store retains the weakness. A parity test checks harness internals and can miss later drift.
   - Running each case on both stores adds duplicate cases while retaining the handwritten store.
 - **Wider fix:** E. All persistence tests use production storage, and no later test can select the removed handwritten store.
-- **Previous examples:** `plans/follow-ups/chat-tests-on-real-object.md` and `plans/follow-ups/lifecycle-tests-on-real-object.md` describe the same weakness.
+- **Previous examples:** `plans/follow-ups/chat-tests-on-real-object.md` and `plans/follow-ups/lifecycle-tests-on-real-object.md` describe the same weakness. Commit `fb6290c2` on `main` fixed both and deleted both items. Their permalinks under **Related** keep their text. Review finding 3 of branch `calummoore/workspace-status-icons`, on 10 November 2026, found a new case, as [The summary copy case](#the-summary-copy-case) says.
 - **Related:**
   - [Chat tests](https://github.com/Firna-AI/remote-code/blob/87784a5a406bc20cb37d602613977cb3ce283ffd/plans/follow-ups/chat-tests-on-real-object.md): reuse the same native workspace harness and transaction fault controls.
   - [Lifecycle tests](https://github.com/Firna-AI/remote-code/blob/87784a5a406bc20cb37d602613977cb3ce283ffd/plans/follow-ups/lifecycle-tests-on-real-object.md): reuse the same clock, real eviction, and due-alarm advance rule.
@@ -46,8 +46,8 @@
 
 The migration preserves these consumers and controls:
 
-- Move `worker/github/test-harness.ts` and its consumers: app handlers, webhooks, webhook bodies, review threads, blocked refreshes, deferred refreshes, and push isolation.
-- Move direct `MemoryWorkspace` users in `worker/github/workspace-state.test.ts` and `worker/github/receipt-size.test.ts`.
+- Move `worker/github/test-harness.ts` and its consumers: app handlers, webhooks, webhook bodies, review threads, blocked refreshes, deferred refreshes, and push isolation. Since 10 November 2026, `worker/github/base-branch.test.ts` and `worker/github/workspace-summary.test.ts` use the harness too.
+- Move direct `MemoryWorkspace` users in `worker/github/workspace-state.test.ts` and `worker/github/receipt-size.test.ts`. Since 10 November 2026, `worker/github/summary-queue.test.ts` is one too.
 - Keep transaction failure, publication failure, receipt replay, event order, unchanged receipts, access checks, and retry-bound assertions.
 - Keep native transaction faults at the test entry boundary. Add no production-only test branch.
 - Use real object eviction for restart claims. Advance only stored due alarms, with no manually seeded replacement alarm.
@@ -63,6 +63,13 @@ Its migration is Milestone 5f in pull request #102, on branch
 At the diagnostic handoff, that pull request was open.
 Merge its primary-branch result before this work uses its fixture paths.
 Do not build another GitHub-only storage or alarm harness.
+
+Status on 10 November 2026: commit `fb6290c2` on `main` merged that migration.
+It runs the chat and lifecycle fixtures on the production object in Miniflare.
+`harness.native.actor(name)` of `worker/test-support/harness.ts` gives HTTP,
+lifecycle RPC, storage controls, and real eviction, as
+`worker/test-support/README.md` says. Its shared alarm helper runs only stored
+due alarms.
 
 ## The deferred pending-push scenario
 
@@ -116,3 +123,35 @@ No timeout or assertion was weakened.
 The webhook-persistence and RPC-code fault proofs did not run for this case.
 Its ten passing repetitions did not run.
 The user explicitly chose this deferral instead of another question about this case.
+
+## The summary copy case
+
+On 10 November 2026, branch `calummoore/workspace-status-icons` added a D1 copy of the GitHub summary of each workspace.
+`WorkspaceGitHubState.refresh` in `worker/github/workspace-state.ts` takes a copy callback.
+After each commit, unchanged read, or receipt replay, `copyCurrent` reads the committed `github:state` again and calls it.
+`refreshWorkspace` passes `saveWorkspaceGitHubSummary` of `worker/github/summary-data.ts`, which writes `workspaces.github_summary`.
+A failed copy fails the refresh. A retry of the same delivery replays its receipt and copies again, without a GitHub read.
+
+The workspace mark review found that the summary tests used `MemoryWorkspace`:
+
+- `worker/github/workspace-summary.test.ts` ran every case through `GitHubTestHarness`, whose `refresh` selects `MemoryWorkspace`.
+- Its failed-copy retry called `MemoryWorkspace.restart()`, which builds a new coordinator over the same Map.
+- No native test passed the copy callback, so `copyCurrent` returned before its store read in every native test.
+- The real port reads through the chat queue. A move of `copyCurrent` into the replay operation would make a production retry wait on that queue. The Map store has no queue, so every test would still pass.
+
+The direct copy-recovery fix:
+
+- `worker/github/summary-queue.test.ts` stays. It checks only the order inside `WorkspaceGitHubState`, which is the same for any store.
+- One native case in `worker/github/chat-store.test.ts`, "repairs a failed summary copy after SQLite eviction without another GitHub read", runs through `createGitHubSQLiteHarness`. It uses real SQLite and the real D1 of the harness.
+- Its test object in `worker/github/sqlite-worker.test-support.ts` writes the copy through `saveWorkspaceGitHubSummary`. A D1 trigger fails the copy of a snapshot with a pull request.
+- After a real eviction, the same delivery retries with GitHub reads forbidden.
+- The case asserts the repaired summary and no new record, read, or event. The retry replays the original event.
+- The native case proves only the copy retry. It does not prove the pending-push retry and its alarm result, which [The deferred pending-push scenario](#the-deferred-pending-push-scenario) gives. That proof stays open.
+
+Setting the native backend as the default is one step inside the approved option E:
+
+- This step makes the production workspace object the default backend of `GitHubTestHarness`. A test chooses `MemoryWorkspace` only explicitly, for a check that does not depend on the store.
+- The step reaches the eight harness test files that existed before the summary copy. They hold 37 direct `harness.memory(...)` reads: 20 in `webhook.test.ts`, 9 in `push-isolation.test.ts`, 3 in `app-handler.test.ts`, 3 in `deferred-refresh.test.ts`, 1 in `blocked-refresh.test.ts`, and 1 in `review-thread.test.ts`. `base-branch.test.ts` and `webhook-bodies.test.ts` hold none.
+- The new default needs a GitHub App key, a token stub, and the native event controls of the workspace object. No GitHub harness test calls `actor.rpc` yet, so the first such call is an unknown.
+- E stays the approved goal of 9 November 2026. It moves every consumer to the native harness and deletes `MemoryWorkspace` after the last one. The default changes first, so no later store-dependent test gets the Map store without a choice.
+- Harder later is now Yes, because the branch added two more `MemoryWorkspace` consumers.

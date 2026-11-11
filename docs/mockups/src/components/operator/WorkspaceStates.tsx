@@ -4,7 +4,7 @@ import { Section, SectionText } from '../settings/Section'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import styles from './WorkspaceStates.module.css'
 
-/** The name of each state, and the glyph that the workspace list draws. */
+/** The name of each state, and the glyph that the header draws for it. */
 const states: Readonly<
   Record<WorkspaceStateKey, { label: string; glyph: ActivityStatus }>
 > = {
@@ -42,9 +42,9 @@ function buildsLine(builds: number, page: 'overview' | 'org'): string {
 
 /**
  * The workspaces of every org, or of one org, in each state, with the
- * glyph of the workspace list, so that a state never depends on colour
- * alone. A line under the list names the running builds. It imports no
- * fixture value, so the app uses it too.
+ * glyph of the state of the cloud computer that the header draws, so that
+ * a state never depends on colour alone. A line under the list names the
+ * running builds. It imports no fixture value, so the app uses it too.
  */
 export function WorkspaceStates(props: {
   counts: StateCounts

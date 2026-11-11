@@ -19,7 +19,7 @@ pages:
 - `app/workspace-links/session-chips` has the second session of `W-395`,
   Debounce the address lookups to 250 ms, after its agent sent two
   messages. Its answer names the first session and the session of Saved
-  carts as session chips: the state mark and the label of the workspace,
+  carts as session chips: the list mark and the label of the workspace,
   the icon of a session tab, and the session title. Its `pasted` variant
   has two pasted session links in the message box: a session without a
   title, which shows Untitled, and a session with a long title.

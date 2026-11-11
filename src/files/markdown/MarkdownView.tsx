@@ -1,4 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
+import headingStyles from '../../../docs/mockups/src/components/common/MarkdownHeadings.module.css'
 import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
 import type { FilesError } from '../api/files-errors'
 import { LoadingFile, ReadError } from '../ui/FileStates'
@@ -102,12 +104,13 @@ function Blocks(props: { blocks: readonly ParsedBlock[] }) {
 
 /**
  * One parsed document. A new render of the same document, as after Copy,
- * renders and splits the text of no block again.
+ * renders and splits the text of no block again. The headings take the
+ * heading style that the chat shares, with the margins of the preview.
  */
 const Document = memo(function Document(props: { document: MarkdownDocument }) {
   return (
     <div className={styles.scroll}>
-      <article className={styles.doc}>
+      <article className={classes(styles.doc, headingStyles.headings)}>
         <Blocks blocks={props.document.blocks} />
       </article>
     </div>
