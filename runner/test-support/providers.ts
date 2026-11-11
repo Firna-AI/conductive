@@ -1,4 +1,5 @@
 import type { AgentChoice } from '../../src/shared/agents'
+import type { RunnerCodexAccount } from '../../src/shared/runner'
 import type {
   ProviderEvent,
   ProviderFactory,
@@ -11,6 +12,13 @@ export const fakeToolContext = {
   machineOrigin: 'https://machines.conductive.test',
   workspaceToken: 'workspace-secret',
   turnId: 'turn-1',
+}
+
+export const fakeCodexAccount: RunnerCodexAccount = {
+  accountId: 'chatgpt-account-alice',
+  email: 'alice@example.test',
+  planType: 'plus',
+  userId: 'chatgpt-user-alice',
 }
 
 export async function fakeClaudeProfile(home: string) {

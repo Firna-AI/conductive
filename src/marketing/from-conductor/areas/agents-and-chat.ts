@@ -63,7 +63,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Stop, retry, and background tasks',
     status: 'available',
-    note: 'Stop ends a turn, and Try again retries the latest failed turn. Keeping turns open for background work with agents powered by Claude is planned.',
+    note: 'Stop ends a turn, and Try again retries failures. Keeping turns open for background work with agents powered by Claude is in progress.',
   },
   {
     id: 'plan-mode',
@@ -111,8 +111,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'skill-use-indicators',
     area: 'agents-and-chat',
     name: 'Skill use indicators',
-    status: 'planned',
-    note: 'Showing skill names in chat and on folded tool groups is planned for agents powered by Claude and Codex.',
+    status: 'in-progress',
+    note: 'Showing skill names in chat and on folded tool groups is in progress for agents powered by Claude and Codex.',
     due: null,
   },
   {
