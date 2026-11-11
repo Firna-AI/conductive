@@ -1,7 +1,8 @@
 # Routes and input activity
 
 This page is part of the [workspace lifecycle](README.md) guide. It gives the browser
-routes, the input activity, and the machine route of this folder.
+routes, the input activity, and the machine route of this folder, and their
+entry points.
 
 ## Browser routes
 
@@ -136,20 +137,6 @@ and of previews. The preview handler reports each request through
   provider. Browser admission waits for its org check. No update holds the chat queue or the durable queue during a
   network call.
 
-### Key Code
-
-- [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
-  the one input owner of a workspace object, with its minute updates and
-  retries. [`create-input-activity.ts`](create-input-activity.ts) connects
-  it to the lifecycle hooks, the member fence, and `warnWorker`.
-- [`input-activity-local.ts`](input-activity-local.ts): `LifecycleInputState`,
-  the fenced input time in the durable lifecycle state, with its capture
-  and its reconciliation.
-- [`input-activity-update.ts`](input-activity-update.ts) and
-  [`input-activity-data.ts`](input-activity-data.ts): one D1 and provider
-  update. `writeWorkspaceActivity` moves `last_activity_at` forward with
-  `MAX`.
-
 ## Machine route
 
 `handleGitCredential` in [`machine.ts`](machine.ts) serves
@@ -165,6 +152,9 @@ says, with its tests.
 For the GitHub CLI outside an agent turn, the helper omits the turn header.
 The handler then selects the workspace owner in its authorized D1 read.
 A present but invalid turn header still fails, without an owner fallback.
+The fetch of a Continue job sends the fetch ID of the job in the same
+header, so the handler gives the token of the member who pressed Continue,
+as [Continue](git-credentials.md#continue) says.
 
 The handler returns a fresh GitHub App user token of the sender, from
 `freshGitHubUserToken` in [`github-tokens.ts`](../security/github-tokens.ts).
@@ -190,21 +180,24 @@ runner socket, with the private error response wrapper.
 
 ### The git credential sender
 
+[The git credential sender](git-credentials.md) gives how
 `Workspace.credentialSender` maps the turn ID of a git credential request
-to a sender, in the chat queue. The [machine route](#machine-route)
-gives the handler, which reads that turn ID from a request header.
+to a sender: the grant of a create, the grant of a Continue fetch, and the
+running chat turn. It also names the tests of the route.
 
-- A create that prepares its repository has its own grant. The start job
-  is a create in the `fetch` or `branch` phase, not cancelled or failed,
-  and its `turnId` matches. The grant gives the sender of the admitted
-  first message.
-- Otherwise the turn must be the running stored chat turn: the active
-  turn of an open session. `activeStoredTurn` in
-  [`access.ts`](../devices/access.ts) reads it. So access ends with the
-  turn, also after a queued Stop, a session close, or a login failure.
-- A stopped or archived workspace gives no sender. The lifecycle admission
-  keeps no turn record for the queued first message.
+## Key code
 
-`machine.test.ts` runs the route with `machineCredentialFixture` in
-[`machine-test-support.ts`](machine-test-support.ts), over the production
-chat and runner boundaries.
+- [`browser.ts`](browser.ts): `handleLifecycleRequest`, the browser routes.
+- [`machine.ts`](machine.ts): `handleGitCredential`, the git credential
+  route.
+- [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
+  the one input owner of a workspace object, with its minute updates and
+  retries. [`create-input-activity.ts`](create-input-activity.ts) connects
+  it to the lifecycle hooks, the member fence, and `warnWorker`.
+- [`input-activity-local.ts`](input-activity-local.ts): `LifecycleInputState`,
+  the fenced input time in the durable lifecycle state, with its capture
+  and its reconciliation.
+- [`input-activity-update.ts`](input-activity-update.ts) and
+  [`input-activity-data.ts`](input-activity-data.ts): one D1 and provider
+  update. `writeWorkspaceActivity` moves `last_activity_at` forward with
+  `MAX`.

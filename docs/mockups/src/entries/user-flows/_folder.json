@@ -15,6 +15,8 @@
     "mac-command",
     "create-routine",
     "link-a-workspace",
+    "merge-and-continue",
+    "open-a-session-link",
     "mention-a-file"
   ]
 }

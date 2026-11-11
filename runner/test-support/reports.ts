@@ -28,6 +28,7 @@ export function reportSnapshot(paths: string[]) {
     removed: 0,
     uncommitted: true,
   }))
+  snapshot.changes.uncommittedFileCount = paths.length
   snapshot.changes.summary = {
     files: paths.length,
     added: paths.length,

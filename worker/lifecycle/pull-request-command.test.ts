@@ -16,7 +16,9 @@ it.each(['head', 'missing-head', 'merged'] as const)(
       const base = kind === 'merged' ? 'release/next' : 'feature/review'
       await h.git('config', '--unset-all', 'remote.origin.fetch')
       const first = await h.createRemoteCommit(`refs/heads/${base}`)
-      const latest = await h.createRemoteCommit(`refs/heads/${base}`, first)
+      const latest = await h.createRemoteCommit(`refs/heads/${base}`, {
+        parent: first,
+      })
       const id = h.auth.workspaceId
       const row = await readWorkspace(
         fixture.runtime.env.DB,

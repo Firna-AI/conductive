@@ -9,6 +9,7 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { CommandPalette } from '../components/palette/CommandPalette'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { ChecksActions } from '../components/workspace/BarActions'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
   PullRequestBar,
@@ -27,8 +28,9 @@ import { paths } from '../paths'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
-import { chatWorkspacesOf, createdWorkspaces } from './orgWorkspaces'
+import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
+import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
   filesPlaceholder,
@@ -82,7 +84,12 @@ export function WorkspaceScreen(props: {
   // admin sees. A suspended org refuses the start of every owner.
   const ownerRefused = state.sandbox === 'refused' && !suspended
   const owner = ownerRefused ? suspendedOwner : record.owner
-  const workspace = { ...record, owner, name: workspaceName(state, record) }
+  const workspace = {
+    ...record,
+    owner,
+    name: workspaceName(state, record),
+    branch: branchOf(state, record),
+  }
   const status = activityOf(state)
   const archived = state.sandbox === 'archived'
   const readOnly = archived || suspended
@@ -94,6 +101,7 @@ export function WorkspaceScreen(props: {
     !readOnly && mayArchiveWorkspace(membership, workspace.owner)
   // Every member restores it while the app keeps its cloud computer.
   const restorable = archiveRestore(state) === 'available'
+  const bar = barOf(state, { archivable, readOnly })
   const problem = sandboxNotice(state)
   const fresh = state.tab === 'new-session'
   const rightHidden = state.rightColumn === 'hidden'
@@ -170,9 +178,16 @@ export function WorkspaceScreen(props: {
       viewport={viewport}
     />
   )
+  // A phone shows the actions of the bar at the top of the Checks tab.
+  const checksTop =
+    viewport === 'mobile' ? (
+      <ChecksActions bar={bar} workspace={workspace} />
+    ) : undefined
   const { header, files } = placeLostUpdate(state, {
     header: workspaceHeader,
-    files: <FilesContent state={state} viewport={viewport} />,
+    files: (
+      <FilesContent checksTop={checksTop} state={state} viewport={viewport} />
+    ),
   })
   const tool = <ToolContent state={state} viewport={viewport} />
   const toast = workspaceToast(state, workspace, viewport)
@@ -203,9 +218,7 @@ export function WorkspaceScreen(props: {
     return (
       <MobileFrame>
         {header}
-        {archived ? null : (
-          <PullRequestRow state={state.banner} workspace={workspace} />
-        )}
+        {archived ? null : <PullRequestRow bar={bar} />}
         <div className={styles.mobileBody}>
           {archived ? body.chat : body[state.focus]}
         </div>
@@ -255,7 +268,7 @@ export function WorkspaceScreen(props: {
         status,
         suspended,
         viewer: membership,
-        created: createdWorkspaces(state),
+        changed: changedWorkspaces(state),
         restoreOpen: state.archive === 'kept',
       })}
     >
@@ -269,13 +282,7 @@ export function WorkspaceScreen(props: {
         }
         files={files}
         header={header}
-        pullRequest={
-          <PullRequestBar
-            archivable={archivable}
-            state={state.banner}
-            workspace={workspace}
-          />
-        }
+        pullRequest={<PullRequestBar bar={bar} workspace={workspace} />}
         rightHidden={rightHidden}
         rightWidth={state.resize === 'right' ? widenedRight : undefined}
         tabs={tabRow}

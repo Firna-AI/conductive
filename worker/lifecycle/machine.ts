@@ -11,12 +11,19 @@ import {
   authenticateWorkspaceToken,
   workspaceTokenRefusedError,
 } from './tokens'
-import type { WorkspaceRuntime } from './workspace-runtime'
+import type {
+  WorkspaceRuntime,
+  WorkspaceLifecycleEndpoint,
+} from './workspace-runtime'
+
+type CredentialRuntime = Omit<WorkspaceRuntime, 'workspace'> & {
+  workspace(id: string): Pick<WorkspaceLifecycleEndpoint, 'credentialSender'>
+}
 
 /** The machine-host dispatcher calls this handler before browser routing. */
 export async function handleGitCredential(
   request: Request,
-  runtime: WorkspaceRuntime,
+  runtime: CredentialRuntime,
 ): Promise<Response> {
   if (
     !runtime.env.MACHINE_ORIGIN ||
@@ -41,7 +48,7 @@ export async function handleGitCredential(
 
 /** Each failure logs its code, because the helper in the sandbox keeps no record. */
 async function credentialResponse(
-  runtime: WorkspaceRuntime,
+  runtime: CredentialRuntime,
   authorization: string | null,
   turnId: string | null,
 ): Promise<Response> {
@@ -84,7 +91,7 @@ async function credentialResponse(
 }
 
 async function authorizeCredential(
-  runtime: WorkspaceRuntime,
+  runtime: CredentialRuntime,
   identity: { workspaceId: string; orgId: string },
   tokenHash: string,
   turnId: string | null,

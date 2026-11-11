@@ -13,6 +13,9 @@ import deviceClientSource from '../../tools/device-client.ts?raw'
 import deviceCliSource from '../../tools/device-cli.ts?raw'
 import deviceSource from '../../src/shared/device.ts?raw'
 import deviceReadSource from '../../src/shared/device-read.ts?raw'
+import sessionCliSource from '../../tools/session-cli.ts?raw'
+import sessionResponsesSource from '../../tools/session-responses.ts?raw'
+import sessionMcpToolsSource from '../../tools/session-mcp-tools.ts?raw'
 
 /** Vite embeds these allowed sources as text in the Worker bundle. */
 export const WORKSPACE_TOOL_SOURCES = [
@@ -27,6 +30,9 @@ export const WORKSPACE_TOOL_SOURCES = [
   { path: 'tools/runtime.ts', contents: runtimeSource },
   { path: 'tools/device-client.ts', contents: deviceClientSource },
   { path: 'tools/device-cli.ts', contents: deviceCliSource },
+  { path: 'tools/session-cli.ts', contents: sessionCliSource },
+  { path: 'tools/session-responses.ts', contents: sessionResponsesSource },
+  { path: 'tools/session-mcp-tools.ts', contents: sessionMcpToolsSource },
   { path: 'src/shared/device.ts', contents: deviceSource },
   { path: 'src/shared/device-read.ts', contents: deviceReadSource },
   { path: 'src/shared/agent-tools.ts', contents: contractSource },

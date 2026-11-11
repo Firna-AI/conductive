@@ -235,6 +235,8 @@ export function shown(controller: ChatController, sessionId: string): string[] {
         return `failed: ${item.error.message}`
       case 'lost':
         return `lost: ${item.marker.runnerEventType} ${item.marker.reason}`
+      case 'continued':
+        return `continued by ${item.member.githubLogin}: ${item.branch} from ${item.baseBranch}`
     }
   })
 }

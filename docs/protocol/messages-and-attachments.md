@@ -70,6 +70,8 @@ says.
   [Create a workspace](create-a-workspace.md)
   says. The app accepts that message before the sandbox is ready
   (decision 14).
+- A message from the agent tools follows these rules. Its text ends with
+  the lines of [The `Sent by:` line](session-calls.md#the-sent-by-line).
 - The app also accepts a later message while the sandbox is not ready
   (decisions 14 and 130). Examples are the first start, a resume, and the
   error state of a failed first start.
@@ -133,9 +135,11 @@ says.
   for a title after accepting its first message (decision 184). The request asks
   for three to five words. Workers AI is the model service of Cloudflare,
   on the account that hosts the app.
-- The model writes the title from the text of that message. The request
-  holds no other data of the workspace. It uses no agent login of a
-  member. The chat does not show it.
+- The model writes the title from the text of that message. It leaves out
+  the `---` line and the `Sent by:` line of a message from the agent tools.
+  Reason: the title names the task, not its sender. The request holds no
+  other data of the workspace. It uses no agent login of a member. The
+  chat does not show it.
 - The reply to the message does not wait for the title. The workspace
   then takes the title as its name, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
@@ -182,6 +186,15 @@ says.
 - A title that keeps a word with underscores from the first message was
   rejected, because the name then holds underscores that no member asked
   for. A member who wants underscores names the workspace with Rename.
+
+### Messages from the bar
+
+- An [agent action](github-banner.md#agent-actions) of the pull request bar
+  sends its fixed prompt as a message of the member who clicks, to the
+  session that the member saw last, with its model and effort.
+- It follows each rule of a message from the composer, and the draft stays
+  as it is. The chat shows it as a message of that member, with no mark of
+  the action. Reason: an action is a message (decision 220).
 
 ## Attachments
 

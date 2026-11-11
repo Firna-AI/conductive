@@ -16,7 +16,10 @@ These docs belong to this doc:
   variable of each repository in a sandbox, and the context folder of each
   workspace.
 - [Life of a workspace](workspace-life.md): the start steps, the time
-  limits, the states, the stop and resume, the archive, and the restore.
+  limits, the states, the stop and resume, the archive, the restore, and
+  Continue.
+- [Continue](continue.md): the next task of a workspace after a merge, on
+  a new branch with the same sandbox and sessions.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
   moves, reassigns, renames, and archives the workspace.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
@@ -177,3 +180,7 @@ These docs belong to this doc:
 ## Archive
 
 [Archive](workspace-life.md#archive) holds these workspace requirements.
+
+## Continue
+
+[Continue](workspace-life.md#continue) holds these workspace requirements.

@@ -1,0 +1,60 @@
+/*
+ * A message under the bar, across the width of the right column, or at the
+ * top of the Checks tab of a phone. Its state tints the whole line, and its
+ * bottom border stays neutral, as the bar's does.
+ */
+.message {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 8px 8px var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-raised);
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.danger {
+  background: var(--ui-rose-soft);
+  color: var(--ui-ink);
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ui-muted);
+}
+
+.danger .icon {
+  color: var(--ui-rose);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The link of a refusal keeps its words, also in a narrow column. */
+.message a {
+  align-self: center;
+}
+
+/* The top of the Checks tab of a phone: the message, then the buttons. */
+.top {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+}

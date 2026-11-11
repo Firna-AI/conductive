@@ -136,10 +136,19 @@ A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
 Adding a repository starts a build automatically.
-A build also installs the newest Conductive cloud computer software.
-An existing workspace keeps the software of the setup that it started from, also after a resume.
-To get newer software, start a new workspace after an admin runs **Build computer**.
+A build includes the current Conductive cloud computer software.
+An existing workspace keeps its software after a resume.
+**Continue** keeps that same computer and software for the workspace's next task.
+A new build does not replace the existing computer.
+Installing updated agent software in an older computer does not change its protection for saved agent logins.
+
+Ask an admin to run **Build computer**.
+After it succeeds, create a new workspace for newer software and the new protection.
 This also gives the new workspace the server list in **Preview**.
+The same steps give it the tools that create sessions, send messages, and read chats across the org.
+Resuming an existing workspace does not update its installed tools.
+
+- [Understand agent login protection](/docs/security#protect-agent-and-github-logins)
 
 After the first successful build, removed repositories and saved install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build runs.
