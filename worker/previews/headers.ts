@@ -120,6 +120,36 @@ export function portRequest(
   return new Request(url, init)
 }
 
+const browserLifetimes = new Set(['max-age', 'no-cache', 'no-store'])
+
+function directiveName(directive: string): string {
+  return directive.split('=', 1)[0].trim().toLowerCase()
+}
+
+/**
+ * Keeps the server's cache rules for the viewer's browser only.
+ * Without a browser lifetime, the browser must check access again before each reuse.
+ * A bare 304 keeps the rules of the reply that the browser stored.
+ */
+function previewCacheControl(upstream: Response): string | null {
+  const value = upstream.headers.get('Cache-Control')
+  if (value === null && upstream.status === 304) return null
+  const directives = (value ?? '')
+    .split(',')
+    .map((directive) => directive.trim())
+    .filter(
+      (directive) =>
+        directive && !['public', 'private'].includes(directiveName(directive)),
+    )
+  if (
+    !directives.some((directive) =>
+      browserLifetimes.has(directiveName(directive)),
+    )
+  )
+    directives.push('no-cache')
+  return ['private', ...directives].join(', ')
+}
+
 export function portResponseHeaders(
   upstream: Response,
   request: Request,
@@ -142,7 +172,8 @@ export function portResponseHeaders(
     if (rewritten !== null) headers.set('Location', rewritten)
   }
   for (const name of port.credential.stripHeaders) headers.delete(name)
-  headers.set('Cache-Control', 'no-store')
+  const cacheControl = previewCacheControl(upstream)
+  if (cacheControl !== null) headers.set('Cache-Control', cacheControl)
   headers.set('Referrer-Policy', 'no-referrer')
   headers.set('X-Content-Type-Options', 'nosniff')
   return headers
