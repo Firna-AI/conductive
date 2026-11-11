@@ -20,6 +20,16 @@
 }
 
 /*
+ * A part that is not a control but can take the focus, such as the name of
+ * a row that takes it when the form of the row closes, or the first line of
+ * a step of the ChatGPT sign-in. It shows no focus ring, and the next Tab
+ * starts from it.
+ */
+.focusTarget:focus {
+  outline: none;
+}
+
+/*
  * The wrapper of a button that keeps the focus. The button takes the flex
  * that a row of actions gives the wrapper, as a phone footer stretches each
  * action.

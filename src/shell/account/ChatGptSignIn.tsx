@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type Ref,
+  type RefObject,
+} from 'react'
 import { CircleAlert, TimerOff, type LucideIcon } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
@@ -10,12 +17,15 @@ import { useStore } from '../../app/store'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { ExternalLink } from '../ui/links'
+import ui from '../ui/ui.module.css'
 import { CodexSignIn, type SignInCode, type SignInState } from './codex-sign-in'
 import { useStepFocus } from './step-focus'
-import focus from './step-focus.module.css'
 
 /** The first line of a step, which takes the focus as `useStepFocus` says. */
 type Line = Ref<HTMLParagraphElement>
+
+/** The first line of the step that shows, as the form gives it. */
+export type SignInLine = RefObject<HTMLParagraphElement | null>
 
 /** The address of a page of OpenAI, as the user reads and types it. */
 function address(url: string): string {
@@ -55,7 +65,7 @@ function CodeShown(props: { code: SignInCode; ref: Line }) {
   return (
     <>
       <p
-        className={classes(formStyles.text, focus.line)}
+        className={classes(formStyles.text, ui.focusTarget)}
         ref={ref}
         tabIndex={-1}
       >
@@ -92,7 +102,7 @@ function Problem(props: {
       className={classes(
         styles.problem,
         props.refused && styles.refused,
-        focus.line,
+        ui.focusTarget,
       )}
       ref={ref}
       role={props.refused ? 'alert' : undefined}
@@ -134,7 +144,7 @@ function Step(props: {
       return (
         <>
           <p
-            className={classes(formStyles.text, focus.line)}
+            className={classes(formStyles.text, ui.focusTarget)}
             ref={ref}
             tabIndex={-1}
           >
@@ -176,14 +186,16 @@ function Step(props: {
  * OpenAI where the user enters it, while the page asks the Worker whether
  * the sign-in finished. An expired code and a refused sign-in offer a code
  * again. A request for a code that failed shows its cause as a refused
- * sign-in does. Each new step takes the focus on its first line, as
- * `useStepFocus` says. At the end of the sign-in, the account shows the
+ * sign-in does. `line` gets the first line of the step that shows. The form
+ * gives the first step the focus after a press, and each later step takes
+ * it on its first line, as `useStepFocus` says. At the end of the sign-in, the account shows the
  * login, and `connected` runs. Cancel shows when `close` is set. Cancel and
  * the end of the form stop the sign-in.
  */
 export function ChatGptSignIn(props: {
   close?: () => void
   connected: () => void
+  line: SignInLine
 }) {
   const app = useApp()
   const services = useServices()
@@ -195,13 +207,13 @@ export function ChatGptSignIn(props: {
   useEffect(() => () => signIn.stop(), [signIn])
   const state = useStore(signIn.state)
   const steps = useRef<HTMLDivElement>(null)
-  const line = useRef<HTMLParagraphElement>(null)
+  const { line } = props
   useStepFocus(state.stage, steps, line)
   const start = () => {
     void signIn.start(() => connected.current())
   }
   return (
-    <div className={focus.steps} ref={steps}>
+    <div className={ui.contents} ref={steps}>
       <Step close={props.close} ref={line} start={start} state={state} />
     </div>
   )

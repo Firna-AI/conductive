@@ -258,5 +258,9 @@ Each path is relative to `src/app/`, the folder of this page.
   `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.
   A closing row menu gives the focus to the current link of its row through
   it, also after a render replaced the row.
+- `../shell/ui/inline-form.ts`: `useInlineForms`, the open form of one
+  part, with the refs of the buttons that open its forms and of their
+  fallbacks, and `useInlineFormFocus`, which each inline form calls on its
+  root. The Connect forms of the agents and the env var forms use them.
 - `../shell/orgs/`: Create org and the name and initials fields.
   `../shell/settings/RepositorySearch.tsx`: the searchable repository list.

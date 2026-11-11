@@ -152,6 +152,17 @@ the command palette and of the Feedback dialog.
   no read acts as the answer of the save. When the save succeeds, each
   field that still equals what went out takes the field of the latest
   saved value. When the save fails, the draft stays.
+- An inline form takes the place of the button that opens it: the Connect
+  form of an agent, and Add variable and Change of the env vars
+  (`useInlineForms`). A press of the button gives the form the focus, on
+  its first control or on the field of a new value. While the ChatGPT
+  sign-in shows, its first line takes it, as after Sign in again. When the
+  form closes, the focus goes back to the button. When the button is gone,
+  as after a connect, the name of the agent takes it. A form that opens
+  with its page, such as the agent step of Get started, takes no focus.
+  The account and that step keep their list on the page when the address
+  or the state of the step opens another form, so the focus stays in the
+  list.
 - Save keeps the focus when a save leaves nothing to save
   (`ActionButton` with `keepFocus`). A browser takes the focus from a
   natively disabled button, so Save stays a native button while it has

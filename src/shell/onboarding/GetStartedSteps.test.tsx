@@ -14,7 +14,11 @@ import {
 import { API_PATHS } from '../../shared/api'
 import { GET_STARTED_PATH } from '../../shared/onboarding'
 import { orgSettingsPaths, type ImageBuild } from '../../shared/org-settings'
-import { byRole, queryByRole } from '../../test-support/dom-queries'
+import {
+  byRole,
+  focusedElement,
+  queryByRole,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
   coreFixtures,
@@ -62,6 +66,41 @@ function pressable(view: HTMLElement, name: string): boolean {
     !button.hasAttribute('disabled') &&
     button.getAttribute('aria-disabled') !== 'true'
   )
+}
+
+/** The Claude token that a connect saves. */
+const savedClaude: AgentLoginStatus = {
+  agent: 'claude',
+  connected: true,
+  kind: 'token',
+  noReuse: true,
+  updatedAt: FAKE_TIME,
+}
+
+/**
+ * Serves Get started with only the agent step left, an account without
+ * agent logins, and the save of the Claude token. The result serves the
+ * account with another Claude login, for the reads after a save.
+ */
+function serveAgentStep(
+  server: FakeApiServer,
+): (claude: AgentLoginStatus) => void {
+  server.json('GET', GET_STARTED_PATH, {
+    orgId: FAKE_IDS.org,
+    steps: [
+      { step: 'github-app', complete: true },
+      { step: 'org', complete: true },
+      { step: 'agent-login', complete: false },
+    ],
+  })
+  const serveClaude = (claude: AgentLoginStatus) =>
+    server.json('GET', ACCOUNT_PATHS.account, {
+      ...coreFixtures().account,
+      agentLogins: [claude, { agent: 'codex', connected: false }],
+    })
+  serveClaude({ agent: 'claude', connected: false })
+  server.json('PUT', agentLoginPath('claude'), savedClaude)
+  return serveClaude
 }
 
 /** The texts of the elements that match `selector`, in their order. */
@@ -176,28 +215,7 @@ describe('the steps of Get started', () => {
 
   test('an agent that connects on Account before Get started is done completes its step, with no second read of the steps', async () => {
     const server = new FakeApiServer()
-    server.json('GET', GET_STARTED_PATH, {
-      orgId: FAKE_IDS.org,
-      steps: [
-        { step: 'github-app', complete: true },
-        { step: 'org', complete: true },
-        { step: 'agent-login', complete: false },
-      ],
-    })
-    const saved: AgentLoginStatus = {
-      agent: 'claude',
-      connected: true,
-      kind: 'token',
-      noReuse: true,
-      updatedAt: FAKE_TIME,
-    }
-    const serveClaude = (claude: AgentLoginStatus) =>
-      server.json('GET', ACCOUNT_PATHS.account, {
-        ...coreFixtures().account,
-        agentLogins: [claude, { agent: 'codex', connected: false }],
-      })
-    serveClaude({ agent: 'claude', connected: false })
-    server.json('PUT', agentLoginPath('claude'), saved)
+    const serveClaude = serveAgentStep(server)
     const { view, navigation } = await mountApp(
       server,
       routes.account('claude'),
@@ -207,7 +225,7 @@ describe('the steps of Get started', () => {
     click(byRole('button', 'Connect', view))
     await settle()
     // As in the Worker, each later read of the account gives the saved login.
-    serveClaude(saved)
+    serveClaude(savedClaude)
     act(() => navigation.push(routes.getStarted()))
     await settle()
     expect({
@@ -216,5 +234,21 @@ describe('the steps of Get started', () => {
         (line) => line === `GET ${GET_STARTED_PATH}`,
       ).length,
     }).toEqual({ finish: true, reads: 1 })
+  })
+
+  test('a connect in the agent step leaves the focus on the name of the agent as the step completes', async () => {
+    const server = new FakeApiServer()
+    const serveClaude = serveAgentStep(server)
+    const { view } = await mountApp(server, routes.getStarted(), 'desktop')
+    // As in the Worker, each read after the save gives the saved login. No
+    // read of the account comes between this answer and the save.
+    serveClaude(savedClaude)
+    typeText(fieldNamed(view, 'Subscription token'), 'token-from-claude')
+    click(byRole('button', 'Connect', view))
+    await settle()
+    expect({
+      finish: pressable(view, 'Open Acme'),
+      focus: focusedElement(),
+    }).toEqual({ finish: true, focus: 'span Claude' })
   })
 })

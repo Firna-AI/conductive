@@ -123,6 +123,7 @@ export function IconButton(
     /** A spinner shows while the action runs. */
     busy?: boolean
     quiet?: boolean
+    buttonRef?: Ref<never>
   },
 ) {
   const Icon = props.icon
@@ -133,6 +134,7 @@ export function IconButton(
       accessibilityLabel={props.label}
       boxSize={control.height}
       busy={props.busy}
+      buttonRef={props.buttonRef}
       disabled={props.disabled}
       iconNode={
         <Icon

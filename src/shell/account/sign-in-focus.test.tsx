@@ -5,7 +5,11 @@ import { describe, expect, test, vi } from 'vitest'
 import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import { ManualDelay } from '../../app/test-kit'
 import { ACCOUNT_PATHS } from '../../shared/account'
-import { byRole, queryByText } from '../../test-support/dom-queries'
+import {
+  byRole,
+  focusedElement,
+  queryByText,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
 import { textOf } from '../test-render'
@@ -81,17 +85,27 @@ describe('the keyboard focus of the ChatGPT sign-in', () => {
     })
   })
 
-  test('Sign in again gives the focus to the first line of the sign-in that takes its place', async () => {
+  test('a sign-in that opens with the page takes no focus, Sign in again gives the focus to the first line of the sign-in that takes its place, and Cancel gives it back to Sign in again', async () => {
     const server = new FakeApiServer()
     const cause = copy.causes.notRenewed
     serveAccount(server, [{ ...chatGptLogin, unusableCause: cause }])
-    const { view } = await openAccount(server, {}, null)
+    const { view } = await openAccount(server, {}, 'codex')
+    const withPage = focusedElement()
+    await press(byRole('button', 'Cancel', view))
     const again = byRole('button', copy.signInAgain, view)
     focus(again)
     await press(again)
-    expect(focused()).toEqual({
-      text: `${copy.intro} ${copy.settingsLink.label}`,
-      tabIndex: '-1',
+    const opened = focused()
+    const cancel = byRole('button', 'Cancel', view)
+    focus(cancel)
+    await press(cancel)
+    expect({ withPage, opened, cancelled: focusedElement() }).toEqual({
+      withPage: 'the page',
+      opened: {
+        text: `${copy.intro} ${copy.settingsLink.label}`,
+        tabIndex: '-1',
+      },
+      cancelled: `button ${copy.signInAgain}`,
     })
   })
 

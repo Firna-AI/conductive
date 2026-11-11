@@ -7,6 +7,7 @@ import { orgSettingsPaths } from '../../shared/org-settings'
 import {
   accessibleName,
   byRole,
+  focusedElement,
   queryAllByText,
   queryByText,
 } from '../../test-support/dom-queries'
@@ -173,6 +174,26 @@ describe('the environment variables of the cloud computer', () => {
         },
         { envVars: [{ operation: 'remove', name: secondName }] },
       ],
+    })
+  })
+
+  test('Add variable and Change give the focus to the field of their form, and Cancel and Save give it back to their button', async () => {
+    const server = new FakeApiServer()
+    const view = await mountedSettings(server)
+    const change = `Change the value of ${plainName}`
+    click(byRole('button', 'Add variable', view))
+    const adding = focusedElement()
+    click(byRole('button', 'Cancel', view))
+    const cancelled = focusedElement()
+    click(byRole('button', change, view))
+    const changing = focusedElement()
+    click(byRole('button', 'Save', view))
+    await settle()
+    expect({ adding, cancelled, changing, saved: focusedElement() }).toEqual({
+      adding: 'textbox Name',
+      cancelled: 'button Add variable',
+      changing: `textbox New value of ${plainName}`,
+      saved: `button ${change}`,
     })
   })
 
