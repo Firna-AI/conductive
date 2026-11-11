@@ -1,6 +1,6 @@
 # Keep a turn open while the agent's background work runs
 
-Status: Active. On branch `calummoore/sandbox-shutdown-investigation`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `conductor/background-work-keeps-turn-open-implementation`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 On 11 November 2026, a routine run opened PR #225, started a background
 watch on its CI checks, and ended its reply. The runner closed the Claude

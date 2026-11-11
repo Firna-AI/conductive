@@ -151,3 +151,36 @@ it('clears an expired device alarm but preserves a replacement lease at the same
   expect(tasks.devices).toHaveBeenCalledTimes(2)
   expect(await native.getAlarm()).toBeNull()
 })
+
+it('preserves a rescheduled Continue lease and holds lifecycle work until its resume is allowed', async () => {
+  const { storage, native, alarms, tasks } = await fixture()
+  await alarms.set('continue', at(100))
+  await alarms.set('lifecycle:start', at(100))
+  await alarms.set('previews', at(100))
+  let calls = 0
+  let allowResume = false
+  const continued = {
+    ...tasks,
+    continuation: async () => {
+      calls++
+      if (calls === 1) await alarms.set('continue', at(200))
+    },
+    lifecycleAllowed: async () => allowResume,
+  }
+  await runWorkspaceAlarms(alarms, () => at(100), continued)
+  expect(calls).toBe(1)
+  expect(tasks.lifecycle).toHaveBeenCalledTimes(0)
+  expect(tasks.previews).toHaveBeenCalledTimes(1)
+  expect(await storage.get('number', 'alarm:continue')).toBe(at(200))
+  expect(await storage.get('number', 'alarm:lifecycle:start')).toBe(at(200))
+  expect(await native.getAlarm()).toBe(at(200))
+  allowResume = true
+  tasks.lifecycle.mockImplementationOnce(async () => {
+    await alarms.set('lifecycle:start', null)
+  })
+  await runWorkspaceAlarms(alarms, () => at(200), continued)
+  expect(calls).toBe(2)
+  expect(tasks.lifecycle).toHaveBeenCalledTimes(1)
+  expect(await storage.get('number', 'alarm:continue')).toBeUndefined()
+  expect(await storage.get('number', 'alarm:lifecycle:start')).toBeUndefined()
+})

@@ -225,6 +225,14 @@ only when `stripHeaders` does not name `Sec-WebSocket-Protocol`.
 The upstream URL and each rewritten redirect lose each name in
 `stripQueryParameters`.
 The proxy follows no upstream redirect.
+`portResponseHeaders` sends `private` first, then the server's `Cache-Control` unchanged.
+It also sends `no-cache` first, unless the server gives a browser lifetime.
+A lifetime is an `Expires` header, or a `Cache-Control` without quotes that holds `no-store`, a bare `no-cache`, or `max-age` with digits.
+A quote can hide the directives after it from the browser, so the proxy's directives never follow the server's value.
+The reply keeps the server's `Expires`, `Date`, and `Age`.
+A 304 without `Cache-Control` gets none, so the browser keeps the rules of its stored reply.
+The outer Worker keeps these rules, because it answers the preview host with `previewResponse` from [http.ts](../http.ts).
+[Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states the requirement.
 
 An org suspension blocks preview creation and launch with 403 `org_suspended`.
 The message gives the abuse address. The org-wide write gate also blocks preview close.

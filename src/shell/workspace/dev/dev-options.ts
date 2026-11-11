@@ -1,5 +1,11 @@
+import { bannerStates } from '../../../../docs/mockups/src/fixtures/pullRequests'
 import type { FileListKind } from '../../../files/navigation'
+import type { BannerState } from '../../../shared/github'
 import type { RunnerReportKind } from '../../../shared/runner'
+import {
+  readScenario,
+  type BarScenario,
+} from '../../../test-support/fake-bar-dev'
 import type { ColorScheme } from '../../ui/ThemeRoot'
 import type { Viewport } from '../../ui/viewport'
 import type { PhoneView } from '../WorkspaceColumns'
@@ -19,6 +25,9 @@ import { firstStartStates, type FirstStartState } from './dev-first-start'
  * - `start=waiting|failed|time-limit|retrying`: opens the new workspace of
  *   the create flow in that state of its first start, with its queue.
  * - `viewer=member`: signs in Priya, a member who is not the owner.
+ * - `bar=<state>`: the GitHub state of the bar, with the app's own Files
+ *   part. `turn=running`, `access`, `method`, `merge`, `work`, and
+ *   `continue` choose how the actions of the bar end.
  */
 export interface DevOptions {
   repair: readonly RunnerReportKind[]
@@ -29,6 +38,14 @@ export interface DevOptions {
   controls: boolean
   start: FirstStartState | null
   member: boolean
+  bar: DevBar | null
+}
+
+/** The GitHub state of the bar, a turn that runs, and the answers of its actions. */
+interface DevBar {
+  state: BannerState
+  turn: boolean
+  scenario: BarScenario
 }
 
 const kinds: Readonly<Record<string, RunnerReportKind>> = {
@@ -69,5 +86,13 @@ export function readDevOptions(search: string): DevOptions {
     controls: query.get('controls') !== 'off',
     start: pick<FirstStartState>(query, 'start', firstStartStates) ?? null,
     member: query.get('viewer') === 'member',
+    bar: readBar(query),
   }
+}
+
+function readBar(query: URLSearchParams): DevBar | null {
+  const state = pick<BannerState>(query, 'bar', bannerStates)
+  if (state === undefined) return null
+  const turn = query.get('turn') === 'running'
+  return { state, turn, scenario: readScenario(query) }
 }

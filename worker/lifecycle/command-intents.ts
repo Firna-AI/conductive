@@ -23,9 +23,13 @@ export function lifecycleCommand(
   owner: CommandOwner,
   phase: CommandPhase,
   command: string,
+  recoverOnly = false,
 ): string {
   const directory = `${commandDirectory(owner)}/${phase}`
-  return `bash -c ${shellQuote(commandJournal)} conductive-lifecycle ${shellQuote(directory)} ${shellQuote(command)}`
+  const existing = recoverOnly
+    ? `test -L ${shellQuote(`${directory}/owner`)} || exit 125\n`
+    : ''
+  return `${existing}bash -c ${shellQuote(commandJournal)} conductive-lifecycle ${shellQuote(directory)} ${shellQuote(command)}`
 }
 
 /**

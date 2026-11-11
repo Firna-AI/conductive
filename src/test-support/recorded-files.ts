@@ -12,6 +12,7 @@ import { toolFixtures } from './fixtures/tools'
 const data = toolFixtures()
 const changed: ChangesResponse = {
   ...data.changes,
+  unpushedCommits: 2,
   files: [
     ...data.changes.files.map((file) =>
       file.path === 'README.md'

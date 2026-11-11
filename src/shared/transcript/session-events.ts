@@ -46,6 +46,7 @@ export function asSessionEvent(
     case 'tool.updated':
     case 'turn.completed':
     case 'turn.failed':
+    case 'workspace.continued':
       return event
     default:
       return null

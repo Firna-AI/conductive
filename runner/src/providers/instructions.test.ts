@@ -127,6 +127,10 @@ it.each(['claude', 'codex'] as const)(
         agent,
         providerSessionId: 'legacy-conversation',
         instructions: initialPrompt,
+        instructionBranches: {
+          workspaceBranch: 'alice/tracked-task',
+          targetBranch: 'target-main',
+        },
       },
     ])
     expect(provider.conversationId()).toBe('legacy-conversation')
@@ -248,6 +252,10 @@ it.each(['claude', 'codex'] as const)(
       agent,
       providerSessionId: null,
       instructions: currentPrompt,
+      instructionBranches: {
+        workspaceBranch: 'bob/new-task',
+        targetBranch: 'new-target',
+      },
     })
     expect(h.warnings).toEqual([])
   },

@@ -180,6 +180,12 @@ says.
   archived. Only the owner or an admin can archive it again.
 - Restore keeps the owner of the workspace. A new owner for the member who
   restores was rejected, because only an admin reassigns a workspace.
+- Every member can continue each workspace of the org after its merge
+  (decision 224). [Who may continue](continue.md#who-may-continue) gives
+  the reason.
+- The role does not decide Merge or the agent actions of the pull request
+  bar. The GitHub access of each member decides them, as
+  [GitHub banner](github-banner.md#merge) says.
 
 ## Workspace owners
 

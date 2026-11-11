@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, expect, it } from 'vitest'
+import { parseChanges } from '../../src/files/api/parse-changes'
 
 import type { BranchChangedFile, FileEntry } from '../../src/shared/files'
 import { recordedRunnerFileEvents } from '../../src/test-support/recorded-files'
@@ -20,8 +21,13 @@ it('stores runner snapshots, tree deltas, and dirty branch changes across durabl
   const storage = runtime.storage('projection-reload')
   const state = new FilesState(storage)
   await state.beginConnection('connection-1')
-  for (const event of recordedRunnerFileEvents)
-    await state.apply('connection-1', event)
+  for (const event of recordedRunnerFileEvents) {
+    if (event.type === 'changes.updated') {
+      const changes = { ...event.changes }
+      delete changes.uncommittedFileCount
+      await state.apply('connection-1', { ...event, changes })
+    } else await state.apply('connection-1', event)
+  }
   await runtime.evict('projection-reload')
   const reloaded = new FilesState(runtime.storage('projection-reload'))
   expect((await reloaded.tree())?.revision).toBe(2)
@@ -67,6 +73,9 @@ it('stores runner snapshots, tree deltas, and dirty branch changes across durabl
       expect.objectContaining({ uncommitted: false }),
     ]),
   })
+  expect(parseChanges(await reloaded.changes())).not.toHaveProperty(
+    'uncommittedFileCount',
+  )
 })
 
 it('ignores stale trees and old connections and accepts a fresh connection revision', async () => {

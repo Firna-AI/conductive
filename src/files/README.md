@@ -17,16 +17,25 @@ app shell mounts them, as
 development pages and the tests run them against the fake API of
 [the browser fakes](../test-support/README.md).
 
+The files store keeps `ChangesResponse.unpushedCommits` and
+`ChangesResponse.uncommittedFileCount` from HTTP replies and events,
+including updates that change only a count. `parseChanges` refuses a reply
+whose count is present but is not a whole number. An older runner can omit
+either count. The store keeps it absent, so callers can distinguish an
+unknown count from zero.
+
 ## Integration
 
-The tab keeps one `WorkspaceFiles` store for each workspace whose Files
-part or chat showed, beside its kept chat. The Files part connects it
-through `useWorkspaceStore` of [the web app](../app/README.md). A stable
-`create` finds the kept store, or makes it. It starts nothing. A stable
-`connect` starts the store and returns its stop. The chat of the shell
-connects the same store while it shows, for the list of `@` and the file
-chips, so several parts share one connection, which stops after the last
-part stops:
+The tab keeps one `WorkspaceFiles` store for each workspace that it showed,
+beside its kept chat. The workspace screen connects it once, for the whole
+screen, through `useWorkspaceStore` of [the web app](../app/README.md), so
+the pull request bar knows the local work on every tab. The Files part and
+the other parts that show files only read it. The chat of the shell reads
+it for the list of `@` and the file chips, also on a phone before a visit
+to Files. A stable `create` finds the kept store, or makes it. It starts
+nothing. A stable `connect` starts the store and returns its stop. A second
+connect of the same store, such as the second run of an effect, shares its
+one connection, which stops after the last connect stops:
 
 ```ts
 const connections = new WeakMap<WorkspaceFiles, number>()

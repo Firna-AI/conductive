@@ -83,7 +83,7 @@ export class WorkspaceFeatures {
       )
       return response
     }
-    if (/\/github(?:\/checks)?$/.test(path)) return null
+    if (/\/github(?:\/.*)?$/.test(path)) return null
     return this.files(request, this.env)
   }
 

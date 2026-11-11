@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { CircleSlash } from 'lucide-react'
+import { splitPath } from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
 import type { BannerState } from '../../fixtures/pullRequests'
 import { checksPaths, paths } from '../../paths'
@@ -75,6 +76,9 @@ function FileTabs(props: {
  * from GitHub and still show. When the cloud computer could not read the
  * files, `tree` keeps the saved list under a notice, or says that no list
  * is available. `paths` adds two files whose labels hide a secret value.
+ * `checksTop` stands above the checks, such as the actions of the pull
+ * request bar on a phone. `only` keeps the changes of these paths, such as
+ * the changed files that moved to the new branch of Continue.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -84,19 +88,27 @@ export function FilesPanel(props: {
   open?: FileTabView
   placeholder?: ReactNode
   paths?: PathState
+  checksTop?: ReactNode
+  only?: readonly string[]
 }) {
-  const { view, open } = props
+  const { view, open, only } = props
   const masked = props.paths === 'masked'
   const files = filesFor(props.paths ?? 'plain')
-  const changes = props.edited ? files.changes : []
-  const tree = props.edited
-    ? files.tree
-    : files.tree.map((entry) => ({ ...entry, change: undefined }))
+  const changes = props.edited
+    ? files.changes.filter((file) => !only || only.includes(file.path))
+    : []
+  const names = new Set(changes.map((file) => splitPath(file.path).name))
+  const tree = files.tree.map((entry) =>
+    props.edited && (!only || names.has(entry.name))
+      ? entry
+      : { ...entry, change: undefined },
+  )
   const treeOpen = open === 'code' || open === 'markdown' ? open : undefined
   const lists = !props.placeholder
   return (
     <div className={styles.files}>
       <FileTabs banner={props.banner} changes={changes.length} view={view} />
+      {view === 'checks' ? props.checksTop : null}
       {view === 'checks' ? <ChecksList state={props.banner} /> : null}
       {view !== 'checks' && props.placeholder ? props.placeholder : null}
       {view === 'all' && lists && props.tree === 'none' ? (

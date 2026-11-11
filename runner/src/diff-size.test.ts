@@ -55,6 +55,7 @@ it.each(['working', 'previous'] as const)(
       await h.git('add', 'README.md')
       await h.git('commit', '-m', 'limit-sized base')
       await h.git('update-ref', 'refs/heads/main', 'HEAD')
+      await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
       await h.write('README.md', 'small current version\n')
     }
     const accepted = await h.request()
@@ -64,6 +65,7 @@ it.each(['working', 'previous'] as const)(
       await h.git('add', 'README.md')
       await h.git('commit', '-m', 'oversized base')
       await h.git('update-ref', 'refs/heads/main', 'HEAD')
+      await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
       await h.write('README.md', 'small current version\n')
     }
     expect(errorResult(await h.request())).toEqual(tooLarge)
@@ -76,6 +78,7 @@ it('bounds generated patch output when both file versions meet the read limit', 
   await h.git('add', 'README.md')
   await h.git('commit', '-m', 'large text base')
   await h.git('update-ref', 'refs/heads/main', 'HEAD')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   await h.write('README.md', 'b'.repeat(2_700_000))
   expect(errorResult(await h.request())).toEqual(tooLarge)
 })
