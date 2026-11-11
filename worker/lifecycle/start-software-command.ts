@@ -43,7 +43,24 @@ export function workspaceSoftwareUpdateCommand(
   const command = `${privilegedCommand(workspaceToolsCommand(WORKSPACE_TOOL_SOURCES))}\n${installImageSoftware(artifact)}`
   return privilegedCommand(`set -eu
 umask 077
+backup_complete=false
+recover() {
+  result=$?
+  trap - EXIT HUP INT TERM
+  if [ "$result" -ne 0 ]; then
+    if [ "$backup_complete" = true ]; then
+      rm -rf -- "$@" || exit 125
+      tar -xPf "$backup/files.tar" || exit 125
+      systemctl daemon-reload || exit 125
+    fi
+    result=1
+  fi
+  rm -rf -- "$backup" || exit 125
+  exit "$result"
+}
 backup=$(mktemp -d /tmp/conductive-software-backup.XXXXXX)
+trap 'recover "$@"' EXIT
+trap 'exit 1' HUP INT TERM
 set -- ${APP_PATHS.map(shellQuote).join(' ')}
 for path do
   if [ -e "$path" ] || [ -L "$path" ]; then
@@ -52,20 +69,7 @@ for path do
 done
 touch "$backup/present"
 tar -cPf "$backup/files.tar" --null -T "$backup/present"
-recover() {
-  result=$?
-  trap - EXIT HUP INT TERM
-  if [ "$result" -ne 0 ]; then
-    rm -rf -- "$@" || exit 125
-    tar -xPf "$backup/files.tar" || exit 125
-    systemctl daemon-reload || exit 125
-    result=1
-  fi
-  rm -rf -- "$backup"
-  exit "$result"
-}
-trap 'recover "$@"' EXIT
-trap 'exit 1' HUP INT TERM
+backup_complete=true
 bash -c ${shellQuote(command)}
 systemctl start conductive-preview-relay.socket
 systemctl restart conductive-preview-relay.service`)

@@ -161,8 +161,9 @@ functions of the lifecycle that a reader opens first.
   command builders as the software image and `softwareVersion`. After a
   good install, it starts the relay socket and restarts the relay service,
   so the current relay runs at once. The image installers still start no
-  unit. The command saves the earlier app files first. When any part
-  fails, it puts them back.
+  unit. The command saves the earlier app files first. A failed backup
+  keeps those files and removes temporary files. A failed install restores
+  the earlier files.
 - [start-machine.ts](start-machine.ts): after provider readiness,
   `advanceStartMachine` asks for an update. With one, the start enters its
   `software` phase before the fetch step of a create or the startup step of

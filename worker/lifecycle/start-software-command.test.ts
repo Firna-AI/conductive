@@ -3,6 +3,7 @@ import {
   chmod,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   rm,
   writeFile,
@@ -138,6 +139,79 @@ it('activates the preview relay after a successful workspace software installati
     expect(await readFile(join(root, 'services'), 'utf8')).toBe(
       'start conductive-preview-relay.socket\nrestart conductive-preview-relay.service\n',
     )
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+it('removes an incomplete software backup and preserves old app files when the archive write fails', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'workspace-software-backup-'))
+  const bin = join(root, 'bin')
+  const temporary = join(root, 'tmp')
+  const software = join(root, 'opt/conductive/software')
+  const runner = join(root, 'opt/conductive/runner-start.sh')
+  try {
+    await Promise.all([
+      mkdir(bin, { recursive: true }),
+      mkdir(temporary, { recursive: true }),
+      mkdir(software, { recursive: true }),
+    ])
+    await writeFile(join(software, 'runner'), 'old runner\n')
+    await writeFile(
+      runner,
+      '#!/bin/sh\ncat "$FIXTURE_ROOT/opt/conductive/software/runner"\n',
+    )
+    const scripts = {
+      sudo: '#!/bin/sh\nshift\nshift\nexec "$@"\n',
+      tar: `#!/bin/sh
+set -eu
+printf '%s\\n' "$1" >> "$FIXTURE_ROOT/tar-calls"
+printf 'partial archive\\n' > "$2"
+exit 2
+`,
+      bash: '#!/bin/sh\ntouch "$FIXTURE_ROOT/install-ran"\n',
+      systemctl: '#!/bin/sh\ntouch "$FIXTURE_ROOT/service-ran"\n',
+    }
+    for (const [name, script] of Object.entries(scripts)) {
+      await writeFile(join(bin, name), script)
+      await chmod(join(bin, name), 0o755)
+    }
+    const command = workspaceSoftwareUpdateCommand(SOFTWARE)
+      .replaceAll('/opt/', `${root}/opt/`)
+      .replaceAll('/usr/local/', `${root}/usr/local/`)
+      .replaceAll('/etc/', `${root}/etc/`)
+      .replaceAll(
+        '/tmp/conductive-software-backup.',
+        `${temporary}/conductive-software-backup.`,
+      )
+    const result = await run('/bin/sh', ['-c', command], {
+      env: {
+        ...process.env,
+        PATH: `${bin}:${process.env.PATH}`,
+        FIXTURE_ROOT: root,
+      },
+    }).then(
+      () => 0,
+      (error: unknown) =>
+        typeof error === 'object' && error !== null && 'code' in error
+          ? error.code
+          : error,
+    )
+    expect(await readdir(temporary)).toEqual([])
+    expect(result).toBe(1)
+    expect(await readFile(join(software, 'runner'), 'utf8')).toBe(
+      'old runner\n',
+    )
+    expect(
+      (
+        await run('/bin/sh', [runner], {
+          env: { ...process.env, FIXTURE_ROOT: root },
+        })
+      ).stdout,
+    ).toBe('old runner\n')
+    expect(await readFile(join(root, 'tar-calls'), 'utf8')).toBe('-cPf\n')
+    expect(await readdir(root)).not.toContain('install-ran')
+    expect(await readdir(root)).not.toContain('service-ran')
   } finally {
     await rm(root, { recursive: true, force: true })
   }
