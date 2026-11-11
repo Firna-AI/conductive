@@ -6,8 +6,15 @@
   padding-left: 12%;
 }
 
-/* Keep message line breaks and wrap a long link to fit the bubble. */
+/*
+ * Keep message line breaks and wrap a long link to fit the bubble. The
+ * bubble is never wider than its column, so a chip with a long name is cut
+ * short inside it, as in an answer, and never pushes the bubble past the
+ * edge of the chat.
+ */
 .bubble {
+  box-sizing: border-box;
+  max-width: 100%;
   padding: 9px 14px;
   border-radius: var(--ui-radius-lg);
   background: var(--ui-bubble);

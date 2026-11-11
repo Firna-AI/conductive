@@ -42,7 +42,7 @@ export function record(value: unknown): Record<string, unknown> {
   return value
 }
 
-function effort(value: unknown): Effort {
+export function effort(value: unknown): Effort {
   if (
     value === 'none' ||
     value === 'low' ||

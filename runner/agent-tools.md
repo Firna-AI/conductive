@@ -32,6 +32,17 @@ A message from another member or a deferred model change keeps the
 active turn's context. Each new turn starts fresh tool processes.
 Closing the SDK or App Server also stops its workspace MCP child.
 
+The tools create and list workspaces, and list repositories, sections, and models.
+They also provide `create_session`, `list_sessions`, `send_message`, and `read_session` across the org.
+An omitted workspace ID names the calling workspace.
+Session reads need only the workspace token. Session writes need the active turn and follow its sender.
+A session link contains the workspace and session IDs.
+Workspace and session links in an answer show as chips.
+A `Sent by:` line names the sending session. An agent must not reply only to confirm it.
+The [tool guide](../tools/README.md#sessions) gives defaults, transcript continuation, and retry IDs.
+The runner puts this guidance in each new session's instructions.
+An existing session keeps its saved instructions after a restart.
+
 ## Key code
 
 - [workspace-tools.ts](src/providers/workspace-tools.ts) binds runtime tool

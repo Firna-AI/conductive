@@ -2,6 +2,7 @@ import { ApiError } from '../../app/api/client'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { DeviceChannel } from '../device/device-actions'
+import type { SessionReads } from '../links/session-reads'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
 import type { PendingMove } from './model-moves'
@@ -47,6 +48,16 @@ export interface ChatContext {
   readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
+  /**
+   * The one read of the sessions of each other workspace that a session
+   * link names, for this run, as `SessionReads` says.
+   */
+  readonly sessionReads: SessionReads
+  /**
+   * The choices of a shown session in this run, so that an address lookup
+   * that a later choice overtook selects nothing.
+   */
+  readonly tabChoices: { count: number }
 }
 
 const RETRY_MESSAGE = 'The request failed. Try again.'
