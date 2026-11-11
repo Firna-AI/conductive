@@ -18,4 +18,15 @@ export const building = defineScreen({
   render: (props, context) => (
     <OrgSettingsScreen state={props} viewport={context.viewport} />
   ),
+  variants: [
+    {
+      slug: 'fallback',
+      title: 'Building without a software image',
+      description:
+        'The software image of the current app version is not ready, such as after a deploy whose software image failed. So the build starts from the base image. After the clones, its log shows "Installing the agent and terminal software" with the output of that step, then the install script. A build from the software image has no such step, as the Building page shows.',
+      rationale:
+        'The user chose option E of image job decision 1 on 10 November 2026: one name covers the app\'s own software in the build log and in the start steps, so an admin does not take it for the install script of the org. "Install software" names the section of the install script, so the step names what it installs. A missing software image slows a build and never fails it.',
+      props: { softwareImage: 'missing' },
+    },
+  ],
 })

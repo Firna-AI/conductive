@@ -98,11 +98,7 @@ export function ComputerTab(props: {
         state={props.build}
       />
       <ScriptSection
-        description={
-          readOnly
-            ? `${includedSoftware} The install script runs only at a build of the computer.`
-            : `${includedSoftware} The install script runs only when you build the computer.`
-        }
+        description={`${includedSoftware} The install script runs at each build and refresh of the computer.`}
         notice={
           changed
             ? changedNotice({ build: props.build, builds: computer, readOnly })

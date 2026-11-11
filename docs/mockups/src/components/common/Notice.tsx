@@ -17,6 +17,8 @@ function BusyGlyph() {
 /**
  * A short message in a box with a full border and a tinted fill. A notice
  * of work that runs, such as a build, shows a spinner in place of its icon.
+ * `children` go under the text at the full width of the box, such as the
+ * output of a script.
  */
 export function Notice(props: {
   icon: LucideIcon
@@ -25,6 +27,7 @@ export function Notice(props: {
   tone?: 'neutral' | 'danger'
   action?: ReactNode
   busy?: boolean
+  children?: ReactNode
 }) {
   const Icon = props.icon
   const danger = props.tone === 'danger'
@@ -40,6 +43,9 @@ export function Notice(props: {
       </div>
       {props.action ? (
         <div className={styles.action}>{props.action}</div>
+      ) : null}
+      {props.children ? (
+        <div className={styles.more}>{props.children}</div>
       ) : null}
     </div>
   )

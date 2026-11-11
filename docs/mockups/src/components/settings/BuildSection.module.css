@@ -97,3 +97,39 @@
   flex: 1;
   font-size: var(--ui-text-sm);
 }
+
+/*
+ * A row of the history names its job: a build, or a refresh and what
+ * started it. The kinds line up after the times. A narrow history, such as
+ * on a phone, puts the kind under the time in each row.
+ */
+.jobs {
+  container: jobs / inline-size;
+}
+
+.job {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 12px;
+  min-width: 0;
+  padding: 5px 0;
+  font-size: var(--ui-text-sm);
+}
+
+.jobWhen {
+  min-width: 96px;
+  color: var(--ui-ink2);
+}
+
+.kind {
+  color: var(--ui-muted);
+}
+
+@container jobs (max-width: 420px) {
+  .job {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -60,3 +60,9 @@
   align-self: center;
   margin-left: auto;
 }
+
+/* More content takes a line of its own under the text. */
+.more {
+  flex-basis: 100%;
+  min-width: 0;
+}

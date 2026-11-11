@@ -46,8 +46,9 @@ full desktop layout.
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
-share. Its linked pages give the parts of [the chat](design-chat.md) and
-of [the operator section](design-operator.md).
+share. Its linked pages give the parts of [the chat](design-chat.md), of
+[the operator section](design-operator.md), and of
+[the cloud computer](design-cloud-computer.md).
 
 ## The catalogue
 
@@ -56,8 +57,9 @@ shows. It also gives the rules of the folder pages and the entries that
 moved. It gives the child pages of `marketing/docs`, `app/account`,
 `app/banner`, `app/chat`, `app/routines`, `app/workspace-menu`,
 `app/workspace-links`, and `app/tools`,
-the New workspace dialog, and the repositories that wait for a build. Its
-linked page,
+the New workspace dialog, the repositories that wait for a build, and the
+jobs of the cloud computer and the updates of an old workspace. Its linked
+page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section.
@@ -98,8 +100,10 @@ shows them in the New workspace dialog.
   draws a real mobile layout, not a squeezed desktop one.
 - An entry module in `src/entries/` exports one `defineScreen` with a named
   export. Its props and saved states (`variants`) choose the state. The
-  workspace screen declares its states in `src/screens/workspaceState.ts`, so
-  `mockups:serve` offers a control for each part of the state. The routine
+  workspace screen declares its states in `src/screens/workspaceState.ts`,
+  which takes the parts that come from its cloud computer from
+  `workspaceComputerState.ts` beside it, so `mockups:serve` offers a control
+  for each part of the state. The routine
   screen declares its states in `src/screens/routineState.ts` in the same
   way.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen

@@ -5,7 +5,8 @@ import { Page } from '../components/layout/Page'
 import { LeaveOrgDialog } from '../components/members/LeaveOrgDialog'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
-import { failedBuildOf } from '../components/settings/BuildSection'
+import { isFailed } from '../components/settings/BuildSection'
+import { jobKinds } from '../components/settings/buildCopy'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
@@ -21,6 +22,8 @@ export const orgSettingsSchema = {
   required: [
     'tab',
     'build',
+    'job',
+    'softwareImage',
     'script',
     'repositoryChange',
     'envForm',
@@ -31,11 +34,27 @@ export const orgSettingsSchema = {
   properties: {
     tab: { enum: ['general', 'repositories', 'computer', 'members'] },
     /**
-     * The builds of the cloud computer, which its tab shows. `time-limit` is
-     * a build that the app stopped at its 60-minute limit. `none` is an org
-     * with no build yet, such as a new org whose first build did not start.
+     * The newest job of the cloud computer, which its tab shows: done,
+     * running, or failed. `time-limit` is a job that the app stopped at its
+     * 60-minute limit. `none` is an org with no build yet, such as a new org
+     * whose first build did not start.
      */
     build: { enum: ['ready', 'building', 'failed', 'time-limit', 'none'] },
+    /**
+     * The kind of the newest job of Acme: a build, a refresh after a push,
+     * or the daily refresh. Each refresh is a clean build that runs the
+     * install script, so the tab shows it with its log and its result, as
+     * `build` gives. Firna has no refresh before its first good build.
+     */
+    job: { enum: jobKinds },
+    /**
+     * The software image of the current app version: ready, so each job
+     * of Acme starts from it, or missing, such as after a deploy whose
+     * software image failed. A job of Acme that runs then installs the
+     * agent and terminal software after the clones, so its log shows that
+     * step. The first build of Firna always starts from the software image.
+     */
+    softwareImage: { enum: ['ready', 'missing'] },
     /**
      * The install script: the one that the newest build started with, or
      * one that an admin changed and saved after that start, which a later
@@ -86,6 +105,8 @@ export type OrgSettingsState = SchemaProps<typeof orgSettingsSchema>
 export const acmeSettings: OrgSettingsState = {
   tab: 'general',
   build: 'ready',
+  job: 'build',
+  softwareImage: 'ready',
   script: 'built',
   repositoryChange: 'none',
   envForm: 'none',
@@ -153,7 +174,7 @@ export function OrgSettingsScreen(props: {
       newWorkspaceTo={settings.newWorkspace}
       org={org}
       sections={settings.sections}
-      settingsAlert={failedBuildOf(state.build) !== undefined}
+      settingsAlert={isFailed(state.build)}
       suspended={suspended}
       viewer={viewerMembership(state.viewer)}
     />

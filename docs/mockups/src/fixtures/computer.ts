@@ -1,14 +1,16 @@
 /**
  * The cloud computer of an org: one image that holds every repository of
  * the org, built from the install script. Every workspace of the org starts
- * from its newest good build.
+ * from its newest good build or refresh.
  */
+
+import type { JobKind } from '../components/settings/buildCopy'
 
 /** What every cloud computer includes before the install script runs. */
 export const includedSoftware =
   'Cloud computers run Ubuntu 24.04 and include Node.js 24, npm, pnpm, Bun, Python 3.12, uv, Go, Rust, Java, GCC, Clang, Docker, git, and gh.'
 
-/** It runs only when the user builds the computer. */
+/** It runs at each build and each refresh of the computer. */
 export const installScript = `#!/usr/bin/env bash
 set -euo pipefail
 
@@ -62,26 +64,49 @@ export const newEnvVar = { name: 'SENTRY_DSN', value: 'https://sentry.example' }
 
 type BuildResult = 'succeeded' | 'failed'
 
-export type Build = { when: string; result: BuildResult; duration: string }
+/**
+ * A job of the org image that ended: a build, or a refresh with what
+ * started it. Each refresh is a clean build too, so the tab lists both.
+ */
+export type Build = {
+  when: string
+  result: BuildResult
+  duration: string
+  kind: JobKind
+}
 
 /** The newest good build, which every workspace starts from. */
 export const lastBuild: Build = {
   when: '8 hours ago',
   result: 'succeeded',
   duration: '6m 41s',
+  kind: 'build',
 }
 
-/** The builds of the computer, newest first. */
+/** The jobs of the computer that ended, newest first. */
 export const buildHistory: readonly Build[] = [
   lastBuild,
-  { when: 'Yesterday', result: 'succeeded', duration: '6m 02s' },
-  { when: '3 Nov', result: 'failed', duration: '2m 18s' },
-  { when: '3 Nov', result: 'succeeded', duration: '5m 57s' },
-  { when: '28 Oct', result: 'succeeded', duration: '7m 13s' },
+  {
+    when: 'Yesterday',
+    result: 'succeeded',
+    duration: '6m 02s',
+    kind: 'daily-refresh',
+  },
+  { when: '3 Nov', result: 'failed', duration: '2m 18s', kind: 'build' },
+  { when: '3 Nov', result: 'succeeded', duration: '5m 57s', kind: 'build' },
+  {
+    when: '28 Oct',
+    result: 'succeeded',
+    duration: '7m 13s',
+    kind: 'push-refresh',
+  },
 ]
 
 /** The build that runs, in that state. */
 export const runningBuild = { elapsed: '2m 14s' } as const
+
+/** The refresh that runs, in that state. */
+export const runningRefresh = { elapsed: '1m 05s' } as const
 
 /**
  * The first build of the cloud computer of a new org, which Create org
@@ -106,6 +131,7 @@ export const firstGoodBuild: Build = {
   when: '1 minute ago',
   result: 'succeeded',
   duration: '4m 52s',
+  kind: 'build',
 }
 
 /**
@@ -118,12 +144,6 @@ set -euo pipefail
 cd ~/code/components && npm ci
 cd ~/code/docs && npm ci`
 
-/**
- * Each build and refresh runs for at most 60 minutes from its start. A
- * build that runs says so under its log.
- */
-export const buildLimit = 'Each build has a 60-minute limit.'
-
 /** A build that ended in failure, with the message that the app saved. */
 export type FailedBuild = Build & { result: 'failed'; error: string }
 
@@ -132,6 +152,7 @@ export const failedBuild: FailedBuild = {
   when: '12 minutes ago',
   result: 'failed',
   duration: '2m 18s',
+  kind: 'build',
   error:
     'The cloud computer image could not build. Check the log and try again.',
 }
@@ -141,6 +162,28 @@ export const timedOutBuild: FailedBuild = {
   when: '1 hour ago',
   result: 'failed',
   duration: '1h 00m',
+  kind: 'build',
   error:
     'The cloud computer image did not build within the 60-minute limit. Check the log and try again.',
+}
+
+/** A refresh, which starts by itself after a push or each day. */
+export type RefreshKind = Exclude<JobKind, 'build'>
+
+/** The newest refresh of Acme, which succeeded after the last build. */
+export function goodRefresh(kind: RefreshKind): Build {
+  return { when: '2 hours ago', result: 'succeeded', duration: '6m 12s', kind }
+}
+
+/**
+ * The newest refresh of Acme, whose install script failed on new commits.
+ * The app saves the message of a failed build for it.
+ */
+export function failedRefresh(kind: RefreshKind): FailedBuild {
+  return { ...failedBuild, duration: '3m 02s', kind }
+}
+
+/** The newest refresh of Acme, which the app stopped at its limit. */
+export function timedOutRefresh(kind: RefreshKind): FailedBuild {
+  return { ...timedOutBuild, kind }
 }

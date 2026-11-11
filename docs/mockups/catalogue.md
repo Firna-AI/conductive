@@ -16,6 +16,7 @@ how a screen is built, and links to the other pages.
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
+| `app/workspace-updates` | The update of the agent and terminal software at the start of an old workspace, also at a first start, a failed update, and the notice of a changed install script with its run |
 | `app/sections`      | The menu of a section, and a workspace dragged to another section             |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
@@ -26,7 +27,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
-| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
+| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, the refreshes, a build without a software image, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lists in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
@@ -42,11 +43,11 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
+| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, update an old one, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
-`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
+`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-updates`, `app/workspace-menu`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
@@ -149,6 +150,40 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   has the notice of a member. `app/org-settings/cloud-computer/script-changed`
   keeps the notice of the install script, which shows only for a change
   of the install script.
+
+The jobs of the cloud computer and the updates of an old workspace come
+from the clean image jobs plan of 10 November 2026. Its decisions carry
+the short name "image job decision". Each refresh, after a
+push and each day, is a clean build that runs the install script, so the
+Cloud computer tab shows it. The app's own software has one name, "the
+agent and terminal software", in the build log and in the start steps.
+[The cloud computer](design-cloud-computer.md) gives the parts:
+
+- `app/org-settings/cloud-computer` has the history of builds and
+  refreshes. Each row names its job: Build, Refresh after a push, or Daily
+  refresh.
+- `app/org-settings/cloud-computer/refreshes` has a refresh after a push
+  that succeeded, with "Last refresh" in the head. Its `running` and
+  `daily` variants have a refresh that runs, with its log and what started
+  it in the head. Its `failed` variant has a failed refresh with the end
+  of its log and Try again.
+- `app/org-settings/cloud-computer/building/fallback` has a build without
+  a ready software image. Its log shows "Installing the agent and terminal
+  software" after the clones.
+- `app/org-settings/cloud-computer/first-build` and its `failed` variant
+  have the empty install script of a new org, so the log shows no install
+  step.
+- `app/workspace-updates` has the resume of a workspace with an earlier
+  version of the agent and terminal software, with the start step
+  "Updating the agent and terminal software". `first-start` has that step
+  at the first start of a new workspace. `update-failed` has the warning
+  bar after a failed update, and its `starting` variant has the failed
+  step while the start goes on.
+- `app/workspace-updates/install-script` has the notice of a changed
+  install script with Run install script. Its `running`, `finished`, and
+  `failed` variants have the output of the script. The flow
+  `user-flows/update-old-workspace` goes from the list through the update
+  and the run.
 
 `app/account` shows the General tab of the account. Its tabs are links, as
 the tabs of the org settings are. `app/account/preferences` shows the

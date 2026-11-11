@@ -88,7 +88,10 @@ Each item marked "my call" is a design call of the planning agent, made on
    still waits for Build computer, and an added repository still starts
    its own build. The limit of one refresh after a push in 30 minutes
    stays. A failed refresh keeps the last good image, as a failed build
-   does. The Cloud computer tab shows each refresh with its log.
+   does. The Cloud computer tab shows each refresh with its log. My call,
+   from finding 19 of Milestone 1: each refresh records what started it,
+   a push, the daily refresh, or a request to the refresh route, so the tab
+   can name it.
 3. **Empty install script.** A build or a refresh skips the install step
    when the install script is empty, and its build log shows no install
    step. The user's design of 10 November 2026: "user scripts (if they
@@ -98,22 +101,33 @@ Each item marked "my call" is a design call of the planning agent, made on
    it ran. Each workspace records its app software version and the org
    image that it started from. My call: the update of an old workspace
    and the notice of an old org setup compare these records, so neither
-   reads files in the sandbox.
+   reads files in the sandbox. My calls, from findings 18 and 20 of
+   Milestone 1: each workspace also records the revision of the install
+   script that its disk holds, and a mark of a failed update that lasts
+   until its next workspace start.
 5. **Update of an old workspace.** At a workspace start, when the
    workspace's app software version is older than the current one, the
    start runs the software step on the workspace's disk before the runner
    starts, and records the new version (decision 8 B). The start shows it
    as its own start step, with the name of decision 1. When the update
    fails, the start goes on with the old app software and warns, because
-   the Worker still serves older runner protocol versions. My call of 9
+   the Worker still serves older runner protocol versions. My call, from
+   finding 20 of Milestone 1: the warning is the stored mark of design item
+   4, so each tab shows a warning bar until the next workspace start. My call of 9
    November 2026: this holds at the first workspace start too, because the
    reason of decision 8 is that every workspace gets the fixes.
-6. **Old org setup.** When the org image of a workspace is older than the
-   current org image, the workspace shows a notice. Its action runs the
-   install script of the current org image in the workspace, when the user
-   chooses (decision 11 C). My call: the action runs from the folder of the
-   workspace's repository, with the env vars of the workspace, and shows
-   its output.
+6. **Old org setup.** When the install script of the current org image
+   differs from the install script that the workspace's disk holds, the
+   workspace shows a notice. Its action runs the install script of the
+   current org image in the workspace, when the user chooses (decision 11
+   C). My calls, from findings 16 and 18 of Milestone 1: the notice compares
+   the install scripts, not the org images, because each refresh makes a new
+   org image with the same script. A good run records the current script for
+   the workspace, so the notice ends. A failed run records nothing, so the
+   notice stays with Try again. The action runs from the folder of the
+   workspace's repository and shows its output. Decision 15 sets its
+   environment, decision 17 a missing repository, decision 23 its time
+   limit, and decision 24 a question before it runs.
 7. **Parallel copies.** The source loader keeps one source record for each
    repository. Each copy gets its own token and one-use grant, and the
    Worker revokes each token as soon as its copy ends. My call: the
@@ -144,7 +158,10 @@ Each item marked "my call" is a design call of the planning agent, made on
    "Installing the agent and terminal software" and "Updating the agent
    and terminal software". The mockup milestone sets the final words.
 10. **Docs.** My call: the new requirements go into the sections of the
-    protocol docs that already hold the rules of each moment. Each long
+    protocol docs that already hold the rules of each moment. My call, from
+    finding 27 of Milestone 1: the docs cite the decisions of this plan as
+    "image job decision N", and each doc that cites one defines that short
+    name. Each long
     doc gets only the lines that must change, because
     `plans/follow-ups/protocol-docs-split.md` owns the split of the long
     docs.
@@ -288,6 +305,205 @@ in `.context/software-image/`. Each decision below has the user's answer.
 - **Reason:** a large repository copies alone, and many small ones copy
   together (design item 8).
 
+### 15. Old org setup: the environment of the install script run
+
+Open. From finding 1 of Milestone 1.
+
+- **Severity:** High. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Security.
+- **Location:** design item 6 of this plan, and "Startup script and env
+  vars" in `docs/protocol/workspaces-and-sandboxes.md`.
+- **Terms:**
+  - **Install script run:** the action of the notice of an old org setup,
+    which runs the install script of the current org image in a workspace.
+- **Background:** Moment: a workspace that already runs. An earlier call of
+  the planning agent ran the install script there with the env vars of the
+  workspace. The protocol says that builds and refreshes get none of the
+  env vars, so admins write and test the script without them.
+- **Problem:** In a workspace, the same script sees the secret values, such
+  as `DATABASE_URL`. The script can then act differently, for example run
+  migrations on a real database. The app hides only exact copies of secret
+  values in the output.
+- **Impact if no action:** One press by a member can change a real service,
+  or show a changed copy of a secret.
+- **Root question:** In which environment does the install script run in
+  an old workspace?
+- **Options:**
+  - **A.** Run it with no org env vars, as a build does. Effort: Small.
+  - **B.** Keep the env vars and hide exact copies in the output. The notice
+    says that the script gets them. The risk stays. Effort: Small.
+- **Left out:** Giving builds the env vars too, because a saved snapshot
+  must not hold them. Running the script in the member's terminal, because
+  that gives it the env vars too, so it is the same as B.
+- **Wider fix:** A. One rule then covers every run of the install script.
+- **Previous examples:** None found.
+- **Recommendation:** A. The script runs in the environment that its author
+  tested, and no secret reaches its output.
+- **Action:** ask the user, because the run adds behaviour at a security
+  boundary that no requirement covers.
+
+### 17. Old org setup: a repository that the workspace lacks
+
+Open. From finding 3 of Milestone 1.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** design item 6 of this plan.
+- **Background:** Moment: a workspace that already runs. An admin can add a
+  repository after a workspace started. The new install script can then use
+  its folder, such as `cd ~/code/admin-dashboard`. The disk of the old
+  workspace has no such folder. Workspace #578 owns the copy of a missing
+  repository at a first workspace start.
+- **Problem:** The plan does not say what the notice does when the
+  repositories changed. A run then fails at the missing folder.
+- **Impact if no action:** The member sees a failed run, and the error does
+  not say why.
+- **Root question:** What does an old workspace offer when the current
+  setup needs a repository that its disk lacks?
+- **Options:**
+  - **A.** Run the script, and let the output show the error at the missing
+    folder. Effort: Small.
+  - **B.** When a repository is missing, the notice says that a new
+    workspace has the new setup, and it offers no run. This needs a new
+    mockup state. Effort: Medium.
+  - **C.** The action copies each missing repository first, then runs the
+    script. It needs a token path, as workspace #578 does. Effort: Large.
+- **Left out:** Running only the lines for the workspace's repository,
+  because the install script runs as one script.
+- **Wider fix:** C. It gives an old workspace each repository of the
+  current setup. It overlaps workspace #578.
+- **Previous examples:** Decision 10 D. Its copy part moved to workspace
+  #578.
+- **Related:** Design item 6: the notice compares the install scripts.
+- **Recommendation:** B. It tells the member the real cause at small cost,
+  and C can follow after workspace #578.
+- **Action:** ask the user, because the options trade cost against a clear
+  result, and B adds a state that no requirement covers.
+
+### 22. Refresh: the history of jobs has no limit
+
+Open. From finding 8 of Milestone 1.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `docs/mockups/src/components/settings/BuildHistory.tsx` and
+  `worker/lifecycle/build-data.ts`.
+- **Background:** Moments: the refresh after a push and the daily refresh.
+  The API returns every job of the org, and the history lists them all.
+  Before this plan, the history held only builds, which are rare.
+- **Problem:** A refresh after a push can run every 30 minutes, and one
+  refresh runs each day. An active org can add hundreds of rows each month.
+- **Impact if no action:** The history becomes a long list, and the builds
+  get lost in it.
+- **Root question:** How does the history stay short enough to read?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Show the newest 50 jobs with "Show older", as the Runs list of a
+    routine does. This needs a mockup state and a paged API. Effort: Medium.
+  - **C.** Group the good refreshes between two other jobs into one row,
+    such as "12 refreshes". This needs a mockup state. Effort: Medium.
+- **Left out:** Hiding good refreshes, because design item 2 says that the
+  tab shows each refresh.
+- **Wider fix:** B. It keeps the list bounded for any number of jobs.
+- **Previous examples:** The Runs list of a routine, which holds the newest
+  50 runs.
+- **Recommendation:** B. It reuses a known pattern, and it also bounds the
+  API reply.
+- **Action:** ask the user, because B and C trade a familiar pattern
+  against a shorter list, and each adds a mockup state.
+
+### 23. Old org setup: a run of the install script has no limit
+
+Open. From finding 9 of Milestone 1.
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** design item 6 and Milestone 8 of this plan.
+- **Background:** Moment: a workspace that already runs. A build has a
+  60-minute limit, and a start has a 20-minute limit. A sandbox stops after
+  30 minutes without member activity and without an agent turn.
+- **Problem:** The plan gives a run of the install script no time limit. A
+  run does not count as member activity, so the idle stop can end it.
+- **Impact if no action:** A script that never ends runs until the idle
+  stop, which cuts it off at a random point.
+- **Root question:** How long can a run of the install script go on?
+- **Options:**
+  - **A.** No limit, and a run does not count as activity. Effort: Small.
+  - **B.** A 60-minute limit, as for a build, and a run keeps the sandbox
+    from its idle stop. Effort: Medium.
+- **Left out:** A 20-minute limit, as for a start, because the script is
+  the same one that a build runs with 60 minutes.
+- **Wider fix:** None.
+- **Previous examples:** Decision 128 set the limits for builds and starts.
+- **Recommendation:** B. The run then ends the same way as a build, and the
+  idle stop cannot cut it.
+- **Action:** ask the user, because B adds a new limit, and the user
+  chooses each new limit.
+
+### 24. Old org setup: no question before the run
+
+Open. From finding 10 of Milestone 1.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** the `ConfirmDialog` bullet in `docs/mockups/design.md`, and
+  `docs/mockups/src/components/workspace/InstallScriptNotice.tsx`.
+- **Background:** Moment: a workspace that already runs. `design.md` says
+  that `ConfirmDialog` asks before an action that a user cannot simply
+  undo. The mockup runs the script with one press.
+- **Problem:** A run can change files and install packages, and nothing
+  undoes it.
+- **Impact if no action:** A member can start a run by mistake and lose the
+  current state of the files.
+- **Root question:** How does a member confirm a run that cannot be undone?
+- **Options:**
+  - **A.** No dialog. The notice says what the run does. Effort: Small.
+  - **B.** A `ConfirmDialog` that says the script runs in this workspace and
+    can change its files. This adds a mockup state. Effort: Small.
+- **Left out:** A snapshot before each run, because a saved disk costs
+  storage and time.
+- **Wider fix:** None.
+- **Previous examples:** The question before closing a running session, in
+  `docs/mockups/src/screens/workspaceOverlays.tsx`.
+- **Recommendation:** B. It follows the rule in `design.md`, and it keeps
+  the choice with the member, which is the reason for decision 11 C.
+- **Action:** ask the user, because B adds a step that decision 11 C does
+  not name.
+
+### 25. Build log: an empty-script log stops at the copies
+
+Open. From finding 11 of Milestone 1.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** UX wording.
+- **Location:** `firstBuildLog` in `docs/mockups/src/fixtures/terminal.ts`,
+  and `worker/lifecycle/build-execution.ts`.
+- **Background:** Moments: each build and each refresh. When the install
+  script is empty, the job skips the install step. The Worker writes no
+  line when it saves the image.
+- **Problem:** The log of such a job ends with the copies. The save can
+  take minutes with no new line.
+- **Impact if no action:** An admin can think that the job hangs.
+- **Root question:** How does the log show the work after the last step?
+- **Options:**
+  - **A.** Change nothing. The head still says "Building" with its time.
+    Effort: Small.
+  - **B.** Add a line such as "Saving the cloud computer" before the save
+    in every build and refresh. Effort: Small.
+- **Left out:** A line only for an empty script, because every job saves
+  its image.
+- **Wider fix:** B. It covers the save of every job.
+- **Previous examples:** None found.
+- **Recommendation:** B. One line says what the job does while it saves.
+- **Action:** ask the user, because B adds a build log line that no
+  requirement names.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -297,18 +513,23 @@ Depends on: none
 The mockups show the clean image jobs, the refreshes on the Cloud computer
 tab, and the updates of an old workspace.
 
-- [ ] Give our software one name in the build log fixtures of
+- [x] Give our software one name in the build log fixtures of
       `docs/mockups/src/fixtures/terminal.ts`, as decision 1 E says, and
-      show a build with an empty install script with no install step.
-- [ ] Show refreshes on the Cloud computer tab, with their log, a failed
+      show a build with an empty install script with no install step. The
+      name is "the agent and terminal software".
+- [x] Show refreshes on the Cloud computer tab, with their log, a failed
       refresh, and Try again.
-- [ ] Draw the start steps of an old workspace: the update of our software
+- [x] Draw the start steps of an old workspace: the update of our software
       with the name of decision 1, and the warning when the update fails.
-- [ ] Draw the notice of an old org setup in a workspace, its action, and
+- [x] Draw the notice of an old org setup in a workspace, its action, and
       the output of the install script.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. Evidence:
+      `.context/software-image/mockups/`.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. Findings 16, 18, 19, 20, 21, 26, and 27 changed the
+      design. Decisions 15, 17, 22, 23, 24, and 25 wait for the user.
+- [ ] Apply the answers to decisions 17, 22, and 24 to the mockups, when
+      they add a mockup state.
 
 ## Milestone 2: Documentation and protocol
 
@@ -332,6 +553,12 @@ The docs state the requirements of each moment that this plan changes.
       because no image job does so after this plan.
 - [ ] In `docs/architecture.md`, change the term "Refresh", and add an old
       workspace. PR #194 already changed the term "Build".
+- [ ] Update the reason of "The repository notice" in
+      `docs/protocol/org-image.md`, which says that the card shows no
+      refresh.
+- [ ] Read each public guide in `src/marketing/docs/` in full, and update
+      each sentence that restates the old refresh, such as the refresh and
+      history sentences of `cloud-computer.md`.
 - [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
@@ -344,8 +571,10 @@ The docs state the requirements of each moment that this plan changes.
 Depends on: 2
 
 - [ ] Add a D1 migration for the records of design item 4: the app
-      software version of each org image, and the app software version
-      and the org image of each workspace.
+      software version and the install script revision of each org image,
+      the cause of each refresh, and the app software version, the org
+      image, the install script revision, and the failed update mark of
+      each workspace.
 - [ ] Write the records at each build, refresh, workspace start, and
       update of an old workspace.
 - [ ] Tests: a build from a software image and a build with the software
@@ -440,6 +669,13 @@ Depends on: 1, 5, 7, 8
       1 draws them.
 - [ ] Show the start step and the warning of Milestone 7.
 - [ ] Show the notice of an old org setup and its action.
+- [ ] Change "The install script runs only when you build the computer." in
+      `src/shell/settings/ComputerTab.tsx` and "only at a build" in
+      `src/members/MemberComputerView.tsx`, with their tests, to the words
+      of the mockup.
+- [ ] Capture the org pictures of the marketing site again with
+      `npm run marketing:pictures`, because the Cloud computer tab of the
+      mockups now shows refreshes.
 
 ## Milestone 10: Verification, commit, review, and pull request
 

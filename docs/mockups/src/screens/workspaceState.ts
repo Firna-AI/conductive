@@ -8,8 +8,8 @@ import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
-import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { computerStateProps } from './workspaceComputerState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -23,6 +23,8 @@ export const workspaceStateSchema = {
     'name',
     'sandbox',
     'startError',
+    'software',
+    'setup',
     'conversation',
     'fold',
     'banner',
@@ -56,20 +58,7 @@ export const workspaceStateSchema = {
      * shows only its first step. Any other workspace shows its own name.
      */
     name: { enum: ['title', 'untitled'] },
-    /**
-     * The cloud computer. `archived` is a cloud computer that Archive
-     * stopped, as `archive` says, and the workspace shows none of it.
-     * `refused` is a stopped cloud computer whose start the app refuses,
-     * such as while the owner of the workspace is suspended.
-     */
-    sandbox: {
-      enum: ['ready', 'starting', 'stopped', 'error', 'refused', 'archived'],
-    },
-    /**
-     * The message that the app saved for a start that failed, which the
-     * error state shows: a failure, or the 20-minute limit of a start.
-     */
-    startError: { enum: startErrorKeys },
+    ...computerStateProps,
     conversation: { enum: conversationKeys },
     /**
      * The fold of the work of each ended turn: closed, as it starts, open,
@@ -260,6 +249,8 @@ export const readyWorkspace: WorkspaceState = {
   name: 'title',
   sandbox: 'ready',
   startError: 'failed',
+  software: 'current',
+  setup: 'current',
   conversation: 'history',
   fold: 'closed',
   banner: 'ready-to-merge',

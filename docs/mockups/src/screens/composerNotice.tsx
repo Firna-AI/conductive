@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { CircleAlert, MessageSquarePlus, Paperclip } from 'lucide-react'
 import {
   notAttachedTitle,
@@ -20,6 +21,7 @@ import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { otherStarter } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
+import { installScriptNotice } from './workspaceUpdates'
 
 /** Why a message of the viewer starts a new session, in a composer state. */
 function linkedReason(
@@ -65,7 +67,7 @@ function tooLargeNotice() {
  * why. The starter whose login is not available sees the notice that asks
  * to connect.
  */
-export function composerNotice(state: WorkspaceState, workspace: Workspace) {
+function messageNotice(state: WorkspaceState, workspace: Workspace) {
   if (state.composer === 'too-large' && state.tab !== 'new-session') {
     return tooLargeNotice()
   }
@@ -86,4 +88,23 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
   if (!noLogin || starter !== undefined) return undefined
   return <ConnectAgentNotice choice={choice} />
+}
+
+/**
+ * The notices over the composer: the notice of a changed install script,
+ * with the run of the script, then the notice of the message, if any.
+ */
+export function composerNotice(
+  state: WorkspaceState,
+  workspace: Workspace,
+): ReactNode {
+  const setup = installScriptNotice(state)
+  const message = messageNotice(state, workspace)
+  if (!setup) return message
+  return (
+    <>
+      {setup}
+      {message}
+    </>
+  )
 }

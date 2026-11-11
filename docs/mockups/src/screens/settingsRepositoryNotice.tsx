@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Hammer, RotateCw } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
 import type { BuildState } from '../components/settings/BuildSection'
+import type { JobKind } from '../components/settings/buildCopy'
 import type { RepositoryWait } from '../components/settings/repositoryChangeCopy'
 import { RepositoryNotice } from '../components/settings/RepositoryNotice'
 import { changedNames } from '../fixtures/repositories'
@@ -9,11 +10,18 @@ import type { OrgSettingsState } from './OrgSettingsScreen'
 import type { SettingsOrg } from './settingsOrgs'
 
 /**
- * How the repository changes wait, from the builds of the org. The first
- * state that applies wins: a failed newest build while none runs, a build
- * that runs while an added repository waits, or else a wait for a build.
+ * How the repository changes wait, from the newest job of the org. The
+ * first state that applies wins: a failed newest build while none runs, a
+ * build that runs while an added repository waits, or else a wait for a
+ * build. A refresh holds the repositories of the newest good build, so a
+ * refresh that runs or failed leaves the changes waiting for a build.
  */
-function waitOf(build: BuildState, added: boolean): RepositoryWait {
+function waitOf(
+  build: BuildState,
+  added: boolean,
+  job: JobKind,
+): RepositoryWait {
+  if (job !== 'build') return 'waiting'
   switch (build) {
     case 'failed':
     case 'time-limit':
@@ -70,7 +78,7 @@ export function settingsRepositoryNotice(
   }
   const { added, removed } = changedNames(state.repositoryChange)
   if (added.length === 0 && removed.length === 0) return null
-  const wait = waitOf(state.build, added.length > 0)
+  const wait = waitOf(state.build, added.length > 0, state.job)
   const admin = state.viewer === 'admin'
   const editable =
     admin && state.org === 'active' && state.tab === 'repositories'

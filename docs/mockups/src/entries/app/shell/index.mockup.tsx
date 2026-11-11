@@ -16,6 +16,7 @@ export const appShell = defineScreen({
   useCasePaths: [
     'user-flows/create-workspace',
     'user-flows/reopen-stopped-workspace',
+    'user-flows/update-old-workspace',
     'user-flows/open-workspace-from-palette',
     'user-flows/archive-from-list',
     'user-flows/create-org',

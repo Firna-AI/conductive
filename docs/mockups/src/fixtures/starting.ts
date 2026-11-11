@@ -4,12 +4,18 @@
  * when a start fails.
  */
 
+import { updatingSoftware } from '../components/workspace/updateCopy'
 import { savedCarts } from './workspaces'
 
 export type StartingLog = {
   title: string
   steps: readonly string[]
   elapsed: string
+  /**
+   * A step that failed while the start goes on, such as the update of the
+   * agent and terminal software. The card marks it.
+   */
+  failedStep?: string
 }
 
 /**
@@ -41,6 +47,40 @@ export const resumingLog: StartingLog = {
   title: 'Resuming the sandbox',
   steps: ['Resuming with your files as you left them'],
   elapsed: '3s',
+}
+
+/**
+ * A workspace with an earlier version of the agent and terminal software
+ * resumes. The update runs right after the resume, before the agent
+ * starts.
+ */
+export const updatingLog: StartingLog = {
+  ...resumingLog,
+  steps: [...resumingLog.steps, updatingSoftware],
+  elapsed: '18s',
+}
+
+/**
+ * A new workspace whose org image holds an earlier version of the agent
+ * and terminal software, such as in the day after a release. The update
+ * runs right after the start from the org image.
+ */
+export const creatingUpdateLog: StartingLog = {
+  ...creatingLog,
+  steps: [
+    creatingLog.steps[0],
+    updatingSoftware,
+    ...creatingLog.steps.slice(1),
+  ],
+  elapsed: '34s',
+}
+
+/**
+ * A start whose update failed. The start goes on with the earlier version
+ * of the agent and terminal software, and the card marks the step.
+ */
+export function failedUpdate(log: StartingLog): StartingLog {
+  return { ...log, elapsed: '41s', failedStep: updatingSoftware }
 }
 
 /** Why a start failed: a failure, or the 20-minute limit. */

@@ -1,56 +1,54 @@
 import { Hammer, RotateCw } from 'lucide-react'
-import {
-  buildLimit,
-  failedBuild,
-  runningBuild,
-  timedOutBuild,
-  type Build,
-  type FailedBuild,
-} from '../../fixtures/computer'
+import type { Build, FailedBuild } from '../../fixtures/computer'
 import type { TerminalLine } from '../../fixtures/terminal'
 import { ActionButton } from '../common/actions'
 import { StatusText } from '../common/StatusText'
 import { TerminalView } from '../tools/TerminalView'
+import {
+  lastJobLabel,
+  runningLabels,
+  runningNote,
+  stillStartsFrom,
+  type JobKind,
+} from './buildCopy'
 import { BuildHistory, BuildResult } from './BuildHistory'
 import { SectionText } from './Section'
 import styles from './BuildSection.module.css'
 
 /**
- * The state of the cloud computer: built, building, failed, stopped at the
- * 60-minute limit of a build, or with no build yet, such as a new org
- * whose first build did not start.
+ * The state of the newest job of the cloud computer, a build or a refresh:
+ * done, running, failed, stopped at the 60-minute limit of a job, or no
+ * build yet, such as a new org whose first build did not start.
  */
 export type BuildState = 'ready' | 'building' | 'failed' | 'time-limit' | 'none'
 
-/** The states whose card shows the log of a build. */
-type LogState = 'building' | 'failed' | 'time-limit'
+/** The states of a newest job that failed. */
+type FailedState = 'failed' | 'time-limit'
 
-/** The log of the build that runs or failed, in each state with a log. */
+/** The states whose card shows the log of a job. */
+type LogState = 'building' | FailedState
+
+/** The log of the job that runs or failed, in each state with a log. */
 type BuildLogs = Readonly<Record<LogState, readonly TerminalLine[]>>
 
 /**
- * The builds of an org that the card shows: the newest good build, which
- * every workspace starts from, the builds that ended, newest first, and
- * the logs. A new org has no good build until its first build succeeds.
+ * The jobs of an org that the card shows: the newest good job, which every
+ * workspace starts from, the jobs that ended, newest first, and the logs.
+ * `failed` holds the newest job in each failed state, with its saved
+ * message, and `running` the kind and the time of the job that runs. A new
+ * org has no good job until its first build succeeds.
  */
 export type OrgBuilds = {
   lastGood?: Build
   history: readonly Build[]
   logs: BuildLogs
+  failed: Readonly<Record<FailedState, FailedBuild>>
+  running: { kind: JobKind; elapsed: string }
 }
 
-/** The build that failed in a state, with its saved message, or none. */
-export function failedBuildOf(state: BuildState): FailedBuild | undefined {
-  switch (state) {
-    case 'failed':
-      return failedBuild
-    case 'time-limit':
-      return timedOutBuild
-    case 'ready':
-    case 'building':
-    case 'none':
-      return undefined
-  }
+/** Whether the newest job failed, so the Settings link shows a mark. */
+export function isFailed(state: BuildState): state is FailedState {
+  return state === 'failed' || state === 'time-limit'
 }
 
 function Log(props: { lines: readonly TerminalLine[]; live: boolean }) {
@@ -61,7 +59,12 @@ function Log(props: { lines: readonly TerminalLine[]; live: boolean }) {
   )
 }
 
-/** The action of the build head. A member who is not an admin gets none. */
+/**
+ * The action of the build head. Build computer waits while a build or a
+ * refresh runs, because one job runs at a time. Try again follows a failed
+ * build or refresh, and builds the current settings. A member who is not
+ * an admin gets none.
+ */
 function HeadAction(props: { state: BuildState; readOnly: boolean }) {
   if (props.readOnly) return null
   switch (props.state) {
@@ -89,45 +92,40 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
   }
 }
 
+/**
+ * The newest job: the job that runs, and its time, or the last job, a
+ * build or a refresh, with its result.
+ */
 function Head(props: { state: BuildState; builds: OrgBuilds }) {
-  if (props.state === 'building') {
+  const { state, builds } = props
+  if (state === 'building') {
+    const { kind, elapsed } = builds.running
     return (
       <StatusText
         busy
-        label={`Building · ${runningBuild.elapsed}`}
+        label={`${runningLabels[kind]} · ${elapsed}`}
         tone="active"
       />
     )
   }
-  const build = failedBuildOf(props.state) ?? props.builds.lastGood
-  if (props.state === 'none' || build === undefined) {
+  const job = isFailed(state) ? builds.failed[state] : builds.lastGood
+  if (state === 'none' || job === undefined) {
     return <span className={styles.label}>No build yet</span>
   }
   return (
     <>
-      <span className={styles.label}>Last build</span>
-      <span className={styles.when}>{build.when}</span>
-      <BuildResult build={build} />
+      <span className={styles.label}>{lastJobLabel(job.kind)}</span>
+      <span className={styles.when}>{job.when}</span>
+      <BuildResult build={job} />
     </>
   )
 }
 
 /**
- * The note under the log of a build that runs: the build that workspaces
- * start from until it finishes, and the time limit of each build.
- */
-function buildingNote(lastGood: Build | undefined): string {
-  const from = lastGood
-    ? `Workspaces start from the build of ${lastGood.when} until this one finishes.`
-    : 'Workspaces start from this build when it finishes.'
-  return `${from} ${buildLimit}`
-}
-
-/**
- * The log and the notes of a build that runs or failed. A build that runs
- * names its time limit. A failed build shows the message that the app
- * saved for it, such as the 60-minute limit, above the end of its log, and
- * the good build that workspaces still start from, if there is one.
+ * The log and the notes of a job that runs or failed. A job that runs
+ * names its time limit. A failed job shows the message that the app saved
+ * for it, such as the 60-minute limit, above the end of its log, and the
+ * good job that workspaces still start from, if there is one.
  */
 function Body(props: { state: BuildState; builds: OrgBuilds }) {
   const { state, builds } = props
@@ -142,32 +140,30 @@ function Body(props: { state: BuildState; builds: OrgBuilds }) {
     return (
       <div className={styles.body}>
         <Log lines={builds.logs.building} live />
-        <SectionText muted>{buildingNote(builds.lastGood)}</SectionText>
+        <SectionText muted>
+          {runningNote(builds.running.kind, builds.lastGood)}
+        </SectionText>
       </div>
     )
   }
-  const failed = failedBuildOf(state)
-  if (!failed) return null
-  const log: LogState = state === 'time-limit' ? 'time-limit' : 'failed'
+  if (!isFailed(state)) return null
   return (
     <div className={styles.body}>
-      <SectionText>{failed.error}</SectionText>
-      <Log lines={builds.logs[log]} live={false} />
+      <SectionText>{builds.failed[state].error}</SectionText>
+      <Log lines={builds.logs[state]} live={false} />
       {builds.lastGood ? (
-        <SectionText muted>
-          {`Workspaces still start from the build of ${builds.lastGood.when}.`}
-        </SectionText>
+        <SectionText muted>{stillStartsFrom(builds.lastGood)}</SectionText>
       ) : null}
     </div>
   )
 }
 
 /**
- * The builds of the org's cloud computer: the last build with its result,
- * Build computer, the log of a build that runs or failed, and the history.
- * A failed build leaves the last good build in use. An org with no build
- * shows Build computer first. `readOnly` drops the actions, for a member
- * who is not an admin (decision 57).
+ * The jobs of the org's cloud computer: the last build or refresh with its
+ * result, Build computer, the log of a job that runs or failed, and the
+ * history of builds and refreshes. A failed job leaves the last good job in
+ * use. An org with no build shows Build computer first. `readOnly` drops
+ * the actions, for a member who is not an admin (decision 57).
  */
 export function BuildSection(props: {
   state: BuildState

@@ -2,6 +2,7 @@
   "order": [
     "building",
     "build-failed",
+    "refreshes",
     "first-build",
     "script-changed",
     "repositories-changed",

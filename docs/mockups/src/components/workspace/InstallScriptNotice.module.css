@@ -1,0 +1,11 @@
+/*
+ * The output of the install script, as the log of a build shows it, in a
+ * box short enough to keep the chat in view above the composer.
+ */
+.output {
+  display: flex;
+  height: 132px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+}

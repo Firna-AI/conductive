@@ -15,12 +15,7 @@ import {
   type OpenWorkspace,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import {
-  creatingLog,
-  firstSecondLog,
-  resumingLog,
-  type StartingLog,
-} from '../fixtures/starting'
+import { firstSecondLog, type StartingLog } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
 import { workspaceSession } from '../fixtures/terminal'
@@ -30,6 +25,7 @@ import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
+import { startWithUpdate } from './workspaceUpdates'
 
 /**
  * The file that the centre tab shows, when the tab is a file. With masked
@@ -68,14 +64,18 @@ function backFrom(open: FileTabView): BackLink {
 
 /**
  * The steps of a sandbox start, while the sandbox starts. A new workspace
- * that still shows Untitled is in the first second of its start.
+ * that still shows Untitled is in the first second of its start. A start
+ * of a workspace with an earlier version of the agent and terminal
+ * software updates it.
  */
 export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
   const run = runStartingLog(state)
   if (run) return run
-  if (!isNew(state)) return resumingLog
-  return state.name === 'untitled' ? firstSecondLog : creatingLog
+  if (!isNew(state)) return startWithUpdate(state, 'resume')
+  return state.name === 'untitled'
+    ? firstSecondLog
+    : startWithUpdate(state, 'create')
 }
 
 /**

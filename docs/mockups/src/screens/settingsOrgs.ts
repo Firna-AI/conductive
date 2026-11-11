@@ -12,7 +12,6 @@ import {
   workspaceSections,
 } from '../components/workspaces/sections'
 import {
-  buildHistory,
   changedInstallScript,
   envVars,
   failedBuild,
@@ -20,7 +19,7 @@ import {
   firstGoodBuild,
   installScript,
   installScriptWithout,
-  lastBuild,
+  runningBuild,
   startupScript,
   timedOutBuild,
 } from '../fixtures/computer'
@@ -38,19 +37,16 @@ import {
   changedNames,
   newOrg,
   type ReachableRepository,
-  type RepositoryChange,
 } from '../fixtures/repositories'
 import {
   acmeBuildLog,
-  buildLog,
-  failedBuildLog,
   failedFirstBuildLog,
   firstBuildLog,
-  timedOutBuildLog,
   timedOutFirstBuildLog,
 } from '../fixtures/terminal'
 import { type Workspace, workspaceList } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { acmeJobs } from './acmeJobs'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 
 /** The org whose settings show, and what its tabs hold. */
@@ -71,30 +67,29 @@ export type SettingsOrg = {
   links: Readonly<Record<SettingsTab, string>>
 }
 
-/** Acme, which has built its cloud computer many times. */
-const acme: SettingsOrg = {
-  org: orgs.acme,
-  repositories: acmeRepositories,
-  members: acmeMembers,
-  invites: acmeInvites,
-  workspaces: workspaceList,
-  computer: {
-    lastGood: lastBuild,
-    history: buildHistory,
-    logs: {
-      building: buildLog,
-      failed: failedBuildLog,
-      'time-limit': timedOutBuildLog,
+/**
+ * Acme, which has built its cloud computer many times, with its newest
+ * job: a build or a refresh, in the state of the tab.
+ */
+function acme(state: OrgSettingsState): SettingsOrg {
+  return {
+    org: orgs.acme,
+    repositories: acmeRepositories,
+    members: acmeMembers,
+    invites: acmeInvites,
+    workspaces: workspaceList,
+    computer: {
+      ...acmeJobs(state.job, state.build, state.softwareImage),
+      installScript,
+      changedInstallScript,
+      startupScript,
+      envVars,
     },
-    installScript,
-    changedInstallScript,
-    startupScript,
-    envVars,
-  },
-  list: paths.shell,
-  sections: workspaceSections(),
-  newWorkspace: paths.newWorkspace,
-  links: settingsLinks,
+    list: paths.shell,
+    sections: workspaceSections(),
+    newWorkspace: paths.newWorkspace,
+    links: settingsLinks,
+  }
 }
 
 /**
@@ -102,7 +97,9 @@ const acme: SettingsOrg = {
  * Firna has no good build until its first build succeeds. The history
  * lists the builds that ended.
  */
-function firnaBuilds(build: BuildState): Omit<OrgBuilds, 'logs'> {
+function firnaBuilds(
+  build: BuildState,
+): Pick<OrgBuilds, 'lastGood' | 'history'> {
   switch (build) {
     case 'ready':
       return { lastGood: firstGoodBuild, history: [firstGoodBuild] }
@@ -134,6 +131,8 @@ function firna(build: BuildState): SettingsOrg {
         failed: failedFirstBuildLog,
         'time-limit': timedOutFirstBuildLog,
       },
+      failed: { failed: failedBuild, 'time-limit': timedOutBuild },
+      running: { kind: 'build', elapsed: runningBuild.elapsed },
       installScript: '',
       changedInstallScript: firnaInstallScript,
       startupScript: '',
@@ -147,42 +146,51 @@ function firna(build: BuildState): SettingsOrg {
 }
 
 /**
- * Acme after a saved change of its repositories. A build that runs clones
- * the chosen repositories, and an admin who removes a repository takes its
- * line out of the install script that they change.
+ * Acme after a saved change of its repositories, with its newest job. A
+ * build that runs clones the chosen repositories, and an admin who removes
+ * a repository takes its line out of the install script that they change.
+ * A refresh clones the repositories of the newest good build, so its log
+ * stays.
  */
-function acmeAfter(change: RepositoryChange): SettingsOrg {
-  if (change === 'none') return acme
+function acmeAfter(state: OrgSettingsState): SettingsOrg {
+  const base = acme(state)
+  const change = state.repositoryChange
+  if (change === 'none') return base
   const repositories = changedAcmeRepositories(change)
   const chosen = repositories
     .filter((repository) => repository.used)
     .map((repository) => repository.name)
   const { removed } = changedNames(change)
+  const { logs } = base.computer
   return {
-    ...acme,
+    ...base,
     repositories,
     computer: {
-      ...acme.computer,
-      logs: { ...acme.computer.logs, building: acmeBuildLog(chosen) },
+      ...base.computer,
+      logs:
+        state.job === 'build'
+          ? { ...logs, building: acmeBuildLog(chosen) }
+          : logs,
       changedInstallScript:
         removed.length > 0
           ? installScriptWithout(removed)
-          : acme.computer.changedInstallScript,
+          : base.computer.changedInstallScript,
     },
   }
 }
 
 /**
  * The org of the settings: Acme in use, Acme suspended, or Firna. Acme
- * shows the saved change of its repositories of the state.
+ * shows its newest job and the saved change of its repositories of the
+ * state.
  */
 export function settingsOrg(state: OrgSettingsState): SettingsOrg {
   switch (state.org) {
     case 'active':
-      return acmeAfter(state.repositoryChange)
+      return acmeAfter(state)
     case 'suspended':
       return {
-        ...acmeAfter(state.repositoryChange),
+        ...acmeAfter(state),
         list: paths.suspendedOrg,
         sections: suspendedSections(),
         links: suspendedSettingsLinks,

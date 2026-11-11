@@ -45,6 +45,12 @@
   text-indent: -16px;
 }
 
+/* The mark of a step that failed while the start goes on. */
+.failed {
+  margin-left: 10px;
+  color: var(--ui-warning);
+}
+
 .caret {
   display: inline-block;
   width: 16px;

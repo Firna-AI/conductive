@@ -51,6 +51,7 @@ import {
 } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
+import { withSoftwareBar } from './workspaceUpdates'
 import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
@@ -171,7 +172,7 @@ export function WorkspaceScreen(props: {
     />
   )
   const { header, files } = placeLostUpdate(state, {
-    header: workspaceHeader,
+    header: withSoftwareBar(state, workspaceHeader),
     files: <FilesContent state={state} viewport={viewport} />,
   })
   const tool = <ToolContent state={state} viewport={viewport} />

@@ -5,7 +5,9 @@ import styles from './StartingCard.module.css'
 
 /**
  * The start of a sandbox in the chat: a quiet card with a moving mark, then
- * each step so far, with the time since the start.
+ * each step so far, with the time since the start. A step that failed while
+ * the start goes on, such as the update of the agent and terminal software,
+ * ends with "failed".
  */
 export function StartingCard(props: { log: StartingLog }) {
   const theme = useSharedUiTheme()
@@ -29,6 +31,9 @@ export function StartingCard(props: { log: StartingLog }) {
                 ›
               </span>
               {step}
+              {step === log.failedStep ? (
+                <span className={styles.failed}>failed</span>
+              ) : null}
             </li>
           ))}
         </ol>

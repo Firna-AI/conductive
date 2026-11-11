@@ -2,6 +2,7 @@
   "order": [
     "sign-in",
     "shell",
+    "workspace-updates",
     "sections",
     "workspace-menu",
     "command-palette",
