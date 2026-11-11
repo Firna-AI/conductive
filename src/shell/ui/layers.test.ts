@@ -25,13 +25,13 @@ describe('the open layers of the page', () => {
   test('notes whether a menu is open until the last open menu closes', () => {
     const layers = new OpenLayers()
     const seen: boolean[] = []
-    layers.menuOpen.subscribe(() => seen.push(layers.menuOpen.get()))
+    layers.anyMenuOpen.subscribe(() => seen.push(layers.anyMenuOpen.get()))
     const removeFirst = layers.addMenu(() => true)
     const removeSecond = layers.addMenu(() => true)
     removeFirst()
-    const withOne = layers.menuOpen.get()
+    const withOne = layers.anyMenuOpen.get()
     removeSecond()
-    expect({ seen, withOne, after: layers.menuOpen.get() }).toEqual({
+    expect({ seen, withOne, after: layers.anyMenuOpen.get() }).toEqual({
       seen: [true, false],
       withOne: true,
       after: false,

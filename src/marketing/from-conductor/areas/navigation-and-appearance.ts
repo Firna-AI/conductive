@@ -26,9 +26,8 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     id: 'keyboard-shortcuts',
     area: 'navigation-and-appearance',
     name: 'Keyboard shortcuts',
-    status: 'in-progress',
-    note: 'Custom keyboard shortcuts are in progress. The command palette shortcut works today.',
-    due: null,
+    status: 'available',
+    note: 'Shortcuts run the main actions of the app. Change them on the Keyboard shortcuts tab of your account.',
   },
   {
     id: 'layout-and-zen-mode',

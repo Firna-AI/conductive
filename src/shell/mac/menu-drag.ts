@@ -19,7 +19,7 @@ export const MENU_OPEN_ATTRIBUTE = 'data-menu-open'
  */
 export function useMenuDragStop(layers: OpenLayers): void {
   const mac = useMacApp() !== null
-  const menuOpen = useStore(layers.menuOpen)
+  const menuOpen = useStore(layers.anyMenuOpen)
   useEffect(() => {
     if (!mac || !menuOpen) return undefined
     const root = document.documentElement

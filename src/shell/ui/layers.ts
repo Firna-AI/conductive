@@ -9,17 +9,23 @@ export type LayerOwner = object
 
 /**
  * The menus and the modal layers that are open on the page, in each UI kit
- * of the app: the shell, the chat, and the members UI. The command palette
- * reads them: it opens only when no dialog or sheet of another owner holds
- * the input, and when every open menu closed.
+ * of the app: the shell, the chat, and the members UI. The shortcut layer
+ * creates them. Its listener reads them before a key runs a command, and
+ * the command palette reads them: it opens only when no dialog or sheet of
+ * another owner holds the input, and when every open menu closed.
  */
 export class OpenLayers {
   private readonly menus = new Set<{ close: () => boolean }>()
   private readonly modals = new Set<{ owner: LayerOwner }>()
-  private readonly anyMenu = new Store(false)
+  private readonly menuStore = new Store(false)
 
-  /** At least one menu is open. */
-  readonly menuOpen: Readable<boolean> = this.anyMenu
+  /** At least one menu is open, as a value that screens follow. */
+  readonly anyMenuOpen: Readable<boolean> = this.menuStore
+
+  /** A menu is open. */
+  menuOpen(): boolean {
+    return this.menus.size > 0
+  }
 
   /**
    * Notes an open menu until the result runs. `close` asks it to close,
@@ -28,10 +34,10 @@ export class OpenLayers {
   addMenu(close: () => boolean): () => void {
     const menu = { close }
     this.menus.add(menu)
-    this.anyMenu.set(true)
+    this.menuStore.set(true)
     return () => {
       this.menus.delete(menu)
-      this.anyMenu.set(this.menus.size > 0)
+      this.menuStore.set(this.menus.size > 0)
     }
   }
 
@@ -62,6 +68,13 @@ export class OpenLayers {
 
 /** The open layers of the app. Without a provider, a layer notes nothing. */
 export const LayersContext = createContext<OpenLayers | null>(null)
+
+/** The open layers of the app, which the shortcut layer gives. */
+export function useOpenLayers(): OpenLayers {
+  const layers = useContext(LayersContext)
+  if (!layers) throw new Error('The app has no open layers.')
+  return layers
+}
 
 /**
  * Notes a menu while `open`. `close` closes it, as Escape does, and says

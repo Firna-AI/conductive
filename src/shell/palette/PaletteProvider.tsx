@@ -2,61 +2,27 @@ import { useEffect, useState, type ReactNode } from 'react'
 import type { AppModel } from '../../app/app-model'
 import { useNavigation } from '../../app/navigation'
 import { PaletteController } from '../../app/palette/controller'
-import { isPaletteKey, paletteKeyOutcome } from '../../app/palette/palette-keys'
-import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import { useApp } from '../context'
-import { useMenuDragStop } from '../mac/menu-drag'
-import { LayersContext, OpenLayers } from '../ui/layers'
-import { PaletteContext, type PaletteHandle } from './palette-context'
-
-/** Whether a key press comes from inside one of the elements. */
-function inside(
-  elements: ReadonlySet<HTMLElement>,
-  target: EventTarget | null,
-): boolean {
-  return (
-    target instanceof Node &&
-    [...elements].some((element) => element.contains(target))
-  )
-}
+import { useShortcutOffer } from '../shortcuts/shortcut-context'
+import { useOpenLayers } from '../ui/layers'
+import { PaletteContext } from './palette-context'
 
 /**
- * The palette key, ⌘K on a Mac and Ctrl+K elsewhere, opens and closes the
- * palette on each page of the signed-in app. It does nothing while a
- * dialog or a sheet other than the palette holds the focus, also over the
- * open palette. It opens through `PaletteController.show`, which closes
- * an open menu first, and stays closed when a menu does not close. When
- * it opens or closes the palette, the browser does not also run its own
- * action. A held key acts once.
+ * The keys of the Command palette command, ⌘K on a Mac and Ctrl+K
+ * elsewhere by default, open a closed palette and close an open one, on
+ * each page of the signed-in app. The dialog of the palette is the layer
+ * of the command, so the key still runs over it, and not over a dialog or
+ * a sheet of another owner. It opens through `PaletteController.show`, as
+ * the Search row does.
  */
-function usePaletteKey(
-  app: AppModel,
-  palette: PaletteHandle,
-  layers: OpenLayers,
-) {
-  const { onKey, platform } = useServices()
-  useEffect(
-    () =>
-      onKey((press) => {
-        if (press.isComposing || !isPaletteKey(press, platform)) return
-        if (app.boot.get().state !== 'ready') return
-        const { controller, terminals } = palette
-        const outcome = paletteKeyOutcome({
-          platform,
-          open: controller.open.get(),
-          modal: layers.modalOpen(controller),
-          inTerminal: inside(terminals, press.target),
-        })
-        if (outcome === 'close') {
-          press.preventDefault()
-          if (!press.repeat) controller.close()
-        } else if (outcome === 'open' && !press.repeat && controller.show()) {
-          press.preventDefault()
-        }
-      }),
-    [onKey, platform, app, palette, layers],
-  )
+function usePaletteCommand(app: AppModel, controller: PaletteController) {
+  const ready = useStore(app.boot).state === 'ready'
+  const toggle = () => {
+    if (controller.open.get()) controller.close()
+    else controller.show()
+  }
+  useShortcutOffer('command-palette', ready ? toggle : null, controller)
 }
 
 /** A change of the address, such as after Back, and a sign-out close the palette. */
@@ -78,22 +44,16 @@ function useCloseOnLeave(app: AppModel, controller: PaletteController) {
 }
 
 /**
- * The command palette of the tab, its key, and the open layers that every
- * UI kit of the app notes, because the key reads them. The layer of each
- * frame draws the palette, as `PaletteLayer` says. In the Mac app, an open
- * menu also stops the drag regions, as `useMenuDragStop` says.
+ * The command palette of the tab and its key. It reads the open layers of
+ * the shortcut layer, so it sits inside `ShortcutProvider`. The layer of
+ * each frame draws the palette, as `PaletteLayer` says.
  */
 export function PaletteProvider(props: { children: ReactNode }) {
   const app = useApp()
-  const [layers] = useState(() => new OpenLayers())
-  const [palette] = useState<PaletteHandle>(() => ({
-    controller: new PaletteController(layers),
-    terminals: new Set(),
-  }))
-  const { controller } = palette
+  const layers = useOpenLayers()
+  const [controller] = useState(() => new PaletteController(layers))
   const open = useStore(controller.open)
-  usePaletteKey(app, palette, layers)
-  useMenuDragStop(layers)
+  usePaletteCommand(app, controller)
   useCloseOnLeave(app, controller)
   // The action of a row runs once the palette left the page: its focus
   // went back and the frame takes input again.
@@ -101,10 +61,8 @@ export function PaletteProvider(props: { children: ReactNode }) {
     if (!open) controller.settle()
   }, [open, controller])
   return (
-    <PaletteContext.Provider value={palette}>
-      <LayersContext.Provider value={layers}>
-        {props.children}
-      </LayersContext.Provider>
+    <PaletteContext.Provider value={controller}>
+      {props.children}
     </PaletteContext.Provider>
   )
 }

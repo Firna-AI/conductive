@@ -90,6 +90,13 @@ This page lists each protocol doc and what it covers.
 - [Feedback](../protocol/feedback.md): the Feedback dialog that Send
   feedback opens, its screenshots and context, the reply address, the
   routes, and the email to the team inbox.
+- [Keyboard shortcuts](../protocol/keyboard-shortcuts.md): the commands that
+  keys run, where a key goes, and where the changes of a person live.
+  - [Keyboard shortcuts: the keys](../protocol/keyboard-shortcuts-keys.md)
+  - [Keyboard shortcuts: fixed keys and text keys](../protocol/keyboard-shortcuts-fixed-keys.md)
+  - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
+  - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
+  - [Keyboard shortcuts: the settings tab](../protocol/keyboard-shortcuts-tab.md)
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and

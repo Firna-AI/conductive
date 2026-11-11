@@ -93,3 +93,8 @@ a.current:hover {
   white-space: nowrap;
   transform: translateY(-50%);
 }
+
+/* The key that opens the org, as key chips after its name. */
+.hintKey {
+  margin-left: 8px;
+}

@@ -5,6 +5,7 @@ import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
+import { ShortcutTip } from '../common/ShortcutTip'
 import { IconButton } from '../common/actions'
 import { workspaceLabel } from '../workspaces/label'
 import { activityPresentation } from '../workspaces/status'
@@ -27,7 +28,8 @@ function State(props: { status: ActivityStatus }) {
  * The name, number, repository, owner, and state of the open
  * workspace. The list groups workspaces by section, so the
  * header names the repository. The label of the number follows the name,
- * and copies the link of the workspace. On a phone it leads the line under
+ * and copies the link of the workspace. On desktop its tooltip names the
+ * key of Copy link. On a phone it leads the line under
  * the name, before the repository. For an admin of the org,
  * the owner opens the menu that reassigns the workspace. On desktop the
  * header ends with the toggle that hides the right column and shows it
@@ -62,12 +64,15 @@ export function WorkspaceHeader(props: {
       readOnly={!props.canReassign}
     />
   )
+  const label = workspaceLabel(workspace.number)
   const copyLink = (
-    <CopyLinkButton
-      inline={props.viewport === 'mobile'}
-      label={workspaceLabel(workspace.number)}
-      result={props.copy}
-    />
+    <ShortcutTip command="copy-link" label={`Copy link to ${label}`}>
+      <CopyLinkButton
+        inline={props.viewport === 'mobile'}
+        label={label}
+        result={props.copy}
+      />
+    </ShortcutTip>
   )
   const header =
     props.viewport === 'mobile' ? (

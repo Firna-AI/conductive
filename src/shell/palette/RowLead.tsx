@@ -10,6 +10,7 @@ import {
   FolderPlus,
   Globe,
   History,
+  Keyboard,
   Laptop,
   ListChecks,
   LogIn,
@@ -72,6 +73,7 @@ const accountIcons: Readonly<
   agents: Bot,
   'new-workspaces': SlidersHorizontal,
   'this-mac': Laptop,
+  'keyboard-shortcuts': Keyboard,
 }
 
 function Icon(props: { icon: LucideIcon }) {

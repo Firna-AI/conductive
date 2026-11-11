@@ -190,6 +190,14 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611101600_shortcuts.sql` adds `user_shortcuts`.
+Each row holds one account's changed command for one keyboard, with its
+ordered keys as JSON. An empty list keeps a command without keys.
+The primary key keeps each account, keyboard, and command separate.
+Deleting the user deletes these rows through the foreign key.
+[Keyboard shortcuts](../docs/protocol/keyboard-shortcuts.md#storage)
+states the storage rules.
+
 `202611102114_workspace_github_summary.sql` adds the nullable `workspaces.github_summary` column.
 A check accepts only `checks-running`, `checks-failed`, `checks-passed`, and `merged`.
 The migration copies nothing, so each existing row keeps `NULL` until its next GitHub refresh.
@@ -240,6 +248,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Routines: records and routes | `202611101300`–`202611101359` |
 | Routines: runs and Run now | `202611101400`–`202611101459` |
 | Routines: pull request runs | `202611101500`–`202611101559` |
+| Keyboard shortcuts storage | `202611101600`–`202611101659` |
 
 ## Key code
 
