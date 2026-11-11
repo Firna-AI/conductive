@@ -18,12 +18,15 @@ The chat backend refuses a runner below that pin before the welcome or any comma
 It accepts runner protocol versions 1 and 2 at or above the pin.
 The packaged runner sends version 2, and each full image build records version 2.
 The [operator area](operator/README.md) owns the operator's app-wide numbers,
-suspensions, waitlist approvals, invite codes, and sign-up pause.
-New accounts wait for app access unless an operator identity or a valid join
-code grants it at sign-in. The [app access gate](security/README.md#app-access-gate)
-admits only session, waitlist, sign-out, and personal invitation requests
-while the user waits. It refuses other API requests and upgrades with
-403 `access_required`, including operator and org requests.
+suspensions, waitlist approvals, invite codes, sign-up pause, and waitlist switch.
+New accounts wait for app access unless an operator identity, open sign-up,
+or a valid join code grants it at sign-in. Open sign-up is on while the
+waitlist switch is off and sign-ups are not paused. During open sign-up, the
+[app access gate](security/README.md#app-access-gate) also grants access to a
+waiting user at their next request. Otherwise the gate admits only session,
+waitlist, sign-out, and personal invitation requests while the user waits.
+It refuses other API requests and upgrades with 403 `access_required`,
+including operator and org requests.
 
 ## Routes
 
@@ -59,7 +62,7 @@ On the app hostname, the Worker serves these API routes:
 - `GET /api/operator/orgs/<orgId>`, the org page for operators.
 - `GET /api/operator/users/<githubId>`, the user page for operators.
 - The operator's waitlist list and approval, invite code list, creation and
-  disable, and sign-up pause, as the [operator area](operator/README.md#waitlist-codes-and-sign-ups) says.
+  disable, sign-up pause, and waitlist switch, as the [operator area](operator/README.md#waitlist-codes-and-sign-ups) says.
 - The operator's suspension of users and orgs, as the [operator area](operator/README.md) says.
 - `DELETE /api/operator/users/<githubId>/suspension`, the operator's lift of a user suspension.
 - `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
@@ -287,6 +290,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [Deployment inputs](../docs/deployment.md)
 - [Access and security](../docs/protocol/access-and-security.md)
 - [Waitlist](../docs/protocol/waitlist.md)
+- [Sign-ups](../docs/protocol/sign-ups.md)
 - [Feedback](../docs/protocol/feedback.md)
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Agent runner](../docs/protocol/agent-runner.md)

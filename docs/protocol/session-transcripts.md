@@ -182,9 +182,9 @@ at `app/tabs` and `app/transcripts`.
 - A Copy button on each answer was left out, because it copies one answer,
   not the session.
 - An export of the session log that the agent keeps in the cloud computer
-  was rejected. An archived workspace has no cloud computer, the two
-  agents write different formats, and those logs can hold the secret
-  values that the chat hides.
+  was rejected. An archived workspace offers no cloud computer tools,
+  the two agents write different formats, and those logs can hold the
+  secret values that the chat hides.
 - A transcript that the workspace keeps up to date at each event was
   rejected. It adds work to each event of each session, for a copy that
   members make only now and then.

@@ -22,7 +22,7 @@ how a screen is built, and links to the other pages.
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
-| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
+| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
@@ -42,14 +42,14 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
+`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
 `app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `marketing/from-conductor` has no screen of its own either. Its
@@ -59,10 +59,10 @@ which links back to it. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
 and update-failed states, and declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
-`app/new-workspace/dialog`, `app/org-settings/cloud-computer`, and
-`app/archive` and `app/command-palette/search` moved into their own folders
-and kept their paths, so that each of those pages shows only its canonical
-screen. `app/sign-in/get-started` moved into its own folder and
+`app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
+`app/operator/user/access`, `app/archive`, and `app/command-palette/search`
+moved into their own folders and kept their paths, so that each of those pages
+shows only its canonical screen. `app/sign-in/get-started` moved into its own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
 the page shows only its canonical screen. Get started is the only first
@@ -105,8 +105,9 @@ decision 151. The mockups draw it for Firna, the first org of the sign-up:
 - `app/new-workspace/first-build` has a notice over the composer with the
   time of the build, and Send is off. The notice shows only while the org
   has no good image. Its `ready` variant has the good build, without a
-  notice. `failed` and `no-build` link an admin to the Cloud computer tab,
-  and `member` shows a failed build to a member, without the link.
+  notice. The running build, `failed`, and `no-build` link an admin to the
+  Cloud computer tab, and `member` shows a failed build to a member,
+  without the link.
 - `app/org-settings/cloud-computer/first-build` has the Cloud computer tab
   of Firna: the first build with its log, then its `failed` and `no-build`
   variants. A new org has empty scripts and no env vars, and its history
@@ -124,9 +125,10 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   acme/admin-dashboard keeps its place, off, with a note that says when it
   is ready, and the form holds the first ready repository. Its
   `kept-draft` variant has a kept draft in acme/admin-dashboard, with a
-  notice over the composer, and Send is off. Its `none-ready` variant has
-  no chosen repository ready after a failed build, with Open Cloud
-  computer for an admin, and its `member` variant has the same notice
+  notice over the composer and Cloud computer settings for an admin, and
+  Send is off. Its `none-ready` variant has
+  no chosen repository ready after a failed build, with Cloud computer
+  settings for an admin, and its `member` variant has the same notice
   without the link. The dialog shows the same repository menu and the
   same notices, as the `repositories`, `repositoryMenu`, and
   `waitingBuild` controls of `app/new-workspace/dialog` show, so the
