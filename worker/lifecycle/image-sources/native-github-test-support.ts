@@ -18,13 +18,21 @@ export class NativeGitHubAccess {
   readonly tokens = new Map<string, boolean>()
   readonly tokenScopes = new Map<
     string,
-    { repositoryIds: readonly number[]; canRead: boolean }
+    {
+      installationId: number
+      repositoryIds: readonly number[]
+      canRead: boolean
+      metadata: boolean
+    }
   >()
   readonly events: string[] = []
+  readonly sizes = new Map<number, number | null>()
+  readonly installations = new Map<number, number>([[101, 701]])
   tokenFailure = false
   revokeFailures = 0
   loseRevokeReply = false
   beforeClaim?: () => Promise<void>
+  beforeMetadata?: () => Promise<void>
 
   constructor(env: AppEnv) {
     this.env = env
@@ -42,9 +50,27 @@ export class NativeGitHubAccess {
     if (url.hostname !== 'api.github.com')
       throw new Error('Unexpected Worker Git request')
     if (
-      url.pathname === '/app/installations/701/access_tokens' &&
-      request.method === 'POST'
+      request.method === 'GET' &&
+      /^\/repositories\/\d+$/u.test(url.pathname)
     ) {
+      this.events.push('metadata')
+      const id = Number(url.pathname.split('/').at(-1))
+      const token = request.headers.get('Authorization')?.slice(7) ?? ''
+      const scope = this.tokenScopes.get(token)
+      if (
+        !this.tokens.get(token) ||
+        !scope?.metadata ||
+        scope.installationId !== this.installations.get(id) ||
+        !scope.repositoryIds.includes(id)
+      )
+        return new Response(null, { status: 403 })
+      await this.beforeMetadata?.()
+      return Response.json({ size: this.sizes.get(id) ?? null })
+    }
+    const installation = url.pathname.match(
+      /^\/app\/installations\/(\d+)\/access_tokens$/u,
+    )
+    if (installation && request.method === 'POST') {
       if (this.tokenFailure)
         return new Response(INSTALLATION_TOKEN, { status: 403 })
       const token = `${INSTALLATION_TOKEN}_${this.tokens.size + 1}`
@@ -58,10 +84,21 @@ export class NativeGitHubAccess {
           : []
       const permissions =
         isRecord(body) && isRecord(body.permissions) ? body.permissions : {}
+      const installationId = Number(installation[1])
+      if (
+        !repositoryIds.length ||
+        repositoryIds.length > 500 ||
+        repositoryIds.some(
+          (id) => this.installations.get(id) !== installationId,
+        )
+      )
+        return new Response(null, { status: 403 })
       this.tokenScopes.set(token, {
+        installationId,
         repositoryIds,
         canRead:
           permissions.contents === 'read' || permissions.contents === 'write',
+        metadata: permissions.metadata === 'read',
       })
       this.tokens.set(token, true)
       this.events.push('mint')

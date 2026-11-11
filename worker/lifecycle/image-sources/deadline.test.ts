@@ -67,6 +67,9 @@ it('returns each alarm while native Git runs and renews the builder before allow
     expect(fixture.provider.statusIds).toEqual([1, 2, 2])
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
+      'GET',
+      'DELETE',
+      'POST',
     ])
     expect(boat.commands).toEqual([])
     release.resolve()
@@ -110,7 +113,7 @@ it('returns each alarm while native Git runs and renews the builder before allow
       fixture.access.events.filter((event) =>
         ['claim', 'revoke', 'finalize'].includes(event),
       ),
-    ).toEqual(['claim', 'revoke', 'finalize'])
+    ).toEqual(['revoke', 'claim', 'revoke', 'finalize'])
   } finally {
     release.resolve()
     await fixture.dispose()

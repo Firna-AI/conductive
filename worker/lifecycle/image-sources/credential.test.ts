@@ -127,6 +127,14 @@ it('limits the read token to one repository and consumes its private build grant
         "UPDATE image_builds SET state = 'running'",
       ],
       [
+        "UPDATE image_builds SET provider_account = 'another-account'",
+        "UPDATE image_builds SET provider_account = 'boat'",
+      ],
+      [
+        "UPDATE image_source_jobs SET provider_account = 'another-account'",
+        "UPDATE image_source_jobs SET provider_account = 'boat'",
+      ],
+      [
         'UPDATE image_source_jobs SET source_index = 1',
         'UPDATE image_source_jobs SET source_index = 0',
       ],
@@ -154,11 +162,11 @@ it('limits the read token to one repository and consumes its private build grant
     ])
     const response = responses.find((candidate) => candidate.status === 200)
     if (!response) throw new Error('Missing successful claim')
-    expect(await response.text()).toBe(`${INSTALLATION_TOKEN}_1`)
+    expect(await response.text()).toBe(`${INSTALLATION_TOKEN}_2`)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
     expect((await claim()).status).toBe(401)
-    const mint = fixture.access.requests[0]
+    const mint = fixture.access.requests[3]
     expect([mint.method, mint.url, mint.redirect]).toEqual([
       'POST',
       'https://api.github.com/app/installations/701/access_tokens',
@@ -199,10 +207,10 @@ it('limits the read token to one repository and consumes its private build grant
     await starting
     await expect(fixture.finish()).rejects.toMatchObject(FAILURE)
     expect(fixture.access.activeTokens).toEqual([])
-    expect(fixture.access.requests[1].url).toBe(
+    expect(fixture.access.requests[4].url).toBe(
       'https://api.github.com/installation/token',
     )
-    expect(fixture.access.requests[1].redirect).toBe('manual')
+    expect(fixture.access.requests[4].redirect).toBe('manual')
   } finally {
     release.resolve()
     await starting

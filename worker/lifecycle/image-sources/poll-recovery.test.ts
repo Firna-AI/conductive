@@ -85,7 +85,7 @@ it('keeps a native source fetch after a temporary status error and resumes witho
     expect(completeAfterFailure).toBe(false)
     expect(boat.deletedIds).toEqual([])
     expect(fixture.provider.commands).toHaveLength(2)
-    expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_1`])
+    expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_2`])
     fixture.provider.beforeStatus = undefined
     runtime.dependencies.now = () => TEST_TIME + 1_000
     const order: string[] = []
@@ -125,13 +125,16 @@ it('keeps a native source fetch after a temporary status error and resumes witho
     expect(fixture.provider.statusIds).toEqual([1, 2, 2, 3])
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
+      'GET',
+      'DELETE',
+      'POST',
       'DELETE',
     ])
     expect(
       fixture.access.events.filter((event) =>
         ['mint', 'claim', 'revoke', 'finalize'].includes(event),
       ),
-    ).toEqual(['mint', 'claim', 'revoke', 'finalize'])
+    ).toEqual(['mint', 'revoke', 'mint', 'claim', 'revoke', 'finalize'])
     expect(order).toEqual(['tools', 'software', 'install', 'cleanup'])
   } finally {
     claim.release()

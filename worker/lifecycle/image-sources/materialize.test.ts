@@ -113,6 +113,9 @@ it('revokes a failed native clone and keeps raw credential-bearing failures out 
     await expect(fixture.finish()).rejects.toMatchObject(FAILURE)
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
+      'GET',
+      'DELETE',
+      'POST',
       'DELETE',
     ])
     expect(fixture.access.activeTokens).toEqual([])
@@ -120,7 +123,7 @@ it('revokes a failed native clone and keeps raw credential-bearing failures out 
     expect(
       fixture.provider.results.map((result) => [result.stdout, result.stderr]),
     ).toEqual([
-      ['', ''],
+      [expect.stringMatching(/^MemAvailable:\s+\d+ kB\n$/u), ''],
       ['', ''],
     ])
     expect(
@@ -129,7 +132,10 @@ it('revokes a failed native clone and keeps raw credential-bearing failures out 
           text: string
         }>()
       ).results,
-    ).toEqual([{ text: 'Updating the repositories.\n' }])
+    ).toEqual([
+      { text: 'Updating the repositories.\n' },
+      { text: 'Repository copy complete.\n' },
+    ])
     expect(fixture.provider.commands.join('\n')).not.toContain(
       INSTALLATION_TOKEN,
     )
@@ -151,7 +157,7 @@ it('retains encrypted revocation ownership across actor restarts and blocks chec
     ).toBe('revoke')
     expect(await fixture.prepare()).toBe(false)
     expect(fixture.provider.commands).toHaveLength(2)
-    expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_1`])
+    expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_2`])
     expect(
       (await readSourceJob(fixture.env.DB, fixture.input.buildId))
         ?.tokenCiphertext,
@@ -175,6 +181,9 @@ it('retains encrypted revocation ownership across actor restarts and blocks chec
     await fixture.finish()
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
+      'GET',
+      'DELETE',
+      'POST',
       'DELETE',
       'DELETE',
       'DELETE',
@@ -191,12 +200,14 @@ it('fails closed after an uncertain native start and revokes the retained token 
     await fixture.step()
     await fixture.step()
     fixture.provider.loseStartReply = new ProviderError('unavailable', 503)
-    fixture.access.revokeFailures = 1
+    fixture.provider.beforeStart = async (command) => {
+      if (command.includes('clone --bare')) fixture.access.revokeFailures = 1
+    }
     await expect(fixture.prepare()).resolves.toBe(false)
     expect(
       (await readSourceJob(fixture.env.DB, fixture.input.buildId))?.phase,
     ).toBe('abort')
-    expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_1`])
+    expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_2`])
     await expect(fixture.prepare()).rejects.toMatchObject(FAILURE)
     expect(fixture.access.activeTokens).toEqual([])
     expect(fixture.provider.commands).toHaveLength(2)

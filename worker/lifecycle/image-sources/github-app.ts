@@ -4,6 +4,7 @@ import {
   revokeInstallationAccessToken,
 } from '../../github/app-credentials'
 import type { SourceRepository } from './data'
+import type { MetadataBatch } from './metadata-plan'
 
 export function installationToken(
   fetch: HttpFetch,
@@ -23,6 +24,30 @@ export function installationToken(
       fetch,
       now,
       failure: () => new Error('Installation access is not available'),
+    },
+  )
+}
+
+export function metadataInstallationToken(
+  fetch: HttpFetch,
+  clientId: string,
+  privateKey: string,
+  batch: MetadataBatch,
+  now: () => number,
+): Promise<string> {
+  return installationAccessToken(
+    { clientId, privateKey },
+    {
+      installationId: batch.installationId,
+      repositoryIds: batch.repositories.map(
+        (repository) => repository.githubRepositoryId,
+      ),
+      permissions: { metadata: 'read' },
+    },
+    {
+      fetch,
+      now,
+      failure: () => new Error('Repository metadata is not available'),
     },
   )
 }

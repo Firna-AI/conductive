@@ -1,6 +1,5 @@
 import { activeOrgPredicate } from '../../data/org-access'
 import type { CommandStatus } from '../../sandbox/provider'
-import { clearImageRetryStatement } from '../image-retry-data'
 
 export type SourcePhase =
   | 'layout-starting'
@@ -9,6 +8,7 @@ export type SourcePhase =
   | 'fetch-starting'
   | 'fetch'
   | 'revoke'
+  | 'retry-revoke'
   | 'finalize-ready'
   | 'finalize-starting'
   | 'finalize'
@@ -29,13 +29,15 @@ export interface SourceJob {
   grantHash: string | null
   tokenCiphertext: string | null
   failed: number
+  estimateBytes: number
 }
 
 const columns = `build_id AS buildId, org_id AS orgId, sandbox_id AS sandboxId,
   provider_account AS providerAccount,
   source_index AS sourceIndex, repository_id AS repositoryId, phase,
   process_id AS processId, stdout_offset AS stdoutOffset, stderr_offset AS stderrOffset,
-  grant_hash AS grantHash, token_ciphertext AS tokenCiphertext, failed`
+  grant_hash AS grantHash, token_ciphertext AS tokenCiphertext, failed,
+  estimate_bytes AS estimateBytes`
 
 export function sourceTokenContext(job: SourceJob): string {
   return JSON.stringify([
@@ -50,8 +52,20 @@ export function sourceTokenContext(job: SourceJob): string {
 
 export function readSourceJob(db: D1Database, buildId: string) {
   return db
-    .prepare(`SELECT ${columns} FROM image_source_jobs WHERE build_id = ?`)
+    .prepare(
+      `SELECT ${columns} FROM image_source_jobs WHERE build_id = ?
+      ORDER BY failed DESC, source_index LIMIT 1`,
+    )
     .bind(buildId)
+    .first<SourceJob>()
+}
+
+export function readSourceAt(db: D1Database, buildId: string, index: number) {
+  return db
+    .prepare(
+      `SELECT ${columns} FROM image_source_jobs WHERE build_id = ? AND source_index = ?`,
+    )
+    .bind(buildId, index)
     .first<SourceJob>()
 }
 
@@ -92,8 +106,9 @@ export async function setSourcePhase(
   buildId: string,
   phase: SourcePhase,
   processId: number | null = null,
+  sourceIndex = 0,
 ): Promise<void> {
-  await sourcePhaseStatement(db, buildId, phase, processId).run()
+  await sourcePhaseStatement(db, buildId, phase, processId, sourceIndex).run()
 }
 
 function sourcePhaseStatement(
@@ -101,36 +116,32 @@ function sourcePhaseStatement(
   buildId: string,
   phase: SourcePhase,
   processId: number | null,
+  sourceIndex: number,
 ) {
   return db
     .prepare(
       `UPDATE image_source_jobs SET phase = ?, process_id = ?, stdout_offset = 0,
-       stderr_offset = 0 WHERE build_id = ?`,
+       stderr_offset = 0 WHERE build_id = ? AND source_index = ?`,
     )
-    .bind(phase, processId, buildId)
-}
-
-export async function completeSourcePhase(
-  db: D1Database,
-  buildId: string,
-  phase: SourcePhase,
-): Promise<void> {
-  await db.batch([
-    sourcePhaseStatement(db, buildId, phase, null),
-    clearImageRetryStatement(db, buildId),
-  ])
+    .bind(phase, processId, buildId, sourceIndex)
 }
 
 export async function saveSourceStatus(
   db: D1Database,
   buildId: string,
   status: CommandStatus,
+  sourceIndex = 0,
 ): Promise<void> {
   await db
     .prepare(
-      'UPDATE image_source_jobs SET stdout_offset = ?, stderr_offset = ? WHERE build_id = ?',
+      'UPDATE image_source_jobs SET stdout_offset = ?, stderr_offset = ? WHERE build_id = ? AND source_index = ?',
     )
-    .bind(status.stdoutNextOffset, status.stderrNextOffset, buildId)
+    .bind(
+      status.stdoutNextOffset,
+      status.stderrNextOffset,
+      buildId,
+      sourceIndex,
+    )
     .run()
 }
 
@@ -180,24 +191,13 @@ export function claimSourceGrant(db: D1Database, grantHash: string) {
     .first<SourceJob>()
 }
 
-export async function nextSource(db: D1Database, buildId: string) {
-  await db.batch([
-    db
-      .prepare(
-        `UPDATE image_source_jobs SET source_index = source_index + 1, repository_id = NULL,
-       phase = 'ready', process_id = NULL, stdout_offset = 0, stderr_offset = 0
-       WHERE build_id = ? AND token_ciphertext IS NULL AND grant_hash IS NULL`,
-      )
-      .bind(buildId),
-    clearImageRetryStatement(db, buildId),
-  ])
-}
-
-export async function orgSourceJobs(db: D1Database, orgId: string) {
+export async function buildSourceJobs(db: D1Database, buildId: string) {
   return (
     await db
-      .prepare(`SELECT ${columns} FROM image_source_jobs WHERE org_id = ?`)
-      .bind(orgId)
+      .prepare(
+        `SELECT ${columns} FROM image_source_jobs WHERE build_id = ? ORDER BY source_index`,
+      )
+      .bind(buildId)
       .all<SourceJob>()
   ).results
 }
