@@ -22,6 +22,8 @@ node tools/pr-previews/main.ts deploy --pr 123 \
   --sha "$GITHUB_SHA" --runner-url "$RUNNER_URL" \
   --runner-sha256 "$RUNNER_SHA256" --runner-archive "$RUNNER_ARCHIVE"
 node tools/pr-previews/main.ts delete --pr 123 --wrangler "$TRUSTED_WRANGLER"
+node tools/pr-previews/main.ts event --check --pr 123 \
+  --action synchronize --sha "$GITHUB_SHA"
 node tools/pr-previews/main.ts sweep --wrangler "$TRUSTED_WRANGLER"
 node tools/pr-previews/main.ts comment --pr 123 --state live --sha "$GITHUB_SHA" \
   --data-reset
@@ -64,6 +66,9 @@ folders under `RUNNER_TEMP`, or the OS temporary folder, and remove them.
 | Local runner | `deploy --runner-archive` | Required only when the bucket lacks the archive. |
 | Comment state | `comment --state` | `deploying`, `live`, `failed`, or `deleted`. |
 | Reset note | `comment --data-reset` | Include the database reset note. |
+| Saved event | `event --action` | `opened`, `synchronize`, `reopened`, or `closed`. |
+| State check | `event --check` | Check current GitHub state without cloud settings, resources, or comments. |
+| Prerequisite failure | `event --failed` | After the state and settings checks, post failed and fail without changing resources. |
 | Relay or app zone | `--zone` | Required for relay and manifest. It selects their zone. |
 | App owner | `manifest --owner` | Optional user or organization. Omit it for the current personal account. |
 
@@ -82,6 +87,8 @@ and succeeds. With only some settings, it fails and names every missing
 setting. It never prints a configured secret value.
 `config`, `deploy`, `delete`, `sweep`, and `relay` use this check.
 `sweep` also requires `GITHUB_REPOSITORY` and `GITHUB_TOKEN`.
+`event` always requires those two GitHub inputs. Without `--check`, it
+also uses the infrastructure settings check and the comment inputs.
 `comment` needs only `PREVIEW_ZONE`, `GITHUB_REPOSITORY`, `GITHUB_TOKEN`,
 `GITHUB_SERVER_URL`, and `GITHUB_RUN_ID`. It skips when the zone is absent.
 
@@ -99,6 +106,23 @@ For pull request 123 in `preview.example`, both resource names are
 origins use HTTPS. The config pins `account_id` to the preview account.
 
 ## Operations
+
+`event` serves workflow runs. It reads the current pull request from
+GitHub before checking infrastructure settings. An open-event run
+deploys only the current head of an open pull request. A close-event
+run deletes only a currently closed pull request. A stale or missing
+pull request changes no resources and posts no comment. The command
+succeeds with a notice and writes `event_action=stale` to `GITHUB_OUTPUT`.
+
+`event --check` writes `event_action=deploy` or `event_action=delete` for
+eligible runs. The workflow uses this check before the build. It calls
+`event` again before deployment or deletion, because a failed-job re-run
+keeps the first job's outputs. The second call takes the same Wrangler
+and deployment inputs as the manual commands. It owns the deploying,
+live, failed, and deleted comments, including the reset note. Use
+`--failed` when build or preparation failed. With absent infrastructure
+settings, it skips without a comment. Manual `deploy` and `delete` keep
+their direct behavior for recovery and smoke checks.
 
 `deploy` finds or creates D1 in Western Europe. It checks migration hashes
 in `conductive_preview_migrations`. A changed or removed recorded migration
@@ -216,9 +240,12 @@ npm run file-length:check
 npm run exports:check
 ```
 
-The NodeNext project checks the CLI. Separate Worker projects check the
-relay and its tests. Production has no Node types. Tests use fake I/O and
-dummy settings. They read no workflow or documentation file.
+The NodeNext project checks the CLI. The Worker test project also checks
+its tests, so they can import the local D1 harness. Separate Worker
+projects check the relay and its tests. Relay production has no Node
+types. Tests use fake commands, HTTP, and dummy settings. Every D1 execute
+runs on local D1 with all real migrations before its scenario handler.
+Tests read no workflow or documentation file.
 
 ### Key code
 
@@ -232,6 +259,8 @@ dummy settings. They read no workflow or documentation file.
 - [config-values.ts](config-values.ts): parsers for untrusted build values.
 - [secrets.ts](secrets.ts): private temporary secrets files and cleanup.
 - [commands.ts](commands.ts) and [command-options.ts](command-options.ts): operation dispatch and flags.
+- [event.ts](event.ts) and [event-work.ts](event-work.ts): current pull request checks, event work, and comments.
+- [d1.test-support.ts](d1.test-support.ts): local D1 execution for the command fakes.
 - [deploy.ts](deploy.ts): ordered deployment and reset reporting.
 - [migration-history.ts](migration-history.ts) and [apply-migrations.ts](apply-migrations.ts): hashes and partial migration recovery.
 - [deployment-output.ts](deployment-output.ts): public outputs for successful and failed deploys.

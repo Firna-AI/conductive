@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 import { createDatabase, findDatabase, queryDatabase } from './database.ts'
+import { seedResources } from './d1.test-support.ts'
 import { commandReply, fakeContext } from './operations.test-support.ts'
 
 it('reads D1 IDs from JSON and creates databases in Western Europe', async () => {
@@ -69,19 +70,28 @@ it('fails D1 commands and malformed JSON without exposing child output', async (
 })
 
 it('reads every JSON statement result and rejects a failed D1 statement', async () => {
-  const { ctx, command } = fakeContext()
+  const { ctx, command } = fakeContext(async (db) => {
+    await seedResources(db)
+    await db
+      .prepare(
+        "INSERT INTO orgs (id, name, creator_user_id, created_at) VALUES ('org-b', 'Second org', 'user-a', 0)",
+      )
+      .run()
+  })
   command
-    .mockResolvedValueOnce(
-      commandReply([
-        { success: true, results: [{ id: 'org-a' }] },
-        { success: true, results: [{ id: 'org-b' }] },
-      ]),
-    )
+    .mockImplementationOnce(async (_request, result) => {
+      if (!result) throw new Error('Expected local D1 results.')
+      return result
+    })
     .mockResolvedValueOnce(
       commandReply([{ success: false, error: 'fake-sensitive-error' }]),
     )
   await expect(
-    queryDatabase(ctx, 'conductive-pr-123', 'SELECT id FROM orgs'),
+    queryDatabase(
+      ctx,
+      'conductive-pr-123',
+      "SELECT id FROM orgs WHERE id = 'org-a'; SELECT id FROM orgs WHERE id = 'org-b'",
+    ),
   ).resolves.toEqual([{ id: 'org-a' }, { id: 'org-b' }])
   await expect(
     queryDatabase(ctx, 'conductive-pr-123', 'SELECT id FROM orgs'),

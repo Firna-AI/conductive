@@ -7,6 +7,7 @@ import { writeManifestForm } from './manifest.ts'
 import type { ExternalIO } from './operations.ts'
 import { defaultIO } from './runtime.ts'
 import { checkSettings } from './settings.ts'
+import { runEventCommand } from './event.ts'
 
 type CommandResult =
   | { kind: 'written'; path: string }
@@ -23,6 +24,8 @@ The config command reads preview settings from the environment.
 It prints the generated config path and deploys nothing.
 
 Other commands:
+  event --pr NUMBER --action opened|synchronize|reopened|closed --sha SHA \\
+    [--check | --failed | --wrangler PATH [deployment inputs]]
   deploy --pr NUMBER --build-folder PATH --wrangler PATH --sha SHA \\
     --runner-url URL --runner-sha256 SHA256 [--runner-archive PATH]
   delete --pr NUMBER --wrangler PATH
@@ -75,6 +78,8 @@ export async function runPreviewCommand(
   if (command === undefined || command === '--help')
     return { kind: 'help', text: USAGE }
   switch (command) {
+    case 'event':
+      return runEventCommand(options, environment, io)
     case 'deploy':
     case 'delete':
     case 'sweep':

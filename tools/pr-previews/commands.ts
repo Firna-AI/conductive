@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import {
   numberOption,
+  deploymentInputs,
   operationOptions,
   requiredOption,
   stateOption,
@@ -10,7 +11,7 @@ import {
 } from './command-options.ts'
 import { commentPreview, type CommentInputs } from './comment.ts'
 import { deletePreview } from './delete.ts'
-import { deployPreview, type DeployInputs } from './deploy.ts'
+import { deployPreview } from './deploy.ts'
 import {
   DeploymentFailure,
   deploymentLines,
@@ -25,7 +26,7 @@ import { sweepPreviews } from './sweep.ts'
 export type OperationResult =
   { kind: 'complete'; lines: string[] } | { kind: 'skip'; warning: string }
 
-async function withWorkingFolder(
+export async function withWorkingFolder(
   base: Omit<OperationContext, 'cwd'>,
   action: (ctx: OperationContext) => Promise<OperationResult>,
 ): Promise<OperationResult> {
@@ -88,23 +89,12 @@ export async function runOperationCommand(
     )
   }
   if (command === 'deploy') {
-    const number = numberOption(values.pr, setup.settings.zone)
-    const buildFolder = resolve(
-      requiredOption(values['build-folder'], 'build-folder'),
-    )
-    const archive = values['runner-archive']
-    const input: DeployInputs = {
-      number,
-      buildFolder,
-      sha: requiredOption(values.sha, 'sha'),
-      runner: {
-        url: requiredOption(values['runner-url'], 'runner-url'),
-        sha256: requiredOption(values['runner-sha256'], 'runner-sha256'),
-        ...(archive === undefined ? {} : { path: resolve(archive) }),
-      },
-    }
+    const input = deploymentInputs(values, setup.settings.zone)
     try {
-      const result = await deployPreview({ ...base, cwd: buildFolder }, input)
+      const result = await deployPreview(
+        { ...base, cwd: input.buildFolder },
+        input,
+      )
       await writeDeploymentOutput(result, environment)
       return { kind: 'complete', lines: deploymentLines(result) }
     } catch (error) {

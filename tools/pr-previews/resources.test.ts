@@ -1,34 +1,28 @@
 import { expect, it } from 'vitest'
 import { databaseResources } from './resources.ts'
-import { d1Reply, fakeContext } from './operations.test-support.ts'
+import { emptyDatabase, seedResources } from './d1.test-support.ts'
+import { fakeContext } from './operations.test-support.ts'
 
 it('collects every snapshot column and each build-derived name without duplicates', async () => {
-  const { ctx, command } = fakeContext()
-  command.mockImplementation(async ({ args }) => {
-    const sql = args[args.indexOf('--command') + 1]
-    if (sql.includes("name IN ('orgs', 'image_builds')"))
-      return d1Reply([{ name: 'orgs' }, { name: 'image_builds' }])
-    if (sql === 'SELECT id FROM orgs') return d1Reply([{ id: 'org-a' }])
-    if (sql.includes('pragma_table_info'))
-      return d1Reply([
-        { name: 'image_builds' },
-        { name: 'image_leases' },
-        { name: 'image_claim_leases' },
-        { name: 'software_images' },
-        { name: 'future_images' },
-      ])
-    if (sql === 'SELECT id FROM image_builds') return d1Reply([{ id: 'a' }])
-    if (sql.includes('"image_builds"'))
-      return d1Reply([{ snapshot_name: 'build-snapshot' }])
-    if (sql.includes('"image_leases"'))
-      return d1Reply([{ snapshot_name: 'leased-snapshot' }])
-    if (sql.includes('"image_claim_leases"'))
-      return d1Reply([{ snapshot_name: 'leased-snapshot' }])
-    if (sql.includes('"software_images"'))
-      return d1Reply([{ snapshot_name: 'software-snapshot' }])
-    if (sql.includes('"future_images"'))
-      return d1Reply([{ snapshot_name: 'future-snapshot' }])
-    throw new Error('Unexpected fake SQL.')
+  const { ctx } = fakeContext(async (db) => {
+    await seedResources(db, 'build-snapshot')
+    await db.batch([
+      db.prepare(
+        "INSERT INTO workspace_creation_attempts (workspace_id, org_id, sender_user_id, first_message_id, created_at) VALUES ('workspace-a', 'org-a', 'user-a', 'message-a', 0)",
+      ),
+      db.prepare(
+        "INSERT INTO image_leases (workspace_id, org_id, snapshot_name) VALUES ('workspace-a', 'org-a', 'leased-snapshot')",
+      ),
+      db.prepare('CREATE TABLE image_claim_leases (snapshot_name TEXT)'),
+      db.prepare("INSERT INTO image_claim_leases VALUES ('leased-snapshot')"),
+      db.prepare(
+        "INSERT INTO software_images (id, provider_account, version, software_json, snapshot_name, state, phase, token_digest, started_at) VALUES ('software-a', 'boat', 'v1', '[]', 'software-snapshot', 'ready', 'done', 'test-digest', 0)",
+      ),
+      db.prepare('CREATE TABLE z_future_images (snapshot_name TEXT)'),
+      db.prepare(
+        "INSERT INTO z_future_images VALUES ('future-snapshot'), (NULL)",
+      ),
+    ])
   })
   await expect(databaseResources(ctx, 'conductive-pr-123')).resolves.toEqual({
     orgIds: ['org-a'],
@@ -43,13 +37,8 @@ it('collects every snapshot column and each build-derived name without duplicate
 })
 
 it('can clean a database left before the application tables were created', async () => {
-  const { ctx, command } = fakeContext()
-  command.mockImplementation(async ({ args }) => {
-    const sql = args[args.indexOf('--command') + 1]
-    return sql === 'SELECT id FROM orgs'
-      ? { exitCode: 1, stdout: '', stderr: 'no such table: orgs' }
-      : d1Reply([])
-  })
+  const { ctx, database } = fakeContext(emptyDatabase)
+  await database()
   await expect(databaseResources(ctx, 'conductive-pr-123')).resolves.toEqual({
     orgIds: [],
     snapshots: [],

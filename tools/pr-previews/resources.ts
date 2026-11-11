@@ -26,7 +26,7 @@ export async function databaseResources(
   const tables = await queryDatabase(
     ctx,
     database,
-    "SELECT m.name FROM sqlite_schema AS m WHERE m.type = 'table' AND EXISTS (SELECT 1 FROM pragma_table_info(m.name) AS c WHERE c.name = 'snapshot_name') ORDER BY m.name",
+    "SELECT m.name FROM sqlite_schema AS m WHERE m.type = 'table' AND m.name NOT LIKE '\\_cf\\_%' ESCAPE '\\' AND EXISTS (SELECT 1 FROM pragma_table_info(m.name) AS c WHERE c.name = 'snapshot_name') ORDER BY m.name",
   )
   const snapshots = new Set<string>()
   for (const row of tables) {

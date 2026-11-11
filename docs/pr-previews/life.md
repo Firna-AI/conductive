@@ -7,21 +7,30 @@ sweep, and a recovery by hand.
 ## Runs of a pull request
 
 - The runs of one pull request share one concurrency group. They wait in
-  turn, and no run cancels another.
-- GitHub keeps only the newest waiting run. So a burst of pushes deploys
-  the newest commit.
+  turn. GitHub keeps every waiting run and cancels none of them.
 - Reason: a cancelled delete can stop after its Boat and attachment steps.
   It then leaves database rows for resources that no longer exist.
+- A first job reads the current pull request state and head commit from
+  GitHub before the build. The deploy and delete jobs check again before
+  they change resources or post a comment.
+- An open-event run deploys only while the pull request stays open and
+  its head matches the run's commit. A close-event run deletes only while
+  the pull request stays closed.
+- A stale run changes no resources and posts no comment. It passes with
+  a notice. This also applies to a re-run of failed jobs.
+- A branch without the preview tool passes with a notice. Merge `main`
+  into that branch to enable its preview.
 
 A deploy run has these jobs:
 
-1. The build job runs `npm ci` and `npm run build`, with no secrets. It
+1. The state check job stops a stale run before the build and runner jobs.
+2. The build job runs `npm ci` and `npm run build`, with no secrets. It
    keeps `dist/` and `migrations/` as an artifact for one day.
-2. The runner job packages the runner archive with
+3. The runner job packages the runner archive with
    `--base-url https://runner.<zone>/`, with no secrets. It asks the
    runner bucket for an archive with the same digest. Only a missing
    archive goes into an artifact for one day.
-3. The deploy job uses the GitHub environment `preview`. It sets the URL
+4. The deploy job uses the GitHub environment `preview`. It sets the URL
    of that environment to the app hostname. It runs the preview tool, as
    [The deploy](#the-deploy) says. It also posts the comment, before and
    after the deploy.
@@ -158,8 +167,9 @@ resources and the attachments of a preview.
 
 ## Recovery by hand
 
-- When a deploy fails, open the run that the comment links. Re-run it, or
-  push a new commit.
+- When a deploy fails, push a new commit or re-run all jobs of the newest
+  run. The build artifact lives for one day. A re-run of only failed jobs
+  cannot use an expired artifact.
 - When a delete fails, re-run its run. Or start a manual run of the
   workflow, which runs the sweep.
 - When the workflow cannot finish a delete, run the `delete` command of

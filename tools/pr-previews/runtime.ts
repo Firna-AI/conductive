@@ -8,10 +8,13 @@ import type {
 } from './operations.ts'
 
 function command(request: CommandRequest): Promise<CommandReply> {
+  const environment = { ...process.env }
+  for (const key of Object.keys(environment)) delete environment[key]
+  Object.assign(environment, request.env)
   return new Promise((resolve) => {
     const child = spawn(request.executable, request.args, {
       cwd: request.cwd,
-      env: request.env,
+      env: environment,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     let stdout = ''

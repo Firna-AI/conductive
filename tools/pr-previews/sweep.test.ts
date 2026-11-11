@@ -2,7 +2,6 @@ import { expect, it } from 'vitest'
 import {
   apiReply,
   commandReply,
-  d1Reply,
   fakeContext,
 } from './operations.test-support.ts'
 import { sweepPreviews } from './sweep.ts'
@@ -16,9 +15,9 @@ it('sweeps closed or missing PRs from the resource union and removes open orphan
     { name: 'conductive-pr-126', uuid: 'delete-db' },
     { name: 'live-database', uuid: 'live-db' },
   ]
-  command.mockImplementation(async ({ args }) => {
+  command.mockImplementation(async ({ args }, sqlResult) => {
     if (args[1] === 'list') return commandReply(databases)
-    if (args[1] === 'execute') return d1Reply([])
+    if (args[1] === 'execute' && sqlResult) return sqlResult
     if (args[1] === 'delete') {
       deleted.push(`database:${args[2].slice('conductive-pr-'.length)}`)
       databases = databases.filter((row) => row.name !== args[2])
@@ -49,7 +48,10 @@ it('sweeps closed or missing PRs from the resource union and removes open orphan
       lookedUp.push(number)
       return number === 126
         ? new Response(null, { status: 404 })
-        : Response.json({ state: number === 123 ? 'closed' : 'open' })
+        : Response.json({
+            state: number === 123 ? 'closed' : 'open',
+            head: { sha: 'a'.repeat(40) },
+          })
     }
     if (path.includes('/values/')) {
       deleted.push(`registry:${path.split('/').at(-1)?.slice(3)}`)

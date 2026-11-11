@@ -9,7 +9,24 @@ const files = vi.hoisted(() => ({
   readFile: vi.fn<() => Promise<string>>(),
   stat: vi.fn<() => Promise<{ size: number }>>(),
 }))
-vi.mock('node:fs/promises', () => files)
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>()
+  return {
+    ...actual,
+    readdir: (...args: Parameters<typeof actual.readdir>) =>
+      args[0] === '/artifact/migrations'
+        ? files.readdir()
+        : actual.readdir(...args),
+    readFile: (...args: Parameters<typeof actual.readFile>) =>
+      String(args[0]).startsWith('/artifact/migrations/')
+        ? files.readFile()
+        : actual.readFile(...args),
+    stat: (...args: Parameters<typeof actual.stat>) =>
+      args[0] === '/artifact/runner.tar.gz'
+        ? files.stat()
+        : actual.stat(...args),
+  }
+})
 vi.mock('./config.ts', () => ({ writePreviewConfig: vi.fn() }))
 vi.mock('./secrets.ts', () => ({ writeSecretsFile: vi.fn() }))
 afterEach(() => vi.resetAllMocks())

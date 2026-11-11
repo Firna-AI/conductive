@@ -1,10 +1,6 @@
-import type { CommandRequest } from './operations.ts'
-import {
-  commandReply,
-  d1Reply,
-  fakeContext,
-} from './operations.test-support.ts'
+import { commandReply, fakeContext } from './operations.test-support.ts'
 import { scenarioHttp } from './scenario-http.test-support.ts'
+import { seedScenarioDatabase, traceSql } from './scenario-sql.test-support.ts'
 
 export interface ScenarioOptions {
   database?: boolean
@@ -18,11 +14,14 @@ export interface ScenarioOptions {
 }
 
 export function scenario(options: ScenarioOptions = {}) {
-  const fake = fakeContext()
+  let seedExisting = options.database ?? false
+  const fake = fakeContext(async (db) => {
+    if (seedExisting) await seedScenarioDatabase(db, options)
+  })
   const trace: string[] = []
   let exists = options.database ?? false
   let id = 'existing-database-id'
-  fake.command.mockImplementation(async (request: CommandRequest) => {
+  fake.command.mockImplementation(async (request, sqlResult) => {
     const args = request.args
     if (request.executable === 'aws') {
       if (args[0] === 's3api') {
@@ -72,64 +71,30 @@ export function scenario(options: ScenarioOptions = {}) {
       case 'delete':
         trace.push('database:delete')
         exists = false
+        seedExisting = false
+        await fake.resetDatabase()
         return commandReply({})
       case 'migrations':
         trace.push('migrations:apply')
-        if (options.migrationFailure)
+        if (options.migrationFailure) {
+          const db = await fake.database()
+          await db.batch([
+            db.prepare(
+              'CREATE TABLE d1_migrations (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)',
+            ),
+            db.prepare("INSERT INTO d1_migrations (name) VALUES ('001.sql')"),
+          ])
           return {
             exitCode: 1,
             stdout: '',
             stderr: 'fake-sensitive-migration-error',
           }
+        }
         return commandReply({})
       case 'execute': {
         const sql = args[args.indexOf('--command') + 1]
-        if (sql.includes("name = 'd1_migrations'")) {
-          trace.push('migrations:applied-table')
-          return d1Reply([{ name: 'd1_migrations' }])
-        }
-        if (sql === 'SELECT name FROM d1_migrations') {
-          trace.push('migrations:applied')
-          return d1Reply([{ name: '001.sql' }])
-        }
-        if (sql.includes("name IN ('orgs', 'image_builds')")) {
-          trace.push('resources:known-tables')
-          return d1Reply([{ name: 'orgs' }, { name: 'image_builds' }])
-        }
-        if (sql.includes("name = 'conductive_preview_migrations'")) {
-          trace.push('migrations:table')
-          return d1Reply(
-            options.recorded ? [{ name: 'conductive_preview_migrations' }] : [],
-          )
-        }
-        if (sql.startsWith('SELECT name, sha256')) {
-          trace.push('migrations:read')
-          return d1Reply(options.recorded ?? [])
-        }
-        if (
-          sql.includes(
-            'CREATE TABLE IF NOT EXISTS conductive_preview_migrations',
-          )
-        ) {
-          trace.push('migrations:record')
-          return d1Reply([])
-        }
-        if (sql === 'SELECT id FROM orgs') {
-          trace.push('resources:orgs')
-          return d1Reply([{ id: 'org-a' }])
-        }
-        if (sql.includes('pragma_table_info')) {
-          trace.push('resources:tables')
-          return d1Reply([{ name: 'image_builds' }])
-        }
-        if (sql.startsWith('SELECT snapshot_name')) {
-          trace.push('resources:snapshots')
-          return d1Reply([{ snapshot_name: 'stored-snapshot' }])
-        }
-        if (sql === 'SELECT id FROM image_builds') {
-          trace.push('resources:builds')
-          return d1Reply([{ id: 'a' }])
-        }
+        traceSql(sql, trace)
+        if (sqlResult) return sqlResult
       }
     }
     throw new Error('Unexpected fake SQL.')

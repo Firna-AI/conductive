@@ -1,5 +1,5 @@
 import type { ExternalIO } from './operations.ts'
-import { array, httpJson, record } from './remote-values.ts'
+import { array, httpJson, record, text } from './remote-values.ts'
 
 export function environmentValue(
   environment: Readonly<Record<string, string | undefined>>,
@@ -57,16 +57,31 @@ export class GitHub {
   }
 
   async pullState(number: number): Promise<'open' | 'closed' | 'missing'> {
+    return (await this.pullRequest(number))?.state ?? 'missing'
+  }
+
+  async pullRequest(number: number): Promise<{
+    state: 'open' | 'closed'
+    headSha: string
+  } | null> {
     const { value } = await this.request(
       `/pulls/${number}`,
       'GET',
       undefined,
       true,
     )
-    if (value === null) return 'missing'
-    const state = record(value, 'GitHub pull request').state
-    if (state === 'open' || state === 'closed') return state
-    throw new Error('GitHub returned an invalid pull request state.')
+    if (value === null) return null
+    const pull = record(value, 'GitHub pull request')
+    const state = pull.state
+    if (state !== 'open' && state !== 'closed')
+      throw new Error('GitHub returned an invalid pull request state.')
+    return {
+      state,
+      headSha: text(
+        record(pull.head, 'GitHub pull request head').sha,
+        'GitHub head SHA',
+      ),
+    }
   }
 
   async comments(number: number): Promise<Record<string, unknown>[]> {

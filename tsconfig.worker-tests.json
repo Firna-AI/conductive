@@ -4,5 +4,12 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.worker-tests.tsbuildinfo",
     "types": ["node"]
   },
+  "include": [
+    "worker",
+    "src/shared",
+    ".wrangler/worker-configuration.d.ts",
+    "tools/pr-previews/*.test.ts",
+    "tools/pr-previews/*.test-support.ts"
+  ],
   "exclude": []
 }
