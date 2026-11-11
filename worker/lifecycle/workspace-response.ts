@@ -47,6 +47,7 @@ export async function presentProvisionedWorkspace(
         number: saved.workspace.number ?? current.number,
       }),
       softwareUpdateFailed: current.softwareUpdateFailed,
+      installScriptChanged: current.installScriptChanged,
     },
   }
 }

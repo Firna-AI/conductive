@@ -16,7 +16,8 @@ import { buildSnapshotIntent } from './resource-intents'
 import { readSavedScript } from './saved-script'
 import { readStartJob, serializeStartJob } from './start-job-codec'
 import { durableStartStorage, START_JOB_KEY } from './start-storage'
-import { assignSandbox, insertWorkspace, readWorkspace } from './workspace-data'
+import { assignSandbox, readWorkspace } from './workspace-data'
+import { insertWorkspace } from './workspace-insert-data'
 
 const fixtureForTest = setupBackendTests()
 

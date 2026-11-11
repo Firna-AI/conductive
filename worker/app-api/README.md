@@ -111,7 +111,7 @@ The machine tools use the configured app origin instead.
   inside the D1 write transaction that saves them. No route computes a
   saved position from an earlier list read. So two overlapping moves give
   the same order as the two moves one after the other.
-- `insertWorkspace` in [`workspace-data.ts`](../lifecycle/workspace-data.ts)
+- `insertWorkspace` in [`workspace-insert-data.ts`](../lifecycle/workspace-insert-data.ts)
   gives a new workspace the lowest `position` of the active workspaces in
   its section, minus 1. In a section without active workspaces, the new
   workspace takes 0. So it lists first, as the
@@ -193,7 +193,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`get-started-github.ts`](get-started-github.ts):
   `getStartedGitHubComplete`, the one owner of the `github-app` step.
 - [`shell.ts`](shell.ts) and [`shell-data.ts`](shell-data.ts): the lists of
-  an org and the read marks.
+  an org and the read marks. The workspace list shares `workspaceColumns`
+  with `readWorkspace` in
+  [`workspace-data.ts`](../lifecycle/workspace-data.ts). Its SQL joins
+  compute `installScriptChanged` from the current image of each workspace's
+  org and provider account.
 - [`workspace-view.ts`](workspace-view.ts): the saved view of each member.
 - [`workspace-state.ts`](workspace-state.ts): the state of a workspace for
   its reader, and the refusal of archived writes.

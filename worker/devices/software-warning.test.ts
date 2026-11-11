@@ -2,7 +2,12 @@ import { afterEach, beforeEach, expect, it } from 'vitest'
 
 import { workspaceEventsPath } from '../../src/shared/events'
 import { SocketInbox } from '../chat/adapter-sockets.test-support'
-import { recordWorkspaceSoftwareUpdateFailed } from '../lifecycle/workspace-software-data'
+import { OUTER_SOFTWARE } from '../chat/integration/outer-seed.test-support'
+import { seedPublishedImage } from '../lifecycle/published-image-test-support'
+import {
+  recordWorkspaceInstallScriptRevision,
+  recordWorkspaceSoftwareUpdateFailed,
+} from '../lifecycle/workspace-software-data'
 import { command, connected } from './requests.test-support'
 import {
   APP,
@@ -21,7 +26,21 @@ afterEach(async () => {
 
 // The fixture workspace has no lifecycle state, so the device-only fallback
 // publishes this event.
-it('keeps the stored software warning in the workspace event of a Mac request', async () => {
+it('keeps the software warning and current install script report in Mac request workspace events', async () => {
+  await seedPublishedImage(fixture.db, {
+    orgId: 'org',
+    buildId: 'current-script-build',
+    imageName: 'current-script-image',
+    repositories: [],
+    software: OUTER_SOFTWARE,
+    now: 1,
+  })
+  await fixture.db
+    .prepare(
+      `UPDATE image_builds SET install_script_revision = 'current-script'
+       WHERE id = 'current-script-build'`,
+    )
+    .run()
   await recordWorkspaceSoftwareUpdateFailed(fixture.db, 'org', WID, true)
   const mac = await connected(fixture)
   const response = await fixture.runtime.dispatchFetch(
@@ -41,7 +60,31 @@ it('keeps the stored software warning in the workspace event of a Mac request', 
     envelope: {
       event: {
         type: 'workspace.updated',
-        workspace: { state: 'input', softwareUpdateFailed: true },
+        workspace: {
+          state: 'input',
+          softwareUpdateFailed: true,
+          installScriptChanged: true,
+        },
+      },
+    },
+  })
+  await recordWorkspaceInstallScriptRevision(
+    fixture.db,
+    'org',
+    WID,
+    'current-script',
+  )
+  await command(fixture, mac, 'same-script-command')
+  expect(await inbox.next()).toMatchObject({
+    type: 'event',
+    envelope: {
+      event: {
+        type: 'workspace.updated',
+        workspace: {
+          state: 'input',
+          softwareUpdateFailed: true,
+          installScriptChanged: false,
+        },
       },
     },
   })

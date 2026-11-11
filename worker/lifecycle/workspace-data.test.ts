@@ -8,7 +8,8 @@ import {
 } from '../app-api/shell-list.test-support'
 import { TEST_TIME } from '../test-support/harness'
 import { FIRST_MESSAGE } from './durable-test-support'
-import { deleteProvisionalWorkspace, insertWorkspace } from './workspace-data'
+import { deleteProvisionalWorkspace } from './workspace-data'
+import { insertWorkspace } from './workspace-insert-data'
 
 const fixtureForTest = setupShellListTests()
 

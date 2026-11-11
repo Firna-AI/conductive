@@ -1057,11 +1057,11 @@ Every option of decision 17 shows the notice when the install scripts
 differ, so this report runs before the answers. It waits for Milestone 9a
 only because both change the same Worker queries.
 
-- [ ] Send with each workspace whether the install script of the current
+- [x] Send with each workspace whether the install script of the current
       org image differs from the install script that its disk holds, as
       design item 6 says, in each Worker path that sends a workspace to the
       browser.
-- [ ] Tests: a workspace whose install script revision differs from that of
+- [x] Tests: a workspace whose install script revision differs from that of
       the current org image reports the change, and one with the same
       revision does not.
 

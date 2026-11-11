@@ -4,6 +4,7 @@ import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatStorage, ChatCallbackPublisher } from '../chat/types'
 import type { AppEnv } from '../env'
+import { workspaceInstallScriptDiffers } from '../lifecycle/workspace-software-data'
 import {
   readDeviceWorkspace,
   enterDeviceInput,
@@ -15,12 +16,12 @@ interface InputState {
   previous: WorkspaceState
 }
 /**
- * The workspace of a fallback event. It carries the failed update mark as
- * an event of the shared state writer does, in a field that the shared
- * type does not name yet.
+ * The workspace of a fallback event. It carries the software reports of
+ * the shared state writer, which the shared type does not name yet.
  */
 type FallbackWorkspace = Omit<Workspace, 'link'> & {
   softwareUpdateFailed: boolean
+  installScriptChanged: boolean
 }
 export type DeviceStateProjection = (
   request: DeviceCommandRecord,
@@ -110,6 +111,11 @@ async function publishFallback(
     choice: session.choice,
     state: row.state,
     softwareUpdateFailed: row.softwareUpdateFailed === 1,
+    installScriptChanged: await workspaceInstallScriptDiffers(
+      env.DB,
+      row.orgId,
+      row.id,
+    ),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,

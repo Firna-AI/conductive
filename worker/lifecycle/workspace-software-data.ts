@@ -1,5 +1,14 @@
 import type { ImageVersions } from './image-records'
 
+export const workspaceInstallScriptChangedColumn = `(b.id IS NOT NULL
+  AND w.install_script_revision IS NOT b.install_script_revision) AS installScriptChanged`
+
+export const workspaceImageJoins = `LEFT JOIN org_images i ON i.org_id = w.org_id
+  AND i.provider_account = w.provider_account
+  LEFT JOIN image_builds b ON b.id = i.image_build_id AND b.org_id = i.org_id
+  AND b.provider_account = i.provider_account AND b.snapshot_name = i.image_name
+  AND b.state = 'succeeded'`
+
 export interface WorkspaceImageRecords extends ImageVersions {
   orgImageBuildId: string | null
   softwareUpdateFailed: boolean
@@ -42,18 +51,13 @@ export async function workspaceInstallScriptDiffers(
 ): Promise<boolean> {
   const row = await db
     .prepare(
-      `SELECT w.install_script_revision AS workspaceRevision,
-       b.install_script_revision AS imageRevision
-       FROM workspaces w JOIN org_images i ON i.org_id = w.org_id
-         AND i.provider_account = w.provider_account
-       JOIN image_builds b ON b.id = i.image_build_id AND b.org_id = i.org_id
-         AND b.provider_account = i.provider_account AND b.snapshot_name = i.image_name
-         AND b.state = 'succeeded'
+      `SELECT ${workspaceInstallScriptChangedColumn}
+       FROM workspaces w ${workspaceImageJoins}
        WHERE w.org_id = ? AND w.id = ?`,
     )
     .bind(orgId, workspaceId)
-    .first<{ workspaceRevision: string | null; imageRevision: string | null }>()
-  return row !== null && row.workspaceRevision !== row.imageRevision
+    .first<{ installScriptChanged: number }>()
+  return row?.installScriptChanged === 1
 }
 
 /** Read the allocated snapshot's immutable build, even after a newer publication. */

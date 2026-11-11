@@ -142,7 +142,11 @@ functions of the lifecycle that a reader opens first.
   Versions are content digests, so they have no time order.
   `workspaceInstallScriptDiffers` compares the workspace script revision
   with the current org image in its provider account. A new image with the
-  same script does not change the result.
+  same script does not change the result. A missing workspace revision
+  differs from a current image revision that is not null. Without a
+  matching published build, the report is false. `workspaceImageJoins` and
+  `workspaceInstallScriptChangedColumn` share that comparison with the
+  workspace queries.
   `recordWorkspaceSoftwareVersion` records a good software update and clears
   the failed update mark. `recordWorkspaceSoftwareUpdateFailed` sets or
   clears that mark without changing the version. It stays set until a
@@ -185,19 +189,21 @@ functions of the lifecycle that a reader opens first.
   fails the start.
 - [start-admission.ts](start-admission.ts): `enqueueWorkspaceStart` clears
   the failed update mark when it admits a start.
-- [workspace-data.ts](workspace-data.ts): `workspaceRecord` reads the failed
-  update mark of the D1 row into `softwareUpdateFailed`. `workspaceView`
-  keeps that field. These queries select the mark: `readWorkspace`, the
-  workspace list query in [shell-data.ts](../app-api/shell-data.ts), and
-  `readDeviceWorkspace` in [data.ts](../devices/data.ts) for the
-  device-only fallback. So the workspace list, each workspace detail
-  reply, and each `workspace.updated` event carry the mark. A row that a
-  query reads without the mark gives no value, never false. Replies give
-  the mark only in that field. The shared `Workspace` type in
-  `src/shared/` does not name it yet.
+- [workspace-data.ts](workspace-data.ts): `workspaceColumns` gives
+  `readWorkspace` and the list query in
+  [shell-data.ts](../app-api/shell-data.ts) one shared column list.
+  Both queries compute `installScriptChanged` through joins, without a
+  separate query for each workspace. `workspaceRecord` maps that report
+  and the failed update mark, `softwareUpdateFailed`, to booleans.
+  `workspaceView` keeps both fields. The list, each detail reply, and each
+  new `workspace.updated` event carry both fields. A row without a report
+  gives no value for that field, never false. The shared `Workspace` type
+  in `src/shared/` does not name these fields yet.
+- [workspace-insert-data.ts](workspace-insert-data.ts): `insertWorkspace`
+  inserts the workspace and its runtime record, then reads the leased image.
 - [workspace-response.ts](workspace-response.ts):
-  `presentProvisionedWorkspace` reads the current mark for a repeated
-  create, because the saved create reply can hold an older value.
+  `presentProvisionedWorkspace` reads both current reports for a repeated
+  create, because the saved create reply can hold older values.
 - [durable-journal.ts](durable-journal.ts): `WorkspaceEventJournal` compares
   public event data, so a warning change reaches open tabs even when the
   workspace state stays unchanged. Timestamp-only polls remain suppressed.

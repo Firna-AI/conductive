@@ -1,9 +1,12 @@
 import type { Repository } from '../../src/shared/org-settings'
 import type { Section } from '../../src/shared/sections'
-import type { WorkspaceRow } from '../lifecycle/workspace-data'
+import {
+  workspaceColumns,
+  type WorkspaceRow,
+} from '../lifecycle/workspace-data'
+import { workspaceImageJoins } from '../lifecycle/workspace-software-data'
 import { activeOrgIdPredicate } from '../data/org-access'
 import { requireActiveOrg } from '../data/user-access'
-import { workspaceNameColumn } from '../data/workspace-name'
 
 export async function shellSections(
   db: D1Database,
@@ -57,18 +60,12 @@ export async function shellWorkspaces(
 ): Promise<ListedWorkspaceRow[]> {
   const { results } = await db
     .prepare(
-      `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
-     w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
-     u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
-     ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId,
-     w.provider_account AS providerAccount, w.state, w.software_update_failed AS softwareUpdateFailed,
-     w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
-     w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
-     r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId,
+      `SELECT ${workspaceColumns},
      COALESCE(m.through_event_number, 0) AS readThroughEventNumber
      FROM workspaces w JOIN users u ON u.id = w.owner_user_id
      JOIN workspace_runtime r ON r.workspace_id = w.id
      JOIN orgs o ON o.id = w.org_id
+     ${workspaceImageJoins}
      LEFT JOIN sections s ON s.id = w.section_id
      LEFT JOIN workspace_read_states m ON m.workspace_id = w.id AND m.user_id = ?
      WHERE w.org_id = ? AND o.deleted_at IS NULL
