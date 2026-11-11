@@ -68,9 +68,8 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     id: 'agent-workspace-controls',
     area: 'automation-and-api',
     name: 'Agent workspace controls',
-    status: 'in-progress',
-    note: 'Agent tools to rename, move, and archive workspaces are in progress. Session, section, and preview controls are planned.',
-    due: null,
+    status: 'available',
+    note: "Agents can rename, move, and archive workspaces, manage sessions and sections, and open or close private previews. Actions follow the turn sender's rights.",
   },
   {
     id: 'read-session-transcripts',

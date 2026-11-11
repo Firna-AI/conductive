@@ -364,6 +364,10 @@ decision.
   and display name. The filter takes the ID, with no login lookup.
   Agents use the sender ID for that sender's workspaces and the row fields
   to identify another owner. Writes still act for the calling turn's sender.
+- Agent call of 11 November 2026: name the owner fields as `owner.id`,
+  `owner.githubLogin`, and `owner.displayName` in agent guidance. Reason:
+  these are the exact reply fields, and their names distinguish public
+  owner metadata from login credentials in the storage privacy check.
 - Agent call: `list_workspaces` and `list_sessions` take an optional limit
   of 1 to 100 and an offset. A reply with a limit says whether more
   entries follow. Without these options, a list returns every entry, as
@@ -710,13 +714,13 @@ README evidence: `.context/agent-tools-conductor-parity/reports/m7-readmes.md`.
 
 Depends on: every other milestone
 
-- [ ] Update the `agent-workspace-controls` comparison row to Available
+- [x] Update the `agent-workspace-controls` comparison row to Available
       after Milestones 3 to 7 implement the calls. Follow the claim
       rules and keep features outside this plan under consideration.
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and `npm run check`.
-- [ ] Smoke-test the stop line in the app of `npm run dev`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Smoke-test the stop line in the app of `npm run dev`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
@@ -727,6 +731,9 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Evidence: `.context/agent-tools-conductor-parity/reports/m8-comparison.md`
+and `.context/agent-tools-conductor-parity/m8-screens/smoke-results.json`.
 
 ## Post-merge follow-up (non-blocking)
 
