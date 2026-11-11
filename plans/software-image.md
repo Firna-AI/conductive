@@ -1061,7 +1061,9 @@ Depends on: 1, 5, 7, 8
 
 - [ ] Show refreshes on the Cloud computer tab, as the mockup of Milestone
       1 draws them.
-- [ ] Show the start step and the warning of Milestone 7.
+- [ ] Show the start step and the warning of Milestone 7. Load the warning
+      mark in the workspace list query and in the device fallback of
+      `worker/devices/state.ts`, which do not load it yet.
 - [ ] Show the notice of an old org setup and its action.
 - [ ] Change "The install script runs only when you build the computer." in
       `src/shell/settings/ComputerTab.tsx` and "only at a build" in
