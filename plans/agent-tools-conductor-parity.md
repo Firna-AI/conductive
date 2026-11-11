@@ -646,6 +646,8 @@ README evidence: `.context/agent-tools-conductor-parity/reports/m5-readmes.md`.
 
 Depends on: 3, 4, 5
 
+Completed: 11 November 2026.
+
 - [x] Add each new call to the CLI and the MCP server under `tools/`, in
       new files where a file would pass 200 lines.
 - [x] Add the options of the existing calls, and the message file and
@@ -657,14 +659,16 @@ Depends on: 3, 4, 5
 - [x] Apply decision 283 to owner-selection instructions and, when the
       chosen option needs it, the sender line and its provider tests.
 - [x] Add CLI and MCP tests in `worker/tools/` against the handler.
-- [ ] Update `tools/README.md` and `runner/agent-tools.md`.
-- [ ] Add the new commands to
+- [x] Update `tools/README.md` and `runner/agent-tools.md`.
+- [x] Add the new commands to
       `plans/follow-ups/full-image-build-for-agent-tools.md`.
 
 Evidence: `.context/agent-tools-conductor-parity/reports/m6-tools.md`
 and `.context/agent-tools-conductor-parity/checks/m6-final-orchestrator-tests.log`.
 
 Main integration notes: `.context/agent-tools-conductor-parity/merge-m6-docs-notes.md`.
+
+README evidence: `.context/agent-tools-conductor-parity/reports/m6-readmes.md`.
 
 ## Milestone 7: The stop line in the app
 

@@ -12,7 +12,8 @@ reach, the turn rule, and the rights of the sender.
 types and the path builders. A preview itself uses the normal
 [preview contract](../../src/shared/previews.ts).
 
-The CLI and the MCP server do not offer these routes yet.
+The CLI and the MCP server offer these routes, as
+[Workspace tool calls](../../tools/calls.md#sections-and-previews) says.
 
 ## Routes
 

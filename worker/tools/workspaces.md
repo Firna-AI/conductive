@@ -10,9 +10,9 @@ states the reach, the turn rule, and the rights of the sender.
 request and reply types and the path builders `agentWorkspacePath` and
 `agentWorkspacePaths`.
 
-The CLI and the MCP server do not offer the get, rename, move, and archive
-routes yet. They also offer no list options, first session title, or
-create request ID yet.
+The CLI and the MCP server offer each of these routes, the list options,
+the first session title, and the create request ID, as
+[Workspace tool calls](../../tools/calls.md#workspaces) says.
 
 ## Routes and access
 
@@ -110,7 +110,8 @@ create request ID yet.
   workspace, the calling session, the sender, and the request ID. The hash
   is the ID of the first message.
 - A create without `requestId` hashes a new random value, so it never
-  replays.
+  replays. The current CLI and MCP server send a new request ID when the
+  agent gives none. Tools from an older org image send none.
 - `replayWorkspaceCreation` runs before the current defaults, the
   repository check, the section choice, and the name cleaning. It calls
   `replayCreation` in the [lifecycle](../lifecycle/key-code.md), which
