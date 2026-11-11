@@ -15,7 +15,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         in, and they show who owns and who sends each piece of work. The
         operator sees the age of the account when you wait for app
         access. Your login and display name also tell the agents who sent
-        each message.`,
+        each message. Your ${productName} user ID goes with them, so that
+        agents can find your workspaces.`,
       text`Commit authors: by default, each commit in a cloud computer names
         the person whose GitHub token Git uses as author and committer. In a
         workspace with older cloud computer software, agent commits name the

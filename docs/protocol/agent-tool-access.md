@@ -55,6 +55,10 @@ names a dated record, as
   it starts no work.
 - Reads that also need an active turn were rejected, so that every read
   keeps the rule of the lists.
+- A read that filters by a member names that member in the call. No read
+  takes such a member from the calling turn or from the owner of the
+  calling workspace (decision 282). Reason: a read can come without a
+  turn, and the member who asks can differ from both.
 - Each write needs an active turn. The request names its turn. The Worker
   accepts it only while that turn runs in the calling workspace.
 - A write without such a turn gets HTTP 403 with the error code

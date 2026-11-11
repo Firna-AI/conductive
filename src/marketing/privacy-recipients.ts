@@ -53,7 +53,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         code when an agent works on them. Each Mac command request and its
         result also go to the agent and to Anthropic or OpenAI.
         With each message, they also get
-        the GitHub login and the display name of its sender. They get the
+        the GitHub login, the display name, and the ${productName} user ID of
+        its sender. They get the
         names of the workspace branch and the branch that a pull request
         targets. Later messages give the current names when either branch
         changes. Each workspace branch starts with the GitHub login of the

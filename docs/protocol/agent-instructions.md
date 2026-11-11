@@ -64,7 +64,11 @@ says.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
   - Several members can write in one session. The sender line of each
-    message names its sender.
+    message names its sender, with the member ID of that member.
+  - The agent gives the member ID of a sender to the owner filter of the
+    workspace list, for the workspaces of that member. Member IDs are for
+    the arguments of the tools. An answer to a member names a member by
+    name, not by member ID.
 - The instructions never tell the agent to send a member to a tool that
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.
@@ -107,12 +111,18 @@ says.
 - Each message that reaches the agent starts with a sender line. This
   holds also for each message during a turn, and for each message of the
   starter.
-- The sender line gives the display name and the GitHub login of the
-  member who sent the message. For a member without a display name, it
-  gives only the GitHub login.
+- The sender line gives the display name, the GitHub login, and the
+  member ID of the member who sent the message (decision 283). For a
+  member without a display name, it gives only the GitHub login and the
+  member ID.
 - Reason: several members can write in one session while the starter
   shares the login (decision 116). So the agent needs to know who sent
   each message.
+- A message that joins a running turn gives its own sender, who can
+  differ from the sender of the turn.
+- Reason for the member ID: the owner filter of the
+  [workspace list](workspace-calls.md#list-the-workspaces) takes a member
+  ID, and a GitHub login can name two members after a GitHub rename.
 - The sender line of a message from the workspace tools names the sender
   of the turn that made the call, as
   [The sender](session-calls.md#the-sender) says.
@@ -123,8 +133,8 @@ says.
 
 ### Access
 
-- The sender line informs the agent only. No access depends on it. The
-  same holds for a `Sent by:` line, as
+- The sender line informs the agent only. No access depends on it, also
+  not on its member ID. The same holds for a `Sent by:` line, as
   [The `Sent by:` line](session-calls.md#the-sent-by-line) says.
 - A Mac command of a turn goes to the Mac of the sender of the turn, the
   member whose message started the turn. The GitHub token of the turn also
@@ -133,13 +143,18 @@ says.
   member too, as [Commit author](github-tokens.md#commit-author) says.
 - A message that another member sends during the turn changes none of
   them.
-- Reason: the Worker takes the sender of a Mac command or a Git operation
-  from its own record of the turn.
+- Each write of the workspace tools acts for the sender of the turn too,
+  also while the agent answers a message of another member, as
+  [The sender](agent-tool-access.md#the-sender) says.
+- Reason: the Worker takes the sender of a Mac command, a Git operation,
+  or a write of the tools from its own record of the turn.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   this rule. Agent code runs in the sandbox, so a sender that the sandbox
   names can be false.
-- Risk: a member can type a false sender line in a message. The agent can
-  then name the wrong member, but no access changes.
+- Risk: a member can type a false sender line in a message, also with a
+  false member ID. The agent can then name the wrong member, or list the
+  workspaces of another member. No access changes, because each write
+  keeps the rights of the sender of the turn.
 
 ## The branch line
 

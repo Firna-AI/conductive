@@ -51,7 +51,8 @@ Cal answered decisions 277 to 281 on 11 November 2026.
 Cal approved the plan on 11 November 2026, in the words "impl all plan
 milestones". A `default orchestrator` session in this workspace runs the
 milestones by delegation.
-Decisions 282 and 283 arose during implementation and still need Cal's answer.
+Cal chose 282 C and 283 F on 11 November 2026, in the words
+"282 = C" and "283 = F". The implementation continues with those choices.
 
 ## Decisions
 
@@ -249,14 +250,14 @@ check is in
 - **Related:** Decision 283 sets the explicit member key for every option. C needs a key that the agent can get for the message it answers.
 - **Recommendation:** C. It gives the requested member's workspaces and keeps token-only reads.
 - **Action:** ask the user, because C drops an approved filter, while A adds a read refusal and B changes the named member.
-- **Chosen:** Open. This blocks the mine filter. Decision 283 blocks the owner-filter input. Every other call, filter, and create option is independent.
+- **Chosen:** C, by Cal on 11 November 2026: "282 = C". There is no mine filter. The explicit owner filter follows decision 283 F.
 
 The options check of 11 November 2026 is in
 `.context/agent-tools-conductor-parity/reports/decision-282-options.md`.
 It kept C and added E. The completion check is in
 `.context/agent-tools-conductor-parity/reports/decision-282-completion.md`.
 It found a second root question about the member key, now decision 283.
-No option is implemented before Cal answers.
+Cal answered both questions on 11 November 2026. The chosen options apply to the remaining milestones.
 
 ### 283. How the owner filter identifies a member
 
@@ -303,7 +304,7 @@ Added on 11 November 2026 from the completion check of decision 282.
 - **Related:** Decision 282 chooses mine or an explicit member. Its C needs a key that the agent can get for the message it answers.
 - **Recommendation:** F, from the options check. It gives an exact sender ID and owner IDs for members named in words, with no lookup refusal. The first recommendation was E.
 - **Action:** ask the user, because F changes the sender-line and workspace-list requirements, which no approved decision covers.
-- **Chosen:** Open. This blocks the owner-filter input, its protocol text, and any sender-line change. Every other call and filter is independent.
+- **Chosen:** F, by Cal on 11 November 2026: "283 = F". The owner filter takes only a member ID. The sender line gives the actual message sender's ID, and every workspace-list row gives its owner's ID, GitHub login, and display name. No login lookup or new refusal is added.
 
 The options check of 11 November 2026 is in
 `.context/agent-tools-conductor-parity/reports/decision-283-options.md`.
@@ -355,11 +356,14 @@ decision.
 ### Options on the existing calls
 
 - Agent call: `list_workspaces` takes optional filters: the workspaces
-  that the sender owns, an owner, a state, a repository, a part of the
-  name, the newest activity after a date, and archived or not. Reason:
-  Conductor's `workspace list` filters in the same way.
-- The sender-owned filter awaits decision 282. The owner-filter input
-  awaits decision 283. No option applies until Cal answers.
+  of an owner by member ID, a state, a repository, a part of the name,
+  the newest activity after a date, and archived or not. Decision 282 C
+  removes mine. Reason: reads must name the member without an active turn.
+- Decision 283 F: the sender line gives the actual message sender's member
+  ID. Each workspace-list row gives its owner's member ID, GitHub login,
+  and display name. The filter takes the ID, with no login lookup.
+  Agents use the sender ID for that sender's workspaces and the row fields
+  to identify another owner. Writes still act for the calling turn's sender.
 - Agent call: `list_workspaces` and `list_sessions` take an optional limit
   of 1 to 100 and an offset. A reply with a limit says whether more
   entries follow. Without these options, a list returns every entry, as
@@ -495,8 +499,10 @@ Evidence: `.context/agent-tools-conductor-parity/reports/m1-ui.md` and
 
 Depends on: 1
 
-The independent documentation is complete. The member filter contract
-waits for decisions 282 and 283.
+Completed: 11 November 2026.
+
+Cal chose 282 C and 283 F. The protocol and public restatements apply those
+choices. The backend work starts from this contract.
 
 State the requirements and the decisions of the new calls. Read the
 `documentation` skill first.
@@ -506,7 +512,7 @@ State the requirements and the decisions of the new calls. Read the
       the request ID of a create, and
       the workspace, section, and preview calls.
 - [x] State the independent workspace list filters and paging.
-- [ ] Apply decisions 282 and 283 to mine, the explicit owner filter,
+- [x] Apply decisions 282 and 283 to mine, the explicit owner filter,
       list-row fields, and the sender line. Keep unchosen behavior absent.
 - [x] Update `docs/protocol/session-calls.md`: the get, rename, close, and
       stop calls, and the get of a message.
@@ -540,6 +546,8 @@ State the requirements and the decisions of the new calls. Read the
 Evidence: `.context/agent-tools-conductor-parity/reports/m2-internal-docs.md`,
 `.context/agent-tools-conductor-parity/reports/m2-external-docs.md`, and
 `.context/agent-tools-conductor-parity/checks/m2-consent-auth-tests.log`.
+Completion: `.context/agent-tools-conductor-parity/reports/m2-complete.md` and
+`.context/agent-tools-conductor-parity/reports/m2-public-complete.md`.
 
 ## Milestone 3: Workspace calls
 

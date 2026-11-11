@@ -122,7 +122,8 @@ On a phone, use a long press to lift its row.
 
 Ask an agent to create, inspect, or rename a workspace.
 It can also move the workspace to the top of a section.
-It can find workspaces by state, repository, name, recent activity, and archive state.
+It can find workspaces by owner, state, repository, name, recent activity, and archive state.
+Ask for your workspaces, or give another member's name or GitHub login.
 Workspace and session lists can return a smaller page of results.
 When an agent creates a workspace, it can set the workspace name and its first session's title.
 
