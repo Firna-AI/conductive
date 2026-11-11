@@ -45,5 +45,13 @@ export const refreshes = defineScreen({
       rationale: `${cleanRefresh} A failed refresh keeps the last good image, as a failed build does. Try again builds the current settings, as it does after a failed build. The app saves the message of a failed build for a refresh too, because each refresh is a clean build.`,
       props: { build: 'failed' },
     },
+    {
+      slug: 'after-failed-build',
+      title: 'Refresh after a failed build',
+      description:
+        'A build failed 5 hours ago, and a refresh after a push succeeded 2 hours ago. The head keeps the failed build: "Last build" with "Failed after 2m 18s" and Try again. The card shows the message that the app saved for the build, the end of its log, and that workspaces still start from the refresh of 2 hours ago. The closed history lists the refresh above the failed build. The Settings link in the sidebar keeps its dot, because a refresh never clears the mark of a failed build.',
+      rationale: `${cleanRefresh} A design call of 11 November 2026, from the options check of image job decisions 28 and 29: a good refresh never hides a failed build that no newer build replaced. The head of the card, its log, and Try again keep that build, because the rule of the org image says that a failed build shows its log, Try again, and the mark. A refresh runs the install script and the repositories of the newest good build, so it does not prove that the changes of the failed build work. The good refresh still replaces the image, so new workspaces start from it. A design call of the same day keeps the dot of the app: the Settings link shows its dot when the newest job failed, or when the newest build failed and no newer build replaced it. So a refresh never clears the mark of a failed build, also while it runs. The app already marks a failed newest build in this way, and the failed variant of this page gives a failed refresh its own dot.`,
+      props: { newestBuild: 'failed' },
+    },
   ],
 })

@@ -1,4 +1,8 @@
-import type { BuildState, OrgBuilds } from '../components/settings/BuildSection'
+import {
+  isFailed,
+  type BuildState,
+  type OrgBuilds,
+} from '../components/settings/BuildSection'
 import type { OrgComputer } from '../components/settings/ComputerTab'
 import {
   settingsLinks,
@@ -46,7 +50,7 @@ import {
 } from '../fixtures/terminal'
 import { type Workspace, workspaceList } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { acmeJobs } from './acmeJobs'
+import { acmeHead, acmeJobs, acmeSettingsAlert } from './acmeJobs'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 
 /** The org whose settings show, and what its tabs hold. */
@@ -58,6 +62,17 @@ export type SettingsOrg = {
   /** The workspaces of the org, with their owners. */
   workspaces: readonly Workspace[]
   computer: OrgComputer
+  /**
+   * The state of the job on the head of the build card: the newest job, or
+   * a failed build that a good refresh followed.
+   */
+  head: BuildState
+  /**
+   * Whether the Settings link of the sidebar shows its dot: the newest job
+   * failed, or the newest build failed and no newer build replaced it. A
+   * refresh never clears the mark of a failed build.
+   */
+  settingsAlert: boolean
   /** The workspace list of the org, and its sections in the sidebar. */
   list: string
   sections: readonly SidebarSection[]
@@ -79,12 +94,14 @@ function acme(state: OrgSettingsState): SettingsOrg {
     invites: acmeInvites,
     workspaces: workspaceList,
     computer: {
-      ...acmeJobs(state.job, state.build, state.softwareImage),
+      ...acmeJobs(state),
       installScript,
       changedInstallScript,
       startupScript,
       envVars,
     },
+    head: acmeHead(state),
+    settingsAlert: acmeSettingsAlert(state),
     list: paths.shell,
     sections: workspaceSections(),
     newWorkspace: paths.newWorkspace,
@@ -138,6 +155,9 @@ function firna(build: BuildState): SettingsOrg {
       startupScript: '',
       envVars: [],
     },
+    head: build,
+    // Firna has no refresh, so its newest job is its newest build.
+    settingsAlert: isFailed(build),
     list: paths.newOrg,
     sections: newOrgSections(),
     newWorkspace: paths.firstBuildWorkspace,

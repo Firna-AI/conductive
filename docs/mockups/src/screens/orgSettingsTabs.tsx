@@ -94,7 +94,7 @@ export function TabBody(props: { state: OrgSettingsState }) {
     case 'computer':
       return (
         <ComputerTab
-          build={state.build}
+          build={settings.head}
           computer={settings.computer}
           envForm={state.envForm}
           org={org.name}

@@ -34,9 +34,10 @@ type BuildLogs = Readonly<Record<LogState, readonly TerminalLine[]>>
 /**
  * The jobs of an org that the card shows: the newest good job, which every
  * workspace starts from, the jobs that ended, newest first, and the logs.
- * `failed` holds the newest job in each failed state, with its saved
- * message, and `running` the kind and the time of the job that runs. A new
- * org has no good job until its first build succeeds.
+ * `failed` holds the failed job of the head in each failed state, with its
+ * saved message: the newest job, or a failed build that a good refresh
+ * followed. `running` holds the kind and the time of the job that runs. A
+ * new org has no good job until its first build succeeds.
  */
 export type OrgBuilds = {
   lastGood?: Build
@@ -46,7 +47,7 @@ export type OrgBuilds = {
   running: { kind: JobKind; elapsed: string }
 }
 
-/** Whether the newest job failed, so the Settings link shows a mark. */
+/** Whether a job failed, or the app stopped it at its 60-minute limit. */
 export function isFailed(state: BuildState): state is FailedState {
   return state === 'failed' || state === 'time-limit'
 }
@@ -93,8 +94,8 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
 }
 
 /**
- * The newest job: the job that runs, and its time, or the last job, a
- * build or a refresh, with its result.
+ * The job on the head: the job that runs, and its time, or a job that
+ * ended, a build or a refresh, with its result.
  */
 function Head(props: { state: BuildState; builds: OrgBuilds }) {
   const { state, builds } = props
@@ -166,6 +167,10 @@ function Body(props: { state: BuildState; builds: OrgBuilds }) {
  * the actions, for a member who is not an admin (decision 57).
  */
 export function BuildSection(props: {
+  /**
+   * The state of the job on the head: the newest job, or a failed build
+   * that no newer build replaced, after a good refresh.
+   */
   state: BuildState
   builds: OrgBuilds
   readOnly?: boolean

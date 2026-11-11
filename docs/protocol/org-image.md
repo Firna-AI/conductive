@@ -50,6 +50,12 @@ Its pull request keeps them after the merge.
 - A failed build or refresh shows the end of its log and Try again, which
   builds the current settings. The Settings link of the sidebar then shows
   a mark.
+- A refresh never hides a failed build that no newer build replaced.
+  After a good refresh, the Cloud computer tab shows that build again, with
+  the end of its log and Try again. The Settings link keeps its mark, also
+  while the refresh runs. Reason: a refresh runs the install script and the
+  repositories of the newest good build, so it does not show that the
+  changes of the failed build work.
 - After a failed build, the app starts no new build by itself
   (decision 12). This also holds for the first build of an org. Reason: a
   broken install script fails again.

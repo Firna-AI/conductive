@@ -166,7 +166,10 @@ agent and terminal software", in the build log and in the start steps.
   that succeeded, with "Last refresh" in the head. Its `running` and
   `daily` variants have a refresh that runs, with its log and what started
   it in the head. Its `failed` variant has a failed refresh with the end
-  of its log and Try again.
+  of its log and Try again. Its `after-failed-build` variant has a good
+  refresh after a failed build: the head keeps the failed build, with its
+  log and Try again, and the Settings link keeps its dot. The history
+  lists the refresh above the failed build.
 - `app/org-settings/cloud-computer/building/fallback` has a build without
   a ready software image. Its log shows "Installing the agent and terminal
   software" after the clones.

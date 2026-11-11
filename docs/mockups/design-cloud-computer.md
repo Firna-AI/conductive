@@ -54,10 +54,10 @@ and the updates of an old workspace.
   each refresh, because each refresh is a clean build that runs the
   install script. `buildCopy.ts` in `src/components/settings/` holds the
   words, and imports no fixture.
-  - The head names the newest job: "Last build" or "Last refresh" with its
-    time and result, or, while it runs, "Building", "Refreshing after a
-    push", or "Running the daily refresh" with its time. Build computer
-    waits while any job runs.
+  - The head names the newest job, or a failed build that a good refresh
+    followed: "Last build" or "Last refresh" with its time and result, or,
+    while it runs, "Building", "Refreshing after a push", or "Running the
+    daily refresh" with its time. Build computer waits while any job runs.
   - Each row of the history names its job after its time: Build, Refresh
     after a push, or Daily refresh. The kinds line up in a column. A
     narrow history, such as on a phone, puts the kind under the time in
@@ -65,6 +65,17 @@ and the updates of an old workspace.
   - A failed refresh shows the saved message, the end of its log, and Try
     again, as a failed build does. The Settings link of the sidebar shows
     its dot.
+  - A good refresh never hides a failed build that no newer build
+    replaced. The head keeps that build, with its saved message, the end
+    of its log, and Try again. The history lists the refresh above the
+    failed build, as
+    `app/org-settings/cloud-computer/refreshes/after-failed-build` shows.
+  - The Settings link of the sidebar shows its dot when the newest job
+    failed, or when the newest build failed and no newer build replaced
+    it. So a refresh never clears the mark of a failed build: the dot
+    stays while a refresh runs after it, and after a good refresh. A build
+    that runs after a failed build shows no dot. The dot does not read the
+    head of the card.
   - The notes name the job that new workspaces start from, a build or a
     refresh, and the 60-minute limit of the job that runs.
 - A start step that fails while the start goes on ends with "failed" in

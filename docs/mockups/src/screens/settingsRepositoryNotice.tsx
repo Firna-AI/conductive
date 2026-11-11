@@ -14,14 +14,17 @@ import type { SettingsOrg } from './settingsOrgs'
  * first state that applies wins: a failed newest build while none runs, a
  * build that runs while an added repository waits, or else a wait for a
  * build. A refresh holds the repositories of the newest good build, so a
- * refresh that runs or failed leaves the changes waiting for a build.
+ * refresh that runs, failed, or succeeded never counts as a build: the
+ * changes wait for a build that succeeds after a failed newest build, or
+ * else for the next build.
  */
 function waitOf(
   build: BuildState,
   added: boolean,
   job: JobKind,
+  newestBuild: OrgSettingsState['newestBuild'],
 ): RepositoryWait {
-  if (job !== 'build') return 'waiting'
+  if (job !== 'build') return newestBuild === 'failed' ? 'failed' : 'waiting'
   switch (build) {
     case 'failed':
     case 'time-limit':
@@ -36,14 +39,19 @@ function waitOf(
 
 /**
  * The action of an admin: Try again after a failed build, or Build
- * computer, which waits while a build runs. A build that runs for an added
+ * computer. Each waits while a job runs, such as a refresh after a failed
+ * build, because one job runs at a time. A build that runs for an added
  * repository needs no action.
  */
 function adminAction(wait: RepositoryWait, build: BuildState): ReactNode {
   switch (wait) {
     case 'failed':
       return (
-        <ActionButton icon={RotateCw} tone="primary">
+        <ActionButton
+          disabled={build === 'building'}
+          icon={RotateCw}
+          tone="primary"
+        >
           Try again
         </ActionButton>
       )
@@ -78,7 +86,12 @@ export function settingsRepositoryNotice(
   }
   const { added, removed } = changedNames(state.repositoryChange)
   if (added.length === 0 && removed.length === 0) return null
-  const wait = waitOf(state.build, added.length > 0, state.job)
+  const wait = waitOf(
+    state.build,
+    added.length > 0,
+    state.job,
+    state.newestBuild,
+  )
   const admin = state.viewer === 'admin'
   const editable =
     admin && state.org === 'active' && state.tab === 'repositories'

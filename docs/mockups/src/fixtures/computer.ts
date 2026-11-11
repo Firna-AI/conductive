@@ -187,3 +187,12 @@ export function failedRefresh(kind: RefreshKind): FailedBuild {
 export function timedOutRefresh(kind: RefreshKind): FailedBuild {
   return { ...timedOutBuild, kind }
 }
+
+/**
+ * The newest build of Acme when it failed before the newest refresh, after
+ * the last good build. Its install script failed, as in the failed build.
+ */
+export const failedBuildBeforeRefresh: FailedBuild = {
+  ...failedBuild,
+  when: '5 hours ago',
+}

@@ -5,7 +5,6 @@ import { Page } from '../components/layout/Page'
 import { LeaveOrgDialog } from '../components/members/LeaveOrgDialog'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
-import { isFailed } from '../components/settings/BuildSection'
 import { jobKinds } from '../components/settings/buildCopy'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import { SettingsTabs } from '../components/settings/OrgSections'
@@ -23,6 +22,7 @@ export const orgSettingsSchema = {
     'tab',
     'build',
     'job',
+    'newestBuild',
     'softwareImage',
     'script',
     'repositoryChange',
@@ -34,8 +34,9 @@ export const orgSettingsSchema = {
   properties: {
     tab: { enum: ['general', 'repositories', 'computer', 'members'] },
     /**
-     * The newest job of the cloud computer, which its tab shows: done,
-     * running, or failed. `time-limit` is a job that the app stopped at its
+     * The newest job of the cloud computer: done, running, or failed. The
+     * tab shows it, unless a good refresh followed a failed build, as
+     * `newestBuild` says. `time-limit` is a job that the app stopped at its
      * 60-minute limit. `none` is an org with no build yet, such as a new org
      * whose first build did not start.
      */
@@ -47,6 +48,16 @@ export const orgSettingsSchema = {
      * `build` gives. Firna has no refresh before its first good build.
      */
     job: { enum: jobKinds },
+    /**
+     * The newest build of Acme when its newest job is a refresh: it
+     * succeeded, or it failed before the refresh. The history lists a
+     * failed one under the refresh. A good refresh never hides it: the head
+     * of the card keeps it, with its log and Try again. A refresh never
+     * clears the mark of a failed build, so the Settings link keeps its dot
+     * while the refresh runs, after it fails, and after it succeeds. When
+     * the newest job is a build, `build` gives its state.
+     */
+    newestBuild: { enum: ['succeeded', 'failed'] },
     /**
      * The software image of the current app version: ready, so each job
      * of Acme starts from it, or missing, such as after a deploy whose
@@ -106,6 +117,7 @@ export const acmeSettings: OrgSettingsState = {
   tab: 'general',
   build: 'ready',
   job: 'build',
+  newestBuild: 'succeeded',
   softwareImage: 'ready',
   script: 'built',
   repositoryChange: 'none',
@@ -174,7 +186,7 @@ export function OrgSettingsScreen(props: {
       newWorkspaceTo={settings.newWorkspace}
       org={org}
       sections={settings.sections}
-      settingsAlert={isFailed(state.build)}
+      settingsAlert={settings.settingsAlert}
       suspended={suspended}
       viewer={viewerMembership(state.viewer)}
     />

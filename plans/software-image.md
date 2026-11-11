@@ -95,7 +95,11 @@ Each item marked "my call" is a design call of the planning agent, made on
    good refresh never hides a failed build that no newer build replaced.
    The card head, its log, Try again, and the mark of the Settings link keep
    that failed build, because the org image rule says that a failed build
-   shows its log, Try again, and the mark.
+   shows its log, Try again, and the mark. My call of 11 November 2026,
+   from the mockup of this rule: the mark shows while the newest job failed,
+   or while the newest build failed and no newer build replaced it. So the
+   mark also stays while a refresh runs after a failed build, as the app on
+   `main` already does, because it reads only the newest build.
 3. **Empty install script.** A build or a refresh skips the install step
    when the install script is empty, and its build log shows no install
    step. The user's design of 10 November 2026: "user scripts (if they
@@ -962,7 +966,7 @@ tab, and the updates of an old workspace.
       design. Decisions 15, 17, 22, 23, 24, and 25 wait for the user.
 - [ ] Apply the answers to decisions 17, 22, 24, 29, 31, and 32 to the
       mockups, when they add a mockup state.
-- [ ] Keep a failed build on the card head and the Settings mark after a
+- [x] Keep a failed build on the card head and the Settings mark after a
       good refresh, as design item 2 says.
 
 ## Milestone 2: Documentation and protocol
