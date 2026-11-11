@@ -1,12 +1,14 @@
-import { afterAll, beforeAll, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, expect, it, vi } from 'vitest'
 
 import { routes } from '../src/app/router'
 import {
+  GITHUB_INSTALL_PATH,
   GITHUB_SETUP_PATH,
   githubInstallLink,
 } from '../src/shared/github-setup'
 import { GITHUB_SETUP_PAGES, SITE_FOLDER } from '../src/shared/site-build'
 import { createApp } from './application'
+import { githubInstallResponse } from './github-setup'
 import { GITHUB_RETURN_COOKIE } from './security/cookies'
 import { fakeSite, FILE_LIST_PATH } from './test-support/fake-site'
 import {
@@ -22,9 +24,11 @@ beforeAll(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
+afterEach(() => vi.restoreAllMocks())
 
 const githubInstallPage =
   'https://github.com/apps/conductive-build/installations/new'
+const previewOrigin = 'https://pr-79-app.example.dev'
 
 /**
  * The cookie that a browser keeps from a reply, as a Cookie header, or
@@ -187,6 +191,108 @@ it('sends an install from the Mac app back to the Mac app, on a page with no scr
         FILE_LIST_PATH,
         `/${SITE_FOLDER}/${page.slice(0, -'.html'.length)}`,
       ],
+    })
+  }
+})
+
+const installScreens = [
+  [
+    null,
+    '__Host-conductive-github-return=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0',
+  ],
+  [
+    routes.createOrg(true),
+    '__Host-conductive-github-return=%2Forgs%2Fnew%3Ffirst%3D1; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600',
+  ],
+] as const
+
+function installStart(
+  domain: string | undefined,
+  screen: string | null,
+  appOrigin = previewOrigin,
+) {
+  const env = {
+    APP_ORIGIN: appOrigin,
+    GITHUB_APP_SLUG: 'conductive-build',
+    GITHUB_SETUP_RELAY_DOMAIN: domain,
+  }
+  const path =
+    screen === null
+      ? GITHUB_INSTALL_PATH
+      : githubInstallLink({ kind: 'browser', screen })
+  return githubInstallResponse(new Request(new URL(path, previewOrigin)), env)
+}
+
+it('keeps install responses unchanged when the relay domain is unset', () => {
+  for (const [screen, returnCookie] of installScreens) {
+    const response = installStart(undefined, screen)
+    expect({
+      status: response.status,
+      statusText: response.statusText,
+      headers: [...response.headers],
+      body: response.body,
+    }).toEqual({
+      status: 302,
+      statusText: '',
+      headers: [
+        ['location', githubInstallPage],
+        ['set-cookie', returnCookie],
+      ],
+      body: null,
+    })
+  }
+})
+
+it('adds the exact domain relay cookie with and without a screen', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  for (const [screen, returnCookie] of installScreens) {
+    const response = installStart('example.dev', screen)
+    expect(response.status).toBe(302)
+    expect(response.headers.get('Location')).toBe(githubInstallPage)
+    expect(response.headers.getSetCookie()).toEqual([
+      returnCookie,
+      '__Secure-conductive-github-relay=https%3A%2F%2Fpr-79-app.example.dev; Domain=example.dev; Path=/github/setup; HttpOnly; Secure; SameSite=Lax; Max-Age=3600',
+    ])
+  }
+  expect(warn.mock.calls).toEqual([])
+})
+
+it('warns once and continues without a relay cookie for invalid configuration', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  const longLabel = 'a'.repeat(64)
+  const configurations = [
+    [''],
+    ['localhost', 'https://pr-79-app.localhost'],
+    ['Example.dev'],
+    ['https://example.dev'],
+    ['example.dev:443'],
+    ['example.dev/path'],
+    ['*.example.dev', 'https://pr-79-app.*.example.dev'],
+    ['.example.dev', 'https://pr-79-app..example.dev'],
+    ['example.dev.', 'https://pr-79-app.example.dev.'],
+    ['example..dev', 'https://pr-79-app.example..dev'],
+    ['-example.dev', 'https://pr-79-app.-example.dev'],
+    ['example-.dev', 'https://pr-79-app.example-.dev'],
+    ['exam_ple.dev', 'https://pr-79-app.exam_ple.dev'],
+    ['example.dev\n'],
+    ['elsewhere.dev'],
+    ['app.example.dev'],
+    ['pr-79-app.example.dev'],
+    ['example.dev', 'not an origin'],
+    [`${longLabel}.dev`, `https://pr.${longLabel}.dev`],
+  ]
+  for (const [domain, origin] of configurations) {
+    warn.mockClear()
+    const response = installStart(domain, routes.createOrg(true), origin)
+    expect(response.status, domain).toBe(302)
+    expect(response.headers.get('Location'), domain).toBe(githubInstallPage)
+    expect(response.headers.getSetCookie(), domain).toEqual([
+      installScreens[1][1],
+    ])
+    expect(warn, domain).toHaveBeenCalledExactlyOnceWith({
+      kind: 'github_setup_relay_domain_invalid',
+      message:
+        'GITHUB_SETUP_RELAY_DOMAIN is invalid for APP_ORIGIN. The install continues without a relay cookie.',
     })
   }
 })

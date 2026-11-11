@@ -16,6 +16,8 @@ export const SIMPLE_WARNINGS = {
   marketing_site_unavailable: 'The built marketing site is not available.',
   github_app_slug_invalid:
     'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',
+  github_setup_relay_domain_invalid:
+    'GITHUB_SETUP_RELAY_DOMAIN is invalid for APP_ORIGIN. The install continues without a relay cookie.',
   github_installation_status_failed:
     'Could not read GitHub installation status for Get started.',
   first_image_build_start_failed:

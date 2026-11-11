@@ -1,9 +1,20 @@
 import { productDomain } from '../docs/mockups/src/brand'
-import { GITHUB_INSTALL_SCREEN, isMacInstall } from '../src/shared/github-setup'
+import {
+  GITHUB_INSTALL_SCREEN,
+  GITHUB_SETUP_PATH,
+  isMacInstall,
+} from '../src/shared/github-setup'
 import { githubInstallUrl } from './app-api/feature-github'
 import type { AppEnv } from './env'
 import { githubSetupPage } from './marketing/github-setup'
-import { cookie, GITHUB_RETURN_COOKIE, readCookie } from './security/cookies'
+import {
+  cookie,
+  domainCookie,
+  GITHUB_RELAY_COOKIE,
+  GITHUB_RETURN_COOKIE,
+  readCookie,
+} from './security/cookies'
+import { warnWorker } from './warnings'
 
 /** How long the screen of a start waits for the return from GitHub. */
 const RETURN_SECONDS = 60 * 60
@@ -53,6 +64,23 @@ function savedScreen(request: Request): string | null {
   }
 }
 
+function validRelayDomain(domain: string, appOrigin: string): boolean {
+  const labels = domain.split('.')
+  if (
+    domain.length > 253 ||
+    labels.length < 2 ||
+    !labels.every((label) =>
+      /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label),
+    )
+  )
+    return false
+  try {
+    return new URL(appOrigin).hostname.endsWith(`.${domain}`)
+  } catch {
+    return false
+  }
+}
+
 /**
  * The start of an install or a change of the GitHub App from a browser.
  * The cookie keeps the screen of the query, and the reply sends the
@@ -61,12 +89,15 @@ function savedScreen(request: Request): string | null {
  */
 export function githubInstallResponse(
   request: Request,
-  env: Pick<AppEnv, 'GITHUB_APP_SLUG'>,
+  env: Pick<
+    AppEnv,
+    'GITHUB_APP_SLUG' | 'APP_ORIGIN' | 'GITHUB_SETUP_RELAY_DOMAIN'
+  >,
 ): Response {
   const screen = appScreen(
     new URL(request.url).searchParams.get(GITHUB_INSTALL_SCREEN),
   )
-  return new Response(null, {
+  const response = new Response(null, {
     status: 302,
     headers: {
       Location: githubInstallUrl(env),
@@ -80,6 +111,22 @@ export function githubInstallResponse(
             ),
     },
   })
+  const domain = env.GITHUB_SETUP_RELAY_DOMAIN
+  if (domain !== undefined) {
+    if (validRelayDomain(domain, env.APP_ORIGIN))
+      response.headers.append(
+        'Set-Cookie',
+        domainCookie(
+          GITHUB_RELAY_COOKIE,
+          encodeURIComponent(env.APP_ORIGIN),
+          RETURN_SECONDS,
+          domain,
+          GITHUB_SETUP_PATH,
+        ),
+      )
+    else warnWorker({ kind: 'github_setup_relay_domain_invalid' })
+  }
+  return response
 }
 
 /**

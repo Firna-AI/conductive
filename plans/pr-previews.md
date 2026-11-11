@@ -575,11 +575,14 @@ Depends on: 1
 An install from a preview returns to that preview through the relay. The
 live app keeps its behaviour.
 
-- [ ] Add `GITHUB_SETUP_RELAY_DOMAIN` to `worker/env.ts`. When it is set,
+- [x] Add `GITHUB_SETUP_RELAY_DOMAIN` to `worker/env.ts`. When it is set,
       make the install start at `/github/install` also set the relay
       cookie, as the design says.
-- [ ] Add tests for the install start with and without the variable, and
-      see each fail once.
+- [x] Add tests for the install start with and without the variable, and
+      see each fail once. Done on 11 November 2026: 3 tests, with the
+      failure proof in `.context/pr-previews/m2/report.md`. The cookie is
+      `__Secure-conductive-github-relay`, and an invalid value logs the
+      warning `github_setup_relay_domain_invalid`.
 
 ## Milestone 3: Preview configuration
 

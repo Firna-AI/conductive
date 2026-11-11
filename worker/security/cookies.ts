@@ -5,6 +5,7 @@ export const OAUTH_COOKIE = '__Host-conductive-oauth'
  * App, which the return from GitHub opens again.
  */
 export const GITHUB_RETURN_COOKIE = '__Host-conductive-github-return'
+export const GITHUB_RELAY_COOKIE = '__Secure-conductive-github-relay'
 
 export function readCookie(request: Request, name: string): string | null {
   const values = (request.headers.get('Cookie') ?? '')
@@ -16,4 +17,14 @@ export function readCookie(request: Request, name: string): string | null {
 
 export function cookie(name: string, value: string, maxAge: number): string {
   return `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`
+}
+
+export function domainCookie(
+  name: string,
+  value: string,
+  maxAge: number,
+  domain: string,
+  path: string,
+): string {
+  return `${name}=${value}; Domain=${domain}; Path=${path}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`
 }

@@ -25,6 +25,7 @@ export interface AppEnv {
   GITHUB_WEBHOOK_SECRET?: string
   GITHUB_CLIENT_ID: string
   GITHUB_APP_SLUG?: string
+  GITHUB_SETUP_RELAY_DOMAIN?: string
   GITHUB_CLIENT_SECRET: string
   SESSION_SIGNING_KEY: string
   BOAT_API_KEY: string
