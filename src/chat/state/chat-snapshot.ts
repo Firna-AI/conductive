@@ -1,5 +1,6 @@
+import type { DraftFile } from '../../app/draft-files'
 import type { AgentModel } from '../../shared/agents'
-import type { Attachment, UserMessage } from '../../shared/messages'
+import type { UserMessage } from '../../shared/messages'
 import type { Session } from '../../shared/sessions'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { Workspace, WorkspaceStart } from '../../shared/workspaces'
@@ -7,9 +8,13 @@ import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
+  RunRoutine,
 } from '../api/read-responses'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
-import { emptyTranscript, type Transcript } from './transcript'
+import {
+  emptyTranscript,
+  type Transcript,
+} from '../../shared/transcript/transcript'
 
 /**
  * The message that a user writes in a session. Its identity stays when the
@@ -19,11 +24,15 @@ import { emptyTranscript, type Transcript } from './transcript'
 export interface Draft {
   id: string
   text: string
-  attachments: readonly Attachment[]
+  /**
+   * The files, in the order of the picks, each with its upload. Send waits
+   * while one uploads or failed, and takes only ready ones.
+   */
+  files: readonly DraftFile[]
+  /** The names of the files of the last pick that are over the size limit. */
+  refused: readonly string[]
   /** The client ID of a send that failed, so that a resend is one message. */
   sendId: string | null
-  /** Files that still upload. Send waits until they are attached. */
-  uploads: number
   /** A send of this draft waits for its answer. */
   sending: boolean
 }
@@ -84,6 +93,11 @@ export interface ChatSnapshot {
    */
   archiveTabs: readonly string[] | null
   view: WorkspaceView | null
+  /**
+   * The routine whose run made the workspace, from the read of the view.
+   * Null for a workspace that a person created, and until the view reads.
+   */
+  routine: RunRoutine | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
@@ -98,9 +112,9 @@ export function blankDraft(id: string): Draft {
   return {
     id,
     text: '',
-    attachments: [],
+    files: [],
+    refused: [],
     sendId: null,
-    uploads: 0,
     sending: false,
   }
 }
@@ -127,6 +141,7 @@ export const initialSnapshot: ChatSnapshot = {
   history: [],
   archiveTabs: null,
   view: null,
+  routine: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },

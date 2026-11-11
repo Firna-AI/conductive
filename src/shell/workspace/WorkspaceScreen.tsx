@@ -6,7 +6,8 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
-import { mayArchive } from '../../app/permissions'
+import { usePassedDeadlines } from '../../app/deadlines'
+import { mayArchive, mayRestore } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import {
@@ -21,15 +22,16 @@ import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
-import { ArchiveDialog } from './ArchiveDialog'
 import { ChatArea } from './ChatArea'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
+import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
-import { sandboxView } from './sandbox-view'
+import { archivedRestore, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
+import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
@@ -105,6 +107,11 @@ export function WorkspaceScreen(props: {
   const viewport = useViewport()
   const theme = useSharedUiTheme()
   const resume = useAction(() => model.resume(), "The sandbox didn't start.")
+  const lifecycle = useArchiveActions(props.org.id, props.viewer)
+  // Restore ends at its last day while the page shows, with no other event.
+  const passed = usePassedDeadlines([
+    detail.state === 'ready' ? detail.value.workspace.restoreUntil : null,
+  ])
   if (detail.state === 'loading') {
     return (
       <div className={workspaceStyles.center}>
@@ -141,6 +148,7 @@ export function WorkspaceScreen(props: {
   const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   const { suspended } = access
+  const restoreEnded = passed(workspace.restoreUntil)
   // A failed first start keeps the workspace, its chat, and its queue for
   // every member, with its saved cause and Try again.
   const sandboxParts = sandboxView({
@@ -149,6 +157,7 @@ export function WorkspaceScreen(props: {
     startError,
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
+    restore: archivedRestore(workspace, suspended, restoreEnded),
   })
   const context: WorkspaceContext = {
     org: props.org,
@@ -164,8 +173,12 @@ export function WorkspaceScreen(props: {
     savedView: chat,
     toolEvents: toolEvents.subscribe,
     archive: mayArchive(access, workspace, props.viewer)
-      ? () => void model.archive.start()
+      ? () => lifecycle.archive(workspace)
       : null,
+    restore: mayRestore(access, workspace, restoreEnded)
+      ? () => lifecycle.restore(workspace)
+      : null,
+    running: lifecycle.running(workspace.id),
     onReassigned: (updated) => model.reassigned(updated),
   }
   const phone = viewport === 'phone'
@@ -211,13 +224,9 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  // The Archive question, and the actions of the screen for the palette.
-  const dialog = (
-    <>
-      <ArchiveDialog archive={model.archive} workspace={workspace} />
-      <WorkspacePaletteActions chat={chat} context={context} />
-    </>
-  )
+  // The actions of the screen for the palette.
+  const paletteOffer = <WorkspacePaletteActions chat={chat} context={context} />
+  const tabOpen = <ResumeOnTabOpen context={context} />
   if (phone) {
     const view = phoneView(props.view)
     const archived = sandbox === 'archived'
@@ -239,7 +248,8 @@ export function WorkspaceScreen(props: {
               : content.tool}
         </div>
         {archived ? null : <PhoneTabBar context={context} />}
-        {dialog}
+        {paletteOffer}
+        {tabOpen}
       </div>
     )
     // An archived workspace on a phone shows only its chat: no pull request
@@ -262,7 +272,8 @@ export function WorkspaceScreen(props: {
           pullRequest={features.pullRequest?.(context)}
           tools={sandbox === 'archived' ? undefined : tools}
         />
-        {dialog}
+        {paletteOffer}
+        {tabOpen}
       </div>
     </WorkspaceGitHub>
   )

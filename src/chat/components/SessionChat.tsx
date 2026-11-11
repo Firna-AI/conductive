@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Agent } from '../../shared/agents'
+import { modelLabel, type Agent } from '../../shared/agents'
 import type { WorkspaceState } from '../../shared/workspaces'
 import { PendingCommands } from '../device/PendingCommands'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
@@ -8,7 +8,6 @@ import { sendBlock } from '../state/blockers'
 import { sessionState, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { failedFirstStart } from '../../app/first-start'
-import { modelLabel } from '../state/format'
 import { loginLabelOf, sessionLoginOf } from '../state/session-login'
 import { ChatPane } from './ChatPane'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
@@ -181,7 +180,6 @@ export function SessionChat(props: SessionChatProps) {
       {sandboxBar}
       {!down && session && snapshot.load.state === 'ready' ? (
         <Composer
-          attaching={state.draft.uploads > 0}
           blocked={block !== null}
           choice={session.choice}
           draft={state.draft}
@@ -192,9 +190,8 @@ export function SessionChat(props: SessionChatProps) {
           onChooseModel={(choice) =>
             void controller.chooseModel(session.id, choice)
           }
-          onRemoveAttachment={(file) =>
-            controller.removeAttachment(session.id, file)
-          }
+          onRemoveFile={(file) => controller.removeFile(session.id, file)}
+          onRetryFile={(file) => void controller.retryFile(session.id, file)}
           onSend={() => void controller.send(session.id)}
           onStop={() => void controller.interrupt(session.id)}
           running={state.transcript.turn !== null}

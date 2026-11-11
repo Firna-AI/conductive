@@ -13,22 +13,35 @@ import { ModelPicker } from '../chat/ModelPicker'
 import { ActionButton, IconButton } from '../common/actions'
 import { classes } from '../common/classes'
 import dialog from '../common/ConfirmDialog.module.css'
+import { Menu, type MenuEntry } from '../common/Menu'
 import styles from './NewWorkspaceDialog.module.css'
 
-/** The repository of the new workspace, as a compact picker. */
-function RepositoryPicker(props: { name: string }) {
+/**
+ * The repository of the new workspace, as a compact picker. `menu` draws
+ * its menu open below it.
+ */
+function RepositoryPicker(props: {
+  name: string
+  menu?: readonly MenuEntry[]
+}) {
   return (
-    <ActionButton
-      accessibilityLabel={`Repository: ${props.name}`}
-      icon={FolderGit2}
-      menu
-      tone="plain"
-      trailing={
-        <ChevronDown aria-hidden className={styles.chevron} size={13} />
-      }
-    >
-      {props.name}
-    </ActionButton>
+    <span className={styles.anchor}>
+      <ActionButton
+        accessibilityLabel={`Repository: ${props.name}`}
+        expanded={props.menu !== undefined}
+        icon={FolderGit2}
+        menu
+        tone="plain"
+        trailing={
+          <ChevronDown aria-hidden className={styles.chevron} size={13} />
+        }
+      >
+        {props.name}
+      </ActionButton>
+      {props.menu ? (
+        <Menu entries={props.menu} label="Repository" placement="below-start" />
+      ) : null}
+    </span>
   )
 }
 
@@ -58,6 +71,11 @@ function CreateButton(props: { ready: boolean }) {
 export type NewWorkspaceDialogProps = {
   /** The chosen repository, or none while the org has chosen none. */
   repository?: string
+  /**
+   * The repository menu, drawn open: each chosen repository, and a waiting
+   * one off with its note, as on the New workspace page.
+   */
+  repositoryMenu?: readonly MenuEntry[]
   /** The org and the section that the new workspace joins. */
   place: string
   /** The message and its files. */
@@ -68,10 +86,14 @@ export type NewWorkspaceDialogProps = {
   choice: AgentChoice
   /**
    * The notices of the New workspace page, above the footer: a failed
-   * create, a missing agent login, or an org without repositories.
+   * create, a repository that waits for its build, a missing agent login,
+   * or an org without repositories.
    */
   notices: readonly ReactNode[]
-  /** The message can go, so Create is on. */
+  /**
+   * The message has text, and it waits for no agent login and no
+   * repository. Create is then on, once each file is uploaded.
+   */
   ready: boolean
 }
 
@@ -82,9 +104,11 @@ export type NewWorkspaceDialogProps = {
  * its files fill the middle, and a pasted link to a workspace of the org
  * shows as a chip, as in the composer. The model picker sits at the bottom
  * left, and the attach button and Create at the bottom right. A phone
- * always opens the page instead.
+ * always opens the page instead. The files show the chips of every
+ * composer, and Create waits for their uploads, as Send does.
  */
 export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
+  const uploads = props.attachments.some((file) => file.state !== undefined)
   return (
     <div className={dialog.layer}>
       <div aria-hidden className={dialog.scrim} />
@@ -96,7 +120,10 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
       >
         <div className={styles.header}>
           {props.repository ? (
-            <RepositoryPicker name={props.repository} />
+            <RepositoryPicker
+              menu={props.repositoryMenu}
+              name={props.repository}
+            />
           ) : null}
           <span className={styles.place}>{props.place}</span>
         </div>
@@ -118,7 +145,7 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
           <ModelPicker choice={props.choice} />
           <span className={styles.spacer} />
           <IconButton icon={Paperclip} label="Attach files" />
-          <CreateButton ready={props.ready} />
+          <CreateButton ready={props.ready && !uploads} />
         </div>
       </section>
     </div>

@@ -53,7 +53,7 @@ export async function resumeCreationCheckpoint(
   job.stdoutOffset = 0
   job.stderrOffset = 0
   job.requestedByUserId = userId
-  job.commandAttempt = `${job.attempt}:restore:${generation}`
+  job.commandAttempt = `${saved.commandAttempt ?? job.attempt}:restore:${generation}`
   // Sandbox resume must rebuild runtime files before the runner reconnects.
   if (job.phase === 'runner') job.afterReadyPhase = 'startup'
   else if (
@@ -64,18 +64,22 @@ export async function resumeCreationCheckpoint(
     job.afterReadyPhase = job.phase
   if (job.phase !== 'records') job.phase = 'machine'
   try {
-    if (row.sandboxId)
+    if (row.sandboxId) {
+      job.providerAccount = row.providerAccount
       job.environmentCiphertext = (
         await readImageSettings(env.DB, orgId)
       ).envVarsCiphertext
-    else {
+    } else {
       const image = await leasedCreationImage(
         env.DB,
         orgId,
         workspaceId,
         row.repositoryId,
       )
-      if (image.imageName !== job.imageName)
+      if (
+        image.imageName !== job.imageName ||
+        image.providerAccount !== job.providerAccount
+      )
         throw new HttpError(
           409,
           'image_required',
@@ -121,7 +125,9 @@ export async function resumeCreationCheckpoint(
     }
   }
   job.deadlineAt = dependencies.now() + WORKSPACE_START_TIME_LIMIT_MS
-  const accepted = await controller.queueLifecycleStart(job)
+  const accepted = await controller.queueLifecycleStart(job, {
+    kind: 'resume-retained-create',
+  })
   if (accepted)
     await nativeWorkspaceStorage(storage, {
       guarded: true,

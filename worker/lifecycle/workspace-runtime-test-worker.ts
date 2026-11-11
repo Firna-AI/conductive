@@ -1,5 +1,6 @@
 import { Workspace } from '../workspace'
-import { sandboxProvider } from '../sandbox/client'
+import { providerForAccount } from '../sandbox/client'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { ProviderError } from '../sandbox/errors'
 import { GitHubClient } from '../security/github'
 import { refreshGitHubTokens } from '../security/github-refresh'
@@ -14,6 +15,8 @@ import type { UserMessage } from '../../src/shared/messages'
 import {
   failAfterFirstMessageAdmission,
   holdMachineCheckpoint,
+  holdResumeCompletionCheckpoint,
+  readCompletionCheckpoint,
 } from './runtime-checkpoint-test-support'
 import type { ImageCoordinatorState } from './image-timers'
 import { ManualChatClock } from '../chat/chat-clock.test-support'
@@ -26,6 +29,8 @@ import { exerciseRepairBudget } from './repair-budget-native-test-support'
 /** Test transport only. Every start and stop runs the actual Workspace implementation. */
 export class WorkspaceRuntimeFixture extends Workspace {
   private heldMachine: ReturnType<typeof holdMachineCheckpoint> | undefined
+  private heldCompletion:
+    ReturnType<typeof holdResumeCompletionCheckpoint> | undefined
   private readonly clock: ManualChatClock
   private readonly chatIds: string[]
 
@@ -34,7 +39,6 @@ export class WorkspaceRuntimeFixture extends Workspace {
     const chatIds: string[] = []
     super(context, env, clock.now, {
       randomId: () => chatIds.shift() ?? crypto.randomUUID(),
-      scheduleRunnerCheck: clock.schedule,
       scheduleBrowserCheck: clock.schedule,
       resolveAttachments: async (_userId, _workspaceId, ids) => ({
         attachments: ids.map((id) => ({
@@ -46,9 +50,10 @@ export class WorkspaceRuntimeFixture extends Workspace {
         })),
         paths: ids.map((id) => ({
           attachmentId: id,
-          path: `/attachments/${id}.txt`,
+          relativePath: `.context/attachments/fixture/${id}.txt`,
         })),
       }),
+      prepareAttachments: async () => null,
     })
     this.clock = clock
     this.chatIds = chatIds
@@ -59,7 +64,7 @@ export class WorkspaceRuntimeFixture extends Workspace {
   }
 
   tickRunnerAccess(): Promise<void> {
-    return this.clock.advance(CONNECTION_CHECK_MS)
+    return this.tick(this.clock.now() + CONNECTION_CHECK_MS)
   }
   holdMachineCheckpoint(): void {
     this.heldMachine = holdMachineCheckpoint(this.ctx.storage)
@@ -70,6 +75,19 @@ export class WorkspaceRuntimeFixture extends Workspace {
   async machineCheckpointReached(): Promise<void> {
     if (!this.heldMachine) throw new Error('No held machine checkpoint')
     await this.heldMachine.entered
+  }
+  holdResumeCompletion(attempt: string): void {
+    this.heldCompletion = holdResumeCompletionCheckpoint(
+      this.ctx.storage,
+      attempt,
+    )
+  }
+  async resumeCompletionReached(): Promise<void> {
+    if (!this.heldCompletion) throw new Error('No held resume completion')
+    await this.heldCompletion.entered
+  }
+  completionCheckpoint() {
+    return readCompletionCheckpoint(this.ctx.storage, this.clock.now())
   }
   async acceptFirstFixtureMessage(
     first: FirstWorkspaceMessage,
@@ -90,7 +108,15 @@ export class WorkspaceRuntimeFixture extends Workspace {
           this.clock.advance(Math.max(0, value - this.clock.now())),
       },
       target,
-      () => [{ storage: this.ctx.storage, fire: () => this.alarm() }],
+      () => [
+        {
+          storage: this.ctx.storage,
+          fire: async () => {
+            await this.alarm()
+            await this.settledAlarms()
+          },
+        },
+      ],
     )
   }
   async fireScheduledAlarm(): Promise<boolean> {
@@ -118,6 +144,12 @@ export class WorkspaceRuntimeFixture extends Workspace {
   alarmAt(): Promise<number | null> {
     return this.ctx.storage.getAlarm()
   }
+  async lifecycleAlarmAt(): Promise<number | null> {
+    return (await this.ctx.storage.get<number>('alarm:lifecycle')) ?? null
+  }
+  async browserAlarmAt(): Promise<number | null> {
+    return (await this.ctx.storage.get<number>('alarm:browser')) ?? null
+  }
   imageSchedule(): Promise<ImageCoordinatorState | undefined> {
     return this.ctx.storage.get('org-image:coordinator')
   }
@@ -127,10 +159,21 @@ export class WorkspaceRuntimeFixture extends Workspace {
   checkpoint(): Promise<StoredWorkspaceStartJob | undefined> {
     return this.ctx.storage.get(START_JOB_KEY)
   }
+  async passTime(target: number): Promise<void> {
+    let next = await this.ctx.storage.getAlarm()
+    while (next !== null && next <= target) {
+      await this.tick(Math.max(this.clock.now(), next))
+      next = await this.ctx.storage.getAlarm()
+    }
+    await this.tick(target)
+  }
+
   async becomeIdle(): Promise<void> {
     const state = await this.readLifecycle()
     if (!state) throw new Error('No workspace lifecycle')
-    await this.tick(Math.max(this.clock.now(), state.lastActivityAt + IDLE_MS))
+    await this.passTime(
+      Math.max(this.clock.now(), state.lastActivityAt + IDLE_MS),
+    )
   }
 }
 
@@ -155,7 +198,9 @@ export default {
     try {
       switch (new URL(request.url).pathname) {
         case '/boat':
-          await sandboxProvider(env, send).get('bx_one')
+          await providerForAccount(env, send, DEFAULT_PROVIDER_ACCOUNT).get(
+            'bx_one',
+          )
           break
         case '/signin':
           await new GitHubClient(send).authorize(
@@ -178,19 +223,32 @@ export default {
               publicExponent: new Uint8Array([1, 0, 1]),
               hash: 'SHA-256',
             },
-            false,
+            true,
             ['sign', 'verify'],
           )
           if (!('privateKey' in keys))
             throw new Error('RSA key pair unavailable')
-          await installationToken(send, env.GITHUB_CLIENT_ID, keys.privateKey, {
-            id: 'source',
-            orgId: 'org',
-            fullName: 'example/source',
-            defaultBranch: 'main',
-            githubRepositoryId: 1,
-            installationId: 91,
-          })
+          const encoded = await crypto.subtle.exportKey(
+            'pkcs8',
+            keys.privateKey,
+          )
+          if (!(encoded instanceof ArrayBuffer))
+            throw new Error('PKCS#8 key unavailable')
+          const privateKey = `-----BEGIN PRIVATE KEY-----\n${btoa(String.fromCharCode(...new Uint8Array(encoded)))}\n-----END PRIVATE KEY-----`
+          await installationToken(
+            send,
+            env.GITHUB_CLIENT_ID,
+            privateKey,
+            {
+              id: 'source',
+              orgId: 'org',
+              fullName: 'example/source',
+              defaultBranch: 'main',
+              githubRepositoryId: 1,
+              installationId: 91,
+            },
+            Date.now,
+          )
           break
         }
       }

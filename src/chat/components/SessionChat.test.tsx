@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { ApiError } from '../../app/api/client'
+import { uploadingFile, type DraftFile } from '../../app/draft-files'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { sessionPaths } from '../../shared/sessions'
 import {
@@ -8,7 +10,10 @@ import {
   FAKE_TIME,
   fakeUser,
 } from '../../test-support/fixtures/core'
-import { senderSnapshot } from '../../test-support/fixtures/workspaces'
+import {
+  senderSnapshot,
+  workspaceFixtures,
+} from '../../test-support/fixtures/workspaces'
 import { blankDraft } from '../state/chat-snapshot'
 import { loginGone, withSessions } from '../state/linked-kit'
 import { historyEntries } from './ChatOverlays'
@@ -40,11 +45,12 @@ describe('SessionChat', () => {
   })
 
   it('shows the start steps after the stored chat, and a message that waits for the sandbox', async () => {
+    const { message } = workspaceFixtures()
     const { markup, text } = await renderChat({
       workspaceState: 'starting',
       conversation: 'queued',
     })
-    expect(text()).toContain('Sends when the sandbox is ready')
+    expect(text()).toContain(message.text)
     expect(text()).toContain(
       'Resuming the sandbox › Resuming with your files as you left them 2m 44s',
     )
@@ -156,6 +162,7 @@ describe('session parts', () => {
         mobile={false}
         onCancelRename={() => {}}
         onClose={() => {}}
+        onCopy={() => {}}
         onMove={() => {}}
         onNew={() => {}}
         onRename={() => {}}
@@ -180,19 +187,23 @@ describe('session parts', () => {
     )
   })
 
-  it('keeps Send off while a file uploads', () => {
-    const composer = (attaching: boolean) =>
+  it('keeps Send off while a file uploads or failed', () => {
+    const composer = (files: readonly DraftFile[]) =>
       renderToStaticMarkup(
         <Composer
-          attaching={attaching}
           blocked={false}
           choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
-          draft={{ ...blankDraft('draft'), text: 'See the screenshot.' }}
+          draft={{
+            ...blankDraft('draft'),
+            text: 'See the screenshot.',
+            files,
+          }}
           models={[]}
           onAttach={() => {}}
           onChangeText={() => {}}
           onChooseModel={() => {}}
-          onRemoveAttachment={() => {}}
+          onRemoveFile={() => {}}
+          onRetryFile={() => {}}
           onSend={() => {}}
           onStop={() => {}}
           running={false}
@@ -200,9 +211,13 @@ describe('session parts', () => {
           stopping={false}
         />,
       )
-    expect(composer(true)).toMatch(/aria-label="Send" aria-disabled="true"/)
-    expect(composer(false)).not.toMatch(
-      /aria-label="Send" aria-disabled="true"/,
+    const file = new File(['png'], 'overlap.png', { type: 'image/png' })
+    const off = /aria-label="Send" aria-disabled="true"/
+    const error = new ApiError(502, 'upload_failed', 'The upload failed.')
+    expect(composer([uploadingFile('file-1', file)])).toMatch(off)
+    expect(composer([{ state: 'failed', id: 'file-1', file, error }])).toMatch(
+      off,
     )
+    expect(composer([])).not.toMatch(off)
   })
 })

@@ -18,6 +18,7 @@ export const appShell = defineScreen({
     'user-flows/create-workspace',
     'user-flows/reopen-stopped-workspace',
     'user-flows/open-workspace-from-palette',
+    'user-flows/archive-from-list',
     'user-flows/create-org',
   ],
   render: (props, context) => (

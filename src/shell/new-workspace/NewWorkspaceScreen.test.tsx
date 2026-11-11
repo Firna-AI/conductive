@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { HeldRequests } from '../../app/test-kit'
 import type { OrgRole } from '../../shared/api'
-import { DRAFT_ATTACHMENTS_PATH } from '../../shared/messages'
+import { attachmentUploadPath } from '../../shared/messages'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import { workspacesPath } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -43,6 +43,11 @@ async function screenText(role: OrgRole, builtAt?: number): Promise<string> {
         },
       ],
       currentImageBuildId: 'image',
+      changes: {
+        installScript: false,
+        addedRepositories: [],
+        removedRepositories: [],
+      },
     })
   }
   const app = await startedApp(server)
@@ -182,12 +187,16 @@ describe('NewWorkspaceScreen', () => {
     const whileSending = buttons('Attach files')
     held.release('POST', createPath)
     await sending
-    held.hold('POST', DRAFT_ATTACHMENTS_PATH)
+    const uploadPath = attachmentUploadPath(FAKE_IDS.org, {
+      type: 'new-workspace',
+      messageId: draft.draft.get().messageId,
+    })
+    held.hold('POST', uploadPath)
     const uploading = draft.attach([
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
     const whileUploading = buttons('Send', 'Try again')
-    held.release('POST', DRAFT_ATTACHMENTS_PATH)
+    held.release('POST', uploadPath)
     await uploading
     const uploaded = buttons('Send', 'Try again')
     await app.account.removeLogin('claude')

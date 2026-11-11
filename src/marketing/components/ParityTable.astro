@@ -1,19 +1,28 @@
 ---
 import { parityAreas } from '../from-conductor/areas'
-import { parityPageCopy } from '../from-conductor/copy'
+import { parityPageCopy, rowLinkLabel } from '../from-conductor/copy'
 import { featuresOf } from '../from-conductor/features'
 import { isComing } from '../from-conductor/model'
 import DueDay from './DueDay.astro'
+import Icon from './Icon.astro'
 import StatusMark from './StatusMark.astro'
 
 /*
  * The comparison as one table: one header, then a row group for each area,
- * with a row for each Conductor Cloud feature. The first row of a group
- * holds the area as one header cell that spans the rows of the group. Each
- * row also holds the area in a row header of its own. On a computer, CSS shows
- * the merged cell, and on a phone the cell of each row, so one table serves
- * both layouts with no script. A hidden cell is out of the accessibility
- * tree too.
+ * with a row for each Conductor feature. The first row of a group holds the
+ * area as one header cell that spans the rows of the group. Each row also
+ * holds the area in a row header of its own. On a computer, CSS shows the
+ * merged cell, and on a phone the cell of each row, so one table serves both
+ * layouts with no script. A hidden cell is out of the accessibility tree too.
+ *
+ * Each row has the id of its feature as its address, such as `#file-tree`.
+ * A quiet link to that address follows the name of the feature. The name is
+ * the row header, which names each cell of its row, so the header keeps the
+ * name as its only accessible name. The span holds a no-break space and the
+ * link, and it never wraps, so the icon stays on the line of the last word
+ * of the name. With a no-break space alone, Chrome can still put the icon
+ * alone on a new line. The build drops the line breaks between these parts,
+ * so the no-break space is the only space before the icon.
  */
 const columns = parityPageCopy.columns
 ---
@@ -38,6 +47,7 @@ const columns = parityPageCopy.columns
               { 'parity-group-start': index === 0 },
               { 'parity-group-end': index === features.length - 1 },
             ]}
+            id={feature.id}
           >
             {index === 0 && (
               <th
@@ -51,8 +61,18 @@ const columns = parityPageCopy.columns
             <th class="parity-area parity-row-area" scope="row">
               {area.title}
             </th>
-            <th class="parity-name" scope="row">
+            <th aria-label={feature.name} class="parity-name" scope="row">
               {feature.name}
+              <span class="parity-name-end">
+                {'\u00a0'}
+                <a
+                  aria-label={rowLinkLabel(feature.name)}
+                  class="parity-row-link"
+                  href={`#${feature.id}`}
+                >
+                  <Icon name="link" size={14} />
+                </a>
+              </span>
             </th>
             <td class="parity-status">
               <StatusMark status={feature.status} />

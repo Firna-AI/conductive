@@ -3,8 +3,20 @@ import type { WorkspaceFeatures } from '../features/workspace'
 import type { DurableLifecycleState } from '../lifecycle/durable-types'
 import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 import type { WorkspaceDisk } from './maintenance-contract'
-import type { StoredWorkspaceStartJob } from '../lifecycle/start-job-codec'
+import {
+  readStartJob,
+  serializeStartJob,
+  type StoredWorkspaceStartJob,
+} from '../lifecycle/start-job-codec'
 import { CREATE_CHECKPOINT_KEY } from './creation-checkpoint'
+import {
+  scheduleWorkspaceAlarm,
+  suspendWorkspaceAlarms,
+} from '../features/alarms'
+import {
+  ARCHIVE_STATE_KEY,
+  type WorkspaceArchiveState,
+} from '../lifecycle/archive-types'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import {
   LIFECYCLE_FENCE_KEY,
@@ -45,13 +57,8 @@ export class WorkspaceMembersReceiver {
     ownership: ReceiverOwnership,
     workspaceId: string | null,
   ): Promise<void> {
-    await mutateReceiver(
-      this.storage,
-      ownership,
-      'suspended',
-      async (transaction) => {
-        await transaction.deleteAlarm()
-      },
+    await mutateReceiver(this.storage, ownership, 'suspended', (transaction) =>
+      suspendWorkspaceAlarms(transaction, 'draining'),
     )
     this.chat.closeConnections()
     await this.chat.runLifecycle(async () => {
@@ -65,14 +72,14 @@ export class WorkspaceMembersReceiver {
       ownership,
       'suspended',
       async (transaction) => {
-        await transaction.delete([
-          ...(await transaction.list({ prefix: 'alarm:' })).keys(),
-        ])
         const job = await transaction.get<StoredWorkspaceStartJob>(
           'lifecycle:start-job',
         )
         if (job?.kind === 'create')
-          await transaction.put(CREATE_CHECKPOINT_KEY, job)
+          await transaction.put(
+            CREATE_CHECKPOINT_KEY,
+            serializeStartJob(readStartJob(job)),
+          )
         await transaction.delete('lifecycle:start-job')
         await transaction.delete('lifecycle:create-publication')
         await transaction.delete('lifecycle:turn-scopes')
@@ -101,7 +108,7 @@ export class WorkspaceMembersReceiver {
             runnerConnected: false,
             nextDiskKeepaliveAt: null,
           } satisfies DurableLifecycleState)
-        await transaction.deleteAlarm()
+        await suspendWorkspaceAlarms(transaction, 'drained')
       },
     )
   }
@@ -147,11 +154,11 @@ export class WorkspaceMembersReceiver {
           await transaction.put('org-image:coordinator', image)
           await transaction.put('alarm:lifecycle', image.nextAt)
         }
+        if (await transaction.get<WorkspaceArchiveState>(ARCHIVE_STATE_KEY))
+          await transaction.put('alarm:lifecycle:archive', this.now())
         if (await transaction.get<string>('lifecycle:cleanup'))
           await transaction.put('alarm:lifecycle', this.now() + 5_000)
-        const alarms = await transaction.list<number>({ prefix: 'alarm:' })
-        if (alarms.size)
-          await transaction.setAlarm(Math.min(...alarms.values()))
+        await scheduleWorkspaceAlarm(transaction, { resumeRegular: true })
       },
     )
   }

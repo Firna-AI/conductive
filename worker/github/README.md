@@ -6,6 +6,10 @@ It stores its state and events in the [chat store](../chat/README.md) of the wor
 The production Worker mounts both browser reads and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
+Verified pull request events also store [routine runs](../routines/README.md).
+The run callback and banner refresh have separate error boundaries.
+The production composition starts stored runs through `waitUntil` after webhook handling.
+Without a request execution context, the minute scan recovers the queued runs.
 
 The [banner protocol](../../docs/protocol/github-banner.md) states the requirements.
 The [shared contracts](../../src/shared/github.ts) define the response bodies.
@@ -39,12 +43,17 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   The one chat publisher sends each new event after its commit, in commit order with the chat events.
   A replay goes through the same publisher.
   The caller implements only `scheduleRefresh`.
-- [installationTokenProvider](credentials.ts) signs the app JWT and gets an installation token for one repository.
+- [installationTokenProvider](credentials.ts) gets an installation token for one repository through the shared App credential flow.
   Its permissions allow repository content, pull request, check, and commit status reads only.
   The token stays on the server.
   This module has no sandbox credential endpoint.
 - [appSigningKey](private-key.ts) imports `GITHUB_APP_PRIVATE_KEY` for each GitHub App feature: these reads and the repository copies of image builds.
   It accepts each key text that the deployment guide allows.
+- [App credentials](app-credentials.ts) owns one cached PEM import, JWT signing, installation token requests, and revocation.
+  Each caller supplies its clock, repositories, permissions, and safe error.
+  Requests use the shared 30-second timeout and API version.
+  Token replies use the shared JSON body budget and accept successful 2xx responses.
+  Only a 204 or 401 revocation reply confirms that a token is inactive.
 
 ## Server integration
 
@@ -94,7 +103,7 @@ The production workspace object persists each scheduled workspace binding and re
 The signal keeps the delivery ID, pushed branch, retry attempt, and user ID when present.
 The consumer can schedule Durable Object alarm retries for failed reads or publication.
 A retry must keep these inputs so delivery receipts and access checks still apply.
-A failed refresh must remain a failure until the current read and publication succeed.
+A failed scheduled refresh remains a failure until the current read and publication succeed.
 
 Scheduled fresh reads omit the delivery ID and pushed branch.
 They retain the user ID for access checks and advance the retry attempt.
@@ -128,7 +137,8 @@ A foreign fork's same-named branch cannot update a workspace in the base reposit
 Push routing sends the active repository workspaces to their coordinators as candidates.
 Each coordinator reads the current head branch, head commit, pull request, and base branch.
 It refreshes only when the pushed branch is that head or base.
-The base comes from the pull request, or the repository default when no pull request exists.
+An explicit workspace base takes precedence.
+Otherwise, the base comes from the pull request, or the repository default when no pull request exists.
 An unrelated push returns `null` and stores no snapshot or event.
 SHA-only events read current workspace state without relying on the payload's pull request list.
 The event commit can be a test merge commit instead of the branch tip.
@@ -136,8 +146,13 @@ A changed banner or check publishes one fresh event.
 A later identical read publishes none.
 Retrying an already committed delivery republishes its original event without another GitHub read.
 An unchanged delivery receipt has no envelope to publish.
-The handler marks a delivery processed only after all workspace refreshes succeed.
-A failed read or commit leaves the delivery retryable.
+For a push, each workspace refresh runs even when an earlier workspace fails.
+The image refresh runs after those workspace steps, also when a workspace fails.
+A push can complete when a `github_pending` workspace has scheduled its bounded fresh read.
+Other workspace failures and image refresh failures leave the delivery retryable.
+The handler returns the error after the independent steps run.
+For other events, the handler marks a delivery processed only after all workspace refreshes succeed.
+A failed read or commit of those events leaves the delivery retryable.
 A failure after the commit also leaves it retryable.
 The retry then replays the receipt.
 A failed send to one tab does not fail the refresh.
@@ -145,7 +160,8 @@ A failed send to one tab does not fail the refresh.
 
 Pull request lookup prefers an open request for the exact repository and branch.
 It then considers merged and closed requests, in GitHub's newest-created order.
-Without a pull request, a GraphQL comparison uses the explicit head commit and reads the commit count and repository identity.
+Without a pull request, a GraphQL comparison uses the explicit head commit and the workspace base branch.
+It reads the commit count and repository identity.
 It selects no file patches.
 The reader follows every lookup, review, and check connection page.
 The combined GitHub check rollup supplies check runs and status contexts in returned order.
@@ -234,9 +250,10 @@ API references:
 ### Key Code
 
 - [Production composition](../features/github.ts) owns the state adapter and retry alarm.
-- [composition.ts](composition.ts) mounts verified webhooks and image refresh.
+- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background routine starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
-- [webhook.ts](webhook.ts) verifies deliveries and starts workspace refreshes.
+- [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
+- [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
 - [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, and replays delivery receipts.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
@@ -246,3 +263,4 @@ API references:
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
 - [Shared state comparison](../../src/shared/github-state.ts) compares the backend and browser displays without banner time.
 - [credentials.ts](credentials.ts) gets server-only installation read tokens.
+- [app-credentials.ts](app-credentials.ts) shares the signing key cache, JWT, token request, and revocation for GitHub App features.

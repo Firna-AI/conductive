@@ -51,7 +51,6 @@ async function mountComposer() {
     }, [])
     return (
       <Composer
-        attaching={false}
         blocked={false}
         choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
         draft={shown.draft}
@@ -62,7 +61,8 @@ async function mountComposer() {
           setShown((now) => ({ ...now, draft: { ...now.draft, text } }))
         }}
         onChooseModel={() => {}}
-        onRemoveAttachment={() => {}}
+        onRemoveFile={() => {}}
+        onRetryFile={() => {}}
         onSend={() => {}}
         onStop={() => {}}
         running={false}

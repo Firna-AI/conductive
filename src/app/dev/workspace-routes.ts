@@ -1,13 +1,15 @@
 import {
+  WORKSPACE_RESTORE_MS,
   workspacePath,
   workspacePaths,
   workspacesPath,
-  type ArchiveCheckResponse,
   type OrderedWorkspaceResponse,
+  type Workspace,
   type WorkspaceResponse,
   type WorkspacesResponse,
 } from '../../shared/workspaces'
-import { choice, count, flag, record, text } from '../api/parse'
+import { choice, count, record, text } from '../api/parse'
+import { failedFirstStart } from '../first-start'
 import { moveWorkspace } from '../sections'
 import {
   changeWorkspace,
@@ -23,11 +25,25 @@ import {
   noContent,
   optional,
   requiredText,
+  RouteError,
   type Params,
   type Route,
 } from './router'
 import { cancelStart, resumeWorkspace, stopLater } from './start-steps'
 import type { OrgState } from './state'
+
+/**
+ * The time of a change, which keeps the time of the last change as its
+ * minimum, as the Worker does. Archive and Restore raise it also on the
+ * same tick of the clock, so the app can order them.
+ */
+function changedAt(
+  backend: DevBackend,
+  workspace: Workspace,
+  raise = false,
+): number {
+  return Math.max(backend.now(), workspace.updatedAt + (raise ? 1 : 0))
+}
 
 function detailReply(org: OrgState, workspaceId: string): Response {
   return json(workspaceDetail(org, workspaceId) satisfies WorkspaceResponse)
@@ -54,11 +70,18 @@ function updateWorkspace(
   workspaceId: string,
   body: unknown,
 ): Response {
+  const current = requireWorkspace(org, workspaceId)
+  if (current.archivedAt !== null || current.state === 'archived') {
+    throw new RouteError(
+      409,
+      'workspace_archived',
+      'The archived chat is read-only.',
+    )
+  }
   const fields = record(body)
   const name = optional(fields, 'name', requiredText)
   const sectionId = optional(fields, 'sectionId', text)
   const position = optional(fields, 'position', count)
-  const current = requireWorkspace(org, workspaceId)
   if (sectionId !== undefined) requireSection(org, sectionId)
   if (sectionId !== undefined || position !== undefined) {
     org.workspaces = moveWorkspace(
@@ -70,7 +93,11 @@ function updateWorkspace(
     )
   }
   const moved = requireWorkspace(org, workspaceId)
-  changeWorkspace(backend, org, { ...moved, name: name ?? moved.name })
+  changeWorkspace(backend, org, {
+    ...moved,
+    name: name ?? moved.name,
+    updatedAt: changedAt(backend, moved),
+  })
   return detailReply(org, workspaceId)
 }
 
@@ -87,16 +114,20 @@ function readWorkspace(
   return orderedDetailReply(backend, org, workspaceId)
 }
 
-/** Archive deletes the cloud computer and keeps the chat read-only. */
+/**
+ * Archive stops the cloud computer at once, with no check, and keeps it for
+ * the 14 days of Restore. A failed first start has no cloud computer to
+ * keep. A repeat changes nothing. The chat stays read-only.
+ */
 function archiveWorkspace(
   backend: DevBackend,
   org: OrgState,
   workspaceId: string,
-  body: unknown,
 ): Response {
-  flag(record(body), 'discardUnpushedWork')
   const current = requireWorkspace(org, workspaceId)
   if (current.state !== 'archived') {
+    const saved = org.starts.get(workspaceId)?.start ?? null
+    const first = failedFirstStart(current, saved)
     cancelStart(org, workspaceId)
     org.starts.set(workspaceId, { start: null, error: null })
     const at = backend.now()
@@ -104,7 +135,41 @@ function archiveWorkspace(
       ...current,
       state: 'archived',
       archivedAt: at,
-      updatedAt: at,
+      restoreUntil: first ? null : at + WORKSPACE_RESTORE_MS,
+      updatedAt: changedAt(backend, current, true),
+    })
+  }
+  return detailReply(org, workspaceId)
+}
+
+/**
+ * Restore puts an archived workspace back in its section, stopped, and
+ * starts nothing. A repeat changes nothing. After the last day of Restore,
+ * or without a kept cloud computer, it refuses, as the Worker does.
+ */
+function restoreWorkspace(
+  backend: DevBackend,
+  org: OrgState,
+  workspaceId: string,
+): Response {
+  const current = requireWorkspace(org, workspaceId)
+  if (current.state === 'archived') {
+    const { restoreUntil } = current
+    if (restoreUntil === null || backend.now() >= restoreUntil) {
+      throw new RouteError(
+        409,
+        'workspace_restore_unavailable',
+        restoreUntil === null
+          ? 'No cloud computer is available to restore.'
+          : 'The time to restore this workspace has ended.',
+      )
+    }
+    changeWorkspace(backend, org, {
+      ...current,
+      state: 'stopped',
+      archivedAt: null,
+      restoreUntil: null,
+      updatedAt: changedAt(backend, current, true),
     })
   }
   return detailReply(org, workspaceId)
@@ -165,8 +230,14 @@ export function workspaceRoutes(backend: DevBackend): Route[] {
     {
       method: 'POST',
       path: workspacePaths.archive(ID.org, ID.workspace),
-      answer: ({ params, body }) =>
-        archiveWorkspace(backend, orgOf(params), params.workspace, body),
+      answer: ({ params }) =>
+        archiveWorkspace(backend, orgOf(params), params.workspace),
+    },
+    {
+      method: 'POST',
+      path: workspacePaths.restore(ID.org, ID.workspace),
+      answer: ({ params }) =>
+        restoreWorkspace(backend, orgOf(params), params.workspace),
     },
     {
       method: 'PUT',
@@ -181,19 +252,6 @@ export function workspaceRoutes(backend: DevBackend): Route[] {
         choice(record(body), 'source', ['input', 'terminal', 'preview'])
         return noContent()
       },
-    },
-    {
-      method: 'GET',
-      path: workspacePaths.archiveCheck(ID.org, ID.workspace),
-      // A workspace that the fake made has no work to lose. The others
-      // keep the recorded check, which finds work.
-      answer: ({ params }) =>
-        orgOf(params).created.has(params.workspace)
-          ? json({
-              uncommittedFiles: [],
-              unpushedCommits: 0,
-            } satisfies ArchiveCheckResponse)
-          : null,
     },
   ]
 }

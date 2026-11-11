@@ -1,11 +1,13 @@
 import { expect, it } from 'vitest'
 
+import type { WorkspaceValues } from './platform-storage'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import type { backendFixture } from './backend-test-support'
 import { IDLE_MS } from './durable-types'
 import { startRetryFixture } from './retry-test-support'
 import { START_JOB_KEY } from './start-storage'
+import { advanceToRunner } from './start-resume-test-support'
 
 const fixtureForTest = setupBackendTests()
 
@@ -13,7 +15,7 @@ async function savedRunnerPhase(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
 ) {
   const start = await startRetryFixture(fixture)
-  const saved = await start.storage.get('job', START_JOB_KEY)
+  const saved = await start.storage.get<WorkspaceValues['job']>(START_JOB_KEY)
   if (!saved || saved.phase === 'records')
     throw new Error('Missing running start checkpoint')
   const platform = fixture.actors.get(saved.workspaceId)
@@ -21,14 +23,14 @@ async function savedRunnerPhase(
   await platform
     .endpoint()
     .lifecycleStep('startup', 'Applying your startup script', 'completed')
-  await start.storage.put('job', START_JOB_KEY, {
+  await start.storage.put<WorkspaceValues['job']>(START_JOB_KEY, {
     ...saved,
     phase: 'runner',
     processId: null,
     stdoutOffset: 0,
     stderrOffset: 0,
   })
-  platform.restart()
+  await platform.restart()
   return { ...start, platform, id: saved.workspaceId }
 }
 
@@ -75,20 +77,21 @@ it('replaces the completion alarm and schedules the restore watch before the idl
   if (!job) throw new Error('Missing start job')
   const platform = fixture.actors.get(job.workspaceId)
   if (!platform) throw new Error('Missing start controller')
-  await fixture.advanceTo(
-    fixture.runtime.dependencies.now() + 1_000,
-    job.workspaceId,
-  )
+  await advanceToRunner(start)
   await platform.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
   const completedAt = fixture.runtime.dependencies.now()
   await fixture.advanceTo(completedAt, job.workspaceId)
   expect(await start.job()).toBeUndefined()
-  expect(platform.storage.alarmAt).toBe(completedAt + 1_000)
+  const completed = await platform.endpoint().readLifecycle()
+  expect(completed).toMatchObject({ restoreWatchAt: completedAt + 5_000 })
+  expect(await platform.storage.getAlarm()).toBe(completedAt + 5_000)
   await fixture.advanceTo(completedAt + 1_000, job.workspaceId)
-  expect(platform.storage.alarmAt).toBe(completedAt + 5_000)
+  expect(await platform.storage.getAlarm()).toBe(completedAt + 5_000)
   await fixture.advanceTo(completedAt + 5_000, job.workspaceId)
   const state = await platform.endpoint().readLifecycle()
-  expect(platform.storage.alarmAt).toBe((state?.lastActivityAt ?? 0) + IDLE_MS)
+  expect(await platform.storage.getAlarm()).toBe(
+    (state?.lastActivityAt ?? 0) + IDLE_MS,
+  )
   expect(state).toMatchObject({ state: 'ready', startupPrepared: true })
 })
 
@@ -107,12 +110,9 @@ it('does not expose readiness when the deadline is reached after startup progres
         (step) => step.id === 'startup' && step.state === 'completed',
       )
     )
-      fixture.setTime(TEST_TIME + 1_200_000)
+      await fixture.setTime(TEST_TIME + 1_200_000)
   })
-  await fixture.advanceTo(
-    fixture.runtime.dependencies.now() + 1_000,
-    job.workspaceId,
-  )
+  await fixture.run(() => start.wait())
   const states = platform.events.flatMap(({ event }) =>
     event.type === 'workspace.updated' ? [event.workspace.state] : [],
   )

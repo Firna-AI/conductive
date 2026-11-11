@@ -1,3 +1,4 @@
+import { copyText } from '../../../app/clipboard'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createApiClient } from '../../../app/api/client'
@@ -15,6 +16,7 @@ import { createFilesClient } from '../../../files/api/files-client'
 import { WorkspaceFiles } from '../../../files/model/files-store'
 import type { WorkspaceSocketMessage } from '../../../shared/events'
 import { FakeApiServer } from '../../../test-support/fake-api'
+import { fetchFiles } from '../../../test-support/fake-files'
 import { FAKE_TIME } from '../../../test-support/fixtures/core'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { storeFailedRepairs } from '../../../test-support/recorded-repairs'
@@ -58,7 +60,7 @@ function ofWorkspace(
 }
 
 const app = new AppModel({
-  api: createApiClient(server.fetch),
+  api: createApiClient(server.fetch, fetchFiles(server.fetch)),
   events: {
     open: (target, handlers) =>
       server.events.subscribe(
@@ -77,7 +79,7 @@ const app = new AppModel({
   newId: () => crypto.randomUUID(),
   leave: () => undefined,
   appOrigin: window.location.origin,
-  copy: (text) => navigator.clipboard.writeText(text),
+  copy: (text) => copyText(window, text),
 })
 
 /** Makes the store of the Files panel over the fake API. It starts nothing. */

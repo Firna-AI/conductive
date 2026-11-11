@@ -1,9 +1,36 @@
 import type { AgentChoice } from './agents'
-import type { Timestamp } from './api'
+import { orgPath, type Timestamp } from './api'
 import type { Session } from './sessions'
+import { filePaths } from './files'
 
-/** Uploads can precede the first message that creates a workspace. */
-export const DRAFT_ATTACHMENTS_PATH = '/api/attachments'
+export const ATTACHMENT_MAX_BYTES = 25_000_000
+
+export type AttachmentUploadTarget =
+  | { type: 'workspace'; workspaceId: string }
+  | { type: 'new-workspace'; messageId: string }
+
+function draftAttachmentsPath(orgId: string): string {
+  return `${orgPath(orgId)}/attachments`
+}
+
+export function attachmentUploadPath(
+  orgId: string,
+  target: AttachmentUploadTarget,
+): string {
+  return target.type === 'workspace'
+    ? filePaths.attachments(orgId, target.workspaceId)
+    : draftAttachmentsPath(orgId)
+}
+
+export function attachmentUploadUrl(
+  orgId: string,
+  target: AttachmentUploadTarget,
+  metadata: { name: string; mediaType: string },
+): string {
+  const query = new URLSearchParams(metadata)
+  if (target.type === 'new-workspace') query.set('messageId', target.messageId)
+  return `${attachmentUploadPath(orgId, target)}?${query}`
+}
 
 export interface MessageSender {
   id: string
@@ -49,13 +76,6 @@ export interface SendMessageResponse {
   session: Session
 }
 
-/** The app gate requires JSON, including writes that carry attachments. */
-export interface UploadAttachmentRequest {
-  name: string
-  kind: 'image' | 'file'
-  mediaType: string
-  dataBase64: string
-}
 export interface UploadAttachmentResponse {
   attachment: Attachment
 }

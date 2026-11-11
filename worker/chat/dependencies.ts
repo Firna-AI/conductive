@@ -1,11 +1,9 @@
 import type { AppEnv } from '../env'
+import { commitAuthor } from '../../src/shared/commit-author'
+import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
-import { HttpError } from '../http'
 import { randomToken } from '../security/crypto'
-import {
-  readConnectionAccess,
-  scheduleConnectionCheck,
-} from '../security/connection-access'
+import { readConnectionAccess } from '../security/connection-access'
 import { loginResolver } from './login-access'
 import {
   readLoginMetadata,
@@ -13,7 +11,12 @@ import {
 } from './login-availability'
 import { readAutomaticTitleWorkspace } from './queries'
 import { titleModelBinding } from './title-model'
+import { readRunnerProtocolVersion } from './runner-version-data'
 import type { ChatDependencies } from './types'
+import { resolveMessageAttachments } from './attachment-claims'
+import { prepareMessageAttachments } from './attachment-copy'
+import { attachmentWorkspace } from './attachment-claim-data'
+import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
 
 /**
@@ -27,16 +30,19 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    readCommitAuthor: async (userId) => {
+      const user = await readUser(env.DB, userId)
+      return user ? commitAuthor(user) : null
+    },
     readAutomaticTitleWorkspace: (id) =>
       readAutomaticTitleWorkspace(env.DB, id),
     runTitleModel: titleModelBinding(env),
     filterRunnerOutput: (transaction, workspace, input) =>
       filterRunnerOutput(env, transaction, workspace, input),
     now: Date.now,
-    scheduleBrowserCheck: scheduleConnectionCheck,
-    scheduleRunnerCheck: scheduleConnectionCheck,
     readRunnerAccess: (id, tokenHash) =>
       runnerTokenAllowed(env.DB, id, tokenHash),
+    readRunnerProtocolVersion: (id) => readRunnerProtocolVersion(env.DB, id),
     readConnectionAccess: (tabs, now) =>
       readConnectionAccess(env.DB, tabs, now),
     randomId: randomToken,
@@ -47,15 +53,29 @@ export function chatDependencies(
         ? Promise.resolve(new Map<string, SessionLoginMetadata>())
         : readLoginMetadata(env.DB, id, targets)
     },
-    resolveAttachments: async (_userId, _workspaceId, ids) => {
-      if (ids.length)
-        throw new HttpError(
-          503,
-          'attachments_unavailable',
-          'Attachments are not available. Try again.',
-        )
-      return { attachments: [], paths: [] }
-    },
+    resolveAttachments: (userId, id, ids, messageId, usedIds) =>
+      resolveMessageAttachments(
+        env,
+        userId,
+        id,
+        ids,
+        messageId,
+        usedIds,
+        (overrides.now ?? Date.now)(),
+      ),
+    prepareAttachments: (id, userId, messageId, attachments, sandboxId) =>
+      prepareMessageAttachments(
+        env,
+        id,
+        userId,
+        messageId,
+        attachments,
+        sandboxId,
+      ),
+    attachmentSandboxId: async (id, userId) =>
+      (await attachmentWorkspace(env.DB, id, userId))?.sandboxId ?? null,
+    resolveAttachmentPaths: (id, userId, attachments) =>
+      resolveAttachmentPaths(env, id, userId, attachments),
     receiveFileResult: async () => undefined,
     runnerAttached: () => undefined,
     runnerDetached: () => undefined,
@@ -65,6 +85,7 @@ export function chatDependencies(
     runnerDisconnected: async () => undefined,
     turnDispatching: async () => true,
     turnDispatchFailed: async () => undefined,
+    turnEnded: async () => undefined,
     browserOpened: async () => undefined,
     browserClosed: async () => undefined,
     waitUntil: (promise) => {

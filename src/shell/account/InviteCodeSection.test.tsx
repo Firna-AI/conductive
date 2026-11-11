@@ -32,7 +32,8 @@ const link = `${FAKE_ORIGIN}${joinPath('K7QHM-3XP2R')}`
 /** The section over a waitlist state, once its read answered. */
 async function showSection(
   state: WaitlistStateResponse,
-  copy: (text: string) => Promise<void> = async () => undefined,
+  copy: (text: string | Promise<string>) => Promise<void> = async () =>
+    undefined,
 ) {
   const server = new FakeApiServer()
   server.json('GET', WAITLIST_PATHS.state, state)
@@ -46,8 +47,10 @@ async function showSection(
 }
 
 describe('the invite code of the account', () => {
-  test('shows the invite link, the code, and the invites left, in each state of the code', async () => {
+  test('shows the invite link, the code, and the invites left, in each state of the code and of sign-ups', async () => {
     holdAnimationFrames()
+    const paused =
+      'Invite code 3 of 5 invites left Sign-ups are paused Your link works again when sign-ups resume. Copy Or share the code K7QHM-3XP2R .'
     const cases = [
       [
         'invites left',
@@ -58,7 +61,19 @@ describe('the invite code of the account', () => {
       [
         'sign-ups paused',
         { ...accessState, signupsPaused: true },
-        'Invite code 3 of 5 invites left Sign-ups are paused Your link works again when sign-ups resume. Copy Or share the code K7QHM-3XP2R .',
+        paused,
+        link,
+      ],
+      [
+        'open sign-up',
+        { ...accessState, waitlistOn: false },
+        'Invite code 3 of 5 invites left Anyone can sign up now Your invites stay for later. Copy Or share the code K7QHM-3XP2R .',
+        link,
+      ],
+      [
+        'the waitlist off while sign-ups are paused',
+        { ...accessState, waitlistOn: false, signupsPaused: true },
+        paused,
         link,
       ],
       [
@@ -94,7 +109,7 @@ describe('the invite code of the account', () => {
     holdAnimationFrames()
     const copied: string[] = []
     const view = await showSection(accessState, async (text) => {
-      copied.push(text)
+      copied.push(await text)
     })
     await press(byRole('button', 'Copy the invite link', view))
     await waitFor(() => copied.length > 0, 'the copy')

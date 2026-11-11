@@ -19,6 +19,7 @@ The file flow adds no renderer bridge.
 
 The desktop entry supplies the configured Worker origin to the app's API and event services.
 API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
+File uploads go to the same origin as one raw `XMLHttpRequest` with credentials, so they send the same cookie and report their progress.
 Workspace sockets use the same Worker origin.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
@@ -35,6 +36,7 @@ npm --prefix desktop start
 
 `CONDUCTIVE_APP_ORIGIN` selects the API origin at build time.
 It defaults to `https://app.conductive.build`.
+Each build also stamps the renderer with the app version, from the shared [build-version.ts](../build-version.ts), as the web build does.
 Local development can use an HTTP localhost origin.
 `CONDUCTIVE_FRAME_SOURCES` lists space-separated HTTPS frame origins.
 Set the same frame sources in the web policy.
@@ -110,7 +112,7 @@ Wake or a cookie change can connect it again.
 Background requests show a native notification.
 A click restores the window and opens the request's workspace.
 It does not approve the request.
-See the [Mac app protocol](../docs/protocol/desktop-app.md) for the device requirements.
+See the [Mac app protocol](../docs/protocol/desktop-commands.md) for the device requirements.
 
 Focused device checks use these commands:
 
@@ -202,6 +204,9 @@ The [window controls test](tests/window-controls.spec.ts) checks the bar, the le
 It also checks the sidebar toggle, the toggle of the right column, Back and Forward, and the layout after a sidebar resize and a window resize.
 The [browser window test](tests/browser-window.spec.ts) opens a fresh web build in a plain Electron window.
 There, the workspace shows no window controls.
+The [phone feedback test](tests/feedback-phone.spec.ts) opens the same build in a 375 × 667 page.
+A long feedback draft fails to send, and a wheel over the sheet brings Cancel and Send into view before Send tries again.
+[browser-entry.ts](tests/browser-entry.ts) builds the web entry and opens its window for both tests.
 
 The `test:logic` command uses the repository's Vitest runner with the desktop configuration.
 It runs the unit tests under `src/` and `renderer/`.
@@ -263,7 +268,7 @@ The package includes only `dist/app/` and `dist/bundle/`.
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
 - [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
-- [Renderer services](renderer/services.ts) routes credentialed API calls and event sockets to the configured Worker.
+- [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
 - [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.

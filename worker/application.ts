@@ -1,13 +1,18 @@
 import { API_PATHS } from '../src/shared/api'
 import { MACHINE_PATHS } from '../src/shared/agent-tools'
-import { GITHUB_SETUP_PATH } from '../src/shared/github-setup'
+import {
+  GITHUB_INSTALL_PATH,
+  GITHUB_SETUP_PATH,
+} from '../src/shared/github-setup'
 import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
 import { SITE_FOLDER } from '../src/shared/site-build'
 import type { AppDependencies, AppEnv } from './env'
-import { githubSetupResponse } from './github-setup'
+import { githubInstallResponse, githubSetupResponse } from './github-setup'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
 import { errorResponse, HttpError, privateResponse } from './http'
 import { requestBodyEntry } from './http/request-body'
+import { routeModelGateway } from './model-gateway/route'
+import { gatewayWorkspaceAllowed } from './model-gateway/workspace-access'
 import { route, routeDevice } from './routes'
 import { workspaceBinding } from './app-api/workspace-state'
 import { routeChat, routeRunner } from './chat/router'
@@ -21,6 +26,11 @@ import {
 } from './lifecycle/image-sources/credential'
 import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
 import { repairLifecycleAlarms } from './lifecycle/repair'
+import { repairSoftwareImages } from './software-image/repair'
+import {
+  handleSoftwareImage,
+  SOFTWARE_IMAGE_PATH,
+} from './software-image/route'
 import { finishSignIn, startSignIn } from './security/auth'
 import { appContentSecurityPolicy } from './security/content-security'
 import { cookie, OAUTH_COOKIE } from './security/cookies'
@@ -40,6 +50,8 @@ import { appFrameSources, runnerSoftware } from './configuration'
 import { appSiteResponse } from './marketing/assets'
 import { retryApprovalEmails } from './operator/approval-email'
 import { warnWorker } from './warnings'
+import { routineRunRuntime } from './routines/run-runtime'
+import { scanRoutineSchedules } from './routines/schedule-scan'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -89,11 +101,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           }
           if (upgrade && !appApi)
             await sessionGate(request, env, dependencies.now())
-          if (
-            path === GITHUB_SETUP_PATH &&
-            (request.method === 'GET' || request.method === 'HEAD') &&
-            !upgrade
-          ) {
+          const read =
+            (request.method === 'GET' || request.method === 'HEAD') && !upgrade
+          if (path === GITHUB_INSTALL_PATH && read) {
+            return respond(githubInstallResponse(request, env))
+          }
+          if (path === GITHUB_SETUP_PATH && read) {
             return respond(await githubSetupResponse(request, env))
           }
           if (!path.startsWith('/api/') && env.ASSETS) {
@@ -112,13 +125,22 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await routeMacCommand(request, env))
         }
         if (surface === 'machine') {
+          if (path === SOFTWARE_IMAGE_PATH)
+            return respond(
+              await handleSoftwareImage(request, env, dependencies),
+            )
           if (isAgentToolPath(path))
             return respond(
               await productionAgentTools(request, env, dependencies),
             )
           if (path === MACHINE_PATHS.githubWebhook)
             return respond(
-              await productionGitHubWebhook(request, env, dependencies),
+              await productionGitHubWebhook(
+                request,
+                env,
+                dependencies,
+                execution,
+              ),
             )
           if (path === MACHINE_PATHS.gitCredential) {
             const machineEnv = env
@@ -135,6 +157,13 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           }
           if (path === IMAGE_SOURCE_CREDENTIAL_PATH)
             return respond(await handleImageSourceCredential(request, env))
+          const gatewayEnv = env
+          const gatewayResponse = await routeModelGateway(request, {
+            ...workspaceRuntime(gatewayEnv, dependencies),
+            workspaceAllowed: (id) =>
+              gatewayWorkspaceAllowed(gatewayEnv.DB, id),
+          })
+          if (gatewayResponse) return respond(gatewayResponse)
           const runnerResponse = await routeRunner(request, env)
           if (runnerResponse) return respond(runnerResponse)
         }
@@ -161,8 +190,13 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await finishDesktopSignIn(request, env, dependencies))
         }
         if (isDeviceAppPath(path))
-          return respond(await routeDevice(request, env))
-        const chatResponse = await routeChat(request, env, dependencies.now())
+          return respond(await routeDevice(request, env, dependencies.now()))
+        const chatResponse = await routeChat(
+          request,
+          env,
+          dependencies.now,
+          dependencies.randomToken,
+        )
         if (chatResponse) return respond(chatResponse)
         const featureResponse = await routeWorkspaceFeatures(
           request,
@@ -185,7 +219,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
   }
   return {
     fetch: requestBodyEntry(application.fetch),
-    async scheduled(_event: ScheduledController, env: AppEnv): Promise<void> {
+    async scheduled(event: ScheduledController, env: AppEnv): Promise<void> {
+      if (event.cron === '* * * * *') {
+        await scanRoutineSchedules(routineRunRuntime(env, dependencies))
+        return
+      }
+      if (event.cron !== '*/15 * * * *') return
       await cleanupDeletedOrgs(
         env,
         dependencies,
@@ -196,13 +235,16 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         imageRuntime(env, dependencies),
         () => runnerSoftware(env),
       )
+      try {
+        await repairSoftwareImages({ env, dependencies })
+      } catch {
+        warnWorker({ kind: 'software_image_repair_failed' })
+      }
       // Last, so that a slow or failed email never holds back the repairs.
       try {
         await retryApprovalEmails(env, dependencies)
       } catch {
-        warnWorker(
-          'The retry of approval emails failed. It runs again at the next timer.',
-        )
+        warnWorker({ kind: 'approval_email_retry_failed' })
       }
     },
   }

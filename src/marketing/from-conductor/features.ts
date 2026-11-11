@@ -16,7 +16,8 @@ import { navigationAndAppearanceFeatures } from './areas/navigation-and-appearan
 import { securityPrivacyAndAdminFeatures } from './areas/security-privacy-and-admin'
 import { plansAndPricingFeatures } from './areas/plans-and-pricing'
 
-export const parityCheckedOn = '2026-11-09'
+/** The time in UTC of the last full check of every row, as `YYYY-MM-DDTHH:MMZ`. */
+export const parityCheckedAt = '2026-11-10T02:07Z'
 
 export const parityFeatures: readonly ParityFeature[] = [
   ...workspacesAndBranchesFeatures,

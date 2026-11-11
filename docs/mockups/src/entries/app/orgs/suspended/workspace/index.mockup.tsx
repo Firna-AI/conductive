@@ -22,9 +22,9 @@ export const suspendedOrgWorkspace = defineScreen({
       slug: 'archived',
       title: 'Archived workspace',
       description:
-        'An archived workspace of Acme after the operator suspended Acme. The notice of the org, with the abuse address, is above the bar of the archived workspace. The chat history stays read-only, and the files and the tools went with the cloud computer, as in app/archive/archived.',
+        'An archived workspace of Acme after the operator suspended Acme. The app still keeps its cloud computer, as in app/archive, but the bar offers no Restore, and no row of the Archived group offers it. The notice of the org, with the abuse address, is above the bar. The chat history stays read-only, and the workspace shows no files and no tools.',
       rationale:
-        'An archived workspace has no sandbox to refuse, so its bar keeps the facts of the archive. The notice of the org shows above it, so every page of a suspended org names the suspension and the abuse address.',
+        'An archived workspace has no sandbox to refuse, so its bar keeps the date of the archive. A suspended org refuses Restore, as it refuses each change, so the bar promises only the chat history, as a refused start does. The notice of the org shows above it, so every page of a suspended org names the suspension and the abuse address.',
       props: { sandbox: 'archived', banner: 'merged' },
     },
     {

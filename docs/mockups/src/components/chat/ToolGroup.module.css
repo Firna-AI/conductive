@@ -178,6 +178,23 @@
   margin-top: 2px;
 }
 
+/* An item of a numbered list hangs its own number before its text. */
+.message[open] .numbered > .bullet {
+  position: relative;
+  list-style-type: none;
+}
+
+.message[open] .number {
+  position: absolute;
+  right: 100%;
+  padding-right: 0.35em;
+}
+
+/* A list under the text of its item, as close as the next item. */
+.message[open] .bullets .bullet > .bullets {
+  margin-top: 2px;
+}
+
 /*
  * A message with a table. A summary holds no table, so the closed line shows
  * the table, and the rest of the message, as text. Open, the line keeps the

@@ -14,7 +14,7 @@ import { readChatEvent, readChoice, readSender } from './read-chat'
  * The workspace events that the chat reads. The stream also carries file,
  * GitHub, and preview events. Those only move the stream cursor on.
  */
-export type ChatStreamEvent =
+type ChatStreamEvent =
   | ChatEvent
   | Extract<
       WorkspaceEvent,
@@ -75,6 +75,7 @@ function readWorkspace(value: unknown): Workspace {
     createdAt: count(source.createdAt),
     updatedAt: count(source.updatedAt),
     archivedAt: nullable(count)(source.archivedAt),
+    restoreUntil: nullable(count)(source.restoreUntil),
   }
 }
 

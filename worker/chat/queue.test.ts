@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionPaths } from '../../src/shared/sessions'
 import {
@@ -12,7 +11,6 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-
 describe('workspace chat queue', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -24,7 +22,6 @@ describe('workspace chat queue', () => {
   afterAll(async () => {
     await harness.dispose()
   })
-
   it('keeps resumed queues across restart and retries opaque message IDs once', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -65,7 +62,7 @@ describe('workspace chat queue', () => {
       .bind(WORKSPACE_ID)
       .run()
     await fixture.send(session.id, 'constructor')
-    fixture.restart()
+    await fixture.restart()
     const runner = await fixture.connect()
     expect(runner.commands).toEqual([])
     runner.emit({ type: 'runner.ready' })
@@ -78,6 +75,10 @@ describe('workspace chat queue', () => {
     expect(command?.type).toBe('turn')
     if (command?.type !== 'turn') throw new Error('Expected a turn.')
     expect(command.message.sender.id).toBe(fixture.owner.id)
+    expect(command.commitAuthor).toEqual({
+      name: 'Octocat',
+      email: '7+octocat@users.noreply.github.com',
+    })
     expect(command.login).toEqual({
       agent: 'claude',
       kind: 'api-key',
@@ -90,24 +91,23 @@ describe('workspace chat queue', () => {
     expect(
       sent.events.filter(({ event }) => event.type === 'message.sent'),
     ).toHaveLength(2)
-    expect(JSON.stringify([...fixture.storage.records.values()])).not.toContain(
-      `secret-${fixture.owner.id}`,
-    )
+    expect(
+      JSON.stringify([...(await fixture.snapshot()).records.values()]),
+    ).not.toContain(`secret-${fixture.owner.id}`)
     runner.emit({
       type: 'turn.started',
       sessionId: session.id,
       turnId: command.turnId,
       senderId: fixture.owner.id,
       choice: CLAUDE,
-      startedAt: 1_800_000_000_000,
+      startedAt: 1800000000000,
       messageIds: ['__proto__', 'constructor'],
     })
     await fixture.drain()
-    fixture.transport.dropOutgoing = (message) => {
-      if (message.type === 'message')
-        throw new Error('Injected socket send failure')
-      return false
-    }
+    await fixture.setSendRule({
+      type: 'message',
+      error: 'Injected socket send failure',
+    })
     const dropped = await fixture.fetch(
       sessionPaths.messages(fixture.org.id, WORKSPACE_ID, session.id),
       {
@@ -126,8 +126,8 @@ describe('workspace chat queue', () => {
         view.turn(command.turnId),
       ),
     ).toMatchObject({ state: 'running' })
-    fixture.transport.dropOutgoing = () => false
-    fixture.restart()
+    await fixture.setSendRule(null)
+    await fixture.restart()
     await fixture.connect(runner)
     expect(runner.commands.at(-1)).toMatchObject({
       type: 'message',
@@ -135,7 +135,6 @@ describe('workspace chat queue', () => {
       message: { id: 'socket-drop', state: 'sent' },
     })
   })
-
   it('uses the starter login during a shared turn and on the next turn', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
@@ -151,7 +150,7 @@ describe('workspace chat queue', () => {
       turnId: initial.turnId,
       senderId: fixture.owner.id,
       choice: CLAUDE,
-      startedAt: 1_800_000_000_000,
+      startedAt: 1800000000000,
       messageIds: ['message-1'],
     })
     await fixture.drain()
@@ -162,6 +161,7 @@ describe('workspace chat queue', () => {
       throw new Error('Expected a message during the turn.')
     expect(steer.turnId).toBe(initial.turnId)
     expect(steer.message.sender.id).toBe(fixture.member.id)
+    expect(steer).not.toHaveProperty('commitAuthor')
     expect(steer.login).toEqual({
       agent: 'claude',
       kind: 'api-key',
@@ -184,7 +184,12 @@ describe('workspace chat queue', () => {
     if (next?.type !== 'turn') throw new Error('Expected the next turn.')
     expect(next.sessionId).toBe(session.id)
     expect(next.turnId).not.toBe(initial.turnId)
+    if (!next.login) throw new Error('The version 1 turn has no login.')
     expect(next.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
+    expect(next.commitAuthor).toEqual({
+      name: 'Teammate',
+      email: '8+teammate@users.noreply.github.com',
+    })
     expect(JSON.stringify(await fixture.history(session.id))).not.toContain(
       'secret-',
     )

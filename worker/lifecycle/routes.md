@@ -46,8 +46,8 @@ same read.
 
 [Creates and resumes](workspace-object.md#creates-and-resumes) says how the
 workspace object runs the start of each create and resume. It gives the
-waits, the replies, the branch, the terminal start hook, the runner
-readiness, and the stop cleanup of a failed resume.
+waits, the replies, the branch, the terminal setup, the runner readiness,
+and the stop cleanup of a failed resume.
 
 - A create needs a published org image and a repository that its build
   loaded. A change to the chosen repositories takes effect after the next
@@ -71,11 +71,15 @@ readiness, and the stop cleanup of a failed resume.
   A create without a sandbox continues from its pinned image.
   A create with a retained sandbox resumes that sandbox through the same readiness step as a resume, with the current env vars of the org.
   It then continues at the saved creation step in `afterReadyPhase`. Its commands use a fresh journal key, `commandAttempt`, and the allocation keeps `attempt`.
-  A checkpoint that waited for runner readiness repeats the startup step after sandbox readiness, to rebuild the runtime files.
+  A create saves `startup` in `afterReadyPhase` when it moves into the terminal setup.
+  So a checkpoint in the terminal setup, the password read, or the runner readiness wait repeats the startup step after sandbox readiness.
+  That repeat rebuilds the runtime files.
+  The terminal setup and the password read then run again.
   Its finished fetch and branch steps stay complete.
   The branch step uses the branch when it already exists.
-- Input from the browser, the terminal, and previews resets the idle time,
-  as [Input activity](#input-activity) says.
+- Browser input and preview requests reset the idle time, as
+  [Input activity](#input-activity) says. Browser input includes the keys
+  and the taps in the terminal.
 - The build log is a stream of server-sent events. It continues after the
   `Last-Event-ID` header or the `after` value, and it ends with a `build`
   event when the job ends. One D1 batch reads the build state and its log,
@@ -88,13 +92,19 @@ turn and the branch step use the sender.
 
 ## Input activity
 
-[Stop and resume](../../docs/protocol/workspaces-and-sandboxes.md#stop-and-resume)
+[Stop and resume](../../docs/protocol/workspace-life.md#stop-and-resume)
 says which input counts as activity. One `InputActivityOwner` in each
-workspace object receives the input times of the browser `activity` route,
-the terminal, and previews. The terminal and preview handlers report each
-input through `ToolDependencies.onActivity(workspaceId, at)`. That call
-returns at once.
+workspace object receives the input times of the browser `activity` route
+and of previews. The preview handler reports each request through
+`ToolDependencies.onActivity(workspaceId, at)`. That call returns at once.
 
+- The input listener of the app page hears the keys, the taps, and the
+  scrolls in the terminal too, as the
+  [web app](../../src/app/README.md#rules-for-this-code) says. An open
+  workspace posts that input to the `activity` route.
+- Terminal frames report no activity, because an automatic reply of
+  xterm.js can have the same bytes as a key, as the
+  [terminal backend](../terminal/README.md) says.
 - The owner saves the newest input time in the durable lifecycle state,
   fenced by the member generation. The shared deadline hook checks the org
   before this queued local write. The write publishes no shown state and
@@ -115,9 +125,30 @@ returns at once.
   A refused update preserves the activity time, provider deadline, and stop-retry alarm.
   Browser activity carries a plain refusal through RPC for the route's 403 reply.
   Stop, reconciliation, and disk cleanup keep their separate hooks.
+- After its org check, the deadline hook skips each provider deadline
+  extension of a workspace whose owner is suspended. This covers the input
+  update, the turn update, and the turn heartbeat. Its check still passes,
+  so browser activity on that workspace still gets HTTP 200. The stop of
+  that workspace goes on, as
+  [The stop of one workspace](../operator/README.md#the-stop-of-one-workspace)
+  says.
 - Each update runs through `waitUntil`. Input producers do not wait for the
   provider. Browser admission waits for its org check. No update holds the chat queue or the durable queue during a
   network call.
+
+### Key Code
+
+- [`input-activity-owner.ts`](input-activity-owner.ts): `InputActivityOwner`,
+  the one input owner of a workspace object, with its minute updates and
+  retries. [`create-input-activity.ts`](create-input-activity.ts) connects
+  it to the lifecycle hooks, the member fence, and `warnWorker`.
+- [`input-activity-local.ts`](input-activity-local.ts): `LifecycleInputState`,
+  the fenced input time in the durable lifecycle state, with its capture
+  and its reconciliation.
+- [`input-activity-update.ts`](input-activity-update.ts) and
+  [`input-activity-data.ts`](input-activity-data.ts): one D1 and provider
+  update. `writeWorkspaceActivity` moves `last_activity_at` forward with
+  `MAX`.
 
 ## Machine route
 
@@ -128,7 +159,7 @@ workspace token as a bearer token, and the current turn ID in the
 `X-Conductive-Turn-Id` header. The handler reads no request body and needs
 no content type. `Workspace.credentialSender` maps that turn to a sender,
 in the chat queue, as
-[The git credential sender](workspace-object.md#the-git-credential-sender)
+[The git credential sender](#the-git-credential-sender)
 says, with its tests.
 
 For the GitHub CLI outside an agent turn, the helper omits the turn header.
@@ -151,3 +182,24 @@ It also checks that both authorizations selected the same person.
 [`image-sources/credential.ts`](image-sources/credential.ts). It does this
 on the machine hostname only, after the Mac command route and before the
 runner socket, with the private error response wrapper.
+
+### The git credential sender
+
+`Workspace.credentialSender` maps the turn ID of a git credential request
+to a sender, in the chat queue. The [machine route](#machine-route)
+gives the handler, which reads that turn ID from a request header.
+
+- A create that prepares its repository has its own grant. The start job
+  is a create in the `fetch` or `branch` phase, not cancelled or failed,
+  and its `turnId` matches. The grant gives the sender of the admitted
+  first message.
+- Otherwise the turn must be the running stored chat turn: the active
+  turn of an open session. `activeStoredTurn` in
+  [`access.ts`](../devices/access.ts) reads it. So access ends with the
+  turn, also after a queued Stop, a session close, or a login failure.
+- A stopped or archived workspace gives no sender. The lifecycle admission
+  keeps no turn record for the queued first message.
+
+`machine.test.ts` runs the route with `machineCredentialFixture` in
+[`machine-test-support.ts`](machine-test-support.ts), over the production
+chat and runner boundaries.

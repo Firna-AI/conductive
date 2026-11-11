@@ -1,5 +1,7 @@
 import { workspacePath } from './workspaces'
 
+export const TERMINAL_PORT = 7681
+
 export const terminalPaths = {
   connection: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/terminal`,

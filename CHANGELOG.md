@@ -1,5 +1,96 @@
 # Changelog
 
+## [0.7.0](https://github.com/Firna-AI/remote-code/compare/v0.6.0...v0.7.0) (2026-11-10)
+
+
+### Features
+
+* **routines:** name the refused login in its own error field ([d39e64e](https://github.com/Firna-AI/remote-code/commit/d39e64eb1ee3949f4ddd905f890adce3a544169a))
+* **routines:** start agent runs on schedules and pull request events ([#182](https://github.com/Firna-AI/remote-code/issues/182)) ([d39e64e](https://github.com/Firna-AI/remote-code/commit/d39e64eb1ee3949f4ddd905f890adce3a544169a))
+
+
+### Bug Fixes
+
+* **app:** restore the New workspace row styles ([d39e64e](https://github.com/Firna-AI/remote-code/commit/d39e64eb1ee3949f4ddd905f890adce3a544169a))
+* **marketing:** mark routines as available on the comparison page ([d39e64e](https://github.com/Firna-AI/remote-code/commit/d39e64eb1ee3949f4ddd905f890adce3a544169a))
+* **marketing:** reflect planned chat links and import progress ([#195](https://github.com/Firna-AI/remote-code/issues/195)) ([b0fecbe](https://github.com/Firna-AI/remote-code/commit/b0fecbe5507501a4db15e53f7eadbba7eb62bf61))
+
+
+### Performance Improvements
+
+* **workspaces:** hibernate idle workspace connections ([#148](https://github.com/Firna-AI/remote-code/issues/148)) ([247c772](https://github.com/Firna-AI/remote-code/commit/247c772afaf09cae29856f67dc4ada41b646cb20))
+
+## [0.6.0](https://github.com/Firna-AI/remote-code/compare/v0.5.0...v0.6.0) (2026-11-10)
+
+
+### Features
+
+* build added repositories and show what waits for a build ([#188](https://github.com/Firna-AI/remote-code/issues/188)) ([b25d8e0](https://github.com/Firna-AI/remote-code/commit/b25d8e0d3021d6235b827c49ad0c04bb933b8655))
+* **chat:** copy session transcripts as Markdown ([#164](https://github.com/Firna-AI/remote-code/issues/164)) ([5d56546](https://github.com/Firna-AI/remote-code/commit/5d56546ceba68d6e19c3a673df1e18460f0164dc))
+* **chat:** nest lists and keep list numbers in agent answers ([#161](https://github.com/Firna-AI/remote-code/issues/161)) ([39b0941](https://github.com/Firna-AI/remote-code/commit/39b09416c13d1c038bd0b4876424608f70abea07))
+* **marketing:** add check time, row links, and local Conductor rows ([#175](https://github.com/Firna-AI/remote-code/issues/175)) ([08cbe3c](https://github.com/Firna-AI/remote-code/commit/08cbe3cd07ce4e3b0394e499d909a43f6add4c47))
+* **marketing:** add the public pricing page ([#170](https://github.com/Firna-AI/remote-code/issues/170)) ([871adca](https://github.com/Firna-AI/remote-code/commit/871adcac0952309a34647793582540ea37f68387))
+* **previews:** detect running servers in Preview ([#154](https://github.com/Firna-AI/remote-code/issues/154)) ([27f888f](https://github.com/Firna-AI/remote-code/commit/27f888f4a600ffa399f26c54bf269b220b06ecf3))
+* **previews:** label the new tab link of a preview "Open" ([#191](https://github.com/Firna-AI/remote-code/issues/191)) ([2008305](https://github.com/Firna-AI/remote-code/commit/20083050b2f427b4ddd30df9aa6843525bb8edd0))
+* **software-image:** start first builds from a shared image ([#180](https://github.com/Firna-AI/remote-code/issues/180)) ([4249b33](https://github.com/Firna-AI/remote-code/commit/4249b33de2b026b08415e3a02b686981daf820b6))
+* **worker:** turn on Cloudflare Issues error tracking ([#178](https://github.com/Firna-AI/remote-code/issues/178)) ([c47330b](https://github.com/Firna-AI/remote-code/commit/c47330bded028cc6f8f59572f04bd359bef641fc))
+* **workspaces:** archive at once and restore within 14 days ([#138](https://github.com/Firna-AI/remote-code/issues/138)) ([8eaf4b2](https://github.com/Firna-AI/remote-code/commit/8eaf4b21e3e788f82b13b3f794142e7753f99b43))
+* **workspaces:** keep attachments and notes in .context ([#168](https://github.com/Firna-AI/remote-code/issues/168)) ([6fd184c](https://github.com/Firna-AI/remote-code/commit/6fd184c53e77dee208687512244ebcaf5fa120e9))
+
+
+### Bug Fixes
+
+* **chat:** remove the label under queued messages ([#165](https://github.com/Firna-AI/remote-code/issues/165)) ([1e6e28b](https://github.com/Firna-AI/remote-code/commit/1e6e28b7912bbcf22ff1e096d0c1d9bbd89af87e))
+* **files:** wait for the sandbox, and start it when a file opens ([#171](https://github.com/Firna-AI/remote-code/issues/171)) ([46769d9](https://github.com/Firna-AI/remote-code/commit/46769d979ff1151cf9cfaf02a4e4de0e9e582057))
+* **github:** return to the screen where a GitHub App change started ([#169](https://github.com/Firna-AI/remote-code/issues/169)) ([16b6c5f](https://github.com/Firna-AI/remote-code/commit/16b6c5f7d996594c228972975d5cc49c821f2a7d))
+* **marketing:** reflect planned terminal tabs and fast mode ([#190](https://github.com/Firna-AI/remote-code/issues/190)) ([ee6a69c](https://github.com/Firna-AI/remote-code/commit/ee6a69cd965967b0d38f59879cbda109e4c178ee))
+* **marketing:** refresh comparison after recent merges ([#184](https://github.com/Firna-AI/remote-code/issues/184)) ([d1abf38](https://github.com/Firna-AI/remote-code/commit/d1abf38e582db8342ba27b7bab6d18c9509f1ca2))
+* **runner:** list the changed files of a stopped turn ([#187](https://github.com/Firna-AI/remote-code/issues/187)) ([7273571](https://github.com/Firna-AI/remote-code/commit/72735714007be58da19cb37d03e03f8d508971fa))
+* **test-support:** await native input before draining output ([27f888f](https://github.com/Firna-AI/remote-code/commit/27f888f4a600ffa399f26c54bf269b220b06ecf3))
+* **workspaces:** give commits in cloud computers an author ([#181](https://github.com/Firna-AI/remote-code/issues/181)) ([076ce5c](https://github.com/Firna-AI/remote-code/commit/076ce5c1b12bf97d9ae06d2759fc69784374ed1c))
+
+## [0.5.0](https://github.com/Firna-AI/remote-code/compare/v0.4.0...v0.5.0) (2026-11-10)
+
+
+### Features
+
+* **chat:** add the @ list of files and file chips ([#145](https://github.com/Firna-AI/remote-code/issues/145)) ([df93a19](https://github.com/Firna-AI/remote-code/commit/df93a19147b1b63b877575ef9e344201c5856a4a))
+* **gateway:** keep agent logins out of cloud computers ([#173](https://github.com/Firna-AI/remote-code/issues/173)) ([a200a53](https://github.com/Firna-AI/remote-code/commit/a200a5326f3e13d3ec71a2d64d504622d9e183a5))
+* keep one record of every cloud computer ([#151](https://github.com/Firna-AI/remote-code/issues/151)) ([a1bbd7f](https://github.com/Firna-AI/remote-code/commit/a1bbd7f8c6f72faa1d43facdd515e541c245c7db))
+* **marketing:** add Markdown product documentation ([#133](https://github.com/Firna-AI/remote-code/issues/133)) ([8567cfb](https://github.com/Firna-AI/remote-code/commit/8567cfb620d9ecea59d555cae594dd29ce383d58))
+* **models:** offer GPT-6 Astra, GPT-6.1 Terra, and GPT-6 Luna ([#155](https://github.com/Firna-AI/remote-code/issues/155)) ([24601a3](https://github.com/Firna-AI/remote-code/commit/24601a32115f4c76dbefbe401e3296b089709b31))
+* **previews:** give previewed servers their local Host through a relay ([#160](https://github.com/Firna-AI/remote-code/issues/160)) ([0315aa5](https://github.com/Firna-AI/remote-code/commit/0315aa5e354c76c86b903e67766cf1ef99fe46ec))
+* **workspaces:** add right-click workspace actions ([#139](https://github.com/Firna-AI/remote-code/issues/139)) ([ebfc286](https://github.com/Firna-AI/remote-code/commit/ebfc286b19198bd489997102f497944b13e4a743))
+
+
+### Bug Fixes
+
+* **lifecycle:** scope computer ledger identities by provider account ([5095987](https://github.com/Firna-AI/remote-code/commit/50959871fa67d377d3e24c475ac02574739240f0))
+* **marketing:** make the website logo 25 px high ([#136](https://github.com/Firna-AI/remote-code/issues/136)) ([ba0c19d](https://github.com/Firna-AI/remote-code/commit/ba0c19d411a4132ee5b0c20862a3c6f221f6c6e0))
+* **marketing:** mark workspace Restore as in progress ([fe295f3](https://github.com/Firna-AI/remote-code/commit/fe295f385e35a0bd33e674da1f58de0f8fe2dd1b))
+* **marketing:** refresh comparison docs and planned features ([#157](https://github.com/Firna-AI/remote-code/issues/157)) ([7c8bcde](https://github.com/Firna-AI/remote-code/commit/7c8bcdec09296da27102519346e6b44a32be6680))
+* **marketing:** refresh comparison feature progress ([3369dea](https://github.com/Firna-AI/remote-code/commit/3369dead6a28f1fb24cc05d57bf65a6e2f292242))
+* **marketing:** refresh comparison progress and billing scope ([#150](https://github.com/Firna-AI/remote-code/issues/150)) ([cd233db](https://github.com/Firna-AI/remote-code/commit/cd233dbd4740b701405c64b7caaea35b41442b19))
+* **members:** close owner popover when preview takes focus ([#149](https://github.com/Firna-AI/remote-code/issues/149)) ([92f9397](https://github.com/Firna-AI/remote-code/commit/92f9397745bec38138ba33733dca801b5aba7551))
+* **merge:** combine provider accounts and the computer ledger ([d4ff458](https://github.com/Firna-AI/remote-code/commit/d4ff45868cbf99052a6a666eccb04ca7dfcb64fe))
+* **terminal:** select and copy text while programs use the mouse ([#172](https://github.com/Firna-AI/remote-code/issues/172)) ([fcc2444](https://github.com/Firna-AI/remote-code/commit/fcc24440603171fc9c7b695c6bea8990ae5508b4))
+* **workspaces:** remove the start limit note from the chat ([#162](https://github.com/Firna-AI/remote-code/issues/162)) ([ae736ab](https://github.com/Firna-AI/remote-code/commit/ae736ab5f23708d66ec684586cd3faf706ea6a4d))
+
+## [0.4.0](https://github.com/Firna-AI/remote-code/compare/v0.3.0...v0.4.0) (2026-11-10)
+
+
+### Features
+
+* add chat attachments and lifecycle, doc, and chat write fixes ([#90](https://github.com/Firna-AI/remote-code/issues/90)) ([ab58467](https://github.com/Firna-AI/remote-code/commit/ab5846798e6a4994de212b361fdb793a2a2c8ba8))
+* **marketing:** add Mac app downloads to the site ([#130](https://github.com/Firna-AI/remote-code/issues/130)) ([073f71b](https://github.com/Firna-AI/remote-code/commit/073f71b57dbf2b9cc4e6a61d155c8b3d1ac9c0ab))
+
+
+### Bug Fixes
+
+* **marketing:** align Conductor comparison with active work ([#144](https://github.com/Firna-AI/remote-code/issues/144)) ([83dfb14](https://github.com/Firna-AI/remote-code/commit/83dfb14b15fab476d75133a5f9f77db8fbca7064))
+* **marketing:** mark merged chat attachments as available ([#147](https://github.com/Firna-AI/remote-code/issues/147)) ([1a9e75a](https://github.com/Firna-AI/remote-code/commit/1a9e75a7a075f3360aa2b4681761cd85f49a8d4d))
+* **marketing:** refresh Conductor comparison progress ([552222e](https://github.com/Firna-AI/remote-code/commit/552222e992a168f4696793c178c7a59c5164988a))
+
 ## [0.3.0](https://github.com/Firna-AI/remote-code/compare/v0.2.0...v0.3.0) (2026-11-10)
 
 

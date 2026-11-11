@@ -109,8 +109,18 @@ it('keeps a created org and answers 201 when its first build cannot start', asyn
   expect(await readBuildHistory(active.env.DB, org.id)).toEqual({
     builds: [],
     currentImageBuildId: null,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
   })
   expect(warning.mock.calls).toEqual([
-    ['Could not start the first cloud computer build.'],
+    [
+      {
+        kind: 'first_image_build_start_failed',
+        message: 'Could not start the first cloud computer build.',
+      },
+    ],
   ])
 })

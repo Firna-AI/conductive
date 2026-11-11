@@ -19,3 +19,4 @@
 - **Impact if no action:** A fault that only a real cloud computer shows can reach the first users of every new org.
 - **Needs:** the merged change on `conductive.build`, a GitHub account with the GitHub App installed on a test repository, and a Claude or Codex login.
 - **Done when:** each check above passes on the deployed app, or each failure has its own follow-up item.
+- **Related:** `plans/follow-ups/provider-groundwork-deployed-smoke.md` runs an image build, a workspace start, and a chat turn on the deployed app too. One session can run both items, and each keeps its own checks.

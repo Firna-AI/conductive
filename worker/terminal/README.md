@@ -8,7 +8,7 @@ is ttyd, tmux, their two systemd services, the launcher, the shell server,
 and the password program.
 The [sandbox software](../../image/README.md) holds no terminal file.
 The production Worker forwards both terminal paths to the workspace object.
-Its feature handler keeps one terminal connection owner and reports input activity to the lifecycle.
+Its feature handler keeps one terminal connection owner.
 The browser uses the [shared terminal contract](../../src/shared/terminal.ts).
 
 Call `createTerminalHandler(env, dependencies).fetch(request)` for both
@@ -17,6 +17,12 @@ each upgrade. Its default socket runtime uses Cloudflare WebSocket pairs.
 Tests can inject `dependencies.sockets` at that boundary.
 A socket open for a workspace whose owner is suspended gets 403
 `user_suspended`. The status read still answers.
+
+The handler opens the `/ws` path of the private ttyd port with the shared
+`portRequest` of the [preview backend](../previews/README.md). That request
+carries no browser cookie, header, or query. It carries the
+[port credential](../sandbox/README.md#port-credentials) of the client, Basic
+auth with the workspace password, and the `tty` subprotocol.
 
 Run `terminalInstallCommand()` in the software command of each org image
 build. The build runs that command detached and writes its output to the
@@ -124,41 +130,55 @@ creates a new session. A stop of the sandbox ends both units and the
 session. `/run` is temporary memory storage, so the next start begins with
 no session.
 
-Call `startWorkspaceTerminal(env, orgId, workspaceId, dependencies)` after
-the workspace startup script succeeds. The lifecycle owner must store the
-sandbox ID first. Call the hook at create and each resume, before the owner
-marks the workspace ready. Do not run this start hook on an image build, a
-refresh, or a disk retention restart.
+The workspace lifecycle starts the terminal in two phases of the start,
+after the workspace startup script succeeds at create and at each resume.
+The workspace record must hold the sandbox ID first. Both phases end
+before the workspace becomes ready, as
+[Creates and resumes](../lifecycle/workspace-object.md#creates-and-resumes)
+says. Do not run either phase on an image build, a refresh, or a disk
+retention restart.
 
-The hook writes the enable marker and starts the ttyd unit. systemd starts
-the shell server unit first. The synchronous `ExecStartPre` step of the
-ttyd unit creates a random password locally under `/run`. It keeps an
-existing valid password on service restarts. `RuntimeDirectoryPreserve=yes`
-in both units keeps the runtime folder, with the password and the tmux
-socket, when a unit stops or restarts. The readiness command returns no
-password in stdout or command history.
+First, the lifecycle runs the setup command, `terminalStartCommand()`, as a
+detached command, so that each alarm can check the start time limit. The
+command writes the enable marker and starts the ttyd unit. systemd starts
+the shell server unit first.
+
+The synchronous `ExecStartPre` step of the ttyd unit creates a random
+password locally under `/run`. It keeps an existing valid password on
+service restarts. `RuntimeDirectoryPreserve=yes` in both units keeps the
+runtime folder, with the password and the tmux socket, when a unit stops
+or restarts. The setup command writes no password to its output or to the
+command history.
 
 The provider's file API reads only under `/home/user` or `/tmp`, and both
-are on disk. So the hook binds the memory folder `/run/conductive-terminal`
-at `/home/user/.conductive-terminal`, and it reads the password there
-through the provider's bounded file API, with a 64-byte limit. The password
-stays in memory, and the disk holds only the empty mount point. It refuses a password that is not
-exactly 64 lowercase hexadecimal characters. It caches that password
-encrypted in D1. The cache update checks that the workspace still owns the
-same sandbox.
+are on disk. So the setup command binds the memory folder
+`/run/conductive-terminal` at `/home/user/.conductive-terminal`.
+
+After the setup command exits with code 0, the lifecycle calls
+`startWorkspaceTerminal(env, orgId, workspaceId, dependencies)`. This
+function starts nothing. It reads the password through the bind mount,
+with the provider's bounded file API and a 64-byte limit. The password
+stays in memory, and the disk holds only the empty mount point.
+
+The function refuses a password that is not exactly 64 lowercase
+hexadecimal characters. It caches that password encrypted in D1. The cache
+update checks that the workspace still owns the same sandbox.
+It also checks the provider account. A read returns the password only for
+that sandbox ID and account.
 
 The app supplies no extra terminal secret at start. The workspace token
 keeps its existing scope and does not authenticate terminal access.
 `/run` must stay temporary memory storage in the org image.
 
-Set `dependencies.onActivity` to report each input to the input owner of the workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
-That call returns at once. The handler writes no D1 activity time. Only terminal input counts.
-The initial handshake, window changes, output, and idle sockets do not count.
+The handler reports no activity for any terminal frame.
+xterm.js sends its automatic replies, such as a cursor report, in the same input frames as the keys of the user.
+A reply can have the same bytes as a key, so the server cannot tell them apart.
+The input listener of the app page counts the user's input in the terminal instead, as [Input activity](../lifecycle/routes.md#input-activity) says.
 
 `TerminalConnections` owns each authenticated session and workspace/sandbox
 registration. Each registration holds a `sandbox` identity of the
 [shared connection reader](../security/README.md#open-connections).
-That kind binds the grant to the current sandbox of a running workspace that is not archived.
+That kind binds the grant to the current sandbox ID and provider account of a running workspace that is not archived.
 The owner of that workspace must not be suspended, as [Sandbox access](../operator/README.md#sandbox-access) says.
 So an open socket closes at the next access check after that suspension.
 Chat tabs use the `workspace` kind, which has no sandbox check.
@@ -170,6 +190,10 @@ An independent deadline cancels idle connections if an access read stalls.
 Frame checks use only the live registration. They run no D1 access query.
 Cleanup removes the registration and its scheduled work.
 Inject `dependencies.terminalSchedule` and `now` to test these deadlines.
+
+Each terminal socket is a bridge. `bridgeSocket` joins the browser socket to an outbound socket to the ttyd port.
+Such a bridge keeps its workspace object active, also while it is idle, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
+So the access timers of the terminal stay in memory.
 
 `scripts.ts` builds the exact password program, launcher, and shell server
 installed in the image. Its trusted options select paths, account names,
@@ -200,16 +224,17 @@ Terminal status reads remain available.
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
-- [service.ts](service.ts) exports `terminalInstallCommand`, which installs both packages, the three programs, and both units. It also exports the image and start hooks, the marker writer `markTerminalRestoreEnded`, and `TERMINAL_PORT`.
+- [service.ts](service.ts) exports `terminalInstallCommand`, which installs both packages, the three programs, and both units. It also exports the image hook `installTerminalService`, the setup command `terminalStartCommand`, the password read `startWorkspaceTerminal`, the marker writer `markTerminalRestoreEnded`.
+- [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`.
 - [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the folder hook with `terminalPromptCommand`.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
-- [store.ts](store.ts) binds each cached password to its current sandbox.
+- [store.ts](store.ts) binds each cached password to its current sandbox ID and provider account.
 - [privileged.ts](privileged.ts) quotes installation and service control commands.
-- [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message.
+- [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message. It passes each later frame through unchanged.
 - [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the programs and the install command with fakes.
 - [The tools adapter](../previews/provider.ts) exposes the private port.
-- [The sandbox provider](../sandbox/README.md) owns credentials, fixed routes, and bounded file reads.
-- [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build and the start hook after each startup script. Its restore watch calls `markTerminalRestoreEnded`.
+- [The sandbox provider](../sandbox/README.md) owns credentials, the port credential, fixed routes, and bounded file reads.
+- [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build. After the startup script of each create and resume, it runs the setup command and then the password read. Its restore watch calls `markTerminalRestoreEnded`.
 
-See [access and security](../../docs/protocol/access-and-security.md) and
-[workspace tools](../../docs/protocol/workspaces-and-sandboxes.md#terminal).
+See [terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md#terminal) and
+[workspace tools](../../docs/protocol/workspace-tools.md#terminal).

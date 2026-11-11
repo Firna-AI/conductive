@@ -1,0 +1,14 @@
+---
+import { pricingPageCopy } from '../pricing'
+
+/*
+ * The top of the pricing page: the label, the title, and one sentence.
+ */
+const copy = pricingPageCopy
+---
+
+<header class="pricing-intro">
+  <span class="pricing-label">{copy.label}</span>
+  <h1 class="pricing-title">{copy.title}</h1>
+  <p class="pricing-lead">{copy.lead}</p>
+</header>

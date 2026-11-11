@@ -2,12 +2,17 @@
   border-bottom: 1px solid var(--ui-border);
 }
 
+/*
+ * The header is at least twice as high as the lockup. So the lockup keeps
+ * the clear space of half a tile above it and below it.
+ */
 .inner {
   display: flex;
   align-items: center;
   gap: 16px;
   max-width: 1184px;
   height: 64px;
+  min-height: calc(var(--ui-lockup-height) * 2);
   margin: 0 auto;
   padding: 0 32px;
   box-sizing: border-box;
@@ -20,10 +25,7 @@
   margin-left: auto;
 }
 
-/*
- * A label never wraps. In the narrowest desktop window, the links reach a
- * little into the padding of the header.
- */
+/* A label never wraps. */
 .link {
   display: inline-flex;
   align-items: center;
@@ -43,15 +45,61 @@
   color: var(--ui-ink);
 }
 
+.link:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+
+/* The section of the page, such as Docs on a page of the docs. */
+.current {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
 .nav > :last-child {
   margin-left: 8px;
 }
 
+/*
+ * Below 900 px a desktop header tightens the space around its links, so
+ * that Pricing fits too. From 760 px, the links then stay inside the
+ * padding of the header. A phone keeps its own spacing below.
+ */
+@media (max-width: 899.98px) {
+  .nav {
+    gap: 0;
+  }
+
+  .link {
+    padding: 6px 8px;
+  }
+}
+
 .mobile .inner {
   height: 56px;
-  padding: 0 12px 0 20px;
+  padding: 0 8px 0 20px;
+}
+
+.mobile .nav {
+  gap: 0;
 }
 
 .mobile .nav > :last-child {
   margin-left: 0;
+}
+
+/*
+ * A phone fits Docs, GitHub, and Sign in beside the wordmark from a width
+ * of about 360px. Each link keeps a touch target of 44px.
+ */
+.mobile .link {
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+
+/* A phone shows GitHub as its mark, in a square touch target. */
+.mobile .mark {
+  justify-content: center;
+  width: var(--ui-touch-min);
+  padding: 0;
 }

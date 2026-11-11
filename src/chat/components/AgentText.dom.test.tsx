@@ -173,9 +173,9 @@ it('starts a table directly after a line of a paragraph or a list, and ends it a
       '| checkout | 182 KB |',
       'The places proxy runs on the server.',
       '- Then the tests:',
-      '  | Test | Time |',
-      '  | --- | --- |',
-      '  | unit | 41s |',
+      '| Test | Time |',
+      '| --- | --- |',
+      '| unit | 41s |',
     ].join('\n'),
   )
   expect(blocks(page)).toEqual([

@@ -13,10 +13,18 @@ import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
+import { ChatToasts, useTranscriptCopy } from './components/TranscriptCopy'
 import { LinksProvider, type ChatLinks } from './links/LinksContext'
+import { useMentionCopy } from './links/mention-copy'
+import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
-import { sessionState, type ChatSnapshot } from './state/chat-snapshot'
+import {
+  sessionState,
+  type ChatSnapshot,
+  type Overlay,
+} from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
+import { browserCopy, type CopyServices } from './transcript-copy'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
 import styles from './WorkspaceChat.module.css'
@@ -27,6 +35,13 @@ export interface ChatViewProps {
   viewport: 'desktop' | 'mobile'
   /** The time source for durations and relative times. */
   clock?: Clock
+  /**
+   * The clipboard, the clock, and the timers of a copy of a transcript, such
+   * as the services of the app. Keep it stable: it keeps the text of a copy
+   * that the clipboard refused, as `copyTranscript` says. Without it, the
+   * chat copies through the clipboard of the browser.
+   */
+  copy?: CopyServices
   /**
    * Names and draws a file or diff tab of the saved view at its place in the
    * tab row, as `RenderTab` says. Without it, the row shows only the session
@@ -53,6 +68,12 @@ export interface ChatViewProps {
   onOpenPage?: (to: string) => void
   /** The notice of an agent with no login leads to its Connect form. */
   onConnectAgent?: (agent: Agent) => void
+  /**
+   * The files of the workspace that the composer lists after `@`, and what
+   * a press on a file chip opens, as `ChatMentions` says. Without it, the
+   * composer has no list, and a message shows each mention as text.
+   */
+  mentions?: ChatMentions
   /** The start steps and the sandbox bar that the app draws, as `ChatHost` says. */
   host?: ChatHost
   /**
@@ -70,6 +91,16 @@ function useReport<T>(value: T | null, report?: (value: T) => void): void {
   useEffect(() => {
     if (value !== null) report?.(value)
   }, [value, report])
+}
+
+/**
+ * The overlay that the chat shows. A read-only chat sends no write, so it
+ * shows only the session history. An open rename or close question then
+ * counts as none, also one that opened before the chat turned read-only.
+ * The store keeps the edit.
+ */
+function permittedOverlay(overlay: Overlay, readOnly: boolean): Overlay {
+  return readOnly && overlay.kind !== 'history' ? { kind: 'none' } : overlay
 }
 
 /**
@@ -94,6 +125,7 @@ function ChatBody(
   const { controller, snapshot } = props
   const readOnly =
     snapshot.workspace?.state === 'archived' || (props.readOnly ?? false)
+  const overlay = permittedOverlay(snapshot.overlay, readOnly)
   const mobile = props.viewport === 'mobile'
   const content = props.content ?? null
   const active = snapshot.activeSessionId
@@ -101,9 +133,11 @@ function ChatBody(
   const ticking =
     running !== null ||
     snapshot.workspace?.state === 'starting' ||
-    snapshot.overlay.kind === 'history'
+    overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
   const links = useLinks(controller, props.onOpenPage)
+  const copy = useTranscriptCopy(controller, props.copy ?? browserCopy)
+  useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
   const reopen = useCallback(
@@ -116,7 +150,6 @@ function ChatBody(
     reopen,
     (item) => endedAt(snapshot, item),
   )
-  const { overlay } = snapshot
   const body = (
     <>
       <SessionTabs
@@ -125,6 +158,7 @@ function ChatBody(
         mobile={mobile}
         onCancelRename={controller.dismissOverlay}
         onClose={controller.requestClose}
+        onCopy={copy}
         onMove={controller.moveTab}
         onNew={() => void controller.newSession()}
         onRename={(id, title) => void controller.rename(id, title)}
@@ -162,18 +196,23 @@ function ChatBody(
       />
     </>
   )
+  const mentions = props.mentions ?? null
   if (!mobile) {
     return (
       <LinksProvider value={links}>
-        <div className={styles.column}>{body}</div>
+        <MentionsProvider value={mentions}>
+          <div className={styles.column}>{body}</div>
+        </MentionsProvider>
       </LinksProvider>
     )
   }
   return (
     <LinksProvider value={links}>
-      <TouchScreen>
-        <div className={styles.phone}>{body}</div>
-      </TouchScreen>
+      <MentionsProvider value={mentions}>
+        <TouchScreen>
+          <div className={styles.phone}>{body}</div>
+        </TouchScreen>
+      </MentionsProvider>
     </LinksProvider>
   )
 }
@@ -189,7 +228,11 @@ export function WorkspaceChat(props: WorkspaceChatProps) {
     props,
     props.readOnly ?? false,
   )
-  return <ChatBody {...props} controller={controller} snapshot={snapshot} />
+  return (
+    <ChatToasts>
+      <ChatBody {...props} controller={controller} snapshot={snapshot} />
+    </ChatToasts>
+  )
 }
 
 /**
@@ -206,5 +249,9 @@ export function WorkspaceChatView(
     controller.getSnapshot,
     controller.getSnapshot,
   )
-  return <ChatBody {...props} snapshot={snapshot} />
+  return (
+    <ChatToasts>
+      <ChatBody {...props} snapshot={snapshot} />
+    </ChatToasts>
+  )
 }

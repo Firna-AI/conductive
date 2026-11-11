@@ -11,6 +11,7 @@ interface ConnectionSessionIdentity {
 export interface SandboxConnectionIdentity extends ConnectionSessionIdentity {
   kind: 'sandbox'
   sandboxId: string
+  providerAccount: string
 }
 
 export interface PreviewConnectionIdentity extends ConnectionSessionIdentity {
@@ -39,12 +40,11 @@ interface AccessRow {
   orgId: string
   workspaceId: string
   sandboxId: string
+  providerAccount: string
   state: PreviewRecord['state']
   port: number
   previewExpiresAt: number
   credentialExpiresAt: number
-  listenerMode: PreviewRecord['listenerMode']
-  listenerSandboxId: string | null
 }
 
 export type ConnectionScheduler = (
@@ -71,6 +71,7 @@ export async function readConnectionAccess(
          json_extract(value, '$.orgId') AS orgId,
          json_extract(value, '$.workspaceId') AS workspaceId,
          json_extract(value, '$.sandboxId') AS sandboxId,
+         json_extract(value, '$.providerAccount') AS providerAccount,
          json_extract(value, '$.previewId') AS previewId,
          json_extract(value, '$.hostname') AS hostname,
          json_extract(value, '$.expiresAt') AS expiresAt
@@ -78,9 +79,9 @@ export async function readConnectionAccess(
      )
      SELECT requested.connectionNumber, sessions.expires_at AS expiresAt,
        p.id AS previewId, p.hostname, w.org_id AS orgId, w.id AS workspaceId,
-       w.sandbox_id AS sandboxId, w.state, p.port, p.expires_at AS previewExpiresAt,
-       requested.expiresAt AS credentialExpiresAt,
-       p.listener_mode AS listenerMode, p.listener_sandbox_id AS listenerSandboxId FROM requested
+       w.sandbox_id AS sandboxId, w.provider_account AS providerAccount,
+       w.state, p.port, p.expires_at AS previewExpiresAt,
+       requested.expiresAt AS credentialExpiresAt FROM requested
      JOIN sessions ON sessions.id = requested.sessionId AND sessions.user_id = requested.userId
        AND sessions.expires_at > ?
      JOIN users u ON u.id = requested.userId AND u.suspended_at IS NULL
@@ -91,6 +92,7 @@ export async function readConnectionAccess(
        AND p.hostname = requested.hostname AND p.workspace_id = w.id AND p.org_id = o.id
      WHERE requested.kind = 'workspace' OR (
        requested.kind = 'sandbox' AND w.sandbox_id = requested.sandboxId
+       AND w.provider_account = requested.providerAccount
        AND ${sandboxAccessPredicate}
      ) OR (
        requested.kind = 'preview'
@@ -117,11 +119,10 @@ export async function readConnectionAccess(
             orgId: row.orgId,
             workspaceId: row.workspaceId,
             sandboxId: row.sandboxId,
+            providerAccount: row.providerAccount,
             state: row.state,
             port: row.port,
             expiresAt: row.previewExpiresAt,
-            listenerMode: row.listenerMode,
-            listenerSandboxId: row.listenerSandboxId,
           },
         }
       : {}),

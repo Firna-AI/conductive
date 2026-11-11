@@ -7,9 +7,7 @@ import {
   it,
   vi,
 } from 'vitest'
-
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
-import * as crypto from '../security/crypto'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
   CLAUDE,
@@ -20,7 +18,6 @@ import {
 import { captureLoginQueries } from './login-queries.test-support'
 import { liveSessions } from './retry.test-support'
 import { startTurn } from './turn-lifecycle.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -34,7 +31,6 @@ afterEach(() => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 it('loads open-session starter metadata in one query for one or four sessions without reading credentials', async () => {
   const fixture = await createChatFixture(harness)
   await harness.env.DB.prepare(
@@ -53,8 +49,9 @@ it('loads open-session starter metadata in one query for one or four sessions wi
       )
     ).status,
   ).toBe(200)
-  const decrypt = vi.spyOn(crypto, 'decrypt')
-  const queries = captureLoginQueries(fixture.env)
+  const decrypt = fixture.actor.api.controls
+  await decrypt.captureDecrypt(true)
+  const queries = await captureLoginQueries(fixture)
   const list = sessionsPath(fixture.org.id, WORKSPACE_ID)
   expect((await fixture.fetch(list)).status).toBe(200)
   expect((await fixture.fetch(list)).status).toBe(200)
@@ -70,18 +67,17 @@ it('loads open-session starter metadata in one query for one or four sessions wi
     ]),
     WORKSPACE_ID,
   ])
-  expect(decrypt).not.toHaveBeenCalled()
+  expect(await decrypt.decryptCalls()).toBe(0)
   await harness.env.DB.prepare(
     "UPDATE agent_logins SET no_reuse = 0 WHERE user_id = ? AND agent = 'claude'",
   )
     .bind(fixture.owner.id)
     .run()
-
   const second = await fixture.createSession(CODEX)
   const third = await fixture.createSession(CLAUDE)
   const fourth = await fixture.createSession(CODEX)
   queries.length = 0
-  decrypt.mockClear()
+  await decrypt.captureDecrypt(true)
   const four = await fixture.tab(0, undefined, fixture.memberCookie)
   expect(four.messages[0]?.type).toBe('history')
   expect(queries).toHaveLength(1)
@@ -95,7 +91,7 @@ it('loads open-session starter metadata in one query for one or four sessions wi
     ]),
     WORKSPACE_ID,
   ])
-  expect(decrypt).not.toHaveBeenCalled()
+  expect(await decrypt.decryptCalls()).toBe(0)
   const response = await fixture.fetch(list)
   expect(await response.json()).toMatchObject({
     sessions: [
@@ -109,10 +105,10 @@ it('loads open-session starter metadata in one query for one or four sessions wi
   expect(
     liveSessions(one.messages).filter((session) => session.id === first.id),
   ).toMatchObject([{ id: first.id, loginAvailable: true, loginShared: true }])
-  one.close()
-  four.close()
+  await decrypt.captureDecrypt(false)
+  await one.close()
+  await four.close()
 })
-
 it('keeps list and history reads free of login checks while a ready runner holds undelivered input', async () => {
   let revokeAtAcceptance = false
   const fixture = await createChatFixture(harness, {
@@ -133,9 +129,9 @@ it('keeps list and history reads free of login checks while a ready runner holds
   expect(
     await fixture.chat.store.read(WORKSPACE_ID, (view) => view.pending()),
   ).toMatchObject([{ type: 'message', messageId: 'held-input' }])
-  const queries = captureLoginQueries(fixture.env)
-  const records = structuredClone(fixture.storage.records)
-  const writes = fixture.storage.writes.length
+  const queries = await captureLoginQueries(fixture)
+  const records = structuredClone((await fixture.snapshot()).records)
+  const writes = (await fixture.snapshot()).writes.length
   const response = await fixture.fetch(
     sessionsPath(fixture.org.id, WORKSPACE_ID),
   )
@@ -149,12 +145,11 @@ it('keeps list and history reads free of login checks while a ready runner holds
     (await fixture.history(session.id)).events.map(({ event }) => event.type),
   ).toContain('message.accepted')
   expect(queries).toEqual([])
-  expect(fixture.storage.records).toEqual(records)
-  expect(fixture.storage.writes).toHaveLength(writes)
+  expect((await fixture.snapshot()).records).toEqual(records)
+  expect((await fixture.snapshot()).writes).toHaveLength(writes)
   expect(runner.commands).toHaveLength(1)
   runner.disconnect()
 })
-
 it('serves another member the list and subscription when the starter ciphertext is damaged', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
@@ -182,9 +177,8 @@ it('serves another member the list and subscription when the starter ciphertext 
   ])
   expect(JSON.stringify(tab.messages)).not.toContain('damaged-login-ciphertext')
   expect(JSON.stringify(tab.messages)).not.toContain('secret-')
-  tab.close()
+  await tab.close()
 })
-
 it('leaves closed-session availability and storage unchanged during reads and a new subscription', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
@@ -194,9 +188,9 @@ it('leaves closed-session availability and storage unchanged during reads and a 
   )
   expect(closed.status).toBe(200)
   await harness.env.DB.prepare('DELETE FROM agent_logins').run()
-  const queries = captureLoginQueries(fixture.env)
-  const records = structuredClone(fixture.storage.records)
-  const writes = fixture.storage.writes.length
+  const queries = await captureLoginQueries(fixture)
+  const records = structuredClone((await fixture.snapshot()).records)
+  const writes = (await fixture.snapshot()).writes.length
   const response = await fixture.fetch(
     sessionsPath(fixture.org.id, WORKSPACE_ID),
   )
@@ -209,11 +203,10 @@ it('leaves closed-session availability and storage unchanged during reads and a 
   const tab = await fixture.tab()
   expect(tab.messages[0]?.type).toBe('history')
   expect(queries).toEqual([])
-  expect(fixture.storage.records).toEqual(records)
-  expect(fixture.storage.writes).toHaveLength(writes)
-  tab.close()
+  expect((await fixture.snapshot()).records).toEqual(records)
+  expect((await fixture.snapshot()).writes).toHaveLength(writes)
+  await tab.close()
 })
-
 it('leaves archived-workspace availability and storage unchanged during reads and a new subscription', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()
@@ -223,9 +216,9 @@ it('leaves archived-workspace availability and storage unchanged during reads an
     .bind(fixture.clock.now(), WORKSPACE_ID)
     .run()
   await harness.env.DB.prepare('DELETE FROM agent_logins').run()
-  const queries = captureLoginQueries(fixture.env)
-  const records = structuredClone(fixture.storage.records)
-  const writes = fixture.storage.writes.length
+  const queries = await captureLoginQueries(fixture)
+  const records = structuredClone((await fixture.snapshot()).records)
+  const writes = (await fixture.snapshot()).writes.length
   const response = await fixture.fetch(
     sessionsPath(fixture.org.id, WORKSPACE_ID),
   )
@@ -239,7 +232,7 @@ it('leaves archived-workspace availability and storage unchanged during reads an
   const tab = await fixture.tab()
   expect(tab.messages[0]?.type).toBe('history')
   expect(queries).toEqual([])
-  expect(fixture.storage.records).toEqual(records)
-  expect(fixture.storage.writes).toHaveLength(writes)
-  tab.close()
+  expect((await fixture.snapshot()).records).toEqual(records)
+  expect((await fixture.snapshot()).writes).toHaveLength(writes)
+  await tab.close()
 })

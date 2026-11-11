@@ -1,9 +1,13 @@
 # Sandbox software
 
 This folder holds the app's own sandbox software. Each image build installs
-it into the org image before it runs the org's install script. The org
+it before it runs the org's install script. A software image build installs
+it once for each app software version. A first org build from that image
+skips the software step. Without a matching ready software image, the first
+build installs it itself. Later builds still install the software. The org
 image is the saved snapshot that every new sandbox of an org starts from.
-In a workspace sandbox, this software starts the agent runner. It also
+In a workspace sandbox, this software starts the agent runner and the
+preview relay. It also
 gives git a fresh GitHub token for each operation. The agent tools are not
 in this folder yet. The folder also holds two
 [developer scripts](developer-scripts.md) that no build installs: the
@@ -14,11 +18,13 @@ archive packager and the live check.
 - Install the pinned private Node after a check of its SHA-256 digest, or
   reuse it when the image already holds it.
 - Install the runner archive after a check of its SHA-256 digest.
-- Install and enable the agent runner's systemd service.
+- Install and enable the systemd services of the agent runner and preview relay.
+- Install and enable the preview relay's socket unit.
 - Make the git credential helper the system credential helper of git.
 - Install the GitHub CLI and its wrapper, which gets a fresh token for each command.
 - Start no runner in a build sandbox. The service runs it only in a
   workspace sandbox.
+- Start no service during installation.
 - Package the runner archive and its digest on a developer machine or in
   the deploy workflow.
 - Check the chat path and time the first agent start in a real sandbox.
@@ -26,7 +32,7 @@ archive packager and the live check.
 The [terminal backend](../worker/terminal/README.md) owns ttyd, tmux, their
 services, the terminal launcher, and the local password. It also owns the
 shell server, which keeps the workspace shell in tmux. The software step of
-each image build runs that area's `terminalInstallCommand()` after
+each software image build and each org build that needs it runs that area's `terminalInstallCommand()` after
 `install.sh`. The build log shows the output of both. The terminal
 installer installs the `ttyd` and `tmux` packages with `apt-get`. It
 enables the terminal service and starts nothing.
@@ -42,9 +48,13 @@ the [lifecycle README](../worker/lifecycle/README.md#browser-routes) says.
 with a user name, a password, a query, or a fragment. It also refuses a
 digest that is not 64 hexadecimal characters.
 
-The archive must hold `runner/main.mjs`: the agent runner, with its SDK
-dependencies. It needs no Node, because the runner runs on the
-[private Node runtime](runtime.md).
+The archive must hold these programs:
+
+- `runner/main.mjs`: the agent runner, with its SDK dependencies.
+- `runner/relay.mjs`: the preview relay, with no npm dependency.
+
+Both programs use the [private Node runtime](runtime.md).
+The archive holds no Node runtime.
 
 Put no credential in the URL or in the archive. Each saved snapshot keeps
 the unpacked archive.
@@ -82,7 +92,11 @@ paths, and its update steps.
 
 [Install in a build](install.md) describes the software step of each image
 build: the staged scripts, the private Node, and the steps of `install.sh`.
-A refresh skips that step.
+A refresh and a first build from a software image skip that step.
+The [software image backend](../worker/software-image/README.md) builds the shared image.
+A workspace gets the relay only from a new image build.
+An existing workspace keeps the software of its image, also after a resume.
+Start a new workspace from the new image to get the relay.
 
 ## Start in a workspace
 
@@ -94,12 +108,16 @@ each resume, together with the org's env vars:
 | `WORKSPACE_TOKEN` | The workspace token. |
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
-| `CONDUCTIVE_DEFAULT_BRANCH` | The default branch of the workspace's repository. |
+| `CONDUCTIVE_DEFAULT_BRANCH` | The workspace base branch, with the repository default as a fallback. |
 | `CONDUCTIVE_WORKSPACE_BRANCH` | The workspace branch that the app tracks, from the Worker's record of the workspace. |
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTIVE_TURN_ID` | Empty. The runner sets it for each agent process. |
 | `CONDUCTIVE_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |
+| `GIT_AUTHOR_NAME` | The workspace owner's commit author name. The runner replaces it with the turn sender's name for each agent turn. |
+| `GIT_AUTHOR_EMAIL` | The workspace owner's GitHub no-reply address. The runner replaces it with the turn sender's address for each agent turn. |
+| `GIT_COMMITTER_NAME` | The workspace owner's commit author name. The runner replaces it with the turn sender's name for each agent turn. |
+| `GIT_COMMITTER_EMAIL` | The workspace owner's GitHub no-reply address. The runner replaces it with the turn sender's address for each agent turn. |
 
 [Repository folders](../docs/protocol/repository-folders.md) gives the
 folder names and the variable names. The
@@ -113,8 +131,11 @@ get them either. So the install command of a build loads the same file,
 with automatic export, before Bash runs the org's install script. The
 install script then gets the folder variables.
 
-At a create, the Worker first fetches the default branch and creates the
-workspace branch. When the GitHub repository has no refs, the fetch step
+At a create, the Worker fetches the workspace base branch into its remote-tracking ref.
+It creates the workspace branch at the event commit of an opened or pushed pull request run.
+A missing event commit uses the fetched head.
+Other creates start at the fetched head.
+The branch's `gh-merge-base` Git setting names the workspace base. When the GitHub repository has no refs, the fetch step
 first pushes an empty first commit to the default branch. That push gets
 its token from the [git credential helper](#git-credentials), as every
 other git operation does. At each create and each resume, the Worker then
@@ -154,6 +175,16 @@ its password, and its automatic restart in its
 [README](../worker/terminal/README.md). That README also says how the
 workspace shell keeps running when a terminal connection drops.
 
+The preview relay runs in `conductive-preview-relay.service` as `user`.
+Boat starts its enabled socket and service after each resume and fork.
+The service requires `conductive-preview-relay.socket` to start first.
+The socket holds `127.0.0.1:7682` while the service restarts.
+Both units stay enabled, so the relay starts without waiting for a preview request.
+Its start script runs `runner/relay.mjs` with the private Node.
+It reads no workspace variable or workspace marker.
+Its service restarts it after each exit.
+A restart of the runner service does not restart the relay service.
+
 Before it runs the runner, `runner-start.sh` sets three variables of the
 runner's [configuration](../runner/README.md#configuration) from the table.
 Each value replaces a saved variable of the same name.
@@ -180,7 +211,7 @@ GitHub CLI wrapper, their token rules, and their tests.
   snapshot holds a secret of a workspace.
 - The Worker gives each read token only to the Git command that copies its
   repository. The Worker revokes it before the build goes on, as
-  [GitHub tokens](../docs/protocol/access-and-security.md#github-tokens)
+  [GitHub tokens](../docs/protocol/tokens-and-secrets.md#github-tokens)
   says. The software step and the install script run only after that.
 - The workspace object keeps the env values and output chunks of a start
   only in encrypted form. Before it returns a start log, it masks the
@@ -224,6 +255,7 @@ build, a disk retention restart, and an unfinished start start no runner.
   copy.
 - Keep each start script safe to run in a build sandbox. Of the variables
   in the table, a build sandbox has only the folder variables.
+  The relay needs none of them.
 - [Developer scripts](developer-scripts.md#development) gives the checks of
   the developer scripts.
 
@@ -232,10 +264,16 @@ build, a disk retention restart, and an unfinished start start no runner.
 - [`install-runtime.sh`](install-runtime.sh): installs the private Node.
   Its arguments are the download URL, the digest, and the version folder.
 - [`install.sh`](install.sh): installs the runner archive, its service,
-  and the git helper. Its arguments are the archive URL and the digest.
+  the relay service and socket, and the git helper.
+  Its arguments are the archive URL and the digest.
 - [`runner-start.sh`](runner-start.sh) and
   [`conductive-runner.service`](conductive-runner.service): start the agent
   runner, and map the sandbox variables to the runner variables.
+- [`preview-relay-start.sh`](preview-relay-start.sh) and
+  [`conductive-preview-relay.service`](conductive-preview-relay.service):
+  start the preview relay with the private Node.
+- [`conductive-preview-relay.socket`](conductive-preview-relay.socket):
+  holds the relay port and passes its listener to the relay service.
 - [The terminal backend](../worker/terminal/service.ts): owns the terminal
   install command, its two services, and its workspace start hook.
 - [`git-credential-helper.sh`](git-credential-helper.sh) and
@@ -263,5 +301,5 @@ build, a disk retention restart, and an unfinished start start no runner.
   the org image, the startup script, and the env vars.
 - [Access and security](../docs/protocol/access-and-security.md): what a
   sandbox holds, GitHub tokens, and the terminal.
-- [Architecture](../docs/architecture.md#sandbox-software): the sandbox
+- [Architecture](../docs/architecture/components.md#sandbox-software): the sandbox
   software and its parts.

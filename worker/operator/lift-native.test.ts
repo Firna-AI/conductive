@@ -5,7 +5,7 @@ import {
   realRuntimeFixture,
   runtimeBundle,
 } from '../lifecycle/real-runtime-test-support'
-import { workspaceRuntime } from '../lifecycle/runtime'
+import { nativeSuspensionRuntime } from './native-runtime.test-support'
 import { runningRuntimeWorkspace } from '../lifecycle/runtime-lifecycle-test-support'
 import {
   authenticateWorkspaceToken,
@@ -28,7 +28,7 @@ afterEach(async () => fixture.dispose())
 it('restores a native disk alarm after a user lift and restart while preserving its revoked token', async () => {
   const { actor, workspaceId } = await runningRuntimeWorkspace(fixture)
   await activeRuntimeOwner(fixture)
-  const runtime = workspaceRuntime(fixture.env)
+  const runtime = nativeSuspensionRuntime(fixture)
   const token = await readWorkspaceToken(fixture.env, workspaceId)
   await suspendUser(runtime, 11, 'active-admin')
   const stopped = await actor.readLifecycle()
@@ -55,7 +55,7 @@ it('restores a native disk alarm after a user lift and restart while preserving 
 it('keeps native disk maintenance blocked until both the org and the owner are lifted', async () => {
   const { actor } = await runningRuntimeWorkspace(fixture)
   await activeRuntimeOwner(fixture)
-  const runtime = workspaceRuntime(fixture.env)
+  const runtime = nativeSuspensionRuntime(fixture)
   await suspendOrg(runtime, 'runtime-org', 'active-admin')
   await suspendUser(runtime, 11, 'active-admin')
   expect(

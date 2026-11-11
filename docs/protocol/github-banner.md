@@ -15,18 +15,28 @@ says.
   repositories that the user wants to use.
 - After an install, or a change of an install, GitHub returns the user to
   `https://app.conductive.build/github/setup`.
-- From a browser, the return opens the screen where the install started:
-  Get started or Account. A return that names neither screen opens the app
-  as usual.
+- From a browser, the return opens the screen where the user started the
+  install or the change: Get started, Account, or the screen of a list with
+  Manage access, such as Create org or the Repositories tab of org
+  settings. A return without a known screen opens Home.
+- A browser starts each install or change at the app, which keeps the
+  screen in a cookie for up to 1 hour and then sends the browser to GitHub.
+  The cookie is HttpOnly, Secure, and SameSite=Lax. The return deletes it.
+- The return opens only a screen of the app origin. It never opens an API
+  route or another site.
+- A screen in `state` alone was rejected. Reason: GitHub drops `state` when
+  the user changes an install that exists.
 - The return needs no sign-in, and it trusts no value that GitHub adds.
   The app reads the installs with the user's own GitHub token.
 - Get started and Account read the installs again each time that the user
   comes back to the page.
 - A return through the sign-in callback was rejected. Reason: the callback
   refuses a GitHub reply that the app's own sign-in did not start.
-- [The Mac app](desktop-app.md#github-app-install) has its own return.
+- [The Mac app](desktop-sign-in.md#github-app-install) has its own return.
 - The GitHub App sends pull request, check, status, and push webhooks to
   the Worker, at `https://api.conductive.build/v1/github/webhooks`.
+- A pull request webhook can also start the runs of routines, as
+  [Pull request runs](pull-request-runs.md) says.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 
 ## State of a branch
@@ -55,7 +65,19 @@ The bar shows one state of the branch of the workspace (decision 18):
 
 Rules for the bar:
 
-- The bar offers "Create pull request" only when the branch has commits.
+- The bar names the branch of the workspace and its base branch, as
+  [Base branches](base-branches.md) says (decision 507 G). A narrow column
+  cuts each name with an ellipsis, and the full name shows as a tooltip.
+- Reason: one layout of the bar serves every workspace, also a pull request
+  run whose base branch is not the default branch.
+- The bar offers "Create pull request" only when the branch has commits
+  that its base branch does not have. It opens a pull request into the base
+  branch.
+- The bar of a pull request run shows the state of its own branch, not the
+  pull request that started it (decision 505 A).
+- A bar that shows that pull request was rejected. The run's own work would
+  then get no "Create pull request", and the header of the run already
+  links to that pull request.
 - Each action of the bar links to GitHub. The app merges nothing and writes
   nothing to GitHub for the bar.
 - A merge from the app was rejected, and so were buttons that send fixed
@@ -66,7 +88,8 @@ Rules for the bar:
 - The bar shows Blocked only when no other state applies. Its action
   opens the pull request on GitHub, where GitHub names the reason.
 - After the merge, the bar offers Archive (decision 16). Only the workspace
-  owner and the admins see it (decision 42).
+  owner and the admins see it (decision 42). It archives at once and asks
+  no question, as [Archive](workspace-life.md#archive) says.
 - Each state shows an icon and words, never only a colour.
 - A state tints the whole bar. No edge of the bar gets its own colour.
 

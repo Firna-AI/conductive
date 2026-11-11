@@ -6,7 +6,7 @@ import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
 import type { PendingMove } from './model-moves'
 import type { PendingEdit } from './session-records'
-import type { Transcript } from './transcript'
+import type { Transcript } from '../../shared/transcript/transcript'
 
 /** What the chat's actions share: the API, the store, the logs, and the stream. */
 export interface ChatContext {
@@ -30,6 +30,13 @@ export interface ChatContext {
   readonly newId: () => string
   /** A new identity for a draft that a session starts after its draft moved. */
   readonly newDraftId: () => string
+  /** A new local identity for a file of a draft, in this tab. */
+  readonly newFileId: () => string
+  /**
+   * The uploads that run, by file ID. Remove aborts the upload of its file,
+   * and a stop of the chat aborts each one.
+   */
+  readonly uploads: Map<string, AbortController>
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean

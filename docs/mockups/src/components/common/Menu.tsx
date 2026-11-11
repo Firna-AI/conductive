@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { Check } from 'lucide-react'
+import { Check, ChevronRight } from 'lucide-react'
+import a11y from './a11y.module.css'
 import { classes } from './classes'
 import styles from './Menu.module.css'
 
@@ -14,6 +15,12 @@ type MenuItem = {
   detail?: string
   /** An icon at the end of the row, such as the arrow that reopens. */
   trailingIcon?: LucideIcon
+  /**
+   * The spoken name of the trailing icon, when the icon says what the label
+   * does not, such as "New session". Without it, a screen reader skips the
+   * icon.
+   */
+  trailingLabel?: string
   /** A choice in a group: the menu marks the current one. */
   checked?: boolean
   tone?: 'danger'
@@ -21,6 +28,11 @@ type MenuItem = {
   highlighted?: boolean
   /** An item that is off: it keeps its place, greyed, and does nothing. */
   disabled?: boolean
+  /**
+   * The item opens a submenu of choices, which an arrow at its end shows.
+   * An open submenu keeps its item highlighted.
+   */
+  submenu?: 'closed' | 'open'
 }
 
 export type MenuEntry =
@@ -37,10 +49,16 @@ export type MenuEntry =
 export type MenuPlacement =
   'below-start' | 'below-end' | 'above-start' | 'above-end' | 'sheet'
 
+/**
+ * A menu at a point, such as at the pointer of a right click. A view runs
+ * no script, so the screen places the box, and an open submenu beside it.
+ */
+type PointPlacement = 'point'
+
 function Item(props: { entry: MenuItem }) {
   const { entry } = props
   const Icon = entry.icon
-  const Trailing = entry.trailingIcon
+  const Trailing = entry.submenu ? ChevronRight : entry.trailingIcon
   const choice = entry.checked !== undefined
   let lead: ReactNode = null
   if (entry.mark) lead = <span className={styles.mark}>{entry.mark}</span>
@@ -49,10 +67,12 @@ function Item(props: { entry: MenuItem }) {
     <div
       aria-checked={choice ? entry.checked : undefined}
       aria-disabled={entry.disabled ? true : undefined}
+      aria-expanded={entry.submenu ? entry.submenu === 'open' : undefined}
+      aria-haspopup={entry.submenu ? 'menu' : undefined}
       className={classes(
         styles.item,
         entry.tone === 'danger' && styles.danger,
-        entry.highlighted && styles.highlighted,
+        (entry.highlighted || entry.submenu === 'open') && styles.highlighted,
         entry.disabled && styles.disabled,
       )}
       role={choice ? 'menuitemradio' : 'menuitem'}
@@ -64,6 +84,9 @@ function Item(props: { entry: MenuItem }) {
       ) : null}
       {Trailing ? (
         <Trailing aria-hidden className={styles.icon} size={14} />
+      ) : null}
+      {entry.trailingLabel ? (
+        <span className={a11y.hidden}>{entry.trailingLabel}</span>
       ) : null}
       {entry.checked ? (
         <Check aria-hidden className={styles.check} size={14} />
@@ -80,7 +103,7 @@ function Item(props: { entry: MenuItem }) {
 export function Menu(props: {
   label: string
   entries: readonly MenuEntry[]
-  placement: MenuPlacement
+  placement: MenuPlacement | PointPlacement
   wide?: boolean
 }) {
   return (

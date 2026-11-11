@@ -26,8 +26,8 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     id: 'keyboard-shortcuts',
     area: 'navigation-and-appearance',
     name: 'Keyboard shortcuts',
-    status: 'planned',
-    note: 'Custom keyboard shortcuts are planned. The command palette shortcut works today.',
+    status: 'in-progress',
+    note: 'Custom keyboard shortcuts are in progress. The command palette shortcut works today.',
     due: null,
   },
   {
@@ -63,6 +63,13 @@ export const navigationAndAppearanceFeatures: readonly ParityFeature[] = [
     area: 'navigation-and-appearance',
     name: 'Status indicators',
     status: 'available',
-    note: 'Workspace state marks show activity, unread output, start progress, stopped computers, and errors.',
+    note: 'Workspace marks show activity, unread output, start progress, stopped computers, and errors. GitHub check and merge colours in the workspace list are in progress.',
+  },
+  {
+    id: 'wrapped-and-passport',
+    area: 'navigation-and-appearance',
+    name: 'Wrapped and Passport',
+    status: 'considering',
+    note: 'A yearly summary of your work and a collection of workspace cities are under consideration.',
   },
 ]

@@ -13,6 +13,14 @@ export const fakeToolContext = {
   turnId: 'turn-1',
 }
 
+export async function fakeClaudeProfile(home: string) {
+  return {
+    directory: `${home}/.conductive/anthropic`,
+    name: 'test-profile',
+    remove: async () => {},
+  }
+}
+
 export class FakeProvider implements ProviderProcess {
   readonly options: ProviderOptions
   readonly messages: ProviderInput[] = []

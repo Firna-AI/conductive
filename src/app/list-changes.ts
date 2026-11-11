@@ -34,6 +34,51 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
   }
 }
 
+/** A confirmed row action keeps every field that its reply does not own. */
+function workspaceChanged(
+  workspaceId: string,
+  fields: Partial<Pick<Workspace, 'name' | 'owner' | 'state' | 'archivedAt'>>,
+): ListChange {
+  return (list) => ({
+    ...list,
+    workspaces: list.workspaces.map((item) =>
+      item.id === workspaceId ? { ...item, ...fields } : item,
+    ),
+  })
+}
+
+export function workspaceRenamed(
+  workspaceId: string,
+  name: string | null,
+): ListChange {
+  return workspaceChanged(workspaceId, { name })
+}
+
+export function workspaceReassigned(
+  workspaceId: string,
+  owner: Workspace['owner'],
+): ListChange {
+  return workspaceChanged(workspaceId, { owner })
+}
+
+/**
+ * A confirmed Archive or Restore changes only its own fields, so a newer
+ * name, owner, or section stays. Each one raises `updatedAt`, so it changes
+ * nothing over a record that is not older, such as a later Restore that a
+ * read brought.
+ */
+export function workspaceLifecycle(workspace: Workspace): ListChange {
+  const { state, archivedAt, restoreUntil, updatedAt } = workspace
+  return (list) => ({
+    ...list,
+    workspaces: list.workspaces.map((current) =>
+      current.id === workspace.id && current.updatedAt < updatedAt
+        ? { ...current, state, archivedAt, restoreUntil, updatedAt }
+        : current,
+    ),
+  })
+}
+
 /** A new section at the end. A read that has it already keeps its own. */
 export function sectionAdded(section: Section): ListChange {
   return (list) =>

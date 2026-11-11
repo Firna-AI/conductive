@@ -3,22 +3,24 @@
 This doc holds the requirements and the decisions in force for the
 waitlist. A new person waits for app access, and the app shows them only
 the waitlist screen (decision 160). The approval of an operator, an invite
-code, a referral code, or an org invitation gives app access. The doc also
-covers the pause, the approval email, and the record of app access.
-[Invite and referral codes](waitlist-codes.md) states the codes, the join
-link, and the use of a code. [Operator section](operator-section.md)
-states the tabs where an operator runs the waitlist. The terms are those
-of the [architecture doc](../architecture.md#terms). A decision number
-names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says. The
-[mockup catalogue](../mockups/catalogue.md) draws each screen of the
-waitlist, on desktop and on a phone.
+code, a referral code, or an org invitation gives app access. During open
+sign-up, each person gets app access without a wait (decision 230). The
+doc also covers the approval email and the record of app access.
+[Sign-ups](sign-ups.md) states the pause, the waitlist switch, and open
+sign-up. [Invite and referral codes](waitlist-codes.md) states the codes,
+the join link, and the use of a code.
+[Operator section](operator-section.md) states the tabs where an operator
+runs the waitlist. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. The [mockup catalogue](../mockups/catalogue-operator.md) draws each
+screen of the waitlist, on desktop and on a phone.
 
 ## Who waits
 
-- A new GitHub sign-in creates an account without app access
-  (decisions 160 and 161). The sign-in also starts a sign-in session, as
-  for every account.
+- Except during [open sign-up](sign-ups.md#open-sign-up), a new GitHub
+  sign-in creates an account without app access (decisions 160, 161, and
+  230). The sign-in also starts a sign-in session, as for every account.
 - A user without app access waits until one of the [ways in](#ways-in)
   gives app access.
 - App access is final. No action takes it away. An operator can still
@@ -50,12 +52,15 @@ waitlist, on desktop and on a phone.
   - the [use of a code](waitlist-codes.md#the-use-of-a-code)
   - the org invitations of its user, and Accept
 - The waitlist state of a user gives whether the user has app access,
-  whether the pause is on, the referral code of the user with its uses,
-  and the address of the approval email. That address is the primary
-  verified email of the GitHub account, or none.
+  whether the pause is on, whether the waitlist is on, the referral code
+  of the user with its uses, and the address of the approval email. That
+  address is the primary verified email of the GitHub account, or none.
 - Every other API request and every WebSocket upgrade of that session gets
   HTTP 403 with the code `access_required`. So a person who waits gets
   this code also for a request of an operator or of an org.
+- During [open sign-up](sign-ups.md#open-sign-up), the next API request or
+  WebSocket upgrade of a person who waits first gives app access. So that
+  request gets no `access_required`.
 - The check uses the method and the path that the browser sent.
 - Reason: one allow list fences the new kind of session in one place. It
   also refuses each route that a later change adds.
@@ -87,6 +92,9 @@ waitlist, on desktop and on a phone.
 - The screen reads the app access again when the person comes back to the
   tab or the window, and after Use code. It sets no timer. Reason: a
   person usually comes back from the approval email.
+- During open sign-up, the read when the person comes back gives app
+  access, so the app opens, as [Open sign-up](sign-ups.md#open-sign-up)
+  says.
 - When a code works, Get started opens. When the person accepts an org
   invitation, its org opens.
   [Get started](orgs-and-members.md#get-started) opens only after app
@@ -96,17 +104,19 @@ waitlist, on desktop and on a phone.
 - While the user waits, the device connection of the Mac app gets the
   `access_required` refusal. When app access arrives, the Mac app connects
   it again, with no new launch. Reason: the Mac is then available for
-  [Mac commands](desktop-app.md#mac-commands) without a wake or a new
+  [Mac commands](desktop-commands.md#mac-commands) without a wake or a new
   launch.
 
 ## Ways in
 
-- Four ways give app access to a person who waits (decision 160):
+- Five ways give app access to a person who waits (decisions 160 and
+  230):
   - the approval of an operator, as [Approve](operator-section.md#approve)
     says
   - an [invite code](waitlist-codes.md#invite-codes)
   - a [referral code](waitlist-codes.md#referral-codes)
   - an [org invitation](#org-invitations)
+  - [open sign-up](sign-ups.md#open-sign-up)
 - Each operator has app access. Each sign-in gives app access, with the
   source "operator", to a user whom the settings of the Worker name as an
   operator, as [The operator](operator-actions.md#the-operator) says
@@ -141,30 +151,8 @@ waitlist, on desktop and on a phone.
 
 ## The pause
 
-- An operator can pause sign-ups (decision 160). Reason: the operator can
-  then stop all sign-ups for a time.
-- While the pause is on, invite codes, referral codes, and the org
-  invitations of people who wait let nobody in.
-- A code that the pause stops stays unused, as
-  [Codes](waitlist-codes.md#codes) says. The person can use it again after
-  the pause.
-- During the pause, the Accept of an org invitation by a person who waits
-  gets HTTP 403 with the code `signups_paused`. It gives no membership and
-  no app access. The invitation stays, so the person can accept it after
-  the pause.
-- The pause changes nothing for a user with app access. Such a user still
-  accepts an org invitation.
-- The waitlist stays open. A new GitHub sign-in still creates an account
-  that waits.
-- The approval of an operator still works. Reason: an approval is one
-  deliberate act.
-- The app keeps the time and the operator of the last change of the pause.
-- The waitlist screen names the pause only after the pause stopped a code
-  or the Accept of an org invitation. Reason: an approval still works
-  during the pause.
-- No email goes out when the pause ends. An email to each person whom the
-  pause stopped was rejected, because it adds a second kind of email and a
-  burst of email at the end of each pause.
+- An operator can pause sign-ups. [The pause](sign-ups.md#the-pause)
+  states what the pause stops, also while the waitlist is off.
 
 ## The approval email
 
@@ -209,6 +197,7 @@ waitlist, on desktop and on a phone.
   - an invite code, with the code
   - a referral code, with its owner
   - an org invitation, with its org and the admin who sent it
+  - an open sign-up, with the operator who last turned the waitlist off
   - an operator, at a sign-in
   - an existing account, from before the waitlist
 - The record keeps the org and the admin of an org invitation, because an
@@ -230,3 +219,7 @@ waitlist, on desktop and on a phone.
   link".
 - User-facing text names the pause with the word "sign-ups", as in
   "Sign-ups are paused".
+- The operator section names the waitlist switch with the words "Turn off
+  the waitlist" and "Turn on the waitlist" (decision 230). The screens of
+  people who wait and of users never name the switch. Reason: these people
+  see only its result.

@@ -9,11 +9,19 @@ export const integrationsFeatures: readonly ParityFeature[] = [
     note: 'After app access, install the GitHub App on the GitHub accounts that own your repositories.',
   },
   {
+    id: 'github-enterprise-and-other-git-hosts',
+    area: 'integrations',
+    name: 'GitHub Enterprise and other Git hosts',
+    status: 'considering',
+    note: 'GitHub Enterprise and other Git hosts are under consideration. Conductive works with repositories on github.com today.',
+  },
+  {
     id: 'github-issues',
     area: 'integrations',
     name: 'GitHub issues',
-    status: 'considering',
-    note: 'Starting from GitHub issues and attaching issues are under consideration. Agents can read and manage issues through the GitHub CLI.',
+    status: 'planned',
+    note: 'Starting workspaces from GitHub issues and attaching their details are planned. Agents can already read and manage issues through the GitHub CLI.',
+    due: null,
   },
   {
     id: 'linear',
@@ -43,5 +51,12 @@ export const integrationsFeatures: readonly ParityFeature[] = [
     status: 'planned',
     note: 'Opening cloud workspaces in desktop editors through SSH is planned for the Mac app.',
     due: null,
+  },
+  {
+    id: 'claude-agent-in-chrome',
+    area: 'integrations',
+    name: 'Claude agent in Chrome',
+    status: 'different',
+    note: 'Agents use a browser on the desktop of their cloud computer, for work such as testing changes.',
   },
 ]

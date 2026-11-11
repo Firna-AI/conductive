@@ -16,6 +16,7 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
+import { serverWith } from '../new-workspace/dialog-test-kit'
 import { click, press, settle, typeText } from '../test-mount'
 import { socketsOf } from '../workspace/wiring-test-kit'
 import {
@@ -144,7 +145,10 @@ describe('the command palette', () => {
 
   test('the key closes an open menu and opens the palette, and does nothing while a dialog is open', async () => {
     holdAnimationFrames()
-    const { view, navigation } = await openPaletteTab(routes.org(org))
+    // New workspace opens as a dialog for this account.
+    const { view, navigation } = await openPaletteTab(routes.org(org), {
+      server: serverWith('dialog'),
+    })
     const sidebar = byLabel('Workspaces', view)
     click(byRole('button', 'More for General', sidebar))
     const menuBefore = queryByRole('menu', 'General') !== null
@@ -156,30 +160,27 @@ describe('the command palette', () => {
     press(searchField(), 'Escape')
     act(() => navigation.push(routes.workspace(org, workspace)))
     await settle()
-    const row = byLabel('Workspaces', view)
-      .querySelector(`a[href="${routes.workspace(org, workspace)}"]`)
-      ?.closest('li')
-    if (!row) throw new Error('The workspace has no list row.')
-    click(byRole('button', 'Archive workspace', row))
+    const list = byLabel('Workspaces', view)
+    click(byRole('button', 'More for General', list))
+    click(byRole('menuitem', 'New workspace', list))
     await settle()
-    const question = 'Archive with work that is not pushed?'
     const key = pressPaletteKey('other')
     expect({
       menuBefore,
       withMenu,
       dialog: {
         open: palette() !== null,
-        question: queryByRole('dialog', question) !== null,
+        dialog: queryByRole('dialog', 'New workspace') !== null,
         prevented: key.defaultPrevented,
       },
     }).toEqual({
       menuBefore: true,
       withMenu: { menu: false, open: true },
-      dialog: { open: false, question: true, prevented: false },
+      dialog: { open: false, dialog: true, prevented: false },
     })
   })
 
-  test('in the Mac app, the Window group hides the sidebar, then offers to show it again', async () => {
+  test('in the Mac app, the Window group hides the sidebar, then offers to show it again, and Help follows it', async () => {
     const { view } = await openPaletteTab(routes.org(org), {
       mac: true,
       platform: 'mac',
@@ -198,7 +199,7 @@ describe('the command palette', () => {
       hidden,
       offered: queryByRole('option', 'Show the sidebar') !== null,
     }).toEqual({
-      before: { groups: ['Acme', 'Orgs', 'Window'], shown: true },
+      before: { groups: ['Acme', 'Orgs', 'Window', 'Help'], shown: true },
       hidden: { open: false, shown: false },
       offered: true,
     })

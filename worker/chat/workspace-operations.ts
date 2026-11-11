@@ -68,7 +68,14 @@ export class WorkspaceOperations {
     const { store, bind, publish, closeRunner } = this.options
     bind(workspaceId)
     closeRunner()
-    await store.change(workspaceId, stopDispatchedTurns, publish)
+    await store.change(
+      workspaceId,
+      async (transaction) => {
+        await transaction.emit({ type: 'ports.updated', ports: null })
+        await stopDispatchedTurns(transaction)
+      },
+      publish,
+    )
   }
 
   async commit(

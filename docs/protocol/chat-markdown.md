@@ -1,13 +1,14 @@
 # Chat Markdown
 
 This doc holds the requirements and the decisions in force for the
-Markdown of agent messages in the chat, with their tables.
+Markdown of agent messages in the chat, with their lists and tables.
 [Chat and events](chat-and-events.md) holds the messages, the live text,
 and the work of a turn. The terms are those of the
 [architecture doc](../architecture.md#terms). The
 [mockup catalogue](../mockups/catalogue.md) draws tables in agent messages
 at `app/chat/tables`, and in the open work of a turn at
-`app/chat/work/table`.
+`app/chat/work/table`. It draws lists inside list items at
+`app/chat/lists`.
 
 ## Formatting
 
@@ -15,7 +16,7 @@ at `app/chat/tables`, and in the open work of a turn at
   the text of each agent message with this Markdown:
   - paragraphs, which a blank line ends
   - bulleted lists with `-`, `*`, or `+`, and numbered lists, such as `1.`
-    or `1)`
+    or `1)`, with lists inside their items, as [Lists](#lists) says
   - code blocks between two lines that start with three backticks
   - inline code between backticks, and strong text between `**` marks
   - tables, as [Tables](#tables) says
@@ -29,7 +30,7 @@ at `app/chat/tables`, and in the open work of a turn at
   and table cells. A code block shows its text with no formatting.
 - HTML in an agent message shows as text, also in a table.
 - Reason: sandbox code is untrusted, as
-  [Trust boundaries](../architecture.md#trust-boundaries) says, and it can
+  [Trust boundaries](../architecture/data-and-trust.md#trust-boundaries) says, and it can
   shape the text of an agent message.
 - The chat keeps this small set of Markdown. The full Markdown of the file
   preview was rejected for the chat, because it also changes the headings,
@@ -38,12 +39,36 @@ at `app/chat/tables`, and in the open work of a turn at
   a review of its safety. One parser with a setting for each view was
   rejected, because it needs more compatibility work.
 
+## Lists
+
+- A list item holds the lines that the agent indents under it: a list,
+  more paragraphs, a code block, or a table. They show inside the item,
+  under its text.
+- Agent messages and the file preview read lists with the same rules, the
+  list rules of CommonMark.
+- A line belongs to an item when its indent reaches the text of the item,
+  such as 2 spaces under `- `, and 3 spaces under `1. `. A tab counts up
+  to the next stop of four columns.
+- A numbered list counts up from the number of its first item. The number
+  of an item has one to nine digits.
+- Lists nest at most 16 levels deep, as in the file preview. Deeper
+  content shows as the text of a paragraph.
+- A task box, such as `[ ]` at the start of an item, shows as text.
+- A code block outside a list keeps its text exactly, with its tabs.
+- Reason: each list keeps the structure that the agent wrote, so the
+  options of a choice show under that choice. A list under an item that
+  shows after the item, at the same level, was rejected, because only the
+  order then shows which list belongs to which item.
+- Reason: lists cannot differ between agent messages and the file
+  preview, as for tables. List rules for the chat alone were rejected for
+  that reason.
+
 ## Tables
 
 - A screen reader reads each table as a table, by its rows and its
   columns.
 - Tables look the same in agent messages and in the file preview. The
-  [mockups](../mockups/design.md) give the look.
+  [mockups](../mockups/design-chat.md) give the look.
 
 ### Table text
 
@@ -116,7 +141,7 @@ at `app/chat/tables`, and in the open work of a turn at
 ### Wide tables
 
 - A table wider than the chat scrolls sideways inside its agent message,
-  also in an open message line.
+  also in a list item and in an open message line.
 - The text before and after the table keeps the width of the chat. The
   chat and the workspace keep the width of the window.
 - Reason: the table keeps its columns as the agent wrote them, so a reader
@@ -159,8 +184,9 @@ at `app/chat/tables`, and in the open work of a turn at
   in row order, from the header row, with a middle dot, `·`, between two
   cells.
 - An open message line keeps the text before the first table of the agent
-  message. The first table and all that follows it show under the line,
-  with their formatting.
+  message. When a list holds that table, the line keeps the text before
+  that list. The table, or the list that holds it, and all that follows
+  show under the line, with their formatting.
 - An agent message without a table opens to its full text in its line.
 - The line stays in place when it opens or closes.
 - Reason: the steps of the work stay close together, also when a message

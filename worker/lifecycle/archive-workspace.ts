@@ -1,20 +1,14 @@
-import type { Workspace, WorkspaceResponse } from '../../src/shared/workspaces'
+import type { WorkspaceResponse } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
-import { readArchiveCheck } from '../app-api/archive'
 import {
   archiveWorkspaceAccess,
   markWorkspaceArchived,
 } from '../app-api/archive-data'
-import { HttpError } from '../http'
-import { orgSandboxProvider } from '../sandbox/client'
-import { deleteSandboxIfPresent } from './cleanup'
-import { readWorkspace, workspaceRecord, workspaceView } from './workspace-data'
+import { readWorkspace, workspaceView } from './workspace-data'
 
 interface ArchiveOperations {
-  revokePreviews(): Promise<void>
-  stopChat(): Promise<void>
-  clearLifecycle(): Promise<void>
-  publish(workspace: Omit<Workspace, 'link'>): Promise<void>
+  reserveArchive(): Promise<void>
+  archiveLifecycle(): Promise<void>
 }
 
 export async function archiveWorkspace(
@@ -23,38 +17,12 @@ export async function archiveWorkspace(
   orgId: string,
   workspaceId: string,
   userId: string,
-  discard: boolean,
   origin: string,
   operations: ArchiveOperations,
 ): Promise<WorkspaceResponse> {
   const row = await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
   if (row.archivedAt === null) {
-    const check = await readArchiveCheck(
-      env,
-      dependencies,
-      orgId,
-      workspaceId,
-      userId,
-    )
-    if (!discard && (check.uncommittedFiles.length || check.unpushedCommits))
-      throw new HttpError(
-        409,
-        'workspace_has_unpushed_work',
-        'Check the saved work before you archive this workspace.',
-      )
-    await operations.revokePreviews()
-    await operations.stopChat()
-    if (row.sandboxId) {
-      await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
-      const provider = await orgSandboxProvider(
-        env,
-        userId,
-        orgId,
-        dependencies.fetch,
-      )
-      await deleteSandboxIfPresent(provider, row.sandboxId)
-    }
-    await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
+    await operations.reserveArchive()
     await markWorkspaceArchived(
       env,
       orgId,
@@ -62,9 +30,9 @@ export async function archiveWorkspace(
       userId,
       dependencies.now(),
     )
-    await operations.clearLifecycle()
+    await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
   }
+  await operations.archiveLifecycle()
   const saved = await readWorkspace(env.DB, orgId, workspaceId)
-  await operations.publish(workspaceRecord(saved))
   return { workspace: workspaceView(saved, origin), start: null, error: null }
 }

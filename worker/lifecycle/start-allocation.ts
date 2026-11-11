@@ -70,6 +70,7 @@ export async function allocateWorkspace(
   job: WorkspaceStartJob,
   input: () => Promise<SandboxStart>,
 ): Promise<string | null> {
+  const mayHaveAllocated = Boolean(job.createPayloadCiphertext)
   let payload: SandboxStart
   if (job.createPayloadCiphertext)
     payload = await readWorkspaceAllocation(env, job)
@@ -81,15 +82,37 @@ export async function allocateWorkspace(
       env.BOAT_KEY_ENCRYPTION_KEY,
     )
   }
+  await env.DB.prepare(
+    `UPDATE workspaces SET runner_protocol_version = COALESCE(
+      (SELECT runner_protocol_version FROM image_builds
+       WHERE org_id = ? AND snapshot_name = ? AND state = 'succeeded' LIMIT 1), 1)
+     WHERE org_id = ? AND id = ?`,
+  )
+    .bind(job.orgId, payload.snapshotName ?? null, job.orgId, job.workspaceId)
+    .run()
   try {
     if (!job.allocatedSandboxId) {
-      const sandbox = await createResource(provider, {
+      const sandbox = await createResource(env.DB, provider, {
         kind: 'sandbox',
+        mayHaveAllocated,
+        ownership: {
+          orgId: job.orgId,
+          providerAccount: job.providerAccount,
+          ownerUserId: job.creation?.user.id ?? payload.labels?.user ?? null,
+          purpose: 'workspace',
+          purposeId: job.workspaceId,
+        },
         input: payload,
         persist: () => storage.update(job),
       })
       job.allocatedSandboxId = sandbox.id
-      await assignSandbox(env.DB, job.orgId, job.workspaceId, sandbox.id)
+      await assignSandbox(
+        env.DB,
+        job.orgId,
+        job.workspaceId,
+        sandbox.id,
+        job.providerAccount,
+      )
       await storage.update(job)
     }
     await assignSandbox(
@@ -97,6 +120,7 @@ export async function allocateWorkspace(
       job.orgId,
       job.workspaceId,
       job.allocatedSandboxId,
+      job.providerAccount,
     )
     return job.allocatedSandboxId
   } catch (error) {

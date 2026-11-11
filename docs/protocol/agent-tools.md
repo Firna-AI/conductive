@@ -18,7 +18,7 @@ says.
   - ask to run a command on a Mac, as [Mac commands](#mac-commands) says
 - Both tools call the Worker with the workspace token of their sandbox.
 - With the workspace token, the tools can make only these six calls.
-  [The workspace token](access-and-security.md#the-workspace-token) states
+  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   what the token allows.
 - A call that reads the chat of another workspace, or sends it a message,
   was left out. Reason: such a call lets sandbox code reach more of the
@@ -57,7 +57,7 @@ says.
 - The answer of the create call holds the stored name.
 - A name that is blank after this rule counts as no name. The app then
   shows "Untitled", as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
+  [Create a workspace](create-a-workspace.md#the-branch-and-the-name)
   says.
 - The name does not change the branch. The branch keeps its rule: the
   GitHub login, a city name, and four random characters.
@@ -65,6 +65,22 @@ says.
   every member. A short name on one line keeps each list readable.
 - A refusal of a blank or long name was rejected, because the agent then
   gets an error for a name that the rule can clean.
+- For the name, the CLI help and the description of `create_workspace`
+  say: "Use plain words separated by spaces. Avoid underscores unless the
+  user tells you to add them."
+- The rule keeps each underscore of the name (decision 256). Reason: only
+  the agent knows whether the member asked for underscores.
+- A rule step that changes each underscore to a space was rejected, because
+  the agent could then not keep underscores that a member asked for. A
+  field that marks a name from the member was rejected, because no agent
+  name showed the risk, and the agent must still set the field.
+- A step that keeps only the underscores of words from the member's
+  messages was rejected, because a request in other words, such as "use
+  snake case", then loses its underscores. A rule that an agent names a
+  workspace only when a member names it was rejected, because agents then
+  name fewer workspaces.
+- Risk: an agent that ignores the text still adds underscores. A cloud
+  computer gets the new text only from a full build of its org image.
 - The reply to a create call gives the new workspace with its number and
   its link, as
   [Workspace numbers and links](workspaces-and-sandboxes.md#workspace-numbers-and-links)
@@ -141,7 +157,7 @@ a create call takes, with their IDs.
 
 An agent can ask to run a command on the Mac of the person who sent its
 turn (decision 62). The Mac app on that Mac asks that person first, as
-[Mac commands in the Mac app](desktop-app.md#mac-commands) says.
+[Mac commands in the Mac app](desktop-commands.md#mac-commands) says.
 
 ### Who gets a request
 
@@ -152,7 +168,7 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   for commands on the Mac of another member.
 - A request names its turn. The Worker accepts it only while that turn
   runs in the calling workspace.
-- [The workspace token](access-and-security.md#the-workspace-token) states
+- [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   how the Worker finds the sender.
 - When the sender has no available Mac, the agent gets the answer that the
   Mac is not available.
@@ -217,7 +233,7 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   the keyboard. The composer stays reachable, and the Allow menu stays
   visible outside the region that scrolls.
 - While a request waits, its workspace shows needs input, as
-  [Workspace states](workspaces-and-sandboxes.md#workspace-states) says
+  [Workspace states](workspace-life.md#workspace-states) says
   (decision 68). The workspace keeps needs input while any of its
   requests waits.
 - After its result, the command shows at its place in the chat: denied,

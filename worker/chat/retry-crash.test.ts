@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import {
   createHarness,
   TEST_TIME,
@@ -17,7 +16,6 @@ import {
   messageCommands,
   terminalEvent,
 } from './turn-lifecycle.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -28,7 +26,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-
 async function runningFixture() {
   const ids = [
     'session',
@@ -39,11 +36,7 @@ async function runningFixture() {
     'retry-command',
   ]
   const fixture = await createChatFixture(harness, {
-    randomId: () => {
-      const id = ids.shift()
-      if (!id) throw new Error('The test ID sequence is empty.')
-      return id
-    },
+    ids,
   })
   const session = await fixture.createSession()
   const runner = await fixture.connect()
@@ -63,6 +56,7 @@ async function runningFixture() {
     senderId: fixture.owner.id,
     messageIds: ['original'],
     state: 'failed',
+    error: { code: 'agent_unavailable', message: 'Try again.' },
     closeAfterStop: false,
     nextTurnId: null,
     started: true,
@@ -79,7 +73,6 @@ async function runningFixture() {
     sentMessage,
   }
 }
-
 it('keeps the full failed receipt after a crash immediately after its commit', async () => {
   const {
     fixture,
@@ -94,13 +87,13 @@ it('keeps the full failed receipt after a crash immediately after its commit', a
   expect(before.throughEventNumber).toBe(4)
   const tab = await fixture.tab()
   const received = structuredClone(runner.received)
-  fixture.storage.crashAfterCommit = true
+  await fixture.failNextCommit('after', 'Injected post-commit crash')
   const receipt = runner.emit(terminalEvent(turn, 'failed'))
   await expect(fixture.drain()).rejects.toThrow('Injected post-commit crash')
   expect(runner.pendingEvents()).toEqual([receipt])
   expect(runner.received).toEqual(received)
   expect(liveSessions(tab.messages)).toEqual([])
-  fixture.restart()
+  await fixture.restart()
   expect(await sessionRecord(fixture, session.id)).toEqual(failedSession)
   const expectedState = {
     sessions: [failedSession],
@@ -149,9 +142,8 @@ it('keeps the full failed receipt after a crash immediately after its commit', a
   })
   expect(await lifecycleSnapshot(fixture)).toEqual(expectedState)
   expect(await fixture.history(session.id)).toEqual(expectedHistory)
-  tab.close()
+  await tab.close()
 })
-
 it('keeps the full accepted retry after a crash immediately after its commit', async () => {
   const { fixture, session, runner, turn, failedTurn, sentMessage } =
     await runningFixture()
@@ -160,7 +152,7 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
   const before = await fixture.history(session.id)
   expect(before.throughEventNumber).toBe(6)
   const tab = await fixture.tab()
-  fixture.storage.crashAfterCommit = true
+  await fixture.failNextCommit('after', 'Injected post-commit crash')
   const response = await retryRequest(fixture, session.id, 'original')
   expect(response.status).toBe(500)
   expect(await response.json()).toEqual({
@@ -172,7 +164,7 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
   expect(liveSessions(tab.messages)).toEqual([])
   expect(runner.commands).toEqual([turn])
   runner.disconnect()
-  fixture.restart()
+  await fixture.restart()
   const retrySession = {
     ...session,
     title: 'Check this code',
@@ -268,5 +260,5 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
       },
     ],
   })
-  tab.close()
+  await tab.close()
 })

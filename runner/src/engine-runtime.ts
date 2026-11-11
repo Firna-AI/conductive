@@ -127,10 +127,7 @@ export class SessionEngine {
     const turn = session?.active
     if (turn) this.starts.remove(turn.first.turnId)
     const pendingEnds = this.starts.close()
-    if (turn) {
-      turn.shutdown = true
-      this.cancel(turn)
-    }
+    if (turn) this.cancel(turn)
     this.closing = Promise.all([this.pending, pendingEnds]).then(async () => {
       if (turn && session?.active === turn)
         await this.finish({

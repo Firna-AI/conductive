@@ -6,7 +6,10 @@ import {
   type OperatorUserDetail,
   type OperatorUsersResponse,
 } from '../../src/shared/operator'
-import { operatorCodeDisablePath } from '../../src/shared/operator-waitlist'
+import {
+  operatorCodeDisablePath,
+  operatorWaitlistSwitchPath,
+} from '../../src/shared/operator-waitlist'
 import { acceptOrgInvitePath } from '../../src/shared/members'
 import { WAITLIST_PATHS } from '../../src/shared/waitlist'
 import { inviteOrgMember } from '../members/invites'
@@ -28,6 +31,34 @@ beforeEach(async () => {
   await harness.reset()
 })
 afterAll(async () => harness.dispose())
+
+it('shows open sign-up with the operator who opened it on the user page', async () => {
+  const client = await operatorWaitlistFixture(harness)
+  const opened = await client.request(
+    operatorWaitlistSwitchPath(),
+    undefined,
+    operatorWrite({}, 'DELETE'),
+  )
+  expect(opened.status).toBe(200)
+  const joined = await client.request(
+    WAITLIST_PATHS.state,
+    client.member.session,
+  )
+  expect(joined.status).toBe(200)
+  const response = await client.request(operatorUserPath(11))
+  expect(response.status).toBe(200)
+  expect(await response.json()).toMatchObject({
+    appAccess: {
+      state: 'granted',
+      grantedAt: TEST_TIME,
+      source: {
+        kind: 'open_signup',
+        operator: { githubId: 10, login: 'admin' },
+      },
+    },
+    approvalEmail: { state: 'none', updatedAt: null },
+  })
+})
 
 it('shows invite labels and referral owners with the referral recipients and their names in the detail and list', async () => {
   const client = await operatorWaitlistFixture(harness)

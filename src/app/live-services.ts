@@ -1,6 +1,9 @@
+import { copyText } from './clipboard'
 import { appDomain } from '../../docs/mockups/src/brand'
 import { createApiClient } from './api/client'
+import { xhrFileTransport } from './api/xhr-files'
 import { browserDelay, socketEventSource } from './events'
+import { APP_VERSION } from './version'
 import {
   windowFocus,
   windowInput,
@@ -22,10 +25,19 @@ function appHostOrigin(location: Location): string {
     : `https://${appDomain}`
 }
 
-/** The services of the deployed app: the Worker on the origin of the page. */
+/**
+ * The services of the deployed app: the Worker on the origin of the page.
+ * Files upload from the same origin, with a native `XMLHttpRequest`.
+ */
 export function createLiveServices(target: Window): AppServices {
   return {
-    api: createApiClient((input, init) => target.fetch(input, init)),
+    api: createApiClient(
+      (input, init) => target.fetch(input, init),
+      xhrFileTransport(
+        () => new XMLHttpRequest(),
+        (path) => path,
+      ),
+    ),
     events: socketEventSource(target.location.origin),
     now: () => Date.now(),
     delay: browserDelay,
@@ -38,6 +50,7 @@ export function createLiveServices(target: Window): AppServices {
     newId: () => target.crypto.randomUUID(),
     leave: (url) => target.location.assign(url),
     appOrigin: appHostOrigin(target.location),
-    copy: (text) => target.navigator.clipboard.writeText(text),
+    appVersion: APP_VERSION,
+    copy: (text) => copyText(target, text),
   }
 }

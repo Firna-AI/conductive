@@ -14,9 +14,22 @@
   display: contents;
 }
 
-/* A wrapper without a box, such as the one of a button that keeps its focus. */
+/* A wrapper without a box, such as the one of a suggestion and its divider. */
 .contents {
   display: contents;
+}
+
+/*
+ * The wrapper of a button that keeps the focus. The button takes the flex
+ * that a row of actions gives the wrapper, as a phone footer stretches each
+ * action.
+ */
+.keepFocus {
+  display: contents;
+}
+
+.keepFocus > * {
+  flex: inherit;
 }
 
 .plainButton {
@@ -40,10 +53,28 @@
   opacity: 0.5;
 }
 
+/*
+ * A menu item that is off fades its parts, except its note, through the
+ * `disabled` style of the mockup menu, so that the reader can read why it
+ * is off. The button itself keeps its opacity, so no part fades twice.
+ */
+.menuItem:disabled {
+  opacity: 1;
+}
+
 .plainButton:focus-visible,
 .focusable:focus-visible {
   outline: 2px solid var(--ui-primary);
   outline-offset: -2px;
+}
+
+/*
+ * A menu at a point of the window, or its choices, above the page. Its
+ * owner sets its place, so no box that scrolls cuts it off.
+ */
+.pointLayer {
+  position: fixed;
+  z-index: 20;
 }
 
 /* The anchor of a menu that opens beside its trigger. */
@@ -71,13 +102,6 @@
 /* The scrim of a sheet or a dialog closes it. */
 .scrim {
   cursor: default;
-}
-
-.error {
-  margin: 0;
-  color: var(--ui-rose);
-  font-size: var(--ui-text-sm);
-  line-height: 1.45;
 }
 
 .center {

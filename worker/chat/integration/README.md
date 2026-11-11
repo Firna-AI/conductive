@@ -7,14 +7,14 @@ A file name without a folder names a file in `worker/chat/`.
 
 `WorkspaceChat` takes `ChatDependencies` from `types.ts` as overrides.
 `createWorkspaceIntegration` in `workspace-integration.ts` sets them for
-the workspace object, as [The workspace lifecycle](#the-workspace-lifecycle)
-says. Its `runnerEventStored` starts device cleanup at each turn end, also
-after a refused end or a lifecycle error. A later handler must keep it.
+the workspace object, as [The workspace lifecycle](workspace-lifecycle.md)
+says. Its `turnEnded` starts device cleanup at each turn end, also after a
+refused end or a lifecycle error. A later handler must keep it.
 
 ## Trusted workspace calls
 
 Trusted Worker code can call these methods of `WorkspaceChat`. They run no
-gate. [The workspace lifecycle](#the-workspace-lifecycle) gives the methods
+gate. [The workspace lifecycle](workspace-lifecycle.md) gives the methods
 that the workspace object adds for the lifecycle.
 
 - `appendWorkspaceEvent(workspaceId, event, occurredAt)` stores one
@@ -105,8 +105,8 @@ depends on where the code runs:
   the browser gate.
 - The Durable Object checks the machine origin and the token again. So a
   token reaches only the object of its own workspace. A `hello` that names
-  another workspace closes the connection before a welcome, a command, or a
-  login goes out.
+  another workspace closes the connection before a welcome, a command, a
+  login, or a turn token goes out.
 - After the app request gate, `chatLifecycleRoute` in
   `worker/app-api/lifecycle.ts` gives the create, read, resume, and
   activity routes of a workspace to the lifecycle handler. It gives the
@@ -120,100 +120,28 @@ routes through the production Worker entry, and the browser harness.
 
 ## The workspace lifecycle
 
-`createWorkspaceIntegration` joins chat, the lifecycle, the file broker, and the Mac devices
-in the workspace object. The object also owns the preview, terminal, desktop, and GitHub handlers. The outer Worker calls the lifecycle through RPC
-methods of `Workspace`.
-
-- Chat and the lifecycle share the serial queue of `ChatStore`. Each
-  lifecycle change of `Workspace` runs in it through `runLifecycle`, then
-  calls `flushRunner`. So a waiting turn goes out when the lifecycle state
-  allows it.
-- `acceptFirstMessage`, `stopWorkspace`, `commitWorkspaceEvent`, and
-  `flushRunner` do not enter the queue. Call them only inside it.
-  `workspaceSummary` enters the queue.
-- `waitCreationAdmission`, `waitCreationLifecycle`, and `waitLifecycleStart`
-  do not hold the queue. So they cannot block the alarm that they wait for.
-- A change of a Mac request enters `authorizedWorkspaceOperation` once.
-  Inside it, the projection callback of `createWorkspaceIntegration` reads
-  the stored session with `chat.store.read`, then calls
-  `projectDeviceState` of the controller. The lifecycle reads the waiting
-  requests through `deviceWaiting`. Neither read enters the queue again.
-  [The shown state](../../lifecycle/workspace-object.md#the-shown-state)
-  gives the one writer of the D1 state and its event.
-- Keep the lifecycle records outside the `chat:v1:` key prefix.
+[The workspace lifecycle](workspace-lifecycle.md) gives how chat and the
+lifecycle work together in the workspace object.
 
 ### The first message
 
-- `initializeLifecycle` checks the workspace and the org membership of the
-  sender. Then its admission hook gives the assigned first message to
-  `acceptFirstMessage`.
-- `requireFirstMessage` in `first-message.ts` checks the stored creator,
-  the session, the turn, the message ID, and the model choice. A mismatch
-  gets `404 workspace_not_found`, and nothing is stored.
-- `admitFirstMessage` of the same file needs a stored agent login of the
-  sender. One chat transaction stores the session, the message, its first
-  turn, and their events. It commits before `initializeLifecycle` returns.
-  So the first message is durable before a browser can lose the create
-  reply.
-- A repeat returns the stored message and adds no history. An archived
-  workspace can return its stored first message, but admits no new one.
-- The RPC `acceptLifecycleFirstMessage`, or a `runner.ready` event, clears
-  the pending first message of the lifecycle.
+[The first message](workspace-lifecycle.md#the-first-message) gives the
+checks and the admission of the first message of a create.
 
 ### Hooks and events
 
-- Each hook passes its `publish` argument to the lifecycle. So the
-  lifecycle events of a hook commit in the task of that hook.
-- `runnerHello(workspaceId, publish)` runs after each `welcome`, also on a
-  stream that is not ready. It repairs the lifecycle, as
-  [Turn recovery](../../lifecycle/workspace-object.md#turn-recovery) says.
-- `runnerReady(workspaceId, publish)` runs after the Durable Object stores
-  each `runner.ready` event, and after `runnerHello` on a stream that sent
-  it before. It reports the event to the lifecycle. A runner that is ready
-  before the start is prepared gets its turns only after that. Their
-  messages and model changes wait behind them.
-- `runnerEventStored(envelope, publish)` runs after each other stored runner
-  event or refusal marker. It reports `turn.started`, `turn.completed`,
-  `turn.failed`, and `start.updated`, with their stored `occurredAt`. A
-  refused `turn.completed` or `turn.failed` ends its lifecycle turn.
-- A `workspace.title` updates the name of the workspace in D1. It is not
-  unread output.
-- `runnerReady` and `runnerEventStored` run after the commit and the
-  confirm. A hook error closes the runner connection, and the runner does
-  not send that event again. The next `hello` repairs the turns and the name.
-- `turnDispatching` registers the sender of a turn with the lifecycle
-  before the command goes out. While the lifecycle state allows no turn, it
-  returns `false`, and the turn waits. `turnDispatchFailed` removes that
-  turn after a failed send. It also removes it when the runner disconnects
-  while `turnDispatching` registers the turn, before the send.
-- `runnerDisconnected` reports a closed runner connection. It runs later in
-  the queue, through `waitUntil`.
-- The other lifecycle events go through `commitWorkspaceEvent`, with the
-  one chat publisher. No hook calls `appendWorkspaceEvent` while it holds
-  the queue.
+[Hooks and events](workspace-lifecycle.md#hooks-and-events) gives the chat
+hooks that report runner events to the lifecycle.
 
 ### Stop and summary
 
-- When the lifecycle state becomes `stopped` or `error`,
-  `stopWorkspace` closes the runner. It ends each
-  running or stopping turn as stopped. Queued turns stay for the resume.
-  Device cleanup starts too.
-- A failed admitted create keeps the same workspace and normal access to chat.
-  Later messages remain queued. A replacement create uses a fresh computer token.
-  Its readiness releases the existing commands in their saved order.
-- During org deletion, a missing workspace ends only the state projection.
-  Device reconciliation still settles the request and sends its broker cancellation.
-- `workspaceSummary` gives the last event number, the last event number
-  with visible output, and whether a dispatched turn runs. Its record
-  commits with the events and the turns. Queued turns do not count as
-  working.
-- Known limit: `Workspace.alarm` holds the queue during one lifecycle
-  phase. A phase can make several provider requests. Each can take up to 30
-  seconds, 65 for a file read, or 610 for a command. So a slow phase
-  delays the chat reads, the messages, and the runner receipts of that
-  workspace.
+[Stop and summary](workspace-lifecycle.md#stop-and-summary) gives the
+runner stop at a stopped or error state, and the workspace summary. It
+also gives the kept chat and queued messages of a failed admitted create.
 
-## Milestone 9: files
+<a id="milestone-9-files"></a>
+
+## Files
 
 - The Durable Object joins file parts with `RunnerFileReports` on
   `ChatTransaction.files`. It stores each complete report before the confirm.
@@ -223,6 +151,7 @@ methods of `Workspace`.
   `false` result means that no runner got the request.
 - `runnerAttached(workspaceId, connectionId, send)` attaches the file broker when a physical runner is ready.
   The callback keeps the physical identity across commands. `runnerDetached(connectionId)` removes that connection.
+  A ready runner that the object restores after a wake attaches again with the same connection ID.
 - `receiveFileResult(value, connectionId)` gets each `file.read.result` and
   `file.diff.result` message from that physical connection without payload checks. Validate the message in the
   hook. File results never enter the history.
@@ -245,68 +174,17 @@ methods of `Workspace`.
 - [The GitHub server integration](../../github/README.md#server-integration)
   gives the routes, the scheduled reads, and the refresh operation.
 
-## Milestone 7r: the agent runner
+<a id="milestone-7r-the-agent-runner"></a>
 
-- The Durable Object stores agent events as the runner sends them. It
-  copies only the known fields, and it refuses an unknown event type.
-- It requires and preserves tool-detail and turn-file omission counts.
-  These counts are non-negative safe integers.
-- It requires file-report revisions, part numbers, and part counts as positive
-  safe integers.
-- `runner.event-refused` is workspace-only. The runner parser refuses it.
-- So the runner maps the SDK events, removes the text that an SDK adds,
-  and maps each result to `userMessageIds`.
-- `turn.started` names the sender of the turn and its message IDs. Each
-  agent event names a started turn of its session, including an ended turn.
-- A valid late event adds data only. It changes neither the turn's end nor
-  the session's active turn. An event for a never-started turn gets
-  `turn_not_active`.
-- An event that breaks these rules or a cap gets a refusal marker and a
-  confirm. The runner must not send it again.
-- Deduplicate the commands by `commandId`. A new connection gets each
-  pending command again.
-- After a text-only turn, each unanswered message moves to a new turn. So
-  one message can come first in a `message` command, then in a new `turn`
-  command with a new command ID.
-- Each `turn` and `message` command carries the agent login of the session
-  starter, whoever sent the message. The runner keeps the login of the
-  first command of a turn for the whole turn.
-- An interrupt for a turn that the runner does not run still gets
-  `turn.completed` with state `stopped`.
-- A new stream gets each command other than `report.refresh` only after its
-  `runner.ready` event. A stream that sent `runner.ready` before gets them
-  right after the `welcome`.
-- A `report.refresh` command can come right after the `welcome`, before
-  `runner.ready`, and during a running turn. Answer it with a full report of
-  its kind.
+## The agent runner
+
+[Agent runner integration](runner/README.md#the-agent-runner) gives the
+runner events, the order and the credentials of the runner commands, and
+the report requests.
 
 ## Agent logins and attachments
 
-- The code that stores an agent login must encrypt it with `encrypt`,
-  `agentLoginContext(userId, agent)`, and `BOAT_KEY_ENCRYPTION_KEY`.
-- `readAgentLogin` decrypts with the same context and key. It accepts the
-  kinds `token` and `api-key` for Claude, and only `api-key` for Codex.
-- A login never holds whitespace. The save removes it, and
-  `readAgentLogin` removes it again, so a login that was saved before that
-  rule still works.
-- A message whose login is missing gets `409 agent_login_required`, and no
-  session is created, as [Session logins](#session-logins) says.
-- When the starter's login, or the sender's access, is gone as a command
-  goes out, `turn.failed` ends the turn only while it is queued. The failure
-  names the cause. A lost starter login sets `loginAvailable` to false.
-- A starter who stops sharing the login fails the queued command of another
-  member in the same way. That refusal sets `loginShared` to false and keeps
-  `loginAvailable` true. The failure then says that the login is for the
-  messages of the starter only, with the same recovery text.
-- A running or stopping turn keeps the command, and the Durable Object does
-  not send it. So the later runner events of that turn stay valid.
-- When that turn finishes, an unanswered message moves to a new queued
-  turn. That turn then fails with `agent_login_required`.
-- `resolveAttachments(userId, workspaceId, ids)` gets the ID of the sender,
-  not of the starter. It returns the attachment records and the sandbox path
-  of each attachment. The command gives the paths to the runner.
-- By default, a message with an attachment gets
-  `503 attachments_unavailable`.
+[Agent logins and attachments](logins-and-attachments.md) gives the login checks, the share refusal, and the attachment seams.
 
 ## Session logins
 
@@ -318,3 +196,7 @@ two login paths of `SessionLogins`, and the linked sessions.
 [Chat backend tests](../tests.md) names the test support files and what
 each group of tests covers. [Outer Worker tests](outer-worker-tests.md)
 gives the tests through the production Worker entry.
+
+The browser harness saves a GitHub token with no expiry for its seeded
+owner, so that a routine's Run now reaches its workspace in a manual smoke
+test. The shared outer-runtime seed keeps its existing credentials.

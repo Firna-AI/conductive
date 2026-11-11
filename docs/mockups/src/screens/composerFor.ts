@@ -1,6 +1,14 @@
 import type { ComposerState } from '../components/chat/Composer'
-import { attachmentDraft, draftAttachments } from '../fixtures/attachments'
+import type { MentionTree } from '../components/chat/FileMentionList'
+import {
+  attachmentDraft,
+  draftAttachments,
+  failedAttachments,
+  uploadingAttachments,
+  type Attachment,
+} from '../fixtures/attachments'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
+import { mentionChipsDraft, mentionDrafts } from '../fixtures/fileMentions'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
@@ -15,8 +23,63 @@ const runningConversations = new Set([
   'first-turn',
   'output-left-out-running',
   'linked',
+  'sent-files',
   'link-sent',
 ])
+
+/**
+ * The files of each composer state with files. A file over the size limit
+ * stays out of the message, so its state holds only the files that the
+ * composer attached, and a notice names the file.
+ */
+const composerFiles: Partial<
+  Record<WorkspaceState['composer'], readonly Attachment[]>
+> = {
+  attachments: draftAttachments,
+  uploading: uploadingAttachments,
+  'upload-failed': failedAttachments,
+  'too-large': draftAttachments,
+  picker: draftAttachments,
+  'attachment-pointer': draftAttachments,
+}
+
+/** The composer states whose Send leads to the message with its files. */
+const sendsFiles = new Set<WorkspaceState['composer']>([
+  'attachments',
+  'too-large',
+])
+
+/** The draft and the tree of each state that opens the list of `@`. */
+const mentionLists: Partial<
+  Record<WorkspaceState['composer'], { draft: string; tree: MentionTree }>
+> = {
+  'mention-query': { draft: mentionDrafts.query, tree: 'latest' },
+  'mention-start': { draft: mentionDrafts.start, tree: 'latest' },
+  'mention-none': { draft: mentionDrafts.none, tree: 'latest' },
+  'mention-loading': { draft: mentionDrafts.query, tree: 'loading' },
+  'mention-unavailable': { draft: mentionDrafts.query, tree: 'unavailable' },
+}
+
+/** The pointer that a state draws over the icon of a chip of the composer. */
+function pointerOf(state: WorkspaceState): ComposerState['pointer'] {
+  if (state.composer === 'attachment-pointer') {
+    return { kind: 'attachment', name: draftAttachments[0].name }
+  }
+  const chip =
+    state.composer === 'file-chip-pointer' ||
+    state.composer === 'workspace-link-pointer'
+  return chip ? { kind: 'chip' } : undefined
+}
+
+/** The draft of a state with chips: file chips, or a workspace link. */
+function chipDraft(composer: WorkspaceState['composer']): string | undefined {
+  if (composer === 'file-chips' || composer === 'file-chip-pointer') {
+    return mentionChipsDraft
+  }
+  const link =
+    composer === 'workspace-link' || composer === 'workspace-link-pointer'
+  return link ? workspaceLinkDraft : undefined
+}
 
 /** An agent turn runs on a ready sandbox. */
 export function isRunning(state: WorkspaceState): boolean {
@@ -32,6 +95,10 @@ export function isRunning(state: WorkspaceState): boolean {
  * the picker marks the models of the other agent as opening a new session.
  * A message for an agent that is not connected waits, and Send is off.
  *
+ * Send also waits while a file uploads, or while a failed upload waits for
+ * Try again or Remove. A file over the size limit stays out, and Send takes
+ * the message with the files that the composer attached.
+ *
  * A session runs on the login of its starter. When the starter is another
  * member, a label in the bar names that login, and the own login of the
  * viewer does not matter. When the login of that starter is not
@@ -45,7 +112,8 @@ export function isRunning(state: WorkspaceState): boolean {
  * a new workspace. The message waits for the sandbox.
  *
  * A message with a pasted link to another workspace shows the link as a
- * chip, and the draft keeps the plain link.
+ * chip, and the draft keeps the plain link. `@` opens the list of the
+ * files and folders above the box, and a picked entry shows as a chip.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -59,27 +127,37 @@ export function composerFor(
   const linkedState =
     state.composer === 'no-starter-login' || state.composer === 'not-shared'
   const opensLinked = !fresh && linkedState && starter !== undefined
-  const withFiles =
-    !fresh && (state.composer === 'attachments' || state.composer === 'picker')
+  const files = fresh ? undefined : composerFiles[state.composer]
+  const mention = fresh ? undefined : mentionLists[state.composer]
+  const chips = fresh ? undefined : chipDraft(state.composer)
   let draft = ''
   if (!fresh && state.conversation === 'steer') draft = steerDraft
-  else if (withFiles) draft = attachmentDraft
+  else if (files) draft = attachmentDraft
   else if (!fresh && (noLogin || linkedState)) draft = followUpDraft
-  else if (!fresh && state.composer === 'workspace-link') {
-    draft = workspaceLinkDraft
-  } else if (!fresh && state.composer === 'draft') {
+  else if (mention) draft = mention.draft
+  else if (chips) draft = chips
+  else if (!fresh && state.composer === 'draft') {
     draft = isNew(state) ? savedCartsDraft : followUpDraft
+  }
+  let sendTo: string | undefined
+  if (opensLinked) sendTo = paths.linkedSession
+  else if (files && sendsFiles.has(state.composer)) {
+    sendTo = paths.attachmentsSent
   }
   return {
     choice: workspace.choice,
     running: !fresh && isRunning(state),
     draft,
-    attachments: withFiles ? draftAttachments : [],
+    attachments: files ?? [],
+    attachTo:
+      files && state.composer === 'attachments' ? paths.attachments : undefined,
     picker: state.composer === 'picker',
     sessionAgent: fresh ? undefined : workspace.choice.agent,
-    sendTo: opensLinked ? paths.linkedSession : undefined,
+    sendTo,
     startsSession: opensLinked,
     blocked: needsLogin,
     sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),
+    mention: mention?.tree,
+    pointer: fresh ? undefined : pointerOf(state),
   }
 }

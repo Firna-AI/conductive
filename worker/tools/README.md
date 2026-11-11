@@ -49,6 +49,8 @@ It preserves the first message text.
 It cleans an optional name with `sessionTitleFrom` in the [shared title helper](../../src/shared/session-title.ts).
 It keeps the first line with text, makes white space single, and removes one final full stop while keeping an ellipsis.
 It cuts at 60 Unicode code points, at a whole word when possible.
+It keeps each underscore, and it does not use `modelTitleFrom`, the title model rule that changes underscores to spaces.
+The tool description and the CLI help ask the agent to avoid underscores unless the user asks for them, as [Create and list calls](../../docs/protocol/agent-tools.md#create-and-list-calls) says.
 A blank result counts as no name, and the app shows "Untitled".
 The create answer gives the stored name. The branch and stored city keep the city.
 The tools preserve string names, including blank names, and ignore names of other types.
@@ -70,15 +72,18 @@ The value keeps the inherited owner separate from the first message sender.
 The lifecycle service must keep the first message durably and start it at once.
 It must use the latest good org image.
 It must use the sender's agent login.
-A failed first start keeps the accepted workspace and its number.
-The create call reports that failure.
+After admission, a failed first start keeps the accepted workspace, its number, and its first message.
+The create call reports that failure, as
+[A failed first start](../../docs/protocol/create-a-workspace.md#a-failed-first-start) says.
 
 An org suspension refuses the shared workspace token rule before agent tool calls.
 The same rule prevents Mac commands and their later approvals and results.
 
 ## Image installer
 
-`installWorkspaceTools` takes source assets and an authorized image command callback.
+`workspaceToolsCommand` builds the install command from source assets.
+`installWorkspaceTools` runs that command with an authorized image callback.
+The software image version hashes that same command with its privilege wrapper.
 The [asset module](image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
 Static Vite `?raw` imports embed the allowed sources in the Worker bundle.
 The asset module has no runtime filesystem dependency.
@@ -116,14 +121,14 @@ It reads the configured account default model when the owner has no saved prefer
 Creation calls the normal workspace lifecycle with a separate owner and sender.
 It waits for creation to finish before it returns the workspace and session.
 
-Each image build calls `installWorkspaceTools` with `WORKSPACE_TOOL_SOURCES`
+Each org build that needs the software step calls `installWorkspaceTools` with `WORKSPACE_TOOL_SOURCES`
 before it installs the rest of the image software.
 The two runner providers register [`WORKSPACE_TOOLS_MCP`](../../src/shared/agent-tools.ts) beside `computer`.
 The [runner](../../runner/README.md) supplies the machine origin, workspace token,
 and active turn ID at runtime. The image stores no such credential.
 
 No git credential endpoint is implemented here.
-[GitHub tokens](../../docs/protocol/access-and-security.md#github-tokens) states its rule.
+[GitHub tokens](../../docs/protocol/github-tokens.md) states its rule.
 
 ## Checks
 

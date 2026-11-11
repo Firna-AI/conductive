@@ -16,10 +16,19 @@ import {
   repositoryEnvironment,
 } from './repository-locations'
 import { readRepositories } from './settings-data'
+import {
+  attachComputer,
+  recordComputerIntent,
+  rejectComputerIntent,
+  type ComputerOwnership,
+} from './computer-ledger'
 
 export interface SandboxResourceIntent {
   kind: 'sandbox'
   input: SandboxStart
+  /** Null only for a computer that no org owns. Its own record keeps it. */
+  ownership: ComputerOwnership | null
+  mayHaveAllocated: boolean
   persist(input: SandboxStart): Promise<void>
 }
 
@@ -38,21 +47,55 @@ export interface SnapshotResourceIntent {
 export type ResourceIntent = SandboxResourceIntent | SnapshotResourceIntent
 
 export function createResource(
+  db: D1Database,
   provider: SandboxProvider,
   intent: SandboxResourceIntent,
 ): Promise<Sandbox>
 export function createResource(
+  db: D1Database,
   provider: SandboxProvider,
   intent: SnapshotResourceIntent,
 ): Promise<SavedSnapshot>
 /** Persist the dispatched request's ownership before the provider can create it. */
 export async function createResource(
+  db: D1Database,
   provider: SandboxProvider,
   intent: ResourceIntent,
 ): Promise<Sandbox | SavedSnapshot> {
   if (intent.kind === 'sandbox') {
     await intent.persist(intent.input)
-    return provider.create(intent.input)
+    const ownership = intent.ownership
+    if (!ownership) return provider.create(intent.input)
+    const firstDispatch = await recordComputerIntent(
+      db,
+      intent.input.idempotencyKey,
+      ownership,
+      intent.mayHaveAllocated,
+    )
+    let sandbox: Sandbox
+    try {
+      sandbox = await provider.create(intent.input)
+    } catch (error) {
+      if (
+        firstDispatch &&
+        error instanceof ProviderError &&
+        [
+          'unauthorized',
+          'forbidden',
+          'payment_required',
+          'not_found',
+          'invalid_request',
+        ].includes(error.kind)
+      )
+        await rejectComputerIntent(
+          db,
+          intent.input.idempotencyKey,
+          ownership.providerAccount,
+        )
+      throw error
+    }
+    await attachComputer(db, intent.input.idempotencyKey, sandbox.id, ownership)
+    return sandbox
   }
   if (intent.recorded) {
     try {
@@ -87,11 +130,25 @@ export async function createResource(
 export function buildSandboxIntent(
   db: D1Database,
   job: BuildJob,
+  mayHaveAllocated: boolean,
 ): SandboxResourceIntent {
   return {
     kind: 'sandbox',
+    mayHaveAllocated,
+    ownership: {
+      orgId: job.orgId,
+      providerAccount: job.providerAccount,
+      ownerUserId: job.startedByUserId,
+      purpose: 'build',
+      purposeId: job.buildId,
+    },
     input: {
-      snapshotName: job.previousImageName ?? undefined,
+      snapshotName:
+        (job.previousProviderAccount === job.providerAccount
+          ? job.previousImageName
+          : null) ??
+        job.softwareImageName ??
+        undefined,
       name: `image-${job.buildId}`,
       env: repositoryEnvironment(
         capturedRepositoryLocations(
@@ -125,6 +182,7 @@ export function buildSnapshotIntent(
       sandboxId: job.sandboxId,
       name: job.snapshotName ?? savedImageName(job.buildId),
     },
-    persist: ({ name }) => assignBuildSnapshot(db, job.buildId, name),
+    persist: ({ name }) =>
+      assignBuildSnapshot(db, job.buildId, name, job.providerAccount),
   }
 }

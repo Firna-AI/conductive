@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
 import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
@@ -11,7 +10,6 @@ import {
   reportKinds,
   refusedEvents,
 } from './runner-repairs.test-support'
-
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -23,7 +21,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('requests all four workspace reports without a login, coalesces losses, and resets only on complete reports', async () => {
+it('requests all workspace reports without a login, coalesces losses, and resets only on complete reports', async () => {
   const fixture = await createChatFixture(harness)
   await harness.env.DB.prepare('DELETE FROM agent_logins').run()
   const runner = await fixture.connect()
@@ -31,7 +29,7 @@ it('requests all four workspace reports without a login, coalesces losses, and r
   await fixture.drain()
   const initial = refreshCommands(runner)
   expect(initial.map((command) => command.kind)).toEqual(reportKinds)
-  expect(new Set(initial.map((command) => command.commandId)).size).toBe(4)
+  expect(new Set(initial.map((command) => command.commandId)).size).toBe(5)
   expect(await refusedEvents(fixture)).toEqual(
     reportKinds.map((runnerEventType, index) => ({
       type: 'runner.event-refused',
@@ -46,11 +44,11 @@ it('requests all four workspace reports without a login, coalesces losses, and r
   for (const kind of reportKinds) runner.emit(oversizedReport(kind, 2))
   await fixture.drain()
   expect(refreshCommands(runner)).toEqual(initial)
-  expect((await refusedEvents(fixture)).slice(4)).toEqual(
+  expect((await refusedEvents(fixture)).slice(5)).toEqual(
     reportKinds.map((runnerEventType, index) => ({
       type: 'runner.event-refused',
       streamId: 'fake-stream-1',
-      runnerEventNumber: index + 5,
+      runnerEventNumber: index + 6,
       runnerEventType,
       reason: 'too_large',
       sessionId: null,
@@ -58,14 +56,14 @@ it('requests all four workspace reports without a login, coalesces losses, and r
       repairFailed: true,
     })),
   )
-  fixture.restart()
+  await fixture.restart()
   await fixture.connect(runner)
   expect(refreshCommands(runner)).toEqual(initial)
   for (const kind of reportKinds) runner.emit(fullReport(kind, 3))
   await fixture.drain()
   for (const kind of reportKinds) runner.emit(oversizedReport(kind, 4))
   await fixture.drain()
-  const next = refreshCommands(runner).slice(4)
+  const next = refreshCommands(runner).slice(5)
   expect(next.map((command) => command.kind)).toEqual(reportKinds)
   expect(
     next.every(
@@ -74,10 +72,9 @@ it('requests all four workspace reports without a login, coalesces losses, and r
     ),
   ).toBe(true)
   expect(
-    (await refusedEvents(fixture)).slice(8).map((event) => event.repairFailed),
-  ).toEqual([undefined, undefined, undefined, undefined])
+    (await refusedEvents(fixture)).slice(10).map((event) => event.repairFailed),
+  ).toEqual([undefined, undefined, undefined, undefined, undefined])
 })
-
 it('delivers repair commands during an active turn and ignores nonreplaceable refusals', async () => {
   const fixture = await createChatFixture(harness)
   const session = await fixture.createSession()

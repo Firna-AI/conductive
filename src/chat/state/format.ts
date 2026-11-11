@@ -1,25 +1,6 @@
-import type { AgentChoice, AgentModel, Effort } from '../../shared/agents'
-
-/** The effort levels from the lowest, with the words that the picker shows. */
-export const effortLabels: Readonly<Record<Effort, string>> = {
-  none: 'None',
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  xhigh: 'Extra high',
-  max: 'Max',
-}
+import { effortLabels, type AgentModel, type Effort } from '../../shared/agents'
 
 const effortOrder = Object.keys(effortLabels)
-
-/** A length of time such as "24s", "4m 12s", or "1h 5m". */
-export function formatDuration(milliseconds: number): string {
-  const seconds = Math.max(0, Math.floor(milliseconds / 1000))
-  if (seconds < 60) return `${seconds}s`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ${seconds % 60}s`
-  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
-}
 
 /** The time since a moment, such as "now", "5m ago", or "1d ago". */
 export function formatAgo(then: number, now: number): string {
@@ -38,23 +19,6 @@ export function formatDay(timestamp: number, timeZone?: string): string {
     month: 'long',
     timeZone,
   }).format(new Date(timestamp))
-}
-
-export function findModel(
-  models: readonly AgentModel[],
-  choice: Pick<AgentChoice, 'agent' | 'model'>,
-): AgentModel | undefined {
-  return models.find(
-    (item) => item.agent === choice.agent && item.model === choice.model,
-  )
-}
-
-/** The name of a model without its agent's brand, such as "Opus 5.5". */
-export function modelLabel(
-  models: readonly AgentModel[],
-  choice: AgentChoice,
-): string {
-  return findModel(models, choice)?.label ?? choice.model
 }
 
 /**

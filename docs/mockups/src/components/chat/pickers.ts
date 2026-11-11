@@ -1,7 +1,8 @@
+import { ExternalLink } from 'lucide-react'
+import { effortLabels } from '../../../../../src/shared/agents'
 import {
   agentKeys,
   agents,
-  effortLabels,
   effortsFor,
   type AgentChoice,
   type AgentKey,
@@ -15,7 +16,9 @@ const divider: MenuEntry = { kind: 'divider' }
  * no brand name, then the effort levels of the chosen model. The menu marks
  * the current model and the current effort. In a session with messages,
  * each model of the other agent opens a new session, and the draft moves
- * there (decision 51). A model of the session's own agent stays in it.
+ * there (decision 51). The external link icon marks each of those models,
+ * and a screen reader says "New session" for it. A model of the session's
+ * own agent stays in it.
  */
 export function pickerMenu(
   choice: AgentChoice,
@@ -28,17 +31,10 @@ export function pickerMenu(
       ...agents[key].models.map((model): MenuEntry => ({
         kind: 'item',
         label: model.name,
-        detail: opensSession ? 'New session' : undefined,
+        trailingIcon: opensSession ? ExternalLink : undefined,
+        trailingLabel: opensSession ? 'New session' : undefined,
         checked: key === choice.agent && model.name === choice.model,
       })),
-      ...(opensSession
-        ? [
-            {
-              kind: 'note',
-              text: 'Your draft moves to the new session.',
-            } satisfies MenuEntry,
-          ]
-        : []),
     ]
   })
   return [

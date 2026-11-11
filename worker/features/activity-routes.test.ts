@@ -5,7 +5,6 @@ import { OUTER_WORKSPACE } from '../chat/integration/outer-seed.test-support'
 import { barrier } from '../previews/stream-test-support'
 import { closeSockets } from '../chat/adapter-sockets.test-support'
 import { WebSocket } from 'miniflare'
-import { record } from '../chat/inputs'
 import { OUTER_ORG } from '../chat/integration/outer-seed.test-support'
 import {
   activityFixture,
@@ -64,19 +63,7 @@ it('forwards terminal and preview input and runner state during a failed provide
       }
       const socket = terminal.fetch(request)
       if (socket) return socket
-      if (
-        new URL(request.url).pathname.endsWith('/host') &&
-        record(await request.clone().json()).port === 7681
-      )
-        return Response.json({
-          ok: true,
-          type: 'port.hosted',
-          port: 7681,
-          url: 'https://sandbox-7681.on.boat.dev?_token=server-port-token',
-          access: 'private',
-          isProtected: true,
-        })
-      return hostedActivityPort(request) ?? fallback(request)
+      return (await hostedActivityPort(request)) ?? fallback(request)
     },
   }))
   const forward = await openActivityPreview(active)
@@ -119,7 +106,7 @@ it('forwards terminal and preview input and runner state during a failed provide
   expect(browser.readyState).toBe(WebSocket.READY_STATE_OPEN)
   await active.actor().waitForLocalActivity()
   expect(await active.actor().readLifecycle()).toMatchObject({
-    lastActivityAt: active.now + 60_000,
+    lastActivityAt: active.now + 20_000,
   })
   expect(deadlines).toEqual([{ ttlSeconds: 1860 }, { ttlSeconds: 1860 }])
   expect(maximum).toBe(1)
@@ -155,7 +142,7 @@ it.each(['start', 'generation'] as const)(
             sandbox: { id: 'bx_activity', state: 'error' },
           })
         }
-        return hostedActivityPort(request) ?? fallback(request)
+        return (await hostedActivityPort(request)) ?? fallback(request)
       },
     }))
     const forward = await openActivityPreview(active)
@@ -215,7 +202,7 @@ it('ignores a delayed provider error after the workspace stops', async () => {
           sandbox: { id: 'bx_activity', state: 'error' },
         })
       }
-      return hostedActivityPort(request) ?? fallback(request)
+      return (await hostedActivityPort(request)) ?? fallback(request)
     },
   }))
   const forward = await openActivityPreview(active)

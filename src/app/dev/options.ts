@@ -5,6 +5,7 @@ import type { FakeApiOptions } from '../../test-support/fake-api'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
+import type { DevUploadMode } from './attachment-routes'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -17,6 +18,14 @@ const CONVERSATIONS = [
   'queued',
   'first-turn',
 ] as const satisfies readonly RecordedChatScenario[]
+
+/** The run lists of Review pull requests that the mockups also draw. */
+const REVIEW_RUNS = ['failed', 'skipped'] as const
+
+/** The runs whose workspace `checkout-autocomplete` can be. */
+const RUN_WORKSPACES = ['pull-request', 'schedule'] as const
+const UPLOADS = ['wait', 'fail'] as const satisfies readonly DevUploadMode[]
+const FEEDBACK = ['ready', 'fail', 'no-email'] as const
 
 const BANNERS = [
   'none',
@@ -64,8 +73,15 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
  * - `stop=<seconds>`: an open workspace stops that many seconds after it
  *   opens, as a sandbox does that stops while its workspace is open.
+ * - `upload=wait|fail`: each file upload never ends, or the first upload of
+ *   each file name fails once, so Try again works.
  * - `shareSave=fail`: each change of the share setting of an agent login
  *   fails, so the account shows that the change was not saved.
+ * - `runs=failed|skipped`: the Runs list of Review pull requests holds a
+ *   failed run of each cause, or the skipped runs of accounts outside Acme.
+ * - `run=pull-request|schedule`: `checkout-autocomplete` is the workspace
+ *   of a run, of Review pull requests for #482 or of an hourly run of
+ *   Triage new errors. So its header shows the line of the run.
  * - `waiting=1`: the user is Sam Okafor, who waits for app access, with a
  *   verified email, so the app shows the waitlist. `waiting=no-email`: the
  *   same account without a verified email. Sam starts as a new account, as
@@ -76,6 +92,11 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `paused=1`: sign-ups are paused. A use of a code and the Accept of a
  *   person who waits get `signups_paused`, and nothing is used up. The
  *   operator section shows the same pause, by the operator of the samples.
+ * - `waitlist=off`: the operator of the samples turned the waitlist off.
+ *   Unless sign-ups are paused, a person who waits gets app access at the
+ *   next request, with no use of a code, so Get started opens. The operator
+ *   section shows the switch off, and Zed K as a person who came back and
+ *   got in by open sign-up. The Account page names open sign-up.
  * - `inviteCode=used-up|disabled`: every invite of the code of the user is
  *   used, or an operator turned the code off. The operator section shows
  *   the same code.
@@ -92,11 +113,19 @@ export interface DevOptions {
   signedOut: boolean
   /** The wait before an open workspace stops, or `null` for no stop. */
   stopAfterMs: number | null
+  /** What each file upload does. */
+  upload: DevUploadMode
   shareSaveFails: boolean
+  feedback: (typeof FEEDBACK)[number]
+  /** The run list of Review pull requests in place of its newest runs. */
+  reviewRuns: (typeof REVIEW_RUNS)[number] | null
+  /** The run whose workspace `checkout-autocomplete` is, or null. */
+  runWorkspace: (typeof RUN_WORKSPACES)[number] | null
   /** The user waits for app access, with a verified email or none. */
   waiting: 'verified' | 'none' | null
   invited: boolean
   paused: boolean
+  waitlistOff: boolean
   inviteCode: DevInviteCode
 }
 
@@ -137,10 +166,15 @@ export function readDevOptions(search: string): DevOptions {
     operator,
     signedOut: params.get('signedOut') === '1',
     stopAfterMs: stopAfter(params.get('stop')),
+    upload: pick(params, 'upload', UPLOADS) ?? 'ready',
     shareSaveFails: params.get('shareSave') === 'fail',
+    feedback: pick(params, 'feedback', FEEDBACK) ?? 'ready',
+    reviewRuns: pick(params, 'runs', REVIEW_RUNS) ?? null,
+    runWorkspace: pick(params, 'run', RUN_WORKSPACES) ?? null,
     waiting,
     invited: params.get('invited') === '1',
     paused: params.get('paused') === '1',
+    waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
   }
 }

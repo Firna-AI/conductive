@@ -18,13 +18,22 @@
 - **Problem:** Two plans that run at the same time take the same numbers, because no rule reserves them.
 - **Evidence:**
   - Decision 142 names three records:
-    - the operator section, in `docs/protocol/operator-section.md` and `docs/protocol/access-and-security.md`
+    - the operator section, in `docs/protocol/operator-section.md` and `docs/protocol/isolation.md`
     - the rule that the last edit that the server commits to a session field wins, in `docs/protocol/agents-and-sessions.md`
     - the Preferences tab, in `docs/protocol/create-a-workspace.md`
   - Decision 145 names three records:
     - the palette key, in `docs/protocol/command-palette.md`
-    - the masked file paths, in `docs/protocol/access-and-security.md` and `src/marketing/privacy.ts`
+    - the masked file paths, in `docs/protocol/tokens-and-secrets.md` and `src/marketing/privacy.ts`
     - the lift of a suspension, in `docs/protocol/operator-actions.md` and `docs/protocol/operator-section.md`
+  - The preview relay change of `calummoore/port-preview-error-v2` took 213 and 214 on 10 November 2026. Main used 213 to 217 for the provider groundwork within hours, so before its merge the branch renumbered them:
+    - 213 became 218, the local `Host` and `Origin` that a previewed server gets.
+    - 214 became 219, the refusal of previews in a sandbox without the relay.
+  - The port-detection change of `calummoore/preview-port-detection-brainstorm` also took 213 and 214 on 10 November 2026. It first renumbered them to 218 and 219 for the provider work. The preview relay then merged with those numbers, so this branch renumbered its records again:
+    - 218 became 220, the runner's reports of listening ports. The user chose option C on 10 November 2026.
+    - 219 became 221, the program names and folders of listening ports. The user chose option D on 10 November 2026.
+  - Decision 148 names two records:
+    - the rule that only an org image build installs the terminal programs, in `plans/boat-native-remote-workspaces.md`. The user chose to keep that rule on 8 November 2026.
+    - the rule that the operator Overview lists no suspensions, in `docs/protocol/operator-section.md` and `docs/mockups/src/entries/app/operator/index.mockup.tsx`
   - Decisions 150 and 151 each name two records:
     - the fold of the work of an ended turn, in `docs/protocol/chat-and-events.md` and `docs/protocol/agent-tools.md`
     - the first build of a new org, in `docs/protocol/org-image.md`, `docs/protocol/orgs-and-members.md`, and `docs/protocol/create-a-workspace.md`
@@ -52,7 +61,7 @@
 - **Previous examples:**
   - The two renumberings of `plans/automatic-first-build.md` on 9 November 2026.
   - The renumbering of the workspace link chips decisions from 150 and 151 to 211 and 212, on 9 November 2026.
-  - The live repeats of 142, 145, 150, and 151 that **Evidence** lists.
+  - The live repeats of 142, 145, 148, 150, and 151 that **Evidence** lists. The repeat of 148 was found on 10 November 2026, by the options check of the [recorded port-detection plan](https://github.com/Firna-AI/remote-code/blob/346334f74113431993856bcfc4a4ed1523753932/plans/preview-port-detection.md).
 - **Recommendation:** B. It ends the collisions without a step before each merge.
 - **Action:** ask the user, because the numbering is a repository rule.
 

@@ -31,6 +31,8 @@ export function ActionButton(
     icon?: LucideIcon
     tone?: ActionTone
     disabled?: boolean
+    /** The action runs, so a spinner leads the label and a press does nothing. */
+    busy?: boolean
     trailing?: ReactNode
   },
 ) {
@@ -39,6 +41,7 @@ export function ActionButton(
     <Button
       {...triggerProps(props)}
       accessibilityLabel={props.accessibilityLabel}
+      busy={props.busy}
       disabled={props.disabled}
       icon={props.icon}
       labelStyle={{
@@ -69,6 +72,8 @@ export function IconButton(
     icon: LucideIcon
     disabled?: boolean
     quiet?: boolean
+    /** The state of a toggle button, such as "+" while its form shows. */
+    pressed?: boolean
   },
 ) {
   const Icon = props.icon
@@ -86,6 +91,7 @@ export function IconButton(
         />
       }
       onPress={noop}
+      pressed={props.pressed}
       shape="square"
       size="sm"
       tone="plain"

@@ -4,17 +4,29 @@
 
 import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
+import { attachmentConversations } from './attachmentConversations'
+import type { Attachment } from './attachments'
 import { changedFiles, type ChangedFile } from './files'
 import { linkedConversations } from './linkedConversations'
+import {
+  bullets,
+  listConversations,
+  type MessageList,
+} from './listConversations'
 import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
-import { newWorkspaceConversations } from './newWorkspaceConversations'
+import {
+  newWorkspaceConversations,
+  savedCartsMessage,
+} from './newWorkspaceConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
+import { conversationKeys } from './conversationKeys'
+import { fileMentionConversations } from './fileMentions'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -24,14 +36,17 @@ type ToolCallStatus = 'done' | 'running' | 'stopped'
 /** A table in a message of the agent. A short row keeps only its own cells. */
 export type MessageTable = { kind: 'table' } & TableCells<string>
 
-/** A block of a message of the agent: a paragraph, or a table. */
-export type AgentBlock = string | MessageTable
+/** A block of a message of the agent: a paragraph, a table, or a list. */
+export type AgentBlock = string | MessageTable | MessageList
 
 export type ChatItem =
   | {
       kind: 'user'
       id: string
       text: string
+      /** The files of the message, which show under it. */
+      attachments?: readonly Attachment[]
+      /** Waits in the queue of the workspace until the sandbox is ready. */
       queued?: boolean
       /** Sent while a turn runs: it joins that turn as a new part. */
       during?: true
@@ -39,10 +54,8 @@ export type ChatItem =
   | {
       kind: 'agent'
       id: string
-      /** The paragraphs and the tables of the message, in order. */
+      /** The paragraphs, the tables, and the lists of the message, in order. */
       blocks: readonly AgentBlock[]
-      /** A list after the blocks. */
-      bullets?: readonly string[]
     }
   | {
       kind: 'tool'
@@ -109,44 +122,6 @@ export type ChatItem =
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
 
-export const conversationKeys = [
-  'history',
-  'running',
-  'steer',
-  'interrupted',
-  'sandbox-stopped',
-  'failed',
-  'queued',
-  'queued-follow-up',
-  'queued-retry',
-  'first-turn',
-  'mac-waiting',
-  'mac-waiting-many',
-  'mac-waiting-suite',
-  'mac-denied',
-  'mac-done',
-  'mac-unavailable',
-  'output-left-out',
-  'output-left-out-running',
-  'files-left-out',
-  'lost-lines',
-  'lost-turn-end',
-  'files-unavailable',
-  'stopped-files-unavailable',
-  'linked',
-  'link-sent',
-  'link-answer',
-  'other-org-link',
-  'steered',
-  'mac-in-work',
-  'table-resources',
-  'table-header',
-  'table-rows',
-  'table-short-row',
-  'table-wide',
-  'tables-in-work',
-] as const
-
 export type ConversationKey = (typeof conversationKeys)[number]
 
 function tool(
@@ -203,13 +178,15 @@ const autocompleteEnd: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'done',
-    blocks: ['Done. Checkout now suggests addresses as you type.'],
-    bullets: [
-      'Choosing a suggestion fills the street, city, and postcode.',
-      'Manual entry still works when there is no match.',
-      'Removed the old postcode lookup, which the suggestions replace.',
-      'Unit tests cover `useAddressAutocomplete`, and the checkout end-to-end tests pass.',
-      'Opened pull request #482.',
+    blocks: [
+      'Done. Checkout now suggests addresses as you type.',
+      bullets(
+        'Choosing a suggestion fills the street, city, and postcode.',
+        'Manual entry still works when there is no match.',
+        'Removed the old postcode lookup, which the suggestions replace.',
+        'Unit tests cover `useAddressAutocomplete`, and the checkout end-to-end tests pass.',
+        'Opened pull request #482.',
+      ),
     ],
   },
   { kind: 'turn-end', id: 'turn-end', duration: '4m 12s', files: changedFiles },
@@ -279,11 +256,14 @@ export const conversations: Readonly<
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...linkedConversations,
+  ...attachmentConversations({ history, firstMessage: savedCartsMessage }),
   ...workspaceLinkConversations(history),
+  ...fileMentionConversations(history),
   ...workConversations({
     start: autocompleteStart,
     tests: autocompleteTests,
     steer: steerDraft,
   }),
   ...tableConversations,
+  ...listConversations,
 }

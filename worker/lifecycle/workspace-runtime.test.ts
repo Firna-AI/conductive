@@ -54,6 +54,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     avatarUrl: null,
   }
   const job: WorkspaceStartJob = {
+    providerAccount: 'boat',
     workspaceId: id,
     orgId: 'runtime-org',
     kind: 'create',
@@ -154,7 +155,7 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   expect(fixture.boat.starts).toHaveLength(1)
   expect(fixture.boat.commands).toHaveLength(4)
   expect(fixture.boat.commandRequests.at(-1)).toMatchObject({
-    detached: false,
+    detached: true,
     command: expect.stringContaining(
       'systemctl start conductive-terminal.service',
     ),
@@ -163,10 +164,18 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
     startupPrepared: true,
     pendingFirstMessage: FIRST_MESSAGE,
   })
-  await restored.tick()
   // Finish the restore watch before checking the idle alarm.
-  await restored.tick()
+  const restoring = await restored.readLifecycle()
+  if (restoring?.restoreWatchAt !== undefined)
+    await restored.tick(restoring.restoreWatchAt)
   const ready = await restored.readLifecycle()
+  const idleAt = (ready?.lastActivityAt ?? 0) + IDLE_MS
+  expect(await restored.lifecycleAlarmAt()).toBe(idleAt)
+  const accessAt = await restored.browserAlarmAt()
+  expect(accessAt).not.toBeNull()
+  expect(accessAt).toBeLessThan(idleAt)
+  expect(await restored.alarmAt()).toBe(accessAt)
+  await restored.passTime((ready?.lastActivityAt ?? 0) + IDLE_MS - 1)
   expect(await restored.alarmAt()).toBe((ready?.lastActivityAt ?? 0) + IDLE_MS)
   const completedBrowser = await fixture.openEvents(id)
   const before = await publicHistory(completedBrowser.inbox)
@@ -192,15 +201,16 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   const stoppedLive = await liveEvents(
     resumedBrowser.inbox,
     before.throughEventNumber,
-    before.throughEventNumber + 2,
+    before.throughEventNumber + 3,
   )
   expect(stoppedLive).toMatchObject([
     { event: { type: 'workspace.updated', workspace: { state: 'stopped' } } },
     { event: { type: 'start.updated' } },
+    { event: { type: 'ports.updated', ports: null } },
   ])
   const stoppedBrowser = await fixture.openEvents(id)
   const after = await publicHistory(stoppedBrowser.inbox)
   expect(after.events.slice(0, before.events.length)).toEqual(before.events)
-  expect(after.throughEventNumber).toBe(before.throughEventNumber + 2)
+  expect(after.throughEventNumber).toBe(before.throughEventNumber + 3)
   expect(after.events).toEqual([...before.events, ...stoppedLive])
 }, 20_000)

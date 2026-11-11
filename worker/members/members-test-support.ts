@@ -1,6 +1,7 @@
 import { API_PATHS, type Org, type User } from '../../src/shared/api'
 import { workspaceLink } from '../data/workspace-link'
 import type { Workspace } from '../../src/shared/workspaces'
+import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import type { AppDependencies } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import type { InvitationEmail } from '../invitation-mailer'
@@ -13,6 +14,7 @@ import {
 } from '../test-support/harness'
 import { membersGate } from './gate'
 import { seedAppAccess } from '../test-support/app-access'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { membersSeed } from './fixture-data.test-support'
 import { maintainDisksForTests } from './maintenance-test-support'
 import { workspaceCreator } from './ownership'
@@ -148,6 +150,7 @@ export async function seedWorkspace(
   owner: User,
   id = 'workspace-one',
   repositoryId = `repository-${org.id}`,
+  sandboxId: string | null = `sandbox-${id}`,
 ) {
   const db = harness.env.DB
   const creator = await workspaceCreator(db, org.id, owner.id)
@@ -167,8 +170,8 @@ export async function seedWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, sandbox_id, state, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'Lisbon', 'member/lisbon-ab12', ?, 'working', ?, ?)`,
+       name, branch, sandbox_id, provider_account, state, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'Lisbon', 'member/lisbon-ab12', ?, ?, 'working', ?, ?)`,
       )
       .bind(
         id,
@@ -176,7 +179,8 @@ export async function seedWorkspace(
         repositoryId,
         creator.id,
         `general-${org.id}`,
-        `sandbox-${id}`,
+        sandboxId,
+        DEFAULT_PROVIDER_ACCOUNT,
         TEST_TIME,
         TEST_TIME,
       ),
@@ -192,13 +196,14 @@ async function readWorkspace(
   const row = await harness.env.DB.prepare(
     `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId, w.section_id AS sectionId,
      ${workspaceNameColumn('w')}, w.branch, w.state, w.created_at AS createdAt, w.updated_at AS updatedAt,
-     w.archived_at AS archivedAt, u.id AS userId, u.github_login AS githubLogin,
+     w.archived_at AS archivedAt, w.sandbox_id AS sandboxId, u.id AS userId, u.github_login AS githubLogin,
      u.display_name AS displayName, u.avatar_url AS avatarUrl
      FROM workspaces w JOIN users u ON u.id = w.owner_user_id WHERE w.org_id = ? AND w.id = ?`,
   )
     .bind(orgId, id)
     .first<
-      Omit<Workspace, 'owner' | 'choice' | 'link'> & {
+      Omit<Workspace, 'owner' | 'choice' | 'link' | 'restoreUntil'> & {
+        sandboxId: string | null
         userId: string
         githubLogin: string
         displayName: string | null
@@ -224,6 +229,7 @@ async function readWorkspace(
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
+    restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
     choice: { agent: 'codex', model: 'test-model', effort: 'medium' },
     owner: {
       id: row.userId,

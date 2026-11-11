@@ -1,34 +1,20 @@
 import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { CommandPalette } from '../components/palette/CommandPalette'
-import {
-  paletteViews,
-  type PaletteView,
-} from '../components/palette/paletteViews'
-import { acmeRail, type RailState } from '../components/layout/OrgRail'
+import { paletteViews } from '../components/palette/paletteViews'
+import type { RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
 import {
+  archivedGroup,
   newOrgSections,
   suspendedSections,
   workspaceSections,
-  type ListDrag,
-  type ListMenu,
+  type SidebarSection,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import {
-  deletedOrg,
-  orgList,
-  orgListWithLabs,
-  orgs,
-  suspendedOrg,
-  type Org,
-} from '../fixtures/orgs'
-import { anotherOrg, newOrg } from '../fixtures/repositories'
-import { menuSection } from '../fixtures/sections'
-import { workspaceDrag } from '../fixtures/workspaces'
 import { viewerMembership } from '../fixtures/members'
-import { paths } from '../paths'
+import { deletedOrg, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
+import { checkoutAutocomplete } from '../fixtures/workspaces'
 import {
   ChooseWorkspace,
   DeletedOrg,
@@ -36,9 +22,24 @@ import {
   ListHeader,
   NewOrgEmpty,
   SuspendedList,
-  type NewOrg,
 } from './listParts'
-import { OrgSwitcherSheet, SectionSheet } from './listSheets'
+import {
+  listDrag,
+  listMenu,
+  listPalette,
+  listRail,
+  listSheet,
+  newOrgs,
+} from './listStates'
+import {
+  isWorkspaceMenuState,
+  workspaceMenuStates,
+} from './workspaceMenuStates'
+import {
+  generalOnlySections,
+  menuListView,
+  type MenuListView,
+} from './workspaceMenuView'
 import styles from './WorkspaceListScreen.module.css'
 
 export const workspaceListSchema = {
@@ -47,27 +48,40 @@ export const workspaceListSchema = {
   required: ['list', 'menu', 'palette'],
   properties: {
     /**
-     * The workspaces of Acme, the first org of a new user or another new
-     * org, both without workspaces, a deleted org, Acme after the operator
-     * suspended it, a deleted org that the operator suspended, or Acme
-     * after its list did not load.
+     * The workspaces of Acme, Acme with only the General section, the
+     * first org of a new user or another new org, both without workspaces,
+     * a deleted org, Acme after the operator suspended it, a deleted org
+     * that the operator suspended, Acme after its list did not load, or
+     * Acme with its Archived group open.
      */
     list: {
       enum: [
         'workspaces',
+        'general-only',
         'new-org',
         'another-org',
         'deleted',
         'suspended',
         'deleted-suspended',
         'failed',
+        'archived',
       ],
     },
     /**
      * The menu of a section, a workspace dragged, the org switcher, or
-     * the org switcher of an operator, which adds Operator.
+     * the org switcher of an operator, which adds Operator. Or a state of
+     * the menu of a workspace row, which the lists of Acme draw.
      */
-    menu: { enum: ['none', 'section', 'drag', 'orgs', 'operator'] },
+    menu: {
+      enum: [
+        'none',
+        'section',
+        'drag',
+        'orgs',
+        'operator',
+        ...workspaceMenuStates,
+      ],
+    },
     /** The command palette, closed or open on one of its views. */
     palette: { enum: paletteViews },
   },
@@ -75,82 +89,42 @@ export const workspaceListSchema = {
 
 export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
 
+/** Cal, an admin of each org, who looks at the lists of these views. */
 const viewer = viewerMembership('admin')
 
-function listMenu(menu: WorkspaceListState['menu']): ListMenu | undefined {
-  return menu === 'section' ? { section: menuSection } : undefined
-}
-
-function listDrag(menu: WorkspaceListState['menu']): ListDrag | undefined {
-  return menu === 'drag' ? workspaceDrag : undefined
-}
-
-/**
- * The command palette over the list of Acme, or nothing while it is
- * closed. The list has no open workspace, so the palette offers no actions
- * of a workspace.
- */
-function listPalette(view: PaletteView, viewport: Viewport): ReactNode {
-  if (view === 'closed') return null
-  return (
-    <CommandPalette
-      context={{ archivable: false }}
-      view={view}
-      viewport={viewport}
-    />
-  )
-}
-
-const sheets: Readonly<Record<WorkspaceListState['menu'], ReactNode>> = {
-  none: null,
-  section: <SectionSheet />,
-  drag: null,
-  orgs: <OrgSwitcherSheet current="acme" />,
-  operator: <OrgSwitcherSheet current="acme" operator />,
+/** The sections of a list before any state changes them. */
+function sectionsOf(list: WorkspaceListState['list']): SidebarSection[] {
+  if (list === 'general-only') return generalOnlySections()
+  if (list === 'suspended') return suspendedSections()
+  if (list === 'archived') return archivedGroup().sections
+  return newOrgs[list] ? newOrgSections() : workspaceSections()
 }
 
 /**
- * The rail of the list: the name of Futex beside the open org switcher,
- * and Operator with its name for an operator.
+ * The open Archived group of the `archived` list, with the pointer over
+ * the row of the last archived workspace, whose Restore covers its time.
+ * A phone draws no hover, because it has no pointer.
  */
-const rails: Readonly<Partial<Record<WorkspaceListState['menu'], RailState>>> =
-  {
-    orgs: { ...acmeRail, hint: 'futex' },
-    operator: { ...acmeRail, operator: true, hint: 'operator' },
+function archivedGroupView(): Pick<MenuListView, 'archived' | 'focus'> {
+  return {
+    archived: archivedGroup().archived,
+    focus: { workspace: checkoutAutocomplete.key, drawing: { kind: 'hover' } },
   }
-
-/**
- * A new org before its first workspace, and its New workspace page. The
- * mockups draw the first build of Firna on its own New workspace page.
- */
-type FreshOrg = {
-  org: Org
-  rail: readonly Org[]
-  form: NewOrg
-  newWorkspaceTo: string
 }
 
-/**
- * The new orgs before their first workspace: the first org of the sign-up,
- * and another org that Create org made beside the user's orgs.
- */
-const newOrgs: Readonly<Partial<Record<WorkspaceListState['list'], FreshOrg>>> =
-  {
-    'new-org': {
-      org: orgs.firna,
-      rail: orgList,
-      form: newOrg,
-      newWorkspaceTo: paths.firstBuildWorkspace,
-    },
-    'another-org': {
-      org: orgs.labs,
-      rail: orgListWithLabs,
-      form: anotherOrg,
-      newWorkspaceTo: paths.newWorkspace,
-    },
-  }
+/** The list and what lies over it, in a state of the menu of a row. */
+function rowMenuView(
+  state: WorkspaceListState,
+  viewport: Viewport,
+): MenuListView | undefined {
+  const { list, menu } = state
+  if (!isWorkspaceMenuState(menu)) return undefined
+  if (list !== 'workspaces' && list !== 'general-only' && list !== 'suspended')
+    return undefined
+  return menuListView(menu, list, viewport)
+}
 
-function MobileList(props: { state: WorkspaceListState }) {
+function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
   const { list, menu, palette } = props.state
   // On a phone the palette is a page in place of the list.
   if (palette !== 'closed') {
@@ -164,35 +138,42 @@ function MobileList(props: { state: WorkspaceListState }) {
       </MobileFrame>
     )
   }
+  const view = rowMenuView(props.state, 'mobile')
+  const sections = view?.sections ?? sectionsOf(list)
   if (list === 'suspended') {
     // A suspended org has no section menus, so only the org switcher opens.
     return (
       <MobileFrame>
         <HomeList
+          focus={view?.focus}
           menuStyle="sheet"
           org={orgs[suspendedOrg]}
-          sections={suspendedSections()}
+          sections={sections}
           suspended
-          viewer={viewer}
+          viewer={view?.viewer ?? viewer}
         />
-        {menu === 'orgs' ? sheets.orgs : null}
+        {menu === 'orgs' ? listSheet(menu) : null}
       </MobileFrame>
     )
   }
   const fresh = newOrgs[list]
+  const group = list === 'archived' ? archivedGroupView() : undefined
   return (
     <MobileFrame>
       <HomeList
+        archived={view?.archived ?? group?.archived}
+        archivedCollapsed={view?.archivedCollapsed}
         drag={listDrag(menu)}
         failed={list === 'failed'}
+        focus={view?.focus ?? group?.focus}
         menu={listMenu(menu)}
         menuStyle="sheet"
         newWorkspaceTo={fresh?.newWorkspaceTo}
         org={fresh ? fresh.org : orgs.acme}
-        sections={fresh ? newOrgSections() : workspaceSections()}
-        viewer={viewer}
+        sections={sections}
+        viewer={view?.viewer ?? viewer}
       />
-      {sheets[menu]}
+      {props.overlay ?? (view ? view.over : listSheet(menu))}
     </MobileFrame>
   )
 }
@@ -201,14 +182,29 @@ function MobileList(props: { state: WorkspaceListState }) {
  * The workspace list of an org, grouped in the sections that the user made.
  * On a phone and in a narrow window it is the home screen. On a wide
  * desktop the list is the sidebar, and the main area waits for a choice.
+ * A right click on a row, or the menu keys, opens the menu of the row.
+ * `overlay` lies over the list of Acme in place of the overlay of its
+ * state, such as a dialog that the palette opens over it.
  */
 export function WorkspaceListScreen(props: {
   state: WorkspaceListState
   viewport: Viewport
+  overlay?: ReactNode
 }) {
   const { list, menu, palette } = props.state
-  if (props.viewport === 'mobile') return <MobileList state={props.state} />
-  if (list === 'suspended') return <SuspendedList viewer={viewer} />
+  if (props.viewport === 'mobile') {
+    return <MobileList overlay={props.overlay} state={props.state} />
+  }
+  const view = rowMenuView(props.state, props.viewport)
+  if (list === 'suspended') {
+    return (
+      <SuspendedList
+        focus={view?.focus}
+        sections={view?.sections}
+        viewer={view?.viewer ?? viewer}
+      />
+    )
+  }
   if (list === 'deleted' || list === 'deleted-suspended') {
     const rail: RailState = {
       orgs: orgList,
@@ -240,39 +236,31 @@ export function WorkspaceListScreen(props: {
       </AppFrame>
     )
   }
-  const sections = workspaceSections()
-  const open = listMenu(menu)
-  const drag = listDrag(menu)
-  const rail = rails[menu] ?? acmeRail
+  const group = list === 'archived' ? archivedGroupView() : undefined
+  const listed = {
+    archived: view?.archived ?? group?.archived,
+    archivedCollapsed: view?.archivedCollapsed,
+    drag: listDrag(menu),
+    failed: list === 'failed',
+    menu: listMenu(menu),
+    focus: view?.focus ?? group?.focus,
+    org: orgs.acme,
+    sections: view?.sections ?? sectionsOf(list),
+    viewer: view?.viewer ?? viewer,
+  }
   return (
     <AppFrame
-      overlay={listPalette(palette, props.viewport)}
-      rail={rail}
-      sidebar={
-        <Sidebar
-          drag={drag}
-          failed={list === 'failed'}
-          menu={open}
-          org={orgs.acme}
-          sections={sections}
-          viewer={viewer}
-        />
+      overlay={
+        props.overlay ?? listPalette(palette, props.viewport) ?? view?.over
       }
+      rail={view?.rail ?? listRail(menu)}
+      sidebar={<Sidebar {...listed} />}
     >
       <div className={`${responsive.wideOnly} ${styles.choose}`}>
         <ChooseWorkspace />
       </div>
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
-        <HomeList
-          drag={drag}
-          failed={list === 'failed'}
-          keys
-          menu={open}
-          menuStyle="anchored"
-          org={orgs.acme}
-          sections={sections}
-          viewer={viewer}
-        />
+        <HomeList {...listed} keys menuStyle="anchored" />
       </div>
     </AppFrame>
   )

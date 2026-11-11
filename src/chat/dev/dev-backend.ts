@@ -1,3 +1,4 @@
+import { handleTranscript } from './dev-transcript'
 import { createApiClient } from '../../app/api/client'
 import type { AgentLoginStatus } from '../../shared/account'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
@@ -10,6 +11,7 @@ import {
   type WorkspaceStart,
 } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { fetchFiles } from '../../test-support/fake-files'
 import {
   coreFixtures,
   FAKE_IDS,
@@ -19,7 +21,7 @@ import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { recordedChatEvents } from '../../test-support/recorded-chat'
 import { recordedFileEvents } from '../../test-support/recorded-files'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
-import { endsTurn } from '../state/known-turns'
+import { endsTurn } from '../../shared/transcript/known-turns'
 import type { Clock } from '../ui/clock'
 import { DevAgent } from './dev-agent'
 import { devAnswers } from './dev-answers'
@@ -116,7 +118,7 @@ export class DevBackend {
       (login) => login.agent === 'claude' && login.connected,
     )
     const api = createChatApi(createApiClient(server.fetch), target)
-    const [detail, listed, view] = await Promise.all([
+    const [detail, listed, { view }] = await Promise.all([
       api.workspace(),
       api.sessions(),
       api.view(),
@@ -189,13 +191,17 @@ export class DevBackend {
         ? new Request(input, init)
         : new Request(new URL(String(input), FAKE_ORIGIN), init)
     const written =
+      (await handleTranscript(this, request)) ??
       (await handleMacWrite(this, request)) ??
       (await handleWrite(this, request))
     return written ?? this.server.fetch(request)
   }
 
-  /** The JSON client of the page, over its fake API, as the app gives one. */
-  readonly client = createApiClient(this.fetch)
+  /**
+   * The JSON client of the page, over its fake API, as the app gives one.
+   * Its uploads send raw files through the same fetch.
+   */
+  readonly client = createApiClient(this.fetch, fetchFiles(this.fetch))
 
   /** Keeps the messages, the queued ones, and the running turn of the recorded chat. */
   private note(events: readonly WorkspaceEvent[]): void {

@@ -2,10 +2,12 @@ import type { SchemaProps } from '@mokly/mokly'
 import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
+import { previewStates } from '../components/tools/PortPreview'
 import { toolKeys } from '../components/workspace/tools'
-import { conversationKeys } from '../fixtures/conversations'
+import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
+import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
 
@@ -34,6 +36,8 @@ export const workspaceStateSchema = {
     'resize',
     'rightColumn',
     'overlay',
+    'archive',
+    'toast',
     'viewer',
     'lostUpdate',
     'tree',
@@ -41,6 +45,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     'copyLink',
+    'copyTranscript',
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -52,9 +57,10 @@ export const workspaceStateSchema = {
      */
     name: { enum: ['title', 'untitled'] },
     /**
-     * The cloud computer. An archived workspace has none. `refused` is a
-     * stopped cloud computer whose start the app refuses, such as while the
-     * owner of the workspace is suspended.
+     * The cloud computer. `archived` is a cloud computer that Archive
+     * stopped, as `archive` says, and the workspace shows none of it.
+     * `refused` is a stopped cloud computer whose start the app refuses,
+     * such as while the owner of the workspace is suspended.
      */
     sandbox: {
       enum: ['ready', 'starting', 'stopped', 'error', 'refused', 'archived'],
@@ -76,7 +82,15 @@ export const workspaceStateSchema = {
     files: { enum: fileLists },
     /** The tool of the tools panel. */
     tool: { enum: toolKeys },
-    ports: { enum: ['open', 'none'] },
+    /**
+     * The Preview tool: a preview in its frame, or "+" beside the tabs of
+     * the open previews. With no preview open, the port form lists the
+     * detected servers, says that the runner reports none, or reads as
+     * before when the app has no report, as for an older image. After a
+     * failed repair of the list (decision 96), it keeps its last list under
+     * a notice.
+     */
+    ports: { enum: previewStates },
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
     /**
@@ -112,19 +126,40 @@ export const workspaceStateSchema = {
      * attached files, with its picker open, or with a message for an agent
      * that is not connected. Or with a message in a session whose starter's
      * login is not available, or whose starter keeps that login for their
-     * own messages. `workspace-link` holds a message with a pasted link to
-     * another workspace of the org, which shows as a chip.
+     * own messages. With files, a file can still upload, its upload can fail,
+     * or a file over the size limit can stay out of the message.
+     * `workspace-link` holds a message with a pasted link to another
+     * workspace of the org, which shows as a chip.
+     *
+     * The `mention-` states open the list of `@`: with a query, without
+     * one, with no match, while the tree loads, and with no tree.
+     * `file-chips` holds a file chip and a folder chip. The `-pointer`
+     * states draw the pointer over the icon of the first chip or the first
+     * attached file, where a × takes the place of the icon. A phone has no
+     * pointer, so it shows the × at the end of each chip instead.
      */
     composer: {
       enum: [
         'empty',
         'draft',
         'attachments',
+        'uploading',
+        'upload-failed',
+        'too-large',
         'picker',
         'no-agent',
         'no-starter-login',
         'not-shared',
         'workspace-link',
+        'mention-query',
+        'mention-start',
+        'mention-none',
+        'mention-loading',
+        'mention-unavailable',
+        'file-chips',
+        'file-chip-pointer',
+        'workspace-link-pointer',
+        'attachment-pointer',
       ],
     },
     /** The user drags the handle of the right column to widen it. */
@@ -136,21 +171,25 @@ export const workspaceStateSchema = {
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, the
-     * question of Archive, with work that is not pushed or with none, or
-     * the tab menu of the first session.
+     * before a running session closes, the owner of the workspace, or the
+     * tab menu of the first session.
      */
     overlay: {
-      enum: [
-        'none',
-        'history',
-        'close-session',
-        'reassign',
-        'archive-unpushed',
-        'archive-pushed',
-        'tab-menu',
-      ],
+      enum: ['none', 'history', 'close-session', 'reassign', 'tab-menu'],
     },
+    /**
+     * The cloud computer of an archived workspace: kept, until the app
+     * deletes it 14 days after the Archive, kept past the last day of
+     * Restore while its delete tries again, or deleted. Until that last day,
+     * every member of an org that is not suspended may restore the
+     * workspace.
+     */
+    archive: { enum: ['kept', 'ended', 'deleted'] },
+    /**
+     * A toast at the bottom of the screen: none, or the toast just after
+     * Archive, which names the workspace and offers Restore.
+     */
+    toast: { enum: ['none', 'archived'] },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -182,6 +221,17 @@ export const workspaceStateSchema = {
      */
     org: { enum: ['active', 'suspended'] },
     /**
+     * The run of a routine that made the workspace (decision 501): a run of
+     * a pull request, a run that Run now started, or a failed run that kept
+     * its workspace, whose first start or first turn failed. A run
+     * workspace is a normal workspace, whose header links to its routine,
+     * and for a pull request run to the pull request. It shows the chat of
+     * its run at the stage of `conversation`: `queued` while the sandbox
+     * starts or after a failed first start, or else its first turn. A
+     * workspace that a person created has none.
+     */
+    run: { enum: runWorkspaceKeys },
+    /**
      * The command palette, closed or open on one of its views. Over an
      * open workspace it offers the actions of the workspace first. A phone
      * opens it from the list, so a phone shows the palette of the list.
@@ -193,6 +243,12 @@ export const workspaceStateSchema = {
      * shows for a moment that the copy worked or failed.
      */
     copyLink: { enum: ['none', 'copied', 'failed'] },
+    /**
+     * The toast after a copy of a session transcript from the tab menu: none,
+     * after a copy that worked, or after a request or a clipboard write that
+     * failed. The menu closed on the press, and the shown tab stays.
+     */
+    copyTranscript: { enum: ['none', 'copied', 'failed'] },
   },
 } as const
 
@@ -217,6 +273,8 @@ export const readyWorkspace: WorkspaceState = {
   resize: 'none',
   rightColumn: 'shown',
   overlay: 'none',
+  archive: 'kept',
+  toast: 'none',
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
@@ -224,6 +282,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   copyLink: 'none',
+  copyTranscript: 'none',
 }
 
 /**

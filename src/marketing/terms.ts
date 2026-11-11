@@ -14,21 +14,23 @@ import {
   text,
   type LegalDocument,
 } from './legal-text'
+import { termsOrgSection } from './terms-org'
 
 /**
  * The terms of use. The facts come from the architecture and the protocol
  * docs. The rules of acceptable use pass on the rules of the providers of
  * the service and name no provider. Both legal pages share the operator
- * details and contact address.
+ * details and contact address. The section on working in an org is in
+ * `terms-org.ts`.
  */
 export const termsDocument: LegalDocument = {
   title: legalTitles.terms,
   description: `The terms of use of ${productName}.`,
-  lead: text`These terms cover your use of ${productName} at ${productDomain}
-  and ${appDomain}. You accept their current version each time that you
-  continue with GitHub to sign in. ${productName} keeps the latest version
-  that you accepted, and the time when you first accepted it. Effective
-  date: 9 November 2026.`,
+  lead: text`These terms cover your use of ${productName} at ${productDomain},
+  at ${appDomain}, and in the Mac app. You accept their current version
+  each time that you continue with GitHub to sign in. ${productName} keeps
+  the latest version that you accepted, and the time when you first
+  accepted it. Effective date: 10 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -45,11 +47,11 @@ export const termsDocument: LegalDocument = {
     {
       title: 'The service',
       blocks: [
-        paragraph`${productName} is a coding tool in the browser. Each
-          workspace is one task with its own branch and its own cloud
-          computer, where agents powered by Claude and Codex work.`,
-        paragraph`${productName} is free for now. It has no plans and no
-          billing.`,
+        paragraph`${productName} is a coding tool in the browser and in the
+          Mac app. Each workspace is one task with its own branch and its
+          own cloud computer, where agents powered by Claude and Codex work.`,
+        paragraph`${productName} is free until billing starts. Nobody pays
+          until they choose a plan.`,
       ],
     },
     {
@@ -64,50 +66,32 @@ export const termsDocument: LegalDocument = {
             account or key of your own for them.`,
           text`The agents run on the Claude or OpenAI login that you connect.
             The model use of each message bills to the account of the member
-            who started its session, under the terms of Anthropic or OpenAI.`,
+            who started its session, under the terms of Anthropic or OpenAI.
+            The runs of a routine start their sessions on the login of the
+            member who owns the routine.
+            A newer cloud computer starts from an org image that requires
+            ${productName} to keep agent logins outside the cloud computer.
+            ${productName} enforces this requirement for computers that start
+            from that image. Its agents send their model requests and receive
+            their answers through ${productName} on Cloudflare. These requests
+            can hold your messages, files, and code. ${productName} adds the
+            login, and sends each request on to Anthropic or OpenAI. An older
+            cloud computer starts from an earlier org image. ${productName}
+            still permits older software there that receives the login itself.
+            With that older software, the agents send their model requests to
+            Anthropic or OpenAI from the cloud computer. Installing newer
+            software in that cloud computer does not remove this risk. A new
+            image build gives the protection to each cloud computer that starts
+            from it. In both kinds of cloud computer, agent settings in the
+            repository can send the model requests of the agents to another
+            address instead.`,
           text`Keep your keys and logins safe. Connect only accounts that you
             have permission to use. If a key or login is exposed, revoke it
             with its provider and remove or replace it in ${productName}.`,
         ),
       ],
     },
-    {
-      title: 'Working in an org',
-      blocks: [
-        list(
-          text`Every member of an org sees all of its workspaces, and can send
-            messages in each of them.`,
-          text`Each session runs on the agent login of the member who started
-            it. The messages of other members use that login only when its
-            owner allows it. Otherwise, the message of another member starts a
-            new session on the login of that member. Each turn's git calls use
-            a GitHub token of the member whose message started the turn.
-            Pushes and pull requests show as that member. Outside an agent
-            turn, the GitHub CLI uses the workspace owner's account.
-            Each terminal connection uses that same account.`,
-          text`That GitHub token reaches every repository where that person
-            installed the GitHub App and has access, not only the
-            repositories of the org.`,
-          text`Each login that you connect has a setting that lets other
-            members use it in the sessions that you start. For a Claude
-            subscription, the setting starts off. For an API key, it starts
-            on. When you replace a login with one of the same kind, the
-            setting stays. You can change it on your account page. Share a
-            login only when its provider's terms allow that use.`,
-          text`While a turn runs, its agent login and its GitHub token are in
-            the cloud computer of the workspace. A member with a terminal in
-            that cloud computer can read them. A program that a tool of the
-            agent starts, such as a dev server, can keep the agent login after
-            the turn ends. A member with a terminal can read it there too. The
-            setting of your login does not change this. A member with a
-            terminal can also get the workspace owner's GitHub token without
-            a running turn. Work in an org only
-            with people whom you trust with your logins.`,
-          text`Admins manage the members, the repositories, the scripts, and
-            the env vars of the org.`,
-        ),
-      ],
-    },
+    termsOrgSection,
     {
       title: 'Acceptable use',
       blocks: [
@@ -142,6 +126,24 @@ export const termsDocument: LegalDocument = {
       ],
     },
     {
+      title: 'Commands on your Mac',
+      blocks: [
+        paragraph`In the Mac app, an agent can ask to run a command on
+          your Mac. The command runs only after you allow it.`,
+        paragraph`You decide which commands run. You can allow a command
+          once. You can always allow the exact same command text on that
+          Mac. You can allow every command of one workspace on that Mac
+          for 15 minutes.`,
+        paragraph`An allowed command runs with your own permissions on the
+          Mac, in the folder that the request names. An always-allowed
+          command runs in any folder that a later request names.`,
+        paragraph`You answer for each command that you allow, and for what
+          it does on your Mac and to your data.`,
+        paragraph`You can remove an always-allowed command, or stop the
+          15 minutes, in the Mac app at any time.`,
+      ],
+    },
+    {
       title: 'Suspension',
       blocks: [
         paragraph`The operator can suspend an account or an org that breaks
@@ -150,14 +152,15 @@ export const termsDocument: LegalDocument = {
           notice.`,
         paragraph`A suspension of an account ends its sign-in. It stops the
           cloud computers of the workspaces that the account owns, closes
-          their previews, and blocks new starts.`,
+          their previews, and blocks new starts. Its routines start no
+          runs.`,
         paragraph`A suspension of an org stops each cloud computer of the org,
-          closes its previews and terminals, and blocks each start and
-          build. Its members keep their accounts and their other orgs. They
-          can still open the org and read its chat history. Nothing in the
-          org can change, except that a member can leave it. An admin can
-          leave only while another admin whose account is not suspended
-          remains.`,
+          closes its previews and terminals, and blocks each start, build,
+          and routine run. Its members keep their accounts and their other
+          orgs. They can still open the org and read its chat history.
+          Nothing in the org can change, except that a member can leave it.
+          An admin can leave only while another admin whose account is not
+          suspended remains.`,
         paragraph`A stopped cloud computer gets no restart to keep its disk
           while its workspace owner or org is suspended. So its disk can be
           deleted, with any work that is not pushed to GitHub.`,
@@ -185,12 +188,19 @@ export const termsDocument: LegalDocument = {
         paragraph`Your repositories, files, and agent sessions live in the
           cloud computers that ${productName} runs for your org.
           ${productName} keeps the chat history of each workspace, so that
-          you can read it while the cloud computer is stopped.`,
+          you can read it while the cloud computer is stopped. It also keeps
+          the files that you attach to messages. It copies each file to the
+          cloud computer when the agent starts work on its message. When it
+          passes on the model requests of a newer cloud computer, it keeps no
+          copy of a request or of its answer. It writes no body or header
+          value of them to its logs.`,
         paragraph`You keep any rights that you have in your repositories,
           files, messages, and other content. You give the operator
           permission to store, copy, process, and transmit that content as
           needed to provide the service, including through its providers.
           You must have permission to submit that content.`,
+        paragraph`If you send feedback, you give the operator permission to
+          use it to improve ${productName}, without any obligation to you.`,
         paragraph`The terms and licences of third-party code and services
           still apply. Check agent output before you use or publish it.`,
       ],

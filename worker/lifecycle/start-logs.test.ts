@@ -1,15 +1,17 @@
 import { expect, it } from 'vitest'
 
-import { MemoryWorkspaceStorage } from './platform-test-storage'
+import { nativeLifecycleStorage } from './native-storage.test-support'
+import { TEST_TIME } from '../test-support/harness'
 import { durableStartStorage, readStartLog } from './start-storage'
 import type { WorkspaceStartJob } from './start-types'
 import { readSavedScript } from './saved-script'
 
 it('masks split and short secrets without changing an inserted start-log marker', async () => {
   const env = { BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)) }
-  const storage = new MemoryWorkspaceStorage()
-  const starts = durableStartStorage(storage, () => 0, env)
+  const { storage } = await nativeLifecycleStorage()
+  const starts = durableStartStorage(storage, () => TEST_TIME, env)
   const job: WorkspaceStartJob = {
+    providerAccount: 'boat',
     workspaceId: 'log-workspace',
     orgId: 'log-org',
     kind: 'resume',

@@ -1,14 +1,18 @@
 import type { Agent, AgentChoice } from '../../src/shared/agents'
+import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { PendingTurn } from '../lifecycle/workspace-runtime'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
 import type { Attachment, MessageDraft } from '../../src/shared/messages'
 import type {
   RunnerAttachment,
   RunnerChangeModel,
+  RunnerCommandV1,
   RunnerInterrupt,
   RunnerLogin,
-  WorkspaceToRunner,
+  WorkspaceToRunnerV1,
+  WorkspaceToRunnerV2,
   RunnerEventEnvelope,
+  RunnerProtocolVersion,
 } from '../../src/shared/runner'
 import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
@@ -23,6 +27,7 @@ import type {
 } from './login-availability'
 import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
+import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
 
 export interface ChatData {
@@ -59,12 +64,15 @@ export interface StoredTurn {
   senderId: string
   messageIds: string[]
   state: 'queued' | 'running' | 'stopping' | 'finished' | 'stopped' | 'failed'
+  error?: { code: string; message: string }
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
   startedAt?: number
   closeAfterStop: boolean
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
+  gateway?: TurnTokenState
+  loginFailure?: string
 }
 
 export interface ModelSessionCreation {
@@ -74,6 +82,20 @@ export interface ModelSessionCreation {
   draft: MessageDraft
 }
 
+/** Only live runner commands carry absolute attachment paths. */
+export interface StoredAttachment {
+  attachmentId: string
+  relativePath: string
+}
+
+export type PreparedMessageCommand = (
+  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments'>
+  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments'>
+) & { attachments: readonly StoredAttachment[] }
+
+export type PreparedCommand =
+  PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
+
 /** Credentials enter only the live command, after this record is read. */
 export type PendingCommand =
   | {
@@ -82,22 +104,23 @@ export type PendingCommand =
       sessionId: string
       turnId: string
       messageId: string
-      attachments: readonly RunnerAttachment[]
+      attachments: readonly StoredAttachment[]
     }
   | RunnerInterrupt
   | RunnerChangeModel
 
 export interface RunnerPeer {
-  send(message: WorkspaceToRunner): void
+  send(message: WorkspaceToRunnerV1 | WorkspaceToRunnerV2): void
   close(): void
 }
 
 export interface ActiveRunner {
+  id: string
   peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
+  protocolVersion: RunnerProtocolVersion | null
   ready: boolean
-  delivered: Set<string>
 }
 
 export interface BrowserPeer {
@@ -107,7 +130,7 @@ export interface BrowserPeer {
 
 export interface ResolvedAttachments {
   attachments: readonly Attachment[]
-  paths: readonly RunnerAttachment[]
+  paths: readonly StoredAttachment[]
 }
 
 /** Await this publisher inside a runner callback. Use appendWorkspaceEvent outside it. */
@@ -117,6 +140,7 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,
   ) => Promise<{ name: string | null } | null>
@@ -149,12 +173,21 @@ export interface ChatDependencies {
     turnId: string,
     publish: ChatCallbackPublisher,
   ): Promise<void>
+  turnEnded(
+    workspaceId: string,
+    turnId: string,
+    publish: ChatCallbackPublisher,
+    occurredAt: number,
+  ): Promise<void>
   browserOpened(workspaceId: string, tabId: string): Promise<void>
   browserClosed(workspaceId: string, tabId: string): Promise<void>
   now: () => number
-  scheduleBrowserCheck: ConnectionScheduler
-  scheduleRunnerCheck: ConnectionScheduler
+  scheduleBrowserCheck?: ConnectionScheduler
+  browserAlarm?: (at: number | null) => Promise<void>
+  scheduleRunnerCheck?: ConnectionScheduler
+  runnerAlarm?: (at: number | null) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
+  readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   readConnectionAccess: (
     identities: readonly ConnectionIdentity[],
     now: number,
@@ -174,7 +207,25 @@ export interface ChatDependencies {
     userId: string,
     workspaceId: string,
     ids: readonly string[],
+    messageId: string,
+    usedIds: readonly string[],
   ) => Promise<ResolvedAttachments>
+  prepareAttachments: (
+    workspaceId: string,
+    userId: string,
+    messageId: string,
+    attachments: readonly StoredAttachment[],
+    sandboxId: string | null,
+  ) => Promise<string | null>
+  resolveAttachmentPaths: (
+    workspaceId: string,
+    userId: string,
+    attachments: readonly StoredAttachment[],
+  ) => Promise<readonly RunnerAttachment[]>
+  attachmentSandboxId: (
+    workspaceId: string,
+    userId: string,
+  ) => Promise<string | null>
   /** File owners validate results here. Results never enter history. */
   receiveFileResult: (value: unknown, connectionId: string) => Promise<void>
   /** The supplied publisher preserves the callback's place in the serial task. */

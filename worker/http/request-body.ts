@@ -1,12 +1,25 @@
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import {
+  FEEDBACK_BODY_MAX_BYTES,
+  FEEDBACK_PATH,
+} from '../../src/shared/feedback'
 import type { AppEnv } from '../env'
 import { GITHUB_WEBHOOK_BODY_BYTES } from '../github/webhook'
 import { hostSurface } from '../hosts'
 import { errorResponse, HttpError, privateResponse } from '../http'
+import { gatewayPath } from '../model-gateway/paths'
 import { desktopCors } from '../security/desktop-origin'
+import { rawUploadRoute } from './raw-upload-routes'
+import { attachmentTooLarge } from '../chat/attachment-record'
 
 function requestBodyBudget(request: Request, machineOrigin?: string): number {
   const url = new URL(request.url)
+  if (
+    request.method === 'POST' &&
+    url.origin === machineOrigin &&
+    gatewayPath(url.pathname)
+  )
+    return 100_000_000
   return request.method === 'POST' &&
     url.origin === machineOrigin &&
     url.pathname === MACHINE_PATHS.githubWebhook
@@ -19,6 +32,7 @@ async function withRequestBodyLimit(
   request: Request,
   budget: number,
   handle: (request: Request) => Promise<Response>,
+  oversized: () => HttpError = oversizedRequest,
 ): Promise<Response> {
   if (!request.body) return handle(request)
   if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
@@ -61,7 +75,7 @@ async function withRequestBodyLimit(
           }
           if (value.byteLength > budget - size) {
             exceeded = true
-            const error = oversizedRequest()
+            const error = oversized()
             controller.error(error)
             cancel(error)
             return
@@ -84,11 +98,11 @@ async function withRequestBodyLimit(
     const response = await handle(new Request(request, init))
     if (exceeded) {
       void response.body?.cancel().catch(() => undefined)
-      throw oversizedRequest()
+      throw oversized()
     }
     return response
   } catch (error) {
-    if (exceeded) throw oversizedRequest()
+    if (exceeded) throw oversized()
     throw error
   }
 }
@@ -106,16 +120,28 @@ export function requestBodyEntry(
     context?: Pick<ExecutionContext, 'waitUntil'>,
   ): Promise<Response> => {
     try {
+      const raw =
+        env && hostSurface(request, env) === 'app' && rawUploadRoute(request)
+      const feedback =
+        env &&
+        hostSurface(request, env) === 'app' &&
+        request.method === 'POST' &&
+        new URL(request.url).pathname === FEEDBACK_PATH
       return await withRequestBodyLimit(
         request,
-        requestBodyBudget(request, env?.MACHINE_ORIGIN),
+        raw
+          ? raw.maxBytes
+          : feedback
+            ? FEEDBACK_BODY_MAX_BYTES
+            : requestBodyBudget(request, env?.MACHINE_ORIGIN),
         (bounded) => handle(bounded, env, context),
+        raw ? attachmentTooLarge : oversizedRequest,
       )
     } catch (error) {
       const response = privateResponse(errorResponse(error))
       return env &&
         error instanceof HttpError &&
-        error.code === 'body_too_large' &&
+        ['body_too_large', 'attachment_too_large'].includes(error.code) &&
         hostSurface(request, env) === 'app' &&
         new URL(request.url).pathname.startsWith('/api/')
         ? desktopCors(request, response)

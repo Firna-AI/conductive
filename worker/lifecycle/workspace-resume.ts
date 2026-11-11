@@ -42,11 +42,13 @@ export async function resumeWorkspace(
     workspaceId,
     orgId,
     kind: 'resume',
+    providerAccount: row.providerAccount,
     requestedByUserId: userId,
     imageName: null,
     startupScript: settings.startupScript,
     environmentCiphertext: settings.envVarsCiphertext,
     defaultBranch: repository.defaultBranch,
+    baseBranch: row.baseBranch ?? undefined,
     repositoryLocations: await workspaceRepositoryLocations(
       env.DB,
       workspaceId,

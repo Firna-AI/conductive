@@ -1,9 +1,10 @@
-# Workspace tools
+# Tools of a workspace
 
-This doc holds the requirements and the decisions in force for the tools
-of a workspace: its files and changes, its terminal, its port previews,
-and its desktop. [Workspaces and sandboxes](workspaces-and-sandboxes.md)
-holds the life of a workspace and its sandbox. The terms are those of the
+This doc holds the requirements and the decisions in force for the tools of
+a workspace. It covers the files and changes, the terminal, the port
+previews, and the desktop. It belongs to
+[Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
+provider, the org image, and the startup script. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
@@ -22,10 +23,11 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).
-- Changes lists the files that the branch changes against the default
-  branch. Its summary gives the number of changed files and the lines that
+- Changes lists the files that the branch changes against its base branch,
+  from the merge base of the two, as [Base branches](base-branches.md)
+  says. Its summary gives the number of changed files and the lines that
   they add and remove.
-- A changed file opens its diff against the default branch as a tab.
+- A changed file opens its diff against the base branch as a tab.
 - Each new file or diff tab opens at the end of the tab row of the centre
   column, as [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The agent runner watches the repository and reports both lists.
@@ -77,6 +79,13 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   still show them while the sandbox sleeps.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
+- While the sandbox does not run, a file or diff tab reads nothing. While
+  the sandbox is stopped, or after its later start failed, a tab keeps the
+  file that it already shows, as the lists keep their copy.
+- Otherwise the tab shows the state of the sandbox in place of the file,
+  with the Resume or Try again of that state.
+- Opening a file or diff tab resumes a stopped sandbox, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says.
 - When the runner cannot read the repository, it sends `files.unavailable`
   (decision 109). The event holds no other data. A failed scan after a
   connect does not stop `runner.ready`, as
@@ -127,20 +136,30 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   the path in its prompt was rejected, because it also moves a shell
   outside a restore. A check of the provider's path of the old view was
   rejected, because the provider does not document that path.
+- A plain drag selects text on the screen, and the user can copy it, such
+  as with Cmd+C on a Mac. This also holds while a program in the shell,
+  such as tmux, uses the mouse (decision 246).
+- The wheel, the right button, and the middle button still reach such a
+  program, so the wheel scrolls the output history. A held Cmd on a Mac,
+  or Ctrl on Windows and Linux, gives a click or a drag to the program.
+- Reason: the user expects to select and copy as in the rest of the page.
+  A copy through the clipboard writes of the program was rejected, because
+  any process in the sandbox could then write the user's clipboard.
+- When the connection ends, the user can still select and copy the text
+  that stays on the screen (decision 245).
+- Reason: the screen keeps its output so that the user can still use it,
+  such as an error message.
 - When the user ends the shell, such as with `exit`, the next connection
   opens a new shell.
 - A stop of the sandbox ends the shell and its commands, as
-  [Stop and resume](workspaces-and-sandboxes.md#stop-and-resume) says. The first connection after the
+  [Stop and resume](workspace-life.md#stop-and-resume) says. The first connection after the
   resume opens a new shell.
 - On a phone, a row of keys adds the keys that a phone keyboard lacks.
 
 ## Port previews
 
-- The user opens a port preview by typing its port. The app does not
-  discover ports.
-- A preview shows in a frame inside the app, with an "Open in new tab"
-  link. Reason: Safari blocks the cookies of the previewed app inside a
-  frame.
+The [port-preview requirements](port-previews.md) give the detected-server
+list, manual opening, preview tabs, and the relay requirement.
 
 ## Desktop
 
@@ -161,7 +180,7 @@ for its return.
   older saved choice stays valid, and Desktop can return without a change
   of the stored data.
 - The server keeps the desktop URL route and its access rules, as
-  [Desktop](access-and-security.md#desktop) says. The pause adds no
+  [Desktop](terminal-previews-and-desktop.md#desktop) says. The pause adds no
   refusal at the server.
 - A Mac app build from before the pause keeps its Desktop tab until it
   updates.
@@ -185,5 +204,5 @@ before the pause:
   of the page blocks the stream, the Desktop tab says that the desktop
   couldn't open, with Try again. It never shows a blocked stream as live.
 
-[Access and security](access-and-security.md) states how the terminal, the
+[Access and security](terminal-previews-and-desktop.md) states how the terminal, the
 previews, and the desktop stay safe.

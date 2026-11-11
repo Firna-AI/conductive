@@ -7,6 +7,7 @@ import { FIRST_MESSAGE } from './durable-test-support'
 import { handleGitCredential } from './machine'
 import { readWorkspaceToken } from './tokens'
 import { createWorkspace } from './workspaces'
+import { seedBackendLogin } from './backend-seed.test-support'
 
 export const SENDER_GITHUB_TOKEN = 'bootstrap-sender-github-token'
 
@@ -47,6 +48,7 @@ export async function defaultBranchCredential(
     },
     TEST_TIME,
   )
+  await seedBackendLogin(fixture.harness, sender.id)
   const created = await fixture.run(() =>
     createWorkspace(
       runtime,
@@ -63,6 +65,7 @@ export async function defaultBranchCredential(
   const turns: string[] = []
   return {
     sender,
+    workspaceId: created.workspace.id,
     turnId: created.first.turnId,
     turns,
     issue: (turnId: string) => {

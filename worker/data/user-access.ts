@@ -86,6 +86,7 @@ export interface WorkspaceAccessStopRecord {
   ownerUserId: string
   orgId: string
   sandboxId: string | null
+  providerAccount: string
   orgDeletedAt: number | null
   state: WorkspaceState
   ownerSuspended: boolean
@@ -101,6 +102,7 @@ export async function readWorkspaceAccessStop(
   const row = await db
     .prepare(
       `SELECT w.owner_user_id AS ownerUserId, w.org_id AS orgId, w.sandbox_id AS sandboxId,
+         w.provider_account AS providerAccount,
          o.deleted_at AS orgDeletedAt, w.state,
          CASE WHEN u.suspended_at IS NOT NULL THEN 1 ELSE 0 END AS ownerSuspended,
          CASE WHEN o.suspended_at IS NOT NULL THEN 1 ELSE 0 END AS orgSuspended,

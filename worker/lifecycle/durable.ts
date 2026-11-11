@@ -3,13 +3,21 @@ import {
   withStartFailure,
   withCreateFailure,
   withReportedStart,
+  initialLifecycle,
+  beginningLifecycleStart,
+  readyLifecycle,
   withPreparedStart,
 } from './durable-start'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import { reconciledLifecycle } from './durable-reconciliation'
 import { advanceDiskRetentionState } from './disk-retention-state'
-import { writeLifecycleState } from './durable-scheduling'
+import {
+  writeLifecycleState,
+  retryLifecyclePublication,
+  scheduleLifecycleState,
+} from './durable-scheduling'
+import { ArchiveTransitions } from './durable-archive'
 import { failedStartStop } from './durable-start-stop'
 import { advanceLifecycleAlarm } from './durable-alarm'
 import { applyLifecycleTurn, recoverLifecycleTurns } from './durable-turns'
@@ -26,6 +34,7 @@ import {
 /** One instance lives inside each workspace Durable Object. */
 export class DurableLifecycle {
   private pending: Promise<unknown> = Promise.resolve()
+  private readonly archiveTransitions: ArchiveTransitions
   readonly input: LifecycleInputState
   private readonly storage: LifecycleStorage
   private readonly now: () => number
@@ -46,6 +55,13 @@ export class DurableLifecycle {
       write: (state) => this.write(state),
       extendDeadline: (request) => this.hooks.extendDeadline(request),
     })
+    this.archiveTransitions = new ArchiveTransitions({
+      storage,
+      hooks,
+      now,
+      input: this.input,
+      serial: (operation) => this.serial(operation),
+    })
   }
 
   read(): Promise<DurableLifecycleState | undefined> {
@@ -59,38 +75,14 @@ export class DurableLifecycle {
   }): Promise<void> {
     return this.serial(async () => {
       if (await this.read()) return
-      await this.write({
-        workspaceId: input.workspaceId,
-        orgId: input.orgId,
-        state: 'starting',
-        start: null,
-        pendingFirstMessage: input.firstMessage,
-        lastActivityAt: this.now(),
-        runningSessions: [],
-        runnerConnected: false,
-        stoppedAt: null,
-        nextDiskKeepaliveAt: null,
-        error: null,
-      })
+      await this.write(initialLifecycle(input, this.now()))
     })
   }
 
   beginStart(kind: WorkspaceStart['kind']): Promise<void> {
-    return this.update((state) => ({
-      ...state,
-      state: 'starting',
-      start: { kind, startedAt: this.now(), steps: [] },
-      error: null,
-      stoppedAt: null,
-      nextDiskKeepaliveAt: null,
-      diskRetentionDeadlineAt: undefined,
-      runnerConnected: false,
-      lastActivityAt: this.now(),
-      startupPrepared: false,
-      restoreWatchAt: undefined,
-      startStop: undefined,
-      diskRetentionCommand: undefined,
-    }))
+    return this.update((state) =>
+      beginningLifecycleStart(state, kind, this.now()),
+    )
   }
 
   step(
@@ -106,30 +98,7 @@ export class DurableLifecycle {
   }
 
   runnerReady(publish?: LifecyclePublisher): Promise<void> {
-    return this.update(
-      (state) =>
-        state.state === 'stopped' ||
-        state.state === 'archived' ||
-        state.state === 'error' ||
-        state.startStop !== undefined
-          ? state
-          : {
-              ...state,
-              state:
-                state.start && !state.startupPrepared
-                  ? 'starting'
-                  : state.runningSessions.length
-                    ? 'working'
-                    : ['unread', 'input'].includes(state.state)
-                      ? state.state
-                      : 'ready',
-              runnerConnected: true,
-              error: null,
-              stoppedAt: null,
-              nextDiskKeepaliveAt: null,
-            },
-      publish,
-    )
+    return this.update(readyLifecycle, publish)
   }
 
   runnerDisconnected(publish?: LifecyclePublisher): Promise<void> {
@@ -173,9 +142,8 @@ export class DurableLifecycle {
     sessionId: string,
     running: boolean,
     publish?: LifecyclePublisher,
-    occurredAt = this.now(),
   ): Promise<void> {
-    const change = { sessionId, running, occurredAt }
+    const change = { sessionId, running }
     return this.update(
       (state) => applyLifecycleTurn(state, change, this.hooks, this.now),
       publish,
@@ -184,7 +152,25 @@ export class DurableLifecycle {
 
   stopped(): Promise<void> {
     return this.update((state) =>
-      reconciledLifecycle(state, 'stopped', this.now()),
+      state.state === 'archived'
+        ? state
+        : reconciledLifecycle(state, 'stopped', this.now()),
+    )
+  }
+
+  archive(): Promise<void> {
+    return this.archiveTransitions.archive()
+  }
+
+  restoreStopped(
+    stoppedAt: number | null,
+    nextDiskKeepaliveAt: number,
+    stopPending = false,
+  ): Promise<void> {
+    return this.archiveTransitions.restore(
+      stoppedAt,
+      nextDiskKeepaliveAt,
+      stopPending,
     )
   }
 
@@ -222,6 +208,7 @@ export class DurableLifecycle {
     return this.serial(async () => {
       this.input.invalidate()
       if (!preserveAlarm) await this.storage.deleteAlarm()
+      await this.storage.changedAlarm(null)
       return this.storage.delete(LIFECYCLE_STATE_KEY)
     })
   }
@@ -236,6 +223,20 @@ export class DurableLifecycle {
 
   exclusive<T>(operation: () => Promise<T>): Promise<T> {
     return this.serial(operation)
+  }
+
+  schedule(): Promise<void> {
+    return this.serial(async () => {
+      const state = await this.read()
+      if (state)
+        await scheduleLifecycleState(this.storage, this.hooks, state, this.now)
+    })
+  }
+
+  retryChanged(): Promise<void> {
+    return this.serial(() =>
+      retryLifecyclePublication(this.storage, this.hooks, this.now),
+    )
   }
 
   alarm(): Promise<void> {

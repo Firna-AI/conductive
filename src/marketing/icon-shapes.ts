@@ -33,11 +33,13 @@ function rect(
   return { kind: 'rect', x, y, width: size[0], height: size[1], rx }
 }
 
+type IconShapes = Readonly<Record<string, readonly IconShape[]>>
+
 /**
- * The lucide icons of the site, as lucide-react 0.577.0 draws them, under
- * the ISC licence. The site runs no script, so it writes the SVG itself.
+ * The icons that the smaller features of the home page can name. The
+ * mockups draw each of them too, with lucide-react.
  */
-export const lucideIcons = {
+const featureIcons = {
   cloud: [path('M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z')],
   users: [
     path('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'),
@@ -63,6 +65,13 @@ export const lucideIcons = {
     path('M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8'),
     path('M10 12h4'),
   ],
+} as const satisfies IconShapes
+
+/**
+ * The icons of the Conductor comparison page, and of its link from the home
+ * page.
+ */
+const comparisonIcons = {
   'circle-check': [circle(12, 12, 10), path('m9 12 2 2 4-4')],
   contrast: [circle(12, 12, 10), path('M12 18a6 6 0 0 0 0-12v12z')],
   'circle-dashed': [
@@ -96,6 +105,44 @@ export const lucideIcons = {
     path('m9 16 2 2 4-4'),
   ],
   'arrow-right': [path('M5 12h14'), path('m12 5 7 7-7 7')],
-} as const satisfies Readonly<Record<string, readonly IconShape[]>>
+  link: [
+    path('M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'),
+    path('M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'),
+  ],
+} as const satisfies IconShapes
+
+/** The icons of actions, such as the downloads of the Mac app. */
+const actionIcons = {
+  download: [
+    path('M12 15V3'),
+    path('M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'),
+    path('m7 10 5 5 5-5'),
+  ],
+} as const satisfies IconShapes
+
+/**
+ * The icons of the docs: the docs menu, the chevron of each disclosure, and
+ * the previous and next guides.
+ */
+const docsIcons = {
+  menu: [path('M4 5h16'), path('M4 12h16'), path('M4 19h16')],
+  'chevron-down': [path('m6 9 6 6 6-6')],
+  'arrow-left': [path('m12 19-7-7 7-7'), path('M19 12H5')],
+  'arrow-right': [path('M5 12h14'), path('m12 5 7 7-7 7')],
+} as const satisfies IconShapes
+
+/**
+ * Every lucide icon of the site, as lucide-react 0.577.0 draws it, under the
+ * ISC licence. The site runs no script, so it writes the SVG itself.
+ */
+export const lucideIcons = {
+  ...featureIcons,
+  ...actionIcons,
+  ...comparisonIcons,
+  ...docsIcons,
+}
+
+/** An icon that a smaller feature can name. */
+export type FeatureIconName = keyof typeof featureIcons
 
 export type IconName = keyof typeof lucideIcons

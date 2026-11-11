@@ -19,6 +19,8 @@ import {
 } from './composition-data'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import { requireFeatureResult, type FeatureResult } from '../features/result'
+import { purgeWorkspaceAttachments } from '../chat/attachment-cleanup'
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 
 async function apply(operation: Promise<FeatureResult<void>>): Promise<void> {
   requireFeatureResult(await operation)
@@ -77,13 +79,20 @@ export function productionMembersHooks(
     async maintainDeletedOrg(input) {
       for (const disk of input.workspaces) {
         await input.ownership.renew()
-        const due = disk.nextKeepaliveAt ?? disk.stoppedAt + DISK_KEEPALIVE_MS
+        const expiresAt =
+          disk.archivedAt === undefined
+            ? Infinity
+            : disk.archivedAt + WORKSPACE_RESTORE_MS
+        const due = Math.min(
+          disk.nextKeepaliveAt ?? disk.stoppedAt + DISK_KEEPALIVE_MS,
+          expiresAt,
+        )
         await input.retention.schedule(disk.workspaceId, due)
-        if (input.mode === 'retention' && due <= input.now) {
+        if (input.mode === 'retention' && due <= input.now && due < expiresAt) {
           const stopped = await input.retention.restart(disk.workspaceId, 1_800)
           await input.retention.schedule(
             disk.workspaceId,
-            stopped.stoppedAt + DISK_KEEPALIVE_MS,
+            Math.min(stopped.stoppedAt + DISK_KEEPALIVE_MS, expiresAt),
           )
         }
       }
@@ -130,6 +139,7 @@ export function productionMembersHooks(
         receiver(workspaceId).deleteMemberWorkspaceState(fence(ownership)),
       )
       await ownership.renew()
+      await purgeWorkspaceAttachments(env, workspaceId, () => ownership.renew())
       await apply(
         receiver(`org-image:${orgId}`).deleteMemberWorkspaceState(
           fence(ownership),

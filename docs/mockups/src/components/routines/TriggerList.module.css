@@ -1,0 +1,41 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* The menu of Add trigger opens below the button. */
+.add {
+  display: flex;
+  position: relative;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+.empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.zone {
+  max-width: 280px;
+  margin-top: 4px;
+}

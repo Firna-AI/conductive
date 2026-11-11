@@ -1,13 +1,18 @@
 import { activeAdminMemberPredicate } from '../data/active-admin'
 import { activeOrgPredicate } from '../data/org-access'
 import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
+import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 export const REPAIR_GRACE_MS = 15 * 60 * 1_000
 export const REPAIR_LIMIT = 50
 export type RepairKind = 'workspace' | 'org'
 
-const workspaceEligible = `w.sandbox_id IS NOT NULL
-  AND w.state IN ('stopped', 'error') AND ${workspaceTokenResourcePredicate}`
+const workspaceEligible = `w.sandbox_id IS NOT NULL AND (
+  (w.state IN ('stopped', 'error') AND ${workspaceTokenResourcePredicate})
+  OR (w.archived_at IS NOT NULL AND EXISTS (SELECT 1 FROM orgs archive_org
+    WHERE archive_org.id = w.org_id AND archive_org.deleted_at IS NULL)))`
+const workspaceDue = `COALESCE(w.next_disk_keepalive_at, w.archived_at + ${WORKSPACE_RESTORE_MS})`
 const orgEligible = `o.deleted_at IS NULL AND ${activeOrgPredicate('o')}
   AND EXISTS (SELECT 1 FROM org_members m WHERE m.org_id = o.id
     AND ${activeAdminMemberPredicate('m')})`
@@ -17,18 +22,18 @@ export async function overdueLifecycleRepairs(db: D1Database, cutoff: number) {
     db
       .prepare(
         `SELECT w.id FROM workspaces w WHERE ${workspaceEligible}
-         AND w.next_disk_keepalive_at <= ?
-         ORDER BY w.next_disk_keepalive_at, w.id LIMIT ?`,
+         AND ${workspaceDue} <= ?
+         ORDER BY ${workspaceDue}, w.id LIMIT ?`,
       )
       .bind(cutoff, REPAIR_LIMIT + 1),
     db
       .prepare(
-        `SELECT o.id FROM settings s JOIN orgs o ON o.id = s.org_id
-         WHERE s.org_image_name IS NOT NULL AND ${orgEligible}
-         AND s.next_image_refresh_at <= ?
-         ORDER BY s.next_image_refresh_at, o.id LIMIT ?`,
+        `SELECT o.id FROM org_images i JOIN orgs o ON o.id = i.org_id
+         WHERE i.provider_account = ? AND i.image_name IS NOT NULL AND ${orgEligible}
+         AND i.next_image_refresh_at <= ?
+         ORDER BY i.next_image_refresh_at, o.id LIMIT ?`,
       )
-      .bind(cutoff, REPAIR_LIMIT + 1),
+      .bind(DEFAULT_PROVIDER_ACCOUNT, cutoff, REPAIR_LIMIT + 1),
   ])
   return { workspaces: workspaces.results, orgs: orgs.results }
 }
@@ -45,15 +50,17 @@ function repairDeferral(
     kind === 'workspace'
       ? db.prepare(
           `UPDATE workspaces AS w SET next_disk_keepalive_at = ?
-           WHERE w.id = ? AND ${workspaceEligible} AND w.next_disk_keepalive_at <= ?`,
+           WHERE w.id = ? AND ${workspaceEligible} AND ${workspaceDue} <= ?`,
         )
       : db.prepare(
-          `UPDATE settings SET next_image_refresh_at = ?
-           WHERE org_id = ? AND org_image_name IS NOT NULL
+          `UPDATE org_images SET next_image_refresh_at = ?
+           WHERE org_id = ? AND provider_account = ? AND image_name IS NOT NULL
            AND next_image_refresh_at <= ? AND EXISTS (
-             SELECT 1 FROM orgs o WHERE o.id = settings.org_id AND ${orgEligible})`,
+             SELECT 1 FROM orgs o WHERE o.id = org_images.org_id AND ${orgEligible})`,
         )
-  return statement.bind(now, id, cutoff)
+  return kind === 'workspace'
+    ? statement.bind(now, id, cutoff)
+    : statement.bind(now, id, DEFAULT_PROVIDER_ACCOUNT, cutoff)
 }
 
 export async function deferOverdueRepair(

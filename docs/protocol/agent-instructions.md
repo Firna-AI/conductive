@@ -3,7 +3,7 @@
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
 and the guidance in them, the sender line of each message, and the base
-prompt of Claude agents. [Chat and events](chat-and-events.md#agents)
+prompt of Claude agents. [Agents and sessions](agents-and-sessions.md#agents)
 states the agents and their sessions. [Agent tools](agent-tools.md)
 states the tools of the agents. The other terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -21,8 +21,10 @@ says.
   names the member who sent that message.
 - **Workspace branch:** the branch that the Worker's record of the
   workspace names. The app tracks this branch.
-- **Target branch:** the default branch of the workspace's repository. The
-  workspace branch starts from it, and the Changes list compares with it.
+- **Target branch:** the base branch of the workspace, as
+  [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
+  says. For a workspace that a member creates, it is the default branch of
+  the repository.
 - **Base prompt:** the general rules for work that a Claude agent gets
   before the agent instructions.
 
@@ -34,8 +36,13 @@ says.
   - The folder of the workspace's repository, and the folder of each other
     repository in the cloud computer, as
     [Repository folders](repository-folders.md) says.
+  - The absolute path of the context folder (decision 243). Git ignores
+    this folder, and attached files arrive in its attachments folder, as
+    [The context folder](repository-folders.md#the-context-folder) says.
   - The workspace branch and the target branch.
 - The instructions also give this guidance:
+  - The agent keeps notes, screenshots, and files for other sessions of the
+    workspace in the context folder.
   - The agent keeps the name of the workspace branch, unless a member asks
     for a rename.
   - The target branch is the base of the diffs and the pull requests of
@@ -50,10 +57,13 @@ says.
 - The instructions never tell the agent to send a member to a tool that
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.
+- The instructions do not ask the agent to show a screenshot in a reply.
+  Reason: the chat shows the Markdown of an image as text, as
+  [Chat Markdown](chat-markdown.md#formatting) says.
 - The instructions hold no secret, such as the workspace token or an agent
   login.
 - The instructions follow the naming rules of user-facing text, as
-  [Names in the product](chat-and-events.md#names-in-the-product) and
+  [Names in the product](agents-and-sessions.md#names-in-the-product) and
   [The provider](workspaces-and-sandboxes.md#the-provider) say. So they
   never name Boat, and they never use "Claude Code" as a name of the
   product.
@@ -100,11 +110,13 @@ says.
 - A Mac command of a turn goes to the Mac of the sender of the turn, the
   member whose message started the turn. The GitHub token of the turn also
   belongs to that member, as
-  [GitHub tokens](access-and-security.md#github-tokens) says.
-- A message that another member sends during the turn changes neither.
+  [GitHub tokens](github-tokens.md) says. The commits of the turn name that
+  member too, as [Commit author](github-tokens.md#commit-author) says.
+- A message that another member sends during the turn changes none of
+  them.
 - Reason: the Worker takes the sender of a Mac command or a Git operation
   from its own record of the turn.
-  [The workspace token](access-and-security.md#the-workspace-token) states
+  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   this rule. Agent code runs in the sandbox, so a sender that the sandbox
   names can be false.
 - Risk: a member can type a false sender line in a message. The agent can
@@ -133,7 +145,7 @@ says.
 - A tool that returns facts that change, such as the pull request state,
   was rejected. It widens what the workspace token allows, and agents still
   need instructions to call it.
-  [The workspace token](access-and-security.md#the-workspace-token) states
+  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   what the token allows.
 
 ## How each agent gets them

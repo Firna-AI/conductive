@@ -4,13 +4,15 @@ The operator section is the part of the web app where an operator sees
 the whole app, acts on one org or one user, and runs the waitlist. It
 lives at `/operator`. It has the tabs Overview, Orgs, Users, Waitlist, and
 Invite codes, a page for each org and each user, Suspend and Lift on those
-pages, Approve for a person who waits, the codes, and the pause of
-sign-ups. The Mac app shows the same pages, because it shows the web app.
+pages, Approve for a person who waits, the codes, the pause of sign-ups,
+and the waitlist switch. The Mac app shows the same pages, because it
+shows the web app.
 [Operator section](../../../docs/protocol/operator-section.md),
-[Operator actions](../../../docs/protocol/operator-actions.md), and
-[Waitlist](../../../docs/protocol/waitlist.md) give the requirements. The
+[Operator actions](../../../docs/protocol/operator-actions.md),
+[Waitlist](../../../docs/protocol/waitlist.md), and
+[Sign-ups](../../../docs/protocol/sign-ups.md) give the requirements. The
 visual spec is the `app/operator` page of the
-[mockup catalogue](../../../docs/mockups/catalogue.md).
+[mockup catalogue](../../../docs/mockups/catalogue-operator.md).
 
 ## Access
 
@@ -51,6 +53,17 @@ with the search of its invite code.
   notice. While the pause loads, or when it did not load, the page shows
   no notice. The Sign-ups box of the Invite codes tab shows placeholders,
   or the failure with Try again.
+- Each page also reads the waitlist switch when it opens, in a read of its
+  own, so a failure of one read leaves the other in place. While the
+  waitlist is off, the notice of the switch follows the notice of the
+  pause. Its words depend on the pause, so it waits for both reads. While
+  either loads, or when either did not load, the page shows no notice of
+  the switch. While the switch loads, the Sign-ups box shows a placeholder
+  line. A switch that did not load shows its failure in the Sign-ups box
+  with Try again, and Pause sign-ups stays.
+  [The Sign-ups box](../../../docs/protocol/sign-ups.md#the-sign-ups-box)
+  and [The notices](../../../docs/protocol/sign-ups.md#the-notices) state
+  their words.
 - Refresh, in the desktop header of the Overview, reads the numbers again.
   The numbers stay until the answer, and the charts dim. A phone has no
   Refresh.
@@ -82,6 +95,12 @@ with the search of its invite code.
   the pause, each with `{}`. Each page shows the pause of the reply at
   once, and the answer of an older read changes nothing. Resume asks
   nothing, and a failed resume names what failed in a toast.
+- Turn off the waitlist asks first, with the number of people who wait
+  from the last read of the switch. It sends `DELETE`, and Turn on the
+  waitlist `POST`, to the path of the switch, each with `{}`. Each page
+  shows the switch of the reply at once, and the answer of an older read
+  changes nothing. Turn on asks nothing, and a failed turn-on names what
+  failed in a toast.
 - The question before the suspension of a user offers to disable a
   referral code that still lets people in, on by default. With the offer
   on, the app disables the code after the suspension, and a failed disable
@@ -128,24 +147,35 @@ year than the last day has its year there.
   `http://127.0.0.1:5173/operator?operator=1`, makes the dev user an
   operator, as [Run it](../../app/README.md#run-it) says. The dev fake
   serves the sample orgs, users, people who wait, and codes of the
-  mockups. Suspend, Lift, Approve, New code, Disable, and the pause change
-  them until the page loads again. The waitlist and the Account page of
-  the dev fake read the same codes and pause. The approval email of Sam
-  Okafor does not go at once, and Kenji Watanabe has no verified email.
+  mockups. Suspend, Lift, Approve, New code, Disable, the pause, and the
+  waitlist switch change them until the page loads again. The waitlist and
+  the Account page of the dev fake read the same codes, pause, and switch.
+  The approval email of Sam Okafor does not go at once, and Kenji
+  Watanabe has no verified email.
+- Add `&waitlist=off` to start with the waitlist off, by the operator of
+  the samples. Each page then shows the notice of the switch. Zed K, who
+  waited, has app access by open sign-up, so the page of that user names
+  the source.
 - `npm run test -- src/shell/operator` runs the tests of the section.
   They mount the shell in happy-dom over the fake API, with the samples of
   `src/test-support/operator.ts`. `operator-test-kit.tsx` mounts the
   shell or the page of a user, and lists the operator requests. It leaves
-  out the reads of the pause unless a test asks for them.
+  out the reads of the pause and of the waitlist switch unless a test asks
+  for them with `pause: true` or `waitlistSwitch: true`.
   `waitlist-test-kit.ts` and `codes-test-kit.ts` give the replies and the
   rows of the samples that the tests of those two tabs share.
+  `WaitlistSwitch.test.tsx` checks the question and the turn-off,
+  the notice and Turn on the waitlist, the order of the two notices, and a
+  switch that did not load. `UserAccess.test.tsx` checks the source of an
+  open sign-up with its operator.
 
 ### Key Code
 
 - `OperatorRoutes.tsx`: the access check, the frames, the page of each
-  address, and the pause that each page reads when it opens.
-- `OperatorPage.tsx`: the header, the tabs, and the notice of the pause of
-  each page.
+  address, and the pause and the switch that each page reads when it
+  opens.
+- `OperatorPage.tsx`: the header, the tabs, and the notices of the pause
+  and of the switch of each page.
 - `OverviewTab.tsx`, `OverviewParts.tsx`, and `OverviewLoading.tsx`: the
   Overview, its tiles with the count of the people who wait, largest orgs,
   and placeholders. Its charts are `DailyChart` of
@@ -156,11 +186,16 @@ year than the last day has its year there.
   and its question.
 - `CodesTab.tsx`, `CodeParts.tsx`, and `CodeDialogs.tsx`: the Invite codes
   tab, a code with Copy and Copy join link, New code, and Disable.
+- `SignUpsBox.tsx`: the Sign-ups box with Pause sign-ups and Turn off the
+  waitlist, its placeholders and failures, and their questions.
 - `PauseParts.tsx` and `pause-context.ts`: the notice of the pause with
-  Resume sign-ups, and the Sign-ups box with Pause sign-ups.
+  Resume sign-ups, and the question of Pause sign-ups.
+- `SwitchParts.tsx` and `switch-context.ts`: the notice of the switch with
+  Turn on the waitlist, and the question of Turn off the waitlist.
 - `OrgPage.tsx`, `UserPage.tsx`, `UserDetails.tsx`, `AccessSections.tsx`,
-  `TargetPage.tsx`, and `TargetDialogs.tsx`: the pages, the app access and
-  the referral code of a user, Suspend with its offer, Lift, and their
+  `TargetPage.tsx`, and `TargetDialogs.tsx`: the pages, the app access of
+  a user with each way in, also an open sign-up with its operator, the
+  referral code of a user, Suspend with its offer, Lift, and their
   questions. `useQuestion.ts`: a question that holds while its write runs.
   `CheckOption.tsx`: the checkbox of the offer.
 - `TargetParts.tsx` and `format.ts`: the rows of users and orgs, the links
@@ -177,8 +212,9 @@ year than the last day has its year there.
 - `../../app/operator-target.ts`: `OperatorTarget`, a page with Suspend
   and Lift.
 - `../../app/operator-pause.ts`: `OperatorPause`, the pause with Pause and
-  Resume sign-ups. `../../app/operator-access.ts`: Approve, New code, and
-  Disable.
+  Resume sign-ups. `../../app/operator-switch.ts`: `OperatorSwitch`, the
+  waitlist switch with Turn off and Turn on the waitlist.
+  `../../app/operator-access.ts`: Approve, New code, and Disable.
 - `../../app/api/read-operator.ts`, `read-operator-pages.ts`, and
   `read-operator-waitlist.ts`: the readers of the replies.
 
@@ -188,5 +224,6 @@ year than the last day has its year there.
 - [Operator actions](../../../docs/protocol/operator-actions.md)
 - [Waitlist](../../../docs/protocol/waitlist.md)
 - [Invite and referral codes](../../../docs/protocol/waitlist-codes.md)
+- [Sign-ups](../../../docs/protocol/sign-ups.md)
 - [Web app: data and composition](../../app/README.md)
 - [Operator actions in the Worker](../../../worker/operator/README.md)

@@ -1,3 +1,4 @@
+import { copyText } from '../clipboard'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
@@ -13,17 +14,23 @@ import {
   type AppServices,
 } from '../services'
 import { accountRoutes } from './account-routes'
+import { attachmentRoutes } from './attachment-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
+import { feedbackRoutes } from './feedback-routes'
+import { APP_VERSION } from '../version'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgRoutes } from './org-routes'
+import { routineRoutes } from './routine-routes'
+import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
+import { runRoutes } from './run-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
-import { waitlistRoutes } from './waitlist-routes'
+import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
 /**
@@ -55,18 +62,25 @@ export function createFakeServices(search: string): AppServices {
   const routes = [
     ...signedOut,
     ...waitlistRoutes(backend),
+    ...feedbackRoutes(backend, options),
     ...accountRoutes(backend),
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),
     ...createRoutes(backend),
+    ...attachmentRoutes(backend, options.upload),
     ...settingsRoutes(backend),
     ...buildRoutes(backend),
+    ...routineRoutes(backend),
+    ...runRoutes(backend),
     ...operatorRoutes(backend),
   ]
   const fetch = routeFetch(
     routes,
-    (path, method) => guardScope(backend.state, path, method),
+    (path, method) => {
+      admitOpenSignup(backend)
+      guardScope(backend.state, path, method)
+    },
     server.fetch,
   )
   const events: WorkspaceEventSource = {
@@ -74,7 +88,7 @@ export function createFakeServices(search: string): AppServices {
       server.events.subscribe(target.afterEventNumber, handlers.message),
   }
   return {
-    api: createApiClient(fetch),
+    api: createApiClient(fetch, devFileTransport(fetch, search)),
     events,
     now,
     delay: browserDelay,
@@ -87,6 +101,7 @@ export function createFakeServices(search: string): AppServices {
     newId,
     leave: (url) => window.location.assign(url),
     appOrigin: window.location.origin,
-    copy: (text) => navigator.clipboard.writeText(text),
+    appVersion: APP_VERSION,
+    copy: (text) => copyText(window, text),
   }
 }

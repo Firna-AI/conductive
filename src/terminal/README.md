@@ -31,8 +31,14 @@ change can move the shared parts to the app's shared components.
   replies reach the shell, but they keep a held Ctrl and count as no
   activity. The screen marks them where xterm.js makes them, so a key with
   the same bytes, such as Shift+F3, stays the user's key.
+- A plain drag selects text, also while a program, such as tmux, has the
+  mouse. The screen sends each plain left press to xterm.js again as a
+  forced selection, with Option on a Mac and Shift elsewhere. The wheel,
+  the right and middle buttons, and a press with Cmd or Ctrl still reach
+  the program. On a Mac, Cmd+C copies the selection.
 - When the connection ends, the screen keeps its output, takes no more
-  input or size, and offers Reconnect.
+  input or size, and offers Reconnect. It also turns off the mouse reports
+  of the program, so a drag selects the text and shows the text cursor.
 - Another workspace starts the tool again, so no input reaches the old one.
 
 ## Mount the tool
@@ -40,7 +46,6 @@ change can move the shared parts to the app's shared components.
 ```tsx
 <TerminalTool
   connect={connectTerminal}
-  onActivity={countTerminalInput}
   touch={phone}
   workspace={{ orgId, workspaceId, fetch, subscribe }}
 />
@@ -56,9 +61,13 @@ change can move the shared parts to the app's shared components.
   Reconnect. A source without `openSocket`, as in the development fake,
   throws. The transport takes text only, so the tool does not send the
   mouse reports that xterm.js sends as binary data, in the old X10 format.
-- `onActivity` runs for each input of the user: keys, text, paste, and mouse
-  reports. It does not run for the replies of xterm.js. The shell can count
-  it as activity with the source `terminal`, at the rate that it chooses.
+- `onActivity` is optional. It runs for each input of the user: keys, text,
+  paste, and mouse reports. It does not run for the replies of xterm.js.
+  The development page shows the number of these inputs.
+- The workspace screen passes no `onActivity`. The input listener of the
+  app page already counts the user's input in the terminal as activity, as
+  [the web app](../app/README.md#rules-for-this-code) says. The Worker
+  counts no terminal frame as activity.
 - `workspace.fetch` is the app's fetch. `workspace.subscribe` is required.
   It delivers the events of the workspace in order. Keep both stable.
 - `touch` selects the phone layout: 44px controls and the key row.
@@ -93,6 +102,9 @@ tool reads no events.
   `WorkspaceEvent` itself, in the order of the subscription. It drops the
   events of other workspaces. The tool's own actions, such as a request
   result, go to the same reducer.
+- A tool whose definition has `fromEnvelope` gets the action that it gives
+  for each envelope, in place of the event. So a tool can read the time of
+  an event, as the Preview tool does for a failed repair of its list.
 - A subscription can deliver its stored history at once, inside the
   subscribe call. The store is already connected then, so the reducer gets
   each event of that history.
@@ -126,15 +138,18 @@ After the [Get started](../../README.md#get-started) setup:
 
 The address holds the settings: `tool` (`terminal`, `preview`, `desktop`),
 `state`, `layout` (`panel`, `phone`), `scheme` (`dark`, `light`), `workspace`,
-and `preview`. The panel layout has the 440 × 389 size of the tools in the
-right column. The phone layout has the 390 × 636 size of a tool page on a
+`preview`, and `ports`. `ports` chooses the stored report of the listening
+ports: `servers`, `empty`, `unknown`, or `failed`, which adds a failed repair
+3 minutes before the fake time of the Preview tool. The panel layout has the
+440 × 389 size of the tools in the right column. The phone layout has the 390 × 636 size of a tool page on a
 phone. The page lists each request and each call of the terminal transport.
 
 The buttons send fake events: revoke a preview, start the sandbox, end the
 terminal connection, and change the workspace. In the `late` state, the
 terminal reads that start before the sandbox runs wait for Answer held
-reads. Two buttons make the shell ask for the cursor position and turn on
-focus reports. These two buttons leave the keyboard on the terminal.
+reads. Three buttons make the shell ask for the cursor position, turn on
+focus reports, and turn on mouse reports, as tmux does. These three
+buttons leave the keyboard on the terminal.
 
 ## Key code
 
@@ -145,6 +160,8 @@ focus reports. These two buttons leave the keyboard on the terminal.
 - `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
 - `xtermScreen.ts`: splits the data of xterm.js into the user's input and
   its own replies.
+- `plainPresses.ts`: keeps plain left presses for the selection of the page
+  while a program has the mouse.
 - `terminalSession.ts`: connects the screen to a `TerminalTransport`.
 - `terminalKeys.ts`: the bytes of the key row and of Ctrl with a key.
 - `terminalTheme.ts`: the colours and the type of the screen from the tokens.
@@ -160,5 +177,5 @@ focus reports. These two buttons leave the keyboard on the terminal.
   echo terminal and its held reads.
 
 See [the previews](../previews/README.md), [the desktop](../desktop/README.md),
-[Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md#terminal),
-and [Access and security](../../docs/protocol/access-and-security.md#terminal).
+[Workspaces and sandboxes](../../docs/protocol/workspace-tools.md#terminal),
+and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#terminal).

@@ -51,7 +51,7 @@ export async function updateWorkspaceTitle(
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE workspaces SET name = ?, updated_at = ?
+      `UPDATE workspaces SET name = ?, updated_at = MAX(updated_at, ?)
     WHERE id = ? AND name = '' AND ${automaticTitleWorkspacePredicate}`,
     )
     .bind(name, now, workspaceId)
@@ -155,4 +155,17 @@ export async function senderLoginAccess(
     runnerAllowed: row?.workspaceAllowed === 1 && row.runnerAllowed === 1,
     reuseAllowed: row?.reuseDenied !== 1,
   }
+}
+
+/** The transcript keeps the workspace name captured with its session. */
+export function transcriptWorkspaceName(
+  db: D1Database,
+  workspaceId: string,
+): Promise<{ name: string | null } | null> {
+  return db
+    .prepare(
+      `SELECT ${workspaceNameColumn('workspaces')} FROM workspaces WHERE id = ?`,
+    )
+    .bind(workspaceId)
+    .first<{ name: string | null }>()
 }
