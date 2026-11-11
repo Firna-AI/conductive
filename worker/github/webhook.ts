@@ -32,7 +32,7 @@ export interface GitHubWebhookDependencies {
   ) => Promise<void>
 }
 
-async function authenticatedBody(
+export async function authenticatedBody(
   request: Request,
   secret: string,
 ): Promise<Uint8Array<ArrayBuffer>> {

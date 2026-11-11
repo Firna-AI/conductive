@@ -2,7 +2,8 @@ import { parseArgs } from 'node:util'
 import type { PreviewState } from './comment.ts'
 import { previewNames } from './names.ts'
 
-export type OperationCommand = 'deploy' | 'delete' | 'sweep' | 'comment'
+export type OperationCommand =
+  'deploy' | 'delete' | 'sweep' | 'comment' | 'relay'
 
 export function operationOptions(command: OperationCommand, args: string[]) {
   try {
@@ -12,6 +13,7 @@ export function operationOptions(command: OperationCommand, args: string[]) {
       allowPositionals: false,
       options: {
         pr: { type: 'string' },
+        zone: { type: 'string' },
         wrangler: { type: 'string' },
         'build-folder': { type: 'string' },
         'runner-url': { type: 'string' },
@@ -35,6 +37,7 @@ export function operationOptions(command: OperationCommand, args: string[]) {
       delete: ['pr', 'wrangler'],
       sweep: ['wrangler'],
       comment: ['pr', 'sha', 'state', 'data-reset'],
+      relay: ['zone', 'wrangler'],
     }
     if (Object.keys(values).some((key) => !allowed[command].includes(key)))
       throw new Error('Unsupported option.')

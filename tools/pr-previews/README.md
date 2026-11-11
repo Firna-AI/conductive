@@ -1,8 +1,8 @@
 # Pull request preview tool
 
-This Node 24 tool configures, deploys, deletes, and sweeps pull request
-previews. It also maintains their GitHub comments. It uses the built app
-and the preview account's settings. It needs no runtime npm package.
+This Node 24 tool deploys and cleans up pull request previews and their relay.
+It configures previews, maintains comments, and prints a GitHub App manifest.
+It uses the built app and preview settings. It needs no runtime npm package.
 Infrastructure commands use Wrangler and the AWS CLI.
 
 ## Commands
@@ -25,21 +25,20 @@ node tools/pr-previews/main.ts delete --pr 123 --wrangler "$TRUSTED_WRANGLER"
 node tools/pr-previews/main.ts sweep --wrangler "$TRUSTED_WRANGLER"
 node tools/pr-previews/main.ts comment --pr 123 --state live --sha "$GITHUB_SHA" \
   --data-reset
+node tools/pr-previews/main.ts relay --zone preview.example --wrangler "$TRUSTED_WRANGLER"
+node tools/pr-previews/main.ts manifest --zone preview.example --owner sample-owner
 ```
 
-Set `RUNNER_SHA256` to the archive's SHA-256 digest before this command.
-`config` copies the archive URL and digest into the Worker variables.
-It does not upload the archive. `deploy` uploads a missing archive.
-Omit `--runner-archive` when no local archive was downloaded.
+Set `RUNNER_SHA256` to the archive digest. `config` copies the runner inputs.
+Only `deploy` uploads archives. Omit `--runner-archive` if none was downloaded.
 
 `config` reads `dist/conductive/wrangler.json` by default. The Cloudflare
 Vite plugin writes that file. `.wrangler/deploy/config.json` points to it.
 Use `--build-config PATH` to read an extracted build in another folder.
 
-The command writes `wrangler.pr-123.json` beside the built config and
-prints its absolute path to stdout. This keeps `index.js`, `../client`,
-and `../../migrations` relative to the same folder. Keep `dist/` and
-`migrations/` in that layout when you extract a build.
+`config` writes `wrangler.pr-123.json` beside its input and prints the
+absolute path to stdout. Preserve the `dist/` and `migrations/` layout.
+The relative paths stay `index.js`, `../client`, and `../../migrations`.
 
 `node tools/pr-previews/main.ts --help` prints the command syntax.
 The command returns exit status 1 for invalid inputs or an incomplete
@@ -60,11 +59,13 @@ folders under `RUNNER_TEMP`, or the OS temporary folder, and remove them.
 | Runner archive digest | `--runner-sha256` | Value of `CONDUCTIVE_RUNNER_ARCHIVE_SHA256`. |
 | Built config path | `--build-config` | Optional path to the built Wrangler JSON. |
 | Extracted build | `deploy --build-folder` | Folder with `dist/` and `migrations/`. |
-| Trusted Wrangler | `--wrangler` | Required binary path for deploy, delete, and sweep. |
+| Trusted Wrangler | `--wrangler` | Required binary path for deploy, delete, sweep, and relay. |
 | Commit | `--sha` | Hexadecimal commit SHA for deploy and comment. Tags use its first seven characters. |
 | Local runner | `deploy --runner-archive` | Required only when the bucket lacks the archive. |
 | Comment state | `comment --state` | `deploying`, `live`, `failed`, or `deleted`. |
 | Reset note | `comment --data-reset` | Include the database reset note. |
+| Relay or app zone | `--zone` | Required for relay and manifest. It selects their zone. |
+| App owner | `manifest --owner` | Optional user or organization. Omit it for the current personal account. |
 
 The settings check reads these required environment variables:
 
@@ -79,10 +80,13 @@ The check preserves each configured value, including private key newlines.
 With no required setting, the command warns on stderr, writes nothing,
 and succeeds. With only some settings, it fails and names every missing
 setting. It never prints a configured secret value.
-`config`, `deploy`, `delete`, and `sweep` use this check.
+`config`, `deploy`, `delete`, `sweep`, and `relay` use this check.
 `sweep` also requires `GITHUB_REPOSITORY` and `GITHUB_TOKEN`.
 `comment` needs only `PREVIEW_ZONE`, `GITHUB_REPOSITORY`, `GITHUB_TOKEN`,
 `GITHUB_SERVER_URL`, and `GITHUB_RUN_ID`. It skips when the zone is absent.
+
+`manifest` needs no setup. `--owner` uses a public GitHub profile lookup
+to choose a personal or organization form. No token is sent.
 
 `PREVIEW_ZONE` must be a lower-case DNS name with at least two labels.
 Each label has at most 63 characters. The name has at most 253 characters.
@@ -129,6 +133,13 @@ keys without a Worker. A GitHub error other than 404 stops the sweep.
 with `<!-- conductive-pr-preview -->`, or creates it. It includes both
 links, the commit, the run URL, and the requested reset note.
 See [Life of a preview](../../docs/pr-previews/life.md) for the workflow.
+
+`relay` creates the registry if needed and deploys the Worker on the bare
+zone. It uses only the webhook secret and checks HTTP 200 within two minutes.
+
+`manifest` prints JSON to stdout and the form path to stderr. The form starts
+registration. Exchange GitHub's code within one hour, then enable callback
+wildcard matching. The tool does not exchange or store credentials.
 
 ## Config allow list
 
@@ -205,8 +216,8 @@ npm run file-length:check
 npm run exports:check
 ```
 
-The root TypeScript project includes this folder's NodeNext project.
-It checks the tool and its tests. Tests use fake file operations and
+The NodeNext project checks the CLI. Separate Worker projects check the
+relay and its tests. Production has no Node types. Tests use fake I/O and
 dummy settings. They read no workflow or documentation file.
 
 ### Key code
@@ -234,3 +245,6 @@ dummy settings. They read no workflow or documentation file.
 - [github.ts](github.ts) and [comment.ts](comment.ts): GitHub replies and comment updates.
 - [health.ts](health.ts): bounded app health polling.
 - [operations.ts](operations.ts) and [runtime.ts](runtime.ts): injected command, HTTP, and clock boundaries.
+- [relay/worker.ts](relay/worker.ts): relay routes and background deliveries.
+- [relay-deploy.ts](relay-deploy.ts) and [relay-config.ts](relay-config.ts): relay deployment.
+- [manifest.ts](manifest.ts): GitHub App manifest and registration form.

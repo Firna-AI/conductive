@@ -16,7 +16,7 @@ afterEach(() => vi.resetAllMocks())
 
 it('skips infrastructure commands with absent setup and reports partial setup before work', async () => {
   const { ctx, command, http } = fakeContext()
-  for (const name of ['deploy', 'delete', 'sweep']) {
+  for (const name of ['deploy', 'delete', 'sweep', 'relay']) {
     await expect(runPreviewCommand([name], {}, ctx.io)).resolves.toEqual({
       kind: 'skip',
       warning: 'Preview settings are absent. Skipping preview configuration.',

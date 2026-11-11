@@ -29,6 +29,19 @@ export class PreviewRegistry {
     return null
   }
 
+  async ensure(): Promise<string> {
+    const existing = await this.id()
+    if (existing !== null) return existing
+    const reply = await this.cloudflare.request(
+      this.cloudflare.account('/storage/kv/namespaces'),
+      'POST',
+      JSON.stringify({ title: 'conductive-preview-registry' }),
+    )
+    const id = text(record(reply?.result, 'KV namespace').id, 'KV namespace ID')
+    this.namespace = Promise.resolve(id)
+    return id
+  }
+
   async add(names: PreviewNames): Promise<boolean> {
     const id = await this.id()
     if (id === null) {

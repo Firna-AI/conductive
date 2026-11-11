@@ -17,6 +17,8 @@ import {
   writeDeploymentOutput,
 } from './deployment-output.ts'
 import type { ExternalIO, OperationContext } from './operations.ts'
+import { previewNames } from './names.ts'
+import { deployRelay } from './relay-deploy.ts'
 import { checkSettings } from './settings.ts'
 import { sweepPreviews } from './sweep.ts'
 
@@ -75,6 +77,16 @@ export async function runOperationCommand(
   const values = operationOptions(command, args)
   const wrangler = resolve(requiredOption(values.wrangler, 'wrangler'))
   const base = { settings: setup.settings, environment, io, wrangler }
+  if (command === 'relay') {
+    const zone = previewNames(1, requiredOption(values.zone, 'zone')).zone
+    return withWorkingFolder(
+      { ...base, settings: { ...setup.settings, zone } },
+      async (ctx) => ({
+        kind: 'complete',
+        lines: [`Relay: ${await deployRelay(ctx)}`],
+      }),
+    )
+  }
   if (command === 'deploy') {
     const number = numberOption(values.pr, setup.settings.zone)
     const buildFolder = resolve(

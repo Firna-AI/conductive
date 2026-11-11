@@ -78,14 +78,19 @@ App. Its one callback URL serves the sign-in of every preview. Its Setup
 URL and its webhook URL go to the relay.
 
 1. From the repository root, run
-   `node tools/pr-previews/main.ts manifest --zone <zone>`. The command
-   prints the manifest of the preview GitHub App for that zone.
-2. Make the app from that manifest on GitHub.
-3. In the settings of the new app, turn on wildcard matching for the
+   `node tools/pr-previews/main.ts manifest --zone <zone> --owner <owner>`.
+   The command prints the manifest of the preview GitHub App for that
+   zone. It also writes a form that starts the registration on GitHub.
+2. Open the form, and make the app on GitHub.
+3. GitHub then opens the bare zone with a `code` in the address. The page
+   can fail before the relay exists. Copy the code from the address.
+4. Within one hour of step 2, run
+   `gh api --method POST /app-manifests/<code>/conversions`. Its reply
+   holds the ID, the client ID, the client secret, the webhook secret,
+   and the private key of the app. Keep them for
+   [The GitHub environment `preview`](#the-github-environment-preview).
+5. In the settings of the new app, turn on wildcard matching for the
    callback URL. A manifest cannot set it.
-4. Give the app a webhook secret. Use the same value for
-   `GITHUB_WEBHOOK_SECRET`.
-5. Make a client secret and a private key for the app.
 6. Compare the permissions of the app with those of the live app, as
    [Permissions](#permissions) says.
 7. Install the app only on test repositories.
@@ -172,7 +177,7 @@ Give it these secrets:
 | `CLOUDFLARE_API_TOKEN` | The preview token |
 | `GITHUB_CLIENT_SECRET` | A client secret of the preview GitHub App |
 | `GITHUB_APP_PRIVATE_KEY` | A private key of the preview GitHub App, as PEM |
-| `GITHUB_WEBHOOK_SECRET` | The webhook secret of the preview GitHub App. The relay and each preview check each delivery with it. |
+| `GITHUB_WEBHOOK_SECRET` | The webhook secret of the preview GitHub App, from the reply of the code exchange. The relay and each preview check each delivery with it. |
 | `SESSION_SIGNING_KEY` | 32 random bytes, encoded as Base64 |
 | `BOAT_KEY_ENCRYPTION_KEY` | A separate 32 random bytes, encoded as Base64 |
 | `BOAT_API_KEY` | The preview Boat key |

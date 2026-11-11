@@ -1,7 +1,9 @@
 import { parseArgs } from 'node:util'
 import { runOperationCommand, type OperationResult } from './commands.ts'
+import { requiredOption } from './command-options.ts'
 import { writePreviewConfig, type ConfigInputs } from './config.ts'
 import { previewNames } from './names.ts'
+import { writeManifestForm } from './manifest.ts'
 import type { ExternalIO } from './operations.ts'
 import { defaultIO } from './runtime.ts'
 import { checkSettings } from './settings.ts'
@@ -11,6 +13,7 @@ type CommandResult =
   | { kind: 'skip'; warning: string }
   | { kind: 'help'; text: string }
   | OperationResult
+  | { kind: 'manifest'; json: string; formPath: string }
 
 const USAGE = `Usage: node tools/pr-previews/main.ts config \\
   --pr NUMBER --database-id ID --runner-url URL --runner-sha256 SHA256 \\
@@ -24,7 +27,22 @@ Other commands:
     --runner-url URL --runner-sha256 SHA256 [--runner-archive PATH]
   delete --pr NUMBER --wrangler PATH
   sweep --wrangler PATH
-  comment --pr NUMBER --state deploying|live|failed|deleted --sha SHA [--data-reset]`
+  comment --pr NUMBER --state deploying|live|failed|deleted --sha SHA [--data-reset]
+  relay --zone ZONE --wrangler PATH
+  manifest --zone ZONE [--owner USER_OR_ORGANIZATION]`
+
+function manifestOptions(args: string[]) {
+  try {
+    return parseArgs({
+      args,
+      strict: true,
+      allowPositionals: false,
+      options: { zone: { type: 'string' }, owner: { type: 'string' } },
+    }).values
+  } catch {
+    throw new Error('Invalid manifest arguments. Use --help for usage.')
+  }
+}
 
 function configOptions(args: string[]) {
   try {
@@ -61,7 +79,21 @@ export async function runPreviewCommand(
     case 'delete':
     case 'sweep':
     case 'comment':
+    case 'relay':
       return runOperationCommand(command, options, environment, io)
+    case 'manifest': {
+      const values = manifestOptions(options)
+      const result = await writeManifestForm(
+        requiredOption(values.zone, 'zone'),
+        values.owner,
+        io,
+      )
+      return {
+        kind: 'manifest',
+        json: JSON.stringify(result.manifest, null, 2),
+        formPath: result.formPath,
+      }
+    }
     case 'config': {
       const result = checkSettings(environment)
       if (result.kind === 'skip') return result

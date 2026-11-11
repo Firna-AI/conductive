@@ -1,6 +1,6 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { afterEach, expect, it, vi } from 'vitest'
-import { writeSecretsFile } from './secrets.ts'
+import { writeRelaySecretsFile, writeSecretsFile } from './secrets.ts'
 
 vi.mock('node:fs/promises', () => ({
   mkdtemp: vi.fn(),
@@ -57,6 +57,24 @@ it('removes a partial secrets file after a write failure without exposing the ca
   ).rejects.toThrowError('Could not write the preview secrets file.')
   expect(rm).toHaveBeenCalledExactlyOnceWith(
     '/runner-temp/conductive-preview-ghi',
+    { recursive: true, force: true },
+  )
+})
+
+it('writes only the webhook secret for a relay with mode 0600 and cleanup', async () => {
+  vi.mocked(mkdtemp).mockResolvedValue('/runner-temp/conductive-preview-relay')
+  const file = await writeRelaySecretsFile('fake-relay-secret', {
+    RUNNER_TEMP: '/runner-temp',
+  })
+  expect(file.path).toBe('/runner-temp/conductive-preview-relay/secrets.json')
+  expect(writeFile).toHaveBeenCalledExactlyOnceWith(
+    file.path,
+    '{"GITHUB_WEBHOOK_SECRET":"fake-relay-secret"}',
+    { encoding: 'utf8', mode: 0o600, flag: 'wx' },
+  )
+  await file.cleanup()
+  expect(rm).toHaveBeenCalledExactlyOnceWith(
+    '/runner-temp/conductive-preview-relay',
     { recursive: true, force: true },
   )
 })

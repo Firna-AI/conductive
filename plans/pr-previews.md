@@ -632,13 +632,19 @@ Depends on: 4
 The relay gives GitHub events and install returns to every preview. The
 tool prints the manifest of the preview GitHub App.
 
-- [ ] Add the relay Worker: the signature check and the fan-out of
+- [x] Add the relay Worker: the signature check and the fan-out of
       webhooks, the redirect of install returns, and the list of previews.
-- [ ] Add the `relay` command, which creates the KV namespace when it is
+- [x] Add the `relay` command, which creates the KV namespace when it is
       missing and deploys the relay.
-- [ ] Add the `manifest` command, which prints the manifest for a zone.
-- [ ] Add unit tests with fake GitHub deliveries, KV entries, and preview
-      replies, and see each fail once.
+- [x] Add the `manifest` command, which prints the manifest for a zone.
+- [x] Add unit tests with fake GitHub deliveries, KV entries, and preview
+      replies, and see each fail once. Done on 11 November 2026: 128 tests
+      of the tool and of `worker/github` pass in 10 runs, and the relay
+      dry run passed. The signature check of `worker/github/webhook.ts`
+      is now exported for the relay, with no change of behaviour. Evidence:
+      `.context/pr-previews/m5/report.md` and
+      `.context/pr-previews/proof/m5-relay-dry-run.log`. The setup page
+      now gives the code exchange of the manifest flow, within one hour.
 
 ## Milestone 6: Preview workflow
 

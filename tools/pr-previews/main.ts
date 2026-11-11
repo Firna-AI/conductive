@@ -16,6 +16,10 @@ try {
     case 'complete':
       for (const line of result.lines) console.log(line)
       break
+    case 'manifest':
+      console.log(result.json)
+      console.error(`Registration form: ${result.formPath}`)
+      break
   }
 } catch (error) {
   if (error instanceof DeploymentFailure)

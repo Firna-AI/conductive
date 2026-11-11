@@ -11,6 +11,7 @@
         "src/marketing/pages/**/*.astro",
         "tools/main.ts",
         "tools/pr-previews/main.ts",
+        "tools/pr-previews/relay/worker.ts",
         "image/*.mjs",
         "image/live-main.ts",
         "worker/chat/integration/run-browser-harness.mjs",

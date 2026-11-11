@@ -3,18 +3,32 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { SECRET_NAMES, type PreviewSecrets } from './settings.ts'
 
+export async function writeRelaySecretsFile(
+  secret: string,
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): Promise<{ path: string; cleanup(): Promise<void> }> {
+  return writeSecretValues({ GITHUB_WEBHOOK_SECRET: secret }, environment)
+}
+
 export async function writeSecretsFile(
   secrets: PreviewSecrets,
   environment: Readonly<Record<string, string | undefined>> = process.env,
+): Promise<{ path: string; cleanup(): Promise<void> }> {
+  const values = Object.fromEntries(
+    SECRET_NAMES.map((name) => [name, secrets[name]]),
+  )
+  return writeSecretValues(values, environment)
+}
+
+async function writeSecretValues(
+  values: Record<string, string>,
+  environment: Readonly<Record<string, string | undefined>>,
 ): Promise<{ path: string; cleanup(): Promise<void> }> {
   const directory = await mkdtemp(
     join(environment.RUNNER_TEMP || tmpdir(), 'conductive-preview-'),
   )
   const path = join(directory, 'secrets.json')
   const cleanup = () => rm(directory, { recursive: true, force: true })
-  const values = Object.fromEntries(
-    SECRET_NAMES.map((name) => [name, secrets[name]]),
-  )
   try {
     await writeFile(path, JSON.stringify(values), {
       encoding: 'utf8',

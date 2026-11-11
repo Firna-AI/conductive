@@ -4,6 +4,8 @@
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.worker.json" },
     { "path": "./tsconfig.node.json" },
-    { "path": "./tools/pr-previews/tsconfig.json" }
+    { "path": "./tools/pr-previews/tsconfig.json" },
+    { "path": "./tools/pr-previews/relay/tsconfig.json" },
+    { "path": "./tools/pr-previews/relay/tsconfig.tests.json" }
   ]
 }

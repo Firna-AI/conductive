@@ -77,3 +77,36 @@ it('accepts missing keys and reads all registry cursor pages', async () => {
     'next',
   )
 })
+
+it.each([true, false])(
+  'finds or creates the shared registry when existing is %s',
+  async (existing) => {
+    const { ctx, http } = fakeContext()
+    http
+      .mockResolvedValueOnce(
+        apiReply(
+          existing
+            ? [{ id: 'registry-id', title: 'conductive-preview-registry' }]
+            : [],
+        ),
+      )
+      .mockResolvedValueOnce(apiReply({ id: 'registry-id' }))
+    const registry = new PreviewRegistry(ctx)
+    await expect(registry.ensure()).resolves.toBe('registry-id')
+    await expect(registry.ensure()).resolves.toBe('registry-id')
+    const requests = await Promise.all(
+      http.mock.calls.map(async ([request]) => ({
+        method: request.method,
+        body: await request.text(),
+      })),
+    )
+    expect(requests).toEqual(
+      existing
+        ? [{ method: 'GET', body: '' }]
+        : [
+            { method: 'GET', body: '' },
+            { method: 'POST', body: '{"title":"conductive-preview-registry"}' },
+          ],
+    )
+  },
+)
