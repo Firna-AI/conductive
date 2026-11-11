@@ -150,6 +150,13 @@ at `app/tabs` and `app/transcripts`.
   says (decision 145).
 - Each attachment shows by its name, with no link. Reason: its file needs
   a sign-in.
+- In the text of a message, each mention of one of its attached files
+  shows as the name of the file (decision 262 D). The line of attachments
+  after the text names only the files whose mention the text does not
+  hold.
+- Reason: the copy then reads like the chat, which shows each such file by
+  its name at its place. A copy with the copy path of each file was
+  rejected, because the chat shows no such path.
 - A stop line names the member who pressed Stop, as the chat names another
   member, such as "Priya stopped the agent". A stop with no Stop request,
   or by a member who left the org, gives "The agent stopped".

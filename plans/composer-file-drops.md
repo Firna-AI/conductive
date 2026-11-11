@@ -18,6 +18,14 @@ plan on 10 November 2026: "impl all plan milestones and tasks". The user
 did not override the actions of the `models` skill, so the
 `default orchestrator` action runs the milestones.
 
+On 11 November 2026, the user directed the orchestrator to commit and push
+the verified mockup work, then continue every unblocked task through
+Milestone 8. This instruction permits that work before all dependency
+TODOs are complete. Composer drops decisions 1 and 2 remain unanswered.
+Only the phone controls, their protocol text and field touch areas wait
+for decision 1. Only the mixed-drop mockup and notice words wait for
+decision 2. No option may be applied before the user answers.
+
 The message text holds a mention of the copy path of each file, such as
 `@.context/attachments/<digest>/a.png`. The digest comes from the file ID
 only, so the path of a file never changes (decision 262 D). The read lines
@@ -745,7 +753,7 @@ Depends on: 1
 The protocol docs state the requirements of decisions 262 to 265 and of
 the design calls above that are requirements.
 
-- [ ] Update `docs/protocol/message-attachments.md` and its owner page
+- [x] Update `docs/protocol/message-attachments.md` and its owner page
       `docs/protocol/messages-and-attachments.md`: the drop, the
       place of each file, the chip in the text, the mention in the text,
       the copy path from the file ID, the sent chips and their press, the
@@ -755,27 +763,31 @@ the design calls above that are requirements.
       file, the sent chip of each file of the message and its press, and
       the removal of a file chip of the text in place of the row above
       it.
-- [ ] Update `docs/protocol/workspace-links.md#the-message-field`: the
+      The touch-size text remains blocked by composer drops decision 1.
+      The other text proceeds under the user's instruction of 11 November.
+- [x] Keep the Feedback screenshot row, and correct its reason in
+      `docs/protocol/feedback.md` after the chat composers move their files.
+- [x] Update `docs/protocol/workspace-links.md#the-message-field`: the
       field holds the chips of attached files too.
-- [ ] Update `docs/protocol/session-transcripts.md`: the names in place
+- [x] Update `docs/protocol/session-transcripts.md`: the names in place
       of the mentions, and the attachments line.
-- [ ] Update `docs/protocol/agents-and-sessions.md#sessions`: the names
+- [x] Update `docs/protocol/agents-and-sessions.md#sessions`: the names
       in a session title, and no title from a message with only files.
-- [ ] Update `docs/protocol/workspace-tools.md#files-and-changes`: the
+- [x] Update `docs/protocol/workspace-tools.md#files-and-changes`: the
       picture of an image file.
-- [ ] Read `docs/protocol/create-a-workspace.md` and
+- [x] Read `docs/protocol/create-a-workspace.md` and
       `docs/architecture.md`, and update each sentence about the files of
       a message.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy
       page in `src/marketing/privacy.ts` in full. Update each sentence
       that restates a changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence about attached files and about the file tab, such as in
       `sessions-and-chat.md`.
-- [ ] Read the `attachments` row in
+- [x] Read the `attachments` row in
       `src/marketing/from-conductor/areas/agents-and-chat.ts`, and update
       its note when it restates a changed fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: Shared paths, sent paths, titles, and copies
 
@@ -859,6 +871,9 @@ Depends on: 1, 2
 The field can hold and draw a chip for each file of its draft. No
 composer puts one there yet.
 
+The field's phone touch areas remain blocked by composer drops decision 1.
+The other field work proceeds under the user's instruction of 11 November.
+
 - [ ] Move the pure mockup mark helper to `src/app/draft-marks.ts`: the
       mark of a file, the marks of a text, and the text without its marks.
       Move each consumer to it, with no forwarding module.
@@ -869,6 +884,8 @@ composer puts one there yet.
       the draft does not hold.
 - [ ] Write each mark with the spaces of a mention in `$fieldText`.
 - [ ] Draw the chip with the mockup part and the live state of its file.
+- [ ] Complete the phone touch areas after composer drops decision 1.
+      This TODO stays open until the user answers.
 - [ ] Make a copy of a ready chip give its mention, and a copy of another
       chip give its name. Make a paste of a mention of a file of the
       draft give its chip back.
@@ -926,6 +943,8 @@ Depends on: 7
 - [ ] Make the box of each composer a drop target, which attaches the
       files and inserts them at the caret of the point.
 - [ ] Name each dropped folder in the notice over the box.
+      Mixed-drop and multiple-folder notice words remain blocked by
+      composer drops decision 2. Apply no interim notice option.
 - [ ] Ignore each file drop outside a message box, from the root of the
       app.
 - [ ] Set the `drag-and-drop-attachments` row in

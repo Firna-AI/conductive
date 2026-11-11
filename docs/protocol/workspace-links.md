@@ -117,8 +117,11 @@ number names a dated record, as
   sees a long address until Send.
 - A paste works also in the Mac app, which gives the page no clipboard
   read, as [Permissions](desktop-commands.md#permissions) says.
-- The field holds plain text and chips. A paste of formatted text keeps
-  only its text.
+- The field holds plain text and chips: workspace chips, the chips of
+  [files and folders](file-mentions.md#chips-of-files-and-folders), and
+  the chips of attached files, as
+  [The chip in the field](message-attachments.md#the-chip-in-the-field)
+  says. A paste of formatted text keeps only its text.
 - A chip in the field is one unit of the text. Backspace and Delete remove
   it whole, and the arrow keys step over it.
 - A chip in the field shows its state mark in a cell at its start. A
@@ -129,6 +132,10 @@ number names a dated record, as
   text. It opens nothing.
 - Typing, input methods, undo, and the touch keyboard of a phone work
   around a chip as in a plain text field.
+- A cut and a paste, or a drag, inside the same field keeps each chip as a
+  chip. Reason: the drag of the browser carries only the words that a chip
+  shows. The chip would then become text, and an attached file would leave
+  the draft.
 - [The send key](create-a-workspace.md#the-send-key) applies to the field,
   as to each composer.
 - The draft keeps the plain link of each chip. When a draft comes back, its

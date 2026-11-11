@@ -17,7 +17,7 @@ says.
 - A change to another model of the same agent stays in the session
   (decision 51).
 - A model of the other agent opens a new session with that agent, and the
-  draft moves there with its files.
+  draft moves there with its files, each at its place in the text.
 - Reason: neither SDK can switch agents inside one session. A hand-over of
   the transcript to the other agent was rejected. The user chose the way
   that Conductor works.
@@ -133,9 +133,12 @@ says.
   for a title after accepting its first message (decision 184). The request asks
   for three to five words. Workers AI is the model service of Cloudflare,
   on the account that hosts the app.
-- The model writes the title from the text of that message. The request
-  holds no other data of the workspace. It uses no agent login of a
-  member. The chat does not show it.
+- The model writes the title from the text of that message. In that text,
+  each mention of one of its attached files becomes the name of the file
+  (decision 262 D). The request holds no other data of the workspace. It
+  uses no agent login of a member. The chat does not show it.
+- Reason: a path makes a poor title. A request with the copy path of each
+  file was rejected for that reason.
 - The reply to the message does not wait for the title. The workspace
   then takes the title as its name, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
@@ -147,6 +150,9 @@ says.
   starts it.
 - A first message with no text starts no request. The next message with
   text in the workspace then starts it.
+- For the title request, a message whose text holds only the mentions of
+  its own attached files counts as a message with no text. The same holds
+  for a session title, as [Sessions](agents-and-sessions.md#sessions) says.
 - Reason: the name shows within seconds, while the sandbox starts, and the
   operator chooses the model and its speed.
 - A request in the sandbox on the agent login of the member was rejected.
@@ -187,7 +193,9 @@ says.
 
 [Message attachments](message-attachments.md#attachments) states the size
 limit, the upload, the storage, the copy into the cloud computer, and the
-deletion of the files of a message.
+deletion of the files of a message. It also states the files in the
+message field, their drop, their place in the text, and the files of a
+sent message.
 
 ## Workspace links
 

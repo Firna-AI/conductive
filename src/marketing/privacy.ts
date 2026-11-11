@@ -23,7 +23,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 10 November 2026.`,
+  it uses it, and who gets it. Effective date: 11 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -46,7 +46,9 @@ export const privacyDocument: LegalDocument = {
         list(
           text`Cloudflare runs ${productName} and stores its data.
             If a workspace has no name, Cloudflare's AI model service can
-            write a short name from the text of its first message. The model
+            write a short name from the text of its first message.
+            For that request, ${productName} replaces each path mention of a file
+            attached to that message with the file's original name. The model
             requests of the agents in a newer cloud computer, and their
             answers, pass through ${productName} on Cloudflare. Agent settings
             in the repository can send these requests to another address

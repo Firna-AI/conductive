@@ -75,7 +75,12 @@ says.
   the workspace accepts in that session (decision 181). The title is the
   first line with text of that message.
 - A message with no text, such as a message with only a screenshot, gives
-  no title.
+  no title. A message whose text holds only the mentions of its own
+  attached files counts as a message with no text.
+- In a title from a message, each mention of one of its attached files
+  becomes the name of the file (decision 262 D). Reason: a path makes a
+  poor title. A title with the copy path of each file was rejected for
+  that reason.
 - In a title from a message, each run of spaces becomes one space. The app
   removes one final full stop, but it keeps an ellipsis.
 - A title from a message holds at most 60 characters. The limit counts
