@@ -98,7 +98,10 @@ export type RunnerLoginKind =
   | { agent: 'codex'; kind: 'api-key' }
 
 export type RunnerLogin = RunnerLoginKind & { secret: string }
-export type RunnerTurnCredential = RunnerLoginKind & { token: string }
+export type RunnerTurnCredential = RunnerLoginKind & {
+  token: string
+  promptCacheTtl?: '1h'
+}
 
 export interface RunnerAttachment {
   attachmentId: string

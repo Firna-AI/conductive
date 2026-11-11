@@ -70,7 +70,7 @@ says.
   [Workspace tools](agent-tools.md#workspace-tools) says. That context holds
   no agent login and no turn token.
 - The Claude adapter adds the two profile variables that [Claude](#claude)
-  names. For a subscription turn, it also adds the variable that
+  names. For a subscription or own endpoint turn, it also adds the variable that
   [The prompt cache of Claude](#the-prompt-cache-of-claude) names.
 - A tool process inherits the environment of its agent program. The runner
   adds no login, no turn token, and no gateway address to that environment.
@@ -142,13 +142,17 @@ says.
 - So for a turn whose credential has the login kind `token`, the Claude
   adapter adds `CLAUDE_CODE_PROMPT_CACHE_TTL=1h` to the agent
   environment. That login kind is a Claude subscription token.
+- The adapter also adds that variable when the gateway credential has
+  `promptCacheTtl: '1h'`. The Worker adds this field only for a Claude own
+  endpoint turn, which keeps the login kind `api-key`.
+  The parser ignores unknown values and keeps the turn valid.
 - With that variable, the program sends `"ttl": "1h"` and the
   `extended-cache-ttl-2025-04-11` value of `anthropic-beta` on its main
   requests.
 - The variable holds also during paid extra usage, when Anthropic bills
   the use beyond the limits of the subscription. In native mode, the
   program asks for about 5 minutes then.
-- A turn with the login kind `api-key` gets no such variable, so it keeps
+- An API-key turn without that field gets no such variable, so it keeps
   the default of about 5 minutes. The [measure tool](#the-measure-tool)
   gets none either, because in native mode the program picks its own
   cache time.
@@ -229,6 +233,7 @@ because no runner command carries a login.
   `message` command without a credential.
 - The same test checks the refusal of a credential of another agent or of
   an unknown kind, and of a `turn` command that has only a `login`.
+- It also checks the optional cache field and ignores unknown cache values.
 - `src/providers/claude-profile.test.ts` checks the paths, the modes, and
   the content of the profile pair. It checks one name for each session,
   and the removal of the file of one session.
@@ -238,8 +243,9 @@ because no runner command carries a login.
   query and a fake child process. It checks the two profile variables. It
   also checks that the start of the program has no flag settings, gateway
   address, token, project key, or descriptor.
-- The same test checks the cache variable for a subscription token, and
-  no cache variable for an API key. A copy of the variable that the
+- The same test checks the cache variable for a subscription token or
+  the cache field, and no cache variable for an API key without that field.
+  A copy of the variable that the
   runner inherited changes neither result.
 - The same test checks that the credentials file goes after a close, a
   failed start, and an abort. It also checks that a cancel during the

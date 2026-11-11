@@ -109,6 +109,26 @@ it('keeps the supplied commit author only on a turn command', () => {
   ).not.toHaveProperty('commitAuthor')
 })
 
+it.each([
+  { value: '1h', expected: { promptCacheTtl: '1h' } },
+  { value: undefined, expected: {} },
+  { value: 'unsupported', expected: {} },
+])(
+  'parses the Claude prompt cache value $value without refusing the turn',
+  ({ value, expected }) => {
+    const input = command()
+    expect(
+      parse({
+        ...input,
+        credential: { ...input.credential, promptCacheTtl: value },
+      }),
+    ).toEqual({
+      ...input,
+      credential: { ...input.credential, ...expected },
+    })
+  },
+)
+
 it.each(['missing', 'null'])(
   'keeps a turn with a %s commit author and no warning',
   (kind) => {

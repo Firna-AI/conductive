@@ -118,14 +118,20 @@ it('returns discovery only to its owner and Refresh touches only that account', 
   ])
   expect((await api.refresh(member)).status).toBe(204)
   expect(api.upstream.requests).toHaveLength(1)
-  expect(
-    (
-      await api.request(agentLoginPath('claude'), owner, {
-        method: 'PATCH',
-        body: JSON.stringify({ noReuse: true }),
-      })
-    ).status,
-  ).toBe(200)
+  const sharing = await api.request(agentLoginPath('claude'), owner, {
+    method: 'PATCH',
+    body: JSON.stringify({ noReuse: true }),
+  })
+  expect(sharing.status).toBe(200)
+  expect(await sharing.json()).toEqual({
+    agent: 'claude',
+    kind: 'endpoint',
+    connected: true,
+    host: 'proxy.example.test:8443',
+    noReuse: true,
+    updatedAt: TEST_TIME,
+    modelList: { missing: ['other-claude'], checkedAt: TEST_TIME },
+  })
   expect((await api.account(owner)).agentLogins[0]).toHaveProperty('modelList')
 })
 

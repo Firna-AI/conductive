@@ -32,6 +32,7 @@ function parseCredential(value: unknown): RunnerTurnCredential {
       agent: 'claude',
       kind: oneOf(input.kind, ['token', 'api-key']),
       token,
+      ...(input.promptCacheTtl === '1h' ? { promptCacheTtl: '1h' } : {}),
     }
   }
   if (input.agent === 'codex' && input.kind === 'api-key') {

@@ -19,12 +19,11 @@ it.each([CLAUDE, CODEX])(
   async (choice) => {
     const client = await gatewayHttp(harness, choice, 'endpoint', 2)
     try {
-      expect(client.turn).toMatchObject({
-        credential: {
-          agent: choice.agent,
-          kind: 'api-key',
-          token: client.token,
-        },
+      expect(client.turn.credential).toEqual({
+        agent: choice.agent,
+        kind: 'api-key',
+        token: client.token,
+        ...(choice.agent === 'claude' ? { promptCacheTtl: '1h' } : {}),
       })
       const response = await client.request(
         `${gatewayPath(choice.agent)}?trace=request`,

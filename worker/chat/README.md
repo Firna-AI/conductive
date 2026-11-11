@@ -184,6 +184,7 @@ It also marks an endpoint unavailable while the connected runner uses protocol 1
 `session-login.ts` treats a refused endpoint as an unusable login for linked-session admission and dispatch.
 Its failed-turn cause names the starter and agent and points to the account page.
 Runner delivery maps a valid endpoint to an API-key turn-token credential for protocol 2.
+`runner-gateway-command.ts` adds `promptCacheTtl: '1h'` only for a Claude own endpoint turn.
 No endpoint address or key enters a runner command or chat record.
 `delivery-state.ts` schedules an own endpoint model-list read after dispatch.
 The read uses `waitUntil` and does not delay the runner command.

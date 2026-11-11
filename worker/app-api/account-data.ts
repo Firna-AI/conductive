@@ -20,7 +20,7 @@ interface LoginRow {
 export async function accountLogins(
   db: D1Database,
   userId: string,
-  models?: () => readonly AgentModel[],
+  models: () => readonly AgentModel[],
 ): Promise<AgentLoginStatus[]> {
   const { results } = await db
     .prepare(
@@ -157,6 +157,7 @@ export async function updateAccountLoginReuse(
   userId: string,
   agent: Agent,
   noReuse: boolean,
+  models: () => readonly AgentModel[],
 ): Promise<AgentLoginStatus> {
   await db
     .prepare(
@@ -165,7 +166,7 @@ export async function updateAccountLoginReuse(
     .bind(noReuse ? 1 : 0, userId, agent)
     .run()
   return (
-    (await accountLogins(db, userId)).find(
+    (await accountLogins(db, userId, models)).find(
       (login) => login.agent === agent,
     ) ?? { agent, connected: false }
   )

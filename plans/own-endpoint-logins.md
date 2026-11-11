@@ -945,6 +945,15 @@ them.
   only the account data holds the list. If that read fails, the save still
   succeeds, and the pickers hide nothing until the next read. Agent call of
   11 November 2026, from Milestone 6.
+- The turn credential of a Claude own endpoint turn carries an optional
+  `promptCacheTtl: '1h'`, and keeps the kind `api-key`. Reason: a runner
+  that does not know the field ignores it, while it refuses an unknown
+  kind. So the runner protocol version stays 2. Agent call of 11 November
+  2026, from Milestone 5d.
+- The protocol says "a runner that does not support this request", not
+  "an older runner", because "older runner" means a runner of protocol 1
+  in `docs/protocol/isolation.md`. Agent call of 11 November 2026, from
+  the Milestone 5d docs.
 
 ## Milestone 1: Mockups
 
@@ -1309,20 +1318,27 @@ Depends on: 5b
 Claude asks for a prompt cache of 1 hour on every turn on a Claude own
 endpoint login, as decision 12 B says.
 
-- [ ] Add an optional field to the turn credential of a runner of protocol
+- [x] Add an optional field to the turn credential of a runner of protocol
       2, in `src/shared/runner.ts`, that asks for the 1-hour prompt cache.
       The Worker sets it for a Claude turn on an own endpoint login only.
-- [ ] Make the runner ask for the 1-hour cache when the field asks for it,
+- [x] Make the runner ask for the 1-hour cache when the field asks for it,
       as it does for a subscription token. An older runner ignores the
       field and keeps the default cache.
-- [ ] State the rule next to gateway decision 13 in "How the agents reach
+- [x] State the rule next to gateway decision 13 in "How the agents reach
       the gateway" of `docs/protocol/model-gateway.md`, and in
       `docs/protocol/agent-runner.md` if it names the fields of the turn
       credential.
-- [ ] Add tests: the Worker sets the field only for a Claude own endpoint
+- [x] Add tests: the Worker sets the field only for a Claude own endpoint
       turn, the runner then asks for the 1-hour cache, and a credential
       without the field keeps the default.
-- [ ] Update the READMEs of the changed areas.
+- [x] Update the READMEs of the changed areas.
+
+Claude asks for the 1-hour cache on a Claude own endpoint since 11
+November 2026, with the turn credential field `promptCacheTtl: '1h'`. The
+same change keeps the model list in the reply of a share change, a defect
+that the Milestone 6 UI check found. Evidence:
+`.context/own-endpoint-logins/non-ui-5d/` and
+`.context/own-endpoint-logins/m5d-docs/`.
 
 ## Milestone 6: Account and Get started
 

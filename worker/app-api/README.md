@@ -53,6 +53,8 @@ View writes cannot change this branch.
   under the same context. Only the endpoint origin stays in plain text.
   Save and preference replies give the host, kind, share setting, and last
   secret-save time. They never give the full address.
+  `accountLogins` requires the app model getter for account reads and share replies.
+  Both replies keep the saved `modelList`, including its missing app IDs and read time.
   Save reads the endpoint model list without making a failed read fail the save.
   Each replacement drops the old model list and its attempt time.
   [`account-models.ts`](account-models.ts) adds the optional `modelList` to
@@ -175,7 +177,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - `agent-endpoint-login.test.ts` checks both agents, encrypted addresses
   and keys, safe account metadata, the address rule, and share defaults.
 - `endpoint-models.test.ts` checks discovery at save and Refresh, private
-  account data, failed reads, unmatched lists, and replacement during a read.
+  account data, model lists in share replies, failed reads, unmatched lists,
+  and replacement during a read.
 - `agent-login-reuse.test.ts` checks the login-kind defaults, the private
   preference update, and unchanged secret data and timestamps.
 - `feature-github-install.test.ts` checks the install link of the GitHub

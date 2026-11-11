@@ -99,6 +99,7 @@ export async function bootRoute(
         userId,
         agent,
         context.body.noReuse,
+        () => configuredModels(env),
       ),
     )
   }

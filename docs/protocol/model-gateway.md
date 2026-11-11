@@ -108,6 +108,21 @@ own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - A cache of about 5 minutes was rejected. Reason: after each pause of
   more than 5 minutes, the next request writes the cache again. That uses
   the limits of the subscription faster.
+- When the agent login of a turn is a Claude own endpoint login, Claude
+  also asks for a prompt cache of 1 hour (own endpoint decision 12). With
+  a runner that does not support this rule, Claude still asks for about 5
+  minutes, as [The agent runner](agent-runner.md#the-agent-runner) says.
+- Reason: an own endpoint can be a proxy that pools Claude subscriptions.
+  Claude cannot tell what is behind the endpoint, so it would ask for
+  about 5 minutes. The app cannot tell either, so the rule holds for each
+  Claude own endpoint.
+- Cost: each cache write costs more when the endpoint bills a metered key.
+- Risk: an endpoint can refuse a model request that asks for the 1-hour
+  cache. Each Claude turn on the login then fails.
+- The default cache of about 5 minutes for an own endpoint was rejected.
+  Reason: after each pause of more than 5 minutes, the next request writes
+  the cache again. A pool of subscriptions behind the endpoint then uses
+  its limits faster.
 - Codex gets the gateway address in its config, and the turn token in its
   login request. Neither is in the environment of Codex.
 

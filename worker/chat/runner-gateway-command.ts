@@ -40,6 +40,7 @@ function nativeCredential(
         agent: 'claude',
         kind: login.kind === 'token' ? 'token' : 'api-key',
         token,
+        ...(login.kind === 'endpoint' ? { promptCacheTtl: '1h' } : {}),
       }
 }
 

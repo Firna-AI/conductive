@@ -94,8 +94,10 @@ They stay because the body of a profile request uses their features.
 That body uses a `cache_control` scope of `global` and a top-level `diagnostics` field.
 Do not remove them to match the normal API-key mode of Claude.
 A Claude subscription token keeps `anthropic-beta` unchanged.
-Only a subscription token requests the one-hour prompt cache in the runner.
-An own endpoint uses the existing API-key cache default.
+A Claude subscription token requests the one-hour prompt cache in the runner.
+A Claude own endpoint keeps API-key mode and adds `promptCacheTtl: '1h'` to its turn credential.
+The runner uses that field to request the same one-hour cache.
+Native API keys and Codex keep their cache defaults.
 
 The Codex upload reader checks for one valid JSON object as bytes arrive.
 It checks each top-level `background` key after JSON string unescaping, including repeated keys.
