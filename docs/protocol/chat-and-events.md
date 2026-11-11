@@ -112,6 +112,16 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 
 - While a turn runs, each agent message shows in full. Each run of tool
   calls gets its own line that folds it, such as "3 tool calls".
+- While a turn runs, only its newest run of tool calls shows its calls. That
+  run stays open between two calls and after a message that follows it,
+  until a newer run starts or the turn ends. Each earlier run of the turn is
+  folded.
+- Reason: the user watches the newest work, and the earlier work stays
+  short. A run that folds when its calls are done was rejected, because it
+  closed and opened again at each call. A run that folds when a message
+  follows it, and every run open until the turn ends, were rejected too.
+- A click opens or closes a run of tool calls, and the run keeps that
+  choice while the chat shows it.
 - When a turn ends, also when it stops or fails, the work before its answer
   folds into one line (decision 150).
 - Reason: the answer of a long turn stays easy to find. A fold while the

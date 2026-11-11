@@ -8,10 +8,10 @@
 
 - **Terms:**
   - **Pull request bar:** the strip at the top of the right column of a workspace. It shows the GitHub state of the workspace branch and one main action.
-  - **Tint:** the green, amber, or red fill of the main action, which matches the state of the bar. `TintedTheme` in `docs/mockups/src/components/common/tint.tsx` applies it, from the `successFill`, `warningFill`, `dangerFill`, and `onFill` tokens of `docs/mockups/src/design/palette.ts`.
+  - **Tint:** the green, amber, red, or merged purple fill of the main action, which matches the state of the bar. `TintedTheme` in `docs/mockups/src/components/common/tint.tsx` applies it, from the `successFill`, `warningFill`, `dangerFill`, `mergedFill`, and `onFill` tokens of `docs/mockups/src/design/palette.ts`.
   - **Outline tone:** the `secondary` tone of the Firna button, with a border and no fill. Archive uses it.
 - **Background:**
-  - On 10 and 11 November 2026 the user asked for two fills in the bar. The main action of a tinted bar takes the tint of the bar. On a bar without a tint, the main action takes the outline tone: Create PR, Continue after a merge, and Commit and push on a neutral bar. `docs/mockups/design-bar.md` states both.
+  - On 10 and 11 November 2026 the user asked for two fills in the bar. The main action of a tinted bar takes the tint of the bar. On a bar without a tint, the main action takes the outline tone: Create PR and Commit and push on a neutral bar. A later request on 11 November gives the merged bar and Continue a purple tint. `docs/mockups/design-bar.md` states both.
   - `ActionButton` in `src/github/ActionButton.tsx` wraps the Firna `Button` in `TintedTheme` with its `tint` prop. It gives a tinted button the `primary` tone, and every other button the `secondary` tone. `BarButton` in `src/github/BarButtons.tsx` passes the tint of the view.
   - `barViewOf` in `src/github/barView.ts` chooses the tint. Its test in `src/github/barView.test.ts` checks the tint of eight states at the level of the model.
 - **Problem:** No test reads the fill of a rendered bar button. A change of `tint={props.tint}` to `tint={null}` in `ActionButton.tsx` removes every tint fill. A change of `'secondary'` to `'primary'` in `ActionButton.tsx` fills each main action of a bar without a tint. With such a change, all 62 tests in `src/github`, `src/shell/workspace/github`, and `src/shell/workspace/files/KeptFiles.test.tsx` still pass.
@@ -22,7 +22,7 @@
   - **B.** Add a rendered `ActionButton` test for the tint alone. It misses the tint wiring in `BarButtons` and the outline tone. Effort: Small.
   - **C.** Check the rendered colour in a workspace screen test. It needs more setup, and it adds no protection, because the app builds the tint only through `barViewOf`. Effort: Small.
   - **D.** Add one table of button fills to `src/github/PullRequestBar.test.tsx`. Effort: Small.
-    - Cover ready-to-merge, conflict, and checks-failed for the three tints, and merged for Continue and the bar without a pull request for Create PR, which take the outline tone.
+    - Cover ready-to-merge, conflict, checks-failed, and merged for the four tints, including purple Continue. Cover the bar without a pull request for Create PR, which takes the outline tone.
     - Render each case in the dark and the light colour scheme inside `SharedUiThemeProvider`, with the theme from `themeFor`. Do not use `ThemeRoot`, because its style text goes into the text of the rendered bar that the other tests read.
     - Read the inline `background-color` of each rendered button, as `src/shell/onboarding/GetStartedScreen.test.tsx:117` does for a primary fill. Name each expected value by its palette token, not by its hex value.
     - Confirm that the test fails with `tint={null}` in `ActionButton.tsx`, and with `'primary'` in place of `'secondary'` there. Then restore both.
