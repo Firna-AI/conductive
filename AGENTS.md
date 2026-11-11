@@ -105,6 +105,11 @@ and restricts deletion of `main`.
 deployment at `conductive.build`. It does not wait for CI, as
 [Automatic deploys](docs/automatic-deploys.md) says.
 
+`.github/workflows/preview.yml` deploys a preview for each pull request
+from a branch of this repository. A bot comment on the pull request links
+the preview. A close or a merge deletes it, as
+[Pull request previews](docs/pr-previews.md) says.
+
 - Agent merges: off
 
 ## Repository rules

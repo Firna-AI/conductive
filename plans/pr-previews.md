@@ -222,9 +222,21 @@ otherwise. The user can override any of them.
   - Secrets: `CLOUDFLARE_API_TOKEN`, `GITHUB_CLIENT_SECRET`,
     `GITHUB_APP_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`,
     `SESSION_SIGNING_KEY`, `BOAT_KEY_ENCRYPTION_KEY`, and `BOAT_API_KEY`.
-  - Variables: `CLOUDFLARE_ACCOUNT_ID`, `PREVIEW_ZONE`, `GITHUB_CLIENT_ID`,
+  - Variables: `CLOUDFLARE_ACCOUNT_ID`, `GITHUB_CLIENT_ID`,
     `GITHUB_APP_SLUG`, `BOAT_ORG_ID`, `OPERATOR_GITHUB_IDS`, and the
     optional `CONDUCTIVE_FRAME_SOURCES`.
+  - `PREVIEW_ZONE` is a repository variable. Reason: GitHub gives the
+    variables of an environment only to a job that names it, and the
+    runner job and the comment job need the zone without the
+    environment. Changed on 11 November 2026 during Milestone 1.
+  - The token needs Workers Scripts Edit, Workers Routes Edit and Zone
+    Read on the zone, D1 Edit, Workers R2 Storage Edit, and Workers KV
+    Storage Edit, as `docs/pr-previews/setup.md` says. It needs no Account
+    Settings Read, because each run gives Wrangler the account ID. Added
+    on 11 November 2026 during Milestone 1.
+  - The preview GitHub App takes the permissions of the live app from the
+    public reply of `GET https://api.github.com/apps/conductive-build`.
+    Added on 11 November 2026 during Milestone 1.
 - `OPERATOR_GITHUB_IDS` names the GitHub user ID of each person who tests
   previews. Reason: a new account waits for app access, and the sign-in of
   an operator gives app access, as `docs/protocol/waitlist.md` says.
@@ -509,8 +521,8 @@ gives each step.
 
 - [ ] Make a Cloudflare account for previews, on the Workers Paid plan.
 - [ ] Add a domain for previews as a zone of that account.
-- [ ] Add a proxied DNS record for the bare zone, and a proxied wildcard
-      DNS record.
+- [ ] Add proxied `AAAA` records with the value `100::` for the bare zone
+      and for `*.<zone>`.
 - [ ] Add the response header rule `X-Robots-Tag: noindex` to the zone.
 - [ ] Make the R2 bucket `conductive-preview-runner`, with the public
       custom domain `runner.<preview zone>`.
@@ -523,7 +535,8 @@ gives each step.
 - [ ] Give the preview Boat key and its organization ID, as decision 4
       says.
 - [ ] Make the GitHub environment `preview` with its secrets and
-      variables, and with no branch rule.
+      variables, and with no branch rule. Set the repository variable
+      `PREVIEW_ZONE`.
 - [ ] For the smoke test of Milestone 7, put a token of the preview
       account in this workspace.
 
@@ -533,23 +546,27 @@ Depends on: none
 
 The docs state what a preview is, its setup, its relay, and its life.
 
-- [ ] Add `docs/pr-previews.md`. Give what a preview is and when it runs,
-      the hostnames, and what works and what does not.
-- [ ] In the same page, give the setup by the user with each setting, each
+- [x] Add `docs/pr-previews.md`. Give what a preview is and when it runs,
+      the hostnames, and what works and what does not. Done on
+      11 November 2026 in `docs/pr-previews.md` and three linked pages
+      under `docs/pr-previews/`, because one page would pass 250 lines.
+- [x] In the same page, give the setup by the user with each setting, each
       token permission, and the permissions and events of the preview
       GitHub App.
-- [ ] In the same page, warn that the code of any open pull request can
+- [x] In the same page, warn that the code of any open pull request can
       reach the data and the logins of every preview, and the relay. Ask
       for agent logins with a spending limit, and for the preview GitHub
       App only on test repositories, as decision 3 A says.
-- [ ] In the same page, give the relay, the life of a preview, the sweep,
+- [x] In the same page, give the relay, the life of a preview, the sweep,
       a recovery by hand, and the costs.
-- [ ] `docs/deployment.md`: add the optional variable
+- [x] `docs/deployment.md`: add the optional variable
       `GITHUB_SETUP_RELAY_DOMAIN`. Link the new page, and say that a
       preview sets the same inputs with its own values.
-- [ ] `README.md`: name previews in the status and in the CI paragraph.
-- [ ] `AGENTS.md`, "CI": add the preview workflow and its link.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] `README.md`: name previews in the status and in the CI paragraph.
+- [x] `AGENTS.md`, "CI": add the preview workflow and its link.
+- [x] Check each relative link of the changed Markdown files. Done on
+      11 November 2026: 145 links, none broken. Evidence:
+      `.context/pr-previews/m1/link-check.log`.
 
 ## Milestone 2: Relay cookie of an install
 

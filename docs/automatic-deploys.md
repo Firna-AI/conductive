@@ -177,4 +177,6 @@ A failed run does not roll back.
 
 Only `main` deploys. A Worker deploy by hand from another branch stays live
 only until the next merge. A migration, a D1 write, or a secret change by
-hand stays after that merge.
+hand stays after that merge. Pull request previews run apart, in a
+Cloudflare account of their own, as [Pull request previews](pr-previews.md)
+says.

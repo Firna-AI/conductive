@@ -21,7 +21,9 @@ Today the repository holds:
   [Mac app](#mac-app) says
 
 A test deployment runs at `conductive.build`. Each push to `main` deploys
-it, as [Automatic deploys](docs/automatic-deploys.md) says. The project is
+it, as [Automatic deploys](docs/automatic-deploys.md) says. Each pull
+request from a branch of this repository gets its own preview copy of the
+app, as [Pull request previews](docs/pr-previews.md) says. The project is
 not in production yet. [Deployment inputs](docs/deployment.md) lists what a
 deployment needs.
 
@@ -208,6 +210,9 @@ GitHub Actions uses `.nvmrc`. It installs with `npm ci`,
 branch of the plan. CI does not deploy. The `Deploy` workflow deploys each
 push to `main`, as [Automatic deploys](docs/automatic-deploys.md) says. It
 does not wait for CI.
+
+`.github/workflows/preview.yml` deploys a preview of each pull request from a
+branch of this repository, as [Pull request previews](docs/pr-previews.md) says.
 
 ## Mac app
 

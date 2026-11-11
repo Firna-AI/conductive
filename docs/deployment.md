@@ -10,6 +10,12 @@ push to `main` deploys the test deployment. Two linked pages hold the
 [model inputs](deployment/models.md) and the
 [runner archive and software image](deployment/runner-archive.md).
 
+[Pull request previews](pr-previews.md) says how each pull request from a
+branch of this repository gets its own copy of the app. Each pull request
+preview sets the inputs of this guide with its own values.
+[The inputs of a preview](pr-previews/life.md#the-inputs-of-a-preview)
+says which inputs a pull request preview leaves out.
+
 Each input names the routes that read it. A route that does not read an
 input works without it. Keep secrets out of the repository and out of
 examples.
@@ -76,6 +82,7 @@ examples.
 | `PREVIEW_DOMAIN` | Port previews | The domain of the preview hostnames. `wrangler.jsonc` sets it. |
 | `GITHUB_CLIENT_ID` | GitHub sign-in, each refresh of a stored GitHub user token, the GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds that copy a repository | The client ID of the GitHub App. |
 | `GITHUB_APP_SLUG` | The links to the GitHub App: Install in Get started, Manage on GitHub in the account, and Manage access of the repository lists | Optional. The slug of the GitHub App, as in `https://github.com/apps/<slug>`. Without it, or with a value that is not a slug, the links use `conductive`, and the Worker logs a warning for a wrong value. It is not a secret. |
+| `GITHUB_SETUP_RELAY_DOMAIN` | The start of an install of the GitHub App at `/github/install` | Optional. The preview zone of the pull request previews. Set it only on a pull request preview, as [Install returns](pr-previews/relay.md#install-returns) says. With it, the start also sets a cookie for that domain. The cookie names the app origin, so that the relay can send the user back to it. Without it, the start sets only the cookie of the app hostname. It is not a secret. |
 | `BOAT_ORG_ID` | Each call to Boat | The ID of the app's Boat organization, as [The app's Boat account](#the-apps-boat-account) says. It is not a secret. |
 | `CONDUCTIVE_MODELS` | `GET /api/models` and `GET /v1/tools/models` | The JSON model list, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | `GET /api/account`, `POST /v1/tools/workspaces`, and `GET /v1/tools/models`, for a user with no saved default | The JSON default choice, as [Models](deployment/models.md#models) says. |
