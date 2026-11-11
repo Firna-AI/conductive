@@ -13,7 +13,7 @@ It groups your work into orgs, workspaces, and sessions.
 | Part | What it does |
 | --- | --- |
 | Org | Holds your repositories, workspaces, members, and shared setup. An org can be just you or a team. |
-| Workspace | Gives one task its own branch and cloud computer. |
+| Workspace | Has its own cloud computer and one branch at a time. Continue starts its next task after a merge. |
 | Session | Holds one agent conversation in a workspace. Each session has its own tab. |
 | Cloud computer | Holds the files and runs the agents, commands, and tools of a workspace. |
 
@@ -57,6 +57,11 @@ The workspace keeps your conversation beside the code and tools.
 - Open **Changes** to inspect edits.
 - Use **Terminal** to run commands on the cloud computer.
 - Use **Preview** to open a running app on one of its ports.
+
+The pull request bar offers actions for the next step.
+It can ask the agent to prepare or fix a pull request, and merge it with your GitHub account.
+After a merge, **Continue** starts a new branch in the same workspace.
+The cloud computer and sessions stay.
 
 Send another message to guide an agent while it works.
 Select **Stop** to end its current turn.

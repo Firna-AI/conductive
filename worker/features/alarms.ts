@@ -6,6 +6,7 @@ export type AlarmSource =
   | 'devices'
   | 'previews'
   | 'github'
+  | 'continue'
   | 'browser'
   | 'runner'
 

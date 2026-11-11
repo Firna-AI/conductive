@@ -114,6 +114,12 @@ pictures again with `npm run marketing:pictures` from the repository
 root. [Pictures](pictures.md) gives the picture list, the files, and the
 capture command.
 
+## Link previews
+
+Public pages share the approved blue product image with their own titles
+and descriptions. [Link previews](link-previews.md) gives the metadata,
+asset, sources, and verification steps.
+
 ## Legal pages
 
 The Terms and Privacy pages show their title, introduction, and sections.

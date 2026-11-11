@@ -121,9 +121,9 @@ The workspace title request removes only the canonical final tool footer from it
 [Chat backend access and open connections](access.md) gives the gates
 that the Durable Object runs itself. It covers the browser gate and its
 second check in the queue, the grants of open tabs, the runner token
-checks, the workspace version pin, the login lookups, and an org
-suspension. It also gives the native state of the tab and runner sockets
-across a wake.
+checks, the workspace version pin, the binding of the object, the login
+lookups and checks, and an org suspension. It also gives the native state
+of the tab and runner sockets across a wake.
 
 ## History and event order
 

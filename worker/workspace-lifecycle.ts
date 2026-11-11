@@ -11,6 +11,7 @@ import {
   type WorkspaceChatResolvers,
 } from './chat/workspace-integration'
 import { DeviceRuntime } from './devices/runtime'
+import { activeStoredTurn } from './devices/access'
 import { credentialSender } from './lifecycle/credential-sender'
 import type { DurableLifecycleState } from './lifecycle/durable-types'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
@@ -85,6 +86,15 @@ export class WorkspaceLifecycle
         return result
       }),
     )
+  }
+
+  async callingToolTurn(workspaceId: string, turnId: string) {
+    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
+      return null
+    return this.chat.runLifecycle(async () => {
+      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
+      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
+    })
   }
 
   webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {

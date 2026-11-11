@@ -246,3 +246,9 @@ says.
   the branch was rejected. A member can type the same text and then lose
   that name.
 - Reason: an archived workspace shows its chat read-only (decision 16).
+
+### The title of a new workspace
+
+- [Messages](messages-and-attachments.md#messages) holds how a small model
+  of Workers AI names a new workspace from its first message
+  (decision 184).

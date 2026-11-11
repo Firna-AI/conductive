@@ -23,7 +23,9 @@ import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
 import { ChatArea } from './ChatArea'
+import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
+import { KeptFilesConnection } from './files/kept-files'
 import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
@@ -174,6 +176,7 @@ export function WorkspaceScreen(props: {
     view: props.view,
     stream: model.stream,
     savedView: chat,
+    chat,
     toolEvents: toolEvents.subscribe,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => lifecycle.archive(workspace)
@@ -227,16 +230,16 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  // The actions of the screen for the palette.
-  const paletteOffer = <WorkspacePaletteActions chat={chat} context={context} />
-  const tabOpen = (
+  // Continue, palette actions, file tab resume, and the session address.
+  const dialog = (
     <>
+      <ContinueDialog />
+      <WorkspacePaletteActions chat={chat} context={context} />
       <ResumeOnTabOpen context={context} />
       <OpenSessionAddress
         chat={chat}
-        orgId={props.org.id}
+        context={context}
         session={props.session}
-        workspaceId={workspace.id}
       />
     </>
   )
@@ -261,33 +264,37 @@ export function WorkspaceScreen(props: {
               : content.tool}
         </div>
         {archived ? null : <PhoneTabBar context={context} />}
-        {paletteOffer}
-        {tabOpen}
+        {dialog}
       </div>
     )
     // An archived workspace on a phone shows only its chat: no pull request
-    // row and no Checks, so it reads no GitHub state.
+    // row and no Checks, so it reads no GitHub state and no files.
     if (archived) return screen
-    return <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
+    return (
+      <KeptFilesConnection context={context}>
+        <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
+      </KeptFilesConnection>
+    )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <WorkspaceGitHub context={context}>
-      <WorkspaceMacBar context={context} />
-      <div className={body.body}>
-        <div className={body.chat}>
-          {header}
-          <HeaderNoticeBars notices={notices} />
-          {chatArea}
+    <KeptFilesConnection context={context}>
+      <WorkspaceGitHub context={context}>
+        <WorkspaceMacBar context={context} />
+        <div className={body.body}>
+          <div className={body.chat}>
+            {header}
+            <HeaderNoticeBars notices={notices} />
+            {chatArea}
+          </div>
+          <RightColumn
+            files={files}
+            pullRequest={features.pullRequest?.(context)}
+            tools={sandbox === 'archived' ? undefined : tools}
+          />
+          {dialog}
         </div>
-        <RightColumn
-          files={files}
-          pullRequest={features.pullRequest?.(context)}
-          tools={sandbox === 'archived' ? undefined : tools}
-        />
-        {paletteOffer}
-        {tabOpen}
-      </div>
-    </WorkspaceGitHub>
+      </WorkspaceGitHub>
+    </KeptFilesConnection>
   )
 }

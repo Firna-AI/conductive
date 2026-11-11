@@ -48,6 +48,9 @@ state the requirements.
 - The Worker checks the login kind before each turn or later message.
   An unsupported login gets no command. Its turn ends once with recovery
   steps. The version 1 wire login type cannot hold a ChatGPT sign-in.
+- Each `turn` and `message` command also carries the current workspace
+  branch and target branch in `branches`, as
+  [History and event order](../../history.md) says.
 - No stored command holds a login or a turn token. Each send adds the
   credential again. A resent version 2 `turn` command carries the same
   token, also after a failed send or a restart of the workspace object.

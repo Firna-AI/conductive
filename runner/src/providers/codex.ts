@@ -18,10 +18,15 @@ import { providerMessage } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
 import type { ProviderFactory, ProviderInput } from './types'
+import type { RunnerBranches } from '../../../src/shared/runner'
 
-function input(command: ProviderInput) {
+function input(command: ProviderInput, branches?: RunnerBranches | null) {
   return [
-    { type: 'text', text: providerMessage(command.message), text_elements: [] },
+    {
+      type: 'text',
+      text: providerMessage(command.message, command.branches, branches),
+      text_elements: [],
+    },
     ...(command.attachments.length
       ? [
           {
@@ -199,7 +204,7 @@ export function createCodexFactory(
                 threadId,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: input(command),
+                input: input(command, options.instructionBranches),
               })
             } catch (error) {
               userIds = before
@@ -211,7 +216,7 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId,
-                input: input(command),
+                input: input(command, options.instructionBranches),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,

@@ -10,7 +10,6 @@ const snapshot: GitHubSnapshot = {
     baseBranch: 'main',
     updatedAt: 1,
     pullRequest: null,
-    createPullRequestUrl: null,
   },
   checks: { state: 'waiting-for-pull-request', checks: [] },
   headSha: null,
@@ -148,7 +147,6 @@ it('keeps an unchanged display snapshot without storing or publishing a fresh re
   const fresh = {
     banner: {
       pullRequest: null,
-      createPullRequestUrl: null,
       updatedAt: 2,
       baseBranch: 'main',
       branch: 'changes',

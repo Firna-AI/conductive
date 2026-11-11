@@ -34,6 +34,9 @@ Its sender is the person whose message started that turn.
 | Agent model use | The session starter's connected agent account |
 | Git and GitHub CLI in a turn | The turn sender's GitHub account |
 | GitHub commands in the shared Terminal | The workspace owner's GitHub account |
+| GitHub CLI outside a turn | The workspace owner's GitHub account |
+| Merge from the pull request bar | The GitHub account of the member who selects Merge |
+| Continue's repository fetch | The GitHub account of the member who selects Continue |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
@@ -51,6 +54,9 @@ Another member's message during a turn does not change its GitHub account, commi
 Every member using a workspace's Terminal uses the same owner identity for GitHub commands.
 GitHub access can include repositories outside the Conductive org.
 It reaches repositories that both the GitHub account and the GitHub App can reach.
+
+GitHub checks the clicking member's access and branch rules for a merge.
+Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
 
 ## Understand what agents can reach
 
@@ -94,7 +100,9 @@ Account shows its status and kind without returning the stored value.
 A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
 Its model requests and answers pass through Conductive on Cloudflare.
 Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
+
 Each turn there gets a temporary credential called a turn token.
+It gives no copy of the stored login.
 A program or member with terminal access can read or copy it.
 
 That token can use the session starter's login through Conductive while the turn runs.
@@ -102,8 +110,15 @@ It also works from outside the cloud computer during that turn.
 
 After **Stop**, the token can start no new request.
 Any request that still runs ends within 30 seconds after the turn ends.
+Changing or removing the session starter's login ends the turn at its next model request.
+The same happens if that member loses org access.
 A program that keeps running can read or copy the tokens of later turns, including turns in other members' sessions.
 Agent settings in the repository can send model requests, with their content and their turn token, to another address.
+
+Review those settings in repositories you use.
+Conductive keeps no copy of a model request or answer as it passes them on.
+It writes no body or header value from those requests or answers to its logs.
+The normal chat history and Mac command records still stay on the service.
 
 An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.
 A program or member with terminal access can read or copy that login during a turn.
@@ -113,20 +128,25 @@ Conductive renews that sign-in for you.
 Your ChatGPT email, account ID, and plan can reach the cloud computer.
 An older cloud computer cannot run Codex with ChatGPT, so your ChatGPT sign-in never reaches it.
 A copied login can remain usable after the turn ends.
+Agent settings in the repository can also send that login to another address.
 Removing a login from Account does not revoke a copy held elsewhere.
 
 Installing newer software on that computer does not remove this risk.
 A new build gives the protection to new cloud computers created from its setup.
-Use **Build computer** and a new workspace to get the newer protection.
+Ask an admin to run **Build computer**.
+Then create a new workspace from that build for the new protection.
 
 Agent settings in the repository can send an older computer's model requests and agent login to another address.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
+Continue also brings the clicking member's GitHub token into the cloud computer while it fetches the latest default branch.
+Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-A copied credential for a workspace connection can still expose credentials of later turns.
+The computer also uses a credential for its connection to Conductive.
+A copy of that credential can still expose later turn credentials in another member's workspace.
 
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
@@ -172,6 +192,7 @@ Preview apps run on a separate domain from Conductive.
 Opening a preview needs your sign-in and workspace access.
 Its address alone does not grant access to another person.
 Closing a preview or stopping the computer ends that preview's access.
+Your browser can still keep the preview files that it loaded, as the preview app's cache rules allow.
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.

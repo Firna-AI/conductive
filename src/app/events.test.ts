@@ -80,6 +80,23 @@ describe('WorkspaceStream', () => {
     expect(seen).toEqual([1, 2])
   })
 
+  test('counts the replay after a dropped connection or a gap as a reconnect, and a start after a stop as none', async () => {
+    const { source, stream, delay } = start()
+    source.send(page([envelope(1)], 1))
+    const first = stream.reconnects.get()
+    source.drop()
+    await delay.runAll()
+    source.send(page([envelope(2)], 2))
+    const dropped = stream.reconnects.get()
+    source.send({ type: 'event', envelope: envelope(4) })
+    source.send(page([envelope(3), envelope(4)], 4))
+    const gap = stream.reconnects.get()
+    stream.stop()
+    stream.start()
+    source.send(page([], 4))
+    expect([first, dropped, gap, stream.reconnects.get()]).toEqual([0, 1, 2, 2])
+  })
+
   test('keeps the late mark of the workspace on an envelope, and only the value true', () => {
     const { source, stream } = start()
     const marks: boolean[] = []

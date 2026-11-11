@@ -23,7 +23,7 @@ how a screen is built, and links to the other pages.
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
-| `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
+| `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
@@ -42,7 +42,7 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, open a session link, create a routine, mention a file |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
@@ -233,15 +233,9 @@ chose these four actions on 9 November 2026. Its child pages:
 child pages of `app/command-palette` and of `app/feedback`, and the flow
 that sends feedback.
 
-`app/banner` shows a branch with commits and no pull request. Its child
-pages show the other states of decision 18: `app/banner/checks` has the
-running, failed, and passed checks and the merge, which moved from
-`app/banner/checks-running`, `checks-failed`, `ready-to-merge`, and `merged`
-and declare `movedFrom`. `app/banner/blocked` has a merge conflict, requested
-changes, a draft, and a pull request closed without a merge. A conflict and
-requested changes tint the bar amber. `app/banner/no-commits` has a branch
-without commits, whose bar offers no Create pull request, as in
-`app/new-workspace/creating` and `first-turn`.
+[The pull request bar](catalogue-bar.md) gives `app/banner`, the bar of a
+workspace with its actions, its child pages, and the flow
+`user-flows/merge-and-continue`.
 
 `app/archive` draws Archive and Restore of Checkout address autocomplete,
 from decisions 1 and 2 of PR #138. Its canonical screen has the archived
