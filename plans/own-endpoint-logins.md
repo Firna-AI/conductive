@@ -1439,8 +1439,8 @@ The merge decisions of the merge of main on 11 November 2026 are in
 `.context/own-endpoint-logins/merge3-decisions.md`. The pull request
 description copies them.
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
