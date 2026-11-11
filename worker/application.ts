@@ -16,6 +16,7 @@ import {
   privateResponse,
 } from './http'
 import { requestBodyEntry } from './http/request-body'
+import { chatGptEgress } from './model-gateway/egress'
 import { routeModelGateway } from './model-gateway/route'
 import { gatewayWorkspaceAllowed } from './model-gateway/workspace-access'
 import { route, routeDevice } from './routes'
@@ -171,7 +172,10 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           const gatewayEnv = env
           const gatewayResponse = await routeModelGateway(request, {
             codexTasks,
-            ...workspaceRuntime(gatewayEnv, dependencies),
+            ...workspaceRuntime(
+              gatewayEnv,
+              chatGptEgress(gatewayEnv, dependencies),
+            ),
             workspaceAllowed: (id) =>
               gatewayWorkspaceAllowed(gatewayEnv.DB, id),
             codexLogin: (userId, failed) =>
