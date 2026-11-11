@@ -56,8 +56,9 @@ month, in US dollars.
   computers that run at once.
 - Reason: the user chose to limit only the free plan. A limit at once on
   every plan was rejected for that reason.
-- Archived workspaces do not count toward the limit of Free. Reason: an
-  archived workspace has no cloud computer, so it costs nothing.
+- Archived workspaces do not count toward the limit of Free. Reason:
+  [Archive](workspace-life.md#archive) stops their cloud computers and keeps
+  them for 14 days. A stopped computer uses no cloud hours.
 - Each paid plan includes cloud hours worth about half its price at the
   app's cost. Reason: the user's sketch included about $10 of use in a plan
   of about $20.
@@ -168,7 +169,8 @@ hand. An accountant should confirm them before the first sale.
   and no plan is marked as the best. Reason: billing has not started, and
   no decision ranks a plan.
 - The page ends with the last call to action of the site. Its main action,
-  "Sign up", starts the GitHub sign-in, and a new account then waits for
+  "Sign up", starts the GitHub sign-in. Except during
+  [open sign-up](sign-ups.md#open-sign-up), a new account then waits for
   app access. Its second action, "Download for Mac", leads to the Mac app
   section of the home page.
 - Each price is a fixed number in US dollars. The page never gives a price

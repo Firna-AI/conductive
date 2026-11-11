@@ -9,6 +9,8 @@ import type { WorkspaceAlarms } from './alarms'
 import { WorkspaceAlarmTasks } from './alarm-tasks'
 import type { WorkspaceGitHub } from './github'
 import type { WorkspaceFeatures } from './workspace'
+import type { WorkspaceContinue } from '../lifecycle/continue'
+import { pendingContinue } from '../lifecycle/continue-types'
 import {
   expireWorkspacePreviews,
   runWorkspaceAlarms,
@@ -26,6 +28,7 @@ interface WorkspaceAlarmInput {
   members: WorkspaceMembersReceiver
   github: WorkspaceGitHub
   features: WorkspaceFeatures
+  continuation: Pick<WorkspaceContinue, 'advance'>
   lifecycle: () => Promise<void>
 }
 
@@ -83,11 +86,17 @@ export class WorkspaceAlarmRunner {
         await alarms.set('lifecycle:access', now() + 30_000)
         return
       }
-      const { lifecycle, github, features, storage } = this.input
+      const { lifecycle, github, features, storage, continuation } = this.input
       await runWorkspaceAlarms(
         alarms,
         now,
         {
+          continuation: async () => {
+            if (await pendingContinue(storage)) await continuation.advance()
+          },
+          lifecycleAllowed: async () =>
+            !(await pendingContinue(storage)) ||
+            Boolean(await storage.get('lifecycle:start-job')),
           lifecycle,
           github: () => github.alarm(),
           previews: () =>

@@ -42,6 +42,9 @@ function firstMessage(text: string): {
   return { firstMessage: text, title: sessionTitleFrom(text) }
 }
 
+/** The first message of the second session, which gives its title. */
+export const debounceMessage = 'Debounce the address lookups to 250 ms.'
+
 /**
  * The sessions of the open workspace, oldest first. The first session
  * started with no title and took the title of the workspace. A member
@@ -52,7 +55,7 @@ export const workspaceSessions: readonly StartedSession[] = [
   { key: 'autocomplete', title: 'Address autocomplete', starter: 'cal' },
   {
     key: 'debounce',
-    ...firstMessage('Debounce the address lookups to 250 ms.'),
+    ...firstMessage(debounceMessage),
     starter: 'cal',
   },
 ]

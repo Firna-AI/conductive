@@ -16,7 +16,17 @@ export function commitAuthor(
   }
 }
 
-export function commitAuthorEnvironment(author: CommitAuthor) {
+/** The Git variables that carry an agent turn's author. */
+export const COMMIT_AUTHOR_VARIABLES = [
+  'GIT_AUTHOR_NAME',
+  'GIT_AUTHOR_EMAIL',
+  'GIT_COMMITTER_NAME',
+  'GIT_COMMITTER_EMAIL',
+] as const
+
+export function commitAuthorEnvironment(
+  author: CommitAuthor,
+): Record<(typeof COMMIT_AUTHOR_VARIABLES)[number], string> {
   return {
     GIT_AUTHOR_NAME: author.name,
     GIT_AUTHOR_EMAIL: author.email,

@@ -6,10 +6,13 @@ import type { AppEnv } from '../env'
 import { featureResult } from './result'
 import { scheduleWorkspaceAlarm } from './alarms'
 import type { ImageCoordinatorState } from '../lifecycle/image-timers'
+import { number, record, sendMessage, string } from '../chat/inputs'
+import { readJsonObject } from '../http/json-body'
 
 const app = createApp({ now: () => DEVICE_TEST_NOW })
 
 export class Workspace extends NativeAlarmWorkspace {
+  private readonly instance = crypto.randomUUID()
   private suspensions = 0
   private readonly observers = new Map<number, () => void>()
 
@@ -36,8 +39,59 @@ export class Workspace extends NativeAlarmWorkspace {
     })
   }
 
+  async fetch(request: Request): Promise<Response> {
+    if (new URL(request.url).pathname === '/__test/features') {
+      const input = await readJsonObject(request)
+      const action = string(input.action)
+      if (action === 'connections')
+        return Response.json(await this.inspectFeatureConnections())
+      if (action === 'state')
+        return Response.json(await this.inspectFeatureState())
+      if (action === 'summary')
+        return Response.json(await this.readChatWorkspaceSummary())
+      if (action === 'initialize') {
+        const data = record(input.input)
+        const turn = record(data.firstTurn)
+        await this.initializeLifecycle({
+          workspaceId: string(data.workspaceId),
+          orgId: string(data.orgId),
+          firstMessage: sendMessage(record(data.firstMessage)),
+          firstTurn: {
+            turnId: string(turn.turnId),
+            sessionId: string(turn.sessionId),
+            senderUserId: string(turn.senderUserId),
+          },
+        })
+      } else if (action === 'stopped') await this.lifecycleStopped()
+      else if (action === 'seed')
+        await this.seedFeatureState(record(input.values))
+      else if (action === 'advance')
+        await this.advanceStartAlarm(
+          input.at === undefined ? undefined : number(input.at),
+        )
+      else return new Response(null, { status: 404 })
+      return Response.json(null)
+    }
+    if (
+      new URL(request.url).pathname === '/__test/continue-restart' &&
+      request.method === 'POST'
+    )
+      this.ctx.abort(
+        'Restart the Continue fixture with durable work still pending.',
+      )
+    return super.fetch(request)
+  }
+
   async runSecurityAlarmAt(at: number): Promise<void> {
     await this.advanceStartAlarm(at)
+  }
+
+  async inspectFeatureConnections() {
+    await this.chat.runLifecycle(async () => undefined)
+    return {
+      instance: this.instance,
+      sockets: this.ctx.getWebSockets().map((socket) => socket.readyState),
+    }
   }
 
   async inspectFeatureState() {
@@ -83,6 +137,15 @@ export class Workspace extends NativeAlarmWorkspace {
 export default {
   ...app,
   async fetch(request: Request, env: AppEnv, execution: ExecutionContext) {
+    const url = new URL(request.url)
+    if (
+      url.pathname === '/__test/continue-restart' ||
+      url.pathname === '/__test/features'
+    ) {
+      const id = url.searchParams.get('workspace')
+      if (!id || !env.WORKSPACES) return new Response(null, { status: 400 })
+      return env.WORKSPACES.getByName(id).fetch(request)
+    }
     if (new URL(request.url).pathname === '/__test/scheduled') {
       await app.scheduled(
         { cron: '*/15 * * * *', scheduledTime: Date.now(), noRetry() {} },

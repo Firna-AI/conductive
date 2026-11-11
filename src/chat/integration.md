@@ -32,7 +32,8 @@ mount the chat.
   `src/shared/name-label.ts`, as
   [Workspace and session names](../../docs/protocol/agents-and-sessions.md#workspace-and-session-names)
   says. "New session" names only the action of +: its label, the heading
-  of the empty chat, and the detail in the model picker.
+  of the empty chat, and the spoken name of the icon that marks each model
+  of the other agent in the model picker.
 - Each tab shows the `title` of its session record. The backend provides
   the titles that the mockups show. The title from the first message names
   the workspace and its first session, as
@@ -72,11 +73,12 @@ mount the chat.
   Without `mentions`, the composer has no list, and a message shows each
   mention as text, as
   [File mentions](../../docs/protocol/file-mentions.md) says.
-- `onOpenPage` gets the page of a workspace chip in a sent message or an
-  answer, such as `/orgs/acme/workspaces/<id>/files`, after a plain click.
-  The app opens it in the same window. A click with a modifier key stays
-  with the browser, as for each link of the app. Without `onOpenPage`, a
-  chip is a plain link.
+- `onOpenPage` gets the page of a workspace chip or a session chip in a
+  sent message or an answer, such as `/orgs/acme/workspaces/<id>/files`,
+  after a plain click. The app opens it in the same window. A click with a
+  modifier key stays with the browser, as for each link of the app.
+  Without `onOpenPage`, a chip is a plain link. The app then shows the
+  session of a session address with `ChatController.showAddress`.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.

@@ -6,15 +6,20 @@ and the Privacy page. It also has the Conductor comparison page,
 [the pricing page](pricing-page.md), and a page for an unknown address.
 Visitors need no sign-in. The pages run no
 script and set no cookie. Every sign-in link leads to the app, on the
-`app.` host. The main action, Sign up, and Sign in lead to the same
-sign-in. A new person waits there for app access, as the
-[waitlist protocol](../../docs/protocol/waitlist.md) says. No button names
-the waitlist. The sentence under the last call to action says that a new
-account waits for access, so the page promises no use at once. The second
-action of the hero and of the last call to action, Download for Mac, leads
-to the Mac app section of the home page, because a page runs no script to
-pick the chip of the visitor. The site and the mockups read the words of
-both actions from `siteActionCopy` in `access-copy.ts`.
+`app.` host.
+
+The main action, Sign up, and Sign in lead to the same sign-in. A new
+person waits there for app access, as the
+[waitlist protocol](../../docs/protocol/waitlist.md) says, except during
+[open sign-up](../../docs/protocol/sign-ups.md#open-sign-up). No button
+names the waitlist, and the words stay the same in each state of sign-ups,
+as [The main action of the site](../../docs/protocol/sign-ups.md#the-main-action-of-the-site)
+says. The sentence under the last call to action says that the app opens
+when the account gets access, so the page promises no use at once. The
+second action of the hero and of the last call to action, Download for
+Mac, leads to the Mac app section of the home page, because a page runs no
+script to pick the chip of the visitor. The site and the mockups read the
+words of both actions from `siteActionCopy` in `access-copy.ts`.
 
 The shared header links to the public source repository on GitHub.
 The link appears on phones and desktops. On desktops, the header also has
@@ -108,6 +113,12 @@ When a screen of the app or a picture of the list changes, capture the
 pictures again with `npm run marketing:pictures` from the repository
 root. [Pictures](pictures.md) gives the picture list, the files, and the
 capture command.
+
+## Link previews
+
+Public pages share the approved blue product image with their own titles
+and descriptions. [Link previews](link-previews.md) gives the metadata,
+asset, sources, and verification steps.
 
 ## Legal pages
 
@@ -208,95 +219,5 @@ before the Worker serves them.
 
 ### Key code
 
-- [`worker/marketing/site.ts`](../../worker/marketing/site.ts): public
-  page paths, site files, the favicon, and the unknown-address page.
-- [`worker/marketing/files.ts`](../../worker/marketing/files.ts): the
-  file-list parser and cache for each assets binding.
-- [`worker/marketing/page.ts`](../../worker/marketing/page.ts): built-page
-  reads, headers, content security policy, and the safe `503` warning.
-- [`worker/marketing/markers.ts`](../../worker/marketing/markers.ts): exact
-  marker replacement with HTML escaping.
-- [`worker/marketing/consent.ts`](../../worker/marketing/consent.ts): the
-  agreement response for sign-in on the app host.
-- [`worker/marketing/github-setup.ts`](../../worker/marketing/github-setup.ts):
-  the built GitHub install return page for the Mac app.
-- [`worker/marketing/assets.ts`](../../worker/marketing/assets.ts): site
-  asset reads and the app host's handling of other site paths.
-- `pages/`, `layouts/`, `components/`: the pages, documents, and parts.
-- `content.config.ts`: the `docs` content collection, which reads each
-  guide in `docs/` without a schema and takes its ID from its file name.
-- `docs-guides.ts`: the front-matter defaults, the order of the menu, the
-  address of each guide, and its previous and next guides.
-- `pages/docs/[...guide].astro`: the page of each guide, with its
-  level-two headings for "On this page".
-- `layouts/DocsLayout.astro`: a guide in the site layout, with Docs marked
-  as the current section of the header.
-- `components/DocsNav.astro`, `DocsMenu.astro`, `DocsContents.astro`, and
-  `DocsPager.astro`: the guide list, the Docs menu of a phone, "On this
-  page", and the previous and next cards.
-- `scroll-regions.ts`: the Markdown hook that gives each code block and
-  each table keyboard focus and a name.
-- `guide-actions.ts`: the Markdown hook that gives the `guide-action`
-  class to a link that is the only content of its list item.
-- `styles/docs-layout.css`: the columns of a guide, with the 1120 px and
-  760 px breakpoints of the mockups.
-- `styles/docs-nav.css`, `docs-contents.css`, `docs-prose.css`, and
-  `docs-code.css`: the guide lists, the contents and cards, the body, and
-  the code colours.
-- `pages/from-conductor.astro`, `from-conductor/`, `styles/comparison.css`,
-  and `styles/comparison-table.css`: the comparison page, the one source of
-  its rows, and its styles. [Its key code](comparison.md#key-code) names
-  each module and part.
-- `components/StatusMark.astro`, `DueDay.astro`, `CopyText.astro`, and
-  `ClosingCall.astro`: a status as its icon and word, a due day or "No date
-  yet", a sentence of shared copy as markup, and the last call to action of
-  a page.
-- `features.ts`: the words that the site and the mockups share: the hero
-  sentence and the footer tagline, the features, the Mac app section with
-  its downloads, and the smaller features.
-- `components/FeatureSection.astro` and `MacDownloads.astro`: the section of
-  one feature of the home page, and the downloads of the Mac app section,
-  with one link for each chip and the oldest macOS version.
-- `access-copy.ts`: the words of the two actions of the site, and the
-  sentence under the last call to action.
-- `pricing.ts` and `pages/pricing.astro`: the one source of the plans and
-  words of the pricing page and its mockup, and the page. Its
-  [key code](pricing-page.md#key-code) names each part.
-- `links.ts`: the source repository address, the Mac app download
-  addresses, `docsPath` for the docs, site paths, the section that the
-  header marks, and `pageHrefs` for links from another origin.
-- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`, and
-  `legal-text.ts`: legal pages, the "Working in an org" section of the
-  Terms, the "What Conductive uses, and why" section of the Privacy page,
-  and the shared text model, titles, contact addresses, and sign-in
-  agreement.
-- `request-values.ts`: built-page markers, local Astro preview values,
-  the sign-in address, and the links to the sections of the home page.
-- [`astro.config.ts`](../../astro.config.ts): build settings, generated
-  CSS for the font, tokens and picture sizes, the Markdown processor with
-  Prism and the hooks, and the file list writer.
-- [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,
-  icon, marker, and file-list names and types.
-- `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
-- `icon-shapes.ts`: the lucide icons of the home page features, the
-  actions, such as the Mac app downloads, the comparison page, and the
-  docs, as shapes for the Astro pages.
-- `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
-  queries, frame classes, and picture-size CSS.
-- [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
-  the shared picture list.
-- [`marketingPictureCaptures.ts`](../../docs/mockups/src/screens/marketingPictureCaptures.ts):
-  capture pages, bounds, and file names.
-- [`tools/marketing-pictures/run.ts`](../../tools/marketing-pictures/run.ts):
-  the capture command, build, and cleanup.
-- [`capture-pictures.ts`](../../tools/marketing-pictures/capture-pictures.ts),
-  [`page.ts`](../../tools/marketing-pictures/page.ts),
-  [`cdp.ts`](../../tools/marketing-pictures/cdp.ts), and
-  [`encode-pictures.ts`](../../tools/marketing-pictures/encode-pictures.ts):
-  capture pages, browser control, Chrome connection, and lossless encoding.
-- `picture-capture.test.ts`: capture pages, bounds, and file names.
-- `picture-page.test.ts`: the animation reset before each capture.
-- [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
-  real builds served through the Worker, including their policy, their
-  files, the public guides, and the comparison page with its two entry
-  links.
+[Key code](key-code.md) gives the entry points of the site, its public guides,
+and its shared Worker helpers.

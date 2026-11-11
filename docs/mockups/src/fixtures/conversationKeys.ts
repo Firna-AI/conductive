@@ -1,3 +1,5 @@
+import { barConversationKeys } from './barConversations'
+
 /**
  * The keys of the chat transcripts of `conversations.ts`, one for each
  * transcript that a mockup state can show.
@@ -32,6 +34,9 @@ export const conversationKeys = [
   'link-sent',
   'link-answer',
   'other-org-link',
+  'sent-by',
+  'sent-by-other',
+  'session-links',
   'steered',
   'mac-in-work',
   'mention-answer',
@@ -45,4 +50,5 @@ export const conversationKeys = [
   'nested-lists-in-work',
   'headings',
   'headings-in-work',
+  ...barConversationKeys,
 ] as const

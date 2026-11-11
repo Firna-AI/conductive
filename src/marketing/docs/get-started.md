@@ -16,7 +16,7 @@ Have these ready:
 
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
-Your GitHub permissions still govern repository reads and pushes made with your account.
+Your GitHub permissions still govern repository reads, pushes, and merges made with your account.
 Conductive runs the agents and repositories on cloud computers.
 You can use the browser without a local copy of your repository.
 
@@ -28,14 +28,20 @@ You can use the browser without a local copy of your repository.
 4. Complete the authorization on GitHub.
 
 Your first sign-in creates your Conductive account.
-A new account waits for access before it can use **Get started**.
+When sign-ups are open to everyone, the account gets access at once.
+Otherwise, it waits for access before it can use **Get started**.
 
 - [Read the Terms](/terms)
 - [Read the Privacy notice](/privacy)
 
 ## Get access
 
-The waitlist screen shows your GitHub account and the available ways to get access.
+During open sign-up, you get access at sign-in without an invite or approval.
+If you already wait, return to the tab or window to open the app.
+You can continue with **Get started** without an approval email.
+You keep access if new accounts must wait later.
+
+If your account still waits, the waitlist screen shows your GitHub account and the available ways to get access.
 Use one of these ways:
 
 - **Approval:** Return to Conductive after your account is approved.
@@ -44,10 +50,11 @@ Use one of these ways:
 - **Invite code:** Enter the code in **Invite code**.
   Then select **Use code**.
   An invite link applies its code when you sign in or open the link.
+  During open sign-up, the link keeps its code unused.
 - **Org invitation:** Select **Accept invitation** beside the org you want to join.
   Use a GitHub account with the invitation's address as a verified email.
 
-After approval or a successful code, **Get started** opens for your account.
+Once you get access through open sign-up, approval, or a code, **Get started** opens for your account.
 It guides you through the GitHub App, your first org, and an agent login.
 
 An accepted org invitation opens that org instead.
@@ -60,6 +67,7 @@ Then try again.
 If a code no longer works or is used up, ask for another code.
 If **Sign-ups are paused** appears, try again later.
 The pause keeps your code unused and your org invitation available.
+The pause also stops open sign-up.
 
 - [Join or manage an org](/docs/orgs-and-members)
 

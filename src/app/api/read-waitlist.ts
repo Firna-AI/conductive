@@ -42,6 +42,7 @@ export function readWaitlistState(value: unknown): WaitlistStateResponse {
   return {
     appAccess: flag(state, 'appAccess'),
     signupsPaused: flag(state, 'signupsPaused'),
+    waitlistOn: flag(state, 'waitlistOn'),
     approvalEmail: maybeText(state, 'approvalEmail'),
     referralCode: maybeNested(state, 'referralCode', readInviteCode),
   }

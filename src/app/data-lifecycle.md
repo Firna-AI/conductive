@@ -112,6 +112,28 @@ of the data that the screens read and write.
   opens, and Get started reads again. A sign-out, or a sign-in of another
   person, forgets the invitations, and an answer for the person before
   changes nothing.
+- `AppModel.feedback` keeps the feedback draft, the reply read, and the
+  snapshot of a failed send in the memory of the tab, and in no browser
+  storage. A close keeps them. A sign-out, a sign-in of another person,
+  or a move to the waitlist clears them, and an answer for the person
+  before changes nothing.
+- Each open of the Feedback dialog reads the reply address again, and
+  shares a read that still runs. While that read loads or after it failed,
+  the draft stays and `canSend` is false. `readReply` reads again, for Try
+  again. A ready reply without an address still allows a send.
+- The first send of a draft keeps a snapshot: the text, the content of each
+  screenshot, the org, the workspace, the Mac app flag, and the app
+  version. A retry sends that snapshot with the same draft ID, also after a
+  close. An edit of the text or the screenshots drops the snapshot, so the
+  next send takes fresh values. While a send runs, a close or an edit does
+  nothing, and a second send shares the request.
+- `send` gives true only for an accepted send of the current person. It
+  then closes the dialog and clears the draft, and a later edit starts a
+  new draft ID. A failed or stale send gives false.
+- `screenshotIntake(app)` keeps one `ScreenshotIntake` for each app. It
+  holds the files that it still reads, and their notices, in the memory of
+  the tab. A file that it still reads joins the draft after a close. A
+  change of the person drops the waiting files and the notices.
 - The reply of the session says whether the person has app access.
   Without it, the first load reads only the waitlist state, and the boot
   is `waiting`. The waitlist reads the invitations of the person at its
@@ -211,9 +233,9 @@ of the data that the screens read and write.
   the tool store. The store of `WorkspaceScreen` is a view of the kept
   workspace, so its stop keeps the parts, as the
   [workspace integration](../shell/workspace/README.md#integration) shows.
-  The `create` of the Files part finds the store that the tab keeps for the
-  workspace, as the [files integration](../files/README.md#integration)
-  shows.
+  The `create` of the Files connection of the screen finds the store that
+  the tab keeps for the workspace, as the
+  [files integration](../files/README.md#integration) shows.
 - A feature store that reads the raw socket messages itself, as the files
   do, follows the event source of the app through `replaySubscribe`. Each
   message reaches the store unchanged.
@@ -226,3 +248,7 @@ of the data that the screens read and write.
   - After the replay, the newest live event.
 - A live event during an unfinished replay moves no number. The store holds
   that event until the final page.
+- `WorkspaceStream.reconnects` counts the replays that end after a dropped
+  connection or a gap. A part that keeps its own reads, such as the
+  member's GitHub access of the pull request bar, reads again at each new
+  count. A start after a stop counts nothing.

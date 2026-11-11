@@ -1,13 +1,14 @@
 # Architecture
 
-Conductive is a coding tool at `conductive.build`. Each workspace is one
-task with its own branch and its own cloud computer, a Boat sandbox.
-Agents powered by Claude and Codex work only in the sandbox. The user
-follows them in the browser or in the Mac app, which shows the web app.
-Routines also start agents without a person, each run in a new workspace.
-This doc describes the components, their responsibilities, and the
-boundaries between them. The [protocol docs](architecture/protocol-docs.md)
-hold the requirements of each feature.
+Conductive is a coding tool at `conductive.build`. Each workspace has its
+own cloud computer, a Boat sandbox, and one branch at a time. It can hold
+one task after another. Agents powered by Claude and Codex work only in
+the sandbox. The user follows them in the browser or in the Mac app, which
+shows the web app. Routines also start agents without a person, each run
+in a new workspace. This doc describes the components, their
+responsibilities, and the boundaries between them. The
+[protocol docs](architecture/protocol-docs.md) hold the requirements of
+each feature.
 
 ## Terms
 
@@ -23,19 +24,31 @@ hold the requirements of each feature.
   user owns, or of every workspace of the org, and blocks new starts. A
   user suspension also ends the sign-in sessions of the user.
 - **App access:** the right of a user to use the app: to create or join an
-  org, and to start cloud computers. A new account starts without it.
+  org, and to start cloud computers. A new account starts without it,
+  except during open sign-up.
 - **Waitlist:** the users without app access. Each of them sees only the
-  waitlist screen until an approval, a code, or an org invitation gives
-  app access.
+  waitlist screen until an approval, a code, an org invitation, or open
+  sign-up gives app access. The waitlist switch of the operator section
+  turns the waitlist off and on.
+- **Open sign-up:** the state while the waitlist is off and sign-ups are
+  not paused. Each user without app access then gets it at their next
+  sign-in or request.
 - **Invite code:** a code that an operator makes, with a use limit. Each
   use gives app access to one person who waits.
 - **Referral code:** the personal code of each user with app access. It
   gives app access to up to 5 people who wait. The screens of users call
   it an invite code.
-- **Workspace:** one task in an org. It has one repository, one branch,
-  one sandbox, and one or more sessions.
+- **Workspace:** the work of an org on one repository, one task at a time.
+  It has one repository, one sandbox, one or more sessions, and one branch
+  at a time. After a merge, Continue moves it on to its next task.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
+- **Continue:** the action after a merge that moves a workspace to a new
+  branch from the latest default branch. The workspace keeps its sandbox
+  and its sessions.
+- **Local work:** work in the sandbox of a workspace that GitHub does not
+  have: changed files that are not committed, also untracked files, and
+  commits that no remote branch holds.
 - **Sender:** the person who sent the message of a turn. The GitHub token
   and the Mac requests of the turn belong to its sender. The agent login
   belongs to the starter of the session, the member who started it.
@@ -82,7 +95,7 @@ hold the requirements of each feature.
 - **Routine owner:** the member whose logins the runs of a routine use. It
   is the member who created the routine, until that member leaves the org.
 - **Base branch:** the branch that the work of a workspace targets. Changes
-  compares with it, and "Create pull request" opens into it.
+  compares with it, and "Create PR" opens into it.
 
 ## Components
 
@@ -108,7 +121,7 @@ the app (decision 6).
 
 The [flows page](architecture/flows.md) describes how the components work
 together for a new workspace, chat, the terminal, previews, the desktop,
-GitHub events, routine runs, and stops.
+GitHub events, a merge, Continue, routine runs, and stops.
 
 ## Where data lives
 

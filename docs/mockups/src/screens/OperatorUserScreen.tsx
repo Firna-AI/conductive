@@ -24,7 +24,8 @@ export const operatorUserSchema = {
      * the waitlist, approved with the email not sent yet, or sent; Kenji
      * Watanabe on the waitlist with no verified email; a user who came in
      * by an invite code, a referral code, an org invitation, or as an
-     * operator; and the approval of Kenji, whose email never went.
+     * operator; the approval of Kenji, whose email never went; and a new
+     * sign-in and a person who waited, both let in by open sign-up.
      */
     page: {
       enum: [
@@ -41,6 +42,8 @@ export const operatorUserSchema = {
         'orgInvitation',
         'operator',
         'emailNotSent',
+        'openSignUp',
+        'openSignUpWaited',
       ],
     },
     /**

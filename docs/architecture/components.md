@@ -21,7 +21,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
   suspends or lifts it. It also approves people who wait, makes and
-  disables codes, and pauses sign-ups.
+  disables codes, pauses sign-ups, and turns the waitlist off and on.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel widths. All other state comes from
@@ -54,6 +54,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
+- It writes to GitHub only as a member. A merge from the pull request bar
+  uses the GitHub token of the member who clicks, as
+  [Merge as the member](../protocol/github-tokens.md#merge-as-the-member)
+  says.
 
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
@@ -64,7 +68,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - D1 holds the records of the app: users, orgs, members, sections,
   repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
-  the sign-up pause, and the state of approval emails.
+  the sign-up pause, the waitlist switch, and the state of approval emails.
 - Boat labels alone cannot hold these records, because a label is fixed
   after a create or a fork.
 
@@ -79,6 +83,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   uses.
 - It also holds the start steps, the stop timer, the delete timer of an
   archived workspace, and the banner state.
+- It runs the trusted jobs of its sandbox: the fetch of a create, and the
+  branch change of Continue.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace
@@ -126,7 +132,8 @@ Every org image holds the app's own sandbox software:
 - the agent runner, a Node program that runs as an always-on service
 - the terminal service, on a private port
 - the preview relay, on a private port
-- the agent tools: an MCP server and a CLI that create and list workspaces
+- the agent tools: an MCP server and a CLI that create and list workspaces,
+  start, list, read, and message sessions, and ask for Mac commands
 - a git credential helper that gets a fresh GitHub token for each git
   operation
 
@@ -183,3 +190,9 @@ the rules.
 - **Boat:** the app's Boat account pays for every sandbox and every saved
   snapshot. Use of the app is free until billing starts, as
   [Pricing](../protocol/pricing.md) says.
+- **Resend:** the email service sends every email of the app, from
+  `mail.conductive.build`. These are the org invitations, the approval
+  emails, and the feedback emails. The Worker sends each feedback email,
+  with its screenshots, to the team inbox. The email provider of the
+  operator hosts that inbox. The app keeps no copy of feedback, as
+  [Feedback](../protocol/feedback.md) says.

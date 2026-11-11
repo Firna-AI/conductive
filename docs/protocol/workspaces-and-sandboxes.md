@@ -16,7 +16,10 @@ These docs belong to this doc:
   variable of each repository in a sandbox, and the context folder of each
   workspace.
 - [Life of a workspace](workspace-life.md): the start steps, the time
-  limits, the states, the stop and resume, the archive, and the restore.
+  limits, the states, the stop and resume, the archive, the restore, and
+  Continue.
+- [Continue](continue.md): the next task of a workspace after a merge, on
+  a new branch with the same sandbox and sessions.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
   moves, reassigns, renames, and archives the workspace.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
@@ -72,9 +75,13 @@ These docs belong to this doc:
   read-only.
 - Each sandbox gets the org's env vars at create and at each resume
   (decision 17). A changed value applies at the next start.
-- The app's own variables, such as the four Git author variables of
-  [Commit author](github-tokens.md#commit-author), replace an org env var
-  with the same name (decision 233).
+- The app's own variables replace an org env var with the same name.
+- The sandbox gets no org env var with the name of a value that the agent
+  runner gives each agent process for its turn. These are the turn ID and
+  the four Git author variables of
+  [Commit author](github-tokens.md#commit-author) (decision 233). Reason: a
+  shell that loads the sandbox's variables again would then replace the
+  values of the turn.
 - Builds and refreshes get none of the env vars, and no saved snapshot
   holds them. Reason: a saved snapshot keeps every file.
 - The app gives each sandbox its values itself, because every sandbox
@@ -173,3 +180,7 @@ These docs belong to this doc:
 ## Archive
 
 [Archive](workspace-life.md#archive) holds these workspace requirements.
+
+## Continue
+
+[Continue](workspace-life.md#continue) holds these workspace requirements.

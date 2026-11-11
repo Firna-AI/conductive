@@ -17,8 +17,9 @@ import { ID, json, RouteError, type Route } from './router'
 import { completeStep, type DevState } from './state'
 
 /**
- * The waitlist state of the person signed in. The pause and the referral
- * code come from the records that the operator section changes.
+ * The waitlist state of the person signed in. The pause, the waitlist
+ * switch, and the referral code come from the records that the operator
+ * section changes.
  */
 function reply(state: DevState): WaitlistStateResponse {
   const { waitlist, operator: records } = state
@@ -28,6 +29,7 @@ function reply(state: DevState): WaitlistStateResponse {
   return {
     appAccess: waitlist.appAccess,
     signupsPaused: records.pause.paused,
+    waitlistOn: records.waitlistSwitch.waitlistOn,
     approvalEmail: waitlist.approvalEmail,
     referralCode: own
       ? {
@@ -54,6 +56,20 @@ function grant(backend: DevBackend): void {
     { githubId, login: githubLogin },
     backend.now(),
   )
+}
+
+/**
+ * The gate of the Worker during open sign-up: while the waitlist is off and
+ * sign-ups are not paused, the next request of a person who waits gives
+ * app access with a new referral code, before the request runs. It uses no
+ * code, so a code of a join link stays unused. The pause wins, so a paused
+ * gate lets nobody in.
+ */
+export function admitOpenSignup(backend: DevBackend): void {
+  const { waitlist, operator: records } = backend.state
+  if (waitlist.appAccess || records.pause.paused) return
+  if (records.waitlistSwitch.waitlistOn) return
+  grant(backend)
 }
 
 /**
@@ -134,8 +150,9 @@ function accept(backend: DevBackend, inviteId: string): Response {
 
 /**
  * The session with its app access, the waitlist state, the use of a code,
- * and the org invitations of the user with Accept. The pause and the codes
- * are those of the operator section, so a change there shows here.
+ * and the org invitations of the user with Accept. The pause, the switch,
+ * and the codes are those of the operator section, so a change there shows
+ * here. `admitOpenSignup` runs before each request, as the gate does.
  */
 export function waitlistRoutes(backend: DevBackend): Route[] {
   const { state } = backend

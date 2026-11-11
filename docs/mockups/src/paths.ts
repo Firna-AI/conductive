@@ -52,6 +52,9 @@ export const paths = {
   paletteSettings: 'app/command-palette/settings',
   paletteSearch: 'app/command-palette/search',
   paletteNoResults: 'app/command-palette/search/no-results',
+  feedback: 'app/feedback',
+  feedbackEmpty: 'app/feedback/states',
+  feedbackSending: 'app/feedback/states/sending',
   account: 'app/account',
   accountPreferences: 'app/account/preferences',
   accountSetup: 'app/account/setup',
@@ -102,6 +105,10 @@ export const paths = {
   operatorCodesSearch: 'app/operator/codes/search',
   operatorCodesPause: 'app/operator/codes/pause',
   operatorCodesPaused: 'app/operator/codes/pause/paused',
+  operatorCodesPauseWaitlistOff: 'app/operator/codes/pause/waitlist-off',
+  operatorCodesWaitlistOff: 'app/operator/codes/waitlist-off',
+  operatorCodesWaitlistTurnedOff: 'app/operator/codes/waitlist-off/turned-off',
+  operatorCodesWaitlistOffPaused: 'app/operator/codes/waitlist-off/paused',
   newWorkspace: 'app/new-workspace',
   firstBuildWorkspace: 'app/new-workspace/first-build',
   newWorkspaceFiles: 'app/new-workspace/files',
@@ -138,6 +145,7 @@ export const paths = {
     'app/org-settings/cloud-computer/first-build/failed',
   firstBuildComputerNoBuild:
     'app/org-settings/cloud-computer/first-build/no-build',
+  repositoriesChanged: 'app/org-settings/cloud-computer/repositories-changed',
   repositoriesChangedFailed:
     'app/org-settings/cloud-computer/repositories-changed/build-failed',
   repositoriesChangedNoBuild:
@@ -150,6 +158,9 @@ export const paths = {
   sessionHistory: 'app/sessions/history',
   noStarterLogin: 'app/sessions/no-starter-login',
   linkedSession: 'app/sessions/linked',
+  sentBy: 'app/workspace-links/sent-by',
+  sentByOther: 'app/workspace-links/sent-by/other-workspace',
+  sessionChips: 'app/workspace-links/session-chips',
   loginNotShared: 'app/composer/not-shared',
   reassign: 'app/reassign',
   archive: 'app/archive',
@@ -175,6 +186,29 @@ export const paths = {
   macAllowAll: 'mac-app/commands/allow-all',
   macDenied: 'app/mac-commands/denied',
   macDone: 'app/mac-commands/done',
+} as const
+
+/** The screens of the actions of the pull request bar. */
+export const barPaths = {
+  merging: 'app/banner/merge',
+  mergeMovedHead: 'app/banner/merge/moved-head',
+  mergeNoRight: 'app/banner/merge/no-right',
+  mergeRefused: 'app/banner/merge/refused',
+  localWork: 'app/banner/local-work',
+  noCommitsLocalWork: 'app/banner/no-commits/local-work',
+  continueQuestion: 'app/banner/continue',
+  continuing: 'app/banner/continue/running',
+  continueFailed: 'app/banner/continue/failed',
+  continueWaits: 'app/banner/continue/waits',
+  continued: 'app/banner/continued',
+  /** The message that each agent action sends, in the chat. */
+  sent: {
+    'fix-checks': 'app/banner/sent',
+    'create-pull-request': 'app/banner/sent/create-pull-request',
+    'commit-and-push': 'app/banner/sent/commit-and-push',
+    'resolve-conflicts': 'app/banner/sent/resolve-conflicts',
+    'address-review': 'app/banner/sent/address-review',
+  },
 } as const
 
 /** The screen that shows the checks of each pull request state. */

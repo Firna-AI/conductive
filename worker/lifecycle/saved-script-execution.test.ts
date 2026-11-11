@@ -7,6 +7,7 @@ import { readBuildJob } from './build-data'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { readRetention } from './retention-data'
+import { saveOwnerDisplayName } from './runner-environment-test-support'
 import {
   localSavedScriptFixture,
   SAVED_BASH_SCRIPT,
@@ -93,6 +94,10 @@ it('runs saved workspace startup in Bash with the org environment before marking
     })
     expect(await local.ready()).toBe('')
     expect(await local.runnerCalls()).toBe('runner-restarted\n')
+    expect(await local.systemGitSettings()).toBe(
+      'author.name=Octocat\nauthor.email=7+octocat@users.noreply.github.com\n' +
+        'committer.name=Octocat\ncommitter.email=7+octocat@users.noreply.github.com\n',
+    )
   } finally {
     await local.dispose()
   }
@@ -119,6 +124,7 @@ it('runs retention startup in Bash with its org environment without marking read
     }
     await stopWorkspaceSandbox(context)
     await actor.lifecycleStopped()
+    await saveOwnerDisplayName(fixture, '  Updated Owner  ')
     const results: CommandResult[] = []
     fixture.boat.beforeCommand = async (command) => {
       if (local.contains(command, 'retention'))
@@ -147,6 +153,10 @@ it('runs retention startup in Bash with its org environment without marking read
     })
     expect(await local.ready()).toBe(null)
     expect(await local.runnerCalls()).toBe(null)
+    expect(await local.systemGitSettings()).toBe(
+      'author.name=Updated Owner\nauthor.email=7+octocat@users.noreply.github.com\n' +
+        'committer.name=Updated Owner\ncommitter.email=7+octocat@users.noreply.github.com\n',
+    )
   } finally {
     await local.dispose()
   }

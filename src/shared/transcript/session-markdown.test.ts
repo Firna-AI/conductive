@@ -71,6 +71,51 @@ it('copies the concise chat with default folds and the historical model choices'
   )
 })
 
+it('keeps the newest run of a running turn open in a concise copy, and folds it when its turn ends', () => {
+  const { builder, document } = markdownFixture()
+  const context = { sessionId: document.session.id, turnId: 'live' }
+  builder.merge([
+    {
+      eventNumber: 101,
+      occurredAt: 101_000,
+      event: {
+        ...context,
+        type: 'tool.updated',
+        tool: {
+          id: 'lint',
+          kind: 'run',
+          target: 'npm run lint',
+          detail: null,
+          omittedDetailBytes: 0,
+          state: 'done',
+        },
+      },
+    },
+  ])
+  expect(builder.render('concise')).toContain(
+    'Partway.\n\n- Ran `npm run lint`\n\n_The agent is still working._\n',
+  )
+
+  builder.merge([
+    {
+      eventNumber: 102,
+      occurredAt: 102_000,
+      event: {
+        ...context,
+        type: 'turn.completed',
+        state: 'finished',
+        durationMs: 2_000,
+        files: [],
+        omittedFileCount: 0,
+        userMessageIds: ['live'],
+      },
+    },
+  ])
+  expect(builder.render('concise')).toContain(
+    'Partway.\n\n_1 tool call_\n\n_Finished in 2s_\n',
+  )
+})
+
 it('copies full work with command output, safe fences, loss, and masked file labels', () => {
   const { builder } = markdownFixture()
   expect(builder.render('full')).toBe(

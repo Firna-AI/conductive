@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-09, from branch `calummoore/session-transcript-copy`, a new problem of the options check of decisions 216 and 217 of the plan `plans/copy-session-transcripts.md`.
-- **Location:** `src/shell/ui/ModelPicker.tsx:19` and `:63`, against `src/chat/state/format.ts:28` and `src/chat/components/model-menu.ts:63`.
+- **Location:** `src/shell/ui/ModelPicker.tsx:19` and `:52`, against `src/chat/state/format.ts:28` and `src/chat/components/model-menu.ts:61`.
 - **Reason:** The two pickers are already on `main`, and the transcript change does not change how either picks an effort.
 
 - **Source:** Review.

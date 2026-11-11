@@ -5,6 +5,7 @@ import { routes } from '../../app/router'
 import {
   operatorUserPath,
   userSuspensionPath,
+  type OperatorUserDetail,
   type UserSuspensionResponse,
 } from '../../shared/operator'
 import { operatorCodeDisablePath } from '../../shared/operator-waitlist'
@@ -31,6 +32,21 @@ const suspended: UserSuspensionResponse = {
   suspendedAt: FAKE_TIME,
   pendingWorkspaceIds: [],
   pendingBuildIds: [],
+}
+
+/**
+ * Zed K, who waited, after open sign-up let them in an hour ago. No sample
+ * came in by open sign-up, so the page takes this change.
+ */
+function cameBack(user: OperatorUserDetail): OperatorUserDetail {
+  return {
+    ...user,
+    appAccess: {
+      state: 'granted',
+      grantedAt: FAKE_TIME - 3_600_000,
+      source: { kind: 'open_signup', operator: sampleOperator },
+    },
+  }
 }
 
 /** Each way in of the samples: the login, the GitHub ID, and the App access rows. */
@@ -60,7 +76,7 @@ const ways = [
 ] as const
 
 describe('the app access and the referral code on the page of a user', () => {
-  test('App access names each way in with links to what let the user in, and the state of the approval email', async () => {
+  test('App access names each way in with links to what let the user in, the operator of an open sign-up, and the state of the approval email', async () => {
     const shown: Record<string, string | null> = {}
     const links: (string | null)[] = []
     for (const [login, githubId] of ways) {
@@ -75,10 +91,16 @@ describe('the app access and the referral code on the page of a user', () => {
         links.push(byText('@vex-ops', access).getAttribute('href'))
       }
     }
+    const open = await openUser(SAMPLE_IDS.newestWaiting, { change: cameBack })
+    shown['zed-k'] = boxText(open.view, 'App access')
     expect({ shown, links }).toEqual({
-      shown: Object.fromEntries(
-        ways.map(([login, , text]) => [login, `App access ${text}`]),
-      ),
+      shown: {
+        ...Object.fromEntries(
+          ways.map(([login, , text]) => [login, `App access ${text}`]),
+        ),
+        'zed-k':
+          'App access How Open sign-up by @calummoore Since 15 Jan 2027 at 07:00',
+      },
       links: [
         routes.operatorCodes('V7MKC-2QDXH'),
         routes.operatorOrg('org_h3xw4v8q'),

@@ -17,6 +17,7 @@ it('keeps Git descendants absent below replacement files and links', async () =>
   await h.git('add', 'entry', 'target')
   await h.git('commit', '-m', 'directory base')
   await h.git('update-ref', 'refs/heads/main', 'HEAD')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   const before = await checkpoint(repository)
   for (const kind of ['file', 'link']) {
     if (kind === 'link') {
@@ -109,6 +110,7 @@ it('returns only the old file deletion after its path becomes a directory', asyn
   await h.git('add', 'entry')
   await h.git('commit', '-m', 'file base')
   await h.git('update-ref', 'refs/heads/main', 'HEAD')
+  await h.git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   await unlink(join(h.root, 'entry'))
   await h.write('entry/new.txt', 'new child\n')
   await h.write('entry/another.txt', 'another child\n')

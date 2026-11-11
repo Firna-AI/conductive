@@ -2,15 +2,21 @@ import { API_PATHS } from '../../src/shared/api'
 import { PENDING_ORG_INVITES_PATH } from '../../src/shared/members'
 import { WAITLIST_PATHS } from '../../src/shared/waitlist'
 import { HttpError } from '../http'
-import { hasAppAccess } from '../waitlist/data'
+import { hasAppAccess, isOpenSignup } from '../waitlist/data'
+import { grantAppAccess } from '../waitlist/grant'
 
 /** Every other method, path, and upgrade needs app access by default. */
 export async function requireAppAccess(
   request: Request,
   db: D1Database,
   userId: string,
+  now: number,
 ): Promise<void> {
   if (await hasAppAccess(db, userId)) return
+  if (await isOpenSignup(db)) {
+    await grantAppAccess(db, userId, { source: 'open_signup' }, now)
+    if (await hasAppAccess(db, userId)) return
+  }
   const path = new URL(request.url).pathname
   const allowed =
     !request.headers.has('Upgrade') &&

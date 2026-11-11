@@ -4,16 +4,21 @@ import { createClaudeFactory } from '../src/providers/claude'
 import { createCodexFactory } from '../src/providers/codex'
 import { FakeAppServers } from './app-server'
 import { FakeClaudeQuery } from './claude-query'
+import { fakeClaudeProfile } from './providers'
 
 export function instructionProviders(agent: Agent) {
   const queries: FakeClaudeQuery[] = []
   const servers = new FakeAppServers()
   const factories = {
-    claude: createClaudeFactory((parameters) => {
-      const query = new FakeClaudeQuery()
-      queries.push(query)
-      return query.open(parameters)
-    }),
+    claude: createClaudeFactory(
+      (parameters) => {
+        const query = new FakeClaudeQuery()
+        queries.push(query)
+        return query.open(parameters)
+      },
+      () => '/fake/claude',
+      fakeClaudeProfile,
+    ),
     codex: createCodexFactory(servers.start),
   }
   const query = () => {
@@ -49,5 +54,9 @@ export function instructionProviders(agent: Agent) {
           ),
     parameters: () =>
       agent === 'claude' ? query().parameters?.options : thread(),
+    environment: () =>
+      agent === 'claude'
+        ? query().parameters?.options?.env
+        : servers.requests.at(-1)?.env,
   }
 }

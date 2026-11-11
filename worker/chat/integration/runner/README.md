@@ -42,6 +42,9 @@ state the requirements.
   - Version 2: the `turn` command carries a turn token, with the agent and
     the login kind. A `message` command carries no credential. The
     workspace makes the token after it stores the turn as running.
+- Each `turn` and `message` command also carries the current workspace
+  branch and target branch in `branches`, as
+  [History and event order](../../history.md) says.
 - No stored command holds a login or a turn token. Each send adds the
   credential again. A resent version 2 `turn` command carries the same
   token, also after a failed send or a restart of the workspace object.

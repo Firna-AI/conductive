@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-09, from the post-merge tasks of the Mac app update plan on branch `calummoore/desktop-app-auto-update`.
-- **Location:** The release workflow `.github/workflows/release.yml`, the release pull request on `main`, and the releases of `Firna-AI/remote-code`.
+- **Location:** The release workflow `.github/workflows/release.yml`, the release pull request on `main`, and the releases of `Firna-AI/conductive`.
 - **Reason:** release-please opens the first release pull request only after the update change merges into `main`.
 
 - **Terms:**
@@ -27,12 +27,12 @@
   1. After the merge of the update change, wait for the release pull request on `main`. Check that it sets `0.1.0` in `package.json` and `desktop/package.json`, and that its `Complete gate` check passes. When it gives another version, do not merge it, and check the `initial-version` setting.
   2. Merge the release pull request.
   3. Watch the release workflow run of that merge. Check that each job passes: `release-please`, the Mac checks on both runners, `verify-tag`, the signing job, and `publish`.
-  4. Run `gh release view v0.1.0 --repo Firna-AI/remote-code --json isDraft,isPrerelease,assets`. Check that the release is not a draft and not a prerelease, and that it holds the seven files, each with a size above zero.
-  5. Run `gh api repos/Firna-AI/remote-code/releases/latest --jq .tag_name`. Check that it prints `v0.1.0`. This checks once that GitHub chooses the new release as latest after the publish step sends `make_latest=legacy`. No permanent test covers this GitHub behaviour.
-  6. Run `git ls-remote https://github.com/Firna-AI/remote-code.git refs/tags/v0.1.0 'refs/tags/v0.1.0^{}'`. Compare its commit with `gh pr view NUMBER --repo Firna-AI/remote-code --json mergeCommit`, for the release pull request. Use the peeled `^{}` commit when present. Otherwise, use the tag target. Check that it matches the merge commit.
-  7. Run `gh release download v0.1.0 --repo Firna-AI/remote-code --pattern latest-mac.yml --output -`. Check that it gives the version `0.1.0`, lists the two ZIP files, and lists no DMG file.
+  4. Run `gh release view v0.1.0 --repo Firna-AI/conductive --json isDraft,isPrerelease,assets`. Check that the release is not a draft and not a prerelease, and that it holds the seven files, each with a size above zero.
+  5. Run `gh api repos/Firna-AI/conductive/releases/latest --jq .tag_name`. Check that it prints `v0.1.0`. This checks once that GitHub chooses the new release as latest after the publish step sends `make_latest=legacy`. No permanent test covers this GitHub behaviour.
+  6. Run `git ls-remote https://github.com/Firna-AI/conductive.git refs/tags/v0.1.0 'refs/tags/v0.1.0^{}'`. Compare its commit with `gh pr view NUMBER --repo Firna-AI/conductive --json mergeCommit`, for the release pull request. Use the peeled `^{}` commit when present. Otherwise, use the tag target. Check that it matches the merge commit.
+  7. Run `gh release download v0.1.0 --repo Firna-AI/conductive --pattern latest-mac.yml --output -`. Check that it gives the version `0.1.0`, lists the two ZIP files, and lists no DMG file.
   8. When a step fails, follow `desktop/RELEASES.md`. Never change or delete a published release.
 - **Impact if no action:** A broken first release can reach the people who install it. A release without the Mac files would stop the updates of every installed copy.
 - **Needs:** The merged update change on `main`. A person with write access to merge the release pull request, because agent merges are off.
 - **Related:** `plans/follow-ups/mac-update-smoke-test.md` and `plans/follow-ups/alpha-build-manual-install.md` wait for the release that this task checks.
-- **Done when:** `v0.1.0` is the latest published release of `Firna-AI/remote-code`. It holds the seven files, its `latest-mac.yml` gives `0.1.0`, and its tag points to the release commit. Then delete this item.
+- **Done when:** `v0.1.0` is the latest published release of `Firna-AI/conductive`. It holds the seven files, its `latest-mac.yml` gives `0.1.0`, and its tag points to the release commit. Then delete this item.

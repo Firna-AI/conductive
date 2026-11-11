@@ -3,7 +3,7 @@ import type {
   WorkspaceCompositionEnv,
   WorkspaceChatResolvers,
 } from './chat/workspace-integration'
-import { AttachmentWorkspace } from './chat/attachment-workspace'
+import { AgentSessionWorkspace } from './tools/workspace'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import { WorkspaceFeatures } from './features/workspace'
 import { WorkspaceGitHub } from './features/github'
@@ -16,18 +16,24 @@ import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type { GitHubRefresh, GitHubWorkspace } from './github/contracts'
 import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
-import { activeStoredTurn } from './devices/access'
 import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
 import { featureResult } from './features/result'
 import { archiveWorkspace } from './lifecycle/archive-workspace'
+import { continueBusy } from './lifecycle/continue-admission'
+import type { WorkspaceContinue } from './lifecycle/continue'
+import { createWorkspaceContinue } from './lifecycle/continue-composition'
+import { pendingContinue } from './lifecycle/continue-types'
+import type { User } from '../src/shared/api'
+import type { ContinueWorkspaceRequest } from '../src/shared/workspaces'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 
-export class Workspace extends AttachmentWorkspace {
+export class Workspace extends AgentSessionWorkspace {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver
+  private readonly continuation: WorkspaceContinue
   private readonly now: () => number
   private readonly alarmRunner: WorkspaceAlarmRunner
 
@@ -79,6 +85,14 @@ export class Workspace extends AttachmentWorkspace {
       this.features,
       now,
     )
+    this.continuation = createWorkspaceContinue({
+      matches,
+      env,
+      dependencies,
+      integration: this.integration,
+      github: this.github,
+      run: (operation) => this.run(operation),
+    })
     this.alarmRunner = new WorkspaceAlarmRunner({
       context,
       env,
@@ -90,17 +104,9 @@ export class Workspace extends AttachmentWorkspace {
       devices: this.devices,
       members: this.members,
       github: this.github,
+      continuation: this.continuation,
       features: this.features,
       lifecycle: () => this.alarmLifecycle(),
-    })
-  }
-
-  async callingToolTurn(workspaceId: string, turnId: string) {
-    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
-      return null
-    return this.chat.runLifecycle(async () => {
-      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
-      return turn ? { workspaceId, turnId, senderUserId: turn.senderId } : null
     })
   }
 
@@ -113,6 +119,7 @@ export class Workspace extends AttachmentWorkspace {
     workspaceId: string | null,
   ) {
     return featureResult(async () => {
+      await this.continuation.cancel()
       await this.members.suspend(ownership, workspaceId)
       this.controller.cancelLifecycleWaiters()
       await this.integration.reconcileStopped()
@@ -197,6 +204,8 @@ export class Workspace extends AttachmentWorkspace {
         now: this.now,
         refresh: (workspace, signal) => this.github.refresh(workspace, signal),
       })
+    if (/\/github\/.*$/.test(new URL(request.url).pathname))
+      return this.github.fetch(request)
     return this.fetchChat(request)
   }
 
@@ -207,8 +216,10 @@ export class Workspace extends AttachmentWorkspace {
     origin: string,
   ) {
     return featureResult(() =>
-      this.run(() =>
-        archiveWorkspace(
+      this.run(async () => {
+        if (await pendingContinue(this.integration.storage))
+          throw continueBusy()
+        return archiveWorkspace(
           this.env,
           { ...lifecycleDependencies(), now: this.now },
           orgId,
@@ -220,8 +231,8 @@ export class Workspace extends AttachmentWorkspace {
               this.controller.archiveLifecycle(workspaceId),
             reserveArchive: () => this.controller.reserveArchive(workspaceId),
           },
-        ),
-      ),
+        )
+      }),
     )
   }
 
@@ -236,5 +247,39 @@ export class Workspace extends AttachmentWorkspace {
         this.controller.restoreWorkspace(orgId, workspaceId, userId, origin),
       ),
     )
+  }
+
+  continueWorkspace(
+    orgId: string,
+    id: string,
+    user: User,
+    request: ContinueWorkspaceRequest,
+    origin: string,
+  ) {
+    return featureResult(() =>
+      this.continuation.start(orgId, id, user, request, origin),
+    )
+  }
+
+  readWorkspaceContinue(
+    orgId: string,
+    id: string,
+    userId: string,
+    continueId: string,
+    origin: string,
+  ) {
+    return featureResult(() =>
+      this.continuation.result(orgId, id, userId, continueId, origin),
+    )
+  }
+
+  async credentialSender(turnId: string): Promise<string | null> {
+    const continued = await this.continuation.credentialSender(turnId)
+    return continued === undefined ? super.credentialSender(turnId) : continued
+  }
+
+  async lifecycleStopped(): Promise<void> {
+    await this.continuation.cancel()
+    return super.lifecycleStopped()
   }
 }

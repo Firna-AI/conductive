@@ -33,8 +33,9 @@ import { InlineLink, TargetList, TargetRow } from './TargetParts'
 /**
  * How the user got app access, with a link to what let them in: the codes
  * tab with the invite code, the owner of the referral code, or the org and
- * the admin of the invitation. A record whose operator, owner, or org no
- * longer exists says so without a link.
+ * the admin of the invitation. An approval names its operator, and open
+ * sign-up the operator who last turned off the waitlist. A record whose
+ * operator, owner, or org no longer exists says so without a link.
  */
 function WayIn(props: { source: OperatorAccessSource }) {
   const { source } = props
@@ -43,6 +44,10 @@ function WayIn(props: { source: OperatorAccessSource }) {
       return source.operator
         ? wayInWords.approvedBy(source.operator.login)
         : 'Approved by an operator'
+    case 'open_signup':
+      return source.operator
+        ? wayInWords.openSignUpBy(source.operator.login)
+        : 'Open sign-up by an operator'
     case 'invite_code':
       return (
         <>

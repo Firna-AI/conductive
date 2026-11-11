@@ -1,14 +1,14 @@
 import { CircleAlert, CircleStop } from 'lucide-react'
 import type { UserMessage } from '../../shared/messages'
+import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { LinkedText } from '../links/LinkedText'
-import type {
-  Transcript,
-  TranscriptItem,
-} from '../../shared/transcript/transcript'
+import type { Transcript } from '../../shared/transcript/transcript'
+import type { SingleItem } from '../../shared/transcript/transcript-entries'
 import {
+  continuedBy,
   filesUnread,
   omittedFiles,
   stoppedSummary,
@@ -20,7 +20,6 @@ import controls from '../ui/controls.module.css'
 import { AgentText } from './AgentText'
 import { SentFiles } from './AttachmentChips'
 import { LostEventLine } from './LostEventLine'
-import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
 
 /**
@@ -51,7 +50,7 @@ export interface ItemActions {
 
 /** One part of a session's chat, other than a run of tool calls. */
 export function ItemView(props: {
-  item: TranscriptItem
+  item: SingleItem
   transcript: Transcript
   actions: ItemActions
   readers: ChatReaders
@@ -62,8 +61,6 @@ export function ItemView(props: {
       return <UserBubble message={item.message} />
     case 'agent':
       return <AgentText text={item.text} />
-    case 'tool':
-      return <ToolGroup calls={[item.tool]} />
     case 'turn-end':
       return (
         <TurnEnd
@@ -111,5 +108,13 @@ export function ItemView(props: {
       )
     case 'lost':
       return <LostEventLine marker={item.marker} />
+    case 'continued':
+      return (
+        <ContinuedLine
+          base={item.baseBranch}
+          branch={item.branch}
+          who={continuedBy(item.member, props.readers)}
+        />
+      )
   }
 }

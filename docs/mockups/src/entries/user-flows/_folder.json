@@ -2,17 +2,21 @@
   "title": "User flows",
   "order": [
     "sign-up",
+    "open-sign-up",
     "join",
     "create-workspace",
     "create-workspace-dialog",
     "retry-first-start",
     "reopen-stopped-workspace",
     "open-workspace-from-palette",
+    "send-feedback",
     "archive-from-list",
     "create-org",
     "mac-command",
     "create-routine",
     "link-a-workspace",
+    "merge-and-continue",
+    "open-a-session-link",
     "mention-a-file"
   ]
 }
