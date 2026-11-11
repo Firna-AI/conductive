@@ -91,7 +91,12 @@ const recentKeys = [
 const recentLimit = 5
 
 const archivedRows: readonly WorkspaceRow[] = archivedWorkspaceList.map(
-  (workspace) => ({ workspace, status: 'archived', selected: false }),
+  (workspace) => ({
+    workspace,
+    status: 'archived',
+    github: workspace.github,
+    selected: false,
+  }),
 )
 
 function workspaceRows(rows: readonly WorkspaceRow[]): PaletteRow[] {

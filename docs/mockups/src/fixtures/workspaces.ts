@@ -2,6 +2,7 @@ import { appDomain } from '../brand'
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type PersonKey } from './members'
 import { orgs, type Org } from './orgs'
+import type { GitHubSummary } from './pullRequests'
 import { repositories, type RepositoryKey } from './repositories'
 import type { SectionKey } from './sections'
 
@@ -58,6 +59,12 @@ export type Workspace = {
   choice: AgentChoice
   /** The status in the workspace list when the app opens. */
   status: ActivityStatus
+  /**
+   * The GitHub state of its pull request when the app opens, which the
+   * list mark shows in colour. `null` is a branch without a pull request,
+   * a pull request without checks, or one closed without a merge.
+   */
+  github: GitHubSummary | null
   /** The time since the last activity, such as `2h`. */
   updated: string
   /**
@@ -110,6 +117,7 @@ export const checkoutAutocomplete: Workspace = {
   section: 'checkout',
   choice: defaultChoice,
   status: 'stopped',
+  github: 'checks-passed',
   updated: '2h',
   owner: 'cal',
 }
@@ -132,6 +140,7 @@ export const savedCarts: Workspace = {
   section: 'general',
   choice: defaultChoice,
   status: 'starting',
+  github: null,
   updated: 'now',
   owner: 'cal',
 }
@@ -152,7 +161,7 @@ export const codex: AgentChoice = {
 
 type Details = Pick<
   Workspace,
-  'number' | 'repository' | 'section' | 'status' | 'updated'
+  'number' | 'repository' | 'section' | 'status' | 'github' | 'updated'
 > & {
   /** The ID of the workspace in its link. */
   id: string
@@ -171,6 +180,25 @@ export function workspace(
   return { key, name, link: workspaceLink(id), branch, choice, ...rest, owner }
 }
 
+/**
+ * A workspace whose agent finished a turn that Cal has not read yet. Its
+ * checks passed, so its list mark is green and only its bold name shows
+ * the unread output.
+ */
+export const webhookRetries: Workspace = workspace(
+  'webhook-retries',
+  'Retry failed webhooks',
+  {
+    number: 399,
+    id: 'dKe1UpohWZD_r7BFTPBvx9FhBhZRb5I_Ec77f_T-ALM',
+    repository: 'billing-service',
+    section: 'checkout',
+    status: 'unread',
+    github: 'checks-passed',
+    updated: '5m',
+  },
+)
+
 /** The workspaces of Acme when the app opens, newest first in each section. */
 export const workspaceList: readonly Workspace[] = [
   workspace('email-dark-mode', 'Dark mode for emails', {
@@ -179,6 +207,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'marketing-site',
     section: 'general',
     status: 'starting',
+    github: null,
     updated: 'now',
   }),
   workspace(
@@ -190,6 +219,7 @@ export const workspaceList: readonly Workspace[] = [
       repository: 'billing-service',
       section: 'general',
       status: 'error',
+      github: 'checks-failed',
       updated: '40m',
       owner: 'priya',
     },
@@ -201,6 +231,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'marketing-site',
     section: 'general',
     status: 'stopped',
+    github: 'merged',
     updated: '3d',
     owner: 'priya',
   }),
@@ -213,24 +244,19 @@ export const workspaceList: readonly Workspace[] = [
       repository: 'storefront',
       section: 'checkout',
       status: 'working',
+      github: 'checks-running',
       updated: 'now',
     },
     codex,
   ),
-  workspace('webhook-retries', 'Retry failed webhooks', {
-    number: 399,
-    id: 'dKe1UpohWZD_r7BFTPBvx9FhBhZRb5I_Ec77f_T-ALM',
-    repository: 'billing-service',
-    section: 'checkout',
-    status: 'unread',
-    updated: '5m',
-  }),
+  webhookRetries,
   workspace('apple-pay', 'Apple Pay button', {
     number: 398,
     id: 'Vi1ajLlUgS7Q581Q6lWrNplWT2aOgFeubaecbNP1gDM',
     repository: 'storefront',
     section: 'checkout',
     status: 'ready',
+    github: 'checks-failed',
     updated: '12m',
   }),
   checkoutAutocomplete,
@@ -240,6 +266,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'storefront',
     section: 'infra',
     status: 'ready',
+    github: null,
     updated: '20m',
   }),
   workspace('retry-queue', 'Move retries to a queue', {
@@ -248,6 +275,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'billing-service',
     section: 'infra',
     status: 'stopped',
+    github: 'checks-running',
     updated: '2d',
     owner: 'jonas',
   }),

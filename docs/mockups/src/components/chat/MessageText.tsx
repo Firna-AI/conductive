@@ -30,6 +30,7 @@ function chipOf(row: WorkspaceRow): ChipWorkspace {
     label: workspaceLabel(row.workspace.number),
     name: row.workspace.name,
     status: row.status,
+    github: row.github,
   }
 }
 
@@ -77,6 +78,7 @@ function LinkChip(props: {
       workspace: {
         label: workspaceLabel(row.workspace.number),
         status: row.status,
+        github: row.github,
       },
       title: nameLabel(session.title),
     }

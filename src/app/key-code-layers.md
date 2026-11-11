@@ -14,7 +14,7 @@ feedback. Each path is relative to `src/app/`, the folder of this page.
   ranks the matches. `rowTexts` includes the workspace number label, such
   as `W-395`, in the search texts. `withNumberLabel` adds that label when
   a query word matches it. `../shell/palette/PaletteList.tsx` draws it
-  before the name. `commands.ts` holds the labels and the search words.
+  between the list mark and the name. `commands.ts` holds the labels and the search words.
   `page-actions.ts` gives the offers of the parts of the page and
   `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
   `palette-keys.ts` the palette key and what it does, and `controller.ts`

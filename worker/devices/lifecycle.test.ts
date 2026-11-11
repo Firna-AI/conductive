@@ -239,6 +239,10 @@ it('cancels work when its turn stops and ignores late approvals and results', as
 })
 
 it('stores and publishes numbered workspace input changes on the real chat stream', async () => {
+  await fixture.db
+    .prepare('UPDATE workspaces SET github_summary = ? WHERE id = ?')
+    .bind('checks-failed', WID)
+    .run()
   const mac = await connected(fixture)
   const response = await fixture.runtime.dispatchFetch(
     APP + workspaceEventsPath('org', WID),
@@ -256,13 +260,19 @@ it('stores and publishes numbered workspace input changes on the real chat strea
   const waiting = deviceObject(deviceObject(await inbox.next()).envelope)
   expect(waiting).toMatchObject({
     eventNumber: Number(through) + 1,
-    event: { type: 'workspace.updated', workspace: { state: 'input' } },
+    event: {
+      type: 'workspace.updated',
+      workspace: { state: 'input', github: 'checks-failed' },
+    },
   })
   await sendFrame(mac, { type: 'command.denied', ...ref() })
   const answered = deviceObject(deviceObject(await inbox.next()).envelope)
   expect(answered).toMatchObject({
     eventNumber: Number(through) + 2,
-    event: { type: 'workspace.updated', workspace: { state: 'working' } },
+    event: {
+      type: 'workspace.updated',
+      workspace: { state: 'working', github: 'checks-failed' },
+    },
   })
   expect(JSON.stringify([waiting, answered])).not.toContain(fixture.senderToken)
 })

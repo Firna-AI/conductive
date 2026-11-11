@@ -44,9 +44,9 @@ export const fileMentionChips = defineScreen({
       slug: 'workspace-chip',
       title: 'Remove a workspace chip',
       description:
-        'A pasted workspace link follows the same rule in the message box. Under the pointer, a × takes the place of the state mark, and a press removes the chip. A chip in a sent message has no ×.',
+        'A pasted workspace link follows the same rule in the message box. Under the pointer, a × takes the place of the mark, and a press removes the chip. A chip in a sent message has no ×.',
       rationale:
-        'Decision 215 covers every chip of the composer. The state mark stays at rest and on a phone, so the chip still shows the state of the workspace (decision 211).',
+        'Decision 215 covers every chip of the composer. The mark stays at rest and on a phone, so the chip still shows the state of the workspace (decision 211).',
       props: { composer: 'workspace-link-pointer' },
     },
     {

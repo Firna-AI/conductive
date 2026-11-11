@@ -168,6 +168,7 @@ check in the Mac app.
   answer, with its file chips and session chips, and `mention-copy.ts`,
   the copy of chat text that gives the mention of each file chip in it,
   and leaves out text that the browser leaves out of a copy.
+  `chipOf` in `LinksContext.tsx` gives what a chip shows of its workspace.
 - `links/session-links.ts`: `useLinkedSession`, the session that a chip
   finds: a live session of the chat's workspace, or one of the one read of
   another workspace in `session-reads.ts`, made again for each load of a
