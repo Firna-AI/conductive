@@ -14,9 +14,10 @@ import styles from './ModelPicker.module.css'
 
 /**
  * One picker for the model and the effort of the next message, such as
- * "Opus 5.5 High". The effort shows in a muted colour. `open` draws its
- * menu open. `sessionAgent` is the agent of a session with messages, whose
- * other agent's models open a new session.
+ * "Opus 5.5 High". The effort shows in a muted colour, and so does "Fast"
+ * after it while fast mode is on. `open` draws its menu open.
+ * `sessionAgent` is the agent of a session with messages, whose other
+ * agent's models open a new session.
  */
 export function ModelPicker(props: {
   choice: AgentChoice
@@ -27,10 +28,11 @@ export function ModelPicker(props: {
   const control = useControlSizes()
   const { choice } = props
   const effort = effortLabels[choice.effort]
+  const speed = choice.fast ? ', Fast' : ''
   return (
     <span className={styles.anchor}>
       <Button
-        accessibilityLabel={`Model and effort: ${choice.model}, ${effort}`}
+        accessibilityLabel={`Model and effort: ${choice.model}, ${effort}${speed}`}
         content={
           <span
             className={styles.trigger}
@@ -38,6 +40,7 @@ export function ModelPicker(props: {
           >
             <span className={styles.model}>{choice.model}</span>
             <span className={styles.effort}>{effort}</span>
+            {choice.fast ? <span className={styles.fast}>Fast</span> : null}
             <ChevronDown aria-hidden className={styles.chevron} size={12} />
           </span>
         }

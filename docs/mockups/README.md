@@ -102,6 +102,10 @@ shows them in the New workspace dialog.
   tokens through the `--ui-*` variables that the renderer writes.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
+- A switch at the end of a menu row, such as Fast in the model menu, is a
+  picture, not a control. `SwitchPicture` in `src/components/common/` draws
+  it with the switch styles of `@firna/ui`, and the row owns the
+  `menuitemcheckbox` role.
 
 ## Orgs and members
 

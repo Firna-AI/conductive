@@ -17,6 +17,7 @@
     "reassign",
     "archive",
     "composer",
+    "fast-mode",
     "attachments",
     "workspace-links",
     "file-mentions",

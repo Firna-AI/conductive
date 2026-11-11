@@ -1,5 +1,6 @@
 import type { ComposerState } from '../components/chat/Composer'
 import type { MentionTree } from '../components/chat/FileMentionList'
+import { noFastChoice, type AgentChoice } from '../fixtures/agents'
 import {
   attachmentDraft,
   draftAttachments,
@@ -81,6 +82,18 @@ function chipDraft(composer: WorkspaceState['composer']): string | undefined {
   return link ? workspaceLinkDraft : undefined
 }
 
+/** The model, the effort, and the speed of the next message of a state. */
+function choiceOf(state: WorkspaceState, workspace: Workspace): AgentChoice {
+  switch (state.modelChoice) {
+    case 'workspace':
+      return workspace.choice
+    case 'fast':
+      return { ...workspace.choice, fast: true }
+    case 'no-fast':
+      return noFastChoice
+  }
+}
+
 /** An agent turn runs on a ready sandbox. */
 export function isRunning(state: WorkspaceState): boolean {
   return (
@@ -145,7 +158,7 @@ export function composerFor(
     sendTo = paths.attachmentsSent
   }
   return {
-    choice: workspace.choice,
+    choice: choiceOf(state, workspace),
     running: !fresh && isRunning(state),
     draft,
     attachments: files ?? [],

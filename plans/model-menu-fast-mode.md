@@ -341,27 +341,35 @@ Depends on: none
 
 The model menu of a session, of New workspace, and of Preferences shows the
 Fast switch. The trigger shows Fast. Each screen has a desktop and a phone
-variant.
+variant. Screenshots of the smoke test are in `.context/fast-mode/m1/`.
 
-- [ ] Add `fast` to the mockup choice, and the fast mark to the fixture
-      models, in `docs/mockups/src/fixtures/agents.ts`.
-- [ ] Add a switch row to the mockup menu in
+- [x] Add `fast` to the mockup choice, and the fast mark to the fixture
+      models, in `docs/mockups/src/fixtures/agents.ts`. The field is
+      optional, because the tests of the app reuse these choices.
+- [x] Add a switch row to the mockup menu in
       `docs/mockups/src/components/common/Menu.tsx`, with the switch styles
-      of `@firna/ui/switch`.
-- [ ] Add the Fast row to `pickerMenu` in
+      of `@firna/ui/switch`. `SwitchPicture` draws the switch as decoration.
+- [x] Add the Fast row to `pickerMenu` in
       `docs/mockups/src/components/chat/pickers.ts`. Show Fast in the
       trigger of `docs/mockups/src/components/chat/ModelPicker.tsx`.
-- [ ] Add the child page `app/composer/fast`, because `app/composer` already
-      shows five screens. Show the open menu with the switch off, with the
-      switch on, and for a model without fast. Link it from `app/composer`.
-- [ ] Show the switch in one state of `app/new-workspace` and of
+- [x] Add the page `app/fast-mode`, because `app/composer` already shows
+      five screens. Show the open menu with the switch on and off, the
+      closed trigger with Fast, and a model without fast. The picker state of
+      `app/composer` names the switch. My call on 2026-11-11: a page beside
+      `app/composer`, not the planned child page `app/composer/fast`.
+      Reason: a folder page with child folders shows only its canonical
+      screen, so the child page would move the four states of
+      `app/composer`.
+- [x] Show the switch in one state of `app/new-workspace` and of
       `app/account/preferences`.
-- [ ] Add the states that the answers to decisions 256 and 257 need.
-- [ ] Update `docs/mockups/catalogue.md` for the new page.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Add the states that the answer to decision 256 needs. Its answer A
+      adds no state, because the menu has no note.
+- [x] Update `docs/mockups/catalogue.md` for the new page.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`, with screenshots under `.context/fast-mode/`.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. The state of decision 257 moved to Milestone 6, because
+      it waits for its answer.
 
 ## Milestone 2: Documentation and protocol
 
@@ -425,6 +433,9 @@ tools, and the browser readers.
       `worker/tools/create.ts`, and `worker/tools/lists.ts`. A create call
       without `fast: true` runs at standard speed.
 - [ ] Read `fast` in the runner commands in `runner/src/commands.ts`.
+- [ ] Update the app test fixtures in `src/test-support/fixtures/` that
+      reuse the mockup choices, and keep the comment on `fast` in
+      `docs/mockups/src/fixtures/agents.ts` true.
 - [ ] Read `fast` in the browser readers: `src/app/api/read-core.ts`,
       `src/chat/api/read-chat.ts`, `src/chat/api/read-responses.ts`,
       `src/members/api/parseCore.ts`, and `src/app/boot.ts`.
@@ -457,7 +468,8 @@ Depends on: 1, 3
 The model menus show the switch, and the triggers show Fast.
 
 - [ ] Add a switch row to `src/chat/ui/Menu.tsx` and to
-      `src/shell/ui/MenuList.tsx`, as the mockup shows. Add
+      `src/shell/ui/MenuList.tsx`, as the mockup shows. Draw its switch with
+      `SwitchPicture` from `docs/mockups/src/components/common/`. Add
       `menuitemcheckbox` to the keyboard selector of `src/chat/ui/Menu.tsx`.
 - [ ] Add the Fast row to `src/chat/components/model-menu.ts`
       and to `src/shell/ui/ModelPicker.tsx`. Add `fastFor` beside
@@ -471,20 +483,30 @@ The model menus show the switch, and the triggers show Fast.
       switch, a change to a model without fast, and the trigger text. See
       each new test fail first.
 
-## Milestone 6: The state of decision 257
+## Milestone 6: Mockup of the state of decision 257
 
-Depends on: 4, 5, and the answer to decision 257
+Tags: mockup
+
+Depends on: 1, and the answer to decision 257
+
+- [ ] Add the state that the answer to decision 257 needs. The scratch
+      pictures and patch in `.context/fast-mode/257/` show each option.
+- [ ] Run `npm run mockups:check`, and smoke-test the changed pages.
+
+## Milestone 7: The state of decision 257
+
+Depends on: 4, 5, and 6
 
 - [ ] Apply the chosen option in the runner, the Worker, and the app. Update
       the protocol docs in the same milestone.
 
-## Milestone 7: The key of decision 258
+## Milestone 8: The key of decision 258
 
 Depends on: 5, and the answer to decision 258
 
 - [ ] Apply the chosen option. Option A needs no work.
 
-## Milestone 8: Verification, commit, review, and pull request
+## Milestone 9: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 

@@ -19,10 +19,10 @@ how a screen is built, and links to the other pages.
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Archive from the list, and the menus of each role |
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs, a search, and a search by number |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model, its menu with Fast on, and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
-| `app/new-workspace` | An empty chat, the first build of a new org, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, the first build of a new org, its error, files on the first message, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/org-settings`  | General with Delete org, then Repositories, Cloud computer with the first build of a new org, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, open work, tables in replies, lost data, lost updates, and unread files |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
@@ -30,6 +30,7 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/archive`       | Archive with its check for unpushed work, and the Archived group              |
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
+| `app/fast-mode`     | The Fast switch of the model menu on and off, the trigger with Fast, and a model without fast mode |
 | `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
@@ -113,7 +114,8 @@ the tabs of the org settings are. `app/account/preferences` shows the
 Preferences tab, from decision 142 of PR #73: the New workspaces section
 with Model and effort, and the choice of how New workspace opens on a
 computer, the page or a dialog. Its `not-saved` variant shows a save that failed, which
-keeps the saved choice. `app/account/setup`, `app/account/connect-claude`,
+keeps the saved choice. Its `model-menu` variant shows the menu of the
+picker open, with Fast on. `app/account/setup`, `app/account/connect-claude`,
 and `app/account/connect-codex` show General before the first connections,
 and with the Connect form of each agent open.
 `app/account/share-not-saved` shows General after a login share setting

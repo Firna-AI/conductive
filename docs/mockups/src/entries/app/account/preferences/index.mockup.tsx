@@ -28,5 +28,14 @@ export const preferences = defineScreen({
         'Each change saves at once, as Model and effort does, so the section has no Save. A failed save keeps the saved choice, so the tab never shows a choice that the account does not hold.',
       props: { view: 'page', save: 'failed' },
     },
+    {
+      slug: 'model-menu',
+      title: 'Model menu',
+      description:
+        'The menu of Model and effort is open, with Fast on. New workspaces then start with fast mode on, and the trigger reads "Opus 5.5 High Fast".',
+      rationale:
+        'The saved default is the choice of the same picker, so it carries fast mode too (decision 255).',
+      props: { modelMenu: 'open-fast' },
+    },
   ],
 })

@@ -37,6 +37,7 @@ export const accountSchema = {
     'save',
     'shareChange',
     'invites',
+    'modelMenu',
   ],
   properties: {
     /**
@@ -68,6 +69,11 @@ export const accountSchema = {
      * login that the app did not save.
      */
     shareChange: { enum: ['none', 'not-saved'] },
+    /**
+     * The Model and effort picker of Preferences: closed, or open with
+     * fast mode on.
+     */
+    modelMenu: { enum: ['closed', 'open-fast'] },
   },
 } as const
 
@@ -82,6 +88,7 @@ export const accountGeneral: AccountState = {
   save: 'saved',
   shareChange: 'none',
   invites: 'left',
+  modelMenu: 'closed',
 }
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -162,6 +169,7 @@ export function AccountScreen(props: {
         <GeneralTab state={state} />
       ) : (
         <DefaultsSection
+          fastMenu={state.modelMenu === 'open-fast'}
           saveFailed={state.save === 'failed'}
           view={state.view}
         />

@@ -29,6 +29,7 @@ export const newWorkspaceSchema = {
     'org',
     'firstBuild',
     'viewer',
+    'modelMenu',
   ],
   properties: {
     ...newWorkspaceFormProperties,
@@ -40,6 +41,8 @@ export const newWorkspaceSchema = {
     firstBuild: { enum: firstBuildStates },
     /** Only an admin gets the link to the Cloud computer tab. */
     viewer: { enum: ['admin', 'member'] },
+    /** The menu of the model picker: closed, or open with fast mode on. */
+    modelMenu: { enum: ['closed', 'open-fast'] },
   },
 } as const
 
@@ -55,6 +58,7 @@ export const newWorkspaceForm: NewWorkspaceState = {
   org: 'active',
   firstBuild: 'succeeded',
   viewer: 'admin',
+  modelMenu: 'closed',
 }
 
 /**
@@ -91,6 +95,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   // of Firna and of a linked task leads nowhere.
   const created =
     state.files === 'ready' ? paths.attachmentsQueued : paths.creating
+  const fastMenu = state.modelMenu === 'open-fast'
   return (
     <ChatPane
       composer={{
@@ -100,8 +105,9 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
             ? paths.newWorkspaceFiles
             : undefined,
         blocked: building || waits(state),
-        choice: page.choice,
+        choice: fastMenu ? { ...page.choice, fast: true } : page.choice,
         draft: text,
+        picker: fastMenu,
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
