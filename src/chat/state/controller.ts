@@ -32,6 +32,7 @@ import {
   setDraftText,
 } from './message-actions'
 import { chooseModel } from './model-actions'
+import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
 import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
@@ -227,6 +228,11 @@ export class ChatController {
     removeFile(this.context, sessionId, fileId)
   readonly send = (sessionId: string) =>
     this.write(() => sendDraft(this.context, sessionId))
+  /** Sends a fixed prompt to the session of the chat, as `sendPrompt` says. */
+  readonly sendPrompt = (text: string): Promise<PromptOutcome> =>
+    this.readOnly()
+      ? Promise.resolve('unavailable')
+      : sendPrompt(this.context, text)
   readonly retry = (sessionId: string, messageId: string) =>
     this.write(() => retryTurn(this.context, sessionId, messageId))
   readonly interrupt = (sessionId: string) =>

@@ -5,11 +5,51 @@ import type { InputActivityOwner } from './input-activity-owner'
 import type { ReceiverStorage } from '../members/receiver-storage'
 import { nativeWorkspaceStorage } from './platform-storage'
 import { readEncryptedStartLog } from './start-storage'
+import {
+  readCreationResult,
+  startResultForTransport,
+  type WorkspaceLifecycleTransport,
+} from './workspace-transport'
 
 type WithGeneration = <R>(work: () => Promise<R>) => Promise<R>
 
+type WorkspaceStartController = Pick<
+  WorkspaceController,
+  'waitLifecycleStart' | 'waitCreationLifecycle' | 'readCreationLifecycleResult'
+>
+type WorkspaceStartLogs = Pick<
+  WorkspaceLifecycleTransport,
+  'readLifecycleStartLog'
+>
+
 export function readWorkspaceLog(storage: ReceiverStorage) {
   return readEncryptedStartLog(nativeWorkspaceStorage(storage))
+}
+
+export const workspaceStartResults = {
+  async waitLifecycleStart(
+    controller: WorkspaceStartController,
+    logs: WorkspaceStartLogs,
+  ): ReturnType<WorkspaceLifecycleTransport['waitLifecycleStart']> {
+    return startResultForTransport(await controller.waitLifecycleStart(), () =>
+      logs.readLifecycleStartLog(),
+    )
+  },
+  async waitCreationLifecycle(
+    controller: WorkspaceStartController,
+    logs: WorkspaceStartLogs,
+  ): ReturnType<WorkspaceLifecycleTransport['waitCreationLifecycle']> {
+    return startResultForTransport(
+      await controller.waitCreationLifecycle(),
+      () => logs.readLifecycleStartLog(),
+    )
+  },
+  readCreation(
+    controller: WorkspaceStartController,
+    logs: WorkspaceStartLogs,
+  ): ReturnType<WorkspaceLifecycleTransport['readCreationLifecycleResult']> {
+    return readCreationResult(controller, () => logs.readLifecycleStartLog())
+  },
 }
 
 export function runWorkspaceLifecycle<T>(

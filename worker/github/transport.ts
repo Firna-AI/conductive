@@ -4,7 +4,7 @@ import { readBoundedBody } from '../http/bounded-body'
 import { githubFailure, object } from './parsers'
 
 const GITHUB_API_VERSION = '2026-03-10'
-const BODY_BUDGET = 26 * 1024 * 1024
+export const GITHUB_API_BODY_BYTES = 26 * 1024 * 1024
 
 export function githubRequest(
   path: string,
@@ -14,7 +14,6 @@ export function githubRequest(
   return new Request(`https://api.github.com${path}`, {
     ...init,
     redirect: 'manual',
-    signal: AbortSignal.timeout(30_000),
     headers: {
       Accept: 'application/vnd.github+json',
       Authorization: `Bearer ${token}`,
@@ -25,21 +24,38 @@ export function githubRequest(
   })
 }
 
+/** Keep the deadline through body reads, then release its pending timer. */
+export async function withGitHubResponse<T>(
+  fetch: HttpFetch,
+  request: Request,
+  read: (response: Response) => Promise<T>,
+): Promise<T> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 30_000)
+  const signal = AbortSignal.any([request.signal, controller.signal])
+  try {
+    return await read(await fetch(new Request(request, { signal })))
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export async function githubJson(
   fetch: HttpFetch,
   request: Request,
 ): Promise<unknown> {
   try {
-    const response = await fetch(request)
-    if (!response.ok) {
-      void response.body?.cancel().catch(() => undefined)
-      throw githubFailure()
-    }
-    const body =
-      response.body === null
-        ? new Uint8Array(0)
-        : await readBoundedBody(response.body, BODY_BUDGET)
-    return JSON.parse(new TextDecoder().decode(body))
+    return await withGitHubResponse(fetch, request, async (response) => {
+      if (!response.ok) {
+        void response.body?.cancel().catch(() => undefined)
+        throw githubFailure()
+      }
+      const body =
+        response.body === null
+          ? new Uint8Array(0)
+          : await readBoundedBody(response.body, GITHUB_API_BODY_BYTES)
+      return JSON.parse(new TextDecoder().decode(body))
+    })
   } catch (error) {
     throw linkWorkerError(githubFailure(), error)
   }

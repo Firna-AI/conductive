@@ -31,6 +31,7 @@ export function captureWorkerWarning(
     case 'workspace_title_unconfigured':
     case 'runner_message_failed':
     case 'runner_protocol_version_mismatch':
+    case 'git_credential_failed':
       return
   }
   if (userScriptFailure(warning, error)) return

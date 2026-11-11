@@ -5,7 +5,7 @@ how the lifecycle code builds and refreshes the org image. The org image is
 the saved snapshot that every new sandbox of an org starts from. It also
 gives the provider retry policy that builds, refreshes, and workspace
 starts share. [Build sandboxes](#build-sandboxes) describes their starting
-image and the clone token of each copy. [Key Code](#key-code) names the
+image and the clone token of each copy. [Key code](#key-code) names the
 files of the image code.
 
 ## Build sandboxes
@@ -198,7 +198,7 @@ coordinator sets no new alarm.
 [Operator actions](../../docs/protocol/operator-actions.md#starts-stops-and-builds)
 states the rule.
 
-## Key Code
+## Key code
 
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
 - [`build-changes-data.ts`](build-changes-data.ts): `readBuildChanges`, the
@@ -226,6 +226,7 @@ states the rule.
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
+- [Software images](../software-image/README.md): the shared software builds and their cleanup.
 - [`image-software.ts`](image-software.ts): the runner archive check and
   install/start commands.
 - [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned

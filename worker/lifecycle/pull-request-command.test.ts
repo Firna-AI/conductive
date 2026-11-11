@@ -16,7 +16,9 @@ it.each(['head', 'missing-head', 'merged'] as const)(
       const base = kind === 'merged' ? 'release/next' : 'feature/review'
       await h.git('config', '--unset-all', 'remote.origin.fetch')
       const first = await h.createRemoteCommit(`refs/heads/${base}`)
-      const latest = await h.createRemoteCommit(`refs/heads/${base}`, first)
+      const latest = await h.createRemoteCommit(`refs/heads/${base}`, {
+        parent: first,
+      })
       const id = h.auth.workspaceId
       const row = await readWorkspace(
         fixture.runtime.env.DB,
@@ -44,7 +46,7 @@ it.each(['head', 'missing-head', 'merged'] as const)(
         ],
       }
       const fetched = await h.execute(
-        workspacePhaseCommand(row, { ...job, phase: 'fetch' }),
+        workspacePhaseCommand(row, { ...job, phase: 'fetch' }, null),
       )
       expect(fetched.exitCode, fetched.stderr).toBe(0)
       expect(
@@ -55,7 +57,7 @@ it.each(['head', 'missing-head', 'merged'] as const)(
         ),
       ).toBe(`${latest}\n`)
       const branched = await h.execute(
-        workspacePhaseCommand(row, { ...job, phase: 'branch' }),
+        workspacePhaseCommand(row, { ...job, phase: 'branch' }, null),
       )
       expect(branched.exitCode, branched.stderr).toBe(0)
       expect(await h.git('branch', '--show-current')).toBe(`${row.branch}\n`)

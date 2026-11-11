@@ -3,11 +3,13 @@ import { expect, it } from 'vitest'
 import { routes as appRoutes } from '../../src/app/router'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { FEEDBACK_PATH } from '../../src/shared/feedback'
+import { githubPaths } from '../../src/shared/github'
 import { GITHUB_INSTALL_PATH } from '../../src/shared/github-setup'
 import { operatorWaitlistSwitchPath } from '../../src/shared/operator-waitlist'
 import { routinePaths } from '../../src/shared/routines'
 import { sessionTranscriptPath } from '../../src/shared/sessions'
 import { joinPath } from '../../src/shared/waitlist'
+import { workspacePaths } from '../../src/shared/workspaces'
 import { PREVIEW_HANDOFF_PATH } from '../security/preview-launch-path'
 import { workerRouteTemplate } from './routes'
 
@@ -26,8 +28,25 @@ it('keeps code-owned route segments and replaces all parameters', () => {
   expect(workerRouteTemplate('/private/path?token=private')).toBe(
     '/:param/:param',
   )
+  expect(workerRouteTemplate('/private/undefined')).toBe('/:param/:param')
   const supportedRoutes = [
     [FEEDBACK_PATH, '/api/feedback'],
+    [
+      githubPaths.mergeResult(
+        'private-org',
+        'private-workspace',
+        'private-job',
+      ),
+      '/api/orgs/:param/workspaces/:param/github/merge/:param',
+    ],
+    [
+      workspacePaths.continueResult(
+        'private-org',
+        'private-workspace',
+        'private-job',
+      ),
+      '/api/orgs/:param/workspaces/:param/continue/:param',
+    ],
     [operatorWaitlistSwitchPath(), '/api/operator/waitlist-switch'],
     [
       routinePaths.runNow('private-org', 'private-routine'),

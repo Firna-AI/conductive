@@ -23,7 +23,7 @@ export function agentInstructions(
   context: WorkspaceContext,
 ): Record<Agent, string> {
   const workspace = [
-    `You work in a workspace of ${productName}. A workspace is one task with its own branch and its own cloud computer.`,
+    `You work in a workspace of ${productName}. A workspace has its own cloud computer and one branch at a time. It can hold one task after another.`,
     `Workspace repository folder: ${JSON.stringify(context.cwd)}`,
     ...Object.entries(context.repositoryDirectories ?? {})
       .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))

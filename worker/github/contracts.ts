@@ -39,6 +39,7 @@ export interface GitHubRefresh {
   userId?: string
   pushBranch?: string
   retryAttempt?: number
+  requireWritable?: true
 }
 
 export interface GitHubRefreshRequest {

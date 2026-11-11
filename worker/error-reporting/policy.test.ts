@@ -68,6 +68,12 @@ it('reports typed safe warning values and keeps IDs, normal refusals, user scrip
       kind: 'runner_protocol_version_mismatch',
       workspaceId: WarningId.checked(id),
     })
+    captureWorkerWarning({
+      kind: 'git_credential_failed',
+      workspaceId: WarningId.checked(id),
+      turn: true,
+      error: errorSummary(error),
+    })
   })
   await flushReporting(fixture.runtime)
   expect(fixture.envelopes).toHaveLength(1)

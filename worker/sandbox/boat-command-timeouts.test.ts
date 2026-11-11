@@ -5,13 +5,6 @@ import { BoatClient } from './boat'
 
 it('aborts detached command starts and status reads at 30 seconds while waited commands keep running', async () => {
   vi.useFakeTimers()
-  const timeout = vi
-    .spyOn(AbortSignal, 'timeout')
-    .mockImplementation((delay) => {
-      const controller = new AbortController()
-      setTimeout(() => controller.abort(), delay)
-      return controller.signal
-    })
   try {
     const signals: AbortSignal[] = []
     const fetch: HttpFetch = (request) => {
@@ -54,7 +47,6 @@ it('aborts detached command starts and status reads at 30 seconds while waited c
     })
     await results
   } finally {
-    timeout.mockRestore()
     vi.useRealTimers()
   }
 })

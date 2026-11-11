@@ -27,6 +27,8 @@ import type { EngineOptions } from './engine-session'
 import type { EventStore } from './state'
 import { PortReporter, type PortReporterOptions } from './ports'
 import { privatePortReport } from './port-report-budget'
+import { onRestoreEnd } from './restore-end'
+import { TERMINAL_RESTORE_MARKER } from '../../src/shared/restore-marker'
 
 type RunnerConnector = TransportRunnerConnector<WorkspaceToRunner>
 
@@ -42,6 +44,8 @@ export interface RunnerOptions extends WorkspaceContext {
   warn: (message: string) => void
   disconnected: () => void
   ports?: PortReporterOptions
+  /** Tests use a temporary path. The service uses the sandbox marker. */
+  restoreMarker?: string
 }
 
 export class Runner {
@@ -55,6 +59,7 @@ export class Runner {
   private readonly commands = new Set<Promise<void>>()
   private readonly refreshed: Set<string>
   private stopWatching: (() => void) | null = null
+  private stopRestoreWatch: (() => void) | null = null
   private stopped = false
   private warmed = false
   private watchFiles = true
@@ -83,7 +88,25 @@ export class Runner {
     )
     this.engine = new AgentEngine({
       ...options,
-      instructions: agentInstructions(options),
+      instructions: (branches) => ({
+        text: agentInstructions({
+          ...options,
+          ...(branches
+            ? {
+                workspaceBranch: branches.workspaceBranch,
+                defaultBranch: branches.targetBranch,
+              }
+            : {}),
+        }),
+        branches:
+          branches ??
+          (options.workspaceBranch
+            ? {
+                workspaceBranch: options.workspaceBranch,
+                targetBranch: options.defaultBranch,
+              }
+            : null),
+      }),
       tools: workspaceToolRuntime(options.request),
       checkpoint: (signal) =>
         checkpoint(new Repository(options.cwd, options.warn, signal)),
@@ -166,8 +189,13 @@ export class Runner {
       await this.options.warm()
       this.warmed = true
     }
-    if (this.watchFiles && !this.stopWatching)
+    if (this.watchFiles && !this.stopWatching) {
       this.stopWatching = this.files.watch(this.options.warn)
+      this.stopRestoreWatch = onRestoreEnd(
+        this.options.restoreMarker ?? TERMINAL_RESTORE_MARKER,
+        () => this.watchRestoredFiles(),
+      )
+    }
     this.ports?.watch()
     await this.link.connect()
   }
@@ -181,12 +209,23 @@ export class Runner {
 
   async close(): Promise<void> {
     this.stopped = true
+    this.stopRestoreWatch?.()
     this.stopWatching?.()
     const closingPorts = this.ports?.close()
     await this.engine.close()
     await closingPorts
     await this.link.persist()
     this.link.close()
+  }
+
+  /** A watch made before the disk restore ended still sees the old view. */
+  private watchRestoredFiles(): void {
+    if (this.stopped || !this.stopWatching) return
+    this.stopWatching()
+    this.stopWatching = this.files.watch(this.options.warn)
+    void this.files
+      .refresh()
+      .catch(() => this.options.warn('The file lists could not update.'))
   }
 
   private emit(

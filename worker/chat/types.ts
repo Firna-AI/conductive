@@ -142,6 +142,9 @@ export type ChatCallbackPublisher = (
 
 export interface ChatDependencies {
   reporting?: WorkspaceErrorReporting
+  readBranches(
+    workspaceId: string,
+  ): Promise<import('../../src/shared/runner').RunnerBranches | null>
   readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,

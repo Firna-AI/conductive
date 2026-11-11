@@ -2,7 +2,8 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 stream cursor, the session logs, the transcript items and their counts,
-the lost lines, the turns, the work fold of each ended turn, and Try again.
+the lost lines, the turns, the open run of tool calls of a running turn,
+the work fold of each ended turn, and Try again.
 
 - The stream cursor spans the whole workspace: every session, file, and
   workspace event. It drops a resent event, holds an event after a gap until
@@ -34,6 +35,11 @@ the lost lines, the turns, the work fold of each ended turn, and Try again.
 - `Transcript.turns` lists the turns that accepted events named, in the order of their first event, and whether each one ended.
   The last one is the newest turn. A turn ends with its completion or failure, with a refused end while it runs, or when a newer turn starts.
 - Each item stays with its turn: before any request or item of a later turn, and before a message that no turn has taken yet.
+- While a turn runs, only the run that holds the newest tool call of the turn shows its calls, as
+  [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn) says.
+  It stays open between two calls, after a message or an insert that follows it, and while a message waits for the turn.
+  Each earlier run of the turn is folded, also when one of its calls failed. A newer run folds it.
+  When the turn ends, its work folds as the rules below say. Each other run shows its calls only while one of its calls is not done.
 - An accepted event of a turn that has ended shows inside that turn, before the row where the turn ended.
   It brings back no Working row and no Stop, and it changes neither a running turn nor the newest turn.
   A running tool of an ended turn shows as stopped. The files of a late end show as a file row, and the stopped line keeps its member.
@@ -63,4 +69,8 @@ the lost lines, the turns, the work fold of each ended turn, and Try again.
   So a late failure of the older turn can name the same message. Then only the item of the newer known turn offers Try again.
 - The Worker refuses an old Try again, such as from a second tab that missed newer events, with `409 retry_not_available`.
   The chat then shows the notice "The turn didn't restart" with the Worker's plain message.
+- Each `workspace.continued` event of a session becomes one `continued` item at its place among the events.
+  The line names the member who pressed Continue, "You" to that member, the new branch, and its base, with `ContinuedLine` of the mockups.
+  The item takes its ID from the new branch, so a repeat of the note replaces it. It belongs to no turn, so it never folds into work.
+  A closed session gets the note in its stored history, so a session that opens later shows it.
 - Ordered history folding preserves these fields and lines across completion and failure events.

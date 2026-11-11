@@ -11,6 +11,7 @@ import { lifecycleCommand } from './command-intents'
 import { workspacePhaseCommand } from './start-command'
 import { workspaceEnvironmentSettings } from './settings-data'
 import { environmentSecrets } from './org-environment'
+import { ownerCommitAuthor } from './sandbox-environment'
 import { readWorkspaceToken } from './tokens'
 import type {
   StartJobStorage,
@@ -65,7 +66,13 @@ export async function advanceStartCommand(
         job.phase,
         job.phase === 'terminal'
           ? terminalStartCommand()
-          : workspacePhaseCommand(row, job),
+          : workspacePhaseCommand(
+              row,
+              job,
+              job.phase === 'startup'
+                ? await ownerCommitAuthor(env.DB, row.ownerUserId)
+                : null,
+            ),
       ),
     )
     await storage.update({ ...job, processId: started.processId })

@@ -60,10 +60,24 @@ export function requiredString(value: unknown): string {
   return value.trim()
 }
 
-export function privateResponse(response: Response): Response {
-  response.headers.set('Cache-Control', 'no-store')
+function securityHeaders(response: Response): Response {
   if (!response.headers.has('Referrer-Policy'))
     response.headers.set('Referrer-Policy', 'no-referrer')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   return response
+}
+
+export function privateResponse(response: Response): Response {
+  response.headers.set('Cache-Control', 'no-store')
+  return securityHeaders(response)
+}
+
+/**
+ * A preview reply keeps the cache rules that the preview code set.
+ * A reply without rules gets `no-store`. A bare 304 keeps the rules of the reply that the browser stored.
+ */
+export function previewResponse(response: Response): Response {
+  if (!response.headers.has('Cache-Control') && response.status !== 304)
+    response.headers.set('Cache-Control', 'no-store')
+  return securityHeaders(response)
 }

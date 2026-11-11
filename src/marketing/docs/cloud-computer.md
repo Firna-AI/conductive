@@ -114,9 +114,15 @@ Values and marks apply at the next start of each workspace's computer.
 Every workspace receives the org's environment values, except values with a name that Conductive sets itself.
 Agents and members with terminal access can read the values that the computer receives.
 
-Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for commit authors and committers.
+In an agent turn, Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for the agent's commands.
+These values name the person whose message started the turn.
+They take priority over every Git setting.
 An org variable with one of these names has no effect.
-These values also take priority over an author that a script or an agent writes into Git settings.
+Outside an agent turn, Git takes the workspace owner's author from the computer's system Git settings.
+Conductive writes these settings at each start.
+The owner's author takes priority over a `user.name` or `user.email` setting.
+An `author` or `committer` setting in the repository or in the global Git settings takes priority over the owner's author.
+In a workspace with older cloud computer software, agent commits name the workspace owner.
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
@@ -130,12 +136,19 @@ A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
 Adding a repository starts a build automatically.
-A build also installs the newest Conductive cloud computer software.
-An existing workspace keeps the software of the setup that it started from, also after a resume.
-To get newer software, start a new workspace after an admin runs **Build computer**.
+A build includes the current Conductive cloud computer software.
+An existing workspace keeps its software after a resume.
+**Continue** keeps that same computer and software for the workspace's next task.
+A new build does not replace the existing computer.
+Installing updated agent software in an older computer does not change its protection for saved agent logins.
+
+Ask an admin to run **Build computer**.
+After it succeeds, create a new workspace for newer software and the new protection.
 This also gives the new workspace the server list in **Preview**.
 The same steps give it the tools that create sessions, send messages, and read chats across the org.
 Resuming an existing workspace does not update its installed tools.
+
+- [Understand agent login protection](/docs/security#protect-agent-and-github-logins)
 
 After the first successful build, removed repositories and saved install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build runs.

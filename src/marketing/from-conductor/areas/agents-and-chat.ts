@@ -63,7 +63,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Stop, retry, and background tasks',
     status: 'available',
-    note: 'Stop ends a turn. Try again retries the latest failed turn. Background task controls are under consideration.',
+    note: 'Stop ends a turn, and Try again retries the latest failed turn. Keeping turns open for background work with agents powered by Claude is planned.',
   },
   {
     id: 'plan-mode',
@@ -148,9 +148,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'session-links',
     area: 'agents-and-chat',
     name: 'Session links',
-    status: 'in-progress',
-    note: 'Links that open individual chat sessions, shown as chips in chat, are in progress.',
-    due: null,
+    status: 'available',
+    note: 'Session links open one chat session and show as chips in chat. Agent tools give these links; Copy link copies only the workspace link.',
   },
   {
     id: 'copy-session-transcripts',

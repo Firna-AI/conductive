@@ -165,7 +165,7 @@ Its access checks use the scheduler that the test injects. Production has no def
 
 `WorkspaceAlarms` in [features/alarms.ts](features/alarms.ts) keeps the due time of each source in its `alarm:<source>` marker, and it sets the one platform alarm.
 The security sources are `browser`, `runner`, and `devices`. They use raw storage, so a member fence cannot refuse their writes.
-The regular sources are the lifecycle tasks, `github`, and `previews`. They use the guarded receiver storage, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
+The regular sources are the lifecycle tasks, `github`, `previews`, and `continue`. They use the guarded receiver storage, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
 [The object alarm scheduler](lifecycle/alarm-scheduler.md) gives the shared rules, such as the lifecycle run lease and the steps at the end of each run.
 
 `Workspace.alarm` calls `WorkspaceAlarmRunner.alarm` in [features/workspace-alarm.ts](features/workspace-alarm.ts).

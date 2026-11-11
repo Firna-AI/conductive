@@ -106,7 +106,6 @@ export async function queuedAccessRace(
             ...snapshot.banner,
             state: 'none',
             pullRequest: null,
-            createPullRequestUrl: null,
           },
         }
       },

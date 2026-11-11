@@ -55,6 +55,7 @@ export function createChatContext(
     picks: new Map(),
     moves: new Map(),
     newId: options.newId ?? (() => crypto.randomUUID()),
+    prompts: new Map(),
     newDraftId: () => {
       drafts += 1
       return `draft-${drafts}`

@@ -12,8 +12,11 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   title: 'Working in an org',
   blocks: [
     list(
-      text`Every member of an org sees all of its workspaces and all of its
-        routines, and can send messages in each workspace.`,
+      text`Every member of an org sees all of its workspaces and routines.
+        In an active org, members can send messages in workspaces that are
+        not archived.
+        After a pull request merges, every member can use Continue to start
+        the next task in that workspace.`,
       text`The workspace tools let agents create and list sessions, send
         messages, and read chats in every workspace of the org.
         A workspace token is a credential for those tools. Any program
@@ -30,8 +33,11 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         owner allows it. Otherwise, the message of another member starts a
         new session on the login of that member. Each turn's git calls use
         a GitHub token of the member whose message started the turn.
-        Pushes and pull requests show as that member. Outside an agent
-        turn, the GitHub CLI uses the workspace owner's account.
+        Pushes and pull requests show as that member. A merge from the app
+        uses the GitHub token of the member who clicks. GitHub shows that
+        member as the merger and checks their rights and the branch rules.
+        Outside an agent turn, the GitHub CLI uses the workspace owner's
+        account.
         Each terminal connection uses that same account.`,
       text`That GitHub token reaches every repository where that person
         installed the GitHub App and has access, not only the
@@ -44,8 +50,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         login only when its provider's terms allow that use.`,
       text`While a turn runs, its GitHub token is in the cloud computer of
         the workspace. A member with a terminal in that cloud computer can
-        read it. A member with a terminal can also get the workspace
-        owner's GitHub token without a running turn.`,
+        read it. During Continue, the fetch uses the GitHub token of the
+        member who clicks. A member with a terminal can also read that token
+        while the fetch runs. A member with a terminal can also get the
+        workspace owner's GitHub token without a running turn.`,
       text`In a newer cloud computer, each turn gets a credential in place
         of the agent login. A member with a terminal or a program in that
         cloud computer can read the credential of a turn that runs there.

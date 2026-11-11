@@ -7,6 +7,7 @@ Its links are relative to the Worker folder.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
 - [application-scheduled.ts](application-scheduled.ts): `scheduledWorker` dispatches the minute routine scan and the 15-minute maintenance through the cron reporting boundary.
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
+  `previewResponse` adds the same security headers to each reply of the preview host. It keeps the cache rules that the preview code set. A reply without rules gets `no-store`, except a bare 304.
 - [software-image/README.md](software-image/README.md) owns software image builds, the deploy token gate, and Cron cleanup.
 - [lifecycle/repair.ts](lifecycle/repair.ts) repairs overdue disk, archive, and image alarms from the Cron Trigger.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
@@ -30,8 +31,8 @@ Its links are relative to the Worker folder.
 - [error-reporting/policy.ts](error-reporting/policy.ts): `captureWorkerWarning` and `captureUnexpectedWorkerFailure` decide which warnings and caught failures report.
 - [error-reporting/workspace.ts](error-reporting/workspace.ts): `workspaceErrorReporting`, the fresh reporting scope of each Durable Object callback.
 - [error-reporting/response-diagnostics.ts](error-reporting/response-diagnostics.ts) owns the bounded private cause that a Durable Object hands to the Worker with a 5xx response.
-- [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of the regular owners of each alarm run: the lifecycle run, the previews, and GitHub. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
-- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the previews, GitHub, and the `browser`, `runner`, and `devices` security sources. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage. [The object alarm scheduler](lifecycle/alarm-scheduler.md) gives its rules.
+- [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of the regular owners of each alarm run: a running Continue, the lifecycle run, the previews, and GitHub. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
+- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the previews, GitHub, Continue, and the `browser`, `runner`, and `devices` security sources. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage. [The object alarm scheduler](lifecycle/alarm-scheduler.md) gives its rules.
 - [features/workspace-alarm.ts](features/workspace-alarm.ts): `WorkspaceAlarmRunner`, the short native alarm handler, the security work before the fences, and the fenced regular work.
 - [features/alarm-tasks.ts](features/alarm-tasks.ts): `WorkspaceAlarmTasks`, the tracked background work of an alarm.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.

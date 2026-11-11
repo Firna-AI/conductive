@@ -15,12 +15,16 @@ function command() {
     turnId: original.turnId,
     message: original.message,
     attachments: original.attachments,
+    branches: { workspaceBranch: 'owner/continued', targetBranch: 'trunk' },
     credential: {
       agent: 'claude',
       kind: 'api-key',
       token: 'sk-ant-api-turn-token',
     },
-    commitAuthor: null,
+    commitAuthor: {
+      name: 'Alice Example',
+      email: '1+alice@users.noreply.github.com',
+    },
   }
 }
 
@@ -68,6 +72,7 @@ it('parses a turn credential and a message without a credential', () => {
     turnId: input.turnId,
     message: input.message,
     attachments: [],
+    branches: { workspaceBranch: 'owner/continued', targetBranch: 'trunk' },
   })
   expect(() =>
     parse({

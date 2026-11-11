@@ -40,6 +40,7 @@ export async function repositoryFixture() {
   await write('a1.txt', 'plain old\n')
   await git('add', '.')
   await git('commit', '-m', 'base')
+  await git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   await git('checkout', '-b', 'task')
   onTestFinished(() => rm(home, { recursive: true, force: true }))
   return { home, root, git, write }

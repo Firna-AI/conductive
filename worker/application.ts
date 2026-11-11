@@ -11,7 +11,12 @@ import { SITE_FOLDER } from '../src/shared/site-build'
 import type { AppDependencies, AppEnv } from './env'
 import { githubInstallResponse, githubSetupResponse } from './github-setup'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
-import { errorResponse, HttpError, privateResponse } from './http'
+import {
+  errorResponse,
+  HttpError,
+  previewResponse,
+  privateResponse,
+} from './http'
 import { requestBodyEntry } from './http/request-body'
 import { routeModelGateway } from './model-gateway/route'
 import { gatewayWorkspaceAllowed } from './model-gateway/workspace-access'
@@ -87,7 +92,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return await marketingResponse(request, env, dependencies.now())
         }
         if (surface === 'preview')
-          return respond(await routePreview(request, env, dependencies))
+          return previewResponse(await routePreview(request, env, dependencies))
         if (surface === 'app') {
           checkOrigin(request, env)
           if (appApi && !upgrade) {

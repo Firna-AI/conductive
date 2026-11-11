@@ -75,6 +75,12 @@ export type WorkerWarning =
       error: ErrorSummary
     }
   | {
+      kind: 'git_credential_failed'
+      workspaceId: WarningId | null
+      turn: boolean
+      error: ErrorSummary
+    }
+  | {
       kind: 'terminal_start_failed'
       workspaceId: WarningId
       exitCode: number | null
@@ -106,6 +112,7 @@ const messages = {
   workspace_start_ended: 'A workspace start ended as failed.',
   workspace_first_message_failed:
     'A workspace could not admit its first message.',
+  git_credential_failed: 'A Git credential request failed.',
   terminal_start_failed: 'The terminal of a workspace did not start.',
   image_build_failed: 'An image build failed.',
   runner_message_failed:

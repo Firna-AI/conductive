@@ -17,9 +17,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         in the repository can send these requests to another address
         instead.`,
       text`GitHub signs you in, and gives ${productName} access to your
-        repositories through its GitHub App. Each commit made in a cloud
-        computer carries its author's GitHub display name or login and
-        GitHub no-reply address. That address contains the author's GitHub
+        repositories through its GitHub App. By default, each commit made in
+        a cloud computer carries its author's GitHub display name or login
+        and GitHub no-reply address. That address contains the author's GitHub
         user ID and login. GitHub and each reader of the repository see
         that name and address. The Mac app also checks
         GitHub for updates and downloads new versions. These requests
@@ -46,9 +46,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         code when an agent works on them. Each Mac command request and its
         result also go to the agent and to Anthropic or OpenAI.
         With each message, they also get
-        the GitHub login and the display name of its sender. They also get
-        the name of the workspace branch, which starts with the GitHub
-        login of the first owner of the workspace. From a newer cloud
+        the GitHub login and the display name of its sender. They get the
+        names of the workspace branch and the branch that a pull request
+        targets. Later messages give the current names when either branch
+        changes. Each workspace branch starts with the GitHub login of the
+        workspace owner when that branch is created. From a newer cloud
         computer, the agents send them through ${productName}, which adds
         the agent login. With the older software in an older cloud
         computer, the agents send them directly, with the agent login. In
@@ -65,7 +67,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         their chats, and each Mac command request and result. They also see
         the routines of the org, with their prompts and their runs.
         A member with a terminal in a cloud computer can read
-        the GitHub token of a turn that runs there. Outside an agent turn,
+        the GitHub token of a turn that runs there. During Continue, they
+        can also read the GitHub token of the member who clicked, while the
+        branch fetch runs. Outside an agent turn,
         the GitHub CLI uses the workspace owner's account. Each member with
         a terminal can get that owner's GitHub token without a running
         turn.`,

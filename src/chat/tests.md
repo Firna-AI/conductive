@@ -4,6 +4,12 @@ This guide belongs to [the chat](README.md). It says what each test file of
 the chat checks. [Tests](README.md#tests) gives the command and the shared
 helpers.
 
+`state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
+checks the request and the unchanged draft, a send during a turn, a missing
+login, a linked session, and the client ID of a second try in the same and
+in another session. `components/ContinuedNote.test.tsx` folds the note of
+Continue once at its place, also after a repeat and in a new tab, in the
+history of a closed session, and draws "You" or the name of the member.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
@@ -20,7 +26,11 @@ refuses. `components/FirstStart.dom.test.tsx` mounts the chat without a
 host, sends with Enter and Send during the first start and after it failed,
 and checks the saved message on the bar of a failed first start and of a
 failed resume. `components/WorkFold.dom.test.tsx` reads the folds of ended
-turns from the rendered chat. `components/OpenFold.dom.test.tsx` opens a
+turns from the rendered chat. It also checks that only the newest run of
+tool calls of a running turn stays open: between two calls, after a
+message, and while a message waits. A newer run folds it, and so does the
+end of the turn.
+`components/OpenFold.dom.test.tsx` opens a
 fold and a message line, and checks that each line keeps its place. It
 also presses a workspace chip in a message line, with and without a
 modifier key. It also opens a message line with a table: the closed line

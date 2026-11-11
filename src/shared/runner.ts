@@ -106,12 +106,19 @@ export interface RunnerAttachment {
   path: string
 }
 
+export interface RunnerBranches {
+  workspaceBranch: string
+  targetBranch: string
+}
+
 interface RunnerTurnV1 {
   type: 'turn'
   commandId: string
   sessionId: string
   turnId: string
   message: UserMessage
+  /** Current Worker branches. Older command producers can omit them. */
+  branches?: RunnerBranches
   attachments: readonly RunnerAttachment[]
   /** The session starter owns this login, whoever sent the message. */
   login: RunnerLogin
@@ -125,6 +132,7 @@ interface RunnerMessageDuringTurnV1 {
   sessionId: string
   turnId: string
   message: UserMessage
+  branches?: RunnerBranches
   attachments: readonly RunnerAttachment[]
   login: RunnerLogin
   credential?: never

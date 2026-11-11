@@ -10,6 +10,7 @@ import previewRelayService from '../../image/conductive-preview-relay.service?ra
 import previewRelaySocket from '../../image/conductive-preview-relay.socket?raw'
 import previewRelayStart from '../../image/preview-relay-start.sh?raw'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import type { CommitAuthor } from '../../src/shared/commit-author'
 import { HttpError, isRecord } from '../http'
 import { terminalInstallCommand } from '../terminal/service'
 import { shellQuote, writeFileCommand } from './commands'
@@ -95,8 +96,26 @@ export function installImageSoftware(artifact: ImageSoftwareArtifact): string {
   ].join('\n')
 }
 
+/**
+ * Git uses the owner's author outside an agent turn. The `author` and
+ * `committer` keys win over a `user` setting that a script writes into a
+ * repository. The runner's turn variables win over both.
+ */
+function ownerGitSettingsCommand(owner: CommitAuthor): string {
+  return [
+    '(',
+    '  umask 022',
+    ...['author', 'committer'].flatMap((role) => [
+      `  sudo -n git config --system ${role}.name ${shellQuote(owner.name)}`,
+      `  sudo -n git config --system ${role}.email ${shellQuote(owner.email)}`,
+    ]),
+    ')',
+  ].join('\n')
+}
+
 export function workspaceStartupCommand(
   script: SavedScript,
+  owner: CommitAuthor | null,
   mode: 'workspace' | 'retention' = 'workspace',
 ): string {
   const path =
@@ -106,6 +125,7 @@ export function workspaceStartupCommand(
   return [
     'set -eu',
     'umask 077',
+    ...(owner ? [ownerGitSettingsCommand(owner)] : []),
     'sudo -n install -d -m 700 -o user -g user /run/conductive',
     savedScriptCommand(path, script, [
       'set -a',

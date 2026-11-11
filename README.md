@@ -1,17 +1,18 @@
 # Conductive
 
 Conductive is a coding tool at `conductive.build`, in the browser and in a
-Mac app. Each workspace is one task with its own branch and its own cloud
-computer, where agents powered by Claude and Codex work. The agents run
-only in the cloud. It replaces Conductor Cloud, which shuts down on
-20 November 2026.
+Mac app. Each workspace has its own cloud computer, where agents powered by
+Claude and Codex work, and one branch at a time. It can hold one task after
+another. The agents run only in the cloud. It replaces Conductor Cloud,
+which shuts down on 20 November 2026.
 
 ## Status
 
 Today the repository holds:
 
-- the [architecture doc](docs/architecture.md) and the protocol docs, which
-  state the requirements
+- the [architecture doc](docs/architecture.md) and the
+  [protocol docs](docs/architecture/protocol-docs.md), which state the
+  requirements
 - the [mockup catalogue](docs/mockups/README.md), which draws every screen
   at phone and desktop sizes
 - the app package, with tests against fake GitHub and Boat servers and
@@ -49,6 +50,9 @@ feature that is not complete yet says so.
   hidden for now, as [Desktop](docs/protocol/workspace-tools.md#desktop)
   says.
 - A pull request bar with the GitHub state of the branch and its checks.
+  It sends the agent fixed requests, such as Create PR and Fix
+  checks, and merges as the member. After the merge, Continue moves the
+  workspace to a new branch, with the same cloud computer and sessions.
 - One prepared cloud computer image for each org, built from an install
   script, with a startup script and env vars.
 - Agents can create workspaces and sessions. They can read chats and

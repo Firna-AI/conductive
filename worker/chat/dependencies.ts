@@ -19,6 +19,7 @@ import { attachmentWorkspace } from './attachment-claim-data'
 import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
 import { workspaceErrorReporting } from '../error-reporting/workspace'
+import { readRunnerBranches } from './branch-data'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -38,6 +39,7 @@ export function chatDependencies(
       void pending.catch(() => undefined)
     })
   return {
+    readBranches: (id) => readRunnerBranches(env.DB, id),
     readCommitAuthor: async (userId) => {
       const user = await readUser(env.DB, userId)
       return user ? commitAuthor(user) : null
