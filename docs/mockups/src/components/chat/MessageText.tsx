@@ -93,6 +93,26 @@ function LinkChip(props: {
 }
 
 /**
+ * One link as the chat shows it: the chip of the workspace that the link
+ * names, or a session chip when the chat read the session. A press on the
+ * chip opens its page, when the mockups draw it. A link that the chat does
+ * not find stays text: `source`, the link as the text has it, else `href`.
+ * A message shows each of its links so, and the line of a stop from a
+ * session shows the link of that session so.
+ */
+export function LinkText(props: { href: string; source?: string }) {
+  const target = linkTarget(props.href, useChatWorkspaces())
+  if (!target) return props.source ?? props.href
+  const to = linkPage(target)
+  return (
+    <LinkChip
+      opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
+      target={target}
+    />
+  )
+}
+
+/**
  * The text of a sent message or an answer. Each part in backticks is code,
  * and each link to a workspace of the org is a chip that opens the
  * workspace, when the mockups draw its screen. A link to a session that the
@@ -103,7 +123,6 @@ function LinkChip(props: {
  * the file.
  */
 export function MessageText(props: { text: string; mentions?: boolean }) {
-  const rows = useChatWorkspaces()
   return (
     <>
       {textParts(props.text, true, props.mentions).map((part, index) => {
@@ -129,16 +148,7 @@ export function MessageText(props: { text: string; mentions?: boolean }) {
             />
           )
         }
-        const target = linkTarget(part.href, rows)
-        if (!target) return part.source
-        const to = linkPage(target)
-        return (
-          <LinkChip
-            key={index}
-            opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
-            target={target}
-          />
-        )
+        return <LinkText href={part.href} key={index} source={part.source} />
       })}
     </>
   )

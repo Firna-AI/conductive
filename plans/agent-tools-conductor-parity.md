@@ -335,26 +335,54 @@ decision.
   item `plans/follow-ups/full-image-build-for-agent-tools.md` gets the new
   commands. Reason: a refresh keeps the tools of its image.
 
+### Stop line mockups
+
+These calls came from Milestone 1 on 11 November 2026:
+
+- Agent call: use exactly "Stopped from" and the sending session chip in
+  the chat. Use the same words and its link in the copy. Reason: a session
+  title can read as a command, so putting the chip first makes the line
+  hard to read.
+- Agent call: reuse one stop-line component and one copy source for each
+  stop. Keep member and unnamed stop words. Reason: the app, the copy, and
+  the mockups must keep the same words. The line uses the line height of
+  the lost lines, so the chip fits.
+- Agent call: put the two states under `app/chat/agent-stops`. Reason:
+  `app/chat/turns` already has four screens, so two more pass its limit.
+- Agent call: show the stopping session still at work in both stories.
+  Reason: stopping another turn does not stop that session. The chip and
+  sidebar keep the live state of its workspace.
+- Agent call: reuse the existing session-chip target and fallbacks.
+  Reason: the line has the same session link as a message. A closed source
+  opens its workspace without reopening the tab.
+- Agent call: use an angle-bracket link in the Markdown stop note.
+  Reason: emphasis must not split a session link whose IDs contain `_`.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
 
 Depends on: none
 
+Completed: 11 November 2026.
+
 Draw the stop line of a stop by an agent (decision 279 B).
 
-- [ ] Read the `mockups` and `product-ui` skills and
+- [x] Read the `mockups` and `product-ui` skills and
       `docs/mockups/README.md`.
-- [ ] In `app/chat`, draw the stop line of a turn that an agent stopped,
+- [x] In `app/chat`, draw the stop line of a turn that an agent stopped,
       with the session chip of the sending session. Draw it for a session
       of the same workspace and of another workspace, on desktop and on a
       phone.
-- [ ] Set the words of the line with the copy rules of the `product-ui`
+- [x] Set the words of the line with the copy rules of the `product-ui`
       skill.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
+
+Evidence: `.context/agent-tools-conductor-parity/reports/m1-ui.md` and
+`.context/agent-tools-conductor-parity/m1-final-checks.log`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -431,7 +459,7 @@ agent.
 - [ ] Let a close that stops a running turn record the member, so the stop
       line names that member, as decision 72 says for Stop. Today such a
       close records no stopper, and the line says "The agent stopped".
-- [ ] Store the sending session on a stop by a tool, also through
+- [ ] Store the sending workspace and session IDs on a stop by a tool, also through
       `close_session`. Give it to the words in
       `src/shared/transcript/turn-words.ts`, for the chat and the copy of a
       transcript.

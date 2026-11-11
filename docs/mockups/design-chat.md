@@ -2,7 +2,7 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives workspace, session, and file chips,
-attached files, Markdown tables, and the work fold of a turn. It also gives the data that the chat does
+attached files, Markdown tables, the work fold of a turn, and the line of a stopped turn. It also gives the data that the chat does
 not have, and the files that the cloud computer could not read.
 
 - `AttachmentChips` in `src/components/chat/` draws each attached file as a
@@ -100,6 +100,22 @@ not have, and the files that the cloud computer could not read.
   under the notice "The latest list of all files is unavailable", which has
   no time. With no saved list, All files says "The list of all files is
   unavailable" in place of the tree. `lostCopy.ts` holds these words too.
+- `StopLine` in `src/components/chat/` draws the line of a stopped turn:
+  the stop icon, who stopped the turn, then each note of the turn after a
+  dot, such as "Changed files unavailable". `stopCopy.ts` beside it holds
+  the words, for the chat and for the copy of a transcript.
+  - A Stop of a member shows "You stopped the agent" to that member and
+    "Priya stopped the agent" to the others. A stop with no Stop, such as
+    when the cloud computer stops, shows "The agent stopped".
+  - A stop by the agent of a session with a workspace tool, also through a
+    close of the session, names no member, from decision 279. The line
+    says "Stopped from", then the session chip of that session, as
+    `app/chat/agent-stops` shows. A press on the chip opens the session,
+    as in a message. The copy of a transcript gives the session link in
+    place of the chip.
+  - The line is centred and muted, as `LostLine` is. A narrow chat wraps
+    it into balanced lines, and the chip moves to the next line whole. It
+    takes no fixtures, so the app can use it too.
 
 ## Workspace, session, and file chips
 
@@ -149,6 +165,8 @@ not have, and the files that the cloud computer could not read.
     session that the chat read. `ChatWorkspaces` gives each linked
     workspace the sessions that the chat read when it loaded, open and
     closed. A link to any other session shows the chip of its workspace.
+    `LinkText` beside it shows one link in the same way, such as the
+    session in the line of a stop from a session.
   - A press on a session chip shows the session. A press on the chip of a
     closed session opens the page of its workspace, so no tab reopens for
     the other members. In a message box a session chip works as a

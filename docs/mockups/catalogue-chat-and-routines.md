@@ -6,7 +6,11 @@ pages of the chat and of routines.
 `app/chat` shows a finished turn, whose work folds into one line. Its child
 pages: `app/chat/turns` has the running turn, steer, interrupt, and a
 failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
-`failed` and declare `movedFrom`. `app/chat/work` draws the work of ended
+`failed` and declare `movedFrom`. `app/chat/agent-stops` draws a turn that
+the agent of another session stopped with a workspace tool, from decision
+279. Its line says "Stopped from" and shows the session chip of that
+session, for a session of the same workspace and, in `other-workspace`, of
+another workspace. `app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with
 one message open, a turn with a message that the user sent during it, whose
 two parts each fold their own work, a turn whose open work holds a Mac
