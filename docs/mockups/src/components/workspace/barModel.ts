@@ -36,7 +36,7 @@ export type BarAction =
   | { kind: 'archive'; busy: boolean; disabled: boolean }
 
 /** The link to the pull request on GitHub. */
-export type GitHubLinkKind = 'open'
+type GitHubLinkKind = 'open'
 
 /** What the bar, and the top of the Checks tab of a phone, show. */
 export type BarModel = {
