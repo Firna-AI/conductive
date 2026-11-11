@@ -88,9 +88,7 @@ it('stops the GitHub CLI when authentication fails and keeps credentials out of 
         free ? JSON.stringify({ args, token: null, input: '' }) : '',
       )
       expect(result.stderr, args.join(' ')).toBe(
-        free
-          ? ''
-          : 'GitHub access failed. Check the current turn and sign in again.\n',
+        free ? '' : 'GitHub access failed. Try again.\n',
       )
     }
   } finally {

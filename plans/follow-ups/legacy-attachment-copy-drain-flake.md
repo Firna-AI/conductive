@@ -28,3 +28,11 @@ The suspected source is asynchronous ordering between the background drain,
 runner readiness processing, and the attachment failure transaction. The
 failure does not establish a defect in production delivery. Reproduce the
 failure before changing code. Record pass counts before and after the fix.
+
+On 11 November 2026, the complete gate of the branch
+`calummoore/repo-renaming-risks` failed the same test with the same
+received values: `activeTurnId: 'chat-0002'` and `retryMessageId: null`.
+It reported 863 passing test files and one failing file, and 2,541 passing
+tests and one failing test, in 1,352 seconds. The test then passed 5 of 5
+isolated runs of `npx vitest run worker/chat/attachment-legacy-path.test.ts`.
+That branch changed no chat code.

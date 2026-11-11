@@ -55,6 +55,7 @@ The CLI is ready to use without a separate login step.
 
 Commits name the person in the table as both author and committer.
 Commits that a script makes outside an agent turn name the workspace owner.
+An `author` or `committer` setting in the repository or in the global Git settings takes priority over the workspace owner's author.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
 Conductive uses their GitHub display name, or their login when the display name is missing or unusable.

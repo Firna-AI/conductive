@@ -3,7 +3,7 @@
 The user approved option A on 8 November 2026.
 Create a new Developer ID Application certificate and a Developer-role Apple API key.
 Store the encrypted signing identity and Apple API credentials in the protected
-`desktop-release` environment of `Firna-AI/remote-code`.
+`desktop-release` environment of `Firna-AI/conductive`.
 Build signed and notarized DMG and ZIP files for arm64 and x64 in GitHub Actions.
 Version tags and manual runs start the release job.
 Upload the files as Actions artifacts.
