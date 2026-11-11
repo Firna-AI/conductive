@@ -2,7 +2,6 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { relayResponse } from './relay.test-support'
 import {
-  barrier,
   bodySource,
   holdFirstAccessRead,
   openPreview,
@@ -31,51 +30,24 @@ it('batches queued socket frames using a new authorization read after their arri
       )
     ).status,
   ).toBe(101)
-  const started = barrier<void>()
-  const release = barrier<void>()
-  let reads = 0
-  const database = harness.env.DB
-  const prepare = database.prepare.bind(database)
-  const wrap = (statement: D1PreparedStatement): D1PreparedStatement =>
-    new Proxy(statement, {
-      get(target, name) {
-        if (name === 'bind')
-          return (...values: unknown[]) => wrap(target.bind(...values))
-        if (name !== 'all') return Reflect.get(target, name)
-        return async () => {
-          const result = await target.all()
-          reads++
-          if (reads === 1) {
-            started.resolve()
-            await release.promise
-          }
-          return result
-        }
-      },
-    })
-  const observedPrepare = (query: string) => {
-    const statement = prepare(query)
-    return query.includes('WITH requested') ? wrap(statement) : statement
+  const access = holdFirstAccessRead(harness)
+  try {
+    const upstream = harness.upstreamSockets[0]
+    const browser = harness.serverSockets[0]
+    const sent = browser.whenSent(3)
+    upstream.emit('first')
+    await access.started
+    upstream.emit('second')
+    upstream.emit('third')
+    expect(browser.sent).toEqual([])
+    access.release()
+    await sent
+    expect(browser.sent).toEqual(['first', 'second', 'third'])
+    expect(access.reads).toBe(2)
+    browser.close()
+  } finally {
+    access.restore()
   }
-  harness.env.DB = new Proxy(database, {
-    get(target, name) {
-      return name === 'prepare' ? observedPrepare : Reflect.get(target, name)
-    },
-  })
-  const upstream = harness.upstreamSockets[0]
-  const browser = harness.serverSockets[0]
-  const sent = browser.whenSent(3)
-  upstream.emit('first')
-  await started.promise
-  upstream.emit('second')
-  upstream.emit('third')
-  expect(browser.sent).toEqual([])
-  release.resolve()
-  await sent
-  expect(browser.sent).toEqual(['first', 'second', 'third'])
-  expect(reads).toBe(2)
-  harness.env.DB = database
-  browser.close()
 })
 
 it('passes response data that arrives during a check in one later batch after a new read', async () => {
@@ -122,52 +94,28 @@ it('drains buffered socket data before forwarding the peer close code and reason
         headers: { Upgrade: 'websocket' },
       }),
     )
-    const started = barrier<void>()
-    const release = barrier<void>()
-    const database = harness.env.DB
-    const prepare = database.prepare.bind(database)
-    const wrap = (statement: D1PreparedStatement): D1PreparedStatement =>
-      new Proxy(statement, {
-        get(target, name) {
-          if (name === 'bind')
-            return (...values: unknown[]) => wrap(target.bind(...values))
-          if (name !== 'all') return Reflect.get(target, name)
-          return async () => {
-            const result = await target.all()
-            started.resolve()
-            await release.promise
-            return result
-          }
-        },
+    const access = holdFirstAccessRead(harness)
+    try {
+      const upstream = harness.upstreamSockets[index]
+      const browser = harness.serverSockets[index]
+      const source = closing.browser ? browser : upstream
+      const destination = closing.browser ? upstream : browser
+      source.emit('final output')
+      await access.started
+      source.close(closing.code, closing.reason)
+      destination.emit('input after peer close')
+      const beforeDrain = destination.closed
+      access.release()
+      await destination.end
+      expect(beforeDrain).toBe(null)
+      expect(destination.sent).toEqual(['final output'])
+      expect(destination.closed).toEqual({
+        code: closing.forwarded,
+        reason: closing.reason,
       })
-    harness.env.DB = new Proxy(database, {
-      get(target, name) {
-        return name === 'prepare'
-          ? (query: string) =>
-              query.includes('WITH requested')
-                ? wrap(prepare(query))
-                : prepare(query)
-          : Reflect.get(target, name)
-      },
-    })
-    const upstream = harness.upstreamSockets[index]
-    const browser = harness.serverSockets[index]
-    const source = closing.browser ? browser : upstream
-    const destination = closing.browser ? upstream : browser
-    source.emit('final output')
-    await started.promise
-    source.close(closing.code, closing.reason)
-    destination.emit('input after peer close')
-    const beforeDrain = destination.closed
-    release.resolve()
-    await destination.end
-    expect(beforeDrain).toBe(null)
-    expect(destination.sent).toEqual(['final output'])
-    expect(destination.closed).toEqual({
-      code: closing.forwarded,
-      reason: closing.reason,
-    })
-    expect(source.sent).toEqual([])
-    harness.env.DB = database
+      expect(source.sent).toEqual([])
+    } finally {
+      access.restore()
+    }
   }
 })
