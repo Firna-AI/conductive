@@ -10,17 +10,16 @@ chat shows plain text, such as "47 more files", for the rest. So a turn that
 changes 150 files shows 150 chips on many rows, and its answer moves far
 from the next message.
 
-This change limits the row to five files (decisions 270 and 271). When the
-row would hide two or more files, it shows the first five, then a button
-with the count of the rest, such as "9 more files". The button shows the
-other listed files below it, and "Show fewer" hides them again. The runner
-limit of 200 files, the chat events, and the stored history do not change.
-Decisions 272 and 273 are open: how a reader gets from each diff to the
-next file, and which files show first. The options checks recommend D for
-decision 271, against the answer B of the user, and E for decision 272. The
-answer B stays in force until the user changes it. The change does not
-cover the line counts on a chip, which count the whole branch, not only the
-turn. The follow-up item
+This change limits the row to five files on a desktop and three on a phone
+(decisions 270 and 271). When the row would hide two or more files, it shows
+the first files up to the limit, then a button with the count of the rest,
+such as "9 more files". The button shows the other listed files below it,
+and "Show fewer" hides them again. The runner limit of 200 files, the chat
+events, and the stored history do not change. Decisions 272 and 273 are
+open: how a reader gets from each diff to the next file, and which files
+show first. The options check recommends E for decision 272. The change
+does not cover the line counts on a chip, which count the whole branch, not
+only the turn. The follow-up item
 [turn-chip-line-counts-cover-branch.md](follow-ups/turn-chip-line-counts-cover-branch.md)
 holds that question.
 
@@ -95,7 +94,7 @@ The report of each options check is under `.context/turn-end-file-limit/`.
 - **Related:** Decision 270. With its option C, a row count replaces this value.
 - **Recommendation:** D. The options check changed it from B, because on a phone five files take about six rows, near 300 pixels, and D takes about four. D keeps the desktop count of B and costs one more value. B gives every member the same count.
 - **Action:** ask the user, because each value trades names in view against height, and no value is clearly best.
-- **Answer:** The user chose B on 2026-11-10, before the options check. B stays in force until the user changes it.
+- **Answer:** The user chose B on 2026-11-10, before the options check. After the options check, the user chose D on 2026-11-11.
 
 ### Decision 272. What a return from a diff shows
 
@@ -137,7 +136,7 @@ The report of each options check is under `.context/turn-end-file-limit/`.
 - **Terms:**
   - **Runner order:** the order of the files in the end event of a turn. The files that existed before the turn come first, in path order, then the files that are new in this turn, in path order.
   - **Kind of change:** the `change` field of each file, which compares the file with the default branch. A file that is new on the branch has the kind `added`, or `untracked` when nobody committed it.
-- **Background:** The agent runner lists the changed files of a turn in the runner order, and the chat shows them in that order. With five files, the row of decision 270 folds from seven listed files and shows only the first five. Each chip shows the file name and its line counts, not its folder or its kind of change.
+- **Background:** The agent runner lists the changed files of a turn in the runner order, and the chat shows them in that order. With the limit of decision 271, the row of decision 270 folds from seven listed files on a desktop and shows only the first five. On a phone, it folds from five listed files and shows the first three. Each chip shows the file name and its line counts, not its folder or its kind of change.
 - **Problem:** A turn that lists seven or more files hides the end of the runner order first, and the files that are new in this turn stand there.
 - **Impact if no action:** A reader of a turn that builds a feature sees the edited files and misses the new files at a glance.
 - **Root question:** How does the reader of a large turn see at a glance the files that matter, such as the new ones, while the row hides the rest?
@@ -157,7 +156,9 @@ The report of each options check is under `.context/turn-end-file-limit/`.
 
 ## Design
 
-The turn end shows at most five chips. One pure helper beside
+The closed turn end shows at most five chips on a desktop and three on a
+phone. The chat passes its `mobile` value to the turn end, which picks the
+limit. One pure helper beside
 `docs/mockups/src/components/chat/lostCopy.ts` holds the limit and the split
 of a row: the files that show, the count of the button, and whether the row
 folds. The mockup turn end and the app turn end both use it, so they cannot
@@ -172,9 +173,10 @@ Design calls, each my call on 2026-11-10:
   and the events and the stored history do not change. Reason: the chat can
   still show each listed file, and no stored format changes.
 - The row folds only when the button would hide two or more files, so a turn
-  of six files shows all six. Reason: a "1 more file" button takes the place
-  of one chip and saves no space.
-- The button stays after the fifth chip in both states. The open row shows
+  of six files shows all six on a desktop, and a turn of four files shows
+  all four on a phone. Reason: a "1 more file" button takes the place of one
+  chip and saves no space.
+- The button stays after the last chip of the closed row in both states. The open row shows
   the other chips after the button, from a new line, as the list of a fold
   opens below its line. The button keeps its place on the screen, also at
   the bottom of the chat. Reason: decision 270 reuses the fold behaviour of
@@ -217,9 +219,10 @@ phone, with the answers to decisions 271 and 273. The page
       `untracked` as new, and the mockup `ChangeKind` in
       `docs/mockups/src/fixtures/files.ts` gets `untracked`.
 - [ ] Update the mockup turn end, `docs/mockups/src/components/chat/TurnEnd.tsx`
-      and `TurnEnd.module.css`. Draw the closed row: the first five chips,
-      then the button. Draw an `open` state: the first five chips, the
-      button as "Show fewer", every other listed chip from a new line, then
+      and `TurnEnd.module.css`. Draw the closed row: the first five chips
+      on a desktop or three on a phone, then the button. Draw an `open`
+      state: the same first chips, the button as "Show fewer", every other
+      listed chip from a new line, then
       the runner count, such as "47 changed files not listed". The button
       has the height of a chip and the touch size on a phone. It links the
       closed and the open screens with `ScreenLink`.
@@ -230,10 +233,12 @@ phone, with the answers to decisions 271 and 273. The page
       row of that turn and the open row of the 247-file turn. Link the page
       from the chat page as the other chat sub-pages are linked.
 - [ ] Update the `files` variant of `app/chat/lost-data`. It now shows the
-      closed row: the first five files and "242 more files". Update its
+      closed row: the first five files and "242 more files" on a desktop,
+      and the first three files and "244 more files" on a phone. Update its
       description and its rationale.
-- [ ] Check that every other chat page keeps its look. The six-file turn of
-      `app/chat` still shows all six chips.
+- [ ] Check every other chat page. On a desktop, the six-file turn of
+      `app/chat` still shows all six chips. On a phone, it now shows three
+      chips and "3 more files". Update the descriptions that this changes.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages with
       `npm run mockups:serve`, on the desktop and the phone. Save the
       screenshots under `.context/turn-end-file-limit/`.
@@ -248,7 +253,8 @@ State the limit and its decisions in the chat protocol, and align the docs
 that restate the turn end.
 
 - [ ] Update "What the chat shows" in `docs/protocol/chat-and-events.md`.
-      State the limit, the fold at two hidden files, the button after the
+      State the limit of five files on a desktop and three on a phone, the
+      fold at two hidden files, the button after the
       last shown file and its count with the files that the runner left
       out, the open row with the other files after the button and the
       runner count, the button that keeps its place, the order of decision
@@ -284,10 +290,12 @@ keep the place of the reader.
       of the reading place of the chat, and settle after the render, as
       `src/chat/components/useFold.ts` does. Share that code with `useFold`
       when both stay simple.
-- [ ] Add the cases to `src/chat/components/TurnEnd.test.tsx`. Twelve listed
-      files show five chips, then "7 more files". A click shows "Show fewer"
-      after the fifth chip and the other seven chips after it, and a second
-      click shows five chips again. Six files show six chips and no button.
+- [ ] Add the cases to `src/chat/components/TurnEnd.test.tsx`. On a
+      desktop, twelve listed files show five chips, then "7 more files". A
+      click shows "Show fewer" after the fifth chip and the other seven
+      chips after it, and a second click shows five chips again. Six files
+      show six chips and no button. On a phone, twelve files show three
+      chips and "9 more files", and four files show four chips.
       A turn of 200 listed files and 47 left out shows "242 more files" when
       closed, and "47 changed files not listed" after the 200 chips when
       open. The chips follow the order of decision 273. See each new case
@@ -299,9 +307,10 @@ keep the place of the reader.
       `.context/turn-end-file-limit/`.
 - [ ] Run `npm run test -- src/chat`.
 - [ ] Smoke-test the chat development page with `scenario=loss`, at a
-      desktop and a phone width. The 247-file turn shows five chips and
-      "242 more files". It opens with the sixth file after the button, and
-      it closes. Save the screenshots under `.context/turn-end-file-limit/`.
+      desktop and a phone width. On a desktop, the 247-file turn shows five
+      chips and "242 more files". On a phone, it shows three chips and "244
+      more files". It opens with the next file after the button, and it
+      closes. Save the screenshots under `.context/turn-end-file-limit/`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
