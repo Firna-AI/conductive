@@ -694,7 +694,8 @@ Open. From finding 1 of Milestone 2. Its options check ran on 11 November
 - **Source:** Implementation.
 - **Category:** Security.
 - **Location:** the pin rules in `docs/protocol/agent-runner.md`, and "A
-  sandbox with a version pin of 1" in `docs/protocol/isolation.md`.
+  sandbox with a version pin of 1" in `docs/protocol/version-pins.md`,
+  where `main` moved it from `docs/protocol/isolation.md`.
 - **Terms:**
   - **Version pin:** the lowest runner protocol version that a workspace
     accepts. A runner of version 1 gets the agent login itself.
@@ -717,7 +718,7 @@ Open. From finding 1 of Milestone 2. Its options check ran on 11 November
   - **B.** After a good update, raise the pin to the new runner's version
     before the runner connects. A failed update keeps the pin. A connection
     that the workspace accepted at pin 1 keeps the login path. This changes
-    `agent-runner.md`, `isolation.md`, `docs/architecture/data-and-trust.md`,
+    `agent-runner.md`, `version-pins.md`, `docs/architecture/data-and-trust.md`,
     `docs/architecture/components.md`, `model-gateway.md`, `routines.md`,
     `tokens-and-secrets.md`, two guides, `terms-org.ts`, and both legal
     pages. Effort: Medium.
@@ -872,6 +873,68 @@ Open. From finding 4 of Milestone 2. Its options check ran on 11 November
   Apply it with decision 30, because both change the same sentences.
 - **Action:** ask the user, because both texts are correct, and B changes
   a legal page.
+
+### 34. App software install nears the Linux argument limit
+
+Open. From the complete gate after the merge of `main` on 11 November 2026.
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `softwareInstallCommand` in
+  `worker/software-image/install-command.ts`, `workspaceToolsCommand` in
+  `worker/tools/image.ts`, and `workspaceSoftwareUpdateCommand` in
+  `worker/lifecycle/start-software-command.ts`.
+- **Terms:**
+  - **Argument limit:** Linux refuses to start a program when one of its
+    arguments is longer than 131,072 bytes.
+  - **Install command:** the script that installs the app's own software.
+    Its digest is the app software version.
+- **Background:** Moments: a build without a ready software image, the
+  software image build of a deploy run, and the update at a workspace
+  start. Each one sends the install command to the sandbox as command text.
+  The command holds each workspace tool source file as base64. The session
+  tools of `main` grew that part from about 63 KB to 96 KB.
+- **Problem:** The install command is 116,111 bytes. It runs its tools part
+  as one 99,396-byte argument of `sudo /bin/sh -c`. The update command was
+  129,179 bytes as one argument, so four tests failed with `spawn E2BIG`.
+  The direct fix removes the nested arguments of the update, but the
+  command text stays about 118 KB. If the provider runs that text as one
+  argument, about 13 KB of growth stops it.
+- **Impact if no action:** A later change of the workspace tools can stop
+  every build without a ready software image, every software image build,
+  and every update at a workspace start. The error says only "Argument list
+  too long".
+- **Root question:** How do the builds and the updates deliver the app's
+  own software to a sandbox, so that the size of the workspace tools never
+  stops them?
+- **Options:**
+  - **A.** Change nothing more. About 13 KB of room stays. Effort: Small.
+  - **B.** Shrink the tool sources at build time, such as with a minify or
+    gzip step. The commands shrink to about half, and growth still counts
+    against the limit. Effort: Medium.
+  - **C.** Upload the install script with the provider's file upload, then
+    run a short command, in the build, the software image build, and the
+    update. No command then carries a large payload. Each software step
+    gets one more provider call. Effort: Medium.
+  - **D.** Ship the workspace tools in the runner archive, which the
+    install script downloads and checks. The commands then hold only small
+    scripts. It changes the deploy artifact and where the tools come from.
+    Effort: Large.
+- **Left out:** Several smaller commands, because the update must back up
+  and restore its files in one command, as design item 5 says. A size test
+  in the gate, because it detects the class but fixes nothing, and the user
+  decides new gates.
+- **Wider fix:** C. It removes the large command text for every payload,
+  not only for the tools.
+- **Previous examples:** None found.
+- **Recommendation:** C. It removes the limit for each software step and
+  keeps the tools in the Worker bundle. D gives the cleanest split at a
+  larger cost.
+- **Action:** ask the user, because the options trade one more provider
+  call in three paths, a new build step, or a new home of the tools, and
+  no option is clearly best while the provider's own command limit is
+  unknown.
 
 ## Milestone 1: Mockups
 
