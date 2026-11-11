@@ -15,9 +15,10 @@ This change limits the row to five files on a desktop and three on a phone
 the first files up to the limit, then a button with the count of the rest,
 such as "9 more files". The button shows the other listed files below it,
 and "Show fewer" hides them again. The runner limit of 200 files, the chat
-events, and the stored history do not change. Decisions 272 and 273 are
-open: how a reader gets from each diff to the next file, and which files
-show first. The options check recommends E for decision 272. The change
+events, and the stored history do not change. Decision 272 keeps the chat
+drawn but hidden behind a file or diff tab, so the open row, the folds, and
+the place of the reader survive a visit to a diff. Decision 273 is open:
+which files show first. The change
 does not cover the line counts on a chip, which count the whole branch, not
 only the turn. The follow-up item
 [turn-chip-line-counts-cover-branch.md](follow-ups/turn-chip-line-counts-cover-branch.md)
@@ -27,6 +28,8 @@ Contract owners:
 
 - [Chat and events](../docs/protocol/chat-and-events.md#what-the-chat-shows).
 - The [transcript rules](../src/chat/transcript.md) of the chat.
+- The [chat integration](../src/chat/integration.md) rules, for the chat
+  behind a file or diff tab.
 - The [mockups](../docs/mockups/README.md), the visual spec.
 
 ## Decisions
@@ -123,9 +126,10 @@ The report of each options check is under `.context/turn-end-file-limit/`.
   - A diff that opens beside the chat. It is a new layout of the centre column, which shows the content of one tab at a time. E keeps the chat drawn without a new layout.
 - **Wider fix:** E. It removes the redraw that resets each choice, so a part that a later change adds keeps its choice too. C must give each part its own state.
 - **Previous examples:** The work fold and the runs of tool calls start closed again after a return from a diff, because the chat draws again.
-- **Related:** Decision 270 chose the row. Milestones 2 and 3 wait for this answer.
+- **Related:** Decision 270 chose the row. Milestone 4 builds the answer.
 - **Recommendation:** E. It keeps the row and every fold as the reader left them, with no new state, for about the effort of B. The options check changed it from B. B stays the narrow choice if the change must touch only the turn end, or if the check of `Activity` fails.
 - **Action:** ask the user, because E changes how the app keeps the chat behind a diff and gives the folds a new rule, and the options trade that reach against effort.
+- **Answer:** The user chose E on 2026-11-11.
 
 ### Decision 273. Which files show before the button
 
@@ -164,8 +168,10 @@ of a row: the files that show, the count of the button, and whether the row
 folds. The mockup turn end and the app turn end both use it, so they cannot
 drift. The mockup turn end takes an `open` prop for the static open screen,
 and its button links the closed and the open screens. The app turn end keeps
-the open state as decision 272 says. Its button gives itself to the keeper
-of the reading place of the chat, as `useFold` does for the line of a fold.
+the open state in its own state. Decision 272 keeps the chat drawn but hidden
+behind a file or diff tab, so that state survives a visit to a diff. The
+button gives itself to the keeper of the reading place of the chat, as
+`useFold` does for the line of a fold.
 
 Design calls, each my call on 2026-11-10:
 
@@ -202,6 +208,22 @@ Design calls, each my call on 2026-11-10:
 - The helper lives in the mockups, as `lostCopy.ts` does, and the app
   imports it. Reason: the app already imports the pure chat parts of the
   mockups, so the limit has one home.
+
+Design calls for decision 272, each my call on 2026-11-11:
+
+- On a phone, the chat stays drawn behind each view that takes its place:
+  the Files view and the tool view. Reason: one swap draws these views, and
+  the reader expects the chat as they left it after each of them.
+- The chat keeps its scroll position across a visit. When the browser loses
+  the position of the hidden chat, the chat brings back the row that the
+  reader read. Reason: option E keeps the chat as the reader left it.
+- While hidden, the chat takes no key, no focus, and no pointer, and it
+  moves no scroll. Its menus and sheets close. Reason: the shown tab owns
+  the input.
+- A switch to another session tab, or to another workspace, still draws
+  that chat again. Reason: option E covers the tabs and views that take the
+  place of the chat of one session, and a drawn chat for each session would
+  grow the memory with each tab.
 
 ## Milestone 1: Mockups
 
@@ -257,8 +279,10 @@ that restate the turn end.
       fold at two hidden files, the button after the
       last shown file and its count with the files that the runner left
       out, the open row with the other files after the button and the
-      runner count, the button that keeps its place, the order of decision
-      273, and the choice that decision 272 keeps. Add the reasons and the
+      runner count, the button that keeps its place, and the order of
+      decision 273. In "The work of a turn", state that the chat keeps its
+      folds, its file rows, and its place while a file or diff tab, or
+      another view on a phone, takes its place. Add the reasons and the
       rejected options of decisions 270 to 273.
 - [ ] Update the rule of the runner count in `src/chat/transcript.md`. The
       closed row counts those files in the button, and the open row names
@@ -285,7 +309,8 @@ keep the place of the reader.
 - [ ] Draw the closed row, the button, and the open row in
       `src/chat/components/TurnEnd.tsx` with the shared helper. The row
       starts closed.
-- [ ] Keep the open state as decision 272 says.
+- [ ] Keep the open state in the state of the turn end. Milestone 4 keeps
+      it across a visit to a diff.
 - [ ] Keep the button in place. On a click, give the button to the keeper
       of the reading place of the chat, and settle after the render, as
       `src/chat/components/useFold.ts` does. Share that code with `useFold`
@@ -312,9 +337,48 @@ keep the place of the reader.
       more files". It opens with the next file after the button, and it
       closes. Save the screenshots under `.context/turn-end-file-limit/`.
 
-## Milestone 4: Verification, commit, review, and pull request
+## Milestone 4: The chat behind a file or diff tab
 
-Depends on: 1, 2, 3
+Tags: ui
+
+Depends on: 3
+
+Keep the chat of the session drawn but hidden while a file or diff tab, or
+another view on a phone, takes its place (decision 272). A return then
+shows the chat as the reader left it.
+
+- [ ] In `src/chat/WorkspaceChat.tsx`, draw the session chat inside React
+      `Activity`. Hide it while `content` shows, and draw `content` beside
+      it.
+- [ ] In `src/shell/workspace/WorkspaceScreen.tsx`, keep the chat drawn
+      inside `Activity` while the phone shows the Files view or the tool
+      view.
+- [ ] Check the hidden chat, and fix each problem that the check finds. The
+      composer takes no key and no focus. Its menus and sheets close. The
+      keeper of the reading place moves nothing. A running turn still
+      updates the hidden chat.
+- [ ] Check once in Chrome whether the chat keeps its scroll position across
+      a visit to a diff, at a desktop and a phone width. Save the result
+      under `.context/turn-end-file-limit/`. When the browser loses the
+      position, keep the row that the reader read, and bring it back when
+      the chat shows again.
+- [ ] Add a mounted test in `src/chat/`. Open a work fold and a file row,
+      show a diff as `content`, remove it, and see both still open. When the
+      chat brings back the place of the reader, test that too. See the test
+      fail first.
+- [ ] Update `src/chat/integration.md`, where `content` shows in place of
+      the chat.
+- [ ] Run each new mounted test 10 times. Record the pass count under
+      `.context/turn-end-file-limit/`. Run
+      `npm run test -- src/chat src/shell/workspace`.
+- [ ] Smoke-test the workspace screen in a browser. Open a file from a turn
+      end, go back to the session tab, and see the row, the folds, and the
+      place as before. Save the screenshots under
+      `.context/turn-end-file-limit/`.
+
+## Milestone 5: Verification, commit, review, and pull request
+
+Depends on: 1, 2, 3, 4
 
 Merge `main`, prove the whole change, review it, and open the pull request.
 
