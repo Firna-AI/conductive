@@ -69,6 +69,9 @@ it.each(['absolute', 'message-relative'] as const)(
     const runner = await fixture.connect()
     try {
       runner.emit({ type: 'runner.ready' })
+      // The ready event starts the copy preparation as background work, so
+      // it must arrive before the drain of that work.
+      await fixture.drain()
       await fixture.drainAttachments()
       expect(messageCommands(runner, 'legacy-message')).toEqual([])
       expect(

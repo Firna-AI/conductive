@@ -84,6 +84,15 @@ class ReadingPlace implements RowKeeper {
     this.note()
   }
 
+  /**
+   * Moves the chat to its bottom and forgets the noted row, so that the next
+   * `settle` keeps the bottom in view.
+   */
+  toBottom(): void {
+    this.scroller.scrollTop = 0
+    this.kept = null
+  }
+
   /** A size changed: the transcript's, which settles, or the box's. */
   resized(): void {
     if (heightOf(this.transcript) !== this.height) this.settle()
@@ -121,14 +130,19 @@ class ReadingPlace implements RowKeeper {
  * The keeper of the reader's place in a chat. It notes the read row at each
  * scroll of `scroller`, and settles after each change of size that a
  * `ResizeObserver` sees in `transcript` or in `scroller`. `shown` says
- * whether the chat shows its transcript.
+ * whether the chat shows its transcript. `newest` names the newest user
+ * message. When it changes to another message, the chat moves to its
+ * bottom, also while the reader is scrolled up, so that the new message
+ * shows.
  */
 export function useReadingPlace(
   scroller: RefObject<HTMLElement | null>,
   transcript: RefObject<HTMLElement | null>,
   shown: boolean,
+  newest: string | null,
 ): RowKeeper {
   const place = useRef<ReadingPlace | null>(null)
+  const shownNewest = useRef(newest)
   useLayoutEffect(() => {
     const box = scroller.current
     const rows = transcript.current
@@ -146,6 +160,12 @@ export function useReadingPlace(
       box.removeEventListener('scroll', note)
     }
   }, [scroller, transcript, shown])
+  // After the effect above, so that a transcript that just showed has its keeper.
+  useLayoutEffect(() => {
+    if (shownNewest.current === newest) return
+    shownNewest.current = newest
+    if (newest !== null) place.current?.toBottom()
+  }, [newest])
   return useMemo(
     () => ({
       keep: (row: Element) => place.current?.keep(row),
