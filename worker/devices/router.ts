@@ -6,8 +6,9 @@ import { deviceBrokerName, workspaceDeviceRoute } from './paths'
 export async function routeDevice(
   request: Request,
   env: AppEnv,
+  now: number,
 ): Promise<Response> {
-  const context = await deviceBrowserGate(request, env, Date.now())
+  const context = await deviceBrowserGate(request, env, now)
   const workspace = workspaceDeviceRoute(new URL(request.url).pathname)
   const name = workspace
     ? workspace.workspaceId

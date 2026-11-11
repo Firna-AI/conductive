@@ -20,6 +20,9 @@ The path helpers and reply types live in
 | `GET /api/operator/signup-pause` | none | `OperatorSignupPause` |
 | `POST /api/operator/signup-pause` | `EmptyRequest` | `OperatorSignupPause` |
 | `DELETE /api/operator/signup-pause` | `EmptyRequest` | `OperatorSignupPause` |
+| `GET /api/operator/waitlist-switch` | none | `OperatorWaitlistSwitch` |
+| `POST /api/operator/waitlist-switch` | `EmptyRequest` | `OperatorWaitlistSwitch` |
+| `DELETE /api/operator/waitlist-switch` | `EmptyRequest` | `OperatorWaitlistSwitch` |
 
 `EmptyRequest` comes from [`api.ts`](../../src/shared/api.ts).
 The waitlist search uses the same login, name, and numeric ID matching as
@@ -54,6 +57,17 @@ An email failure keeps app access and the pending message.
 POST to the pause turns it on. DELETE turns it off.
 The reply records `paused`, `updatedAt`, and the operator.
 A repeat preserves the first time and operator and returns 200.
+
+`operatorWaitlistSwitchPath` builds the path of the waitlist switch.
+POST turns the waitlist on. DELETE turns it off.
+The reply gives `waitlistOn`, `updatedAt`, and the operator of the last change.
+It also gives `waiting`, the count of the Waitlist tab: accounts without
+app access and without a suspension.
+A repeat keeps the time and operator of the last change and returns 200.
+A change grants nobody access in bulk, and it saves or sends no email.
+During open sign-up, [sign-in](../security/README.md#app-access-at-sign-in)
+and the [app access gate](../security/README.md#app-access-gate) grant
+access to one user at a time.
 
 ### Approval email delivery
 

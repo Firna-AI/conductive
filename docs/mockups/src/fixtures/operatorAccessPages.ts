@@ -3,12 +3,17 @@
  * operator opens it.
  */
 import { approval, referral } from './operatorAccess'
+import { waitlistSwitch } from './operatorCodes'
 import { kenji, type UserPage } from './operatorUserPages'
+
+/** Open sign-up names the operator who turned off the waitlist. */
+const openSignUp = { kind: 'open-sign-up', by: waitlistSwitch.by } as const
 
 /**
  * The pages of users who came in after the waitlist started: by an invite
  * code, by the referral code of another user, by an org invitation, as an
- * operator, and by an approval whose email never went.
+ * operator, and by an approval whose email never went. Then two users of
+ * open sign-up: a new sign-in, and a person who waited and came back.
  */
 export const accessPages = {
   inviteCode: {
@@ -92,5 +97,41 @@ export const accessPages = {
       '7 Nov 2026 at 10:02',
     ),
     referral: referral('D7HQK-4XNWP'),
+  },
+  openSignUp: {
+    login: 'mira-l',
+    name: 'Mira Lund',
+    initials: 'ML',
+    githubId: 77310452,
+    githubAge: '6 years',
+    verifiedEmail: true,
+    joined: '8 Nov 2026',
+    owned: 1,
+    running: 1,
+    orgs: [{ name: 'Lund Labs', initials: 'LL', role: 'Admin' }],
+    access: {
+      state: 'granted',
+      since: '8 Nov 2026 at 12:14',
+      way: openSignUp,
+    },
+    referral: referral('C4VRT-9KMWE'),
+  },
+  openSignUpWaited: {
+    login: 'noor-a',
+    name: 'Noor Aziz',
+    initials: 'NA',
+    githubId: 68841207,
+    githubAge: '9 years',
+    verifiedEmail: true,
+    joined: '5 Nov 2026',
+    owned: 0,
+    running: 0,
+    orgs: [],
+    access: {
+      state: 'granted',
+      since: '8 Nov 2026 at 12:40',
+      way: openSignUp,
+    },
+    referral: referral('G6PXH-3TNDA'),
   },
 } as const satisfies Record<string, UserPage>

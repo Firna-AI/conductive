@@ -1,18 +1,13 @@
-import { useState } from 'react'
 import { CircleAlert, CirclePause, Pause, Play } from 'lucide-react'
-import { SkeletonBar, SkeletonGroup } from '@firna/ui/skeleton'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
 import {
   pausedTitle,
   pauseWords,
 } from '../../../docs/mockups/src/components/operator/codeCopy'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
-import { LoadFailure } from '../ui/LoadFailure'
 import { useAction } from '../ui/useAction'
 import { formatMoment } from './format'
 import { useOperatorPause } from './pause-context'
@@ -57,7 +52,10 @@ export function PauseNotice() {
  * that each code keeps its uses, and what still works. A failed pause shows
  * its error, and the question stays open.
  */
-function PauseDialog(props: { pause: () => Promise<void>; close: () => void }) {
+export function PauseDialog(props: {
+  pause: () => Promise<void>
+  close: () => void
+}) {
   const pause = useQuestion(props.pause, props.close)
   return (
     <Dialog
@@ -91,65 +89,5 @@ function PauseDialog(props: { pause: () => Promise<void>; close: () => void }) {
         />
       ) : null}
     </Dialog>
-  )
-}
-
-/** The Sign-ups box while the pause loads: its title, with placeholders. */
-function SignUpsLoading() {
-  return (
-    <Section title={pauseWords.box}>
-      <SkeletonGroup direction="column" gap={10}>
-        <SkeletonBar height={12} width={320} />
-        <SkeletonBar height={28} width={132} />
-      </SkeletonGroup>
-    </Section>
-  )
-}
-
-/**
- * The Sign-ups box at the top of the Invite codes tab while sign-ups are
- * open, with Pause sign-ups, which asks first. While the pause is on, the
- * notice at the top of the page takes its place. A pause that did not load
- * shows its failure, with Try again.
- */
-export function SignUpsBox() {
-  const pause = useOperatorPause()
-  const state = useStore(pause.state.value)
-  const [asking, ask] = useState(false)
-  const box = () => {
-    switch (state.state) {
-      case 'loading':
-        return <SignUpsLoading />
-      case 'failed':
-        return (
-          <LoadFailure
-            error={state.error}
-            retry={() => pause.state.refresh()}
-            title="Sign-ups could not load"
-          />
-        )
-      case 'ready':
-        if (state.value.paused) return null
-        return (
-          <Section
-            actions={
-              <ActionButton icon={Pause} onPress={() => ask(true)}>
-                {pauseWords.pause}
-              </ActionButton>
-            }
-            description={pauseWords.openLine}
-            status={<StatusText label={pauseWords.open} tone="success" />}
-            title={pauseWords.box}
-          />
-        )
-    }
-  }
-  return (
-    <>
-      {box()}
-      {asking ? (
-        <PauseDialog close={() => ask(false)} pause={() => pause.pause()} />
-      ) : null}
-    </>
   )
 }

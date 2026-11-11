@@ -1,0 +1,9 @@
+{
+  "order": [
+    "referral-code",
+    "org-invitation",
+    "operator",
+    "email-not-sent",
+    "open-sign-up"
+  ]
+}
