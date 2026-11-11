@@ -201,8 +201,9 @@ UNSTABLE remains retryable if the read checks show no failed, running, or queued
 It keeps the previous stored state until a read can confirm the current state.
 The bounded scheduled reads retry that state without a browser request.
 
-Workspace state does not limit a GitHub read or webhook refresh.
-The workspace queries read repository and access bindings without selecting or filtering workspace state.
+The webhook candidate query skips archived workspaces: `archived_at` is set or the state is `archived`.
+An archived workspace still reads GitHub when a tab asks, and its scheduled reads still run.
+No other workspace state limits a GitHub read or webhook refresh.
 This includes a workspace in `input` while its agent waits for the user.
 
 ## Verification
