@@ -73,6 +73,8 @@ them, and this page lists each protocol doc and what it covers.
 - [Keyboard shortcuts](../protocol/keyboard-shortcuts.md): the commands that
   keys run, where a key goes, and where the changes of a person live.
   - [Keyboard shortcuts: the keys](../protocol/keyboard-shortcuts-keys.md)
+  - [Keyboard shortcuts: fixed keys and text keys](../protocol/keyboard-shortcuts-fixed-keys.md)
+  - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
   - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
   - [Keyboard shortcuts: the settings tab](../protocol/keyboard-shortcuts-tab.md)
 - [Org image](../protocol/org-image.md): the org image, its builds and its

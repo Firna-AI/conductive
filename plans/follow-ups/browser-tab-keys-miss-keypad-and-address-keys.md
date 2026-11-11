@@ -11,7 +11,7 @@
   - **Browser key table:** the lists in `src/app/shortcuts/browser-keys.ts` that say which keys each browser keeps or uses on each system. A key in the `own` list of a browser is one that the app leaves to that browser in a normal tab: the tab dims it, and no command runs on it there.
 - **Background:**
   - Each person can record keys for the commands of the app on the Keyboard shortcuts tab.
-  - The user's answer to decision 196 (B with D, 2026-11-10) leaves to each browser, in a normal tab, the keys that it uses on its system to select a tab or to open its address bar. The protocol states this rule under "Hosts" in `docs/protocol/keyboard-shortcuts.md`.
+  - The user's answer to decision 196 (B with D, 2026-11-10) leaves to each browser, in a normal tab, the keys that it uses on its system to select a tab or to open its address bar. The protocol states this rule under "Hosts" in `docs/protocol/keyboard-shortcuts-hosts.md`.
   - The user's answer to review item 10 (B, 2026-11-10) records a keypad key as the key that it types, except a keypad digit, which stays a key of the keypad. The protocol states it under "How a key matches" in `docs/protocol/keyboard-shortcuts-matching.md`.
   - `digitKeys(modifier)` in `browser-keys.ts` builds only the top-row forms, such as `Alt+1` to `Alt+9`.
 - **Problem:**

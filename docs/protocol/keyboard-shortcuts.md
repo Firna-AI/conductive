@@ -8,12 +8,17 @@ those of the [architecture doc](../architecture.md#terms) and the terms
 below. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
-Three pages belong to this doc:
+Five pages belong to this doc:
 
 - [Keyboard shortcuts: the keys](keyboard-shortcuts-keys.md) gives the
   default keys of each command, the keys of Windows and Linux, the keys
-  that each browser keeps, the keys that the app leaves to each browser,
-  the fixed keys, and the text keys.
+  that each browser keeps, and the keys that the app leaves to each
+  browser.
+- [Keyboard shortcuts: fixed keys and text keys](keyboard-shortcuts-fixed-keys.md)
+  gives the fixed keys and the text keys of each system.
+- [Keyboard shortcuts: the hosts](keyboard-shortcuts-hosts.md) gives how the
+  keys work in each host: the Mac app, an installed app, and a normal
+  browser tab.
 - [Keyboard shortcuts: matching a press](keyboard-shortcuts-matching.md)
   gives how a press matches a key, also on other keyboard layouts and
   while a layout switch key is down.
@@ -112,66 +117,6 @@ app.
   and Next effort level. Reason: the menus of the app and the tabs of the
   palette wrap too.
 
-## Hosts
-
-- The app runs in three hosts: the Mac app, an installed app, and a normal
-  browser tab. The supported browsers are Chrome, Edge, Firefox, and
-  Safari.
-- The Mac app and an installed app give the page every key, except a key
-  that the system takes first, such as ⌘Space on a Mac. So every default
-  key works there.
-- A web app of Firefox or Safari is not an installed app. It keeps the
-  keys of a normal tab of its browser.
-- A normal tab keeps some keys for the browser, such as ⌘T, which opens a
-  new tab of the browser.
-  [Keys that a tab keeps](keyboard-shortcuts-keys.md#keys-that-a-tab-keeps)
-  lists the default keys that each browser keeps.
-- In a normal tab, a kept key runs no command, also when the page gets it.
-  Reason: the browser acts on the key anyway.
-- An unknown browser counts each key that a supported browser keeps as
-  kept.
-- Each command whose key from Conductor a supported browser keeps also
-  gets a second key, which every normal tab lets through (decision 191).
-  For example, New workspace has ⌘N and the second key ⌥⌘N. The Mac app
-  and an installed app take both keys.
-- Reason: a person then reaches each command from the keyboard in every
-  host, as in VS Code for the Web. One set of keys for every host was
-  rejected, because the Mac app would then lose ⌘N, ⌘T, and ⌘W. The keys of
-  Conductor alone were rejected, because these commands would then have no
-  key in a normal tab.
-- In a normal tab, the app leaves some keys to the browser (decision 192).
-  They are the keys that the browser uses on its system to select a tab or
-  to open its address bar. Such a key runs no command there, as a kept key
-  does.
-- [Keys that the app leaves to the browser](keyboard-shortcuts-keys.md#keys-that-the-app-leaves-to-the-browser)
-  lists these keys for each browser and system, such as ⌘1 to ⌘9 and ⌘L
-  on a Mac.
-- So Open workspace 1 to 9 and Focus the message field use their second
-  keys where the browser uses their keys from Conductor. The Mac app and
-  an installed app take both keys.
-- Reason: people use these keys of the browser the most. After ⌘L, an
-  address that the person types and sends would go to the agent. A tab
-  that takes every key that the browser lets through was rejected for
-  these reasons.
-- Chrome, Edge, and Firefox on Linux select a tab on Alt+1 to Alt+9. So in
-  a normal tab on Linux, Switch to org 1 to 9 have no default key that
-  works (decision 196). An installed app takes Alt+1 to Alt+9.
-- Firefox on Linux has no action on Ctrl+1 to Ctrl+9. So in Firefox on
-  Linux, Open workspace 1 to 9 keep Ctrl+1 to Ctrl+9.
-- Reason: the person keeps each tab key of the browser, and the Switch to
-  rows of the palette still open every other org. Alt+1 to Alt+9 for the
-  orgs in a Linux tab were rejected for this reason. Other org keys were
-  rejected: Ctrl+Alt+1 to Ctrl+Alt+9 would work on Linux only, and a layout
-  switch can take Ctrl+Shift+1 to Ctrl+Shift+9.
-- Each other key of the browser that a tab lets the page take stays a
-  default key, such as ⇧⌘A, which is tab search in Chrome. Where the page
-  offers the command, the key runs the command in place of the action of
-  the browser. Reason: these keys of the browser cost little, and the
-  person can remove any key.
-- In a normal tab, Back and Forward stay with the browser. Only the Mac app
-  has the commands Back and Forward, because only the Mac app has their
-  buttons.
-
 ## Where a key goes
 
 - While a dialog or a sheet is open, a key runs only the command that owns
@@ -195,12 +140,14 @@ app.
     rejected, so that the palette key works the same everywhere. `clear`
     or Ctrl+L clears the screen.
 - A key works also in a text field, except a text key of the system.
-  [Text keys](keyboard-shortcuts-keys.md#text-keys) lists the text keys. So
-  ⌘K opens the palette from the message field. ⌘C still copies there.
+  [Text keys](keyboard-shortcuts-fixed-keys.md#text-keys) lists the text
+  keys. So ⌘K opens the palette from the message field. ⌘C still copies
+  there.
 - A key without ⌘, Ctrl, or Alt runs its command only outside text fields.
 - Enter with any modifier and Space with no modifier run no command,
-  because they are [fixed keys](keyboard-shortcuts-keys.md#fixed-keys). So
-  the message field and a focused control get them.
+  because they are
+  [fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys). So the
+  message field and a focused control get them.
 - On a Mac, a key with ⌥ and without ⌘ or ⌃ also runs only outside text
   fields. Reason: such a key types a character, such as ¡ for ⌥1.
 - While a port preview or the live desktop has the focus, every key goes
@@ -230,7 +177,7 @@ app.
 - So ⌘N, ⌘T, and ⌘W run their commands in the Mac app. ⌘R still reloads
   the page.
 - The keys of the menus of the Mac app are fixed keys, as
-  [Fixed keys](keyboard-shortcuts-keys.md#fixed-keys) says.
+  [Fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys) says.
 - The menu bar of the Mac app has no item for a command that keys run,
   such as a Search item. Reason: the page hears each key itself. A menu
   cannot run an action inside the page, because the page has no bridge, as

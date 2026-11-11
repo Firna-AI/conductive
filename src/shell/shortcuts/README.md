@@ -194,5 +194,7 @@ the account.
 
 - [Keyboard shortcuts](../../../docs/protocol/keyboard-shortcuts.md)
 - [Keyboard shortcuts: the keys](../../../docs/protocol/keyboard-shortcuts-keys.md)
+- [Keyboard shortcuts: fixed keys and text keys](../../../docs/protocol/keyboard-shortcuts-fixed-keys.md)
+- [Keyboard shortcuts: the hosts](../../../docs/protocol/keyboard-shortcuts-hosts.md)
 - [Keyboard shortcuts: the settings tab](../../../docs/protocol/keyboard-shortcuts-tab.md)
 - [Command palette](../../../docs/protocol/command-palette.md)

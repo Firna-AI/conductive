@@ -1408,10 +1408,13 @@ mockup could find.
 - [x] Add the command Send feedback without a default key, and run it from
       the palette's Send feedback row, with tests. Report:
       `.context/keyboard-shortcuts/reports/send-feedback-model.md`.
-- [ ] Split `docs/protocol/keyboard-shortcuts.md` and
+- [x] Split `docs/protocol/keyboard-shortcuts.md` and
       `docs/protocol/keyboard-shortcuts-keys.md`, which pass the 250 lines
       of the `documentation` skill, into linked pages, from the docs
-      report of Milestone 10.
+      report of Milestone 10. "Fixed keys" and "Text keys" moved to
+      `keyboard-shortcuts-fixed-keys.md`, and "Hosts" to
+      `keyboard-shortcuts-hosts.md`. Report:
+      `.context/keyboard-shortcuts/reports/protocol-split.md`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

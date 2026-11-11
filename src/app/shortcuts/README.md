@@ -3,7 +3,10 @@
 This area holds the shortcut rules without a DOM or a network connection.
 The [keyboard shortcut protocol](../../../docs/protocol/keyboard-shortcuts.md)
 defines the behavior. Its [key table](../../../docs/protocol/keyboard-shortcuts-keys.md)
-defines the defaults, fixed keys, and browser keys.
+defines the defaults and the browser keys,
+[fixed keys and text keys](../../../docs/protocol/keyboard-shortcuts-fixed-keys.md)
+defines the fixed keys, and [the hosts](../../../docs/protocol/keyboard-shortcuts-hosts.md)
+defines which keys each host keeps.
 
 The caller supplies the commands that the page offers and the focus state.
 It supplies visible workspace rows after collapsed sections and groups hide.

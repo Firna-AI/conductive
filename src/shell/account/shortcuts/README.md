@@ -90,4 +90,6 @@ of each host in Node.
 - [Keyboard shortcuts: the settings tab](../../../../docs/protocol/keyboard-shortcuts-tab.md)
 - [Keyboard shortcuts](../../../../docs/protocol/keyboard-shortcuts.md)
 - [Keyboard shortcuts: the keys](../../../../docs/protocol/keyboard-shortcuts-keys.md)
+- [Keyboard shortcuts: fixed keys and text keys](../../../../docs/protocol/keyboard-shortcuts-fixed-keys.md)
+- [Keyboard shortcuts: the hosts](../../../../docs/protocol/keyboard-shortcuts-hosts.md)
 - [Keyboard shortcuts: matching a press](../../../../docs/protocol/keyboard-shortcuts-matching.md)

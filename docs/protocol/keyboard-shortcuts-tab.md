@@ -30,8 +30,8 @@ app.
 - The tab lists each command with its keys, in the groups General, View,
   Navigation, Workspace, and Chat.
 - The tab also lists the
-  [fixed keys](keyboard-shortcuts-keys.md#fixed-keys). In each group, the
-  commands come first. The fixed keys of the group follow, each with
+  [fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys). In each group,
+  the commands come first. The fixed keys of the group follow, each with
   "Fixed shortcut".
 - Three groups hold only fixed keys, and they close the list: Menus and
   palette, Text, and Mac app. Each group says once, under its title, that
@@ -64,8 +64,8 @@ app.
   has the focus."
 - In a normal tab, a key that does not work there is dimmed. Such a key is
   a kept key, or a key that the app leaves to that browser on that system,
-  as [Hosts](keyboard-shortcuts.md#hosts) says. For example, a Chrome tab
-  on Linux dims Alt+1 to Alt+9.
+  as [Hosts](keyboard-shortcuts-hosts.md#hosts) says. For example, a
+  Chrome tab on Linux dims Alt+1 to Alt+9.
 - One more line then names where the dimmed keys work: in the Mac app on a
   Mac, and in the app that the browser installs when the browser is Chrome
   or Edge.
