@@ -340,10 +340,12 @@ user can override each one.
     no skill. Reason: Codex lists a linked skill folder by the path of its
     target, but its model reads the path of the link. Codex gives each
     read of a simple command as one `read` action with an absolute path.
-15. A Codex read of a skill that the turn already named shows as a plain
-    command. Reason: Codex reads a long `SKILL.md` in pages, and one load
-    should give one skill line. Each Claude `Skill` call shows, because
-    each call is a separate load.
+15. A Codex read of a skill shows as a plain command when an earlier read
+    of the turn loaded that skill. A failed read loads no skill, so a
+    later read of that skill gets its skill line. Reason: Codex reads a
+    long `SKILL.md` in pages, and one load should give one skill line.
+    Each Claude `Skill` call shows, because each call is a separate load.
+    The docs agent of Milestone 2 found the case of a failed first read.
 16. A skill line with two or more names reads "Using skills" or "Used
     skills". Reason: the plural is a detail of decision 279, and the fold
     line already uses "Skills:" for two or more names. The options check
@@ -367,6 +369,10 @@ user can override each one.
 20. The `history` chat of the mockups gets no skill line, so `app/chat`
     shows its turn without skills. Reason: the marketing pictures also
     use that chat, and they stay the same.
+21. Only the concise transcript copy has fold lines that name skills. The
+    full copy gives the steps of each fold in place of its line, so it
+    gives each skill line instead. Reason: the full copy has no fold
+    lines. The docs agent of Milestone 2 made this call.
 
 ## Milestone 1: Mockups
 
@@ -417,25 +423,28 @@ Depends on: 1
 The protocol docs state the skill line, the skill names on fold lines, and
 what counts as a Codex skill use. Read the `documentation` skill first.
 
-- [ ] Update `docs/protocol/chat-and-events.md` under "What the chat
+- [x] Update `docs/protocol/chat-and-events.md` under "What the chat
       shows" and "The work of a turn":
-  - [ ] Each skill use of the agent shows as a skill line at its place
+  - [x] Each skill use of the agent shows as a skill line at its place
         among the tool calls, with the skill name as the agent gives it
         (decision 277). Give the rejected options and their reasons.
-  - [ ] Each fold line names the skills of its calls, as design call 9
+  - [x] Each fold line names the skills of its calls, as design call 9
         says (decision 277).
-  - [ ] A Codex skill use is a command that reads the `SKILL.md` file of a
+  - [x] A Codex skill use is a command that reads the `SKILL.md` file of a
         skill in the Codex skill list, compared by real path. A second
         read of that skill in the same turn is a plain command
         (decision 278). Give the rejected options and their reasons.
-  - [ ] The words of the skill line, "Using skill" and "Used skill"
+  - [x] The words of the skill line, "Using skill" and "Used skill"
         (decision 279). Give the rejected options and their reasons.
-- [ ] Update `docs/protocol/session-transcripts.md`: in the full copy, a
+- [x] Update `docs/protocol/session-transcripts.md`: in the full copy, a
       skill line gives the words of the chat, the skill names as code, and
       the detail.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a fact that this milestone changes.
+
+Evidence: `.context/skill-use-in-chat/m2-report.md`, with the legal page
+read and the link check.
 
 ## Milestone 3: Skill names in the chat contract
 
@@ -505,8 +514,8 @@ that reads a listed `SKILL.md` file, as design calls 2 and 12 to 15 say.
 - [ ] In `runner/src/providers/codex-events.ts`, give a `commandExecution`
       item the names of its matching `read` actions, as design call 14
       says. Its target holds the names, and its detail holds the command.
-- [ ] Keep the skills that the turn already named, and skip them, as
-      design call 15 says.
+- [ ] Keep the skills that an earlier read of the turn loaded, and skip
+      them, as design call 15 says. A failed read loads no skill.
 - [ ] Warn once and continue when the list fails or cannot be read.
 - [ ] Let `FakeAppServer` in `runner/test-support/app-server.ts` answer
       `skills/list` with a list from the test.
@@ -516,6 +525,7 @@ that reads a listed `SKILL.md` file, as design calls 2 and 12 to 15 say.
   - [ ] A read of a `SKILL.md` file that the list does not hold carries no
         name.
   - [ ] A second read of the same skill in the turn carries no name.
+  - [ ] A read after a failed read of the same skill carries the name.
   - [ ] A failed list leaves the turn running, with no names.
 - [ ] Update "What it does" in `runner/README.md`.
 
