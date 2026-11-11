@@ -148,6 +148,16 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   and each message. A click opens a message line to its full text.
 - When the user opens or closes a fold or a run of tool calls, its line
   stays in place. Its list opens or closes below the line.
+- The line of a tool call gives a verb for its kind, its target, and then
+  its detail, such as "Ran `npm test`".
+- The target of a call to a tool of an MCP server, such as the computer
+  tools, is the name of that tool without its server, such as
+  `get_window_state`. Its detail is the subject of the call, such as a
+  query, a path, or an address.
+- Reason: a subject alone, such as `menu`, does not say which tool ran,
+  and a full name, such as `mcp__computer__get_window_state`, is hard to
+  read. Words of the app for each computer tool were rejected, because
+  they need a list of tool names that the provider can change.
 
 ## Session transcripts
 

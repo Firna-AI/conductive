@@ -45,6 +45,8 @@ part.
   `src/providers/claude-background-note.ts`, the note at the end of a reply.
 - `src/providers/`: the Claude and Codex adapters, their event mapping, and
   each agent environment. `claude-message.ts` joins whole Claude messages.
+  `tool.ts` maps each tool call to its chat line, and each adapter names
+  the tool of an MCP call for it.
   `message.ts` puts the sender line before the text of each message.
   `codex-thread.ts` resumes saved Codex conversations and forks after a
   saved provider refusal. `rpc.ts` keeps structured JSON-RPC error data.

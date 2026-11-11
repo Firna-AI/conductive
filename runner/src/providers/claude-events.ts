@@ -9,6 +9,16 @@ export function synthetic(text: string): boolean {
   return /^\[Request interrupted by user(?: for tool use)?\]$/.test(text.trim())
 }
 
+/**
+ * Claude names a tool of an MCP server `mcp__<server>__<tool>`. This gives
+ * the tool part of such a name, or null for any other tool.
+ */
+function mcpTool(name: string): string | null {
+  const [prefix, server, ...rest] = name.split('__')
+  const tool = rest.join('__')
+  return prefix === 'mcp' && server && tool ? tool : null
+}
+
 /** Parse SDK output as unknown. Only this module knows its event fields. */
 export class ClaudeEvents {
   private messageId = ''
@@ -178,7 +188,8 @@ export class ClaudeEvents {
 
   private beginTool(block: Record<string, unknown>): void {
     const id = string(block.id)
-    const tool = mapTool(id, string(block.name), block.input, 'running')
+    const name = string(block.name)
+    const tool = mapTool(id, name, block.input, 'running', mcpTool(name))
     this.tools.set(id, tool)
     this.emit({ type: 'tool', tool })
   }

@@ -183,6 +183,11 @@ A failed send to one tab does not fail the refresh.
 
 Pull request lookup prefers an open request for the exact repository and branch.
 It then considers merged and closed requests, in GitHub's newest-created order.
+Each lookup page reads five pull requests with their banner fields, both check rollups, and latest opinionated reviews.
+Each check and review connection includes its first 100 entries.
+When those first pages are complete, an open pull request needs one GraphQL query.
+A merged or closed pull request needs two queries, including the empty open lookup.
+Further lookup pages and later pages of the chosen check rollup or reviews need additional queries.
 Without a pull request, a GraphQL comparison uses the explicit head commit and the workspace base branch.
 It reads the commit count and repository identity.
 It selects no file patches.
