@@ -473,6 +473,23 @@ These calls came from Milestone 1 on 11 November 2026:
 - Agent call: use an angle-bracket link in the Markdown stop note.
   Reason: emphasis must not split a session link whose IDs contain `_`.
 
+### The stop source in the app
+
+These calls came from Milestone 7 on 11 November 2026:
+
+- Agent call: find the session-chip target by its workspace and session
+  IDs in the reader's workspace list. Reuse the existing chip and its
+  session read. Reason: a stored reference needs no URL parse round trip.
+- Agent call: build a text fallback with the origin of the chat's own
+  workspace link. Reason: the development page origin can differ from
+  the workspace-link origin, and chat reads no app services.
+- Agent call: use a relative session path when no link origin exists.
+  Actual chats load their workspace before the history. Reason: the
+  component also handles a context that has no origin yet.
+- Agent call: use one development scenario with a fixed sending session
+  for both workspaces. Reason: it exercises the same and other-workspace
+  paths without product fixtures.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -676,11 +693,14 @@ Tags: ui
 
 Depends on: 1, 2, 4
 
-- [ ] Read the `product-ui` and `typescript` skills.
-- [ ] Show the stop line of a stop by an agent with the session chip, as
+- [x] Read the `product-ui` and `typescript` skills.
+- [x] Show the stop line of a stop by an agent with the session chip, as
       the mockups draw, on desktop and on a phone.
-- [ ] Add tests beside the code for the line.
+- [x] Add tests beside the code for the line.
 - [ ] Update `src/chat/README.md` where it describes the changed code.
+
+Evidence: `.context/agent-tools-conductor-parity/reports/m7-stop-ui.md`
+and `.context/agent-tools-conductor-parity/checks/m7-orchestrator-tests.log`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

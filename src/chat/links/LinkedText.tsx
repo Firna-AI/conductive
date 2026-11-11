@@ -5,7 +5,9 @@ import {
   type ChipOpener,
 } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
 import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
+import { routes } from '../../app/router'
 import type { FileEntry } from '../../shared/files'
+import { sessionLink } from '../../shared/session-link'
 import { isPlainClick } from '../../shell/ui/AppLink'
 import { MentionIcon } from '../mentions/MentionIcon'
 import {
@@ -16,7 +18,7 @@ import {
 import { chatParts, type ChatPart, type MentionLookup } from './chat-parts'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
-import type { LinkTarget } from './workspace-links'
+import { sessionTarget, type LinkTarget } from './workspace-links'
 
 /**
  * A workspace in a sent message or an answer: a link of the app to the page
@@ -44,6 +46,27 @@ function LinkChip(props: { target: LinkTarget }) {
   ) : (
     <WorkspaceChip opener={opener} workspace={chipOf(workspace)} />
   )
+}
+
+/**
+ * A session that the chat names by its IDs, such as the session whose agent
+ * stopped a turn, as the chat shows the link of that session: its session
+ * chip, or the chip of its workspace while the chat does not hold the
+ * session. When no workspace of the list matches, the link stays text.
+ * Outside a chat, which gives no origin, the text is the address of the
+ * session in the app.
+ */
+export function SessionLinkText(props: {
+  workspaceId: string
+  sessionId: string
+}) {
+  const { links, origin } = useChatLinks()
+  const target = sessionTarget(props, links)
+  if (target) return <LinkChip target={target} />
+  const { workspaceId, sessionId } = props
+  return origin === undefined
+    ? routes.session(links.orgId, workspaceId, sessionId)
+    : sessionLink(origin, links.orgId, workspaceId, sessionId)
 }
 
 /**
