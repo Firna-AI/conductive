@@ -259,8 +259,6 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - `ui/`: the local dense controls of the design, such as `ChoiceMenu`,
   `ConfirmDialog`, and `Sheet`, where `@firna/ui` has none. They copy the
   local parts of the mockups, because the app has no shared UI folder yet.
-  [Shared UI lacks parts](../../plans/follow-ups/firna-ui-missing-parts.md)
-  records the gap in `@firna/ui`.
 - `dev/`: the dev page and its fake server.
 
 Related docs: [Orgs and members](../../docs/protocol/orgs-and-members.md),
