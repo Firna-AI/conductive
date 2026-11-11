@@ -8,6 +8,7 @@ import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
 import { AttachmentChips } from './AttachmentChips'
+import { ContinuedLine } from './ContinuedLine'
 import type { SingleItem } from './groupItems'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
@@ -72,6 +73,14 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       return (
         <LinkedLine
           link={<ScreenLink to={paths.noStarterLogin}>{item.from}</ScreenLink>}
+        />
+      )
+    case 'continued':
+      return (
+        <ContinuedLine
+          base={item.base}
+          branch={item.branch}
+          who={item.by === viewer ? 'You' : people[item.by].name}
         />
       )
     case 'stopped':

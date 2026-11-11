@@ -61,21 +61,18 @@ it('maps pull request blockers and terminal states into the shared banner', asyn
       baseBranch: 'main',
       state: sample.state,
       updatedAt: TEST_TIME,
+      pullRequest: { headSha: HEAD_SHA },
     })
     expect(snapshot.checks.state).toBe('available')
     expect(snapshot.headSha).toBe(HEAD_SHA)
   }
 })
 
-it('offers the create link only for branch commits and waits for a pull request', async () => {
+it('tells a branch with commits from one without, and waits for a pull request', async () => {
   api.pulls = {}
   for (const sample of [
-    { ahead: 0, state: 'no-commits', url: null },
-    {
-      ahead: 3,
-      state: 'none',
-      url: 'https://github.com/Codertocat/Hello-World/compare/main...changes?expand=1',
-    },
+    { ahead: 0, state: 'no-commits' },
+    { ahead: 3, state: 'none' },
   ]) {
     api.comparisons.set('refs/heads/main', new Map([[HEAD_SHA, sample.ahead]]))
     expect(await read()).toEqual({
@@ -85,7 +82,6 @@ it('offers the create link only for branch commits and waits for a pull request'
         baseBranch: 'main',
         updatedAt: TEST_TIME,
         pullRequest: null,
-        createPullRequestUrl: sample.url,
       },
       checks: { state: 'waiting-for-pull-request', checks: [] },
       headSha: HEAD_SHA,
@@ -96,10 +92,7 @@ it('offers the create link only for branch commits and waits for a pull request'
   }
   api.branches.delete('refs/heads/changes')
   api.requests = []
-  expect((await read()).banner).toMatchObject({
-    state: 'no-commits',
-    createPullRequestUrl: null,
-  })
+  expect((await read()).banner).toMatchObject({ state: 'no-commits' })
   expect(api.requests.every((request) => request.method === 'POST')).toBe(true)
 })
 

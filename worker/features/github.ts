@@ -10,6 +10,9 @@ import { installationTokenProvider } from '../github/credentials'
 import { refreshWorkspace } from '../github/refresh'
 import { WorkspaceGitHubState } from '../github/workspace-state'
 import { HttpError } from '../http'
+import { handleGitHubMerge } from '../github/merge-handler'
+import { authorizeMerge } from '../github/merge-access'
+import { GitHubReader } from '../github/client'
 import type { WorkspaceAlarms } from './alarms'
 import type { ReceiverStorage } from '../members/receiver-storage'
 
@@ -77,6 +80,55 @@ export class WorkspaceGitHub {
         this.dependencies.now,
       ),
     })
+  }
+
+  fetch(request: Request): Promise<Response> {
+    return handleGitHubMerge(request, this.env, {
+      ...this.dependencies,
+      storage: this.storage,
+      refresh: (workspace, signal) => this.refresh(workspace, signal),
+    })
+  }
+
+  async defaultBranch(
+    workspace: GitHubWorkspace,
+    userId: string,
+  ): Promise<string> {
+    const authorize = () => authorizeMerge(this.env.DB, workspace, userId)
+    await authorize()
+    const token = await installationTokenProvider(
+      {
+        ...this.env,
+        GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
+      },
+      this.dependencies.fetch,
+      this.dependencies.now,
+    )(workspace)
+    const branch = await new GitHubReader(
+      {
+        ...this.dependencies,
+        token: async () => token,
+        fetch: async (request) => {
+          await authorize()
+          return this.dependencies.fetch(request)
+        },
+      },
+      workspace,
+      token,
+    ).defaultBranch()
+    await authorize()
+    return branch
+  }
+
+  async scheduleFresh(workspace: GitHubWorkspace): Promise<void> {
+    await this.storage.put(
+      `github-refresh:${this.dependencies.randomToken()}`,
+      {
+        at: this.dependencies.now(),
+        request: { workspace, signal: {} },
+      } satisfies ScheduledRead,
+    )
+    await this.schedule()
   }
 
   async alarm(): Promise<void> {

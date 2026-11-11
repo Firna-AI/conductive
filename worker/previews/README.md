@@ -198,6 +198,8 @@ A denied viewer loses only the connections of that viewer session. Other
 viewers of the same preview keep theirs.
 The request and response streams read only when their consumer requests data.
 They read one chunk at a time. No cached authorization or time window permits data.
+A chunk of a byte stream, such as a fetch body, holds the data that waits, up to 256 KB.
+So one check covers it. The default reader of a Workers fetch body gives 4 KB at most.
 Completed HTTP connections release their registry entries.
 
 A preview socket uses `bridgeSocket` with an outbound socket to the sandbox.

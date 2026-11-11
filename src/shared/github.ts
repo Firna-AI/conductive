@@ -5,13 +5,31 @@ export const githubPaths = {
   banner: (orgId: string, id: string) => `${workspacePath(orgId, id)}/github`,
   checks: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/github/checks`,
+  capabilities: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/github/capabilities`,
+  merge: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/github/merge`,
+  mergeResult: (orgId: string, id: string, mergeId: string) =>
+    `${workspacePath(orgId, id)}/github/merge/${encodeURIComponent(mergeId)}`,
 } as const
 
 export interface PullRequest {
   number: number
   title: string
   url: string
+  headSha: string
 }
+export type GitHubMergeMethod = 'merge' | 'squash' | 'rebase'
+export interface GitHubCapabilities {
+  canWrite: boolean
+  mergeMethod: GitHubMergeMethod | null
+}
+export interface GitHubMergeRequest {
+  headSha: string
+  method: GitHubMergeMethod
+}
+export type GitHubMergeResponse =
+  { state: 'pending'; mergeId: string } | { state: 'merged' }
 export type BannerState =
   | 'none'
   | 'no-commits'
@@ -34,7 +52,6 @@ export type GitHubBanner = {
   | {
       state: 'none' | 'no-commits'
       pullRequest: null
-      createPullRequestUrl: string | null
     }
   | {
       state: Exclude<BannerState, 'none' | 'no-commits'>

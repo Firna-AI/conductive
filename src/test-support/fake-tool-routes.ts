@@ -31,6 +31,24 @@ export function fakeGitHub(
     : data.banner
   routes.json('GET', githubPaths.banner(FAKE_IDS.org, workspaceId), bar)
   routes.json('GET', githubPaths.checks(FAKE_IDS.org, workspaceId), data.checks)
+  routes.json('GET', githubPaths.capabilities(FAKE_IDS.org, workspaceId), {
+    canWrite: true,
+    mergeMethod: 'squash',
+  })
+  routes.json(
+    'POST',
+    githubPaths.merge(FAKE_IDS.org, workspaceId),
+    {
+      state: 'pending',
+      mergeId: `merge-${workspaceId}`,
+    },
+    202,
+  )
+  routes.json(
+    'GET',
+    githubPaths.mergeResult(FAKE_IDS.org, workspaceId, `merge-${workspaceId}`),
+    { state: 'merged' },
+  )
 }
 
 export function fakeToolRoutes(

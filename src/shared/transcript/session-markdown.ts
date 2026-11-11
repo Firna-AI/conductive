@@ -133,7 +133,10 @@ export class SessionMarkdown {
         continue
       }
       if (entry.kind === 'item') {
-        heading(turnOf(transcript, entry.item))
+        // The note of a Continue belongs to no turn, so it has no heading.
+        if (entry.item.kind !== 'continued') {
+          heading(turnOf(transcript, entry.item))
+        }
         blocks.push(itemMarkdown(entry.item, transcript, readers))
       } else if (entry.kind === 'insert') {
         heading(entry.insert.content.turnId)

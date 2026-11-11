@@ -69,4 +69,8 @@ the work fold of each ended turn, and Try again.
   So a late failure of the older turn can name the same message. Then only the item of the newer known turn offers Try again.
 - The Worker refuses an old Try again, such as from a second tab that missed newer events, with `409 retry_not_available`.
   The chat then shows the notice "The turn didn't restart" with the Worker's plain message.
+- Each `workspace.continued` event of a session becomes one `continued` item at its place among the events.
+  The line names the member who pressed Continue, "You" to that member, the new branch, and its base, with `ContinuedLine` of the mockups.
+  The item takes its ID from the new branch, so a repeat of the note replaces it. It belongs to no turn, so it never folds into work.
+  A closed session gets the note in its stored history, so a session that opens later shows it.
 - Ordered history folding preserves these fields and lines across completion and failure events.

@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-07, from PR #30, branch `conductor/boat-native-remote-workspaces-milestone-7u`, a problem outside the scope that the check of round 1 finding 2 found. The user sees it as item 114. Updated on 2026-11-08 by branch `conductor/boat-native-remote-workspaces-milestone-7x`, which implements option C. Updated on 2026-11-10 by branch `conductor/model-gateway-m7-runner-on-the-gateway`, which moves the runner of this repository to runner protocol version 2. Since then this item covers only version 1 runners.
-- **Location:** version 1 runners in older org images. Their code is `runner/src/providers/claude-process.ts`, `runner/src/providers/codex.ts`, and `runner/src/providers/environment.ts` at commit `59ae89c`, or at a later commit where `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts` is 1. The requirement is the section "A sandbox with a version pin of 1" of `docs/protocol/isolation.md`.
+- **Location:** version 1 runners in older org images. Their code is `runner/src/providers/claude-process.ts`, `runner/src/providers/codex.ts`, and `runner/src/providers/environment.ts` at commit `59ae89c`, or at a later commit where `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts` is 1. The requirement is the section "A sandbox with a version pin of 1" of `docs/protocol/version-pins.md`.
 - **Reason:** the proof needs a real sandbox with a version 1 runner and real logins of three kinds, and only the primary workspace holds those logins and the real-sandbox settings.
 
 - **Terms:**
@@ -33,7 +33,7 @@
   - The pinned `claude` program 2.1.318 of Claude Agent SDK 0.3.318 reads that pipe until the newline or the end, and closes it. Then it removes the descriptor variable. It writes a copy of the login to disk only when `CLAUDE_CODE_REMOTE` is set, and the runner removes that variable.
   - Codex: the runner starts `codex app-server` 0.167.0 with no login in its environment or its arguments. After `initialize`, it sends `account/login/start` with the type `apiKey` on the standard input of the App Server. When that request succeeds, the runner sends `thread/start` or `thread/resume`.
   - The Codex model provider of a version 1 runner has `base_url` set to `https://api.openai.com/v1`, `requires_openai_auth=true`, and no `env_key`. The credential store is `ephemeral`, so Codex keeps the key in memory.
-  - The section "A sandbox with a version pin of 1" of `docs/protocol/isolation.md` requires that no process that the agent starts inherits the login, and that no agent program writes a copy to disk.
+  - The section "A sandbox with a version pin of 1" of `docs/protocol/version-pins.md` requires that no process that the agent starts inherits the login, and that no agent program writes a copy to disk.
   - The runner tests use fake logins. `runner/src/providers/claude-native.test.ts` still runs the pinned SDK with a fake child process, and checks the same Claude pipe for the measure tool. No test starts a real agent program. So no run has shown that the real programs take these routes, or that a real tool server gets no login.
   - The accepted risk stays: a member with a terminal, or another process of the same sandbox user, can read the login of a running turn on purpose and keep a copy. This check does not test that risk.
   - Earlier cases of a login that outlived its turn: the idle agent process that kept the login between turns, fixed in PR #30, and an agent that ran after its turn ended, round 1 finding 2 of PR #30.
@@ -191,4 +191,4 @@ If the probe server stops when the tool command ends, record that, and start the
 - It does not test the accepted risk: a member with a terminal, or another process of the same sandbox user, can still read the login of a running turn on purpose.
 - It covers only the versions that the version 1 runner pins. The runner of `59ae89c` pins the `claude` program 2.1.318 of Claude Agent SDK 0.3.318, and Codex 0.167.0. Run it again for a version 1 runner with other pins.
 - `image/live-check.mjs` checks real chat and resume. But it starts no server through a tool, and its measurement forks get `LIVE_AGENT_LOGIN` in their resume env. So that script alone does not show this requirement.
-- It does not cover a runner of protocol version 2, which holds no login. The section "A sandbox with a version pin of 2 or later" of `docs/protocol/isolation.md` states the risks of its turn token.
+- It does not cover a runner of protocol version 2, which holds no login. The section "A sandbox with a version pin of 2 or later" of `docs/protocol/version-pins.md` states the risks of its turn token.

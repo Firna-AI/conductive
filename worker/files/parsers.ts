@@ -111,6 +111,9 @@ export function parseChanges(value: unknown): ChangesResponse {
   if (
     !isRecord(value) ||
     typeof value.baseBranch !== 'string' ||
+    (value.unpushedCommits !== undefined && !natural(value.unpushedCommits)) ||
+    (value.uncommittedFileCount !== undefined &&
+      !natural(value.uncommittedFileCount)) ||
     !Array.isArray(value.files) ||
     !isRecord(value.summary) ||
     !natural(value.summary.files) ||
@@ -120,6 +123,12 @@ export function parseChanges(value: unknown): ChangesResponse {
     throw invalidFileResponse()
   return {
     baseBranch: value.baseBranch,
+    ...(value.unpushedCommits === undefined
+      ? {}
+      : { unpushedCommits: value.unpushedCommits }),
+    ...(value.uncommittedFileCount === undefined
+      ? {}
+      : { uncommittedFileCount: value.uncommittedFileCount }),
     ...(typeof value.displayBaseBranch === 'string'
       ? { displayBaseBranch: value.displayBaseBranch }
       : {}),

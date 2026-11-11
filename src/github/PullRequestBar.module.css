@@ -59,6 +59,33 @@
   color: var(--ui-amber-deep);
 }
 
+/*
+ * The number of a pull request links to it on GitHub. An arrow cell after a
+ * divider marks the link, which takes the colours of the state.
+ */
+.numberLink {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 0;
+  text-decoration: none;
+}
+
+.numberLink:hover {
+  border-color: currentcolor;
+}
+
+.numberText {
+  padding: 1px 6px;
+}
+
+.numberArrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  border-left: 1px solid;
+  border-left-color: inherit;
+}
+
 /* The words of a state shrink with an ellipsis. Its icon keeps its size. */
 .state {
   display: inline-flex;
@@ -161,12 +188,14 @@
   color: var(--ui-muted);
 }
 
+/* On a phone, the link at the top of the Checks tab is a touch target. */
 .action {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   gap: 4px;
   height: calc(var(--ui-control-height) - 4px);
+  min-height: var(--ui-touch-min, 0px);
   padding: 0 8px;
   border: 1px solid var(--ui-control-border);
   border-radius: var(--ui-radius-md);
@@ -218,15 +247,40 @@
   color: var(--ui-muted);
 }
 
-/* The right column is a size container: a narrow column drops detail. */
+/* The GitHub mark takes the place of the words and the arrow of a link. */
+.mark {
+  display: none;
+  flex-shrink: 0;
+}
+
+.arrow {
+  flex-shrink: 0;
+}
+
+/*
+ * The right column is a size container: a narrow column drops detail. Beside
+ * an action, the bar drops its detail, so the words of the state keep their
+ * room. In a very narrow container, a GitHub link keeps only its mark.
+ */
 @container (max-width: 420px) {
   .detail {
     display: none;
   }
 }
 
-@container (max-width: 340px) {
-  .actionLabel {
+@container (max-width: 520px) {
+  .withActions .detail {
     display: none;
+  }
+}
+
+@container (max-width: 340px) {
+  .actionLabel,
+  .arrow {
+    display: none;
+  }
+
+  .mark {
+    display: block;
   }
 }

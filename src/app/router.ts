@@ -1,4 +1,5 @@
 import type { Agent } from '../shared/agents'
+import { sessionAddressPath } from '../shared/session-link'
 import { INVITE_CODE_ERROR_PARAMETER } from '../shared/waitlist'
 
 export const SETTINGS_TABS = [
@@ -44,12 +45,16 @@ export type Route =
   | { screen: 'create-org'; first: boolean }
   | { screen: 'org'; orgId: string }
   | { screen: 'new-workspace'; orgId: string; sectionId: string | null }
-  /** `view` holds the path after the workspace, such as `files`, for its tabs. */
+  /**
+   * `view` holds the path after the workspace, such as `files`, for its
+   * tabs. A session address names its session in `session`, with no view.
+   */
   | {
       screen: 'workspace'
       orgId: string
       workspaceId: string
       view: readonly string[]
+      session?: string
     }
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
   | { screen: 'routines'; orgId: string }
@@ -98,6 +103,8 @@ export const routes = {
     [`/orgs/${encode(orgId)}/workspaces/${encode(workspaceId)}`]
       .concat(view.map(encode))
       .join('/'),
+  /** The address of a session, which the Worker builds the same way. */
+  session: sessionAddressPath,
   settings: (orgId: string, tab: SettingsTab = 'general') =>
     tab === 'general'
       ? `/orgs/${encode(orgId)}/settings`
@@ -216,6 +223,11 @@ export function parseRoute(pathname: string, search: string): Route {
     return { screen: 'new-workspace', orgId, sectionId: query.get('section') }
   }
   if (area === 'workspaces' && id !== undefined) {
+    // Only `sessions` and an ID, with nothing after them, name a session.
+    const [sessions, session, ...more] = rest
+    if (sessions === 'sessions' && session !== undefined && more.length === 0) {
+      return { screen: 'workspace', orgId, workspaceId: id, view: [], session }
+    }
     return { screen: 'workspace', orgId, workspaceId: id, view: rest }
   }
   if (area === 'settings' && rest.length === 0) {

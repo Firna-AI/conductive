@@ -58,8 +58,16 @@ export function parseChanges(value: unknown): ChangesResponse | null {
   const added = readCount(summary, 'added')
   const removed = readCount(summary, 'removed')
   if (count === null || added === null || removed === null) return null
+  const unpushedCommits = readCount(value, 'unpushedCommits')
+  if (value.unpushedCommits !== undefined && unpushedCommits === null)
+    return null
+  const uncommittedFileCount = readCount(value, 'uncommittedFileCount')
+  if (value.uncommittedFileCount !== undefined && uncommittedFileCount === null)
+    return null
   return {
     baseBranch,
+    ...(unpushedCommits === null ? {} : { unpushedCommits }),
+    ...(uncommittedFileCount === null ? {} : { uncommittedFileCount }),
     ...readLabel(value, 'displayBaseBranch'),
     files: parseItems(files, parseChangedFile),
     summary: { files: count, added, removed },
