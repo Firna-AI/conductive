@@ -135,7 +135,7 @@ The main-process socket uses `ws` because the native WebSocket API cannot set au
 
 The main process lists the Conductor workspaces of this Mac that are not archived.
 It uploads the workspaces that the person selects.
-No page of the app starts an import operation yet.
+The offer bar and the [import page](../src/shell/import/ConductorImportScreen.tsx) of the app start each operation through the Worker.
 The [import README](src/import/README.md) gives the consent, the operations, the scan, the upload, the old documents, the focused checks, and the key code.
 [Import on the Mac](../docs/protocol/desktop-import.md) states the requirements.
 

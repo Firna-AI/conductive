@@ -8,10 +8,12 @@ import {
   utimes,
   writeFile,
 } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { zstdCompressSync } from 'node:zlib'
 import { expect, it } from 'vitest'
 import { readStageResults } from './stage.ts'
+import { sourceInventory } from './inventory.ts'
+import { readSource } from './source.ts'
 import {
   claudeMemory,
   content,
@@ -45,6 +47,23 @@ it('packages working bytes, modes, tombstones, links, context and native session
       join(fixture.workspace, 'renamed.txt'),
     )
     await fixture.write('.gitignore', '.context/\n')
+    const localExclude = resolve(
+      fixture.workspace,
+      await fixture.git('rev-parse', '--git-path', 'info/exclude'),
+    )
+    await mkdir(dirname(localExclude), { recursive: true })
+    await writeFile(localExclude, '/ignored-local.env\n.context/\n')
+    await fixture.write('ignored-local.env', 'Synthetic local secret\n')
+    await fixture.write('ignored-project.env', 'Synthetic project secret\n')
+    await fixture.write('.gitignore', '.context/\nignored-project.env\n')
+    await fixture.write('ignored-default.env', 'Synthetic default secret\n')
+    await fixture.write('ignored-user.env', 'Synthetic configured secret\n')
+    const defaultExclude = join(fixture.locations.xdgConfigHome, 'git/ignore')
+    await mkdir(dirname(defaultExclude), { recursive: true })
+    await writeFile(
+      defaultExclude,
+      '/ignored-default.env\n/ignored-user.env\n.context/\n',
+    )
     await fixture.write('.context/note.md', 'Context to keep.\n')
     await mkdir(join(fixture.workspace, '.context/empty'), {
       recursive: true,
@@ -205,6 +224,43 @@ it('packages working bytes, modes, tombstones, links, context and native session
     })
     expect(stage.snapshot.sessionCount).toBe(2)
     expect(stage.snapshot.recordCount).toBe(entries.length)
+    const userExclude = join(fixture.locations.home, 'custom-ignore')
+    await writeFile(userExclude, '/ignored-user.env\n.context/\n')
+    const userConfig = join(fixture.locations.home, '.gitconfig')
+    await writeFile(userConfig, '[core]\n excludesFile = ~/custom-ignore\n')
+    const configured = await sourceInventory(
+      fixture.locations,
+      readSource(fixture.locations)[0],
+      signal(),
+    )
+    const configuredPaths = configured.files.map((file) => file.path)
+    expect(configuredPaths).not.toContain('ignored-local.env')
+    expect(configuredPaths).not.toContain('ignored-project.env')
+    expect(configuredPaths).not.toContain('ignored-user.env')
+    expect(configuredPaths).toContain('ignored-default.env')
+    expect(configuredPaths).toContain('.context/note.md')
+    await writeFile(userConfig, '[core]\n excludesFile =\n')
+    const empty = await sourceInventory(
+      fixture.locations,
+      readSource(fixture.locations)[0],
+      signal(),
+    )
+    expect(empty.files.map((file) => file.path)).toContain('ignored-user.env')
+    expect(empty.files.map((file) => file.path)).toContain(
+      'ignored-default.env',
+    )
+    await writeFile(userConfig, '')
+    const homeDefault = await sourceInventory(
+      { ...fixture.locations, xdgConfigHome: '' },
+      readSource(fixture.locations)[0],
+      signal(),
+    )
+    expect(homeDefault.files.map((file) => file.path)).not.toContain(
+      'ignored-default.env',
+    )
+    expect(homeDefault.files.map((file) => file.path)).not.toContain(
+      'ignored-user.env',
+    )
   } finally {
     await fixture.dispose()
   }

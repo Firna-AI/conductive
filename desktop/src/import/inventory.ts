@@ -7,7 +7,7 @@ import type {
   SourceWorkspace,
 } from './types.ts'
 import { LocalImportError } from './types.ts'
-import { controlledWorktree, sourceGit } from './git.ts'
+import { controlledWorktree, sourceGit, userExcludesFile } from './git.ts'
 import { indexNativeFiles } from './native.ts'
 import { selectedLfsPointers } from './inventory-lfs.ts'
 import { localPrerequisiteCandidates } from './inventory-prerequisites.ts'
@@ -33,6 +33,7 @@ export async function inventory(
   native: Map<string, string>,
   signal: AbortSignal,
   hashFiles: boolean,
+  locations: ImportLocations,
 ): Promise<SourceInventory> {
   if (!workspace.path) throw new LocalImportError('source_missing')
   const root = await sourceRoot(workspace.path)
@@ -85,7 +86,9 @@ export async function inventory(
       .split('\0')
       .filter((path) => path && !known.has(path))
     untracked =
-      (await controlled.run([
+      (await git([
+        '-c',
+        `core.excludesFile=${await userExcludesFile(root, locations, signal)}`,
         'ls-files',
         '--others',
         '--exclude-standard',
@@ -199,5 +202,6 @@ export async function sourceInventory(
     await indexNativeFiles(nativeRoots(locations), signal),
     signal,
     true,
+    locations,
   )
 }

@@ -1,21 +1,13 @@
-import {
-  chmod,
-  mkdir,
-  mkdtemp,
-  realpath,
-  rm,
-  writeFile,
-} from 'node:fs/promises'
+import { chmod, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { zstdCompressSync } from 'node:zlib'
+import { importTemporaryDirectory } from '../../tests/import-temporary.ts'
 
 export const withNativeFixture = async (
   run: (root: string) => Promise<void>,
 ) => {
-  const root = await realpath(
-    await mkdtemp(join(tmpdir(), 'conductive-native-')),
-  )
+  const root = await importTemporaryDirectory(tmpdir(), 'conductive-native-')
   try {
     await run(root)
   } finally {

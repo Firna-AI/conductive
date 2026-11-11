@@ -2,7 +2,6 @@ import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   mkdir,
-  mkdtemp,
   lstat,
   readdir,
   readFile,
@@ -16,6 +15,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { zstdCompressSync } from 'node:zlib'
 import { conductorDatabasePath } from '../src/import/source.ts'
 import type { ImportLocations } from '../src/import/types.ts'
+import { importTemporaryDirectory } from './import-temporary.ts'
 
 const claudeNativeId = '11111111-1111-4111-8111-111111111111'
 const codexNativeId = '22222222-2222-4222-8222-222222222222'
@@ -26,10 +26,11 @@ export async function importFixture() {
     '../../.context/import-from-conductor/current',
   )
   await mkdir(evidence, { recursive: true })
-  const directory = await mkdtemp(join(evidence, 'source-fixture-'))
+  const directory = await importTemporaryDirectory(evidence, 'source-fixture-')
   const locations: ImportLocations = {
     home: join(directory, 'home'),
     userData: join(directory, 'profile'),
+    xdgConfigHome: join(directory, 'home/.config'),
   }
   const workspace = join(locations.home, 'conductor/workspaces/repository/work')
   await mkdir(workspace, { recursive: true })

@@ -23,7 +23,7 @@ export async function scanSource(
     signal.throwIfAborted()
     let row = workspace.row
     try {
-      const state = await inventory(workspace, native, signal, false)
+      const state = await inventory(workspace, native, signal, false, locations)
       let bytes = state.files.reduce(
         (sum, file) =>
           sum +

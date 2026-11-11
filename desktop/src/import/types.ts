@@ -15,6 +15,7 @@ import type { ImportLfsObject } from '../../../src/shared/conductor-import-lfs.t
 export interface ImportLocations {
   home: string
   userData: string
+  xdgConfigHome?: string
 }
 
 export type ImportFrameSend = (

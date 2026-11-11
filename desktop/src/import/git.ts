@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { parentPort } from 'node:worker_threads'
 import { missing, readSourceFile } from './safe-files.ts'
+import type { ImportLocations } from './types.ts'
 
 const settings = [
   '--no-pager',
@@ -44,15 +45,25 @@ export interface GitInput {
 }
 
 /** argv never enters a shell, and Git never receives an ambient credential. */
-export async function git(
+export function git(
   cwd: string,
   args: string[],
   signal: AbortSignal,
   input: GitInput = {},
 ): Promise<string> {
+  return runGit(cwd, args, signal, input, environment())
+}
+
+async function runGit(
+  cwd: string,
+  args: string[],
+  signal: AbortSignal,
+  input: GitInput,
+  processEnvironment: NodeJS.ProcessEnv,
+): Promise<string> {
   signal.throwIfAborted()
   const child = spawn('git', [...settings, '-C', cwd, ...args], {
-    env: environment(),
+    env: processEnvironment,
     stdio: ['pipe', 'pipe', 'pipe'],
     signal,
     detached: true,
@@ -117,6 +128,38 @@ export async function git(
 
 export async function sourceGit(cwd: string, signal: AbortSignal) {
   return (args: string[], input?: GitInput) => git(cwd, args, signal, input)
+}
+
+/** Only this data query reads user config. Acting commands keep fixed settings. */
+export async function userExcludesFile(
+  cwd: string,
+  locations: ImportLocations,
+  signal: AbortSignal,
+): Promise<string> {
+  const xdg = locations.xdgConfigHome ?? process.env.XDG_CONFIG_HOME
+  const configEnvironment = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) =>
+      /^GIT_CONFIG_(?:COUNT|PARAMETERS|KEY_\d+|VALUE_\d+)$/.test(key),
+    ),
+  )
+  const value = await runGit(
+    cwd,
+    ['config', '--null', '--path', '--get', 'core.excludesFile'],
+    signal,
+    { allowFailure: true },
+    {
+      ...environment(),
+      ...configEnvironment,
+      HOME: locations.home,
+      XDG_CONFIG_HOME: xdg,
+      GIT_CONFIG_GLOBAL: process.env.GIT_CONFIG_GLOBAL,
+      GIT_CONFIG_SYSTEM: process.env.GIT_CONFIG_SYSTEM,
+      GIT_CONFIG_NOSYSTEM: process.env.GIT_CONFIG_NOSYSTEM,
+    },
+  )
+  return value === ''
+    ? join(xdg || join(locations.home, '.config'), 'git/ignore')
+    : value.slice(0, -1)
 }
 
 /** Worktree conversions use only our config, even if source config changes. */

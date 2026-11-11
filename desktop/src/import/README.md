@@ -5,7 +5,7 @@ It lists the Conductor workspaces of this Mac that are not archived.
 It uploads the workspaces that the person selects.
 [Import on the Mac](../../../docs/protocol/desktop-import.md) and [Import from Conductor](../../../docs/protocol/conductor-import.md) state the requirements.
 The [import area](../../../worker/conductor-import/README.md) of the Worker relays each operation and keeps the reservations.
-No page of the app starts an import operation yet.
+The [import offer bar](../../../src/shell/import/ImportOfferBar.tsx) and the [import page](../../../src/shell/import/ConductorImportScreen.tsx) of the app start each operation through the Worker, with [runImportOperation](../../../src/app/import/import-operation.ts).
 The [desktop README](../../README.md) gives the package, the window, and the device commands.
 
 ## Consent and operations
@@ -37,8 +37,10 @@ The [desktop README](../../README.md) gives the package, the window, and the dev
 - No read touches a message table, a script, an env value, or a credential store.
 - A scan estimates each upload size from metadata only. It builds no bundle and decodes no session file.
 - A workspace that the scan cannot measure still appears in the list, with no upload size.
-- Git gets fixed private settings: no global or system config, hook, file monitor, prompt, or lazy fetch.
-- Worktree comparisons run in a private repository with its own index, so no filter from the source config runs.
+- Each acting Git command keeps fixed private settings: no global or system config, hook, file monitor, prompt, or lazy fetch.
+- One read-only config query reads only the effective `core.excludesFile` path, as data. The untracked list follows that file, as Git resolves it, and the repository's own ignore rules.
+- Ignore rules never drop the `.context` folder.
+- Tracked worktree comparisons run in a private repository with its own index, so no filter from the source config runs.
 
 ## The upload
 

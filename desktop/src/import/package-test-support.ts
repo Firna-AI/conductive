@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
@@ -18,14 +18,16 @@ import {
   sealStage,
 } from './stage.ts'
 import type { ImportLocations, ImportStage } from './types.ts'
+import { importTemporaryDirectory } from '../../tests/import-temporary.ts'
 
 export const signal = () => new AbortController().signal
 
 export async function packageFixture(base = true) {
-  const root = await mkdtemp(join(tmpdir(), 'conductive-package-'))
+  const root = await importTemporaryDirectory(tmpdir(), 'conductive-package-')
   const locations = {
     home: join(root, 'home'),
     userData: join(root, 'private'),
+    xdgConfigHome: join(root, 'home/.config'),
   }
   const workspace = join(locations.home, 'conductor/workspaces/example/work')
   await mkdir(workspace, { recursive: true })
