@@ -591,16 +591,20 @@ Depends on: 1
 The preview tool computes the names, the hostnames, the settings, and the
 Wrangler config of a preview.
 
-- [ ] Add `tools/pr-previews/` with the settings check, the names and
+- [x] Add `tools/pr-previews/` with the settings check, the names and
       hostnames, the config writer with its allow list, and the secrets
       file writer, as the design says.
-- [ ] Add unit tests for each, and see each fail once.
-- [ ] Add the tool to the type check, the lint, Vitest, and the exports
+- [x] Add unit tests for each, and see each fail once.
+- [x] Add the tool to the type check, the lint, Vitest, and the exports
       check.
-- [ ] Add `tools/pr-previews/README.md` with the commands and the key
+- [x] Add `tools/pr-previews/README.md` with the commands and the key
       code.
-- [ ] Run a dry run of a generated config. Save the output under
-      `.context/pr-previews/`.
+- [x] Run a dry run of a generated config. Save the output under
+      `.context/pr-previews/`. Done on 11 November 2026: 18 tests pass, and
+      the dry run passed. Evidence: `.context/pr-previews/m3/report.md` and
+      `.context/pr-previews/proof/m3-dry-run.log`. The tool accepts only a
+      positive pull request number, so the smoke test uses a number that
+      no pull request has.
 
 ## Milestone 4: Deploy, delete, and sweep commands
 
@@ -659,16 +663,16 @@ Depends on: 6, and the setup by the user
 A real preview works, its relay works, and the delete leaves nothing
 behind.
 
-- [ ] Deploy the relay and a preview for the test number 0 with the tool
-      from this workspace.
+- [ ] Deploy the relay and a preview for a test number that no pull
+      request has, such as 999999, with the tool from this workspace.
 - [ ] Check the health route, the marketing page, the app page, and the
       machine hostname.
 - [ ] Check that GitHub accepts the sign-in redirect of the app hostname.
 - [ ] Send a signed test delivery to the relay, and check that the
       preview records it.
 - [ ] Check that the relay sends an install return with the relay cookie
-      of `pr-0` to `/github/setup` of the preview, and refuses another
-      origin.
+      of the test preview to `/github/setup` of the preview, and refuses
+      another origin.
 - [ ] Delete the preview. Prove that no Worker, route, D1 database,
       Durable Object storage, attachment, Boat sandbox, saved snapshot, or
       registry entry remains. If a route or Durable Object storage

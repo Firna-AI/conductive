@@ -10,6 +10,7 @@
         "src/files/markdown/markdown-worker.ts",
         "src/marketing/pages/**/*.astro",
         "tools/main.ts",
+        "tools/pr-previews/main.ts",
         "image/*.mjs",
         "image/live-main.ts",
         "worker/chat/integration/run-browser-harness.mjs",

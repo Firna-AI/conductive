@@ -28,5 +28,9 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['tools/pr-previews/**/*.ts'],
+    languageOptions: { globals: globals.node },
+  },
   astro.configs.recommended,
 ])
