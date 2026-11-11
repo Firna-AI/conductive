@@ -14,8 +14,8 @@
   - Preview lists detected servers with a short program name and an optional repository folder.
   - A row opens the same private preview path as manual port entry.
   - An org image build installs a new runner.
-  - Existing workspaces keep their older runner and must retain manual entry when no report exists.
-  - A preview also needs the preview relay. A workspace without it refuses previews and asks for a new workspace after Build computer.
+  - A workspace keeps its older runner only until a workspace start updates it, as [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says. While no report exists, Preview must retain manual entry.
+  - A preview also needs the preview relay. A workspace without it refuses previews, and the message says that the next workspace start will update the agent and terminal software.
   - The list excludes the terminal, preview relay, ascii-agent, and Sunshine services.
   - The runner filters known credentials from complete labels. The workspace filters marked org values before stored or displayed cuts.
 - **Task:**
@@ -24,7 +24,7 @@
   3. Start a normal web development server in a repository subfolder. Use a known port and record the start signal.
   4. Open **Preview**. Confirm that the server appears with its port, name, and relative folder within five seconds.
   5. Select that row. Confirm that its private preview opens and that its tab has the short program label.
-  6. Confirm that the original workspace still shows its manual port field when its older runner supplies no report. With a running preview relay, open a server there by typing its port. Without the relay, confirm that the error asks for a new workspace after Build computer. Confirm that manual opening works in that new workspace.
+  6. Confirm that the original workspace still shows its manual port field when its older runner supplies no report. With a running preview relay, open a server there by typing its port. Without the relay, confirm that the error says that the next workspace start will update the agent and terminal software. Confirm that manual opening works in the new workspace of step 2.
 - **Impact if no action:** Local tests and CI do not prove the deployed runner archive, image build, workspace event connection, and browser flow together. A rollout defect could hide the list or break the manual fallback.
 - **Needs:** The deployed port-detection change, a signed-in test account, permission to build a test org image, and one workspace from before that build. No production account or external credential value needs to enter the evidence.
 - **Done when:** The new workspace lists and opens the server within five seconds with the expected name and folder. The old workspace retains its manual field. Manual opening works with the relay, and a workspace without it gives the required recovery message. Record the image build, the workspace creation times, and the observed results.

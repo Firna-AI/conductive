@@ -7,11 +7,11 @@
 - **Reason:** the check needs the deployed Worker, a runner archive with the relay, and a new org image build.
 
 - **Terms:**
-  - **Preview relay:** the service `conductive-preview-relay.service` in each sandbox of a new org image. It listens on `127.0.0.1:7682`, and it gives each previewed server `Host: localhost:<port>`.
-  - **Org image:** the saved snapshot that each new sandbox of an org starts from. Only an image build installs the relay. A refresh does not.
+  - **Preview relay:** the service `conductive-preview-relay.service` of the app's own software in a sandbox. It listens on `127.0.0.1:7682`, and it gives each previewed server `Host: localhost:<port>`.
+  - **Org image:** the saved snapshot that each new sandbox of an org starts from. Each build and each refresh gives it the relay. A workspace start also gives the relay to an existing workspace, as [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says.
 - **Background:**
   - A dev server with a Host check refuses a `Host` that is not local. Before the relay, `mokly serve` answered every preview request with 403 `{"code":"forbidden","message":"Use the local catalogue address."}`. Vite blocks such requests with "Blocked request. This host is not allowed."
-  - The user chose the relay on 10 November 2026. The user also chose that a sandbox without a running relay refuses previews with 409 `preview_relay_unavailable` and the message "Previews need newer cloud computer software. Start a new workspace after an admin runs Build computer."
+  - The user chose the relay on 10 November 2026. The user also chose that a sandbox without a running relay refuses previews with 409 `preview_relay_unavailable`. Its message is now "Previews need an update to the agent and terminal software. The next workspace start will update it."
   - The relay answers only a request whose `Host` matches `<label>-7682.on.boat.dev`. Boat's hosting docs tell Vite users to allow `.on.boat.dev`, so that hostname should reach the sandbox. No test runs against the real Boat edge, so this is still an assumption.
   - The relay adds `X-Conductive-Relay: 1` to each of its answers. The Worker replaces each answer without the mark with its own unavailable error.
 - **Task:**

@@ -3,7 +3,7 @@
 This guide belongs to the [sandbox software](README.md). It describes the
 software step of an image build.
 
-Before this step, Git in the build sandbox copies each chosen repository
+Before this step, Git in the build sandbox copies each repository of the job
 into a new folder, as the
 [source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
 says. That Git comes from the image that the build sandbox starts from.
@@ -66,8 +66,7 @@ The relay uses the private Node.
 Its start script reads no workspace variable or workspace marker.
 
 A build or refresh from a software image skips this step, and the terminal
-installer with it. A change in this folder or in the terminal software
-reaches new workspaces after the org's next successful build or refresh.
-A workspace that exists keeps its software.
-A workspace gets the relay only from a new image build.
-Start a new workspace from that image to get the relay.
+installer with it.
+[Old workspaces](../docs/protocol/workspace-life.md#old-workspaces) says
+how an existing workspace gets a change in this folder or in the terminal
+software.

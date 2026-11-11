@@ -93,18 +93,20 @@ Build computer on the Cloud computer tab of the org starts that build, as
 says. [The runner archive](README.md#the-runner-archive) gives the steps
 that supply the archive to the build.
 
-A full build records the runner protocol version of the test Worker, not
-the version of the archive. So package the archive from the same commit as
-the test Worker, as [The runner archive](../docs/deployment.md#the-runner-archive)
-says. A workspace refuses a runner below the version of its image. So a
-runner of version 1 from an older archive gets no turns.
+Each build and each refresh records the runner protocol version of the
+test Worker, not the version of the archive. So package the archive from
+the same commit as the test Worker, as
+[The runner archive](../docs/deployment.md#the-runner-archive) says. A
+workspace refuses a runner below the version of its image. So a runner of
+version 1 from an older archive gets no turns.
 
 The check does not read the runner version of the image. With a runner of
 protocol version 2, the agents send the model requests of the chat steps
 through the [model gateway](../docs/protocol/model-gateway.md) of the test
-Worker. The gateway adds the login that the app stored for the account. A refresh
-keeps the runner and the version of its image. So an image from an older
-build can still hold a runner of version 1, which gets that login itself.
+Worker. The gateway adds the login that the app stored for the account.
+[Old workspaces](../docs/protocol/workspace-life.md#old-workspaces) says
+when a workspace from an older image keeps its older runner, such as a
+runner of version 1, which gets that login itself.
 
 ### Variables
 

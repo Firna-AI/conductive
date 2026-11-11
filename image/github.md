@@ -58,9 +58,7 @@ An invalid or ended turn gets no token.
 [GitHub tokens](../docs/protocol/github-tokens.md) states the access rules.
 The wrapper saves no token and changes no shell profile or login file.
 
-An org must build its image again to get this wrapper.
-An existing workspace keeps its installed software, also after a resume.
-Create a new workspace from the rebuilt image to get the change.
+[Old workspaces](../docs/protocol/workspace-life.md#old-workspaces) says how an existing workspace gets a change to this wrapper.
 
 ### GitHub App permissions
 

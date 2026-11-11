@@ -41,7 +41,7 @@
 - **Action:** fix after merge, apply C, because the bind address is unusual and the two feature fix rounds are used.
 
 The relay remains the only preview route. The public report keeps one row for each port, without an address.
-Only a new org image build installs the corrected software. Existing workspaces keep their software after a resume.
+Each build and each refresh after the deploy gives the org image the corrected software. [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says how an existing workspace gets it.
 The Worker currently rewrites redirects only for `localhost`, `127.0.0.1`, and `[::1]`.
 A server that writes another bind address into an absolute redirect still sends that address to the browser.
 

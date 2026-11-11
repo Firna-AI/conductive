@@ -25,10 +25,11 @@ carries no browser cookie, header, or query. It carries the
 auth with the workspace password, and the `tty` subprotocol.
 
 Run `terminalInstallCommand()` in the software command of each org image
-build. The build runs that command detached and writes its output to the
-build log. The image lifecycle owner must first authorize that org's build
-sandbox. The command installs the `ttyd` and `tmux` packages with
-`apt-get`. Then it writes these files:
+build or refresh that has no ready software image. The build runs that
+command detached and writes its output to the build log. The image
+lifecycle owner must first authorize that org's build sandbox. The command
+installs the `ttyd` and `tmux` packages with `apt-get`. Then it writes
+these files:
 
 - `/usr/local/lib/conductive/terminal`: the launcher, which runs ttyd.
 - `/usr/local/lib/conductive/terminal-password`: the password program.
@@ -39,12 +40,10 @@ sandbox. The command installs the `ttyd` and `tmux` packages with
 
 The command puts no password in the image, and it starts nothing.
 `installTerminalService(provider, sandboxId)` runs the same command for a
-caller that needs a synchronous install hook. A refresh does not run the
-command. So a change to these files reaches the new workspaces of an org
-only after its next build. A workspace keeps the files of the image that it
-started from, also after a resume. So the pull request of each change to
-these files says that an existing workspace needs a new workspace to get
-the change.
+caller that needs a synchronous install hook. A change to these files
+reaches the org image at its next build or refresh.
+[Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says
+how an existing workspace gets it.
 
 For an existing shell, `tmux set-option -g mouse on` enables scrolling
 immediately. Run it inside that workspace's Terminal tab. The setting lasts
@@ -234,7 +233,7 @@ Terminal status reads remain available.
 - [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the programs and the install command with fakes.
 - [The tools adapter](../previews/provider.ts) exposes the private port.
 - [The sandbox provider](../sandbox/README.md) owns credentials, the port credential, fixed routes, and bounded file reads.
-- [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build. After the startup script of each create and resume, it runs the setup command and then the password read. Its restore watch calls `markTerminalRestoreEnded`.
+- [The workspace lifecycle](../lifecycle/README.md) runs the install command in each build or refresh that has no ready software image, and in the update of an old workspace. After the startup script of each create and resume, it runs the setup command and then the password read. Its restore watch calls `markTerminalRestoreEnded`.
 
 See [terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md#terminal) and
 [workspace tools](../../docs/protocol/workspace-tools.md#terminal).

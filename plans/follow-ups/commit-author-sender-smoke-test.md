@@ -13,9 +13,11 @@
     starts from. A build installs the newest agent runner into it.
 - **Background:** Since pull request #181, each runner turn command carries
   the turn sender's commit author, and the runner gives it to each agent
-  process of the turn. A cloud computer keeps the runner of its org image,
-  so only a workspace that starts from an image built after the merge has
-  this behaviour. `docs/protocol/github-tokens.md`, section "Commit
+  process of the turn. A workspace start gives an older cloud computer the
+  current runner, as
+  [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces)
+  says. So a workspace from an older image also has this behaviour after a
+  good update at its next workspace start. `docs/protocol/github-tokens.md`, section "Commit
   author", states the rule.
 - **Task:** After the deploy, run **Build computer** for a test org. Create
   a new workspace from the new image. Let a second member send a message in

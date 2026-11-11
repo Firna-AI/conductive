@@ -41,6 +41,7 @@ that image. A build from the base image downloads the release.
 
 4. Run the tests in [Development](README.md#development).
 
-After you deploy the Worker, the next build of each org image installs the
-new release. A refresh does not install it. A workspace that exists keeps
-the Node of its image.
+After you deploy the Worker, the next build or refresh of each org image
+gets the new release.
+[Old workspaces](../docs/protocol/workspace-life.md#old-workspaces) says
+how a workspace that exists gets it.

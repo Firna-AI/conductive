@@ -16,7 +16,7 @@ The [chat backend](chat/README.md) owns the sessions, the messages, and the even
 The [lifecycle](lifecycle/README.md) records each image's runner version and copies it before each new computer allocation.
 The chat backend refuses a runner below that pin before the welcome or any command.
 It accepts runner protocol versions 1 and 2 at or above the pin.
-The packaged runner sends version 2, and each full image build records version 2.
+The packaged runner sends version 2, and each image build and refresh records version 2.
 The [operator area](operator/README.md) owns the operator's app-wide numbers,
 suspensions, waitlist approvals, invite codes, sign-up pause, and waitlist switch.
 New accounts wait for app access unless an operator identity, open sign-up,
@@ -247,7 +247,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
-- [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
+- [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds, refreshes, the software image route, and workspace starts.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
 - [native-sockets.ts](native-sockets.ts): `WorkspaceSockets`, the trusted socket roles, the attachment check, the restore, and the dispatch of native socket events.

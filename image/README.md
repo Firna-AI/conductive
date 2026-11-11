@@ -82,8 +82,8 @@ says. To supply an archive by hand:
 A build fails when the file at the URL does not match the digest. So a
 versioned URL for each archive is a good choice.
 
-The Worker does not serve the archive. Image builds and refreshes read the
-two variables.
+The Worker does not serve the archive. Image builds, refreshes, workspace
+starts, and the software image route read the two variables.
 
 ## The private Node runtime
 
@@ -97,9 +97,7 @@ build: the staged scripts, the private Node, and the steps of `install.sh`.
 Each build or refresh from a software image skips that step.
 Without that image, both run the software step after the repository copy.
 The [software image backend](../worker/software-image/README.md) builds the shared image.
-A workspace gets the relay only from a new image build.
-An existing workspace keeps the software of its image, also after a resume.
-Start a new workspace from the new image to get the relay.
+[Old workspaces](../docs/protocol/workspace-life.md#old-workspaces) says how an existing workspace gets this software.
 
 ## Start in a workspace
 

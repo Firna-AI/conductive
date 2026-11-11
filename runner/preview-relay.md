@@ -26,7 +26,5 @@ It also installs and enables `conductive-preview-relay.socket`.
 The socket holds port 7682 while the relay service restarts.
 Both units stay enabled, so the service starts without waiting for a preview request.
 A runner restart does not restart the relay.
-A workspace gets the relay only from a new image build.
-A refresh installs no software.
-An existing workspace keeps the software of its image, also after a resume.
-Start a new workspace from the new image to get the relay.
+Each org image from a build or a refresh holds the relay.
+[Old workspaces](../docs/protocol/workspace-life.md#old-workspaces) says how an existing workspace gets it.

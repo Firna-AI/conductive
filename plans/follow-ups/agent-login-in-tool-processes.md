@@ -9,14 +9,14 @@
 - **Terms:**
   - **Agent login:** the Claude subscription token from `claude setup-token`, the Anthropic API key, or the OpenAI API key of the member who started a session. Every turn of that session uses it.
   - **Tool process:** a program that the agent starts for a tool, such as a shell command or a dev server.
-  - **Version 1 runner:** the program in a cloud computer from an older org image that runs the agents and gets the real login with each turn.
+  - **Version 1 runner:** the program of an older org image that runs the agents and gets the real login with each turn. [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says when a cloud computer still runs it.
   - **Probe server:** a small HTTP server that the agent starts with its shell tool in this check. Each answer holds only its process ID and two true or false values.
   - **Gate:** a named pipe. The shell tool of the agent waits on it, so the turn stays open until the checker writes one line to it.
 - **Background:**
   - With each turn, the workspace Durable Object sends a credential of the session starter to the runner. The runner starts a new agent process for each turn and closes it at the end of the turn.
   - A version 1 runner gets the agent login itself. A runner of protocol version 2 gets a turn token in its place. The model gateway of the Worker then adds the login to each model request.
   - On 9 November 2026 the user chose that a version 1 runner keeps getting the real login, and that the access doc states the risk. The user also chose that each workspace refuses a runner below the version of its image.
-  - A sandbox keeps the runner of the org image that it starts from, also after a stop and a resume. So a version 1 runner stays in each sandbox from an older org image.
+  - At each workspace start, a sandbox with an older version of the app's own software gets the current runner before the runner starts, as [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says. So a version 1 runner stays in a sandbox only until a workspace start updates it. It stays longer when that update fails.
   - A full image build records the `RUNNER_PROTOCOL_VERSION` of the Worker in `image_builds.runner_protocol_version` of the D1 database. A refresh keeps the version of its image. A missing value counts as 1.
   - Each new cloud computer of a workspace copies the version of its image to `workspaces.runner_protocol_version`, the version pin of the workspace. The workspace refuses a runner below its pin before the welcome.
   - In this repository, `RUNNER_PROTOCOL_VERSION` in `src/shared/runner.ts` is now 2. The runner of this repository uses a turn token, as `runner/agent-logins.md` says. Only its measure tool still uses the Claude pipe and the Codex login request below, with a developer login.

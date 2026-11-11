@@ -33,9 +33,12 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
   gives it its work, so the work continues when the browser closes.
 
 `chatLifecycleRoute` makes the runtime with `workspaceRuntime` and
-`imageRuntime`. It gives `software` as a getter, so only a build or a
-refresh reads the archive variables. It gives `acceptFirstMessage` to
-`acceptLifecycleFirstMessage` of the workspace object.
+`imageRuntime`. It gives `software` as a getter, so of these routes only a
+build or a refresh reads the archive variables. It gives
+`acceptFirstMessage` to `acceptLifecycleFirstMessage` of the workspace
+object. The start of a create or a resume reads the archive variables later,
+in the workspace object, for the software version check of
+[Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces).
 
 For a read or a resume, the `projectWorkspace` of `chatLifecycleRoute`
 takes the reply from `readChatWorkspaceResponse` of the workspace object.
