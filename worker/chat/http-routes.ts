@@ -9,6 +9,7 @@ import {
   sendMessage,
 } from './inputs'
 import { send, retryMessage } from './send-message'
+import { BROWSER_PAGE_LIMITS } from './history-pages'
 import { changeModel } from './model-changes'
 import type { ChatOperation } from './operation'
 import { sessionFor } from './session-record'
@@ -48,7 +49,7 @@ export async function chatRoute(
       view.history(
         afterNumber(url),
         through === null ? undefined : counter(Number(through)),
-        sessionId,
+        { sessionId, limits: BROWSER_PAGE_LIMITS },
       ),
     )
     return Response.json(presentWorkspaceHistory(history, presentation))

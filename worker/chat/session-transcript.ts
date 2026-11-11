@@ -102,7 +102,7 @@ export async function buildSessionTranscript(
   for (;;) {
     const page = await store.run(() =>
       store.read(workspaceId, (view) =>
-        view.history(after, document.eventNumber, sessionId),
+        view.history(after, document.eventNumber, { sessionId }),
       ),
     )
     builder.merge(page.events)
