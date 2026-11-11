@@ -122,8 +122,10 @@ plan limits.
   row of the agent, with a choice of the kinds of that agent. On a phone
   the three kinds of Claude wrap onto two lines. The hint of a token or an
   API key says that the app tests it once and never shows it again. The
-  hint of an own endpoint key promises no test, because the save sends no
-  request to the endpoint. A connected login shows its kind and Remove.
+  hint of an own endpoint key promises no test. The save reads the model
+  list of the endpoint with the key, and the account page shows the
+  result, as `app/account/endpoint-models` shows. A connected login shows
+  its kind and Remove.
 - An own endpoint login sends the turns of its agent to a gateway or a
   proxy that the user chose, from decision 1 A of the own endpoint plan.
   The model gateway in the Worker, not the cloud computer, sends each model
@@ -134,9 +136,10 @@ plan limits.
   and its `codex` variant show.
   - The form says that the endpoint must serve the Anthropic Messages API
     for Claude, or the OpenAI Responses API for Codex. It names the models
-    that the picker offers, which the endpoint must serve too, because the
-    app keeps its own model list and does not read the models of the
-    endpoint (decision 3 A of that plan).
+    that the app offers. The app reads the model list of the endpoint, and
+    the owner's pickers hide each model of the app that the list does not
+    name (decision 10 G of that plan), as `app/account/endpoint-models`
+    and `app/chat/endpoint-models` show.
   - The address is the base address of the endpoint. The placeholder gives
     an example, without `/v1` for Claude, and with `/v1` for Codex. One
     shared rule checks the address and builds the exact address of each

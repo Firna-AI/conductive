@@ -94,7 +94,7 @@ export function isRunning(state: WorkspaceState): boolean {
  * a message with attached files, with the model picker open when the state
  * asks for it. A new session starts empty. In a session with messages,
  * the picker marks the models of the other agent as opening a new session.
- * In a session of the viewer on an own endpoint, it also marks the models
+ * In a session of the viewer on an own endpoint, it leaves out the models
  * that the model list of the endpoint does not name. After a turn that the
  * endpoint did not serve, the session keeps the model of that turn.
  * A message for an agent that is not connected waits, and Send is off.
@@ -163,9 +163,12 @@ export function composerFor(
       files && state.composer === 'attachments' ? paths.attachments : undefined,
     picker: state.composer === 'picker' || unlistedPicker,
     sessionAgent: fresh ? undefined : choice.agent,
-    // Only the owner of the login sees the marks of its model list.
-    unlisted:
-      unlistedPicker && starter === undefined ? unlistedLabels : undefined,
+    // Only the pickers of the owner of the login follow its model list, and
+    // a session keeps its current model.
+    hiddenModels:
+      unlistedPicker && starter === undefined
+        ? unlistedLabels.filter((label) => label !== choice.model)
+        : undefined,
     sendTo,
     startsSession: opensLinked,
     blocked: needsLogin,

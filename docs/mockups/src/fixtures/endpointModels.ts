@@ -27,15 +27,19 @@ export const proxyModelCheck: ModelListCheck = {
 }
 
 /**
- * The labels of the models that the picker marks in the sessions of Cal on
- * the proxy. The mark never blocks a choice, because the list of a gateway
- * need not name every model that it serves.
+ * The labels of the models that the pickers of Cal leave out, because the
+ * list of the proxy does not name them. A model that the proxy serves but
+ * does not list is left out too.
  */
 export const unlistedLabels: readonly string[] = proxyModelCheck.unlisted.map(
   (model) => model.label,
 )
 
-/** The choice of a message on the model that the list does not name. */
+/**
+ * The choice of a session on the model that the list does not name. Cal
+ * chose it while the list still named it, and a session keeps its current
+ * model.
+ */
 export const unlistedChoice: AgentChoice = {
   agent: 'claude',
   model: fable.label,
@@ -50,7 +54,7 @@ const notServed = `The endpoint of this login does not serve ${fable.id}. Choose
 
 /**
  * The chat after Cal sent the next message on Fable 5.1, which the list of
- * the proxy does not name. The endpoint refused the model, so the turn
+ * the proxy no longer names. The endpoint refused the model, so the turn
  * stopped before any work. `history` is the finished turn before it, and
  * `followUp` is the next message.
  */

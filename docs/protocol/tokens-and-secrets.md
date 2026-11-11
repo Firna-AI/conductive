@@ -137,9 +137,25 @@ while the change is open. Its pull request keeps them after the merge.
   Responses API, and accept the key as a bearer token in the
   `Authorization` header.
 - The [model gateway](model-gateway.md#own-endpoints) sends each model
-  request of a turn on the login to the endpoint, with the key. The app
-  makes no other call to the endpoint, also not to test the key at the save
-  or to read its models (own endpoint decision 3).
+  request of a turn on the login to the endpoint, with the key.
+- The Worker also reads the model list of the endpoint, with the key: at
+  the save, when the owner presses Refresh on the account page, and in the
+  background when a turn on the login starts, at most once in 10 minutes
+  (own endpoint decision 10). It makes no other call to the endpoint.
+- The pickers of the owner hide each model of the app that the last list
+  that the Worker could read does not name. Before the first such list,
+  and when a list names no model of the app for an agent, the pickers show
+  every model of the app for that agent. A failed read keeps the last
+  list. The picker of a session keeps its current model.
+- The account page names each model of the app that the list does not
+  name, with its model ID and the time of the last read.
+- Reason: a model that the endpoint does not serve fails in its turn. A
+  mark that only warns was rejected, because the owner chose to see only
+  models that the endpoint lists. Risk: a gateway can serve a model that
+  its list does not name, and the owner's pickers then hide that model.
+- The pickers of other members show every model of the app. A turn on a
+  model that the endpoint does not serve fails with a cause that names the
+  model ID, and no host (own endpoint decision 5).
 - The key and the full address are write-only, as the other logins are.
   The browser gets back only the host of the address, with its port when
   the port is not the default. The account page shows that host with the

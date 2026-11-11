@@ -180,6 +180,11 @@ for local development.
     `high`, `xhigh`, or `max`.
 - `CONDUCTIVE_DEFAULT_CHOICE` is one JSON object with `agent`, `model`, and
   `effort`. The saved default of a user comes before it.
+- An own endpoint login uses the same list. The owner's pickers hide each
+  model of the list that the endpoint does not name in its own model
+  list, as
+  [Own endpoint logins](protocol/tokens-and-secrets.md#own-endpoint-logins)
+  says. The endpoint gets the full model ID that the agent program sends.
 - These routes read the two variables:
   - `GET /api/models` of the app reads `CONDUCTIVE_MODELS`. A missing or
     invalid value gives `503 models_unavailable`.

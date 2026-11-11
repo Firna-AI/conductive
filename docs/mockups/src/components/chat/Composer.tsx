@@ -41,10 +41,11 @@ export type ComposerState = {
    */
   sessionAgent?: AgentKey
   /**
-   * The models that the model list of the viewer's own endpoint does not
-   * name, in a session of the viewer on that login. The picker marks them.
+   * The models that the picker leaves out: in a session of the viewer on an
+   * own endpoint login, the models that the model list of the endpoint does
+   * not name.
    */
-  unlisted?: readonly string[]
+  hiddenModels?: readonly string[]
   /** The text of an empty box. */
   placeholder?: string
   /** The screen that Send leads to, when the mockups draw it. */
@@ -148,9 +149,9 @@ export function Composer(props: ComposerState & { lines?: number }) {
             )}
             <ModelPicker
               choice={props.choice}
+              hiddenModels={props.hiddenModels}
               open={props.picker}
               sessionAgent={props.sessionAgent}
-              unlisted={props.unlisted}
             />
             {props.sessionLogin ? (
               <SessionLoginLabel {...props.sessionLogin} />

@@ -501,6 +501,7 @@ recommendation from B to D.
   to get the models tbh - but then we might need to update the model
   selector - as if there are a lot of models could be bad ux?" This
   reopens decision 3. Decision 10 asks both questions together.
+- **Closed:** on 10 November 2026 by decision 10 G, which replaces it.
 
 ### 7. Choose the text of the agent step of Get started
 
@@ -658,6 +659,11 @@ takes over the question of decision 6. The options check of 10 November
 - **Related:** Decision 3 and decision 6, which this decision replaces. Decision 9 E, whose address rule the read of the list uses. A model that only one login serves fails in a linked session of decision 115 and after a Try again on a changed login. `plans/follow-ups/unoffered-model-choice.md` must follow a list for each login if a login can add models.
 - **Recommendation:** G. It was B before the options check. G uses the endpoint to learn which models work, keeps the picker as short as it is today, keeps its marks current with no Refresh, never blocks a model that a list omits, and makes a failed turn name the missing ID for every member. C or I can follow later, if users want the endpoint's other models.
 - **Action:** ask the user, because Cal asked for this choice, and G changes decision 3 A.
+- **Chosen:** G, by Cal on 10 November 2026, with one change: "if its not
+  listed it should not show I would guess". So the owner's pickers hide
+  each app model that the endpoint's last list does not name, in place of
+  a soft mark. Cal saw the quick mockup of G before he chose. The cost:
+  a model that a gateway serves but does not list is hidden too.
 
 ### 11. Choose what a full phone bar keeps of the host
 
@@ -765,8 +771,8 @@ them.
   sends no request to the endpoint. The hints of the other kinds stay as
   they are. On a
   phone, the kind choice wraps onto two lines. Agent call of 9 November
-  2026, from the mockups. Waits for decision 10: an option that reads the
-  model list at the save also tests the key.
+  2026, from the mockups. Since decision 10 G, the save reads the model
+  list with the key, and the hint still promises nothing about a test.
 - The output filter hides the key and the endpoint of an own endpoint
   login. Reason: the endpoint is stored encrypted because its path can
   hold a secret, and the error details of Codex print the request address.
@@ -788,6 +794,22 @@ them.
 - The runner never gets an own endpoint or its key. A runner of protocol
   1 cannot run an own endpoint turn, as main's follow-up item says. Agent
   call of 10 November 2026, from gateway decision 10 B.
+- Decision 10 G hides a model only after a read of the endpoint's list
+  that worked. Before the first such read, the pickers show every app
+  model. When the list names no app model of an agent, the pickers show
+  every app model of that agent, and the account page says that the list
+  names none of them. The picker of a session keeps its current model,
+  also when the list no longer names it. Reason: a picker with no model
+  cannot start a turn, and a hidden current model hides the state of the
+  session. Agent call of 10 November 2026.
+- The pickers of other members in a session on the owner's login show
+  every app model, as option G says. A turn on a model that the endpoint
+  does not serve fails with a cause that names the model ID and no host
+  (decision 5). Agent call of 10 November 2026.
+- Every picker of the owner follows the list: the composer, the new
+  workspace dialog, routines, and the default model in Preferences. The
+  agent tool `list_models` keeps the full app list, because it has no
+  login of its own. Agent call of 10 November 2026.
 
 ## Milestone 1: Mockups
 
@@ -833,7 +855,9 @@ The mockups show the answers to the questions that Milestone 1 raised.
       `docs/mockups/orgs-and-logins.md`: the gateway in the Worker sends
       each request, not the cloud computer. Show the refused state of
       decision 9.
-- [ ] Show the model list in the form as decision 10 says.
+- [x] Show decision 10 G in the mockups: the account line of an unlisted
+      model with Refresh, the owner's picker without that model, and the
+      failed turn that names the model.
 - [x] Change the text of the agent step in
       `docs/mockups/src/screens/getStartedCopy.ts` as decision 7 says. The
       app reads the same file.
@@ -904,7 +928,7 @@ The protocol states the own endpoint login with the gateway.
       the session record shows (decision 5). Change the composer label
       rules in `docs/protocol/messages-and-attachments.md` as decision 5
       says.
-- [ ] In "Models" of `docs/deployment.md`, state how an own endpoint's
+- [x] In "Models" of `docs/deployment.md`, state how an own endpoint's
       models work, as decision 10 says.
 - [x] Update the data flow and the trust boundaries in
       `docs/architecture/flows.md` and `docs/architecture/data-and-trust.md`.
@@ -917,7 +941,7 @@ The protocol states the own endpoint login with the gateway.
 - [ ] State the list of ports in `docs/protocol/model-gateway.md` after the
       port check of Milestone 5b. A refusal of other ports follows decision
       9 E.
-- [ ] Change the sentence "The app makes no other call to the endpoint" in
+- [x] Change the sentence "The app makes no other call to the endpoint" in
       `docs/protocol/tokens-and-secrets.md` if decision 10 reads the
       endpoint's model list.
 
@@ -1118,7 +1142,8 @@ show.
 - [ ] Say on the Privacy page in `src/marketing/privacy.ts` and
       `src/marketing/privacy-uses.ts` that a chosen
       endpoint gets the messages and the files. Name the endpoint address,
-      stored encrypted, under "Keys and logins".
+      stored encrypted, under "Keys and logins". Say that the app reads the
+      endpoint's model list with the key (decision 10 G).
 - [ ] Update `src/marketing/terms.ts` and `src/marketing/terms-org.ts`: they name only the terms of
       Anthropic or OpenAI, and the share defaults of two kinds. Raise
       `TERMS_VERSION` in `src/shared/terms.ts`.

@@ -13,16 +13,15 @@ import styles from './ModelPicker.module.css'
  * One picker for the model and the effort of the next message, such as
  * "Opus 5.5 High". The effort shows in a muted colour. `open` draws its
  * menu open. `sessionAgent` is the agent of a session with messages, whose
- * other agent's models open a new session. `unlisted` holds the models that
- * the model list of the viewer's own endpoint does not name, which the menu
- * marks softly.
+ * other agent's models open a new session. `hiddenModels` holds the models
+ * that its menu leaves out.
  */
 export function ModelPicker(props: {
   choice: AgentChoice
   open?: boolean
   placement?: MenuPlacement
   sessionAgent?: AgentKey
-  unlisted?: readonly string[]
+  hiddenModels?: readonly string[]
 }) {
   const control = useControlSizes()
   const { choice } = props
@@ -50,7 +49,7 @@ export function ModelPicker(props: {
       />
       {props.open ? (
         <Menu
-          entries={pickerMenu(choice, props.sessionAgent, props.unlisted)}
+          entries={pickerMenu(choice, props.sessionAgent, props.hiddenModels)}
           label="Model and effort"
           placement={props.placement ?? 'above-start'}
         />

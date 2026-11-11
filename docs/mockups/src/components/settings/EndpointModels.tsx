@@ -7,13 +7,19 @@ import styles from './EndpointModels.module.css'
 /** Names in a sentence, such as "A", "A and B", or "A, B, and C". */
 const names = new Intl.ListFormat('en', { type: 'conjunction' })
 
+/** Says which models the pickers of the owner hide, and why. */
+function hiddenText(labels: string, count: number): string {
+  return count === 1
+    ? `${labels} is hidden from your model pickers, because this endpoint does not list it.`
+    : `${labels} are hidden from your model pickers, because this endpoint does not list them.`
+}
+
 /**
  * The models of the app that the model list of an own endpoint does not
- * name, under the host of the login: their labels, their IDs as code that
- * the owner can copy into the setup of the endpoint, and the time of the
- * last read of the list. Refresh reads the list again. Each model stays a
- * choice in the picker, because the list of a gateway need not name every
- * model that it serves. `agent` is the name of the agent, for the spoken
+ * name, under the host of the login. The pickers of the owner hide them, so
+ * the line says so, with their IDs as code that the owner can copy into the
+ * setup of the endpoint, and the time of the last read of the list. Refresh
+ * reads the list again. `agent` is the name of the agent, for the spoken
  * name of Refresh.
  */
 export function EndpointModels(props: {
@@ -27,7 +33,7 @@ export function EndpointModels(props: {
     <div className={styles.models}>
       <div className={styles.text}>
         <span className={styles.label}>
-          This endpoint does not list {labels}
+          {hiddenText(labels, unlisted.length)}
         </span>
         <span className={styles.hint}>
           {unlisted.length === 1 ? 'Its model ID is ' : 'Their model IDs are '}
