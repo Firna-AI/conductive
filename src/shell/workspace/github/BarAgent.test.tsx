@@ -24,10 +24,12 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../../test-support/mount'
+import { openPaletteTab } from '../../palette/palette-test-kit'
+import { pressHintKey } from '../../shortcuts/shortcut-test-kit'
 import { click, settle, typeText } from '../../test-mount'
 import { filesHref } from '../files/files-address'
 import { bodiesOf, draftOf, messageField } from '../kept-test-kit'
-import { openTab } from '../wiring-test-kit'
+import { openTab, socketsOf } from '../wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -41,6 +43,8 @@ const fixChecks =
   'These checks failed on pull request #482: lint and e2e (chromium). Find out why with `gh pr checks 482`, and read the logs of failed GitHub Actions jobs with `gh run view --log-failed`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If `gh` is missing or fails, run the failed checks locally, and say that `gh` failed.'
 const sends = (server: FakeApiServer) =>
   bodiesOf(server, 'POST', sessionPaths.messages(org, id, session), 0)
+const sentTexts = async (server: FakeApiServer) =>
+  (await sends(server)).map((body) => Object(body).text)
 
 describe('the agent actions of the bar', () => {
   test('Fix checks sends its prompt to the session that the member saw last, also while a file shows, and the typed draft stays', async () => {
@@ -138,5 +142,58 @@ describe('the agent actions of the bar', () => {
       address: navigation.href(),
       notice: (view.textContent ?? '').includes('Connect Claude to use'),
     }).toEqual({ sends: 0, address: routes.workspace(org, id), notice: true })
+  })
+
+  test('the key of an agent action sends its prompt as a click does, only while the bar shows its button in the right column', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ banner: 'checks-failed' })
+    serveWork(server, 'none')
+    const { app, view } = await openPaletteTab(routes.workspace(org, id), {
+      server,
+      events: socketsOf(server).events,
+    })
+    const press = async (command: 'create-pull-request' | 'fix-checks') => {
+      const key = pressHintKey(app, command, document.body)
+      await settle()
+      return key.defaultPrevented
+    }
+
+    // The bar of failed checks shows Fix checks, and no Create PR.
+    const create = await press('create-pull-request')
+    const fix = await press('fix-checks')
+    click(byRole('button', 'Hide the right column', view))
+    const hidden = await press('fix-checks')
+
+    expect({ create, fix, hidden, sends: await sentTexts(server) }).toEqual({
+      create: false,
+      fix: true,
+      hidden: false,
+      sends: [fixChecks],
+    })
+  })
+
+  test('on a phone, the key of an agent action sends its prompt only while the Checks tab shows its button', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ banner: 'checks-failed' })
+    serveWork(server, 'none')
+    const { app, navigation } = await openPaletteTab(
+      routes.workspace(org, id),
+      { server, viewport: 'phone', events: socketsOf(server).events },
+    )
+
+    const chat = pressHintKey(app, 'fix-checks', document.body)
+    await settle()
+    act(() =>
+      navigation.push(filesHref(org, id, { kind: 'list', list: 'checks' })),
+    )
+    await settle()
+    const checks = pressHintKey(app, 'fix-checks', document.body)
+    await settle()
+
+    expect({
+      chat: chat.defaultPrevented,
+      checks: checks.defaultPrevented,
+      sends: await sentTexts(server),
+    }).toEqual({ chat: false, checks: true, sends: [fixChecks] })
   })
 })

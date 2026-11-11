@@ -6,6 +6,12 @@ import {
 import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
 import { useServices } from '../../app/services'
 import type { Workspace } from '../../shared/workspaces'
+import { useShortcutOffer } from '../shortcuts/shortcut-context'
+import {
+  ShortcutTip,
+  useAriaShortcut,
+  useShortcutHint,
+} from '../shortcuts/shortcut-hints'
 
 /** How long the note says that the link was copied, in ms. */
 const copiedMs = 2_000
@@ -17,10 +23,14 @@ const copiedMs = 2_000
  * that fails says to try again until the next press, as the file page does.
  * The note is a status, and it lies over the content, so nothing moves. The
  * header gives each workspace its own button, so a note never outlives the
- * workspace that it names.
+ * workspace that it names. The key of Copy link does what a press does
+ * while the button shows. Its tooltip names that key, and the button names
+ * it to a screen reader.
  */
 export function CopyLink(props: { workspace: Workspace; inline: boolean }) {
   const services = useServices()
+  const hint = useShortcutHint('copy-link')
+  const nameKey = useAriaShortcut(hint)
   const [result, setResult] = useState<CopyResult | undefined>(undefined)
   const press = useRef(0)
   const clear = useRef<(() => void) | null>(null)
@@ -51,12 +61,17 @@ export function CopyLink(props: { workspace: Workspace; inline: boolean }) {
       () => show('failed'),
     )
   }
+  useShortcutOffer('copy-link', copy)
+  const label = workspaceLabel(props.workspace.number)
   return (
-    <CopyLinkButton
-      inline={props.inline}
-      label={workspaceLabel(props.workspace.number)}
-      onPress={copy}
-      result={result}
-    />
+    <ShortcutTip hint={hint} label={`Copy link to ${label}`}>
+      <CopyLinkButton
+        buttonRef={nameKey}
+        inline={props.inline}
+        label={label}
+        onPress={copy}
+        result={result}
+      />
+    </ShortcutTip>
   )
 }

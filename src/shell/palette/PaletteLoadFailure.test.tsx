@@ -14,13 +14,13 @@ import { FakeApiServer } from '../../test-support/fake-api'
 import { coreFixtures, FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
+import { pressCommand } from '../shortcuts/shortcut-test-kit'
 import { click, settle, typeText } from '../test-mount'
 import {
   groupLabels,
   highlighted,
   openPaletteTab,
   options,
-  pressPaletteKey,
   searchField,
   status,
 } from './palette-test-kit'
@@ -44,7 +44,7 @@ describe('the Workspaces tab of the palette', () => {
     // The first read fails, before any read of the list succeeds.
     server.json('GET', listPath, busy, 503)
     await openPaletteTab(routes.org(org), { server })
-    pressPaletteKey('other', document.body)
+    pressCommand('command-palette', 'other', document.body)
     click(byRole('tab', 'Workspaces'))
     const palette = byRole('dialog', 'Search')
     expect({
@@ -83,7 +83,7 @@ describe('the All tab of the palette', () => {
     server.json('GET', listPath, busy, 503)
     server.json('GET', repositoriesPath, busy, 503)
     await openPaletteTab(routes.org(org), { server })
-    pressPaletteKey('other', document.body)
+    pressCommand('command-palette', 'other', document.body)
     typeText(searchField(), 'to')
     const palette = byRole('dialog', 'Search')
     // The status part is not a row: the first action is highlighted.

@@ -12,3 +12,8 @@ export function TouchScreen(props: { children: ReactNode }) {
 export function useControlSizes(): ControlSizes {
   return useContext(TouchContext) ? touchControl : control
 }
+
+/** Whether the screen is a phone, whose controls show no key hints. */
+export function useTouchScreen(): boolean {
+  return useContext(TouchContext)
+}

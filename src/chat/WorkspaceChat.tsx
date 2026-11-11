@@ -11,6 +11,7 @@ import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { SessionTabs } from './components/SessionTabs'
+import { useTabKeys } from './components/tab-keys'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
 import { ChatToasts, useTranscriptCopy } from './components/TranscriptCopy'
 import { useChatLinksOf } from './links/chat-links'
@@ -135,6 +136,13 @@ function ChatBody(
     reopen,
     (item) => endedAt(snapshot, item),
   )
+  const tabs = rowOf(
+    snapshot.view,
+    tabSessions(snapshot),
+    shownTab(snapshot.view, active, content !== null),
+    props.renderTab,
+  )
+  useTabKeys({ tabs, controller, history, copy })
   const body = (
     <>
       <SessionTabs
@@ -152,12 +160,7 @@ function ChatBody(
         onStartRename={controller.startRename}
         readOnly={readOnly}
         renaming={overlay.kind === 'rename' ? overlay.sessionId : null}
-        tabs={rowOf(
-          snapshot.view,
-          tabSessions(snapshot),
-          shownTab(snapshot.view, active, content !== null),
-          props.renderTab,
-        )}
+        tabs={tabs}
       />
       {content ?? (
         <SessionChat

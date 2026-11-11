@@ -1,11 +1,9 @@
-import { InputFrame } from '@firna/ui/input'
-import { Check, FolderGit2, Plus, Search, X } from 'lucide-react'
+import { Check, FolderGit2, Plus, X } from 'lucide-react'
 import type { ReachableRepository } from '../../fixtures/repositories'
-import { noop } from '../../noop'
 import { ActionButton, IconButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
 import { ExternalLink } from '../common/ExternalLink'
-import { useControlSizes } from '../common/touch'
+import { SearchField } from '../common/SearchField'
 import styles from './RepositoryList.module.css'
 
 /**
@@ -50,7 +48,6 @@ export function RepositoryList(props: {
   repositories: readonly ReachableRepository[]
   search: string
 }) {
-  const { field } = useControlSizes()
   if (props.repositories.length === 0) {
     return (
       <EmptyState
@@ -65,13 +62,10 @@ export function RepositoryList(props: {
   }
   return (
     <div className={styles.picker}>
-      <InputFrame
-        accessibilityLabel="Search repositories"
-        onChangeText={noop}
+      <SearchField
+        label="Search repositories"
         placeholder="Search repositories"
-        prefixIcon={Search}
-        size={field}
-        value={props.search}
+        query={props.search}
       />
       <ul aria-label="Repositories" className={styles.list}>
         {props.repositories.map((repository) => (
