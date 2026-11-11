@@ -11,6 +11,7 @@ export const ACCOUNT_PATHS = {
   defaultModel: '/api/account/default-model',
   newWorkspaceView: '/api/account/new-workspace-view',
   agentLogins: '/api/account/agent-logins',
+  codexDevice: '/api/account/agent-logins/codex/device',
   githubInstallations: '/api/account/github-installations',
   githubRepositories: '/api/account/github-repositories',
   deleteAccount: '/api/account/delete',
@@ -23,10 +24,46 @@ export function agentLoginPath(agent: Agent): string {
   return `${ACCOUNT_PATHS.agentLogins}/${agent}`
 }
 
+export function codexDevicePath(handle: string): string {
+  return `${ACCOUNT_PATHS.codexDevice}/${encodeURIComponent(handle)}`
+}
+
+export interface StartCodexDeviceResponse {
+  handle: string
+  userCode: string
+  verificationUrl: string
+  expiresAt: Timestamp
+  pollIntervalMs: number
+}
+
+export type PollCodexDeviceResponse =
+  | { state: 'waiting'; pollIntervalMs: number }
+  | { state: 'connected'; login: AgentLoginStatus }
+  | { state: 'expired' }
+  | { state: 'failed'; cause: string }
+
 /** Secrets occur only in writes and runner commands, never in account responses. */
 export type SaveAgentLoginRequest =
   | { agent: 'claude'; kind: 'token' | 'api-key'; secret: string }
   | { agent: 'codex'; kind: 'api-key'; secret: string }
+
+type AgentLoginKinds = {
+  [A in Agent]: Extract<AgentLoginStatus, { agent: A; connected: true }>['kind']
+}
+
+const loginNoReuseDefaults: {
+  [A in Agent]: Record<AgentLoginKinds[A], boolean>
+} = {
+  claude: { token: true, 'api-key': false },
+  codex: { token: true, 'api-key': false },
+}
+
+export function defaultAgentLoginNoReuse<A extends Agent>(
+  agent: A,
+  kind: AgentLoginKinds[A],
+): boolean {
+  return loginNoReuseDefaults[agent][kind]
+}
 
 export type AgentLoginStatus =
   | { agent: Agent; connected: false }
@@ -40,9 +77,10 @@ export type AgentLoginStatus =
   | {
       agent: 'codex'
       connected: true
-      kind: 'api-key'
+      kind: 'token' | 'api-key'
       noReuse: boolean
       updatedAt: Timestamp
+      unusableCause?: string
     }
 
 export interface GitHubInstallation {

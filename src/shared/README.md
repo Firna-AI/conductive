@@ -34,15 +34,20 @@ removes it. Each request sends `EmptyRequest` and returns the current list.
 confirmations, and resend rules. Its comments state the delivery contract.
 `RunnerProtocolVersion` is 1 or 2. The Worker accepts both versions.
 The `welcome` repeats the version of the runner's `hello`.
+The optional `hello.loginKinds` declares the login kinds the runner can use.
+A version 2 runner without it has only legacy support.
+ChatGPT sign-in needs an explicit declaration. Version 1 cannot declare it usable.
 `RUNNER_PROTOCOL_VERSION` is 2. The packaged runner sends it, and
 each full image build records it.
 The credential of a turn belongs to the session starter, whoever sent the
 message:
 
 - `RunnerTurnV1` and `RunnerMessageDuringTurnV1` carry the real agent
-  login in `login`, with its agent, kind, and secret.
+  login in `login`, with its agent, kind, and secret. Their typed login
+  excludes Codex ChatGPT sign-in.
 - `RunnerTurnV2` carries a turn token in `credential`, with the agent and
-  the login kind. It has no `login`.
+  the login kind. A Codex ChatGPT credential also carries public account
+  claims for its temporary login file. It has no `login`.
 - `RunnerMessageDuringTurnV2` carries no credential and no login.
 
 `RunnerTurn`, `RunnerMessageDuringTurn`, `RunnerCommand`, and
@@ -51,6 +56,9 @@ shapes of one version. The runner imports the `V2` forms and uses
 a turn token.
 The [model gateway](../../worker/model-gateway/README.md#model-requests)
 gives the form of a turn token.
+
+`account.ts` defines the start and poll contracts of the Codex device code
+sign-in. Replies contain the public code and state, never the sign-in tokens.
 `RUNNER_EVENT_MAX_BYTES` limits the complete serialized runner event envelope.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.

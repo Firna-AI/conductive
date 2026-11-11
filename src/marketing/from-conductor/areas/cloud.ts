@@ -83,7 +83,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Cloud agent credentials',
     status: 'available',
-    note: 'Members connect and share agent logins. Using keys from cloud computer environment variables is under consideration.',
+    note: 'Members connect and share agent logins. Using a shared agent setup on the cloud computer, including environment variables, is planned.',
   },
   {
     id: 'workspace-details',
@@ -142,7 +142,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Sleep and wake',
     status: 'different',
-    note: 'Cloud computers stop after 30 idle minutes. Files and sessions stay. Opening a stopped workspace resumes it.',
+    note: 'Idle computers stop after 30 minutes, keep files and sessions, and resume when opened. Agent wake-ups that can keep computers running are planned.',
   },
   {
     id: 'cloud-desktop',

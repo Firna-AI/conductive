@@ -9,7 +9,12 @@ import { SITE_FOLDER } from '../src/shared/site-build'
 import type { AppDependencies, AppEnv } from './env'
 import { githubInstallResponse, githubSetupResponse } from './github-setup'
 import { hostStub, hostSurface, marketingResponse } from './hosts'
-import { errorResponse, HttpError, privateResponse } from './http'
+import {
+  errorResponse,
+  HttpError,
+  previewResponse,
+  privateResponse,
+} from './http'
 import { requestBodyEntry } from './http/request-body'
 import { routeModelGateway } from './model-gateway/route'
 import { gatewayWorkspaceAllowed } from './model-gateway/workspace-access'
@@ -49,6 +54,11 @@ import { productionGitHubWebhook } from './github/composition'
 import { appFrameSources, runnerSoftware } from './configuration'
 import { appSiteResponse } from './marketing/assets'
 import { retryApprovalEmails } from './operator/approval-email'
+import { freshCodexLogin } from './codex-auth/renew'
+import { codexTaskOwner } from './codex-auth/tasks'
+import { failCodexAccessToken } from './codex-auth/failure'
+import { waitForCodexRotation } from './codex-auth/rotation'
+import { cleanupCodexDevices } from './codex-auth/device-store'
 import { warnWorker } from './warnings'
 import { routineRunRuntime } from './routines/run-runtime'
 import { scanRoutineSchedules } from './routines/schedule-scan'
@@ -66,6 +76,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       env?: AppEnv,
       execution?: Pick<ExecutionContext, 'waitUntil'>,
     ): Promise<Response> {
+      const codexTasks = codexTaskOwner(execution)
       const path = new URL(request.url).pathname
       const upgrade = request.headers.has('Upgrade')
       const health =
@@ -92,7 +103,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return await marketingResponse(request, env, dependencies.now())
         }
         if (surface === 'preview')
-          return respond(await routePreview(request, env, dependencies))
+          return previewResponse(await routePreview(request, env, dependencies))
         if (surface === 'app') {
           checkOrigin(request, env)
           if (appApi && !upgrade) {
@@ -159,9 +170,28 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             return respond(await handleImageSourceCredential(request, env))
           const gatewayEnv = env
           const gatewayResponse = await routeModelGateway(request, {
+            codexTasks,
             ...workspaceRuntime(gatewayEnv, dependencies),
             workspaceAllowed: (id) =>
               gatewayWorkspaceAllowed(gatewayEnv.DB, id),
+            codexLogin: (userId, failed) =>
+              freshCodexLogin(
+                gatewayEnv,
+                userId,
+                dependencies,
+                codexTasks,
+                failed,
+              ),
+            codexLoginFailed: (userId, failed) =>
+              failCodexAccessToken(gatewayEnv, userId, failed),
+            codexWaitForRotation: (userId, failed, pending) =>
+              waitForCodexRotation(
+                gatewayEnv,
+                userId,
+                failed,
+                dependencies,
+                pending,
+              ),
           })
           if (gatewayResponse) return respond(gatewayResponse)
           const runnerResponse = await routeRunner(request, env)
@@ -206,7 +236,14 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         if (featureResponse) return respond(featureResponse)
         const context = await membersGate(request, env, dependencies.now())
         return respond(
-          await route(request, env, context, dependencies, execution),
+          await route(
+            request,
+            env,
+            context,
+            dependencies,
+            codexTasks,
+            execution,
+          ),
         )
       } catch (error) {
         const response = errorResponse(error)
@@ -225,6 +262,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         return
       }
       if (event.cron !== '*/15 * * * *') return
+      await cleanupCodexDevices(env.DB, dependencies.now())
       await cleanupDeletedOrgs(
         env,
         dependencies,

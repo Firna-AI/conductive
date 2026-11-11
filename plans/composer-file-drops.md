@@ -1016,6 +1016,8 @@ Tags: ui
 
 Depends on: 7
 
+Main integration notes: `.context/composer-file-drops/merge-justifications.md`.
+
 - [ ] Expose the folder names of a drop with the draft's existing refused
       file data, through the attach boundary, without notice words. Keep
       folder-only drops, draft ownership, and existing notice cleanup.

@@ -46,7 +46,7 @@ export const checks = defineScreen({
       description:
         'The pull request is merged into the default branch. Continue moves the workspace to a new branch from the latest main and keeps the sessions. Archive shows beside it, for the owner of the workspace and the admins of the org.',
       rationale:
-        'The user chose decision 223: Continue keeps the sandbox and the sessions, as in Conductor, and every member may press it, from decision 224. Archive keeps the rule of decision 42. app/banner/continue shows the question with local work, the branch change that runs, a failure, and the wait for a turn.',
+        'The user chose decision 223: Continue keeps the sandbox and the sessions, as in Conductor, and every member may press it, from decision 224. Archive keeps the rule of decision 42. On 11 November 2026, the user chose purple for a merged pull request. The bar, the row, and Continue take that tint, as the main action of each tinted bar does. app/banner/continue shows the question with local work, the branch change that runs, a failure, and the wait for a turn.',
       movedFrom: 'app/banner/merged',
       props: { banner: 'merged' },
       useCasePaths: mergeFlow,

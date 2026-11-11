@@ -21,7 +21,7 @@ how a screen is built, and links to the other pages.
 | `app/command-palette` | The command palette over the list: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
@@ -47,7 +47,7 @@ how a screen is built, and links to the other pages.
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
-`app/orgs/suspended`, `app/account`, `app/new-workspace`,
+`app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
 `app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, and `app/tools` do. `marketing/pictures` has no screen of its own. Each picture's capture
@@ -151,16 +151,40 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   keeps the notice of the install script, which shows only for a change
   of the install script.
 
-`app/account` shows the General tab of the account. Its tabs are links, as
-the tabs of the org settings are. `app/account/preferences` shows the
-Preferences tab, from decision 142 of PR #73: the New workspaces section
-with Model and effort, and the choice of how New workspace opens on a
-computer, the page or a dialog. Its `not-saved` variant shows a save that failed, which
-keeps the saved choice. `app/account/setup`, `app/account/connect-claude`,
-and `app/account/connect-codex` show General before the first connections,
-and with the Connect form of each agent open.
-`app/account/share-not-saved` shows General after a login share setting
-failed to save, with its saved value and the cause beside the switch.
+`app/account` shows the General tab of the account, with Claude connected
+by a subscription token and Codex by an API key. Its tabs are links, as
+the tabs of the org settings are. Its child pages:
+
+- `app/account/preferences` shows the Preferences tab, from decision 142
+  of PR #73: the New workspaces section with Model and effort, and the
+  choice of how New workspace opens on a computer, the page or a dialog.
+  Its `not-saved` variant shows a save that failed, which keeps the saved
+  choice.
+- `app/account/setup` shows General at the first run, with nothing
+  connected.
+- `app/account/connect-claude` has the Connect form of Claude, whose
+  switch starts on Subscription token. Its `api-key` variant has that form
+  with API key selected.
+- `app/account/connect-codex` has the Connect form of Codex, whose switch
+  starts on API key. Its child page `app/account/connect-codex/chatgpt` has
+  that form with ChatGPT plan selected, before the sign-in starts, with the
+  link to the ChatGPT settings and Get a code. Its `code` variant shows the
+  one-time code while the page waits for the sign-in. Its `expired` variant
+  has a code that expired, with Get a new code. Its `refused` variant has a
+  first request for a code that OpenAI refused, with the link and Get a
+  code.
+- `app/account/codex-token` has Codex connected by a sign-in to a ChatGPT
+  plan, whose share switch starts off.
+  Its `not-usable` variant has a sign-in that OpenAI did not renew: the row
+  says Signed out, with the cause and Sign in again. Its `sign-in-again`
+  variant has the ChatGPT sign-in form that Sign in again opens under that
+  row, which keeps Remove and the share switch. Its `sign-in-again-code`
+  variant has the code in that form.
+- `app/account/share-not-saved` shows General after a login share setting
+  failed to save, with its saved value and the cause beside the switch.
+- `app/account/invites` has the invite code while sign-ups are paused.
+  [The waitlist, suspensions, and the operator](catalogue-operator.md)
+  gives its variants.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a user who chose the dialog. Its states are child

@@ -49,6 +49,16 @@ says.
 - [Access and security](isolation.md#agent-logins-in-a-sandbox)
   states how a login reaches the sandbox, its share setting, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
+- A Codex session keeps its conversation when its starter changes between
+  an OpenAI API key and a ChatGPT sign-in.
+- When Codex refuses to resume because the saved model provider differs
+  from the current provider or is no longer configured, the session
+  continues in a fork.
+- The fork keeps the earlier messages. The session keeps the same chat.
+- The session saves the fork's conversation ID. Later turns use that ID,
+  also after a restart of the runner.
+- A refused resume for another cause, or a refused fork, fails the turn
+  with that cause.
 
 ## Names in the product
 

@@ -163,6 +163,8 @@ is relative to `src/chat/`, the folder of this guide.
   `foldedWork` finds the work of each ended turn that folds, as the
   [transcript rules](transcript.md) say. `groupEntries` makes the entries
   that the chat draws, and puts each insert at its place, also in a fold.
+  It gives each run of tool calls its open state: while a turn runs, only
+  the run with its newest call is open.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.

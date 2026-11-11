@@ -6,7 +6,7 @@ export const plansAndPricingFeatures: readonly ParityFeature[] = [
     area: 'plans-and-pricing',
     name: 'Bring your own subscriptions and keys',
     status: 'available',
-    note: 'Model use goes to your Claude subscription or API key, or your OpenAI API key. Conductive does not resell model use.',
+    note: 'Model use goes to your Claude subscription, ChatGPT plan, or Anthropic or OpenAI API key. Conductive does not resell model use.',
   },
   {
     id: 'pro-plan',

@@ -64,7 +64,9 @@ export function TranscriptView(props: {
               <Fragment key={entry.insert.key}>{entry.insert.content}</Fragment>
             )
           case 'tools':
-            return <ToolGroup calls={entry.calls} key={entry.id} />
+            return (
+              <ToolGroup calls={entry.calls} open={entry.open} key={entry.id} />
+            )
           case 'work':
             return <WorkFold key={entry.id} steps={entry.steps} />
           case 'item':

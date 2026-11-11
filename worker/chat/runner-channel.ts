@@ -106,6 +106,7 @@ export class RunnerChannel {
       if (!welcome) return
       active.streamId = message.streamId
       active.protocolVersion = message.protocolVersion
+      active.loginKinds = message.loginKinds
       active.ready = welcome.ready
       await this.connections.persist(active)
       if (active.ready) this.connections.attachFiles(active)

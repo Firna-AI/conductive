@@ -39,7 +39,9 @@ page.
   command after the items that began before it.
 - [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
   [Transcript entries](transcript/transcript-entries.ts) group the items and
-  generic inserts. Browser callers use React nodes as the insert content.
+  generic inserts, and give each run of tool calls its default open state.
+  The browser and the concise copy share that state. Browser callers use
+  React nodes as the insert content.
 
 - [Mention text](mention-text.ts) reads and writes the mention of a file or
   a folder, for the chat field, sent messages, and the attachment mentions.
@@ -62,7 +64,7 @@ page.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
-- [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
+- [Account contracts](account.ts) include the repository list available before an org exists. Stored login statuses keep `token` and `api-key` for both agents. A Codex save request accepts only `api-key`; ChatGPT uses the device flow. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `defaultAgentLoginNoReuse` gives the typed default for each stored agent and kind. The Worker and the dev backend use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the required `waitlistOn` flag of the waitlist switch, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause and switch changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.

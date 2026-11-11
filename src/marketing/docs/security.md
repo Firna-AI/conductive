@@ -38,7 +38,7 @@ Its sender is the person whose message started that turn.
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
 | Commit in an agent turn | The turn sender, as author and committer |
-| Commit outside a turn, including Terminal and scripts | The workspace owner, as author and committer |
+| Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
 | Session created through agent tools | The calling turn's sender, as the session starter |
 | Message sent through agent tools | The calling turn's sender, under the receiving session's login rules |
@@ -122,6 +122,11 @@ The normal chat history and Mac command records still stay on the service.
 
 An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.
 A program or member with terminal access can read or copy that login during a turn.
+
+Your ChatGPT sign-in stays outside the cloud computer.
+Conductive renews that sign-in for you.
+Your ChatGPT email, account ID, and plan can reach the cloud computer.
+An older cloud computer cannot run Codex with ChatGPT, so your ChatGPT sign-in never reaches it.
 A copied login can remain usable after the turn ends.
 Agent settings in the repository can also send that login to another address.
 Removing a login from Account does not revoke a copy held elsewhere.
@@ -163,9 +168,14 @@ Every workspace receives the org's environment values at start, except values wi
 Its agents, programs, and terminal users can read the values that the computer receives.
 Builds and repository refreshes do not receive the org's environment values.
 
-Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for commit authors and committers.
+In an agent turn, Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for the agent's commands.
+These values name the turn sender.
+They take priority over every Git setting.
 An org variable with one of these names has no effect.
-These values also take priority over an author that a script or an agent writes into Git settings.
+Outside an agent turn, Git takes the workspace owner's author from the computer's system Git settings.
+Conductive writes these settings at each start.
+The owner's author takes priority over a `user.name` or `user.email` setting.
+An `author` or `committer` setting in the repository or in the global Git settings takes priority over the owner's author.
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
@@ -187,6 +197,7 @@ Preview apps run on a separate domain from Conductive.
 Opening a preview needs your sign-in and workspace access.
 Its address alone does not grant access to another person.
 Closing a preview or stopping the computer ends that preview's access.
+Your browser can still keep the preview files that it loaded, as the preview app's cache rules allow.
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.

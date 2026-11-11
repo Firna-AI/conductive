@@ -69,7 +69,7 @@ it('names each pull request state in words, with an icon and the tint of the moc
       state: 'merged',
       text: 'Merged into main',
       detail: '2h ago',
-      tone: 'neutral',
+      tone: 'merged',
       mark: 'GitMerge',
     },
     {

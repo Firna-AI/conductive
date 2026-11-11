@@ -6,10 +6,8 @@ import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { filesWithoutChip } from '../links/chat-parts'
 import { ChatText, useChatParts } from '../links/LinkedText'
-import type {
-  Transcript,
-  TranscriptItem,
-} from '../../shared/transcript/transcript'
+import type { Transcript } from '../../shared/transcript/transcript'
+import type { SingleItem } from '../../shared/transcript/transcript-entries'
 import {
   continuedBy,
   filesUnread,
@@ -23,7 +21,6 @@ import controls from '../ui/controls.module.css'
 import { AgentText } from './AgentText'
 import { SentFiles } from './AttachmentChips'
 import { LostEventLine } from './LostEventLine'
-import { ToolGroup } from './ToolGroup'
 import { TurnEnd } from './TurnEnd'
 
 /**
@@ -61,7 +58,7 @@ export interface ItemActions {
 
 /** One part of a session's chat, other than a run of tool calls. */
 export function ItemView(props: {
-  item: TranscriptItem
+  item: SingleItem
   transcript: Transcript
   actions: ItemActions
   readers: ChatReaders
@@ -72,8 +69,6 @@ export function ItemView(props: {
       return <UserBubble message={item.message} />
     case 'agent':
       return <AgentText text={item.text} />
-    case 'tool':
-      return <ToolGroup calls={[item.tool]} />
     case 'turn-end':
       return (
         <TurnEnd
