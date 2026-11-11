@@ -222,7 +222,7 @@ An unchanged read stores no snapshot and publishes no event, but it still repair
 A read that returns `null`, such as an unrelated push, copies nothing.
 `saveWorkspaceGitHubSummary` updates only `github_summary`, when the value differs and the workspace still has the snapshot's branch.
 Continue clears the summary when it stores the new branch, so an old branch's copy cannot restore its mark.
-It changes no activity time, update time, or list position.
+The summary copy changes no activity time, update time, or list position.
 A failed copy rejects the refresh, so the delivery stays retryable.
 The retry of a committed delivery replays its receipt and copies again, without a GitHub request or a fresh event.
 

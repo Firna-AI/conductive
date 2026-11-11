@@ -187,6 +187,7 @@ Preview apps run on a separate domain from Conductive.
 Opening a preview needs your sign-in and workspace access.
 Its address alone does not grant access to another person.
 Closing a preview or stopping the computer ends that preview's access.
+Your browser can still keep the preview files that it loaded, as the preview app's cache rules allow.
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
