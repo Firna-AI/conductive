@@ -53,10 +53,17 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         repositories of the org.`,
       text`Each login that you connect has a setting that lets other
         members use it in the sessions that you start. For a Claude
-        subscription, the setting starts off. For an API key, it starts
-        on. When you replace a login with one of the same kind, the
-        setting stays. You can change it on your account page. Share a
+        subscription or a ChatGPT sign-in, the setting starts off. For
+        an API key, it starts on. When you replace a login with one of the
+        same kind, the setting stays. You can change it on your account page. Share a
         login only when its provider's terms allow that use.`,
+      text`Codex can use your ChatGPT plan through device code sign-in.
+        ${productName} stores and renews that sign-in. OpenAI sends hosted
+        apps to its sign-in waitlist and can block this use. OpenAI's terms
+        forbid making your account available to anyone else. The real
+        ChatGPT sign-in never enters a cloud computer. A computer that cannot
+        use it fails the turn. Ask an admin to rebuild the org image, then
+        start a new workspace. You can also connect an OpenAI API key.`,
       text`While a turn runs, its GitHub token is in the cloud computer of
         the workspace. A member with a terminal in that cloud computer can
         read it. During Continue, the fetch uses the GitHub token of the

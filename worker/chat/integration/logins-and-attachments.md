@@ -5,10 +5,13 @@ This page belongs to the [chat backend integration](README.md) guide.
 - The code that stores an agent login must encrypt it with `encrypt`,
   `agentLoginContext(userId, agent)`, and `BOAT_KEY_ENCRYPTION_KEY`.
 - `readAgentLogin` decrypts with the same context and key. It accepts the
-  kinds `token` and `api-key` for Claude, and only `api-key` for Codex.
-- A login never holds whitespace. The save removes it, and
-  `readAgentLogin` removes it again, so a login that was saved before that
-  rule still works.
+  kinds `token` and `api-key` for both agents.
+- A Claude login or API key never holds whitespace. The save removes it,
+  and `readAgentLogin` removes it again for older saved values.
+- A Codex `token` is an encrypted structured ChatGPT sign-in. Its parser
+  preserves public account text. A former pasted token requires reconnect.
+- A login with a saved renewal failure is unavailable. No credential
+  reaches the runner until the member reconnects it.
 - A message whose login is missing gets `409 agent_login_required`, and no
   session is created, as [Session logins](README.md#session-logins) says.
 - When the starter's login, or the sender's access, is gone as a command
@@ -30,6 +33,11 @@ This page belongs to the [chat backend integration](README.md) guide.
 - In each of these cases, `TurnLifecycle.fail` stops the running turn with
   a durable Stop, as a failed gateway check does. The turn fails with
   `agent_login_required`.
+- Before either command version is built, the shared runner support rule
+  checks its login kind. A refused turn ends immediately with the
+  image rebuild, new workspace, or API key recovery cause.
+- A message whose login became unsupported ends its running turn in the
+  same way. An interrupt stops its former process. Late ends stay late.
 - `resolveAttachments(userId, workspaceId, ids, messageId, usedIds)` checks the sender's files and target.
   The chat transaction supplies the IDs whose accepted-use evidence it already holds.
 - `prepareAttachments` copies through the provider outside the chat queue.

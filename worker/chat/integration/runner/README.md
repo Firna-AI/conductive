@@ -42,6 +42,12 @@ state the requirements.
   - Version 2: the `turn` command carries a turn token, with the agent and
     the login kind. A `message` command carries no credential. The
     workspace makes the token after it stores the turn as running.
+- `hello.loginKinds` advertises supported logins. An absent list keeps
+  Claude tokens, Claude API keys, and Codex API keys. Version 2 requires
+  an advertised Codex `token` kind for ChatGPT. Version 1 cannot add it.
+- The Worker checks the login kind before each turn or later message.
+  An unsupported login gets no command. Its turn ends once with recovery
+  steps. The version 1 wire login type cannot hold a ChatGPT sign-in.
 - Each `turn` and `message` command also carries the current workspace
   branch and target branch in `branches`, as
   [History and event order](../../history.md) says.

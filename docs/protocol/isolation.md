@@ -166,8 +166,18 @@ decision number names a decision of the change that adds the
   [The agent runner](agent-runner.md#the-agent-runner) states which runner
   versions a workspace accepts.
 - A newer runner gets a turn token as the credential of each turn. An
-  older runner gets the agent login itself. This rule holds for each
+  older runner gets a supported agent login itself. This rule holds for each
   runner connection.
+- Before a turn or a later message reaches a runner, the app checks
+  that the runner can use its login kind (decision 174).
+- A ChatGPT turn needs a runner that declares support for that sign-in.
+  An older runner, including an earlier version 2 runner, cannot use it.
+- A runner that cannot use the login gets no turn or message command
+  and no credential. The turn fails once with a recovery cause.
+- The cause offers a new workspace after an admin rebuilds the org
+  image, or an OpenAI API key. A reconnect does not send the failed turn again.
+- A ChatGPT sign-in never reaches a sandbox, including one whose older
+  runner can still receive other agent logins.
 - The version pin of a workspace is the lowest runner protocol version that
   it accepts. The workspace takes the pin from the org image that its
   cloud computer starts from. A stop and a resume keep the pin. A
@@ -185,11 +195,14 @@ decision number names a decision of the change that adds the
 - Each agent login has a share setting (decision 116). It says whether the
   messages of other members can run on that login.
 - The kind of a login sets the default of its share setting. A new Claude
-  subscription login does not let other members use it. A new API key lets
+  subscription login does not let other members use it. A new ChatGPT
+  sign-in does not let them use it either (decisions 171 and 175). A new API key lets
   them use it.
 - Reason: Anthropic's consumer terms forbid making a Claude account
-  available to anyone else. The owner of an API key may let a team use it.
-  Sharing every login by default was rejected for that reason.
+  available to anyone else. OpenAI's terms also forbid making an account
+  available to anyone else. The owner of an API key may
+  let a team use it. Sharing every login by default was rejected for these
+  reasons.
 - A replaced login keeps its share setting while its kind stays the same. A
   login whose kind changes gets the default of its new kind. Reason: a key
   rotation keeps the choice of its owner.
@@ -208,6 +221,11 @@ decision number names a decision of the change that adds the
 - The session record shows whether the login of its starter can be used,
   and whether the starter shares it. It holds no part of the login.
 - The runner never writes a login to disk.
+- On a ChatGPT turn, the rules of the signed-in ChatGPT workspace
+  apply to Codex (decisions 173 and 175).
+- Risk: hooks and MCP commands from those rules run in the sandbox of
+  the org. Its members trust that ChatGPT workspace admin with their code
+  and the credentials that the sandbox can reach.
 - Risk: while the starter shares the login, the other members of a session
   spend it. Anthropic's rules for hosted products ask each end user to sign
   in with their own credentials. So a shared Claude subscription stays a

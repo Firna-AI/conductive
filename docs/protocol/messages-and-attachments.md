@@ -122,6 +122,13 @@ says.
   starter after a stop continues the same session. The next message of
   another member does the same while the starter shares the login.
 - A turn that fails names the cause, and Try again retries the turn.
+- When the cloud computer cannot run a turn's login kind, the turn fails
+  with a cause and sends no credential to its runner (decision 174).
+- For a ChatGPT sign-in, the cause offers two ways to continue. An admin
+  rebuilds the org image, then the member starts a new workspace. Or the
+  member connects an OpenAI API key.
+- The same rule applies to a message that joins a turn. A reconnect
+  does not repeat a failed turn or send its credential again.
 - Try again can retry only the newest turn of a session, and only when that
   turn failed (decision 97). It sends the retry message that the failure
   names.
