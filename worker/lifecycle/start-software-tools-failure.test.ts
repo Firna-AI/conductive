@@ -98,6 +98,10 @@ done
       .replaceAll('/usr/local/', `${root}/usr/local/`)
       .replaceAll('/etc/', `${root}/etc/`)
       .replaceAll(
+        '/tmp/conductive-privileged.',
+        `${root}/tmp/conductive-privileged.`,
+      )
+      .replaceAll(
         '/tmp/conductive-software-backup.',
         `${root}/tmp/conductive-software-backup.`,
       )

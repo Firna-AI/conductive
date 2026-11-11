@@ -64,6 +64,10 @@ exit 137
       .replaceAll('/usr/local/', `${root}/usr/local/`)
       .replaceAll('/etc/', `${root}/etc/`)
       .replaceAll(
+        '/tmp/conductive-privileged.',
+        `${root}/tmp/conductive-privileged.`,
+      )
+      .replaceAll(
         '/tmp/conductive-software-backup.',
         `${root}/tmp/conductive-software-backup.`,
       )
@@ -126,6 +130,10 @@ it('activates the preview relay after a successful workspace software installati
       .replaceAll('/usr/local/', `${root}/usr/local/`)
       .replaceAll('/etc/', `${root}/etc/`)
       .replaceAll(
+        '/tmp/conductive-privileged.',
+        `${root}/tmp/conductive-privileged.`,
+      )
+      .replaceAll(
         '/tmp/conductive-software-backup.',
         `${root}/tmp/conductive-software-backup.`,
       )
@@ -180,6 +188,10 @@ exit 2
       .replaceAll('/opt/', `${root}/opt/`)
       .replaceAll('/usr/local/', `${root}/usr/local/`)
       .replaceAll('/etc/', `${root}/etc/`)
+      .replaceAll(
+        '/tmp/conductive-privileged.',
+        `${temporary}/conductive-privileged.`,
+      )
       .replaceAll(
         '/tmp/conductive-software-backup.',
         `${temporary}/conductive-software-backup.`,

@@ -52,7 +52,13 @@ at each start.
 [Old workspaces](../../docs/protocol/workspace-life.md#old-workspaces) says
 how an existing workspace gets the shell server that sets it.
 
-One quoted privileged-command helper owns the root commands.
+The helpers in `privileged.ts` own the root commands.
+`privilegedCommand` quotes a script for `/bin/sh -c`.
+`privilegedFileCommand` writes a large script into a private temporary
+folder, then passes its path to `sudo -n -- /bin/sh`.
+It uses a quoted heredoc and rejects a script that contains its delimiter
+line. It reads standard input from `/dev/null`, keeps the script's exit
+status, and removes the folder on exit.
 Both units require a nonsecret enable marker under `/run`.
 An image build or refresh has no marker, so it starts no terminal and no
 shell, and it creates no terminal password.
@@ -233,7 +239,7 @@ Terminal status reads remain available.
 - [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the folder hook with `terminalPromptCommand`.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
 - [store.ts](store.ts) binds each cached password to its current sandbox ID and provider account.
-- [privileged.ts](privileged.ts) quotes installation and service control commands.
+- [privileged.ts](privileged.ts) builds quoted commands and commands that run a private script file as root.
 - [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message. It passes each later frame through unchanged.
 - [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the programs and the install command with fakes.
 - [The tools adapter](../previews/provider.ts) exposes the private port.

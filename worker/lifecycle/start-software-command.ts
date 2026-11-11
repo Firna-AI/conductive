@@ -1,5 +1,5 @@
 import { softwareInstallCommand } from '../software-image/install-command'
-import { privilegedCommand } from '../terminal/privileged'
+import { privilegedFileCommand } from '../terminal/privileged'
 import {
   WORKSPACE_TOOLS_COMMAND,
   WORKSPACE_TOOLS_DIRECTORY,
@@ -37,7 +37,10 @@ export function workspaceSoftwareUpdateCommand(
   artifact: ImageSoftwareArtifact,
 ): string {
   const command = softwareInstallCommand(artifact)
-  return privilegedCommand(`set -eu
+  const delimiter = 'CONDUCTIVE_SOFTWARE_INSTALL'
+  if (command.split('\n').includes(delimiter))
+    throw new Error('The software install contains its heredoc delimiter.')
+  return privilegedFileCommand(`set -eu
 umask 077
 backup_complete=false
 recover() {
@@ -66,7 +69,10 @@ done
 touch "$backup/present"
 tar -cPf "$backup/files.tar" --null -T "$backup/present"
 backup_complete=true
-bash -c ${shellQuote(command)}
+cat > "$backup/install.sh" <<'${delimiter}'
+${command}
+${delimiter}
+bash "$backup/install.sh" </dev/null
 systemctl start conductive-preview-relay.socket
 systemctl restart conductive-preview-relay.service`)
 }
