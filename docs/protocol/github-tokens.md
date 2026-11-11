@@ -1,11 +1,13 @@
 # GitHub tokens
 
-This doc states how a cloud computer gets GitHub access, and who its
-commits name as their author.
-[Access and security](access-and-security.md) states the shared access rules.
-An image job is a build or a refresh of the org image. An image job
-decision number names a decision of the change that makes every image job
-clean, as [Org image](org-image.md) says.
+This doc states how a cloud computer gets GitHub access, who its commits
+name as their author, and how the Worker acts on GitHub as a member.
+[Access and security](access-and-security.md) states the shared access
+rules. A decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. An image job
+is a build or a refresh of the org image. An image job decision number
+names a decision of the change that makes every image job clean, as
+[Org image](org-image.md) says.
 
 ## Git and the GitHub CLI
 
@@ -24,6 +26,8 @@ clean, as [Org image](org-image.md) says.
   The terminal is shared, so this account is the same for each connection.
 - A supplied turn ID must name a current turn. An unknown or ended turn
   never falls back to the workspace owner.
+- A trusted Continue job is the one other case. Its fetch gets the token
+  of the member who pressed Continue, as [Continue](#continue) says.
 - The helper asks the Worker at `/v1/git/credential` on
   `api.conductive.build`. It proves itself with the workspace token.
 - The Worker checks access before it gets the GitHub token and again
@@ -144,3 +148,66 @@ clean, as [Org image](org-image.md) says.
   data.
 - A workspace sandbox never gets an installation token. Its Git gets
   GitHub tokens only from the git credential helper.
+
+## The Actions permission
+
+- The GitHub App has Actions write, and each install owner approves it
+  (decision 225).
+- With it, the agent reads the logs of failed GitHub Actions jobs with
+  `gh run view --log-failed`, for Fix checks of the pull request bar.
+- Reason: the logs are the main evidence of a failed Actions job.
+- A check of another service keeps its log outside GitHub. Fix checks then
+  asks the agent to read its details, or to run it locally.
+- Risk: write also lets each member token start, re-run, and cancel
+  workflow runs, turn workflows on and off, and delete runs, logs,
+  artifacts, and caches. This holds on each repository that the token
+  reaches, also outside the org. Read access would be enough for the logs.
+- These ways were rejected (decision 225):
+  - No Actions permission. Fix checks then works only from the check
+    summaries and local runs, and a failure that shows only in a log takes
+    longer.
+  - A Worker that puts the end of each failed log into the prompt. The
+    actions of the bar only send their prompt (decision 222).
+  - A personal token, or a second GitHub App, for the logs. One GitHub App
+    gives the app all of its GitHub access.
+
+## Merge as the member
+
+- The Worker reads, for each member, the access of that member to the
+  repository and the merge method that GitHub gives that member
+  (decision 221). It reads with the member's own GitHub token, and the
+  answer goes only to that member.
+- A member may merge when GitHub gives that member write access or more.
+  GitHub still checks the rules of the branch at the merge.
+- Reason: GitHub reports no single field for the right to merge.
+- The Worker merges with the GitHub token of the member who clicks Merge
+  (decision 220). GitHub then shows that member as the merger, and checks
+  the rights of that member.
+- A merge with a token of the app was rejected. GitHub would then show the
+  app as the merger, and skip the rights of the member.
+- The Worker refuses a merge for a person who is not a member of the org,
+  in a suspended org, and in an archived workspace.
+- No GitHub error text reaches the browser. The Worker gives each refusal
+  of GitHub as an error code of the app.
+
+## Continue
+
+- Continue fetches the latest default branch with the GitHub token of the
+  member who pressed Continue (decision 226). GitHub then checks the read
+  access of that member.
+- The workspace runs this fetch as a trusted Continue job, as it runs the
+  fetch of a create. The credential route gives the token to that job only
+  while its fetch runs.
+- The token reaches only that fetch. No Git setting and no hook of the
+  repository folder runs with it. Reason: agent code can change the Git
+  settings and the hooks of the repository folder.
+- Every member may press Continue (decision 224). So the token of a member
+  who is not the owner reaches the sandbox of the owner for the fetch, as
+  it does for a message of that member.
+- These ways were rejected (decision 226):
+  - The token of the workspace owner, through the mode that `gh` uses
+    outside a turn. It works only in a workspace with a newer version of
+    the app's own software.
+  - An installation token that reads only the one repository. A workspace
+    sandbox then gets an installation token, and the fetch needs the revoke
+    steps of image builds.

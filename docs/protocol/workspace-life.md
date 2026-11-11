@@ -3,10 +3,9 @@
 This doc holds the requirements and the decisions in force for the life of a
 workspace. It covers the create, the start steps, the updates of an old
 workspace, the time limits, the states, the stop and resume, the archive,
-and the restore of a workspace.
-It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
-which covers the provider, the org image, and the startup script. The
-terms are those of the
+the restore, and Continue of a workspace. It belongs to
+[Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
+provider, the org image, and the startup script. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. An image job decision number names a decision of the change that
@@ -148,6 +147,22 @@ makes every build and every refresh of the org image clean, as
   open asks for the start. A tab that showed the stopped state, or an error
   with Try again, until a member pressed Resume was rejected, because the
   open of the tab already asks for the file.
+- A message from `send_message` or `create_session` of the agent tools
+  also starts the sandbox (decision 260). It does so in the same cases as
+  an open, and with the same checks. These cases are a stopped workspace
+  and a workspace whose later start failed, such as a failed resume.
+- A failed first start keeps waiting for Try again, as
+  [A failed first start](create-a-workspace.md#a-failed-first-start)
+  says. An empty session from the agent tools starts nothing.
+- Reason: every member can already start each workspace of the org with an
+  open. A delegated task then runs while no member watches.
+- A message that waits until a member opens its workspace was rejected.
+  Its task could wait for hours, and the agent that sent it would not learn
+  why.
+- A refusal of such a message was rejected, because it adds a refusal, and
+  the agent must then ask a member to open the workspace.
+- Each such start counts toward the starts that all orgs share, as
+  [The provider](workspaces-and-sandboxes.md#the-provider) says.
 - While the sandbox is stopped, the chat history shows, and the stopped
   state takes the place of the composer.
 - A start that fails shows the error state with Try again. The chat history
@@ -216,7 +231,7 @@ makes every build and every refresh of the org image clean, as
   The push shows as a push of the owner, and it can start the CI of the
   repository. It can also put files with secret values on GitHub.
 - The pull request bar offers Archive after the merge, as
-  [GitHub banner](github-banner.md#banner-states) says. The menu of a
+  [After the merge](github-banner.md#after-the-merge) says. The menu of a
   workspace row offers it too, as [Archive](workspace-menu.md#archive)
   says.
 - An archived workspace has no file lists and no tools. A phone shows only
@@ -254,3 +269,12 @@ makes every build and every refresh of the org image clean, as
   history.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may
   restore a workspace.
+
+## Continue
+
+- After the merge of its pull request, Continue moves a workspace to a new
+  branch from the latest default branch. The workspace keeps its sandbox
+  and its sessions (decision 223).
+- [Continue](continue.md) holds its requirements: who may continue, when
+  Continue runs, its check for local work, the new branch, and the
+  sessions after it.

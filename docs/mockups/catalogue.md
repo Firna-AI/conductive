@@ -24,7 +24,7 @@ how a screen is built, and links to the other pages.
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, the agent logins, and the invite code, then Preferences with the model and how New workspace opens |
 | `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
-| `app/banner`        | The pull request bar and Checks: no pull request, then its other states       |
+| `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, the refreshes, a build without a software image, and Members |
@@ -35,7 +35,7 @@ how a screen is built, and links to the other pages.
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
 | `app/composer`      | Attached files, the picker, another member's login, and a missing agent       |
 | `app/attachments`   | A file that uploads, a failed upload, a file over 25 MB, sent files, and a first message with files |
-| `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
+| `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, and diff tab       |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
@@ -43,7 +43,7 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, update an old one, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, update an old one, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
@@ -244,15 +244,9 @@ chose these four actions on 9 November 2026. Its child pages:
 child pages of `app/command-palette` and of `app/feedback`, and the flow
 that sends feedback.
 
-`app/banner` shows a branch with commits and no pull request. Its child
-pages show the other states of decision 18: `app/banner/checks` has the
-running, failed, and passed checks and the merge, which moved from
-`app/banner/checks-running`, `checks-failed`, `ready-to-merge`, and `merged`
-and declare `movedFrom`. `app/banner/blocked` has a merge conflict, requested
-changes, a draft, and a pull request closed without a merge. A conflict and
-requested changes tint the bar amber. `app/banner/no-commits` has a branch
-without commits, whose bar offers no Create pull request, as in
-`app/new-workspace/creating` and `first-turn`.
+[The pull request bar](catalogue-bar.md) gives `app/banner`, the bar of a
+workspace with its actions, its child pages, and the flow
+`user-flows/merge-and-continue`.
 
 `app/archive` draws Archive and Restore of Checkout address autocomplete,
 from decisions 1 and 2 of PR #138. Its canonical screen has the archived

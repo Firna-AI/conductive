@@ -9,6 +9,13 @@ import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
+import { composerStates, tabStates } from './chatStates'
+import {
+  feedbackStateDefaults,
+  feedbackStateKeys,
+  feedbackStateProperties,
+} from './feedbackState'
 import { computerStateProps } from './workspaceComputerState'
 
 /**
@@ -39,15 +46,14 @@ export const workspaceStateSchema = {
     'rightColumn',
     'overlay',
     'archive',
-    'toast',
     'viewer',
     'lostUpdate',
     'tree',
     'paths',
     'org',
     'palette',
-    'copyLink',
-    'copyTranscript',
+    ...feedbackStateKeys,
+    ...barStateKeys,
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -82,24 +88,8 @@ export const workspaceStateSchema = {
     ports: { enum: previewStates },
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
-    /**
-     * The tab of the centre column: the first session, a new session, the
-     * linked session that a member's message opened from the first session,
-     * or a file, a Markdown preview, a diff, or a file whose name the app
-     * does not know, such as a file that moved. A phone shows a file in
-     * Files.
-     */
-    tab: {
-      enum: [
-        'session',
-        'new-session',
-        'linked-session',
-        'code',
-        'markdown',
-        'diff',
-        'unnamed-file',
-      ],
-    },
+    /** The tab of the centre column, as `tabStates` says. */
+    tab: { enum: tabStates },
     /**
      * The tab row, from decisions 186 to 188: each tab where it opened, the
      * drag of a tab, the code file after its move between the two
@@ -110,47 +100,8 @@ export const workspaceStateSchema = {
      * sessions.
      */
     tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
-    /**
-     * The composer: empty, with a message that is not sent yet, with
-     * attached files, with its picker open, or with a message for an agent
-     * that is not connected. Or with a message in a session whose starter's
-     * login is not available, or whose starter keeps that login for their
-     * own messages. With files, a file can still upload, its upload can fail,
-     * or a file over the size limit can stay out of the message.
-     * `workspace-link` holds a message with a pasted link to another
-     * workspace of the org, which shows as a chip.
-     *
-     * The `mention-` states open the list of `@`: with a query, without
-     * one, with no match, while the tree loads, and with no tree.
-     * `file-chips` holds a file chip and a folder chip. The `-pointer`
-     * states draw the pointer over the icon of the first chip or the first
-     * attached file, where a × takes the place of the icon. A phone has no
-     * pointer, so it shows the × at the end of each chip instead.
-     */
-    composer: {
-      enum: [
-        'empty',
-        'draft',
-        'attachments',
-        'uploading',
-        'upload-failed',
-        'too-large',
-        'picker',
-        'no-agent',
-        'no-starter-login',
-        'not-shared',
-        'workspace-link',
-        'mention-query',
-        'mention-start',
-        'mention-none',
-        'mention-loading',
-        'mention-unavailable',
-        'file-chips',
-        'file-chip-pointer',
-        'workspace-link-pointer',
-        'attachment-pointer',
-      ],
-    },
+    /** The composer, as `composerStates` says. */
+    composer: { enum: composerStates },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },
     /**
@@ -160,11 +111,19 @@ export const workspaceStateSchema = {
     rightColumn: { enum: ['shown', 'hidden'] },
     /**
      * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, or the
-     * tab menu of the first session.
+     * before a running session closes, the owner of the workspace, the tab
+     * menu of the first session, or the question of Continue with work that
+     * is not pushed.
      */
     overlay: {
-      enum: ['none', 'history', 'close-session', 'reassign', 'tab-menu'],
+      enum: [
+        'none',
+        'history',
+        'close-session',
+        'reassign',
+        'tab-menu',
+        'continue-unpushed',
+      ],
     },
     /**
      * The cloud computer of an archived workspace: kept, until the app
@@ -174,11 +133,6 @@ export const workspaceStateSchema = {
      * workspace.
      */
     archive: { enum: ['kept', 'ended', 'deleted'] },
-    /**
-     * A toast at the bottom of the screen: none, or the toast just after
-     * Archive, which names the workspace and offers Restore.
-     */
-    toast: { enum: ['none', 'archived'] },
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -226,18 +180,8 @@ export const workspaceStateSchema = {
      * opens it from the list, so a phone shows the palette of the list.
      */
     palette: { enum: paletteViews },
-    /**
-     * The label of the workspace number in the header, which copies the
-     * link of the workspace: as it is, or just after a press, while it
-     * shows for a moment that the copy worked or failed.
-     */
-    copyLink: { enum: ['none', 'copied', 'failed'] },
-    /**
-     * The toast after a copy of a session transcript from the tab menu: none,
-     * after a copy that worked, or after a request or a clipboard write that
-     * failed. The menu closed on the press, and the shown tab stays.
-     */
-    copyTranscript: { enum: ['none', 'copied', 'failed'] },
+    ...feedbackStateProperties,
+    ...barStateProperties,
   },
 } as const
 
@@ -265,15 +209,14 @@ export const readyWorkspace: WorkspaceState = {
   rightColumn: 'shown',
   overlay: 'none',
   archive: 'kept',
-  toast: 'none',
   viewer: 'admin',
   lostUpdate: 'none',
   tree: 'latest',
   paths: 'plain',
   org: 'active',
   palette: 'closed',
-  copyLink: 'none',
-  copyTranscript: 'none',
+  ...feedbackStateDefaults,
+  ...barStateDefaults,
 }
 
 /**

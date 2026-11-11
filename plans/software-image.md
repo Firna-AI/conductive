@@ -1145,10 +1145,6 @@ Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 8a, 9, 9a
 - [ ] Measure the memory of the parallel copies in a real build, and tune
       the numbers of design item 8.
 - [ ] Resume a workspace that was created before a release. Check that its
-      start updates our software and that an agent answers. In its
-      terminal, run `conductive repositories list`, `conductive sections
-      list`, and `conductive models list`, and check that the `--name` help
-      of `conductive --help` says "Use plain words separated by spaces.
-      Avoid underscores unless the user tells you to add them." This check
-      replaces the follow-up item `full-image-build-for-agent-tools.md`,
-      whose rebuild the update at a workspace start makes unnecessary.
+      start updates our software and that an agent answers. The follow-up
+      item `full-image-build-for-agent-tools.md` holds the checks of the
+      workspace tools after the deploy.

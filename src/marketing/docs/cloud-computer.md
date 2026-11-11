@@ -136,6 +136,15 @@ That start shows the step **Updating the agent and terminal software**.
 If the update fails, the workspace starts with its earlier software.
 A warning then stays until the next start, which tries the update again.
 The newer software also gives the workspace the server list in **Preview**.
+It also gives agents the tools that create sessions, send messages, and read chats across the org.
+**Continue** keeps the same computer and software for the workspace's next task.
+A new build does not replace the existing computer.
+
+Installing newer software in an older computer, also at its start, does not change its protection for saved agent logins.
+For the new protection, ask an admin to run **Build computer**.
+After it succeeds, create a new workspace.
+
+- [Understand agent login protection](/docs/security#protect-agent-and-github-logins)
 
 After the first successful build, removed repositories and saved install-script changes need **Build computer**.
 New workspaces can keep using the last successful setup while a later build or a refresh runs.

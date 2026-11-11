@@ -33,8 +33,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'drag-and-drop-attachments',
     area: 'agents-and-chat',
     name: 'Drag and drop attachments',
-    status: 'planned',
-    note: 'Dropping files into the message box, each as a chip in the text, is planned. Use the attachment button today.',
+    status: 'in-progress',
+    note: 'Dropping files into the message box, each as a chip in the text, is in progress. Use the attachment button today.',
     due: null,
   },
   {
@@ -134,7 +134,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Answers show Markdown, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
+    note: 'Chat shows Markdown, tables, lists, and code. Headings are planned, with diagrams, maths, media, and Run buttons under consideration.',
   },
   {
     id: 'chat-links',
@@ -148,9 +148,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'session-links',
     area: 'agents-and-chat',
     name: 'Session links',
-    status: 'planned',
-    note: 'Links to individual chat sessions are planned.',
-    due: null,
+    status: 'available',
+    note: 'Session links open one chat session and show as chips in chat. Agent tools give these links; Copy link copies only the workspace link.',
   },
   {
     id: 'copy-session-transcripts',
@@ -191,9 +190,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'agent-to-agent-messages',
     area: 'agents-and-chat',
     name: 'Agent-to-agent messages',
-    status: 'in-progress',
-    note: 'Agents can create another workspace with a first message. Sending messages to existing sessions is in progress.',
-    due: null,
+    status: 'available',
+    note: 'Agents can message sessions across the org. Each message links to the session that sent it.',
   },
   {
     id: 'codex-personalities',

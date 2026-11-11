@@ -1,15 +1,20 @@
 import { browserDelay } from '../../app/events'
 import { githubPaths, type BannerState } from '../../shared/github'
+import type { MessageSender } from '../../shared/messages'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { scenarioFetch } from '../../test-support/fake-bar-dev'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import type { FetchLike } from '../githubClient'
 import type { GitHubSource } from '../githubStore'
-import { sampleReplies, type Sample } from './devSamples'
+import type { DevOptions } from './devOptions'
+import { sampleReplies } from './devSamples'
 
 /** How the fake GitHub answers: at once, after two seconds, or with an error. */
 export type GitHubMode = 'normal' | 'slow' | 'error'
 
 export interface DevSource extends GitHubSource {
+  /** The fake API, for the chat, the files, and the stream of the page. */
+  server: FakeApiServer
   /** Sends a live `github.updated` event with the sample data of a state. */
   emit: (state: BannerState) => void
   /** Makes the next load succeed, so that Try again recovers. */
@@ -24,15 +29,29 @@ function wait(ms: number): Promise<void> {
 }
 
 /**
- * The fake API of one banner state and sample, as the development page uses
- * it. The replies and the live events of a sample carry the same data.
+ * The fake API of one banner state, sample, and set of answers, as the
+ * development page uses it. The replies and the live events of a sample
+ * carry the same data. The actions of the bar get the answers of
+ * `options.scenario`, as `scenarioFetch` gives them.
  */
 export function createDevSource(
-  state: BannerState,
-  mode: GitHubMode,
-  sample: Sample,
+  options: Pick<
+    DevOptions,
+    'state' | 'github' | 'sample' | 'turn' | 'scenario'
+  >,
+  member: MessageSender,
 ): DevSource {
-  const server = new FakeApiServer({ banner: state })
+  const { state, github: mode, sample } = options
+  const server = new FakeApiServer({
+    banner: state,
+    ...(options.turn === 'running' ? { conversation: 'running' } : {}),
+  })
+  const actions = scenarioFetch(
+    server,
+    options.scenario,
+    member,
+    () => FAKE_TIME,
+  )
   let replies = sampleReplies(sample, state)
   let failing = mode === 'error'
   if (sample !== 'fake') {
@@ -46,17 +65,19 @@ export function createDevSource(
     }
     server.json('GET', bannerPath, { error }, 503)
   }
-  let eventNumber = server.events.history().throughEventNumber
   const fetch: FetchLike = async (input, init) => {
     if (mode === 'slow') await wait(2_000)
-    return server.fetch(input, init)
+    return actions(input, init)
   }
   return {
+    server,
     fetch,
     subscribe: (after, listener) => server.events.subscribe(after, listener),
     delay: browserDelay,
     emit: (next) => {
-      eventNumber += 1
+      // The actions of the bar add events too, so each one counts.
+      const last = server.events.history(Number.MAX_SAFE_INTEGER)
+      const eventNumber = last.throughEventNumber + 1
       const data = sampleReplies(sample, next)
       replies = data
       if (!failing) server.json('GET', bannerPath, data.banner)

@@ -3,22 +3,24 @@
 import { act, type MouseEvent } from 'react'
 import { createRoot } from 'react-dom/client'
 import { expect, it, onTestFinished, vi } from 'vitest'
+import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
 import { FAKE_TIME } from '../test-support/fixtures/core'
 import type { GitHubState } from './githubStore'
 import { PullRequestBar } from './PullRequestBar'
 import { PullRequestRow } from './PullRequestRow'
-import { feedOf, snapshotOf } from './testing'
+import { controlsOf, feedOf, snapshotOf } from './testing'
 
 function mountActions(view: 'desktop' | 'phone', state: GitHubState) {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   const container = document.createElement('div')
   const root = createRoot(container)
   const retry = vi.fn()
-  const onArchive = vi.fn()
+  const onAction = vi.fn((action: BarAction) => action)
   const onOpenChecks = vi.fn((event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
   })
   const github = feedOf(state, retry)
+  const controls = controlsOf(github, {}, onAction)
   onTestFinished(() => {
     act(() => root.unmount())
     vi.unstubAllGlobals()
@@ -26,31 +28,18 @@ function mountActions(view: 'desktop' | 'phone', state: GitHubState) {
   act(() => {
     root.render(
       view === 'desktop' ? (
-        <PullRequestBar
-          github={github}
-          now={FAKE_TIME}
-          onArchive={onArchive}
-          viewer={{ id: 'cal', role: 'member' }}
-          workspace={{
-            owner: {
-              id: 'cal',
-              githubLogin: 'calummoore',
-              displayName: 'Cal',
-              avatarUrl: null,
-            },
-            state: 'ready',
-          }}
-        />
+        <PullRequestBar controls={controls} github={github} now={FAKE_TIME} />
       ) : (
         <PullRequestRow
           checksHref="/checks"
+          controls={controls}
           github={github}
           onOpenChecks={onOpenChecks}
         />
       ),
     )
   })
-  return { container, retry, onArchive, onOpenChecks }
+  return { container, retry, onAction, onOpenChecks }
 }
 
 function buttonNamed(container: HTMLElement, name: string): HTMLButtonElement {
@@ -68,11 +57,11 @@ it('calls only retry once when the desktop Try again button is clicked', () => {
   act(() => button.click())
 
   expect(actions.retry).toHaveBeenCalledTimes(1)
-  expect(actions.onArchive).not.toHaveBeenCalled()
+  expect(actions.onAction).not.toHaveBeenCalled()
   expect(actions.onOpenChecks).not.toHaveBeenCalled()
 })
 
-it('calls only onArchive once when the desktop Archive button is clicked', () => {
+it('presses only the Archive action once when the desktop Archive button is clicked', () => {
   const actions = mountActions('desktop', {
     status: 'ready',
     snapshot: snapshotOf('merged'),
@@ -81,7 +70,9 @@ it('calls only onArchive once when the desktop Archive button is clicked', () =>
 
   act(() => button.click())
 
-  expect(actions.onArchive).toHaveBeenCalledTimes(1)
+  expect(actions.onAction.mock.calls).toEqual([
+    [{ kind: 'archive', busy: false, disabled: false }],
+  ])
   expect(actions.retry).not.toHaveBeenCalled()
   expect(actions.onOpenChecks).not.toHaveBeenCalled()
 })
@@ -93,7 +84,7 @@ it('calls only retry once when the phone Try again button is clicked', () => {
   act(() => button.click())
 
   expect(actions.retry).toHaveBeenCalledTimes(1)
-  expect(actions.onArchive).not.toHaveBeenCalled()
+  expect(actions.onAction).not.toHaveBeenCalled()
   expect(actions.onOpenChecks).not.toHaveBeenCalled()
 })
 
@@ -113,5 +104,5 @@ it('calls only onOpenChecks once when the phone Checks link is clicked', () => {
 
   expect(actions.onOpenChecks).toHaveBeenCalledTimes(1)
   expect(actions.retry).not.toHaveBeenCalled()
-  expect(actions.onArchive).not.toHaveBeenCalled()
+  expect(actions.onAction).not.toHaveBeenCalled()
 })

@@ -16,7 +16,7 @@ Have these ready:
 
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
-Your GitHub permissions still govern repository reads and pushes made with your account.
+Your GitHub permissions still govern repository reads, pushes, and merges made with your account.
 Conductive runs the agents and repositories on cloud computers.
 You can use the browser without a local copy of your repository.
 

@@ -12,9 +12,10 @@ import {
   archivedSections,
   suspendedSections,
   workspaceSections,
-  type OpenWorkspace,
+  type ChangedWorkspace,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { unpushedWork } from '../fixtures/barActions'
 import { firstSecondLog, type StartingLog } from '../fixtures/starting'
 import { orgs } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
@@ -43,6 +44,7 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
     case 'session':
     case 'new-session':
     case 'linked-session':
+    case 'later-session':
       return undefined
   }
 }
@@ -79,6 +81,15 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 }
 
 /**
+ * The changed paths of the branch after Continue: the changed files that
+ * moved to the new branch, or none. Any other branch shows every change.
+ */
+function changedPaths(state: WorkspaceState): readonly string[] | undefined {
+  if (state.branch !== 'continued') return undefined
+  return state.localWork === 'changes' ? unpushedWork.files : []
+}
+
+/**
  * The sandbox state in place of All files, Changes, and the content of an
  * open file: while the sandbox starts, while its start is refused, and
  * after a failed first start. A stopped sandbox, and one whose later start
@@ -107,6 +118,8 @@ export function filesPlaceholder(
 export function FilesContent(props: {
   state: WorkspaceState
   viewport: Viewport
+  /** What a phone shows at the top of the Checks tab: the bar's actions. */
+  checksTop?: ReactNode
 }) {
   const { state } = props
   const phone = props.viewport === 'mobile'
@@ -124,7 +137,9 @@ export function FilesContent(props: {
   return (
     <FilesPanel
       banner={state.banner}
+      checksTop={props.checksTop}
       edited={!isNew(state)}
+      only={changedPaths(state)}
       open={open}
       paths={state.paths}
       placeholder={placeholder}
@@ -171,16 +186,16 @@ export function workspaceSidebar(props: {
   status: ActivityStatus
   suspended: boolean
   viewer: Membership
-  /** The workspaces that the create flow made by then. */
-  created: readonly OpenWorkspace[]
+  /** The rows that differ from the list of when the app opens, by then. */
+  changed: readonly ChangedWorkspace[]
   /** The last day of Restore of the archived workspace has not passed. */
   restoreOpen: boolean
 }): ReactNode {
-  const { workspace, status, suspended, viewer, created } = props
+  const { workspace, status, suspended, viewer, changed } = props
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
-      : workspaceSections({ workspace, status }, undefined, created)
+      : workspaceSections({ workspace, status }, undefined, changed)
     return (
       <Sidebar
         org={orgs.acme}

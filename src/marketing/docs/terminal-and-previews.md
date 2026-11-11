@@ -51,6 +51,7 @@ The CLI is ready to use without a separate login step.
 | --- | --- |
 | In an agent turn | The person whose message started the turn |
 | In the shared Terminal | The workspace owner |
+| GitHub CLI outside an agent turn | The workspace owner |
 
 Commits name the person in the table as both author and committer.
 Commits that a script makes outside an agent turn name the workspace owner.
@@ -66,6 +67,11 @@ An explicit `GH_TOKEN` or `GITHUB_TOKEN` value can replace the supplied CLI logi
 
 The token can reach repositories that both that person and the GitHub App can access.
 This can include repositories outside the Conductive org.
+
+**Merge** and **Continue** in the pull request bar use the GitHub account of the member who selects them.
+The shared Terminal still uses the workspace owner's account.
+
+- [Use pull request actions](/docs/pull-requests)
 
 ## Preview a running app
 

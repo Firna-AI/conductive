@@ -38,6 +38,14 @@ export type SidebarSection = {
 /** The workspace that the main area shows, with its current status. */
 export type OpenWorkspace = { workspace: Workspace; status: ActivityStatus }
 
+/**
+ * A workspace whose row differs from the list of when the app opens, by the
+ * time of a screen: a workspace that the create flow made, or a workspace
+ * of the list whose state changed. `to` is the screen that opening it
+ * shows then, in place of the screen of the list.
+ */
+export type ChangedWorkspace = OpenWorkspace & { to?: string }
+
 /** The section whose menu the list shows open. */
 export type ListMenu = { section: SectionKey }
 
@@ -68,7 +76,7 @@ function rowFor(
   workspace: Workspace,
   open?: OpenWorkspace,
   needsInput?: string,
-  created: readonly OpenWorkspace[] = [],
+  changed: readonly ChangedWorkspace[] = [],
 ): WorkspaceRow {
   const isOpen = open !== undefined && workspace.key === open.workspace.key
   if (!isOpen && workspace.key === needsInput) {
@@ -80,13 +88,14 @@ function rowFor(
       to: paths.macPrompt,
     }
   }
-  const made = created.find((item) => item.workspace.key === workspace.key)
-  const busy = isOpen && liveStatuses.has(open.status)
+  const later = changed.find((item) => item.workspace.key === workspace.key)
+  const status = isOpen ? open.status : (later?.status ?? workspace.status)
+  const busy = (isOpen || later !== undefined) && liveStatuses.has(status)
   return {
     workspace: busy ? { ...workspace, updated: 'now' } : workspace,
-    status: isOpen ? open.status : (made?.status ?? workspace.status),
+    status,
     selected: isOpen,
-    to: linkFor(workspace.key, isOpen),
+    to: (isOpen ? undefined : later?.to) ?? linkFor(workspace.key, isOpen),
   }
 }
 
@@ -94,20 +103,23 @@ function rowFor(
  * The sections of the org, each with its workspaces. The open workspace
  * shows its current status, and a new one joins the top of its section.
  * `needsInput` marks a workspace whose agent waits for the user while the
- * main area shows another page. `created` adds the workspaces that the
- * create flow made by the time of the screen, with their states, at the
- * top of their sections.
+ * main area shows another page. `changed` gives the rows that differ by the
+ * time of the screen, with their states. A workspace that the create flow
+ * made joins the top of its section, and a workspace of the list keeps its
+ * place.
  */
 export function workspaceSections(
   open?: OpenWorkspace,
   needsInput?: string,
-  created: readonly OpenWorkspace[] = [],
+  changed: readonly ChangedWorkspace[] = [],
 ): SidebarSection[] {
-  const isNew =
-    open !== undefined &&
-    !workspaceList.some((item) => item.key === open.workspace.key)
+  const listed = (workspace: Workspace) =>
+    workspaceList.some((item) => item.key === workspace.key)
+  const isNew = open !== undefined && !listed(open.workspace)
   const all = [
-    ...created.map((item) => item.workspace),
+    ...changed
+      .map((item) => item.workspace)
+      .filter((workspace) => !listed(workspace)),
     ...(isNew ? [open.workspace] : []),
     ...workspaceList,
   ]
@@ -115,7 +127,7 @@ export function workspaceSections(
     section: sections[key],
     rows: all
       .filter((workspace) => workspace.section === key)
-      .map((workspace) => rowFor(workspace, open, needsInput, created)),
+      .map((workspace) => rowFor(workspace, open, needsInput, changed)),
   }))
 }
 

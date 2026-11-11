@@ -69,7 +69,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Managed Git identity',
     status: 'available',
-    note: 'Git and the GitHub CLI use the message sender’s GitHub account, and commits name that person. The terminal uses the workspace owner’s account. Workspaces with older cloud computer software name the owner in commits.',
+    note: 'Git and the GitHub CLI use the message sender’s GitHub account, and commits name that person. The terminal uses the workspace owner’s account. An older workspace names the owner in commits until a start updates its software.',
   },
   {
     id: 'organization-environment-and-secrets',
@@ -135,7 +135,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Shared preview URL',
     status: 'available',
-    note: 'Members who can open a workspace can open its private port previews.',
+    note: 'Members who can open a workspace can open its private port previews. A toggle to share previews without sign-in is under consideration.',
   },
   {
     id: 'sleep-and-wake',

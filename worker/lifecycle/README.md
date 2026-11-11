@@ -2,8 +2,9 @@
 
 This folder holds the Worker code that prepares the org image and runs the
 life of each workspace. The org image is the saved snapshot that every new
-sandbox of an org starts from. A workspace is one task with its own branch
-and its own Boat sandbox. The code reaches Boat only through the
+sandbox of an org starts from. A workspace has its own Boat sandbox and one
+branch at a time. [Continue](continue.md) moves it to a new branch after
+its merge. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
 with the client of the provider account that each record stores.
 [Provider accounts](provider-accounts.md) and the
@@ -31,7 +32,9 @@ gives the create, read, resume, and activity routes of a workspace to
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
-  the current turn.
+  the current turn, or of the member who pressed Continue during its fetch.
+- Continue a workspace on a new branch after its merge, with the same
+  sandbox and sessions.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
@@ -71,6 +74,14 @@ names, the lifecycle steps, the alarm, the start logs, the event socket,
 and the publication of the events. It also gives the creates and resumes.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
+
+### Continue
+
+[Continue](continue.md) gives the admission and reservation of Continue,
+its phases, the staged fetch and the branch move, the publication, and the
+recovery. [Continue routes](continue-routes.md) gives its routes and errors.
+[The git credential sender](git-credentials.md#continue) gives the grant
+of its fetch.
 
 ### Builds and refreshes
 
@@ -117,8 +128,8 @@ A confirmed missing archived disk uses that batch too.
 
 ### Key Code
 
-[Lifecycle key code](key-code.md) names the files, the types, and the
-functions of the lifecycle that a reader opens first.
+[Key code](key-code.md) lists the entry points of the lifecycle code, and
+the guides that give the entry points of each part.
 
 - [build-admission-data.ts](build-admission-data.ts): `insertBuild` pins the
   software version and install script revision in the job. `publishBuild`

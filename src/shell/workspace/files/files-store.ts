@@ -19,13 +19,14 @@ export function createWorkspaceFiles(
   })
 }
 
-/** The parts that keep each store connected now, such as Files and the chat. */
+/** The connects that keep each store connected now. */
 const connections = new WeakMap<WorkspaceFiles, number>()
 
 /**
  * Starts the files: the first reads and the stream. The result stops them.
- * Several parts can connect the same store, such as the Files part and the
- * chat. They share one connection, which stops when the last part stops.
+ * `KeptFilesConnection` of the screen is the one part that connects a store.
+ * A second connect of the same store, such as the second run of an effect,
+ * shares its one connection, which stops when the last connect stops.
  */
 export function startFiles(files: WorkspaceFiles): () => void {
   const count = connections.get(files) ?? 0

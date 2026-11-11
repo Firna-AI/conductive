@@ -1,51 +1,80 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { domBackendCss } from '@firna/ui'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
 import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
+import { mayArchive } from '../../app/permissions'
+import type { OrgRole } from '../../shared/api'
+import type { MessageSender } from '../../shared/messages'
 import {
   FAKE_IDS,
   FAKE_TIME,
   fakeUsers,
 } from '../../test-support/fixtures/core'
-import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import type { GitHubViewer } from '../archive'
+import {
+  senderSnapshot,
+  workspaceFixtures,
+} from '../../test-support/fixtures/workspaces'
+import { ChecksActions } from '../BarButtons'
 import { ChecksList } from '../ChecksList'
 import { PullRequestBar } from '../PullRequestBar'
 import { PullRequestRow } from '../PullRequestRow'
 import { useGitHubState } from '../useGitHubState'
+import { useDevBar } from './devBar'
 import { DevControls } from './DevControls'
 import { optionsQuery, readOptions, type DevOptions } from './devOptions'
+import { DevReadout } from './DevReadout'
 import { createDevSource, type DevSource } from './devSource'
 import styles from './DevPage.module.css'
 
 const target = { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace }
 const workspace = workspaceFixtures().detail.workspace
-const viewers: Readonly<Record<DevOptions['viewer'], GitHubViewer>> = {
-  owner: { id: workspace.owner.id, role: 'member' },
-  admin: { id: fakeUsers[1].id, role: 'admin' },
-  member: { id: fakeUsers[2].id, role: 'member' },
+
+/** Each viewer of the page: the member and the role of that member. */
+const viewers: Readonly<
+  Record<DevOptions['viewer'], { member: MessageSender; role: OrgRole }>
+> = {
+  owner: { member: workspace.owner, role: 'member' },
+  admin: { member: senderSnapshot(fakeUsers[1]), role: 'admin' },
+  member: { member: senderSnapshot(fakeUsers[2]), role: 'member' },
 }
 
-/** The desktop right column and the phone, both against the fake API. */
+/**
+ * The desktop right column and the phone, both against the fake API, with
+ * the real action state of the bar.
+ */
 function Preview(props: {
   source: DevSource
-  viewer: GitHubViewer
-  onArchive: () => void
+  viewer: DevOptions['viewer']
+  onNote: (note: string) => void
 }) {
-  const { fetch, subscribe, delay } = props.source
+  const { source, onNote } = props
+  const { fetch, subscribe, delay } = source
   const github = useGitHubState(target, { fetch, subscribe, delay })
+  const { member, role } = viewers[props.viewer]
+  const archivable = mayArchive({ role, suspended: false }, workspace, member)
+  const archive = useMemo(
+    () =>
+      archivable ? () => onNote('Archive opens the app’s Archive flow.') : null,
+    [archivable, onNote],
+  )
+  const showChat = useCallback(
+    () => onNote('The app shows the chat, whose composer names the cause.'),
+    [onNote],
+  )
+  const { controls, actions, chat } = useDevBar({
+    source,
+    target,
+    github,
+    branch: workspace.branch,
+    archive,
+    showChat,
+  })
   return (
     <div className={styles.frames}>
       <section aria-label="Desktop right column">
         <p className={styles.frameLabel}>Desktop right column</p>
         <div className={styles.column}>
-          <PullRequestBar
-            github={github}
-            now={FAKE_TIME}
-            onArchive={props.onArchive}
-            viewer={props.viewer}
-            workspace={workspace}
-          />
+          <PullRequestBar controls={controls} github={github} now={FAKE_TIME} />
           <div className={styles.tabs}>
             <span className={styles.tab}>Checks</span>
           </div>
@@ -55,12 +84,18 @@ function Preview(props: {
       <section aria-label="Phone">
         <p className={styles.frameLabel}>Phone</p>
         <div className={styles.phone}>
-          <PullRequestRow checksHref="#phone-checks" github={github} />
+          <PullRequestRow
+            checksHref="#phone-checks"
+            controls={controls}
+            github={github}
+          />
           <div className={styles.phoneChecks} id="phone-checks">
+            <ChecksActions controls={controls} />
             <ChecksList github={github} />
           </div>
         </div>
       </section>
+      <DevReadout actions={actions} chat={chat} />
     </div>
   )
 }
@@ -72,9 +107,11 @@ function Preview(props: {
 export function DevPage() {
   const [options, setOptions] = useState(() => readOptions(location.search))
   const [note, setNote] = useState('')
+  const member = viewers[options.viewer].member
+  const { state, github, sample, turn, scenario } = options
   const source = useMemo(
-    () => createDevSource(options.state, options.github, options.sample),
-    [options.state, options.github, options.sample],
+    () => createDevSource({ state, github, sample, turn, scenario }, member),
+    [state, github, sample, turn, scenario, member],
   )
   useEffect(() => {
     history.replaceState(null, '', optionsQuery(options))
@@ -91,9 +128,9 @@ export function DevPage() {
               setNote('')
               setOptions(next)
             }}
-            onEmit={(state) => {
-              source.emit(state)
-              setNote(`Sent a live event: ${state}`)
+            onEmit={(next) => {
+              source.emit(next)
+              setNote(`Sent a live event: ${next}`)
             }}
             onRecover={() => {
               source.recover()
@@ -102,10 +139,10 @@ export function DevPage() {
             options={options}
           />
           <Preview
-            key={`${options.state}-${options.github}-${options.sample}`}
-            onArchive={() => setNote('Archive opens the app’s Archive flow.')}
+            key={optionsQuery(options)}
+            onNote={setNote}
             source={source}
-            viewer={viewers[options.viewer]}
+            viewer={options.viewer}
           />
         </main>
       </SharedUiThemeProvider>

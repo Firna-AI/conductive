@@ -2,7 +2,10 @@ import { expect, it } from 'vitest'
 
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
+import { FIRST_MESSAGE } from './durable-test-support'
 import { startImageBuild } from './image-builds'
+import { seedPublishedImage } from './published-image-test-support'
+import { createWorkspace } from './workspaces'
 
 const fixtureForTest = setupBackendTests()
 
@@ -38,3 +41,62 @@ it.each([
     ).toBe(expectedVersion)
   },
 )
+
+it('pins equal-named images to their own account versions for legacy and gateway workspaces', async () => {
+  const fixture = fixtureForTest()
+  const { runtime, org, user, repositoryId, boat } = fixture
+  boat.server.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
+  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = {
+    'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
+  }
+  const images = [
+    { account: 'boat', version: 1, buildId: 'legacy-shared-image' },
+    { account: 'boat-second', version: 2, buildId: 'gateway-shared-image' },
+  ]
+  for (const image of images)
+    await seedPublishedImage(runtime.env.DB, {
+      orgId: org.id,
+      buildId: image.buildId,
+      imageName: 'shared-image',
+      providerAccount: image.account,
+      runnerProtocolVersion: image.version,
+      repositories: [
+        {
+          id: repositoryId,
+          orgId: org.id,
+          fullName: 'example/repository',
+          defaultBranch: 'main',
+        },
+      ],
+      software: SOFTWARE,
+      now: runtime.dependencies.now(),
+    })
+  for (const image of images) {
+    const created = await fixture.run(() =>
+      createWorkspace(
+        runtime,
+        org.id,
+        user,
+        {
+          repositoryId,
+          firstMessage: { ...FIRST_MESSAGE, id: image.buildId },
+        },
+        user,
+        image.account,
+      ),
+    )
+    const start = fixture.starts.get(created.workspace.id)
+    if (!start) throw new Error('The image start was not admitted.')
+    await start.advance()
+    expect(
+      await runtime.env.DB.prepare(
+        'SELECT provider_account AS providerAccount, runner_protocol_version AS runnerProtocolVersion FROM workspaces WHERE id = ?',
+      )
+        .bind(created.workspace.id)
+        .first(),
+    ).toEqual({
+      providerAccount: image.account,
+      runnerProtocolVersion: image.version,
+    })
+  }
+})

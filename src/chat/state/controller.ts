@@ -3,6 +3,7 @@ import type { DeviceApprovalAction } from '../../shared/device'
 import type { TranscriptDetail } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
+import type { SessionReads } from '../links/session-reads'
 import { answerCommand, refreshDevices } from '../device/device-actions'
 import { browserTimers } from '../stream/workspace-stream'
 import { copyTranscript, type CopyServices } from '../transcript-copy'
@@ -12,6 +13,7 @@ import {
   type ChatSnapshot,
   type Overlay,
 } from './chat-snapshot'
+import { showAddressSession } from './address-session'
 import { closeLocally, isArchived, showLocally } from './archive-view'
 import { attachFiles, removeFile, retryFile } from './attachment-actions'
 import type { ChatContext } from './context'
@@ -30,6 +32,7 @@ import {
   setDraftText,
 } from './message-actions'
 import { chooseModel } from './model-actions'
+import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
 import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
@@ -93,6 +96,11 @@ export class ChatController {
   readonly subscribe = (listener: () => void) => this.store.subscribe(listener)
   readonly getSnapshot = (): ChatSnapshot => this.store.get()
 
+  /** The reads of the sessions of linked workspaces for this load. */
+  get sessionReads(): SessionReads {
+    return this.context.sessionReads
+  }
+
   /**
    * Loads the chat, then opens its stream. From now on, each session that
    * becomes the shown session loads its history.
@@ -114,6 +122,7 @@ export class ChatController {
 
   readonly stop = (): void => {
     this.run += 1
+    this.context.sessionReads.close()
     for (const upload of this.context.uploads.values()) upload.abort()
     this.context.uploads.clear()
     this.unwatch?.()
@@ -176,6 +185,18 @@ export class ChatController {
     this.readOnly()
       ? showLocally(this.context, sessionId)
       : selectSession(this.context, sessionId)
+  /**
+   * Shows the open session that an app address names, as
+   * `showAddressSession` says. An abort of `signal`, such as at a newer
+   * address, makes the lookup show nothing.
+   */
+  readonly showAddress = (sessionId: string, signal: AbortSignal) =>
+    showAddressSession(
+      this.context,
+      sessionId,
+      () => !signal.aborted,
+      (id) => void this.select(id),
+    )
   readonly newSession = () => this.write(() => newSession(this.context))
   readonly startRename = (sessionId: string) =>
     this.overlay({ kind: 'rename', sessionId })
@@ -207,6 +228,11 @@ export class ChatController {
     removeFile(this.context, sessionId, fileId)
   readonly send = (sessionId: string) =>
     this.write(() => sendDraft(this.context, sessionId))
+  /** Sends a fixed prompt to the session of the chat, as `sendPrompt` says. */
+  readonly sendPrompt = (text: string): Promise<PromptOutcome> =>
+    this.readOnly()
+      ? Promise.resolve('unavailable')
+      : sendPrompt(this.context, text)
   readonly retry = (sessionId: string, messageId: string) =>
     this.write(() => retryTurn(this.context, sessionId, messageId))
   readonly interrupt = (sessionId: string) =>
