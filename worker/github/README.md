@@ -131,6 +131,29 @@ That read has no user ID, and it uses the same retry alarm.
 A read or a retry that captured the old branch fails its binding check, so it stores and publishes nothing.
 Webhook routing follows the new branch, because the candidate query reads the current branch of the D1 row.
 
+## Rate limits
+
+GitHub gives each installation of the App its own hourly limit and reset time.
+GraphQL and REST requests have separate limits.
+GitHub's docs say that it can ban an app that keeps sending requests while it is limited.
+That ban would also stop sign-in, because the same App handles it.
+
+- [InstallationLimit](rate-limit.ts) watches each GraphQL response of a banner read.
+  The limit is used up when `x-ratelimit-remaining` is `0` or the status is 429.
+  The read then stores the `x-ratelimit-reset` time of the installation in the D1 table `github_installation_limits`.
+  A `retry-after` header, which GitHub sends for a secondary limit, stores that many seconds from now.
+  The stored time is at least one minute from now, as GitHub asks when it gives no time.
+  When two times differ, the later one stays.
+- Before it gets a token, each banner read checks that stored time.
+  Until the time passes, the read sends nothing to GitHub and fails with HTTP 502 `github_unavailable`.
+  This covers webhook refreshes, tab reads, scheduled reads, and the read after a merge.
+- A read that fails on the limit stores one fresh read at the reset time, under one key for each workspace.
+  A scheduled read that fails on the limit gives way to that read, so each workspace reads once after the reset.
+  That read has no user ID or delivery ID, as the read after Continue.
+- The merge, its capability read, and Continue's default-branch read are not checked.
+  The first two use the member's own token, whose limit belongs to the member.
+  Continue reads the default branch only after a banner read that the check covers.
+
 ## Body budgets
 
 Raw webhook bodies and GitHub API JSON responses each have a 26 MiB budget: 27,262,976 bytes.
@@ -264,10 +287,12 @@ API references:
 - [Combined status rollup](https://docs.github.com/en/graphql/reference/commits#statuscheckrollup)
 - [Ref comparison](https://docs.github.com/en/graphql/reference/git#ref)
 - [Installation tokens](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app)
+- [GraphQL rate limits](https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api)
+- [REST rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
 
 ### Key Code
 
-- [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue asks for.
+- [Production composition](../features/github.ts) owns the state adapter and retry alarm, the read after a used-up limit, and the reads that Continue asks for.
 - [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background routine starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
@@ -277,6 +302,7 @@ API references:
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
+- [rate-limit.ts](rate-limit.ts) stores the reset time of a used-up installation limit and stops banner reads until it passes. [data.ts](data.ts) holds its D1 queries.
 - [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue.
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
 - [merge-handler.ts](merge-handler.ts) gates and parses the member merge routes.

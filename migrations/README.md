@@ -190,6 +190,12 @@ Existing runs keep null because their original choice is not known.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
 
+`202611111600_github_installation_limits.sql` adds `github_installation_limits`.
+Each row keeps the time, in milliseconds, when GitHub takes the reads of one GitHub App installation again.
+It has no foreign key, so a removed installation never waits on it.
+A row whose time has passed limits nothing.
+[Rate limits](../worker/github/README.md#rate-limits) says how the reads use it.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

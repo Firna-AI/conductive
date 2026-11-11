@@ -8,6 +8,7 @@ import { workspaceEventsPath } from '../../src/shared/events'
 import { githubPaths } from '../../src/shared/github'
 import { sessionsPath } from '../../src/shared/sessions'
 import { CLAUDE } from '../chat/harness.test-support'
+import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import { record, string } from '../chat/inputs'
 import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
 import {
@@ -161,4 +162,80 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
       .bind(OUTER_ORG)
       .first('count'),
   ).toBe(1)
+})
+
+it('waits for a used-up GitHub limit to reset, then reads the workspace once', async () => {
+  const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
+  const api: { current?: RepositoryGitHub } = {}
+  let tokens = 0
+  const active = (fixture = await featureFixture(bundle, {
+    configuration: {
+      GITHUB_APP_PRIVATE_KEY: privateKey
+        .export({ type: 'pkcs1', format: 'pem' })
+        .toString(),
+    },
+    outbound: (request, fallback) => {
+      const url = new URL(request.url)
+      if (url.pathname === '/app/installations/1/access_tokens') {
+        tokens++
+        return Promise.resolve(Response.json({ token: 'server-token' }))
+      }
+      return url.pathname === '/graphql' && api.current
+        ? api.current.fetch(request)
+        : fallback(request)
+    },
+  }))
+  const github = (api.current = new RepositoryGitHub(active.github))
+  await active.env.DB.batch([
+    active.env.DB.prepare(
+      "INSERT INTO github_installations (id, account_login, account_type, created_at) VALUES (1, 'Codertocat', 'User', 1)",
+    ),
+    active.env.DB.prepare(
+      "UPDATE repositories SET github_repository_id = 186853002, full_name = 'Codertocat/Hello-World', installation_id = 1 WHERE id = 'chat-repository'",
+    ),
+    active.env.DB.prepare(
+      "UPDATE workspaces SET branch = 'changes' WHERE id = ?",
+    ).bind(OUTER_WORKSPACE),
+  ])
+  const resetAt = DEVICE_TEST_NOW + 1_800_000
+  github.failure = Response.json(
+    {
+      errors: [
+        {
+          type: 'RATE_LIMITED',
+          message: 'API rate limit already exceeded for installation ID 1.',
+        },
+      ],
+    },
+    {
+      headers: {
+        'x-ratelimit-remaining': '0',
+        'x-ratelimit-reset': String(resetAt / 1000),
+      },
+    },
+  )
+  const banner = () =>
+    active.request(githubPaths.banner(OUTER_ORG, OUTER_WORKSPACE))
+  const waiting = async () =>
+    [...featureState(await active.actor().inspectFeatureState())]
+      .filter(([key]) => key.startsWith('github-refresh:'))
+      .map(([, read]) => record(read))
+
+  expect((await banner()).status).toBe(502)
+  const scheduled = await waiting()
+  expect(scheduled.map((read) => read.at)).toEqual([resetAt])
+  const sent = { tokens, reads: github.requests.length }
+  expect((await banner()).status).toBe(502)
+  await active.actor().seedFeatureState({
+    'github-refresh:older': { ...scheduled[0], at: 0 },
+    'alarm:github': 0,
+  })
+  await active.actor().advanceStartAlarm()
+  expect({ tokens, reads: github.requests.length }).toEqual(sent)
+  expect((await waiting()).map((read) => read.at)).toEqual([resetAt])
+
+  github.failure = null
+  await active.actor().advanceStartAlarm(resetAt)
+  expect(tokens).toBe(sent.tokens + 1)
+  expect(await waiting()).toEqual([])
 })
