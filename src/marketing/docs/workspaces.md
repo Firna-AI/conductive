@@ -118,6 +118,26 @@ The default section stays available.
 Drag a workspace to move it between sections.
 On a phone, use a long press to lift its row.
 
+## Let an agent manage workspaces
+
+Ask an agent to create, inspect, or rename a workspace.
+It can also move the workspace to the top of a section.
+It can find workspaces by state, repository, name, recent activity, and archive state.
+Workspace and session lists can return a smaller page of results.
+When an agent creates a workspace, it can set the workspace name and its first session's title.
+
+Agents can also create and delete sections.
+Deleting a section moves its workspaces to **General**.
+The default section stays available.
+
+Each change uses the rights of the member whose message started the agent's turn.
+Only a workspace owner or org admin can archive it through an agent.
+An agent can archive the workspace where it runs, which ends its turn.
+The same Archive and Restore rules below apply.
+
+- [Understand what agents can reach](/docs/security#understand-what-agents-can-reach)
+- [Get the current workspace tools](/docs/cloud-computer#apply-setup-changes)
+
 ## Resume a stopped computer
 
 The computer stops after 30 minutes without user activity and without a running agent turn.

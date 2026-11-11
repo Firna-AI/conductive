@@ -2,11 +2,11 @@
 
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
-and the guidance in them, the sender line and the branch line of each
-message, and the base prompt of Claude agents.
-[Agents and sessions](agents-and-sessions.md#agents) states the agents and
-their sessions. [Agent tools](agent-tools.md) states the tools of the
-agents. The other terms are those of the
+and the guidance in them, and the sender line and the branch line of each
+message. [Base prompts](base-prompts.md) states the base prompt of Claude
+agents. [Agents and sessions](agents-and-sessions.md#agents) states the
+agents and their sessions. [Agent tools](agent-tools.md) states the tools
+of the agents. The other terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
@@ -55,10 +55,12 @@ says.
   - The computer tools do browser work on the desktop of the cloud
     computer, when the agent has them.
   - A member opens a port preview in the app by its port number.
-  - The workspace tools create and list the workspaces of the org. They
-    also start a session, list the sessions, send a message, and read a
-    chat, in each workspace of the org. They
-    also ask to run a command on the Mac of the sender of the turn.
+  - The workspace tools create, list, get, rename, move, and archive the
+    workspaces of the org. In each workspace of the org, they also start,
+    list, get, rename, close, and stop sessions, send and get messages,
+    read a chat, and list, open, and close previews. They also create and
+    delete the sections of the org, and ask to run a command on the Mac of
+    the sender of the turn.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
   - Several members can write in one session. The sender line of each
@@ -227,42 +229,6 @@ says.
 
 ## Base prompts
 
-- A Claude agent gets a short base prompt of the app, then the agent
-  instructions, as one text of system instructions.
-- The base prompt holds seven rules. They tell the agent to:
-  - complete the task that the user authorized, and read the relevant code
-    and docs before it changes files
-  - keep each change focused: prefer the existing files, and add no
-    unrelated feature, clean-up, or abstraction
-  - write secure code, and fix each security problem that its change adds
-  - protect the work of the user: ask before a destructive action or a
-    change to a shared system, unless the user authorized it
-  - use the tools efficiently: prefer the dedicated file and search tools,
-    and run independent tool calls together
-  - check the results: test a change of an interface in a browser, and
-    report each check that failed or could not run
-  - write short and accurate replies: keep checked facts apart from
-    assumptions, and give the file path and the line of each code
-    reference
-- The base prompt names tools by their purpose, because the tools of an
-  agent can vary.
-- The base prompt holds no fact that changes, such as the date or the Git
-  state.
-- The base prompt does not copy the default system prompt of the agent
-  SDK. It does not promise each rule or behaviour of that prompt.
-- Reason: the app keeps a short, fixed text of its own. That text changes
-  only when the app changes it.
-- These base prompts were rejected:
-  - No base prompt. The agent instructions are then the whole prompt, with
-    no base guidance below them.
-  - The default system prompt of the agent SDK, with the agent
-    instructions after it. It changes with each SDK update, and parts of
-    it name another product. It also holds sections that change, such as
-    the Git state, so each turn can rewrite the prompt cache.
-  - A setting for each org that chooses between these two. It needs a
-    setting, a mockup, storage, and a runner field, for a choice that no
-    user asked for.
-- A Codex agent keeps the default base instructions of Codex. It gets the
-  agent instructions in addition to them.
-- Reason: Codex gives its agents base instructions of its own. The Claude
-  agent SDK gives none by default.
+[Base prompts](base-prompts.md) states the short base prompt of the app
+that a Claude agent gets before the agent instructions, and the base
+instructions of a Codex agent.

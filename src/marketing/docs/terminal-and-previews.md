@@ -121,6 +121,11 @@ Open a new preview after the computer resumes.
 Preview access follows your sign-in and workspace access.
 A copied preview address grants no access by itself.
 
+Ask an agent to list, open, or close previews.
+To open a preview, give the agent your server's port.
+It can do this in any workspace of the same org.
+Previews that agents open need sign-in and workspace access.
+
 ## Recover from a connection error
 
 If Terminal cannot connect, check the workspace's start state.

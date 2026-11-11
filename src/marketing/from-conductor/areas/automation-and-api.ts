@@ -20,7 +20,7 @@ export const automationAndApiFeatures: readonly ParityFeature[] = [
     area: 'automation-and-api',
     name: 'Workspace API token',
     status: 'available',
-    note: 'Workspace programs get a workspace token for the built in workspace tools.',
+    note: 'Workspace programs get a token for workspace tools. Reads need no running turn, while changes act for the sender of a running turn.',
   },
   {
     id: 'transcript-sql-search',

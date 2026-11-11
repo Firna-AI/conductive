@@ -105,7 +105,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         sent by pull request bar actions, and the answers of the agents as
         the chat history of each workspace.
         Messages from agent tools end with Sent by: and a link to the
-        sending session. The chat history keeps that link. It also records
+        sending session. The chat history keeps that link.
+        A stop through agent tools also records the sending session.
+        This includes a close that stops a running turn. The chat and
+        copied transcripts name that session with Stopped from and its link.
+        The chat history also records
         who used Continue, the new branch, and the branch it starts from. It keeps
         the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the

@@ -47,10 +47,11 @@ by then, as `plans/follow-ups/decision-numbers-across-plans.md` says.
 The brainstorm notes are in `.context/conductor-cli-parity/brainstorm.md`.
 The options check of 11 November 2026 ran over decisions 277 to 280. Its
 report is in `.context/agent-tools-conductor-parity/options-check.md`.
-Cal answered every decision of this plan on 11 November 2026.
+Cal answered decisions 277 to 281 on 11 November 2026.
 Cal approved the plan on 11 November 2026, in the words "impl all plan
 milestones". A `default orchestrator` session in this workspace runs the
 milestones by delegation.
+Decisions 282 and 283 arose during implementation and still need Cal's answer.
 
 ## Decisions
 
@@ -204,6 +205,110 @@ Added on 11 November 2026 from the options check of decisions 277 to 280.
 - **Action:** ask the user, because decision 277 B and decision 216 D conflict, and no rule settles which one wins.
 - **Chosen:** C, by Cal on 11 November 2026: "281 = C". The base branch of an agent's create goes to the start-from plan.
 
+### 282. Whose workspaces the mine filter lists
+
+Added on 11 November 2026 during implementation. The read-only contract
+check is in
+`.context/agent-tools-conductor-parity/reports/list-owner-contract-check.md`.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** The list filters in the design below, and `docs/protocol/workspace-calls.md`, section "List the workspaces".
+- **Terms:**
+  - **Workspace token:** the secret of each cloud computer that names its workspace and its owner.
+  - **Calling turn:** the agent turn that makes a call. The tools send its ID in the `X-Conductive-Turn-Id` header.
+  - **Sender:** the member whose message started the calling turn.
+  - **Sender line:** the `Sender: Name (@login)` line at the start of a message to the agent. No access depends on it.
+  - **Mine filter:** the planned workspace-list filter for the workspaces that the sender owns, after Conductor's `--mine`.
+- **Background:** The plan adds a mine filter and an owner filter. Reads need only the workspace token. The Worker learns a sender only from an active calling turn. Another member can join a running turn, which keeps its first sender. A process can read after its turn ends, and a terminal can read with the token set by hand.
+- **Problem:** Without an active turn, mine has no sender. After another member joins a turn, its sender can differ from the member whose message the agent answers. The approved requirements do not settle either case.
+- **Impact if no action:** An implementer must add an unapproved refusal or guess a member. A wrong list can steer rename, move, or archive to another member's workspaces. An admin's archive can then succeed for a member who did not ask.
+- **Root question:** How does an agent list the workspaces of the member whose message it answers, or of another member, with only the workspace token?
+- **Shared assumptions:**
+  - An unfiltered list needs only the workspace token. The existing agent-tools requirement and decision 257 settle this. Kept.
+  - Every member already sees each workspace of the org. The filter changes the answer, not access. The existing agent-tools requirement settles this. Kept.
+  - The filter matches the workspace owner. The approved design says "owns", and the archive right also uses the owner. Kept.
+- **Options:**
+  - **A.** Keep mine for the calling turn's sender. Require an active turn for this filter alone. Without one, return HTTP 403 `calling_turn_required`. Other reads keep their token-only rule. A message that joins a turn gets the workspaces of that turn's first sender. Effort: Small.
+  - **B.** Make mine give the workspaces of the calling workspace's owner. The token names that member, so no turn is needed. Conductor also resolves mine against its token owner. Another member's turn still gets the owner's workspaces. Effort: Small.
+  - **C.** Drop mine and keep the explicit owner filter. Tell agents to name the member whose message they answer, rather than infer one from the turn or token. Decision 283 gives the member key. Reads keep needing only the workspace token. Effort: Small.
+  - **D.** Use the sender with an active turn, else the calling workspace's owner. Name the selected member in the reply. No call refuses, but mine has two meanings and the reply needs a new field. Effort: Medium.
+  - **E.** Keep mine for the sender of the newest message of the calling turn, rather than its first sender. Require an active turn, as A does. A member who joins usually gets their own workspaces. A newer message can change the member before the agent reads it. A call that still answers an earlier message can then name the wrong member. Writes still act for the first sender. Effort: Medium. Added by the options check.
+- **Left out:**
+  - Ignoring mine without a turn, or returning an empty list, gives a misleading answer.
+  - Inferring a sender from the workspace's running turns is worse than A. Parallel sessions can have different senders, and the tools already send their turn ID.
+  - Passing a sender from the runner adds a runner change without resolving a call from a terminal.
+  - Requiring an active turn for every read breaks the unchanged token-only read requirement.
+  - Listing workspaces that the calling workspace created answers which work it delegated, rather than which workspaces a member owns.
+  - A runner channel that gives the newest sender adds a runner change and a full image build. E gives about the same member without them.
+  - Mine for the session starter needs the same turn as A and can name neither the turn sender nor the member who asked.
+  - List rows with their owners but no member filter need every page to find one member. C keeps the approved owner filter and shorter answers.
+- **Wider fix:** C. Each member filter names its member, so reads need no hidden member identity.
+- **Previous examples:** The model list uses the calling workspace owner's default with only the token. Decision 257 rejected an active turn for session reads.
+- **Related:** Decision 283 sets the explicit member key for every option. C needs a key that the agent can get for the message it answers.
+- **Recommendation:** C. It gives the requested member's workspaces and keeps token-only reads.
+- **Action:** ask the user, because C drops an approved filter, while A adds a read refusal and B changes the named member.
+- **Chosen:** Open. This blocks the mine filter. Decision 283 blocks the owner-filter input. Every other call, filter, and create option is independent.
+
+The options check of 11 November 2026 is in
+`.context/agent-tools-conductor-parity/reports/decision-282-options.md`.
+It kept C and added E. The completion check is in
+`.context/agent-tools-conductor-parity/reports/decision-282-completion.md`.
+It found a second root question about the member key, now decision 283.
+No option is implemented before Cal answers.
+
+### 283. How the owner filter identifies a member
+
+Added on 11 November 2026 from the completion check of decision 282.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review, from the options check during implementation.
+- **Category:** Docs or spec.
+- **Location:** The owner filter in this plan's design, and `docs/protocol/workspace-calls.md`, section "List the workspaces". D and E also change the sender line in `docs/protocol/agent-instructions.md`.
+- **Terms:**
+  - **Member ID:** the stable user key of a member, `users.id`. Session starter and message sender replies give it.
+  - **Stored login:** the GitHub login that the app saved at the member's last sign-in.
+  - **Sender line:** the `Sender: Name (@login)` line that starts a message to the agent. It gives no member ID.
+- **Background:** Each option of 282 keeps the owner filter. Under 282 C, it also selects the member whose message the agent answers. A stored login can repeat after a GitHub rename, because the app updates it only at sign-in. The sender line gives a login, but no member ID. The runner already receives that ID, so showing it changes no Worker payload.
+- **Problem:** A login can identify two members. A member ID is exact, but the agent does not get it from the sender line.
+- **Impact if no action:** An implementer must guess the input or add an unapproved refusal. A mixed list can steer a write to another member's workspaces.
+- **Root question:** How does an agent give the owner filter one exact member, both its message sender and a member named in words?
+- **Shared assumptions:**
+  - The filter selects workspace owners. The approved design says "owns". Kept.
+  - The lookup stays inside the calling org. The approved reach and token rule settle this. Kept.
+  - The filter needs no active turn. The read rule settles this. Kept.
+  - The key is the app member ID. Existing sender and starter replies give that key. Kept.
+- **Shared part of B, C, E, and G:** A value with a leading `@` names a stored login. Any other value names a member ID. The marker distinguishes the two without inferring an opaque ID's length. This is an agent call of 11 November 2026, from the `@login` form of the sender line.
+- **Options:**
+  - **A.** Accept only a member ID. An unknown ID gives an empty list. Add no refusal. Finding a member named in words can need one get call for each workspace. The sender line gives no ID. Effort: Small.
+  - **B.** Accept a member ID or a stored login without case. No match gives an empty list. More than one org member with the login gives a named refusal. It lists the matching members with IDs and display names, so the agent can select an ID. Include suspended members in this match, even when they own no workspace. This adds a read refusal for an ambiguous login. Effort: Small.
+  - **C.** B, but an ambiguous login gives every matching member's workspaces. The reply names each matched member. Add no refusal. An agent can still show or act on a mixed list. Effort: Small.
+  - **D.** Accept only a member ID, and put that ID in the sender line too. The agent can identify the member whose message it answers, also after a rename. Add no login lookup or refusal. Finding another member named in words can need one get call for each workspace. This changes one runner function, its tests, and the sender-line requirement. Effort: Medium.
+  - **E.** B, and put the member ID in the sender line too. Agents use that ID for the message they answer. They can use the login lookup for another member named in words. The ambiguity refusal of B stays. This changes the sender-line requirement and the runner. Effort: Medium.
+  - **F.** D, and each workspace-list row gives its owner's member ID, GitHub login, and display name. Agents find an owner named in words in the rows, then filter by ID. Add no login lookup or refusal. Rows grow, and finding another member can need every page. This also changes the list-row requirement. Effort: Medium. Added by the options check.
+  - **G.** E, but an ambiguous login gives each matching member's workspaces and names them, as C does. The sender's own list uses its exact ID. Add no refusal. Another member named by a shared login can still give a mixed list. Effort: Medium. Added by the options check.
+  - **H.** A, and each workspace-list row gives its owner, as F does. Keep the sender line. Agents find the sender in the rows by login and name. The sender's own list needs that first read. Equal names and logins can still hide which sender asked. Effort: Small. Added by the options check.
+- **Left out:**
+  - A login-only filter cannot select one member when stored logins repeat. An ID keeps that selection possible.
+  - A live GitHub lookup needs an external call for each read and identifies the current holder, rather than the member of an older sender line.
+  - Clearing, marking, or refreshing old logins alone cannot identify an older sender line. A member who does not return can keep an old login.
+  - A tool that lists members falls outside the approved Conductor command set.
+  - Adding a display name to a login cannot always break a tie. Display names can repeat or be empty.
+  - Inferring a login's member from the calling session guesses silently when the login came from other text.
+  - An empty list with candidates looks like no workspaces if the agent skips the candidate field.
+  - A display-name filter is less exact than a login. F lets the agent choose from the names and IDs instead.
+- **Wider fix:** F. Each owner that the agent sees carries an exact ID, so no login lookup or refusal is needed.
+- **Previous examples:** Invitations use a verified email because GitHub logins can be renamed and taken, under decision 78. Routine author filters resolve logins to GitHub account IDs.
+- **Related:** Decision 282 chooses mine or an explicit member. Its C needs a key that the agent can get for the message it answers.
+- **Recommendation:** F, from the options check. It gives an exact sender ID and owner IDs for members named in words, with no lookup refusal. The first recommendation was E.
+- **Action:** ask the user, because F changes the sender-line and workspace-list requirements, which no approved decision covers.
+- **Chosen:** Open. This blocks the owner-filter input, its protocol text, and any sender-line change. Every other call and filter is independent.
+
+The options check of 11 November 2026 is in
+`.context/agent-tools-conductor-parity/reports/decision-283-options.md`.
+It added F, G, and H and changed the recommendation from E to F.
+
 ## Design
 
 Each item below is an agent call of 11 November 2026, unless it names a
@@ -253,6 +358,8 @@ decision.
   that the sender owns, an owner, a state, a repository, a part of the
   name, the newest activity after a date, and archived or not. Reason:
   Conductor's `workspace list` filters in the same way.
+- The sender-owned filter awaits decision 282. The owner-filter input
+  awaits decision 283. No option applies until Cal answers.
 - Agent call: `list_workspaces` and `list_sessions` take an optional limit
   of 1 to 100 and an offset. A reply with a limit says whether more
   entries follow. Without these options, a list returns every entry, as
@@ -388,38 +495,51 @@ Evidence: `.context/agent-tools-conductor-parity/reports/m1-ui.md` and
 
 Depends on: 1
 
+The independent documentation is complete. The member filter contract
+waits for decisions 282 and 283.
+
 State the requirements and the decisions of the new calls. Read the
 `documentation` skill first.
 
-- [ ] Update `docs/protocol/agent-tools.md`: the list and the count of the
-      calls, the reach, the token and turn rules, the list filters and
-      paging, the first session title, the request ID of a create, and
+- [x] Update `docs/protocol/agent-tools.md`: the list and the count of the
+      calls, the reach, the token and turn rules, the first session title,
+      the request ID of a create, and
       the workspace, section, and preview calls.
-- [ ] Update `docs/protocol/session-calls.md`: the get, rename, close, and
+- [x] State the independent workspace list filters and paging.
+- [ ] Apply decisions 282 and 283 to mine, the explicit owner filter,
+      list-row fields, and the sender line. Keep unchosen behavior absent.
+- [x] Update `docs/protocol/session-calls.md`: the get, rename, close, and
       stop calls, and the get of a message.
-- [ ] Update `docs/protocol/messages-and-attachments.md` and
+- [x] Update `docs/protocol/messages-and-attachments.md` and
       `docs/protocol/session-transcripts.md`: the stop line of a stop by an
       agent (decision 279 B).
-- [ ] Update `docs/protocol/tokens-and-secrets.md`: the calls that the
+- [x] Update `docs/protocol/tokens-and-secrets.md`: the calls that the
       workspace token allows.
-- [ ] Update `docs/protocol/isolation.md` and the open risks of
+- [x] Update `docs/protocol/isolation.md` and the open risks of
       `docs/protocol/routines.md`: any process with the token can also
       read one workspace, session, or message. While a turn of its
       workspace runs, it can also rename, move, and archive workspaces,
       close and stop sessions, change the sections, and open previews in
       the whole org, with the rights of the sender.
-- [ ] Update `docs/protocol/agent-instructions.md`: what the workspace
+- [x] Update `docs/protocol/agent-instructions.md`: what the workspace
       tools can do.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
       Update each sentence that restates a changed fact.
-- [ ] Read each guide under `src/marketing/docs/` in full, with
+- [x] Give the changed Terms a new revision under the existing consent
+      requirement. Run the existing consent tests.
+- [x] Read each guide under `src/marketing/docs/` in full, with
       `docs/protocol/website-docs.md`. Update each sentence that restates a
       changed fact, such as the list of what agents can reach in
       `security.md`.
-- [ ] Update each row under `src/marketing/from-conductor/areas/` whose
+- [x] Update each row under `src/marketing/from-conductor/areas/` whose
       feature this change ships, as
       `docs/protocol/conductor-comparison.md#statuses` says.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+
+Evidence: `.context/agent-tools-conductor-parity/reports/m2-internal-docs.md`,
+`.context/agent-tools-conductor-parity/reports/m2-external-docs.md`, and
+`.context/agent-tools-conductor-parity/checks/m2-consent-auth-tests.log`.
 
 ## Milestone 3: Workspace calls
 
@@ -438,6 +558,8 @@ skills first.
       `archive_workspace` the reach of the org (decision 277 A).
 - [ ] Add the filters and the paging of `list_workspaces`, with no change
       to a call without options.
+- [ ] Apply decision 283 to the owner filter and list-row owner fields.
+      Add only the fields that the chosen option needs.
 - [ ] Add the first session title and the optional request ID to
       `create_workspace`.
 - [ ] Add tests beside the code: the archive rights of the sender, an
@@ -456,6 +578,8 @@ agent.
 - [ ] Add `get_session`, `rename_session`, `close_session`, `stop_session`,
       and `get_message` to `worker/tools/`. Reuse the session routes of
       `worker/chat` without a browser context.
+- [ ] Add the approved limit and offset paging to `list_sessions`. Keep a
+      call without options unchanged, including closed sessions.
 - [ ] Let a close that stops a running turn record the member, so the stop
       line names that member, as decision 72 says for Stop. Today such a
       close records no stopper, and the line says "The agent stopped".
@@ -495,6 +619,8 @@ Depends on: 3, 4, 5
       and turn rules, the rights of the sender, and the links.
 - [ ] Update the workspace tools line of `runner/src/instructions.ts` and
       its tests.
+- [ ] Apply decision 283 to owner-selection instructions and, when the
+      chosen option needs it, the sender line and its provider tests.
 - [ ] Add CLI and MCP tests in `worker/tools/` against the handler.
 - [ ] Update `tools/README.md` and `runner/agent-tools.md`.
 - [ ] Add the new commands to
@@ -516,6 +642,9 @@ Depends on: 1, 2, 4
 
 Depends on: every other milestone
 
+- [ ] Update the `agent-workspace-controls` comparison row from Planned to
+      Available after Milestones 3 to 7 implement the calls. Follow the claim
+      rules and keep features outside this plan under consideration.
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and `npm run check`.
 - [ ] Smoke-test the stop line in the app of `npm run dev`.

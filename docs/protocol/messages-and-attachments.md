@@ -111,6 +111,13 @@ says.
   set it, because agent code runs on the same cloud computer.
 - A turn that stops with no Stop request, such as when the cloud
   computer stops, shows "The agent stopped".
+- A close of a session that stops its turn counts as a Stop of the member
+  who closed the session. So the chat names that member too. Reason: that
+  member confirmed the stop when the close asked first, as
+  [Sessions](agents-and-sessions.md#sessions) says.
+- When a turn gets more than one stop, its line names the first one.
+- [Stops by the workspace tools](#stops-by-the-workspace-tools) states the
+  line of a stop by an agent.
 - While the login of the starter can be used, the next message of the
   starter after a stop continues the same session. The next message of
   another member does the same while the starter shares the login.
@@ -195,6 +202,29 @@ says.
 - It follows each rule of a message from the composer, and the draft stays
   as it is. The chat shows it as a message of that member, with no mark of
   the action. Reason: an action is a message (decision 220).
+
+### Stops by the workspace tools
+
+- A stop through the workspace tools names no member (decision 279). This
+  holds for `stop_session`, and for each `close_session` that stops a
+  turn.
+- The chat shows "Stopped from" and the session chip of the sending
+  session, as [Session chips](workspace-links.md#session-chips) says. The
+  sending session is the session of the calling turn.
+- The workspace records the sending session when the stop request
+  arrives, as it records the member of a Stop. It takes that session from
+  its own record of the calling turn, never from the call.
+- Reason: the member whose message started the calling turn pressed
+  nothing. The same chip names the session of a tool message, as
+  [The `Sent by:` line](session-calls.md#the-sent-by-line) says.
+- A line that names that member, as if the member pressed Stop, was
+  rejected (decision 279). Members would then believe that a colleague
+  stopped their agent. A line that names both the member and the session
+  was rejected too, because the chip already tells the truth.
+- The line names the sending session also when an agent stops its own
+  session.
+- The [mockup catalogue](../mockups/catalogue.md) draws the line at
+  `app/chat/agent-stops`, with its words.
 
 ## Attachments
 

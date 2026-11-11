@@ -37,8 +37,9 @@ This page lists each protocol doc and what it covers.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
-    session as concise or full Markdown, its route, and the reads of
-    agents.
+    session as concise or full Markdown, and the text of a copy.
+    - [Transcript routes](../protocol/transcript-routes.md): the route of
+      a copy, and the reads of agents.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
@@ -51,9 +52,21 @@ This page lists each protocol doc and what it covers.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
-  sandbox.
+  sandbox, and Mac commands.
+  - [Agent tool access](../protocol/agent-tool-access.md): what each call
+    reaches, which calls need an active turn, and the rights of the sender.
+  - [Workspace calls](../protocol/workspace-calls.md): the calls that
+    create, list, get, rename, move, and archive workspaces, and the lists
+    that a create call takes.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
+    - [Session management](../protocol/session-management.md): the calls
+      that get, rename, close, and stop a session, and get a message.
+  - [Section and preview calls](../protocol/section-and-preview-calls.md):
+    the calls that create and delete sections, and list, open, and close
+    port previews.
+  - [Names from the workspace tools](../protocol/tool-names.md): the rule
+    for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
@@ -92,8 +105,10 @@ This page lists each protocol doc and what it covers.
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets, the sender line and the branch line of each message,
-  and the base prompt of Claude agents.
+  agent session gets, and the sender line and the branch line of each
+  message.
+  - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
+    agents, and the base instructions of Codex agents.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
   ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of
