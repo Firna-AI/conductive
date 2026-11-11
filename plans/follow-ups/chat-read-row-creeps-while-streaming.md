@@ -1,0 +1,31 @@
+# The read row creeps while the agent writes
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-11, from branch `calummoore/chat-auto-scroll-issue`, a finding of the fix that keeps the chat at its newest message.
+- **Location:** `src/chat/components/reading-place.ts`, the methods `settle`, `note`, and `distance` of `ReadingPlace`, and the scroll listener in `useReadingPlace`.
+- **Reason:** the creep was on `main` before that branch, and its fix needs its own design and its own check in a real browser.
+
+- **Terms:**
+  - **Keeper:** `ReadingPlace` in `src/chat/components/reading-place.ts`. It keeps the row that the reader reads in place while the transcript changes size.
+  - **Reversed box:** the box of the chat that scrolls. It uses `flex-direction: column-reverse` from `docs/mockups/src/components/chat/ChatPane.module.css`, so its scroll position counts up to 0 at the bottom.
+- **Background:**
+  - While the reader is scrolled up, the keeper notes the top row in view at each scroll event.
+  - After each change of size of the transcript, the keeper moves the chat by the distance that this row moved in the transcript. Then it notes the top row again.
+  - The box turns off the browser's scroll anchoring with the class `keptScroll` in `src/chat/components/chat.module.css`, so the keeper alone keeps the row.
+  - Agent text in the chat is 13 px, with a line height of 20.8 px. So each new line of an answer adds 20.8 px.
+  - Chrome keeps the scroll position of the box in whole pixels.
+  - In headless Chrome 157, a test page with rows of 20.297 px added 180 rows while the reader read higher up. The read row moved up by 46.44 px at device pixel ratios 1, 1.25, and 2.
+  - The same page gave the same 46.44 px before that branch, when Chrome's own scroll anchoring kept the row.
+- **Problem:** Each move of the keeper loses the part of the distance after the decimal point. The next note starts from that place, so the lost parts add up. Each new line of 20.8 px moves the read row by about 0.2 px.
+- **Impact if no action:** While the reader reads older messages during a long answer, the text creeps up slowly, for example by about 20 px for each 100 new lines.
+- **Root question:** How does the keeper hold the read row at its place to less than a pixel over many changes of size?
+- **Options:**
+  - **A.** Keep the place in the box that the reader chose, with its fraction, until the reader scrolls again. After each move, keep the same row and the same target. Ignore the scroll event that the keeper's own move causes. When the browser cannot bring the row back, such as at the top of the range, note the row at its new place. Test it with a layout that rounds the scroll position to whole pixels and has rows of 20.8 px. Effort: Medium.
+  - **B.** Keep the fraction that each move lost, and add it to the distance of the next move. Clear it when the reader scrolls. This also needs the keeper to ignore the scroll event of its own move. Effort: Medium.
+  - **C.** Change nothing. The creep is slow, and each scroll of the reader starts a new place. Effort: Small.
+- **Left out:** A line height of whole pixels for chat text, because it changes the type scale of the mockups, and tables and code blocks still have fractions. Chrome's own scroll anchoring, because it moves the newest message out of view at the bottom and moves a row twice with the keeper.
+- **Wider fix:** A. The target of the reader stays the reference, so no source of fractions can add up.
+- **Previous examples:** None found.
+- **Recommendation:** A. With the reader's target as the reference, the error stays under one pixel for any number of changes.
+- **Action:** fix after merge, apply A, because the creep was on `main` before that branch, and the fix needs its own design and its own check in a real browser.

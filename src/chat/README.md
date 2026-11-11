@@ -236,8 +236,12 @@ check in the Mac app.
 - `components/reading-place.ts`: the keeper of the reader's place, which
   `ChatPane` gives through `ChatKeeper`. While the reader is scrolled up, it
   keeps the top row in view in place for every change of size of the
-  transcript. When that row folds away, the fold that took it keeps its
-  place.
+  transcript, and a scroll of the reader stays. When that row folds away,
+  the fold that took it keeps its place. At the bottom, the newest message
+  stays in view. The keeper does the work of the browser's scroll
+  anchoring, so the box of `components/ChatPane.tsx` turns that off.
+  `ChatPane` gives each session a box of its own, so a session opens at its
+  newest message.
 - `components/useFold.ts`: `useFold` opens and closes a fold on a click on
   its line, and gives the line to the keeper, also at the bottom of the
   chat, so the line keeps its place.
