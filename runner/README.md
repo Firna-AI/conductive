@@ -12,6 +12,10 @@ requests. [Agent runner](../docs/protocol/agent-runner.md) and
 [Model gateway](../docs/protocol/model-gateway.md) state its requirements,
 and the [shared contracts](../src/shared/README.md) define its messages.
 
+The `hello` advertises every login kind that this runner can run.
+The Worker checks that list before dispatching a turn or message.
+An older runner receives no unsupported login and the turn fails with recovery steps.
+
 This folder is a separate Node 24 package with its own lockfile. The root
 `npm install` does not install it. Tests inject the fake workspace endpoint.
 The package also holds the sandbox's preview relay.
@@ -25,13 +29,16 @@ These facts belong to this implementation, not to the protocol docs.
   that program. The runner turns off its automatic updates. It starts the
   program through the SDK option `spawnClaudeCodeProcess`, so the runner
   owns the child process.
-- Codex runs through the Codex App Server. The runner starts
-  `codex app-server` from the `@openai/codex` package, which
-  `@openai/codex-sdk` installs.
-- Both agents run without approval prompts, with the rights of the service
-  user.
-- Both agents get the sandbox's `computer` MCP server and the `conductive`
-  workspace MCP server. The [agent tools guide](agent-tools.md) gives
+- Codex uses the pinned Codex App Server, through `@openai/codex-sdk`.
+  API keys use its private login request. ChatGPT sign-ins use a temporary
+  login file with a turn token and public account identity.
+  [Agent logins](agent-logins.md#codex) gives both routes through the gateway.
+  [Conversation continuation](codex-logins.md#conversation-continuation)
+  gives the resume and fork sequence after a login kind change.
+- Both agents request no approvals and the service user's rights. ChatGPT
+  workspace rules can replace these Codex settings on a ChatGPT turn.
+- The runner configures the sandbox's `computer` and `conductive` MCP
+  servers for both agents. The [agent tools guide](agent-tools.md) gives
   their settings, runtime context, and process lifetime.
 - No command carries an agent login or a GitHub token. Each `turn` command
   carries a turn token for the model gateway, as [Agent logins](agent-logins.md)

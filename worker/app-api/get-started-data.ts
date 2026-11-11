@@ -17,7 +17,7 @@ export async function getStartedData(
     .first<{ id: string }>()
   const setup = await db
     .prepare(
-      `SELECT EXISTS(SELECT 1 FROM agent_logins WHERE user_id = ?) AS login`,
+      `SELECT EXISTS(SELECT 1 FROM agent_logins WHERE user_id = ? AND failure_cause IS NULL) AS login`,
     )
     .bind(userId)
     .first<{ login: number }>()

@@ -85,7 +85,7 @@ export function workspaceLifecycleEndpoint(
     clearLifecycle: () => transport.clearLifecycle(),
     lifecycleActivity: () => transport.lifecycleActivity(),
     credentialSender: (turnId) => transport.credentialSender(turnId),
-    checkTurnToken: (token) => transport.checkTurnToken(token),
+    checkTurnToken: (token, claim) => transport.checkTurnToken(token, claim),
     retryFailedCreateCleanup: (id) => transport.retryFailedCreateCleanup(id),
     finishDiskMaintenance: () => transport.finishDiskMaintenance(),
     queueLifecycleStart: (job, intent) =>

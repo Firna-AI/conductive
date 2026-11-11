@@ -13,6 +13,8 @@ Its links are relative to the Worker folder.
 - [marketing/site.ts](marketing/site.ts) serves the built root-domain site.
 - [marketing/consent.ts](marketing/consent.ts) serves the built agreement page before GitHub.
 - [routes.ts](routes.ts) dispatches protected app routes.
+- [codex-auth/README.md](codex-auth/README.md) owns device authorization,
+  encrypted ChatGPT sign-ins, and serialized refresh-token renewal.
 - [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details.
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.

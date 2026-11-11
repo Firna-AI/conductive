@@ -12,6 +12,7 @@ import { retryApprovalEmails } from './operator/approval-email'
 import { warnWorker } from './warnings'
 import { routineRunRuntime } from './routines/run-runtime'
 import { scanRoutineSchedules } from './routines/schedule-scan'
+import { cleanupCodexDevices } from './codex-auth/device-store'
 
 export function scheduledWorker(
   env: AppEnv,
@@ -27,6 +28,7 @@ export function scheduledWorker(
         return
       }
       if (cron !== '*/15 * * * *') return
+      await cleanupCodexDevices(env.DB, dependencies.now())
       await cleanupDeletedOrgs(
         env,
         dependencies,

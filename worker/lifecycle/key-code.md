@@ -52,7 +52,7 @@ points of each part.
   object. [`lifecycle-admission.ts`](lifecycle-admission.ts) checks a create
   and calls the admission hook inside `blockConcurrencyWhile` of the
   platform. A refused admission ends the start as a normal failed start.
-- [`run-workspace.ts`](run-workspace.ts): the queue, generation, reporting, activity, log, and encrypted start-result helpers of the workspace object.
+- [`run-workspace.ts`](run-workspace.ts): the queue, generation, reporting, activity, log, encrypted start-result, and turn-token helpers of the workspace object.
 - [`workspace-platform.ts`](workspace-platform.ts): `nativeWorkspacePlatform`,
   the platform of the workspace object. A throw inside the runtime's
   `blockConcurrencyWhile` resets the object. So the platform keeps the

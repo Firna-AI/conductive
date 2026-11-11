@@ -23,11 +23,14 @@ peer range of `@firna/ui`.
 | `npm run mockups:typecheck`  | Type-check the catalogue sources                                |
 | `npm run mockups:check`      | Run the type check, then the strict build                       |
 | `npm run marketing:pictures` | Capture the pictures of the marketing site again                |
+| `npm run marketing:preview` | Capture only the public share card                              |
 | `npm run lint`               | Run ESLint                                                      |
 | `npm run format:check`       | Check the formatting with Prettier                              |
 
 A change to a screen that a picture of the marketing site shows needs a
 new capture with `npm run marketing:pictures`.
+That command also rebuilds the [share card](../../src/marketing/link-previews.md)
+from the current workspace screen and the approved blue design.
 [Pictures](../../src/marketing/README.md#pictures) gives the steps.
 
 Git ignores the build output, `mokly-static/` and
@@ -91,7 +94,7 @@ shows them in the New workspace dialog.
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
-| `src/brand.ts`            | The product name "Conductive", its domains, and the Mac DMG names   |
+| `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 

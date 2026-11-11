@@ -23,6 +23,23 @@ const responseNames = new Set([
   'request-id',
   'x-request-id',
 ])
+const codexTokenRequestNames = new Set([
+  ...requestNames,
+  'chatgpt-account-id',
+  'version',
+  'x-codex-routing-hint',
+  'x-codex-turn-state',
+  'x-openai-subagent',
+])
+const codexTokenResponseNames = new Set([
+  'etag',
+  'x-models-etag',
+  'x-codex-turn-state',
+  'x-reasoning-included',
+  'openai-model',
+  'x-codex-safety-buffering-enabled',
+  'x-codex-safety-buffering-faster-model',
+])
 
 function connectionHeaders(headers: Headers) {
   return new Set(
@@ -44,13 +61,16 @@ export function hasClaudeMarkers(headers: Headers): boolean {
 export function upstreamHeaders(headers: Headers, login: RunnerLogin): Headers {
   const result = new Headers()
   const connection = connectionHeaders(headers)
+  const tokenMode = login.agent === 'codex' && login.kind === 'token'
   headers.forEach((value, name) => {
     if (
       !connection.has(name) &&
-      (requestNames.has(name) ||
-        name.startsWith('anthropic-') ||
-        name.startsWith('x-claude-code-') ||
-        name.startsWith('x-stainless-'))
+      (tokenMode
+        ? codexTokenRequestNames.has(name)
+        : requestNames.has(name) ||
+          name.startsWith('anthropic-') ||
+          name.startsWith('x-claude-code-') ||
+          name.startsWith('x-stainless-'))
     )
       result.set(name, value)
   })
@@ -69,13 +89,18 @@ export function upstreamHeaders(headers: Headers, login: RunnerLogin): Headers {
   return result
 }
 
-export function downstreamHeaders(headers: Headers, secret: string): Headers {
+export function downstreamHeaders(
+  headers: Headers,
+  secret: string,
+  codexToken = false,
+): Headers {
   const result = new Headers()
   const connection = connectionHeaders(headers)
   headers.forEach((value, name) => {
     if (
       !connection.has(name) &&
       (responseNames.has(name) ||
+        (codexToken && codexTokenResponseNames.has(name)) ||
         name.startsWith('anthropic-ratelimit-') ||
         name.startsWith('x-ratelimit-'))
     )

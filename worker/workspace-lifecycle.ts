@@ -32,6 +32,7 @@ import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { WorkspaceErrorReporting } from './error-reporting/workspace'
 import {
+  checkWorkspaceTurnToken,
   recordWorkspaceActivity,
   readWorkspaceLog,
   runWorkspaceLifecycle,
@@ -248,11 +249,11 @@ export class WorkspaceLifecycle
     return credentialSender(this.chat, this.controller, turnId)
   }
 
-  async checkTurnToken(token: string): Promise<TurnTokenCheck> {
-    const workspaceId = await this.chat.store.workspaceId()
-    return workspaceId
-      ? this.chat.turnTokens.check(workspaceId, token)
-      : { ok: false, reason: 'turn_not_active' }
+  async checkTurnToken(
+    token: string,
+    claimCodexRecovery?: true | 'complete',
+  ): Promise<TurnTokenCheck> {
+    return checkWorkspaceTurnToken(this.chat, token, claimCodexRecovery)
   }
 
   async reportRunnerLifecycle(event: RunnerLifecycleEvent): Promise<void> {

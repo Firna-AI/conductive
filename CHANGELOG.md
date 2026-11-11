@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.9.0](https://github.com/Firna-AI/conductive/compare/v0.8.0...v0.9.0) (2026-11-11)
+
+
+### Features
+
+* **github:** add pull request bar actions and Continue ([#176](https://github.com/Firna-AI/conductive/issues/176)) ([d7a8a0c](https://github.com/Firna-AI/conductive/commit/d7a8a0c97d520359d813899dd7a6f506c246cdc0))
+* **logins:** connect Codex to a ChatGPT plan with device sign-in ([#177](https://github.com/Firna-AI/conductive/issues/177)) ([d970f26](https://github.com/Firna-AI/conductive/commit/d970f263a4f45b2c2918324dfe3de217d6320ee7))
+* **marketing:** add approved social link preview ([#228](https://github.com/Firna-AI/conductive/issues/228)) ([b5dbada](https://github.com/Firna-AI/conductive/commit/b5dbada1f924bad7703b686c40bb6ef55d57c4c1))
+
+
+### Bug Fixes
+
+* **chat:** keep only the newest run of tool calls open during a turn ([#167](https://github.com/Firna-AI/conductive/issues/167)) ([23628f7](https://github.com/Firna-AI/conductive/commit/23628f77b7f0dc8ecb8740a7242e666da53e799f))
+* **github:** keep agent pushes working and explain access failures ([#235](https://github.com/Firna-AI/conductive/issues/235)) ([36c3b17](https://github.com/Firna-AI/conductive/commit/36c3b17cb9cf11c1f7d59da6971eee4e854448f4))
+* **github:** show why Git got no GitHub access ([36c3b17](https://github.com/Firna-AI/conductive/commit/36c3b17cb9cf11c1f7d59da6971eee4e854448f4))
+* **github:** tint merged pull requests purple ([#234](https://github.com/Firna-AI/conductive/issues/234)) ([acd22d5](https://github.com/Firna-AI/conductive/commit/acd22d551f4e60e36a7b8878e7fa01c1cb096107))
+* **marketing:** mark session links available in Conductor comparison ([#227](https://github.com/Firna-AI/conductive/issues/227)) ([5759a4b](https://github.com/Firna-AI/conductive/commit/5759a4b9a5f4f442e6713cb5cefd9097a89c0004))
+* **marketing:** note planned background work and manual logins ([#237](https://github.com/Firna-AI/conductive/issues/237)) ([32d09c4](https://github.com/Firna-AI/conductive/commit/32d09c4ee3507e0330bfbc2b5778ea277ab2b3d6))
+* **marketing:** refresh Conductor comparison statuses ([#229](https://github.com/Firna-AI/conductive/issues/229)) ([f5eb804](https://github.com/Firna-AI/conductive/commit/f5eb804fcc2007b3348fa76d67d759363d01fb3d))
+* **release:** use the renamed repository Firna-AI/conductive ([#233](https://github.com/Firna-AI/conductive/issues/233)) ([16c0aac](https://github.com/Firna-AI/conductive/commit/16c0aac8b95fe639a303d3a558c0e04645aa23e7))
+
+
+### Performance Improvements
+
+* **previews:** let the viewer's browser cache preview files ([#232](https://github.com/Firna-AI/conductive/issues/232)) ([cad6880](https://github.com/Firna-AI/conductive/commit/cad68800a023c0832a13604c06482f305c2d3ae5))
+
 ## [0.8.0](https://github.com/Firna-AI/remote-code/compare/v0.7.0...v0.8.0) (2026-11-11)
 
 

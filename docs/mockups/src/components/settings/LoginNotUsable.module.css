@@ -1,0 +1,21 @@
+/*
+ * A connected login that the app can no longer use, under its row, in the
+ * same box as the rows: the cause, then Sign in again, which lines up with
+ * Remove. A narrow row puts the button under the cause.
+ */
+.notUsable {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 0 8px 10px 12px;
+}
+
+.cause {
+  flex: 1 1 200px;
+  min-width: 0;
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: 1.45;
+}

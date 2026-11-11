@@ -1,5 +1,6 @@
 import type { WorkspaceChat } from '../chat/backend'
 import type { WorkspaceErrorReporting } from '../error-reporting/workspace'
+import type { TurnTokenCheck } from '../model-gateway/types'
 import type { WorkspaceController } from './workspace-controller-types'
 import type { InputActivityOwner } from './input-activity-owner'
 import type { ReceiverStorage } from '../members/receiver-storage'
@@ -24,6 +25,17 @@ type WorkspaceStartLogs = Pick<
 
 export function readWorkspaceLog(storage: ReceiverStorage) {
   return readEncryptedStartLog(nativeWorkspaceStorage(storage))
+}
+
+export async function checkWorkspaceTurnToken(
+  chat: Pick<WorkspaceChat, 'store' | 'turnTokens'>,
+  token: string,
+  claimCodexRecovery?: true | 'complete',
+): Promise<TurnTokenCheck> {
+  const workspaceId = await chat.store.workspaceId()
+  return workspaceId
+    ? chat.turnTokens.check(workspaceId, token, claimCodexRecovery)
+    : { ok: false, reason: 'turn_not_active' }
 }
 
 export const workspaceStartResults = {

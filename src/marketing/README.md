@@ -118,7 +118,8 @@ capture command.
 
 Public pages share the approved blue product image with their own titles
 and descriptions. [Link previews](link-previews.md) gives the metadata,
-asset, sources, and verification steps.
+asset, sources, and verification steps. `npm run marketing:pictures`
+refreshes this image too. `npm run marketing:preview` refreshes it alone.
 
 ## Legal pages
 

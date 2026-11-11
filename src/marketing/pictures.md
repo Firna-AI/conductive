@@ -69,3 +69,14 @@ The command uses the direct development dependency `sharp` to write
 lossless WebP files in `pictures/`, so each pixel stays as the mockup draws
 it. The command stops its server and browser and removes its temporary
 files on success, failure, or interruption.
+
+## The share card
+
+The same command also rebuilds `pictures/link-preview.png`, the 1200 × 630
+image that public links share. It captures the canonical dark workspace
+and places it in the approved blue design. The background, logo, title,
+font, and layout have tracked sources, so no scratch file is required.
+
+Run `npm run marketing:preview` to rebuild only that card.
+[Link previews](link-previews.md#refresh-the-image) gives the inputs and
+steps. Both commands keep Chrome out of the site build and deployment.
