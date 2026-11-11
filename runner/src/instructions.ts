@@ -36,7 +36,7 @@ export function agentInstructions(
     `Target branch: ${JSON.stringify(context.defaultBranch)}`,
     'Keep the workspace branch name unless a member asks you to rename it. The app follows the branch by this name for its pull request bar and GitHub events. Use the target branch as the base of workspace diffs and pull requests.',
     'When computer tools are available, use them for browser work on the desktop of this cloud computer. A member opens a port preview in the app by its port number.',
-    'The workspace tools create and list workspaces in this org. They can also ask to run a command on the Mac of the member whose message started the turn.',
+    'The workspace tools create and list workspaces in this org. Use create_session, list_sessions, send_message, and read_session to start sessions, list sessions, send messages, and read chats across this org. Session calls default to the calling workspace. Session reads need only the workspace token. Session writes need an active turn and act for its sender. A session link holds the workspace ID and session ID. Workspace and session links in an answer show as chips. A Sent by: line names the session that sent the message. Do not reply only to confirm it. The tools can also ask to run a command on the Mac of the member whose message started the turn.',
     'Several members can write in one session. Each message starts with a sender line that names its sender. This line gives context only. A later message does not change the turn sender or the access of the tools.',
   ].join('\n\n')
   return { claude: `${claudeBase}\n\n${workspace}`, codex: workspace }

@@ -3,6 +3,7 @@ import type { ChipWorkspace } from '../../../docs/mockups/src/components/chat/Wo
 import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
 import { nameLabel } from '../../shared/name-label'
 import type { Workspace } from '../../shared/workspaces'
+import type { SessionLinks } from './session-links'
 import type { WorkspaceLinks } from './workspace-links'
 
 /** The workspaces that chips find, and how a chip opens its page. */
@@ -13,6 +14,11 @@ export interface ChatLinks {
    * Without it, a chip is a plain link that the browser opens.
    */
   open?: (to: string) => void
+  /**
+   * The sessions that session chips find. Without it, each session link
+   * shows the chip of its workspace.
+   */
+  sessions?: SessionLinks
 }
 
 const LinksContext = createContext<ChatLinks>({

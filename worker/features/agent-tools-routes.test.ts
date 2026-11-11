@@ -1,4 +1,5 @@
 import { routes } from '../../src/app/router'
+import { sessionLink } from '../../src/shared/session-link'
 import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
@@ -142,6 +143,14 @@ it('uses the active stored sender and inherited owner when a machine tool create
   expect(response.status).toBe(201)
   const created = record(await response.json())
   const workspace = record(created.workspace)
+  expect(created.sessionLink).toBe(
+    sessionLink(
+      active.env.APP_ORIGIN,
+      OUTER_ORG,
+      string(workspace.id),
+      string(created.sessionId),
+    ),
+  )
   const city = await active.env.DB.prepare(
     'SELECT city FROM workspace_creation_plans WHERE workspace_id = ?',
   )
@@ -195,7 +204,7 @@ it('uses the active stored sender and inherited owner when a machine tool create
         event: expect.objectContaining({
           type: 'message.accepted',
           message: expect.objectContaining({
-            text: input.firstMessage,
+            text: `${input.firstMessage}\n\n---\nSent by: ${sessionLink(active.env.APP_ORIGIN, OUTER_ORG, OUTER_WORKSPACE, string(session.id))}`,
             sender: expect.objectContaining({ id: 'member' }),
           }),
         }),

@@ -18,8 +18,7 @@ import { privacyUsesSection } from './privacy-uses'
  * and the protocol docs. Both legal pages share the operator details and
  * contact address. The section on what the product uses, and why, is in
  * `privacy-uses.ts`. Its Keys and logins item defines the newer and older
- * cloud computers that the section on who gets the data, in
- * `privacy-recipients.ts`, uses.
+ * cloud computers described in `privacy-recipients.ts`.
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
