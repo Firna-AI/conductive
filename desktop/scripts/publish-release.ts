@@ -1,8 +1,9 @@
 import { join } from 'node:path'
 
+import { sourceRepository } from '../../docs/mockups/src/brand.ts'
 import { selectReleaseFiles } from './publish-assets.ts'
 
-const REPOSITORY = 'Firna-AI/remote-code'
+const REPOSITORY = `${sourceRepository.owner}/${sourceRepository.name}`
 
 export interface PublishDependencies {
   run(program: string, args: string[]): Promise<{ stdout: string }>
