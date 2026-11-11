@@ -1,4 +1,5 @@
 import type { User } from '../api'
+import type { TurnEndReason } from '../chat-events'
 import type { MessageSender } from '../messages'
 import {
   turnFilesUnavailable,
@@ -65,6 +66,14 @@ export function omittedFiles(transcript: Transcript, turnId: string): number {
 /** Whether the cloud computer could not read the changed files of a turn. */
 export function filesUnread(transcript: Transcript, turnId: string): boolean {
   return completionOf(transcript, turnId)?.filesUnavailable === true
+}
+
+/** The cause that finished a turn, when its end names one. */
+export function turnEndReason(
+  transcript: Transcript,
+  turnId: string,
+): TurnEndReason | undefined {
+  return completionOf(transcript, turnId)?.endReason
 }
 
 /** Whether a turn has a file row, such as one from a late end. */

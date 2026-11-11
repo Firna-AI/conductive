@@ -1,7 +1,9 @@
 import { CircleSlash, FileText } from 'lucide-react'
+import type { TurnEndReason } from '../../shared/chat-events'
 import type { ChangedFile } from '../../shared/files'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { DiffStat } from '../../../docs/mockups/src/components/files/DiffStat'
+import { EndReasonLine } from '../../../docs/mockups/src/components/chat/EndReasonLine'
 import {
   moreFiles,
   turnFilesUnavailable,
@@ -53,16 +55,20 @@ function FileChip(props: {
  * at most 200 files of a turn, and `omittedFiles` counts the rest as plain
  * text after the list. `filesUnavailable` says that the cloud computer could
  * not read the changed files, in place of the list. The turn still finished.
+ * `endReason` names a cause other than the end of the reply, such as the
+ * time limit of background work. Its line sits above the row, as in the
+ * mockups.
  */
 export function TurnEnd(props: {
   durationMs: number
   files: readonly ChangedFile[]
   omittedFiles: number
   filesUnavailable: boolean
+  endReason?: TurnEndReason
   onOpenDiff?: (path: string) => void
 }) {
   const more = props.omittedFiles
-  return (
+  const row = (
     <div className={styles.end}>
       <span className={styles.duration}>
         {formatDuration(props.durationMs)}
@@ -83,6 +89,13 @@ export function TurnEnd(props: {
           {more > 0 ? <li className={styles.more}>{moreFiles(more)}</li> : null}
         </ul>
       ) : null}
+    </div>
+  )
+  if (props.endReason === undefined) return row
+  return (
+    <div className={styles.ended}>
+      <EndReasonLine reason={props.endReason} />
+      {row}
     </div>
   )
 }

@@ -14,6 +14,33 @@ import type { WorkspaceGitHubState } from './workspace-state'
 const MERGE_STATE_RETRY_LIMIT = 3
 const MERGE_STATE_RETRY_DELAY_MS = 1000
 
+/**
+ * Decide from the stored state whether a webhook can change this workspace.
+ * A push to another branch matters only to an open pull request into it. A
+ * check event that names no branch matters only to an open pull request.
+ * Without stored state of the current branch, the workspace reads GitHub.
+ */
+async function needsRead(
+  workspace: GitHubWorkspace,
+  signal: GitHubRefresh,
+  state: WorkspaceGitHubState,
+): Promise<boolean> {
+  const otherPush =
+    signal.pushBranch !== undefined && signal.pushBranch !== workspace.branch
+  if (!otherPush && !signal.openPullRequestOnly) return true
+  const stored = await state.stored()
+  if (stored?.banner.branch !== workspace.branch) return true
+  const { banner } = stored
+  const open =
+    banner.pullRequest !== null &&
+    banner.state !== 'merged' &&
+    banner.state !== 'closed'
+  if (!otherPush) return open
+  return (
+    open && signal.pushBranch === (workspace.baseBranch ?? banner.baseBranch)
+  )
+}
+
 /** Call inside the workspace DO. It rechecks access before reads and commits. */
 export async function refreshWorkspace(
   db: D1Database,
@@ -68,6 +95,7 @@ export async function refreshWorkspace(
   }
   return state.refresh(
     async () => {
+      if (!(await needsRead(workspace, signal, state))) return null
       const token = await dependencies.token(workspace)
       await authorize()
       const reader = new GitHubReader(

@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.9.1](https://github.com/Firna-AI/conductive/compare/v0.9.0...v0.9.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* **marketing:** refresh chat and workspace progress ([#241](https://github.com/Firna-AI/conductive/issues/241)) ([cb67e06](https://github.com/Firna-AI/conductive/commit/cb67e0610c941177485e61eef9b0b014ebe503f0))
+
+
+### Performance Improvements
+
+* **chat:** read session history in a few large pages ([#242](https://github.com/Firna-AI/conductive/issues/242)) ([9188144](https://github.com/Firna-AI/conductive/commit/91881446b4f2ad50fe7ed68892d98228d8eb4f38))
+* **chat:** show the chat while the session history loads ([#239](https://github.com/Firna-AI/conductive/issues/239)) ([2b3a3e0](https://github.com/Firna-AI/conductive/commit/2b3a3e03aedd88a518d2da521aa11051e39ac1c1))
+
 ## [0.9.0](https://github.com/Firna-AI/conductive/compare/v0.8.0...v0.9.0) (2026-11-11)
 
 
