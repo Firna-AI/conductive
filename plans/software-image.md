@@ -126,8 +126,9 @@ Each item marked "my call" is a design call of the planning agent, made on
    current org image in the workspace, when the user chooses (decision 11
    C). My calls, from findings 16 and 18 of Milestone 1: the notice compares
    the install scripts, not the org images, because each refresh makes a new
-   org image with the same script. A good run records the current script for
-   the workspace, so the notice ends. A failed run records nothing, so the
+   org image with the same script. A good run records the revision of the
+   script that it ran, so the notice ends, and a newer script that arrives
+   during the run keeps the notice. A failed run records nothing, so the
    notice stays with Try again. The action shows its output. Decision 15
    sets its start folder and its
    environment, decision 17 a missing repository, decision 23 its time
@@ -184,7 +185,7 @@ keeps both.
 The options check of the `implementation-review` skill ran over decisions
 4, 5, and 6 on 9 November 2026, over decisions 1, 12, and 13 on 10
 November 2026, over decision 14 on 10 November 2026, and over decisions
-15, 17, 22, 23, 24, 25, 28, and 29 on 11 November 2026. Its reports are
+15, 17, 22, 23, 24, 25, 28, 29, 30, 31, 32, and 33 on 11 November 2026. Its reports are
 in `.context/software-image/`. Each decision below has the user's answer.
 
 ### 1. First and later builds: confusing software step label
@@ -683,7 +684,8 @@ ran on 11 November 2026.
 
 ### 30. Old workspace: the update leaves the version pin unchanged
 
-Open. From finding 1 of Milestone 2. Its options check waits.
+Open. From finding 1 of Milestone 2. Its options check ran on 11 November
+2026.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation.
@@ -702,28 +704,54 @@ Open. From finding 1 of Milestone 2. Its options check waits.
   can still claim version 1 and get the agent login.
 - **Impact if no action:** Old workspaces keep the agent-login risk. Only a
   new workspace removes it.
-- **Root question:** How does an old workspace get the protection of the
-  gateway?
+- **Root question:** How does an existing workspace stop getting real agent
+  logins, and what does it lose when its update fails or sandbox code
+  blocks the update? The options check replaced "How does an old workspace
+  get the protection of the gateway?", because the options differ mainly
+  in that case.
 - **Options:**
   - **A.** Keep the pin. The docs stay as written. Effort: Small.
   - **B.** After a good update, raise the pin to the new runner's version
-    before the runner connects. A failed update keeps the pin. This changes
-    `agent-runner.md`, `isolation.md`, `data-and-trust.md`, two guides, and
-    both legal pages. Effort: Medium.
-  - **C.** Refuse runner version 1 in every workspace. A workspace whose
-    update fails loses its agent turns. Effort: Medium.
+    before the runner connects. A failed update keeps the pin. A connection
+    that the workspace accepted at pin 1 keeps the login path. This changes
+    `agent-runner.md`, `isolation.md`, `docs/architecture/data-and-trust.md`,
+    `docs/architecture/components.md`, `model-gateway.md`, `routines.md`,
+    `tokens-and-secrets.md`, two guides, `terms-org.ts`, and both legal
+    pages. Effort: Medium.
+  - **C.** Refuse runner version 1 in every workspace, and remove the login
+    path for version 1, so that a restored connection gets no login. A
+    workspace whose update fails, or that runs since before the release,
+    gets no agent turns until a later start succeeds. The update-failed
+    mockup must say so. Effort: Medium.
+  - **D.** At each start that updates an old workspace, the Worker raises the
+    pin before the provider call, to the version that the update installs,
+    from its own record. Before the workspace sends a login to a runner of
+    version 1, it reads the pin again and closes a connection below it. A
+    failed update then stops agent turns until a later start succeeds.
+    Effort: Medium.
+  - **E.** As B, and the workspace reads the pin again before it sends each
+    login to a runner of version 1. The docs say that sandbox code can block
+    the update and so keep the pin at 1. Effort: Medium.
 - **Left out:** A new cloud computer at each start, because it loses the
-  files.
-- **Wider fix:** B.
+  files. Turn tokens for a runner of version 1, because that runner sends
+  its credential to the provider, which refuses a turn token.
+- **Wider fix:** D. The pin then follows each update from the Worker's own
+  record.
 - **Previous examples:** Gateway decisions 2 and 5.
-- **Recommendation:** B. The update already installs the runner, so a
-  raised pin removes the risk at no extra start.
+  `plans/follow-ups/runner-update-at-start.md` on `main` asks the same
+  question. The answer updates or deletes it.
+- **Recommendation:** C. The first recommendation was B. Decision 8 B now
+  gives each old workspace a newer runner at its next start, so C stops
+  agent turns only where an update fails. C ends the real-login path
+  without depending on anything that sandbox code controls. E is the safe
+  form of B, if agent turns must stay after a failed update.
 - **Action:** ask the user, because B changes the pin rule of gateway
   decisions 2 and 5 and the risk text of the legal pages.
 
 ### 31. Old org setup: two runs of the install script at once
 
-Open. From finding 2 of Milestone 2. Its options check waits.
+Open. From finding 2 of Milestone 2. Its options check ran on 11 November
+2026.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Implementation.
@@ -735,26 +763,35 @@ Open. From finding 2 of Milestone 2. Its options check waits.
   run, or what the other tabs show.
 - **Impact if no action:** Two runs at once can break the setup, such as
   two package installs into one folder.
-- **Root question:** How do the open tabs of a workspace share one run?
+- **Root question:** Does a run of the install script belong to the
+  workspace, so that one runs at a time and each open tab shows it, or to
+  the tab that starts it? The options check replaced "How do the open tabs
+  of a workspace share one run?", because a reload of the starting tab has
+  the same cause.
 - **Options:**
   - **A.** One run at a time. Every open tab shows the run, its output, and
     its result, as the start steps do. Effort: Medium.
   - **B.** One run at a time. A second press gets a refusal, and only the
     starting tab shows the output. Effort: Small.
   - **C.** No rule. Effort: Small.
-- **Left out:** A queue, because a second run of the same script adds
-  nothing.
+  - **D.** The action restarts the sandbox, and that start runs the install
+    script as its own step. The restart ends running programs, terminal
+    sessions, and any agent turn. Effort: Large.
+- **Left out:** A queue, because A is better on every point: a queued run
+  repeats the same script.
 - **Wider fix:** A.
 - **Previous examples:** One job at a time in each org. The start steps
   reach every tab.
 - **Related:** Decision 15 decides what the kept output can hold.
-- **Recommendation:** A. No tab then shows a stale notice.
+- **Recommendation:** A. A second press joins the same run, so no tab needs
+  a refusal, and the Durable Object keeps the state of the run.
 - **Action:** ask the user, because A adds behaviour at a boundary that no
   requirement covers.
 
 ### 32. Refresh: no name for a refresh from the route
 
-Open. From finding 3 of Milestone 2. Its options check waits.
+Open. From finding 3 of Milestone 2. Its options check ran on 11 November
+2026.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation.
@@ -766,8 +803,10 @@ Open. From finding 3 of Milestone 2. Its options check waits.
   Daily refresh.
 - **Problem:** The mockups give no name for a refresh from the route.
 - **Impact if no action:** Milestone 9 must guess the name.
-- **Root question:** How does the history name a refresh that an admin
-  asked for?
+- **Root question:** What does the history show for a refresh that only a
+  direct call to the API can start? The options check replaced "How does
+  the history name a refresh that an admin asked for?", because whether
+  the route stays is part of the question.
 - **Options:**
   - **A.** "Refresh", with a mockup variant. Effort: Small.
   - **B.** "Refresh on request", with a mockup variant. Effort: Small.
@@ -777,13 +816,17 @@ Open. From finding 3 of Milestone 2. Its options check waits.
   script.
 - **Wider fix:** None, because this is one label.
 - **Previous examples:** None found.
-- **Recommendation:** B. It names the cause, as the other refresh names do.
+- **Recommendation:** C. The first recommendation was B. No screen,
+  script, workflow, or Mac app calls the route, in
+  `worker/lifecycle/browser.ts`. C removes an unused admin write route and
+  a fourth job kind at the same cost. If the route stays, B.
 - **Action:** ask the user, because B adds a name that no requirement or
   mockup covers, and C deletes a route on `main`.
 
 ### 33. Two names for the app's own software
 
-Open. From finding 4 of Milestone 2. Its options check waits.
+Open. From finding 4 of Milestone 2. Its options check ran on 11 November
+2026.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Implementation.
@@ -796,15 +839,30 @@ Open. From finding 4 of Milestone 2. Its options check waits.
 - **Problem:** Readers meet one name in the guides and another in the app.
 - **Impact if no action:** A member may not link the start step to the
   guide text.
-- **Root question:** Which name do the public texts use?
+- **Root question:** Which one name do the app and the public texts use for
+  the app's own software, so that a reader links it to the start step and
+  tells it apart from an older cloud computer? The options check replaced
+  "Which name do the public texts use?", because the app itself still says
+  "cloud computer software" in errors.
 - **Options:**
   - **A.** Keep "cloud computer software". Effort: Small.
   - **B.** Use "the agent and terminal software" everywhere, also on the
-    Privacy page. Effort: Small.
-- **Left out:** A third name, because it adds a third word for one thing.
-- **Wider fix:** None.
+    Privacy page, in the three `runner_software_unavailable` errors of
+    `worker/lifecycle/image-software.ts`, and in the relay refusal. Effort:
+    Small.
+  - **C.** One new name in the app and in the public texts, built from the
+    product name, such as "the Conductive software". It reopens the words
+    of Milestone 1. Effort: Small.
+  - **D.** As B, and one exported constant next to the product name holds
+    the name for the Worker, the app, the mockups, the Privacy page, and the
+    comparison row. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** D. One constant keeps each TypeScript text on the same name
+  after a later rename.
 - **Previous examples:** None found.
-- **Recommendation:** B. It extends the reason of decision 1 E.
+- **Recommendation:** B. A guide uses the words of the product, and B tells
+  the software that a start updates apart from an older cloud computer.
+  Apply it with decision 30, because both change the same sentences.
 - **Action:** ask the user, because both texts are correct, and B changes
   a legal page.
 
