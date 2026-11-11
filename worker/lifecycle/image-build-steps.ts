@@ -52,7 +52,7 @@ export async function advanceBuildStep(
   if (dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS)
     throw new JobTimeLimit('build')
   if (job.phase === 'snapshot') {
-    if (job.kind === 'build' && job.snapshotName === null)
+    if (job.snapshotName === null)
       await clearImageCommands(provider, job.sandboxId)
     await requireActiveOrg(env.DB, orgId)
     const snapshot = await createResource(
@@ -101,11 +101,7 @@ export async function advanceBuildStep(
     await completeBuildPhase(
       env.DB,
       buildId,
-      job.kind === 'refresh'
-        ? 'snapshot'
-        : job.softwareImageName
-          ? 'install'
-          : 'software',
+      job.softwareImageName ? 'install' : 'software',
     )
     return false
   }

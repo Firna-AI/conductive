@@ -1,20 +1,19 @@
 # Runner archive and software image
 
 This page belongs to [Deployment inputs](../deployment.md). It says how
-image builds and workspace starts get the runner archive, and how each
-deploy from `main` publishes the archive and builds the software image.
+image builds, refreshes, and workspace starts get the runner archive, and
+how each deploy from `main` publishes the archive and builds the software image.
 
 ## The runner archive
 
-Each new image build installs the runner archive into the org image. A
-refresh keeps the installed runner and updates the repositories.
+Each image build and refresh uses the current runner archive for its org image.
 A workspace start installs the runner archive on the disk of a workspace
 with an older version of the app's own software. The restart of an
 archived sandbox installs nothing.
 [Old workspaces](../protocol/workspace-life.md#old-workspaces) gives the
 rules.
 Publish the runner archive from the same commit as the Worker before any
-image build or workspace start.
+image build, refresh, or workspace start.
 [The runner archive](../../image/README.md#the-runner-archive) says how to make
 and publish it.
 
@@ -56,11 +55,10 @@ More facts:
   the start of the app need no archive setting.
 - Image builds and refreshes run through the Worker routes that the
   [Worker README](../../worker/README.md#routes) lists.
-- The archive holds no Node. Each build downloads one pinned Node release
-  from `nodejs.org` into the image, as
-  [The private Node runtime](../../image/runtime.md) says. The update at a
-  workspace start downloads that release too when the disk lacks it. That
-  download needs no deployment input.
+- The archive holds no Node. The software step installs a pinned Node
+  release from `nodejs.org` when the disk needs it, as
+  [The private Node runtime](../../image/runtime.md) says. This also applies
+  to the update at a workspace start. That download needs no deployment input.
 
 ### The archive in each deploy
 
@@ -91,9 +89,7 @@ steps for the archive:
   The key ID is the ID of the token. The secret key is the SHA-256 digest
   of the token value.
 - The run masks that secret key in its log.
-- A new archive reaches the next build of each org image. A refresh keeps
-  the installed runner. So an existing image keeps its runner until its
-  next build.
+- A new archive reaches the next build or refresh of each org image.
 - A new archive also changes the version of the app's own software. So the
   disk of each existing workspace gets the new archive at its next
   workspace start. The restart of an archived sandbox updates nothing, as
@@ -122,7 +118,7 @@ the rest of the app's own sandbox software.
   of its version, which `CF_VERSION_METADATA` gives.
 - An older Worker version answers 409 to the digest of a newer deploy. The
   deploy then asks again.
-- A deploy by hand sets no new token, so it builds no software image. Builds
-  of an org without an org image then install the app's own software.
+- A deploy by hand sets no new token, so it builds no software image. Image
+  jobs run the software step when no matching software image is ready.
 - After the wait ends, the 15-minute Cron Trigger moves an unfinished
   build on, until it ends or reaches its time limit of 60 minutes.

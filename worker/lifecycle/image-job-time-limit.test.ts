@@ -20,6 +20,11 @@ const FAILURE =
 
 it('ends an install that never exits at the original build deadline after phase changes and reconstruction', async () => {
   const fixture = await backendFixture()
+  await fixture.runtime.env.DB.prepare(
+    'UPDATE settings SET install_script = ? WHERE org_id = ?',
+  )
+    .bind('echo build-install', fixture.org.id)
+    .run()
   const image = await imageRetryFixture(fixture)
   await image.tick(TEST_TIME + 3_000_000)
   await image.tick(TEST_TIME + 3_001_000)

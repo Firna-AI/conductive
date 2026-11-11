@@ -143,13 +143,7 @@ export function buildSandboxIntent(
       purposeId: job.buildId,
     },
     input: {
-      snapshotName:
-        (job.kind === 'refresh' &&
-        job.previousProviderAccount === job.providerAccount
-          ? job.previousImageName
-          : null) ??
-        job.softwareImageName ??
-        undefined,
+      snapshotName: job.softwareImageName ?? undefined,
       name: `image-${job.buildId}`,
       env: repositoryEnvironment(
         capturedRepositoryLocations(

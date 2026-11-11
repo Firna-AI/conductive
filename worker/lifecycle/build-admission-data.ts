@@ -56,8 +56,7 @@ export async function insertBuild(
   },
 ): Promise<void> {
   const version =
-    input.softwareVersion ??
-    (input.kind === 'build' ? await softwareVersion(input.software) : null)
+    input.softwareVersion ?? (await softwareVersion(input.software))
   const scriptRevision =
     input.installScriptRevision === undefined
       ? await installScriptRevision(input.installScript)
@@ -74,9 +73,7 @@ export async function insertBuild(
         input.orgId,
         input.kind,
         input.settingsRevision,
-        input.kind === 'refresh'
-          ? (input.previousRunnerProtocolVersion ?? 1)
-          : RUNNER_PROTOCOL_VERSION,
+        RUNNER_PROTOCOL_VERSION,
         input.userId,
         input.now,
         input.providerAccount,
@@ -91,7 +88,6 @@ export async function insertBuild(
        SELECT ?, 'create', ?, ?, ?, ?, ?, ?, ?, ?, ?,
          (SELECT snapshot_name FROM software_images
           WHERE provider_account = ? AND version = ? AND state = 'ready'
-          AND ? = 'build'
           ORDER BY started_at DESC, id DESC LIMIT 1)
        WHERE EXISTS (SELECT 1 FROM image_builds WHERE id = ?)`,
       )
@@ -107,8 +103,7 @@ export async function insertBuild(
         version,
         scriptRevision,
         input.providerAccount,
-        input.softwareVersion ?? null,
-        input.kind,
+        version,
         input.id,
       ),
     db

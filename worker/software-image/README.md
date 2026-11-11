@@ -5,8 +5,8 @@ version. The image holds the provider's base image and the app software.
 It holds no repository, org data, or credential.
 Its build receives no app environment variable.
 The [org lifecycle](../lifecycle/README.md) owns org builds and their pins.
-Each org build starts from the ready image of its version, or from the
-provider's base image without one.
+Each org build and refresh starts from the ready image of its version, or
+from the provider's base image without one.
 
 ## Responsibilities
 

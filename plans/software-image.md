@@ -158,9 +158,12 @@ Each item marked "my call" is a design call of the planning agent, made on
      estimate passes the budget runs alone. At most 8 Git commands run at
      once, so that the polls stay within the provider's request limit.
    - At the start of each image job, the Worker reads the size of each
-     repository from GitHub with one installation token that can read only
-     the metadata of those repositories. It revokes that token before the
-     first copy starts. A repository with no size gets the least estimate.
+     repository from GitHub with metadata-only installation tokens: one for
+     each installation of the job's repositories, each named for at most 500
+     of them, because GitHub limits a token to one installation and 500
+     repositories. It revokes every metadata token before the first copy
+     starts. A repository with no size gets the least estimate. My call of 11
+     November 2026, from finding 2 of the Milestone 6 workspace.
 9. **One name for our software.** Decision 1 E. One name in the Worker
    names our software in the build log and in the start step, such as
    "Installing the agent and terminal software" and "Updating the agent
@@ -965,30 +968,31 @@ Depends on: 3
 - [x] Pin the ready software image for a later build, as for a first
       build, and copy each repository fresh. Branch:
       `conductor/later-builds-from-software-image`, PR #194.
-- [ ] Skip the install step when the install script is empty.
+- [x] Skip the install step when the install script is empty.
 - [x] Tests: a later build with a ready software image starts from it and
       runs no software command. A later build without one runs the
       software step after the copy. Branch:
       `conductor/later-builds-from-software-image`, PR #194.
-- [ ] Test: a build with an empty script runs no install command.
+- [x] Test: a build with an empty script runs no install command.
 - [x] Update `image/install.md`, `worker/lifecycle/README.md`, and
       `worker/lifecycle/image-builds.md` for the later build. Branch:
       `conductor/later-builds-from-software-image`, PR #194.
-- [ ] Update the same docs for the skip of an empty install script.
+- [x] Update the same docs for the skip of an empty install script.
 
 ## Milestone 5: Clean refreshes
 
 Depends on: 4
 
-- [ ] Run each refresh as a clean build with the install script and the
+- [x] Run each refresh as a clean build with the install script and the
       repositories of the newest good build.
-- [ ] Delete the start from the last org image for image jobs.
-- [ ] Return refreshes to the Cloud computer tab with their log and their
+- [x] Delete the start from the last org image for image jobs.
+- [x] Return refreshes to the Cloud computer tab with their log and their
       result.
-- [ ] Tests: a refresh after a push and a daily refresh start from the
+- [x] Tests: a refresh after a push and a daily refresh start from the
       software image and run the install script of the newest good build.
       A saved script change does not reach a refresh. A failed refresh
       keeps the last good image.
+      Evidence: `.context/software-image/clean-refresh/report.md`.
 
 ## Milestone 6: Parallel copies
 

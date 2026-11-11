@@ -13,6 +13,11 @@ const backendFixture = setupBackendTests()
 it('resumes saved build progress on the next alarm after a transient provider error', async () => {
   const fixture = await backendFixture()
   const { images, org, user, boat, runtime } = fixture
+  await runtime.env.DB.prepare(
+    'UPDATE settings SET install_script = ? WHERE org_id = ?',
+  )
+    .bind('echo build-install', org.id)
+    .run()
   const id = await startImageBuild(images, {
     orgId: org.id,
     userId: user.id,

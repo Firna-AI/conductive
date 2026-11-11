@@ -23,6 +23,11 @@ it.each(['first', 'later'] as const)(
     const fixture =
       kind === 'first' ? await withoutOrgImage() : fixtureForTest()
     const { images, org, user, boat } = fixture
+    await images.env.DB.prepare(
+      'UPDATE settings SET install_script = ? WHERE org_id = ?',
+    )
+      .bind('echo build-install', org.id)
+      .run()
     const name = await seedReadySoftwareImage(images.env.DB)
     const id = await startImageBuild(images, {
       orgId: org.id,
@@ -60,6 +65,11 @@ it.each([
     const fixture =
       kind === 'first' ? await withoutOrgImage() : fixtureForTest()
     const { images, org, user, boat } = fixture
+    await images.env.DB.prepare(
+      'UPDATE settings SET install_script = ? WHERE org_id = ?',
+    )
+      .bind('echo build-install', org.id)
+      .run()
     if (scenario !== 'missing')
       await seedReadySoftwareImage(
         images.env.DB,
@@ -99,10 +109,13 @@ it.each([
   },
 )
 
-it('keeps a later refresh on its org image', async () => {
+it('pins a ready software image for a clean refresh and runs the built install script', async () => {
   const fixture = fixtureForTest()
   const { images, org, user, boat } = fixture
-  await seedReadySoftwareImage(images.env.DB)
+  const name = await seedReadySoftwareImage(images.env.DB)
+  await images.env.DB.prepare(
+    "UPDATE image_build_jobs SET install_script = 'echo built-install' WHERE build_id = 'published-image'",
+  ).run()
   const id = await startImageBuild(images, {
     orgId: org.id,
     userId: user.id,
@@ -112,10 +125,13 @@ it('keeps a later refresh on its org image', async () => {
   await advanceImageBuild(images, org.id, id)
   expect(
     (await readBuildJob(images.env.DB, org.id, id)).softwareImageName,
-  ).toBeNull()
-  expect(boat.starts[0].from).toBe('last-good-image')
+  ).toBe(name)
+  expect(boat.starts[0].from).toBe(name)
   await finishImageBuild(fixture, id)
   expect(
     boat.commandRequests.filter((command) => command.detached),
-  ).toHaveLength(0)
+  ).toHaveLength(1)
+  expect(
+    boat.commandRequests.find((command) => command.detached)?.command,
+  ).toContain(btoa('echo built-install'))
 })
