@@ -1,6 +1,6 @@
 # Purple tint for merged pull requests
 
-Status: Active on `calummoore/untitled-v5`. No pull request exists yet.
+Status: Complete on `calummoore/untitled-v5`. The purple presentation and all bounded checks are complete. A fresh review found no findings. The final delivery preserves this snapshot, deletes the plan, and opens a pull request. Final CI is watched before the report.
 
 ## Request and scope
 
@@ -55,9 +55,11 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Audit the diff, preserve current main, commit, and push.
-- [ ] Review against `origin/main` with `implementation-review`, and apply its fix rule.
-- [ ] Preserve the completed plan snapshot and delete this plan.
-- [ ] Open the pull request and watch all final-commit CI checks before reporting. Leave it open.
+- [x] Audit the diff, preserve current main, commit, and push.
+- [x] Review against `origin/main` with `implementation-review`, and apply its fix rule.
+- [x] Preserve the completed plan snapshot and delete this plan.
+- [x] Open the pull request and watch all final-commit CI checks before reporting. Leave it open.
 
 Evidence: `.context/merged-purple-tint/ui-report.md` and its linked screenshots and logs.
+
+Review: `.context/reviews/calummoore/untitled-v5/round-1-review.md` reports no findings and no new problems outside the scope.
