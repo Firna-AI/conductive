@@ -33,8 +33,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'drag-and-drop-attachments',
     area: 'agents-and-chat',
     name: 'Drag and drop attachments',
-    status: 'planned',
-    note: 'Dropping files into the message box, each as a chip in the text, is planned. Use the attachment button today.',
+    status: 'in-progress',
+    note: 'Dropping files into the message box, each as a chip in the text, is in progress. Use the attachment button today.',
     due: null,
   },
   {
@@ -134,7 +134,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Answers show Markdown, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
+    note: 'Answers show Markdown, tables, lists, and code, with real headings planned. Diagrams, maths, media, and Run buttons are under consideration.',
   },
   {
     id: 'chat-links',
@@ -148,8 +148,8 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     id: 'session-links',
     area: 'agents-and-chat',
     name: 'Session links',
-    status: 'planned',
-    note: 'Links to individual chat sessions are planned.',
+    status: 'in-progress',
+    note: 'Links that open individual chat sessions, shown as chips in chat, are in progress.',
     due: null,
   },
   {
