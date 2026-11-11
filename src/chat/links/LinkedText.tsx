@@ -1,7 +1,11 @@
 import { entryName } from '../../../docs/mockups/src/components/chat/entryPaths'
 import { FileChip } from '../../../docs/mockups/src/components/chat/FileChip'
 import { SentFileChip } from '../../../docs/mockups/src/components/chat/SentFileChip'
-import { WorkspaceChip } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
+import { SessionChip } from '../../../docs/mockups/src/components/chat/SessionChip'
+import {
+  WorkspaceChip,
+  type ChipOpener,
+} from '../../../docs/mockups/src/components/chat/WorkspaceChip'
 import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
 import type { FileEntry } from '../../shared/files'
 import type { Attachment } from '../../shared/messages'
@@ -19,32 +23,34 @@ import {
   type MentionLookup,
 } from './chat-parts'
 import { chipOf, useChatLinks } from './LinksContext'
+import { sessionChipOf, useLinkedSession } from './session-links'
 import type { LinkTarget } from './workspace-links'
 
 /**
  * A workspace in a sent message or an answer: a link of the app to the page
- * that the link names. A plain click opens it in the same window, as the
- * other links of the app do. A click with a modifier key stays with the
- * browser, such as a new tab.
+ * that the link names. A link to a known session shows as its session chip.
+ * A plain click opens it in the same window, as the other links of the app
+ * do. A click with a modifier key stays with the browser, such as a new tab.
  */
 function LinkChip(props: { target: LinkTarget }) {
   const { open } = useChatLinks()
-  const { to } = props.target
-  return (
-    <WorkspaceChip
-      opener={(chip) => (
-        <a
-          {...chip}
-          href={to}
-          onClick={(event) => {
-            if (!open || !isPlainClick(event)) return
-            event.preventDefault()
-            open(to)
-          }}
-        />
-      )}
-      workspace={chipOf(props.target.workspace)}
+  const session = useLinkedSession(props.target)
+  const { to, workspace } = props.target
+  const opener = (chip: ChipOpener) => (
+    <a
+      {...chip}
+      href={to}
+      onClick={(event) => {
+        if (!open || !isPlainClick(event)) return
+        event.preventDefault()
+        open(to)
+      }}
     />
+  )
+  return session ? (
+    <SessionChip opener={opener} session={sessionChipOf(workspace, session)} />
+  ) : (
+    <WorkspaceChip opener={opener} workspace={chipOf(workspace)} />
   )
 }
 

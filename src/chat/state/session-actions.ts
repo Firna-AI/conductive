@@ -16,12 +16,14 @@ function sameTabs(current: WorkspaceView | null, next: WorkspaceView): boolean {
 
 /**
  * Shows a session in the chat, saves the view, and loads the session's
- * history once. The promise ends when the history has loaded.
+ * history once. The promise ends when the history has loaded. Each call is
+ * a choice of a shown session, which an older address lookup yields to.
  */
 export async function selectSession(
   context: ChatContext,
   sessionId: string,
 ): Promise<void> {
+  context.tabChoices.count += 1
   const snapshot = context.store.get()
   if (!snapshot.sessions.some((item) => item.id === sessionId)) return
   const view = viewShowing(snapshot.view, sessionId)

@@ -1,14 +1,12 @@
 import type { Attachment } from '../../fixtures/attachments'
 import type { MentionEntry } from '../../fixtures/fileMentions'
-import type { WorkspaceRow } from '../workspaces/sections'
-import { useChatWorkspaces } from './chatWorkspaces'
+import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
 import { DraftFileChip, type ChipUpload } from './DraftFileChip'
 import { draftParts } from './draftMarks'
 import { entryName } from './entryPaths'
 import { FileChip } from './FileChip'
-import { chipOf, iconOf } from './MessageText'
-import { linkedWorkspace, textParts } from './workspaceLinks'
-import { WorkspaceChip } from './WorkspaceChip'
+import { iconOf, LinkChip } from './MessageText'
+import { linkTarget, textParts, type LinkTarget } from './workspaceLinks'
 import styles from './DraftText.module.css'
 
 /** A part of a draft as the field draws it: text, the caret, or a chip. */
@@ -17,18 +15,18 @@ type DraftItem =
   | { kind: 'caret' }
   | { kind: 'file'; file: Attachment }
   | { kind: 'mention'; entry: MentionEntry }
-  | { kind: 'workspace'; row: WorkspaceRow }
+  | { kind: 'link'; target: LinkTarget }
 
 /**
  * The parts of a draft: its text, the chip of each attached file at its
- * mark, and the chip of each link to a workspace of the org and of each
- * mention of the tree. A mark of a file that the draft does not hold
- * shows nothing.
+ * mark, the chip of each link to a workspace of the org or to one of its
+ * sessions, and the chip of each mention of the tree. A mark of a file that
+ * the draft does not hold shows nothing.
  */
 function itemsOf(
   text: string,
   files: readonly Attachment[],
-  rows: readonly WorkspaceRow[],
+  rows: readonly ChatRow[],
 ): DraftItem[] {
   return draftParts(text).flatMap((part): DraftItem[] => {
     if (part.kind === 'file') {
@@ -40,9 +38,9 @@ function itemsOf(
         case 'mention':
           return { kind: 'mention', entry: piece.entry }
         case 'link': {
-          const row = linkedWorkspace(piece.href, rows)
-          return row
-            ? { kind: 'workspace', row }
+          const target = linkTarget(piece.href, rows)
+          return target
+            ? { kind: 'link', target }
             : { kind: 'text', text: piece.source }
         }
         case 'attached':
@@ -59,19 +57,15 @@ function itemsOf(
 const caretItem: DraftItem = { kind: 'caret' }
 
 function isChip(item: DraftItem): boolean {
-  return (
-    item.kind === 'file' || item.kind === 'mention' || item.kind === 'workspace'
-  )
+  return item.kind === 'file' || item.kind === 'mention' || item.kind === 'link'
 }
 
 /**
  * The draft holds a chip: an attached file, a link to a workspace of the
- * org, or a mention of a file or a folder of the tree.
+ * org or to one of its sessions, or a mention of a file or a folder of the
+ * tree.
  */
-export function holdsChips(
-  draft: string,
-  rows: readonly WorkspaceRow[],
-): boolean {
+export function holdsChips(draft: string, rows: readonly ChatRow[]): boolean {
   return draftParts(draft).some(
     (part) => part.kind === 'file' || itemsOf(part.text, [], rows).some(isChip),
   )
@@ -88,12 +82,14 @@ function uploadOf(file: Attachment): ChipUpload {
 
 /**
  * The draft of a message box as plain text, with each attached file, each
- * link to a workspace of the org, and each mention of the tree as a chip.
- * A chip is one unit of the text, which the caret steps over and Backspace
- * removes whole, so it is not editable inside the editable field. Each chip
- * starts with the cell of its icon, which a pointer turns into a × that
- * removes it. In the app a press on the name of a file chip opens the file,
- * and a press on the name of an attached file opens nothing.
+ * link to a workspace of the org or to one of its sessions, and each
+ * mention of the tree as a chip. A link to a session that the chat read is
+ * a session chip. A chip is one unit of the text, which the caret steps
+ * over and Backspace removes whole, so it is not editable inside the
+ * editable field. Each chip starts with the cell of its icon, which a
+ * pointer turns into a × that removes it. In the app a press on the name of
+ * a file chip opens the file, and a press on the name of an attached file
+ * opens nothing.
  *
  * `files` are the files of the draft, by the draft IDs of their marks. A
  * view runs no script, so `caret` draws the caret at that index of the
@@ -148,17 +144,12 @@ export function DraftText(props: {
                 />
               </span>
             )
-          case 'workspace': {
-            const chip = chipOf(item.row)
+          case 'link':
             return (
               <span contentEditable={false} key={index}>
-                <WorkspaceChip
-                  removal={{ name: `${chip.label} ${chip.name}`, pointer }}
-                  workspace={chip}
-                />
+                <LinkChip pointer={pointer} target={item.target} />
               </span>
             )
-          }
         }
       })}
     </>

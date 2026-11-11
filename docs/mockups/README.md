@@ -46,7 +46,8 @@ full desktop layout.
 
 [The design](design.md) gives the style of the app, the layouts of the
 desktop and the phone, the design tokens, and the parts that the screens
-share. Its linked pages give the parts of [the chat](design-chat.md) and
+share. Its linked pages give the parts of
+[the workspace](design-workspace.md), of [the chat](design-chat.md), and
 of [the operator section](design-operator.md).
 
 ## The catalogue
@@ -121,8 +122,10 @@ a dropped folder. [The chat](design-chat.md) gives the design of each part.
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
   `mockups:serve` offers a control for each part of the state. The routine
   screen declares its states in `src/screens/routineState.ts` in the same
-  way. The composer states of the workspace screen live in
-  `src/screens/composerStates.ts`.
+  way. The tab and composer states of the workspace screen live in
+  `src/screens/chatStates.ts`. `tabStates` covers the session, file, and
+  image tabs of the centre column. `composerStates` covers the composer,
+  with its links, mentions, attached files, and drops.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from

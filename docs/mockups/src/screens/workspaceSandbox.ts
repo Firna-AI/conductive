@@ -5,7 +5,7 @@ import type {
   SandboxPanelState,
 } from '../components/workspace/sandboxNoticeState'
 import { orgSuspendedReason } from '../components/orgs/suspension'
-import { conversations } from '../fixtures/conversations'
+import { conversations, type ConversationKey } from '../fixtures/conversations'
 import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { ActivityStatus } from '../fixtures/workspaces'
@@ -14,16 +14,25 @@ import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
 /**
+ * The chats of a session whose turn ended while another session of the
+ * workspace works: the second session after it sent a message to the first.
+ */
+const otherSessionWorks: ReadonlySet<ConversationKey> = new Set([
+  'session-links',
+])
+
+/**
  * The state of the open workspace, for its header and its row: the state
  * of its sandbox, or, on a ready sandbox, whether its agent waits for the
- * user or works.
+ * user or works. The agent of any session of the workspace counts.
  */
 export function activityOf(state: WorkspaceState): ActivityStatus {
   // A refused start leaves the sandbox stopped.
   if (state.sandbox === 'refused') return 'stopped'
   if (state.sandbox !== 'ready') return state.sandbox
   if (conversations[state.conversation].some(isPendingCommand)) return 'input'
-  return isRunning(state) ? 'working' : 'ready'
+  const works = isRunning(state) || otherSessionWorks.has(state.conversation)
+  return works ? 'working' : 'ready'
 }
 
 /**

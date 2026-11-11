@@ -34,7 +34,7 @@ how a screen is built, and links to the other pages.
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
 | `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 25 MB, sent files, the file tab of a sent screenshot, and a first message with files |
-| `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, and a link of another org |
+| `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
 | `app/files`         | All files, Changes with its summary, and a file, Markdown, diff, and image tab |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
@@ -42,7 +42,7 @@ how a screen is built, and links to the other pages.
 | `app/tools`         | The terminal, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, and This Mac      |
-| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, create a routine, mention a file, drop a file |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, link a workspace, open a session link, create a routine, mention a file, drop a file |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,

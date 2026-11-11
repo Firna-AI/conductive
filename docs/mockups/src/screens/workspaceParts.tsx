@@ -12,7 +12,7 @@ import {
   archivedSections,
   suspendedSections,
   workspaceSections,
-  type OpenWorkspace,
+  type ChangedWorkspace,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import {
@@ -51,6 +51,7 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
     case 'session':
     case 'new-session':
     case 'linked-session':
+    case 'later-session':
       return undefined
   }
 }
@@ -178,16 +179,16 @@ export function workspaceSidebar(props: {
   status: ActivityStatus
   suspended: boolean
   viewer: Membership
-  /** The workspaces that the create flow made by then. */
-  created: readonly OpenWorkspace[]
+  /** The rows that differ from the list of when the app opens, by then. */
+  changed: readonly ChangedWorkspace[]
   /** The last day of Restore of the archived workspace has not passed. */
   restoreOpen: boolean
 }): ReactNode {
-  const { workspace, status, suspended, viewer, created } = props
+  const { workspace, status, suspended, viewer, changed } = props
   if (status !== 'archived') {
     const sections = suspended
       ? suspendedSections(workspace)
-      : workspaceSections({ workspace, status }, undefined, created)
+      : workspaceSections({ workspace, status }, undefined, changed)
     return (
       <Sidebar
         org={orgs.acme}

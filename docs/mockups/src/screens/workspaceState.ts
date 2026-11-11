@@ -10,7 +10,7 @@ import { bannerStates } from '../fixtures/pullRequests'
 import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { openableWorkspaces } from '../fixtures/workspaces'
-import { composerStates } from './composerStates'
+import { composerStates, tabStates } from './chatStates'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -94,29 +94,8 @@ export const workspaceStateSchema = {
     ports: { enum: previewStates },
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
-    /**
-     * The tab of the centre column: the first session, a new session, the
-     * linked session that a member's message opened from the first session,
-     * or a file, a Markdown preview, a diff, or a file whose name the app
-     * does not know, such as a file that moved. An image of the branch shows
-     * as its picture, or with the state of an image that the browser cannot
-     * draw. `attachment` is the copy of an attached screenshot, which a
-     * press on its sent chip opens. A phone shows a file in Files.
-     */
-    tab: {
-      enum: [
-        'session',
-        'new-session',
-        'linked-session',
-        'code',
-        'markdown',
-        'diff',
-        'unnamed-file',
-        'image',
-        'image-not-drawn',
-        'attachment',
-      ],
-    },
+    /** The tab of the centre column, as `tabStates` says. */
+    tab: { enum: tabStates },
     /**
      * The tab row, from decisions 186 to 188: each tab where it opened, the
      * drag of a tab, the code file after its move between the two
@@ -127,7 +106,7 @@ export const workspaceStateSchema = {
      * sessions.
      */
     tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
-    /** The composer, in one of the states that `composerStates` gives. */
+    /** The composer, as `composerStates` says. */
     composer: { enum: composerStates },
     /** The user drags the handle of the right column to widen it. */
     resize: { enum: ['none', 'right'] },

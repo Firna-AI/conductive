@@ -29,6 +29,7 @@ import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { archivedRestore, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
+import { OpenSessionAddress } from './session-address'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
 import { useArchiveActions } from './useArchiveActions'
@@ -88,6 +89,8 @@ export function WorkspaceScreen(props: {
   org: OrgSummary
   workspaceId: string
   view: readonly string[]
+  /** The session that the address names, which the chat then shows. */
+  session?: string
   viewer: User
 }) {
   const app = useApp()
@@ -226,7 +229,17 @@ export function WorkspaceScreen(props: {
   )
   // The actions of the screen for the palette.
   const paletteOffer = <WorkspacePaletteActions chat={chat} context={context} />
-  const tabOpen = <ResumeOnTabOpen context={context} />
+  const tabOpen = (
+    <>
+      <ResumeOnTabOpen context={context} />
+      <OpenSessionAddress
+        chat={chat}
+        orgId={props.org.id}
+        session={props.session}
+        workspaceId={workspace.id}
+      />
+    </>
+  )
   if (phone) {
     const view = phoneView(props.view)
     const archived = sandbox === 'archived'

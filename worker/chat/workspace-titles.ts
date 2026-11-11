@@ -6,6 +6,7 @@ import {
 import type { AppEnv } from '../env'
 import { warnWorker } from '../warnings'
 import { errorSummary } from '../warning-values'
+import { agentToolTaskText } from '../tools/message-text'
 import type { ChatStore } from './store'
 import { requestWorkspaceTitle } from './title-model'
 import type { ChatDependencies } from './types'
@@ -89,7 +90,7 @@ export class WorkspaceTitles {
       const name = await requestWorkspaceTitle(
         this.env.CONDUCTIVE_TITLE_MODEL,
         this.dependencies.runTitleModel,
-        source,
+        agentToolTaskText(source, this.env.APP_ORIGIN),
       )
       if (!name) return
       await this.store.run(async () => {
