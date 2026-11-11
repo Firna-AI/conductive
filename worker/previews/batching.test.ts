@@ -1,6 +1,12 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { barrier, openPreview } from './stream-test-support'
+import { relayResponse } from './relay.test-support'
+import {
+  barrier,
+  bodySource,
+  holdFirstAccessRead,
+  openPreview,
+} from './stream-test-support'
 import { createToolsHarness, type ToolsHarness } from './test-support'
 
 let harness: ToolsHarness
@@ -70,6 +76,38 @@ it('batches queued socket frames using a new authorization read after their arri
   expect(reads).toBe(2)
   harness.env.DB = database
   browser.close()
+})
+
+it('passes response data that arrives during a check in one later batch after a new read', async () => {
+  const setup = await openPreview(harness)
+  const source = bodySource()
+  const base = harness.dependencies.fetch
+  harness.dependencies.fetch = async (request) =>
+    new URL(request.url).hostname === 'boat.dev'
+      ? base(request)
+      : relayResponse(source.stream)
+  const response = await setup.handler.proxy(
+    setup.previewRequest(setup.previewUrl),
+  )
+  const access = holdFirstAccessRead(harness)
+  try {
+    const reader = response.body?.getReader()
+    const requested = source.nextPull()
+    const first = reader?.read()
+    await requested
+    source.send('first')
+    await access.started
+    source.send('second')
+    source.send('third')
+    access.release()
+    const text = new TextDecoder()
+    expect(text.decode((await first)?.value)).toBe('first')
+    expect(text.decode((await reader?.read())?.value)).toBe('secondthird')
+    expect(access.reads).toBe(2)
+    await reader?.cancel()
+  } finally {
+    access.restore()
+  }
 })
 
 it('drains buffered socket data before forwarding the peer close code and reason', async () => {
