@@ -91,10 +91,11 @@ first.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
-  check. Each command takes the shape of the connection's protocol
-  version. Version 1 gets the real login in each `turn` and `message`
-  command. Version 2 gets a turn token in each `turn` command, after the
-  running state commits, and no credential in a `message` command.
+  check and the current branches that `branch-data.ts` reads. Each command
+  takes the shape of the connection's protocol version. Version 1 gets the
+  real login in each `turn` and `message` command. Version 2 gets a turn
+  token in each `turn` command, after the running state commits, and no
+  credential in a `message` command.
   `gatewayRunnerCommand` in `runner-gateway-command.ts` builds that
   version 2 command. Delivery skips a command whose `deliveredTo` names
   the current connection.

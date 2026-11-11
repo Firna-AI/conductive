@@ -72,7 +72,8 @@ chips.
   the chat shares with the file preview and the mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, the message field of each composer, and Stop.
+  sends, the fixed prompts of the pull request bar, the message field of
+  each composer, and Stop.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
   moves, the login of each session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,

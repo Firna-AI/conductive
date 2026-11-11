@@ -44,8 +44,8 @@ These facts belong to this implementation, not to the protocol docs.
   A malformed author gives a local warning and keeps those values. The turn continues.
   A workspace gets this behaviour only from an org image built with this runner.
 - The [agent input guide](agent-input.md) describes the context folder,
-  the instructions that each session keeps, the sender line, and attached
-  files.
+  the instructions that each session keeps with their branches, the sender
+  line and the branch line of each message, and attached files.
 - When the running agent cannot take the model or the effort of a message
   at once, that message waits for the result of the agent. A new agent
   process then takes the waiting input on the same conversation and turn
@@ -100,11 +100,12 @@ These facts belong to this implementation, not to the protocol docs.
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, and
   `turns` records of accepted turns. It holds the conversation reference and
-  the agent instructions of each session. It also holds the last
-  `start.updated` and `workspace.title` events, and the ID of each answered
-  [report request](reports.md). It holds no other command data, no
-  login, and no turn token. The runner saves a turn record before the
-  session save. The saves of `turn.started` and its end update that record.
+  the agent instructions of each session, with their branches. It also
+  holds the last `start.updated` and `workspace.title` events, and the ID of
+  each answered [report request](reports.md). It holds no other command
+  data, no login, and no turn token. The runner saves a turn record before
+  the session save. The saves of `turn.started` and its end update that
+  record.
   A turn stopped before its start also has a saved end record.
   The confirm of the end removes the record.
 - A failed save rejects only its own call, and later saves and events
@@ -133,14 +134,9 @@ These facts belong to this implementation, not to the protocol docs.
   unavailable. The state file holds no record of its initial files.
   A changed-file read failure also keeps the turn's completed state and
   marks its files as unavailable.
-- File reads and diffs use the shared UTF-8 decoder and keep a leading byte
-  order mark. A valid path can hold a tab, a newline, or a backslash. Each
-  path must still resolve inside the repository and pass the `.git` check.
-- File reads cap bytes at `FILE_READ_MAX_BYTES`, also when a caller asks
-  for more. Diffs use the same cap for each file version and for the patch.
-  The runner checks file and blob sizes before it loads their bytes.
-  Git stops patch output at the cap. An oversized result returns
-  `file_too_large`. Patch size reports the first byte over the limit.
+- The [file reports guide](file-reports.md) gives the base of each
+  comparison, the counts of each changes report, and the limits of file
+  reads and diffs.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no credential and starts no agent.
 - After a start from a saved snapshot, the sandbox provider restores the
@@ -169,8 +165,9 @@ receipts, and the listening-port scan and scheduling boundaries.
 
 ## Preview relay
 
-The [preview relay guide](preview-relay.md) gives its entry points, build,
-service, and socket activation.
+The [preview relay guide](preview-relay.md) gives what the relay does, its
+entry points, how it listens, its build, and its separate service with
+socket activation.
 
 ## Commands
 
@@ -239,59 +236,8 @@ tools that time the first agent start after a resume.
 
 ## Key code
 
-- `src/main.ts` and `src/config.ts`: the service entry point, the variables
-  and their defaults, the state file, and the reconnect after each drop.
-- [`src/relay/server.ts`](src/relay/server.ts): starts the preview relay.
-  The HTTP and upgrade handlers share the header rules and target connection code.
-- `src/runner.ts`: `Runner` joins the connection, agents, file and port
-  reports, and report requests.
-- `src/context-folder.ts`: `prepareContextFolder` adds the local exclude
-  rule and makes the context folders before startup reports.
-- `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
-- [`OutputSanitizer`](../src/shared/output-sanitizer.ts) and the
-  [output field policy](../src/shared/output-fields.ts): the one filter
-  shared with the Worker. The runner supplies the workspace and turn tokens.
-- [`event-limits.ts`](../src/shared/event-limits.ts): portable UTF-8 byte
-  accounting and the shared tool and turn-summary caps.
-- `src/proc-ports.ts`, `src/socket-table.ts`, and `src/port-metadata.ts`:
-  socket-table reads, listener filters, and safe process names and folders.
-- `src/ports.ts`: `PortReporter`, its stable list, scan queue, and timer lifetime.
-- `src/port-report-budget.ts`: complete private port labels or whole-label
-  omission within the report budget, after runner credential filtering.
-- `src/file-parts.ts`: full report parts and bounded tree deltas.
-- `src/file-updates.ts`: the full tree or the tree delta of each scan, and
-  the check for a new changes report.
-- `src/link.ts`, `src/state.ts`, `src/socket.ts`, `src/commands.ts`, and
-  `src/stored-events.ts`: the hello, welcome, confirm, and resend rules, the
-  state file, the WebSocket, and checks of messages and saved events.
-- `src/serial-queue.ts`: the ordered queue of the saves and the events. A
-  failed step rejects only its own call, and later steps still run.
-- `src/report-state.ts`: the saved `start.updated` and `workspace.title`
-  events and the answered report request IDs of the state file.
-- `src/engine.ts`, `src/engine-runtime.ts`, and `src/turn-output.ts`:
-  session queues, cancelable turns, message delivery, controls, and text deltas.
-- `src/engine-disposal.ts`: one close path for deferred model changes, turn
-  ends, Stop, and shutdown.
-- `src/engine-pending.ts`: accepted turn saves and the ends of pending starts.
-- `src/providers/`: the Claude and Codex adapters, their event mapping, and
-  each agent environment. `claude-message.ts` joins whole Claude messages.
-  `message.ts` puts the sender line before the text of each message.
-  `lifetime.ts` owns each agent process until it exits, with its kill delay.
-  `attachment-description.ts` describes each attached file to both agents.
-  The [tool entry points](agent-tools.md#key-code) cover both MCP servers,
-  and the [login entry points](agent-logins.md#key-code) cover the credentials.
-- `src/files.ts`, `src/repository.ts`, and `src/checkpoint.ts`: the scan
-  queue, the file tree, the branch changes, bounded reads, and the files of
-  one turn.
-- `src/restore-end.ts`: `onRestoreEnd` waits for the restore marker, so the
-  runner can move its repository watch to the live folder.
-- `src/git-index.ts`, `src/git-entries.ts`, and `src/git-diff.ts`: temporary
-  indexes and objects for Git comparisons. The real index stays unchanged.
-- `src/git.ts`: Git commands and merge-base selection, which prefers the fetched remote-tracking base over a local branch.
-- `src/git-paths.ts`: shared Git namespace states for paths and parents.
-- `src/measure.ts`, `src/compare.ts`, `scripts/`, and `service/`: the
-  first-start measurement and its comparison, the build, the install
-  script, the Codex check, and the systemd unit.
+[Key code](key-code.md) lists the entry points of the runner, and the
+guides that give the entry points of each part.
 
 ## Related docs
 

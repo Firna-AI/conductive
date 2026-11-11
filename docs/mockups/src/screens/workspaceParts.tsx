@@ -15,6 +15,7 @@ import {
   type ChangedWorkspace,
 } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { unpushedWork } from '../fixtures/barActions'
 import {
   creatingLog,
   firstSecondLog,
@@ -87,6 +88,15 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 }
 
 /**
+ * The changed paths of the branch after Continue: the changed files that
+ * moved to the new branch, or none. Any other branch shows every change.
+ */
+function changedPaths(state: WorkspaceState): readonly string[] | undefined {
+  if (state.branch !== 'continued') return undefined
+  return state.localWork === 'changes' ? unpushedWork.files : []
+}
+
+/**
  * The sandbox state in place of All files, Changes, and the content of an
  * open file: while the sandbox starts, while its start is refused, and
  * after a failed first start. A stopped sandbox, and one whose later start
@@ -115,6 +125,8 @@ export function filesPlaceholder(
 export function FilesContent(props: {
   state: WorkspaceState
   viewport: Viewport
+  /** What a phone shows at the top of the Checks tab: the bar's actions. */
+  checksTop?: ReactNode
 }) {
   const { state } = props
   const phone = props.viewport === 'mobile'
@@ -132,7 +144,9 @@ export function FilesContent(props: {
   return (
     <FilesPanel
       banner={state.banner}
+      checksTop={props.checksTop}
       edited={!isNew(state)}
+      only={changedPaths(state)}
       open={open}
       paths={state.paths}
       placeholder={placeholder}

@@ -16,6 +16,11 @@ function entries(paths: string[]): FileEntry[] {
 
 it('sends captured full trees and changes as bounded parts after filtering', async () => {
   const snapshot = emptySnapshot()
+  snapshot.changes = {
+    ...snapshot.changes,
+    unpushedCommits: 3,
+    uncommittedFileCount: 4,
+  }
   snapshot.entries = entries(
     Array.from({ length: 6 }, (_, index) => 'x'.repeat(9_000) + index),
   )
@@ -80,9 +85,18 @@ it('sends captured full trees and changes as bounded parts after filtering', asy
     displayPath: '[redacted]'.repeat(9_000) + index,
   }))
   expect(trees.flatMap((part) => part.entries)).toEqual(expectedEntries)
-  expect(changes.map((part) => [part.baseBranch, part.summary])).toEqual(
+  expect(
+    changes.map((part) => [
+      part.baseBranch,
+      part.unpushedCommits,
+      part.uncommittedFileCount,
+      part.summary,
+    ]),
+  ).toEqual(
     Array.from({ length: 3 }, () => [
       'main',
+      3,
+      4,
       { files: 6, added: 12, removed: 6 },
     ]),
   )

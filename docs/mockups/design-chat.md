@@ -1,9 +1,12 @@
 # The design of the chat
 
 This page belongs to [the design](design.md), which gives the style, the
-layouts, the design tokens, and the shared parts. This page gives workspace, session, and file chips,
-attached files and their drops, the picture of an image file, Markdown tables, and the work fold of a turn. It also gives the data that the chat does
-not have, and the files that the cloud computer could not read.
+layouts, the design tokens, and the shared parts. This page gives workspace,
+session, and file chips with the list of `@`, and attached files with their
+drops. It gives the picture of an image file, the Markdown tables of a
+reply and of a file preview, and the work fold of a turn. It also gives the
+data that the chat does not have, and the files that the cloud computer
+could not read.
 
 - `DraftFileChip` in `src/components/chat/` draws each attached file of a
   draft as a chip at its place in the text of the message box. It is one

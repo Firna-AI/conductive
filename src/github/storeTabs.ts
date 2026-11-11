@@ -34,6 +34,7 @@ export function sameStateEvent(eventNumber: number): WorkspaceEventEnvelope {
     changesRequestedBy: [...banner.changesRequestedBy],
     review: banner.review,
     pullRequest: {
+      headSha: banner.pullRequest.headSha,
       url: banner.pullRequest.url,
       title: banner.pullRequest.title,
       number: banner.pullRequest.number,

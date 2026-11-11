@@ -964,6 +964,8 @@ Tags: ui
 
 Depends on: 3, 4, 6
 
+Main integration notes: `.context/composer-file-drops/merge-justifications.md`.
+
 - [ ] Make the attach of each draft give the new file IDs at once, while
       the uploads run.
 - [ ] Bring the files of each draft in line with the marks of each new

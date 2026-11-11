@@ -107,3 +107,11 @@
   flex-direction: column;
   min-height: 0;
 }
+
+/* What the real chat and the action state of the page hold. */
+.readout {
+  flex-basis: 100%;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  white-space: pre-wrap;
+}

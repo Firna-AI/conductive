@@ -34,6 +34,20 @@ it('serves the member transcript of a closed session in archived and suspended w
     undefined,
     'Keep this conversation.',
   )
+  await fixture.changeWorkspace(WORKSPACE_ID, async (view) => {
+    await view.emit({
+      type: 'workspace.continued',
+      sessionId: session.id,
+      member: {
+        id: fixture.member.id,
+        githubLogin: 'teammate',
+        displayName: 'Teammate',
+        avatarUrl: null,
+      },
+      branch: 'teammate/next-task',
+      baseBranch: 'main',
+    })
+  })
   await fixture.fetch(
     sessionPath(fixture.org.id, WORKSPACE_ID, session.id),
     { title: 'Saved conversation' },
@@ -57,6 +71,23 @@ it('serves the member transcript of a closed session in archived and suspended w
   expect(first.markdown).toContain('## Octocat\n\nKeep this conversation.')
   expect(first.markdown).toContain(
     `https://app.conductive.test/orgs/${fixture.org.id}/workspaces/${WORKSPACE_ID}`,
+  )
+  const note =
+    '_Teammate continued on `teammate/next-task`, a new branch from `main`_'
+  expect(first.markdown.split(note)).toHaveLength(2)
+  expect(first.markdown.indexOf('Keep this conversation.')).toBeLessThan(
+    first.markdown.indexOf(note),
+  )
+  const concise = await fixture.fetch(
+    sessionTranscriptPath(fixture.org.id, WORKSPACE_ID, session.id, 'concise'),
+    undefined,
+    fixture.memberCookie,
+  )
+  expect(concise.status).toBe(200)
+  const summary: SessionTranscriptResponse = await concise.json()
+  expect(summary.markdown.split(note)).toHaveLength(2)
+  expect(summary.markdown.indexOf('Keep this conversation.')).toBeLessThan(
+    summary.markdown.indexOf(note),
   )
   expect(response.headers.get('Cache-Control')).toBe('no-store')
   await harness.env.DB.prepare(

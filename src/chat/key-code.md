@@ -103,6 +103,11 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/history.ts`: the shared history load of each session, and the
   watch that loads the history of each shown session.
 - `state/drafts.ts`: the draft identity, its moves, and its work in flight.
+- `state/message-send.ts`: `postMessage`, the post of one message and the
+  route of its reply, which a draft and a fixed prompt share.
+- `state/prompt-actions.ts`: `sendPrompt`, a fixed prompt to the session of
+  the chat, which changes no draft, as
+  [Fixed prompts](loads-and-sends.md#fixed-prompts) says.
 - `state/attachment-actions.ts`: attach, Try again, and Remove for the files
   of a draft. Each upload goes through the app's `uploadAttachment`, ends
   on its draft after a move, and stops with Remove and with the chat.

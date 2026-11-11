@@ -89,6 +89,31 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   ID. The notice "Your message didn't send" shows the Worker's plain
   message.
 
+## Fixed prompts
+
+The actions of the pull request bar send fixed prompts, as
+[Messages from the bar](../../docs/protocol/messages-and-attachments.md#messages-from-the-bar)
+says. `sendPrompt` of the controller, in
+[`state/prompt-actions.ts`](state/prompt-actions.ts), sends one:
+
+- It goes to the session of the chat: the session that the member saw
+  last, also while a file, a diff, or another tab of a phone shows.
+- It shares `postMessage` of [`state/message-send.ts`](state/message-send.ts)
+  with Send, so it follows each rule of a send: the model and the effort
+  of the session, its login, and a linked session that the reply names. A
+  send during a turn joins that turn.
+- It reads and changes no draft. The draft keeps its text, its files, its
+  identity, its uploads, and the client ID of a failed send.
+- A session whose login is missing gets no request, and the outcome is
+  `blocked`. A failed send shows the notice "Your message didn't send", as
+  a send from the composer does. Without an open session, nothing sends.
+- A second try of the same prompt in the same session keeps the client ID
+  of the prompt that did not send, so a lost reply makes no second message.
+  The same prompt in another session is a new message.
+- A reply that names a linked session shows the prompt there. No draft
+  moves, and the tab moves only as for a draft that cannot move.
+- A read-only workspace sends nothing.
+
 ## The message field
 
 - The message field of every composer is the chip text field of

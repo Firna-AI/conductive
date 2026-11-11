@@ -33,7 +33,12 @@ it('serves the last stored file tree and changes while the sandbox sleeps', asyn
   const context = await setupFilesHttp(harness, runtime)
   const { org, workspaceId, files, request, evict } = context
   const connected = await connectWorkspaceFiles(files)
-  for (const event of recordedRunnerFileEvents) connected.runner.emit(event)
+  for (const event of recordedRunnerFileEvents)
+    connected.runner.emit(
+      event.type === 'changes.updated'
+        ? { ...event, changes: { ...event.changes, uncommittedFileCount: 4 } }
+        : event,
+    )
   connected.runner.emit({ type: 'files.unavailable' })
   await connected.flush()
   connected.runner.disconnect()
@@ -65,6 +70,8 @@ it('serves the last stored file tree and changes while the sandbox sleeps', asyn
   })
   expect(changes.status).toBe(200)
   expect(await changes.json()).toMatchObject({
+    unpushedCommits: 2,
+    uncommittedFileCount: 4,
     summary: { files: 7, added: 161, removed: 50 },
   })
   expect(tree.headers.get('Cache-Control')).toBe('no-store')

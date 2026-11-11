@@ -17,6 +17,7 @@ import {
   reviewByState,
   type BannerState,
 } from '../../fixtures/pullRequests'
+import type { ButtonTint } from '../common/tint'
 
 type PrTone = 'neutral' | 'success' | 'warning' | 'danger'
 
@@ -32,6 +33,13 @@ export type PrStatus = {
 
 /** The states of a branch that has a pull request. */
 export type PullRequestState = Exclude<BannerState, 'none' | 'no-commits'>
+
+/** A branch with a pull request, in any state of that pull request. */
+export function hasPullRequest(
+  banner: BannerState,
+): banner is PullRequestState {
+  return banner !== 'none' && banner !== 'no-commits'
+}
 
 /**
  * The state of a pull request, as its bar and its row show it. A state
@@ -115,4 +123,15 @@ export function prStatus(state: PullRequestState): PrStatus {
         tone: 'warning',
       }
   }
+}
+
+/**
+ * The tint of the main action of the bar: the tone of its state, so the
+ * button matches the tint of the bar. A bar without a tint keeps the
+ * primary fill.
+ */
+export function barTint(banner: BannerState): ButtonTint | undefined {
+  if (!hasPullRequest(banner)) return undefined
+  const { tone } = prStatus(banner)
+  return tone === 'neutral' ? undefined : tone
 }

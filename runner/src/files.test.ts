@@ -26,6 +26,8 @@ it('reports committed, staged, unstaged, renamed, and untracked branch changes',
       partNumber: 1,
       partCount: 1,
       baseBranch: 'main',
+      unpushedCommits: 1,
+      uncommittedFileCount: 3,
       files: [
         {
           path: 'committed.txt',

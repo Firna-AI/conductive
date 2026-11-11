@@ -1,12 +1,12 @@
-# Lifecycle key code
+# Workspace lifecycle: key code
 
-This page belongs to the [workspace lifecycle README](README.md). It names
-the files, the types, and the functions of the lifecycle that a reader
-opens first.
+This page belongs to the [workspace lifecycle](README.md). It lists the
+entry points of the lifecycle code, and the guides that give the entry
+points of each part.
 
-- [`browser.ts`](browser.ts): `handleLifecycleRequest`, the browser routes.
-- [`machine.ts`](machine.ts): `handleGitCredential`, the git credential
-  route.
+- [Routes and input activity](routes.md#key-code): the browser routes, the
+  git credential route, and the input activity owner, with its durable
+  input time and its D1 and provider update.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
   workspace and queues its start.
 - [`creation-attempt-data.ts`](creation-attempt-data.ts) keeps the public failure code and message after a failed create.
@@ -107,8 +107,6 @@ opens first.
   Both take the turn part of the idle time only from the committed chat.
   The [turn recovery](recovery-and-shown-state.md#turn-recovery) gives the
   rules.
-- [Input activity](routes.md#key-code): the entries of the input owner, its
-  durable input time, and its D1 and provider update.
 - [`durable-start-stop.ts`](durable-start-stop.ts): the saved stop owner of
   failed and cancelled resumes.
 - [`durable-alarm.ts`](durable-alarm.ts): `advanceLifecycleAlarm`, the
@@ -176,13 +174,16 @@ opens first.
   [The object alarm scheduler](alarm-scheduler.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
 - [Image builds](image-builds.md#key-code): the entries of the image
-  builds, the refreshes, the build logs, the image coordinator, and the
-  image software and runtime.
-- [Software images](../software-image/README.md): the shared software builds and their cleanup.
+  builds, the refreshes, the build logs and timers, the image coordinator,
+  the image software and runtime, and the shared software images.
 - [`saved-script.ts`](saved-script.ts): `SavedScript`, which hides the text
   of a saved install or startup script. Only `savedScriptCommand` turns it
   into a Bash command. [`lifecycleCommand`](command-intents.ts) runs each step once.
 - [Repository layout](repository-layout.md#key-code): the repository entries.
+- [The default branch at a create](default-branch.md#key-code): the fetch
+  and branch commands of a create.
+- [Continue](continue.md#key-code): the Continue entries, the shared
+  local-work check, and the branch name of a create and of Continue.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and
   `authenticateWorkspaceToken`.
 - [`runtime.ts`](runtime.ts): `LifecycleEnvironment`, `workspaceRuntime`,

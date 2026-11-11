@@ -14,6 +14,7 @@ import {
   moreFiles,
   turnFilesUnavailable,
 } from '../../../docs/mockups/src/components/chat/lostCopy'
+import { continuedNote } from '../../../docs/mockups/src/components/workspace/barCopy'
 import {
   commandCopy,
   commandRan,
@@ -29,6 +30,7 @@ import { codeBlock, inlineCode, plainText } from './markdown-code'
 import { foldLabel, toolEnding, toolVerb } from './tool-words'
 import type { Transcript, TranscriptItem } from './transcript'
 import {
+  continuedBy,
   filesUnread,
   omittedFiles,
   stoppedSummary,
@@ -121,6 +123,14 @@ export function itemMarkdown(
       return note(
         lostText(lostData[item.marker.runnerEventType], item.marker.reason),
       )
+    case 'continued': {
+      // The words of the note of the chat, with each branch as code.
+      const words = continuedNote(
+        plainText(continuedBy(item.member, readers)),
+        inlineCode(item.baseBranch),
+      )
+      return note(`${words.before}${inlineCode(item.branch)}${words.after}`)
+    }
   }
 }
 

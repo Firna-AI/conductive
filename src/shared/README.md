@@ -71,6 +71,8 @@ that report, its limits, and its refresh kind.
 `RunnerConnection` and `RunnerConnector` take the type of the Worker's
 messages.
 Browser response types carry no login and no turn token.
+`RunnerTurn` and `RunnerMessageDuringTurn` carry the current `branches`: the workspace branch and the target branch.
+The current Worker always sends them. A command of an older producer can omit them.
 Turn commands also carry the commit author of the member whose message started the turn.
 Message commands carry no commit author.
 An uploaded attachment reaches the runner as a path, after the backend puts it there.
@@ -120,6 +122,14 @@ Tree and changes revisions have independent sequences within each runner stream.
 A new stream starts with full reports. A reconnect keeps its revisions and parts.
 The workspace joins all parts before it publishes a full browser report.
 Branch changes include committed, staged, unstaged, and untracked work.
+`ChangesResponse.unpushedCommits` counts the current branch's commits that
+no remote branch holds. `ChangesResponse.uncommittedFileCount` counts the
+raw Git status records of uncommitted work, also untracked files, and
+counts a rename once. It also counts a file whose edit brings back its base
+content, which Changes lists in no row. So it can differ from the number
+of rows. Each changes part repeats both complete counts.
+The current runner always sends both. Reports from older workspace images
+can omit either, and readers preserve that absence instead of assuming zero.
 `runner-files.ts` defines file read and diff commands and their matching results.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.
@@ -153,6 +163,11 @@ Its `repairFailed: true` flag marks a refused replacement of a lost workspace up
 Only the workspace sets that flag.
 [Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 states the rules of the request and of a failed repair.
+`workspace.continued` is the note of Continue in one session. It belongs to
+`ChatEvent`, so it reaches the browser stream, but not to `AgentChatEvent`
+or to the runner events. Only the Worker writes it. It names its
+`sessionId`, the `member` who pressed Continue, the new `branch`, and its
+`baseBranch`.
 
 `events.ts` defines the browser stream. Its event numbers span all sessions
 and runner connections of one workspace. A reconnect uses the last stored number.
@@ -220,79 +235,11 @@ The git credential payload is not defined yet.
 
 ## Key code
 
-- [Session addresses](session-link.ts) builds app session paths and absolute session links for the Worker and the app.
-- [Session Markdown](transcript/session-markdown.ts) folds session pages and
-  builds concise or full transcripts. [Markdown items](transcript/markdown-items.ts)
-  format the shared chat words, paths, and commands. In a member's message,
-  they put the escaped name of each attached file in place of its mention.
-  The attachments line then lists only the other files.
-  [Markdown code](transcript/markdown-code.ts)
-  keeps inline and block fences longer than their content's backticks.
-- [Lost data](transcript/lost-data.ts) maps refusal event types to the same
-  product names for the browser line and the copied transcript.
-- [Agent words](agents.ts) supply the effort labels, model lookup, and model
-  labels for the chat, the new-workspace picker, and the mockups.
-- [Duration](transcript/duration.ts) formats elapsed chat and command times.
-  [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
-  and the rule that starts a run open.
-- [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
-  lines, with omitted-file and unavailable-file data.
-- [Command words](transcript/command-words.ts) supply Mac names, command
-  states, notes, and output text. Browser code supplies icons and colours.
-- [Session events](transcript/session-events.ts) take stored Worker envelopes
-  or parsed browser envelopes and select one session's events.
-- [Session log](transcript/session-log.ts) folds those events and session
-  records in event order. It keeps the transcript and each item's first time.
-- [Transcript](transcript/transcript.ts) defines the items and folds each
-  session event with its [turn helpers](transcript/turn-events.ts).
-- [Item placement](transcript/item-placement.ts) keeps late items in their
-  turn. [Command placement](transcript/command-placement.ts) puts each Mac
-  command after the items that began before it.
-- [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
-  [Transcript entries](transcript/transcript-entries.ts) group the items and
-  generic inserts. Browser callers use React nodes as the insert content.
-
-- [Mention text](mention-text.ts) reads and writes the mention of a file or
-  a folder, for the chat field, sent messages, and the attachment mentions.
-- [Attachment paths](attachment-paths.ts): `attachmentPath` builds the copy
-  path of a file: `ATTACHMENTS_DIRECTORY`, a digest of the file ID alone,
-  and the safe file name. The Worker and the development and test fakes
-  call it.
-- [Attachment mentions](attachment-mentions.ts): `attachmentForMention`
-  finds the attached file that a file mention of the message names.
-  `textWithAttachmentNames` puts the original name of each such file in
-  place of its mention. `hasOwnWords` says whether the text holds more than
-  spaces and those mentions.
-- [Session title](session-title.ts): `sessionTitleFrom` puts in those names
-  before it takes the first line and cuts it to 60 code points. It gives
-  null when the text holds nothing but those mentions. `modelTitleFrom`
-  first changes each underscore of a model answer to a space.
-- [Port reports](ports.ts) carry sorted listening ports and their safe labels.
-- [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
-- [Restore marker](restore-marker.ts) names the file that the Worker writes at the end of the disk restore. The terminal and the agent runner read it.
-- [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
-- [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
-- [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
-- [Account contracts](account.ts) include the repository list available before an org exists. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
-- [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the required `waitlistOn` flag of the waitlist switch, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
-- [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause and switch changes, and user access details.
-- [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
-- [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
-- [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
-- [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.
-- [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
-  Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
-  Run now takes a page request ID and returns its run after workspace admission.
-  Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
-  Each run carries its own `agent` and `owner`, independent of later routine edits or owner moves.
-  An unknown historical agent or owner is null.
-  Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
-  A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
-  Older runs and skips without an account omit it.
-- [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.
-  The routine's `pullRequest` holds the run's pull request number and URL, or null for scheduled and Run now runs.
-  Replies also carry `baseBranch`, resolved by the Worker. View writes cannot change it.
-- [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
-- [Browser fakes](../test-support/README.md) use these response types.
-- [Runner fakes](../../worker/test-support/README.md) use these message types.
-- [Migrations](../../migrations/README.md) define the D1 tables and reserved ranges.
+[Shared contracts key code](key-code.md) names the files, the types, and
+the functions of the shared contracts that a reader opens first. It covers
+the session addresses, the Markdown transcripts, and the shared words and
+parts of a transcript. It also covers the mentions, the attachment paths,
+and the session titles. Then it gives the contracts of the other areas,
+such as ports, orgs, members, the waitlist, workspaces, GitHub, feedback,
+and routines. It ends with links to the browser fakes, the runner fakes,
+and the migrations.

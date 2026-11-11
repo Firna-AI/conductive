@@ -41,6 +41,7 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
           state: 'sent',
         }),
         attachments: [],
+        branches: { workspaceBranch: 'octocat/test', targetBranch: 'main' },
         credential: { agent, kind, token: client.token },
         commitAuthor: {
           name: 'Octocat',
@@ -65,6 +66,7 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
         turnId: client.turn.turnId,
         message: { ...accepted.message, state: 'sent' },
         attachments: [],
+        branches: { workspaceBranch: 'octocat/test', targetBranch: 'main' },
       })
       const response = await client.request()
       expect(response.status).toBe(200)
