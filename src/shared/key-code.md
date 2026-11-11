@@ -15,8 +15,9 @@
   [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
   and the rule that starts a run open.
 - [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
-  lines, with omitted-file and unavailable-file data, and the member of a
-  Continue note: "You" to that member, its name to others and in a copy.
+  lines, the end reason of a turn, omitted-file and unavailable-file data,
+  and the member of a Continue note: "You" to that member, its name to
+  others and in a copy.
 - [Command words](transcript/command-words.ts) supply Mac names, command
   states, notes, and output text. Browser code supplies icons and colours.
 - [Session events](transcript/session-events.ts) take stored Worker envelopes

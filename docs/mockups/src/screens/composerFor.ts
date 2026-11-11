@@ -25,6 +25,7 @@ const runningConversations = new Set([
   'steer',
   'first-turn',
   'output-left-out-running',
+  'background-waiting',
   'linked',
   'sent-files',
   'link-sent',

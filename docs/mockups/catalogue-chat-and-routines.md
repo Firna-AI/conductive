@@ -46,6 +46,13 @@ variant has a stopped turn on Fable 5.1, which the session kept as its
 model, and the notice names the model ID and no host. Its `member`
 variant has the same notice as Priya sees it.
 
+`app/chat/background-limit` draws a turn that waited for the background
+work of its agent, a watch of the checks of pull request #482. The checks
+still ran at the time limit, so the turn ends as finished, with
+"Background work stopped at the time limit" above its duration and its
+files. Its `waiting` variant draws the same turn before the limit, which
+shows as any running turn.
+
 `app/routines` lists the routines of Acme, which the Routines link below
 New workspace opens. Its child pages:
 

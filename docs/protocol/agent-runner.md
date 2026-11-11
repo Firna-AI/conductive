@@ -2,14 +2,17 @@
 
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
-runner, its events and their limits, its turns, its report of the
-listening ports, and the repair of lost workspace updates. It belongs to
+runner, its events and their limits, its turns, the background work of
+Claude turns, its report of the listening ports, and the repair of lost
+workspace updates. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A gateway decision number names a decision of the change that adds
-the [model gateway](model-gateway.md), as that doc says.
+the [model gateway](model-gateway.md), as that doc says. A background work
+decision number, such as background work decision 1, names a decision of
+the change that keeps a turn open for background work.
 
 ## The agent runner
 
@@ -146,6 +149,88 @@ the [model gateway](model-gateway.md), as that doc says.
   [Files and changes](workspace-tools.md#files-and-changes) says.
   File results are not part of the chat history.
 
+## Background work
+
+- Live work is each task of the
+  [background work](../architecture.md#terms) that runs or waits to start,
+  and each wake-up. A task that the agent program does not count as
+  activity is not live work.
+- A Claude turn stays open after a reply of the agent while live work
+  remains (background work decision 1). Such a time is a wait.
+- When a task ends or a wake-up fires, the agent program notifies the
+  agent. The agent then works again in the same turn.
+- The turn ends when the agent is idle and no live work remains. The agent
+  is idle when no reply runs and no message of the turn waits for an answer.
+- That end has the state `finished`. Its duration and its files cover the
+  whole turn, with each wait.
+- Each end of a Claude turn closes the agent program. The close ends its
+  tasks, and each wake-up that it keeps only in memory.
+- A waiting turn is a running turn for every other rule. Examples are Stop,
+  a shutdown, a message, a model change, the turn token, the idle stop, and
+  Continue. So Stop during a wait ends the turn as stopped.
+- A Codex turn does not wait, because Codex gives its agent no notification
+  when background work ends.
+- Reason: the tool text of Claude promises that notification. The wait
+  keeps the promise up to the limit, also in a routine run.
+- A rule that the agent waits in the foreground for each result was
+  rejected, because the tool text still promises the notification.
+- Background work turned off was rejected, because agents then lose it also
+  inside a turn.
+- A new turn that background work starts by itself was rejected, because
+  sandbox code could then spend the login of the sender.
+
+### The note
+
+- At the end of a reply, the agent gets one note when live work holds a
+  task or a wake-up that no earlier note of the turn named.
+- The note names each such task and wake-up, so each one at most once in a
+  turn. Reason: a second note for the same work can loop the agent.
+- The note is guidance, not an error, so the reply goes on. It says that
+  the turn stays open while the work runs, for up to 2 hours. It says that
+  a notification comes when each task ends or each wake-up fires.
+- The note asks the agent to stop each task that it does not need, such as
+  a dev server. It asks the agent to delete each wake-up that it does not
+  need. Then it asks the agent to end its reply.
+- The note follows the naming rules of the
+  [agent instructions](agent-instructions.md#what-the-instructions-hold).
+  So it never names Boat, and it never uses "Claude Code" as a name.
+  Reason: the agent can repeat the note in the chat.
+- The chat never shows the note. Reason: the note is for the agent.
+- A wake-up that repeats is live work too. Reason: one rule for all
+  background work keeps the promise of each tool.
+- A wait with no note was rejected, because a forgotten dev server would
+  then hold each turn until the limit.
+
+### The time limit
+
+- A turn waits for at most 120 minutes (background work decision 2). Reason:
+  Claude lets a background command run for up to 2 hours.
+- No limit was rejected, because a forgotten task would then hold its
+  sandbox without end.
+- The count starts at the first wait. Agent work after a notification
+  counts.
+- A message of a member that joins the turn during a wait starts the count
+  again, from that message. A message during a reply does not change the
+  count.
+- Reason: the limit bounds the waiting that a turn holds with no new
+  message of a member.
+- When the limit passes during a reply, the limit applies at the end of
+  that reply. Reason: a cut tool call can leave half-done work, such as a
+  push without its merge.
+- When the limit applies, the runner closes the agent program (background
+  work decision 3). The runner then sends `turn.completed` with the state
+  `finished`, its duration, its files, and `endReason`.
+- This end at the limit holds also when no live work remains at the end of
+  that reply.
+- `endReason` is an optional field of `turn.completed`. Its one value is
+  `background_work_limit`, which marks an end at the limit.
+- A stopped end at the limit was rejected, because it shows no duration
+  and no files.
+- Risk: a wait keeps each right of a running turn, such as its turn token,
+  for up to 2 hours more, as
+  [Version pins](version-pins.md#a-sandbox-with-a-version-pin-of-2-or-later)
+  says.
+
 ## Listening ports
 
 The [listening-port requirements](listening-ports.md) give the scanner,
@@ -153,47 +238,6 @@ its labels, its limits, and its full reports.
 
 ## Lost workspace updates
 
-- The file tree, the changes list, the start steps, the workspace name,
-  and the list of listening ports belong to no session. A later full
-  report of the same kind replaces each of them. But a report of the workspace name sets that name only while
-  the workspace has no name, as
-  [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
-- When the workspace refuses an update of one of these kinds, the update is
-  lost. The workspace stores its marker. Then it asks the runner once for a
-  fresh full report of that kind (decision 96).
-- The browser shows nothing for that marker. A notice shows beside the
-  affected data only when the repair fails. A newer complete report of that
-  kind clears the notice.
-- Reason: only the latest full report matters. A notice for each lost update
-  was rejected.
-- The request is a `report.refresh` command with a `commandId` and a `kind`.
-  The kind is `files.snapshot`, `changes.updated`, `start.updated`,
-  `workspace.title`, or `ports.updated`.
-- The workspace asks for a full file tree after a refused tree delta. It asks
-  for no report after a refused event of any other type.
-- Each kind has at most one open request. After a further refusal of that
-  kind, the workspace sends no second request.
-- A stored complete report of that kind ends the repair, also a failed one.
-  A report of the workspace name that comes when the workspace already has
-  a name also ends the repair, because it can change nothing. It ends no
-  repair of another kind. After the next refusal of that kind, the
-  workspace asks for a new report, with a new command ID.
-- A replacement is a later full report of the same kind.
-  [Files and changes](workspace-tools.md#files-and-changes) says
-  which file reports count as replacements.
-- The repair fails when the workspace refuses a replacement too, for any
-  reason. Only the marker of such a replacement carries `repairFailed: true`.
-- Each new connection gets the open request again, with the same command ID.
-  A repeated command ID is the same request, not a new one.
-- After a failed repair, no new connection gets the request again.
-- The workspace stores the marker and the open request together. A storage
-  failure stores neither, and the update stays unconfirmed.
-- When a refusal makes a new request, the workspace confirms the refused
-  update only after the request goes out. Until then, no confirm and no
-  welcome covers that update.
-- The workspace sends a request after the `welcome`, also before
-  `runner.ready` and during a running turn. A request needs no agent login.
-- The runner answers each request with a full report of its kind, also
-  during a running turn. When it cannot read the repository, it answers a
-  request for a file tree or a changes list with `files.unavailable`, as
-  [Files and changes](workspace-tools.md#files-and-changes) says.
+The [lost-update requirements](lost-workspace-updates.md) give the reports
+that belong to no session, the repair request after a refused update, and
+the notice of a failed repair.

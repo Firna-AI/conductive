@@ -116,7 +116,19 @@ Send another message to guide the agent while it works.
 When your message uses the session's available login, it joins the running turn.
 A turn is one period of work by the agent.
 
-Select **Stop** to interrupt that turn.
+An agent powered by Claude can leave work running in the background, such as a command that watches pull request checks.
+After its reply, the turn stays open while background tasks or scheduled wake-ups remain.
+The chat shows **Working**, and **Stop** stays available.
+When a task ends or a wake-up arrives, the agent continues in the same turn.
+The turn ends when the agent finishes and no background work remains.
+
+The time limit is 2 hours from the start of the first wait.
+The agent's work after a notification also counts toward that limit.
+A message that joins the turn during a wait starts the count again from that message.
+If the limit passes during a reply, that reply finishes before the turn ends.
+At that limit, the turn ends with **Background work stopped at the time limit** above its duration and changed files.
+
+Select **Stop** to interrupt the turn, including a wait for background work.
 The chat records the stop.
 You can send another message to continue the conversation.
 

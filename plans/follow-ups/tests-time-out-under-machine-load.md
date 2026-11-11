@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, from the branch `calummoore/chat-title-rename`, where several agents ran tests, a mockup build, and Chrome on one machine at the same time.
-- **Location:** `worker/chat/retry.test.ts`, `worker/chat/retry-queue.test.ts`, `worker/lifecycle/runner-environment.test.ts`, `worker/lifecycle/disk-retention.test.ts`, `worker/operator/suspension-race.test.ts:20`, and two Git tests of the agent runner under `runner/src/`.
+- **Location:** `worker/chat/retry.test.ts`, `worker/chat/retry-queue.test.ts`, `worker/lifecycle/runner-environment.test.ts`, `worker/lifecycle/disk-retention.test.ts`, `worker/operator/suspension-race.test.ts:20`, two Git tests of the agent runner under `runner/src/`, and `worker/tools/sessions.test.ts:48`.
 - **Reason:** The original branch changed none of the first five tests. Each passed alone and in two complete gate runs.
 
 - **Source:** Implementation. **Category:** Test.
@@ -23,6 +23,17 @@
   The other failure of that run was an assertion. The [completed native-harness record](https://github.com/Firna-AI/remote-code/blob/02ae69421b4b128eba6b1041d829e99f221cd360/plans/follow-ups/tests-fail-under-load.md) preserves it. Main commit `5386af5a` fixed that harness and deleted its record. That branch changed no timeout or assertion of this test. The test file and each module that it imports directly equal `main` at `8567cfb6`. Modules that those imports reach in turn changed on that branch, such as `worker/features/alarms.ts`.
 
   On the same commit, the unchanged file then passed alone in a local run: 3 of 3 tests, with no skip, in 5.09 seconds. The case then passed three more local runs alone, with no failure. Each of those runs selected only this case by name, so each reported the 2 other tests of the file as skipped. The await that blocked, the cause, and the load of the CI machine are not known. A pass alone does not show that load caused the timeout.
+- On 11 November 2026, branch `conductor/background-work-keeps-turn-open-implementation` ran selected contract tests beside type, lint, format, and file-length checks.
+  The existing case at `worker/tools/sessions.test.ts:48` failed.
+  Its name is "runs CLI session creation, reads, and replayed messages through the stored caller".
+  Its error was `Error: Test timed out in 15000ms.`
+  The run passed 18 tests and failed 2.
+
+  The other failure was a new test of that branch.
+  Its implementor changed it to a direct Worker tool client and kept its storage, restart, and transcript assertions.
+  After the heavy checks ended, the existing CLI test passed its single rerun in 3,235 ms.
+  All 20 selected tests passed that rerun, with no assertion or timeout change in the existing test.
+  Machine contention is the suspected source, but the rerun does not prove the cause.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?
