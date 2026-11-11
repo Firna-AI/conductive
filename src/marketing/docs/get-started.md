@@ -12,7 +12,7 @@ Have these ready:
 - A GitHub account.
 - GitHub read access to the repository where you will create a workspace.
 - Permission to install a GitHub App if you will set up your own org.
-- A Claude subscription token, an Anthropic API key, or an OpenAI API key.
+- A Claude subscription token, an Anthropic API key, an OpenAI API key, or an endpoint address and key.
 
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
@@ -129,7 +129,9 @@ Choose the login you want to use:
 | --- | --- | --- |
 | Claude | Subscription token | Select **Subscription token**. Paste a token from `claude setup-token`. |
 | Claude | Anthropic API key | Select **API key**. Paste your Anthropic API key. |
-| Codex | OpenAI API key | Paste your OpenAI API key. |
+| Claude | Own endpoint | Select **Own endpoint**. Enter **Endpoint** and **API key**. |
+| Codex | OpenAI API key | Select **API key**. Paste your OpenAI API key. |
+| Codex | Own endpoint | Select **Own endpoint**. Enter **Endpoint** and **API key**. |
 
 For a subscription token, run this command on a computer where the `claude` command is installed:
 
@@ -141,18 +143,31 @@ Complete the browser authorization that the command opens.
 Paste the token it prints into Conductive's **Subscription token** field.
 If the command is unavailable, you can use the Anthropic API key option.
 
-For an API key, the form provides a link to create one with the provider.
+For an Anthropic or OpenAI API key, the form provides a link to create one with the provider.
 Paste the key into its field.
 Select **Connect**.
 The agent row then shows **Connected**.
+
+An own endpoint is a gateway or proxy that you choose for model requests.
+Use a public `https://` address with a host name and no user name or password.
+For Claude, it must serve the Anthropic Messages API.
+For Codex, it must serve the OpenAI Responses API.
+Read the hint under **Endpoint** to check the request address before selecting **Connect**.
+The connected row shows the host, including any non-default port.
+
+An own endpoint gets the messages, files, and command results of turns on that login.
+Model use bills where its owner runs the endpoint.
+An own endpoint login starts with sharing on.
+Open **Account** to change **Let other members use this login**.
 
 One connected agent is enough to finish setup.
 You can connect the other later in **Account**.
 
 If your first agent request reports a login error, open **Account**.
 Remove that agent's login.
-Then connect the correct token or key.
+Then connect the correct token, key, or endpoint.
 
+- [Connect an own endpoint and check its models](/docs/agent-logins#connect-an-own-endpoint)
 - [Manage logins and sharing](/docs/agent-logins)
 
 ## Create your first workspace

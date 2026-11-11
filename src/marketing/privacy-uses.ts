@@ -88,7 +88,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         run keeps the GitHub login of the account outside the org whose
         event it skipped. They run the routines and show their runs.`,
       text`Keys and logins: the env var values of each org, and your
-        Claude or OpenAI logins. ${productName} stores them encrypted. It
+        agent logins. An own endpoint login holds the endpoint address and
+        its key. ${productName} stores these values encrypted. It
         uses your login only for the turns of the sessions that you start,
         also the sessions that the runs of your routines start.
         The messages of other members in those sessions use it only when
@@ -101,7 +102,19 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         org image. ${productName} still permits older software there that
         receives your login itself. Installing newer software in that cloud
         computer does not remove this risk. A new image build gives the
-        protection to each cloud computer that starts from it.`,
+        protection to each cloud computer that starts from it.
+        An own endpoint's address and key never reach a cloud computer.
+        A turn on that login needs agent software that supports temporary
+        credentials.`,
+      text`Endpoint models: ${productName} reads the endpoint's model list
+        with its key when you save the login or press Refresh on your account
+        page. It also reads the list in the background when a turn on that
+        login starts, at most once in 10 minutes. It stores the model IDs
+        from the last list it could read to set the models in your pickers.`,
+      text`Own endpoints: ${productName} sends each model request of a turn
+        on an own endpoint login to that endpoint, with its key. The endpoint
+        gets the messages, the files, and the command results of each turn
+        on the login, whoever sent the message.`,
       text`Your work: ${productName} keeps your messages, including those
         sent by pull request bar actions, and the answers of the agents as
         the chat history of each workspace.
@@ -125,10 +138,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
         reads a file or a diff when you open it, to show it to you. In a
-        newer cloud computer, the agents send their requests to the models
-        of Anthropic or OpenAI through ${productName}. Agent settings in the
-        repository can send them to another address instead. These model
-        requests can hold your messages, your files, and your code.
+        newer cloud computer, the agents send their model requests through
+        ${productName} to Anthropic, OpenAI, or the chosen endpoint.
+        Agent settings in the repository can send them to another address
+        instead. These model requests can hold your messages, files, code,
+        and command results.
         ${productName} adds the login that the session uses, and passes
         each request on. When it passes on these model requests and their
         answers, it keeps no copy of them. It writes no body or header value

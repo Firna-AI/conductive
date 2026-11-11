@@ -103,6 +103,13 @@ The new session starts without a copy of that conversation.
 If the chosen agent has no usable login, the message box offers **Connect** for that agent.
 Connect the login in **Account** before you send.
 
+For your own endpoint login, your pickers hide app models that its last successful model list does not name.
+They show all app models for the agent before the first successful read, or when the list names none of them.
+The session keeps its current model.
+Other members' pickers still show all app models.
+
+- [Refresh an endpoint's model list](/docs/agent-logins#keep-the-model-list-current)
+
 ## Guide or stop a running agent
 
 Send another message to guide the agent while it works.
@@ -179,10 +186,14 @@ Select the same copy option within one minute to retry.
 ## Know whose account a session uses
 
 The member who starts a session supplies its agent login.
-Model use in that session goes to that member's connected account.
+A subscription token or provider API key bills model use to that member's connected account.
+On an own endpoint login, model use bills where the endpoint's owner runs it.
+The endpoint gets the messages, files, and command results of each turn on that login, whoever sent the message.
 
 If that member shares the login, other members' messages use it too.
 The message box names that member's login when you use it.
+It uses the same login label for an own endpoint.
+The chat does not show the endpoint's host.
 
 If the login is private or unavailable, your message starts a new session on your own login.
 That session links back to the earlier conversation.

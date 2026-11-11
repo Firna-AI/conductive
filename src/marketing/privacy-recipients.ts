@@ -37,9 +37,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         for ${productName}, in the account of ${productName}. Your code,
         your files, and your agent sessions are in them. ${productName}
         sends the provider the requests that start, stop, and use them.`,
-      text`Anthropic and OpenAI get your messages, your files, and your
-        code when an agent works on them. Each Mac command request and its
-        result also go to the agent and to Anthropic or OpenAI.
+      text`Anthropic, OpenAI, or the chosen endpoint gets the messages,
+        files, code, and command results of turns on the session's login.
+        This includes the messages of other members who use that login.
+        Each Mac command request and its result also go to the agent and
+        to that provider or endpoint.
         With each message, they also get
         the GitHub login and the display name of its sender. They get the
         names of the workspace branch and the branch that a pull request
@@ -47,8 +49,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         changes. Each workspace branch starts with the GitHub login of the
         workspace owner when that branch is created. From a newer cloud
         computer, the agents send them through ${productName}, which adds
-        the agent login. With the older software in an older cloud
-        computer, the agents send them directly, with the agent login. In
+        the agent login. For a subscription token or provider API key,
+        older software in an older cloud computer sends them directly,
+        with the agent login. In
         both kinds of cloud computer, agent settings in the repository can
         send them to another address instead. Each session uses the
         login of the member who started it. Each run of a routine sends
@@ -57,7 +60,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         member's session use that member's login only when that member
         lets other members use it. When that member does not share the
         login, your message starts a new session on your own login. The
-        terms of that provider apply.`,
+        terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
         their chats, and each Mac command request and result. They also see
         the routines of the org, with their prompts and their runs.
@@ -84,8 +87,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         seconds after the turn ends. If the member who started the session
         removes or changes the login, or loses access to the org, the turn
         ends at its next model request.`,
-      text`In an older cloud computer, a member with a terminal or a program
-        in it can read the agent login of a turn that runs there. A program
+      text`For a subscription token or provider API key, a member with a
+        terminal or a program in an older cloud computer can read the
+        agent login of a turn that runs there. A program
         that a tool of the agent starts, such as a dev server, can keep the
         agent login after the turn ends. A member with a terminal can read
         it there too. Agent settings in the repository can make the agent
@@ -106,8 +110,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`During a turn in the calling workspace, the tools can also create
         sessions and send messages as that turn's sender. That sender
         must still belong to the org. The session's login rules apply.
-        An agent can send chat text that it reads to Anthropic or OpenAI
-        as part of its work.`,
+        An agent can send chat text that it reads to Anthropic, OpenAI,
+        or the chosen endpoint as part of its work.`,
       text`The members of your orgs also see who started each session,
         whose login it uses, and whether it can use that login. They also
         see whether its starter lets other members use that login.`,

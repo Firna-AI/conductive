@@ -34,8 +34,11 @@ The message box lets you choose a model and its effort.
 Connect your own agent login before you start.
 Claude accepts a subscription token or an Anthropic API key.
 Codex accepts an OpenAI API key.
+Either agent can use an own endpoint: a gateway or proxy that you choose, with its address and key.
 Each session uses the agent login of the member who starts it.
-Model use goes to that member's connected account.
+A subscription token or provider API key bills model use to that member's connected account.
+An own endpoint bills model use where its owner runs it.
+That endpoint gets the messages, files, and command results of each turn on its login.
 
 Select **+** to start another session in the same workspace.
 The sessions share its files and branch.

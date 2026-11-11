@@ -82,7 +82,7 @@ it('requires consent at OAuth start before it creates a new account', async () =
     ).first(),
   ).toEqual({
     version:
-      '2026-11-11-gateway-actions-sessions-archive-restore-routines-feedback',
+      '2026-11-11-gateway-actions-sessions-archive-restore-routines-feedback-own-endpoints',
     acceptedAt: TEST_TIME,
   })
   harness.setTime(TEST_TIME + 1_000)

@@ -961,6 +961,15 @@ them.
   other spellings of an IPv4 address are refused too. The cause of a turn
   on a saved login with an IP address also asks for a host name. Agent
   call of 11 November 2026, from Milestone 5e.
+- The public pages say "agent software that supports temporary
+  credentials" for a runner of protocol 2 or later, and they name the
+  1-hour prompt cache in the agent logins guide, because it affects what
+  an endpoint must support and what it costs. Agent call of 11 November
+  2026, from Milestone 6.
+- The Bedrock row of the Conductor comparison says that an own endpoint
+  can give access through a compatible API, and the row "Custom API
+  endpoints" is Available. Agent call of 11 November 2026, from
+  Milestone 6.
 
 ## Milestone 1: Mockups
 
@@ -1037,8 +1046,9 @@ The protocol states the own endpoint login and the fixed Claude endpoint.
 - [x] State there that the chosen endpoint gets the messages and the files
       of each turn on that login, and that the agent program on the cloud
       computer calls it.
-- [ ] State what the session record shows about an own endpoint login, as
-      decision 5 says.
+- [x] Done in Milestone 2b on 10 November 2026, because Milestone 2 is
+      superseded: state what the session record shows about an own
+      endpoint login, as decision 5 says.
 - [x] In "Agent logins in a sandbox", state that the runner sets the
       endpoint of each agent program, and that no repository setting can
       change it.
@@ -1363,7 +1373,7 @@ says, so that the app saves no address that fails each turn.
 - [x] State the rule and its reason in "Own endpoint logins" of
       `docs/protocol/tokens-and-secrets.md`.
 - [x] Change the refusal text and the rule in the mockups.
-- [ ] Say in the agent logins guide that a free name such as
+- [x] Say in the agent logins guide that a free name such as
       `<IP address>.sslip.io` works when the server has a certificate for
       that name. The legal and guide step of Milestone 6 does it.
 - [x] Add tests: an IPv4 and an IPv6 host refused at the save, the
@@ -1395,12 +1405,12 @@ show.
       models from `GET /api/models`, not from the mockup fixtures.
 - [x] Check the agent step of Get started, which reuses `AgentList` in
       `src/shell/onboarding/AgentStep.tsx`.
-- [ ] Say on the Privacy page in `src/marketing/privacy.ts` and
+- [x] Say on the Privacy page in `src/marketing/privacy.ts` and
       `src/marketing/privacy-uses.ts` that a chosen
       endpoint gets the messages and the files. Name the endpoint address,
       stored encrypted, under "Keys and logins". Say that the app reads the
       endpoint's model list with the key (decision 10 G).
-- [ ] Update `src/marketing/terms.ts` and `src/marketing/terms-org.ts`: they name only the terms of
+- [x] Update `src/marketing/terms.ts` and `src/marketing/terms-org.ts`: they name only the terms of
       Anthropic or OpenAI, and the share defaults of two kinds. Raise
       `TERMS_VERSION` in `src/shared/terms.ts`.
 - [x] Dropped on 10 November 2026, because decision 5 changed: show the own
@@ -1408,14 +1418,18 @@ show.
       the mockups show.
 - [x] Extend `src/shell/account/AccountScreen.test.tsx` and
       `src/shell/onboarding/GetStartedSteps.test.tsx`.
-- [ ] Update the public guides of the website for the own endpoint:
+- [x] Update the public guides of the website for the own endpoint:
       `agent-logins.md`, `get-started.md`, `overview.md`, `security.md`, and
       `sessions-and-chat.md` under `src/marketing/docs/`, at the lines that
       the Milestone 2b report lists.
-- [ ] Mark the "Custom API endpoints" row of the Conductor comparison done,
+- [x] Mark the "Custom API endpoints" row of the Conductor comparison done,
       in `src/marketing/from-conductor/areas/models-and-providers.ts`.
-- [ ] Remove "not complete yet" from the README when the account page
+- [x] Remove "not complete yet" from the README when the account page
       offers the kind and turns run on it.
+
+The legal pages, the public guides, the comparison rows, and the README
+state the own endpoint login since 11 November 2026, with a new revision
+of the Terms. Evidence: `.context/own-endpoint-logins/m6-external-docs/`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

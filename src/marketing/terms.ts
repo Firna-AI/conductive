@@ -67,9 +67,13 @@ export const termsDocument: LegalDocument = {
           text`${productName} runs the cloud computers of every org in its
             own account with its cloud computer provider. You need no
             account or key of your own for them.`,
-          text`The agents run on the Claude or OpenAI login that you connect.
-            The model use of each message bills to the account of the member
-            who started its session, under the terms of Anthropic or OpenAI.
+          text`The agents run on the agent login that you connect.
+            Each session uses the login of the member who started it.
+            For a subscription token or an API key, model use bills to that
+            member's connected account under the terms of Anthropic or OpenAI.
+            For an own endpoint login, model use bills where the endpoint's
+            owner runs it. You are responsible for the endpoint that you
+            connect and for following its terms.
             The runs of a routine start their sessions on the login of the
             member who owns the routine.
             A newer cloud computer starts from an org image that requires
@@ -77,9 +81,14 @@ export const termsDocument: LegalDocument = {
             ${productName} enforces this requirement for computers that start
             from that image. Its agents send their model requests and receive
             their answers through ${productName} on Cloudflare. These requests
-            can hold your messages, files, and code. ${productName} adds the
-            login, and sends each request on to Anthropic or OpenAI. An older
-            cloud computer starts from an earlier org image. ${productName}
+            can hold your messages, files, code, and command results.
+            ${productName} adds the login and sends each request to
+            Anthropic, OpenAI, or the chosen endpoint. An own endpoint gets
+            the messages, files, and command results of each turn on its
+            login, whoever sent the message. Its address and key never reach
+            a cloud computer. A turn on an own endpoint needs agent software
+            that supports temporary credentials. An older cloud computer
+            starts from an earlier org image. ${productName}
             still permits older software there that receives the login itself.
             With that older software, the agents send their model requests to
             Anthropic or OpenAI from the cloud computer. Installing newer
@@ -100,7 +109,8 @@ export const termsDocument: LegalDocument = {
       blocks: [
         paragraph`Use ${productName} only for lawful purposes that you have
           the right to carry out, and that harm no other person or system.
-          Also follow the terms of GitHub, Anthropic, and OpenAI. Do not use
+          Also follow the applicable terms of GitHub, Anthropic, OpenAI,
+          and any endpoint that you connect. Do not use
           ${productName} or its cloud computers to:`,
         list(
           text`break a law, a sanction, or an export control, or the rights
