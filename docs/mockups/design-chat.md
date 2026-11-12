@@ -48,8 +48,8 @@ background work.
 - `SentFileChip` draws each attached file of a sent message as a chip at
   the place of its mention: the icon of its kind, its name, and its size in
   a muted colour. A sent message holds `@` and the copy path of each file,
-  and the chip finds its file by that path. A press opens the file tab of
-  the copy, as `app/attachments/open` shows. The chip of a message that
+  and the chip finds its file by that path. A press opens the copy in the
+  temporary tab, as `app/attachments/open` shows. The chip of a message that
   waits for the cloud computer opens nothing. `SentFiles` lists the files
   that the text does not show under the message, at the right, with
   `AttachmentChips.module.css` and `AttachmentStates.module.css`.

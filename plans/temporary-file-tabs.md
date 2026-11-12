@@ -425,6 +425,20 @@ decisions 286 and 287.
   each guide that it makes wrong, and the status of each listed feature
   that it ships.
 
+These design calls were made on 12 November 2026, when the mockups were
+drawn.
+
+- A screen reader hears the name of the temporary tab, then "temporary",
+  as in "README.md, temporary". Reason: VS Code reads "preview" after the
+  name of its preview tab in the same way, so the name still starts with
+  the file.
+- Keep open has the icon of a bookmark with a check. Reason: each item of
+  the tab menu has an icon, and a pin names the pinned tabs of a browser
+  and of VS Code, which is another feature.
+- A press on the chip of an attached file in a sent message opens the copy
+  of the file in the temporary tab too. Reason: decision 264 B opens that
+  chip as a file chip opens its file.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -434,24 +448,24 @@ Depends on: none
 Draw the temporary tab in the tab row on desktop. A phone row shows no
 file tabs, so the phone variants change only where a page shows the row.
 
-- [ ] Add a temporary state to the mockup tab in
+- [x] Add a temporary state to the mockup tab in
       `docs/mockups/src/components/workspace/TabItem.tsx`, with its title
       in italics. The copy that a drag lifts keeps the italics.
-- [ ] In `app/files`, draw the file or the diff that a list opened as the
+- [x] In `app/files`, draw the file or the diff that a list opened as the
       temporary tab: README.md in `markdown` and AddressForm.tsx in
       `diff`. The code file that stays open is a kept tab. Update the
       descriptions of the variants.
-- [ ] Add a page for the temporary tab, with at most five screens: a press
+- [x] Add a page for the temporary tab, with at most five screens: a press
       opens a file in the temporary tab, a press on another file replaces
       it in its place, and a double-click keeps it while the next press
       opens a new temporary tab at the end. Make the page reachable from
       `app/files` and `app/tabs`.
-- [ ] On the new page, draw the tab menu of the temporary tab with Keep
+- [x] On the new page, draw the tab menu of the temporary tab with Keep
       open, a line, then Move left and Move right (decision 286 B).
-- [ ] Update `docs/mockups/design.md` and `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages on
+- [x] Update `docs/mockups/design.md` and `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages on
       desktop and on a phone.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -481,7 +495,8 @@ State the temporary tab as requirements, with decisions 284 and 285.
       [Conductor comparison](../docs/protocol/conductor-comparison.md#statuses)
       says.
 - [ ] Check that `docs/protocol/file-mentions.md` still reads right: a
-      press on a chip opens the file as a press in All files does.
+      press on a chip, also the chip of an attached file in a sent
+      message, opens the file as a press in All files does.
 - [ ] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: The saved view keeps the temporary mark
@@ -520,12 +535,16 @@ Depends on: 1, 3
       a file row. In `src/files/ui/FilesLink.tsx`, the second click of a
       double-click opens nothing again, and a double-click selects no
       text.
-- [ ] In `src/files/tabs/FileTabItem.tsx`, draw the italic title, keep the
-      tab on a double-click, and tell a screen reader that the tab is
-      temporary. `LiftedFileTab` keeps the italics.
+- [ ] In `src/files/tabs/FileTabItem.tsx`, draw the italic title with
+      `.temporary` of the shared `WorkspaceTabs.module.css`, and keep the
+      tab on a double-click. Tell a screen reader that the tab is
+      temporary, as in "README.md, temporary", also in the `aria-label`
+      of a diff tab. Keep `fileTabName` as it is, because the tab menu and
+      the move messages use it. `LiftedFileTab` keeps the italics.
 - [ ] Check each other way that opens a file or a diff: the chips of a
-      finished turn, the chips of a message, and the file link of a diff
-      page. Each one opens the temporary tab.
+      finished turn, the chips of a message, the chips of attached files
+      in a sent message, and the file link of a diff page. Each one opens
+      the temporary tab.
 - [ ] Add tests: the view functions, then the wiring of a press, a second
       press, a double-click, an address, a switch of mode, and a close.
 - [ ] Update `src/files/README.md`, `src/shell/workspace/README.md`, and
@@ -544,7 +563,8 @@ Depends on: 4
       its place (decision 287 B).
 - [ ] In `src/chat/components/useTabMenu.ts`, add Keep open to the tab
       menu of the temporary tab, before Move left and Move right, with a
-      line between them. Leave it out in a read-only workspace. After
+      line between them, and with the icon of the mockups,
+      `BookmarkCheck`. Leave it out in a read-only workspace. After
       Keep open, give the focus back to the tab and tell a screen reader
       that the tab stays open (decision 286 B).
 - [ ] Add tests: a move that keeps the tab, a cancelled drag and a drop
@@ -564,6 +584,12 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [ ] Record a follow-up item under `plans/follow-ups/` for the tab row
+      of the mockups in a narrow catalogue frame. A static view shows the
+      start of a row that does not fit, so the shown tab and an open tab
+      menu at the end of the row are cut off, as in the `kept` and `menu`
+      variants of `app/files/temporary`. The fix draws the row in
+      `WorkspaceTabs` of the mockups as the app scrolls it.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

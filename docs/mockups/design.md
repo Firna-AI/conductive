@@ -27,6 +27,8 @@ right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
 session and each open file or diff, in the order that the user gives them
 by drag, + for a new session, and a clock that opens the session history.
+The file or diff of the last press shows in the temporary tab, with its
+title in italics, until the next press replaces it.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
 It shows no file content. A phone shows an org switcher at the top of the list,
@@ -291,8 +293,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".
 - [The workspace](design-workspace.md) gives the messages that wait for
-  the sandbox, the tab row, and the number with Copy link. It also gives
-  the bars of the cloud computer.
+  the sandbox, the tab row with its temporary tab, and the number with Copy
+  link. It also gives the bars of the cloud computer.
 - [The chat](design-chat.md) gives the chips of attached files, the
   Markdown tables and headings of a reply and of a file preview, and the
   fold of the work of a turn. It also gives the data that the chat does

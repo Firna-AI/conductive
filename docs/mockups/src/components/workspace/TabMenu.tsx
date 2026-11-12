@@ -1,5 +1,12 @@
 import type { LucideIcon } from 'lucide-react'
-import { ArrowLeft, ArrowRight, Copy, CopyPlus, Pencil } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookmarkCheck,
+  Copy,
+  CopyPlus,
+  Pencil,
+} from 'lucide-react'
 import { Menu, type MenuEntry } from '../common/Menu'
 import { Sheet } from '../common/Sheet'
 import type { WorkspaceTab } from './TabItem'
@@ -34,14 +41,49 @@ function joined(groups: readonly (readonly TabMenuItem[])[]): MenuEntry[] {
 }
 
 /**
+ * Keeps the temporary tab as a normal tab, as a double-click on the tab
+ * does (decision 286). Its icon is a bookmark with a check, because a pin
+ * names the pinned tabs of a browser and of VS Code.
+ */
+const keepOpen: TabMenuItem = {
+  label: 'Keep open',
+  icon: BookmarkCheck,
+  changes: true,
+}
+
+/**
+ * The groups of the menu of a tab, before a read-only workspace leaves
+ * items out: a session tab has Rename session, its two copies, and the
+ * moves. The temporary tab has Keep open and the moves, and a kept file or
+ * diff tab has only the moves.
+ */
+function groupsOf(
+  tab: WorkspaceTab,
+  moves: readonly TabMenuItem[],
+): readonly (readonly TabMenuItem[])[] {
+  if (tab.kind === 'session') {
+    return [
+      [{ label: 'Rename session', icon: Pencil, changes: true }],
+      [
+        { label: transcriptItems.concise, icon: Copy, changes: false },
+        { label: transcriptItems.full, icon: CopyPlus, changes: false },
+      ],
+      moves,
+    ]
+  }
+  return tab.temporary ? [[keepOpen], moves] : [moves]
+}
+
+/**
  * The menu of a tab: a right click opens it, and on a phone a long press
  * that ends without a move. A session tab leads with Rename session, the
  * one way to rename a session. Its two copy items follow: the concise copy,
  * with each fold of the chat closed, and the full copy, with every fold
- * open. Every tab moves one place left or right. A move that the place of
- * the tab rules out keeps its place, off. A read-only workspace leaves out
- * each item that changes the workspace, so a session tab keeps only its
- * copy items, and a file or diff tab has no menu.
+ * open. The temporary tab leads with Keep open. Every tab moves one place
+ * left or right. A move that the place of the tab rules out keeps its
+ * place, off. A read-only workspace leaves out each item that changes the
+ * workspace, so a session tab keeps only its copy items, and a file or
+ * diff tab has no menu.
  */
 export function tabMenuOf(
   tabs: readonly WorkspaceTab[],
@@ -65,19 +107,10 @@ export function tabMenuOf(
       changes: true,
     },
   ]
-  const groups: TabMenuItem[][] =
-    tab.kind === 'session'
-      ? [
-          [{ label: 'Rename session', icon: Pencil, changes: true }],
-          [
-            { label: transcriptItems.concise, icon: Copy, changes: false },
-            { label: transcriptItems.full, icon: CopyPlus, changes: false },
-          ],
-          moves,
-        ]
-      : [moves]
   return joined(
-    groups.map((group) => group.filter((item) => !readOnly || !item.changes)),
+    groupsOf(tab, moves).map((group) =>
+      group.filter((item) => !readOnly || !item.changes),
+    ),
   )
 }
 

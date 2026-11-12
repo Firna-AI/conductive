@@ -14,6 +14,7 @@ import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
+import { withTemporaryTab } from './workspaceTemporaryTab'
 
 /**
  * A workspace that the create flow or a routine run made has one session,
@@ -98,6 +99,8 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
  * starter keeps the login for their own messages, the first session leads
  * to that view. After the second session sent its messages, the second
  * session can show, and each session tab leads to its chat of that time.
+ * The file or the diff that the state opens can be the temporary tab, as
+ * `withTemporaryTab` draws it.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -189,5 +192,8 @@ export function tabsFor(
       selected: true,
     })
   }
-  return state.tabRow === 'moved' ? withCodeMoved(tabs) : tabs
+  return withTemporaryTab(
+    state,
+    state.tabRow === 'moved' ? withCodeMoved(tabs) : tabs,
+  )
 }

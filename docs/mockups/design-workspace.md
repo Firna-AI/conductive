@@ -2,9 +2,9 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
-messages that wait for the sandbox and the tab row of the centre column.
-It also gives the number of a workspace with Copy link, and the bars of
-the cloud computer.
+messages that wait for the sandbox and the tab row of the centre column,
+with its temporary tab. It also gives the number of a workspace with Copy
+link, and the bars of the cloud computer.
 
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
@@ -24,9 +24,9 @@ the cloud computer.
   shown tab in view, and fades each end that clips tabs. A right click on a
   tab opens its menu at the pointer: Rename session, a line, Copy concise
   transcript and Copy full transcript, a line, then Move left and Move
-  right, from decisions 188 and 215. A file or diff tab has only the moves.
-  In a read-only workspace, the menu of a session tab holds only the two
-  copy items, and a file or diff tab opens no menu. A copy keeps the shown
+  right, from decisions 188 and 215. A kept file or diff tab has only the
+  moves. In a read-only workspace, the menu of a session tab holds only the
+  two copy items, and a file or diff tab opens no menu. A copy keeps the shown
   tab, and a toast gives its result, as `app/transcripts` shows. The menu
   is the one way to rename a session, so no tab shows a rename button.
   Rename session opens a field in place of the title of that tab, also when
@@ -36,6 +36,25 @@ the cloud computer.
   and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
   a drag, and `TabRename.module.css` the rename field. The app shares these
   modules.
+- The temporary tab, from decisions 284 to 287, is the one file or diff tab
+  that the next press on a file or a diff replaces, as
+  `app/files/temporary` shows. A press on a row of All files or Changes, or
+  on a file chip, opens the file or the diff in the temporary tab. When the
+  row has no temporary tab, it opens at the end of the row. Otherwise the
+  press replaces its file in the same place, also when a later tab stands
+  after it. A press on a file that has a tab shows that tab. The title of
+  the temporary tab shows in italics, also on the lifted copy of a drag,
+  and nothing else on the tab changes. A screen reader hears its name, then
+  ", temporary". The tab menu and the move messages keep the plain name. A
+  double-click on the tab or on the row of its file keeps it as a normal
+  tab, with an upright title, in its place. Its tab menu leads with Keep
+  open, which keeps it too, then a line, then Move left and Move right.
+  Keep open has the icon of a bookmark with a check, because a pin names
+  the pinned tabs of a browser. A drag, Move left, or Move right that
+  changes its place keeps it. A drag that Escape cancels, or that ends in
+  the same place, keeps it temporary. A phone row shows no file tabs, so a
+  phone draws no temporary tab. `.temporary` of `WorkspaceTabs.module.css`
+  styles the title.
 - Each workspace has a number in its org, and `workspaceLabel` in
   `src/components/workspaces/label.ts` shows it as `W-395`. The number
   shows in the header, in chips, and in a row of the command palette

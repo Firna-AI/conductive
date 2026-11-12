@@ -81,7 +81,7 @@ gives the child pages of `app/attachments` and `app/files`, and the flow
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
 the text, and a dropped folder that the box does not attach.
-`app/attachments/open` shows the file tab that a press on a sent chip
+`app/attachments/open` shows the temporary tab that a press on a sent chip
 opens, with the picture of the screenshot. The other child pages show a
 failed upload, a file over 25 MB, the sent message, and the files of a
 queued first message. `app/files/image` shows the picture of an image file
@@ -129,8 +129,10 @@ a dropped folder. [The chat](design-chat.md) gives the design of each part.
   screen declares its states in `src/screens/routineState.ts` in the same
   way. The tab and composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file, and
-  image tabs of the centre column. `composerStates` covers the composer,
-  with its links, mentions, attached files, and drops.
+  image tabs of the centre column. `temporaryTabStates` covers the
+  temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
+  row. `composerStates` covers the composer, with its links, mentions,
+  attached files, and drops.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
