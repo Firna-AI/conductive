@@ -19,6 +19,32 @@ You need installation permission for the GitHub App when you set up your own org
 
 - [Get access and complete setup](/docs/get-started)
 
+## Reorder your orgs
+
+The org list at the far left has your own order.
+Conductive saves that order with your account.
+It stays the same after a reload, on other devices, and in the Mac app.
+Other members keep their own order.
+
+On a computer, move an org in one of these ways:
+
+- Drag its tile up or down.
+  Press **Escape** to cancel a drag.
+- Right-click its tile.
+  Then choose **Move up** or **Move down**.
+- Focus its tile and press **Shift+F10** or the **Menu** key to open the same menu.
+  Then choose **Move up** or **Move down**.
+- Focus its tile and press **Alt+Up** or **Alt+Down** to move it one place.
+  On a Mac, use **Option** in place of **Alt**.
+
+On a phone, select the org name at the top of the list to open the org switcher.
+Then long-press an org and move it to its new place.
+
+A new org goes at the end.
+Suspended orgs and deleted orgs that you can still restore move in the same way.
+The command palette lists orgs in your order.
+When Conductive opens without a chosen org, it opens the first org in your list that is not deleted.
+
 ## Create an org
 
 1. Select **Create org** in the org list or **Get started**.

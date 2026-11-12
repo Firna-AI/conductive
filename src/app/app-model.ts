@@ -4,6 +4,7 @@ import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
 import {
   leaveOrgPath,
   type CreateOrgRequest,
+  type MoveOrgRequest,
   type OrgSummary,
   type RenameOrgRequest,
 } from '../shared/orgs'
@@ -16,6 +17,7 @@ import type { ComposerFocusRequest } from './composer-focus'
 import { FeedbackModel } from './feedback-model'
 import { failedBoot, readShared, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
+import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
 import { isSuspended } from './permissions'
 import type { AppServices } from './services'
@@ -32,7 +34,9 @@ const readOrgResponse = (body: unknown) => nested(record(body), 'org', readOrg)
  */
 export class AppModel {
   readonly boot = new Store<Boot>({ state: 'loading' })
-  readonly orgs = new Store<readonly OrgSummary[]>([])
+  private readonly orgList = new OrgList()
+  /** The orgs of the person in their own order, as `OrgList` says. */
+  readonly orgs: Readable<readonly OrgSummary[]> = this.orgList
   /**
    * The orgs whose requests the API refused with `org_suspended`. Such a
    * refusal shows that the org is suspended, also while its summary is old.
@@ -160,7 +164,7 @@ export class AppModel {
     const shared = await readShared(this.services.api)
     if (this.boot.get() !== from) return
     this.account.account.set(shared.account)
-    this.orgs.set(shared.orgs)
+    this.orgList.load(shared.orgs)
     this.models.set(shared.models)
     this.setupReply.set(shared.getStarted)
     this.boot.set({ state: 'ready', user })
@@ -242,10 +246,17 @@ export class AppModel {
    * follow it.
    */
   putOrg(org: OrgSummary): void {
-    this.orgs.change((orgs) =>
-      orgs.some((item) => item.id === org.id)
-        ? orgs.map((item) => (item.id === org.id ? org : item))
-        : [...orgs, org],
+    this.orgList.put(org)
+  }
+
+  /**
+   * Moves an org to `index` among the other orgs of the rail. The move
+   * shows at once. A failure takes back only this move, and throws.
+   */
+  moveOrg(orgId: string, index: number): Promise<void> {
+    const request: MoveOrgRequest = { orgId, index }
+    return this.orgList.move(orgId, index, () =>
+      this.services.api.send('PUT', API_PATHS.orgOrder, request, ignore),
     )
   }
 
@@ -283,6 +294,6 @@ export class AppModel {
    */
   async leaveOrg(orgId: string): Promise<void> {
     await this.orgApi(orgId).send('POST', leaveOrgPath(orgId), {}, ignore)
-    this.orgs.change((orgs) => orgs.filter((org) => org.id !== orgId))
+    this.orgList.remove(orgId)
   }
 }
