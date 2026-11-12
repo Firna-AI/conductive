@@ -99,7 +99,8 @@ Failed checks take priority over checks that still run.
 A merge takes priority over all checks.
 Archived workspaces keep a faint grey mark.
 
-A light runs around the mark while the agent works.
+A light runs around the mark while the agent works or the checks run.
+The moving light means that you do not need to act.
 The mark pulses when the agent needs input.
 With reduced motion, a still ring means the agent works.
 A still middle column means it needs input.
