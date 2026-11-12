@@ -3,11 +3,11 @@ import { expect, it } from 'vitest'
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { isRecord } from '../http'
 import { SOFTWARE } from '../lifecycle/backend-test-support'
+import { TOOLS_OUTPUT } from './test-support'
 import { boatRoute } from '../sandbox/routes'
 import { heldOperation } from '../test-support/held-operation'
 import { requestSoftwareImage } from './build'
 import { softwareImages } from './data'
-import { TOOLS_OUTPUT } from './test-support'
 
 const fixtureForTest = setupBackendTests()
 const digest = 'a'.repeat(64)

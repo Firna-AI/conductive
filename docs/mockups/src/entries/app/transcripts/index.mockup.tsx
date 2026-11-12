@@ -31,7 +31,7 @@ export const transcripts = defineScreen({
       slug: 'archived',
       title: 'Archived workspace',
       description:
-        'Checkout address autocomplete is archived, so its chat is read-only. A right click on the Address autocomplete tab opens its menu with only Copy concise transcript and Copy full transcript. Rename session, Move left, and Move right change the workspace, so the menu leaves them out. A file or diff tab of a read-only workspace, such as a workspace of a suspended org, opens no menu. On a phone, a long press on the tab opens the two items as a sheet, and no drag starts.',
+        'Checkout address autocomplete is archived, so its chat is read-only. A right click on the Address autocomplete tab opens its menu with only Copy link, Copy concise transcript, and Copy full transcript. Rename session, Move left, and Move right change the workspace, so the menu leaves them out. A file or diff tab of a read-only workspace, such as a workspace of a suspended org, opens no menu. On a phone, a long press on the tab opens the three items as a sheet, and no drag starts.',
       rationale:
         'The user chose option B of decision 214 on 9 November 2026: a copy changes nothing, and an archived workspace holds finished work that a member is likely to keep. The menu leaves out each item that a read-only workspace does not allow, so it shows no greyed rows that never turn on. An item that the place of a tab rules out, such as Move left on the first tab, still keeps its place, greyed. A design call of the same day marks each item that changes the workspace, so a later item that only reads needs no new decision.',
       props: {

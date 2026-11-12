@@ -50,7 +50,7 @@ function FileTabLabel(props: { tab: FilesTab; name: string }) {
  */
 export function FileTabItem(props: {
   tab: FilesTab
-  /** The label of the path, from `listLabel`, or null. */
+  /** The label of the path, from `tabLabel`, or null. */
   label: string | null
   selected: boolean
   navigation: FilesNavigation

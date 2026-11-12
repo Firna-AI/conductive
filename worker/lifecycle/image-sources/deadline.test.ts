@@ -6,14 +6,11 @@ import { createHarness, type TestHarness } from '../../test-support/harness'
 import { advanceImageBuild } from '../image-builds'
 import { readBuild } from '../build-data'
 import { readOrgImage } from '../org-image-data'
-import {
-  WORKSPACE_TOOLS_DIRECTORY,
-  workspaceToolsCommands,
-} from '../../tools/image'
-import { WORKSPACE_TOOL_SOURCES } from '../../tools/image-assets'
+import { WORKSPACE_TOOLS_DIRECTORY } from '../../tools/image'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { readSourceJob } from './source-data'
+import { TOOLS_COMMAND_COUNT } from '../../tools/image-commands.test-support'
 
 const privateKey = generateKeyPairSync('rsa', { modulusLength: 2048 })
   .privateKey.export({ type: 'pkcs1', format: 'pem' })
@@ -100,7 +97,7 @@ it('returns each alarm while native Git runs and renews the builder before allow
     }
     expect(complete).toBe(true)
     expect(order).toEqual([
-      ...workspaceToolsCommands(WORKSPACE_TOOL_SOURCES).map(() => 'tools'),
+      ...Array<string>(TOOLS_COMMAND_COUNT).fill('tools'),
       'software',
       'install',
       'cleanup',

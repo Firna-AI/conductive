@@ -30,6 +30,7 @@ export async function imageSoftwareFixture(options: { relay?: boolean } = {}) {
     repository,
     join(root, 'usr/local/bin'),
     join(root, 'etc/systemd/system'),
+    join(root, 'etc/udev/rules.d'),
     join(root, 'run/ascii-secrets'),
     join(root, 'run/conductive'),
   ]) {
@@ -125,6 +126,11 @@ cp ${shellQuote(archive)} "$output"
     relaySocket: () =>
       readFile(
         join(root, 'etc/systemd/system/conductive-preview-relay.socket'),
+        'utf8',
+      ),
+    diskCacheRule: () =>
+      readFile(
+        join(root, 'etc/udev/rules.d/60-conductive-disk-cache.rules'),
         'utf8',
       ),
     githubCli: (args: readonly string[]) =>

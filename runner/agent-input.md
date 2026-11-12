@@ -14,6 +14,11 @@ the workspace repository. It keeps existing exclude rules and tracked
 files. It leaves a file or link named `.context` alone. A failed step
 warns and lets the runner continue.
 
+Each file report then adds the untracked files of `.context/` to the
+tree, also the files that Git ignores. `contextFolderFiles` lists them
+with `git ls-files --others` and no ignore rules. The changes report
+does not take them, so Changes leaves them out.
+
 [The context folder](../docs/protocol/repository-folders.md#the-context-folder)
 states its use and limits. A new org image build installs the runner with this
 startup step and the instruction text below.
@@ -85,6 +90,7 @@ guide gives the exact instruction and the metadata source.
 
 - `src/context-folder.ts`: `prepareContextFolder` adds the local exclude
   rule and makes the context folders before startup reports.
+  `contextFolderFiles` lists the files of the folder for the file tree.
 - `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
 - `src/instruction-state.ts`: the built text with its branches, the parser
   of saved branches, and the reader of the branches of older saved text.

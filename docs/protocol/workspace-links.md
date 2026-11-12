@@ -1,7 +1,8 @@
 # Workspace links
 
 This doc holds the requirements and the decisions in force for links to a
-workspace. It covers Copy link in the workspace header, and the chips that
+workspace. It covers Copy link in the workspace header and in the menus,
+and the chips that
 show a workspace link or a session link in chat text and in the message
 field of each composer.
 [Workspace numbers and links](workspaces-and-sandboxes.md#workspace-numbers-and-links)
@@ -34,6 +35,11 @@ number names a dated record, as
   workspace, in the same order on both sizes.
 - A button at the right end of the phone header was rejected, because it
   left the name too little room.
+- The menu of each workspace row also has Copy link, which copies the
+  same link, as [Copy link](workspace-menu.md#copy-link) says.
+- The tab menu of each session tab has Copy link too. It copies the link
+  of that session, as
+  [Session links](agents-and-sessions.md#session-links) says.
 
 ## Chips
 

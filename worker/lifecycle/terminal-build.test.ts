@@ -7,9 +7,7 @@ import { shellQuote } from './commands'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { IMAGE_NODE_RUNTIME } from './image-runtime'
 import { lifecycleCommandBody } from './command-test-support'
-import { privilegedCommand } from '../terminal/privileged'
-import { workspaceToolsCommands } from '../tools/image'
-import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
+import { TOOLS_COMMAND_COUNT } from '../tools/image-commands.test-support'
 
 const backendFixture = setupBackendTests()
 
@@ -31,12 +29,11 @@ it('runs terminal installation inside the detached software command and streams 
     phase: 'software',
     processId: 1,
   })
-  const tools = workspaceToolsCommands(WORKSPACE_TOOL_SOURCES)
   expect(boat.commandRequests).toEqual([
-    ...tools.map((command) => ({
+    ...Array.from({ length: TOOLS_COMMAND_COUNT }, () => ({
       sandboxId: 'bx_1',
       detached: false,
-      command: privilegedCommand(command),
+      command: expect.stringContaining('/opt/conductive/agent-tools/'),
     })),
     {
       sandboxId: 'bx_1',
@@ -46,7 +43,7 @@ it('runs terminal installation inside the detached software command and streams 
       ),
     },
   ])
-  const software = boat.commands[tools.length]
+  const software = boat.commands[TOOLS_COMMAND_COUNT]
   expect(lifecycleCommandBody(software)).toContain(
     'RuntimeDirectoryPreserve=yes',
   )

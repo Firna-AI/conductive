@@ -4,9 +4,9 @@ import { createApp } from '../application'
 import type { AppEnv } from '../env'
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { SOFTWARE } from '../lifecycle/backend-test-support'
+import { TOOLS_OUTPUT } from './test-support'
 import { TEST_TIME } from '../test-support/harness'
 import { sha256Hex } from './digest'
-import { TOOLS_OUTPUT } from './test-support'
 
 const fixtureForTest = setupBackendTests()
 const path = '/v1/deploy/software-image'

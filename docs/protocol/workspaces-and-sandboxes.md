@@ -21,7 +21,8 @@ These docs belong to this doc:
 - [Continue](continue.md): the next task of a workspace after a merge, on
   a new branch with the same sandbox and sessions.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
-  moves, reassigns, renames, and archives the workspace.
+  moves, reassigns, renames, and archives the workspace, and copies its
+  link.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
   terminal, the port previews, and the desktop.
 
@@ -47,6 +48,28 @@ These docs belong to this doc:
   rejected, because each workspace gets its own sandbox.
 - Every sandbox has one machine size for now: Boat's default size, with
   4 vCPU and 8 GB.
+
+## Disk flushes
+
+- A sandbox sends no disk flush to its host (disk decision 1). So `fsync`
+  returns when the host has the data, not when the host's disk has it.
+  Disk decisions are the decisions of the change that added this section.
+- Reason: a flush on a Boat disk took about 22 ms. Tools that sync each
+  write ran many times slower. For example, a page of the app under
+  `npm run dev` took 30 seconds or more, and about 4 seconds without
+  flushes.
+- E2B and Superserve sandboxes also send no flush.
+- Risk: a crash or a power loss of the host can lose recent writes, and
+  can damage the file system of the sandbox. A crash of a program or of
+  the sandbox, and a normal stop, lose nothing.
+- Boat takes a snapshot of the disk each minute. After a machine failure,
+  Boat restores the last good snapshot, so a failure already loses up to a
+  minute of writes. So flushes add little protection.
+- A sandbox with flushes was rejected, because its previews of dev servers
+  were too slow. A wait for faster Boat storage was rejected, because its
+  date is unknown.
+- The image build installs the rule. A sandbox from an older image keeps
+  its flushes until a new image build.
 
 ## The org image
 
@@ -134,7 +157,8 @@ These docs belong to this doc:
 ## The workspace menu
 
 - [Workspace menu](workspace-menu.md) holds the requirements of the menu
-  of a workspace row: Move to section, Reassign to, Rename, and Archive.
+  of a workspace row: Move to section, Reassign to, Rename, Copy link, and
+  Archive.
 
 ## Tools of a workspace
 

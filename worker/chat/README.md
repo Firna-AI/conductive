@@ -37,7 +37,7 @@ which serves these routes. The path helpers live in
 | `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts |
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
 | `GET` transcript | `sessionTranscriptPath` | Copies one session as concise or full Markdown |
-| `GET` history | `chatHistoryPath` | Reads the stored events of one session |
+| `GET` history | `chatHistoryPath` | Reads the stored events of one session in newest-first pages, with `before` and `through` |
 | `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
 | `GET` runner socket | `MACHINE_PATHS.runner` | Connects the agent runner on the machine hostname |
 

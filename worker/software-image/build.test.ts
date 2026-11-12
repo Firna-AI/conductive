@@ -2,10 +2,10 @@ import { expect, it } from 'vitest'
 
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { SOFTWARE } from '../lifecycle/backend-test-support'
+import { TOOLS_OUTPUT } from './test-support'
 import { SAVED_IMAGE_NAME } from '../lifecycle/image-names'
 import { requestSoftwareImage } from './build'
 import { softwareImages } from './data'
-import { TOOLS_OUTPUT } from './test-support'
 
 const fixtureForTest = setupBackendTests()
 const digest = 'a'.repeat(64)

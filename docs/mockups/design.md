@@ -73,10 +73,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
-- The menu of a workspace row has Move to section, Reassign to, Rename, a
-  line, then Archive, as `app/workspace-menu` shows. It lists only the
-  actions that the person can use, from `workspaceMenu.ts` in
-  `src/components/workspaces/`, and a row with none has no menu. The app
+- The menu of a workspace row has Move to section, Reassign to, Rename,
+  Copy link, a line, then Archive, as `app/workspace-menu` shows. It lists
+  only the actions that the person can use, from `workspaceMenu.ts` in
+  `src/components/workspaces/`. Every row offers Copy link, so every row
+  has a menu. `linkCopy.ts` in `src/components/workspace/` gives the words
+  of Copy link and of its result. The app
   reads the same list, so `workspaceMenu.ts` imports no fixture. A right
   click opens the menu at the pointer, from `RowMenu.tsx` beside it.
   Shift+F10 and the Menu key on a focused row open it below the row. No
@@ -89,6 +91,19 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Rename puts a field in place of the name and the time, with the name
   selected. `RowMenu.module.css` styles the field and the menu at the
   pointer.
+- `OrgRail` in `src/components/layout/` draws the order of the orgs that
+  each person keeps, from decisions 515 to 517, as `app/orgs/reorder`
+  shows. A drag of a tile looks like the drag of a tab and of a workspace
+  row: the tile lifts as a raised card, a faint copy stays at its place,
+  and a line in the accent colour marks where it lands. The line takes no
+  space, and the rail names no org during a drag. A right click on a tile
+  opens its menu at the pointer: Move up and Move down, from
+  `orgTileMenu.ts` in `src/components/orgs/`. Shift+F10 and the Menu key
+  open it beside the tile. A move that the place of the tile rules out
+  keeps its place, greyed. Create org, Operator, and the account have no
+  menu. On a phone, a long press lifts an org in the org switcher with the
+  same look, and opens no menu. `OrgDrop` and `OrgDrag.module.css` beside
+  `orgTileMenu.ts` draw the drag on the rail and in the org switcher.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.

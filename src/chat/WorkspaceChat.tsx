@@ -9,7 +9,9 @@ import type { WorkspaceView } from '../shared/workspace-view'
 import type { Workspace } from '../shared/workspaces'
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
+import type { ComposerFocus } from './components/Composer'
 import { SessionChat, type ChatHost } from './components/SessionChat'
+import { useSessionLinkCopy } from './components/session-link-copy'
 import { SessionTabs } from './components/SessionTabs'
 import { useTabKeys } from './components/tab-keys'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
@@ -84,6 +86,11 @@ export interface ChatViewProps {
    * without it.
    */
   readOnly?: boolean
+  /**
+   * The composer takes the focus when it shows, as after a click on the
+   * workspace in the sidebar. `ComposerFocus` gives the rules.
+   */
+  composerFocus?: ComposerFocus | null
 }
 
 export interface WorkspaceChatProps extends ChatConnection, ChatViewProps {}
@@ -122,7 +129,13 @@ function ChatBody(
     overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
   const links = useChatLinksOf(controller, snapshot, props.onOpenPage)
-  const copy = useTranscriptCopy(controller, props.copy ?? browserCopy)
+  const copyServices = props.copy ?? browserCopy
+  const copy = useTranscriptCopy(controller, copyServices)
+  const copyLink = useSessionLinkCopy(
+    controller.target,
+    links.origin,
+    copyServices,
+  )
   useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
@@ -152,6 +165,7 @@ function ChatBody(
         onCancelRename={controller.dismissOverlay}
         onClose={controller.requestClose}
         onCopy={copy}
+        onCopyLink={copyLink}
         onMove={controller.moveTab}
         onNew={() => void controller.newSession()}
         onRename={(id, title) => void controller.rename(id, title)}
@@ -164,6 +178,7 @@ function ChatBody(
       />
       {content ?? (
         <SessionChat
+          composerFocus={props.composerFocus}
           controller={controller}
           host={props.host}
           mobile={mobile}

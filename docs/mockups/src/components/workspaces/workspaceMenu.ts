@@ -1,12 +1,13 @@
 import type { LucideIcon } from 'lucide-react'
 import { Archive, FolderInput, Pencil, UserRoundPen } from 'lucide-react'
 import type { MenuEntry } from '../common/Menu'
+import { linkItem } from '../workspace/linkCopy'
 
 /** An action of the workspace menu that opens its choices beside the menu. */
 export type Submenu = 'move' | 'reassign'
 
 /** An action of the workspace menu. */
-type WorkspaceAction = Submenu | 'rename' | 'archive'
+type WorkspaceAction = Submenu | 'rename' | 'copyLink' | 'archive'
 
 /** What the person signed in may do to one workspace of the list. */
 export type RowAccess = {
@@ -17,6 +18,8 @@ export type RowAccess = {
   archived: boolean
   /** The org has another section, where the workspace can move. */
   otherSection: boolean
+  /** Nothing in the org can change, as in a suspended org. */
+  readOnly: boolean
 }
 
 /** One row of the workspace menu: an action, or the line before Archive. */
@@ -42,26 +45,36 @@ function action(
 
 /**
  * The menu of a workspace row, with only the actions that the person can
- * use. Members move and rename a workspace that is not archived. Only
- * admins reassign, and only the owner and the admins archive. The archived
- * row of an admin offers only Reassign to. An org with one section offers
- * no Move to section. An empty menu means no menu, so a right click keeps
- * the browser's own menu. The mockups and the app read this one list. It
- * holds no data of a screen, so the app can import it.
+ * use. Every row offers Copy link, which changes nothing, also an archived
+ * row and a row of a read-only org. Members move and rename a workspace
+ * that is not archived. Only admins reassign, and only the owner and the
+ * admins archive. The archived row of an admin also offers Reassign to. An
+ * org with one section offers no Move to section. A read-only org offers
+ * only Copy link. The mockups and the app read this one list. It holds no
+ * data of a screen, so the app can import it.
  */
 export function workspaceMenuItems(access: RowAccess): WorkspaceMenuItem[] {
   const reassign = action('reassign', 'Reassign to', UserRoundPen)
-  if (access.archived) return access.admin ? [reassign] : []
+  const copyLink = action('copyLink', linkItem.label, linkItem.icon)
+  if (access.readOnly) return [copyLink]
+  if (access.archived) return access.admin ? [reassign, copyLink] : [copyLink]
   const items: WorkspaceMenuItem[] = []
   if (access.otherSection) {
     items.push(action('move', 'Move to section', FolderInput))
   }
   if (access.admin) items.push(reassign)
-  items.push(action('rename', 'Rename', Pencil))
+  items.push(action('rename', 'Rename', Pencil), copyLink)
   if (access.admin || access.owner) {
     items.push({ kind: 'divider' }, action('archive', 'Archive', Archive))
   }
   return items
+}
+
+/** The menu of the row offers Rename. */
+export function renames(access: RowAccess): boolean {
+  return workspaceMenuItems(access).some(
+    (item) => item.kind === 'action' && item.action === 'rename',
+  )
 }
 
 /**

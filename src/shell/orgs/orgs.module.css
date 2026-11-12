@@ -1,0 +1,12 @@
+/*
+ * The frame of a lifted org above the page. It stands in for the drop line
+ * of the mockups, at the height of the pointer, so the raised card of
+ * `OrgDrag.module.css` hangs below it and to its right, as the mockups draw
+ * it below the line. It takes no space and no pointer input.
+ */
+.liftedFrame {
+  position: fixed;
+  z-index: 60;
+  height: 0;
+  pointer-events: none;
+}

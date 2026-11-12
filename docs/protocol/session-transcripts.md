@@ -30,7 +30,7 @@ at `app/tabs` and `app/transcripts`.
 - The tab menu of each session tab holds two copy items: Copy concise
   transcript and Copy full transcript (decision 215).
   [The tab row](agents-and-sessions.md#the-tab-row) gives their place in
-  the menu.
+  the menu, after Copy link, which copies the link of the session.
 - Each item copies the transcript of the session of its tab (decision
   213). A member can then paste it into another agent, a document, or a
   pull request.

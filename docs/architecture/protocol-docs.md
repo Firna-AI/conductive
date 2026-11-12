@@ -6,7 +6,7 @@ that meet them, and gives the terms and the meaning of a decision number.
 This page lists each protocol doc and what it covers.
 
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
-  image and the life of a workspace.
+  image, the life of a workspace, and the disk flushes of a sandbox.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
@@ -86,6 +86,8 @@ This page lists each protocol doc and what it covers.
     for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
+  - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
+    in the rail that each person keeps, and how the person changes it.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.

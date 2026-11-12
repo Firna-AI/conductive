@@ -3,10 +3,10 @@ import {
   type WorkspaceToolSource,
 } from '../../tools/image-manifest'
 import type { CommandResult } from '../sandbox/provider'
+import { privilegedCommand, shellArgument } from '../terminal/privileged'
 import { imageNodeExecutable } from '../lifecycle/image-runtime'
 import { WORKSPACE_TOOLS_MCP } from '../../src/shared/agent-tools'
 import { TOOL_ENV } from '../../tools/context'
-import { privilegedCommand } from '../terminal/privileged'
 
 /** @public Image installation checks identify the tools by this path. */
 export const WORKSPACE_TOOLS_DIRECTORY = '/opt/conductive/agent-tools'
@@ -14,13 +14,14 @@ export const WORKSPACE_TOOLS_COMMAND = WORKSPACE_TOOLS_MCP.command
 export const WORKSPACE_TOOLS_SECRETS_FILE = '/run/ascii-secrets/env.sh'
 
 /**
- * Linux refuses one program argument of 128 KiB or more, and the sandbox runs
- * each privileged command as one argument. This limit, in UTF-8 bytes, leaves
- * room for the provider's own wrapper.
+ * Linux refuses one exec argument of 128 KiB or more (`MAX_ARG_STRLEN`). The
+ * sandbox runs each command as one shell argument, and the sudo wrapper
+ * escapes each quote again. So each install command, with that wrapper,
+ * stays under this size, with room for the provider's own wrapper.
  */
-export const WORKSPACE_TOOLS_COMMAND_LIMIT = 64 * 1024
+export const WORKSPACE_TOOLS_COMMAND_BYTES = 64 * 1024
 
-/** Build the same install commands, in order, for execution and software versioning. */
+/** Build the same install commands, in order, for execution and versioning. */
 export function workspaceToolsCommands(
   sources: readonly WorkspaceToolSource[],
   root = '/',
@@ -67,7 +68,7 @@ exit 1
     return write(`${directory}/${path}`, source, '0644')
   })
   // The launcher comes last, so the command exists only after its sources.
-  return batches([
+  return commandBatches([
     `install -d ${quote(`${directory}/tools`)} ${quote(`${directory}/src/shared`)} ${quote(`${prefix}/usr/local/bin`)}`,
     ...writes,
     write(`${directory}/package.json`, '{"type":"module"}\n', '0644'),
@@ -89,25 +90,35 @@ export async function installWorkspaceTools(
   }
 }
 
-const ENCODER = new TextEncoder()
+const BATCH_START = 'set -eu'
 
-/** Group the steps in order, so each privileged command stays under the limit. */
-function batches(steps: readonly string[]): string[] {
-  const commands: string[] = []
-  let current = 'set -eu'
+/**
+ * Group the steps in order into commands under the size limit. No step
+ * needs the shell state of an earlier step, so each command starts afresh.
+ * A step that alone passes the limit gets its own command, and the provider
+ * then reports the failure.
+ */
+function commandBatches(steps: readonly string[]): string[] {
+  const start = utf8Bytes(privilegedCommand(BATCH_START))
+  const batches: string[][] = []
+  let batch: string[] = []
+  let size = 0
   for (const step of steps) {
-    const next = `${current}\n${step}`
-    if (
-      current !== 'set -eu' &&
-      ENCODER.encode(privilegedCommand(next)).length >
-        WORKSPACE_TOOLS_COMMAND_LIMIT
-    ) {
-      commands.push(current)
-      current = `set -eu\n${step}`
-    } else current = next
+    // The wrapper escapes each character alone, so the sizes add up.
+    const added = utf8Bytes(shellArgument(`\n${step}`)) - 2
+    if (batch.length === 0 || size + added > WORKSPACE_TOOLS_COMMAND_BYTES) {
+      batch = [BATCH_START]
+      batches.push(batch)
+      size = start
+    }
+    batch.push(step)
+    size += added
   }
-  commands.push(current)
-  return commands
+  return batches.map((lines) => lines.join('\n'))
+}
+
+function utf8Bytes(text: string): number {
+  return new TextEncoder().encode(text).length
 }
 
 function write(path: string, contents: string, mode: string): string {
