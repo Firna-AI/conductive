@@ -54,9 +54,13 @@ Each item is my design call of 12 November 2026, unless it says otherwise.
   and a finger after a long press. A click with no drag still collapses
   or opens the section. The menu button keeps its own press.
 - **Drag look.** The header lifts under the pointer, with its name and
-  its count. The section stays in its place, faint, so the list does not
-  jump. A line between two sections shows where it lands. A status line
-  tells a screen reader the section and its new place.
+  its count, also while the section is open. The section stays in its
+  place, faint, so the list does not jump. A line in the middle of the
+  gap between two sections shows where it lands, and it takes no room. A
+  status line tells a screen reader the section and its new place. The
+  mockup draws the lifted header after the name of the section below the
+  line, so that the picture shows both names; in the app it follows the
+  pointer.
 - **Drop place.** The section lands before the first other section whose
   middle is below the pointer. The Archived group is no target. A drop at
   its own place moves nothing. Escape ends the drag with no move.
@@ -75,15 +79,17 @@ The Sections page of the catalogue changes. Its menu gets the two new
 items, and it gets a new variant for the drag of a section, on the phone
 and on the desktop.
 
-- [ ] Add Move section up and Move section down to `sectionMenu` in
+- [x] Add Move section up and Move section down to `sectionMenu` in
       `docs/mockups/src/components/workspaces/menus.ts`, and update the
-      description of the Sections entry.
-- [ ] Add a "Drag a section" variant to
+      description of the Sections entry. `sectionMenu` takes the place of
+      the section, so it hides the item that does not apply.
+- [x] Add a "Drag a section" variant to
       `docs/mockups/src/entries/app/sections/index.mockup.tsx`: the
-      lifted header, the faint section, and the drop line.
-- [ ] Update `docs/mockups/catalogue.md` when it lists the variants.
-- [ ] Run `npm run mockups:check`. Smoke-test the Sections page.
-- [ ] Update the design of this plan for each problem that the mockups
+      lifted header, the faint section, and the drop line. `ListDrag` is
+      now a drag of a workspace or of a section.
+- [x] Update `docs/mockups/catalogue.md` when it lists the variants.
+- [x] Run `npm run mockups:check`. Smoke-test the Sections page.
+- [x] Update the design of this plan for each problem that the mockups
       show.
 
 ## Milestone 2: Documentation and protocol

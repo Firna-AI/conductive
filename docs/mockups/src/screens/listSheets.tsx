@@ -8,7 +8,7 @@ import { AccountAvatar, OrgTile } from '../components/orgs/OrgTile'
 import { sectionMenu } from '../components/workspaces/menus'
 import type { RowMenuOpen } from '../components/workspaces/RowMenu'
 import { orgList, type OrgKey } from '../fixtures/orgs'
-import { menuSection, sections } from '../fixtures/sections'
+import { menuSection, sectionKeys, sections } from '../fixtures/sections'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
@@ -97,7 +97,14 @@ export function SectionSheet() {
   const section = sections[menuSection]
   return (
     <Sheet title={section.name}>
-      <Menu entries={sectionMenu} label={section.name} placement="sheet" />
+      <Menu
+        entries={sectionMenu({
+          first: sectionKeys[0] === menuSection,
+          last: sectionKeys.at(-1) === menuSection,
+        })}
+        label={section.name}
+        placement="sheet"
+      />
     </Sheet>
   )
 }

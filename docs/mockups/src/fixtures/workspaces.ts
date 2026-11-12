@@ -283,6 +283,7 @@ export const workspaceList: readonly Workspace[] = [
 
 /** The workspace that the drag state moves, and where it lands. */
 export const workspaceDrag = {
+  kind: 'workspace',
   workspace: 'webhook-retries',
   section: 'general',
   index: 1,
