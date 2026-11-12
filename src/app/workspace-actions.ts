@@ -1,6 +1,7 @@
 import { workspacePath, type Workspace } from '../shared/workspaces'
 import { readWorkspaceResponse } from './api/read-workspaces'
 import { ArchiveModel, type ArchiveAction } from './archive-model'
+import type { RunningWrite } from './archive-overlay'
 import {
   workspaceLifecycle,
   workspaceReassigned,
@@ -13,10 +14,12 @@ import { Store } from './store'
 /** The writes of workspace rows, without opening their workspaces. */
 export class WorkspaceActions {
   /**
-   * The Archive or the Restore that runs for each workspace of the org. Its
-   * controls show it busy, and another one waits for its end.
+   * The Archive or the Restore that runs for each workspace of the org, and
+   * when it started. The list and the open workspace show a running Archive
+   * as done. The controls of a running Restore show it busy. Another write
+   * of the workspace waits for its end.
    */
-  readonly running = new Store<ReadonlyMap<string, ArchiveAction>>(new Map())
+  readonly running = new Store<ReadonlyMap<string, RunningWrite>>(new Map())
   private readonly org: OrgModel
   private readonly archives = new Map<string, ArchiveModel>()
 
@@ -61,7 +64,7 @@ export class WorkspaceActions {
   /** Marks the Archive or the Restore of a workspace that runs, or its end. */
   setRunning(workspaceId: string, action: ArchiveAction | null): void {
     const next = new Map(this.running.get())
-    if (action) next.set(workspaceId, action)
+    if (action) next.set(workspaceId, { action, at: this.org.services.now() })
     else next.delete(workspaceId)
     this.running.set(next)
   }

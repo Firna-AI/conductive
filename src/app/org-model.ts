@@ -20,6 +20,7 @@ import {
   readRepositories,
   readSettings,
 } from './api/read-settings'
+import { listWithArchives } from './archive-overlay'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
@@ -27,7 +28,14 @@ import { buildsWait, listWait, onEntry, routinesWait } from './org-waits'
 import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
-import { ready, Store, valueOf, type Loadable, type Readable } from './store'
+import {
+  derived,
+  ready,
+  Store,
+  valueOf,
+  type Loadable,
+  type Readable,
+} from './store'
 import { WorkspaceActions } from './workspace-actions'
 import {
   neverSuspended,
@@ -83,7 +91,17 @@ export class OrgModel {
     readonly settings: Resource<OrgSettings>
   }
   readonly sections: Readable<Loadable<readonly Section[]>>
+  /**
+   * The workspaces as screens show them: each Archive that runs shows as
+   * done, so it feels instant. A failed Archive shows the row as before.
+   */
   readonly workspaces: Readable<Loadable<readonly Workspace[]>>
+  /**
+   * The workspaces as the server confirmed them, without the Archives that
+   * wait for their reply. The detail of the open workspace follows them, so
+   * its order never takes a record that a failed Archive takes back.
+   */
+  readonly confirmedWorkspaces: Readable<Loadable<readonly Workspace[]>>
   readonly repositories: Readable<Loadable<readonly Repository[]>>
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
@@ -132,7 +150,12 @@ export class OrgModel {
     const { list, repositories, builds, members, routines } = this.resources
     this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
-    this.workspaces = partOf(list.store, (value) => value.workspaces)
+    this.confirmedWorkspaces = partOf(list.store, (value) => value.workspaces)
+    this.workspaces = derived(
+      this.confirmedWorkspaces,
+      this.workspaceActions.running,
+      listWithArchives,
+    )
     this.repositories = repositories.store
     this.builds = builds.store
     this.members = members.store
@@ -185,8 +208,16 @@ export class OrgModel {
     )
   }
 
+  /** A workspace as screens show it, as `workspaces` says. */
   workspace(workspaceId: string): Workspace | undefined {
     return valueOf(this.workspaces.get())?.find(
+      (item) => item.id === workspaceId,
+    )
+  }
+
+  /** A workspace as the server confirmed it, as `confirmedWorkspaces` says. */
+  confirmedWorkspace(workspaceId: string): Workspace | undefined {
+    return valueOf(this.confirmedWorkspaces.get())?.find(
       (item) => item.id === workspaceId,
     )
   }

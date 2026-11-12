@@ -37,6 +37,37 @@ export class Store<T> implements Readable<T> {
   }
 }
 
+/**
+ * A value that `combine` makes from two stores. It follows both, and it
+ * keeps its last value while neither changes, so a screen draws again only
+ * after a change. It keeps no subscription of its own.
+ */
+export function derived<A, B, T>(
+  first: Readable<A>,
+  second: Readable<B>,
+  combine: (first: A, second: B) => T,
+): Readable<T> {
+  let last: { first: A; second: B; value: T } | null = null
+  return {
+    get: () => {
+      const a = first.get()
+      const b = second.get()
+      if (!last || last.first !== a || last.second !== b) {
+        last = { first: a, second: b, value: combine(a, b) }
+      }
+      return last.value
+    },
+    subscribe: (listener) => {
+      const stopFirst = first.subscribe(listener)
+      const stopSecond = second.subscribe(listener)
+      return () => {
+        stopFirst()
+        stopSecond()
+      }
+    },
+  }
+}
+
 export function useStore<T>(store: Readable<T>): T {
   return useSyncExternalStore(store.subscribe, store.get, store.get)
 }
