@@ -82,6 +82,15 @@ decision number names a dated record, as
   message and its files, and the model picker.
 - The dialog always names the org and the section of the new workspace,
   also General.
+- The org and the section are a menu of the sections of the org, in the
+  order of the list, with the current section checked. A pick puts the
+  new workspace in that section. The menu has no Archived item, because
+  Archived is a group of the list and not a section. The user asked for
+  the menu on 12 November 2026.
+- The pick belongs to the draft. So a close keeps it with the message,
+  and the page of the same org and section names the picked section. A
+  create ends the pick, so the next draft starts in the section that
+  opened it.
 - The button of the dialog is Create. The button of the page is Send,
   because the page looks like the chat that it becomes.
 - The dialog shows the notices of the page: the first build, a waiting

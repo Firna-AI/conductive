@@ -4,6 +4,7 @@ import { classes } from '../../../docs/mockups/src/components/common/classes'
 import layer from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
 import styles from '../../../docs/mockups/src/components/new-workspace/NewWorkspaceDialog.module.css'
 import { useNavigation } from '../../app/navigation'
+import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { defaultSection } from '../../app/sections'
 import { useStore, valueOf } from '../../app/store'
 import {
@@ -25,19 +26,24 @@ import { trapTab } from '../ui/Sheet'
 import ui from '../ui/ui.module.css'
 import { orgRefusal, RefusedBar } from '../workspace/SandboxNotice'
 import { ChooseRepositoriesNotice } from './notices'
-import { RepositoryMenu } from './parts'
+import { RepositoryMenu, SectionMenu } from './parts'
 import local from './new-workspace.module.css'
 import { OrgLinks } from './OrgLinks'
 import { useNewWorkspaceForm } from './useNewWorkspaceForm'
 
-/** The org and the section that the new workspace joins, such as General. */
-function usePlace(org: OrgSummary, sectionId: string | null): string {
-  const sections = valueOf(useStore(useOrgModel(org.id).sections))
+/**
+ * The section that the new workspace joins, such as General: the pick of
+ * the draft, else the section of the dialog. It is `undefined` while the
+ * sections load, and for a section that the org no longer has.
+ */
+function useSection(org: OrgSummary, model: NewWorkspaceModel) {
+  const sections = valueOf(useStore(useOrgModel(org.id).sections)) ?? []
+  const id = useStore(model.draft).sectionId ?? model.sectionId
   const section =
-    sectionId === null
-      ? defaultSection(sections ?? [])
-      : sections?.find((item) => item.id === sectionId)
-  return section ? `${org.name} · ${section.name}` : org.name
+    id === null
+      ? defaultSection(sections)
+      : sections.find((item) => item.id === id)
+  return { sections, section }
 }
 
 /**
@@ -98,7 +104,7 @@ function DialogCard(props: {
   }
   const form = useNewWorkspaceForm(org, model, leave)
   const { suspended } = useOrgAccess(org)
-  const place = usePlace(org, props.sectionId)
+  const { sections, section } = useSection(org, model)
   const sending = form.create.state === 'sending'
   const card = useRef<HTMLElement>(null)
   const message = useRef<FieldHandle>(null)
@@ -152,7 +158,19 @@ function DialogCard(props: {
             waiting={form.waiting}
           />
         ) : null}
-        <span className={styles.place}>{place}</span>
+        {section ? (
+          <SectionMenu
+            chevron={styles.chevron}
+            choose={(id) => model.setSection(id)}
+            chosen={section}
+            className={classes(styles.anchor, styles.placeMenu)}
+            disabled={sending}
+            org={org.name}
+            sections={sections}
+          />
+        ) : (
+          <span className={styles.place}>{org.name}</span>
+        )}
       </div>
       {suspended ? (
         // A suspended org refuses each create, as on the page.
@@ -234,7 +252,8 @@ function DialogCard(props: {
 /**
  * New workspace as a dialog over the whole frame, on a computer, as the
  * mockup draws it. The repository picker sits at the top left, and the org
- * and the section of the new workspace at the top right. The message and
+ * and the section of the new workspace at the top right, as a menu of the
+ * sections of the org. The message and
  * its files fill the middle, with the notices of the page under them. The
  * model picker sits at the bottom left, and the attach button and Create
  * at the bottom right. The dialog and the page of an org and a section
