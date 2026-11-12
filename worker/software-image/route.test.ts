@@ -6,6 +6,7 @@ import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { SOFTWARE } from '../lifecycle/backend-test-support'
 import { TEST_TIME } from '../test-support/harness'
 import { sha256Hex } from './digest'
+import { TOOLS_OUTPUT } from './test-support'
 
 const fixtureForTest = setupBackendTests()
 const path = '/v1/deploy/software-image'
@@ -103,7 +104,7 @@ it('advances the current runner build and returns only private state and new out
   expect(await first.json()).toMatchObject({
     state: 'building',
     phase: 'software',
-    output: 'done\ninstalling...\n',
+    output: `${TOOLS_OUTPUT}installing...\n`,
   })
   expect(await (await request()).json()).toMatchObject({
     state: 'building',
@@ -129,7 +130,7 @@ it('returns the same failure to its deploy run and starts again for another depl
   expect(await failed.json()).toMatchObject({
     state: 'failed',
     error: 'The software image build failed.',
-    keptOutput: 'done\ninstalling...\n',
+    keptOutput: `${TOOLS_OUTPUT}installing...\n`,
   })
   expect(await (await request()).json()).toMatchObject({
     state: 'failed',

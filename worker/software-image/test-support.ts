@@ -1,7 +1,14 @@
 import { SOFTWARE } from '../lifecycle/backend-test-support'
 import { softwareImageName } from '../lifecycle/image-names'
 import { TEST_TIME } from '../test-support/harness'
+import { workspaceToolsCommands } from '../tools/image'
+import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
 import { softwareVersion } from './version'
+
+/** The fake sandbox answers each install command of the tools with this line. */
+export const TOOLS_OUTPUT = 'done\n'.repeat(
+  workspaceToolsCommands(WORKSPACE_TOOL_SOURCES).length,
+)
 
 export async function seedReadySoftwareImage(
   db: D1Database,

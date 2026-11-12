@@ -159,9 +159,17 @@ The same rule prevents Mac commands and their later approvals and results.
 
 ## Image installer
 
-`workspaceToolsCommand` builds the install command from source assets.
-`installWorkspaceTools` runs that command with an authorized image callback.
-The software image version hashes that same command with its privilege wrapper.
+`workspaceToolsCommands` builds the install commands from source assets.
+`installWorkspaceTools` runs those commands in order with an authorized image callback.
+It stops at the first failed command.
+The software image version hashes those same commands with their privilege wrapper.
+
+Linux refuses one program argument of 128 KiB or more.
+The sandbox runs each privileged command as one such argument.
+So the installer groups its writes into commands of at most 64 KiB each with the wrapper, in UTF-8 bytes.
+The half leaves room for the wrapper of the sandbox provider.
+A single command of all 41 sources passes the Linux limit, and each image build that installs the tools then fails.
+The launcher is written in the last command.
 The [asset module](image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
 Static Vite `?raw` imports embed the allowed sources in the Worker bundle.
 The asset module has no runtime filesystem dependency.
