@@ -37,6 +37,8 @@ Select **Resume** if the restored workspace is already open.
 On a computer, **Enter** sends the message.
 Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
+Your message appears in the chat at once.
+If it cannot send, it goes back to the message box, and the chat shows the cause.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
 New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.

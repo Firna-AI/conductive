@@ -4,7 +4,10 @@ This guide belongs to [the chat](README.md). It says what each test file of
 the chat checks. [Tests](README.md#tests) gives the command and the shared
 helpers.
 
-`state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
+`state/instant-send.test.ts` checks a message while its send waits: it
+leaves the composer and shows in the chat at once, and it goes back to the
+composer, before newer text, when the Worker refuses it. It also shows a
+fixed prompt at once. `state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
 checks the request and the unchanged draft, a send during a turn, a missing
 login, a linked session, and the client ID of a second try in the same and
 in another session. `components/ContinuedNote.test.tsx` folds the note of

@@ -61,7 +61,7 @@ describe('ChatController actions', () => {
       },
     ])
     const state = () => chat.controller.getSnapshot().sessionStates[id]
-    expect(state().pending.map((message) => message.state)).toEqual(['queued'])
+    expect(state().pending).toEqual([queued])
     expect(state().draft.text).toBe('')
     chat.emit({ type: 'message.accepted', message: queued })
     expect(state().pending).toEqual([])

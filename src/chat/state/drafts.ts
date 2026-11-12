@@ -51,16 +51,48 @@ export function changeDraft(
 }
 
 /**
- * The draft after its send: the sent files leave it, and the text clears
- * when the user did not change it during the send. A file that the user
- * added during the send stays for the next message.
+ * The draft at the start of its send: the message leaves the composer at
+ * once, and shows in the chat while its send waits, as `message-send.ts`
+ * says. Send waits for ready files, so all files go with the message.
  */
-export function afterSend(draft: Draft, request: SendMessageRequest): Draft {
+export function startSend(draft: Draft, request: SendMessageRequest): Draft {
   return {
     ...draft,
-    text: draft.text === request.text ? '' : draft.text,
-    files: withoutFiles(draft.files, request.attachmentIds),
-    sendId: null,
+    text: '',
+    files: [],
+    refused: [],
+    sendId: request.id,
+    sending: true,
+  }
+}
+
+/** The draft after its send. Text and files from during the send stay. */
+export function afterSend(draft: Draft): Draft {
+  return { ...draft, sendId: null, sending: false }
+}
+
+/** A message whose send failed, which goes back to its draft. */
+export interface FailedSend {
+  request: SendMessageRequest
+  files: readonly DraftFile[]
+  /** The draft is still in the session of the request. */
+  sameSession: boolean
+}
+
+/**
+ * The draft after a failed send: the message comes back, before the text
+ * and the files that the user added during the send. The client ID stays
+ * only when the draft is the same message as before, in the same session,
+ * so Send again is the same message. A changed message is a new one.
+ */
+export function failSend(draft: Draft, failed: FailedSend): Draft {
+  const untouched = draft.text === '' && draft.files.length === 0
+  const text = [failed.request.text, draft.text].filter((part) => part !== '')
+  return {
+    ...draft,
+    text: text.join('\n'),
+    files: [...failed.files, ...draft.files],
+    sendId: untouched && failed.sameSession ? failed.request.id : null,
     sending: false,
   }
 }

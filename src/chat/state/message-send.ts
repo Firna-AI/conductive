@@ -1,4 +1,5 @@
-import type { SendMessageRequest } from '../../shared/messages'
+import type { Attachment, SendMessageRequest } from '../../shared/messages'
+import { withSession } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { takeReply } from './linked-replies'
 
@@ -10,20 +11,64 @@ export type PostedMessage = { target: string | null } | { error: unknown }
 
 /**
  * Posts one message of a session, the step that a draft and a fixed prompt
- * share. The reply goes to the session that it names, as `takeReply` says.
- * A reply can name a linked session that the Worker opened, because the
- * login of the starter was not available.
+ * share. The message shows in the session at once, below the transcript,
+ * and its send waits for the reply there. The reply goes to the session that
+ * it names, as `takeReply` says, and takes the place of the message that
+ * waited. A reply can name a linked session that the Worker opened, because
+ * the login of the starter was not available. Then the waiting message
+ * leaves the session of the request. A failed send takes the message out of
+ * the chat, so the caller can give it back to the user.
  */
 export async function postMessage(
   context: ChatContext,
   sessionId: string,
   request: SendMessageRequest,
+  attachments: readonly Attachment[],
 ): Promise<PostedMessage> {
+  showWaiting(context, sessionId, {
+    id: request.id,
+    text: request.text,
+    attachments,
+  })
   try {
-    return {
-      target: takeReply(context, await context.api.send(sessionId, request)),
-    }
+    const target = takeReply(
+      context,
+      await context.api.send(sessionId, request),
+    )
+    if (target !== sessionId) dropWaiting(context, sessionId, request.id)
+    return { target }
   } catch (error) {
+    dropWaiting(context, sessionId, request.id)
     return { error }
   }
+}
+
+function showWaiting(
+  context: ChatContext,
+  sessionId: string,
+  message: { id: string; text: string; attachments: readonly Attachment[] },
+): void {
+  if (!context.live()) return
+  context.store.update((snapshot) =>
+    withSession(snapshot, sessionId, (state) => {
+      const known =
+        state.pending.some((item) => item.id === message.id) ||
+        state.transcript.items.some((item) => item.id === `user:${message.id}`)
+      return known ? state : { ...state, pending: [...state.pending, message] }
+    }),
+  )
+}
+
+function dropWaiting(
+  context: ChatContext,
+  sessionId: string,
+  messageId: string,
+): void {
+  if (!context.live()) return
+  context.store.update((snapshot) =>
+    withSession(snapshot, sessionId, (state) => ({
+      ...state,
+      pending: state.pending.filter((item) => item.id !== messageId),
+    })),
+  )
 }

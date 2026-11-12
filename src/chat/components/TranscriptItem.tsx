@@ -26,7 +26,9 @@ import { TurnEnd } from './TurnEnd'
  * A message that a person sent. Each part in backticks is code, and each
  * workspace link is a chip.
  */
-export function UserBubble(props: { message: UserMessage }) {
+export function UserBubble(props: {
+  message: Pick<UserMessage, 'text' | 'attachments'>
+}) {
   const { message } = props
   return (
     <div className={styles.user}>

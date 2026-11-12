@@ -119,17 +119,21 @@ describe('a draft that moves to another session', () => {
     })
   })
 
-  it('clears the sent text from the draft when the send ends after the draft moved', async () => {
+  it('keeps the text that the user types after a send, when the send ends after the draft moved', async () => {
     const chat = await chatWithCodex(isSend)
     chat.controller.setDraft(id, 'See the screenshot.')
     const sending = chat.controller.send(id)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
+    expect(chat.draftOf(id)?.text).toBe('')
     await chat.controller.chooseModel(id, codex)
     const created = await opened(chat)
-    expect(chat.draftOf(created)?.text).toBe('See the screenshot.')
+    chat.controller.setDraft(created, 'And the empty state.')
     chat.held.splice(0, 1)[0]()
     await sending
-    expect(chat.draftOf(created)?.text).toBe('')
+    expect(chat.draftOf(created)).toMatchObject({
+      text: 'And the empty state.',
+      sending: false,
+    })
     expect(chat.draftOf(id)?.text).toBe('')
   })
 

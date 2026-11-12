@@ -3,12 +3,20 @@ import {
   filesWait,
   isMissingFile,
   readyIds,
+  type DraftFile,
 } from '../../app/draft-files'
-import type { SendMessageRequest } from '../../shared/messages'
+import type { Attachment, SendMessageRequest } from '../../shared/messages'
 import { sendBlock } from './blockers'
 import { sessionState, withSession, type SessionState } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
-import { afterSend, changeDraft, draftIdOf, holderOf } from './drafts'
+import {
+  afterSend,
+  changeDraft,
+  draftIdOf,
+  failSend,
+  holderOf,
+  startSend,
+} from './drafts'
 import { showTarget, takeReply } from './linked-replies'
 import { postMessage, sendFailedTitle } from './message-send'
 import { confirmWorkspace } from './workspace-records'
@@ -34,11 +42,13 @@ export function setDraftText(
 }
 
 /**
- * Sends the draft of a session. The workspace queues messages during its
- * first start, after a failed first start, and during Resume. During a turn,
- * a message steers the agent. Send waits while a file uploads or has failed.
- * It sends only the IDs of ready files. A failed send keeps the draft and
- * its client ID, so Send again is the same message.
+ * Sends the draft of a session. The message leaves the composer and shows in
+ * the chat at once, while its send waits. The workspace queues messages
+ * during its first start, after a failed first start, and during Resume.
+ * During a turn, a message steers the agent. Send waits while a file uploads
+ * or has failed. It sends only the IDs of ready files. A failed send gives
+ * the message back to its draft with its client ID, so Send again is the same
+ * message, as `failSend` says.
  *
  * When the server no longer has a file, that file turns failed. Try again
  * uploads its kept File. The send finishes on its draft, also after a move
@@ -63,33 +73,43 @@ export async function sendDraft(
     choice: session.choice,
   }
   const draftId = draftIdOf(context, sessionId)
-  changeDraft(context, draftId, (current) => ({
-    ...current,
-    refused: [],
-    sendId: request.id,
-    sending: true,
-  }))
-  const posted = await postMessage(context, sessionId, request)
+  changeDraft(context, draftId, (current) => startSend(current, request))
+  const posted = await postMessage(
+    context,
+    sessionId,
+    request,
+    readyAttachments(draft.files),
+  )
   if ('error' in posted) {
     const { error } = posted
-    changeDraft(context, draftId, (current) => ({
-      ...current,
-      files: isMissingFile(error)
-        ? failSent(current.files, request.attachmentIds, error)
-        : current.files,
-      sending: false,
-    }))
     const holder = holderOf(context.store.get(), draftId) ?? sessionId
+    changeDraft(context, draftId, (current) => {
+      const back = failSend(current, {
+        request,
+        files: draft.files,
+        sameSession: holder === sessionId,
+      })
+      return isMissingFile(error)
+        ? { ...back, files: failSent(back.files, request.attachmentIds, error) }
+        : back
+    })
     showNotice(context, holder, sendFailedTitle, error)
     return
   }
-  changeDraft(context, draftId, (current) => afterSend(current, request))
+  changeDraft(context, draftId, afterSend)
   const holder = holderOf(context.store.get(), draftId)
   const owner = context.store.get().notice?.sessionId
   if (context.live() && owner && (owner === sessionId || owner === holder)) {
     context.store.update((current) => ({ ...current, notice: null }))
   }
   await showTarget(context, sessionId, posted.target, draftId)
+}
+
+/** The attachments of the ready files, which show with a message. */
+function readyAttachments(files: readonly DraftFile[]): Attachment[] {
+  return files.flatMap((item) =>
+    item.state === 'ready' ? [item.attachment] : [],
+  )
 }
 
 /**

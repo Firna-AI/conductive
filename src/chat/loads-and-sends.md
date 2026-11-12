@@ -88,9 +88,17 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   The chat takes it from each read and Resume reply, and from each
   `workspace.updated` event. An event without an error keeps it, and null
   clears it.
-- A send that the Worker refuses keeps its text, its files, and its message
-  ID. The notice "Your message didn't send" shows the Worker's plain
-  message.
+- A send clears the composer at once. The message shows below the
+  transcript while its send waits, as `postMessage` of
+  [`state/message-send.ts`](state/message-send.ts) says. The reply takes
+  its place, and the stream's copy then takes the place of the reply. The
+  Send button stays busy until the reply, so one send of a draft waits at a
+  time. A fixed prompt shows at once in the same way.
+- A send that the Worker refuses leaves the chat. Its text, its files, and
+  its message ID go back to the draft, as `failSend` of
+  [`state/drafts.ts`](state/drafts.ts) says. Text and files that the user
+  added during the send stay after it, and the message then gets a new ID.
+  The notice "Your message didn't send" shows the Worker's plain message.
 
 ## Fixed prompts
 
