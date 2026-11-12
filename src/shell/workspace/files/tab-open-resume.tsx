@@ -8,10 +8,14 @@ import { filesPlace, tabOf } from './files-address'
  * where the open of the workspace resumes it, a stopped workspace and one
  * whose later start failed. A failed first start waits for Try again. A
  * refused start, an archived workspace, and a suspended org start nothing.
+ * Nor does a tab that opens while the open of the workspace still resumes
+ * the sandbox, because that Resume already runs.
  */
 function resumesAtTabOpen(context: WorkspaceContext): boolean {
   const { panel } = context
-  if (context.readOnly || panel === null) return false
+  if (context.readOnly || context.resumingAtOpen || panel === null) {
+    return false
+  }
   return (
     panel.problem === 'stopped' ||
     (panel.problem === 'error' && panel.firstStart !== true)

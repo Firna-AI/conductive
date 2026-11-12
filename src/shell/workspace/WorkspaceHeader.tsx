@@ -9,7 +9,7 @@ import { personName } from '../../app/people'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { nameLabel } from '../../shared/name-label'
-import type { Workspace } from '../../shared/workspaces'
+import type { Workspace, WorkspaceState } from '../../shared/workspaces'
 import { useOrgModel } from '../context'
 import { useMacBar } from '../mac/mac-app'
 import { IconButton } from '../ui/actions'
@@ -36,11 +36,11 @@ function Owner(props: { workspace: Workspace; compact: boolean }) {
   )
 }
 
-function State(props: { workspace: Workspace }) {
+function State(props: { state: WorkspaceState }) {
   return (
     <span className={styles.state}>
-      <StatusGlyph status={props.workspace.state} />
-      {activityPresentation[props.workspace.state].label}
+      <StatusGlyph status={props.state} />
+      {activityPresentation[props.state].label}
     </span>
   )
 }
@@ -54,6 +54,8 @@ function State(props: { workspace: Workspace }) {
  * the line under the name. The list groups workspaces by section, so the
  * header names the repository. On desktop the header ends with the toggle
  * of the right column. A run workspace links to its routine below it.
+ * While the open of the workspace resumes its sandbox, the state shows
+ * Starting at once, before the Resume reply.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -72,6 +74,7 @@ export function WorkspaceHeader(props: {
       ?.fullName ?? workspace.repositoryId
   const name = nameLabel(workspace.name)
   const phone = props.context.viewport === 'phone'
+  const state = props.context.resumingAtOpen ? 'starting' : workspace.state
   const ownerView = props.ownerControl ?? (
     <Owner compact={phone} workspace={workspace} />
   )
@@ -93,7 +96,7 @@ export function WorkspaceHeader(props: {
         </span>
       </div>
       {ownerView}
-      <State workspace={workspace} />
+      <State state={state} />
     </header>
   ) : (
     <header className={classes(styles.bar, bar)}>
@@ -106,7 +109,7 @@ export function WorkspaceHeader(props: {
         </span>
       </span>
       {ownerView}
-      <State workspace={workspace} />
+      <State state={state} />
       <RightColumnToggle />
     </header>
   )
