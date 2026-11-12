@@ -20,7 +20,7 @@ jobs:
   check:
     name: Check the commit
     if: github.ref == 'refs/heads/main'
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       stale: ${{ steps.commit.outputs.stale }}
@@ -51,7 +51,7 @@ jobs:
     if: >-
       needs.check.outputs.stale == 'false' &&
       needs.check.outputs.attempt == github.run_attempt
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment:
       name: production
@@ -87,7 +87,7 @@ jobs:
   deploy:
     name: Deploy
     needs: [check, settings]
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     # The egress step records each complete egress deploy as a deployment.
     permissions:
@@ -404,7 +404,7 @@ jobs:
     if: >-
       ${{ !cancelled() && needs.deploy.result == 'success' &&
       needs.check.outputs.attempt == github.run_attempt }}
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Require a ready software image
@@ -425,7 +425,7 @@ jobs:
     if: >-
       ${{ !cancelled() && needs.check.result == 'success' &&
       (needs.check.outputs.stale == 'true' || needs.check.outputs.attempt != github.run_attempt) }}
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       actions: write
