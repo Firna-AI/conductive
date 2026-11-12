@@ -7,6 +7,7 @@ import { boatRoute } from '../sandbox/routes'
 import { heldOperation } from '../test-support/held-operation'
 import { requestSoftwareImage } from './build'
 import { softwareImages } from './data'
+import { TOOLS_OUTPUT } from './test-support'
 
 const fixtureForTest = setupBackendTests()
 const digest = 'a'.repeat(64)
@@ -124,7 +125,7 @@ it('fences concurrent command polls without duplicate saved output or two active
   expect(await earlier).toMatchObject({ state: 'building', output: '' })
   const imagesNow = await softwareImages(images.env.DB, 'boat')
   expect(imagesNow).toHaveLength(1)
-  expect(imagesNow[0].output).toBe('done\ninstalling...\nnext\n')
+  expect(imagesNow[0].output).toBe(TOOLS_OUTPUT + 'installing...\nnext\n')
   expect(boat.starts).toHaveLength(1)
 })
 

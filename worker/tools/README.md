@@ -159,15 +159,18 @@ The same rule prevents Mac commands and their later approvals and results.
 
 ## Image installer
 
-`workspaceToolsCommand` builds the install command from source assets.
-`installWorkspaceTools` runs that command with an authorized image callback.
-The software image version hashes that same command with its privilege wrapper.
+`workspaceToolsCommands` builds the install commands from source assets.
+`installWorkspaceTools` runs those commands in order with an authorized image callback.
+The software image version hashes those same commands with their privilege wrapper.
+The sandbox provider passes each command as one argument, and Linux rejects one argument over 128 KiB.
+So each command stays at or below `WORKSPACE_TOOLS_COMMAND_BYTES`, 64 KiB, after the privilege wrapper.
+A file write goes to the next command when it would pass that limit.
 The [asset module](image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
 Static Vite `?raw` imports embed the allowed sources in the Worker bundle.
 The asset module has no runtime filesystem dependency.
 The callback can bind `SandboxProvider.runCommand` to the image-build sandbox.
-The installer returns only after the command succeeds.
-A failed or timed-out command throws a fixed error.
+The installer returns only after each command succeeds.
+A failed or timed-out command stops the install and throws a fixed error.
 The builder must stop the build before it saves a snapshot when installation fails.
 
 The installer also accepts an optional root folder.

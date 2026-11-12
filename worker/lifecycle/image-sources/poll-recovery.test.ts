@@ -11,7 +11,11 @@ import {
 import { readBuildJob } from '../build-data'
 import { advanceImageBuild } from '../image-builds'
 import { heldOperation } from '../../test-support/held-operation'
-import { WORKSPACE_TOOLS_DIRECTORY } from '../../tools/image'
+import {
+  WORKSPACE_TOOLS_DIRECTORY,
+  workspaceToolsCommands,
+} from '../../tools/image'
+import { WORKSPACE_TOOL_SOURCES } from '../../tools/image-assets'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { INSTALLATION_TOKEN } from './native-github-test-support'
@@ -126,7 +130,12 @@ it('keeps a native source fetch after a temporary status error and resumes witho
         ['mint', 'claim', 'revoke', 'finalize'].includes(event),
       ),
     ).toEqual(['mint', 'claim', 'revoke', 'finalize'])
-    expect(order).toEqual(['tools', 'software', 'install', 'cleanup'])
+    expect(order).toEqual([
+      ...workspaceToolsCommands(WORKSPACE_TOOL_SOURCES).map(() => 'tools'),
+      'software',
+      'install',
+      'cleanup',
+    ])
   } finally {
     claim.release()
     await fixture.dispose()
