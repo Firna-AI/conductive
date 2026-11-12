@@ -44,7 +44,7 @@ feature that is not complete yet says so.
 - Chat with agents powered by Claude and Codex. A workspace holds several
   sessions, and one picker sets the model and the effort.
 - Send a message during a turn, or stop the turn.
-- Attach files of up to 25 MB each to a message.
+- Attach files of up to 100 MB each to a message.
 - Each user connects a Claude subscription token, a ChatGPT plan through
   device code sign-in, an API key, or an own endpoint in Account or Get started.
 - Files and Changes, a terminal, and port previews. The live desktop is

@@ -59,7 +59,7 @@ A file dropped on the text goes where you drop it.
 A drop on the rest of the box uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
-Each file can be up to 25 MB.
+Each file can be up to 100 MB.
 Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
 Removing a chip takes its file off the draft.

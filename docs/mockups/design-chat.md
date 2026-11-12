@@ -29,7 +29,7 @@ background work.
     at the place of each file, and its other text is escaped, as
     [`draft-marks.ts`](../../src/app/draft-marks.ts) of the app says. The
     mockups and the app share that module. Send waits for each upload.
-- A file over 25 MB never becomes a chip: a notice over the composer names
+- A file over 100 MB never becomes a chip: a notice over the composer names
   it, gives the limit, and offers "Attach a smaller file", as
   `app/attachments/too-large` shows. A dropped folder is not attached
   either: its notice names it, says to attach the files in it, and offers
@@ -57,7 +57,7 @@ background work.
   The New workspace page and dialog use the same chips before the
   workspace exists, as `app/new-workspace/files` and
   `app/new-workspace/dialog/files` show. In the dialog, the notice of a
-  file over 25 MB sits with its other notices, under the message.
+  file over 100 MB sits with its other notices, under the message.
 - `ImageView` in `src/components/files/` draws the picture of a PNG, JPEG,
   GIF, or WebP file in its tab, from decision 265 B. The picture keeps its
   proportions, in the middle of the tab, at its own size or smaller, so

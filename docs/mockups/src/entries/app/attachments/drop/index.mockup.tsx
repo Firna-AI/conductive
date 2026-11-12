@@ -37,7 +37,7 @@ export const attachmentsDrop = defineScreen({
       description:
         'Cal dropped the screenshot and the folder checkout-screens together. The screenshot is a chip at the place of the drop. The folder is not attached: the notice over the box names it and says to attach the files in it. "Attach files" opens the file picker.',
       rationale:
-        'An upload of a folder fails, and a failed chip that Try again cannot fix tells the member nothing. So the notice names the folder, as it names a file over 25 MB, and the files of the same drop stay.',
+        'An upload of a folder fails, and a failed chip that Try again cannot fix tells the member nothing. So the notice names the folder, as it names a file over 100 MB, and the files of the same drop stay.',
       props: { composer: 'dropped-folder' },
     },
   ],

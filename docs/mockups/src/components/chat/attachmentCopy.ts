@@ -44,7 +44,7 @@ export function notAttachedCountTitle(count: number): string {
  * the chosen file, because the size formatter counts in units of 1024 and
  * the limit counts in units of 1000. So the two numbers could disagree.
  */
-export const tooLargeBody = 'Each file can be up to 25 MB.'
+export const tooLargeBody = 'Each file can be up to 100 MB.'
 
 /** The action of that notice, which opens the file picker again. */
 export const smallerFileLabel = 'Attach a smaller file'
