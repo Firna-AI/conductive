@@ -26,6 +26,11 @@ keeps the stored mark inside each compare-and-swap attempt. A missing or
 deleted name starts secret. An explicit mark changes it with the value.
 Its `classify` change carries only a name and a mark, so it keeps the value.
 `api.ts` keeps the existing sign-in and org paths and common records.
+`API_PATHS.orgOrder` names `PUT /api/org-order`, outside the paths of one org.
+`MoveOrgRequest` in `orgs.ts` carries `orgId` and the zero-based `index` among the other visible orgs.
+`readMoveOrgRequest` validates its fields. A move returns 204 without a body.
+The org list uses each person's saved order. A new membership goes at the end.
+[Org rail order](../../docs/protocol/org-rail-order.md) states the requirements.
 Its `ApiErrorBody` carries the error code and message.
 The optional `error.details` identifies an unknown routine author login.
 It carries `login`, `triggerIndex`, and `list`.
@@ -235,7 +240,7 @@ The git credential payload is not defined yet.
 - [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
 - [Restore marker](restore-marker.ts) names the file that the Worker writes at the end of the disk restore. The terminal and the agent runner read it.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
-- [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation.
+- [Org contracts](orgs.ts) carry custom initials, GitHub repository choices for org creation, and the request reader for org moves.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists. Stored login statuses keep `token` and `api-key` for both agents. A Codex save request accepts only `api-key`; ChatGPT uses the device flow. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `defaultAgentLoginNoReuse` gives the typed default for each stored agent and kind. The Worker and the dev backend use it. `UpdateAgentLoginRequest` changes only that value, without the secret.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the required `waitlistOn` flag of the waitlist switch, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.

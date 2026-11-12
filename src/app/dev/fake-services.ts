@@ -1,5 +1,6 @@
 import { copyText } from '../clipboard'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { devOrgOrderRoute } from '../../test-support/dev-org-order-route'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
 import { createApiClient } from '../api/client'
@@ -64,6 +65,7 @@ export function createFakeServices(search: string): AppServices {
     ...waitlistRoutes(backend),
     ...feedbackRoutes(backend, options),
     ...accountRoutes(backend),
+    devOrgOrderRoute(backend),
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),

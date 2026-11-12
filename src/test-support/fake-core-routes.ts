@@ -29,6 +29,7 @@ import {
 import { sectionPath, sectionsPath } from '../shared/sections'
 import { WAITLIST_PATHS } from '../shared/waitlist'
 import type { FakeRouteWriter } from './fake-api-routes'
+import { fakeOrgOrderRoutes } from './fake-org-order-routes'
 import { coreFixtures, FAKE_IDS, FAKE_TIME } from './fixtures/core'
 import { listRuns, runsPage } from './fixtures/routine-runs'
 import { routineFixtures } from './fixtures/routines'
@@ -67,7 +68,7 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   }
   routes.json('GET', GET_STARTED_PATH, data.getStarted)
   routes.json('GET', PENDING_ORG_INVITES_PATH, { invites: [] })
-  routes.json('GET', API_PATHS.orgs, data.orgs)
+  fakeOrgOrderRoutes(routes, data.orgs.orgs)
   routes.json('POST', API_PATHS.orgs, data.createdOrg, 201)
   routes.json('GET', orgPath(id), { org })
   routes.json('PATCH', orgPath(id), { org })

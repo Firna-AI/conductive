@@ -344,25 +344,42 @@ Depends on: 2
 
 Save and read the order of each person.
 
-- [ ] Add a migration under `migrations/` with the nullable place column on
+Backend design calls of 12 November 2026:
+
+- Use `PUT /api/org-order`, with `{ orgId, index }`, and return 204 without
+  a body. Reason: it keeps the normal request gate without the checks for
+  one active org, and matches the existing no-body write replies.
+- Clamp a large integer before binding it to D1. Reason: an index beyond
+  the end still means the end when it exceeds SQLite's integer range.
+- Keep the stateful dev move handler in `src/test-support/`. Its two-line
+  connection in `src/app/dev/fake-services.ts` needs a scope extension.
+  Reason: the app's dev org list overrides the recorded fake org list.
+
+- [x] Add a migration under `migrations/` with the nullable place column on
       `org_members`. Fill the place of each existing row in the current
       order of its person. Follow `migrations/README.md`.
-- [ ] Order `visibleOrgs` by the saved place, then by `joined_at`, then by
+- [x] Order `visibleOrgs` by the saved place, then by `joined_at`, then by
       org ID.
-- [ ] Add the shared path and the request type to `src/shared/api.ts` and
+- [x] Add the shared path and the request type to `src/shared/api.ts` and
       `src/shared/orgs.ts`.
-- [ ] Add the move route to `membersRoute` in `worker/members/route.ts`,
+- [x] Add the move route to `membersRoute` in `worker/members/route.ts`,
       with its data function in `worker/members/org-data.ts`.
-- [ ] Tests:
-  - [ ] A move changes the order of the person and of nobody else.
-  - [ ] A move of an org that the person cannot see gets
+- [x] Tests:
+  - [x] A move changes the order of the person and of nobody else.
+  - [x] A move of an org that the person cannot see gets
         `404 org_not_found`. This includes an org of another person and a
         deleted org of a person who is not its admin.
-  - [ ] A member moves a suspended org. An admin moves a deleted org.
-  - [ ] Two overlapping moves give the order of the two moves one after
+  - [x] A member moves a suspended org. An admin moves a deleted org.
+  - [x] Two overlapping moves give the order of the two moves one after
         the other.
-  - [ ] A new membership goes at the end, after the placed orgs.
-- [ ] Update `worker/members/README.md` and `src/shared/README.md`.
+  - [x] A new membership goes at the end, after the placed orgs.
+- [x] Update `worker/members/README.md` and `src/shared/README.md`.
+- [x] Connect `devOrgOrderRoute` in `src/app/dev/fake-services.ts` after
+      the user permits the two-line edit outside the task's allowed paths.
+
+The verification evidence and the proposed dev connection are in
+`.context/org-rail-order/m3-report.md` and
+`.context/org-rail-order/m3-dev-connection.patch`.
 
 ## Milestone 4: Rail and org sheet
 
