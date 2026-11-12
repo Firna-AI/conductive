@@ -103,7 +103,9 @@ export function AllowAllBar(props: { untilStop?: boolean }) {
               {untilStop}
             </span>
           )}
-          <ActionButton icon={Square}>Stop</ActionButton>
+          <ActionButton icon={Square} tone="outline">
+            Stop
+          </ActionButton>
         </>
       ) : null}
       {change === 'stop-not-saved' ? (

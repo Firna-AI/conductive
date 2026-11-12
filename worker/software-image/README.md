@@ -46,7 +46,7 @@ The tests use local D1 and the lifecycle fake provider.
 
 ### Key Code
 
-- [version.ts](version.ts): the hash of both software commands.
+- [version.ts](version.ts): the hash of the tools commands and the software command.
 - [route.ts](route.ts) and [deploy-gate.ts](deploy-gate.ts): the machine route and token gate.
 - [build.ts](build.ts): admission, version replacement, and resumable advancement.
 - [steps.ts](steps.ts): sandbox readiness, commands, snapshot, and publication.

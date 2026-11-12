@@ -148,6 +148,7 @@ export function AllowAllBar(props: {
           busy={waits === 'stop-workspace'}
           disabled={busy && waits !== 'stop-workspace'}
           icon={Square}
+          tone="outline"
           onPress={() => void controller.change(stop)}
         >
           Stop

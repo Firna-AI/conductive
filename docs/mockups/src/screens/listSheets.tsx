@@ -1,20 +1,29 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Check, Gauge, Plus } from 'lucide-react'
+import { classes } from '../components/common/classes'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
+import orgDrag from '../components/orgs/OrgDrag.module.css'
+import {
+  OrgDrop,
+  placeAfterDrop,
+  type OrgDrag,
+} from '../components/orgs/OrgDrop'
 import { orgLinks } from '../components/orgs/orgLinks'
 import { AccountAvatar, OrgTile } from '../components/orgs/OrgTile'
 import { sectionMenu } from '../components/workspaces/menus'
 import type { RowMenuOpen } from '../components/workspaces/RowMenu'
-import { orgList, type OrgKey } from '../fixtures/orgs'
+import { orgList, type Org, type OrgKey } from '../fixtures/orgs'
 import { menuSection, sections } from '../fixtures/sections'
 import { paths } from '../paths'
 import styles from './WorkspaceListScreen.module.css'
 
+/** A row of a sheet. Without `to` it links nowhere, as a faint copy. */
 function SheetRow(props: {
   to?: string
   current?: boolean
+  faint?: boolean
   children: ReactNode
 }) {
   const content = (
@@ -25,7 +34,15 @@ function SheetRow(props: {
       ) : null}
     </>
   )
-  if (!props.to) return <div className={styles.sheetRow}>{content}</div>
+  if (!props.to) {
+    return (
+      <div
+        className={classes(styles.sheetRow, props.faint && orgDrag.placeholder)}
+      >
+        {content}
+      </div>
+    )
+  }
   return (
     <ScreenLink
       aria-current={props.current ? 'page' : undefined}
@@ -37,34 +54,70 @@ function SheetRow(props: {
   )
 }
 
+/** The square and the name of an org, in a row of the org switcher. */
+function OrgRowContent(props: { org: Org; current: boolean }) {
+  return (
+    <>
+      <OrgTile current={props.current} org={props.org} size={26} />
+      <span className={styles.sheetLabel}>{props.org.name}</span>
+    </>
+  )
+}
+
 /**
- * The org switcher of a phone, which has no rail: every org, a way to
- * create one, and the account. An operator also gets Operator under the
- * account.
+ * The org switcher of a phone, which has no rail: every org in the order
+ * of the person, a way to create one, and the account. An operator also
+ * gets Operator under the account. `drag` draws an org that a long press
+ * lifted, from decision 515 C: a faint copy stays at its place, a line
+ * marks where it lands, and a raised copy of its row follows the finger.
  */
 export function OrgSwitcherSheet(props: {
   current: OrgKey
   operator?: boolean
+  orgs?: readonly Org[]
+  drag?: OrgDrag
 }) {
+  const orgs = props.orgs ?? orgList
+  const from = orgs.findIndex((org) => org.key === props.drag?.org)
+  const dragged = orgs[from]
+  const dropAt = (index: number) =>
+    dragged && props.drag?.index === index ? (
+      <OrgDrop
+        at="sheet"
+        count={orgs.length}
+        name={dragged.name}
+        place={placeAfterDrop(from, index)}
+      >
+        <SheetRow current={dragged.key === props.current}>
+          <OrgRowContent
+            current={dragged.key === props.current}
+            org={dragged}
+          />
+        </SheetRow>
+      </OrgDrop>
+    ) : null
   return (
     <Sheet title="Orgs">
       <nav aria-label="Orgs">
         <ul className={styles.sheetList}>
-          {orgList.map((org) => (
-            <li key={org.key}>
-              <SheetRow
-                current={org.key === props.current}
-                to={orgLinks[org.key]}
-              >
-                <OrgTile
+          {orgs.map((org, index) => (
+            <Fragment key={org.key}>
+              {dropAt(index)}
+              <li>
+                <SheetRow
                   current={org.key === props.current}
-                  org={org}
-                  size={26}
-                />
-                <span className={styles.sheetLabel}>{org.name}</span>
-              </SheetRow>
-            </li>
+                  faint={org === dragged}
+                  to={org === dragged ? undefined : orgLinks[org.key]}
+                >
+                  <OrgRowContent
+                    current={org.key === props.current}
+                    org={org}
+                  />
+                </SheetRow>
+              </li>
+            </Fragment>
           ))}
+          {dropAt(orgs.length)}
           <li>
             <SheetRow to={paths.createOrg}>
               <span className={styles.createTile}>

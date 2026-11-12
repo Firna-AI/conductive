@@ -84,6 +84,38 @@
   flex-shrink: 0;
 }
 
+/*
+ * The layer of a menu beside its trigger: a manual popover in the top layer,
+ * which `PopoverSurface` places. The menu inside draws the box. These rules
+ * replace the browser's popover style. A closed popover keeps the browser's
+ * `display: none`.
+ */
+.menuLayer {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.menuLayer:popover-open {
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+ * A menu in its layer. A long menu scrolls, so its rows stay on the screen.
+ * The layer can make it shorter, to fit the room beside its trigger.
+ */
+.anchoredMenu {
+  min-height: 0;
+  max-height: 70dvh;
+  overflow-y: auto;
+}
+
 /* Text for assistive technology only. */
 .hidden {
   position: absolute;

@@ -121,6 +121,8 @@ export async function createToolsHarness() {
   const dependencies = {
     onActivity: (id: string, at: number) => activity.record(id, at),
     now: () => now,
+    // Each check reads again, as after the access window ends. window.test.ts covers the window.
+    previewAccessWindowMs: 0,
     sockets,
     fetch: async (request: Request) => {
       requests.push(request.clone())

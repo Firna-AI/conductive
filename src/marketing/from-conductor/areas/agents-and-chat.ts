@@ -27,7 +27,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Attachments',
     status: 'available',
-    note: 'Attach files of up to 25 MB each for the agent to read. If a file is too large, attach a smaller file.',
+    note: 'Attach files up to 25 MB each, or attach a smaller file. A 1 GB limit is planned.',
   },
   {
     id: 'drag-and-drop-attachments',
@@ -133,7 +133,7 @@ export const agentsAndChatFeatures: readonly ParityFeature[] = [
     area: 'agents-and-chat',
     name: 'Rich chat rendering',
     status: 'available',
-    note: 'Chat shows Markdown, headings, tables, lists, and code. Diagrams, maths, media, and Run buttons are under consideration.',
+    note: 'Chat shows Markdown, headings, tables, lists, and code, with Copy code buttons in progress. Diagrams, maths, media, and Run buttons remain under consideration.',
   },
   {
     id: 'chat-links',

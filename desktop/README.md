@@ -233,6 +233,7 @@ It also checks a refused response, child and preview frames, another window, and
 Run it after the desktop build with `npm --prefix desktop run test:electron -- tests/downloads.spec.ts`.
 
 Mac CI runs the source and packaged tests on an Apple silicon runner and on an Intel runner.
+[Releases](RELEASES.md#releases) names the runners.
 It runs them for each pull request, and for each push to `main` and to the primary branch of the plan.
 It builds DMG and ZIP files with publishing disabled.
 Mac jobs run only when changed files match these paths:

@@ -67,7 +67,14 @@ paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 
-Writes return recorded replies. They do not change backend state.
+Writes return recorded replies, except org moves.
+`fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
+It validates the shared move request and returns 204, or the Worker's validation and visibility errors.
+The app's stateful dev routes supply their own org list.
+`dev-org-order-route.ts` supplies a move handler for that stateful list.
+The app's dev route table must register it before a move can change that list.
+
+Other writes return recorded replies without changing backend state.
 The account fixture includes empty shortcut changes for both keyboards.
 The recorded shortcut save answers for the Mac keyboard.
 Override that reply to test another keyboard or saved changes.
@@ -207,6 +214,8 @@ Replies, timers, and `waitFor` go on.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies, also the member action routes of GitHub.
   Its upload replies give each file the `path` that `attachmentPath` in `src/shared/attachment-paths.ts` builds, as the Worker does.
 - `fake-api-routes.ts` defines the reply registration interface.
+- `fake-org-order-routes.ts` registers org list reads and moves on the recorded fake server.
+- `dev-org-order-route.ts` exports `devOrgOrderRoute` for the app's stateful dev route table.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
