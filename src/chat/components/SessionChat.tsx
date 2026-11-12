@@ -15,7 +15,7 @@ import {
 } from '../state/session-login'
 import { ChatPane } from './ChatPane'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
-import { Composer } from './Composer'
+import { Composer, type ComposerFocus } from './Composer'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
 import {
   EarlierLoading,
@@ -62,6 +62,8 @@ export interface SessionChatProps {
    * suspended. The chat then shows its history and no control that writes.
    */
   readOnly?: boolean
+  /** The composer takes the focus when it shows, as `ComposerFocus` says. */
+  composerFocus?: ComposerFocus | null
 }
 
 /**
@@ -199,6 +201,7 @@ export function SessionChat(props: SessionChatProps) {
           choice={session.choice}
           draft={state.draft}
           files={files}
+          focus={props.composerFocus}
           login={loginLabelOf(login)}
           models={composerModels(
             login,

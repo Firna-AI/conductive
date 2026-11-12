@@ -102,11 +102,11 @@ describe('the actions of a workspace row', () => {
       ),
     }).toEqual({
       refused: {
-        menu: 4,
+        menu: 5,
         error: 'The owner did not change. Priya Raman is suspended.',
       },
       saving: {
-        menu: 4,
+        menu: 5,
         afterEscape: 3,
         afterLeft: 3,
         owners: 3,

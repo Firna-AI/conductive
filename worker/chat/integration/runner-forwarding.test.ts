@@ -179,13 +179,17 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
     },
   })
   const history = await fixture.request(
-    chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, sessionId, 4),
+    chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, sessionId),
   )
   expect(history.status).toBe(200)
   const stored: unknown = await history.json()
   expect(stored).toMatchObject({
     throughEventNumber: 8,
     events: [
+      { eventNumber: 1, event: { type: 'session.updated' } },
+      { eventNumber: 2, event: { type: 'message.accepted' } },
+      { eventNumber: 3, event: { type: 'session.updated' } },
+      { eventNumber: 4, event: { type: 'message.sent' } },
       {
         eventNumber: 5,
         event: { type: 'assistant.delta', text: 'Streamed through the Worker' },

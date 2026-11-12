@@ -21,7 +21,8 @@ These docs belong to this doc:
 - [Continue](continue.md): the next task of a workspace after a merge, on
   a new branch with the same sandbox and sessions.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
-  moves, reassigns, renames, and archives the workspace.
+  moves, reassigns, renames, and archives the workspace, and copies its
+  link.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
   terminal, the port previews, and the desktop.
 
@@ -134,7 +135,8 @@ These docs belong to this doc:
 ## The workspace menu
 
 - [Workspace menu](workspace-menu.md) holds the requirements of the menu
-  of a workspace row: Move to section, Reassign to, Rename, and Archive.
+  of a workspace row: Move to section, Reassign to, Rename, Copy link, and
+  Archive.
 
 ## Tools of a workspace
 

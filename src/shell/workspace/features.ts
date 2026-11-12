@@ -54,6 +54,13 @@ export interface WorkspaceContext {
    */
   panel: SandboxPanelState | null
   /**
+   * The open of the workspace resumes its sandbox and has not ended. The
+   * header then shows Starting, and a part that shows the state of the
+   * sandbox in place of its content shows the wait of a start, with no
+   * Resume. The lists keep their saved copy.
+   */
+  resumingAtOpen: boolean
+  /**
    * Resume, or Try again after a failed start. A phone shows it on a part
    * that shows the state of the sandbox in place of its content.
    */

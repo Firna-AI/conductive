@@ -8,6 +8,7 @@ import {
   type GitHubSummary,
 } from '../shared/github'
 import type { WorkspaceState } from '../shared/workspaces'
+import { chatEventsOf } from '../shared/transcript/session-events'
 import type { FakeMethod, FakeRouteWriter } from './fake-api-routes'
 import { fakeCoreRoutes } from './fake-core-routes'
 import { fakeDeviceRoutes } from './fake-device-routes'
@@ -169,9 +170,26 @@ export class FakeApiServer implements FakeRouteWriter {
       FAKE_ORIGIN,
     ).pathname
     if (request.method === 'GET' && url.pathname === historyPath) {
-      return Response.json(
-        this.events.history(Number(url.searchParams.get('after') ?? 0)),
+      const history = this.events.history()
+      const through = Number(
+        url.searchParams.get('through') ?? history.throughEventNumber,
       )
+      const before = Number(url.searchParams.get('before') ?? through + 1)
+      const numbers = new Set(
+        chatEventsOf(
+          url.searchParams.get('sessionId') ?? '',
+          history.events,
+        ).map(({ eventNumber }) => eventNumber),
+      )
+      return Response.json({
+        events: history.events.filter(
+          ({ eventNumber }) =>
+            numbers.has(eventNumber) &&
+            eventNumber <= through &&
+            eventNumber < before,
+        ),
+        throughEventNumber: through,
+      })
     }
     return Response.json(
       {

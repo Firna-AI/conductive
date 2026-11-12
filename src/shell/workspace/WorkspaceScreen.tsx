@@ -1,14 +1,13 @@
 import { useCallback, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert, SearchX } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
 import { usePassedDeadlines } from '../../app/deadlines'
 import { mayArchive, mayRestore } from '../../app/permissions'
-import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import {
   useWorkspaceStore,
@@ -19,7 +18,6 @@ import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
 import { ActionButton } from '../ui/actions'
-import { useGo } from '../ui/AppLink'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
 import { ChatArea } from './ChatArea'
@@ -29,11 +27,12 @@ import { KeptFilesConnection } from './files/kept-files'
 import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
-import { archivedRestore, sandboxView } from './sandbox-view'
+import { archivedRestore, contentState, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
 import { OpenSessionAddress } from './session-address'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
+import { Unavailable } from './Unavailable'
 import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
@@ -41,29 +40,6 @@ import { WorkspaceMacBar } from './WorkspaceMacBar'
 import { WorkspacePaletteActions } from './WorkspacePaletteActions'
 import type { WorkspaceView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
-
-/**
- * A workspace that the app cannot show, such as after a 404. The way out is
- * the list of the org.
- */
-function Unavailable(props: { orgId: string; body: string }) {
-  const go = useGo()
-  return (
-    <EmptyState
-      action={
-        <ActionButton
-          onPress={() => go(routes.org(props.orgId))}
-          tone="primary"
-        >
-          All workspaces
-        </ActionButton>
-      }
-      body={props.body}
-      icon={SearchX}
-      title="This workspace is not available"
-    />
-  )
-}
 
 /** Shows the kept parts of the workspace while the screen shows it. */
 function connectView(view: WorkspaceView): () => void {
@@ -108,6 +84,7 @@ export function WorkspaceScreen(props: {
   )
   const { model, notices, chat, toolEvents } = shown
   const startError = useStore(model.startError)
+  const opened = useStore(model.opened)
   const features = useFeatures()
   const viewport = useViewport()
   const theme = useSharedUiTheme()
@@ -155,7 +132,8 @@ export function WorkspaceScreen(props: {
   const { suspended } = access
   const restoreEnded = passed(workspace.restoreUntil)
   // A failed first start keeps the workspace, its chat, and its queue for
-  // every member, with its saved cause and Try again.
+  // every member, with its saved cause and Try again. The open resumes a
+  // stopped sandbox, so its bar waits until the open ends.
   const sandboxParts = sandboxView({
     sandbox,
     suspended,
@@ -163,6 +141,7 @@ export function WorkspaceScreen(props: {
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
     restore: archivedRestore(workspace, suspended, restoreEnded),
+    opened,
   })
   const context: WorkspaceContext = {
     org: props.org,
@@ -171,6 +150,7 @@ export function WorkspaceScreen(props: {
     sandbox,
     readOnly: suspended || sandbox === 'archived',
     panel: sandboxParts.panel,
+    resumingAtOpen: sandboxParts.resumingAtOpen,
     resume,
     viewport,
     view: props.view,
@@ -189,13 +169,18 @@ export function WorkspaceScreen(props: {
   }
   const phone = viewport === 'phone'
   // The state of a sandbox that does not run, in place of a part: the
-  // notice of the bar, with the words of a refusal, or the wait of a start.
+  // notice of the bar, with the words of a refusal, or the wait of a start,
+  // also while the open resumes the sandbox.
+  const shownState = contentState(
+    sandboxParts.panel,
+    sandboxParts.resumingAtOpen,
+  )
   const down =
-    sandboxParts.panel === null ? null : (
+    shownState === null ? null : (
       <SandboxPanel
         phone={phone}
         resume={resume}
-        state={sandboxParts.panel}
+        state={shownState}
         workspace={workspace}
       />
     )

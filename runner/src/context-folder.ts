@@ -1,10 +1,41 @@
 import { appendFile, lstat, mkdir, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 
-import { Git } from './git'
+import { Git, zeroPaths } from './git'
+import type { GitPathClassifier } from './git-paths'
+
+const CONTEXT_FOLDER = '.context'
 
 export function contextFolderPath(cwd: string): string {
-  return join(cwd, '.context')
+  return join(cwd, CONTEXT_FOLDER)
+}
+
+/**
+ * Lists the untracked files of the context folder, also the ones that Git
+ * ignores. All files shows them, and Changes still leaves them out. A nested
+ * repository shows as one folder, as Git lists it.
+ */
+export async function contextFolderFiles(
+  git: Git,
+  classifier: GitPathClassifier,
+  warn: (message: string) => void,
+): Promise<string[]> {
+  const folder = await classifier.classify(CONTEXT_FOLDER)
+  if (folder.kind !== 'directory' || folder.submodule) return []
+  try {
+    const output = await git.run([
+      'ls-files',
+      '--others',
+      '-z',
+      '--',
+      `${CONTEXT_FOLDER}/`,
+    ])
+    return zeroPaths(output).map((path) => path.replace(/\/$/u, ''))
+  } catch (error) {
+    if (git.signal?.aborted) throw error
+    warn('The context folder files could not be listed.')
+    return []
+  }
 }
 
 function missingFile(error: unknown): undefined {

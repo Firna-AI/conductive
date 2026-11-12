@@ -146,17 +146,18 @@ composer shows for a folder and for a file over the size limit.
   attachment IDs of the files in the same order.
 - In the chat, a message can hold only chips. New workspace needs words
   outside the chips of its files: `withoutMarks(text).trim() !== ''`.
-- Send keeps the draft text that it took, as the field wrote it, with its
-  marks and its escapes. After a send that succeeds, the draft text clears
-  when it is still that text. A text that the member changed during the
-  send stays, without the marks of the sent files and of the detached
-  files. A file that the member added during the send stays, with its
-  mark, for the next message. The send also ends the detached files.
-  `afterSend` of `state/drafts.ts` applies this in the chat.
-- A send that fails keeps the text with its marks, and the files. When the
-  Worker no longer has a sent file, each sent file turns failed, attached
-  or detached, through `failSentDraft`. So undo cannot bring back such a
-  file as ready. Try again uploads its kept `File`.
+- In the chat, Send clears the draft text, its files, and its detached
+  files at once, through `startSend` of `state/drafts.ts`. The message
+  shows in the chat while its send waits. Text and files that the member
+  adds during the send stay for the next message, also after a send that
+  succeeds, through `afterSend`.
+- A send that fails gives back the draft text that Send took, as the field
+  wrote it, with its marks and its escapes, and its attached and detached
+  files, through `failSend`. They go before the text and the files that the
+  member added during the send. When the Worker no longer has a sent file,
+  each sent file turns failed, attached or detached, through
+  `failSentDraft`. So undo cannot bring back such a file as ready. Try
+  again uploads its kept `File`.
 - A create of New workspace that succeeds ends the upload generations. It
   starts a new draft with a new message ID, which keeps the model choice
   and a picked repository. A text that changed during the create stays,

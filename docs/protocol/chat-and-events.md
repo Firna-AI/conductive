@@ -172,7 +172,17 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 - Reason: one event type serves both agents, and the web app needs no
   change when an SDK changes its events.
 - Every open tab of a workspace gets the same events in the same order.
-- A tab that opens gets the stored history first, then the live events.
+- A tab that shows a session gets the newest part of its stored history
+  first. The live events start after that part, and the earlier history
+  loads above it (decision 280).
+- Reason: the newest messages and the work of a running turn show after
+  one read, also in a long session. Live events after the full history
+  were rejected, because a long session then showed nothing new until its
+  whole history had loaded.
+- The chat shows each event of a session once and in event order, also
+  when earlier history arrives after newer events.
+- While the earlier history loads, the chat says so above the messages
+  that it shows.
 - The Durable Object of the workspace stores every event, so the chat
   survives a stop of the sandbox.
 - A tab keeps the chat of each workspace that it showed in memory. A

@@ -2,7 +2,7 @@ import type { SessionsResponse } from '../../shared/sessions'
 import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { refreshDevices } from '../device/device-actions'
 import { messageOf, type ChatContext } from './context'
-import { hydrate } from './history'
+import { hydrateNewest } from './history'
 import { confirmSessions } from './session-records'
 import { confirmWorkspace } from './workspace-records'
 
@@ -18,14 +18,17 @@ const none = Promise.resolve(null)
  *    of the view also names the routine whose run made the workspace. The
  *    workspace loads with them, so the chat shows its records, its start
  *    steps, and its composer while the history loads.
- * 2. The full history of the shown session gives the event number that the
- *    stream starts after.
+ * 2. The newest history page of the shown session shows at once. Its cutoff
+ *    gives the event number that the stream starts after.
  * 3. The workspace and the session list load again after that number, so no
  *    change between the reads and the stream gets lost. Each read carries
  *    the event number of its state, so a record shows only while no newer
  *    record of the stream or a history replaces it.
+ * 4. Earlier pages load in sequence while the stream runs. They merge once,
+ *    after the oldest page or an earlier-page failure. The history status
+ *    stays loading until then. Other session actions wait for that full load.
  *
- * When the history of the shown session fails, the chat still loads. That
+ * When the newest page of the shown session fails, the chat still loads. That
  * session shows its failed history with Try again, and its record shows a
  * running turn with Stop. The stream then starts after the older of the two
  * later reads.
@@ -86,7 +89,7 @@ export async function loadChat(context: ChatContext): Promise<void> {
   const active = store.get().activeSessionId
   let through: number | null = 0
   if (active) {
-    through = await hydrate(context, active, true)
+    through = await hydrateNewest(context, active, true)
     if (!context.live()) return
   }
   let detail: OrderedWorkspaceResponse

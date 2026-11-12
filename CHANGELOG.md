@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.14.0](https://github.com/Firna-AI/conductive/compare/v0.13.0...v0.14.0) (2026-11-12)
+
+
+### Features
+
+* add own endpoint logins for Claude and Codex ([#263](https://github.com/Firna-AI/conductive/issues/263)) ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **files:** show syntax colours in diffs ([#276](https://github.com/Firna-AI/conductive/issues/276)) ([9b0bbcb](https://github.com/Firna-AI/conductive/commit/9b0bbcbb2f86d588940839d939e5d24032ef9acd))
+* **model-gateway:** route ChatGPT through a Cloudflare Container ([#287](https://github.com/Firna-AI/conductive/issues/287)) ([1f1b54a](https://github.com/Firna-AI/conductive/commit/1f1b54aa4f97a524bb091db4cae2f721cff58121))
+* **terminal:** plan terminal tabs and draw their mockups ([#280](https://github.com/Firna-AI/conductive/issues/280)) ([b1874ca](https://github.com/Firna-AI/conductive/commit/b1874ca947ae5d85671b7afda771ce4c81f24a74))
+* **workspace:** resize the split between the files and the tools ([#283](https://github.com/Firna-AI/conductive/issues/283)) ([ade62e3](https://github.com/Firna-AI/conductive/commit/ade62e35e2abcde25199790116c47467f370df79))
+
+
+### Bug Fixes
+
+* **account:** follow background model list reads in an open tab ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **account:** keep the model list in the reply of a share change ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **chat:** name the model of the failed Codex message ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **marketing:** refresh Conductor comparison notes ([#282](https://github.com/Firna-AI/conductive/issues/282)) ([cc472bb](https://github.com/Firna-AI/conductive/commit/cc472bb002d3182e3bd6bffeb84fbd777596941b))
+* **marketing:** track vertical panel resizing in progress ([#286](https://github.com/Firna-AI/conductive/issues/286)) ([1c66e33](https://github.com/Firna-AI/conductive/commit/1c66e330f852c6f72d60463e7a15d124b5d212c5))
+* **model-gateway:** keep ordinary request paths in endpoint answers ([579ad69](https://github.com/Firna-AI/conductive/commit/579ad69850e002bbd4810f38f7ffa8cad86b7f2e))
+* **ui:** make menu hover visible and show the pointer cursor ([#278](https://github.com/Firna-AI/conductive/issues/278)) ([8057cac](https://github.com/Firna-AI/conductive/commit/8057cacd3bd0cfddb2002ecbe8939f24bd633f70))
+
 ## [0.13.0](https://github.com/Firna-AI/conductive/compare/v0.12.0...v0.13.0) (2026-11-12)
 
 

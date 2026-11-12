@@ -22,11 +22,12 @@ the cloud computer.
   stands between two tabs and takes no space. When the tabs do not fit at
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, Copy concise
-  transcript and Copy full transcript, a line, then Move left and Move
-  right, from decisions 188 and 215. A file or diff tab has only the moves.
-  In a read-only workspace, the menu of a session tab holds only the two
-  copy items, and a file or diff tab opens no menu. A copy keeps the shown
+  tab opens its menu at the pointer: Rename session, a line, Copy link,
+  Copy concise transcript, and Copy full transcript, a line, then Move left
+  and Move right, from decisions 188 and 215. Copy link copies the link of
+  the session. A file or diff tab has only the moves. In a read-only
+  workspace, the menu of a session tab holds only the three copy items,
+  and a file or diff tab opens no menu. A copy keeps the shown
   tab, and a toast gives its result, as `app/transcripts` shows. The menu
   is the one way to rename a session, so no tab shows a rename button.
   Rename session opens a field in place of the title of that tab, also when
