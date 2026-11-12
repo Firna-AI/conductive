@@ -14,7 +14,7 @@ says.
   token of a sandbox (decision 258). The `read_session` call of the
   [session calls](session-calls.md) uses it.
 - The route reaches each session of each workspace of the org of the
-  sandbox, as [Reach](session-calls.md#reach) says. It needs no active
+  sandbox, as [Reach](agent-tool-access.md#reach) says. It needs no active
   turn.
 - The text is the text of a copy, from the same build. So
   [What each copy holds](session-transcripts.md#what-each-copy-holds) and

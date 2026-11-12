@@ -10,7 +10,7 @@ import { previewPaths } from '../files/previewPaths'
 import { workspaceLabel } from '../workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
 import type { ChipRemoval } from './ChipRemove'
-import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
+import { useChatWorkspaces } from './chatWorkspaces'
 import { FileChip } from './FileChip'
 import { entryName } from './entryPaths'
 import { SentFileChip } from './SentFileChip'
@@ -112,11 +112,7 @@ export function LinkChip(props: {
  * message `waits` for the cloud computer, the chip of an attached file opens
  * nothing, because its copy does not exist yet.
  */
-function Part(props: {
-  part: TextPart
-  rows: readonly ChatRow[]
-  waits?: boolean
-}) {
+function Part(props: { part: TextPart; waits?: boolean }) {
   const { part } = props
   if (part.kind === 'text') return part.text
   if (part.kind === 'code') {
@@ -144,8 +140,20 @@ function Part(props: {
       />
     )
   }
-  const target = linkTarget(part.href, props.rows)
-  if (!target) return part.source
+  return <LinkText href={part.href} source={part.source} />
+}
+
+/**
+ * One link as the chat shows it: the chip of the workspace that the link
+ * names, or a session chip when the chat read the session. A press on the
+ * chip opens its page, when the mockups draw it. A link that the chat does
+ * not find stays text: `source`, the link as the text has it, else `href`.
+ * A message shows each of its links so, and the line of a stop from a
+ * session shows the link of that session so.
+ */
+export function LinkText(props: { href: string; source?: string }) {
+  const target = linkTarget(props.href, useChatWorkspaces())
+  if (!target) return props.source ?? props.href
   const to = linkPage(target)
   return (
     <LinkChip
@@ -177,12 +185,11 @@ export function MessageText(props: {
   files?: readonly Attachment[]
   waits?: boolean
 }) {
-  const rows = useChatWorkspaces()
   const parts = textParts(props.text, true, props.mentions, props.files)
   const runs = props.strong ? strongRuns(parts) : [{ strong: false, parts }]
   return runs.map((run, index) => {
     const content = run.parts.map((part, inner) => (
-      <Part key={inner} part={part} rows={rows} waits={props.waits} />
+      <Part key={inner} part={part} waits={props.waits} />
     ))
     return run.strong ? (
       <strong key={index}>{content}</strong>

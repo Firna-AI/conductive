@@ -8,7 +8,11 @@ pages: `app/chat/turns` has the running turn, steer, interrupt, and a
 failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
 `failed` and declare `movedFrom`. From decision 277, its running turn has a
 skill line in its open run, and an earlier run whose fold line names its
-skill. `app/chat/work` draws the work of ended turns, from decisions 150,
+skill. `app/chat/agent-stops` draws a turn that the agent of another session
+stopped with a workspace tool, from decision 279. Its line says "Stopped
+from" and shows the session chip of that session, for a session of the same
+workspace and, in `other-workspace`, of another workspace.
+`app/chat/work` draws the work of ended turns, from decisions 150,
 151, and 277: the open work of the finished turn with one message open and
 two skill lines, a turn with a message that the user sent during it, whose
 two parts each fold their own work, a turn whose open work holds a Mac

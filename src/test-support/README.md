@@ -37,6 +37,9 @@ Its first turn finished, and used `brainstorming` with the arguments `high` and 
 Its second turn still runs: a folded run used `brainstorming`, and the call of `plans` runs.
 Its session records name no active turn, because they hold the state before the events.
 A record that named the second turn would put that turn before the first one.
+The `stopped-from` conversation is the `interrupted` conversation, but the agent of session `debounce` stopped its turn through a workspace tool.
+Its stop request names that session of `checkout-autocomplete` by its IDs, so the chat of each workspace of the fake names the same session.
+The dev app shows it with `?conversation=stopped-from`, also in another workspace such as `fix-cart-flake`.
 Each fake session record sets `retryMessageId`.
 In the `failed` conversation, each open session names the failed request `ask`, which the recorded failure names too.
 All other session records hold null.

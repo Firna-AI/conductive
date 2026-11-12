@@ -32,6 +32,7 @@ export async function creationAdmissionResponse(
       turnId: job.turnId,
       sender: job.creation.sender,
       request: first,
+      firstSessionTitle: job.creation.firstSessionTitle,
     },
   }
 }

@@ -1,3 +1,4 @@
+import type { StopSessionReference } from '../session-stop'
 import type { AgentChoice } from '../agents'
 import type {
   AgentChatEvent,
@@ -30,8 +31,9 @@ export type TranscriptItem =
       kind: 'stopped'
       id: string
       turnId: string
-      /** The member who pressed Stop, or null for a stop without a request. */
+      /** The member who pressed Stop, or null for another stop source. */
       by: string | null
+      from?: StopSessionReference
     }
   | {
       kind: 'failed'
@@ -85,10 +87,10 @@ export interface Transcript {
     Record<string, Extract<AgentChatEvent, { type: 'turn.completed' }>>
   >
   /**
-   * The member who first pressed Stop, for each turn that has not ended. The
+   * The first member or session that requested Stop, for each active turn. The
    * request alone ends nothing: the turn runs until it ends as stopped.
    */
-  stopRequests: Readonly<Record<string, string>>
+  stopRequests: Readonly<Record<string, string | StopSessionReference>>
 }
 
 export const emptyTranscript: Transcript = {
@@ -171,7 +173,7 @@ export function foldEvent(
         ...transcript,
         stopRequests: {
           ...transcript.stopRequests,
-          [event.turnId]: event.requestedById,
+          [event.turnId]: event.requestedBySession ?? event.requestedById,
         },
       }
     default:

@@ -80,7 +80,8 @@ chips.
   mockups.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, the fixed prompts of the pull request bar, and Stop.
+  sends, the fixed prompts of the pull request bar, and Stop with the line
+  of each stop.
 - [The message field](message-field.md) gives the rules of the message
   field of each composer. They cover its chips, the chips of attached
   files, the copy, the paste, and the drag. They also cover the drop of

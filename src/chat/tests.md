@@ -199,6 +199,15 @@ Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, unknown workspaces, and punctuation. `links/LinkedText.test.tsx`
 mounts an answer with chips: in bold, in a list, with a bold or a code
 label, and a link in inline code and in a code block.
+`components/AgentStop.dom.test.tsx` mounts the chat with its controller,
+workspace list, and session reads, and draws four stops through the
+workspace tools. The stopping sessions are a session of the chat's
+workspace, with its live title and a note, a session of another
+workspace, an unknown session of that workspace, and a session of a
+workspace that the list does not hold. While the one read of the other
+workspace waits, both of its stops show the chip of that workspace. After
+the read, the known session shows its session chip, and the other
+workspace got one request. The last stop keeps the session link as text.
 `state/workspace-list.test.ts` checks that a chat without sources reads the
 list while it shows, and not while it is hidden. The workspace screen's
 `LinkChips.test.tsx` checks the chips of a kept chat on a phone, and its

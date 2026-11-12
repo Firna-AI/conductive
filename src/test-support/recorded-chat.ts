@@ -1,6 +1,7 @@
 import type { ChatEvent, ToolCall } from '../shared/chat-events'
 import type { WorkspaceEventEnvelope } from '../shared/events'
 import { sessionLink } from '../shared/session-link'
+import type { TurnStopRequester } from '../shared/session-stop'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './fixtures/core'
 import { workspaceFixtures } from './fixtures/workspaces'
 import { skillChat } from './recorded-skills'
@@ -17,6 +18,7 @@ export type RecordedChatScenario =
   | 'refused-events'
   | 'sent-by'
   | 'skills'
+  | 'stopped-from'
 
 const { message } = workspaceFixtures()
 const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
@@ -94,6 +96,39 @@ const sentBy: ChatEvent = {
   },
 }
 
+/**
+ * The turn up to the tests that a stop cut off, then its stop. `requester`
+ * names who asked for the stop: the member who pressed Stop, or the session
+ * whose agent stopped the turn with a workspace tool. The record names that
+ * session by its IDs, so the chat of each workspace of the fake names it.
+ */
+function stoppedTurn(requester: TurnStopRequester): readonly ChatEvent[] {
+  return [
+    ...beginning,
+    {
+      ...turn,
+      type: 'tool.updated',
+      tool: {
+        ...tool,
+        id: 'unit',
+        kind: 'run',
+        target: 'npm test',
+        state: 'stopped',
+      },
+    },
+    { ...turn, type: 'turn.stop-requested', ...requester },
+    {
+      ...turn,
+      type: 'turn.completed',
+      state: 'stopped',
+      durationMs: 161_000,
+      files: [],
+      omittedFileCount: 0,
+      userMessageIds: [message.id],
+    },
+  ]
+}
+
 const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
   history: [...beginning, ...completed],
   'sent-by': [...beginning, ...completed, sentBy],
@@ -126,30 +161,13 @@ const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
       userMessageIds: [message.id, 'steer-1'],
     },
   ],
-  interrupted: [
-    ...beginning,
-    {
-      ...turn,
-      type: 'tool.updated',
-      tool: {
-        ...tool,
-        id: 'unit',
-        kind: 'run',
-        target: 'npm test',
-        state: 'stopped',
-      },
+  interrupted: stoppedTurn({ requestedById: message.sender.id }),
+  'stopped-from': stoppedTurn({
+    requestedBySession: {
+      workspaceId: FAKE_IDS.workspace,
+      sessionId: 'debounce',
     },
-    { ...turn, type: 'turn.stop-requested', requestedById: message.sender.id },
-    {
-      ...turn,
-      type: 'turn.completed',
-      state: 'stopped',
-      durationMs: 161_000,
-      files: [],
-      omittedFileCount: 0,
-      userMessageIds: [message.id],
-    },
-  ],
+  }),
   failed: [
     accepted,
     started,

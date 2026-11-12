@@ -1,4 +1,4 @@
-import type { WorkspaceToolConfiguration } from './client.ts'
+import type { WorkspaceToolConfiguration } from './transport.ts'
 import { TOOL_ENV } from './context.ts'
 import { ToolInputError } from './input.ts'
 

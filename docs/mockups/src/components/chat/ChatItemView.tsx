@@ -1,6 +1,6 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert, CircleStop } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { people, type PersonKey } from '../../fixtures/members'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
@@ -15,20 +15,36 @@ import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
-import { filesWithoutPlace, MessageText } from './MessageText'
+import { filesWithoutPlace, LinkText, MessageText } from './MessageText'
 import { SentFiles } from './SentFiles'
+import { StopLine, type StopSource } from './StopLine'
+import { memberStopped, stoppedUnnamed } from './stopCopy'
 import { TurnEnd } from './TurnEnd'
 import styles from './ChatItemView.module.css'
 
+type StoppedItem = Extract<SingleItem, { kind: 'stopped' }>
+
 /**
- * The line of a stopped turn. It names the member who pressed Stop, and
- * says "You" to that member (decision 72). A turn that stopped with no
- * Stop, such as when the cloud computer stopped, names no member.
+ * Who stopped a turn. A stop from a session names that session with its
+ * chip. Else the line names the member who pressed Stop, and says "You" to
+ * that member. A turn that stopped with no Stop, such as when the cloud
+ * computer stopped, names no member.
  */
-function stoppedLine(by: PersonKey | undefined, viewer: PersonKey): string {
-  if (by === undefined) return 'The agent stopped'
-  const who = by === viewer ? 'You' : people[by].name
-  return `${who} stopped the agent`
+function stopSource(item: StoppedItem, viewer: PersonKey): StopSource {
+  if (item.from !== undefined) {
+    return { kind: 'session', chip: <LinkText href={item.from} /> }
+  }
+  if (item.by === undefined) return { kind: 'words', text: stoppedUnnamed }
+  const who = item.by === viewer ? 'You' : people[item.by].name
+  return { kind: 'words', text: memberStopped(who) }
+}
+
+/** The notes after who stopped a turn: the files that it does not list. */
+function stopNotes(item: StoppedItem): string[] {
+  return [
+    ...(item.omittedFiles ? [unlistedFiles(item.omittedFiles)] : []),
+    ...(item.filesUnavailable ? [turnFilesUnavailable] : []),
+  ]
 }
 
 /**
@@ -94,12 +110,7 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       )
     case 'stopped':
       return (
-        <div className={styles.event}>
-          <CircleStop size={13} />
-          {stoppedLine(item.by, viewer)}
-          {item.omittedFiles ? ` · ${unlistedFiles(item.omittedFiles)}` : null}
-          {item.filesUnavailable ? ` · ${turnFilesUnavailable}` : null}
-        </div>
+        <StopLine notes={stopNotes(item)} source={stopSource(item, viewer)} />
       )
     case 'error':
       return (

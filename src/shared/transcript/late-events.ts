@@ -26,12 +26,12 @@ function foldLateEnd(
     'stopped',
   )
   if (event.state === 'stopped' && !items.some((item) => isEnd(item, turnId))) {
-    const by = stopperOf(transcript, turnId)
+    const source = stopperOf(transcript, turnId)
     const id = stoppedKey(turnId)
     items = placeInTurn(
       transcript,
       items,
-      { kind: 'stopped', id, turnId, by },
+      { kind: 'stopped', id, turnId, ...source },
       true,
     )
   }

@@ -10,6 +10,8 @@ export const conversationKeys = [
   'steer',
   'interrupted',
   'sandbox-stopped',
+  'stopped-from',
+  'stopped-from-other',
   'failed',
   'queued',
   'queued-follow-up',
