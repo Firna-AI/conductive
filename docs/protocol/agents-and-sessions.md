@@ -132,7 +132,11 @@ says.
 - Each member has their own order in each workspace. The order stays after
   a reload. The other devices of that member load the same order.
 - A new tab of any kind opens at the end of the row. This holds also for a
-  session that the history reopens.
+  session that the history reopens, and for a new
+  [temporary tab](temporary-tabs.md).
+- A press that replaces the file or the diff of the temporary tab leaves
+  the tab in its place. This holds also when later tabs stand after it. A
+  keep does not move the tab either.
 - The user can drag any tab to any place in the row.
 - A row that keeps the sessions and the files in two groups was rejected,
   because a file could then never go before a session.
@@ -164,8 +168,10 @@ says.
   a sheet.
 - The tab menu of a session tab holds three groups, with a line between
   them: Rename session, then Copy concise transcript and Copy full
-  transcript, then Move left and Move right. The tab menu of a file or diff
-  tab holds Move left and Move right.
+  transcript, then Move left and Move right. The tab menu of a kept file or
+  diff tab holds Move left and Move right.
+- The tab menu of the temporary tab holds two groups, with a line between
+  them: Keep open, then Move left and Move right (decision 286 B).
 - Reason: the tab menu groups its items by kind (decision 188).
 - [Session transcripts](session-transcripts.md) states what each copy item
   copies (decisions 213 and 215).
@@ -174,6 +180,19 @@ says.
 - After a move from the tab menu, a screen reader user hears the name of
   the tab and its new place, such as "Address autocomplete moves to place
   2 of 4". The focus then goes back to the tab.
+- Keep open keeps the temporary tab, and the tab stays in its place. The
+  focus then goes back to the tab. A screen reader user hears that the tab
+  stays open, such as "README.md stays open".
+- [Keep a tab](temporary-tabs.md#keep-a-tab) says why the menu holds Keep
+  open.
+- A move that changes the place of the temporary tab keeps it (decision
+  287 B). This holds for a drag, Move left, and Move right. A drag that
+  Escape cancels, or that ends in the same place, leaves the tab temporary.
+- Reason: a move shows that the user wants the file at that place. A
+  temporary tab that stays temporary after a move was rejected. The next
+  press would then replace the file at that place.
+- A drag that keeps the tab while Move left and Move right do not was
+  rejected. Two ways to make one move would then act differently.
 - Rename session opens a field for the title in that tab. The shown tab
   does not change.
 - In the app, the tab menu is the one way to rename a session. A Rename
@@ -193,6 +212,9 @@ says.
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
   says. The rule also covers each item that the menu gets later.
+- So a read-only workspace also leaves out Keep open. The temporary tab
+  there opens no tab menu either, and only a double-click keeps a tab
+  (decision 286 B).
 - The tab menu opens there in the same ways as in other workspaces. A long
   press on a phone opens it, but lifts no tab.
 - An item that the place of a tab rules out, such as Move left on the

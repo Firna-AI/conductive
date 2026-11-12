@@ -28,8 +28,10 @@ that keep a tab, bulk close actions, or temporary session tabs.
 
 Contract owners:
 
-- [Tools of a workspace](../docs/protocol/workspace-tools.md#files-and-changes):
-  the temporary tab, and what opens and keeps it.
+- [Temporary tabs](../docs/protocol/temporary-tabs.md): the temporary
+  tab, what opens and keeps it, and its mark in the saved view.
+  [Tools of a workspace](../docs/protocol/workspace-tools.md#files-and-changes)
+  links to it.
 - [Agents and sessions](../docs/protocol/agents-and-sessions.md#the-tab-row):
   the place of the temporary tab in the tab row, its moves, and its tab
   menu.
@@ -474,30 +476,30 @@ Depends on: 1
 
 State the temporary tab as requirements, with decisions 284 and 285.
 
-- [ ] In `docs/protocol/workspace-tools.md`, under Files and changes, state
+- [x] In `docs/protocol/workspace-tools.md`, under Files and changes, state
       the temporary tab: what opens it, the italics, the replace in place,
       the double-click that keeps it, the address rule, and that each
       press on a phone replaces the last glance. Give decision 284 with
       its rejected alternatives, and decision 285.
-- [ ] In `docs/protocol/agents-and-sessions.md`, under The tab row, state
+- [x] In `docs/protocol/agents-and-sessions.md`, under The tab row, state
       where a new and a replaced temporary tab go. State Keep open in the
       tab menu of the temporary tab (decision 286 B), and that a move to
       another place keeps the tab (decision 287 B).
-- [ ] Read the Terms page and the Privacy page in full, and update each
+- [x] Read the Terms page and the Privacy page in full, and update each
       sentence that restates a changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. In
+- [x] Read each public guide in `src/marketing/docs/` in full. In
       `files-and-changes.md`, describe the temporary tab, the
       double-click, and Keep open, as
       [Website docs](../docs/protocol/website-docs.md) says.
-- [ ] In `src/marketing/from-conductor/areas/files.ts`, change the note
+- [x] In `src/marketing/from-conductor/areas/files.ts`, change the note
       of the File tabs and editor row: temporary tabs ship with this
       change, as
       [Conductor comparison](../docs/protocol/conductor-comparison.md#statuses)
       says.
-- [ ] Check that `docs/protocol/file-mentions.md` still reads right: a
+- [x] Check that `docs/protocol/file-mentions.md` still reads right: a
       press on a chip, also the chip of an attached file in a sent
       message, opens the file as a press in All files does.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 
 ## Milestone 3: The saved view keeps the temporary mark
 
@@ -590,6 +592,11 @@ Depends on: every other milestone
       menu at the end of the row are cut off, as in the `kept` and `menu`
       variants of `app/files/temporary`. The fix draws the row in
       `WorkspaceTabs` of the mockups as the app scrolls it.
+- [ ] Record a follow-up item under `plans/follow-ups/` to move The tab
+      row out of `docs/protocol/agents-and-sessions.md` to its own page.
+      This change takes that doc to 282 lines, over the 250-line target
+      of the `documentation` skill. The move waits, because The tab row
+      changes often on `main`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
