@@ -433,13 +433,16 @@ pages.
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up
       items under `plans/follow-ups/` for the rest, re-review once, and
       report.
+- Evidence: `.context/chat-history-newest-first/gate-2.log` (passed on
+  `89ccef74`) and `.context/reviews/calummoore/chat-history-loading-3c/`
+  (round 1, no findings).
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
