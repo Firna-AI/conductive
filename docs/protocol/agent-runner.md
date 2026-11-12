@@ -23,8 +23,12 @@ the change that keeps a turn open for background work.
 - The runner connection carries a protocol version. The Durable Object
   serves each version that a live org image or sandbox can hold, within
   the version pin of its workspace.
-- Each build of the org image installs the newest runner. Reason: a stopped
-  sandbox can resume weeks later with an old runner.
+- Each build of the org image installs the newest runner. Each sandbox then
+  updates its runner itself at a later start, as
+  [Updates](sandbox-software.md#updates) says. Reason: a fix of the runner
+  then reaches each sandbox with no new workspace.
+- A sandbox runs its older runner until its update applies. A stopped
+  sandbox can also resume weeks later with an old runner.
 - A connection to the runner through a Boat port address was rejected,
   because it ties the runner to Boat.
 - Each build of the org image records the runner protocol version that it

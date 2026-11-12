@@ -208,11 +208,28 @@ under `.wrangler/`, which Git also ignores.
 | `npm run format:check`      | Check formatting with Prettier                                 |
 | `npm run format`            | Format the files with Prettier                                 |
 
+The program `conductive` of each sandbox is Rust code in a Cargo workspace
+at the repository root. Its crates live under `crates/`, each with the
+prefix `cnd-`. Install Rust with `rustup`. Run these commands from the
+repository root before you submit a change to the Cargo workspace:
+
+| Command | What it does |
+| --- | --- |
+| `cargo fmt --all -- --check` | Check the format of the Rust code |
+| `cargo clippy --workspace --all-targets -- -D warnings` | Lint the Rust code, and fail on each warning |
+| `cargo test --workspace` | Run the Rust tests |
+| `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli` | Build `conductive` as a static Linux program for the sandboxes |
+
+The release build needs the target that
+`rustup target add x86_64-unknown-linux-musl` adds. On Ubuntu, it also
+needs the `musl-tools` package. `npm run check` runs no Rust command.
+
 GitHub Actions uses `.nvmrc`. It installs with `npm ci`,
 `npm --prefix desktop ci`, and `npm ci --prefix runner`. Then it runs
 `npm run check` on pull requests, and on pushes to `main` and to the primary
-branch of the plan. CI does not deploy, as
-[Automatic deploys](docs/automatic-deploys.md) says.
+branch of the plan. A separate `Rust gate` job runs the four Rust commands
+above. A pull request into `main` needs both checks to pass. CI does not
+deploy, as [Automatic deploys](docs/automatic-deploys.md) says.
 
 ## Mac app
 

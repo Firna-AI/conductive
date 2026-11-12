@@ -29,6 +29,7 @@ and the separate preview domain.
 | The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software                         | The org image, in the app's Boat account |
+| The releases of the [sandbox software](sandbox-software.md) | An R2 bucket, public at `runner.conductive.build` |
 | Panel sizes                                                                  | The browser, or the Mac app              |
 
 ## Trust boundaries

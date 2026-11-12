@@ -142,6 +142,9 @@ each one.
   plan says.
 - The first-start measurement tools of `runner/scripts/` stay Node tools.
   They move into the helper package.
+- The `Rust gate` job runs on the GitHub-hosted `ubuntu-24.04` runner,
+  not on Blacksmith. Reason: PR #310 moved every Linux job there, and
+  `AGENTS.md` states that rule. Milestone 2 first named Blacksmith.
 
 ## Decision 8: where the shared message types come from
 
@@ -198,24 +201,24 @@ The docs state the new update rules and the new shape of the sandbox
 software before any code changes. No screen changes, so the plan has no
 mockup milestone.
 
-- [ ] Update `docs/protocol/agent-runner.md`: the runner updates itself at the next restart after a release, and the reason of "Each build of the org image installs the newest runner" changes.
-- [ ] Update `docs/protocol/org-image.md`, "The software image": the program installs the newest release in a build, and an existing sandbox updates itself.
-- [ ] Update `docs/protocol/port-previews.md`: remove the rule that only a build installs the software of a sandbox. Record that decision 1 of this plan reverses it.
-- [ ] Update `docs/protocol/workspaces-and-sandboxes.md` and `docs/architecture/components.md#sandbox-software`: one Rust program, the Node SDK helper, the release files in R2, and the check, download, and restart rules of decision 5.
-- [ ] Update `docs/architecture.md` where it restates the software install rule.
+- [x] Update `docs/protocol/agent-runner.md`: the runner updates itself at the next restart after a release, and the reason of "Each build of the org image installs the newest runner" changes.
+- [x] Update `docs/protocol/org-image.md`, "The software image": the program installs the newest release in a build, and an existing sandbox updates itself.
+- [x] Update `docs/protocol/port-previews.md`: remove the rule that only a build installs the software of a sandbox. Record that decision 1 of this plan reverses it.
+- [x] Update `docs/protocol/workspaces-and-sandboxes.md` and `docs/architecture/components.md#sandbox-software`: one Rust program, the Node SDK helper, the release files in R2, and the check, download, and restart rules of decision 5.
+- [x] Update `docs/architecture.md` where it restates the software install rule.
 - [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts` in full. Update each sentence that restates the install rule, such as the image build sentences near `terms.ts:79-97`. The removal of protocol version 1 changes the sentences about the version 1 login risk, not this change.
 - [ ] Read each public guide in `src/marketing/docs/` in full. Update each sentence that restates the install rule, for example `cloud-computer.md:138-148` and `agent-logins.md:238-245`. Follow `docs/protocol/website-docs.md`, and do not name Boat.
 - [ ] Check the Conductor comparison rows in `src/marketing/from-conductor/`. Change a row only when this change ships, starts, or drops its feature.
-- [ ] Add the Rust commands and the Rust CI job to `AGENTS.md`, `CLAUDE.md`, and `README.md`.
+- [x] Add the Rust commands and the Rust CI job to `AGENTS.md`, `CLAUDE.md`, and `README.md`.
 
 ## Milestone 2: Rust workspace, program skeleton, and CI job
 
 Depends on: 1
 
-- [ ] Add the Cargo workspace at the repository root, with `crates/cnd-cli` for the `conductive` program and a README for each crate, as the `rust` skill says.
-- [ ] Add `cli-updater` and `cli-release-interface` as git dependencies of `futex-ai/cli-release`, pinned to a full commit.
-- [ ] Give the program its subcommands with `clap`. Each subcommand that later milestones fill gives a clear "not available yet" error.
-- [ ] Add the `Rust gate` job to `.github/workflows/ci.yml`, on a Blacksmith runner: format, clippy, tests, and a musl release build.
+- [x] Add the Cargo workspace at the repository root, with `crates/cnd-cli` for the `conductive` program and a README for each crate, as the `rust` skill says.
+- [x] Add `cli-updater` and `cli-release-interface` as git dependencies of `futex-ai/cli-release`, pinned to a full commit.
+- [x] Give the program its subcommands with `clap`. Each subcommand that later milestones fill gives a clear "not available yet" error.
+- [x] Add the `Rust gate` job to `.github/workflows/ci.yml`, on a Blacksmith runner: format, clippy, tests, and a musl release build.
 - [ ] Ask an admin to add the `Rust gate` check to the `Protect main` ruleset, as decision 7 says. The change of the ruleset waits for that admin.
 
 ## Milestone 3: Release publishing in each deploy
@@ -241,6 +244,7 @@ Depends on: 3
 - [ ] Make the `gh` wrapper, the git credential setting, and the udev rule `60-conductive-disk-cache.rules` release parts, so that no part of `image/install.sh` is left without an owner.
 - [ ] Make the org image build and the software image build install the newest release through the program.
 - [ ] Add the one-time install of the program to `workspaceStartupCommand` in `worker/lifecycle/image-software.ts`, for a sandbox without it.
+- [ ] Update the READMEs that say only an image build installs the sandbox software, and that an existing workspace keeps it: `image/install.md`, `worker/terminal/README.md`, and `worker/previews/README.md`.
 - [ ] Test the update logic with mocks of the `cli-updater` traits and of the disk, as the `rust` skill says.
 - [ ] Run the live check in a real sandbox: an existing workspace gets the program at its next start, downloads a newer release, and applies it at the next restart. Save the evidence under `.context/rust-sandbox-software/`.
 

@@ -9,7 +9,9 @@ lives in `docs/mockups/`, in TypeScript and React with `@firna/ui`. The root
 npm package holds the React and Vite web app under `src/` and the Cloudflare
 Worker with Durable Objects and D1 under `worker/`. The Mac app is a separate
 Electron package under `desktop/`. [desktop/README.md](desktop/README.md)
-gives its commands.
+gives its commands. The program `conductive` of each sandbox is Rust code in
+a Cargo workspace at the repository root. Its crates live under `crates/`,
+each with the prefix `cnd-`.
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
@@ -81,24 +83,36 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   first failed step. GitHub Actions runs it on pushes and pull requests. Run
   `npm --prefix desktop ci` and `npm ci --prefix runner` once before the
   gate, as CI does. These commands install the dependencies of the gate's
-  desktop and runner checks.
+  desktop and runner checks. The gate runs no Rust check. Run the Rust
+  checks below for each change to the Cargo workspace.
 - Format: `npm run format`.
 - Mockup check: `npm run mockups:check`. It runs the typecheck, then the
   strict build into `mokly-static/`.
 - Mockup preview: `npm run mockups:serve`. It serves the catalogue at
   `http://127.0.0.1:4173`, and it watches the edits.
+- Rust checks: `cargo fmt --all -- --check`,
+  `cargo clippy --workspace --all-targets -- -D warnings`, and
+  `cargo test --workspace`. `cargo test -p <crate>` runs the tests of one
+  crate. `cargo fmt --all` formats the Rust code.
+- Rust release build:
+  `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`.
+  It builds `conductive` as a static Linux program for the sandboxes. Run
+  `rustup target add x86_64-unknown-linux-musl` once before it. On Ubuntu,
+  it also needs the `musl-tools` package.
 
 ## CI
 
 GitHub Actions runs `npm run check` from `.github/workflows/ci.yml` on each
 pull request, and on each push to `main` and to the primary branch of the
-plan. A push to another branch runs no CI until its pull request opens.
+plan. A push to another branch runs no CI until its pull request opens. The
+`Rust gate` job of the same workflow runs the Rust checks and the Rust
+release build of [Commands](#commands).
 
-The active `Protect main` ruleset requires a pull request with a green
-`Complete gate` check. An admin can bypass its rules only through a pull
-request. It requires no approval and does not require the branch to be up
-to date. It requires resolved review conversations, blocks force pushes,
-and restricts deletion of `main`.
+The active `Protect main` ruleset requires a pull request with green
+`Complete gate` and `Rust gate` checks. An admin can bypass its rules only
+through a pull request. It requires no approval and does not require the
+branch to be up to date. It requires resolved review conversations, blocks
+force pushes, and restricts deletion of `main`.
 
 `.github/workflows/deploy.yml` deploys each push to `main` to the test
 deployment at `conductive.build`. It does not wait for CI, as
