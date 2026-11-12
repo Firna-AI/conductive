@@ -54,11 +54,13 @@ Replaced ways:
   `worker/sandbox/file-write.ts`, `worker/sandbox/file-write-body.ts`,
   `BoatTransport.uploadFile`, the `uploadFileUrl` provider route, and their
   tests have no other consumer. Deleted in Milestone 3.
-- One raw `POST` for each file → the transport of large-upload decision 1.
-  Consumers: `worker/http/raw-upload-routes.ts`,
+- One raw `POST` for each file → an upload in parts (large-upload
+  decision 1 C). Consumers: `worker/http/raw-upload-routes.ts`,
   `worker/chat/attachment-routes.ts`, `src/app/api/xhr-files.ts`,
-  `src/app/dev/attachment-routes.ts`, and their tests. Moved and deleted in
-  Milestones 5 and 6, after the user answers decision 1.
+  `src/app/attachment-upload.ts`, `src/app/dev/attachment-routes.ts`, and
+  their tests. The Worker adds the part routes in Milestone 5. The app
+  moves to them in Milestone 6. Milestone 7 deletes the raw `POST` routes
+  and their 25 MB limit.
 
 ## Decisions
 
@@ -67,7 +69,7 @@ The decisions of this change carry the short name "large-upload". So
 
 ### 1. How the browser uploads a 1 GB file
 
-Open. It waits for the user's answer. Milestones 5 and 6 wait for it.
+Chosen on 12 November 2026: C. Cal's answer: "1 = C".
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Design. **Category:** Architecture.
@@ -199,7 +201,7 @@ A, for every file.
 
 ### 4. The read line for a very large file
 
-Open. It waits for the user's answer. Milestone 7 waits for it.
+Chosen on 12 November 2026: D. Cal's answer: "4 = D".
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design. **Category:** Product.
@@ -348,6 +350,46 @@ Chosen on 12 November 2026: A. Cal's answer: "5 = A".
 - The 7-day expiry of an unsent file, and the deletion of the files of a
   deleted workspace or org, stay as they are.
 
+### The upload in parts
+
+- The start call is a JSON `POST` with the default body limit. It names
+  the target, the file name, the media type, and the size in bytes. It
+  refuses a size above 1,000,000,000 bytes with HTTP 413 and
+  `attachment_too_large`. It creates the record and the R2 multipart
+  upload, and it returns the upload ID, the part size, and the part count.
+- The part size is 64 MiB, or 67,108,864 bytes, for each part but the
+  last. Reason: R2 needs equal parts but the last, and a part stays under
+  the 100 MB request limit of the zone. A file of 1 GB has 15 parts.
+  Design call of 12 November 2026.
+- Each part is a raw `PUT` with `application/octet-stream` and a
+  `Content-Length`. The gate keeps the rules of
+  [Attachment uploads](../docs/protocol/access-and-security.md#attachment-uploads).
+  The route refuses a part number above the part count, and a byte count
+  other than the expected length of that part. It streams the part into
+  R2 and returns its receipt.
+- The complete call is a JSON `POST` with the receipts. The Worker
+  completes the R2 upload, checks that the object size equals the declared
+  size, and publishes the file. It returns the same reply as today's
+  upload, with `path`.
+- The browser keeps the receipts in the memory of the tab. A failed part
+  retries alone, up to three times. Try again of a failed chip sends only
+  the parts with no receipt, while the tab keeps the upload. The progress
+  of a chip counts the bytes of all parts. Design call of 12 November
+  2026.
+- Each file uses the parts, also a small file with one part. Reason: one
+  way to upload is simpler to test and to keep. Design call of 12 November
+  2026.
+- The scheduled cleanup aborts an unfinished multipart upload when its
+  draft expires, as it does today.
+
+### The read line
+
+- One read line for every file: "The sender attached these files. Read
+  each file, or the parts of a large file that you need, before you
+  answer." (large-upload decision 4 D).
+- Codex gets an image as image input only when the image has at most
+  25,000,000 bytes. A larger image gets only its file line.
+
 ### Risks
 
 - An agent edit that keeps the size of a file goes unnoticed. The next
@@ -389,7 +431,10 @@ Depends on: 1
       check of a later message and of Try again, and the new error.
       Remove the rejection of a download by the cloud computer.
 - [ ] Update `docs/protocol/access-and-security.md` with the download
-      route and its token.
+      route and its token, and with the part routes in place of the one
+      raw `POST` of decision 144.
+- [ ] Update the read line and the image input of decision 244 in
+      `docs/protocol/message-attachments.md`.
 - [ ] Update `docs/protocol/isolation.md`, which says that the Worker sends
       each attachment to the provider's upload address.
 - [ ] Update `docs/protocol/create-a-workspace.md` only if its words about
@@ -442,29 +487,53 @@ Depends on: 3
 
 ## Milestone 5: Upload in parts
 
-Depends on: 2, and the answer to large-upload decision 1
+Depends on: 2
 
-- [ ] Write the TODOs of the chosen option of decision 1.
+The Worker adds the part routes. The raw `POST` routes stay, with their
+25 MB limit, until the app moves.
 
-## Milestone 6: The composer accepts 1 GB
+- [ ] Add the start, part, and complete routes for a draft file and for a
+      file of a workspace, with the checks of the design.
+- [ ] Register the part routes with a body limit of one part. Keep the
+      raw `POST` routes at 25,000,000 bytes under their own constant.
+- [ ] Set `ATTACHMENT_MAX_BYTES` to 1,000,000,000 for the part routes,
+      and the Worker's notice text to "Each file can be up to 1 GB."
+- [ ] Add tests: a part beyond the size, a part of the wrong length, a
+      retried part, a complete call with a wrong size, and the gate rules.
+- [ ] Update `worker/chat/attachments.md` and `src/shared/README.md`.
+
+## Milestone 6: The composer uploads in parts
 
 Tags: ui
 
 Depends on: 1, 5
 
-- [ ] Set `ATTACHMENT_MAX_BYTES` to 1,000,000,000 and update every text
-      that names 25 MB, in the app, the Worker, and the tests.
-- [ ] Move the upload client to the transport of Milestone 5, with one
-      progress value for each file.
-- [ ] Update `src/shared/README.md`.
+- [ ] Move `src/app/api/xhr-files.ts` and `src/app/attachment-upload.ts`
+      to the part routes, with one progress value for each file.
+- [ ] Retry a failed part alone. Try again sends only the parts with no
+      receipt.
+- [ ] Move the dev routes in `src/app/dev/attachment-routes.ts`.
+- [ ] Update every text in the app and its tests that names 25 MB.
 
-## Milestone 7: The read line for large files
+## Milestone 7: Delete the raw upload routes
 
-Depends on: 2, and the answer to large-upload decision 4
+Depends on: 6
 
-- [ ] Write the TODOs of the chosen option of decision 4.
+- [ ] Delete the raw `POST` routes, their constant, and their tests.
+- [ ] Update `worker/chat/attachments.md`.
 
-## Milestone 8: Verification, commit, review, and pull request
+## Milestone 8: The read line for large files
+
+Depends on: 2
+
+- [ ] Change the read line in
+      `runner/src/providers/attachment-description.ts` for both adapters.
+- [ ] Give Codex an image as image input only up to 25,000,000 bytes, in
+      `runner/src/providers/codex.ts`.
+- [ ] Add runner tests for the line and for an image above the limit.
+- [ ] Update `worker/chat/attachments.md` and the runner README.
+
+## Milestone 9: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
