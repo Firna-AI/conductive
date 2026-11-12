@@ -1,4 +1,5 @@
 import { browserDelay } from '../../app/events'
+import { windowVisibility } from '../../app/services'
 import { githubPaths, type BannerState } from '../../shared/github'
 import type { MessageSender } from '../../shared/messages'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -74,6 +75,7 @@ export function createDevSource(
     fetch,
     subscribe: (after, listener) => server.events.subscribe(after, listener),
     delay: browserDelay,
+    visible: windowVisibility(window),
     emit: (next) => {
       // The actions of the bar add events too, so each one counts.
       const last = server.events.history(Number.MAX_SAFE_INTEGER)

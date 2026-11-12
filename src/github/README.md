@@ -16,7 +16,7 @@ the bar or the row and the Checks tab, as
 ## Use the parts in the app
 
 ```tsx
-const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe, delay })
+const github = useGitHubState({ orgId, workspaceId }, { fetch, subscribe, delay, visible })
 const actions = useBarActions({ orgId, workspaceId }, ports)
 const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly, archive, archiving, showChat })
 
@@ -51,8 +51,12 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
 - `delay` is `AppServices.delay`, the timer of the app. The store waits with
   it before each [backup read](#backup-reads). The development page gives
   `browserDelay`.
-- Keep `fetch`, `subscribe`, and `delay` stable, for example with
-  `useCallback`. A new function connects the same store again and reloads.
+- `visible` is `AppServices.visible`: whether the page shows. The store
+  starts no backup read while the page is hidden. The development page
+  gives `windowVisibility(window)`.
+- Keep `fetch`, `subscribe`, `delay`, and `visible` stable, for example
+  with `useCallback`. A new value connects the same store again and
+  reloads.
 - `now` is the clock of the relative times, such as "2h ago" after a merge.
   Give it a value that changes each minute.
 - `controls` gives the actions, the link, and the message of the state that
@@ -152,7 +156,7 @@ The store applies them in this way:
 
 GitHub events keep the state current. A change that no webhook names, or a
 lost webhook, needs a fresh read. So the store reads again while it is
-connected:
+connected and the page shows:
 
 - The store waits five minutes after a read ends, then reads again. The
   wait is a choice of the app, not a product limit.
@@ -162,7 +166,17 @@ connected:
   wait.
 - A backup read shows no loading. When it fails, the state or the error that
   shows stays, and Try again still reads.
-- A disconnect stops the wait.
+- A hidden page gets no backup read, so a hidden tab or a minimized window
+  costs no GitHub reads. When the wait ends while the page is hidden, the
+  read is due. It runs when the page shows again.
+- When the page shows again, the store reads only if a backup read is due.
+  A read on each return would cost more than the wait, because people
+  switch tabs often.
+- The first read of a connection runs also while the page is hidden,
+  because a tab that opens reads the current state, as
+  [GitHub banner](../../docs/protocol/github-banner.md#state-of-a-branch)
+  says.
+- A disconnect stops the wait, and the store stops following the page.
 
 ## Development page
 
@@ -200,15 +214,19 @@ mounts it, and the production build leaves it out.
 - `githubStore.ts`: starts the first read on connection, then merges reads,
   the event history, and live events in order. It also runs the backup
   reads.
+- `backupReads.ts`: the timer of the backup reads of one connection. It
+  holds a due read while the page is hidden.
 - `useGitHubState.test.tsx`: mounts a hook probe with the real store and fake
   API in happy-dom. It checks the first read, live events, workspace switches,
   and retry after a failed first read through an unbound callback. After a
   switch, it also checks that only the new workspace gets a backup read.
-- `freshReads.test.ts`: drives the store with `ManualDelay` on the fake API,
-  in Node. It checks that a backup read shows a new state without a GitHub
-  event. It checks that a failed backup read keeps the shown state or error.
-  It also checks that a disconnect stops the timer, and how other reads and
-  live events stop, keep, or start it.
+- `freshReads.test.ts`: drives the store with `ManualDelay` and
+  `ManualVisibility` on the fake API, in Node. It checks that a backup read
+  shows a new state without a GitHub event. It checks that a failed backup
+  read keeps the shown state or error. It checks that a hidden page holds a
+  due read until the page shows again. It also checks that a disconnect
+  stops the timer, and how other reads and live events stop, keep, or start
+  it.
 - `PullRequestActions.test.tsx`: mounts the bar and row in happy-dom. It
   clicks the retry, Archive, and Checks actions and checks their callbacks.
   The other view tests keep their static markup checks in Node.

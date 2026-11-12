@@ -49,7 +49,8 @@ export function useScreenBar(): ScreenBar | null {
  * and for the Checks tab, with one action state for the bar on desktop and
  * the top of the Checks tab on a phone. It reads with the fetch of the org,
  * follows the ordered stream of the workspace, and waits with the timer of
- * the app. A state of another branch shows as loading.
+ * the app. It reads no backup state while the visibility of the app says
+ * that the page is hidden. A state of another branch shows as loading.
  */
 export function WorkspaceGitHub(props: {
   context: WorkspaceContext
@@ -62,6 +63,7 @@ export function WorkspaceGitHub(props: {
       fetch: services.api.fetch,
       subscribe: githubSubscribe(stream),
       delay: services.delay,
+      visible: services.visible,
     }),
     [services, stream],
   )

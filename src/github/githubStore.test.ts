@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { ManualDelay } from '../app/test-kit'
+import { ManualDelay, ManualVisibility } from '../app/test-kit'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
@@ -193,6 +193,7 @@ it('shows the newest state of all history pages after the final page, then the l
       return () => {}
     },
     delay: new ManualDelay().delay,
+    visible: new ManualVisibility(),
   })
   const states: string[] = []
   store.subscribe(() => states.push(shown(store)))
@@ -227,6 +228,7 @@ it('replays an unfinished GitHub update after reconnects when each read fails', 
   const source = {
     fetch: server.fetch,
     delay: new ManualDelay().delay,
+    visible: new ManualVisibility(),
     subscribe: (
       position: number,
       listener: (message: WorkspaceSocketMessage) => void,

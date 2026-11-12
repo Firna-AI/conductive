@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 import type { Delay } from '../app/events'
-import { ManualDelay } from '../app/test-kit'
+import { ManualDelay, ManualVisibility } from '../app/test-kit'
 import { githubPaths } from '../shared/github'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FakeWorkspaceEvents } from '../test-support/fake-events'
@@ -19,7 +19,8 @@ import { snapshotOf } from './testing'
 
 /*
  * The fresh reads of an open workspace on its slow timer. The timer runs
- * only when a test runs the timers of its `ManualDelay`.
+ * only when a test runs the timers of its `ManualDelay`. The page shows
+ * until a test hides it with its `ManualVisibility`.
  */
 
 const bannerPath = githubPaths.banner(target.orgId, target.workspaceId)
@@ -85,19 +86,50 @@ it('keeps a shown error without loading through a failed timed read, and shows t
   })
 })
 
-it('stops the timer at disconnect, and ignores a timed read that ends after it', async () => {
+it('reads at connect while the page is hidden, holds a timed read that falls due until the page shows again, and adds no read when the page shows with no read due', async () => {
+  const server = new FakeApiServer({ banner: 'ready-to-merge' })
+  const timers = new ManualDelay()
+  const page = new ManualVisibility()
+  page.set(false)
+  const store = new GitHubStore(target)
+  connect(store, server.fetch, new FakeWorkspaceEvents([]), timers.delay, page)
+  expect(readsOf(server)).toBe(1)
+  await nextChange(store)
+  serveState(server, 'merged')
+
+  await timers.runAll()
+
+  expect({
+    shown: shown(store),
+    reads: readsOf(server),
+    waiting: timers.pending,
+  }).toEqual({ shown: 'ready-to-merge', reads: 1, waiting: 0 })
+  const shows = nextChange(store)
+  page.set(true)
+  await shows
+  page.set(false)
+  page.set(true)
+  expect({
+    shown: shown(store),
+    reads: readsOf(server),
+    waiting: timers.pending,
+  }).toEqual({ shown: 'merged', reads: 2, waiting: 1 })
+})
+
+it('stops the timer and stops following the page at disconnect, and ignores a timed read that ends after it', async () => {
   const server = new FakeApiServer({ banner: 'ready-to-merge' })
   const replies = heldReplies(server)
   const timers = new ManualDelay()
+  const page = new ManualVisibility()
   const store = new GitHubStore(target)
   const events = new FakeWorkspaceEvents([])
-  const leave = connect(store, replies.fetch, events, timers.delay)
+  const leave = connect(store, replies.fetch, events, timers.delay, page)
   const loaded = nextChange(store)
   await replies.release()
   await loaded
-  const beforeLeave = timers.pending
+  const beforeLeave = { waiting: timers.pending, following: page.listening }
   leave()
-  const afterLeave = timers.pending
+  const afterLeave = { waiting: timers.pending, following: page.listening }
 
   const leaveAgain = connect(store, replies.fetch, events, timers.delay)
   const reloaded = nextChange(store)
@@ -109,7 +141,10 @@ it('stops the timer at disconnect, and ignores a timed read that ends after it',
   await replies.release()
   await timed
 
-  expect({ beforeLeave, afterLeave }).toEqual({ beforeLeave: 1, afterLeave: 0 })
+  expect({ beforeLeave, afterLeave }).toEqual({
+    beforeLeave: { waiting: 1, following: 1 },
+    afterLeave: { waiting: 0, following: 0 },
+  })
   expect({
     shown: shown(store),
     reads: readsOf(server),

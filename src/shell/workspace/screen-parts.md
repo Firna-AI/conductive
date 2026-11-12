@@ -189,7 +189,8 @@ The workspace screen keeps one GitHub store, through `useGitHubState` of
 [the GitHub screens](../../github/README.md), for the pull request bar or
 row and the Checks tab of the Files part. It reads with the `fetch` of
 the org, waits with the timer of the app, and takes the GitHub events of
-the ordered stream of the workspace.
+the ordered stream of the workspace. It follows the visibility of the app,
+so a hidden page gets no backup read.
 
 - The screen keeps one action state for the bar on desktop and the top of
   the Checks tab on a phone, as

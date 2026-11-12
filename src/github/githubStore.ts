@@ -1,9 +1,11 @@
 import type { Delay } from '../app/events'
+import type { Readable } from '../app/store'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
 } from '../shared/events'
 import { sameGitHubState } from '../shared/github-state'
+import { BackupReads } from './backupReads'
 import {
   GitHubLoadError,
   loadGitHubSnapshot,
@@ -28,17 +30,14 @@ export type SubscribeToWorkspace = (
 export interface GitHubSource {
   fetch: FetchLike
   subscribe: SubscribeToWorkspace
-  /** Runs the next fresh read later: `AppServices.delay` in the app. */
+  /** Runs the next backup read later: `AppServices.delay` in the app. */
   delay: Delay
+  /**
+   * Whether the page shows: `AppServices.visible` in the app. A hidden page
+   * gets no backup read.
+   */
+  visible: Readable<boolean>
 }
-
-/**
- * The wait before the next fresh read of an open workspace, in ms. GitHub
- * events keep the state current, so these reads only catch a change that no
- * webhook names. Each read costs GitHub API calls in every open tab, so the
- * wait is long. It is a choice of the app, not a product limit.
- */
-const freshReadWait = 300_000
 
 export type GitHubState =
   | { status: 'loading' }
@@ -67,10 +66,12 @@ interface Read {
  * during a read, or after its reply shows, has no known order against that
  * reply: when the two differ, the store keeps what it shows and reads again.
  *
- * While connected, the timer of the next fresh read waits whenever no read
+ * While connected, the timer of the next backup read waits whenever no read
  * runs. It starts when a read ends or a live event cancels a read, and each
- * read stops it. So a timed read never overlaps or cancels another read. A
+ * read stops it. So a backup read never overlaps or cancels another read. A
  * live event keeps a timer that waits, so events never put off the reads.
+ * A backup read that falls due while the page is hidden waits until the
+ * page shows again, as `BackupReads` says.
  */
 export class GitHubStore {
   readonly target: WorkspaceTarget
@@ -90,8 +91,8 @@ export class GitHubStore {
   /** Whether the shown state came from a read, not from the stream. */
   private shownFromRead = false
   private running: Read | null = null
-  /** Cancels the timer of the next fresh read, while one waits. */
-  private cancelTimer: (() => void) | null = null
+  /** The backup reads of the connection, while connected. */
+  private backup: BackupReads | null = null
 
   constructor(target: WorkspaceTarget) {
     this.target = target
@@ -108,11 +109,14 @@ export class GitHubStore {
 
   /**
    * Starts the first API read and the stream until the returned function
-   * disconnects. Until then, the store also reads again after a slow wait,
-   * so a change that no event names shows too.
+   * disconnects. Until then, the store also reads again after a slow wait
+   * while the page shows, so a change that no event names shows too.
    */
   connect(source: GitHubSource): () => void {
+    this.backup?.close()
+    const backup = new BackupReads(source.delay, source.visible, this.refresh)
     this.source = source
+    this.backup = backup
     this.lastEventNumber = this.resumeEventNumber
     this.replay = null
     this.replayed = null
@@ -121,10 +125,11 @@ export class GitHubStore {
     void this.load()
     return () => {
       unsubscribe()
+      backup.close()
       if (this.source !== source) return
       this.source = null
+      this.backup = null
       this.cancelRead()
-      this.stopTimer()
     }
   }
 
@@ -136,19 +141,16 @@ export class GitHubStore {
   retry = (): Promise<void> => this.load()
 
   /**
-   * The timed read. It shows no loading, and a failure keeps the state. No
-   * read runs now, because each read stops the timer.
+   * The backup read. It shows no loading, and a failure keeps the state. No
+   * read runs now, because each read stops the timer of the backup reads.
    */
-  private refresh = (): Promise<void> => {
-    this.cancelTimer = null
-    return this.read(true)
-  }
+  private refresh = (): Promise<void> => this.read(true)
 
   private read(timed: boolean): Promise<void> {
     const source = this.source
     if (!source) return Promise.resolve()
     this.cancelRead()
-    this.stopTimer()
+    this.backup?.stop()
     const read: Read = { controller: new AbortController(), sawHistory: false }
     this.running = read
     if (!timed && this.state.status === 'error') this.set({ status: 'loading' })
@@ -260,16 +262,9 @@ export class GitHubStore {
     this.show(reply, true)
   }
 
-  /** Starts the timer of the next fresh read, unless one waits or a read runs. */
+  /** Starts the timer of the next backup read, unless a read runs. */
   private schedule(): void {
-    const source = this.source
-    if (!source || this.running || this.cancelTimer) return
-    this.cancelTimer = source.delay(freshReadWait, this.refresh)
-  }
-
-  private stopTimer(): void {
-    this.cancelTimer?.()
-    this.cancelTimer = null
+    if (!this.running) this.backup?.start()
   }
 
   private cancelRead(): void {

@@ -3,7 +3,7 @@
 import { act, useLayoutEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { expect, it, onTestFinished, vi } from 'vitest'
-import { ManualDelay } from '../app/test-kit'
+import { ManualDelay, ManualVisibility } from '../app/test-kit'
 import { githubPaths } from '../shared/github'
 import { FakeApiServer } from '../test-support/fake-api'
 import { toolFixtures } from '../test-support/fixtures/tools'
@@ -81,6 +81,7 @@ it('loads the API state without GitHub history and shows each live GitHub update
     fetch: replies.fetch,
     subscribe: (after, listener) => server.events.subscribe(after, listener),
     delay: timers.delay,
+    visible: new ManualVisibility(),
   }
   const probe = mountProbe()
   probe.render(target, source)
@@ -129,6 +130,7 @@ it('uses a new store after a workspace switch, shows loading until its API state
     fetch: replies.fetch,
     subscribe: (after, listener) => server.events.subscribe(after, listener),
     delay: timers.delay,
+    visible: new ManualVisibility(),
   }
   const probe = mountProbe()
   probe.render(target, source)
@@ -187,6 +189,7 @@ it('retries a failed first read through an unbound feed callback and shows the r
     fetch: replies.fetch,
     subscribe: (after, listener) => server.events.subscribe(after, listener),
     delay: timers.delay,
+    visible: new ManualVisibility(),
   }
   const probe = mountProbe()
   probe.render(target, source)
