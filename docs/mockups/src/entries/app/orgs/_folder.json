@@ -1,1 +1,1 @@
-{ "order": ["new", "empty", "deleted", "suspended"] }
+{ "order": ["new", "empty", "deleted", "suspended", "reorder"] }
