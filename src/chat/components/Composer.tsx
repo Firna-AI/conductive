@@ -1,6 +1,10 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
+import {
+  focusStayed,
+  type ComposerFocusRequest,
+} from '../../app/composer-focus'
 import { filesWait } from '../../app/draft-files'
 import type { Agent, AgentChoice, AgentModel } from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
@@ -14,9 +18,17 @@ import type { Draft } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
 import { DraftFiles, OversizeNotice } from './AttachmentChips'
 import { ChipTextField } from './chip-field/ChipTextField'
+import type { FieldHandle } from './chip-field/focus-plugins'
 import local from './chat.module.css'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
+
+/** A request that the message field takes the focus once. */
+export interface ComposerFocus {
+  readonly request: ComposerFocusRequest
+  /** The composer took the request: it focused, or the focus had moved. */
+  readonly done: () => void
+}
 
 export interface ComposerProps {
   draft: Draft
@@ -49,6 +61,24 @@ export interface ComposerProps {
   onRetryFile: (id: string) => void
   onRemoveFile: (id: string) => void
   onChooseModel: (choice: AgentChoice) => void
+  /** The field takes the focus when it shows, as `ComposerFocus` says. */
+  focus?: ComposerFocus | null
+}
+
+/**
+ * Gives the focus to the field once for each request, when the composer
+ * shows it, unless the focus moved to another element since the request.
+ */
+function useRequestedFocus(focus: ComposerFocus | null) {
+  const field = useRef<FieldHandle>(null)
+  const request = focus?.request ?? null
+  const done = focus?.done
+  useEffect(() => {
+    if (request === null) return
+    if (focusStayed(request)) field.current?.focus()
+    done?.()
+  }, [request, done])
+  return field
 }
 
 /**
@@ -65,7 +95,9 @@ export interface ComposerProps {
  * line, so Enter never adds a line to a message that it sends. A pasted
  * workspace link shows as a chip, and the draft keeps the plain link. In a
  * chat with the files of its workspace, `@` opens the list of the files and
- * folders just above the box, and a pick shows as a file chip.
+ * folders just above the box, and a pick shows as a file chip. A focus
+ * request, such as from a click on the workspace in the sidebar, puts the
+ * caret in the field when it shows.
  */
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
@@ -76,6 +108,7 @@ export function Composer(props: ComposerProps) {
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
   const steers = props.running && props.startsSession !== true
   const sendKey = useSendKey(!off, props.onSend)
+  const field = useRequestedFocus(props.focus ?? null)
   return (
     <>
       <OversizeNotice
@@ -93,6 +126,7 @@ export function Composer(props: ComposerProps) {
               />
             ) : null}
             <ChipTextField
+              handle={field}
               label="Message"
               lines={2}
               maxLines={8}

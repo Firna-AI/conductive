@@ -127,6 +127,13 @@ says.
 - A row of the Archived group offers Restore in the same way, to every
   member, until Restore of its workspace ends, as
   [Restore](workspace-life.md#restore) says.
+- A click on a workspace row in the sidebar opens the workspace with the
+  focus in its message box, so that the user can type at once. This holds
+  also for the row of the open workspace. The message box takes the focus
+  when it shows, unless the focus moved to another element before then.
+  Reason: the message box never takes the focus from a later choice of the
+  user. The list page of a phone opens a workspace without that focus, so
+  that no keyboard opens on its own.
 
 ## Members and roles
 

@@ -11,7 +11,7 @@ import { failedFirstStart } from '../../app/first-start'
 import { loginLabelOf, sessionLoginOf } from '../state/session-login'
 import { ChatPane } from './ChatPane'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
-import { Composer } from './Composer'
+import { Composer, type ComposerFocus } from './Composer'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
 import {
   EarlierLoading,
@@ -58,6 +58,8 @@ export interface SessionChatProps {
    * suspended. The chat then shows its history and no control that writes.
    */
   readOnly?: boolean
+  /** The composer takes the focus when it shows, as `ComposerFocus` says. */
+  composerFocus?: ComposerFocus | null
 }
 
 /**
@@ -183,6 +185,7 @@ export function SessionChat(props: SessionChatProps) {
           blocked={block !== null}
           choice={session.choice}
           draft={state.draft}
+          focus={props.composerFocus}
           login={loginLabelOf(login)}
           models={snapshot.models}
           onAttach={(files) => void controller.attachFiles(session.id, files)}

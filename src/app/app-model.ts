@@ -12,6 +12,7 @@ import { ignore, nested, record } from './api/parse'
 import { readGetStarted, readOrg } from './api/read-core'
 import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
+import type { ComposerFocusRequest } from './composer-focus'
 import { FeedbackModel } from './feedback-model'
 import { failedBoot, readShared, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
@@ -45,6 +46,11 @@ export class AppModel {
    * in memory only.
    */
   readonly lastOrg = new Store<string | null>(null)
+  /**
+   * The workspace whose message field takes the focus when its chat shows,
+   * as `ComposerFocusRequest` says. The tab keeps it in memory only.
+   */
+  readonly composerFocus = new Store<ComposerFocusRequest | null>(null)
   readonly models = new Store<readonly AgentModel[]>([])
   /**
    * The steps of Get started as every screen shows them. Only the step of

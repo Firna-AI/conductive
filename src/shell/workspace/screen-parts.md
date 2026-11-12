@@ -21,6 +21,12 @@ says.
   again.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
+- A plain click on a workspace row of the sidebar puts a request in
+  `AppModel.composerFocus`. `ChatArea` gives the request of its workspace
+  to the chat as `composerFocus`, so the message field takes the focus
+  when it shows, as
+  [Chat integration](../../chat/integration.md) says. A phone gets no
+  request, so no keyboard opens on its own.
 - On desktop, the chat shows the file and diff tabs of the saved view
   among the session tabs, in the one order of the tab row. A file or diff
   tab moves by drag and with its tab menu, as a session tab does, as

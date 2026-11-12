@@ -17,7 +17,8 @@ import { ownPress } from '../../app/pointer-drag'
 import { formatAgo } from '../../app/time'
 import { nameLabel } from '../../shared/name-label'
 import type { Workspace } from '../../shared/workspaces'
-import { AppLink } from '../ui/AppLink'
+import { useApp } from '../context'
+import { AppLink, isPlainClick } from '../ui/AppLink'
 import { IconButton } from '../ui/actions'
 import { opensMenu } from '../ui/menu-keys'
 import ui from '../ui/ui.module.css'
@@ -60,7 +61,9 @@ function setRef<T>(ref: Ref<T> | undefined, value: T | null): void {
  * lifts the row, and a faint copy stays where it was. With `menu`, a right
  * click or the menu keys open the menu of the row, which keeps the fill of
  * a hover while it is open. The row has no button for the menu. The field
- * of Rename takes the place of the name and the time.
+ * of Rename takes the place of the name and the time. A plain click on a
+ * row of the sidebar asks the message field of the workspace to take the
+ * focus when its chat shows, so the person can type at once.
  */
 export function WorkspaceRow({
   rowRef,
@@ -98,6 +101,7 @@ export function WorkspaceRow({
   focusRow?: () => boolean
 }) {
   const { workspace, menu } = props
+  const app = useApp()
   const link = useRef<HTMLAnchorElement | null>(null)
   const renaming = menu?.rename ?? null
   // A field that closes with the focus in it gives the focus to the link.
@@ -164,6 +168,14 @@ export function WorkspaceRow({
     }
     props.onKeyDown?.(event)
   }
+  // A click in the sidebar opens the workspace ready for a message.
+  const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (page || event.defaultPrevented || !isPlainClick(event)) return
+    app.composerFocus.set({
+      workspaceId: workspace.id,
+      from: event.currentTarget,
+    })
+  }
   const archived = workspace.state === 'archived'
   const action = props.drag
     ? undefined
@@ -189,6 +201,7 @@ export function WorkspaceRow({
       <AppLink
         aria-current={props.selected ? 'page' : undefined}
         className={className}
+        onClick={onClick}
         ref={(node) => {
           link.current = node
           setRef(linkRef, node)
